@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.5 2005/08/29 15:54:55 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -27,38 +27,37 @@ ClassImp(TSliderBox)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+
 //______________________________________________________________________________
 TSliderBox::TSliderBox(): TWbox()
 {
-//*-*-*-*-*-*-*-*-*-*-*SliderBox default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
+   // SliderBox default constructor.
 
-  fSlider = 0;
+   fSlider = 0;
 }
+
 
 //______________________________________________________________________________
 TSliderBox::TSliderBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TWbox(x1,y1,x2,y2,color,bordersize,bordermode)
 {
-//*-*-*-*-*-*-*-*-*-*-*SliderBox normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // SliderBox normal constructor.
 
    fSlider = 0;
 }
 
+
 //______________________________________________________________________________
 TSliderBox::~TSliderBox()
 {
-//*-*-*-*-*-*-*-*-*-*-*SliderBox default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-
+   // SliderBox default destructor.
 }
+
 
 //______________________________________________________________________________
 void TSliderBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Interaction with a slider*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
+   // Interaction with a slider.
 
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
@@ -147,8 +146,8 @@ again:
 
       if (!vertical && (py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
           TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-          pxold = pxt; pyold = pyt; pR = kTRUE;
-          gPad->SetCursor(kRightSide);
+         pxold = pxt; pyold = pyt; pR = kTRUE;
+         gPad->SetCursor(kRightSide);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
@@ -289,10 +288,9 @@ again:
    }
 }
 
+
 //______________________________________________________________________________
 void TSliderBox::SavePrimitive(ofstream &, Option_t *)
 {
     // Save primitive as a C++ statement(s) on output stream out
-
 }
-

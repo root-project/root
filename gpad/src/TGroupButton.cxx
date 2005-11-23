@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.8 2004/05/12 16:19:04 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.9 2004/12/13 11:21:14 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 
 ClassImp(TGroupButton)
 
+
 //______________________________________________________________________________
 //
 //  A TGroupButton object is a specialized TButton used in a group of Buttons.
@@ -32,44 +33,45 @@ ClassImp(TGroupButton)
 //  For examples of use of TGroupButton objects, see:
 //    TAttFillCanvas, TAttLineCanvas, TAttTextCanvas and TAttMarkerCanvas.
 
+
 //______________________________________________________________________________
 TGroupButton::TGroupButton(): TButton()
 {
-//*-*-*-*-*-*-*-*-*-*-*GroupButton default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
+   // GroupButton default constructor.
+
    SetFraming();
 }
+
 
 //______________________________________________________________________________
 TGroupButton::TGroupButton(const char *groupname, const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TButton(title,method,x1,y1,x2,y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*GroupButton normal constructor*-*-*-*-*-*-*-*-*-*-*-*
-//                     ==============================
+   // GroupButton normal constructor.
 
    SetName((char*)groupname);
    SetFraming();
 }
 
+
 //______________________________________________________________________________
 TGroupButton::~TGroupButton()
 {
-//*-*-*-*-*-*-*-*-*-*-*GroupButton default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==============================
+   // GroupButton default destructor.
 }
+
 
 //______________________________________________________________________________
 void TGroupButton::DisplayColorTable(const char *action, Double_t x0, Double_t y0, Double_t wc, Double_t hc)
 {
-//*-*-*-*-*-*-*-*-*-*-*Display Color Table in an attribute canvas*-*-*-*-*-*-*
-//*-*                  ==========================================
+   // Display Color Table in an attribute canvas.
 
    TGroupButton *colorpad;
    Int_t i, j;
    Int_t color;
    Double_t xlow, ylow, hs, ws;
 
-//*-* draw colortable buttons
+   // draw colortable buttons
    hs = hc/5;
    ws = wc/10;
    char command[32];
@@ -88,15 +90,15 @@ void TGroupButton::DisplayColorTable(const char *action, Double_t x0, Double_t y
    }
 }
 
+
 //______________________________________________________________________________
 void TGroupButton::ExecuteAction()
 {
-//*-*-*-*-*-*-*-*Execute action of this button*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =============================
-//*-*
-//*-*   If an object has been selected before executing the APPLY button
-//*-*   in the control canvas, The member function and its parameters
-//*-*   for this object is executed via the interpreter.
+   // Execute action of this button.
+   //
+   //   If an object has been selected before executing the APPLY button
+   //   in the control canvas, The member function and its parameters
+   //   for this object is executed via the interpreter.
 
    TVirtualPad *pad;
    char line[128];
@@ -138,13 +140,13 @@ void TGroupButton::ExecuteAction()
    }
 }
 
+
 //______________________________________________________________________________
 void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//*-*  This member function is called when a Button object is clicked.
-//*-*
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a Button object is clicked.
 
    if (fMother->IsEditable()) {
       TPad::ExecuteEvent(event,px,py);
@@ -208,17 +210,18 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 void TGroupButton::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    TPad *padsav = (TPad*)gPad;
    char quote = '"';
    if (gROOT->ClassSaved(TGroupButton::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TGroupButton *";
+      out<<"   TGroupButton *";
    }
    out<<"button = new TGroupButton("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
       <<quote<<","<<quote<<GetMethod()<<quote
@@ -251,4 +254,3 @@ void TGroupButton::SavePrimitive(ofstream &out, Option_t *)
    out<<"   "<<padsav->GetName()<<"->cd();"<<endl;
    padsav->cd();
 }
-

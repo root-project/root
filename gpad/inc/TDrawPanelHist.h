@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.h,v 1.3 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.h,v 1.4 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -33,25 +33,25 @@ class TH1;
 class TDrawPanelHist : public TDialogCanvas {
 
 protected:
-        TString     fOption;     //Fitting options
-        TSlider     *fSlider;    //Pointer to fitpanel slider
-        TObject     *fHistogram; //Pointer to histogram
+   TString     fOption;     //Fitting options
+   TSlider     *fSlider;    //Pointer to fitpanel slider
+   TObject     *fHistogram; //Pointer to histogram
 
 public:
-        TDrawPanelHist();
-        TDrawPanelHist(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj);
-        virtual ~TDrawPanelHist();
-        virtual void  AddOption(Option_t *option);
-        virtual void  Apply(const char *action="");
-        virtual void  BuildStandardButtons();
-        virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        TObject       *GetHistogram() const {return fHistogram;}
-        virtual void  RecursiveRemove(TObject *obj);
-        virtual void  SavePrimitive(ofstream &out, Option_t *option);
-        virtual void  SetDefaults();
-        virtual void  SetSame();
+   TDrawPanelHist();
+   TDrawPanelHist(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj);
+   virtual ~TDrawPanelHist();
+   virtual void  AddOption(Option_t *option);
+   virtual void  Apply(const char *action="");
+   virtual void  BuildStandardButtons();
+   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   TObject       *GetHistogram() const {return fHistogram;}
+   virtual void  RecursiveRemove(TObject *obj);
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SetDefaults();
+   virtual void  SetSame();
 
-        ClassDef(TDrawPanelHist,1)  //Class used to control histogram drawing options
+   ClassDef(TDrawPanelHist,1)  //Class used to control histogram drawing options
 };
 
 #endif

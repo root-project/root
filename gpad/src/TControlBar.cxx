@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.6 2004/02/19 07:56:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.7 2005/08/02 16:43:21 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -89,13 +89,16 @@
 
 ClassImp(TControlBar)
 
+
 //_______________________________________________________________________
 TControlBar::TControlBar() : TControlBarButton()
 {
-    fControlBarImp = 0;
-    fOrientation   = 0;
-    fButtons       = 0;
-    fNoroc         = 1;
+   // Default constructor.
+
+   fControlBarImp = 0;
+   fOrientation   = 0;
+   fButtons       = 0;
+   fNoroc         = 1;
 }
 
 
@@ -104,83 +107,101 @@ TControlBar::TControlBar(const char *orientation, const char *title)
             : TControlBarButton(title, "", "", "button")
 
 {
-    SetOrientation( orientation );
-    Initialize(-999, -999);
+   // Normal constructor.
+
+   SetOrientation( orientation );
+   Initialize(-999, -999);
 }
+
 
 //_______________________________________________________________________
 TControlBar::TControlBar(const char *orientation, const char *title, Int_t x, Int_t y)
             : TControlBarButton(title, "", "", "button")
 
 {
-    Int_t xs = (Int_t)(x*gStyle->GetScreenFactor());
-    Int_t ys = (Int_t)(y*gStyle->GetScreenFactor());
-    SetOrientation( orientation );
-    Initialize(xs, ys);
+   // Normal constructor.
+
+   Int_t xs = (Int_t)(x*gStyle->GetScreenFactor());
+   Int_t ys = (Int_t)(y*gStyle->GetScreenFactor());
+   SetOrientation( orientation );
+   Initialize(xs, ys);
 }
+
 
 //_______________________________________________________________________
 TControlBar::~TControlBar()
 {
-    delete fControlBarImp;
+   // Destructor.
 
-    if( fButtons )
-        fButtons->Delete();
+   delete fControlBarImp;
 
-    fButtons       = 0;
-    fControlBarImp = 0;
+   if( fButtons )
+      fButtons->Delete();
+
+   fButtons       = 0;
+   fControlBarImp = 0;
 }
 
 
 //_______________________________________________________________________
 void TControlBar::AddButton(TControlBarButton &button)
 {
-    AddButton( &button );
+   // Add button.
+
+   AddButton( &button );
 }
 
 
 //_______________________________________________________________________
 void TControlBar::AddButton(TControlBarButton *button)
 {
-    if( fButtons && button )
-        fButtons->Add( button );
+   // Add button.
+
+   if( fButtons && button )
+      fButtons->Add( button );
 }
 
 
 //_______________________________________________________________________
 void TControlBar::AddButton(const char *label, const char *action, const char *hint, const char *type)
 {
-    TControlBarButton *button = new TControlBarButton( label, action, hint, type );
-    AddButton( button );
+   // Add button.
+
+   TControlBarButton *button = new TControlBarButton( label, action, hint, type );
+   AddButton( button );
 }
 
 
 //_______________________________________________________________________
 void TControlBar::AddControlBar(TControlBar &controlBar)
 {
-    AddControlBar( &controlBar );
+   // Add controlbar.
+
+   AddControlBar( &controlBar );
 }
 
 
 //_______________________________________________________________________
 void TControlBar::AddControlBar(TControlBar *controlBar)
 {
-    if( fButtons && controlBar )
-        fButtons->Add( controlBar );
+   // Add controlbar.
+
+   if( fButtons && controlBar )
+      fButtons->Add( controlBar );
 }
 
 
 //_______________________________________________________________________
 void TControlBar::AddSeparator()
 {
-
+   // Add separator.
 }
 
 
 //_______________________________________________________________________
 void TControlBar::Create()
 {
-   //
+   // Create controlbar.
   
    if( fControlBarImp ) {
       fControlBarImp->Create();
@@ -191,7 +212,7 @@ void TControlBar::Create()
 //_______________________________________________________________________
 void TControlBar::Hide()
 {
-   //
+   // Hide controlbar.
 
    if( fControlBarImp ) {
       fControlBarImp->Hide();
@@ -202,7 +223,7 @@ void TControlBar::Hide()
 //_______________________________________________________________________
 void TControlBar::Initialize(Int_t x, Int_t y)
 {
-   //
+   // Initialize controlbar.
 
    if (x == -999) {
       fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName() );
@@ -214,6 +235,7 @@ void TControlBar::Initialize(Int_t x, Int_t y)
    fNoroc         = 1;
 }
 
+
 //_______________________________________________________________________
 void TControlBar::SetFont(const char *fontName)
 {
@@ -223,6 +245,7 @@ void TControlBar::SetFont(const char *fontName)
 
    fControlBarImp->SetFont(fontName);
 }
+
 
 //_______________________________________________________________________
 void TControlBar::SetTextColor(const char *colorName)
@@ -234,41 +257,51 @@ void TControlBar::SetTextColor(const char *colorName)
    fControlBarImp->SetTextColor(colorName);
 }
 
+
 //_______________________________________________________________________
 void TControlBar::SetOrientation(const char *o)
 {
-    fOrientation = kVertical;
+   // Set controlbar orientation.
 
-    if( *o ) {
-        if( !strcasecmp( o, "vertical" ) )
-            fOrientation = kVertical;
-        else if( !strcasecmp( o, "horizontal" ) )
-            fOrientation = kHorizontal;
-        else
-            Error( "SetOrientation", "Unknown orientation: '%s' !\n\t\t(choice of: %s, %s)",
-                    o, "vertical", "horizontal" );
-    }
+   fOrientation = kVertical;
+
+   if( *o ) {
+      if( !strcasecmp( o, "vertical" ) )
+         fOrientation = kVertical;
+      else if( !strcasecmp( o, "horizontal" ) )
+         fOrientation = kHorizontal;
+      else
+         Error( "SetOrientation", "Unknown orientation: '%s' !\n\t\t(choice of: %s, %s)",
+                 o, "vertical", "horizontal" );
+   }
 }
+
 
 //_______________________________________________________________________
 void TControlBar::SetOrientation(Int_t o)
 {
-    fOrientation = kVertical;
+   // Set controlbar orientation.
 
-    if( ( o == kVertical ) || ( o == kHorizontal ) )
-        fOrientation = o;
-    else
-        Error( "SetOrientation", "Unknown orientation: %d !\n\t\t(choice of: %d, %d)",
-                o, kVertical, kHorizontal );
+   fOrientation = kVertical;
+
+   if( ( o == kVertical ) || ( o == kHorizontal ) )
+      fOrientation = o;
+   else
+      Error( "SetOrientation", "Unknown orientation: %d !\n\t\t(choice of: %d, %d)",
+              o, kVertical, kHorizontal );
 }
+
 
 
 //_______________________________________________________________________
 void TControlBar::Show()
 {
-    if( fControlBarImp )
-        fControlBarImp->Show();
+   // Show controlbar.
+
+   if( fControlBarImp )
+      fControlBarImp->Show();
 }
+
 
 //_______________________________________________________________________
 TControlBarButton *TControlBar::GetClicked() const

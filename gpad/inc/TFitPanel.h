@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.h,v 1.3 2001/08/07 13:44:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.h,v 1.4 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -33,28 +33,28 @@ class TH1;
 class TFitPanel : public TDialogCanvas {
 
 protected:
-        TString     fOption;     //Fitting options
-        TString     fFunction;   //Function to fit
-        TString     fSame;       //graphics option to superimpose new fit on existing picture
-        TSlider     *fSlider;    //Pointer to fitpanel slider
-        TObject     *fObjectFit; //Pointer to object to fit
+   TString     fOption;     //Fitting options
+   TString     fFunction;   //Function to fit
+   TString     fSame;       //graphics option to superimpose new fit on existing picture
+   TSlider     *fSlider;    //Pointer to fitpanel slider
+   TObject     *fObjectFit; //Pointer to object to fit
 
 public:
-        TFitPanel();
-        TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj);
-        virtual ~TFitPanel();
-        virtual void  AddOption(Option_t *option);
-        virtual void  Apply(const char *action="");
-        virtual void  BuildStandardButtons();
-        virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        TObject       *GetObjectFit() const {return fObjectFit;}
-        virtual void  RecursiveRemove(TObject *obj);
-        virtual void  SavePrimitive(ofstream &out, Option_t *option);
-        virtual void  SetDefaults();
-        virtual void  SetFunction(const char *function);
-        virtual void  SetSame();
+   TFitPanel();
+   TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh, const TVirtualPad *pad, const TObject *obj);
+   virtual ~TFitPanel();
+   virtual void  AddOption(Option_t *option);
+   virtual void  Apply(const char *action="");
+   virtual void  BuildStandardButtons();
+   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   TObject       *GetObjectFit() const {return fObjectFit;}
+   virtual void  RecursiveRemove(TObject *obj);
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SetDefaults();
+   virtual void  SetFunction(const char *function);
+   virtual void  SetSame();
 
-        ClassDef(TFitPanel,1)  //Class used to control histograms fit panel
+   ClassDef(TFitPanel,1)  //Class used to control histograms fit panel
 };
 
 #endif

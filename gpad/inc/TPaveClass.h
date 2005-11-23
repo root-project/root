@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPaveClass.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.h,v 1.4 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   06/08/99
 
 /*************************************************************************
@@ -31,25 +31,26 @@
 class TPaveClass : public TPaveLabel{
 
 protected:
-        TClassTree   *fClassTree;       //Pointer to the TClassTree referencing this object
+   TClassTree   *fClassTree;       //Pointer to the TClassTree referencing this object
 
 public:
-        TPaveClass();
-        TPaveClass(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, TClassTree *classtree);
-        TPaveClass(const TPaveClass &PaveVar);
-        virtual      ~TPaveClass();
-                void  Copy(TObject &PaveVar) const;
-        virtual void  DrawClasses(const char *classes="this");   // *MENU*
-        TClassTree   *GetClassTree() const {return fClassTree;}
-        virtual void  SaveAs(const char *filename=""); // *MENU*
-        virtual void  SavePrimitive(ofstream &out, Option_t *option);
-        virtual void  SetClasses(const char *classes="this", Option_t *option="ID");   // *MENU*
-        virtual void  ShowClassesUsedBy(const char *classes="this");  // *MENU*
-        virtual void  ShowClassesUsing(const char *classes="this");   // *MENU*
-        virtual void  SetClassTree(TClassTree *classtree) {fClassTree = classtree;}
-        virtual void  ShowLinks(Option_t *option="HMR"); // *MENU*
+   TPaveClass();
+   TPaveClass(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, TClassTree *classtree);
+   TPaveClass(const TPaveClass &PaveVar);
+   virtual      ~TPaveClass();
 
-        ClassDef(TPaveClass,1)  //A TPaveLabel specialized for TClassTree objects
+   void          Copy(TObject &PaveVar) const;
+   virtual void  DrawClasses(const char *classes="this");   // *MENU*
+   TClassTree   *GetClassTree() const {return fClassTree;}
+   virtual void  SaveAs(const char *filename=""); // *MENU*
+   virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  SetClasses(const char *classes="this", Option_t *option="ID");   // *MENU*
+   virtual void  ShowClassesUsedBy(const char *classes="this");  // *MENU*
+   virtual void  ShowClassesUsing(const char *classes="this");   // *MENU*
+   virtual void  SetClassTree(TClassTree *classtree) {fClassTree = classtree;}
+   virtual void  ShowLinks(Option_t *option="HMR"); // *MENU*
+
+   ClassDef(TPaveClass,1)  //A TPaveLabel specialized for TClassTree objects
 };
 
 #endif

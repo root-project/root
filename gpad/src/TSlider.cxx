@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSlider.cxx,v 1.3 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSlider.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -97,24 +97,24 @@ ClassImp(TSlider)
 //    called with px=0 and py = 0                                       //
 //////////////////////////////////////////////////////////////////////////
 
+
 //______________________________________________________________________________
 TSlider::TSlider(): TPad()
 {
-//*-*-*-*-*-*-*-*-*-*-*slider default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
+   // slider default constructor.
 
    fObject = 0;
    fMethod = "";
 }
 
+
 //______________________________________________________________________________
 TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TPad(name,title,0.1,0.1,0.9,0.9,color,bordersize,bordermode)
 {
-//*-*-*-*-*-*-*-*-*-*-*Slider normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
-//
-//   x1,y1,x2,y2 are in pad user coordinates
+   // Slider normal constructor.
+   //
+   //   x1,y1,x2,y2 are in pad user coordinates
 
    Double_t x1pad = gPad->GetX1();
    Double_t x2pad = gPad->GetX2();
@@ -142,34 +142,34 @@ TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,D
    AppendPad();
 }
 
+
 //______________________________________________________________________________
 TSlider::~TSlider()
 {
-//*-*-*-*-*-*-*-*-*-*-*slider default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
-
+   // slider default destructor.
 }
+
 
 //______________________________________________________________________________
 void TSlider::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this slider with its current attributes*-*-*-*
-//*-*                  =============================================
+   // Paint this slider with its current attributes.
 
    TPad::Paint(option);
 }
 
+
 //______________________________________________________________________________
 void TSlider::SavePrimitive(ofstream &out, Option_t *)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    TPad *padsav = (TPad*)gPad;
    char quote = '"';
    if (gROOT->ClassSaved(TSlider::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TSlider *";
+      out<<"   TSlider *";
    }
    out<<"slider = new TSlider("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
       <<quote
@@ -196,6 +196,7 @@ void TSlider::SavePrimitive(ofstream &out, Option_t *)
    out<<"   "<<padsav->GetName()<<"->cd();"<<endl;
    padsav->cd();
 }
+
 
 //______________________________________________________________________________
 void TSlider::SetRange(Double_t xmin, Double_t xmax)
