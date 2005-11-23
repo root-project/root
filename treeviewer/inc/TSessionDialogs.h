@@ -92,7 +92,6 @@ private:
    TGTextEntry       *fTxtOptions;     // options text entry
    TGNumberEntry     *fNumEntries;     // number of entries selector
    TGNumberEntry     *fNumFirstEntry;  // first entry selector
-   TGTextEntry       *fTxtParFile;     // parameter file name text entry
    TGTextEntry       *fTxtEventList;   // event list text entry
    TSessionViewer    *fViewer;         // pointer on main viewer
    TQueryDescription *fQuery;          // query description class
@@ -106,7 +105,6 @@ public:
    void     OnNewQueryMore();
    void     OnBrowseChain();
    void     OnBrowseSelector();
-   void     OnBrowseParFile();
    void     OnBrowseEventList();
    void     OnBtnSaveClicked();
    void     OnBtnCloseClicked();

@@ -120,7 +120,6 @@ public:
    TString        fTDSetString;     // dataset name
    TString        fOptions;         // query processing options
    TString        fEventList;       // event list
-   TString        fParFile;         // parameter file name
    Int_t          fNbFiles;         // number of files to process
    Int_t          fNoEntries;       // number of events/entries to process
    Int_t          fFirstEntry;      // first event/entry to process
@@ -290,7 +289,7 @@ private:
    TGTextButton      *fApplyParallel;        // apply parallel nodes button
 
    TSessionViewer    *fViewer;               // pointer on main viewer
-   TGLabel           *fInfoLine[13];         // infos on session
+   TGLabel           *fInfoLine[19];         // infos on session
 
 public:
    TSessionFrame(TGWindow* parent, Int_t w, Int_t h);
@@ -356,7 +355,6 @@ public:
    void     OnNewQueryMore();
    void     OnBrowseChain();
    void     OnBrowseSelector();
-   void     OnBrowseParFile();
    void     OnBrowseEventList();
    void     OnBtnSave();
    void     OnElementSelected(TObject *obj);
@@ -419,6 +417,7 @@ public:
    TTime    GetStartTime() const { return fStartTime; }
    TTime    GetEndTime() const   { return fEndTime; }
    TEditQueryFrame *GetQueryEditFrame() const { return fFD; }
+   TGTab   *GetTab() const { return fTab; }
 
    void     SetStartTime(TTime time) { fStartTime = time; }
    void     SetEndTime(TTime time) { fEndTime = time; }

@@ -444,17 +444,6 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0,
          37, 0, 0, 8));
 
-   // add "Par file" label and text entry
-   fFrmMore->AddFrame(new TGLabel(fFrmMore, "Par file :"),
-         new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 0, 5, 0, 0));
-   fFrmMore->AddFrame(fTxtParFile = new TGTextEntry(fFrmMore,
-         (const char *)0, 5), new TGTableLayoutHints(1, 2, 2, 3, 0, 37,
-         5, 0, 0));
-   // add "Browse" button
-   fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
-         new TGTableLayoutHints(2, 3, 2, 3, 0, 6, 0, 0, 8));
-   btnTmp->Connect("Clicked()", "TNewQueryDlg", this, "OnBrowseParFile()");
-
    // add "Event list" label and text entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 0, 5, 0, 0));
@@ -472,7 +461,6 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fTxtOptions->Associate(this);
    fNumEntries->Associate(this);
    fNumFirstEntry->Associate(this);
-   fTxtParFile->Associate(this);
    fTxtEventList->Associate(this);
 
    TGCompositeFrame *tmp;
@@ -560,18 +548,6 @@ void TNewQueryDlg::OnBrowseSelector()
 }
 
 //______________________________________________________________________________
-void TNewQueryDlg::OnBrowseParFile()
-{
-   // Open file browser to choose parameter file.
-
-   TGFileInfo fi;
-   fi.fFileTypes = partypes;
-   new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
-   if (!fi.fFilename) return;
-   fTxtParFile->SetText(gSystem->BaseName(fi.fFilename));
-}
-
-//______________________________________________________________________________
 void TNewQueryDlg::OnBrowseEventList()
 {
    //
@@ -603,7 +579,6 @@ void TNewQueryDlg::OnBtnSaveClicked()
    }
    newquery->fQueryName      = fTxtQueryName->GetText();
    newquery->fOptions        = fTxtOptions->GetText();
-   newquery->fParFile        = fTxtParFile->GetText();
    newquery->fNoEntries      = fNumEntries->GetIntNumber();
    newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
    newquery->fNbFiles        = 0;
@@ -709,7 +684,6 @@ void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
    fTxtOptions->SetText(desc->fOptions);
    fNumEntries->SetIntNumber(desc->fNoEntries);
    fNumFirstEntry->SetIntNumber(desc->fFirstEntry);
-   fTxtParFile->SetText(desc->fParFile);
    fTxtEventList->SetText(desc->fEventList);
 }
 //______________________________________________________________________________
@@ -737,10 +711,6 @@ Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fTxtOptions->SetFocus();
                      break;
                   case 4: // Options
-                     fTxtParFile->SelectAll();
-                     fTxtParFile->SetFocus();
-                     break;
-                  case 5: // Parameter file
                      fTxtEventList->SelectAll();
                      fTxtEventList->SetFocus();
                      break;

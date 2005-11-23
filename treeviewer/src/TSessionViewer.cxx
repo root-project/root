@@ -64,6 +64,8 @@
 #include "TWin32SplashThread.h"
 #endif
 
+#include "TSlave.h"
+
 TSessionViewer *gSessionViewer = 0;
 
 ClassImp(TQueryDescription)
@@ -668,17 +670,17 @@ void TSessionFrame::Build(TSessionViewer *gui)
          kLHintsExpandX, 5, 5, 15, 5));
 
    TGCompositeFrame* frmInfos = new TGHorizontalFrame(fFA, 350, 100);
-   frmInfos->SetLayoutManager(new TGTableLayout(frmInfos, 6, 2));
+   frmInfos->SetLayoutManager(new TGTableLayout(frmInfos, 9, 2));
 
    // add session information lines
    j = 0;
-   for (i=0;i<11;i+=2) {
+   for (i=0;i<17;i+=2) {
       fInfoLine[i+1] = new TGLabel(frmInfos, " ");
       frmInfos->AddFrame(fInfoLine[i+1], new TGTableLayoutHints(0, 1, j, j+1,
-            kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
+            kLHintsLeft | kLHintsCenterY, 5, 5, 2, 2));
       fInfoLine[i+2] = new TGLabel(frmInfos, " ");
       frmInfos->AddFrame(fInfoLine[i+2], new TGTableLayoutHints(1, 2, j, j+1,
-            kLHintsLeft | kLHintsCenterY, 5, 5, 5, 5));
+            kLHintsLeft | kLHintsCenterY, 5, 5, 2, 2));
       j++;
    }
    fFA->AddFrame(frmInfos, new TGLayoutHints(kLHintsLeft | kLHintsTop |
@@ -943,6 +945,12 @@ void TSessionFrame::ProofInfos()
       fInfoLine[10]->SetText(" ");
       fInfoLine[11]->SetText(" ");
       fInfoLine[12]->SetText(" ");
+      fInfoLine[13]->SetText(" ");
+      fInfoLine[14]->SetText(" ");
+      fInfoLine[15]->SetText(" ");
+      fInfoLine[16]->SetText(" ");
+      fInfoLine[17]->SetText(" ");
+      fInfoLine[18]->SetText(" ");
       delete userGroup;
       Layout();
       Resize(GetDefaultSize());
@@ -981,6 +989,15 @@ void TSessionFrame::ProofInfos()
       sprintf(buf, "%s", fViewer->GetActDesc()->fProof->IsValid() ?
             fViewer->GetActDesc()->fProof->GetSessionTag() : " ");
       fInfoLine[12]->SetText(buf);
+      fInfoLine[13]->SetText("Total MB's processed :");
+      sprintf(buf, "%.2f", float(fViewer->GetActDesc()->fProof->GetBytesRead())/(1024*1024));
+      fInfoLine[14]->SetText(buf);
+      fInfoLine[15]->SetText("Total real time used (s) :");
+      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetRealTime());
+      fInfoLine[16]->SetText(buf);
+      fInfoLine[17]->SetText("Total CPU time used (s) :");
+      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetCpuTime());
+      fInfoLine[18]->SetText(buf);
    }
    else {
       if (fViewer->GetActDesc()->fProof->IsParallel())
@@ -1009,6 +1026,15 @@ void TSessionFrame::ProofInfos()
       fInfoLine[11]->SetText("Config file : ");
       sprintf(buf, "%s", fViewer->GetActDesc()->fProof->GetConfFile());
       fInfoLine[12]->SetText(buf);
+      fInfoLine[13]->SetText("Total MB's processed :");
+      sprintf(buf, "%.2f", float(fViewer->GetActDesc()->fProof->GetBytesRead())/(1024*1024));
+      fInfoLine[14]->SetText(buf);
+      fInfoLine[15]->SetText("Total real time used (s) :");
+      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetRealTime());
+      fInfoLine[16]->SetText(buf);
+      fInfoLine[17]->SetText("Total CPU time used (s) :");
+      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetCpuTime());
+      fInfoLine[18]->SetText(buf);
    }
    Layout();
    Resize(GetDefaultSize());
@@ -1027,6 +1053,7 @@ void TSessionFrame::OnApplyLogLevel()
       fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
       fViewer->GetActDesc()->fProof->SetLogLevel(fViewer->GetActDesc()->fLogLevel);
    }
+   fViewer->GetSessionFrame()->ProofInfos();
 }
 
 //______________________________________________________________________________
@@ -1042,6 +1069,7 @@ void TSessionFrame::OnApplyParallel()
       Int_t nodes = atoi(fTxtParallel->GetText());
       fViewer->GetActDesc()->fProof->SetParallel(nodes);
    }
+   fViewer->GetSessionFrame()->ProofInfos();
 }
 
 //______________________________________________________________________________
@@ -1454,7 +1482,6 @@ void TSessionFrame::OnBtnGetQueriesClicked()
                                           query->GetName());
          newquery->fOptions         = query->GetOptions();
          newquery->fEventList       = "";
-         newquery->fParFile         = "";
          newquery->fNbFiles         = 0;
          newquery->fNoEntries       = query->GetEntries();
          newquery->fFirstEntry      = query->GetFirst();
@@ -1641,17 +1668,6 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
          TGNumberFormat::kNELNoLimits), new TGTableLayoutHints(1, 2, 1, 2, 0,
          37, 0, 0, 8));
 
-   // add "Par file" label and text entry
-   fFrmMore->AddFrame(new TGLabel(fFrmMore, "Par file :"),
-         new TGTableLayoutHints(0, 1, 2, 3, kLHintsCenterY, 5, 5, 0, 0));
-   fFrmMore->AddFrame(fTxtParFile = new TGTextEntry(fFrmMore,
-         (const char *)0, 5), new TGTableLayoutHints(1, 2, 2, 3, 0, 37,
-         5, 0, 0));
-   // add "Browse" button
-   fFrmMore->AddFrame(btnTmp = new TGTextButton(fFrmMore, "Browse..."),
-         new TGTableLayoutHints(2, 3, 2, 3, 0, 6, 0, 0, 8));
-   btnTmp->Connect("Clicked()", "TEditQueryFrame", this, "OnBrowseParFile()");
-
    // add "Event list" label and text entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Event list :"),
          new TGTableLayoutHints(0, 1, 3, 4, kLHintsCenterY, 5, 5, 0, 0));
@@ -1669,7 +1685,6 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
    fTxtOptions->Associate(this);
    fNumEntries->Associate(this);
    fNumFirstEntry->Associate(this);
-   fTxtParFile->Associate(this);
    fTxtEventList->Associate(this);
 
 }
@@ -1726,18 +1741,6 @@ void TEditQueryFrame::OnBrowseSelector()
 }
 
 //______________________________________________________________________________
-void TEditQueryFrame::OnBrowseParFile()
-{
-   // Open file browser to choose parameter file.
-
-   TGFileInfo fi;
-   fi.fFileTypes = pkgtypes;
-   new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
-   if (!fi.fFilename) return;
-   fTxtParFile->SetText(gSystem->BaseName(fi.fFilename));
-}
-
-//______________________________________________________________________________
 void TEditQueryFrame::OnBrowseEventList()
 {
    //
@@ -1769,7 +1772,6 @@ void TEditQueryFrame::OnBtnSave()
    }
    newquery->fQueryName      = fTxtQueryName->GetText();
    newquery->fOptions        = fTxtOptions->GetText();
-   newquery->fParFile        = fTxtParFile->GetText();
    newquery->fNoEntries      = fNumEntries->GetIntNumber();
    newquery->fFirstEntry     = fNumFirstEntry->GetIntNumber();
    newquery->fNbFiles        = 0;
@@ -1790,6 +1792,12 @@ void TEditQueryFrame::OnBtnSave()
    fTxtQueryName->SelectAll();
    fTxtQueryName->SetFocus();
    fViewer->WriteConfiguration();
+   if (fViewer->GetActDesc()->fProof &&
+       fViewer->GetActDesc()->fProof->IsValid() &&
+       fViewer->GetActDesc()->fConnected) {
+      fViewer->GetQueryFrame()->GetTab()->SetTab("Status");
+      fViewer->GetQueryFrame()->OnBtnSubmit();
+   }
 }
 
 //______________________________________________________________________________
@@ -1797,14 +1805,16 @@ void TEditQueryFrame::UpdateFields(TQueryDescription *desc)
 {
    // Update entry fields with query description values.
 
+   fChain = 0;
    fQuery = desc;
+   if (desc->fChain)
+      fChain = desc->fChain;
    fTxtQueryName->SetText(desc->fQueryName);
    fTxtChain->SetText(desc->fTDSetString);
    fTxtSelector->SetText(desc->fSelectorString);
    fTxtOptions->SetText(desc->fOptions);
    fNumEntries->SetIntNumber(desc->fNoEntries);
    fNumFirstEntry->SetIntNumber(desc->fFirstEntry);
-   fTxtParFile->SetText(desc->fParFile);
    fTxtEventList->SetText(desc->fEventList);
 }
 
@@ -1930,8 +1940,17 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fFD = new TEditQueryFrame(tf, 100, 100);
    fFD->Build(fViewer);
    tf->AddFrame(fFD, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 10, 0));
-   tf->AddFrame(fBtnSave = new TGTextButton(tf, "     Apply Changes     "),
-                new TGLayoutHints(kLHintsTop | kLHintsLeft, 10, 5, 5, 5));
+   TString btntxt;
+   if (fViewer->GetActDesc()->fProof &&
+       fViewer->GetActDesc()->fProof->IsValid() &&
+       fViewer->GetActDesc()->fConnected) {
+      btntxt = "         Submit         ";
+   }
+   else {
+      btntxt = "     Apply changes      ";
+   }
+   tf->AddFrame(fBtnSave = new TGTextButton(tf, btntxt),
+                new TGLayoutHints(kLHintsTop | kLHintsLeft, 10, 5, 25, 5));
 
    // connect button actions to functions
    fBtnSave->Connect("Clicked()", "TEditQueryFrame", fFD,
@@ -2302,15 +2321,6 @@ void TSessionQueryFrame::OnBtnSubmit()
       // set current proof session
       fViewer->GetActDesc()->fProof->cd();
       // check if parameter file has been specified
-      if (newquery->fParFile.Length() > 1) {
-         const char *packname = newquery->fParFile;
-         // upload parameter file
-         if (fViewer->GetActDesc()->fProof->UploadPackage(packname) != 0)
-            Error("Submit", "Upload package failed");
-         // enable parameter file
-         if (fViewer->GetActDesc()->fProof->EnablePackage(packname) != 0)
-            Error("Submit", "Enable package failed");
-      }
       if (newquery->fChain) {
          // Quick FIX just for the demo. Creating a new TDSet causes a memory leak.
          if (newquery->fChain->IsA() == TChain::Class()) {
@@ -2491,6 +2501,16 @@ void TSessionQueryFrame::UpdateInfos()
 
    if (fViewer->GetActDesc()->fActQuery)
       fFD->UpdateFields(fViewer->GetActDesc()->fActQuery);
+
+   if (fViewer->GetActDesc()->fProof &&
+       fViewer->GetActDesc()->fProof->IsValid() &&
+       fViewer->GetActDesc()->fConnected) {
+      fBtnSave->SetText("         Submit         ");
+   }
+   else {
+      fBtnSave->SetText("     Apply changes      ");
+   }
+   fClient->NeedRedraw(fBtnSave);
    fInfoTextView->Clear();
    if (!fViewer->GetActDesc()->fActQuery ||
        !fViewer->GetActDesc()->fActQuery->fResult) {
@@ -2912,7 +2932,6 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                TString dset = strtok(0, ";");
                TString options = strtok(0, ";");
                TString eventlist = strtok(0, ";");
-               TString parfile = strtok(0, ";");
                TString nbfiles = strtok(0, ";");
                TString nbentries = strtok(0, ";");
                TString firstentry = strtok(0, ";");
@@ -2926,7 +2945,6 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                newquery->fQueryName       = queryname.Length() > 2 ? queryname.Data() : "";
                newquery->fOptions         = options.Length() > 2 ? options.Data() : "";
                newquery->fEventList       = eventlist.Length() > 2 ? eventlist.Data() : "";
-               newquery->fParFile         = parfile.Length() > 2 ? parfile.Data() : "";
                newquery->fNbFiles         = atoi(nbfiles);
                newquery->fNoEntries       = atoi(nbentries);
                newquery->fFirstEntry      = atoi(firstentry);
@@ -3038,7 +3056,6 @@ void TSessionViewer::UpdateListOfProofs()
             newquery->fQueryName       = query->GetName();
             newquery->fOptions         = query->GetOptions();
             newquery->fEventList       = "";
-            newquery->fParFile         = "";
             newquery->fNbFiles         = 0;
             newquery->fNoEntries       = query->GetEntries();
             newquery->fFirstEntry      = query->GetFirst();
@@ -3133,8 +3150,6 @@ void TSessionViewer::WriteConfiguration(const char *filename)
          querystring += query->fOptions.Length() > 1 ? query->fOptions.Data() : " ";
          querystring += ";";
          querystring += query->fEventList.Length() > 1 ? query->fEventList.Data() : " ";
-         querystring += ";";
-         querystring += query->fParFile.Length() > 1 ? query->fParFile.Data() : " ";
          querystring += ";";
          querystring += Form("%d",query->fNbFiles);
          querystring += ";";
