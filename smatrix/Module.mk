@@ -43,13 +43,13 @@ INCLUDEFILES += $(SMATRIXDEP)
 ##### local rules #####
 include/Math/%.h: $(SMATRIXDIRI)/%.h
 		@(if [ ! -d "include/Math" ]; then     \
-		   mkdir include/Math;                 \
+		   mkdir -p include/Math;              \
 		fi)
 		cp $< $@
 
 include/Math/%.icc: $(SMATRIXDIRI)/%.icc
 		@(if [ ! -d "include/Math" ]; then     \
-		   mkdir include/Math;                 \
+		   mkdir -p include/Math;              \
 		fi)
 		cp $< $@
 

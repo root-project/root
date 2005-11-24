@@ -82,7 +82,7 @@ INCLUDEFILES += $(MATHMOREDEP)
 ##### local rules #####
 include/Math/%.h: $(MATHMOREDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then     \
-		   mkdir include/Math;                 \
+		   mkdir -p include/Math;              \
 		fi)
 		cp $< $@
 
