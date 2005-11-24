@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RStipples.h,v 1.3 2005/07/14 21:53:21 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RStipples.h,v 1.4 2005/07/15 00:30:58 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -23,7 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#if !defined(GDK_WIN32)
+#if !defined(R__WIN32)
 
 const char gStipples[26][32] = {
    {
@@ -296,5 +296,3 @@ const char gStipples[26][32] = {
 #endif
 
 #endif
-
-

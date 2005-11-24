@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.10 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.11 2005/11/21 11:17:18 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -93,21 +93,7 @@ void TContextMenu::Action(TObject *object, TMethod *method)
       if (method->GetListOfMethodArgs()->First())
          fContextMenuImp->Dialog(object, method);
       else {
-#ifndef WIN32
          Execute(object, method, "");
-#else
-#ifdef GDK_WIN32
-         Execute(object, method, "");
-#else
-         // It is a workaround of the "Dead lock under Windows
-         char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                          "(TMethod *)0x%lx,(TObjArray *)0);",
-                          (Long_t)this,(Long_t)object,(Long_t)method);
-         //Printf("%s", cmd);
-         gROOT->ProcessLine(cmd);
-         //Execute( object, method, (TObjArray *)NULL );
-#endif
-#endif
       }
    }
 

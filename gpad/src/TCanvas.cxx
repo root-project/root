@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.100 2005/11/17 14:43:17 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.101 2005/11/21 17:26:31 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -521,11 +521,6 @@ void TCanvas::Build()
       if (TestBit(kShowToolBar))     fCanvasImp->ShowToolBar(kTRUE);
       if (TestBit(kShowEditor))      fCanvasImp->ShowEditor(kTRUE);
    }
-   
-#if defined(WIN32) && !defined(GDK_WIN32)
-   if (!strcmp(gVirtualX->GetName(), "Win32"))
-      gVirtualX->UpdateWindow(1);
-#endif
 }
 
 
@@ -1692,17 +1687,10 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
 
    // depending of the buffer mode set the drawing window to either
    // the canvas pixmap or to the canvas on-screen window
-#if !defined(WIN32) || defined(GDK_WIN32)
    if (fDoubleBuffer)
       gVirtualX->SelectWindow(fPixmapID);
    else
       gVirtualX->SelectWindow(fCanvasID);
-#else
-   if (fDoubleBuffer && strcmp(gVirtualX->GetName(), "Win32"))
-      gVirtualX->SelectWindow(fPixmapID);
-   else
-      gVirtualX->SelectWindow(fCanvasID);
-#endif
 }
 
 

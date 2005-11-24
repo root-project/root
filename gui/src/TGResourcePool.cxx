@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.5 2005/06/18 09:58:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.6 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -102,7 +102,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    strcpy(framebgpixmap,  gEnv->GetValue("Gui.FrameBackgroundPixmap", ""));
    strcpy(docbgpixmap,    gEnv->GetValue("Gui.DocumentBackgroundPixmap", ""));
 
-#ifndef GDK_WIN32
+#ifndef R__WIN32
 #ifndef R__VMS
 # ifdef ROOTICONPATH
    sprintf(icon_path, "%s/icons:%s:.:",
@@ -141,14 +141,14 @@ TGResourcePool::TGResourcePool(TGClient *client)
       sprintf(mime_file, "%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
 # endif
 #endif
-#else // GDK_WIN32
+#else // R__WIN32
    sprintf(icon_path, "%s\\icons:.:\\", gSystem->Getenv("ROOTSYS"));
    strcat(icon_path, gEnv->GetValue("Gui.IconPath", ""));
    sprintf(line, "%s\\root.mimes", gSystem->Getenv("HOME"));
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
    if (gSystem->AccessPathName(mime_file, kReadPermission))
       sprintf(mime_file, "%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
-#endif // GDK_WIN32
+#endif
 
    // Setup colors...
    fClient->GetColorByName("white", fWhite);  // white and black always exist
@@ -275,7 +275,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    fMimeTypeList  = new TGMimeTypes(fClient, mime_file);
 
    // Clipboard handle...
-#ifndef GDK_WIN32
+#ifndef R__WIN32
    fClipboardAtom = gVirtualX->InternAtom("_ROOT_CLIPBOARD", kFALSE);
 #else
    fClipboardAtom = gVirtualX->InternAtom("CLIPBOARD", kFALSE);

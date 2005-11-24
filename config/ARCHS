@@ -45,5 +45,4 @@ solarisCC5           for Solaris CC 5.0
 solarisgcc           for Solaris gcc
 solariskcc           for Solaris KCC
 win32                for Win32 with VC++ and gdk based GUI
-win32old             for Win32 with VC++ (obsolete version)
 win32gcc             for Win32 with cygwin/gcc

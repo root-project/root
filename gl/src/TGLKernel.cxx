@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.37 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.38 2005/11/24 12:29:12 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -1415,7 +1415,7 @@ void TGLKernel::GLLoadName(UInt_t name)
 void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Double_t * normals,
                             const Float_t * mat, UInt_t size)
 {
-#if defined(GDK_WIN32)
+#if defined(R__WIN32)
    typedef void (CALLBACK * funcptr)();
 #elif defined(R__AIXGCC)
    typedef void (*funcptr)(...);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.212 2005/11/23 11:03:12 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.213 2005/11/23 14:48:02 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2732,7 +2732,6 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       }
       if (style) {
          if (style > 3000 && style < 4000) {
-#if !defined(WIN32) || defined(GDK_WIN32)
             if (style < 3026) {
                // draw stipples with fFillColor foreground
                gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
@@ -2751,9 +2750,6 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
                gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
                gVirtualX->SetFillColor(10);
             }
-#else
-            gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
-#endif
          } else if (style >= 4000 && style <= 4100) {
             // For style >=4000 we make the window transparent.
             // From 4000 to 4100 the window is 100% transparent to 100% opaque
@@ -5377,21 +5373,10 @@ TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
 {
    // Create a tool tip and return its pointer.
 
-#ifndef WIN32
    if (gPad->IsBatch()) return 0;
    // return new TGToolTip(box, text, delayms);
    return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
                                            (Long_t)box,text,(Int_t)delayms));
-#else
-#ifdef GDK_WIN32
-   if (gPad->IsBatch()) return 0;
-   // return new TGToolTip(box, text, delayms);
-   return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%lx,\"%s\",%d)",
-                                           (Long_t)box,text,(Int_t)delayms));
-#else
-   return 0;
-#endif
-#endif
 }
 
 
@@ -5400,16 +5385,9 @@ void TPad::DeleteToolTip(TObject *tip)
 {
    // Delete tool tip object.
 
-#ifndef WIN32
    // delete tip;
    if (!tip) return;
    gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%lx", (Long_t)tip));
-#else
-#ifdef GDK_WIN32
-   if (!tip) return;
-   gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%lx", (Long_t)tip));
-#endif
-#endif
 }
 
 
@@ -5419,19 +5397,10 @@ void TPad::ResetToolTip(TObject *tip)
    // Reset tool tip, i.e. within time specified in CreateToolTip the
    // tool tip will pop up.
 
-#ifndef WIN32
    if (!tip) return;
    // tip->Reset(this);
    gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Reset((TPad*)0x%lx)",
                           (Long_t)tip,(Long_t)this));
-#else
-#ifdef GDK_WIN32
-   if (!tip) return;
-   // tip->Reset(this);
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Reset((TPad*)0x%lx)",
-                          (Long_t)tip,(Long_t)this));
-#endif
-#endif
 }
 
 
@@ -5440,17 +5409,9 @@ void TPad::CloseToolTip(TObject *tip)
 {
    // Hide tool tip.
 
-#ifndef WIN32
    if (!tip) return;
    // tip->Hide();
    gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Hide()",(Long_t)tip));
-#else
-#ifdef GDK_WIN32
-   if (!tip) return;
-   // tip->Hide();
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%lx)->Hide()",(Long_t)tip));
-#endif
-#endif
 }
 
 

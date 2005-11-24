@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.8 2003/10/23 15:27:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.9 2005/01/05 01:28:12 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -77,7 +77,6 @@ TGApplication::TGApplication(const char *appClassName,
    // a GUI application is never run in batch mode
    gROOT->SetBatch(kFALSE);
 
-#if !defined(R__WIN32) || defined(GDK_WIN32)
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 # ifdef TTFFONTDIR
@@ -95,7 +94,6 @@ TGApplication::TGApplication(const char *appClassName,
 
       delete [] ttfont;
    }
-#endif
 
    // Create the canvas colors early so they are allocated before
    // any color table expensive bitmaps get allocated in GUI routines (like
@@ -150,15 +148,9 @@ void TGApplication::LoadGraphicsLibs()
    name    = "X11";
    title   = title1 + "X11";
 #else
-#ifndef GDK_WIN32
-   nativex = "win32";
-   name    = "Win32";
-   title   = title1 + "Win32";
-#else
    nativex = "win32gdk";
    name    = "Win32gdk";
    title   = title1 + "Win32gdk";
-#endif
 #endif
 
    TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));

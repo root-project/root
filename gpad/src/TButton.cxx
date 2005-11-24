@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.9 2005/08/02 16:40:53 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.10 2005/11/21 17:26:31 couet Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -198,24 +198,9 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       //check case where pressing a button deletes itself
       if (!TestBit(kNotDeleted)) return;
-#ifndef WIN32
       SetBorderMode(1);
       Modified();
       Update();
-#else
-#ifndef GDK_WIN32
-      // The following instructions must be executed via the interpreter
-      // Otherwise, we get a Thread problem under WindowsNT
-      gROOT->ProcessLine(Form("((TButton*)0x%lx)->SetBorderMode(1);",(Long_t)this));
-      gROOT->ProcessLine(Form("((TButton*)0x%lx)->Modified();",(Long_t)this));
-      gROOT->ProcessLine(Form("((TButton*)0x%lx)->GetCanvas()->Modified();",(Long_t)this));
-      gROOT->ProcessLine(Form("((TButton*)0x%lx)->Update();",(Long_t)this));
-#else
-      SetBorderMode(1);
-      Modified();
-      Update();
-#endif
-#endif
       SetCursor(kCross);
       break;
    }

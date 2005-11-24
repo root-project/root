@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.69 2005/10/27 10:00:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.70 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -160,7 +160,6 @@ TApplication::TApplication(const char *appClassName,
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-#if !defined(R__WIN32) || defined(GDK_WIN32)
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 # ifdef TTFFONTDIR
@@ -182,7 +181,6 @@ TApplication::TApplication(const char *appClassName,
 #endif
       delete [] ttfont;
    }
-#endif
 
    // Create the canvas colors early so they are allocated before
    // any color table expensive bitmaps get allocated in GUI routines (like
@@ -541,16 +539,9 @@ void TApplication::LoadGraphicsLibs()
    name    = "X11";
    title   = title1 + "X11";
 #else
-#ifndef GDK_WIN32
-   nativex = "win32";
-   nativeg = "win32";
-   name    = "Win32";
-   title   = title1 + "Win32";
-#else
    nativex = "win32gdk";
    name    = "Win32gdk";
    title   = title1 + "Win32gdk";
-#endif
 #endif
 
    TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));

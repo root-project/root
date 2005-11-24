@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.167 2005/11/03 23:03:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.168 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -505,11 +505,6 @@ TROOT::~TROOT()
       // ATTENTION!!! Order is important!
 
 //      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
-#if defined(WIN32) && !defined(GDK_WIN32)
-      // Under Windows, one has to restore the color palettes created
-      // by individual canvases
-      fCanvases->Delete();    SafeDelete(fCanvases);    // first close canvases
-#endif
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets

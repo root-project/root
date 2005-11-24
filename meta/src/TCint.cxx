@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.111 2005/11/07 12:17:53 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.112 2005/11/16 20:10:45 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 #include "TError.h"
 #include "TEnv.h"
 
-#ifdef WIN32
+#ifdef R__WIN32
 #  ifndef ROOT_TGWin32Command
 #    include "TGWin32Command.h"
 #    undef GetClassInfo
@@ -116,7 +116,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
 
    ResetAll();
 
-#ifndef WIN32
+#ifndef R__WIN32
    optind = 1;  // make sure getopt() works in the main program
 #endif
 
@@ -190,22 +190,7 @@ void TCint::ExecThreadCB(TWin32SendClass *command)
 {
    // This function must be called from the "Command thread only".
 
-#ifdef WIN32
-#ifndef GDK_WIN32
-   char *line = (char *)(command->GetData(0));
-   EErrorCode *error = (EErrorCode*)(command->GetData(1));
-   Int_t iret = ProcessLine((const char *)line,error);
-   delete [] line;
-   if (LOWORD(command->GetCOP()) == kSendWaitClass)
-      ((TWin32SendWaitClass *)command)->Release();
-   else
-      delete command;
-#else
    if (command) { }
-#endif
-#else
-   if (command) { }
-#endif
 }
 
 //______________________________________________________________________________
@@ -328,20 +313,7 @@ Long_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line asynch.
 
-#ifndef WIN32
    return ProcessLine(line, error);
-#else
-#ifndef GDK_WIN32
-   if (error) *error = kProcessing;
-   char *cmd = new char[strlen(line)+1];
-   strcpy(cmd,line);
-   TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,(UInt_t)error,0,0);
-   ExecCommandThread(code,kFALSE);
-   return 0;
-#else
-   return ProcessLine(line, error);
-#endif
-#endif
 }
 
 //______________________________________________________________________________
@@ -352,16 +324,6 @@ Long_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
 
    if (gApplication && gApplication->IsCmdThread())
       return ProcessLine(line, error);
-#ifdef WIN32
-#ifndef GDK_WIN32
-   if (error) *error = kProcessing;
-   char *cmd = new char[strlen(line)+1];
-   strcpy(cmd,line);
-   TWin32SendWaitClass code(this,(UInt_t)cmd,(UInt_t)error,0,0);
-   ExecCommandThread(&code,kFALSE);
-   code.Wait();
-#endif
-#endif
    return 0;
 }
 
@@ -373,7 +335,7 @@ Long_t TCint::Calc(const char *line, EErrorCode *error)
 
    Long_t result;
 
-#ifdef WIN32
+#ifdef R__WIN32
    // Test on ApplicationImp not being 0 is needed because only at end of
    // TApplication ctor the IsLineProcessing flag is set to 0, so before
    // we can not use it.
@@ -389,7 +351,7 @@ Long_t TCint::Calc(const char *line, EErrorCode *error)
    result = (Long_t) G__int_cast(G__calc((char *)line));
    if (error) *error = (EErrorCode)G__lasterror();
 
-#ifdef WIN32
+#ifdef R__WIN32
    if (gApplication && gApplication->GetApplicationImp())
       gROOT->SetLineHasBeenProcessed();
 #endif

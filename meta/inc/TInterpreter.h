@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.22 2005/01/18 21:04:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.23 2005/11/16 20:09:16 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -38,11 +38,7 @@ class TMethod;
 class TObjArray;
 
 
-class TInterpreter :
-#if defined(WIN32) && !defined(GDK_WIN32)
-   protected TWin32HookViaThread,
-#endif
-   public TNamed {
+class TInterpreter : public TNamed {
 
 protected:
    virtual void Execute(TMethod *method, TObjArray *params, int *error = 0) = 0;

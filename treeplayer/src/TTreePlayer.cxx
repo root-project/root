@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.203 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.204 2005/11/14 15:17:34 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3159,7 +3159,6 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
       return;
    }
 
-#if !defined(R__WIN32) || defined(GDK_WIN32)
    if (ww || wh) { }   // use unused variables
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer"))) {
@@ -3167,11 +3166,6 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
          return;
       h->ExecPlugin(1,fTree);
    }
-#else
-   //hoping to replace these two lines soon by the general case
-   gROOT->LoadClass("TTreeViewer","TreeViewer");
-   gROOT->ProcessLine(Form("new TTreeViewer(\"%s\",\"TreeViewer\",%d,%d);",fTree->GetName(),ww,wh));
-#endif
 }
 
 //______________________________________________________________________________
