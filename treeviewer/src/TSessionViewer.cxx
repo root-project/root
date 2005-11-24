@@ -57,14 +57,11 @@
 #include "TG3DLine.h"
 #include "TSessionDialogs.h"
 #include "TEnv.h"
-#include "TH1.h"
 #include "TH2.h"
 #include "TEnv.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
-
-#include "TSlave.h"
 
 TSessionViewer *gSessionViewer = 0;
 
