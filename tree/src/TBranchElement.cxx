@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.184 2005/10/24 18:18:16 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.185 2005/11/11 22:16:04 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2114,7 +2114,8 @@ void TBranchElement::InitializeOffsets()
                      if (info) {
                         // If all the condition above are fullfilled we have already
                         // compensated for the missing branch.
-                        fParentOffset=0;
+                        Int_t ind = parent->GetListOfBranches()->IndexOf(this);
+                        fParentOffset -= parent->fBranchOffset[ind];
                      }
                   }
                }
@@ -2467,6 +2468,9 @@ void TBranchElement::SetAddress(void *add)
       return;
    }
    if (nbranches == 0) {
+      if (fAddress==fObject) {
+         fAddress += fParentOffset;
+      }
       fObject += fParentOffset;
       return;
    }
