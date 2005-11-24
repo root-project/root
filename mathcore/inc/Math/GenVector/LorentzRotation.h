@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.3 2005/10/28 16:05:35 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.4 2005/11/16 19:30:47 marafino Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.3 2005/10/28 16:05:35 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.4 2005/11/16 19:30:47 marafino Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -29,10 +29,10 @@
 #include "Math/GenVector/RotationXfwd.h"
 #include "Math/GenVector/RotationYfwd.h"
 #include "Math/GenVector/RotationZfwd.h"
-#include "Math/GenVector/Boostfwd.h"
-#include "Math/GenVector/BoostXfwd.h"
-#include "Math/GenVector/BoostYfwd.h"
-#include "Math/GenVector/BoostZfwd.h"
+#include "Math/GenVector/Boost.h"
+#include "Math/GenVector/BoostX.h"
+#include "Math/GenVector/BoostY.h"
+#include "Math/GenVector/BoostZ.h"
 
 namespace ROOT {
 
@@ -81,11 +81,15 @@ public:
      Construct from a pure boost 
   */
 
-  explicit LorentzRotation( Boost  const &  ) {} // TODO
-  explicit LorentzRotation( BoostX const &  ) {} // TODO
-  explicit LorentzRotation( BoostY const &  ) {} // TODO
-  explicit LorentzRotation( BoostZ const &  ) {} // TODO
+//explicit LorentzRotation( Boost  const &  ) {} // TODO
+//explicit LorentzRotation( BoostX const &  ) {} // TODO
+//explicit LorentzRotation( BoostY const &  ) {} // TODO
+//explicit LorentzRotation( BoostZ const &  ) {} // TODO
 
+  explicit LorentzRotation( Boost  const & b  ) {  b.GetLorentzRotation( fM+0 ); } 
+  explicit LorentzRotation( BoostX const & bx ) { bx.GetLorentzRotation( fM+0 ); }
+  explicit LorentzRotation( BoostY const & by ) { by.GetLorentzRotation( fM+0 ); }
+  explicit LorentzRotation( BoostZ const & bz ) { bz.GetLorentzRotation( fM+0 ); }
 
   /**
      Construct from a 3-D rotation (no space-time mixing)
@@ -228,7 +232,7 @@ public:
   template<class IT>
   void SetComponents(IT begin, IT end) {
     assert (end==begin+16);
-    std::copy ( begin, end, fM );
+    std::copy ( begin, end, fM+0 );
   }
 
   /**
@@ -238,7 +242,7 @@ public:
   template<class IT>
   void GetComponents(IT begin, IT end) const {
     assert (end==begin+16);
-    std::copy ( fM, fM+16, begin );
+    std::copy ( fM+0, fM+16, begin );
   }
 
   /**

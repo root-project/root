@@ -31,6 +31,10 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/RotationY.h \
                  $(MODDIRI)/Math/RotationZ.h \
                  $(MODDIRI)/Math/LorentzRotation.h \
+                 $(MODDIRI)/Math/Boost.h    \
+                 $(MODDIRI)/Math/BoostX.h    \
+                 $(MODDIRI)/Math/BoostY.h    \
+                 $(MODDIRI)/Math/BoostZ.h    \
                  $(MODDIRI)/Math/EulerAngles.h \
                  $(MODDIRI)/Math/AxisAngle.h \
                  $(MODDIRI)/Math/Quaternion.h \

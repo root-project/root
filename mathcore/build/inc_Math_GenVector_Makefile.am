@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: inc_Math_GenVector_Makefile.am,v 1.1 2005/09/20 13:52:26 brun Exp $
+# @(#)root/mathcore:$Name:  $:$Id: inc_Math_GenVector_Makefile.am,v 1.2 2005/10/28 16:52:35 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -17,6 +17,10 @@ math_genvector_HEADERS =               \
          AxisAngle.h                   \
          AxisAnglefwd.h                \
          BitReproducible.h             \
+         Boost.h                       \
+         BoostX.h                      \
+         BoostY.h                      \
+         BoostZ.h                      \
          Boostfwd.h                    \
          BoostXfwd.h                   \
          BoostYfwd.h                   \

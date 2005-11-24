@@ -1,0 +1,111 @@
+// @(#)root/mathcore:$Name:  $:$Id: BoostY.cpp,v 1.1 2005/11/16 19:30:47 marafino Exp $
+// Authors:  M. Fischler  2005  
+
+ /**********************************************************************
+  *                                                                    *
+  * Copyright (c) 2005 , LCG ROOT FNAL MathLib Team                    *
+  *                                                                    *
+  *                                                                    *
+  **********************************************************************/
+
+// Header file for class BoostY, a 4x4 symmetric matrix representation of
+// an axial Lorentz transformation
+//
+// Created by: Mark Fischler Mon Nov 1  2005
+//
+#include "Math/GenVector/BoostY.h"
+#include "Math/GenVector/LorentzVector.h"
+#include "Math/GenVector/PxPyPzE4D.h"
+#include "Math/GenVector/DisplacementVector3D.h"
+#include "Math/GenVector/Cartesian3D.h"
+#include "Math/GenVector/GenVector_exception.h"
+
+#include <cmath>
+#include <algorithm>
+
+namespace ROOT {
+
+  namespace Math {
+
+BoostY::BoostY() : fBeta(0.0), fGamma(1.0) {}
+
+void
+BoostY::SetComponents (Scalar by) {
+  Scalar bp2 = by*by;
+  if (bp2 >= 1) {
+    GenVector_exception e ( 
+      "Beta Vector supplied to set BoostY represents speed >= c");
+    Throw(e);
+    return;
+  }    
+  fBeta = by;
+  fGamma = 1.0 / std::sqrt(1.0-bp2);
+}
+
+void
+BoostY::GetComponents (Scalar& by) const {
+  by = fBeta;
+}
+
+DisplacementVector3D< Cartesian3D<BoostY::Scalar> >
+BoostY::BetaVector() const {
+  return DisplacementVector3D< Cartesian3D<Scalar> > ( 0.0, fBeta, 0.0 );
+}
+
+void 
+BoostY::GetLorentzRotation (Scalar r[]) const {
+  r[LXX] = 0.0;  r[LXY] = 0.0;           r[LXZ] = 0.0;  r[LXT] = 0.0;  
+  r[LYX] = 0.0;  r[LYY] = fGamma;        r[LYZ] = 0.0;  r[LYT] = fGamma*fBeta; 
+  r[LZX] = 0.0;  r[LZY] = 0.0;           r[LZZ] = 0.0;  r[LZT] = 0.0;  
+  r[LTX] = 0.0;  r[LTY] = fGamma*fBeta;  r[LTZ] = 0.0;  r[LTT] = fGamma;  
+}
+
+void 
+BoostY::
+Rectify() {
+  // Assuming the representation of this is close to a true Lorentz Rotation,
+  // but may have drifted due to round-off error from many operations,
+  // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
+  // again.
+
+  if (fGamma <= 0) {	
+    GenVector_exception e ( 
+      "Attempt to rectify a boost with non-positive gamma");
+    Throw(e);
+    return;
+  }    
+  Scalar beta = fBeta;
+  if ( beta >= 1 ) {			    
+    beta /= ( beta * ( 1.0 + 1.0e-16 ) );  
+  }
+  SetComponents ( beta );
+}
+
+LorentzVector< PxPyPzE4D<double> >
+BoostY::
+operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
+  Scalar y = v.Py();
+  Scalar t = v.E();
+  return LorentzVector< PxPyPzE4D<double> > 
+    (  0.0
+    , fGamma*y       + fGamma*fBeta*t
+    ,  0.0
+    , fGamma*fBeta*y + fGamma*t );
+}
+
+void 
+BoostY::
+Invert() {
+  fBeta = -fBeta;
+}
+
+BoostY
+BoostY::
+Inverse() const {
+  BoostY I(*this);
+  I.Invert();
+  return I; 
+}
+
+} //namespace Math
+} //namespace ROOT
