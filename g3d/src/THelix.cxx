@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.10 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.11 2005/08/30 09:11:39 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -60,7 +60,7 @@
 //
 // will initializes a helix with its axis in Z direction (rtype=kHelixZ).
 // range[0] = 0 and range[1] = 1
-//______________________________________________________________________________
+
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -72,6 +72,7 @@ Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D
 
 ClassImp(THelix)
 
+
 //______________________________________________________________________________
 void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
                        Double_t *range, EHelixRangeType rType,
@@ -79,14 +80,10 @@ void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
 {
    // Set all helix parameters.
 
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    // Define the helix frame by setting the helix axis and rotation matrix
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    SetAxis(axis);
 
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    // Calculate initial position and velocity in helix frame
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    fW    = w;
    Double_t * m = fRotMat->GetMatrix();
    Double_t vx0, vy0, vz0;
@@ -104,9 +101,7 @@ void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
       fY0 -= fVt / fW * TMath::Cos(fPhi0);
    }
 
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    // Then calculate the range in t and set the polyline representation
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    Double_t r1 = 0;
    Double_t r2 = 1;
    if (range) {r1 = range[0]; r2 = range[1];}
@@ -114,15 +109,8 @@ void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
       fRange[0] = 0.0;   fRange[1] = TMath::Pi();   // initialize to half round
       SetRange(r1,r2,rType);
    }
-
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-   // Calculate real (x0,y0,z0)
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-   //Double_t x0 = fX0 - fVt/fW * TMath::Sin(fPhi0);
-   //Double_t y0 = fY0 + fVt/fW * TMath::Cos(fPhi0);
-   //Double_t z0 = fZ0;
-
 }
+
 
 //______________________________________________________________________________
 THelix::THelix()
@@ -136,6 +124,7 @@ THelix::THelix()
    fRange[1] = 1.0;
    fRotMat   = 0;
 }
+
 
 //______________________________________________________________________________
 THelix::THelix(Double_t x,  Double_t y,  Double_t z,
@@ -183,9 +172,10 @@ THelix::THelix(Double_t * p, Double_t * v, Double_t w,
    fOption = "";
 }
 
+
 #if 0
 //______________________________________________________________________________
- THelix::THelix(const THelix &h) : TPolyLine3D()
+THelix::THelix(const THelix &h) : TPolyLine3D()
 {
    // Helix copy constructor.
 
@@ -205,6 +195,7 @@ THelix::THelix(Double_t * p, Double_t * v, Double_t w,
 }
 #endif
 
+
 //______________________________________________________________________________
 THelix::~THelix()
 {
@@ -217,6 +208,8 @@ THelix::~THelix()
 //______________________________________________________________________________
 THelix::THelix(const THelix &helix) : TPolyLine3D(helix)
 {
+   // Helix copy constructor.
+
    fRotMat=0;
    ((THelix&)helix).THelix::Copy(*this);
 }
@@ -255,6 +248,7 @@ void THelix::Copy(TObject &obj) const
    ((THelix&)obj).SetRange(fRange[0], fRange[1], kHelixT);
 }
 
+
 //______________________________________________________________________________
 void THelix::Draw(Option_t *option)
 {
@@ -263,6 +257,7 @@ void THelix::Draw(Option_t *option)
    AppendPad(option);
 }
 
+
 //______________________________________________________________________________
 void THelix::Print(Option_t *option) const
 {
@@ -270,6 +265,7 @@ void THelix::Print(Option_t *option) const
 
    cout <<"    THelix Printing N=" <<fN<<" Option="<<option<<endl;
 }
+
 
 //______________________________________________________________________________
 void THelix::SavePrimitive(ofstream &out, Option_t *)
@@ -294,6 +290,7 @@ void THelix::SavePrimitive(ofstream &out, Option_t *)
    out<<"   helix->Draw();"<<endl;
 }
 
+
 //______________________________________________________________________________
 void THelix::SetAxis(Double_t * axis)
 {
@@ -314,20 +311,16 @@ void THelix::SetAxis(Double_t * axis)
       fAxis[2] = 1;
    }
 
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    // Construct the rotational matrix from the axis
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    SetRotMatrix();
-
-// Double_t * M = fRotMat->GetMatrix();
-// printf(" matrix:  %lf   %lf   %lf\n", M[0], M[1], M[2]);
-// printf("          %lf   %lf   %lf\n", M[3], M[4], M[5]);
-// printf("          %lf   %lf   %lf\n", M[6], M[7], M[8]);
 }
+
 
 //______________________________________________________________________________
 void THelix::SetAxis(Double_t x, Double_t y, Double_t z)
 {
+   // Set axis.
+
    Double_t axis[3];    axis[0] = x;    axis[1] = y;    axis[2] = z;
    SetAxis(axis);
 }
@@ -336,8 +329,7 @@ void THelix::SetAxis(Double_t x, Double_t y, Double_t z)
 //______________________________________________________________________________
 void THelix::SetRange(Double_t * range, EHelixRangeType rType)
 {
-   // set a new range for the helix.  This will remake the polyline.
-   //
+   // Set a new range for the helix.  This will remake the polyline.
 
    Double_t a[2];
    Double_t halfpi = TMath::Pi()/2.0;
@@ -487,12 +479,9 @@ void THelix::SetRange(Double_t * range, EHelixRangeType rType)
       Double_t temp = fRange[1];   fRange[1] = fRange[0];  fRange[0] = temp;
    }
 
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    // Set the polylines in global coordinates
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    Double_t degrad  = TMath::Pi() / 180.0;
    Double_t segment = 5.0 * degrad;             // 5 degree segments
-// Double_t dt      = segment / fW;             // parameter span on each segm.
    Double_t dt      = segment / TMath::Abs(fW); // parameter span on each segm.
 
    Int_t    nSeg    = Int_t((fRange[1]-fRange[0]) / dt) + 1;
@@ -504,8 +493,6 @@ void THelix::SetRange(Double_t * range, EHelixRangeType rType)
    Double_t * xl    = new Double_t[nSeg+1];     // polyline in local coordinates
    Double_t * yl    = new Double_t[nSeg+1];
    Double_t * zl    = new Double_t[nSeg+1];
-
-  // printf("use %d points in %lf <= t <= %lf\n", nSeg+1, fRange[0], fRange[1]);
 
    for (i=0; i<=nSeg; i++) {                    // calculate xl[], yl[], zl[];
       Double_t t, phase;
@@ -531,32 +518,32 @@ void THelix::SetRange(Double_t * range, EHelixRangeType rType)
    delete[] xl;  delete[] yl;    delete[] zl;
 }
 
+
 //______________________________________________________________________________
 void THelix::SetRange(Double_t r1, Double_t r2, EHelixRangeType rType)
 {
+   // Set range.
+
    Double_t range[2];
    range[0] = r1;       range[1] = r2;
    SetRange(range, rType);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//                                                                          //
-//                  Protected     Member     Functions                      //
-//                                                                          //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                   Protected     Member     Functions                       //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 
 //______________________________________________________________________________
 void THelix::SetRotMatrix()
 {
-   // set the rotational matrix according to the helix axis
-   //
+   // Set the rotational matrix according to the helix axis.
 
-   //
    // Calculate all 6 angles.
    // Note that TRotMatrix::TRotMatrix() expects angles in degrees.
-   //
    Double_t raddeg = 180.0 / TMath::Pi();
    Double_t halfpi = TMath::Pi()/2.0 * raddeg;
                                  // (theta3,phi3) is the helix axis
@@ -569,24 +556,20 @@ void THelix::SetRotMatrix()
    Double_t theta2 = halfpi;
    Double_t phi2   = phi1 + halfpi;
 
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    // Delete the old rotation matrix
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    if (fRotMat) delete fRotMat;
 
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    // Make a new rotation matrix
-   //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
    fRotMat = new TRotMatrix("HelixRotMat", "Master frame -> Helix frame",
                             theta1, phi1,  theta2, phi2,  theta3, phi3 );
    return;
 }
 
+
 //______________________________________________________________________________
 Double_t  THelix::FindClosestPhase(Double_t phi0,  Double_t cosine)
 {
    // Finds the closest phase to phi0 that gives cos(phase) = cosine
-   //
 
    const Double_t pi    = TMath::Pi();
    const Double_t twopi = TMath::Pi() * 2.0;
@@ -598,13 +581,13 @@ Double_t  THelix::FindClosestPhase(Double_t phi0,  Double_t cosine)
 
    while ( phi2 - phi0 >  pi )   phi2 -= twopi;
    while ( phi2 - phi0 < -pi )   phi2 += twopi;
-   //
+
    // Now phi1, phi2 and phi0 are within the same 2pi range
    // and cos(phi1) = cos(phi2) = cosine
-   //
    if ( TMath::Abs(phi1-phi0) < TMath::Abs(phi2-phi0) )  return phi1;
    else                                                  return phi2;
 }
+
 
 //______________________________________________________________________________
 void THelix::Streamer(TBuffer &R__b)

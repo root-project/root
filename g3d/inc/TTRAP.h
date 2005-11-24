@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRAP.h,v 1.3 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRAP.h,v 1.4 2005/03/09 18:19:25 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -33,35 +33,35 @@
 #endif
 
 class TTRAP : public TBRIK {
+protected:
+   Float_t fH1;        // half length in y at low z
+   Float_t fBl1;       // half length in x at low z and y low edge
+   Float_t fTl1;       // half length in x at low z and y high edge
+   Float_t fAlpha1;    // angle w.r.t. the y axis
+   Float_t fH2;        // half length in y at high z
+   Float_t fBl2;       // half length in x at high z and y low edge
+   Float_t fTl2;       // half length in x at high z and y high edge
+   Float_t fAlpha2;    // angle w.r.t. the y axis
 
-    protected:
-        Float_t fH1;        // half length in y at low z
-        Float_t fBl1;       // half length in x at low z and y low edge
-        Float_t fTl1;       // half length in x at low z and y high edge
-        Float_t fAlpha1;    // angle w.r.t. the y axis
-        Float_t fH2;        // half length in y at high z
-        Float_t fBl2;       // half length in x at high z and y low edge
-        Float_t fTl2;       // half length in x at high z and y high edge
-        Float_t fAlpha2;    // angle w.r.t. the y axis
+   virtual void     SetPoints(Double_t *points) const;
 
-        virtual void     SetPoints(Double_t *points) const;
-    public:
-        TTRAP();
-        TTRAP(const char *name, const char *title, const char *material, Float_t dz, Float_t theta, Float_t phi, Float_t h1,
-              Float_t bl1, Float_t tl1, Float_t alpha1, Float_t h2, Float_t bl2, Float_t tl2,
-              Float_t alpha2);
-        virtual ~TTRAP();
+public:
+   TTRAP();
+   TTRAP(const char *name, const char *title, const char *material, Float_t dz, Float_t theta, Float_t phi, Float_t h1,
+         Float_t bl1, Float_t tl1, Float_t alpha1, Float_t h2, Float_t bl2, Float_t tl2,
+         Float_t alpha2);
+   virtual ~TTRAP();
 
-        virtual Float_t  GetH1() const     {return fH1;}
-        virtual Float_t  GetBl1() const    {return fBl1;}
-        virtual Float_t  GetTl1() const    {return fTl1;}
-        virtual Float_t  GetAlpha1() const {return fAlpha1;}
-        virtual Float_t  GetH2() const     {return fH2;}
-        virtual Float_t  GetBl2() const    {return fBl2;}
-        virtual Float_t  GetTl2() const    {return fTl2;}
-        virtual Float_t  GetAlpha2() const {return fAlpha2;}
+   virtual Float_t  GetH1() const     {return fH1;}
+   virtual Float_t  GetBl1() const    {return fBl1;}
+   virtual Float_t  GetTl1() const    {return fTl1;}
+   virtual Float_t  GetAlpha1() const {return fAlpha1;}
+   virtual Float_t  GetH2() const     {return fH2;}
+   virtual Float_t  GetBl2() const    {return fBl2;}
+   virtual Float_t  GetTl2() const    {return fTl2;}
+   virtual Float_t  GetAlpha2() const {return fAlpha2;}
 
-        ClassDef(TTRAP,1)  //TRAP shape
+   ClassDef(TTRAP,1)  //TRAP shape
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPGON.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPGON.cxx,v 1.2 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -34,17 +34,10 @@ ClassImp(TPGON)
 //     - z          array of dimension nz with z position of given plane
 
 
-
-
-
-
 //______________________________________________________________________________
 TPGON::TPGON ()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*PGON shape default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============================
-
-
+   // PGON shape default constructor.
 }
 
 
@@ -53,31 +46,31 @@ TPGON::TPGON (const char *name, const char *title, const char *material, Float_t
               Float_t dphi1, Int_t npdv, Int_t nz)
      : TPCON (name, title,material, phi1, dphi1, nz)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*PGON shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-//*-*  Parameters of the nz positions must be entered via TPCON::DefineSection.
+   // PGON shape normal constructor.
+   //
+   //  Parameters of the nz positions must be entered via TPCON::DefineSection.
 
-    SetNumberOfDivisions (npdv);
+   SetNumberOfDivisions (npdv);
 }
 
 
 //______________________________________________________________________________
 TPGON::~TPGON ()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*PGON shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // PGON shape default destructor.
 }
+
 
 //______________________________________________________________________________
 void TPGON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 {
- // Fill the table of cos and sin to prepare drawing
-  Double_t factor = 1./TMath::Cos(angstep/2);
-  Double_t ph = phi-angstep;
-  for (Int_t j = 0; j < n; j++)
-  {
-    ph += angstep;
-    fCoTab[j] = factor*TMath::Cos(ph);
-    fSiTab[j] = factor*TMath::Sin(ph);
-  }
+   // Fill the table of cos and sin to prepare drawing
+
+   Double_t factor = 1./TMath::Cos(angstep/2);
+   Double_t ph = phi-angstep;
+   for (Int_t j = 0; j < n; j++) {
+      ph += angstep;
+      fCoTab[j] = factor*TMath::Cos(ph);
+      fSiTab[j] = factor*TMath::Sin(ph);
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.6 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.7 2005/03/09 18:19:25 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -28,52 +28,51 @@
 // const Int_t kDiv = 30;               //default number of z segments for semi-sphere
 
 class TSPHE : public TShape {
+private:
+   // Internal cache
+   mutable Double_t  *fSiTab;       //! Table of sin(fPhimin) .... sin(Phi)
+   mutable Double_t  *fCoTab;       //! Table of cos(fPhimin) .... cos(Phi)
+   mutable Double_t  *fCoThetaTab;  //! Table of sin(gThemin) .... cos(Theta)
+   Int_t      fNdiv;        // number of divisions
+   Int_t      fNz;          //! number of sections
+   Float_t    fAspectRatio; // Relation between asumth and grid size (by default 1.0)
 
-    private:
-       // Internal cache
-       mutable Double_t  *fSiTab;       //! Table of sin(fPhimin) .... sin(Phi)
-       mutable Double_t  *fCoTab;       //! Table of cos(fPhimin) .... cos(Phi)
-       mutable Double_t  *fCoThetaTab;  //! Table of sin(gThemin) .... cos(Theta)
-       Int_t      fNdiv;        // number of divisions
-       Int_t      fNz;          //! number of sections
-       Float_t    fAspectRatio; // Relation between asumth and grid size (by default 1.0)
-
-
-    protected:
-        Float_t fRmin;    // minimum radius
-        Float_t fRmax;    // maximum radius
-        Float_t fThemin;  // minimum theta
-        Float_t fThemax;  // maximum theta
-        Float_t fPhimin;  // minimum phi
-        Float_t fPhimax;  // maximum phi
-        Float_t faX;      // Coeff along Ox
-        Float_t faY;      // Coeff along Oy
-        Float_t faZ;      // Coeff along Oz
+protected:
+   Float_t fRmin;    // minimum radius
+   Float_t fRmax;    // maximum radius
+   Float_t fThemin;  // minimum theta
+   Float_t fThemax;  // maximum theta
+   Float_t fPhimin;  // minimum phi
+   Float_t fPhimax;  // maximum phi
+   Float_t faX;      // Coeff along Ox
+   Float_t faY;      // Coeff along Oy
+   Float_t faZ;      // Coeff along Oz
         
-        virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
-        virtual void    SetPoints(Double_t *points) const;
-    public:
-        TSPHE();
-        TSPHE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t themin,
-              Float_t themax, Float_t phimin, Float_t phimax);
-        TSPHE(const char *name, const char *title, const char *material, Float_t rmax);
-        virtual ~TSPHE();
-        virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-        virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
-        virtual Float_t GetRmin() const {return fRmin;}
-        virtual Float_t GetRmax() const {return fRmax;}
-        virtual Float_t GetThemin() const {return fThemin;}
-        virtual Float_t GetThemax() const {return fThemax;}
-        virtual Float_t GetPhimin() const {return fPhimin;}
-        virtual Float_t GetPhimax() const {return fPhimax;}
-        virtual Float_t GetAspectRatio() const { return fAspectRatio;}
-        virtual Int_t   GetNumberOfDivisions () const {return fNdiv;}
-        virtual void    SetAspectRatio(Float_t factor=1.0){ fAspectRatio = factor; MakeTableOfCoSin();}
-        virtual void    SetEllipse(const Float_t *factors);
-        virtual void    SetNumberOfDivisions (Int_t p);
-        virtual void    Sizeof3D() const;
+   virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
+   virtual void    SetPoints(Double_t *points) const;
 
-        ClassDef(TSPHE,3)  //SPHE shape
+public:
+   TSPHE();
+   TSPHE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t themin,
+         Float_t themax, Float_t phimin, Float_t phimax);
+   TSPHE(const char *name, const char *title, const char *material, Float_t rmax);
+   virtual ~TSPHE();
+   virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
+   virtual Float_t GetRmin() const {return fRmin;}
+   virtual Float_t GetRmax() const {return fRmax;}
+   virtual Float_t GetThemin() const {return fThemin;}
+   virtual Float_t GetThemax() const {return fThemax;}
+   virtual Float_t GetPhimin() const {return fPhimin;}
+   virtual Float_t GetPhimax() const {return fPhimax;}
+   virtual Float_t GetAspectRatio() const { return fAspectRatio;}
+   virtual Int_t   GetNumberOfDivisions () const {return fNdiv;}
+   virtual void    SetAspectRatio(Float_t factor=1.0){ fAspectRatio = factor; MakeTableOfCoSin();}
+   virtual void    SetEllipse(const Float_t *factors);
+   virtual void    SetNumberOfDivisions (Int_t p);
+   virtual void    Sizeof3D() const;
+
+   ClassDef(TSPHE,3)  //SPHE shape
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.5 2005/03/09 18:19:25 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.6 2005/03/11 11:44:25 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -52,22 +52,24 @@ protected:
    TMaterial      *fMaterial;    //Pointer to material
    
    virtual void    FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const;
-           Int_t   GetBasicColor() const;
+   Int_t           GetBasicColor() const;
 
    Int_t           ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py);
+
 public:
-                   TShape();
-                   TShape(const char *name, const char *title, const char *material);
+   TShape();
+   TShape(const char *name, const char *title, const char *material);
    virtual         ~TShape();
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
-   TMaterial       *GetMaterial()  const {return fMaterial;}
+
+   virtual const   TBuffer3D &GetBuffer3D(Int_t reqSections) const;
+   TMaterial      *GetMaterial()  const {return fMaterial;}
    virtual Int_t   GetNumber()     const {return fNumber;}
-           Int_t   GetVisibility() const {return fVisibility;}
+   Int_t           GetVisibility() const {return fVisibility;}
    virtual void    Paint(Option_t *option="");
    virtual void    SetName(const char *name);
    virtual void    SetPoints(Double_t *points) const ;
    virtual void    SetVisibility(Int_t vis) {fVisibility = vis;} // *MENU*
-           void    TransformPoints(Double_t *points, UInt_t NbPnts) const;
+   void            TransformPoints(Double_t *points, UInt_t NbPnts) const;
 
    ClassDef(TShape,2)  //Basic shape
 };
@@ -77,4 +79,3 @@ R__EXTERN TNode *gNode;
 inline void TShape::SetName(const char *) { }
 
 #endif
-

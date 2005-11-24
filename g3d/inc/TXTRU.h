@@ -1,8 +1,8 @@
-//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.6 2004/08/03 16:01:17 brun Exp $
+//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.7 2005/03/09 18:19:25 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 ////////////////////////////////////////////////////////////////////////////
-// $Id: TXTRU.h,v 1.6 2004/08/03 16:01:17 brun Exp $
+// $Id: TXTRU.h,v 1.7 2005/03/09 18:19:25 brun Exp $
 //
 // TXTRU
 //
@@ -22,7 +22,7 @@
 #endif
 
 class TXTRU : public TShape {
- public:
+public:
    TXTRU();
    TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
          Int_t nyx, Int_t nz);
@@ -35,7 +35,7 @@ class TXTRU : public TShape {
                                   Float_t x0=0., Float_t y0=0.);
    virtual void     DefineVertex(Int_t pointNum, Float_t x, Float_t y);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual const TBuffer3D &GetBuffer3D(Int_t) const;
+   virtual const    TBuffer3D &GetBuffer3D(Int_t) const;
    virtual Int_t    GetNxy() const { return fNxy; }
    virtual Int_t    GetNz() const { return fNz; }
    virtual Float_t  GetOutlinePointX(Int_t pointNum) const;
@@ -52,13 +52,12 @@ class TXTRU : public TShape {
    virtual Float_t *GetY0() const {return fY0; }
    virtual void     Print(Option_t *option="") const;
    virtual void     Sizeof3D() const;
-           void     SplitConcavePolygon(Bool_t split = kTRUE);
+   void             SplitConcavePolygon(Bool_t split = kTRUE);
    virtual void     TruncateNxy(Int_t npts);
    virtual void     TruncateNz(Int_t npts);
 
- protected:
-
-           void    CheckOrdering();
+protected:
+   void            CheckOrdering();
    virtual void    SetPoints(Double_t *points) const;
 
    Int_t       fNxy;       // number of x-y points in the cross section
@@ -87,8 +86,7 @@ class TXTRU : public TShape {
    // in wire mode; if not split....the converse.
    Bool_t      fSplitConcave;
 
- private:
-
+private:
    void DumpPoints(int npoints, float *pointbuff) const;
    void DumpSegments(int nsegments, int *segbuff) const;
    void DumpPolygons(int npolygons, int *polybuff, int buffsize) const;

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.16 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.17 2005/10/12 14:55:09 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -137,7 +137,9 @@ Int_t TSPHE::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TSPHE::SetEllipse(const Float_t *factors){
+void TSPHE::SetEllipse(const Float_t *factors)
+{
+   // Set ellipse.
 
    if (factors[0] > 0) faX = factors[0];
    if (factors[1] > 0) faY = factors[1];
@@ -148,10 +150,12 @@ void TSPHE::SetEllipse(const Float_t *factors){
 //______________________________________________________________________________
 void TSPHE::SetNumberOfDivisions (Int_t p)
 {
-    if (GetNumberOfDivisions () == p) return;
-    fNdiv=p;
-    fNz = Int_t(fAspectRatio*fNdiv*(fThemax - fThemin )/(fPhimax - fPhimin )) + 1;
-    MakeTableOfCoSin();
+   // Set number of divisions.
+
+   if (GetNumberOfDivisions () == p) return;
+   fNdiv=p;
+   fNz = Int_t(fAspectRatio*fNdiv*(fThemax - fThemin )/(fPhimax - fPhimin )) + 1;
+   MakeTableOfCoSin();
 }
 
 
@@ -212,61 +216,63 @@ void TSPHE::Sizeof3D() const
 //______________________________________________________________________________
 void TSPHE::MakeTableOfCoSin() const
 {
-    const Double_t pi  = TMath::ATan(1) * 4.0;
-    const Double_t ragrad  = pi/180.0;
+   // Make table of sine and cosine.
 
-    Float_t dphi = fPhimax - fPhimin;
-    while (dphi > 360) dphi -= 360;
+   const Double_t pi  = TMath::ATan(1) * 4.0;
+   const Double_t ragrad  = pi/180.0;
 
-    Float_t dtet = fThemax - fThemin;
-    while (dtet > 180) dtet -= 180;
+   Float_t dphi = fPhimax - fPhimin;
+   while (dphi > 360) dphi -= 360;
 
-    Int_t j;
-    Int_t n = GetNumberOfDivisions () + 1;
-    if (fCoTab)
-        delete [] fCoTab; // Delete the old tab if any
-        fCoTab = new Double_t [n];
-    if (!fCoTab ) return;
+   Float_t dtet = fThemax - fThemin;
+   while (dtet > 180) dtet -= 180;
 
-    if (fSiTab)
-        delete [] fSiTab; // Delete the old tab if any
-    fSiTab = new Double_t [n];
-    if (!fSiTab ) return;
+   Int_t j;
+   Int_t n = GetNumberOfDivisions () + 1;
+   if (fCoTab)
+      delete [] fCoTab; // Delete the old tab if any
+   fCoTab = new Double_t [n];
+   if (!fCoTab ) return;
 
-    Double_t range   = Double_t(dphi * ragrad);
-    Double_t phi1    = Double_t(fPhimin  * ragrad);
-    Double_t angstep = range/(n-1);
+   if (fSiTab)
+      delete [] fSiTab; // Delete the old tab if any
+   fSiTab = new Double_t [n];
+   if (!fSiTab ) return;
 
-    Double_t ph = phi1;
-    for (j = 0; j < n; j++)
-    {
-        ph = phi1 + j*angstep;
-        fCoTab[j] = TMath::Cos(ph);
-        fSiTab[j] = TMath::Sin(ph);
-    }
+   Double_t range   = Double_t(dphi * ragrad);
+   Double_t phi1    = Double_t(fPhimin  * ragrad);
+   Double_t angstep = range/(n-1);
 
-    n  = fNz + 1;
+   Double_t ph = phi1;
+   for (j = 0; j < n; j++)
+   {
+      ph = phi1 + j*angstep;
+      fCoTab[j] = TMath::Cos(ph);
+      fSiTab[j] = TMath::Sin(ph);
+   }
 
-    if (fCoThetaTab)
-        delete [] fCoThetaTab; // Delete the old tab if any
-    fCoThetaTab = new Double_t [n];
-    if (!fCoThetaTab ) return;
+   n  = fNz + 1;
 
-    range   = Double_t(dtet * ragrad);
-    phi1    = Double_t(fThemin  * ragrad);
-    angstep = range/(n-1);
+   if (fCoThetaTab)
+      delete [] fCoThetaTab; // Delete the old tab if any
+   fCoThetaTab = new Double_t [n];
+   if (!fCoThetaTab ) return;
 
-    ph = phi1;
-    for (j = 0; j < n; j++)
-    {
-        fCoThetaTab[n-j-1] = TMath::Cos(ph);
-        ph += angstep;
-    }
+   range   = Double_t(dtet * ragrad);
+   phi1    = Double_t(fThemin  * ragrad);
+   angstep = range/(n-1);
+
+   ph = phi1;
+   for (j = 0; j < n; j++)
+   {
+      fCoThetaTab[n-j-1] = TMath::Cos(ph);
+      ph += angstep;
+   }
 
 }
 
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TSPHE::Streamer(TBuffer &b)
 {
    // Stream a class object
@@ -292,9 +298,9 @@ void TSPHE::Streamer(TBuffer &b)
       Int_t tNdiv;   // XXX added by RvdE XXX (fNdiv is set by SetNumberOfDivisions)
       b >> tNdiv;
       if (R__v > 1) {
-        b >> faX;
-        b >> faY;
-        b >> faZ;
+         b >> faX;
+         b >> faY;
+         b >> faZ;
       }
       SetNumberOfDivisions (tNdiv); // XXX added by RvdE
       b.CheckByteCount(R__s, R__c, TSPHE::IsA());
@@ -305,9 +311,12 @@ void TSPHE::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
 {
+   // Get buffer 3d.
+
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);
@@ -435,24 +444,24 @@ const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
 
       //inside & outside, number of polygons: (nz-1)*2*(n-1)
       for (k = 0; k < (nz-1); k++) {
-        for (j = 0; j < n-1; j++) {
-           buffer.fPols[indx++] = c;
-           buffer.fPols[indx++] = 4;
-           buffer.fPols[indx++] = 2*k*m+j;
-           buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
-           buffer.fPols[indx++] = (2*k+2)*m+j;
-           buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
-        }
-        for (j = 0; j < n-1; j++) {
-           buffer.fPols[indx++] = c+1;
-           buffer.fPols[indx++] = 4;
-           buffer.fPols[indx++] = (2*k+1)*m+j;
-           buffer.fPols[indx++] = nz*2*m+(2*k + 3)*n+j;
-           buffer.fPols[indx++] = (2*k+ 3)*m+j;
-           buffer.fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
-        }
+         for (j = 0; j < n-1; j++) {
+            buffer.fPols[indx++] = c;
+            buffer.fPols[indx++] = 4;
+            buffer.fPols[indx++] = 2*k*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
+            buffer.fPols[indx++] = (2*k+2)*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
+         }
+         for (j = 0; j < n-1; j++) {
+            buffer.fPols[indx++] = c+1;
+            buffer.fPols[indx++] = 4;
+            buffer.fPols[indx++] = (2*k+1)*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k + 3)*n+j;
+            buffer.fPols[indx++] = (2*k+ 3)*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
+         }
        	 
-        if (specialCase) {
+         if (specialCase) {
             buffer.fPols[indx++] = c;
             buffer.fPols[indx++] = 4;
             buffer.fPols[indx++] = 2*k*m+j;

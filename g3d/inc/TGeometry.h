@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.4 2000/11/21 20:12:04 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.5 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -62,7 +62,6 @@ private:
    Bool_t           fIsReflection[kMAXLEVELS];            //!
 
 public:
-
    TGeometry();
    TGeometry(const char *name, const char *title);
    virtual           ~TGeometry();
@@ -159,4 +158,3 @@ inline void TGeometry::SetPosition(TRotMatrix *matrix, Float_t x,Float_t y,Float
 R__EXTERN TGeometry *gGeometry;
 
 #endif
-

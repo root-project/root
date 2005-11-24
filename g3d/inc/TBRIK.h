@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TBRIK.h,v 1.3 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TBRIK.h,v 1.4 2005/03/09 18:19:25 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -27,25 +27,25 @@
 
 class TBRIK : public TShape {
 
-    protected:
-        Float_t fDx;        // half length in x
-        Float_t fDy;        // half length in y
-        Float_t fDz;        // half length in z
+protected:
+   Float_t fDx;        // half length in x
+   Float_t fDy;        // half length in y
+   Float_t fDz;        // half length in z
 
-        virtual void    SetPoints(Double_t * points) const;
-    public:
-        TBRIK();
-        TBRIK(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz);
-        virtual ~TBRIK();
+   virtual void    SetPoints(Double_t * points) const;
+public:
+   TBRIK();
+   TBRIK(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz);
+   virtual ~TBRIK();
 
-        virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-        virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
-        Float_t         GetDx() const {return fDx;}
-        Float_t         GetDy() const {return fDy;}
-        Float_t         GetDz() const {return fDz;}
-        virtual void    Sizeof3D() const;
+   virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
+   Float_t         GetDx() const {return fDx;}
+   Float_t         GetDy() const {return fDy;}
+   Float_t         GetDz() const {return fDz;}
+   virtual void    Sizeof3D() const;
 
-        ClassDef(TBRIK,1)  //TBRIK shape
+   ClassDef(TBRIK,1)  //TBRIK shape
 };
 
 #endif

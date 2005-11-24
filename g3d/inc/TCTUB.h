@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCTUB.h,v 1.3 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.h,v 1.4 2005/03/09 18:19:25 brun Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -30,23 +30,23 @@
 
 class TCTUB : public TTUBS {
 
-    protected:
-        Float_t fCosLow[3];        // dir cosinus of surface cutting tube at low z
-        Float_t fCosHigh[3];       // dir cosinus of surface cutting tube at high z
+protected:
+   Float_t fCosLow[3];        // dir cosinus of surface cutting tube at low z
+   Float_t fCosHigh[3];       // dir cosinus of surface cutting tube at high z
 
-        virtual void    SetPoints(Double_t *points) const;
-    public:
-        TCTUB();
-        TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
-             Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2,
-             Float_t coslx, Float_t cosly, Float_t coslz,
-             Float_t coshx, Float_t coshy, Float_t coshz);
-        TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
-             Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2,
-             Float_t *lowNormal, Float_t *highNormal);
-        virtual ~TCTUB();
+   virtual void    SetPoints(Double_t *points) const;
+public:
+   TCTUB();
+   TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
+         Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2,
+         Float_t coslx, Float_t cosly, Float_t coslz,
+         Float_t coshx, Float_t coshy, Float_t coshz);
+   TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
+         Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2,
+         Float_t *lowNormal, Float_t *highNormal);
+   virtual ~TCTUB();
 
-        ClassDef(TCTUB,2)  //The Cut Tube shape
+   ClassDef(TCTUB,2)  //The Cut Tube shape
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.23 2005/05/18 12:31:08 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.24 2005/08/30 09:11:39 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include <assert.h>
 
 ClassImp(TPolyLine3D)
+
 
 //______________________________________________________________________________
 // PolyLine3D is a 3-dimensional polyline. It has 4 different constructors.
@@ -82,6 +83,7 @@ TPolyLine3D::TPolyLine3D()
    fLastPoint = -1;
 }
 
+
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
 {
@@ -101,6 +103,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
    fP = new Float_t[3*fN];
    for (Int_t i=0; i<3*fN; i++) fP[i] = 0;
 }
+
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
@@ -132,6 +135,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
    }
 }
 
+
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
 {
@@ -161,6 +165,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
       fLastPoint = -1;
    }
 }
+
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option)
@@ -194,6 +199,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *
       }
    }
 }
+
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *option)
@@ -229,6 +235,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
    }
 }
 
+
 //______________________________________________________________________________
 TPolyLine3D::~TPolyLine3D()
 {
@@ -236,6 +243,7 @@ TPolyLine3D::~TPolyLine3D()
 
    if (fP) delete [] fP;
 }
+
 
 //______________________________________________________________________________
 TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttLine(polyline), TAtt3D(polyline)
@@ -245,6 +253,7 @@ TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttL
    fP = 0;
    ((TPolyLine3D&)polyline).TPolyLine3D::Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::Copy(TObject &obj) const
@@ -265,6 +274,7 @@ void TPolyLine3D::Copy(TObject &obj) const
    ((TPolyLine3D&)obj).fOption = fOption;
    ((TPolyLine3D&)obj).fLastPoint = fLastPoint;
 }
+
 
 //______________________________________________________________________________
 Int_t TPolyLine3D::DistancetoPrimitive(Int_t px, Int_t py)
@@ -308,6 +318,7 @@ Int_t TPolyLine3D::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::Draw(Option_t *option)
 {
@@ -315,6 +326,7 @@ void TPolyLine3D::Draw(Option_t *option)
 
    AppendPad(option);
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax)
@@ -391,6 +403,7 @@ void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax
    pl3d->SetPoint(3, xmin, ymax, zmax);
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::DrawPolyLine(Int_t n, Float_t *p, Option_t *option)
 {
@@ -410,14 +423,16 @@ void TPolyLine3D::DrawPolyLine(Int_t n, Float_t *p, Option_t *option)
    newpolyline->AppendPad(option);
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    // Execute action corresponding to one event.
 
-  if (gPad->GetView())
-     gPad->GetView()->ExecuteRotateView(event, px, py);
+   if (gPad->GetView())
+      gPad->GetView()->ExecuteRotateView(event, px, py);
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::ls(Option_t *option) const
@@ -427,6 +442,7 @@ void TPolyLine3D::ls(Option_t *option) const
    TROOT::IndentLevel();
    cout <<"PolyLine3D  N=" <<fN<<" Option="<<option<<endl;
 }
+
 
 //______________________________________________________________________________
 Int_t TPolyLine3D::Merge(TCollection *li)
@@ -462,6 +478,7 @@ Int_t TPolyLine3D::Merge(TCollection *li)
 
    return npoints;
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::Paint(Option_t * /* option */ )
@@ -529,9 +546,9 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
 
       // Segments
       for (i = 0; i < buffer.NbSegs(); i++) {
-          buffer.fSegs[3*i  ] = c;
-          buffer.fSegs[3*i+1] = i;
-          buffer.fSegs[3*i+2] = i+1;
+         buffer.fSegs[3*i  ] = c;
+         buffer.fSegs[3*i+1] = i;
+         buffer.fSegs[3*i+2] = i+1;
       }
 
       TAttLine::Modify();
@@ -541,6 +558,7 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
    
    gPad->GetViewer3D()->AddObject(buffer);
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::Print(Option_t *option) const
@@ -556,6 +574,7 @@ void TPolyLine3D::Print(Option_t *option) const
       }
    }
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::SavePrimitive(ofstream &out, Option_t *)
@@ -581,6 +600,7 @@ void TPolyLine3D::SavePrimitive(ofstream &out, Option_t *)
    out<<"   pline3D->Draw();"<<endl;
 }
 
+
 //______________________________________________________________________________
 Int_t TPolyLine3D::SetNextPoint(Double_t x, Double_t y, Double_t z)
 {
@@ -591,6 +611,7 @@ Int_t TPolyLine3D::SetNextPoint(Double_t x, Double_t y, Double_t z)
    SetPoint(fLastPoint, x, y, z);
    return fLastPoint;
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
@@ -618,6 +639,7 @@ void TPolyLine3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
    fLastPoint = TMath::Max(fLastPoint,n);
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::SetPolyLine(Int_t n, Option_t *option)
 {
@@ -638,6 +660,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Option_t *option)
    memset(fP,0,3*fN*sizeof(Float_t));
    fLastPoint = fN-1;
 }
+
 
 //______________________________________________________________________________
 void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
@@ -668,6 +691,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
    fLastPoint = fN-1;
 }
 
+
 //______________________________________________________________________________
 void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
 {
@@ -697,7 +721,8 @@ void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
    fLastPoint = fN-1;
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 void TPolyLine3D::Streamer(TBuffer &b)
 {
    // Stream a 3-D polyline object.

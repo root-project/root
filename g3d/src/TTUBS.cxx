@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.7 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.8 2005/08/30 09:11:39 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -68,9 +68,13 @@ TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t 
    fPhi2 = phi2;
    MakeTableOfCoSin();
 }
+
+
 //______________________________________________________________________________
 void TTUBS::MakeTableOfCoSin() const
 {
+   // Make table of sine and cosine.
+
    const Double_t pi  = TMath::ATan(1) * 4.0;
    const Double_t ragrad  = pi/180.0;
 
@@ -177,6 +181,8 @@ void TTUBS::Sizeof3D() const
 //_______________________________________________________________________
 const TBuffer3D & TTUBS::GetBuffer3D(Int_t reqSections) const
 {
+   // Get buffer 3d.
+
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMaterial.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMaterial.h,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun   03/10/95
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 #endif
 
 class TMaterial  : public TNamed, public TAttFill {
- protected:
+protected:
    Int_t        fNumber;      //Material matrix number
    Float_t      fA;           //A of Material
    Float_t      fZ;           //Z of Material
@@ -38,19 +38,19 @@ class TMaterial  : public TNamed, public TAttFill {
    Float_t      fRadLength;   //Material radiation length
    Float_t      fInterLength; //Material interaction length
 
- public:
-        TMaterial();
-        TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density);
-        TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density, Float_t radl, Float_t inter);
-        virtual ~TMaterial();
-        virtual Int_t     GetNumber() const      {return fNumber;}
-        virtual Float_t   GetA() const           {return fA;}
-        virtual Float_t   GetZ() const           {return fZ;}
-        virtual Float_t   GetDensity() const     {return fDensity;}
-        virtual Float_t   GetRadLength() const   {return fRadLength;}
-        virtual Float_t   GetInterLength() const {return fInterLength;}
+public:
+   TMaterial();
+   TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density);
+   TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density, Float_t radl, Float_t inter);
+   virtual ~TMaterial();
+   virtual Int_t     GetNumber() const      {return fNumber;}
+   virtual Float_t   GetA() const           {return fA;}
+   virtual Float_t   GetZ() const           {return fZ;}
+   virtual Float_t   GetDensity() const     {return fDensity;}
+   virtual Float_t   GetRadLength() const   {return fRadLength;}
+   virtual Float_t   GetInterLength() const {return fInterLength;}
 
-        ClassDef(TMaterial,3)  //Materials used in the Geometry Shapes
+   ClassDef(TMaterial,3)  //Materials used in the Geometry Shapes
 };
 
 #endif

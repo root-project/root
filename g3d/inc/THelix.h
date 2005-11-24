@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.5 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.6 2005/03/09 18:19:25 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
    virtual void    SetAxis(Double_t x, Double_t y, Double_t z);
    virtual void    SetRange(Double_t * range, EHelixRangeType rtype=kHelixZ);
    virtual void    SetRange(Double_t r1, Double_t r2, EHelixRangeType rtype=kHelixZ);
-           void    SetHelix(Double_t *xyz,  Double_t *v, Double_t w,
+   void            SetHelix(Double_t *xyz,  Double_t *v, Double_t w,
                             Double_t *range=0, EHelixRangeType type=kUnchanged,
                             Double_t *axis=0);
 

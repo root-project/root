@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.6 2002/10/31 07:27:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.7 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -85,4 +85,3 @@ public:
 };
 
 #endif
-

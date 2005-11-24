@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.11 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.12 2005/09/04 14:53:18 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -87,6 +87,8 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
 //______________________________________________________________________________
 void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn can use
 {
+   // Make table of sine and cosine.
+
    const Double_t pi  = TMath::ATan(1) * 4.0;
 
    Int_t j;
@@ -186,9 +188,12 @@ void TTUBE::SetPoints(Double_t *points) const
    }
 }
 
+
 //______________________________________________________________________________
 void TTUBE::SetSegsAndPols(TBuffer3D & buffer) const
 {
+   // Set segments and polygons.
+
    Int_t i, j;
    Int_t n = GetNumberOfDivisions();
    Int_t c = GetBasicColor();
@@ -263,6 +268,7 @@ void TTUBE::SetSegsAndPols(TBuffer3D & buffer) const
    buffer.fPols[indx+2] = (4+i)*n;
 }
 
+
 //______________________________________________________________________________
 void TTUBE::Sizeof3D() const
 {
@@ -302,9 +308,12 @@ void TTUBE::Streamer(TBuffer &R__b)
    }
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
 {
+   // Get buffer 3d.
+
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);
@@ -335,7 +344,3 @@ const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
    }
    return buffer;
 }
-
-
-
-

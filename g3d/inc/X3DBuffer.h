@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Name:  $:$Id: X3DBuffer.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/g3d:$Name:  $:$Id: X3DBuffer.h,v 1.2 2003/04/03 13:46:50 brun Exp $ */
 /* Author: Nenad Buncic   13/12/95*/
 
 /*************************************************************************
@@ -15,19 +15,18 @@
 #include "DllImport.h"
 
 typedef struct _x3d_data_ {
-      int  numPoints;
-      int  numSegs;
-      int  numPolys;
-    float *points;            /* x0, y0, z0, x1, y1, z1, ..... ..... ....    */
-      int *segs;              /* c0, p0, q0, c1, p1, q1, ..... ..... ....    */
-      int *polys;             /* c0, n0, s0, s1, ... sn, c1, n1, s0, ... sn  */
+   int  numPoints;
+   int  numSegs;
+   int  numPolys;
+   float *points; /* x0, y0, z0, x1, y1, z1, ..... ..... ....    */
+   int *segs;     /* c0, p0, q0, c1, p1, q1, ..... ..... ....    */
+   int *polys;    /* c0, n0, s0, s1, ... sn, c1, n1, s0, ... sn  */
 } X3DBuffer;
 
-
 typedef struct _x3d_sizeof_ {
-      int  numPoints;
-      int  numSegs;
-      int  numPolys;
+   int  numPoints;
+   int  numSegs;
+   int  numPolys;
 } Size3D;
 
 #ifdef __cplusplus

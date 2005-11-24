@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.18 2005/03/09 18:19:26 brun Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.19 2005/08/30 09:11:39 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -14,6 +14,7 @@
 
 
 ClassImp(TXTRU)
+
 
 //_____________________________________________________________________________
 // Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/xtru.gif"> </P> End_Html
@@ -68,19 +69,18 @@ TXTRU::TXTRU()
    : fNxy(0), fNxyAlloc(0), fNz(0), fNzAlloc(0), fXvtx(0), fYvtx(0),
      fZ(0), fScale(0), fX0(0), fY0(0)
 {
-   //
    // TXTRU shape - default constructor
-   //
+
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
 }
+
 
 //______________________________________________________________________________
 TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
              Int_t nxy, Int_t nz)
    : TShape (name,title,material)
 {
-   //
    // TXTRU shape - normal constructor
    //
    // Parameters of Nxy positions must be entered via TXTRU::DefineVertex
@@ -140,6 +140,7 @@ TXTRU::TXTRU(const Text_t *name, const Text_t *title, const Text_t *material,
 
 }
 
+
 //______________________________________________________________________________
 TXTRU::TXTRU(const TXTRU &xtru) : TShape(xtru)
 {
@@ -150,12 +151,11 @@ TXTRU::TXTRU(const TXTRU &xtru) : TShape(xtru)
    ((TXTRU&)xtru).Copy(*this);
 }
 
+
 //______________________________________________________________________________
 TXTRU::~TXTRU()
 {
-   //
    // TXTRU destructor deallocates arrays
-   //
 
    if (fXvtx) delete [] fXvtx;
    if (fYvtx) delete [] fYvtx;
@@ -179,10 +179,11 @@ TXTRU::~TXTRU()
    fZOrdering     = kUncheckedZ;
 }
 
+
 //______________________________________________________________________________
 TXTRU& TXTRU::operator=(const TXTRU &rhs)
 {
-   // deep assignment operator
+   // Deep assignment operator
 
    // protect against self-assignment
    if (this == &rhs) return *this;
@@ -201,6 +202,7 @@ TXTRU& TXTRU::operator=(const TXTRU &rhs)
 
    return *this;
 }
+
 
 //______________________________________________________________________________
 void TXTRU::Copy(TObject &obj) const
@@ -237,6 +239,7 @@ void TXTRU::Copy(TObject &obj) const
    ((TXTRU&)obj).fPolygonShape = fPolygonShape;
    ((TXTRU&)obj).fZOrdering    = fZOrdering;
 }
+
 
 //______________________________________________________________________________
 void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_t y0)
@@ -292,6 +295,7 @@ void TXTRU::DefineSection(Int_t iz, Float_t z, Float_t scale, Float_t x0, Float_
    fY0[iz]    = y0;
 }
 
+
 //______________________________________________________________________________
 void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
 
@@ -334,6 +338,7 @@ void TXTRU::DefineVertex(Int_t ipt, Float_t x, Float_t y) {
    fYvtx[ipt] = y;
 }
 
+
 //______________________________________________________________________________
 Int_t TXTRU::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -343,6 +348,7 @@ Int_t TXTRU::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t numPoints = fNz*fNxy;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
+
 
 //______________________________________________________________________________
 Float_t TXTRU::GetOutlinePointX(Int_t n) const {
@@ -356,6 +362,7 @@ Float_t TXTRU::GetOutlinePointX(Int_t n) const {
    return fXvtx[n];
 }
 
+
 //______________________________________________________________________________
 Float_t TXTRU::GetOutlinePointY(Int_t n) const {
 
@@ -367,6 +374,7 @@ Float_t TXTRU::GetOutlinePointY(Int_t n) const {
    }
    return fYvtx[n];
 }
+
 
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionX0(Int_t n) const {
@@ -380,6 +388,7 @@ Float_t TXTRU::GetSectionX0(Int_t n) const {
    return fX0[n];
 }
 
+
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionY0(Int_t n) const {
 
@@ -392,6 +401,7 @@ Float_t TXTRU::GetSectionY0(Int_t n) const {
    return fY0[n];
 }
 
+
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionScale(Int_t n) const {
 
@@ -403,6 +413,7 @@ Float_t TXTRU::GetSectionScale(Int_t n) const {
    }
    return fScale[n];
 }
+
 
 //______________________________________________________________________________
 Float_t TXTRU::GetSectionZ(Int_t n) const {
@@ -495,6 +506,7 @@ void TXTRU::Print(Option_t *option) const
 
 }
 
+
 //______________________________________________________________________________
 void TXTRU::SetPoints(Double_t *points) const
 {
@@ -532,6 +544,7 @@ void TXTRU::SetPoints(Double_t *points) const
    }
 }
 
+
 //______________________________________________________________________________
 void TXTRU::Sizeof3D() const
 {
@@ -541,6 +554,7 @@ void TXTRU::Sizeof3D() const
    gSize3D.numSegs   += (2*fNz-1)*fNxy;
    gSize3D.numPolys  += (fNz-1)*fNxy+2;
 }
+
 
 //______________________________________________________________________________
 void TXTRU::SplitConcavePolygon(Bool_t split)
@@ -562,6 +576,7 @@ void TXTRU::SplitConcavePolygon(Bool_t split)
 
 }
 
+
 //______________________________________________________________________________
 void TXTRU::TruncateNxy(Int_t npts) {
 
@@ -574,6 +589,7 @@ void TXTRU::TruncateNxy(Int_t npts) {
    fNxy = npts;
    return;
 }
+
 
 //______________________________________________________________________________
 void TXTRU::TruncateNz(Int_t nz) {
@@ -588,7 +604,8 @@ void TXTRU::TruncateNz(Int_t nz) {
    return;
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 void TXTRU::CheckOrdering()
 {
    // Determine ordering over which to process points, segments, surfaces
@@ -622,7 +639,6 @@ void TXTRU::CheckOrdering()
       } else {
          zero++;
       }
-
    }
 
    if (fNxy<3) {
@@ -683,7 +699,6 @@ void TXTRU::CheckOrdering()
       }
       // also check for scale factors that change sign...
       if (fScale[iz]*fScale[iznext] < 0) scaleSignChange = kTRUE;
-
    }
 
    if (fNz<1 || scaleSignChange) {
@@ -706,8 +721,8 @@ void TXTRU::CheckOrdering()
          }
       }
    }
-
 }
+
 
 //______________________________________________________________________________
 void TXTRU::DumpPoints(int npoints, float *pointbuff) const
@@ -726,6 +741,7 @@ void TXTRU::DumpPoints(int npoints, float *pointbuff) const
    }
 }
 
+
 //______________________________________________________________________________
 void TXTRU::DumpSegments(int nsegments, int *segbuff) const
 {
@@ -742,6 +758,7 @@ void TXTRU::DumpSegments(int nsegments, int *segbuff) const
       printf(" [%4d] %3d (%4d,%4d)\n",iseg,icol,p1,p2);
    }
 }
+
 
 //______________________________________________________________________________
 void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
@@ -770,9 +787,11 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
 }
 
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 const TBuffer3D & TXTRU::GetBuffer3D(Int_t reqSections) const
 {
+   // Get buffer 3d.
+
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

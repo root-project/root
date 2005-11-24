@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TNodeDiv.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -28,19 +28,19 @@
 
 
 class TNodeDiv  : public TNode {
- protected:
+protected:
    Int_t           fNdiv;        //Number of divisions
    Int_t           fAxis;        //Axis number where object is divided
 
- public:
-        TNodeDiv();
-        TNodeDiv(const char *name, const char *title, const char *shapename, Int_t ndiv, Int_t axis, Option_t *option="");
-        TNodeDiv(const char *name, const char *title, TShape *shape, Int_t ndiv, Int_t axis, Option_t *option="");
-        virtual ~TNodeDiv();
-        virtual void             Draw(Option_t *option="");
-        virtual void             Paint(Option_t *option="");
+public:
+   TNodeDiv();
+   TNodeDiv(const char *name, const char *title, const char *shapename, Int_t ndiv, Int_t axis, Option_t *option="");
+   TNodeDiv(const char *name, const char *title, TShape *shape, Int_t ndiv, Int_t axis, Option_t *option="");
+   virtual ~TNodeDiv();
+   virtual void             Draw(Option_t *option="");
+   virtual void             Paint(Option_t *option="");
 
-        ClassDef(TNodeDiv,1)  //Description of parameters to divide a 3-D geometry object
+   ClassDef(TNodeDiv,1)  //Description of parameters to divide a 3-D geometry object
 };
 
 #endif

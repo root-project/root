@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.6 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.7 2001/08/29 10:35:38 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -45,17 +45,17 @@ class TNode : public TNamed , public TAttLine, public TAttFill, public TAtt3D {
 protected:
    enum { kSonsInvisible = BIT(17) };
 
-   Double_t        fX;           //X offset with respect to parent object
-   Double_t        fY;           //Y offset with respect to parent object
-   Double_t        fZ;           //Z offset with respect to parent object
-   TRotMatrix      *fMatrix;     //Pointer to rotation matrix
-   TShape          *fShape;      //Pointer to shape definition
-   TNode           *fParent;     //Pointer to parent positioned volume
-   TList           *fNodes;      //List of son nodes (if any)
-   TString         fOption;      //List of options if any
-   Int_t           fVisibility;  //Visibility flag
+   Double_t        fX;          //X offset with respect to parent object
+   Double_t        fY;          //Y offset with respect to parent object
+   Double_t        fZ;          //Z offset with respect to parent object
+   TRotMatrix     *fMatrix;     //Pointer to rotation matrix
+   TShape         *fShape;      //Pointer to shape definition
+   TNode          *fParent;     //Pointer to parent positioned volume
+   TList          *fNodes;      //List of son nodes (if any)
+   TString         fOption;     //List of options if any
+   Int_t           fVisibility; //Visibility flag
 
- public:
+public:
    TNode();
    TNode(const char *name, const char *title, const char *shapename, Double_t x=0, Double_t y=0, Double_t z=0,
          const char *matrixname="", Option_t *option="");
@@ -69,13 +69,13 @@ protected:
    virtual void        Draw(Option_t *option=""); // *MENU*
    virtual void        DrawOnly(Option_t *option="");
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
-           TList      *GetListOfNodes() const {return fNodes;}
+   TList              *GetListOfNodes() const {return fNodes;}
    virtual TRotMatrix *GetMatrix() const {return fMatrix;}
    virtual TNode      *GetNode(const char *name) const;
    virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
    const   Option_t   *GetOption() const { return fOption.Data();}
    virtual TNode      *GetParent() const {return fParent;}
-           TShape     *GetShape() const {return fShape;}
+   TShape             *GetShape() const {return fShape;}
    Int_t               GetVisibility() const {return fVisibility;}
    virtual Double_t    GetX() const {return fX;}
    virtual Double_t    GetY() const {return fY;}

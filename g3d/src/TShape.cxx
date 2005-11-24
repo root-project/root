@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.9 2005/09/04 14:53:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.10 2005/10/12 14:55:09 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include <assert.h>
 
 ClassImp(TShape)
+
 
 //______________________________________________________________________________
 //
@@ -87,30 +88,34 @@ TShape::~TShape()
 //______________________________________________________________________________
 Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
 {
-  Int_t dist = 9999;
+   // Distance to primitive.
 
-  TView *view = gPad->GetView();
-  if (!(numPoints && view)) return dist;
+   Int_t dist = 9999;
 
-  Double_t *points =  new Double_t[3*numPoints];
-  SetPoints(points);
-  Double_t dpoint2, x1, y1, xndc[3];
-  for (Int_t i = 0; i < numPoints; i++) {
-     if (gGeometry) gGeometry->Local2Master(&points[3*i],&points[3*i]);
-     view->WCtoNDC(&points[3*i], xndc);
-     x1     = gPad->XtoAbsPixel(xndc[0]);
-     y1     = gPad->YtoAbsPixel(xndc[1]);
-     dpoint2= (px-x1)*(px-x1) + (py-y1)*(py-y1);
-     if (dpoint2 < dist) dist = (Int_t)dpoint2;
-  }
-  delete [] points;
-  return Int_t(TMath::Sqrt(Float_t(dist)));
+   TView *view = gPad->GetView();
+   if (!(numPoints && view)) return dist;
+
+   Double_t *points =  new Double_t[3*numPoints];
+   SetPoints(points);
+   Double_t dpoint2, x1, y1, xndc[3];
+   for (Int_t i = 0; i < numPoints; i++) {
+      if (gGeometry) gGeometry->Local2Master(&points[3*i],&points[3*i]);
+      view->WCtoNDC(&points[3*i], xndc);
+      x1     = gPad->XtoAbsPixel(xndc[0]);
+      y1     = gPad->YtoAbsPixel(xndc[1]);
+      dpoint2= (px-x1)*(px-x1) + (py-y1)*(py-y1);
+      if (dpoint2 < dist) dist = (Int_t)dpoint2;
+   }
+   delete [] points;
+   return Int_t(TMath::Sqrt(Float_t(dist)));
 }
 
 
 //______________________________________________________________________________
 void TShape::Paint(Option_t *)
 {
+   // Paint.
+
    AbstractMethod("TShape::Paint(Option_t *)");
 }
 
@@ -118,6 +123,8 @@ void TShape::Paint(Option_t *)
 //______________________________________________________________________________
 void TShape::SetPoints(Double_t *) const 
 {
+   // Set points.
+
    AbstractMethod("SetPoints(Double_t *buffer) const");
 }
 
@@ -155,7 +162,8 @@ void TShape::Streamer(TBuffer &R__b)
    }
 }
 
-//_____________________________________________________________________________
+
+//______________________________________________________________________________
 void TShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 {
    // Tranform points (LocalToMaster)
@@ -175,11 +183,13 @@ void TShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
    }
 }
 
-//_____________________________________________________________________________
+
+//______________________________________________________________________________
 void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
 {
    // We have to set kRawSize (unless already done) to allocate buffer space 
    // before kRaw can be filled
+
    if (reqSections & TBuffer3D::kRaw)
    {
       if (!(reqSections & TBuffer3D::kRawSizes) && !buffer.SectionsValid(TBuffer3D::kRawSizes))
@@ -187,7 +197,6 @@ void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
          assert(kFALSE);
       }
    }
-
 
    if (reqSections & TBuffer3D::kCore) {
       buffer.ClearSectionsValid();
@@ -206,19 +215,24 @@ void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
    }
 }
 
-//_____________________________________________________________________________
+
+//______________________________________________________________________________
 Int_t TShape::GetBasicColor() const
 {
+   // Get basic solor.
+
    Int_t basicColor = ((GetLineColor() %8) -1) * 4;
    if (basicColor < 0) basicColor = 0;
 
    return basicColor;
 }
 
-//_____________________________________________________________________________
+
+//______________________________________________________________________________
 const TBuffer3D &TShape::GetBuffer3D(Int_t /* reqSections */ ) const
 {
    // Stub to avoid forcing implementation at this stage
+
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    Warning("GetBuffer3D", "this must be implemented for shapes in a TNode::Paint hierarchy. This will become a pure virtual fn eventually.");
    return buffer;

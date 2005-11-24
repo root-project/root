@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.6 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.7 2005/08/30 09:11:39 brun Exp $
 // Author: Nenad Buncic 17/09/95 
 
 /*************************************************************************
@@ -87,6 +87,7 @@ void TBRIK::SetPoints(Double_t *points) const
    }
 }
 
+
 //______________________________________________________________________________
 void TBRIK::Sizeof3D() const
 {
@@ -97,9 +98,12 @@ void TBRIK::Sizeof3D() const
    gSize3D.numPolys  += 6;
 }
 
+
 //______________________________________________________________________________
 const TBuffer3D & TBRIK::GetBuffer3D(Int_t reqSections) const
 {
+   // Get buffer 3D
+
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

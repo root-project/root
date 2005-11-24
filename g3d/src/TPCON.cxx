@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.10 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.11 2005/09/04 14:53:18 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -38,17 +38,16 @@ ClassImp(TPCON)
 //     - z          array of dimension nz with z position of given plane
 
 
-
 //______________________________________________________________________________
 TPCON::TPCON()
 {
    // PCON shape default constructor
 
-    fRmin  = 0;
-    fRmax  = 0;
-    fDz    = 0;
-    fCoTab = 0;
-    fSiTab = 0;
+   fRmin  = 0;
+   fRmax  = 0;
+   fDz    = 0;
+   fCoTab = 0;
+   fSiTab = 0;
 }
 
 
@@ -84,6 +83,8 @@ TPCON::TPCON(const char *name, const char *title, const char *material, Float_t 
 //______________________________________________________________________________
 void TPCON::MakeTableOfCoSin() const
 {
+   // Make table of cosine and sine
+
    const Double_t pi  = TMath::ATan(1) * 4.0;
    const Double_t ragrad  = pi/180.0;
 
@@ -162,6 +163,7 @@ Int_t TPCON::DistancetoPrimitive(Int_t px, Int_t py)
 void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 {
    // Fill the table of cos and sin to prepare drawing
+
    Double_t ph = phi-angstep;
    for (Int_t j = 0; j < n; j++) {
       ph += angstep;
@@ -174,9 +176,11 @@ void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 //______________________________________________________________________________
 void TPCON::SetNumberOfDivisions (Int_t p)
 {
-    if (GetNumberOfDivisions () == p) return;
-    fNdiv=p;
-    MakeTableOfCoSin();
+   // Set number of divisions.
+
+   if (GetNumberOfDivisions () == p) return;
+   fNdiv=p;
+   MakeTableOfCoSin();
 }
 
 
@@ -223,7 +227,7 @@ void TPCON::Sizeof3D() const
 }
 
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TPCON::Streamer(TBuffer &b)
 {
    // Stream a class object
@@ -255,9 +259,12 @@ void TPCON::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 const TBuffer3D & TPCON::GetBuffer3D(Int_t reqSections) const
 {
+   // Get buffer 3d.
+
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);
@@ -293,9 +300,12 @@ const TBuffer3D & TPCON::GetBuffer3D(Int_t reqSections) const
    return buffer;
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
 {
+   // Set segments and polygons.
+
    if (fNz < 2) return kFALSE;
    const Int_t n = GetNumberOfDivisions()+1;
    Bool_t specialCase = (fDphi1 == 360);
@@ -434,7 +444,7 @@ Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
       }
    }
 
-  if (!specialCase) {
+   if (!specialCase) {
       indx2 = fNz*2*(n-1);
       for (k = 0; k < (fNz-1); k++) {
          buffer.fPols[indx++] = c+2;
@@ -455,5 +465,5 @@ Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
       buffer.fPols[indx-2] = indx2+2*n-1;
    }
 
-  return kTRUE;
+   return kTRUE;
 }

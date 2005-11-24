@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.h,v 1.2 2000/11/21 20:14:07 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.h,v 1.3 2005/08/30 09:11:39 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -40,10 +40,9 @@ protected:
    Double_t     fMatrix[9];   //Rotation matrix
 
 public:
-
    //TRotMatrix status bits
    enum {
-      kReflection = BIT(23)    //  "Reflection" bit
+      kReflection = BIT(23)   //  "Reflection" bit
    };
       
    TRotMatrix();
@@ -62,7 +61,7 @@ public:
    virtual Double_t  GetPsi()      const {return fPsi;}
    virtual Double_t* GetGLMatrix(Double_t *rGLMatrix) const ;  // Convert this matrix to the OpenGL [4x4]
    virtual Bool_t    IsReflection() const {return TestBit(kReflection);}  // Return kTRUE if this matrix defines the reflection
-   virtual const Double_t* SetAngles(Double_t theta1, Double_t phi1,Double_t theta2, Double_t phi2, Double_t theta3, Double_t phi3);
+   virtual const     Double_t* SetAngles(Double_t theta1, Double_t phi1,Double_t theta2, Double_t phi2, Double_t theta3, Double_t phi3);
    virtual void      SetMatrix(const Double_t *matrix);
    virtual void      SetName(const char *name);
 
@@ -72,5 +71,3 @@ public:
 inline void TRotMatrix::SetName(const char *) { }
 
 #endif
-
-

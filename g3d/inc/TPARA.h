@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPARA.h,v 1.3 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPARA.h,v 1.4 2005/03/09 18:19:25 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -30,24 +30,24 @@
 #endif
 
 class TPARA : public TBRIK {
+protected:
+   Float_t fAlpha;  // angle w.r.t. the y axis from the centre of the low y to the high y
+   Float_t fTheta;  // polar angle from the centre of the low z to the high z
+   Float_t fPhi;    // polar angle from the centre of the low z to the high z
 
-    protected:
-        Float_t fAlpha;  // angle w.r.t. the y axis from the centre of the low y to the high y
-        Float_t fTheta;  // polar angle from the centre of the low z to the high z
-        Float_t fPhi;    // polar angle from the centre of the low z to the high z
+   virtual void    SetPoints(Double_t *points) const;
 
-        virtual void    SetPoints(Double_t *points) const;
-    public:
-        TPARA();
-        TPARA(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz,
-              Float_t alpha, Float_t theta, Float_t phi);
-        virtual ~TPARA();
+public:
+   TPARA();
+   TPARA(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz,
+         Float_t alpha, Float_t theta, Float_t phi);
+   virtual ~TPARA();
 
-        virtual Float_t  GetAlpha() const  {return fAlpha;}
-        virtual Float_t  GetTheta() const  {return fTheta;}
-        virtual Float_t  GetPhi() const    {return fPhi;}
+   virtual Float_t  GetAlpha() const  {return fAlpha;}
+   virtual Float_t  GetTheta() const  {return fTheta;}
+   virtual Float_t  GetPhi() const    {return fPhi;}
 
-        ClassDef(TPARA,1)  //PARA shape
+   ClassDef(TPARA,1)  //PARA shape
 };
 
 #endif

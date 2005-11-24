@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCONE.h,v 1.3 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCONE.h,v 1.4 2005/03/09 18:19:25 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -29,22 +29,22 @@
 
 class TCONE : public TTUBE {
 
-    protected:
-        Float_t fRmin2;        // inside radius at the high z limit
-        Float_t fRmax2;        // outside radius at the high z limit
+protected:
+   Float_t fRmin2;        // inside radius at the high z limit
+   Float_t fRmax2;        // outside radius at the high z limit
 
-        virtual void    SetPoints(Double_t *points) const;
-   public:
-        TCONE();
-        TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1,
-              Float_t rmin2, Float_t rmax2);
-        TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmax1, Float_t rmax2 =0);
-        virtual ~TCONE();
+   virtual void    SetPoints(Double_t *points) const;
+public:
+   TCONE();
+   TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1,
+         Float_t rmin2, Float_t rmax2);
+   TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmax1, Float_t rmax2 =0);
+   virtual ~TCONE();
 
-        Float_t         GetRmin2() const {return fRmin2;}
-        Float_t         GetRmax2() const {return fRmax2;}
+   Float_t         GetRmin2() const {return fRmin2;}
+   Float_t         GetRmax2() const {return fRmax2;}
 
-        ClassDef(TCONE,1)  //CONE shape
+   ClassDef(TCONE,1)  //CONE shape
 };
 
 #endif

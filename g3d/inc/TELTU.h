@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TELTU.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -32,12 +32,12 @@
 
 class TELTU : public TTUBE {
 
-    public:
-        TELTU();
-        TELTU(const char *name, const char *title, const char *material, Float_t rx, Float_t ry,Float_t dz);
-        virtual ~TELTU();
+public:
+   TELTU();
+   TELTU(const char *name, const char *title, const char *material, Float_t rx, Float_t ry,Float_t dz);
+   virtual ~TELTU();
 
-        ClassDef(TELTU,1)  //ELTU shape
+   ClassDef(TELTU,1)  //ELTU shape
 };
 
 #endif

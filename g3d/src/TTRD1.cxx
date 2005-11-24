@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRD1.cxx,v 1.3 2004/08/09 15:22:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRD1.cxx,v 1.4 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -73,5 +73,5 @@ void TTRD1::SetPoints(Double_t *points) const
       points[15] = -dx2 ; points[16] =  dy ; points[17] =  dz;
       points[18] =  dx2 ; points[19] =  dy ; points[20] =  dz;
       points[21] =  dx2 ; points[22] = -dy ; points[23] =  dz;
-  }
+   }
 }

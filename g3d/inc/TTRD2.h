@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRD2.h,v 1.3 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRD2.h,v 1.4 2005/03/09 18:19:25 brun Exp $
 // Author: Nenad Buncic   13/09/95
 
 /*************************************************************************
@@ -29,23 +29,22 @@
 #endif
 
 class TTRD2 : public TBRIK {
+protected:
+   Float_t fDx2;        // half length in x at the high z surface
+   Float_t fDy2;        // half length in y at the high z surface
 
-    protected:
-        Float_t fDx2;        // half length in x at the high z surface
-        Float_t fDy2;        // half length in y at the high z surface
+   virtual void    SetPoints(Double_t *points) const;
 
-        virtual void    SetPoints(Double_t *points) const;
-    public:
-        TTRD2();
-        TTRD2(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2,
-              Float_t dy1, Float_t dy2, Float_t dz);
-        virtual ~TTRD2();
+public:
+   TTRD2();
+   TTRD2(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2,
+         Float_t dy1, Float_t dy2, Float_t dz);
+   virtual ~TTRD2();
 
-        Float_t         GetDx2() const {return fDx2;}
-        Float_t         GetDy2() const {return fDy2;}
+   Float_t         GetDx2() const {return fDx2;}
+   Float_t         GetDy2() const {return fDy2;}
 
-        ClassDef(TTRD2,1)  //TRD2 shape
+   ClassDef(TTRD2,1)  //TRD2 shape
 };
 
 #endif
-

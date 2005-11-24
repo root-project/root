@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.3 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.4 2005/03/09 18:19:26 brun Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -90,9 +90,11 @@ TCTUB::~TCTUB()
 //______________________________________________________________________________
 static Double_t Product(const Double_t *x, const Float_t *y)
 {
- Double_t s = 0;
- for (int i= 0 ; i <2 ; i++ ) s += x[i]*y[i];
- return s;
+   // Product.
+   
+   Double_t s = 0;
+   for (int i= 0 ; i <2 ; i++ ) s += x[i]*y[i];
+   return s;
 }
 
 

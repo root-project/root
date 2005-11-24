@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TUtil3D.h,v 1.6 2002/02/22 08:30:37 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TUtil3D.h,v 1.1 2002/09/14 16:19:14 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -26,8 +26,6 @@
 #endif
 
 class TUtil3D : public TVirtualUtil3D {
-
-
 public:
    TUtil3D();
    virtual     ~TUtil3D();
