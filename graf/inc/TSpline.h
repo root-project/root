@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.11 2005/09/05 07:25:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.12 2005/11/21 13:57:42 couet Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -188,7 +188,7 @@ public:
    virtual ~TSpline3() {if (fPoly) delete [] fPoly;}
    void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
                  Double_t &c, Double_t &d) {x=fPoly[i].X();y=fPoly[i].Y();
-                 b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
+                  b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const
       {x=fPoly[i].X(); y=fPoly[i].Y();}
    virtual  void     SaveAs(const char *filename) const;
