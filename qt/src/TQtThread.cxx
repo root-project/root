@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtThread.cxx,v 1.6 2004/08/13 06:05:17 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThread.cxx,v 1.7 2005/02/08 07:36:08 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// $Id: NewDelFunctions.h,v 1.1 2005/11/21 17:24:01 roiser Exp $
+// $Id: NewDelFunctions.h,v 1.2 2005/11/23 16:08:08 roiser Exp $
 
 #ifndef ROOT_Reflex_NewDelFunctions
 #define ROOT_Reflex_NewFelFunctions

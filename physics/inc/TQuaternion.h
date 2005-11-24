@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TQuaternion.h,v 1.1 2005/06/28 07:10:08 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TQuaternion.h,v 1.2 2005/09/04 09:51:19 brun Exp $
 // Author: Eric Anciant 28/06/2005
 
 #ifndef ROOT_TQuaternion

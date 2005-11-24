@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.3 2005/09/19 08:27:08 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************

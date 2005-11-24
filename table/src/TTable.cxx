@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.9 2005/01/19 18:30:58 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.10 2005/02/10 07:24:49 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 

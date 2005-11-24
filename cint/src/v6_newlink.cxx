@@ -2781,6 +2781,10 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
           int i;
           for(i=0;i<100;i++)        
             fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__x86_64__) && defined(__linux)
+          int i;
+          for(i=0;i<100;i++)        
+            fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
           fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -2875,6 +2879,10 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         int i;
         for(i=0;i<100;i++)        
           fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__x86_64__) && defined(__linux)
+          int i;
+          for(i=0;i<100;i++)        
+            fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
         fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -3746,6 +3754,10 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         int i;
         for(i=0;i<100;i++)        
           fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__x86_64__) && defined(__linux)
+          int i;
+          for(i=0;i<100;i++)        
+            fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
         fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -3805,6 +3817,10 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         int i;
         for(i=0;i<100;i++)        
           fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__x86_64__) && defined(__linux)
+          int i;
+          for(i=0;i<100;i++)        
+            fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
       fprintf(fp,",G__va_arg_bufobj");
 #endif

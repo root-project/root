@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.40 2004/08/22 01:47:06 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: mditest.C,v 1.1 2004/09/03 00:25:48 rdm Exp $
 // Author: Fons Rademakers   2/9/2004
 
 #include <stdio.h>

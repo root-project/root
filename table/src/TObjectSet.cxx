@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.3 2005/06/06 14:36:06 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.4 2005/07/05 15:11:42 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.3 2005/06/06 14:36:06 brun Exp $
+// $Id: TObjectSet.cxx,v 1.4 2005/07/05 15:11:42 brun Exp $
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

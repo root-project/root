@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.3 2004/09/10 14:00:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.4 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
