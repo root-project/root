@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.2 2005/10/27 19:47:41 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.3 2005/10/28 14:35:39 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************
@@ -438,6 +438,7 @@ The results above can be obtained by running the tutorial TestSPlot.C
 //____________________________________________________________________
 TSPlot::TSPlot()
 {
+   // default constructor (used by I/O only)
    fNumbersOfEvents=0;
    fTree = 0;
 }
@@ -445,6 +446,13 @@ TSPlot::TSPlot()
 //____________________________________________________________________
 TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree)
 {
+   //normal TSPlot constructor
+   // nx :  number of control variables
+   // ny :  number of discriminating variables
+   // ne :  total number of events
+   // ns :  number of species
+   // tree: input data
+   
    fNx = nx;
    fNy=ny;
    fNevents = ne;
@@ -461,7 +469,8 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree)
 //____________________________________________________________________
 TSPlot::~TSPlot()
 {
-
+   // destructor
+   
    if (fNumbersOfEvents)
       delete [] fNumbersOfEvents;
    if (!fXvarHists.IsEmpty())
@@ -477,32 +486,32 @@ void TSPlot::Browse(TBrowser *b)
 {
    //To browse the histograms
 
-  if (!fSWeightsHists.IsEmpty()) {
-    TIter next(&fSWeightsHists);
-    TH1D* h = 0;
-    while ((h = (TH1D*)next()))
-      b->Add(h,h->GetName());
-  }
+   if (!fSWeightsHists.IsEmpty()) {
+      TIter next(&fSWeightsHists);
+       TH1D* h = 0;
+       while ((h = (TH1D*)next()))
+          b->Add(h,h->GetName());
+   }
 
-  if (!fYpdfHists.IsEmpty()) {
-    TIter next(&fYpdfHists);
-    TH1D* h = 0;
-    while ((h = (TH1D*)next()))
-      b->Add(h,h->GetName());
-  }
-  if (!fYvarHists.IsEmpty()) {
-    TIter next(&fYvarHists);
-    TH1D* h = 0;
-    while ((h = (TH1D*)next()))
-      b->Add(h,h->GetName());
-  }
-  if (!fXvarHists.IsEmpty()) {
-    TIter next(&fXvarHists);
-    TH1D* h = 0;
-    while ((h = (TH1D*)next()))
-      b->Add(h,h->GetName());
-  }
-  b->Add(&fSWeights, "sWeights");
+   if (!fYpdfHists.IsEmpty()) {
+      TIter next(&fYpdfHists);
+      TH1D* h = 0;
+      while ((h = (TH1D*)next()))
+         b->Add(h,h->GetName());
+   }
+   if (!fYvarHists.IsEmpty()) {
+      TIter next(&fYvarHists);
+      TH1D* h = 0;
+      while ((h = (TH1D*)next()))
+         b->Add(h,h->GetName());
+   }
+   if (!fXvarHists.IsEmpty()) {
+      TIter next(&fXvarHists);
+      TH1D* h = 0;
+      while ((h = (TH1D*)next()))
+         b->Add(h,h->GetName());
+   }
+   b->Add(&fSWeights, "sWeights");
 }
 
 
@@ -582,7 +591,7 @@ void TSPlot::MakeSPlot(Option_t *option)
       for (ispecies=0; ispecies<fNSpecies; ispecies++){
          fNumbersOfEvents[ispecies]=minuit->GetParameter(ispecies);
          if (!opt.Contains("Q"))
-             printf("estimated #of events in species %d = %f\n", ispecies, fNumbersOfEvents[ispecies]);
+            printf("estimated #of events in species %d = %f\n", ispecies, fNumbersOfEvents[ispecies]);
       }
       if (!opt.Contains("Q"))
          printf("\n");
@@ -899,6 +908,7 @@ TH1D *TSPlot::GetSWeightsHist(Int_t ixvar, Int_t ispecies,Int_t iyexcl)
 //____________________________________________________________________
 void TSPlot::SetTree(TTree *tree)
 {
+   // Set the input Tree
    fTree = tree;
 }
 
@@ -920,7 +930,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
    TTreeFormula **var;
    TString *cnames;
    TString onerow;
-   TList *FormulaList = new TList();
+   TList *formulaList = new TList();
    TSelectorDraw *selector = (TSelectorDraw*)(((TTreePlayer*)fTree->GetPlayer())->GetSelector());
 
    Long64_t entry,entryNumber, curentry;
@@ -944,7 +954,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return;
       if (!select->GetNdim()) { delete select; return; }
-      FormulaList->Add(select);
+      formulaList->Add(select);
    }
 //*-*- if varexp is empty, take first nx + ny + ny*nspecies columns by default
 
@@ -978,15 +988,15 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 //*-*- Create the TreeFormula objects corresponding to each column
    for (i=0;i<ncols;i++) {
       var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
-      FormulaList->Add(var[i]);
+      formulaList->Add(var[i]);
    }
 
 //*-*- Create a TreeFormulaManager to coordinate the formulas
    TTreeFormulaManager *manager=0;
-   if (FormulaList->LastIndex()>=0) {
+   if (formulaList->LastIndex()>=0) {
       manager = new TTreeFormulaManager;
-      for(i=0;i<=FormulaList->LastIndex();i++) {
-         manager->Add((TTreeFormula*)FormulaList->At(i));
+      for(i=0;i<=formulaList->LastIndex();i++) {
+         manager->Add((TTreeFormula*)formulaList->At(i));
       }
       manager->Sync();
    }
@@ -1075,9 +1085,9 @@ void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t /*iflag*/)
       f+=TMath::Log(lik);
    }
    //extended likelihood, equivalent to chi2
-   Double_t Ntot=0;
+   Double_t ntot=0;
    for (i=0; i<nes; i++)
-      Ntot+=x[i];
-   f=-2*(f-Ntot);
+      ntot += x[i];
+   f = -2*(f-ntot);
 }
 

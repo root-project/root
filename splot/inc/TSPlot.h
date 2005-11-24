@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.h,v 1.2 2005/10/27 17:06:29 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.h,v 1.1 2005/10/27 19:33:41 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005
 
 /**********************************************************************
@@ -82,7 +82,7 @@ public:
    void       SetTree(TTree *tree);
    void       SetTreeSelection(const char* varexp="", const char *selection="", Long64_t firstentry=0);
 
-   ClassDef(TSPlot, 1)
+   ClassDef(TSPlot, 1)  //class to disentangle signal from background
 };
  
 #endif
