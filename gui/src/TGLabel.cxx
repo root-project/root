@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.18 2005/05/10 15:11:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.19 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -149,11 +149,20 @@ void TGLabel::DoRedraw()
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    if (!fDisabled) {
-      fText->Draw(fId, GetBckgndGC()(), x +1, y +1 + max_ascent);
       fText->Draw(fId, fNormGC, x, y + max_ascent);
    } else {
-      fText->Draw(fId, GetHilightGC()(), x + 1, y + 1 + max_ascent);
-      fText->Draw(fId, GetShadowGC()(), x, y + max_ascent);
+      FontH_t fontH;
+      if (GetDefaultFontStruct() != fFontStruct)
+         fontH = gVirtualX->GetFontHandle(fFontStruct);
+      else
+         fontH = gVirtualX->GetFontHandle(GetDefaultFontStruct());
+      TGGC *gc;
+      gc = fClient->GetResourcePool()->GetGCPool()->FindGC(GetHilightGC()());
+      gc->SetFont(fontH);
+      fText->Draw(fId, gc->GetGC(), x + 1, y + 1 + max_ascent);
+      gc = fClient->GetResourcePool()->GetGCPool()->FindGC(GetShadowGC()());
+      gc->SetFont(fontH);
+      fText->Draw(fId, gc->GetGC(), x, y + max_ascent);
    }
 }
 
