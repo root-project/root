@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.9 2005/10/04 07:51:29 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.10 2005/11/17 14:43:17 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -39,14 +39,14 @@ Window_t TX11GL::CreateGLWindow(Window_t wind)
       fDpy = (Display *)gVirtualX->GetDisplay();
 
    static int dblBuf[] = {
-    			  GLX_DOUBLEBUFFER,
+                           GLX_DOUBLEBUFFER,
 #ifdef STEREO_GL
-    			  GLX_STEREO,
+                           GLX_STEREO,
 #endif
-			  GLX_RGBA, GLX_DEPTH_SIZE, 16,
-    			  GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1,
-			  GLX_BLUE_SIZE, 1,None
-			 };
+                           GLX_RGBA, GLX_DEPTH_SIZE, 16,
+                           GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1,
+                           GLX_BLUE_SIZE, 1,None
+                           };
    static int * snglBuf = dblBuf + 1;
 
    if(!fVisInfo){
@@ -78,11 +78,11 @@ Window_t TX11GL::CreateGLWindow(Window_t wind)
    mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask |
           CWBackingStore | CWBitGravity;
 
-   Window GLWin = XCreateWindow(fDpy, wind, xval, yval, wval, hval,
+   Window glWin = XCreateWindow(fDpy, wind, xval, yval, wval, hval,
                                 0, fVisInfo->depth, InputOutput,
                                 fVisInfo->visual, mask, &attr);
-   XMapWindow(fDpy, GLWin);
-   return (Window_t)GLWin;
+   XMapWindow(fDpy, glWin);
+   return (Window_t)glWin;
 }
 
 //______________________________________________________________________________

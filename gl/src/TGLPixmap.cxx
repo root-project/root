@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.7 2005/11/04 20:13:08 pcanal Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.8 2005/11/23 14:48:02 couet Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -418,10 +418,10 @@ void GLFaceSet::GLDraw()const
 //______________________________________________________________________________
 void GLFaceSet::GLDrawPolys()const
 {
-  GLUtriangulatorObj *tessObj = getTesselator();
-  const Double_t *pnts = &fVertices[0];
-  const Double_t *normals = &fNormals[0];
-  const Int_t *pols = &fPolyDesc[0];
+   GLUtriangulatorObj *tessObj = getTesselator();
+   const Double_t *pnts = &fVertices[0];
+   const Double_t *normals = &fNormals[0];
+   const Int_t *pols = &fPolyDesc[0];
 
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t npoints = pols[j++];
@@ -918,29 +918,29 @@ void TGLPixmap::DrawObjects()const
 //______________________________________________________________________________
 void TGLPixmap::UpdateRange(const GLSelection *box)
 {
-   const Double_t *X = box->GetRangeX();
-   const Double_t *Y = box->GetRangeY();
-   const Double_t *Z = box->GetRangeZ();
+   const Double_t *x = box->GetRangeX();
+   const Double_t *y = box->GetRangeY();
+   const Double_t *z = box->GetRangeZ();
 
    if (!fRender->GetSize()) {
-      fRangeX.first = X[0], fRangeX.second = X[1];
-      fRangeY.first = Y[0], fRangeY.second = Y[1];
-      fRangeZ.first = Z[0], fRangeZ.second = Z[1];
+      fRangeX.first = x[0], fRangeX.second = x[1];
+      fRangeY.first = y[0], fRangeY.second = y[1];
+      fRangeZ.first = z[0], fRangeZ.second = z[1];
       return;
    }
 
-   if (fRangeX.first > X[0])
-      fRangeX.first = X[0];
-   if (fRangeX.second < X[1])
-      fRangeX.second = X[1];
-   if (fRangeY.first > Y[0])
-      fRangeY.first = Y[0];
-   if (fRangeY.second < Y[1])
-      fRangeY.second = Y[1];
-   if (fRangeZ.first > Z[0])
-      fRangeZ.first = Z[0];
-   if (fRangeZ.second < Z[1])
-      fRangeZ.second = Z[1];
+   if (fRangeX.first > x[0])
+      fRangeX.first = x[0];
+   if (fRangeX.second < x[1])
+      fRangeX.second = x[1];
+   if (fRangeY.first > y[0])
+      fRangeY.first = y[0];
+   if (fRangeY.second < y[1])
+      fRangeY.second = y[1];
+   if (fRangeZ.first > z[0])
+      fRangeZ.first = z[0];
+   if (fRangeZ.second < z[1])
+      fRangeZ.second = z[1];
 }
 
 

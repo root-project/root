@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.26 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.27 2005/06/13 10:20:10 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve, 
                   TObject *realObj = 0);
    TGLSceneObject(const TBuffer3D &buffer, TObject *realObj = 0);
-	TGLSceneObject(TObject *realObj);
+   TGLSceneObject(TObject *realObj);
    
    void InvokeContextMenu(TContextMenu &menu, UInt_t x, UInt_t y) const;
 

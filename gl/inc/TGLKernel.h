@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.20 2005/08/10 16:26:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.21 2005/10/03 15:19:35 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -125,8 +125,8 @@ public:
    void SetGLNormal(const Double_t * normal);
    void PaintPolyMarker(const Double_t * vertex, Style_t marker_style, UInt_t size);
    void DrawSelectionBox(Double_t xmin, Double_t xmax,
-	                     Double_t ymin, Double_t ymax,
-						 Double_t zmin, Double_t zmax);
+                         Double_t ymin, Double_t ymax,
+                         Double_t zmin, Double_t zmax);
    void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport);
    Int_t ExitSelectionMode();
    void GLLoadName(UInt_t name);

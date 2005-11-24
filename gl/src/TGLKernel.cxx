@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.36 2005/09/07 11:43:36 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.37 2005/10/03 15:19:35 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include "gl2ps.h"
 
 #ifndef   ColorOffset
- #define  ColorOffset 0
+#define  ColorOffset 0
 #endif
 
 //ClassImp(TGLKernel)
@@ -902,195 +902,195 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
       if (*(nextv+1) == 0.0 && *nextv == 0.0) { // The inner radius is ZERO
 
       //*-*  Draw the "Triangle fan"
-            glBegin(GL_TRIANGLE_FAN);
-            glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
-            nextv += pt3;
-            for (i=0;i<ndiv;i++) {
-                glVertex3fv(nextv);
-                nextv += 3;
-            }
-            if (nseg > 0)
-                glVertex3fv(nextv-pt3);
-        } else {
+         glBegin(GL_TRIANGLE_FAN);
+         glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
+         nextv += pt3;
+         for (i=0;i<ndiv;i++) {
+            glVertex3fv(nextv);
+            nextv += 3;
+         }
+         if (nseg > 0)
+         glVertex3fv(nextv-pt3);
+      } else {
 //*-*  Draws the series of the quadrilaterals
-            glBegin(GL_QUAD_STRIP);
-            exnextv = nextv + pt3;
-            for (i=0;i<ndiv;i++) {
-                glVertex3fv(nextv);
-                glVertex3fv(exnextv);
-                nextv += 3;
-                exnextv += 3;
-            }
-            if (nseg > 0 ) {
-                glVertex3fv(nextv  - pt3);
-                glVertex3fv(exnextv- pt3);
-            }
+         glBegin(GL_QUAD_STRIP);
+         exnextv = nextv + pt3;
+         for (i=0;i<ndiv;i++) {
+            glVertex3fv(nextv);
+            glVertex3fv(exnextv);
+            nextv += 3;
+            exnextv += 3;
+         }
+         if (nseg > 0 ) {
+            glVertex3fv(nextv  - pt3);
+            glVertex3fv(exnextv- pt3);
+         }
 
-        }
-        glEnd();
+      }
+      glEnd();
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*   "Bottom"  of TPCON
-         if (!fRootLight)
-            glNormal3fv(backone);
+      if (!fRootLight)
+         glNormal3fv(backone);
 
-        nextv = vert(0,0,0);
-        if (*(nextv+1) == 0.0 && *nextv == 0.0 ) {
+      nextv = vert(0,0,0);
+      if (*(nextv+1) == 0.0 && *nextv == 0.0 ) {
 //*-*  Draw the "Triangle fan"
-            glBegin(GL_TRIANGLE_FAN);
-            glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
-            nextv += pt6;
-            for (i=0;i<ndiv;i++) {
-                nextv -= 3;
-                glVertex3fv(nextv);
-            }
-            if (nseg > 0)
-                glVertex3fv(nextv+pt3-3);
-        } else {
-            //*-*  Draws the series of the quadrilaterals
-            glBegin(GL_QUAD_STRIP);
-            exnextv = nextv + pt3;
-            for (i=0;i<ndiv;i++) {
-                glVertex3fv(exnextv);
-                glVertex3fv(nextv);
-                nextv += 3;
-                exnextv +=3;
-            }
-            if (nseg > 0) {
-                glVertex3fv(exnextv- pt3);
-                glVertex3fv(nextv  - pt3);
-            }
-        }
-        glEnd();
+         glBegin(GL_TRIANGLE_FAN);
+         glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
+         nextv += pt6;
+         for (i=0;i<ndiv;i++) {
+             nextv -= 3;
+             glVertex3fv(nextv);
+         }
+         if (nseg > 0)
+            glVertex3fv(nextv+pt3-3);
+      } else {
+         //*-*  Draws the series of the quadrilaterals
+         glBegin(GL_QUAD_STRIP);
+         exnextv = nextv + pt3;
+         for (i=0;i<ndiv;i++) {
+            glVertex3fv(exnextv);
+            glVertex3fv(nextv);
+            nextv += 3;
+            exnextv +=3;
+         }
+         if (nseg > 0) {
+             glVertex3fv(exnextv- pt3);
+             glVertex3fv(nextv  - pt3);
+         }
+      }
+      glEnd();
 
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*   "Walls"  of TPCON
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*    Create the external walls
-        nextv = vertex + pt3;
-        for (i=0;i<nstacks-1;i++) {
-            glBegin(GL_QUAD_STRIP);
-            {
+      nextv = vertex + pt3;
+      for (i=0;i<nstacks-1;i++) {
+         glBegin(GL_QUAD_STRIP);
+         {
 //                nextv = vert(0,i,1);
-                exnextv = nextv+pt6;
-                for(j=0;j<ndiv;j++) {
-                    if (fRootLight)
-                        LightIndex(j>>1);
-                    else
-                        glNormal3fv(Normal2Line(exnextv,nextv,normal));
+            exnextv = nextv+pt6;
+            for(j=0;j<ndiv;j++) {
+               if (fRootLight)
+                  LightIndex(j>>1);
+               else
+                  glNormal3fv(Normal2Line(exnextv,nextv,normal));
 
-                    glVertex3fv(exnextv);
-                    glVertex3fv(nextv);
-                    nextv += 3;
-                    exnextv += 3;
-                }
-                if (nseg > 0) {
-//*-* To "close" shape we have to add on extra "wall"
-                    if (fRootLight)
-                        LightIndex(j>>1);
-                    else
-                        glNormal3fv(Normal2Line(exnextv-pt3,nextv-pt3,normal));
-
-                    glVertex3fv(exnextv - pt3);
-                    glVertex3fv(nextv   - pt3);
-                }
-                nextv += 3*ndiv;
+               glVertex3fv(exnextv);
+               glVertex3fv(nextv);
+               nextv += 3;
+               exnextv += 3;
             }
-            glEnd();
-        }
+            if (nseg > 0) {
+//*-* To "close" shape we have to add on extra "wall"
+               if (fRootLight)
+                  LightIndex(j>>1);
+               else
+                  glNormal3fv(Normal2Line(exnextv-pt3,nextv-pt3,normal));
+
+               glVertex3fv(exnextv - pt3);
+               glVertex3fv(nextv   - pt3);
+            }
+            nextv += 3*ndiv;
+         }
+         glEnd();
+      }
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*    Create the internal walls
-        exnextv = vertex;
-        for (i=0;i<nstacks-1;i++) {
-          if (*(exnextv+1) == 0.0 && *exnextv == 0.0) continue; // No internal wall at all
+      exnextv = vertex;
+      for (i=0;i<nstacks-1;i++) {
+         if (*(exnextv+1) == 0.0 && *exnextv == 0.0) continue; // No internal wall at all
 
-          glBegin(GL_QUAD_STRIP);
-          {
-              nextv = exnextv+pt6;
-              for(j=0;j<ndiv;j++) {
-                  if (fRootLight)
-                      LightIndex(j>>1);
-                  else
-                      glNormal3fv(Invert(Normal2Line(nextv,exnextv,normal)));
+         glBegin(GL_QUAD_STRIP);
+         {
+            nextv = exnextv+pt6;
+            for(j=0;j<ndiv;j++) {
+               if (fRootLight)
+                  LightIndex(j>>1);
+               else
+                  glNormal3fv(Invert(Normal2Line(nextv,exnextv,normal)));
 
-                  glVertex3fv(exnextv);
-                  glVertex3fv(nextv);
-                  nextv += 3;
-                  exnextv += 3;
-              }
-              if (nseg > 0) {
+               glVertex3fv(exnextv);
+               glVertex3fv(nextv);
+               nextv += 3;
+               exnextv += 3;
+            }
+            if (nseg > 0) {
 //*-* To "close" shape we have to add on extra "wall"
-                  if (fRootLight)
-                      LightIndex(j>>1);
-                  else
-                      glNormal3fv(Invert(Normal2Line(nextv-pt3,exnextv-pt3,normal)));
+               if (fRootLight)
+                  LightIndex(j>>1);
+               else
+                  glNormal3fv(Invert(Normal2Line(nextv-pt3,exnextv-pt3,normal)));
 
-                  glVertex3fv(exnextv - pt3);
-                  glVertex3fv(nextv   - pt3);
-              }
-              exnextv += pt3;
-          }
-          glEnd();
-        }
-        if (nseg < 0 ) {
+               glVertex3fv(exnextv - pt3);
+               glVertex3fv(nextv   - pt3);
+            }
+            exnextv += pt3;
+         }
+         glEnd();
+      }
+      if (nseg < 0 ) {
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*  Close the side holes
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-            Float_t oz[3]   = {0.0,0.0,1.0};
-            Float_t base[3] = {0.0,0.0,0.0};
+         Float_t oz[3]   = {0.0,0.0,1.0};
+         Float_t base[3] = {0.0,0.0,0.0};
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*   First hole
-            nextv = vertex;
-            base[0] = *(nextv+pt3);
-            base[1] = *(nextv+pt3+1);
-            if (fRootLight) {
-                      LightIndex(2>>1);
-            } else {
-                TMath::NormCross(base,oz,normal);
-                glNormal3fv(normal);
+         nextv = vertex;
+         base[0] = *(nextv+pt3);
+         base[1] = *(nextv+pt3+1);
+         if (fRootLight) {
+            LightIndex(2>>1);
+         } else {
+            TMath::NormCross(base,oz,normal);
+            glNormal3fv(normal);
+         }
+
+         glBegin(GL_QUAD_STRIP);
+         {
+            for (i=0;i<nstacks;i++) {
+               glVertex3fv(nextv);
+
+               nextv += pt3;
+               glVertex3fv(nextv);
+
+               nextv += pt3;
             }
-
-            glBegin(GL_QUAD_STRIP);
-            {
-                for (i=0;i<nstacks;i++) {
-                    glVertex3fv(nextv);
-
-                    nextv += pt3;
-                    glVertex3fv(nextv);
-
-                    nextv += pt3;
-                }
-            }
-            glEnd();
+         }
+         glEnd();
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*   Second one
-            nextv = vertex + 3*(ndiv-1);
-            base[0] = *(nextv+pt3);
-            base[1] = *(nextv+pt3+1);
+         nextv = vertex + 3*(ndiv-1);
+         base[0] = *(nextv+pt3);
+         base[1] = *(nextv+pt3+1);
 
-            if (fRootLight) {
-                LightIndex(ndiv>>1);
-            } else {
-                TMath::NormCross(oz,base,normal);
-                glNormal3fv(normal);
-            }
+         if (fRootLight) {
+            LightIndex(ndiv>>1);
+         } else {
+            TMath::NormCross(oz,base,normal);
+            glNormal3fv(normal);
+         }
 
-            glBegin(GL_QUAD_STRIP);
-            {
-                for (i=0;i<nstacks;i++) {
-                    glVertex3fv(nextv+pt3);
-                    glVertex3fv(nextv);
-                    nextv += 6*ndiv;
-                }
+         glBegin(GL_QUAD_STRIP);
+         {
+            for (i=0;i<nstacks;i++) {
+               glVertex3fv(nextv+pt3);
+               glVertex3fv(nextv);
+               nextv += 6*ndiv;
             }
-            glEnd();
-        }
-        if (fRootLight)
-            LightIndex(0);  //Reset the original color
-    }
+         }
+         glEnd();
+      }
+      if (fRootLight)
+         LightIndex(0);  //Reset the original color
+   }
 #undef vert
 }
 

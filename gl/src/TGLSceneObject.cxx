@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.44 2005/09/07 11:43:36 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.46 2005/10/24 14:49:33 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -196,15 +196,15 @@ void TGLFaceSet::SetFromMesh(const RootCsg::BaseMesh *mesh)
    // Should only be done on an empty faceset object
    assert(fNbPols == 0);
    
-	UInt_t nv = mesh->NumberOfVertices();
-	fVertices.reserve(3 * nv);
-	fNormals.resize(mesh->NumberOfPolys() * 3);
+   UInt_t nv = mesh->NumberOfVertices();
+   fVertices.reserve(3 * nv);
+   fNormals.resize(mesh->NumberOfPolys() * 3);
    UInt_t i;
 
-	for (i = 0; i < nv; ++i) {
-		const Double_t *v = mesh->GetVertex(i);
-		fVertices.insert(fVertices.end(), v, v + 3);
-	}
+   for (i = 0; i < nv; ++i) {
+      const Double_t *v = mesh->GetVertex(i);
+      fVertices.insert(fVertices.end(), v, v + 3);
+   }
 
    fNbPols = mesh->NumberOfPolys();
 
@@ -217,7 +217,7 @@ void TGLFaceSet::SetFromMesh(const RootCsg::BaseMesh *mesh)
    for (UInt_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex) {
       UInt_t polySize = mesh->SizeOfPoly(polyIndex);
 
-		fPolyDesc.push_back(polySize);
+      fPolyDesc.push_back(polySize);
 
       for(UInt_t i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
    }
@@ -1082,9 +1082,9 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
 
          Double_t phi1 = segBuffer->fPhiMin;
          Double_t phi2 = segBuffer->fPhiMax;
-			if (phi2 < phi1) phi2 += 360.;
-			phi1 *= TMath::DegToRad();
-			phi2 *= TMath::DegToRad();
+         if (phi2 < phi1) phi2 += 360.;
+         phi1 *= TMath::DegToRad();
+         phi2 *= TMath::DegToRad();
 
          if (buffer.Type() == TBuffer3DTypes::kCutTube) {
             const TBuffer3DCutTube * cutBuffer = dynamic_cast<const TBuffer3DCutTube *>(&buffer);

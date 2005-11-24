@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.15 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.16 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -344,7 +344,7 @@ void TGLPlane::Dump() const
    // Output plane equation to std::out
    std::cout.precision(6);
    std::cout << "Plane : " << fVals[0] << "x + " << fVals[1] << "y + " << fVals[2] << "z + " << fVals[3] << std::endl;
- }
+}
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

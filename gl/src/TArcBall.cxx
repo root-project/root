@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.7 2004/11/24 14:48:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.8 2005/08/30 10:29:52 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -210,10 +210,10 @@ inline void TArcBall::MapToSphere(const TPoint &NewPt, Double_t *NewVec) const
 
 //______________________________________________________________________________
 TArcBall::TArcBall(UInt_t Width, UInt_t Height)
-            :fThisRot(), fLastRot(),
-	          fTransform(), fStVec(),
-	          fEnVec(), fAdjustWidth(0.),
-	          fAdjustHeight(0.)
+         :fThisRot(), fLastRot(),
+         fTransform(), fStVec(),
+         fEnVec(), fAdjustWidth(0.),
+         fAdjustHeight(0.)
 {
    SetBounds(Width, Height);
    ResetMatrices();

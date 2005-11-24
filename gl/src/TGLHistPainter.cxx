@@ -1273,12 +1273,12 @@ namespace {
          }
          //Option time display is required ?
          if (axis->GetTimeDisplay()) {
-           option += 't';
+            option += 't';
 
-           if (!strlen(axis->GetTimeFormatOnly()))
-              axisPainter.SetTimeFormat(axis->ChooseTimeFormat(max - min));
-           else
-              axisPainter.SetTimeFormat(axis->GetTimeFormat());
+            if (!strlen(axis->GetTimeFormatOnly()))
+               axisPainter.SetTimeFormat(axis->ChooseTimeFormat(max - min));
+            else
+               axisPainter.SetTimeFormat(axis->GetTimeFormat());
          }
 
          axisPainter.SetOption(option.c_str());
@@ -1744,11 +1744,11 @@ void TGLHistPainter::DrawGrid(Int_t plane)const
    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
       
    Double_t lineCaps[][4] = {
-                             {fMinXScaled, fMinXScaled, fMinYScaled, fMaxYScaled},
-                             {fMinXScaled, fMaxXScaled, fMinYScaled, fMinYScaled}, 
-                             {fMaxXScaled, fMaxXScaled, fMinYScaled, fMaxYScaled},
-                             {fMinXScaled, fMaxXScaled, fMaxYScaled, fMaxYScaled}
-                            };
+                              {fMinXScaled, fMinXScaled, fMinYScaled, fMaxYScaled},
+                              {fMinXScaled, fMaxXScaled, fMinYScaled, fMinYScaled}, 
+                              {fMaxXScaled, fMaxXScaled, fMinYScaled, fMaxYScaled},
+                              {fMinXScaled, fMaxXScaled, fMaxYScaled, fMaxYScaled}
+                              };
 
    for (UInt_t i = 0; i < fZLevels.size(); ++i) {
       glBegin(GL_LINES);
