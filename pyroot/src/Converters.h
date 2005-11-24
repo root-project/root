@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.13 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.14 2005/10/26 05:12:24 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -90,12 +90,16 @@ namespace PyROOT {
 
    class TCStringConverter : public TConverter {
    public:
+      TCStringConverter( UInt_t maxSize = (UInt_t)-1 ) : fMaxSize( maxSize ) {}
+
+   public:
       virtual Bool_t SetArg( PyObject*, G__CallFunc* );
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
 
    private:
       std::string fBuffer;
+      UInt_t fMaxSize;
    };
 
 // pointer/array conversions

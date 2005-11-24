@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.28 2005/10/26 05:12:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.29 2005/11/17 06:26:35 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -756,27 +756,6 @@ namespace {
 namespace PyROOT {      // workaround for Intel icc on Linux
 
 //- TTree behaviour ----------------------------------------------------------
-   class TreeEraser : public TObject {
-   public:
-      TreeEraser( PyObject* ttree ) : fTree( ttree ) {}
-
-      virtual Bool_t Notify()
-      {
-         if ( ! fTree )
-            return kFALSE;
-
-      // "reset" the dictionary by replacing it with an empty one
-         PyObject* dict = PyDict_New();
-         PyObject_SetAttrString( fTree, const_cast< char* >( "__dict__" ), dict );
-         Py_DECREF( dict );
-
-         return kTRUE;
-      }
-   private:
-      PyObject* fTree;
-   };
-
-//____________________________________________________________________________
    PyObject* TTreeGetAttr( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; const char* name = 0;
@@ -788,50 +767,52 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTree* tree =
          (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
 
-   // setup notification as needed
-      if ( ! tree->GetNotify() )
-         tree->SetNotify( new TreeEraser( (PyObject*)self ) );
-
    // allow access to leaves as if they are data members
       TLeaf* leaf = tree->GetLeaf( name );
-      if ( ! leaf )
-         return 0;
-
-      if ( leaf->IsOnTerminalBranch() ) {
-      // found a leaf, extract value if just one, or wrap buffer if more
+      if ( leaf && leaf->IsOnTerminalBranch() ) {
+      // found a leaf, extract value and wrap
          if ( ! leaf->GetLeafCount() && leaf->GetLenStatic() <= 1 ) {
-            return PyFloat_FromDouble( leaf->GetValue() );
-         } else {
-            TConverter* pcnv = CreateConverter( leaf->GetTypeName(), leaf->GetNdata() );
-            PyObject* value = pcnv->FromMemory( leaf->GetValuePointer() );
+            TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
+            PyObject* value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );
             delete pcnv;
 
-            if ( ! PyString_Check( value ) )    // if not, ordinary array: cache result
-               PyObject_SetAttrString( (PyObject*)self, const_cast< char* >( name ), value );
+            return value;
+
+         } else {
+            std::string typeName = leaf->GetTypeName();
+            TConverter* pcnv = CreateConverter( typeName + '*', leaf->GetNdata() );
+            void* address = (void*)leaf->GetValuePointer();
+            PyObject* value = pcnv->FromMemory( &address );
+            delete pcnv;
 
             return value;
          }
       } else {
-      // probably found a branch, extract object if possible
+      // maybe there's a branch; extract object if possible
          TBranch* branch = tree->GetBranch( name );
          if ( branch ) {
             TClass* klass = gROOT->GetClass( branch->GetClassName() );
             if ( klass && branch->GetAddress() )
                return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
-         }
+          }
       }
 
    // confused
-      PyErr_Format( PyExc_AttributeError, "no such attribute \'%s\'", name );
+      PyErr_Format( PyExc_AttributeError,
+          "\'%s\' object has no attribute \'%s\'", tree->IsA()->GetName(), name );
       return 0;
    }
 
 //____________________________________________________________________________
-   class TTreeBranch : public PyCallable {
-   public:
-      TTreeBranch( MethodProxy* org ) { Py_INCREF( org ); fOrg = org; }
-      TTreeBranch( const TTreeBranch& t ) : PyCallable( t ) { Py_INCREF( t.fOrg ); fOrg = t.fOrg; }
-      TTreeBranch& operator=( const TTreeBranch& t )
+   class TTreeMemberFunction : public PyCallable {
+   protected:
+      TTreeMemberFunction( MethodProxy* org ) { Py_INCREF( org ); fOrg = org; }
+      TTreeMemberFunction( const TTreeMemberFunction& t ) : PyCallable( t )
+      {
+         Py_INCREF( t.fOrg );
+         fOrg = t.fOrg;
+      }
+      TTreeMemberFunction& operator=( const TTreeMemberFunction& t )
       {
          if ( &t != this ) {
             Py_INCREF( t.fOrg );
@@ -839,7 +820,16 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          }
          return *this;
       }
-      ~TTreeBranch() { Py_DECREF( fOrg ); fOrg = 0; }
+      ~TTreeMemberFunction() { Py_DECREF( fOrg ); fOrg = 0; }
+
+   protected:
+      MethodProxy* fOrg;
+   };
+
+//____________________________________________________________________________
+   class TTreeBranch : public TTreeMemberFunction {
+   public:
+      TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
       virtual PyObject* GetDocString()
@@ -953,9 +943,68 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
          return result;
       }
+   };
 
-   private:
-      MethodProxy* fOrg;
+//____________________________________________________________________________
+   class TTreeSetBranchAddress : public TTreeMemberFunction {
+   public:
+      TTreeSetBranchAddress( MethodProxy* org ) : TTreeMemberFunction( org ) {}
+
+   public:
+      virtual PyObject* GetDocString()
+      {
+         return PyString_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
+      }
+
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+      {
+      // acceptable signature:
+      //   ( const char*, void* )
+         int argc = PyTuple_GET_SIZE( args );
+
+         if ( 2 == argc ) {
+            TTree* tree =
+               (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
+
+            if ( ! tree ) {
+               PyErr_SetString( PyExc_TypeError,
+                  "TTree::SetBranchAddress must be called with a TTree instance as first argument" );
+               return 0;
+            }
+
+            PyObject *name = 0, *address = 0;
+
+         // try: ( const char*, void* )
+            if ( PyArg_ParseTuple( args, const_cast< char* >( "SO:SetBranchAddress" ),
+                    &name, &address ) ) {
+
+               void* buf = 0;
+               if ( ObjectProxy_Check( address ) ) {
+                  if ( ((ObjectProxy*)address)->fFlags & ObjectProxy::kIsReference )
+                     buf = (void*)((ObjectProxy*)address)->fObject;
+                  else
+                     buf = (void*)&((ObjectProxy*)address)->fObject;
+               } else
+                  Utility::GetBuffer( address, '*', 1, buf, kFALSE );
+
+               if ( buf != 0 ) {
+                  tree->SetBranchAddress( PyString_AS_STRING( name ), buf );
+
+                  Py_INCREF( Py_None );
+                  return Py_None;
+               }
+            }
+         }
+
+      // still here? Then call original Branch() to reach the other overloads:
+         Py_INCREF( (PyObject*)self );
+         fOrg->fSelf = self;
+         PyObject* result = PyObject_Call( (PyObject*)fOrg, args, kwds );
+         fOrg->fSelf = 0;
+         Py_DECREF( (PyObject*)self );
+
+         return result;
+      }
    };
 
 } // namespace PyROOT
@@ -1469,11 +1518,21 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       MethodProxy* original = (MethodProxy*)PyObject_GetAttrString(
          pyclass, const_cast< char* >( "Branch" ) );
       MethodProxy* method = MethodProxy_New( "Branch", new TTreeBranch( original ) );
-      Py_DECREF( original );
+      Py_DECREF( original ); original = 0;
 
       PyObject_SetAttrString(
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
-      Py_DECREF( method );      
+      Py_DECREF( method ); method = 0;
+
+   // workaround for templated member SetBranchAddress()
+      original = (MethodProxy*)PyObject_GetAttrString(
+         pyclass, const_cast< char* >( "SetBranchAddress" ) );
+      method = MethodProxy_New( "SetBranchAddress", new TTreeSetBranchAddress( original ) );
+      Py_DECREF( original ); original = 0;
+
+      PyObject_SetAttrString(
+         pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
+      Py_DECREF( method ); method = 0;
 
       return kTRUE;
    }

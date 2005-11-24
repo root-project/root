@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.18 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.19 2005/10/26 05:12:24 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -281,7 +281,14 @@ Bool_t PyROOT::TCStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
    const char* s = PyString_AsString( pyobject );
    if ( PyErr_Occurred() )
       return kFALSE;
+
    fBuffer = s;
+
+// verify (too long string will cause truncation, no crash)
+   if ( fMaxSize < (UInt_t)fBuffer.size() )
+      PyErr_Warn( PyExc_RuntimeWarning, "string too long for char array (truncated)" );
+   else if ( fMaxSize != (UInt_t)-1 )
+      fBuffer.resize( fMaxSize, '\0' );      // padd remainder of buffer as needed
 
 // set the value and declare success
    func->SetArg( reinterpret_cast< Long_t >( fBuffer.c_str() ) );
@@ -289,8 +296,16 @@ Bool_t PyROOT::TCStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
 }
 
 PyObject* PyROOT::TCStringConverter::FromMemory( void* address ) {
-   if ( address )
+   if ( address && *(char**)address ) {
+      if ( fMaxSize != (UInt_t)-1 ) {        // need to prevent reading beyond boundary
+         std::string buf( *(char**)address, fMaxSize );
+         return PyString_FromString( buf.c_str() );
+      }
+
       return PyString_FromString( *(char**)address );
+   }
+
+// empty string in case there's no address
    return PyString_FromString( const_cast< char* >( "" ) );
 }
 
@@ -299,7 +314,15 @@ Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address ) {
    if ( PyErr_Occurred() )
       return kFALSE;
 
-   strcpy( *(char**)address, s );
+// verify (too long string will cause truncation, no crash)
+   if ( fMaxSize < (UInt_t)PyString_GET_SIZE( value ) )
+      PyErr_Warn( PyExc_RuntimeWarning, "string too long for char array (truncated)" );
+
+   if ( fMaxSize != (UInt_t)-1 )
+      strncpy( *(char**)address, s, fMaxSize );   // padds remainder
+   else
+      strcpy( *(char**)address, s );
+
    return kTRUE;
 }
 
@@ -806,7 +829,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
    PYROOT_BASIC_CONVERTER_FACTORY( Macro )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
-   PYROOT_BASIC_CONVERTER_FACTORY( CString )
+   PYROOT_ARRAY_CONVERTER_FACTORY( CString )
    PYROOT_ARRAY_CONVERTER_FACTORY( ShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( UShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( IntArray )
