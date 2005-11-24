@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStructure.h,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStructure.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -70,7 +70,6 @@ public:
 class TSQLStructure : public TObject {
 protected:   
 
-   TString          MakeArrayIndex(TStreamerElement* elem, Int_t n);
    Bool_t           CheckNormalClassPair(TSQLStructure* vers, TSQLStructure* info);
 
    Int_t            FindMaxRef();
@@ -154,7 +153,9 @@ public:
    static Bool_t    UnpackTString(TSQLFile* f, TSQLObjectData* data, Int_t objid, Int_t clversion);
    static Bool_t    IsNumericType(Int_t typ);
    static const char* GetSimpleTypeName(Int_t typ);
+   static TString   MakeArrayIndex(TStreamerElement* elem, Int_t n);
    static Int_t     DefineElementColumnType(TStreamerElement* elem, TSQLFile* f);
+   static TString   DefineElementColumnName(TStreamerElement* elem, TSQLFile* f, Int_t indx = 0);
   
    enum ESQLTypes {
      kSqlObject       = 10001,

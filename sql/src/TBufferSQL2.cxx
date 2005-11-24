@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -528,6 +528,10 @@ void TBufferSQL2::SetStreamerElementNumber(Int_t number)
 //______________________________________________________________________________
 void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t number)
 {
+   // This function is a part of SetStreamerElementNumber function.
+   // It is introduced for reading of data for specified data memeber of class.
+   // Used also in ReadFastArray methods to resolve problem of compressed data,
+   // when several data memebers of the same basic type streamed with single ...FastArray call
 
    if (gDebug>2)
       cout << " TBufferSQL2::WorkWithElement " << elem->GetName() << endl;
@@ -1199,6 +1203,9 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 
 Int_t TBufferSQL2::SqlReadArraySize()
 {
+   // Reads array size, written in raw data table.
+   // Used in ReadArray methods, where TBuffer need to read array size first.   
+    
    const char* value = SqlReadValue(sqlio::Array);
    if ((value==0) || (strlen(value)==0)) return 0;
    Int_t sz = atoi(value);

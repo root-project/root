@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLFile.cxx,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLFile.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -82,6 +82,14 @@
 //
 // When data is reading, TBufferSQL2 will produce requests to database
 // during unstreaming of object data.
+//
+// There is one method TSQLFile::MakeSelectQuery(TClass*), which
+// produces SELECT statement to get objects data of specified class.
+// Difference from simple statement like:
+//   mysql> SELECT * FROM TH1I_ver1 
+// that not only data for that class, but also data from parent classes
+// will be extracted from other tables and combined in single result table
+// Such select query can be usufull for external access to objects data.
 //
 // There is two examples: tables.C and canvas.C in sql directory
 // To run them, correct database name, username and password should be specified.
@@ -516,7 +524,8 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
 
    return;
 
- zombie:
+zombie:
+   
    delete fSQL;
    fSQL = 0;
    MakeZombie();
@@ -978,6 +987,10 @@ Bool_t TSQLFile::ReadConfigurations()
 //______________________________________________________________________________
 void TSQLFile::CreateBasicTables()
 {
+   // Creates initial tables in database
+   // This is table with configurations and table with keys
+   // Function called once when first object is stored to the file.  
+    
    TString sqlcmd;
 
    const char* quote = SQLIdentifierQuote();
@@ -1032,6 +1045,119 @@ void TSQLFile::CreateBasicTables()
                sqlio::KT_Class, SQLSmallTextType());
 
    SQLQuery(sqlcmd.Data());
+}
+
+//______________________________________________________________________________
+TString TSQLFile::MakeSelectQuery(TClass* cl)
+{
+   // Produce SELECT statement which can be used to get all data 
+   // of class cl in one SELECT statement 
+   // This statement also can be used to create VIEW by command like
+   // mysql> CREATE VIEW TH1I_view AS $CLASSSELECT$
+   // Where $CLASSSELECT$ argument should be produced by call
+   //   f->MakeSelectQuery(TH1I::Class());
+   // VIEWs supported by latest MySQL 5 and Oracle
+   
+   TString res = ""; 
+   TSQLClassInfo* sqlinfo = RequestSQLClassInfo(cl);
+   if (sqlinfo==0) return res;
+   
+   TString columns, tables;
+   Int_t tablecnt = 0;
+   
+   if (!ProduceClassSelectQuery(cl->GetStreamerInfo(), sqlinfo, columns, tables, tablecnt))
+     return res;
+   
+   res.Form("SELECT %s FROM %s", columns.Data(), tables.Data());
+   
+   return res;
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::ProduceClassSelectQuery(TStreamerInfo* info, 
+                                         TSQLClassInfo* sqlinfo, 
+                                         TString& columns, 
+                                         TString& tables, 
+                                         Int_t& tablecnt)
+{
+   // used by MakeClassSelectQuery method to add columns from table of 
+   // class, specified by TStreamerInfo structure
+    
+   if ((info==0) || (sqlinfo==0)) return kFALSE;
+   
+   if (!sqlinfo->IsClassTableExist()) return kFALSE;
+   
+   const char* quote = SQLIdentifierQuote();
+   
+   TString table_syn;
+   table_syn.Form("t%d", ++tablecnt);
+   
+   Bool_t start = tables.Length()==0;
+   
+   TString buf;
+   
+   if (start) 
+     buf.Form("%s AS %s", sqlinfo->GetClassTableName(), table_syn.Data());
+   else 
+     buf.Form(" LEFT JOIN %s AS %s USING(%s%s%s)",
+              sqlinfo->GetClassTableName(), table_syn.Data(), 
+              quote, SQLObjectIdColumn(), quote);
+              
+   tables += buf;
+   
+   if (start)
+     columns.Form("%s.%s%s%s",table_syn.Data(), quote, SQLObjectIdColumn(), quote);
+     
+   if (info->GetClass()==TObject::Class()) {
+      buf.Form(", %s.%s",table_syn.Data(), sqlio::TObjectUniqueId); 
+      columns+=buf;
+      buf.Form(", %s.%s",table_syn.Data(), sqlio::TObjectBits); 
+      columns+=buf;
+      buf.Form(", %s.%s",table_syn.Data(), sqlio::TObjectProcessId); 
+      columns+=buf;
+      return kTRUE; 
+   }
+   
+   TIter iter(info->GetElements());
+   TStreamerElement* elem = 0;
+   
+   while ((elem = (TStreamerElement*) iter()) != 0) {
+      Int_t typ = elem->GetType();
+      Int_t coltype = TSQLStructure::DefineElementColumnType(elem, this);
+      TString colname = TSQLStructure::DefineElementColumnName(elem, this);
+      
+      buf = "";
+      switch (coltype) {
+          
+         case TSQLStructure::kColObject:
+         case TSQLStructure::kColObjectPtr:
+         case TSQLStructure::kColTString:
+         case TSQLStructure::kColSimple: {
+            buf.Form(", %s.%s%s%s",table_syn.Data(), quote, colname.Data(), quote); 
+            columns+=buf;
+            break;
+         }
+ 
+         case TSQLStructure::kColParent: {
+            TClass* parentcl = elem->GetClassPointer();
+            ProduceClassSelectQuery(parentcl->GetStreamerInfo(),
+                                    RequestSQLClassInfo(parentcl),
+                                    columns, tables, tablecnt);
+            break;  
+         } 
+         
+         case TSQLStructure::kColSimpleArray: {
+            for(Int_t n=0;n<elem->GetArrayLength();n++) {
+               colname = TSQLStructure::DefineElementColumnName(elem, this, n); 
+               buf.Form(", %s.%s%s%s",table_syn.Data(), quote, colname.Data(), quote); 
+               columns+=buf;
+            }
+            break;
+         }
+      } // switch
+   }
+   
+   return (columns.Length()>0) && (tables.Length()>0);
 }
 
 //______________________________________________________________________________
@@ -1734,3 +1860,4 @@ const char* TSQLFile::SQLIntType() const
 
    return SQLCompatibleType(TStreamerInfo::kInt);
 }
+

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStructure.cxx,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStructure.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -614,38 +614,38 @@ public:
    TSqlRegistry() :
       TObject(),
       f(0),
-      keyid(0),
-      MaxObjId(-1),
-      cmds(0),
-      FirstObjId(0),
-      regcmds(),
-      curr_objid(),
-      curr_objcl(0),
-      longstrid(0)
+      fKeyId(0),
+      fLastObjId(-1),
+      fCmds(0),
+      fFirstObjId(0),
+      fRegCmds(),
+      fCurrentObjId(),
+      fCurrentObjClass(0),
+      fLastLongStrId(0)
    {
    }
 
    TSQLFile*  f;
-   Int_t      keyid;
-   Int_t      MaxObjId;
-   TObjArray* cmds;
-   Int_t      FirstObjId;
-   TObjArray  regcmds;
+   Int_t      fKeyId;
+   Int_t      fLastObjId;
+   TObjArray* fCmds;
+   Int_t      fFirstObjId;
+   TObjArray  fRegCmds;
 
-   TString    curr_objid;
-   TClass*    curr_objcl;
+   TString    fCurrentObjId;
+   TClass*    fCurrentObjClass;
 
-   Int_t      longstrid;
+   Int_t      fLastLongStrId;
 
    virtual ~TSqlRegistry() {}
 
-   Int_t GetNextObjId() { return ++MaxObjId; }
+   Int_t GetNextObjId() { return ++fLastObjId; }
 
    void AddSqlCmd(const char* query)
    {
       // add SQL command to the list
-      if (cmds==0) cmds = new TObjArray;
-      cmds->Add(new TObjString(query));
+      if (fCmds==0) fCmds = new TObjArray;
+      fCmds->Add(new TObjString(query));
    }
 
    void AddBrackets(TString& s, const char* quote)
@@ -661,11 +661,11 @@ public:
    {
       // add special command to register object in objects table
 
-      Int_t indx = objid-FirstObjId;
+      Int_t indx = objid-fFirstObjId;
       if (indx<0)
          Error("AddRegCmd","Soemthing wrong");
       else
-         regcmds.AddAtAndExpand(new TObjString(cmd), indx);
+         fRegCmds.AddAtAndExpand(new TObjString(cmd), indx);
    }
 
    Int_t AddLongString(const char* strvalue)
@@ -673,8 +673,8 @@ public:
       // add value to special string table,
       // where large (more than 255 bytes) strings are stored
 
-      if (longstrid==0) f->VerifyLongStringTable();
-      Int_t strid = ++longstrid;
+      if (fLastLongStrId==0) f->VerifyLongStringTable();
+      Int_t strid = ++fLastLongStrId;
       TString value = strvalue;
       const char* valuequote = f->SQLValueQuote();
       const char* quote = f->SQLIdentifierQuote();
@@ -683,7 +683,7 @@ public:
       TString cmd;
       cmd.Form("INSERT INTO %s%s%s VALUES (%s, %d, %s)",
                quote, sqlio::StringsTable, quote,
-               curr_objid.Data(), strid, value.Data());
+               fCurrentObjId.Data(), strid, value.Data());
       AddSqlCmd(cmd.Data());
       return strid;
    }
@@ -705,7 +705,7 @@ public:
 
          sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s, %d, %s%s%s, %s)",
                      quote, sqlinfo->GetRawTableName(), quote,
-                     curr_objid.Data(),
+                     fCurrentObjId.Data(),
                      rawid++,
                      valuequote, cmd->GetName(), valuequote,
                      value.Data());
@@ -729,7 +729,7 @@ public:
       const char* valuequote = f->SQLValueQuote();
       const char* quote = f->SQLIdentifierQuote();
 
-      cmdmask.Form("(%s, %s, %s%s%s, %s)", curr_objid.Data(), "%d", valuequote, "%s", valuequote, "%s");
+      cmdmask.Form("(%s, %s, %s%s%s, %s)", fCurrentObjId.Data(), "%d", valuequote, "%s", valuequote, "%s");
 
       TIter iter(blobs);
       TNamed* cmd = 0;
@@ -821,20 +821,20 @@ Bool_t TSQLStructure::ConvertToTables(TSQLFile* file, Int_t keyid, TObjArray* cm
    // this structure with object data
    // Should be only called for toplevel structure
 
-   if (file==0) return kFALSE;
+   if ((file==0) || (cmds==0)) return kFALSE;
 
    TSqlRegistry reg;
 
-   reg.cmds = cmds;
+   reg.fCmds = cmds;
    reg.f = file;
-   reg.keyid = keyid;
-   reg.FirstObjId = atoi(GetValue()); // this is id of main object to be stored
+   reg.fKeyId = keyid;
+   reg.fFirstObjId = atoi(GetValue()); // this is id of main object to be stored
    // this is maximum objectid which is now in use
-   reg.MaxObjId = FindMaxRef();
+   reg.fLastObjId = FindMaxRef();
 
    Bool_t res = StoreObject(&reg, GetValue(), GetObjectClass());
 
-   cmds->AddAll(&(reg.regcmds));
+   cmds->AddAll(&(reg.fRegCmds));
 
    return res;
 }
@@ -923,7 +923,7 @@ void TSQLStructure::PerformConversion(TSqlRegistry* reg, TObjArray* blobs, const
          Int_t size = strlen(value);
          if (size > reg->f->SQLSmallTextTypeLimit()) {
             Int_t strid = reg->AddLongString(value);
-            buf = reg->f->CodeLongString(atoi(reg->curr_objid.Data()), strid);
+            buf = reg->f->CodeLongString(atoi(reg->fCurrentObjId.Data()), strid);
             value = buf.Data();
          }
       }
@@ -962,11 +962,11 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* 
 
    TSQLClassInfo* sqlinfo = 0;
 
-   TString oldid = reg->curr_objid;
-   TClass* oldcl = reg->curr_objcl;
+   TString oldid = reg->fCurrentObjId;
+   TClass* oldcl = reg->fCurrentObjClass;
 
-   reg->curr_objid = objid;
-   reg->curr_objcl = cl;
+   reg->fCurrentObjId = objid;
+   reg->fCurrentObjClass = cl;
 
    Bool_t normstore = kFALSE;
 
@@ -1016,12 +1016,12 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* 
 
    if (registerobj) {
       Int_t objidint = atoi(objid);
-      TString regcmd = reg->f->SetObjectDataCmd(reg->keyid, objidint, cl);
+      TString regcmd = reg->f->SetObjectDataCmd(reg->fKeyId, objidint, cl);
       reg->AddRegCmd(regcmd.Data(), objidint);
    }
 
-   reg->curr_objid = oldid;
-   reg->curr_objcl = oldcl;
+   reg->fCurrentObjId = oldid;
+   reg->fCurrentObjClass = oldcl;
 
    return res;
 }
@@ -1062,7 +1062,7 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
    Int_t currrawid = 0;
 
    // add first column with object id
-   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->curr_objid, kTRUE));
+   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->fCurrentObjId, kTRUE));
 
    for(Int_t n=0;n<=fChilds.GetLast();n++) {
       TSQLStructure* child = (TSQLStructure*) fChilds.At(n);
@@ -1169,7 +1169,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
          columns->Add(new TSQLColumnData(colname.Data(), stype, value, kFALSE));
       else {
          Int_t strid = reg->AddLongString(value);
-         TString buf = reg->f->CodeLongString(atoi(reg->curr_objid.Data()), strid);
+         TString buf = reg->f->CodeLongString(atoi(reg->fCurrentObjId.Data()), strid);
          columns->Add(new TSQLColumnData(colname.Data(), stype, buf.Data(), kFALSE));
       }
 
@@ -1177,7 +1177,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
    }
 
    if (columntyp==kColParent) {
-      TString objid = reg->curr_objid; // DefineObjectIdStr();
+      TString objid = reg->fCurrentObjId; // DefineObjectIdStr();
       TClass* basecl = elem->GetClassPointer();
       Int_t resversion = basecl->GetClassVersion();
       if (!StoreObject(reg, objid.Data(), basecl, kFALSE))
@@ -1375,7 +1375,7 @@ Bool_t TSQLStructure::StoreTObject(TSqlRegistry* reg)
 
    const char* uinttype = reg->f->SQLCompatibleType(TStreamerInfo::kUInt);
 
-   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->curr_objid, kTRUE));
+   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->fCurrentObjId, kTRUE));
 
    columns.Add(new TSQLColumnData(sqlio::TObjectUniqueId, uinttype, str_id->GetValue(), kTRUE));
    columns.Add(new TSQLColumnData(sqlio::TObjectBits, uinttype, str_bits->GetValue(), kTRUE));
@@ -1404,7 +1404,7 @@ Bool_t TSQLStructure::StoreTString(TSqlRegistry* reg)
 
    TObjArray columns;
 
-   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->curr_objid, kTRUE));
+   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->fCurrentObjId, kTRUE));
    columns.Add(new TSQLColumnData(sqlio::TStringValue, reg->f->SQLBigTextType(), value, kFALSE));
 
    reg->f->SyncSQLClassInfo(sqlinfo, &columns, kFALSE);
@@ -1515,6 +1515,80 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
 }
 
 //________________________________________________________________________
+TString TSQLStructure::DefineElementColumnName(TStreamerElement* elem, TSQLFile* f, Int_t indx)
+{
+   // returns name of the column in class table for that element 
+    
+   TString colname = ""; 
+    
+   Int_t coltype = DefineElementColumnType(elem, f);
+   if (coltype==kColUnknown) return colname;
+
+   const char* elemname = elem->GetName();
+
+   switch (coltype) {
+   case kColSimple: {
+      colname = elemname;
+      if (f->GetUseSuffixes()) {
+         colname+=f->SQLNameSeparator();
+         colname+=GetSimpleTypeName(elem->GetType());
+      }
+      break;
+   }
+
+   case kColSimpleArray: {
+      colname = elemname;
+      colname+=MakeArrayIndex(elem, indx);
+      break;
+   }
+
+   case kColParent: {
+      colname = elemname;
+      if (f->GetUseSuffixes())
+         colname+=sqlio::ParentSuffix;
+      break;
+   }
+
+   case kColObject: {
+      colname = elemname;
+      if (f->GetUseSuffixes())
+         colname += sqlio::ObjectSuffix;
+      break;
+   }
+
+   case kColObjectPtr: {
+      colname = elemname;
+      if (f->GetUseSuffixes())
+         colname += sqlio::PointerSuffix;
+      break;
+   }
+
+   case kColTString: {
+      colname = elem->GetName();
+      if (f->GetUseSuffixes())
+         colname+=sqlio::StrSuffix;
+      break;
+   }
+
+   case kColRawData: {
+      colname = elemname;
+      if (f->GetUseSuffixes())
+         colname += sqlio::RawSuffix;
+      break;
+   }
+
+   case kColObjectArray: {
+      colname = elemname;
+      if (f->GetUseSuffixes())
+         colname += sqlio::RawSuffix;
+      break;
+   }
+   }
+
+   return colname;
+}
+
+//________________________________________________________________________
 Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
 {
    // find column in TSQLObjectData object, which correspond to current element
@@ -1540,7 +1614,7 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
    case kColSimple: {
       TString colname = elemname;
       if (f->GetUseSuffixes()) {
-         colname+=":";
+         colname+=f->SQLNameSeparator();
          colname+=GetSimpleTypeName(elem->GetType());
       }
       located = data->LocateColumn(colname.Data());

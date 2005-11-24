@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLFile.h,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLFile.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -88,6 +88,7 @@ protected:
    TSQLClassInfo*    RequestSQLClassInfo(const char* clname, Int_t version, Bool_t force = kFALSE);
    TSQLClassInfo*    RequestSQLClassInfo(const TClass* cl, Bool_t force = kFALSE);
    Bool_t            SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bool_t hasrawdata);
+   Bool_t            ProduceClassSelectQuery(TStreamerInfo* info, TSQLClassInfo* sqlinfo, TString& columns, TString& tables, Int_t& tablecnt);
 
    // operations with long string table
    TString           CodeLongString(Int_t objid, Int_t strid);
@@ -135,9 +136,9 @@ protected:
    std::ofstream*    fLogFile;        //! log file with SQL statements
 
 private:
-  //let the compiler do the job. gcc complains when the following line is activated
-  //TSQLFile(const TSQLFile &) {}            //Files cannot be copied
-  void operator=(const TSQLFile &);
+   //let the compiler do the job. gcc complains when the following line is activated
+   //TSQLFile(const TSQLFile &) {}            //Files cannot be copied
+   void operator=(const TSQLFile &);
 
 public:
    TSQLFile();
@@ -154,6 +155,7 @@ public:
    // log file for SQL statements
    void              StartLogFile(const char* fname);  // *MENU*
    void              StopLogFile();                    // *MENU*
+   TString           MakeSelectQuery(TClass* cl);
 
    virtual void      Close(Option_t *option="");       // *MENU*
    virtual void      DrawMap(const char* ="*",Option_t* ="") {} 

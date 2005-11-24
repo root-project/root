@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLObjectData.h,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLObjectData.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -34,7 +34,8 @@ class TSQLResult;
 class TSQLRow;
 
 class TSQLObjectData : public TObject {
- public:
+
+public:
    TSQLObjectData();
    
    TSQLObjectData(TSQLClassInfo* sqlinfo,
@@ -61,7 +62,7 @@ class TSQLObjectData : public TObject {
    Bool_t            VerifyDataType(const char* tname, Bool_t errormsg = kTRUE);
    Bool_t            PrepareForRawData();
    
- protected: 
+protected: 
    Bool_t            ExtractBlobValues();
    
    Int_t             GetNumClassFields();

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.7 2005/09/06 09:34:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.8 2005/11/20 05:07:41 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -174,7 +174,7 @@ Bool_t TXMLSetup::IsValidXmlSetup(const char* setupstr)
    str.ToLower();
    if ((str[0]<48) || (str[0]>53)) return kFALSE;
    for (int n=1;n<4;n++)
-     if ((str[n]!='o') && (str[n]!='x')) return kFALSE;
+      if ((str[n]!='o') && (str[n]!='x')) return kFALSE;
    return kTRUE;  
 }
 
