@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.4 2005/04/29 16:10:42 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.5 2005/06/23 10:04:08 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -232,7 +232,7 @@ public:
    virtual void       FixParameter(Int_t ipar);
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
    virtual Double_t   GetChisquare();
-   virtual Double_t*  GetCovarianceMatrix() const {return 0;}
+   virtual Double_t*  GetCovarianceMatrix() const;
    virtual void       GetCovarianceMatrix(TMatrixD &matr);
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const {return fParCovar(i, j);}
    virtual void       GetErrors(TVectorD &vpar);

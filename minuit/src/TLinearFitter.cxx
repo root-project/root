@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.13 2005/09/04 10:38:41 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.14 2005/09/04 10:40:24 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -783,6 +783,13 @@ Double_t TLinearFitter::GetChisquare()
       Chisquare();
       return fChisquare;
    }
+}
+
+//______________________________________________________________________________
+Double_t * TLinearFitter::GetCovarianceMatrix() const
+{
+   Double_t *p = const_cast<Double_t*>(fParCovar.GetMatrixArray());
+   return p;
 }
 
 //______________________________________________________________________________
