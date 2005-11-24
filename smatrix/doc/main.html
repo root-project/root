@@ -1,0 +1,32 @@
+// top doc Doxygen page  for smatrix
+
+/**
+
+\mainpage SMatrix Package
+
+
+@b SMatrix is a C++ package for high performance vector and matrix
+  computations. It can be used only in problems when the size of the matrices is known 
+at compile time, like in the tracking reconstruction of HEP experiments. It is based on a C++ technique, called expression templates, to achieve an high level optimization. The C++ templates can be used to implement vector and matrix
+expressions such that these expressions can be transformed at compile time to
+code which is equivalent to hand optimized code in a low-level language like FORTRAN
+or C (see for example ref. 1) 
+<p>
+The SMatrix has been deeveloped initially by T. Glebe of the  Max-Planck-Institut, Heidelberg, as part of the HeraB analysis framework. A subset of the original package has been now incorporated in the %ROOT distribution, with the aim to provide to the LHC experiments a stand-alone and high performant matrix package for reconstruction. The API of the current package differs from the original one, in order to be complient to the %ROOT coding conventions. 
+
+ 
+<h2>References</h2>
+<ol>
+<li>T. Veldhuizen, <a href="http://osl.iu.edu/~tveldhui/papers/Expression-Templates/exprtmpl.html"><em>Expression Templates</em></a>, C++ Report, 1995.
+<li>T. Glebe, <em>SMatrix -  A high performance library for Vector/Matrix calculation and Vertexing></em>, HERA-B Software Note 01-134, December 2, 2003 (<A HREF="http://seal.web.cern.ch/seal/documents/mathlib/smatrix_herab.pdf">pdf</A>)</li>
+<li>L. Moneta, %ROOT Math proposal for Linear Algebra, <A HREF="http://seal.cern.ch/documents/mathlib/aa_matrix_nov05.pdf">presentation</A> at the LCG Application Area meeting, November 23, 2005</li>
+</ol>
+
+<hr>
+<p>
+@authors the %ROOT Math Library Team and T. Glebe (original SMatrix author) 
+<p>
+@b Contact:   <Lorenzo.Moneta@cern.ch>  
+
+
+*/
