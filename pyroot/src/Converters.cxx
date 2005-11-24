@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.19 2005/10/26 05:12:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.20 2005/11/24 16:25:18 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -164,7 +164,28 @@ PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( UChar, UChar_t,   0, 255 )
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Short,  Short_t,  Long_t, PyInt_FromLong,  PyInt_AsLong )
 PYROOT_IMPLEMENT_BASIC_CONVERTER( UShort, UShort_t, Long_t, PyInt_FromLong,  PyInt_AsLong )
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Int,    Int_t,    Long_t, PyInt_FromLong,  PyInt_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONVERTER( UInt,   UInt_t,   Long_t, PyInt_FromLong,  PyInt_AsLong )
+
+// the following works fine because sizeof(UInt_t) == sizeof(ULong_t) on 32-bits;
+// it'll also work on 64, but the upper limits may not be flagged properly
+PYROOT_IMPLEMENT_BASIC_CONVERTER( UInt, UInt_t, ULong_t, PyLong_FromUnsignedLong, PyLong_AsUnsignedLong )
+
+//____________________________________________________________________________
+Bool_t PyROOT::TULongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   ULong_t ul = PyLong_AsUnsignedLong( pyobject );
+   if ( PyErr_Occurred() ) {
+      if ( PyInt_Check( pyobject ) ) {    // shouldn't be ... bug in python?
+         PyErr_Clear();
+         ul = (ULong_t)PyInt_AS_LONG( pyobject );
+      } else 
+         return kFALSE;
+   }
+
+   func->SetArg( (Long_t)ul );            // TODO: fix CINT to accept ULong_t
+   if ( PyErr_Occurred() )
+      return kFALSE;
+   return kTRUE;
+}
 
 PyObject* PyROOT::TULongConverter::FromMemory( void* address )
 {
@@ -271,6 +292,58 @@ Bool_t PyROOT::TLongLongConverter::ToMemory( PyObject* value, void* address )
    if ( PyErr_Occurred() )
       return kFALSE;
    *((Long64_t*)address) = ll;
+   return kTRUE;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::TULongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
+   if ( PyErr_Occurred() ) {
+      if ( PyInt_Check( pyobject ) ) {    // shouldn't be ... bug in python?
+         PyErr_Clear();
+         Int_t i = PyInt_AS_LONG( pyobject );
+         if ( 0 <= i ) {
+            ull = (ULong64_t)i;
+         } else {
+            PyErr_SetString( PyExc_OverflowError,
+                "can\'t convert negative value to unsigned long long" );
+            return kFALSE;
+         }
+      } else 
+         return kFALSE;
+   }
+
+   func->SetArg( ull );
+   if ( PyErr_Occurred() )
+      return kFALSE;
+   return kTRUE;
+}
+
+PyObject* PyROOT::TULongLongConverter::FromMemory( void* address )
+{  
+   return PyLong_FromUnsignedLongLong( *(ULong64_t*)address );
+}
+
+Bool_t PyROOT::TULongLongConverter::ToMemory( PyObject* value, void* address )
+{
+   ULong64_t ull = PyLong_AsUnsignedLongLong( value );
+   if ( PyErr_Occurred() ) {
+      if ( PyInt_Check( value ) ) {    // shouldn't be ... bug in python?
+         PyErr_Clear();
+         Int_t i = PyInt_AS_LONG( value );
+         if ( 0 <= i ) {
+            ull = (ULong64_t)i;
+         } else {
+            PyErr_SetString( PyExc_OverflowError, 
+                "can\'t convert negative value to unsigned long long" );
+            return kFALSE;
+         }
+      } else
+         return kFALSE;
+   }
+
+   *((ULong64_t*)address) = ull;
    return kTRUE;
 }
 
@@ -829,6 +902,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
    PYROOT_BASIC_CONVERTER_FACTORY( Macro )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
+   PYROOT_BASIC_CONVERTER_FACTORY( ULongLong )
    PYROOT_ARRAY_CONVERTER_FACTORY( CString )
    PYROOT_ARRAY_CONVERTER_FACTORY( ShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( UShortArray )
@@ -864,6 +938,7 @@ namespace {
       NFp_t( "long&",              &CreateLongRefConverter            ),
       NFp_t( "unsigned long",      &CreateULongConverter              ),
       NFp_t( "long long",          &CreateLongLongConverter           ),
+      NFp_t( "unsigned long long", &CreateULongLongConverter          ),
       NFp_t( "float",              &CreateFloatConverter              ),
       NFp_t( "double",             &CreateDoubleConverter             ),
       NFp_t( "double&",            &CreateDoubleRefConverter          ),

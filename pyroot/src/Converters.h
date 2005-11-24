@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.14 2005/10/26 05:12:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.15 2005/11/24 16:25:18 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -71,8 +71,9 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER2( UShort, Long );
    PYROOT_DECLARE_BASIC_CONVERTER2( Int, Long );
    PYROOT_DECLARE_BASIC_CONVERTER2( UInt, Long );
-   PYROOT_DECLARE_BASIC_CONVERTER2( ULong, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER( ULong );
    PYROOT_DECLARE_BASIC_CONVERTER( LongLong );
+   PYROOT_DECLARE_BASIC_CONVERTER( ULongLong );
    PYROOT_DECLARE_BASIC_CONVERTER( Double );
    PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
    PYROOT_DECLARE_BASIC_CONVERTER( DoubleRef );

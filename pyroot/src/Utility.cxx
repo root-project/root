@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.23 2005/09/14 08:07:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.24 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -316,7 +316,9 @@ void PyROOT::Utility::ErrMsgCallback( char* msg ) {
    // either printout or raise exception, depending on user settings
       PyErr_WarnExplicit( NULL, p+9, errFile, errLine, (char*)"CINT", NULL );
       return;                                // NOTE: return after warning is set
-   }
-   else
+   } else if ( ( p = strstr( msg, "Note:" ) ) ) {
+      fprintf( stdout, "Note: (file \"%s\", line %d) %s)\n", errFile, errLine, p+6 );
+      return;                                // NOTE: return after printing note
+   } else
       PyErr_Format( PyExc_RuntimeError, format, errFile, errLine, msg );
 }
