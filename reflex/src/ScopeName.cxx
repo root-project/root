@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -49,7 +49,7 @@ ROOT::Reflex::ScopeName::ScopeName( const char * name,
    sScopes() [ fName.c_str() ] = this;
    sScopeVec().push_back(Scope(this));
    //---Build recursively the declaring scopeNames
-   if( fName != "" ) {
+   if( fName != "@N@I@R@V@A@N@A@" ) {
       std::string decl_name = Tools::GetScopeName(fName);
       if ( ! Scope::ByName( decl_name ).Id() )  new ScopeName( decl_name.c_str(), 0 );
    }

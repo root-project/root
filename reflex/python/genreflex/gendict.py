@@ -1123,7 +1123,7 @@ class genDictionary(object) :
     self.getAllBases( cid, bases ) 
     for b in bases :
       bname = self.genTypeName(b[0],colon=True)
-      s += '    s_bases.push_back(std::make_pair(seal::reflex::Base( seal::reflex::getType< %s >(), seal::reflex::baseOffset< %s,%s >::get(),%s), %d));\n' % (bname, cl, bname, b[1], b[2])
+      s += '    s_bases.push_back(std::make_pair(ROOT::Reflex::Base( ROOT::Reflex::GetType< %s >(), ROOT::Reflex::BaseOffset< %s,%s >::Get(),%s), %d));\n' % (bname, cl, bname, b[1], b[2])
     s += '  }\n  return &s_bases;\n' 
     s += '}\n'
     return s
@@ -1131,18 +1131,18 @@ class genDictionary(object) :
   def genGetNewDelFunctionsDecl( self, attrs, args ) :
     return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genGetNewDelFunctionsBuild( self, attrs, args ) :
-    return '  .addFunctionMember<void*(void)>("__getNewDelFunctions", method%s)' % (attrs['id'])
+    return '  .AddFunctionMember<void*(void)>("__getNewDelFunctions", method%s)' % (attrs['id'])
   def genGetNewDelFunctionsDef( self, attrs, args ) :
     cid      = attrs['context']
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
-    s  = 'void* %s_dict::method%s( void*, const std::vector<void*>&, void*)\n{\n' %( clt, attrs['id'] )
+    s  = 'void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'] )
     s += '  static NewDelFunctions s_funcs;\n'
-    s += '  s_funcs.fNew         = new_T< %s >;\n' % cl
-    s += '  s_funcs.fNewArray    = newArray_T< %s >;\n' % cl
-    s += '  s_funcs.fDelete      = delete_T< %s >;\n' % cl
-    s += '  s_funcs.fDeleteArray = deleteArray_T< %s >;\n' % cl
-    s += '  s_funcs.fDestructor  = destruct_T< %s >;\n' % cl
+    s += '  s_funcs.fNew         = NewDelFunctionsT< %s >::new_T;\n' % cl
+    s += '  s_funcs.fNewArray    = NewDelFunctionsT< %s >::newArray_T;\n' % cl
+    s += '  s_funcs.fDelete      = NewDelFunctionsT< %s >::delete_T;\n' % cl
+    s += '  s_funcs.fDeleteArray = NewDelFunctionsT< %s >::deleteArray_T;\n' % cl
+    s += '  s_funcs.fDestructor  = NewDelFunctionsT< %s >::destruct_T;\n' % cl
     s += '  return &s_funcs;\n;'
     s += '}\n'
     return s

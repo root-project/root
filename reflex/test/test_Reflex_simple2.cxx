@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -157,6 +157,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE( ReflexSimple2Test );
   CPPUNIT_TEST( loadLibrary );
+  CPPUNIT_TEST( testIterators );
   CPPUNIT_TEST( fooBarZot );
   CPPUNIT_TEST( testBaseClasses );
   CPPUNIT_TEST( testDataMembers );
@@ -170,6 +171,7 @@ public:
   void setUp() {}
 
   void loadLibrary();
+  void testIterators();
   void fooBarZot();
   void testBaseClasses();
   void testDataMembers();
@@ -192,6 +194,57 @@ void ReflexSimple2Test::loadLibrary() {
   libInstance = dlopen("libtest_Reflex2Rflx.so", RTLD_LAZY);
 #endif
   CPPUNIT_ASSERT(libInstance);
+}
+
+void ReflexSimple2Test::testIterators() {
+  CPPUNIT_ASSERT_EQUAL(Scope::Scope_Begin()->Name(), (Scope::Scope_REnd()-1)->Name());
+  CPPUNIT_ASSERT_EQUAL((Scope::Scope_End()-1)->Name(), Scope::Scope_RBegin()->Name());
+  CPPUNIT_ASSERT_EQUAL(Type::Type_Begin()->Name(), (Type::Type_REnd()-1)->Name());
+  CPPUNIT_ASSERT_EQUAL((Type::Type_End()-1)->Name(), Type::Type_RBegin()->Name());
+
+  Scope s = Scope::ByName("");
+  CPPUNIT_ASSERT(s);
+  CPPUNIT_ASSERT(s.Id());
+  CPPUNIT_ASSERT(s.IsTopScope());
+  if (s.SubScopeSize()) {
+    CPPUNIT_ASSERT_EQUAL(s.SubScope_Begin()->Name(), (s.SubScope_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s.SubScope_RBegin()->Name(), (s.SubScope_End()-1)->Name());
+  }
+  if (s.SubTypeSize()) {
+    CPPUNIT_ASSERT_EQUAL(s.SubType_Begin()->Name(), (s.SubType_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s.SubType_RBegin()->Name(), (s.SubType_End()-1)->Name());
+  }
+  if (s.SubTypeTemplateSize()) {
+    CPPUNIT_ASSERT_EQUAL(s.SubTypeTemplate_Begin()->Name(), (s.SubTypeTemplate_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s.SubTypeTemplate_RBegin()->Name(), (s.SubTypeTemplate_End()-1)->Name());
+  }
+  Scope s2 = Scope::ByName("ClassF");
+  CPPUNIT_ASSERT(s2);
+  CPPUNIT_ASSERT(s2.Id());
+  if (s2.BaseSize()) {
+    CPPUNIT_ASSERT_EQUAL(s2.Base_Begin()->Name(), (s2.Base_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s2.Base_RBegin()->Name(), (s2.Base_End()-1)->Name());
+  }
+  if (s2.DataMemberSize()) {
+    CPPUNIT_ASSERT_EQUAL(s2.DataMember_Begin()->Name(), (s2.DataMember_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s2.DataMember_RBegin()->Name(), (s2.DataMember_End()-1)->Name());
+  }
+  if (s2.FunctionMemberSize()) {
+    CPPUNIT_ASSERT_EQUAL(s2.FunctionMember_Begin()->Name(), (s2.FunctionMember_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s2.FunctionMember_RBegin()->Name(), (s2.FunctionMember_End()-1)->Name());
+  }
+  if (s2.MemberSize()) {
+    CPPUNIT_ASSERT_EQUAL(s2.Member_Begin()->Name(), (s2.Member_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s2.Member_RBegin()->Name(), (s2.Member_End()-1)->Name());
+  }
+  if (s2.MemberTemplateSize()) {
+    CPPUNIT_ASSERT_EQUAL(s2.MemberTemplate_Begin()->Name(), (s2.MemberTemplate_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s2.MemberTemplate_RBegin()->Name(), (s2.MemberTemplate_End()-1)->Name());
+  }
+  if (s2.TemplateArgumentSize()) {
+    CPPUNIT_ASSERT_EQUAL(s2.TemplateArgument_Begin()->Name(), (s2.TemplateArgument_REnd()-1)->Name());
+    CPPUNIT_ASSERT_EQUAL(s2.TemplateArgument_RBegin()->Name(), (s2.TemplateArgument_End()-1)->Name());
+  }
 }
 
 void ReflexSimple2Test::fooBarZot() {
@@ -233,10 +286,10 @@ void ReflexSimple2Test::fooBarZot() {
     bool inheritsPublic = fooBase.IsPublic();
     CPPUNIT_ASSERT_EQUAL(inheritsPublic, true);
 
-    // get number of members (i.e. 12)
+    // get number of members (i.e. 13)
     fooType.UpdateMembers();
     size_t fooMembers = fooType.MemberSize();
-    CPPUNIT_ASSERT_EQUAL(size_t(12), fooMembers);
+    CPPUNIT_ASSERT_EQUAL(size_t(13), fooMembers);
 
     // get number of data members (i.e. 1)
     size_t fooDataMembers = fooType.DataMemberSize();
@@ -433,7 +486,7 @@ void ReflexSimple2Test::testFunctionMembers() {
   o = t.Construct();
   CPPUNIT_ASSERT(o);
   
-  CPPUNIT_ASSERT_EQUAL(49,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(50,int(t.FunctionMemberSize()));
   
   m = t.MemberByName("h");
   CPPUNIT_ASSERT(m);
@@ -519,8 +572,8 @@ void ReflexSimple2Test::testFreeFunctions() {
                        
   t = Type::ByName("ClassAAA");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(3,int(t.MemberSize()));
-  CPPUNIT_ASSERT_EQUAL(3,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(4,int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(4,int(t.FunctionMemberSize()));
   CPPUNIT_ASSERT_EQUAL(0,int(t.DataMemberSize()));
   m = t.MemberByName("function6");
   CPPUNIT_ASSERT(m);
@@ -541,7 +594,7 @@ void ReflexSimple2Test::testFreeFunctions() {
 
   t = Type::ByName("ClassBBB");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(3, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(4, int(t.MemberSize()));
   m = t.MemberByName("meth");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("ClassBBB::meth"),m.Name(SCOPED));

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -208,7 +208,7 @@ void ReflexUnitTest::exception() {
     t.UpdateMembers();
   }
   catch (ROOT::Reflex::RuntimeError e) {
-    CPPUNIT_ASSERT_EQUAL(std::string("SEAL REFLEX: Function UpdateMembers can only be called on Class/Struct"), std::string(e.What()));
+    CPPUNIT_ASSERT_EQUAL(std::string("REFLEX: Function UpdateMembers can only be called on Class/Struct"), std::string(e.What()));
   }
 }
 
