@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.cpp,v 1.2 2005/11/18 21:55:45 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.cxx,v 1.1 2005/11/24 14:45:50 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -25,7 +25,7 @@
 
 #ifdef TEX
 	A variable names bgamma appears in several places in this file. A few
-	words of elaboration are needed to make it's meaning clear.  On page 69
+	words of elaboration are needed to make its meaning clear.  On page 69
 	of Misner, Thorne and Wheeler, (Exercise 2.7) the elements of the matrix
 	for a general Lorentz boost are given as
 
