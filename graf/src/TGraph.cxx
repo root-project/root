@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.174 2005/11/17 09:38:55 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.175 2005/11/23 17:18:06 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3190,17 +3190,12 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                      }
                      if (optionLine) {
                         if (!optionMarker) ComputeLogs(npt, optionZ);
-                        if (optionFill2) {
-                           gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
-                           gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
-                           gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
-                        }
                         gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                      }
                   }
                   gxwork[0] = gxwork[npt-1];
                   gywork[0] = gywork[npt-1];
-                  npt      = 1;
+                  npt       = 1;
                   continue;
                }
 
