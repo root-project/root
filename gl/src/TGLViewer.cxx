@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.25 2005/11/17 10:38:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.26 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -171,9 +171,6 @@ void TGLViewer::BeginScene()
       // new scene range
       CurrentCamera().ResetInterest();
 
-      // Post build setup required
-      fPostSceneBuildSetup = kTRUE;
-
       // External rebuilds could potentially invalidate all logical and
       // physical shapes - including any modified physicals
       // Physicals must be removed first
@@ -215,21 +212,22 @@ void TGLViewer::EndScene()
 
    if (fPostSceneBuildSetup) {
       PostSceneBuildSetup();
+
+      // We leave fPostSceneBuildSetup set true as we want
+      // another full setup after first internal rebuild
+      // when we have the full scene limits
    }
 
    // Externally triggered scene rebuild (first pass) completed
    if (!fInternalRebuild) {
-      // Request intial draw
+      // Request intial draw - will result in an internal (full) rebuild
+      // afterwards - when we have camera interest bootstrapped properly
       RequestDraw();
-
-      // After draw RebuildScene will be called to test if a second internal 
-      // rebuild is to properly establish scene limits and camera interest (it will be).
-      // We want to setup viewer again once this is done with proper scene extents
-      fPostSceneBuildSetup = kTRUE;
    } else {
       fInternalRebuild = kFALSE;
 
-      // Internal rebuilds retain current camera/clip setup
+      // No more setup done after first internal scene rebuild
+      fPostSceneBuildSetup = kFALSE;
    }      
 
    if (gDebug>2 || fDebugMode) {
@@ -763,7 +761,6 @@ void TGLViewer::PostSceneBuildSetup()
 
    // Set default reference to scene center
    fReferencePos.Set(fScene.BoundingBox().Center());
-   fPostSceneBuildSetup = kFALSE;
 }
 
 //______________________________________________________________________________
