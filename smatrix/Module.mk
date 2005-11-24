@@ -12,19 +12,19 @@ SMATRIXDIRS := $(SMATRIXDIR)/src
 SMATRIXDIRI := $(SMATRIXDIR)/inc/Math
 
 ##### libSmatrix #####
-SMATRIXL    := $(MODDIRI)/LinkDef.h 
-#SMATRIXLINC := 
+SMATRIXL    := $(MODDIRI)/LinkDef.h
+#SMATRIXLINC :=
 SMATRIXDS   := $(MODDIRS)/G__Smatrix.cxx
 SMATRIXDO   := $(SMATRIXDS:.cxx=.o)
 SMATRIXDH   := $(SMATRIXDS:.cxx=.h)
 
-SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h $(MODDIRI)/Math/SVector.h 
+SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h $(MODDIRI)/Math/SVector.h
 
 
 
 SMATRIXH1   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.h))
 SMATRIXH2   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.icc))
-SMATRIXH    := $(SMATRIXH1) $(SMATRIXH2) 
+SMATRIXH    := $(SMATRIXH1) $(SMATRIXH2)
 SMATRIXS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 SMATRIXO    := $(SMATRIXS:.cxx=.o)
 
@@ -41,11 +41,17 @@ ALLLIBS      += $(SMATRIXLIB)
 INCLUDEFILES += $(SMATRIXDEP)
 
 ##### local rules #####
-include/Math/%.h: $(SMATRIXDIRI)/%.h 
-		cp $< $@	
+include/Math/%.h: $(SMATRIXDIRI)/%.h
+		@(if [ ! -d "include/Math" ]; then     \
+		   mkdir include/Math;                 \
+		fi)
+		cp $< $@
 
-include/Math/%.icc: $(SMATRIXDIRI)/%.icc 
-		cp $< $@	
+include/Math/%.icc: $(SMATRIXDIRI)/%.icc
+		@(if [ ! -d "include/Math" ]; then     \
+		   mkdir include/Math;                 \
+		fi)
+		cp $< $@
 
 $(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
@@ -62,7 +68,7 @@ $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMP)
 
 
 $(SMATRIXDO):  $(SMATRIXDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(SMATRIXDIRI)   -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(SMATRIXDIRI) -o $@ -c $<
 
 all-smatrix:   $(SMATRIXLIB)
 
@@ -82,5 +88,3 @@ distclean-smatrix: clean-smatrix
 		@rm -rf include/Math
 
 distclean::     distclean-smatrix
-
-
