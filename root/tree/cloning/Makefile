@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += treeCloneTest.log hsimple1.root hsimple2.root event1.root event2.root
+CLEAN_TARGETS += *.log hsimple1.root hsimple2.root event1.root event2.root merge.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += treeCloneTest
+TEST_TARGETS += mergeWithDir treeCloneTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -14,8 +14,8 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-Event.new.split0.root: copiedEvent
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent Event.new.split0.root
+Event.new.split0.root: copiedEvent$(ExeSuf)
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) Event.new.split0.root
 
 hsimple1.root: hsimple.C
 	$(CMDECHO) root.exe -q -l -b hsimple.C > hsimple.out
@@ -38,3 +38,6 @@ ifeq ($(FAIL),)
 endif
 
 
+
+mergeWithDir: mergeWithDir.log
+	$(TestDiff)
