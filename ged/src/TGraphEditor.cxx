@@ -151,7 +151,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom("TGraph")) {
+   if (obj == 0 || !obj->InheritsFrom(TGraph::Class())) {
       SetActive(kFALSE);
       return;
    }

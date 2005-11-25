@@ -723,7 +723,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used values of histogram attributes.
 
-   if (obj == 0 || !obj->InheritsFrom("TH2") || 
+   if (obj == 0 || !obj->InheritsFrom(TH2::Class()) || 
        !strcmp(((TH2 *)obj)->GetName(),"htemp")) {  // htemp is empty histogram
 
       SetActive(kFALSE);
@@ -746,8 +746,8 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    TGFrameElement *el;   
    TIter nextS1(fBin->GetList());
    while ((el = (TGFrameElement *) nextS1())) {
-      if ((el->fFrame)->InheritsFrom("TGedFrame")) 
-         ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
+      if ((el->fFrame)->InheritsFrom(TGedFrame::Class())) 
+         ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, kButton1Down);
    } 
    if (fBinHist && (obj != fHist)) {
       //we have probably moved to a different pad.
@@ -1008,7 +1008,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    if (fInit) ConnectSignals2Slots();
    fTab->SetEnabled(1, kTRUE); 
    SetActive(kTRUE);        
-   Update();
+//   Update();
 }
   
 //______________________________________________________________________________

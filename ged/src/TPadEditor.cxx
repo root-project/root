@@ -206,7 +206,7 @@ void TPadEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom("TPad")) {
+   if (obj == 0 || !obj->InheritsFrom(TPad::Class())) {
       SetActive(kFALSE);
       return;
    }

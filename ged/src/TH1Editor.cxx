@@ -434,9 +434,11 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used values of histogram attributes.
    
-   if (obj == 0 || !obj->InheritsFrom("TH1") || ((TH1*)obj)->GetDimension()!=1
-       || ((TH1*)obj)->GetEntries() == 0/*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
-   SetActive(kFALSE);
+   if (obj == 0 || !obj->InheritsFrom(TH1::Class()) || 
+       ((TH1*)obj)->GetDimension()!=1 || 
+       ((TH1*)obj)->GetEntries() == 0 
+       /*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
+      SetActive(kFALSE);
       for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
          if (fTab->GetTabContainer(i)==fBinContainer || fTab->GetTabContainer(i)==fFitContainer) {
             fTab->GetTabContainer(i)->UnmapWindow();     // Hide the Rebin tab if obj is not inherited from TH1 or 
@@ -452,7 +454,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    // calling the SetModel(initialization) of all editors in the BinTab
    TIter nextS1(fBin->GetList());
    while ((el = (TGFrameElement *) nextS1())) {
-      if ((el->fFrame)->InheritsFrom("TGedFrame"))
+      if ((el->fFrame)->InheritsFrom(TGedFrame::Class()))
          ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
    } 
 

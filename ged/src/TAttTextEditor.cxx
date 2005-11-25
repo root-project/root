@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.5 2004/07/05 06:42:05 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.6 2005/05/14 00:19:58 rdm Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -102,7 +102,7 @@ void TAttTextEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom("TAttText")) {
+   if (obj == 0 || !obj->InheritsFrom(TAttText::Class())) {
       SetActive(kFALSE);
       return;
    }

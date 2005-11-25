@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.5 2005/03/03 22:06:49 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.6 2005/05/14 00:19:58 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -112,7 +112,7 @@ void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (!obj || !obj->InheritsFrom("TAttLine") || obj->InheritsFrom("TPad")) {
+   if (!obj || !obj->InheritsFrom(TAttLine::Class()) || obj->InheritsFrom(TVirtualPad::Class())) {
       SetActive(kFALSE);
       return;
    }

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.22 2005/06/15 13:12:57 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.23 2005/11/11 15:38:30 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -175,7 +175,7 @@ void TGedEditor::GetClassEditor(TClass *cl)
    TClass *class2, *class3;
    Bool_t found = kFALSE;
    class2 = gROOT->GetClass(Form("%sEditor",cl->GetName()));
-   if (class2 && class2->InheritsFrom("TGedFrame")) {
+   if (class2 && class2->InheritsFrom(TGedFrame::Class())) {
       TList *list = fStyle->GetList();
       if (list->First() != 0) {
          TGFrameElement *fr;
@@ -273,7 +273,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
    TGFrameElement *el;
    TIter next(fStyle->GetList());
    while ((el = (TGFrameElement *) next())) {
-      if ((el->fFrame)->InheritsFrom("TGedFrame"))
+      if ((el->fFrame)->InheritsFrom(TGedFrame::Class()))
          ((TGedFrame *)(el->fFrame))->SetModel(fPad, fModel, event);
    }
 }

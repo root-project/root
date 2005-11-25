@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.7 2004/12/16 09:04:49 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.8 2005/05/14 00:19:58 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -100,7 +100,7 @@ void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom("TAttFill") || obj->InheritsFrom("TCurlyLine")) {
+   if (obj == 0 || !obj->InheritsFrom(TAttFill::Class()) || obj->InheritsFrom("TCurlyLine")) {
       SetActive(kFALSE);
       return;
    }

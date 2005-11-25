@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.6 2005/05/10 15:11:25 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.7 2005/11/11 15:38:30 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -169,6 +169,11 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
    fLabel = new TGLabel(f2, "");
    f2->AddFrame(fLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   // Set red color for the name.
+   Pixel_t color;
+   gClient->GetColorByName("#ff0000", color);
+   fLabel->SetTextColor(color, kFALSE);
 }
 
 //______________________________________________________________________________
@@ -205,10 +210,6 @@ void TGedNameFrame::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    string.Append("::");
    string.Append(fModel->ClassName());
 
-   // Set red color for the name.
-   Pixel_t color;
-   gClient->GetColorByName("#ff0000", color);
-   fLabel->SetTextColor(color, kFALSE);
    fLabel->SetText(new TGString(string));
 
    SetActive();

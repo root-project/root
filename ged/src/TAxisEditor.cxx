@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.9 2005/06/18 09:57:54 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.10 2005/09/26 14:03:20 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -309,7 +309,7 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom("TAxis")) {
+   if (obj == 0 || !obj->InheritsFrom(TAxis::Class())) {
       SetActive(kFALSE);
       return;
    }

@@ -184,7 +184,7 @@ void TCurlyLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = 0;
    fPad = 0;
-   if (obj == 0 || !obj->InheritsFrom("TCurlyLine")) {
+   if (obj == 0 || !obj->InheritsFrom(TCurlyLine::Class())) {
       SetActive(kFALSE);
       return;
    }
