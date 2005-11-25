@@ -2032,7 +2032,7 @@ void TBranchElement::InitializeOffsets()
    TClass *clm      = fBranchClass;
    if (fType == 31 || fType == 41) {
       if ( fClassName != fParentName ) {
-         // We are in the case where we have a missing link.
+         // We are in the case where we have one or more missing links.
          // This information is realliable here (or so it seems)
          // (In other cases fParentName does not seems to be set correctly in all cases).
          
@@ -2050,7 +2050,13 @@ void TBranchElement::InitializeOffsets()
             CleanParentName(parentDataName,fBranchCount->GetName());
             // remove the parent branch name (if present)
             CleanParentName(parentDataName,parent->GetName());
-            fOffset = GetDataMemberOffsetEx(clparent, parentDataName, lOffset);
+
+            // fOffset needs to be the offset to be added to the start of the object
+            // stored in the collection to find the beginning of the object/class described
+            // by the current TStreamerInfo.   The lOffset will then be re-added to this
+            // offset by TStreamerInfo::Write/ReadBuffer.
+            if (parentDataName[0]=='.') parentDataName.Remove(0,1);
+            fOffset = GetDataMemberOffset(clparent,parentDataName) - lOffset;
          }
       }
       if (gDebug > 0 ) {
