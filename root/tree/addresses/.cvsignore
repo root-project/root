@@ -7,4 +7,5 @@
 *.log
 *.exp
 
- *.pdb 
+ *.pdb
+*.clog 

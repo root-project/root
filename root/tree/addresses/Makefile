@@ -6,7 +6,9 @@ CLEAN_TARGETS += Embedded.root RootRelations.root clonesA_Event.root
 CLEAN_TARGETS += data.root dummy.root problem.root tree.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug merging headerTest clonesATest EmbeddedTest inheritTest relationsTest suetest
+TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
+	merging headerTest clonesATest EmbeddedTest inheritTest \
+	relationsTest suetest Jantest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -112,4 +114,12 @@ suetest.log: configtest.root
 	$(CMDECHO) root.exe -q -b -l suetestrd.C > suetest.log 2>&1
 
 suetest: suetest.log
+	$(TestDiff)
+
+runJan_C.$(DllSuf): runJan.C JansEvent_C.$(DllSuf)
+	$(BuildWithLib)
+
+Jan.clog: runJan_C.$(DllSuf)
+
+Jantest: Jan.clog
 	$(TestDiff)
