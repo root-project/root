@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.30 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.31 2005/10/06 05:22:49 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -2327,7 +2327,8 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
 
 
 //_____________________________________________________________________________
-    Int_t TSpectrum::Search1HighRes(float *source,float *dest, int size,
+
+Int_t TSpectrum::Search1HighRes(float *source,float *dest, int size,
                                      float sigma, double threshold,
                                      bool background_remove,int decon_iterations,
                                      bool markov, int aver_window)
@@ -2641,11 +2642,15 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       if(maximum < working_space[6 * size_ext + i])
          maximum = working_space[6 * size_ext + i];
    }
+   lda=1;
+   if(lda>threshold)
+       lda=threshold;
+   lda=lda/100;
 //searching for peaks in deconvolved spectrum
    for(i = 1; i < size_ext - 1; i++){
       if(working_space[i] > working_space[i - 1] && working_space[i] > working_space[i + 1]){
          if(i >= shift && i < size + shift){
-            if(working_space[i] > 0.01*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){        
+            if(working_space[i] > lda*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){        
                if(peak_index < fMaxPeaks){
                   for(j = i - 1, a = 0, b = 0; j <= i + 1; j++){
                      a += (double)(j - shift) * working_space[j];
@@ -2675,7 +2680,6 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    fNPeaks = peak_index;
    return fNPeaks;
 }
-
 
 
 //_____________________________________________________________________________
