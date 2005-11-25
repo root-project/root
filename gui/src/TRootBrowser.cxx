@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.84 2005/09/13 15:24:40 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.85 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1461,9 +1461,8 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
             gApplication->ProcessLine(act.Data());
          }
          Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
-      } else {
-         BrowseTextFile(obj->GetName());
       }
+      BrowseTextFile(obj->GetName());
 
       ////////// new TFile was opened. Add it to the browser /////
       if (gFile && (wasf != gFile) && ext.EndsWith(".root")) {
