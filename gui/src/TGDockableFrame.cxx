@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.10 2005/10/13 13:43:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.11 2005/11/17 19:09:28 rdm Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -74,8 +74,6 @@ TGDockButton::TGDockButton(const TGCompositeFrame *p, int id) :
 TGDockButton::~TGDockButton()
 {
    // Delete dock button.
-
-   fClient->FreeColor(fHiBg);
 }
 
 //______________________________________________________________________________
@@ -189,7 +187,7 @@ TGUndockedFrame::~TGUndockedFrame()
 {
    // Delete undocked frame. Puts back dockable frame in its original container.
 
-   if (fDockable && !fDockable->fDeleted) { 
+   if (fDockable && !fDockable->fDeleted) {
       fDockable->DockContainer(kFALSE);
    }
 }
@@ -263,7 +261,7 @@ TGDockableFrame::~TGDockableFrame()
       fDeleted = kTRUE;
       delete fFrame;
    } else {
-      delete fContainer; 
+      delete fContainer;
    }
    delete fCl;
    delete fButtons;
@@ -459,7 +457,7 @@ void TGDockableFrame::SavePrimitive(ofstream &out, Option_t *option)
    out << endl << "   // dockable frame" << endl;
    out << "   TGDockableFrame *";
    out << GetName()<<" = new TGDockableFrame(" << fParent->GetName();
-   
+
    if (GetOptions() == kHorizontalFrame) {
       if (fWidgetId == -1) {
          out << ");" << endl;
@@ -469,10 +467,10 @@ void TGDockableFrame::SavePrimitive(ofstream &out, Option_t *option)
    } else {
       out << "," << fWidgetId << "," << GetOptionString() << ");" << endl;
    }
-   
+
    out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = "
        << GetName() << "->GetContainer();" << endl;
-   
+
    TGFrameElement *el;
    TIter next(GetContainer()->GetList());
 
@@ -482,22 +480,22 @@ void TGDockableFrame::SavePrimitive(ofstream &out, Option_t *option)
       el->fLayout->SavePrimitive(out, option);
       out << ");"<< endl;
    }
-   
+
    out << endl << "   // next lines belong to the dockable frame widget" << endl;
-   if (EnableUndock()) 
+   if (EnableUndock())
       out << "   " << GetName() << "->EnableUndock(kTRUE);" << endl;
    else
       out << "   " << GetName() << "->EnableUndock(kFALSE);" << endl;
-     
-   if (EnableHide()) 
+
+   if (EnableHide())
       out << "   " << GetName() << "->EnableHide(kTRUE);" << endl;
    else
       out << "   " << GetName() << "->EnableHide(kFALSE);" << endl;
-  
+
    if (fDockName != "")
       out << "   " << GetName() << "->SetWindowName(" << quote << fDockName
           << quote << ");" << endl;
-   
+
    if (IsUndocked())
       out << "   " << GetName() << "->UndockContainer();" << endl;
    else
@@ -507,4 +505,4 @@ void TGDockableFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "   " << GetName() << "->HideContainer();" << endl;
 
    out << endl;
-}  
+}
