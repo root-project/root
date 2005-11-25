@@ -42,6 +42,7 @@ $(REFLEXLIB):   $(REFLEXO) $(MAINLIBS)
 		"$(REFLEXLIBEXTRA)"
 
 all-reflex:     $(REFLEXLIB)
+#		cd ./reflex/python; python ./setup.py install --prefix ../../
 
 map-reflex:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(REFLEXLIB) \
@@ -51,6 +52,9 @@ map::           map-reflex
 
 clean-reflex:
 		@rm -f $(REFLEXO)
+		@rm -fr reflex/python/build
+		@rm -f bin/genreflex*
+		@rm -fr lib/python*/site-packages/genreflex
 
 clean::         clean-reflex
 
