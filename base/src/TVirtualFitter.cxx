@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.10 2005/11/16 20:04:12 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.11 2005/11/26 15:03:06 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -34,6 +34,7 @@ TVirtualFitter::TVirtualFitter()
    fNpoints    = 0;
    fPointSize  = 0;
    fCacheSize  = 0;
+   fCache      = 0;
 }
 
 //______________________________________________________________________________

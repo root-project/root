@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.27 2005/11/01 19:48:09 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.28 2005/11/26 15:03:06 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1801,7 +1801,6 @@ void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    //    -2D : bc,e,xc,xw,yc,yw
    //    -3D : bc,e,xc,xw,yc,yw,zc,zw
 
-   Foption_t fitOption = GetFitOption();
    Double_t cu,eu,fu,fsum;
    Double_t x[3];
    Double_t *zik=0;
@@ -1913,7 +1912,6 @@ void TFumili::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
       TF1::RejectPoint(kFALSE);
       fu = f1->EvalPar(x,u);
       if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
-      Double_t eu = cache[1];
       if (flag == 2) {
          for (j=0;j<npar;j++) {
             dersum[j] += 1; //should be the derivative
@@ -1967,7 +1965,6 @@ void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
    //    -2D : bc,e,xc,xw,yc,yw
    //    -3D : bc,e,xc,xw,yc,yw,zc,zw
 
-   Foption_t fitOption = GetFitOption();
    Double_t cu,fu,fobs,fsub;
    Double_t dersum[100];
    Double_t x[3];
@@ -2005,7 +2002,6 @@ void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
          fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
       }
       if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
-      Double_t eu = cache[1];
       if (flag == 2) {
          for (j=0;j<npar;j++) {
             dersum[j] += 1; //should be the derivative
