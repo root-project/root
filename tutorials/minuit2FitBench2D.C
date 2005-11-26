@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: minuit2FitBench2D.Cv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: minuit2FitBench2D.C,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -51,14 +51,12 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    pad->SetGrid();
    fitFcn->SetParameters(100,0,0,2,7);
    fitFcn->Update();
-   histo->Draw("LEGO");
          
    timer.Start();
-
-   histo->Fit("fitFcn");
-
+   histo->Fit("fitFcn","0");
    timer.Stop();
 
+   histo->Draw();
    Double_t cputime = timer.CpuTime();
    printf("%s, npass=%d  : RT=%7.3f s, Cpu=%7.3f s\n",fitter,npass,timer.RealTime(),cputime);
    TPaveLabel *p = new TPaveLabel(0.5,0.7,0.85,0.8,Form("%s CPU= %g s",fitter,cputime),"brNDC");
