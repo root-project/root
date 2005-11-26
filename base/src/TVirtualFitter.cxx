@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.9 2005/11/04 15:07:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.10 2005/11/16 20:04:12 pcanal Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -31,6 +31,9 @@ TVirtualFitter::TVirtualFitter()
 
    fMethodCall = 0;
    fFCN        = 0;
+   fNpoints    = 0;
+   fPointSize  = 0;
+   fCacheSize  = 0;
 }
 
 //______________________________________________________________________________
@@ -39,6 +42,7 @@ TVirtualFitter::~TVirtualFitter()
    // Cleanup virtual fitter.
 
    delete fMethodCall;
+   delete [] fCache;
    fgFitter    = 0;
    fgMaxpar    = 0;
    fMethodCall = 0;
@@ -157,6 +161,27 @@ void InteractiveFCN(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
    m->SetParamPtrs(args);
    Double_t result;
    m->Execute(result);
+}
+
+//______________________________________________________________________________
+Double_t *TVirtualFitter::SetCache(Int_t npoints, Int_t psize)
+{
+   // Initialize the cache array
+   // npoints is the number of points to be stored (or already stored) in the cache
+   // psize is the number of elements per point
+   //
+   // if (npoints*psize > fCacheSize) the existing cache is deleted
+   // and a new array is created.
+   // The function returns a pointer to the cache
+   
+   if (npoints*psize > fCacheSize) {
+      delete [] fCache;
+      fCacheSize = npoints*psize;
+      fCache = new Double_t[fCacheSize];
+   }
+   fNpoints = npoints;
+   fPointSize = psize;
+   return fCache;
 }
 
 //______________________________________________________________________________

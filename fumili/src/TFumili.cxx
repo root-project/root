@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.26 2005/09/03 12:50:40 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.27 2005/11/01 19:48:09 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -90,7 +90,7 @@ $$
 <p>They form parallelepiped $P$ ($P_0$ may be deformed by $P$). 
 Very similar step formulae are used in FUMILI for negative logarithm
 of the likelihood function with the same idea - linearization of
-functional argument.
+function argument.
 
 <!--*/
 // -->END_HTML
@@ -1080,7 +1080,7 @@ Int_t TFumili::Minimize()
   //
   // TFumili::Minimize return following values:
   //    0  - fit is converged
-  //   -2  - functional is not decreasing (or bad derivatives)
+  //   -2  - function is not decreasing (or bad derivatives)
   //   -3  - error estimations are infinite
   //   -4  - maximum number of iterations is exceeded
   //
@@ -1374,7 +1374,7 @@ Int_t TFumili::Minimize()
           }
         // cut step
         fDA[i] = fDA[i]*alambd;
-        // expected functional value change in next iteration
+        // expected function value change in next iteration
         fGT = fGT + fDA[i]*fGr[i];
     }
 
@@ -1463,7 +1463,7 @@ void TFumili::PrintResults(Int_t ikode,Double_t p) const
   // Prints fit results. 
   //  
   // ikode is the type of printing parameters
-  // p is functional value
+  // p is function value
   //
   //  ikode = 1   - print values, errors and limits
   //  ikode = 2   - print values, errors and steps
@@ -1479,7 +1479,7 @@ void TFumili::PrintResults(Int_t ikode,Double_t p) const
     break;
   case -1:
     exitStatus="CONST FCN";
-    xsexpl="****\n* FUNCTIONAL IS NOT DECREASING OR BAD DERIVATIVES\n****";
+    xsexpl="****\n* FUNCTION IS NOT DECREASING OR BAD DERIVATIVES\n****";
     break;
   case -2:
     exitStatus="ERRORS INF";
@@ -1720,6 +1720,332 @@ Int_t TFumili::SGZ()
 
 
 //______________________________________________________________________________
+void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Chisquare method
+   //  Default method (function evaluated at center of bin)
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
+   //    -2D : bc,e,xc,yc
+   //    -3D : bc,e,xc,yc,zc
+
+   Foption_t fitOption = GetFitOption();
+   if (fitOption.Integral) {
+      FitChisquareI(npar,gin,f,u,flag);
+      return;
+   }
+   Double_t cu,eu,fu,fsum;
+   Double_t x[3];
+   Double_t *zik=0;
+   Double_t *pl0=0;
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Int_t nd  = hfit->GetDimension();
+   Int_t j;
+   
+   npar = f1->GetNpar();
+   SetParNumber(npar);
+   if(flag == 9) return;
+   zik = GetZ();
+   pl0 = GetPL0();
+
+   Double_t *df = new Double_t[npar];
+   f1->InitArgs(x,u);
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      if (nd > 2) x[2]     = cache[4];
+      if (nd > 1) x[1]     = cache[3];
+      x[0]     = cache[2];
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      fu = f1->EvalPar(x,u);
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      eu = cache[1];
+      Derivatives(df,x);
+      Int_t n = 0;
+      fsum = (fu-cu)/eu;
+      if (flag!=1) {
+         for (j=0;j<npar;j++) {
+            if (pl0[j]>0) {
+               df[n] = df[j]/eu; 
+               // left only non-fixed param derivatives / by Sigma
+               gin[j] += df[n]*fsum;
+               n++;
+            }
+         }
+         Int_t l = 0;
+         for (j=0;j<n;j++)
+            for (Int_t k=0;k<=j;k++) 
+               zik[l++] += df[j]*df[k];
+      }
+      f += .5*fsum*fsum;
+      npfit++;
+      cache += fPointSize;
+   }
+   f1->SetNumberFitPoints(npfit);
+   delete [] df;
+}
+
+
+//______________________________________________________________________________
+void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Chisquare method
+   //  The "I"ntegral method is used
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //    -2D : bc,e,xc,xw,yc,yw
+   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
+
+   Foption_t fitOption = GetFitOption();
+   Double_t cu,eu,fu,fsum;
+   Double_t x[3];
+   Double_t *zik=0;
+   Double_t *pl0=0;
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Int_t nd  = hfit->GetDimension();
+   Int_t j;
+   
+   f1->InitArgs(x,u);
+   npar = f1->GetNpar();
+   SetParNumber(npar);
+   if(flag == 9) return;
+   zik = GetZ();
+   pl0 = GetPL0();
+
+   Double_t *df=new Double_t[npar];
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      f1->SetParameters(u);
+      if (nd < 2) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],u)/cache[3];
+      } else if (nd < 3) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
+      } else {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
+      }
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      eu = cache[1];
+      Derivatives(df,x);
+      Int_t n = 0;
+      fsum = (fu-cu)/eu;
+      if (flag!=1) {
+         for (j=0;j<npar;j++) {
+            if (pl0[j]>0){
+               df[n] = df[j]/eu; 
+               // left only non-fixed param derivatives / by Sigma
+               gin[j] += df[n]*fsum;
+               n++;
+            }
+         }
+         Int_t l = 0;
+         for (j=0;j<n;j++)
+            for (Int_t k=0;k<=j;k++) 
+               zik[l++] += df[j]*df[k];
+      }
+      f += .5*fsum*fsum;
+      npfit++;
+      cache += fPointSize;
+   }
+   f1->SetNumberFitPoints(npfit);
+   delete[] df;
+}
+
+
+//______________________________________________________________________________
+void TFumili::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+   //     Basically, it forms the likelihood by determining the Poisson
+   //     probability that given a number of entries in a particular bin,
+   //     the fit would predict it's value.  This is then done for each bin,
+   //     and the sum of the logs is taken as the likelihood.
+   //  Default method (function evaluated at center of bin)
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
+   //    -2D : bc,e,xc,yc
+   //    -3D : bc,e,xc,yc,zc
+
+   Foption_t fitOption = GetFitOption();
+   if (fitOption.Integral) {
+      FitLikelihoodI(npar,gin,f,u,flag);
+      return;
+   }
+   Double_t cu,fu,fobs,fsub;
+   Double_t dersum[100];
+   Double_t x[3];
+   Int_t icu;
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Int_t nd = hfit->GetDimension();
+   Int_t j;
+   Double_t *zik = GetZ();
+   Double_t *pl0 = GetPL0();
+
+   Double_t *df=new Double_t[npar];
+
+   npar = f1->GetNpar();
+   SetParNumber(npar);
+   if(flag == 9) return;
+   if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
+   f1->InitArgs(x,u);
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      if (nd > 2) x[2] = cache[4];
+      if (nd > 1) x[1] = cache[3];
+      x[0]     = cache[2];
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      fu = f1->EvalPar(x,u);
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      Double_t eu = cache[1];
+      if (flag == 2) {
+         for (j=0;j<npar;j++) {
+            dersum[j] += 1; //should be the derivative
+            //grad[j] += dersum[j]*(fu-cu)/eu; dersum[j] = 0;
+         }
+      }
+      if (fu < 1.e-9) fu = 1.e-9;
+      icu  = Int_t(cu);
+      fsub = -fu +icu*TMath::Log(fu);
+      fobs = GetSumLog(icu);
+      fsub -= fobs;
+      Derivatives(df,x);
+      int n=0;
+      // Here we need gradients of Log likelihood function
+      // 
+      for (j=0;j<npar;j++) {
+         if (pl0[j]>0){
+            df[n]   = df[j]*(icu/fu-1); 
+            gin[j] -= df[n];
+            n++;
+         }
+      }
+      Int_t l = 0;
+      // Z-matrix here - production of first derivatives  
+      //  of log-likelihood function
+      for (j=0;j<n;j++)
+         for (Int_t k=0;k<=j;k++) 
+            zik[l++] += df[j]*df[k];
+            
+      f -= fsub;
+      npfit++;
+      cache += fPointSize;
+   }
+   f *= 2;
+   f1->SetNumberFitPoints(npfit);
+   delete[] df;
+}
+
+
+//______________________________________________________________________________
+void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+   //     Basically, it forms the likelihood by determining the Poisson
+   //     probability that given a number of entries in a particular bin,
+   //     the fit would predict it's value.  This is then done for each bin,
+   //     and the sum of the logs is taken as the likelihood.
+   //  The "I"ntegral method is used
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //    -2D : bc,e,xc,xw,yc,yw
+   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
+
+   Foption_t fitOption = GetFitOption();
+   Double_t cu,fu,fobs,fsub;
+   Double_t dersum[100];
+   Double_t x[3];
+   Int_t icu;
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Int_t nd = hfit->GetDimension();
+   Int_t j;
+   Double_t *zik = GetZ();
+   Double_t *pl0 = GetPL0();
+
+   Double_t *df=new Double_t[npar];
+
+   npar = f1->GetNpar();
+   SetParNumber(npar);
+   if(flag == 9) return;
+   if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
+   f1->InitArgs(x,u);
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      if (nd > 2) x[2] = cache[4];
+      if (nd > 1) x[1] = cache[3];
+      x[0]     = cache[2];
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      if (nd < 2) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],u)/cache[3];
+      } else if (nd < 3) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
+      } else {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
+      }
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      Double_t eu = cache[1];
+      if (flag == 2) {
+         for (j=0;j<npar;j++) {
+            dersum[j] += 1; //should be the derivative
+            //grad[j] += dersum[j]*(fu-cu)/eu; dersum[j] = 0;
+         }
+      }
+      if (fu < 1.e-9) fu = 1.e-9;
+      icu  = Int_t(cu);
+      fsub = -fu +icu*TMath::Log(fu);
+      fobs = GetSumLog(icu);
+      fsub -= fobs;
+      Derivatives(df,x);
+      int n=0;
+      // Here we need gradients of Log likelihood function
+      // 
+      for (j=0;j<npar;j++) {
+         if (pl0[j]>0){
+            df[n]   = df[j]*(icu/fu-1); 
+            gin[j] -= df[n];
+            n++;
+         }
+      }
+      Int_t l = 0;
+      // Z-matrix here - production of first derivatives  
+      //  of log-likelihood function
+      for (j=0;j<n;j++)
+         for (Int_t k=0;k<=j;k++) 
+            zik[l++] += df[j]*df[k];
+            
+      f -= fsub;
+      npfit++;
+      cache += fPointSize;
+   }
+   f *= 2;
+   f1->SetNumberFitPoints(npfit);
+   delete[] df;
+}
+
+
+//______________________________________________________________________________
 //
 //  STATIC functions
 //______________________________________________________________________________
@@ -1727,87 +2053,12 @@ Int_t TFumili::SGZ()
 //______________________________________________________________________________
 void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
-   Double_t cu,eu,fu,fsum;
-   Double_t x[3];
-   Int_t i, bin,binx,biny,binz;
-   Axis_t binlow, binup, binsize;
-   Double_t *zik=0;
-   Double_t *pl0=0;
-   Int_t npfits = 0;
+//           Minimization function for H1s using a Chisquare method
+//           ======================================================
 
    TFumili *hFitter = (TFumili*)TVirtualFitter::GetFitter();
-   TH1 *hfit = (TH1*)hFitter->GetObjectFit();
-   TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t fitOption = hFitter->GetFitOption();
-
-   npar = f1->GetNpar();
-   hFitter->SetParNumber(npar);
-   if(flag == 9) return;
-   zik = hFitter->GetZ();
-   pl0 = hFitter->GetPL0();
-
-   Double_t *df=new Double_t[npar];
-   f1->InitArgs(x,u);
-   f = 0;
-   Int_t hxfirst = hFitter->GetXfirst(); 
-   Int_t hxlast  = hFitter->GetXlast(); 
-   Int_t hyfirst = hFitter->GetYfirst(); 
-   Int_t hylast  = hFitter->GetYlast(); 
-   Int_t hzfirst = hFitter->GetZfirst(); 
-   Int_t hzlast  = hFitter->GetZlast(); 
-   TAxis *xaxis  = hfit->GetXaxis();
-   TAxis *yaxis  = hfit->GetYaxis();
-   TAxis *zaxis  = hfit->GetZaxis();
-   
-   for (binz=hzfirst;binz<=hzlast;binz++) {
-      x[2]  = zaxis->GetBinCenter(binz);
-      for (biny=hyfirst;biny<=hylast;biny++) {
-         x[1]  = yaxis->GetBinCenter(biny);
-         for (binx=hxfirst;binx<=hxlast;binx++) {
-            x[0]  = xaxis->GetBinCenter(binx);
-            if (!f1->IsInside(x)) continue;
-            bin = hfit->GetBin(binx,biny,binz);
-            cu  = hfit->GetBinContent(bin);
-            TF1::RejectPoint(kFALSE);
-            if (fitOption.Integral) {
-               binlow  = xaxis->GetBinLowEdge(binx);
-               binsize = xaxis->GetBinWidth(binx);
-               binup   = binlow + binsize;
-               fu      = f1->Integral(binlow,binup,u)/binsize;
-            } else {
-               fu = f1->EvalPar(x,u);
-            }
-            if (TF1::RejectedPoint()) continue;
-            if (fitOption.W1) {
-               eu = 1;
-            } else {
-               eu  = hfit->GetBinError(bin);
-               if (eu <= 0) continue;
-            }
-            npfits++;
-            hFitter->Derivatives(df,x);
-            Int_t n = 0;
-            fsum = (fu-cu)/eu;
-            if (flag!=1) {
-              for (i=0;i<npar;i++) 
-                if (pl0[i]>0){
-                  df[n] = df[i]/eu; 
-                  // left only non-fixed param derivatives / by Sigma
-                  gin[i] += df[n]*fsum;
-                  n++;
-                }
-              Int_t l = 0;
-              for (i=0;i<n;i++)
-                for (Int_t j=0;j<=i;j++) 
-                  zik[l++] += df[i]*df[j];
-            }
-            f += .5*fsum*fsum;
-         }
-      }
-   }
-   f1->SetNumberFitPoints(npfits);
-   delete[] df;
-} 
+   hFitter->FitChisquare(npar, gin, f, u, flag);
+}
 
 //______________________________________________________________________________
 void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
@@ -1824,87 +2075,9 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
 //    drawback is that if F_i>Int_t - GetSumLog will fail
 //    for big F_i is faster to use Euler's Gamma-function
 
-   Double_t cu,fu,fobs,fsub;
-   Double_t x[3];
-   Int_t i, bin,binx,biny,binz,icu;
-   Axis_t binlow, binup, binsize;
-
-   Int_t npfits = 0;
 
    TFumili *hFitter = (TFumili*)TVirtualFitter::GetFitter();
-   TH1 *hfit = (TH1*)hFitter->GetObjectFit();
-   TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t fitOption = hFitter->GetFitOption();
-   npar = f1->GetNpar();
-
-   hFitter->SetParNumber(npar);
-   if(flag == 9) return;
-   Double_t *zik = hFitter->GetZ();
-   Double_t *pl0 = hFitter->GetPL0();
-
-   Double_t *df=new Double_t[npar];
-
-   f1->InitArgs(x,u);
-   f = 0;
-   Int_t hxfirst = hFitter->GetXfirst(); 
-   Int_t hxlast  = hFitter->GetXlast(); 
-   Int_t hyfirst = hFitter->GetYfirst(); 
-   Int_t hylast  = hFitter->GetYlast(); 
-   Int_t hzfirst = hFitter->GetZfirst(); 
-   Int_t hzlast  = hFitter->GetZlast(); 
-   TAxis *xaxis  = hfit->GetXaxis();
-   TAxis *yaxis  = hfit->GetYaxis();
-   TAxis *zaxis  = hfit->GetZaxis();
-   
-   for (binz=hzfirst;binz<=hzlast;binz++) {
-      x[2]  = zaxis->GetBinCenter(binz);
-      for (biny=hyfirst;biny<=hylast;biny++) {
-         x[1]  = yaxis->GetBinCenter(biny);
-         for (binx=hxfirst;binx<=hxlast;binx++) {
-            x[0]  = xaxis->GetBinCenter(binx);
-            if (!f1->IsInside(x)) continue;
-            TF1::RejectPoint(kFALSE);
-            bin = hfit->GetBin(binx,biny,binz);
-            cu  = hfit->GetBinContent(bin);
-            if (fitOption.Integral) {
-               binlow  = xaxis->GetBinLowEdge(binx);
-               binsize = xaxis->GetBinWidth(binx);
-               binup   = binlow + binsize;
-               fu      = f1->Integral(binlow,binup,u)/binsize;
-            } else {
-               fu = f1->EvalPar(x,u);
-            }
-            if (TF1::RejectedPoint()) continue;
-            npfits++;
-            if (fu < 1.e-9) fu = 1.e-9; 
-            icu  = Int_t(cu);
-            fsub = -fu +icu*TMath::Log(fu);
-            fobs = hFitter->GetSumLog(icu);
-            fsub -= fobs;
-                hFitter->Derivatives(df,x);
-            int n=0;
-            // Here we need gradients of Log likelihood function
-            // 
-            for (i=0;i<npar;i++) 
-              if (pl0[i]>0){
-                    df[n]   = df[i]*(icu/fu-1); 
-                    gin[i] -= df[n];
-                n++;
-              }
-            Int_t l = 0;
-            // Z-matrix here - production of first derivatives  
-            //  of log-likelihood function
-            for (i=0;i<n;i++)
-              for (Int_t j=0;j<=i;j++) 
-                 zik[l++] += df[i]*df[j];
-            
-            f -= fsub;
-         }
-      }
-   }
-   //f *=.5;
-   f1->SetNumberFitPoints(npfits);
-   delete[] df;
+   hFitter->FitLikelihood(npar, gin, f, u, flag);
 }
 
 

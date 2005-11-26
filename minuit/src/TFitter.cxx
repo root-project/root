@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.33 2005/11/01 19:48:09 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.34 2005/11/21 09:47:20 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -322,6 +322,256 @@ Int_t TFitter::SetParameter(Int_t ipar,const char *parname,Double_t value,Double
    return ierr;
 }
 
+//______________________________________________________________________________
+void TFitter::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Chisquare method
+   //  Default method (function evaluated at center of bin)
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
+   //    -2D : bc,e,xc,yc
+   //    -3D : bc,e,xc,yc,zc
+
+   Foption_t fitOption = GetFitOption();
+   if (fitOption.Integral) {
+      FitChisquareI(npar,gin,f,u,flag);
+      return;
+   }
+   Double_t cu,eu,fu,fsum;
+   Double_t dersum[100], grad[100];
+   Double_t x[3];
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Int_t nd  = hfit->GetDimension();
+   Int_t j;
+   
+   f1->InitArgs(x,u);
+   npar = f1->GetNpar();
+   if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      if (nd > 2) x[2]     = cache[4];
+      if (nd > 1) x[1]     = cache[3];
+      x[0]     = cache[2];
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      fu = f1->EvalPar(x,u);
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      eu = cache[1];
+      if (flag == 2) {
+         for (j=0;j<npar;j++) dersum[j] += 1; //should be the derivative
+         for (j=0;j<npar;j++) grad[j] += dersum[j]*(fu-cu)/eu; dersum[j] = 0;
+      }
+      fsum = (cu-fu)/eu;
+      f += fsum*fsum;
+      npfit++;
+      cache += fPointSize;
+   }
+   f1->SetNumberFitPoints(npfit);
+}
+
+//______________________________________________________________________________
+void TFitter::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Chisquare method
+   //  The "I"ntegral method is used
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //    -2D : bc,e,xc,xw,yc,yw
+   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
+   
+   Double_t cu,eu,fu,fsum;
+   Double_t dersum[100], grad[100];
+   Double_t x[3];
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Int_t nd = hfit->GetDimension();
+   Int_t j;
+   
+   f1->InitArgs(x,u);
+   npar = f1->GetNpar();
+   if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      f1->SetParameters(u);
+      if (nd < 2) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],u)/cache[3];
+      } else if (nd < 3) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
+      } else {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
+      }
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      eu = cache[1];
+      if (flag == 2) {
+         for (j=0;j<npar;j++) dersum[j] += 1; //should be the derivative
+         for (j=0;j<npar;j++) grad[j] += dersum[j]*(fu-cu)/eu; dersum[j] = 0;
+      }
+      fsum = (cu-fu)/eu;
+      f += fsum*fsum;
+      npfit++;
+      cache += fPointSize;
+   }
+   f1->SetNumberFitPoints(npfit);
+}
+
+
+//______________________________________________________________________________
+void TFitter::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+   //     Basically, it forms the likelihood by determining the Poisson
+   //     probability that given a number of entries in a particular bin,
+   //     the fit would predict it's value.  This is then done for each bin,
+   //     and the sum of the logs is taken as the likelihood.
+   //  Default method (function evaluated at center of bin)
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc  (bin content, error, x of center of bin)
+   //    -2D : bc,e,xc,yc
+   //    -3D : bc,e,xc,yc,zc
+
+   Foption_t fitOption = GetFitOption();
+   if (fitOption.Integral) {
+      FitLikelihoodI(npar,gin,f,u,flag);
+      return;
+   }
+   Double_t cu,fu,fobs,fsub;
+   Double_t dersum[100];
+   Double_t x[3];
+   Int_t icu;
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Int_t nd = hfit->GetDimension();
+   Int_t j;
+
+   f1->InitArgs(x,u);
+   npar = f1->GetNpar();
+   if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      if (nd > 2) x[2] = cache[4];
+      if (nd > 1) x[1] = cache[3];
+      x[0]     = cache[2];
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      fu = f1->EvalPar(x,u);
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      Double_t eu = cache[1];
+      if (flag == 2) {
+         for (j=0;j<npar;j++) {
+            dersum[j] += 1; //should be the derivative
+            //grad[j] += dersum[j]*(fu-cu)/eu; dersum[j] = 0;
+         }
+      }
+      if (fu < 1.e-9) fu = 1.e-9;
+      if (fitOption.Like == 1) {
+         icu  = Int_t(cu);
+         fsub = -fu +icu*TMath::Log(fu);
+         fobs = GetSumLog(icu);
+      } else {
+         fsub = -fu +cu*TMath::Log(fu);
+         fobs = TMath::LnGamma(cu+1);
+      }
+      fsub -= fobs;
+      f -= fsub;
+      npfit++;
+      cache += fPointSize;
+   }
+   f *= 2;
+   f1->SetNumberFitPoints(npfit);
+}
+
+
+//______________________________________________________________________________
+void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+{
+   //  Minimization function for H1s using a Likelihood method*-*-*-*-*-*
+   //     Basically, it forms the likelihood by determining the Poisson
+   //     probability that given a number of entries in a particular bin,
+   //     the fit would predict it's value.  This is then done for each bin,
+   //     and the sum of the logs is taken as the likelihood.
+   //  The "I"ntegral method is used
+   //  for each point the cache contains the following info
+   //    -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //    -2D : bc,e,xc,xw,yc,yw
+   //    -3D : bc,e,xc,xw,yc,yw,zc,zw
+
+   Double_t cu,fu,fobs,fsub;
+   Double_t dersum[100];
+   Double_t binxlow, binxup, binxsize;
+   Double_t binylow, binyup, binysize;
+   Double_t binzlow, binzup, binzsize;
+   Double_t x[3];
+   Int_t icu;
+
+   TH1 *hfit = (TH1*)GetObjectFit();
+   TF1 *f1   = (TF1*)GetUserFunc();
+   Foption_t fitOption = GetFitOption();
+   Int_t nd = hfit->GetDimension();
+   Int_t j;
+
+   f1->InitArgs(x,u);
+   npar = f1->GetNpar();
+   if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
+   f = 0;
+   
+   Int_t npfit = 0;
+   Double_t *cache = fCache;
+   for (Int_t i=0;i<fNpoints;i++) {
+      if (nd > 2) x[2] = cache[4];
+      if (nd > 1) x[1] = cache[3];
+      x[0]     = cache[2];
+      cu  = cache[0];
+      TF1::RejectPoint(kFALSE);
+      f1->SetParameters(u);
+      if (nd < 2) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],u)/cache[3];
+      } else if (nd < 3) {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
+      } else {
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
+      }
+      if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
+      Double_t eu = cache[1];
+      if (flag == 2) {
+         for (j=0;j<npar;j++) {
+            dersum[j] += 1; //should be the derivative
+            //grad[j] += dersum[j]*(fu-cu)/eu; dersum[j] = 0;
+         }
+      }
+      if (fu < 1.e-9) fu = 1.e-9;
+      if (fitOption.Like == 1) {
+         icu  = Int_t(cu);
+         fsub = -fu +icu*TMath::Log(fu);
+         fobs = GetSumLog(icu);
+      } else {
+         fsub = -fu +cu*TMath::Log(fu);
+         fobs = TMath::LnGamma(cu+1);
+      }
+      fsub -= fobs;
+      f -= fsub;
+      npfit++;
+      cache += fPointSize;
+   }
+   f *= 2;
+   f1->SetNumberFitPoints(npfit);
+}
+
+
 
 //______________________________________________________________________________
 void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
@@ -329,88 +579,8 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
 //           Minimization function for H1s using a Chisquare method
 //           ======================================================
 
-   Double_t cu,eu,fu,fsum;
-   Double_t dersum[100], grad[100];
-   Double_t x[3];
-   Int_t bin,binx,biny,binz,k;
-   Axis_t binxlow, binxup, binxsize;
-   Axis_t binylow, binyup, binysize;
-   Axis_t binzlow, binzup, binzsize;
-
-   Int_t npfits = 0;
-
-
-   TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
-   TH1 *hfit = (TH1*)hFitter->GetObjectFit();
-   TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t fitOption = hFitter->GetFitOption();
-   
-   f1->InitArgs(x,u);
-   npar = f1->GetNpar();
-   if (flag == 2) for (k=0;k<npar;k++) dersum[k] = gin[k] = 0;
-   f = 0;
-   Int_t hxfirst = hFitter->GetXfirst(); 
-   Int_t hxlast  = hFitter->GetXlast(); 
-   Int_t hyfirst = hFitter->GetYfirst(); 
-   Int_t hylast  = hFitter->GetYlast(); 
-   Int_t hzfirst = hFitter->GetZfirst(); 
-   Int_t hzlast  = hFitter->GetZlast(); 
-   TAxis *xaxis  = hfit->GetXaxis();
-   TAxis *yaxis  = hfit->GetYaxis();
-   TAxis *zaxis  = hfit->GetZaxis();
-   
-   for (binz=hzfirst;binz<=hzlast;binz++) {
-      x[2]  = zaxis->GetBinCenter(binz);
-      binzlow  = zaxis->GetBinLowEdge(binz);
-      binzsize = zaxis->GetBinWidth(binz);
-      binzup   = binzlow + binzsize;
-      for (biny=hyfirst;biny<=hylast;biny++) {
-         x[1]  = yaxis->GetBinCenter(biny);
-         binylow  = yaxis->GetBinLowEdge(biny);
-         binysize = yaxis->GetBinWidth(biny);
-         binyup   = binylow + binysize;
-         for (binx=hxfirst;binx<=hxlast;binx++) {
-            x[0]  = xaxis->GetBinCenter(binx);
-            if (!f1->IsInside(x)) continue;
-            bin = hfit->GetBin(binx,biny,binz);
-            cu  = hfit->GetBinContent(bin);
-            TF1::RejectPoint(kFALSE);
-            if (fitOption.Integral) {
-               binxlow  = xaxis->GetBinLowEdge(binx);
-               binxsize = xaxis->GetBinWidth(binx);
-               binxup   = binxlow + binxsize;
-               if (hfit->GetDimension() < 2) {
-                  fu = f1->Integral(binxlow,binxup,u)/binxsize;
-               } else if (hfit->GetDimension() < 3) {
-                  f1->SetParameters(u);
-                  fu = f1->Integral(binxlow,binxup,binylow,binyup)/(binxsize*binysize);
-               } else {
-                  f1->SetParameters(u);
-                  fu = f1->Integral(binxlow,binxup,binylow,binyup,binzlow,binzup)/(binxsize*binysize*binzsize);
-               }
-            } else {
-               fu = f1->EvalPar(x,u);
-            }
-            if (TF1::RejectedPoint()) continue;
-            if (fitOption.W1) {
-               eu = 1;
-            } else {
-               eu  = hfit->GetBinError(bin);
-               if (eu <= 0) continue;
-            }
-            if (flag == 2) {
-               for (k=0;k<npar;k++) dersum[k] += 1; //should be the derivative
-            }
-            npfits++;
-            if (flag == 2) {
-               for (k=0;k<npar;k++) grad[k] += dersum[k]*(fu-cu)/eu; dersum[k] = 0;
-            }
-            fsum = (cu-fu)/eu;
-            f += fsum*fsum;
-         }
-      }
-   }
-   f1->SetNumberFitPoints(npfits);
+   TFitter *hFitter = (TFitter*)TVirtualFitter::GetFitter();
+   hFitter->FitChisquare(npar, gin, f, u, flag);
 }
 
 //______________________________________________________________________________
@@ -423,76 +593,8 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
 //     the fit would predict it's value.  This is then done for each bin,
 //     and the sum of the logs is taken as the likelihood.
 
-   Double_t cu,fu,fobs,fsub;
-   Double_t dersum[100];
-   Double_t x[3];
-   Int_t bin,binx,biny,binz,k,icu;
-   Axis_t binlow, binup, binsize;
-
-   Int_t npfits = 0;
-
-
-   TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
-   TH1 *hfit = (TH1*)hFitter->GetObjectFit();
-   TF1 *f1   = (TF1*)hFitter->GetUserFunc();
-   Foption_t fitOption = hFitter->GetFitOption();
-
-   f1->InitArgs(x,u);
-   npar = f1->GetNpar();
-   if (flag == 2) for (k=0;k<npar;k++) dersum[k] = gin[k] = 0;
-   f = 0;
-   Int_t hxfirst = hFitter->GetXfirst(); 
-   Int_t hxlast  = hFitter->GetXlast(); 
-   Int_t hyfirst = hFitter->GetYfirst(); 
-   Int_t hylast  = hFitter->GetYlast(); 
-   Int_t hzfirst = hFitter->GetZfirst(); 
-   Int_t hzlast  = hFitter->GetZlast(); 
-   TAxis *xaxis  = hfit->GetXaxis();
-   TAxis *yaxis  = hfit->GetYaxis();
-   TAxis *zaxis  = hfit->GetZaxis();
-   
-   for (binz=hzfirst;binz<=hzlast;binz++) {
-      x[2]  = zaxis->GetBinCenter(binz);
-      for (biny=hyfirst;biny<=hylast;biny++) {
-         x[1]  = yaxis->GetBinCenter(biny);
-         for (binx=hxfirst;binx<=hxlast;binx++) {
-            x[0]  = xaxis->GetBinCenter(binx);
-            if (!f1->IsInside(x)) continue;
-            TF1::RejectPoint(kFALSE);
-            bin = hfit->GetBin(binx,biny,binz);
-            cu  = hfit->GetBinContent(bin);
-            if (fitOption.Integral) {
-               binlow  = xaxis->GetBinLowEdge(binx);
-               binsize = xaxis->GetBinWidth(binx);
-               binup   = binlow + binsize;
-               fu      = f1->Integral(binlow,binup,u)/binsize;
-            } else {
-               fu = f1->EvalPar(x,u);
-            }
-            if (TF1::RejectedPoint()) continue;
-            npfits++;
-            if (flag == 2) {
-               for (k=0;k<npar;k++) {
-                  dersum[k] += 1; //should be the derivative
-                  //grad[k] += dersum[k]*(fu-cu)/eu; dersum[k] = 0;
-               }
-            }
-            if (fu < 1.e-9) fu = 1.e-9;
-            if (fitOption.Like == 1) {
-               icu  = Int_t(cu);
-               fsub = -fu +icu*TMath::Log(fu);
-               fobs = hFitter->GetSumLog(icu);
-            } else {
-               fsub = -fu +cu*TMath::Log(fu);
-               fobs = TMath::LnGamma(cu+1);
-            }
-            fsub -= fobs;
-            f -= fsub;
-         }
-      }
-   }
-   f *= 2;
-   f1->SetNumberFitPoints(npfits);
+   TFitter *hFitter = (TFitter*)TVirtualFitter::GetFitter();
+   hFitter->FitLikelihood(npar, gin, f, u, flag);
 }
 
 //______________________________________________________________________________

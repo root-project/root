@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.11 2004/10/22 13:03:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.12 2004/10/22 21:18:23 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -41,6 +41,10 @@ protected:
    Int_t                  fYlast;      //last  bin on Y axis
    Int_t                  fZfirst;     //first bin on Z axis
    Int_t                  fZlast;      //last  bin on Z axis
+   Int_t                  fNpoints;    //Number of points to fit
+   Int_t                  fPointSize;  //Number of words per point in the cache
+   Int_t                  fCacheSize;  //Size of the fCache array
+   Double_t              *fCache;      //[fCacheSize] array of points data (fNpoints*fPointSize < fCacheSize words)
    TObject               *fObjectFit;  //pointer to object being fitted
    TObject               *fUserFunc;   //pointer to user theoretical function (a TF1*)
    TMethodCall           *fMethodCall; //Pointer to MethodCall in case of interpreted function
@@ -84,6 +88,7 @@ public:
    virtual Bool_t    IsFixed(Int_t ipar) const = 0;
    virtual void      PrintResults(Int_t level, Double_t amin) const = 0;
    virtual void      ReleaseParameter(Int_t ipar) = 0;
+   virtual Double_t *SetCache(Int_t npoints, Int_t psize);
    virtual void      SetFCN(void *fcn);
    virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
    virtual void      SetFitMethod(const char *name) = 0;

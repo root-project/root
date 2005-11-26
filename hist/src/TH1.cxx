@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.260 2005/11/07 20:27:55 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.261 2005/11/17 14:43:17 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2401,10 +2401,63 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    } else {
       f1->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
    }
+   
+   // Initialize the fitter cache
    hFitter->SetXfirst(hxfirst); hFitter->SetXlast(hxlast);
    hFitter->SetYfirst(hyfirst); hFitter->SetYlast(hylast);
    hFitter->SetZfirst(hzfirst); hFitter->SetZlast(hzlast);
-
+   //for each point the cache contains the following info
+   // -normal case
+   //   -1D : bc,e,xc  (bin content, error, x of center of bin)
+   //   -2D : bc,e,xc,yc
+   //   -3D : bc,e,xc,yc,zc
+   //
+   // -Integral case
+   //   -1D : bc,e,xc,xw  (bin content, error, x of center of bin, x bin width of bin)
+   //   -2D : bc,e,xc,xw,yc,yw
+   //   -3D : bc,e,xc,xw,yc,yw,zc,zw
+   Int_t maxpoints = (hzlast-hzfirst+1)*(hylast-hyfirst+1)*(hxlast-hxfirst+1);
+   Int_t psize = 2 +fDimension;
+   if (fitOption.Integral) psize = 2+3*fDimension;
+   Double_t *cache = hFitter->SetCache(maxpoints,psize);
+   Int_t np = 0;
+   for (Int_t binz=hzfirst;binz<=hzlast;binz++) {
+      for (Int_t biny=hyfirst;biny<=hylast;biny++) {
+         for (Int_t binx=hxfirst;binx<=hxlast;binx++) {
+            if (fitOption.Integral) {
+               if (fDimension > 2) {
+                  cache[6] = fZaxis.GetBinCenter(binz);
+                  cache[7] = fZaxis.GetBinWidth(binz);
+               }
+               if (fDimension > 1) {
+                  cache[4] = fYaxis.GetBinCenter(biny);
+                  cache[5] = fYaxis.GetBinWidth(biny);
+               }
+               cache[2] = fXaxis.GetBinCenter(binx);
+               cache[3] = fXaxis.GetBinWidth(binx);
+            } else {
+               if (fDimension > 2) {
+                  cache[4] = fZaxis.GetBinCenter(binz);
+               }
+               if (fDimension > 1) {
+                  cache[3] = fYaxis.GetBinCenter(biny);
+               }
+               cache[2] = fXaxis.GetBinCenter(binx);
+            }
+            if (!f1->IsInside(&cache[2])) continue;
+            if (fitOption.Integral) cache[5] = fXaxis.GetBinWidth(binx);
+            Int_t bin = GetBin(binx,biny,binz);
+            cache[0] = GetBinContent(bin);
+            if (fitOption.W1) cache[1] = 1;
+            else              cache[1]  = GetBinError(bin);
+            if (cache[1] == 0) continue;
+            np++;
+            cache += psize;
+         }
+      }
+   }
+   hFitter->SetCache(np,psize);
+   
    if (linear){
       hFitter->ExecuteCommand("FitHist", 0, 0);
    } else {

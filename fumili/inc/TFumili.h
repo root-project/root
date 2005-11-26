@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.6 2004/10/22 13:03:39 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.7 2004/10/22 21:18:23 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /////////////////////////////////////////////////////////////////////////
@@ -93,6 +93,10 @@ public:
   Double_t         EvalTFN(Double_t *,Double_t*);
   virtual Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
   Int_t            ExecuteSetCommand(Int_t ); 
+  virtual void     FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+  virtual void     FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+  virtual void     FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+  virtual void     FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
   virtual void     FixParameter(Int_t ipar); 
   virtual Double_t *GetCovarianceMatrix() const;
   virtual Double_t GetCovarianceMatrixElement(Int_t i, Int_t j) const;
