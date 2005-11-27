@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.35 2005/11/26 15:03:07 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.36 2005/11/27 07:29:51 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -470,7 +470,6 @@ void TFitter::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
       TF1::RejectPoint(kFALSE);
       fu = f1->EvalPar(x,u);
       if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
-      Double_t eu = cache[1];
       if (flag == 2) {
          for (j=0;j<npar;j++) {
             dersum[j] += 1; //should be the derivative
@@ -543,7 +542,6 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
          fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
       }
       if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
-      Double_t eu = cache[1];
       if (flag == 2) {
          for (j=0;j<npar;j++) {
             dersum[j] += 1; //should be the derivative
