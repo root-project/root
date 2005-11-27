@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.34 2005/11/21 09:47:20 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.35 2005/11/26 15:03:07 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -512,9 +512,6 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
 
    Double_t cu,fu,fobs,fsub;
    Double_t dersum[100];
-   Double_t binxlow, binxup, binxsize;
-   Double_t binylow, binyup, binysize;
-   Double_t binzlow, binzup, binzsize;
    Double_t x[3];
    Int_t icu;
 
