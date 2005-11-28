@@ -15,7 +15,7 @@ class RecDataRecord : public RecRecordImp<T> {
  private:
   // data members
 
-  ClassDef(RecDataRecord<T>,1)
+  ClassDef(RecDataRecord,1)
 
 };
 

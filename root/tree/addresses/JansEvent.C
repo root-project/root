@@ -211,8 +211,8 @@ void JansEvent::reset()
 void testJan() {
   {
     B_Parameters *b = new B_Parameters;
-    TObject *o = b;
-    CandidateParameters *c = b;
+    //TObject *o = b;
+    //CandidateParameters *c = b;
     //std::cout << (void*)b << " : " << (void*)c << " and " << (void*)o << endl;
     std::cout << b->gamma.minTrackDTheta << std::endl;
     std::cout << b->gamma.uid << std::endl;

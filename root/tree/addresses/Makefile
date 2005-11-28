@@ -119,10 +119,7 @@ suetest.log: configtest.root
 suetest: suetest.log
 	$(TestDiff)
 
-runJan_C.$(DllSuf): runJan.C JansEvent_C.$(DllSuf)
-	$(BuildWithLib)
-
-Jan.clog: runJan_C.$(DllSuf)
+Jan.log: JansEvent_C.$(DllSuf)
 
 Jantest: Jan.log
 	$(TestDiff)
