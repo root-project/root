@@ -603,14 +603,13 @@ char *cpp_argv[ARGUMENTS] = {
 # define DEFAULT_OS_MINOR_REV   "r %*d.%[0-9]"
 # define DEFAULT_OS_TEENY_REV   "v %[0-9]"
 /* # define DEFAULT_OS_NAME        "srm %[^\n]" */ /* Not useful on ISC */
-#elif defined(__FreeBSD__) || defined(__OpenBSD__)
+#elif defined(__FreeBSD__)
 /* BSD/OS too? */
 /* uname -r returns "x.y[.z]-mumble", e.g. "2.1.5-RELEASE" or "2.2-0801SNAP" */
 # define DEFAULT_OS_MAJOR_REV   "r %[0-9]"
 # define DEFAULT_OS_MINOR_REV   "r %*d.%[0-9]"
 # define DEFAULT_OS_TEENY_REV   "r %*d.%*d.%[0-9]"
 # define DEFAULT_OS_NAME        "srm %[^\n]"
-# if defined(__FreeBSD__)
 /* Use an alternate way to find the teeny version for -STABLE, -SNAP versions */
 #  define DEFAULT_OS_TEENY_REV_FROB(buf, size)				\
     do {								\
@@ -638,10 +637,12 @@ char *cpp_argv[ARGUMENTS] = {
 		buf[1] = 0;						\
 	}								\
     } while (0)
-# else
-   /* OpenBSD - Add DEFAULT_MACHINE_ARCHITECTURE */
-#  define DEFAULT_MACHINE_ARCHITECTURE "m %[^\n]"
-# endif
+#elif defined(__OpenBSD__)
+/* uname -r returns "x.y", e.g. "3.7" */
+# define DEFAULT_OS_MAJOR_REV   "r %[0-9]"
+# define DEFAULT_OS_MINOR_REV   "r %*d.%[0-9]"
+# define DEFAULT_OS_NAME        "srm %[^\n]"
+# define DEFAULT_MACHINE_ARCHITECTURE "m %[^\n]"
 #elif defined(__NetBSD__)
 /*
  * uname -r returns "x.y([ABCD...]|_mumble)", e.g.:
