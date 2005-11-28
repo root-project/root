@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.27 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.28 2005/11/21 13:52:50 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -199,6 +199,11 @@ void TGeoVoxelFinder::BuildVoxelLimits()
 void TGeoVoxelFinder::CreateCheckList()
 {
 // Initializes check list.
+   if (NeedRebuild()) {
+      Voxelize();
+      fVolume->FindOverlaps();
+      SetNeedRebuild(kFALSE);
+   }   
    Int_t nd = fVolume->GetNdaughters();
    if (!nd) return;
    if (!fCheckList) fCheckList = new Int_t[nd];
@@ -217,6 +222,12 @@ Bool_t TGeoVoxelFinder::IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsa
 {
 // Computes squared distance from POINT to the voxel(s) containing node INODE. Returns 0
 // if POINT inside voxel(s).
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+      vox->SetNeedRebuild(kFALSE);
+   }   
    Double_t dxyz, minsafe2=minsafe*minsafe;
    Int_t ist = 6*inode;
    Int_t i;
@@ -234,6 +245,11 @@ Double_t TGeoVoxelFinder::Efficiency()
 {
 //--- Compute voxelization efficiency.
    printf("Voxelization efficiency for %s\n", fVolume->GetName());
+   if (NeedRebuild()) {
+      Voxelize();
+      fVolume->FindOverlaps();
+      SetNeedRebuild(kFALSE);
+   }   
    Double_t nd = Double_t(fVolume->GetNdaughters());
    Double_t eff = 0;
    Double_t effslice = 0;
@@ -275,6 +291,12 @@ Double_t TGeoVoxelFinder::Efficiency()
 void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 {
 // create the list of nodes for which the bboxes overlap with inode's bbox
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+      vox->SetNeedRebuild(kFALSE);
+   }   
    if (!fBoxes) return;
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
    Double_t xmin1, xmax1, ymin1, ymax1, zmin1, zmax1;
@@ -499,6 +521,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
 {
 // Returns list of new candidates in next voxel. If NULL, nowhere to
 // go next. 
+   if (NeedRebuild()) {
+      Voxelize();
+      fVolume->FindOverlaps();
+      SetNeedRebuild(kFALSE);
+   }   
    ncheck = 0;
    if (fLimits[0]<0) return 0;
    if (fLimits[1]<0) return 0;
@@ -1139,7 +1166,11 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
 Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
 {
 // get the list of daughter indices for which point is inside their bbox
-//   if (!fBoxes) return 0;
+   if (NeedRebuild()) {
+      Voxelize();
+      fVolume->FindOverlaps();
+      SetNeedRebuild(kFALSE);
+   }   
    if (fVolume->GetNdaughters() == 1) {
       if (fXb) {
          if (point[0]<fXb[0] || point[0]>fXb[1]) return 0;
@@ -1295,6 +1326,11 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t 
 {
 // get the list of new candidates for the next voxel crossed by current ray
 //   printf("### GetNextVoxel\n");
+   if (NeedRebuild()) {
+      Voxelize();
+      fVolume->FindOverlaps();
+      SetNeedRebuild(kFALSE);
+   }   
    if (fCurrentVoxel==0) {
 //      printf(">>> first voxel, %i candidates\n", ncheck);
 //      printf("   bits[0]=%i\n", gGeoManager->GetBits()[0]);
@@ -1995,6 +2031,12 @@ void TGeoVoxelFinder::SortAll(Option_t *)
 void TGeoVoxelFinder::Print(Option_t *) const
 {
 // Print the voxels.
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+      vox->SetNeedRebuild(kFALSE);
+   }   
    Int_t id, i;
    Int_t nd = fVolume->GetNdaughters();
    printf("Voxels for volume %s (nd=%i)\n", fVolume->GetName(), fVolume->GetNdaughters());
@@ -2091,6 +2133,12 @@ void TGeoVoxelFinder::Print(Option_t *) const
 void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
 {
 // print the voxel containing point
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+      vox->SetNeedRebuild(kFALSE);
+   }   
    Int_t im=0;
    if (fPriority[0]) {
       im = TMath::BinarySearch(fIbx, fXb, point[0]);
@@ -2488,6 +2536,12 @@ Int_t *TGeoCylVoxels::GetCheckList(Double_t *point, Int_t &nelem)
 {
 //--- Get the list of nodes possibly containing a given point.
    // convert the point to cylindrical coordinates
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+      vox->SetNeedRebuild(kFALSE);
+   }   
    Double_t ptcyl[3];
    ptcyl[0] = point[0]*point[0]+point[1]*point[1];
    if (fPriority[1]) {
@@ -2547,6 +2601,12 @@ Int_t TGeoCylVoxels::IntersectIntervals(Double_t vox1, Double_t vox2, Double_t p
 void TGeoCylVoxels::Print(Option_t *) const
 {
 // Print info about voxels.
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+      vox->SetNeedRebuild(kFALSE);
+   }   
    Int_t id;
    printf("Voxels for volume %s (nd=%i)\n", fVolume->GetName(), fVolume->GetNdaughters());
    printf("priority : x=%i y=%i z=%i\n", fPriority[0], fPriority[1], fPriority[2]);
@@ -3045,6 +3105,12 @@ Int_t *TGeoFullVoxels::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nche
 Int_t *TGeoFullVoxels::GetCheckList(Double_t *point, Int_t &nelem)
 {
 // get the list of daughter indices for which point is inside their bbox
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+      vox->SetNeedRebuild(kFALSE);
+   }   
    nelem = fNcandidates = 0;
    Int_t im;
    UChar_t *slice; 

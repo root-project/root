@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.41 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.42 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -81,7 +81,9 @@ public:
       kVolumeMulti   =     BIT(19),
       kVoxelsXYZ     =     BIT(20),
       kVoxelsCyl     =     BIT(21),
-      kVolumeClone   =     BIT(22)
+      kVolumeClone   =     BIT(22),
+      kVolumeAdded   =     BIT(23),
+      kVolumeReplicated =  BIT(24)
    };
    // constructors
    TGeoVolume();
@@ -122,6 +124,8 @@ public:
    void            PrintVoxels() const; // *MENU*
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
+   Bool_t          IsAdded()     const {return TObject::TestBit(kVolumeAdded);}
+   Bool_t          IsReplicated() const {return TObject::TestBit(kVolumeReplicated);}
    Bool_t          IsCylVoxels() const {return TObject::TestBit(kVoxelsCyl);}
    Bool_t          IsXYZVoxels() const {return TObject::TestBit(kVoxelsXYZ);}
    Bool_t          IsTopVolume() const;
@@ -170,6 +174,8 @@ public:
    void            SaveAs(const char *filename); // *MENU*
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
    void            SetAsTopVolume(); // *TOGGLE* *GETTER=IsTopVolume
+   void            SetAdded()      {TObject::SetBit(kVolumeAdded);}
+   void            SetReplicated() {TObject::SetBit(kVolumeReplicated);}
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}

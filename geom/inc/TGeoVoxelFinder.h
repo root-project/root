@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.10 2005/06/13 12:17:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.11 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -25,7 +25,8 @@ class TGeoVoxelFinder : public TObject
 {
 public:
 enum EVoxelsType {
-   kGeoInvalidVoxels = BIT(15)
+   kGeoInvalidVoxels = BIT(15),
+   kGeoRebuildVoxels = BIT(16)
 };
 protected:
    TGeoVolume      *fVolume;          // volume to which applies
@@ -68,35 +69,18 @@ protected:
    Int_t            *fExtraZ;         //[fNez] indices of extra daughters in Z slices
    Int_t            *fCheckList;      //! list of candidates
    UChar_t          *fBits1;          //! bits used for list intersection
-public :
-   TGeoVoxelFinder();
-   TGeoVoxelFinder(TGeoVolume *vol);
-   virtual ~TGeoVoxelFinder();
+
    virtual void        BuildVoxelLimits();
-   void                CreateCheckList();
-   void                DaughterToMother(Int_t id, Double_t *local, Double_t *master) const;
-   virtual Double_t    Efficiency();
-   virtual Int_t      *GetCheckList(Double_t *point, Int_t &nelem);
-   Int_t              *GetCheckList(Int_t &nelem) const {nelem=fNcandidates; return fCheckList;}
    Int_t              *GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const;
    Int_t              *GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) const;
    Int_t              *GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) const;
    Bool_t              GetIndices(Double_t *point);
    Int_t               GetPriority(Int_t iaxis) const {return fPriority[iaxis];}
    Int_t               GetNcandidates() const         {return fNcandidates;}
-//   virtual Bool_t      GetNextIndices(Double_t *point, Double_t *dir);
-   virtual Int_t      *GetNextCandidates(Double_t *point, Int_t &ncheck); 
-   virtual Int_t      *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
    Int_t              *GetValidExtra(Int_t *list, Int_t &ncheck);
    Int_t              *GetValidExtra(Int_t n1, UChar_t *array1, Int_t *list, Int_t &ncheck);
    Int_t              *GetValidExtra(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t *list, Int_t &ncheck);
    virtual Int_t      *GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck);
-   virtual void        FindOverlaps(Int_t inode) const;
-   Bool_t              IsInvalid() const {return TObject::TestBit(kGeoInvalidVoxels);}
-   Double_t           *GetBoxes() const {return fBoxes;}
-   Bool_t              IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsafe) const;
-   virtual void        Print(Option_t *option="") const;
-   void                PrintVoxelLimits(Double_t *point) const;
 //   Bool_t              Intersect(Int_t n1, Int_t *array1, Int_t n2, Int_t *array2,
 //                             Int_t n3, Int_t *array3, Int_t &nf, Int_t *result); 
    Bool_t              Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *result); 
@@ -110,15 +94,35 @@ public :
    Bool_t              IntersectAndStore(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2); 
    Bool_t              IntersectAndStore(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2,
                              Int_t n3, UChar_t *array3); 
-   void                SetInvalid(Bool_t flag=kTRUE) {TObject::SetBit(kGeoInvalidVoxels, flag);}
    virtual void        SortAll(Option_t *option="");
-   void                SortCrossedVoxels(Double_t *point, Double_t *dir);
 //   Bool_t              Union(Int_t n1, Int_t *array1, Int_t n2, Int_t *array2,
 //                             Int_t n3, Int_t *array3);
    Bool_t              Union(Int_t n1, UChar_t *array1);
    Bool_t              Union(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2);
    Bool_t              Union(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2,
                              Int_t n3, UChar_t *array3);
+public :
+   TGeoVoxelFinder();
+   TGeoVoxelFinder(TGeoVolume *vol);
+   virtual ~TGeoVoxelFinder();
+   void                CreateCheckList();
+   void                DaughterToMother(Int_t id, Double_t *local, Double_t *master) const;
+   virtual Double_t    Efficiency();
+   virtual Int_t      *GetCheckList(Double_t *point, Int_t &nelem);
+   Int_t              *GetCheckList(Int_t &nelem) const {nelem=fNcandidates; return fCheckList;}
+//   virtual Bool_t      GetNextIndices(Double_t *point, Double_t *dir);
+   virtual Int_t      *GetNextCandidates(Double_t *point, Int_t &ncheck); 
+   virtual void        FindOverlaps(Int_t inode) const;
+   Bool_t              IsInvalid() const {return TObject::TestBit(kGeoInvalidVoxels);}
+   Bool_t              NeedRebuild() const {return TObject::TestBit(kGeoRebuildVoxels);}
+   Double_t           *GetBoxes() const {return fBoxes;}
+   Bool_t              IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsafe) const;
+   virtual void        Print(Option_t *option="") const;
+   void                PrintVoxelLimits(Double_t *point) const;
+   void                SetInvalid(Bool_t flag=kTRUE) {TObject::SetBit(kGeoInvalidVoxels, flag);}
+   void                SetNeedRebuild(Bool_t flag=kTRUE) {TObject::SetBit(kGeoRebuildVoxels, flag);}
+   virtual Int_t      *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
+   void                SortCrossedVoxels(Double_t *point, Double_t *dir);
    virtual void        Voxelize(Option_t *option="");
 
    ClassDef(TGeoVoxelFinder, 2)                // voxel finder class
@@ -132,13 +136,13 @@ public :
 class TGeoCylVoxels : public TGeoVoxelFinder
 {
 private:
-
+   virtual void        SortAll(Option_t *option="");
+   virtual void        BuildVoxelLimits();
 public:
    TGeoCylVoxels();
    TGeoCylVoxels(TGeoVolume *vol);
    virtual ~TGeoCylVoxels();
    
-   virtual void        BuildVoxelLimits();
    virtual Double_t    Efficiency();
    virtual void        FindOverlaps(Int_t inode) const;
    virtual Int_t      *GetCheckList(Double_t *point, Int_t &nelem);
@@ -146,7 +150,6 @@ public:
    virtual Int_t      *GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck);
    Int_t               IntersectIntervals(Double_t vox1, Double_t vox2, Double_t phi1, Double_t phi2) const;
    virtual void        Print(Option_t *option="") const;
-   virtual void        SortAll(Option_t *option="");
    virtual void        Voxelize(Option_t *option);
 
    ClassDef(TGeoCylVoxels, 2)                // cylindrical voxel class

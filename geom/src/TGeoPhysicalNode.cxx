@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.6 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.7 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -103,6 +103,10 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
             return;
          }
          // Clone daughter volume and node
+         if (!node->GetVolume()->IsReplicated()) {
+            vm = node->GetVolume();
+            continue;
+         }   
          vd = node->GetVolume()->CloneVolume();
          nnode = node->MakeCopyNode();
          // Correct pointers to mother and volume
@@ -137,10 +141,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    if (newshape) vd->SetShape(newshape);
    // Now we have to re-voxelize the mother volume
    TGeoVoxelFinder *voxels = vm->GetVoxels();
-   if (voxels) voxels->Voxelize();
-//   vm->SetVoxelFinder(0);
-//   vm->Voxelize("ALL");
-   vm->FindOverlaps(); 
+   if (voxels) voxels->SetNeedRebuild();
    // Eventually check for overlaps
    if (check) vm->CheckOverlaps();
    // clean current matrices from cache

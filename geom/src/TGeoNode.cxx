@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.26 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.27 2005/11/21 09:31:47 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -102,6 +102,8 @@ TGeoNode::TGeoNode(const TGeoVolume *vol)
       return;
    }
    fVolume       = (TGeoVolume*)vol;
+   if (fVolume->IsAdded()) fVolume->SetReplicated();
+   fVolume->SetAdded();
    fMother       = 0;
    fNumber       = 0;
    fOverlaps     = 0;
