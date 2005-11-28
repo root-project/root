@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLFile.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLFile.cxx,v 1.3 2005/11/24 16:57:23 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -64,16 +64,6 @@
 //     data, corresponding to this particular data member, and column
 //     will contain this raw:id
 //
-// Optionally (default this options on) name of column includes
-// suffix which indicates type of column. For instance:
-//   *:parent  - parent class, column contain class version
-//   *:object  - other object, column contain object id
-//   *:rawdata - raw data, column contains id of raw data from _streamer_ table
-//   *:Int_t   - column with integer value
-// Use TSQLFile::SetUseSuffixes(kFALSE) to disable with behaviour.
-// Option can only be changed before first object was written to file.
-// Normally this should be done immidiately after createion of TSQLFile instance.
-//
 // All conversion to SQL statements are done with help of TSQLStructure class.
 // This is special hierarchical structure wich internally is very similar
 // to XML structures. TBufferSQL2 creates these structures, when object
@@ -83,34 +73,54 @@
 // When data is reading, TBufferSQL2 will produce requests to database
 // during unstreaming of object data.
 //
-// There is one method TSQLFile::MakeSelectQuery(TClass*), which
+// Optionally (default this options on) name of column includes
+// suffix which indicates type of column. For instance:
+//   *:parent  - parent class, column contain class version
+//   *:object  - other object, column contain object id
+//   *:rawdata - raw data, column contains id of raw data from _streamer_ table
+//   *:Int_t   - column with integer value
+// Use TSQLFile::SetUseSuffixes(kFALSE) to disable suffixes usage.
+//
+// This and several other options can be changed only when
+// TSQLFile created with options "CREATE" or "RECREATE" and only before
+// first write operation. These options are:
+//     SetUseSuffixes() - suffix usage in column names (default - on)
+//     SetArrayLimit()  - defines maximum array size, which can 
+//                        has column for each element (default 20)
+//     SetTablesType()  - table type name in MySQL database (default "InnoDB")
+//     SetUseIndexes()  - usage of indexes in database (default kIndexesBasic)
+// Normally these functions should be called immidiately after TSQLFile constructor.
+//
+// When objects data written to database, by default START TRANSACTION/COMMIT
+// SQL commands are used before and after data storage. If TSQLFile detects 
+// any problems, ROLLBACK command will be used to restore 
+// previous state of data base. If transactions not supported by SQL server,
+// they can be disabled by SetUseTransactions(kTransactionsOff). Or user
+// can take responsibility to use transactions function to hime
+//
+// By default only indexes for basic tables are created.
+// In most cases usage of indexes increase perfomance to data reading,
+// but it also can increase time of writing data to database.
+// There are several modes of index usage available in SetUseIndexes() method
+//
+// There is MakeSelectQuery(TClass*) method, which
 // produces SELECT statement to get objects data of specified class.
 // Difference from simple statement like:
 //   mysql> SELECT * FROM TH1I_ver1 
 // that not only data for that class, but also data from parent classes
-// will be extracted from other tables and combined in single result table
+// will be extracted from other tables and combined in single result table.
 // Such select query can be usufull for external access to objects data.
 //
-// There is two examples: tables.C and canvas.C in sql directory
-// To run them, correct database name, username and password should be specified.
-// Be carefull. First, what TSQLFile does when "recreate" or "create" option
-// are specified, is delete all tables (including non-ROOT) from data base.
-//
-// In first example histogram and list of TBox classes
-// are written and then read back.
-//
-// Second produces canvas (like in ntuple1.C tutorial),
-// store its to DB and reads back. There is also benchmark.
-// On MySQL 4.1, running on remote PC, store taking ~4s and read ~2s.
-//
-// Up to now MySQL 4.1 and Oracle 9i were tested. Definitely, some
-// adjustments required for other SQL databases. Hopefully, this should
-// be straigthforward.
+// Up to now MySQL 4.1 and Oracle 9i were tested. 
+// Some extra work is required for other SQL databases. 
+// Hopefully, this should be straigthforward.
 //
 // Known problems and open questions.
 // 1) TTree is not supported by TSQLFile. There is independent development
-//    of TTreeSQL, which allows to store trees directly in SQL database
-// 2) TClonesArray is not tested, will be adjusted soon.
+//    of TTreeSQL class, which allows to store trees directly in SQL database
+// 2) TClonesArray is store objects in raw format, 
+//    which can not be accessed outside ROOT. 
+//    This will be changed later.
 // 3) TDirectory cannot work. Hopefully, will (changes in ROOT basic I/O is required)
 // 4) Streamer infos are not written to file, therefore schema evolution
 //    is not yet supported. All eforts are done to enable this feature in
@@ -128,7 +138,7 @@
 //  // Clean data base and create primary tables
 //  TSQLFile* f = new TSQLFile(dbname, "recreate", username, userpass);
 //  // Write with standard I/O functions
-//  arr->Write("arr",TObject::kSingleKey);
+//  arr->Write("arr", TObject::kSingleKey);
 //  h1->Write("histo");
 //  // Close connection to DB
 //  delete f;
@@ -149,7 +159,6 @@
 //  delete f;
 //
 // The "SQL I/O" package is currently under development.
-// Documentaion is not complete, not all data combination are tested.
 // Any bug reports and suggestions are welcome.
 // Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 //
@@ -205,7 +214,7 @@ const char* mysql_BasicTypes[20] = {
 ""
 };
 
-const char* mysql_OtherTypes[12] = {
+const char* mysql_OtherTypes[13] = {
 "VARCHAR(255)",     // smallest text
 "255",              // maximum length of small text
 "TEXT",             // biggest size text
@@ -217,7 +226,8 @@ const char* mysql_OtherTypes[12] = {
 "raw:id",           // raw data id column
 "str:id",           // string id column
 ":",                // name separator between name and type like TObject:Parent
-"\""                // quote for string values in MySQL
+"\"",               // quote for string values in MySQL
+"InnoDB"            // default tables types, used only for MySQL tables
 };
 
 const char* oracle_BasicTypes[20] = {
@@ -243,7 +253,7 @@ const char* oracle_BasicTypes[20] = {
 ""
 };
 
-const char* oracle_OtherTypes[12] = {
+const char* oracle_OtherTypes[13] = {
 "VARCHAR(1000)",    // smallest text
 "4095",             // maximum size of smallest text
 "VARCHAR(4000)",    // biggest size text, CLOB is not yet supported by TOracleRow
@@ -255,7 +265,8 @@ const char* oracle_OtherTypes[12] = {
 "raw:id",           // raw data id column
 "str:id",           // string id column
 ":",                // name separator between name and type like TObject:parent
-"'"                 // quote for string values in Oracle
+"'",                // quote for string values in Oracle
+""                  // default tables types, used only for MySQL tables
 };
 
 // ******************************************************************
@@ -373,13 +384,17 @@ TSQLFile::TSQLFile() :
    fSQLIOversion(1),
    fArrayLimit(20),
    fCanChangeConfig(kFALSE),
+   fTablesType(),
+   fUseTransactions(0),
+   fUseIndexes(0),
+   fModifyCounter(0),
    fBasicTypes(0),
+   fOtherTypes(0),
    fUserName(),
    fLogFile(0)
 {
    // default TSQLFile constructor
 }
-
 
 //______________________________________________________________________________
 TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const char* pass) :
@@ -390,6 +405,10 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    fSQLIOversion(1),
    fArrayLimit(20),
    fCanChangeConfig(kFALSE),
+   fTablesType(),
+   fUseTransactions(0),
+   fUseIndexes(0),
+   fModifyCounter(0),
    fBasicTypes(mysql_BasicTypes),
    fOtherTypes(mysql_OtherTypes),
    fUserName(user),
@@ -405,7 +424,11 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    //           = RECREATE        create completely new tables. Any existing tables
    //                             will be deleted
    //           = UPDATE          open an existing database for writing.
-   //                             if no tables existing, they will be created.
+   //                             If data base open by other TSQLFile instance for writing,
+   //                             write access will be rejected
+   //           = BREAKLOCK       Special case when lock was not correctly released 
+   //                             by TSQLFile instance. This may happen if program crashed when
+   //                             TSQLFile was open with write access mode.
    //           = READ or OPEN    open an existing data base for reading.
    //
    // For more details see comments for TFile::TFile() constructor
@@ -425,6 +448,11 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
       fBasicTypes = oracle_BasicTypes;
       fOtherTypes = oracle_OtherTypes;
    }
+   
+   fArrayLimit = 20;
+   fTablesType = SQLDefaultTableType();
+   fUseIndexes = 1;
+   fUseTransactions = kTransactionsAuto;
 
    fD          = -1;
    fFile       = this;
@@ -449,6 +477,10 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    fOption.ToUpper();
 
    if (fOption == "NEW") fOption = "CREATE";
+   
+   Bool_t breaklock = kFALSE;
+   
+   if (fOption == "BREAKLOCK") { breaklock = kTRUE; fOption = "UPDATE"; }
 
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
@@ -474,6 +506,11 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    }
 
    if (recreate) {
+      if (IsTablesExists())
+         if (!IsWriteAccess()) {
+            Error("TSQLFile", "no write permission, DB %s locked", dbname);
+            goto zombie;
+         }
       SQLDeleteAllTables();
       recreate = kFALSE;
       create   = kTRUE;
@@ -490,9 +527,9 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
          update = kFALSE;
          create = kTRUE;
       }
-
-      if (update && !IsWriteAccess()) {
-         Error("TSQLFile", "no write permission, could not open DB %s", dbname);
+      
+      if (update && !breaklock && !IsWriteAccess()) {
+         Error("TSQLFile", "no write permission, DB %s locked", dbname);
          goto zombie;
       }
    }
@@ -503,16 +540,17 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
          goto zombie;
       }
       if (!IsReadAccess()) {
-         Error("TSQLFile", "no read permission, could not open DB %s tables", dbname);
+         Error("TSQLFile", "no read permission for DB %s tables", dbname);
          goto zombie;
       }
    }
 
    fRealName = dbname;
 
-   if (create || update)
+   if (create || update) {
       SetWritable(kTRUE);
-   else
+      if (update) SetLocking(kLockBusy);
+   } else
       SetWritable(kFALSE);
 
    // user can change configurations only when create (recreate) options
@@ -521,7 +559,7 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    fCanChangeConfig = create;
 
    InitSqlDatabase(create);
-
+   
    return;
 
 zombie:
@@ -597,6 +635,102 @@ void TSQLFile::SetArrayLimit(Int_t limit)
 }
 
 //______________________________________________________________________________
+void TSQLFile::SetTablesType(const char* tables_type)
+{
+   // Defines tables type, which is used in CREATE TABLE statements
+   // Now is only used for MySQL database, where following types are supported:
+   //    "BDB", "HEAP", "ISAM", "InnoDB", "MERGE", "MRG_MYISAM", "MYISAM"
+   // Default for TSQLFile is "InnoDB". For more detailes see MySQL docs.
+    
+   if (!fCanChangeConfig)
+      Error("SetTablesType", "Configurations already cannot be changed");
+   else
+      fTablesType = tables_type;
+}
+
+//______________________________________________________________________________
+void TSQLFile::SetUseTransactions(Int_t mode) 
+{ 
+   // Defines usage of transactions statements for writing objects data to database.
+   //    kTransactionsOff=0   - no transaction operation are allowed
+   //    kTransactionsAuto=1  - automatic mode. Each write operation, 
+   //        produced by TSQLFile, will be supplied by START TRANSACTION and COMMIT calls.
+   //        If any error happen, ROLLBACK will returns database to previous state
+   //    kTransactionsUser=2  - transactions are delegated to user. Methods 
+   //        StartTransaction(), Commit() and Rollback() should be called by user.
+   // Default UseTransactions option is kTransactionsAuto
+      
+   fUseTransactions = mode; 
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::StartTransaction()
+{
+   // Start user transaction.
+   // This can be usesfull, when big number of objects should be stored in
+   // data base and commitment required only if all operations were succesfull.
+   // In that case in the end of all operations method Commit() should be
+   // called. If operation on user-level is looks like not successfull,
+   // method Rollback() will return database data and TSQLFile instance to
+   // previous state.
+   // In MySQL not all tables types support transaction mode of operation.
+   // See SetTablesType() method for details .
+   
+   if (GetUseTransactions()!=kTransactionsUser) {
+      Error("SQLStartTransaction","Only allowed when SetUseTransactions(kUserTransactions) was configured");
+      return kFALSE;
+   }
+   
+   return SQLStartTransaction();
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::Commit()
+{
+   // Commit transaction, started by StartTransaction() call.
+   // Only after that call data will be written and visible on database side.
+
+   if (GetUseTransactions()!=kTransactionsUser) {
+      Error("SQLCommit","Only allowed when SetUseTransactions(kUserTransactions) was configured");
+      return kFALSE;
+   }
+   
+   return SQLCommit();
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::Rollback()
+{
+   // Rollback all operations, done after StartTransaction() call.
+   // Database should return to initial state.
+
+   if (GetUseTransactions()!=kTransactionsUser) {
+      Error("SQLRollback","Only allowed when SetUseTransactions(kUserTransactions) was configured");
+      return kFALSE;
+   }
+   
+   return SQLRollback();
+}
+
+//______________________________________________________________________________
+void TSQLFile::SetUseIndexes(Int_t use_type)
+{
+   // Specify usage of indexes for data tables
+   //    kIndexesNone = 0  - no indexes are used
+   //    kIndexesBasic = 1 - indexes used only for keys list and 
+   //                        objects list tables (default)
+   //    kIndexesClass = 2 - index also created for every normal class table
+   //    kIndexesAll = 3   - index created for every table, including _streamer_ tables
+   // Indexes in general should increase speed of access to objects data,
+   // but they required more operations and more disk space on server side
+   
+   if (!fCanChangeConfig)
+      Error("SetUseIndexes", "Configurations already cannot be changed");
+   else
+      fUseIndexes = use_type;
+}
+
+//______________________________________________________________________________
 const char* TSQLFile::GetDataBaseName() const
 {
    // Return name of data base on the host
@@ -620,7 +754,11 @@ void TSQLFile::Close(Option_t *option)
    if (opt.Length()>0)
       opt.ToLower();
 
-   if (IsWritable()) SaveToDatabase();
+   if (IsWritable()) {
+      SaveToDatabase();
+      SetLocking(kLockFree);
+   }
+   
    fWritable = kFALSE;
 
    if (fClassIndex) {
@@ -718,16 +856,27 @@ Int_t TSQLFile::ReOpen(Option_t* mode)
    if (opt == "READ") {
       // switch to READ mode
 
-      if (IsOpen() && IsWritable())
+      if (IsOpen() && IsWritable()) {
          SaveToDatabase();
+         SetLocking(kLockFree);
+      }
       fOption = opt;
 
       SetWritable(kFALSE);
 
    } else {
+      // switch to UPDATE mode
+      
+      if (!IsWriteAccess()) {
+         Error("ReOpen","Tables are locked, no write access");
+         return 1;
+      }
+      
       fOption = opt;
 
       SetWritable(kTRUE);
+      
+      SetLocking(kLockBusy);
    }
 
    return 0;
@@ -801,7 +950,6 @@ void TSQLFile::WriteStreamerInfo()
    cmds.Delete();
 
    fClassIndex->fArray[0] = 0; //to prevent adding classes in TStreamerInfo::TagFile
-
 }
 
 //______________________________________________________________________________
@@ -814,7 +962,7 @@ TList* TSQLFile::GetStreamerInfoList()
    // streamers, which can not be handled by TBufferSQL2.
    // Hopefully, problem will be solved soon
 
-   return 0;
+   return new TList;
 
    if (gDebug>1)
       Info("GetStreamerInfoList","Start reading of streamer infos");
@@ -914,7 +1062,7 @@ void TSQLFile::InitSqlDatabase(Bool_t create)
          ReadStreamerInfo();
          ok = ReadKeysForDirectory(this, sqlio::Ids_RootDir);
       }
-
+      
       if (!ok) {
          Error("InitSqlDatabase", "Cannot detect proper tabled in database. Close.");
          Close();
@@ -928,7 +1076,7 @@ void TSQLFile::InitSqlDatabase(Bool_t create)
 
    gROOT->GetListOfFiles()->Add(this);
    cd();
-
+   
    fNProcessIDs = 0;
    TKey* key = 0;
    TIter iter(fKeys);
@@ -955,6 +1103,21 @@ Bool_t TSQLFile::ReadConfigurations()
 
    // should be found, otherwise will be error
    fSQLIOversion = 0;
+   
+   Int_t lock = 0;
+   
+   #define ReadIntCfg(name, target)                        \
+     if ((field.CompareTo(name, TString::kIgnoreCase)==0)) \
+        target = value.Atoi(); else
+        
+   #define ReadBoolCfg(name, target)                        \
+     if ((field.CompareTo(name, TString::kIgnoreCase)==0))  \
+        target = value.CompareTo(sqlio::True, TString::kIgnoreCase)==0; else 
+
+   #define ReadStrCfg(name, target)                         \
+     if ((field.CompareTo(name, TString::kIgnoreCase)==0))  \
+        target = value; else 
+   
 
    for(Int_t nrow=0;nrow<res->GetRowCount();nrow++) {
       TSQLRow* row = res->Next();
@@ -963,20 +1126,20 @@ Bool_t TSQLFile::ReadConfigurations()
       TString value = row->GetField(1);
 
       delete row;
-
-      if (field.CompareTo(sqlio::cfg_Version,TString::kIgnoreCase)==0)
-         fSQLIOversion = value.Atoi();
-      else
-         if (field.CompareTo(sqlio::cfg_UseSufixes,TString::kIgnoreCase)==0)
-            fUseSuffixes = value.CompareTo(sqlio::True, TString::kIgnoreCase)==0;
-         else
-            if (field.CompareTo(sqlio::cfg_ArrayLimit,TString::kIgnoreCase)==0)
-               fArrayLimit = value.Atoi();
-            else {
-               Error("ReadConfigurations","Invalid configuration field %s", field.Data());
-               fSQLIOversion = 0;
-               break;
-            }
+      
+      ReadIntCfg(sqlio::cfg_Version, fSQLIOversion)
+      ReadBoolCfg(sqlio::cfg_UseSufixes, fUseSuffixes)
+      ReadIntCfg(sqlio::cfg_ArrayLimit, fArrayLimit)
+      ReadStrCfg(sqlio::cfg_TablesType, fTablesType)
+      ReadIntCfg(sqlio::cfg_UseTransactions, fUseTransactions)
+      ReadIntCfg(sqlio::cfg_UseIndexes, fUseIndexes)
+      ReadIntCfg(sqlio::cfg_ModifyCounter, fModifyCounter)
+      ReadIntCfg(sqlio::cfg_LockingMode, lock)
+      {
+         Error("ReadConfigurations","Invalid configuration field %s", field.Data());
+         fSQLIOversion = 0;
+         break;
+      }
    }
 
    delete res;
@@ -1005,26 +1168,30 @@ void TSQLFile::CreateBasicTables()
                quote, sqlio::ConfigTable, quote,
                sqlio::CT_Field, SQLSmallTextType(),
                sqlio::CT_Value, SQLSmallTextType());
-
+   if (fTablesType.Length()>0) {
+      sqlcmd +=" TYPE=";
+      sqlcmd += fTablesType;
+   }
+     
    SQLQuery(sqlcmd.Data());
 
-   sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s%s%s, %s%d%s)",
-               quote, sqlio::ConfigTable, quote,
-               vquote, sqlio::cfg_Version, vquote,
-               vquote, fSQLIOversion, vquote);
-   SQLQuery(sqlcmd.Data());
+   #define WrintCfg(name, type, value)                              \
+   {                                                                \
+      sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s%s%s, %s"type"%s)", \
+                  quote, sqlio::ConfigTable, quote,                 \
+                  vquote, name, vquote,                             \
+                  vquote, value, vquote);                           \
+      SQLQuery(sqlcmd.Data());                                      \
+   }
 
-   sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s%s%s, %s%s%s)",
-               quote, sqlio::ConfigTable, quote,
-               vquote, sqlio::cfg_UseSufixes, vquote,
-               vquote, fUseSuffixes ? sqlio::True : sqlio::False, vquote);
-   SQLQuery(sqlcmd.Data());
-
-   sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s%s%s, %s%d%s)",
-               quote, sqlio::ConfigTable, quote,
-               vquote, sqlio::cfg_ArrayLimit, vquote,
-               vquote, fArrayLimit, vquote);
-   SQLQuery(sqlcmd.Data());
+   WrintCfg(sqlio::cfg_Version, "%d", fSQLIOversion);
+   WrintCfg(sqlio::cfg_UseSufixes, "%s", fUseSuffixes ? sqlio::True : sqlio::False);
+   WrintCfg(sqlio::cfg_ArrayLimit, "%d", fArrayLimit);
+   WrintCfg(sqlio::cfg_TablesType, "%s", fTablesType.Data());
+   WrintCfg(sqlio::cfg_UseTransactions, "%d", fUseTransactions);
+   WrintCfg(sqlio::cfg_UseIndexes, "%d", fUseIndexes);
+   WrintCfg(sqlio::cfg_ModifyCounter, "%d", fModifyCounter);
+   WrintCfg(sqlio::cfg_LockingMode, "%d", kLockBusy);
 
    // from this moment on user cannot change configurations
    fCanChangeConfig = kFALSE;
@@ -1043,8 +1210,41 @@ void TSQLFile::CreateBasicTables()
                sqlio::KT_Datetime, SQLDatetimeType(),
                sqlio::KT_Cycle, SQLIntType(),
                sqlio::KT_Class, SQLSmallTextType());
-
+               
+   if (fTablesType.Length()>0) {
+      sqlcmd +=" TYPE=";
+      sqlcmd += fTablesType;
+   }
+   
    SQLQuery(sqlcmd.Data());
+   
+   if (GetUseIndexes()>kIndexesNone) {
+      sqlcmd.Form("CREATE UNIQUE INDEX %s%s%s ON %s%s%s (%s%s%s)",
+                   quote, sqlio::KeysTableIndex, quote,
+                   quote, sqlio::KeysTable, quote,
+                   quote, SQLKeyIdColumn(), quote);
+      SQLQuery(sqlcmd.Data());    
+   }
+}
+
+//______________________________________________________________________________
+void TSQLFile::IncrementModifyCounter()
+{
+   if (!IsWritable()) {
+      Error("IncrementModifyCounter","Cannot update tables without write accsess");
+      return;
+   }
+   
+   TString sqlcmd;
+   const char* quote = SQLIdentifierQuote();
+   const char* vquote = SQLValueQuote();
+   
+   sqlcmd.Form("UPDATE %s%s%s SET %s%s%s=%d WHERE %s%s%s=%s%s%s",
+                quote, sqlio::ConfigTable, quote,
+                quote, sqlio::CT_Value, quote, ++fModifyCounter,
+                quote, sqlio::CT_Field, quote,
+                vquote, sqlio::cfg_ModifyCounter, vquote);
+   SQLQuery(sqlcmd.Data());             
 }
 
 //______________________________________________________________________________
@@ -1066,7 +1266,7 @@ TString TSQLFile::MakeSelectQuery(TClass* cl)
    Int_t tablecnt = 0;
    
    if (!ProduceClassSelectQuery(cl->GetStreamerInfo(), sqlinfo, columns, tables, tablecnt))
-     return res;
+      return res;
    
    res.Form("SELECT %s FROM %s", columns.Data(), tables.Data());
    
@@ -1097,16 +1297,16 @@ Bool_t TSQLFile::ProduceClassSelectQuery(TStreamerInfo* info,
    TString buf;
    
    if (start) 
-     buf.Form("%s AS %s", sqlinfo->GetClassTableName(), table_syn.Data());
+      buf.Form("%s AS %s", sqlinfo->GetClassTableName(), table_syn.Data());
    else 
-     buf.Form(" LEFT JOIN %s AS %s USING(%s%s%s)",
-              sqlinfo->GetClassTableName(), table_syn.Data(), 
-              quote, SQLObjectIdColumn(), quote);
+      buf.Form(" LEFT JOIN %s AS %s USING(%s%s%s)",
+               sqlinfo->GetClassTableName(), table_syn.Data(), 
+               quote, SQLObjectIdColumn(), quote);
               
    tables += buf;
    
    if (start)
-     columns.Form("%s.%s%s%s",table_syn.Data(), quote, SQLObjectIdColumn(), quote);
+      columns.Form("%s.%s%s%s",table_syn.Data(), quote, SQLObjectIdColumn(), quote);
      
    if (info->GetClass()==TObject::Class()) {
       buf.Form(", %s.%s",table_syn.Data(), sqlio::TObjectUniqueId); 
@@ -1122,7 +1322,6 @@ Bool_t TSQLFile::ProduceClassSelectQuery(TStreamerInfo* info,
    TStreamerElement* elem = 0;
    
    while ((elem = (TStreamerElement*) iter()) != 0) {
-      Int_t typ = elem->GetType();
       Int_t coltype = TSQLStructure::DefineElementColumnType(elem, this);
       TString colname = TSQLStructure::DefineElementColumnName(elem, this);
       
@@ -1164,25 +1363,71 @@ Bool_t TSQLFile::ProduceClassSelectQuery(TStreamerInfo* info,
 Bool_t TSQLFile::IsTablesExists()
 {
    // Checks if main keys table is existing
-   return SQLTestTable(sqlio::KeysTable);
+   
+   return SQLTestTable(sqlio::KeysTable) && SQLTestTable(sqlio::ConfigTable);
 }
 
 //______________________________________________________________________________
 Bool_t TSQLFile::IsWriteAccess()
 {
-   // dummy, in future should check about write access to database
-   return kTRUE;
+   // Checkis, if lock is free in configuration tables
+   
+   return GetLocking()==kLockFree;
+}
+
+//______________________________________________________________________________
+void TSQLFile::SetLocking(Int_t mode)
+{
+   // Set locking mode for current database
+   
+   TString sqlcmd;
+   const char* quote = SQLIdentifierQuote();
+   const char* vquote = SQLValueQuote();
+   
+   sqlcmd.Form("UPDATE %s%s%s SET %s%s%s=%d WHERE %s%s%s=%s%s%s",
+                quote, sqlio::ConfigTable, quote,
+                quote, sqlio::CT_Value, quote, mode,
+                quote, sqlio::CT_Field, quote,
+                vquote, sqlio::cfg_LockingMode, vquote);
+   SQLQuery(sqlcmd.Data());             
+}
+
+//______________________________________________________________________________
+Int_t TSQLFile::GetLocking()
+{
+   // Return current locking mode for that file
+   
+   const char* quote = SQLIdentifierQuote();
+   const char* vquote = SQLValueQuote();
+   
+   TString sqlcmd;
+   sqlcmd.Form("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s=%s%s%s",
+                quote, sqlio::CT_Value, quote,
+                quote, sqlio::ConfigTable, quote,
+                quote, sqlio::CT_Field, quote,
+                vquote, sqlio::cfg_LockingMode, vquote);
+
+   TSQLResult* res = SQLQuery(sqlcmd.Data(), 1);
+   TSQLRow* row = (res==0) ? 0 : res->Next();
+   TString field = (row==0) ? "" : row->GetField(0);
+   delete row;
+   delete res;
+   
+   if (field.Length()==0) return kLockFree;
+   
+   return field.Atoi();
 }
 
 //______________________________________________________________________________
 Bool_t TSQLFile::IsReadAccess()
 {
    // dummy, in future should check about read access to database
+   
    return kTRUE;
 }
 
 //______________________________________________________________________________
-TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag)
+TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
 {
    // submits query to SQL server
    // if flag==0, result is not interesting and will be deleted
@@ -1190,15 +1435,19 @@ TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag)
    // if flag==2, results is may be necessary for long time
    //             Oracle plugin do not support working with several TSQLResult
    //             objects, therefore explicit deep copy will be produced
+   // If ok!=0, it will contains kTRUE is Query was successfull, otherwise kFALSE
 
    if (fLogFile!=0)
       *fLogFile << cmd << endl;
+
+   if (ok!=0) *ok = kFALSE;
 
    if (fSQL==0) return 0;
 
    if (gDebug>2) Info("SQLQuery",cmd);
 
    TSQLResult* res = fSQL->Query(cmd);
+   if (ok!=0) *ok = res!=0;
    if (res==0) return 0;
    if (flag==0) {
       delete res;
@@ -1216,11 +1465,16 @@ Bool_t TSQLFile::SQLApplyCommands(TObjArray* cmds)
    // Commands is stored as array of TObjString
 
    if ((cmds==0) || (fSQL==0)) return kFALSE;
+   
+   Bool_t ok = kTRUE;
    TIter iter(cmds);
    TObject* cmd= 0;
-   while ((cmd=iter())!=0)
-      SQLQuery(cmd->GetName());
-   return kTRUE;
+   while ((cmd=iter())!=0) {
+      SQLQuery(cmd->GetName(),0,&ok);
+      if(!ok) break;
+   }
+   
+   return ok;
 }
 
 //______________________________________________________________________________
@@ -1393,6 +1647,36 @@ void TSQLFile::SQLDeleteAllTables()
 }
 
 //______________________________________________________________________________
+Bool_t TSQLFile::SQLStartTransaction()
+{
+   // Start SQL transaction.
+   
+   Bool_t ok;
+   SQLQuery("START TRANSACTION", 0, &ok);
+   return ok;
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::SQLCommit()
+{
+   // Commit SQL transaction
+
+   Bool_t ok;
+   SQLQuery("COMMIT", 0, &ok);
+   return ok;
+}
+
+//______________________________________________________________________________
+Bool_t TSQLFile::SQLRollback()
+{
+   // Rollback all SQL operations, done after start transaction
+
+   Bool_t ok;
+   SQLQuery("ROLLBACK", 0, &ok);
+   return ok;
+}
+
+//______________________________________________________________________________
 void TSQLFile::DeleteKeyFromDB(Int_t keyid)
 {
    // remove key with specified id from keys table
@@ -1424,14 +1708,16 @@ void TSQLFile::DeleteKeyFromDB(Int_t keyid)
 
    query.Form("DELETE FROM %s WHERE %s%s%s=%d", sqlio::KeysTable, quote, SQLKeyIdColumn(), quote, keyid);
    SQLQuery(query.Data());
+   
+   IncrementModifyCounter();
 }
 
 //______________________________________________________________________________
-void TSQLFile::WriteKeyData(Int_t keyid, Int_t dirid, Int_t objid, const char* keyname, const char* datime, Int_t cycle, const char* clname)
+Bool_t TSQLFile::WriteKeyData(Int_t keyid, Int_t dirid, Int_t objid, const char* keyname, const char* datime, Int_t cycle, const char* clname)
 {
    // add entry into keys table
 
-   if (fSQL==0) return;
+   if (fSQL==0) return kFALSE;
 
    if (!IsTablesExists()) CreateBasicTables();
 
@@ -1447,7 +1733,13 @@ void TSQLFile::WriteKeyData(Int_t keyid, Int_t dirid, Int_t objid, const char* k
                cycle,
                valuequote, clname, valuequote);
 
-   SQLQuery(sqlcmd.Data());
+   Bool_t ok = kTRUE;
+   
+   SQLQuery(sqlcmd.Data(), 0, &ok);
+   
+   if (ok) IncrementModifyCounter();
+   
+   return ok;
 }
 
 //______________________________________________________________________________
@@ -1542,14 +1834,8 @@ Bool_t TSQLFile::SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bo
    if (!sqlinfo->IsClassTableExist() && (columns!=0)) {
 
       TString sqlcmd;
-
-      if (IsMySQL()) {
-         sqlcmd.Form("DROP TABLE IF EXISTS %s%s%s",
-                     quote, sqlinfo->GetClassTableName(), quote);
-         SQLQuery(sqlcmd.Data());
-      }
-
-      sqlcmd.Form("CREATE TABLE %s%s%s (", quote, sqlinfo->GetClassTableName(), quote);
+      sqlcmd.Form("CREATE TABLE %s%s%s (", 
+                   quote, sqlinfo->GetClassTableName(), quote);
 
       TObjArray* newcolumns = new TObjArray();
       TIter iter(columns);
@@ -1560,7 +1846,7 @@ Bool_t TSQLFile::SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bo
          if (!first) sqlcmd+=", "; else first = false;
 
          const char* colname = col->GetName();
-         if ((strpbrk(colname,"[:]")!=0) || forcequote) {
+         if ((strpbrk(colname,"[:.]<>")!=0) || forcequote) {
             sqlcmd += quote;
             sqlcmd += colname;
             sqlcmd += quote;
@@ -1575,20 +1861,27 @@ Bool_t TSQLFile::SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bo
          newcolumns->Add(new TNamed(col->GetName(), col->GetType()));
       }
       sqlcmd += ")";
+      
+      if (fTablesType.Length()>0) {
+         sqlcmd +=" TYPE=";
+         sqlcmd += fTablesType;
+      }
 
       SQLQuery(sqlcmd.Data());
 
       sqlinfo->SetColumns(newcolumns);
+      
+      if (GetUseIndexes()>kIndexesBasic) {
+         sqlcmd.Form("CREATE UNIQUE INDEX %s%s_Index%s ON %s%s%s (%s%s%s)",
+                     quote, sqlinfo->GetClassTableName(), quote,
+                     quote, sqlinfo->GetClassTableName(), quote,
+                     quote, SQLObjectIdColumn(), quote);
+         SQLQuery(sqlcmd.Data());    
+      }
    }
 
    if (hasrawdata && !sqlinfo->IsRawTableExist()) {
       TString sqlcmd;
-
-      if (IsMySQL()) {
-         sqlcmd.Form("DROP TABLE IF EXISTS %s%s%s",
-                     quote, sqlinfo->GetRawTableName(), quote);
-         SQLQuery(sqlcmd.Data());
-      }
 
       sqlcmd.Form("CREATE TABLE %s%s%s (%s%s%s %s, %s%s%s %s, %s %s, %s %s)",
                   quote, sqlinfo->GetRawTableName(), quote,
@@ -1596,9 +1889,24 @@ Bool_t TSQLFile::SyncSQLClassInfo(TSQLClassInfo* sqlinfo, TObjArray* columns, Bo
                   quote, SQLRawIdColumn(), quote, SQLIntType(),
                   sqlio::BT_Field, SQLSmallTextType(),
                   sqlio::BT_Value, SQLSmallTextType());
+                  
+      if (fTablesType.Length()>0) {
+         sqlcmd +=" TYPE=";
+         sqlcmd += fTablesType;
+      }
 
       SQLQuery(sqlcmd.Data());
       sqlinfo->SetRawExist(kTRUE);
+      
+      if (GetUseIndexes()>kIndexesClass) {
+         sqlcmd.Form("CREATE UNIQUE INDEX %s%s_Index%s ON %s%s%s (%s%s%s, %s%s%s)",
+                     quote, sqlinfo->GetRawTableName(), quote,
+                     quote, sqlinfo->GetRawTableName(), quote,
+                     quote, SQLObjectIdColumn(), quote,
+                     quote, SQLRawIdColumn(), quote);
+         SQLQuery(sqlcmd.Data());    
+      }
+
    }
 
    return kTRUE;
@@ -1616,14 +1924,19 @@ Bool_t TSQLFile::VerifyLongStringTable()
 
    const char* quote = SQLIdentifierQuote();
 
-   TString cmd_cr;
-   cmd_cr.Form("CREATE TABLE %s (%s%s%s %s, %s%s%s %s, %s %s)",
+   TString sqlcmd;
+   sqlcmd.Form("CREATE TABLE %s (%s%s%s %s, %s%s%s %s, %s %s)",
                sqlio::StringsTable,
                quote, SQLObjectIdColumn(), quote, SQLIntType(),
                quote, SQLStrIdColumn(), quote, SQLIntType(),
                sqlio::ST_Value, SQLBigTextType());
+               
+   if (fTablesType.Length()>0) {
+      sqlcmd +=" TYPE=";
+      sqlcmd += fTablesType;
+   }
 
-   SQLQuery(cmd_cr.Data());
+   SQLQuery(sqlcmd.Data());
 
    return kTRUE;
 }
@@ -1717,15 +2030,29 @@ Int_t TSQLFile::VerifyObjectTable()
    if (SQLTestTable(sqlio::ObjectsTable))
       maxid = SQLMaximumValue(sqlio::ObjectsTable, SQLObjectIdColumn());
    else {
-      TString cmd_cr;
+      TString sqlcmd;
       const char* quote = SQLIdentifierQuote();
-      cmd_cr.Form("CREATE TABLE %s%s%s (%s%s%s %s, %s%s%s %s, %s %s, %s %s)",
+      sqlcmd.Form("CREATE TABLE %s%s%s (%s%s%s %s, %s%s%s %s, %s %s, %s %s)",
                   quote, sqlio::ObjectsTable, quote,
                   quote, SQLKeyIdColumn(), quote, SQLIntType(),
                   quote, SQLObjectIdColumn(), quote, SQLIntType(),
                   sqlio::OT_Class, SQLSmallTextType(),
                   sqlio::OT_Version, SQLIntType());
-      SQLQuery(cmd_cr.Data());
+
+      if (fTablesType.Length()>0) {
+         sqlcmd +=" TYPE=";
+         sqlcmd += fTablesType;
+      }
+                  
+      SQLQuery(sqlcmd.Data());
+      
+      if (GetUseIndexes()>kIndexesNone) {
+         sqlcmd.Form("CREATE UNIQUE INDEX %s%s%s ON %s%s%s (%s%s%s)",
+                      quote, sqlio::ObjectsTableIndex, quote,
+                      quote, sqlio::ObjectsTable, quote,
+                      quote, SQLObjectIdColumn(), quote);
+         SQLQuery(sqlcmd.Data());
+      }
    }
 
    return maxid;

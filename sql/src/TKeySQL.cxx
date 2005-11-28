@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TKeySQL.cxx,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TKeySQL.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -133,6 +133,9 @@ void TKeySQL::StoreObject(const void* obj, const TClass* cl)
 {
 //  convert object to sql statements and store them in DB
 
+   TObjArray cmds;
+   Bool_t needcommit = kFALSE;
+
    fCycle = fFile->AppendKey(this);
 
    fKeyId = fFile->DefineNextKeyId();
@@ -145,35 +148,77 @@ void TKeySQL::StoreObject(const void* obj, const TClass* cl)
 
    TSQLStructure* s = buffer.SqlWrite(obj, cl, fObjId);
 
+   if ((buffer.GetErrorFlag()>0) || (s==0)) {
+      Error("StoreObject","Cannot convert object data to TSQLStructure");
+      goto zombie;
+   }
+
    if (gDebug>2) {
       cout << "==== Printout of Sql structures ===== " << endl;
-      s->Print("*");
+      if (s!=0) s->Print("*");
       cout << "=========== End printout ============ " << endl;
    }
 
-   TDatime now;
-   fDatime = now;
-
    if (cl) fClassName = cl->GetName();
+   
+   if (fFile->GetUseTransactions()==TSQLFile::kTransactionsAuto) {
+      fFile->SQLStartTransaction();
+      needcommit = kTRUE;
+   }
 
-   TObjArray cmds;
-   if (s->ConvertToTables(fFile, fKeyId, &cmds))
-      if (fFile->SQLApplyCommands(&cmds))
-         fFile->WriteKeyData(GetDBKeyId(),
-                             sqlio::Ids_RootDir, // later parent directory id should be
-                             GetDBObjId(),
-                             GetName(),
-                             GetDatime().AsSQLString(),
-                             GetCycle(),
-                             GetClassName());
+   // here tables may be already created, therefore 
+   // it should be protected by transactions operations
+   if (!s->ConvertToTables(fFile, fKeyId, &cmds)) {
+      Error("StoreObject","Cannot convert to SQL statements");
+      goto zombie;
+   }
+   
+   if (!fFile->SQLApplyCommands(&cmds)) {
+      Error("StoreObject","Cannot correctly store object data in database");
+      goto zombie; 
+   }
+
+   // commit here, while objects data is already stored 
+   if (needcommit) {
+      fFile->SQLCommit();
+      needcommit = kFALSE;
+   }
+
    cmds.Delete();
+
+   fDatime.Set();
+   
+   if (!fFile->WriteKeyData(GetDBKeyId(),
+                            sqlio::Ids_RootDir, // later parent directory id should be
+                            GetDBObjId(),
+                            GetName(),
+                            GetDatime().AsSQLString(),
+                            GetCycle(),
+                            GetClassName())) {
+      // cannot add entry to keys table                          
+      Error("StoreObject","Cannot write data to key tables");
+      // delete everything relevant for that key
+      fFile->DeleteKeyFromDB(GetDBKeyId());
+      goto zombie;                           
+   }
+
+   return;
+   
+zombie:
+   if (needcommit)
+      fFile->SQLRollback();
+
+   cmds.Delete();
+   gDirectory->GetListOfKeys()->Remove(this);
+   // fix me !!! One should delete object by other means
+   // delete this;
 }
 
 //______________________________________________________________________________
 TObject* TKeySQL::ReadObj()
 {
-// read object derived from TObject class, from key
-// if it is not TObject or in case of error, return 0
+// Read object derived from TObject class
+// If it is not TObject or in case of error, return 0
 
    if (gDebug>0)
       cout << "TKeySQL::ReadObj fKeyId = " << fKeyId << endl;

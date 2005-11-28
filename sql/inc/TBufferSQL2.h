@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TBufferSQL2.h,v 1.2 2005/11/22 11:30:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -132,6 +132,8 @@ class TBufferSQL2 : public TBuffer {
       void             SetCompressionLevel(int level) { fCompressLevel = level; }
 
       TSQLStructure*   GetStructure() const { return fStructure; }
+      
+      Int_t            GetErrorFlag() const { return fErrorFlag; }
       
       void             SetIgnoreVerification() { fIgnoreVerification = kTRUE; }
 

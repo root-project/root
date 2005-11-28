@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLFile.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLFile.h,v 1.3 2005/11/24 16:57:23 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -44,6 +44,11 @@ class TSQLFile : public TFile {
    friend class TSqlRegistry; 
     
 protected:
+   enum ELockingKinds {
+       kLockFree  = 0,
+       kLockBusy  = 1
+   };
+
    // Interface to basic system I/O routines, suppressed
    virtual Int_t     SysOpen(const char*, Int_t, UInt_t) { return 0; }
    virtual Int_t     SysClose(Int_t) { return 0; }
@@ -59,6 +64,9 @@ protected:
    Bool_t            IsTablesExists();
    void              InitSqlDatabase(Bool_t create);
    void              CreateBasicTables();
+   void              IncrementModifyCounter();
+   void              SetLocking(Int_t mode);
+   Int_t             GetLocking();
   
    // function for read/write access infos, not implemented
    Bool_t            IsWriteAccess();
@@ -69,17 +77,20 @@ protected:
    virtual TKey*     CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize);
   
    // generic sql functions
-   TSQLResult*       SQLQuery(const char* cmd, Int_t flag = 0);
+   TSQLResult*       SQLQuery(const char* cmd, Int_t flag = 0, Bool_t* res = 0);
    Bool_t            SQLApplyCommands(TObjArray* cmds);
    TObjArray*        SQLTablesList(const char* searchtable = 0);
    Bool_t            SQLTestTable(const char* tablename);
    TObjArray*        SQLTableColumns(const char* tablename);
    Int_t             SQLMaximumValue(const char* tablename, const char* columnname);
    void              SQLDeleteAllTables();
+   Bool_t            SQLStartTransaction();
+   Bool_t            SQLCommit();
+   Bool_t            SQLRollback();
 
    // operation with keys structures in database
    void              DeleteKeyFromDB(Int_t keyid);
-   void              WriteKeyData(Int_t keyid, Int_t dirid, Int_t objid, const char* name, const char* datime, Int_t cycle, const char* clname);
+   Bool_t            WriteKeyData(Int_t keyid, Int_t dirid, Int_t objid, const char* name, const char* datime, Int_t cycle, const char* clname);
    Int_t             DefineNextKeyId();
    Bool_t            ReadKeysForDirectory(TDirectory* dir, Int_t dir_id);
 
@@ -118,6 +129,7 @@ protected:
    const char*       SQLStrIdColumn() const        { return fOtherTypes[9]; }
    const char*       SQLNameSeparator() const      { return fOtherTypes[10]; }
    const char*       SQLValueQuote() const         { return fOtherTypes[11]; }
+   const char*       SQLDefaultTableType() const   { return fOtherTypes[12]; }
   
    TSQLServer*       fSQL;             //! interface to SQL database 
   
@@ -127,6 +139,10 @@ protected:
    Int_t             fSQLIOversion;    //! version of SQL I/O which is stored in configurations
    Int_t             fArrayLimit;      //! limit for array size. when array bigger, its content converted to raw format
    Bool_t            fCanChangeConfig; //! variable indicates can be basic configuration changed or not
+   TString           fTablesType;      //! type, used in CREATE TABLE statements
+   Int_t             fUseTransactions; //! use transaction statements for writing data into the tables
+   Int_t             fUseIndexes;      //! use indexes for tables: 0 - off, 1 - only for basic tables, 2  + normal class tables, 3 - all tables
+   Int_t             fModifyCounter;   //! indicates how many changes was done with database tables
   
    const char**      fBasicTypes;      //! pointer on list of basic types specific for currently connected SQL server
    const char**      fOtherTypes;      //! pointer on list of other SQL types like TEXT or blob
@@ -141,21 +157,44 @@ private:
    void operator=(const TSQLFile &);
 
 public:
+   enum ETransactionKinds {
+       kTransactionsOff  = 0,
+       kTransactionsAuto = 1,
+       kTransactionsUser = 2
+   };
+   
+   enum EIndexesKinds {
+       kIndexesNone      = 0,
+       kIndexesBasic     = 1,
+       kIndexesClass     = 2,
+       kIndexesAll       = 3,
+   };
+
    TSQLFile();
    TSQLFile(const char* dbname, Option_t* option = "read", const char* user = "user", const char* pass = "pass");
    virtual ~TSQLFile();
 
-   // configuration of SQL interface
+   // configuration of SQL 
    Bool_t            GetUseSuffixes() const { return fUseSuffixes; }
    void              SetUseSuffixes(Bool_t on = kTRUE);
    Int_t             GetArrayLimit() const { return fArrayLimit; }
    void              SetArrayLimit(Int_t limit = 20);
    void              SkipArrayLimit() { SetArrayLimit(-1); }
+   void              SetTablesType(const char* table_type);
+   const char*       GetTablesType() const { return fTablesType.Data(); }
+   void              SetUseTransactions(Int_t mode = kTransactionsAuto);
+   Int_t             GetUseTransactions() const { return fUseTransactions; }
+   void              SetUseIndexes(Int_t use_type = kIndexesBasic);
+   Int_t             GetUseIndexes() const { return fUseIndexes; }
+
+   TString           MakeSelectQuery(TClass* cl);
+   Bool_t            StartTransaction();
+   Bool_t            Commit();
+   Bool_t            Rollback();
   
    // log file for SQL statements
    void              StartLogFile(const char* fname);  // *MENU*
    void              StopLogFile();                    // *MENU*
-   TString           MakeSelectQuery(TClass* cl);
 
    virtual void      Close(Option_t *option="");       // *MENU*
    virtual void      DrawMap(const char* ="*",Option_t* ="") {} 

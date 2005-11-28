@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.3 2005/11/24 16:57:23 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -1146,7 +1146,7 @@ void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMember
    for(; obj<end; obj+=objectSize) {
       if (fCurrentData->IsBlobData() &&
           fCurrentData->VerifyDataType(sqlio::ObjectRef_Arr,kFALSE)) {
-         cout << "Do job for array 1" << endl;
+         //cout << "Do job for array 1" << endl;
          Int_t objid = atoi(fCurrentData->GetValue());
          fCurrentData->ShiftToNextValue();
          TClass* cl1 = (TClass*) cl;
@@ -1188,7 +1188,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
          if (!start[j]) start[j] = ((TClass*)cl)->New();
          if (fCurrentData->IsBlobData() &&
              fCurrentData->VerifyDataType(sqlio::ObjectRef_Arr,kFALSE)) {
-            cout << "Do job for array 2" << endl;
+            //cout << "Do job for array 2" << endl;
             Int_t objid = atoi(fCurrentData->GetValue());
             fCurrentData->ShiftToNextValue();
             TClass* cl1 = (TClass*) cl;

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.9 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.10 2005/11/22 20:42:37 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1006,7 +1006,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
                if (argcl[n]!=0) argtype[n]=TStreamerInfo::kObject;
             }
             if (argtype[n]<0) stltyp = -1;
-        } // for narg
+         } // for narg
 
       if (stltyp<0) return false;
    }

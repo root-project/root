@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.9 2005/09/06 09:34:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.10 2005/11/20 05:07:41 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -31,15 +31,15 @@ class TStreamerInfo;
 
 class TXMLFile : public TFile, public TXMLSetup {
    protected:
-       void             InitXmlFile(Bool_t create);
-       // Interface to basic system I/O routines
-       virtual Int_t    SysOpen(const char*, Int_t, UInt_t) { return 0; }
-       virtual Int_t    SysClose(Int_t) { return 0; }
-       virtual Int_t    SysRead(Int_t, void*, Int_t) { return 0; }
-       virtual Int_t    SysWrite(Int_t, const void*, Int_t) { return 0; }
-       virtual Long64_t SysSeek(Int_t, Long64_t, Int_t) { return 0; }
-       virtual Int_t    SysStat(Int_t, Long_t*, Long64_t*, Long_t*, Long_t*) { return 0; }
-       virtual Int_t    SysSync(Int_t) { return 0; }
+      void             InitXmlFile(Bool_t create);
+      // Interface to basic system I/O routines
+      virtual Int_t    SysOpen(const char*, Int_t, UInt_t) { return 0; }
+      virtual Int_t    SysClose(Int_t) { return 0; }
+      virtual Int_t    SysRead(Int_t, void*, Int_t) { return 0; }
+      virtual Int_t    SysWrite(Int_t, const void*, Int_t) { return 0; }
+      virtual Long64_t SysSeek(Int_t, Long64_t, Int_t) { return 0; }
+      virtual Int_t    SysStat(Int_t, Long_t*, Long64_t*, Long_t*, Long_t*) { return 0; }
+      virtual Int_t    SysSync(Int_t) { return 0; }
 
    private:
       //let the compiler do the job. gcc complains when the following line is activated

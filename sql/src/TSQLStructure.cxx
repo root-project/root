@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStructure.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStructure.cxx,v 1.3 2005/11/24 16:57:23 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -77,10 +77,12 @@ namespace sqlio {
    const char* False       = "0";
 
    // standard tables names
-   const char* KeysTable    = "KeysTable";
-   const char* ObjectsTable = "ObjectsTable";
-   const char* StringsTable = "StringsTable";
-   const char* ConfigTable  = "Configurations";
+   const char* KeysTable      = "KeysTable";
+   const char* KeysTableIndex = "KeysTableIndex";
+   const char* ObjectsTable   = "ObjectsTable";
+   const char* ObjectsTableIndex = "ObjectsTableIndex";
+   const char* StringsTable   = "StringsTable";
+   const char* ConfigTable    = "Configurations";
 
    // colummns in Keys table
    const char* KT_Name      = "Name";
@@ -107,6 +109,11 @@ namespace sqlio {
    const char* cfg_Version  = "SQL_IO_version";
    const char* cfg_UseSufixes = "UseNameSuffix";
    const char* cfg_ArrayLimit = "ArraySizeLimit";
+   const char* cfg_TablesType = "TablesType"; 
+   const char* cfg_UseTransactions = "UseTransactions";
+   const char* cfg_UseIndexes = "UseIndexes";
+   const char* cfg_LockingMode = "LockingMode";
+   const char* cfg_ModifyCounter = "ModifyCounter";
 };
 
 //________________________________________________________________________
@@ -772,7 +779,7 @@ public:
       while ((col=(TSQLColumnData*)iter())!=0) {
          if (names.Length()>0) names+=", ";
          const char* colname = col->GetName();
-         if (forcequote || (strpbrk(colname,"[:.]")!=0)) {
+         if (forcequote || (strpbrk(colname,"[:.]<>")!=0)) {
             names+=quote;
             names+=colname;
             names+=quote;

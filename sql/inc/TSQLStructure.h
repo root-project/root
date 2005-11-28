@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStructure.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStructure.h,v 1.3 2005/11/24 16:57:23 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -230,12 +230,14 @@ namespace sqlio {
    extern const char* False;
     
    extern const char* KeysTable;
+   extern const char* KeysTableIndex;
    extern const char* KT_Name;
    extern const char* KT_Datetime;
    extern const char* KT_Cycle;
    extern const char* KT_Class;
     
    extern const char* ObjectsTable;
+   extern const char* ObjectsTableIndex;
    extern const char* OT_Class;
    extern const char* OT_Version;
     
@@ -252,6 +254,11 @@ namespace sqlio {
    extern const char* cfg_Version;
    extern const char* cfg_UseSufixes;
    extern const char* cfg_ArrayLimit;
+   extern const char* cfg_TablesType;
+   extern const char* cfg_UseTransactions;
+   extern const char* cfg_UseIndexes;
+   extern const char* cfg_LockingMode;
+   extern const char* cfg_ModifyCounter;
 };
 
 #endif
