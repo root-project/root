@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.20 2005/03/26 07:02:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.21 2005/11/16 20:03:58 pcanal Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -83,9 +83,9 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
 //______________________________________________________________________________
 TRefArray::TRefArray(const TRefArray &a) : TSeqCollection()
 {
-   // Create a copy of TRefArray a. Note, does not copy the kIsOwner flag.
+   // Create a copy of TRefArray a. 
 
-   fPID  = TProcessID::GetSessionProcessID();
+   fPID  = a.fPID;
    fUIDs = 0;
    Init(a.fSize, a.fLowerBound);
 
