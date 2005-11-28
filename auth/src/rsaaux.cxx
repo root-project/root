@@ -1050,7 +1050,7 @@ void do_crypt(char *s, char *d, int len, rsa_NUMBER *e)
 {
    static char hex[] = "0123456789ABCDEF";
    rsa_NUMBER n;
-   char buf[ rsa_STRLEN + 1 ];
+   char buf[ rsa_STRLEN + 8 ];
    char *ph;
    int i,c;
 
