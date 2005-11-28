@@ -98,15 +98,15 @@ else
 		fi; \
 		if [ $(ARCH) = "sgicc64" ]; then \
 			FREECC="cc"; \
-			ARCH_CFLAGS="-64"; \
+			FREE_CFLAGS="-64"; \
 		fi; \
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
 			FREECC="gcc -m64"; \
-			ARCH_CFLAGS="-m64"; \
+			FREE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			FREECC="cc"; \
-			ARCH_CFLAGS="+DD64 -Ae"; \
+			FREE_CFLAGS="+DD64 -Ae"; \
 		fi; \
 		if [ $(ARCH) = "aix5" ]; then \
 			FREEZLIB="--without-zlib"; \
@@ -115,7 +115,7 @@ else
 			FREEZLIB="--without-zlib"; \
 		fi; \
 		GNUMAKE=$(MAKE) ./configure --with-pic $$FREEZLIB \
-		CC=\"$$FREECC\" CFLAGS=\"$$ARCH_CFLAGS -O\"; \
+		CC=\"$$FREECC\" CFLAGS=\"$$FREE_CFLAGS -O\"; \
 		$(MAKE))
 endif
 
