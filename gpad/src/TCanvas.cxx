@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.101 2005/11/21 17:26:31 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.102 2005/11/24 23:30:05 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -644,15 +644,16 @@ void TCanvas::Close(Option_t *option)
    //
    //  Delete window/pads data structure
 
-   if (fCanvasID == -1) return;
+   TPad    *padsave = (TPad*)gPad;
+   TCanvas *cansave = 0;
+   if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
+
+   if (fCanvasID == -1) goto deletepad;
 
    if (!gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "Close", option);
       return;
    }
-
-   TCanvas *cansave = (TCanvas*)gPad->GetCanvas();
-   TPad    *padsave = (TPad*)gPad;
 
    FeedbackMode(kFALSE);
 
@@ -670,6 +671,7 @@ void TCanvas::Close(Option_t *option)
    // Close actual window on screen
    SafeDelete(fCanvasImp);
 
+deletepad:
    if (cansave == this) {
       gPad = (TCanvas *) gROOT->GetListOfCanvases()->First();
    } else {
