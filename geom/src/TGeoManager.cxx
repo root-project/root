@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.133 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.134 2005/11/21 13:52:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2783,6 +2783,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       }
       // Check if the current point is still inside the current volume
       vol=fCurrentNode->GetVolume();
+      if (vol->IsAssembly()) inside_current=kTRUE;
       // If the current node is not to be skipped
       if (!inside_current) {
          fCache->MasterToLocal(fPoint, point);
@@ -2824,7 +2825,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    }
 
    Int_t crtindex = vol->GetCurrentNodeIndex();
-   while (crtindex>=0) {
+   while (crtindex>=0 && downwards) {
       CdDown(crtindex);
       vol = fCurrentNode->GetVolume();
       crtindex = vol->GetCurrentNodeIndex();
@@ -2854,13 +2855,23 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // second, look if current volume is voxelized
    TGeoVoxelFinder *voxels = vol->GetVoxels();
    Int_t *check_list = 0;
+   Int_t id;
    if (voxels) {
       // get the list of nodes passing thorough the current voxel
       check_list = voxels->GetCheckList(&point[0], ncheck);
       // if none in voxel, see if this is the last one
-      if (!check_list) return fCurrentNode;
+      if (!check_list) {
+         if (!fCurrentNode->GetVolume()->IsAssembly()) return fCurrentNode;
+         node = fCurrentNode;
+         if (!fLevel) {
+            fIsOutside = kTRUE;
+            return 0;
+         }
+         CdUp();
+         return SearchNode(kFALSE,node);
+      }   
       // loop all nodes in voxel
-      for (Int_t id=0; id<ncheck; id++) {
+      for (id=0; id<ncheck; id++) {
          node = vol->GetNode(check_list[id]);
          if (node==skipnode) continue;
          if (fActivity && !node->GetVolume()->IsActive()) continue;
@@ -2888,26 +2899,38 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          }
          CdUp();
       }
-      return fCurrentNode;
+      if (!fCurrentNode->GetVolume()->IsAssembly()) return fCurrentNode;
+      node = fCurrentNode;
+      if (!fLevel) {
+         fIsOutside = kTRUE;
+         return 0;
+      }
+      CdUp();
+      return SearchNode(kFALSE,node);
    }
    // if there are no voxels just loop all daughters
-   Int_t id = 0;
-   while ((node=fCurrentNode->GetDaughter(id++))) {
+   for (id=0; id<nd; id++) {
+      node=fCurrentNode->GetDaughter(id);
+      if (node==skipnode) continue;  
       if (fActivity && !node->GetVolume()->IsActive()) continue;
-      if (node==skipnode) {
-         if (id==nd) return fCurrentNode;
-         continue;
-      }
-      CdDown(id-1);
+      CdDown(id);
       node = SearchNode(kTRUE);
       if (node) {
          fIsSameLocation = kFALSE;
          return node;
       }
       CdUp();
-      if (id == nd) return fCurrentNode;
-   }
+   }      
    // point is not inside one of the daughters, so it is in the current vol
+   if (fCurrentNode->GetVolume()->IsAssembly()) {
+      node = fCurrentNode;
+      if (!fLevel) {
+         fIsOutside = kTRUE;
+         return 0;
+      }
+      CdUp();
+      return SearchNode(kFALSE,node);
+   }      
    return fCurrentNode;
 }
 
@@ -2920,6 +2943,8 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
 // node.
    Int_t iact = 3;
    Int_t nextindex;
+   Bool_t is_assembly;
+   TGeoNode *skip;
    fIsStepEntering = kFALSE;
    fStep = stepmax;
    Double_t snext = TGeoShape::Big();
@@ -2987,18 +3012,19 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
    if (snext <= TGeoShape::Tolerance()) {
       snext = TGeoShape::Tolerance();
       fStep = snext;
-      fPoint[0] -= extra*fDirection[0];
-      fPoint[1] -= extra*fDirection[1];
-      fPoint[2] -= extra*fDirection[2];
       fIsOnBoundary = kTRUE;
       fIsStepEntering = kTRUE;
-      if (!fLevel) {
+      skip = fCurrentNode;
+      is_assembly = fCurrentNode->GetVolume()->IsAssembly();
+      if (!fLevel && !is_assembly) {
          fIsOutside = kTRUE;
          return 0;
       }   
-      CdUp();
-      return CrossBoundaryAndLocate(kFALSE, fNextNode);
+      if (fLevel) CdUp();
+      else        skip = 0;
+      return CrossBoundaryAndLocate(kFALSE, skip);
    }   
+
    if (snext < fStep) {
       icrossed = -1;
       fStep = snext;
@@ -3149,15 +3175,19 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
    fIsOnBoundary = kTRUE;
    if (icrossed == -1) {
       TGeoNode *skip = fCurrentNode;
-      if (!fLevel) {
+      is_assembly = fCurrentNode->GetVolume()->IsAssembly();
+      if (!fLevel && !is_assembly) {
          fIsOutside = kTRUE;
          return 0;
       }   
-      CdUp();
-      while (fLevel && fCurrentNode->GetVolume()->IsAssembly()) {
-         CdUp();
-         skip = fCurrentNode;
-      }   
+      if (fLevel) CdUp();
+      else        skip = 0;
+//      is_assembly = fCurrentNode->GetVolume()->IsAssembly();
+//      while (fLevel && is_assembly) {
+//         CdUp();
+//         is_assembly = fCurrentNode->GetVolume()->IsAssembly();
+//         skip = fCurrentNode;
+//      }   
       return CrossBoundaryAndLocate(kFALSE, skip);
    }   
       
