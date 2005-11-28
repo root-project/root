@@ -951,7 +951,7 @@ void inv(rsa_NUMBER *d, rsa_NUMBER *phi, rsa_NUMBER *e)
 void gen_number(int len, rsa_NUMBER *n)
 {
    const char *hex = "0123456789ABCDEF" ;
-   char num[ rsa_MAXLEN*rsa_MAXBIT/4 +1 ];
+   char num[ rsa_STRLEN +1 ];
    char *p;
    int i,l;
 
@@ -1050,11 +1050,11 @@ void do_crypt(char *s, char *d, int len, rsa_NUMBER *e)
 {
    static char hex[] = "0123456789ABCDEF";
    rsa_NUMBER n;
-   char buf[ rsa_STRLEN + 8 ];
+   char buf[ rsa_STRLEN + 1 ];
    char *ph;
    int i,c;
 
-   ph = buf + rsa_STRLEN;
+   ph = buf + rsa_STRLEN - 1;
    ph[1] = '\0';
 
    for (i=len; i; i--) {
