@@ -2,6 +2,7 @@
 // usage: root[0] .x testwrt.C
 
 gSystem -> Load("sueloader_C");
+gSystem -> Load("ConfigRecord_cxx");
 
 f = new TFile("configtest.root","RECREATE");
 t = new TTree("Config","Config Test");

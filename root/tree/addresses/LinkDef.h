@@ -5,9 +5,9 @@
 #pragma link off all functions;
 
 #pragma link C++ class Context+;
+#pragma link C++ class RecHeader+;
 #pragma link C++ class RecRecordImp<RecHeader>+;
 #pragma link C++ class RecDataRecord<RecHeader>+;
-#pragma link C++ class RecHeader+;
-#pragma link C++ class ConfigRecord+;
+//# pragma link C++ class ConfigRecord+;
 
 #endif

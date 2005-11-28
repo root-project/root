@@ -1,6 +1,7 @@
 
-#include "RecDataRecord.h"
 #include "RecHeader.h"
+#include "RecDataRecord.cxx"
+#include "RecRecordImp.cxx"
 
 class ConfigRecord : public RecDataRecord<RecHeader>
 {

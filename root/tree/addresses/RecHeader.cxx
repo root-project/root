@@ -6,15 +6,6 @@ using namespace std;
 
 ClassImp(RecHeader)
 
-// Instantiate associated template Record classes
-// **********************************************
-#include "RecRecordImp.cxx"
-template class RecRecordImp<RecHeader>;
-
-#include "RecDataRecord.cxx"
-template class RecDataRecord<RecHeader>;
-
-
 // Definition of methods (alphabetical order)
 // ***************************************************
 

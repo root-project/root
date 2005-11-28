@@ -106,7 +106,10 @@ BadBaseAddresses: BadBaseAddresses.log
 ursula: ursula.log
 	$(TestDiff)
 
-configtest.root: sueloader_C.$(DllSuf)
+ConfigRecord_cxx.$(DllSuf): ConfigRecord.cxx ConfigRecord.h sueloader_C.$(DllSuf)
+	$(BuildWithLib)	
+
+configtest.root: ConfigRecord_cxx.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l suetestwrt.C > configtest.log 2>&1
 	$(CMDECHO) diff -b configtest.ref configtest.log
 
@@ -121,5 +124,5 @@ runJan_C.$(DllSuf): runJan.C JansEvent_C.$(DllSuf)
 
 Jan.clog: runJan_C.$(DllSuf)
 
-Jantest: Jan.clog
+Jantest: Jan.log
 	$(TestDiff)

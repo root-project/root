@@ -6,7 +6,7 @@ using namespace std;
 ClassImp(Context)
 
 //_____________________________________________________________________________
-void Context::Print(Option_t *option) const
+void Context::Print(Option_t *) const
 {
    // Print this object
 
