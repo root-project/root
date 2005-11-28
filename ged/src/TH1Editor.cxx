@@ -177,7 +177,8 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    // Constructor of histogram attribute GUI.
    
    fHist = 0;
-
+   fSameOpt = kFALSE;
+   
    // TextEntry for changing the title of the histogram
    MakeTitle("Title");
    fTitlePrec = 2;
@@ -483,6 +484,10 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fMake=kFALSE;
    TString str = GetDrawOption();
    str.ToUpper();
+   if (str.Contains("SAME"))
+      fSameOpt = kTRUE;
+   else
+      fSameOpt = kFALSE;
    Bool_t errorset = kFALSE;
    // if no draw option is specified: (default options)
    if (str.IsNull() || str=="" ) {        
@@ -749,6 +754,10 @@ void TH1Editor::DoAddMarker(Bool_t on)
    
    TString str = GetDrawOption();
    str.ToUpper(); 
+   if (str.Contains("SAME"))
+      fSameOpt = kTRUE;
+   else
+      fSameOpt = kFALSE;
    TString dum = str;
    
    if (dum.Contains("POL")) dum.Remove(strstr(dum.Data(),"POL")-dum.Data(),3);
@@ -769,6 +778,7 @@ void TH1Editor::DoAddMarker(Bool_t on)
       else if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);
       else fAddSimple->SetState(kButtonUp);
    }
+   if (fSameOpt) str += "SAME";
    if (fMake) SetDrawOption(str);
    Update();
 }
@@ -781,6 +791,10 @@ void TH1Editor::DoAddB(Bool_t on)
    
    TString str = GetDrawOption();
    str.ToUpper();
+   if (str.Contains("SAME"))
+      fSameOpt = kTRUE;
+   else
+      fSameOpt = kFALSE;
    if (fMakeB) {
       fMakeB=kFALSE;
       if (on) {
@@ -800,6 +814,7 @@ void TH1Editor::DoAddB(Bool_t on)
          fAddBar->SetState(kButtonUp);
          if (fAddMarker->GetState()!=kButtonDown && !(str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE)) fAddSimple->SetState(kButtonUp);
       }
+      if (fSameOpt) str += "SAME";
       if (fMake) SetDrawOption(str);
       Update(); 
       fTab->Layout();
@@ -817,6 +832,10 @@ void TH1Editor::DoAddBar(Bool_t on)
    Disconnect(fAddMarker);
    TString str = GetDrawOption();
    str.ToUpper();
+   if (str.Contains("SAME"))
+      fSameOpt = kTRUE;
+   else
+      fSameOpt = kFALSE;
    if (fMakeB) {
       fMakeB=kFALSE;
       Int_t o = 0;
@@ -878,6 +897,7 @@ void TH1Editor::DoAddBar(Bool_t on)
              ((fAddMarker->GetState()==kButtonDown) && fErrorCombo->GetSelected()==kERRORS_NO)) 
             fAddSimple->SetState(kButtonDisabled);
       }
+      if (fSameOpt) str += "SAME";
       if (fMake) SetDrawOption(str);
       Update(); 
       fTab->Layout();      
@@ -900,6 +920,10 @@ void TH1Editor::DoAddSimple(Bool_t on)
    fMake = kFALSE;
    TString str = GetDrawOption();
    str.ToUpper();
+   if (str.Contains("SAME"))
+      fSameOpt = kTRUE;
+   else
+      fSameOpt = kFALSE;
    if (on) {
       if (!str.Contains("HIST")) {
          str += "HIST";
@@ -913,6 +937,7 @@ void TH1Editor::DoAddSimple(Bool_t on)
          fMake=kTRUE;
       }
    }
+   if (fSameOpt) str += "SAME";
    if (fMake) SetDrawOption(str);
    fAddMarker->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddMarker(Bool_t)");
    Update();   
@@ -992,6 +1017,7 @@ void TH1Editor::DoHistSimple()
       }
       if (fAddSimple->GetState()==kButtonDown) str+="HIST";
       str += GetHistErrorLabel()+GetHistAddLabel();
+      if (fSameOpt) str += "SAME";
       SetDrawOption(str);
       Update();
       fTab->Layout();
@@ -1039,6 +1065,7 @@ void TH1Editor::DoHistComplex()
          HideFrame(f11); 
          HideFrame(f12);
       }
+      if (fSameOpt) str += "SAME";
       SetDrawOption(str);
       Update();
       ((TGMainFrame*)GetMainFrame())->Layout();            
@@ -1136,6 +1163,7 @@ void TH1Editor::DoHistChanges()
       if (fDim->GetState()==kButtonDown) str = GetHistErrorLabel()+GetHistAddLabel();
       else if (fDim0->GetState()==kButtonDown) str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
       if (fAddSimple->GetState()==kButtonDown) str += "HIST";   
+      if (fSameOpt) str += "SAME";
       SetDrawOption(str);
       if (str=="" || str=="HIST") fAddSimple->SetState(kButtonDisabled);
       Update();
@@ -1174,6 +1202,10 @@ void TH1Editor::DoPercent()
       
    TString str = GetDrawOption();
    str.ToUpper();
+   if (str.Contains("SAME"))
+      fSameOpt = kTRUE;
+   else
+      fSameOpt = kFALSE;
    Int_t o = 0;
    if (str.Contains("HBAR")) o=1;
    if (str.Contains("BAR4")) str.Remove(strstr(str.Data(),"BAR4")-str.Data()-1,4+o);
@@ -1191,6 +1223,7 @@ void TH1Editor::DoPercent()
       case (kPER_30):{ str += "BAR3"; break;} 
       case (kPER_40):{ str += "BAR4"; break;}                  
    }
+   if (fSameOpt) str += "SAME";
    if (fMake) SetDrawOption(str);
    Update();
 }
@@ -1203,12 +1236,17 @@ void TH1Editor::DoHBar(Bool_t on)
    
    TString str = GetDrawOption();
    str.ToUpper();
+   if (str.Contains("SAME"))
+      fSameOpt = kTRUE;
+   else
+      fSameOpt = kFALSE;
    if (on) {
       if (!str.Contains("HBAR")) str.Insert(strstr(str.Data(),"BAR")-str.Data(),"H");
    }
    else if (fMakeHBar->GetState()==kButtonUp) {
       if(str.Contains("HBAR")) str.Remove(strstr(str.Data(),"BAR")-str.Data()-1,1);
    }
+   if (fSameOpt) str += "SAME";
    if (fMake) SetDrawOption(str);
    Update();
 }

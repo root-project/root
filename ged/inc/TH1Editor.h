@@ -51,6 +51,7 @@ class TH1Editor : public TGedFrame {
 
 protected:
    TH1                 *fHist;            // histogram object
+   Bool_t               fSameOpt;         // flag for option "same"
    TGTab               *fTab;             // Pointer to the Tab Parent
    TGCompositeFrame    *fBin;             // Contains the Binning Widgets
    TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
