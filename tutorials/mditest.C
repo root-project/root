@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: mditest.C,v 1.1 2004/09/03 00:25:48 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: mditest.C,v 1.2 2005/11/24 17:08:36 rdm Exp $
 // Author: Fons Rademakers   2/9/2004
 
 #include <stdio.h>
@@ -99,7 +99,8 @@ TGAppMainFrame::TGAppMainFrame(const TGWindow *p, int w, int h)
    fMain->AddFrame(fMainFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    const TGPicture *pbg = gClient->GetPicture("mditestbg.xpm");
-   fMainFrame->GetContainer()->SetBackgroundPixmap(pbg->GetPicture());
+   if (pbg)
+      fMainFrame->GetContainer()->SetBackgroundPixmap(pbg->GetPicture());
 
    TGMdiFrame *mdiFrame;
 
@@ -159,7 +160,8 @@ TGAppMainFrame::TGAppMainFrame(const TGWindow *p, int w, int h)
    fListBox->SetMultipleSelections(kFALSE);
    mdiFrame->AddFrame(fListBox,
                       new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
-   mdiFrame->AddFrame(new TGHSlider(mdiFrame, 50, kSlider1, 1),
+   mdiFrame->AddFrame(new TGHSlider(mdiFrame, 50, kSlider1, 1, 
+                      kHorizontalFrame, ic),
                       new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
    mdiFrame->Move(400, 300);
    mdiFrame->SetWindowName("Four");
@@ -175,7 +177,7 @@ TGAppMainFrame::TGAppMainFrame(const TGWindow *p, int w, int h)
    fMain->SetWindowName("MDI test");
    fMain->SetClassHints("mdi test", "mdi test");
 
-   if (pbg->GetWidth() > 600 && pbg->GetHeight() > 400)
+   if (pbg && pbg->GetWidth() > 600 && pbg->GetHeight() > 400)
       fMain->Resize(pbg->GetWidth(), pbg->GetHeight()+25);
    else
       fMain->Resize(640, 400);
