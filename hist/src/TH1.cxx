@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.261 2005/11/17 14:43:17 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.262 2005/11/26 15:03:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2697,7 +2697,8 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
 
         // make sure there are some events, if not, then the errors are set = 0
         // automatically.
-        if(bot < 1){}
+        //if(bot < 1){} was changed to the next line from recommendation of Jason Seely (28 Nov 2005)
+        if(bot < 1e-6){}
         else{
           // computation of errors by Christos Leonidopoulos
           da    = h1->GetBinError(i,j,k);
