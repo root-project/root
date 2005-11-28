@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.18 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.19 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -65,7 +65,7 @@ TBox::~TBox()
 {
    // Box destructor.
 
-   if (gPad) {
+   if (fTip && gPad) {
       gPad->CloseToolTip(fTip);
       gPad->DeleteToolTip(fTip);
    }
