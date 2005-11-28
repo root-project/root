@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.213 2005/11/23 14:48:02 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.214 2005/11/24 23:30:05 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -872,7 +872,9 @@ void TPad::CopyPixmap()
 
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
-   gVirtualX->CopyPixmap(fPixmapID, px, py);
+   
+   if (fPixmapID != -1) 
+      gVirtualX->CopyPixmap(fPixmapID, px, py);
 
    if (this == gPad) HighLight(gPad->GetHighLightColor());
 
