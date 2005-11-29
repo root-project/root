@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.120 2005/11/16 20:25:59 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.121 2005/11/29 06:01:20 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -524,7 +524,7 @@ TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
 void TChain::Browse(TBrowser *b)
 {
    // Browse contain of the chain
-   
+
    TTree::Browse(b);
 }
 
@@ -1274,19 +1274,19 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 
    Long64_t nentries = GetEntriesFast();
    if (fastClone) {
-      
-      // for each tree in the chain 
+
+      // for each tree in the chain
       for (Long64_t i=0;
            i<nentries;
            i += this->GetTree()->GetEntries()
-           ) 
+           )
       {
          if (LoadTree(i) < 0) break;
          TTreeCloner t(GetTree(),hnew,option);
          hnew->SetEntries( hnew->GetEntries() + GetTree()->GetEntries() );
          t.Exec();
       }
-  
+
    } else {
       for (Long64_t i=0;i<nentries;i++) {
          if (GetEntry(i) <= 0) break;
@@ -1400,7 +1400,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
    // IMPORTANT REMARK:
    // In case TChain::SetBranchStatus is called, it must be called
    // BEFORE calling this function.
-   
+
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its address
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1408,9 +1408,9 @@ void TChain::SetBranchAddress(const char *bname, void *add)
       element = new TChainElement(bname,"");
       fStatus->Add(element);
    }
-   
+
    element->SetBaddress(add);
-   
+
    // Set also address in current Tree
    if (fTreeNumber >= 0) {
       TBranch *branch = fTree->GetBranch(bname);
@@ -1467,7 +1467,7 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
    //  If found is not 0, the number of branch(es) found matching the regular
    //  expression is returned in *found AND the error message 'unknown branch'
    //  is suppressed.
-   
+
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its status
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1509,7 +1509,7 @@ void TChain::SetDirectory(TDirectory *dir)
 void TChain::SetPacketSize(Int_t size)
 {
    // Set number of entries per packet for parallel root
-   
+
    fPacketSize = size;
    TIter next(fFiles);
    TChainElement *element;
@@ -1599,7 +1599,6 @@ void TChain::ReleaseChainProof()
    SafeDelete(fChainProof);
 }
 
-
 //_______________________________________________________________________
 TDSet* TChain::MakeTDSet() const
 {
@@ -1656,7 +1655,7 @@ TDSet* TChain::MakeTDSetWithoutFriends() const
       TString file(element->GetTitle());
       TString tree(element->GetName());
       Int_t slashpos = tree.Index("/");
-      TString dir;
+      TString dir = "/";
       if (slashpos>=0) {
          // Copy the tree name specification
          TString behindSlash = tree(slashpos+1,tree.Length()-slashpos-1);
