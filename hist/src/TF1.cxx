@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.111 2005/11/29 14:38:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.112 2005/11/29 15:04:32 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1945,7 +1945,7 @@ TAxis *TF1::GetZaxis() const
 }
 
 //______________________________________________________________________________
-void TF1::GradientPar(Double_t *x, Double_t *grad, Double_t eps)
+void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
    //Compute the gradient wrt parameters
    //Parameters:
@@ -1963,12 +1963,18 @@ void TF1::GradientPar(Double_t *x, Double_t *grad, Double_t eps)
    }
    Double_t h;
    TF1 *func = (TF1*)this;
-   Double_t *pp = new Double_t[fNpar];
    //save original parameters
-   Double_t *opp = new Double_t[fNpar];
+   Double_t *opp;
+   Double_t par_local[20];
+   Bool_t isAllocated=kFALSE;
+   if (fNpar > 20){
+      opp = new Double_t[fNpar];
+      isAllocated = kTRUE;
+   } else
+      opp = par_local;
+
    Bool_t errorsComputed=kFALSE;
    for (Int_t ipar=0; ipar<fNpar; ipar++){
-     pp[ipar]=fParams[ipar];
      opp[ipar]=fParams[ipar];
      if (func->GetParError(ipar)!=0)
         errorsComputed=kTRUE;
@@ -1981,24 +1987,22 @@ void TF1::GradientPar(Double_t *x, Double_t *grad, Double_t eps)
          h = eps*func->GetParError(ipar);
       else 
          h=eps;
-      pp[ipar] = opp[ipar]+h;     Double_t f1 = func->EvalPar(x, pp);
-      pp[ipar] = opp[ipar]-h;     Double_t f2 = func->EvalPar(x, pp);
+      fParams[ipar] = opp[ipar]+h;     Double_t f1 = func->EvalPar(x);
+      fParams[ipar] = opp[ipar]-h;     Double_t f2 = func->EvalPar(x);
       
-      pp[ipar] = opp[ipar]+h/2;   Double_t g1 = func->EvalPar(x, pp);
-      pp[ipar] = opp[ipar]-h/2;   Double_t g2 = func->EvalPar(x, pp);
+      fParams[ipar] = opp[ipar]+h/2;   Double_t g1 = func->EvalPar(x);
+      fParams[ipar] = opp[ipar]-h/2;   Double_t g2 = func->EvalPar(x);
       
       //compute the central differences
       Double_t h2    = 1/(2.*h);
       Double_t d0    = f1 - f2;
       Double_t d2    = 2*(g1 - g2);
       
-      grad[ipar] = h2*(4*d2 - d0)/3.;  
+      grad[ipar] = h2*(4*d2 - d0)/3.;
+      fParams[ipar]=opp[ipar];  
    }
-   for (Int_t ipar=0; ipar<fNpar; ipar++)
-      fParams[ipar]=opp[ipar];
-   
-   delete [] opp;
-   delete [] pp;
+   if (isAllocated)
+      delete [] opp;
 }
 
 //______________________________________________________________________________

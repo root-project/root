@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.15 2005/11/24 16:17:16 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.16 2005/11/29 14:43:59 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -792,7 +792,7 @@ Double_t TLinearFitter::GetChisquare()
 }
 
 //______________________________________________________________________________
-void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, Double_t *x, Double_t *ci, Double_t cl)
+void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
 {
 //Computes point-by-point confidence intervals for the fitted function
 //Parameters:

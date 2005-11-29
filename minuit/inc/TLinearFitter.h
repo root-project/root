@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.6 2005/11/24 16:17:16 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.7 2005/11/29 14:43:59 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -233,7 +233,7 @@ public:
    virtual void       FixParameter(Int_t ipar);
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
    virtual Double_t   GetChisquare();
-   virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, Double_t *x, Double_t *ci, Double_t cl=0.95);
+   virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
    virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95); 
    virtual Double_t*  GetCovarianceMatrix() const;
    virtual void       GetCovarianceMatrix(TMatrixD &matr);

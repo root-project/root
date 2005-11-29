@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.52 2005/08/18 17:50:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.53 2005/11/29 14:38:31 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -139,7 +139,7 @@ public:
    TAxis           *GetXaxis() const ;
    TAxis           *GetYaxis() const ;
    TAxis           *GetZaxis() const ;
-   virtual void     GradientPar(Double_t *x, Double_t *grad, Double_t eps=0.01);
+   virtual void     GradientPar(const Double_t *x, Double_t *grad, Double_t eps=0.01);
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=1e-12);

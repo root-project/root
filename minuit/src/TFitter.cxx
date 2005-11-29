@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.37 2005/11/27 07:31:51 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.38 2005/11/29 14:43:59 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -98,7 +98,7 @@ void TFitter::FixParameter(Int_t ipar)
 }
 
 //______________________________________________________________________________
-void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, Double_t *x, Double_t *ci, Double_t cl)
+void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
 {
 //Computes point-by-point confidence intervals for the fitted function
 //Parameters:
@@ -307,7 +307,6 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
    }           
 
 }
-
 
 //______________________________________________________________________________
 Double_t *TFitter::GetCovarianceMatrix() const
