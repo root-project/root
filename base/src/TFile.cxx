@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.145 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.146 2005/11/18 17:45:00 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -966,16 +966,15 @@ TList *TFile::GetStreamerInfoList()
 
    TList *list = 0;
    if (fSeekInfo) {
+      TDirectory::TContext ctx(gDirectory,this); // gFile and gDirectory used in ReadObj
+
       TKey *key = new TKey();
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
       Seek(fSeekInfo);
       ReadBuffer(buf,fNbytesInfo);
       key->ReadBuffer(buf);
-      TFile *filesave = gFile;
-      gFile = this; // used in ReadObj
       list = (TList*)key->ReadObj();
-      gFile = filesave;
       if (list) list->SetOwner();
       delete [] buffer;
       delete key;
