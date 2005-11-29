@@ -24,6 +24,7 @@ In addition the package includes the interfaces for generic (ROOT::Math::IGenFun
 The mathematical functions are implemented as a set of free functions in the namespace \em ROOT::Math. The naming used for the special functions is the same proposed for the C++ standard (see C++ standard extension <A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1687.pdf"> proposal document</A>).
 
 The MathCore library is implemented wrapping in C++ the GNU Scientific Library (<A HREF="http://www.gnu.org/software/gsl">GSL</A>). The needed routine of GSL are compiled in the library in the %ROOT version, while in the standalone version GSL is needed to both build and use libMathMore. 
+<A HREF="http://seal.web.cern.ch/seal/MathLibs/gsl-1.5.tar.gz">Here</A> you can find a tar file of GSL compatible with MathMore, it is the one used for building MathMore for the ROOT distribution. 
 
 The current version can be downloaded <A HREF="http://seal.web.cern.ch/seal/MathLibs/MathMore-5_0_4.tar.gz">here</A>. 
 To build the library run first the script <em>configure --with-gsl="gsl_dir_location"</em> and then <em>make</em>. Do <em>configure --help</em> to see options available in configuring, like defining the installation directory. Run also <em>make install</em> to install the library and include files and <em>make check</em> to build the tests.  
