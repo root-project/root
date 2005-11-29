@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.21 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.22 2005/11/23 10:47:52 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -38,18 +38,21 @@ private:
 TGLMatView::TGLMatView(const TGWindow *parent, Window_t wid, TGLColorEditor *owner)
                :TGCompositeFrame(gClient, wid, parent), fOwner(owner)
 {
+   //
    AddInput(kExposureMask | kStructureNotifyMask);
 }
 
 //______________________________________________________________________________
 Bool_t TGLMatView::HandleConfigureNotify(Event_t *event)
 {
+   //
    return fOwner->HandleContainerNotify(event);
 }
 
 //______________________________________________________________________________
 Bool_t TGLMatView::HandleExpose(Event_t *event)
 {
+   //
    return fOwner->HandleContainerExpose(event);
 }
 
@@ -468,6 +471,7 @@ void TGLGeometryEditor::SetScale(const Double_t *s)
 //______________________________________________________________________________
 void TGLGeometryEditor::Disable()
 {
+   //Disable "Apply" button
    fIsActive = kFALSE;
    fApplyButton->SetState(kButtonDisabled);
 }

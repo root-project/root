@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.h,v 1.4 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.h,v 1.5 2005/05/25 14:25:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -34,7 +34,7 @@ private:
    TGLWindow(const TGLWindow &);
    TGLWindow & operator = (const TGLWindow &);
 
-   ClassDef(TGLWindow, 0)
+   ClassDef(TGLWindow, 0) //GL container
 };
 
 class TGLRenderArea {
@@ -49,7 +49,7 @@ private:
 
    TGLWindow * fArea;
 
-   ClassDef(TGLRenderArea, 0)
+   ClassDef(TGLRenderArea, 0) //GL container owner
 };
 
 #endif

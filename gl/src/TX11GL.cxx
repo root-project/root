@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.10 2005/11/17 14:43:17 couet Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.11 2005/11/24 12:29:12 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -113,7 +113,7 @@ void TX11GL::SwapBuffers(Window_t wind)
 
 namespace {
 
-   struct PaintDevice {
+   struct PaintDevice_t {
       //these are numbers returned by gVirtualX->AddWindow and gVirtualX->AddPixmap
       //need both, I can have a pixmap, which is always created for certain window
       Int_t        fWindowIndex;
@@ -133,15 +133,15 @@ namespace {
       GLXContext   fGLXContext;
       Bool_t       fDirect;
       //
-      PaintDevice *fNextFreeDevice;
+      PaintDevice_t *fNextFreeDevice;
    };
     
-   typedef std::deque<PaintDevice> DeviceTable_t;
-   typedef DeviceTable_t::size_type size_type;
+   typedef std::deque<PaintDevice_t> DeviceTable_t;
+   typedef DeviceTable_t::size_type SizeType_t;
    typedef std::map<Int_t, XVisualInfo *> WinTable_t;
    
    XSetWindowAttributes dummyAttr;  
-   PaintDevice          dummyDevice; 
+   PaintDevice_t          dummyDevice; 
    
    const Int_t dblBuff[] = {
                             GLX_DOUBLEBUFFER,
@@ -160,52 +160,52 @@ namespace {
    //man does not show return types of these functions, in old K&R C it's int
    //in such cases, but in C++ there are no implicit int. So... :))
    
-   class X11PixGuard {
+   class TX11PixGuard {
    private:
       Display *fDpy;
       Pixmap   fPix;
 
    public:
-      X11PixGuard(Display *dpy, Pixmap pix) : fDpy(dpy), fPix(pix) {}
-      ~X11PixGuard(){if (fPix) XFreePixmap(fDpy, fPix);}
+      TX11PixGuard(Display *dpy, Pixmap pix) : fDpy(dpy), fPix(pix) {}
+      ~TX11PixGuard(){if (fPix) XFreePixmap(fDpy, fPix);}
       void Stop(){fPix = 0;}
    
    private:
-      X11PixGuard(const X11PixGuard &);
-      X11PixGuard &operator = (const X11PixGuard &);
+      TX11PixGuard(const TX11PixGuard &);
+      TX11PixGuard &operator = (const TX11PixGuard &);
    };
 
-   class GLXPixGuard {
+   class TGLXPixGuard {
    private:
       Display    *fDpy;
       GLXPixmap   fPix;
 
    public:
-      GLXPixGuard(Display *dpy, GLXPixmap pix) : fDpy(dpy), fPix(pix) {}
-      ~GLXPixGuard(){if (fPix) glXDestroyGLXPixmap(fDpy, fPix);}
+      TGLXPixGuard(Display *dpy, GLXPixmap pix) : fDpy(dpy), fPix(pix) {}
+      ~TGLXPixGuard(){if (fPix) glXDestroyGLXPixmap(fDpy, fPix);}
       void Stop(){fPix = 0;}
    
    private:
-      GLXPixGuard(const GLXPixGuard &);
-      GLXPixGuard &operator = (const GLXPixGuard &);
+      TGLXPixGuard(const TGLXPixGuard &);
+      TGLXPixGuard &operator = (const TGLXPixGuard &);
    };
    
-   class GLXCtxGuard {
+   class TGLXCtxGuard {
    private:
       Display    *fDpy;
       GLXContext  fCtx;
 
    public:
-      GLXCtxGuard(Display *dpy, GLXContext ctx) : fDpy(dpy), fCtx(ctx) {}
-      ~GLXCtxGuard(){if (fCtx) glXDestroyContext(fDpy, fCtx);}
+      TGLXCtxGuard(Display *dpy, GLXContext ctx) : fDpy(dpy), fCtx(ctx) {}
+      ~TGLXCtxGuard(){if (fCtx) glXDestroyContext(fDpy, fCtx);}
       void Stop(){fCtx = 0;}
    
    private:
-      GLXCtxGuard(const GLXCtxGuard &);
-      GLXCtxGuard &operator = (const GLXCtxGuard &);
+      TGLXCtxGuard(const TGLXCtxGuard &);
+      TGLXCtxGuard &operator = (const TGLXCtxGuard &);
    };
    
-   Int_t length(PaintDevice *p)
+   Int_t length(PaintDevice_t *p)
    {
       Int_t rez = 0;
       while(p && ++rez, p = p->fNextFreeDevice);
@@ -222,7 +222,7 @@ public:
    WinTable_t      fGLWindows;
    DeviceTable_t   fPaintDevices;
    Display        *fDpy;
-   PaintDevice    *fNextFreeDevice;
+   PaintDevice_t    *fNextFreeDevice;
    
 private:
    TX11GLImpl(const TX11GLImpl &);
@@ -244,8 +244,8 @@ TX11GLManager::TX11GLImpl::~TX11GLImpl()
    //destroys only gl contexts and GLXPixmap,
    //pixmaps and windows must be
    //closed through gVirtualX
-   for (size_type i = 0,  e = fPaintDevices.size(); i < e; ++i) {
-      PaintDevice &currDev = fPaintDevices[i];
+   for (SizeType_t i = 0,  e = fPaintDevices.size(); i < e; ++i) {
+      PaintDevice_t &currDev = fPaintDevices[i];
 
       if (GLXContext ctx = currDev.fGLXContext) {
          ::Warning("TX11GLManager::~TX11GLManager", "opengl device with index %d was not destroyed", i);
@@ -263,6 +263,7 @@ TX11GLManager::TX11GLImpl::~TX11GLImpl()
 //______________________________________________________________________________
 TX11GLManager::TX11GLManager() : fPimpl(new TX11GLImpl)
 {
+   //
    gGLManager = this;
    gROOT->GetListOfSpecials()->Add(this);
 }
@@ -270,6 +271,7 @@ TX11GLManager::TX11GLManager() : fPimpl(new TX11GLImpl)
 //______________________________________________________________________________
 TX11GLManager::~TX11GLManager()
 {
+   //
    delete fPimpl;
 }
 
@@ -329,7 +331,7 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
    }
 
    //register new context now
-   if (PaintDevice *dev = fPimpl->fNextFreeDevice) {
+   if (PaintDevice_t *dev = fPimpl->fNextFreeDevice) {
       Int_t ind = dev->fWindowIndex;
       dev->fWindowIndex = winInd;
       dev->fGLXContext = glxCtx;
@@ -337,8 +339,8 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
       
       return ind;
    } else {
-      GLXCtxGuard glxCtxGuard(fPimpl->fDpy, glxCtx);
-      PaintDevice newDev(dummyDevice);
+      TGLXCtxGuard glxCtxGuard(fPimpl->fDpy, glxCtx);
+      PaintDevice_t newDev(dummyDevice);
 
       newDev.fWindowIndex = winInd;
       newDev.fPixmapIndex = -1;//on-screen rendering device
@@ -355,7 +357,7 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 Bool_t TX11GLManager::MakeCurrent(Int_t devInd)
 {
    //Make gl context current
-   PaintDevice &currDev = fPimpl->fPaintDevices[devInd];
+   PaintDevice_t &currDev = fPimpl->fPaintDevices[devInd];
    
    if (currDev.fPixmapIndex != -1) {
       //off-screen rendering into pixmap
@@ -370,7 +372,7 @@ Bool_t TX11GLManager::MakeCurrent(Int_t devInd)
 void TX11GLManager::Flush(Int_t devInd, Int_t, Int_t)
 {
    //swaps buffers for window or copy pixmap
-   PaintDevice &currDev = fPimpl->fPaintDevices[devInd];  
+   PaintDevice_t &currDev = fPimpl->fPaintDevices[devInd];  
    Window winID = gVirtualX->GetWindowID(currDev.fWindowIndex);
    
    if (currDev.fPixmapIndex != -1) {
@@ -404,7 +406,7 @@ Bool_t TX11GLManager::CreateGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, U
       return kFALSE;
    }
 
-   X11PixGuard x11PixGuard(fPimpl->fDpy, x11Pix);
+   TX11PixGuard x11PixGuard(fPimpl->fDpy, x11Pix);
    GLXPixmap glxPix = glXCreateGLXPixmap(fPimpl->fDpy, fPimpl->fGLWindows[winInd], x11Pix);
    
    if (!glxPix) {
@@ -412,7 +414,7 @@ Bool_t TX11GLManager::CreateGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, U
       return kFALSE;
    }
    
-   GLXPixGuard glxPixGuard(fPimpl->fDpy, glxPix);
+   TGLXPixGuard glxPixGuard(fPimpl->fDpy, glxPix);
    
    if (prevInd == -1 || !fPimpl->fPaintDevices[prevInd].fGLXContext) {
       GLXContext glxCtx = glXCreateContext(fPimpl->fDpy, fPimpl->fGLWindows[winInd],
@@ -423,8 +425,8 @@ Bool_t TX11GLManager::CreateGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, U
          return kFALSE;
       }
 
-      GLXCtxGuard glxCtxGuard(fPimpl->fDpy, glxCtx);
-      PaintDevice newDev = {winInd, gVirtualX->AddPixmap(x11Pix, w, h), x11Pix,
+      TGLXCtxGuard glxCtxGuard(fPimpl->fDpy, glxCtx);
+      PaintDevice_t newDev = {winInd, gVirtualX->AddPixmap(x11Pix, w, h), x11Pix,
                             glxPix, w, h, w, h, x, y, glxCtx, kFALSE, 0};
 
       if (prevInd == -1) {
@@ -436,7 +438,7 @@ Bool_t TX11GLManager::CreateGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, U
          
       glxCtxGuard.Stop();
    } else {
-      PaintDevice &dev = fPimpl->fPaintDevices[prevInd];
+      PaintDevice_t &dev = fPimpl->fPaintDevices[prevInd];
       
       XFreePixmap(fPimpl->fDpy, dev.fX11Pixmap);
       gVirtualX->AddPixmap(x11Pix, w, h, dev.fPixmapIndex);
@@ -458,7 +460,7 @@ Int_t TX11GLManager::OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt
 {
    //create new X11 pixmap and GLX pixmap and gl context for
    //off-screen drawing - new device
-   if (PaintDevice *dev = fPimpl->fNextFreeDevice) {
+   if (PaintDevice_t *dev = fPimpl->fNextFreeDevice) {
       //reuse existing place in fPaintDevices
       Int_t prevInd = dev->fWindowIndex; //obscure usage of fWindowIndex
       
@@ -477,7 +479,8 @@ Int_t TX11GLManager::OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt
 //______________________________________________________________________________
 void TX11GLManager::ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   PaintDevice &dev = fPimpl->fPaintDevices[pixInd];
+   //
+   PaintDevice_t &dev = fPimpl->fPaintDevices[pixInd];
    
    if (w > dev.fRealW || h > dev.fRealH) {
       //destroy old pixmap with such index and create
@@ -504,6 +507,7 @@ void TX11GLManager::SelectGLPixmap(Int_t /*pixInd*/)
 //______________________________________________________________________________
 void TX11GLManager::MarkForDirectCopy(Int_t pixInd, Bool_t dir)
 {
+   //
    if (fPimpl->fPaintDevices[pixInd].fPixmapIndex != -1)
       fPimpl->fPaintDevices[pixInd].fDirect = dir;
    //Part of
@@ -513,7 +517,8 @@ void TX11GLManager::MarkForDirectCopy(Int_t pixInd, Bool_t dir)
 //______________________________________________________________________________
 void TX11GLManager::DeletePaintDevice(Int_t devInd)
 {
-   PaintDevice &currDev = fPimpl->fPaintDevices[devInd];
+   //
+   PaintDevice_t &currDev = fPimpl->fPaintDevices[devInd];
    //free gl context
    glXDestroyContext(fPimpl->fDpy, currDev.fGLXContext);
    currDev.fGLXContext = 0;
@@ -531,12 +536,14 @@ void TX11GLManager::DeletePaintDevice(Int_t devInd)
 
 Int_t TX11GLManager::GetVirtualXInd(Int_t glPix)
 {
+   //Returns index appropriate for gVirtualX
    return fPimpl->fPaintDevices[glPix].fPixmapIndex;
 }
 
 void TX11GLManager::ExtractViewport(Int_t pixId, Int_t *viewport)
 {
-   PaintDevice &dev = fPimpl->fPaintDevices[pixId];
+   //Returns current sizes of gl pixmap
+   PaintDevice_t &dev = fPimpl->fPaintDevices[pixId];
    
    if (dev.fPixmapIndex != -1) {
       viewport[0] = 0;
@@ -549,17 +556,20 @@ void TX11GLManager::ExtractViewport(Int_t pixId, Int_t *viewport)
 //______________________________________________________________________________
 void TX11GLManager::DrawViewer(TVirtualViewer3D *vv)
 {
+   //
    vv->DrawViewer();
 }
 
 //______________________________________________________________________________
 TObject *TX11GLManager::Select(TVirtualViewer3D *vv, Int_t x, Int_t y)
 {
+   //
    return vv->SelectObject(x, y);
 }
 
 //______________________________________________________________________________
 void TX11GLManager::PaintSingleObject(TVirtualGLPainter *p)
 {
+   //
    p->Paint();
 }

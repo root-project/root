@@ -201,7 +201,7 @@ private:
    static void    DrawFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
                            const TGLVector3 &norm1, const TGLVector3 &norm2, const TGLVector3 &norm3);
    //
-   ClassDef(TGLHistPainter, 0)
+   ClassDef(TGLHistPainter, 0) //GL hist painter
 };
 
 #endif

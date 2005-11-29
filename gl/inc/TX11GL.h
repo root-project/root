@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.5 2005/08/23 11:29:06 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.6 2005/11/17 14:43:17 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -89,7 +89,7 @@ private:
    TX11GLManager(const TX11GLManager &);
    TX11GLManager &operator = (const TX11GLManager &);
 
-   ClassDef(TX11GLManager, 0);
+   ClassDef(TX11GLManager, 0) //X11-specific version of TGLManager
 };
 
 

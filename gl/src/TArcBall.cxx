@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.8 2005/08/30 10:29:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.9 2005/11/24 12:29:12 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -187,6 +187,7 @@ void Matrix4dSetRotationFromMatrix3d(Double_t *NewObj, const Double_t *m1)
 //______________________________________________________________________________
 inline void TArcBall::MapToSphere(const TPoint &NewPt, Double_t *NewVec) const
 {
+   //
    Double_t tempPt[] = {NewPt.fX, NewPt.fY};
    //Adjust point coords and scale down to range of [-1 ... 1]
    tempPt[0]  = tempPt[0] * fAdjustWidth  - 1.;
@@ -215,6 +216,7 @@ TArcBall::TArcBall(UInt_t Width, UInt_t Height)
          fEnVec(), fAdjustWidth(0.),
          fAdjustHeight(0.)
 {
+   //
    SetBounds(Width, Height);
    ResetMatrices();
 }
@@ -258,6 +260,7 @@ void TArcBall::Drag(const TPoint &NewPt)
 //______________________________________________________________________________
 void TArcBall::ResetMatrices()
 {
+   //Set rotation matrix as union
    fTransform[0] = 1.f, fTransform[1] = fTransform[2] = fTransform[3] =
    fTransform[4] = 0.f, fTransform[5] = 1.f, fTransform[6] = fTransform[7] =
    fTransform[8] = fTransform[9] = 0.f, fTransform[10] = 1.f, fTransform[11] =
@@ -266,126 +269,3 @@ void TArcBall::ResetMatrices()
    Matrix3dSetIdentity(fThisRot);
 }
 
-//______________________________________________________________________________
-TEqRow::TEqRow()
-           :fData()
-{
-}
-
-//______________________________________________________________________________
-TEqRow::TEqRow(const Double_t *source)
-{
-   fData[0] = source[0];
-   fData[1] = source[1];
-   fData[2] = source[2];
-   fData[3] = source[3];
-}
-
-//______________________________________________________________________________
-void TEqRow::SetRow(const Double_t *source)
-{
-   fData[0] = source[0];
-   fData[1] = source[1];
-   fData[2] = source[2];
-   fData[3] = source[3];
-}
-
-//______________________________________________________________________________
-TEqRow &TEqRow::operator *= (Double_t x)
-{
-   fData[0] *= x;
-   fData[1] *= x;
-   fData[2] *= x;
-   fData[3] *= x;
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TEqRow &TEqRow::operator /= (Double_t x)
-{
-   fData[0] /= x;
-   fData[1] /= x;
-   fData[2] /= x;
-   fData[3] /= x;
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TEqRow &TEqRow::operator += (const TEqRow &row)
-{
-   fData[0] += row.fData[0];
-   fData[1] += row.fData[1];
-   fData[2] += row.fData[2];
-   fData[3] += row.fData[3];
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TEqRow operator * (const TEqRow &row, Double_t x)
-{
-   return TEqRow(row) *= x;
-}
-
-//______________________________________________________________________________
-TEqRow operator * (Double_t x, const TEqRow &row)
-{
-   return TEqRow(row) *= x;
-}
-
-//______________________________________________________________________________
-TEqRow operator / (const TEqRow &row, Double_t x)
-{
-   return TEqRow(row) /= x;
-}
-
-//______________________________________________________________________________
-TEqRow operator + (const TEqRow &r1, const TEqRow &r2)
-{
-   return TEqRow(r1)+=r2;
-}
-
-//______________________________________________________________________________
-TToySolver::TToySolver(const Double_t *source)
-{
-   fMatrix[0].SetRow(source);
-   fMatrix[1].SetRow(source + 4);
-   fMatrix[2].SetRow(source + 8);
-   fBase[0] = fBase[1] = fBase[2] = -1;
-}
-
-//______________________________________________________________________________
-void TToySolver::GetSolution(Double_t *sink)
-{
-   for (UInt_t i = 0; i < 3; ++i) {
-      for (UInt_t j = 0; j < 3; ++j) {
-         if (fMatrix[i][j] > 1e-14 || fMatrix[i][j] < -1e-14) {
-            AddNewBV(i, j);
-            break;
-         }
-      }   
-   }
-   
-   //j for vc 6.0 :))
-   for (UInt_t j = 0; j < 3; ++j) {
-      if (fBase[j] >= 0)sink[fBase[j]] = fMatrix[j][3];
-   }
-}
-
-//______________________________________________________________________________
-void TToySolver::AddNewBV(UInt_t row, UInt_t col)
-{
-   Double_t tmp1 = fMatrix[row][col];
-   fMatrix[row] /= tmp1;
-   
-   for (UInt_t i = 0; i < 3; ++i) {
-      if (i != row) {
-         Double_t tmp2 = fMatrix[i][col];
-         fMatrix[i] += -tmp2 * fMatrix[row];
-      }
-   }
-   
-   fBase[row] = col;
-}
