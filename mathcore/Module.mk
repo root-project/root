@@ -65,7 +65,7 @@ INCLUDEFILES += $(MATHCOREDEP)
 
 ##### local rules #####
 include/Math/%.h: $(MATHCOREDIRI)/Math/%.h
-		@(if [ ! -d "include/Math" ]; then   \
+		@(if [ ! -d "include/Math/GenVector" ]; then   \
 		   mkdir -p include/Math/GenVector;       \
 		fi)
 		cp $< $@
