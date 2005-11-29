@@ -58,7 +58,7 @@ INCLUDEFILES += $(MINUIT2DEP)
 ##### local rules #####
 include/Minuit2/%.h: $(MINUIT2DIRI)/Minuit2/%.h
 		@(if [ ! -d "include/Minuit2" ]; then     \
-		   mkdir include/Minuit2;                 \
+		   mkdir -p include/Minuit2;                 \
 		fi)
 		cp $< $@
 
