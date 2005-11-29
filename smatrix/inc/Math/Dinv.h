@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dinv.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dinv
@@ -45,7 +45,7 @@ namespace ROOT {
     matrix if dimension $idim$ and order $n$. The content of the matrix will be
     replaced by its inverse. In case the inversion fails, the matrix content is
     destroyed. Invert specializes Dinv by the matrix order. E.g. if the order
-    of the matrix is two, the routine Invert<2> is called which implements
+    of the matrix is two, the routine Inverter<2> is called which implements
     Cramers rule.
 
     @author T. Glebe
@@ -90,7 +90,7 @@ public:
     @author T. Glebe
 */
 //==============================================================================
-// Invert<0>
+// Inverter<0>
 //==============================================================================
 template <>
 class Inverter<0> {
@@ -101,13 +101,13 @@ public:
 };
     
 
-/** Invert<1>.
+/** Inverter<1>.
     $1\times1$ (sub-)matrix. $a_{11} \to 1/a_{11}$
 
     @author T. Glebe
 */
 //==============================================================================
-// Invert<1>
+// Inverter<1>
 //==============================================================================
 template <>
 class Inverter<1> {
@@ -126,13 +126,13 @@ public:
 };
 
 
-/** Invert<2>.
+/** Inverter<2>.
     $2\times2$ (sub-)matrix. Use Cramers rule.
 
     @author T. Glebe
 */
 //==============================================================================
-// Invert<2>: Cramers rule
+// Inverter<2>: Cramers rule
 //==============================================================================
 template <>
 class Inverter<2> {
@@ -158,7 +158,7 @@ public:
 };
 
 
-/** Invert<3>.
+/** Inverter<3>.
     $3\times3$ (sub-)matrix. Use pivotisation.
 
     @author T. Glebe
