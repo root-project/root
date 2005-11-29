@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.12 2004/10/22 21:18:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.13 2005/11/26 15:03:06 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -65,6 +65,8 @@ public:
    virtual void      Clear(Option_t *option="") = 0;
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void      FixParameter(Int_t ipar) = 0;
+   virtual void      GetConfidenceIntervals(Int_t n, Int_t ndim, Double_t *x, Double_t *ci, Double_t cl=0.95);
+   virtual void      GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);
    virtual Double_t *GetCovarianceMatrix() const = 0;
    virtual Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const = 0;
    virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const = 0;

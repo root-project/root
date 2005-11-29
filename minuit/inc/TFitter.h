@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.10 2004/10/22 21:18:23 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.h,v 1.11 2005/11/26 15:03:07 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -46,6 +46,8 @@ private:
    virtual void       FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    virtual void       FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    virtual void       FixParameter(Int_t ipar);
+   virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, Double_t *x, Double_t *ci, Double_t cl=0.95);
+   virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);
    virtual Double_t  *GetCovarianceMatrix() const;
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const;
    virtual Int_t      GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;

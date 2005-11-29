@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.14 2005/09/04 10:40:24 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.15 2005/11/24 16:17:16 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -581,6 +581,17 @@ void TLinearFitter::Chisquare()
 }
 
 //______________________________________________________________________________
+void TLinearFitter::ComputeTValues()
+{
+   // Computes parameters' t-values and significance
+
+   for (Int_t i=0; i<fNfunctions; i++){
+     fTValues(i) = fParams(i)/(TMath::Sqrt(fParCovar(i, i)));
+     fParSign(i) = 2*(1-TMath::StudentI(TMath::Abs(fTValues(i)),fNpoints-fNfunctions+fNfixed));
+   }
+}
+
+//______________________________________________________________________________
 void TLinearFitter::Eval()
 {
    // Perform the fit and evaluate the parameters
@@ -678,11 +689,6 @@ void TLinearFitter::Eval()
    }
    fParams=coef;
    fParCovar=chol.Invert();
-
-   for (i=0; i<fNfunctions; i++){
-     fTValues(i) = fParams(i)/(TMath::Sqrt(fParCovar(i, i)));
-     fParSign(i) = 2*(1-TMath::StudentI(TMath::Abs(fTValues(i)),fNpoints-fNfunctions));
-   }
 
    if (fInputFunction){
       fInputFunction->SetParameters(fParams.GetMatrixArray());
@@ -786,8 +792,216 @@ Double_t TLinearFitter::GetChisquare()
 }
 
 //______________________________________________________________________________
-Double_t * TLinearFitter::GetCovarianceMatrix() const
+void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, Double_t *x, Double_t *ci, Double_t cl)
 {
+//Computes point-by-point confidence intervals for the fitted function
+//Parameters:
+//n - number of points
+//ndim - dimensions of points
+//x - points, at which to compute the intervals, for ndim > 1 
+//    should be in order: (x0,y0, x1, y1, ... xn, yn)
+//ci - computed intervals are returned in this array
+//cl - confidence level, default=0.95
+
+   if (fInputFunction){
+      Double_t *grad = new Double_t[fNfunctions];
+      Double_t *sum_vector = new Double_t[fNfunctions];
+      Double_t c=0;
+      Int_t df = fNpoints-fNfunctions+fNfixed;
+      Double_t t = TMath::StudentQuantile(cl, df);   
+      Double_t chidf = TMath::Sqrt(fChisquare/df);
+
+      for (Int_t ipoint=0; ipoint<n; ipoint++){
+         c=0;
+         ((TF1*)(fInputFunction))->GradientPar(x+ndim*ipoint, grad);
+         //multiply the covariance matrix by gradient
+         for (Int_t irow=0; irow<fNfunctions; irow++){
+            sum_vector[irow]=0;
+            for (Int_t icol=0; icol<fNfunctions; icol++)
+               sum_vector[irow]+=fParCovar(irow,icol)*grad[icol];
+         }
+         for (Int_t i=0; i<fNfunctions; i++)
+            c+=grad[i]*sum_vector[i];
+         c=TMath::Sqrt(c);
+         ci[ipoint]=c*t*chidf;
+      }
+
+      delete [] grad;
+      delete [] sum_vector;
+   }
+}
+
+//______________________________________________________________________________
+void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
+{
+//Computes confidence intervals at level cl. Default is 0.95
+//The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH123.
+//For Graphs, confidence intervals are computed for each point,
+//the value of the graph at that point is set to the function value at that
+//point, and the graph y-errors (or z-errors) are set to the value of
+//the confidence interval at that point
+//For Histograms, confidence intervals are computed for each bin center
+//The bin content of this bin is then set to the function value at the bin
+//center, and the bin error is set to the confidence interval value.
+//Allowed combinations:
+//Fitted object               Passed object
+//TGraph                      TGraphErrors, TH1
+//TGraphErrors, AsymmErrors   TGraphErrors, TH1
+//TH1                         TGraphErrors, TH1
+//TGraph2D                    TGraph2DErrors, TH2
+//TGraph2DErrors              TGraph2DErrors, TH2
+//TH2                         TGraph2DErrors, TH2
+//TH3                         TH3
+
+   if (!fInputFunction) {
+      Error("GetConfidenceIntervals", "The case of fitting not with a TFormula is not yet implemented");
+      return;
+   }
+
+   //TGraph//////////////////
+
+   if (obj->InheritsFrom(TGraph::Class())) {
+      TGraph *gr = (TGraph*)obj;
+      if (!gr->GetEY()){
+         Error("GetConfidenceIntervals", "A TGraphErrors should be passed instead of a graph");
+         return;
+      }
+      if (fObjectFit->InheritsFrom(TGraph2D::Class())){
+         Error("GetConfidenceIntervals", "A TGraph2DErrors should be passed instead of a graph");
+         return;
+      }
+      if (fObjectFit->InheritsFrom(TH1::Class())){
+         if (((TH1*)(fObjectFit))->GetDimension()>1){
+            Error("GetConfidenceIntervals", "A TGraph2DErrors or a TH23 should be passed instead of a graph");
+            return;
+         }
+      }
+
+      GetConfidenceIntervals(gr->GetN(),1,gr->GetX(), gr->GetEY(), cl);
+      for (Int_t i=0; i<gr->GetN(); i++)
+         gr->SetPoint(i, gr->GetX()[i], fInputFunction->Eval(gr->GetX()[i]));
+   }
+
+   //TGraph2D///////////////
+   else if (obj->InheritsFrom(TGraph2D::Class())) {
+      TGraph2D *gr2 = (TGraph2D*)obj;
+      if (!gr2->GetEZ()){
+         Error("GetConfidenceIntervals", "A TGraph2DErrors should be passed instead of a TGraph2D");
+         return;
+      }
+      if (fObjectFit->InheritsFrom(TGraph::Class())){
+         Error("GetConfidenceIntervals", "A TGraphErrors should be passed instead of a TGraph2D");
+         return;
+      }
+      if (fObjectFit->InheritsFrom(TH1::Class())){
+         if (((TH1*)(fObjectFit))->GetDimension()==1){
+            Error("GetConfidenceIntervals", "A TGraphErrors or a TH1 should be passed instead of a graph");
+            return;
+         }
+      }
+      Double_t xy[2];
+      Int_t np = gr2->GetN();
+      Double_t *grad = new Double_t[fNfunctions];
+      Double_t *sum_vector = new Double_t[fNfunctions];
+      Double_t *x = gr2->GetX();
+      Double_t *y = gr2->GetY();
+      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());   
+      Double_t chidf = TMath::Sqrt(fChisquare/((TF1*)(fInputFunction))->GetNDF());
+      Double_t c = 0;
+      for (Int_t ipoint=0; ipoint<np; ipoint++){
+         c=0;
+         xy[0]=x[ipoint];
+         xy[1]=y[ipoint];
+         ((TF1*)(fInputFunction))->GradientPar(xy, grad);
+         for (Int_t irow=0; irow<fNfunctions; irow++){
+            sum_vector[irow]=0;
+            for (Int_t icol=0; icol<fNfunctions; icol++)
+               sum_vector[irow]+=fParCovar(irow, icol)*grad[icol];
+         }
+         for (Int_t i=0; i<fNfunctions; i++)
+            c+=grad[i]*sum_vector[i];
+         c=TMath::Sqrt(c);
+         gr2->SetPoint(ipoint, xy[0], xy[1], fInputFunction->EvalPar(xy));
+         gr2->GetEZ()[ipoint]=c*t*chidf;
+      }
+      delete [] grad;
+      delete [] sum_vector;
+   }
+
+   //TH1////////////////////////
+   else if (obj->InheritsFrom(TH1::Class())) {
+      if (fObjectFit->InheritsFrom(TGraph::Class())){
+         if (((TH1*)obj)->GetDimension()>1){
+            Error("GetConfidenceIntervals", "Fitted graph and passed histogram have different number of dimensions");
+            return;
+         }
+      }
+      if (fObjectFit->InheritsFrom(TGraph2D::Class())){
+         if (((TH1*)obj)->GetDimension()!=2){
+            Error("GetConfidenceIntervals", "Fitted graph and passed histogram have different number of dimensions");
+            return;
+         }
+      }
+      if (fObjectFit->InheritsFrom(TH1::Class())){
+         if (((TH1*)(fObjectFit))->GetDimension()!=((TH1*)(obj))->GetDimension()){
+            Error("GetConfidenceIntervals", "Fitted and passed histograms have different number of dimensions");
+            return;
+         }
+      }
+
+
+      TH1 *hfit = (TH1*)obj;
+      Double_t *grad = new Double_t[fNfunctions];
+      Double_t *sum_vector = new Double_t[fNfunctions];
+      Double_t x[3];
+      Int_t hxfirst = hfit->GetXaxis()->GetFirst();
+      Int_t hxlast  = hfit->GetXaxis()->GetLast(); 
+      Int_t hyfirst = hfit->GetYaxis()->GetFirst();
+      Int_t hylast  = hfit->GetYaxis()->GetLast(); 
+      Int_t hzfirst = hfit->GetZaxis()->GetFirst();
+      Int_t hzlast  = hfit->GetZaxis()->GetLast(); 
+
+      TAxis *xaxis  = hfit->GetXaxis();
+      TAxis *yaxis  = hfit->GetYaxis();
+      TAxis *zaxis  = hfit->GetZaxis();
+      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());   
+      Double_t chidf = TMath::Sqrt(fChisquare/((TF1*)(fInputFunction))->GetNDF());
+      Double_t c=0;
+      for (Int_t binz=hzfirst; binz<=hzlast; binz++){
+         x[2]=zaxis->GetBinCenter(binz);
+         for (Int_t biny=hyfirst; biny<=hylast; biny++) {
+            x[1]=yaxis->GetBinCenter(biny);
+            for (Int_t binx=hxfirst; binx<=hxlast; binx++) {
+               x[0]=xaxis->GetBinCenter(binx);
+               ((TF1*)(fInputFunction))->GradientPar(x, grad);
+               c=0;
+               for (Int_t irow=0; irow<fNfunctions; irow++){
+                  sum_vector[irow]=0;
+                  for (Int_t icol=0; icol<fNfunctions; icol++)
+                     sum_vector[irow]+=fParCovar(irow, icol)*grad[icol];
+               }
+               for (Int_t i=0; i<fNfunctions; i++)
+                  c+=grad[i]*sum_vector[i];
+               c=TMath::Sqrt(c);
+               hfit->SetBinContent(binx, biny, binz, fInputFunction->EvalPar(x));
+               hfit->SetBinError(binx, biny, binz, c*t*chidf);
+            }
+         }
+      }
+      delete [] grad;
+      delete [] sum_vector;
+   }    
+   else {
+      Error("GetConfidenceIntervals", "This object type is not supported");
+      return;
+   }           
+}
+
+//______________________________________________________________________________
+Double_t* TLinearFitter::GetCovarianceMatrix() const
+{
+//Returns covariance matrix
+
    Double_t *p = const_cast<Double_t*>(fParCovar.GetMatrixArray());
    return p;
 }
@@ -795,6 +1009,8 @@ Double_t * TLinearFitter::GetCovarianceMatrix() const
 //______________________________________________________________________________
 void TLinearFitter::GetCovarianceMatrix(TMatrixD &matr)
 {
+//Returns covariance matrix
+
    if (matr.GetNrows()!=fNfunctions || matr.GetNcols()!=fNfunctions){
       matr.ResizeTo(fNfunctions, fNfunctions);
    }
@@ -804,6 +1020,8 @@ void TLinearFitter::GetCovarianceMatrix(TMatrixD &matr)
 //______________________________________________________________________________
 void TLinearFitter::GetErrors(TVectorD &vpar)
 {
+//Returns parameter errors
+
    if (vpar.GetNoElements()!=fNfunctions) {
      vpar.ResizeTo(fNfunctions);
   }
@@ -815,6 +1033,8 @@ void TLinearFitter::GetErrors(TVectorD &vpar)
 //______________________________________________________________________________
 void TLinearFitter::GetParameters(TVectorD &vpar)
 {
+//Returns parameter values
+
    if (vpar.GetNoElements()!=fNfunctions) {
      vpar.ResizeTo(fNfunctions);
   }
@@ -824,6 +1044,8 @@ void TLinearFitter::GetParameters(TVectorD &vpar)
 //______________________________________________________________________________
 Double_t TLinearFitter::GetParError(Int_t ipar) const
 {
+//Returns the error of parameter #ipar
+
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParError", "illegal value of parameter");
       return 0;
@@ -833,8 +1055,38 @@ Double_t TLinearFitter::GetParError(Int_t ipar) const
 }
 
 //______________________________________________________________________________
+Double_t TLinearFitter::GetParTValue(Int_t ipar)
+{
+//Returns the t-value for parameter #ipar
+
+   if (ipar<0 || ipar>fNfunctions) {
+      Error("GetParTValue", "illegal value of parameter");
+      return 0;
+   }
+   if (!fTValues.NonZeros())
+      ComputeTValues();
+   return fTValues(ipar);
+}
+
+//______________________________________________________________________________
+Double_t TLinearFitter::GetParSignificance(Int_t ipar)
+{
+//Returns the significance of parameter #ipar
+
+   if (ipar<0 || ipar>fNfunctions) {
+      Error("GetParSignificance", "illegal value of parameter");
+      return 0;
+   }
+   if (!fParSign.NonZeros())
+      ComputeTValues();
+   return fParSign(ipar);
+}
+
+//______________________________________________________________________________
 void TLinearFitter::GetFitSample(TBits &bits)
 {
+//For robust lts fitting, returns the sample, on which the best fit was based
+
    if (!fRobust){
       Error("GetFitSample", "there is no fit sample in ordinary least-squares fit");
       return;
@@ -932,7 +1184,6 @@ void TLinearFitter::SetFormula(const char *formula)
          offset++;
       fstring = (char*)strchr(sstring.Data()+offset, 'x');
    }
-
 
    //fill the array of functions
    j=0;
@@ -1044,7 +1295,6 @@ void TLinearFitter::SetFormula(TFormula *function)
 //______________________________________________________________________________
 Bool_t TLinearFitter::UpdateMatrix()
 {
-
    //Update the design matrix after the formula has been changed.
 
      if (fStoreData){

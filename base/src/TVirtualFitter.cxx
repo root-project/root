@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.11 2005/11/26 15:03:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.12 2005/11/26 15:25:38 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -75,6 +75,20 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 
    if (fgFitter) fgFitter->SetObjectFit(obj);
    return fgFitter;
+}
+
+//______________________________________________________________________________
+void  TVirtualFitter::GetConfidenceIntervals(Int_t /*n*/, Int_t /*ndim*/, Double_t * /*x*/, Double_t * /*ci*/, Double_t /*cl*/)
+{
+   //return confidence intervals in array x of dimension ndim
+   //implemented in TFitter, TFumili, etc
+}
+
+//______________________________________________________________________________
+void  TVirtualFitter::GetConfidenceIntervals(TObject * /*obj*/, Double_t /*cl*/)
+{
+   //return confidence intervals in TObject obj
+   //implemented in TFitter, TFumili, etc
 }
 
 //______________________________________________________________________________

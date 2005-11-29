@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.5 2005/06/23 10:04:08 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.6 2005/11/24 16:17:16 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -200,6 +200,7 @@ private:
    TBits        fFitsample;      //indices of points, used in the robust fit
 
    void AddToDesign(Double_t *x, Double_t y, Double_t e);
+   void ComputeTValues();
    void GraphLinearFitter(Double_t h);
    void Graph2DLinearFitter(Double_t h);
    void HistLinearFitter();
@@ -232,6 +233,8 @@ public:
    virtual void       FixParameter(Int_t ipar);
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
    virtual Double_t   GetChisquare();
+   virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, Double_t *x, Double_t *ci, Double_t cl=0.95);
+   virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95); 
    virtual Double_t*  GetCovarianceMatrix() const;
    virtual void       GetCovarianceMatrix(TMatrixD &matr);
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const {return fParCovar(i, j);}
@@ -241,8 +244,8 @@ public:
    virtual void       GetParameters(TVectorD &vpar);
    virtual Double_t   GetParameter(Int_t ipar) const {return fParams(ipar);}
    virtual Double_t   GetParError(Int_t ipar) const;
-   virtual Double_t   GetParTValue(Int_t ipar) const {return fTValues(ipar);}
-   virtual Double_t   GetParSignificance(Int_t ipar) const {return fParSign(ipar);}
+   virtual Double_t   GetParTValue(Int_t ipar);
+   virtual Double_t   GetParSignificance(Int_t ipar);
    virtual void       GetFitSample(TBits& bits);
    virtual Bool_t     IsFixed(Int_t ipar) const {return fFixedParams[ipar];}
    virtual void       PrintResults(Int_t level, Double_t amin=0) const;

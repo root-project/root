@@ -107,6 +107,9 @@ public:
    Double_t        *GetX() const {return fX;}
    Double_t        *GetY() const {return fY;}
    Double_t        *GetZ() const {return fZ;}
+   virtual Double_t *GetEX() const {return 0;}
+   virtual Double_t *GetEY() const {return 0;}
+   virtual Double_t *GetEZ() const {return 0;}
    Double_t         GetXmax() const;
    Double_t         GetXmin() const;
    Double_t         GetYmax() const;
