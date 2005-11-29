@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.h,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -10,7 +10,7 @@
 #ifndef ROOT_TBinLikelihoodFCN_H_
 #define ROOT_TBinLikelihoodFCN_H_
 
-#include "Minuit/FCNBase.h"
+#include "Minuit2/FCNBase.h"
 
 
 class TF1;
@@ -21,7 +21,7 @@ class TChi2FitData;
      Class implementing the standard Chi2 objective function 
    */ 
 
-class TBinLikelihoodFCN : public FCNBase {
+class TBinLikelihoodFCN : public ROOT::Minuit2::FCNBase {
 
 
 
@@ -62,7 +62,7 @@ public:
   /**
      return error definition for likelihood = 0.5
   */
-  double up() const { return fUp; }
+  double Up() const { return fUp; }
 
   void SetErrorDef( double up) { fUp = up; }
 

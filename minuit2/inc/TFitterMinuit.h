@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -14,17 +14,17 @@
 #include "TVirtualFitter.h"
 #endif
 
-#include "Minuit/MnUserParameterState.h"
-#include "Minuit/MinosError.h"
-#include "Minuit/ModularFunctionMinimizer.h"
-#include "Minuit/FumiliMinimizer.h"
+#include "Minuit2/MnUserParameterState.h"
+#include "Minuit2/MinosError.h"
+#include "Minuit2/ModularFunctionMinimizer.h"
+#include "Minuit2/FumiliMinimizer.h"
 #include "TFcnAdapter.h"
 
 /**
     TVirtualFitter implementation for new C++ Minuit
 */
 
-class FunctionMinimum;
+class ROOT::Minuit2::FunctionMinimum;
 
 class TFitterMinuit : public TVirtualFitter {
 
@@ -81,14 +81,14 @@ public:
   // set FCN using Minuit interface
   // you pass to the class ownership of FCNBase pointer
 
-  virtual void SetMinuitFCN(  FCNBase * f);
+  virtual void SetMinuitFCN(  ROOT::Minuit2::FCNBase * f);
 
   // methods needed by derived classes 
-  virtual const MnUserParameterState & State() const { return fState; } 
+  virtual const ROOT::Minuit2::MnUserParameterState & State() const { return fState; } 
 
-  virtual const FCNBase * GetMinuitFCN() const { return fMinuitFCN; } 
+  virtual const ROOT::Minuit2::FCNBase * GetMinuitFCN() const { return fMinuitFCN; } 
 
-  virtual const ModularFunctionMinimizer * GetMinimizer() const { return fMinimizer; }
+  virtual const ROOT::Minuit2::ModularFunctionMinimizer * GetMinimizer() const { return fMinimizer; }
 
 
   // additional abstract methods to be implemented by derived classes 
@@ -112,9 +112,9 @@ protected:
 
   // method to set internal data (no copying involved so - make protected )
 
-  virtual MnUserParameterState & State() { return fState; }
+  virtual ROOT::Minuit2::MnUserParameterState & State() { return fState; }
 
-  virtual void SetMinimizer( ModularFunctionMinimizer * m) { fMinimizer = m; }
+  virtual void SetMinimizer( ROOT::Minuit2::ModularFunctionMinimizer * m) { fMinimizer = m; }
 
 
   // re -implemented in derived classes 
@@ -132,12 +132,12 @@ protected:
   virtual void CreateUnbinLikelihoodFCN() {}
 
   // internal function to perform the actual minimization (could be implemented by derived classes)
-  virtual FunctionMinimum DoMinimization( int nfcn = 0, double edmval = 0.1);
+  virtual ROOT::Minuit2::FunctionMinimum DoMinimization( int nfcn = 0, double edmval = 0.1);
 
   // internal funcition to study Function minimum results
   // return 0 if function minimum is OK or an error code
 
-  virtual int ExamineMinimum(const FunctionMinimum & );
+  virtual int ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & );
   
   virtual void Initialize();
    
@@ -147,10 +147,10 @@ private:
   double fEDMVal;
   bool fGradient;
 
-  MnUserParameterState fState;
-  std::vector<MinosError> theMinosErrors;
-  ModularFunctionMinimizer * fMinimizer;
-  FCNBase * fMinuitFCN;
+  ROOT::Minuit2::MnUserParameterState fState;
+  std::vector<ROOT::Minuit2::MinosError> fMinosErrors;
+  ROOT::Minuit2::ModularFunctionMinimizer * fMinimizer;
+  ROOT::Minuit2::FCNBase * fMinuitFCN;
   int fDebug;
   int fStrategy;
   double fMinTolerance;

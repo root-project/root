@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FCN.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FCN.h,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -10,7 +10,7 @@
 #ifndef ROOT_TChi2FCN_H_
 #define ROOT_TChi2FCN_H_
 
-#include "Minuit/FCNBase.h"
+#include "Minuit2/FCNBase.h"
 
 
 class TF1;
@@ -22,7 +22,7 @@ class TChi2FitData;
      Class implementing the standard Chi2 objective function 
    */ 
 
-class TChi2FCN : public FCNBase {
+class TChi2FCN : public ROOT::Minuit2::FCNBase {
 
 
 
@@ -67,7 +67,7 @@ public:
   /**
      return error definition for chi2 = 1
   */
-  double up() const { return fUp; }
+  double Up() const { return fUp; }
 
   void SetErrorDef( double up) { fUp = up; }
 

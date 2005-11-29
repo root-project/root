@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.h,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -10,7 +10,7 @@
 #ifndef ROOT_TFumiliChi2FCN_H_
 #define ROOT_TFumiliChi2FCN_H_
 
-#include "Minuit/FumiliFCNBase.h"
+#include "Minuit2/FumiliFCNBase.h"
 
 // temporary - should use interface
 class TF1;
@@ -23,7 +23,7 @@ class TChi2FitData;
 */
 
 
-class TFumiliFCN : public FumiliFCNBase {
+class TFumiliFCN : public ROOT::Minuit2::FumiliFCNBase {
 
 public: 
 
@@ -57,12 +57,12 @@ public:
   /**
      evaluate gradient and function elements needed by fumili 
    */
-  void evaluateAll( const std::vector<double> & );  
+  void EvaluateAll( const std::vector<double> & );  
 
   /**
      return error definition for chi2 = 1
   */
-  double up() const { return fUp; }
+  double Up() const { return fUp; }
 
   void SetErrorDef (double up) { fUp = up; }
 

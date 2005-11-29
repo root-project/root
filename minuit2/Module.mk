@@ -38,7 +38,9 @@ MINUIT2DS    := $(MODDIRS)/G__Minuit2.cxx
 MINUIT2DO    := $(MINUIT2DS:.cxx=.o)
 MINUIT2DH    := $(MINUIT2DS:.cxx=.h)
 
-MINUIT2H     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MINUIT2AH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+MINUIT2BH    := $(filter-out $(MODDIRI)/Minuit2/LinkDef%,$(wildcard $(MODDIRI)/Minuit2/*.h))
+MINUIT2H     := $(MINUIT2AH) $(MINUIT2BH)
 MINUIT2S     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MINUIT2O     := $(MINUIT2S:.cxx=.o)
 
@@ -54,76 +56,28 @@ ALLLIBS      += $(MINUIT2LIB)
 INCLUDEFILES += $(MINUIT2DEP)
 
 ##### local rules #####
+include/Minuit2/%.h: $(MINUIT2DIRI)/Minuit2/%.h
+		@(if [ ! -d "include/Minuit2" ]; then     \
+		   mkdir include/Minuit2;                 \
+		fi)
+		cp $< $@
+
 include/%.h:    $(MINUIT2DIRI)/%.h
 		cp $< $@
 
-$(MINUITBASELIB): $(MINUITBASELIBA)
-		cp $< $@
-ifeq ($(PLATFORM),macosx)
-		ranlib $@
-endif
-ifeq ($(PLATFORM),win32)
-		cp $(MINUITBASEDIRS)/libminuitbase.dll bin/libminuitbase.dll
-endif
 
-$(MINUITBASELIBA):  $(MINUITBASESRCS)
-ifeq ($(PLATFORM),win32)
-		@(if [ -d $(MINUITBASEDIRS) ]; then \
-			rm -rf $(MINUITBASEDIRS); \
-		fi; \
-		echo "*** Building $@..."; \
-		cd $(MINUIT2DIRS); \
-		if [ ! -d $(MINUITBASEVERS) ]; then \
-			gunzip -c $(MINUITBASEVERS).tar.gz | tar xf -; \
-		fi; \
-		cd $(MINUITBASEVERS); \
-		unset MAKEFLAGS; \
-		nmake -f makefile.msc $(MINUITBASEBLD))
-else
-		@(if [ -d $(MINUITBASEDIRS) ]; then \
-			rm -rf $(MINUITBASEDIRS); \
-		fi; \
-		echo "*** Building $@..."; \
-		cd $(MINUIT2DIRS); \
-		if [ ! -d $(MINUITBASEVERS) ]; then \
-			gunzip -c $(MINUITBASEVERS).tar.gz | tar xf -; \
-		fi; \
-		cd $(MINUITBASEVERS); \
-		ACC=$(CC); \
-		ACXX=$(CXX); \
-		ACXXFLAGS=$(OPT); \
-		if [ "$(CXX)" = "icc" ]; then \
-			ACXX="icc"; \
-		fi; \
-		if [ "$(ARCH)" = "sgicc64" ]; then \
-			ACXX="g++ -mabi=64"; \
-		fi; \
-		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
-			ACXX="aCC +DD64"; \
-		fi; \
-		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
-			ACXX="g++ -m64"; \
-		fi; \
-		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
-			ACXX="g++ -m64"; \
-		fi; \
-		GNUMAKE=$(MAKE) CC=$$ACC CXX=$$ACXX CXXFLAGS=$$ACXXFLAGS  \
-		./configure --with-pic --enable-shared=false; \
-		$(MAKE))
-endif
-
-$(MINUIT2LIB):  $(MINUITBASEDEP) $(MINUIT2O) $(MINUIT2DO) $(MAINLIBS) $(MINUIT2LIBDEP)
+$(MINUIT2LIB):  $(MINUIT2O) $(MINUIT2DO) $(MAINLIBS) $(MINUIT2LIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMinuit2.$(SOEXT) $@ \
 		   "$(MINUIT2O) $(MINUIT2DO)" \
-		   "$(MINUIT2LIBEXTRA) $(MINUITBASELIB)"
+		   "$(MINUIT2LIBEXTRA)"
 
-$(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMP) $(MINUITBASELIBA)
+$(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMP) 
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(MINUITBASEDIRI) $(MINUIT2H) $(MINUIT2L)
+		$(ROOTCINTTMP) -f $@ -c $(MINUIT2H) $(MINUIT2L)
 
 $(MINUIT2DO):   $(MINUIT2DS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(MINUITBASEDIRI) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS)  -I. -o $@ -c $<
 
 all-minuit2:    $(MINUIT2LIB)
 
@@ -138,28 +92,14 @@ test-minuit2: 	$(MINUIT2LIB)
 
 clean-minuit2:
 		@rm -f $(MINUIT2O) $(MINUIT2DO)
-ifeq ($(PLATFORM),win32)
-		-@(if [ -d $(MINUITBASEDIRS) ]; then \
-			cd $(MINUITBASEDIRS); \
-			unset MAKEFLAGS; \
-			nmake -nologo -f Makefile.msc clean \
-			CFG=$(MINUITBASEBLD); \
-		fi)
-else
-		-@(if [ -d $(MINUITBASEDIRS) ]; then \
-			cd $(MINUITBASEDIRS); \
-			$(MAKE) clean; \
-		fi)
-endif
 
 clean::         clean-minuit2
 
 distclean-minuit2: clean-minuit2
 		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB)
-		@rm -f $(MINUITBASELIB) bin/libminuitbase.dll
 
 distclean::     distclean-minuit2
 
 ##### extra rules ######
-$(MINUIT2O): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(MINUITBASEDIRI) -o $@ -c $<
+#$(MINUIT2O): %.o: %.cxx
+#	$(CXX) $(OPT) $(CXXFLAGS) $(MINUITBASEDIRI) -o $@ -c $<
