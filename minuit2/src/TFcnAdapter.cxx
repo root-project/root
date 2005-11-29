@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.2 2005/11/05 15:17:35 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -29,7 +29,7 @@ double TFcnAdapter::operator()(const std::vector<double>& par) const {
   return fs;
 }
   
-std::vector<double> TFcnAdapter::gradient(const std::vector<double>& par) const {
+std::vector<double> TFcnAdapter::Gradient(const std::vector<double>& par) const {
 //     std::cout<<"TFcnAdapter::gradient "<<std::endl;
 //   assert(par.size() == theNPar);
   assert(fFCN != 0);

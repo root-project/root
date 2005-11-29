@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.4 2005/11/05 15:17:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.5 2005/11/07 09:41:48 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -63,11 +63,11 @@ void TFumiliFCN::Initialize(unsigned int nPar) {
   fParamCache = std::vector<double>(nPar);
   fFunctionGradient = std::vector<double>( nPar );
   // call init function on FumiliFCN
-  initAndReset(nPar);
+  InitAndReset(nPar);
 }
 
 
-void  TFumiliFCN::evaluateAll( const std::vector<double> & p) { 
+void  TFumiliFCN::EvaluateAll( const std::vector<double> & p) { 
   
   Calculate_gradient_and_hessian(p);
 }
@@ -78,7 +78,7 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
 
 
   unsigned int npar = p.size(); 
-  if (npar != dimension() ) { 
+  if (npar != Dimension() ) { 
     // re-initialize the store gradient
     //std::cout << "initialize FumiliFCN and cache" << std::endl;
     Initialize(npar);
@@ -91,8 +91,8 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
   fFunc->SetParameters( &p.front() );
   fParamCache = p;
  
-  std::vector<double> & grad = gradient(); 
-  std::vector<double> & hess = hessian(); 
+  std::vector<double> & grad = Gradient(); 
+  std::vector<double> & hess = Hessian(); 
 
   // dimension of hessian symmetric matrix  
   unsigned int nhdim = static_cast<int>( 0.5*npar*(npar + 1) ); 
@@ -137,7 +137,7 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
   }
 
   // set value of Obj function to be used by Minuit
-  setFCNValue(sum); 
+  SetFCNValue(sum); 
 	
 }
 

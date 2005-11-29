@@ -10,17 +10,18 @@
 #include "TBinLikelihoodFCN.h"
 
 
-#include "Minuit/MnMigrad.h"
-#include "Minuit/MnMinos.h"
-#include "Minuit/MnHesse.h"
-#include "Minuit/MinuitParameter.h"
-#include "Minuit/MnPrint.h"
-#include "Minuit/FunctionMinimum.h"
-#include "Minuit/VariableMetricMinimizer.h"
-#include "Minuit/SimplexMinimizer.h"
-#include "Minuit/CombinedMinimizer.h"
-#include "Minuit/ScanMinimizer.h"
+#include "Minuit2/MnMigrad.h"
+#include "Minuit2/MnMinos.h"
+#include "Minuit2/MnHesse.h"
+#include "Minuit2/MinuitParameter.h"
+#include "Minuit2/MnPrint.h"
+#include "Minuit2/FunctionMinimum.h"
+#include "Minuit2/VariableMetricMinimizer.h"
+#include "Minuit2/SimplexMinimizer.h"
+#include "Minuit2/CombinedMinimizer.h"
+#include "Minuit2/ScanMinimizer.h"
 
+using namespace ROOT::Minuit2;
 
 #ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
@@ -45,14 +46,13 @@ ClassImp(TFitterMinuit);
 TFitterMinuit* gMinuit2 = 0;
 
 TFitterMinuit::TFitterMinuit() : fErrorDef(0.) , fEDMVal(0.), fGradient(false),
-		     fState(MnUserParameterState()), theMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) {
+		     fState(MnUserParameterState()), fMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) {
   Initialize();
 }
 
 
 // needed this additional contructor ? 
-TFitterMinuit::TFitterMinuit(Int_t /* maxpar */) : fErrorDef(0.) , fEDMVal(0.), fGradient(false), fState(MnUserParameterState()), theMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) { 
-  std::cout << "creating FitterMinuit " << std::endl;
+TFitterMinuit::TFitterMinuit(Int_t /* maxpar */) : fErrorDef(0.) , fEDMVal(0.), fGradient(false), fState(MnUserParameterState()), fMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) { 
   Initialize();
 }
 
@@ -120,7 +120,7 @@ void TFitterMinuit::Clear(Option_t*) {
   fEDMVal = 0; 
   fGradient = false; 
   State() = MnUserParameterState();
-  theMinosErrors.clear();
+  fMinosErrors.clear();
   fDebug = 1;  
   fStrategy = 1;  
   fMinTolerance = 0;
@@ -142,7 +142,7 @@ FunctionMinimum TFitterMinuit::DoMinimization( int nfcn, double edmval)  {
   assert(GetMinuitFCN() != 0 );
   assert(GetMinimizer() != 0 );
   // use always strategy 1 (2 is not yet fully tested)
-  return GetMinimizer()->minimize(*GetMinuitFCN(), State(), MnStrategy(1), nfcn, edmval);
+  return GetMinimizer()->Minimize(*GetMinuitFCN(), State(), MnStrategy(fStrategy), nfcn, edmval);
 }
 
   
@@ -155,7 +155,7 @@ int  TFitterMinuit::Minimize( int nfcn, double edmval)  {
     std::cout << "TFitterMinuit - Minimize with max iterations " << nfcn << " edmval " << edmval << std::endl;
   }
   FunctionMinimum min = DoMinimization(nfcn,edmval);
-  fState = min.userState();
+  fState = min.UserState();
   return ExamineMinimum(min);
 }
 
@@ -230,14 +230,14 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
     // should use maybe FunctionMinimum from previous call to migrad
     // need to keep a pointer to function minimum in the class
     FunctionMinimum min = DoMinimization();
-    if (!min.isValid() ) { 
+    if (!min.IsValid() ) { 
       std::cout << "TFitterMinuit::MINOS failed due to invalid function minimum" << std::endl;
       return -10;
     }
     MnMinos minos( *fMinuitFCN, min);
-    for(unsigned int i = 0; i < State().variableParameters(); i++) {
-      MinosError me = minos.minos(State().extOfInt(i));
-      theMinosErrors.push_back(me);
+    for(unsigned int i = 0; i < State().VariableParameters(); i++) {
+      MinosError me = minos.Minos(State().ExtOfInt(i));
+      fMinosErrors.push_back(me);
     }
     return 0;
   } 
@@ -248,7 +248,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
     const FCNBase * fcn = GetMinuitFCN();
     assert(fcn != 0);
     fState = hesse(*fcn, State(),100000 );
-    if (!fState.isValid() ) {
+    if (!fState.IsValid() ) {
       std::cout << "TFitterMinuit::Hesse calculation failed " << std::endl;
       return -10;
     }
@@ -268,7 +268,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
     int ipar = int(args[0]);
     double low = args[1];
     double up = args[2];
-    State().setLimits(ipar, low, up);
+    State().SetLimits(ipar, low, up);
     return 0; 
   } 
   // SET PRINT
@@ -306,48 +306,48 @@ int  TFitterMinuit::ExamineMinimum(const FunctionMinimum & min) {
   // debug ( print all the states) 
   if (fDebug >= 3) { 
 
-    const std::vector<MinimumState>& iterationStates = min.states();
+    const std::vector<MinimumState>& iterationStates = min.States();
     std::cout << "Number of iterations " << iterationStates.size() << std::endl;
     for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
       //std::cout << iterationStates[i] << std::endl;                                                                       
       const MinimumState & st =  iterationStates[i];
       std::cout << "----------> Iteration " << i << std::endl;
-      std::cout << "            FVAL = " << st.fval() << " Edm = " << st.edm() << " Nfcn = " << st.nfcn() << std::endl;
-      std::cout << "            Error matrix change = " << st.error().dcovar() << std::endl;
+      std::cout << "            FVAL = " << st.Fval() << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << std::endl;
+      std::cout << "            Error matrix change = " << st.Error().Dcovar() << std::endl;
       std::cout << "            Internal parameters : ";
-      for (int j = 0; j < st.size() ; ++j) std::cout << " p" << j << " = " << st.vec()(j);
+      for (int j = 0; j < st.size() ; ++j) std::cout << " p" << j << " = " << st.Vec()(j);
       std::cout << std::endl;
     }
   }
   // print result 
-  if (min.isValid() ) {
+  if (min.IsValid() ) {
     if (fDebug >=1 ) { 
       std::cout << "Minimum Found" << std::endl; 
-      std::cout << "FVAL  = " << State().fval() << std::endl;
-      std::cout << "Edm   = " << State().edm() << std::endl;
-      std::cout << "Nfcn  = " << State().nfcn() << std::endl;
-      std::vector<double> par = State().params();
-      std::vector<double> err = State().errors();
-      for (unsigned int i = 0; i < State().params().size(); ++i) 
-	std::cout << State().parameter(i).name() << "\t  = " << par[i] << "\t  +/-  " << err[i] << std::endl; 
+      std::cout << "FVAL  = " << State().Fval() << std::endl;
+      std::cout << "Edm   = " << State().Edm() << std::endl;
+      std::cout << "Nfcn  = " << State().NFcn() << std::endl;
+      std::vector<double> par = State().Params();
+      std::vector<double> err = State().Errors();
+      for (unsigned int i = 0; i < State().Params().size(); ++i) 
+	std::cout << State().Parameter(i).Name() << "\t  = " << par[i] << "\t  +/-  " << err[i] << std::endl; 
     }
     return 0;
   }
   else { 
     if (fDebug >= 1)  std::cout << "TFitterMinuit::Minimization DID not converge !" << std::endl; 
-    if (min.hasMadePosDefCovar() ) { 
+    if (min.HasMadePosDefCovar() ) { 
       if (fDebug >= 1) std::cout << "      Covar was made pos def" << std::endl;
       return -11; 
     }
-    if (min.hesseFailed() ) { 
+    if (min.HesseFailed() ) { 
       if (fDebug >= 1) std::cout << "      Hesse is not valid" << std::endl;
       return -12; 
     }
-    if (min.isAboveMaxEdm() ) { 
+    if (min.IsAboveMaxEdm() ) { 
       if (fDebug >= 1) std::cout << "      Edm is above max" << std::endl;
       return -13; 
     }
-    if (min.hasReachedCallLimit() ) { 
+    if (min.HasReachedCallLimit() ) { 
       if (fDebug >= 1) std::cout << "      Reached call limit" << std::endl;
       return -14; 
     }
@@ -358,32 +358,32 @@ int  TFitterMinuit::ExamineMinimum(const FunctionMinimum & min) {
 
 void TFitterMinuit::FixParameter(Int_t ipar) {
 //   std::cout<<"FixParameter"<<std::endl;
-  State().fix(ipar);
+  State().Fix(ipar);
 }
 
 Double_t* TFitterMinuit::GetCovarianceMatrix() const {
-  return (Double_t*)(&(State().covariance().data().front()));
+  return (Double_t*)(&(State().Covariance().Data().front()));
 }
 
 Double_t TFitterMinuit::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
 
   std::cout<<"GetCovarianceMatrix not implemented"<<std::endl;
-  return State().covariance()(i,j);
+  return State().Covariance()(i,j);
 }
 
 
 Int_t TFitterMinuit::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const {
 //   std::cout<<"GetError"<<std::endl;
-  if(theMinosErrors.empty()) {
+  if(fMinosErrors.empty()) {
     eplus = 0.;
     eminus = 0.; 
   } else {
-    unsigned int nintern = State().intOfExt(ipar);
-    eplus = theMinosErrors[nintern].upper();
-    eminus = theMinosErrors[nintern].lower();
+    unsigned int nintern = State().IntOfExt(ipar);
+    eplus = fMinosErrors[nintern].Upper();
+    eminus = fMinosErrors[nintern].Lower();
   }
-  eparab = State().error(ipar);
-  globcc = State().globalCC().globalCC()[ipar];
+  eparab = State().Error(ipar);
+  globcc = State().GlobalCC().GlobalCC()[ipar];
   return 0;
 }
 
@@ -393,43 +393,43 @@ Int_t TFitterMinuit::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Dou
 Int_t TFitterMinuit::GetNumberTotalParameters() const {
 
 
-  return State().parameters().parameters().size();
+  return State().Parameters().Parameters().size();
 }
 Int_t TFitterMinuit::GetNumberFreeParameters() const {
 
-  return State().parameters().variableParameters();
+  return State().Parameters().VariableParameters();
 }
 
 
 Double_t TFitterMinuit::GetParError(Int_t ipar) const {
 //   std::cout<<"GetParError"<<std::endl;
-  return State().error(ipar);
+  return State().Error(ipar);
 }
 
 Double_t TFitterMinuit::GetParameter(Int_t ipar) const {
 //   std::cout<<"GetParameter"<<std::endl;
-  return State().value(ipar);
+  return State().Value(ipar);
 }
 
 Int_t TFitterMinuit::GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const {
 //   std::cout<<"GetParameter(Int_t ipar,char"<<std::endl;
-  const MinuitParameter& mp = State().parameter(ipar);
+  const MinuitParameter& mp = State().Parameter(ipar);
 //   std::cout<<"i= "<<ipar<<" verr= "<<mp.error()<<std::endl;
-  name = const_cast<char*>(mp.name());
-  value = mp.value();
-  verr = mp.error();
-  vlow = mp.lowerLimit();
-  vhigh = mp.upperLimit();
+  name = const_cast<char*>(mp.Name());
+  value = mp.Value();
+  verr = mp.Error();
+  vlow = mp.LowerLimit();
+  vhigh = mp.UpperLimit();
   return 0;
 }
 
 Int_t TFitterMinuit::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const {
 //   std::cout<<"GetStats"<<std::endl;
-  amin = State().fval();
-  edm = State().edm();
+  amin = State().Fval();
+  edm = State().Edm();
   errdef = fErrorDef;
-  nvpar = State().variableParameters();
-  nparx = State().parameters().parameters().size();
+  nvpar = State().VariableParameters();
+  nparx = State().Parameters().Parameters().size();
   return 0;
 }
 
@@ -440,7 +440,7 @@ Double_t TFitterMinuit::GetSumLog(Int_t) {
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Bool_t TFitterMinuit::IsFixed(Int_t ipar) const {
-  return State().parameter(ipar).isFixed();
+  return State().Parameter(ipar).IsFixed();
 }
 
 
@@ -449,8 +449,8 @@ void TFitterMinuit::PrintResults(Int_t level, Double_t) const {
 //   std::cout<<State().parameters()<<std::endl;
   std::cout<<State()<<std::endl;
   if (level > 3) { 
-    for(std::vector<MinosError>::const_iterator ime = theMinosErrors.begin();
-	ime != theMinosErrors.end(); ime++) {
+    for(std::vector<MinosError>::const_iterator ime = fMinosErrors.begin();
+	ime != fMinosErrors.end(); ime++) {
       std::cout<<*ime<<std::endl;
     }
   }
@@ -458,7 +458,7 @@ void TFitterMinuit::PrintResults(Int_t level, Double_t) const {
 
 void TFitterMinuit::ReleaseParameter(Int_t ipar) {
 //   std::cout<<"ReleaseParameter"<<std::endl;
-  State().release(ipar);
+  State().Release(ipar);
 }
 
 
@@ -546,10 +546,10 @@ Int_t TFitterMinuit::SetParameter(Int_t,const char *parname,Double_t value,Doubl
    std::cout<<" i= "<<parname<<" value = " << value << " verr= "<<verr<<std::endl;
 #endif
    if(vlow < vhigh) { 
-    State().add(parname, value, verr, vlow, vhigh);
+    State().Add(parname, value, verr, vlow, vhigh);
    }
   else
-    State().add(parname, value, verr);
+    State().Add(parname, value, verr);
   return 0;
 }
 
