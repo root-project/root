@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.109 2005/09/27 16:10:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.110 2005/10/26 10:57:18 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -801,7 +801,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 //______________________________________________________________________________
 Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 {
-  // returns the first derivative of the function at point x, 
+  // returns the second derivative of the function at point x, 
   // computed by Richardson's extrapolation method (use 2 derivative estimates 
   // to compute a third, more accurate estimation)
   // first, derivatives with steps h and h/2 are computed by central difference formulas
@@ -862,7 +862,7 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 //______________________________________________________________________________
 Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
 {
-  // returns the first derivative of the function at point x, 
+  // returns the third derivative of the function at point x, 
   // computed by Richardson's extrapolation method (use 2 derivative estimates 
   // to compute a third, more accurate estimation)
   // first, derivatives with steps h and h/2 are computed by central difference formulas
@@ -1942,6 +1942,60 @@ TAxis *TF1::GetZaxis() const
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetZaxis();
+}
+
+//______________________________________________________________________________
+void TF1::GradientPar(Double_t *x, Double_t *grad, Double_t eps)
+{
+   //Compute the gradient wrt parameters
+   //Parameters:
+   //x - point, were the gradient is computed
+   //grad - used to return the computed gradient, assumed to be of at least fNpar size
+   //eps - if the errors of parameters have been computed, the step used in
+   //numerical differentiation is eps*parameter_error.
+   //if the errors have not been computed, step=eps is used
+   //default value of eps = 0.01
+   //Method is the same as in Derivative() function
+   
+   if(eps< 1e-10 || eps > 1) {
+     Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1], reset to 0.01",eps);
+     eps = 0.01;
+   }
+   Double_t h;
+   TF1 *func = (TF1*)this;
+   Double_t pp[fNpar];
+   //save original parameters
+   Double_t opp[fNpar];
+   Bool_t errorsComputed=kFALSE;
+   for (Int_t ipar=0; ipar<fNpar; ipar++){
+     pp[ipar]=fParams[ipar];
+     opp[ipar]=fParams[ipar];
+     if (func->GetParError(ipar)!=0)
+        errorsComputed=kTRUE;
+   }
+ 
+   for (Int_t ipar=0; ipar<fNpar; ipar++){
+      
+      func->InitArgs(x, opp);
+      if (errorsComputed)
+         h = eps*func->GetParError(ipar);
+      else 
+         h=eps;
+      pp[ipar] = opp[ipar]+h;     Double_t f1 = func->EvalPar(x, pp);
+      pp[ipar] = opp[ipar]-h;     Double_t f2 = func->EvalPar(x, pp);
+      
+      pp[ipar] = opp[ipar]+h/2;   Double_t g1 = func->EvalPar(x, pp);
+      pp[ipar] = opp[ipar]-h/2;   Double_t g2 = func->EvalPar(x, pp);
+      
+      //compute the central differences
+      Double_t h2    = 1/(2.*h);
+      Double_t d0    = f1 - f2;
+      Double_t d2    = 2*(g1 - g2);
+      
+      grad[ipar] = h2*(4*d2 - d0)/3.;  
+   }
+   for (Int_t ipar=0; ipar<fNpar; ipar++)
+      fParams[ipar]=opp[ipar];
 }
 
 //______________________________________________________________________________
