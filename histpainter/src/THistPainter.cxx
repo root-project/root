@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.231 2005/11/16 11:02:16 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.232 2005/11/23 08:50:42 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -75,8 +75,8 @@ ClassImp(THistPainter)
 //______________________________________________________________________________
 THistPainter::THistPainter()
 {
-//    *-*-*-*-*-*-*-*-*Histogram default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//                     =============================
+   // Histogram default constructor.
+
    fH = 0;
    fXaxis = 0;
    fYaxis = 0;
@@ -93,26 +93,22 @@ THistPainter::THistPainter()
 //______________________________________________________________________________
 THistPainter::~THistPainter()
 {
-//    *-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//                     ============================
-
+   // Histogram default destructor.
 }
 
 
 //______________________________________________________________________________
 Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//    *-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
-//                     ===========================================
-//     Compute the closest distance of approach from point px,py to elements
-//     of an histogram.
-//     The distance is computed in pixels units.
-//
-//     Algorithm:
-//     Currently, this simple model computes the distance from the mouse
-//     to the histogram contour only.
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Compute distance from point px,py to a line.
+   //
+   //     Compute the closest distance of approach from point px,py to elements
+   //     of an histogram.
+   //     The distance is computed in pixels units.
+   //
+   //     Algorithm:
+   //     Currently, this simple model computes the distance from the mouse
+   //     to the histogram contour only.
 
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
@@ -132,9 +128,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    if (fH->GetNormFactor() != 0) {
       factor = fH->GetNormFactor()/fH->GetSumOfWeights();
    }
-//     return if point is not in the histogram area
+   //     return if point is not in the histogram area
 
-//     If a 3-D view exists, check distance to axis
+   //     If a 3-D view exists, check distance to axis
    TView *view = gPad->GetView();
    Int_t d1,d2,d3;
    if (view) {
@@ -148,7 +144,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if ( px > puxmin && px < puxmax && py > puymax && py < puymin) curdist = 1;
       goto FUNCTIONS;
    }
-//     check if point is close to an axis
+   //     check if point is close to an axis
    doption.ToLower();
    dsame = kFALSE;
    if (doption.Contains("same")) dsame = kTRUE;
@@ -172,7 +168,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       }
    }
 
-//     if object is 2-D or 3-D return this object
+   //     if object is 2-D or 3-D return this object
    if (fH->GetDimension() == 2) {
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
       if ( px > puxmin + delta2
@@ -181,7 +177,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
         && py < puymin - delta2) {curdist =1; goto FUNCTIONS;}
    }
 
-//     point is inside histogram area. Find channel number
+   //     point is inside histogram area. Find channel number
    if (gPad->IsVertical()) {
       Int_t bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
       Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoX(x1));
@@ -243,10 +239,9 @@ FUNCTIONS:
 //______________________________________________________________________________
 void THistPainter::DrawPanel()
 {
-//    *-*-*-*-*Display a panel with all histogram drawing options*-*-*-*-*-*
-//             ==================================================
-//
-//      See class TDrawPanelHist for example
+   // Display a panel with all histogram drawing options.
+   //
+   //      See class TDrawPanelHist for example
 
    gCurrentHist = fH;
    if (!gPad) {
@@ -270,20 +265,19 @@ void THistPainter::DrawPanel()
 //______________________________________________________________________________
 void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//    *-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//                     =========================================
-//     This member function is called when a histogram is clicked with the locator
-//
-//     If Left button clicked on the bin top value, then the content of this bin
-//     is modified according to the new position of the mouse when it is released.
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Execute action corresponding to one event.
+   //
+   //     This member function is called when a histogram is clicked with the locator
+   //
+   //     If Left button clicked on the bin top value, then the content of this bin
+   //     is modified according to the new position of the mouse when it is released.
+
    static Int_t bin, px1, py1, px2, py2, pyold;
    Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
 
    if (!gPad->IsEditable()) return;
 
-//     come here if we have a lego/surface in the pad
+   //     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
    if (view && view->TestBit(kCannotRotate) == 0) {
       view->ExecuteRotateView(event, px, py);
@@ -422,10 +416,10 @@ TList *THistPainter::GetContourList(Double_t contour) const
 //______________________________________________________________________________
 char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 {
-//   Redefines TObject::GetObjectInfo.
-//   Displays the histogram info (bin number, contents, integral up to bin
-//   corresponding to cursor position px,py
-//
+   //   Redefines TObject::GetObjectInfo.
+   //   Displays the histogram info (bin number, contents, integral up to bin
+   //   corresponding to cursor position px,py
+
    if (!gPad) return (char*)"";
    static char info[64];
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
@@ -532,8 +526,7 @@ Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 //______________________________________________________________________________
 Int_t THistPainter::MakeChopt(Option_t *choptin)
 {
-//    *-*-*-*-*-*-*Decode string chopt and fill Hoption structure*-*-*-*-*-*-*
-//                 ==============================================
+   // Decode string chopt and fill Hoption structure.
 
    char *l;
    char chopt[128];
@@ -547,9 +540,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
    Hoption.Off  = Hoption.Tri    = 0;
-   Hoption.Proj = 0; // added EJB
+   Hoption.Proj = 0;
 
-//    special 2-D options
+   //    special 2-D options
    Hoption.List     = 0;
    Hoption.Zscale   = 0;
    Hoption.FrontBox = 1;
@@ -684,7 +677,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strncpy(l,"   ",3); }
    l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    strncpy(l,"   ",3); }
 
-   // added EJB -->
    l = strstr(chopt,"AITOFF");
    if (l) {
       Hoption.Proj = 1; strncpy(l,"     ",6);       //Aitoff projection
@@ -705,7 +697,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Scat = 0;
       Hoption.Contour = 14;
    }
-   // <-- added EJB
 
    if (strstr(chopt,"A"))   Hoption.Axis = -1;
    if (strstr(chopt,"B"))   Hoption.Bar  = 1;
@@ -746,15 +737,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       }
    }
 
-//
-//   if (fSumw2.fN && !Hoption.Error) Hoption.Error = 2;
-
-//      Copy options from current style
+   //      Copy options from current style
    Hoption.Logx = gPad->GetLogx();
    Hoption.Logy = gPad->GetLogy();
    Hoption.Logz = gPad->GetLogz();
 
-//       Check options incompatibilities
+   //       Check options incompatibilities
    if (Hoption.Bar  == 1) Hoption.Hist = -1;
    if (Hoption.Same && Hoption.Plus) {
       Error("MakeChopt", "select only one of the options S,+");
@@ -778,8 +766,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 //______________________________________________________________________________
 Int_t THistPainter::MakeCuts(char *choptin)
 {
-//    *-*-*-*-*-*-*Decode string chopt and fill Graphical cuts structure
-//                 =====================================================
+   // Decode string chopt and fill Graphical cuts structure.
 
    fNcuts = 0;
    char *left = (char*)strchr(choptin,'[');
@@ -825,554 +812,550 @@ Int_t THistPainter::MakeCuts(char *choptin)
 //______________________________________________________________________________
 void THistPainter::Paint(Option_t *option)
 {
-//    *-*-*-*-*-*-*Control routine to paint any kind of histograms*-*-*-*-*-*-*
-//                 ===============================================
-//
-// When you call the Draw method of a histogram for the first time (TH1::Draw),
-// it creates a THistPainter object and saves a pointer to painter as a
-// data member of the histogram.
-// The THistPainter class specializes in the drawing of histograms. It is
-// separate from the histogram so that one can have histograms without
-// the graphics overhead, for example in a batch program. The choice
-// to give each histogram have its own painter rather than a central
-// singleton painter, allows two histograms to be drawn in two threads
-// without overwriting the painter's values.
-//
-// When a displayed histogram is filled again you do not have to call the Draw
-// method again. The image is refreshed the next time the pad is updated.
-// A pad is updated after one of these three actions:::Paint
-//   - a carriage control on the ROOT command line
-//   - a click inside the pad
-//   - a call to TPad::Update
-//
-// By default a call to TH1::Draw clears the pad of all objects before drawing the
-// new image of the histogram. You can use the "SAME" option to leave the previous
-// display intact and superimpose the new histogram. The same histogram can be
-// drawn with different graphics options in different pads.
-//
-// When a displayed histogram is deleted, its image is automatically removed from the pad.
-//
-// To create a copy of the histogram when drawing it, you can use TH1::DrawClone. This
-// will clone the histogram and allow you to change and delete the original one
-// without affecting the clone.
-//
-// Setting the Style
-// =================
-// Histograms use the current style (gStyle). When you change the current style and
-// would like to propagate the change to the histogram you can call TH1::UseCurrentStyle.
-// You will need to call UseCurrentStyle on each histogram.
-// When reading many histograms from a file and you wish to update them to the current
-// style you can use gROOT::ForceStyle and all histograms read after this call
-// will be updated to use the current style.
-//
-//  The following options are supported on all types:
-//  =================================================
-//    "AXIS"   : Draw only axis
-//    "AXIG"   : Draw only grid (if the grid is requested)
-//    "HIST"   : When an histogram has errors it is visualized by default with
-//               error bars. To visualize it without errors use the option HIST
-//               together with the required option (eg "hist same c")
-//    "SAME"   : Superimpose on previous picture in the same pad
-//    "CYL"    : Use Cylindrical coordinates
-//    "POL"    : Use Polar coordinates
-//    "SPH"    : Use Spherical coordinates
-//    "PSR"    : Use PseudoRapidity/Phi coordinates
-//    "LEGO"   : Draw a lego plot with hidden line removal
-//    "LEGO1"  : Draw a lego plot with hidden surface removal
-//    "LEGO2"  : Draw a lego plot using colors to show the cell contents
-//    "SURF"   : Draw a surface plot with hidden line removal
-//    "SURF1"  : Draw a surface plot with hidden surface removal
-//    "SURF2"  : Draw a surface plot using colors to show the cell contents
-//    "SURF3"  : same as SURF with in addition a contour view drawn on the top
-//    "SURF4"  : Draw a surface using Gouraud shading
-//    "SURF5"  : Same as SURF3 but only the colored contour is drawn. Used with
-//               option CYL, SPH or PSR it allows to draw colored contours on a
-//               sphere, a cylinder or a in pseudo rapidy space. In cartesian
-//               or polar coordinates, option SURF3 is used.
-//
-//  The following options are supported for 1-D types:
-//    "AH"     : Draw histogram without axis. "A" can be combined with any drawing option.
-//             : For instance, "AC" draws the histogram as a smooth Curve without axis.
-//    "]["     : When this option is selected the first and last vertical lines
-//             : of the histogram are not drawn.
-//    "B"      : Bar chart option
-//    "C"      : Draw a smooth Curve througth the histogram bins
-//    "E"      : Draw error bars
-//    "E0"     : Draw error bars including bins with o contents
-//    "E1"     : Draw error bars with perpendicular lines at the edges
-//    "E2"     : Draw error bars with rectangles
-//    "E3"     : Draw a fill area througth the end points of the vertical error bars
-//    "E4"     : Draw a smoothed filled area through the end points of the error bars
-//    "L"      : Draw a line througth the bin contents
-//    "P"      : Draw current marker at each bin except empty bins
-//    "P0"     : Draw current marker at each bin including empty bins
-//    "*H"     : Draw histogram with a * at each bin
-//    "LF2"    : Draw histogram like with option "L" but with a fill area.
-//             : Note that "L" draws also a fill area if the hist fillcolor is set
-//             : but the fill area corresponds to the histogram contour.
-//    "9"      : Force histogram to be drawn in high resolution mode.
-//             : By default, the histogram is drawn in low resolution
-//             : in case the number of bins is greater than the number of pixels
-//             : in the current pad.
-//
-//
-//  The following options are supported for 2-D types:
-//    "ARR"    : arrow mode. Shows gradient between adjacent cells
-//    "BOX"    : a box is drawn for each cell with surface proportional to the
-//               content's absolute value. A negative content is marked with a X.
-//    "BOX1"   : a button is drawn for each cell with surface proportional to 
-//               content's absolute value. A sunken button is drawn for negative values
-//               a raised one for positive.
-//    "COL"    : a box is drawn for each cell with a color scale varying with contents
-//    "COLZ"   : same as "COL". In addition the color palette is also drawn
-//    "CONT"   : Draw a contour plot (same as CONT0)
-//    "CONT0"  : Draw a contour plot using surface colors to distinguish contours
-//    "CONT1"  : Draw a contour plot using line styles to distinguish contours
-//    "CONT2"  : Draw a contour plot using the same line style for all contours
-//    "CONT3"  : Draw a contour plot using fill area colors
-//    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
-//    "CONT5"  : (TGraph2D only) Draw a contour plot using Delaunay triangles
-//    "LIST"   : Generate a list of TGraph objects for each contour
-//    "FB"     : With LEGO or SURFACE, suppress the Front-Box
-//    "BB"     : With LEGO or SURFACE, suppress the Back-Box
-//    "SCAT"   : Draw a scatter-plot (default)
-//    "TEXT"   : Draw bin contents as text
-//    "TEXTnn" : Draw bin contents as text at angle nn (0 < nn < 90)
-//    "[cutg]" : Draw only the sub-range selected by the TCutG named "cutg"
-//
-// Most options can be concatenated without spaces or commas, for example:
-//        h->Draw("E1 SAME");
-//
-// The options are not case sensitive:
-//        h->Draw("e1 same");
-//
-// The options "BOX", "COL" or "COLZ", use the color palette
-// defined in the current style (see TStyle::SeTPaletteAxis)
-//
-// The options "CONT" or "SURF" or "LEGO" have by default 20 equidistant contour
-// levels, you can change the number of levels with TH1::SetContour or
-// TStyle::SetNumberContours.
-//
-// You can also set the default drawing option with TH1::SetOption. To see the current
-// option use TH1::GetOption.
-//
-// Setting line, fill, marker, and text attributes
-// =====================================
-// The histogram classes inherit from the attribute classes:
-//    TAttLine, TAttFill, TAttMarker and TAttText.
-// See the description of these classes for the list of options.
-//
-//
-//  Setting Tick marks on the histogram axis
-//  ========================================
-// The TPad::SetTicks method specifies the type of tick marks on the axis.
-//
-// Assume tx = gPad->GetTickx() and ty = gPad->GetTicky().
-//
-//    tx = 1 ;  tick marks on top side are drawn (inside)
-//    tx = 2;   tick marks and labels on top side are drawn
-//    ty = 1;   tick marks on right side are drawn (inside)
-//    ty = 2;   tick marks and labels on right side are drawn
-// By default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
-//
-// Use TPad::SetTicks(tx,ty) to set these options
-// See also The TAxis functions to set specific axis attributes.
-//
-//  In case multiple collor filled histograms are drawn on the same pad, the fill
-//  area may hide the axis tick marks. One can force a redraw of the axis
-//  over all the histograms by calling:
-//    gPad->RedrawAxis();
-//
-//
-//  Giving titles to the X, Y and Z axis
-//  =================================
-//    h->GetXaxis()->SetTitle("X axis title");
-//    h->GetYaxis()->SetTitle("Y axis title");
-//  The histogram title and the axis titles can be any TLatex string.
-//  The titles are part of the persistent histogram.
-//
-//
-//  Superimposing two histograms with different scales in the same pad
-//  ==================================================================
-//  The following script creates two histograms, the second histogram is
-//  the bins integral of the first one. It shows a procedure to
-//  draw the two histograms in the same pad and it draws the scale of
-//  the second histogram using a new vertical axis on the right side.
-//   (see also tutorial transpad.C for a variant of this example)
-//
-//   void twoscales() {
-//    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
-//
-//     //create/fill draw h1
-//     gStyle->SetOptStat(kFALSE);
-//     TH1F *h1 = new TH1F("h1","my histogram",100,-3,3);
-//     Int_t i;
-//     for (i=0;i<10000;i++) h1->Fill(gRandom->Gaus(0,1));
-//     h1->Draw();
-//     c1->Update();
-//
-//     //create hint1 filled with the bins integral of h1
-//     TH1F *hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
-//     Float_t sum = 0;
-//     for (i=1;i<=100;i++) {
-//        sum += h1->GetBinContent(i);
-//        hint1->SetBinContent(i,sum);
-//     }
-//
-//     //scale hint1 to the pad coordinates
-//     Float_t rightmax = 1.1*hint1->GetMaximum();
-//     Float_t scale = gPad->GetUymax()/rightmax;
-//     hint1->SetLineColor(kRed);
-//     hint1->Scale(scale);
-//     hint1->Draw("same");
-//
-//     //draw an axis on the right side
-//     TGaxis *axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
-//           gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
-//     axis->SetLineColor(kRed);
-//     axis->SetTextColor(kRed);
-//     axis->Draw();
-// }
-//Begin_Html
-/*
-<img src="gif/twoscales.gif">
-*/
-//End_Html
-//
-//
-// Statistics Display
-// ======================================
-// The type of information shown in the histogram statistics box
-//  can be selected with gStyle->SetOptStat(mode).
-//
-//  The mode has up to seven digits that can be set to on(1) or off(0).
-//
-//  mode = iourmen  (default = 0001111)
-//    n = 1;  name of histogram is printed
-//    e = 1;  number of entries printed
-//    m = 1;  mean value printed
-//    r = 1;  rms printed
-//    u = 1;  number of underflows printed
-//    o = 1;  number of overflows printed
-//    i = 1;  integral of bins printed
-//
-// For example: gStyle->SetOptStat(11);
-// displays only the name of histogram and the number of entries.
-// For example: gStyle->SetOptStat(1101);
-// displays the name of histogram, mean value and RMS.
-// WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
-//          be taken as an octal number !!
-// SetOptStat can also take any combination of letters IOURMEN as its argument.
-// For example gStyle->SetOptStat("NE"), gStyle->SetOptStat("NMR") and
-// gStyle->SetOptStat("RMEN") are equivalent to the examples above.
-//
-// When the histogram is drawn, a TPaveStats object is created and added
-// to the list of functions of the histogram. If a TPaveStats object already
-// exists in the histogram list of functions, the existing object is just
-// updated with the current histogram parameters.
-// With the option "same", the statistic box is not redrawn.
-// With the option "sames", the statistic box is drawn. If it hiddes
-// the previous statistics box, you can change its position
-// with these lines (if h is the pointer to the histogram):
-//
-//  Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
-//  Root > st->SetX1NDC(newx1); //new x start position
-//  Root > st->SetX2NDC(newx2); //new x end position
-//
-// To change the type of information for an histogram with an existing TPaveStats
-// you should do: st->SetOptStat(mode) where mode has the same meaning than
-// when calling gStyle->SetOptStat(mode) (see above).
-//
-// You can delete the stats box for a histogram TH1* h with h->SetStats(0)
-// and activate it again with h->SetStats(1).
-//
-// Fit Statistics
-// ==============
-// You can change the statistics box to display the fit parameters with
-// the TStyle::SetOptFit(mode) method. This mode has four digits.
-// mode = pcev  (default = 0111)
-//    v = 1;  print name/values of parameters
-//    e = 1;  print errors (if e=1, v must be 1)
-//    c = 1;  print Chisquare/Number of degress of freedom
-//    p = 1;  print Probability
-//
-// For example: gStyle->SetOptFit(1011);
-// prints the fit probability, parameter names/values, and errors.
-//
-//
-//  The ERROR bars options
-//  ======================
-//   'E' default. Shows only the error bars, not a marker
-//   'E1' Small lines are drawn at the end of the error bars.
-//   'E2' Error rectangles are drawn.
-//   'E3' A filled area is drawn through the end points of the vertical error bars.
-//   '4' A smoothed filled area is drawn through the end points of the
-//       vertical error bars.
-//   'E0' Draw also bins with null contents.
-//Begin_Html
-/*
-<img src="gif/PaintErrors.gif">
-*/
-//End_Html
-//
-//  The BAR options
-//  ===============
-//  When the option "bar" or "hbar" is specified, a bar chart is drawn.
-//   ----Vertical BAR chart: Options "bar","bar0","bar1","bar2","bar3","bar4"
-//  The bar is filled with the histogram fill color
-//  The left side of the bar is drawn with a light fill color
-//  The right side of the bar is drawn with a dark fill color
-//  The percentage of the bar drawn with either the light or dark color
-//    is  0 per cent for option "bar" or "bar0"
-//    is 10 per cent for option "bar1"
-//    is 20 per cent for option "bar2"
-//    is 30 per cent for option "bar3"
-//    is 40 per cent for option "bar4"
-//
-//  Use TH1::SetBarWidth to control the bar width (default is the bin width)
-//  Use TH1::SetBarOffset to control the bar offset (default is 0)
-//    See example in $ROOTSYS/tutorials/hbars.C
-//Begin_Html
-/*
-<img src="gif/PaintBar.gif">
-*/
-//End_Html
-//
-//   ----Horizontal BAR chart: Options "hbar","hbar0","hbar1","hbar2","hbar3","hbar4"
-//  An horizontal bar is drawn for each bin.
-//  The bar is filled with the histogram fill color
-//  The bottom side of the bar is drawn with a light fill color
-//  The top side of the bar is drawn with a dark fill color
-//  The percentage of the bar drawn with either the light or dark color
-//    is  0 per cent for option "hbar" or "hbar0"
-//    is 10 per cent for option "hbar1"
-//    is 20 per cent for option "hbar2"
-//    is 30 per cent for option "hbar3"
-//    is 40 per cent for option "hbar4"
-//
-//  Use TH1::SetBarWidth to control the bar width (default is the bin width)
-//  Use TH1::SetBarOffset to control the bar offset (default is 0)
-//    See example in $ROOTSYS/tutorials/hbars.C
-//Begin_Html
-/*
-<img src="gif/PaintBarH.gif">
-*/
-//End_Html
-//
-//  The SCATter plot option (default for 2-D histograms)
-// =======================
-//  For each cell (i,j) a number of points proportional to the cell content is drawn.
-//  A maximum of 500 points per cell are drawn. If the maximum is above 500
-//  contents are normalized to 500.
-//
-//
-//  The ARRow option.  Shows gradient between adjacent cells
-//  ================
-//    For each cell (i,j) an arrow is drawn
-//    The orientation of the arrow follows the cell gradient
-//
-//
-//
-//  The BOX option
-//  ==============
-//    For each cell (i,j) a box is drawn with surface proportional to contents
-//
-//
-//  The COLor option
-//  ==============
-//  For each cell (i,j) a box is drawn with a color proportional
-//    to the cell content.
-//    The color table used is defined in the current style (gStyle).
-//    The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
-//Begin_Html
-/*
-<img src="gif/h2_c2h.gif">
-*/
-//End_Html
-//
-//
-//  The TEXT and TEXTnn Option
-//  ==========================
-//    For each bin the content is printed.
-//    The text attributes are:
-//      - text font = current TStyle font
-//      - text size = 0.02*padheight*markersize
-//      - text color= marker color
-//    "nn" is the angle used to draw the text (0 < nn < 90)
-//Begin_Html
-/*
-<img src="gif/h2_text.gif">
-*/
-//End_Html
-//
-//
-//  The CONTour options
-//  ===================
-//  The following contour options are supported:
-//    "CONT"   : Draw a contour plot (same as CONT0)
-//    "CONT0"  : Draw a contour plot using surface colors to distinguish contours
-//    "CONT1"  : Draw a contour plot using line styles to distinguish contours
-//    "CONT2"  : Draw a contour plot using the same line style for all contours
-//    "CONT3"  : Draw a contour plot using fill area colors
-//    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
-//    "CONT5"  : Draw a contour plot using Delaunay triangles
-//
-// The following options select the "CONT4" option and are usefull for
-// skymaps or exposure maps. (see example in tutorial earth.C)
-//    "AITOFF"     : Draw a contour via an AITOFF projection
-//    "MERCATOR"   : Draw a contour via an Mercator projection
-//    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
-//    "PARABOLIC"  : Draw a contour via an Parabolic projection
-//
-//  The default number of contour levels is 20 equidistant levels and can
-//  be changed with TH1::SetContour or TStyle::SetNumberContours.
-//
-//  When option "LIST" is specified together with option "CONT",
-//  the points used to draw the contours are saved in the TGraph object
-//  and are accessible in the following way:
-//
-//     TObjArray *contours =
-//           gROOT->GetListOfSpecials()->FindObject("contours")
-//     Int_t ncontours = contours->GetSize();
-//     TList *list = (TList*)contours->At(i);
-//
-// Where i is a contour number, and list contains a list of TGraph objects.
-// For one given contour, more than one disjoint polyline may be generated.
-// The number of TGraphs per countour is given by list->GetSize().
-// Here we show only the case to access the first graph in the list.
-//    TGraph *gr1 = (TGraph*)list->First();
-//
-//Begin_Html
-/*
-<img src="gif/h2_cont.gif">
-*/
-//End_Html
-//
-//
-//
-//  The LEGO options
-//  ================
-//    In a lego plot the cell contents are drawn as 3-d boxes, with
-//    the height of the box proportional to the cell content.
-//    A lego plot can be represented in several coordinate systems, the
-//    default system is Cartesian coordinates.
-//    Other possible coordinate systems are CYL,POL,SPH,PSR.
-//
-//    "LEGO"   : Draw a lego plot with hidden line removal
-//    "LEGO1"  : Draw a lego plot with hidden surface removal
-//    "LEGO2"  : Draw a lego plot using colors to show the cell contents
-//
-//      See TStyle::SeTPaletteAxis to change the color palette.
-//      We suggest you use palette 1 with the call
-//        gStyle->SetColorPalette(1)
-//
-//Begin_Html
-/*
-<img src="gif/h2_lego.gif">
-*/
-//End_Html
-//
-//
-//   The "SURFace" options
-//   =====================
-//  In a surface plot, cell contents are represented as a mesh.
-//     The height of the mesh is proportional to the cell content.
-//
-//  A surface plot can be represented in several coordinate systems.
-//  The default is cartesian coordinates, and the other possible systems
-//  are CYL,POL,SPH,PSR.
-//
-//    "SURF"   : Draw a surface plot with hidden line removal
-//    "SURF1"  : Draw a surface plot with hidden surface removal
-//    "SURF2"  : Draw a surface plot using colors to show the cell contents
-//    "SURF3"  : same as SURF with in addition a contour view drawn on the top
-//    "SURF4"  : Draw a surface using Gouraud shading
-//
-//  The following picture uses SURF1.
-//
-//      See TStyle::SeTPaletteAxis to change the color palette.
-//      We suggest you use palette 1 with the call
-//      gStyle->SetColorPalette(1)
-//
-//Begin_Html
-/*
-<img src="gif/h2_surf.gif">
-*/
-//End_Html
-//
-//
-//  Option "Z" : Adding the color palette on the right side of the pad
-//  ==================================================================
-// When this option is specified, a color palette with an axis indicating
-// the value of the corresponding color is drawn on the right side of
-// the picture. In case, not enough space is left, you can increase the size
-// of the right margin by calling TPad::SetRightMargin.
-// The attributes used to display the palette axis values are taken from
-// the Z axis of the object. For example, you can set the labels size
-// on the palette axis via hist->GetZaxis()->SetLabelSize().
-//
-//  Setting the color palette
-//  =========================
-// You can set the color palette with TStyle::SeTPaletteAxis, eg
-//
-//      gStyle->SeTPaletteAxis(ncolors,colors);
-//
-// For example the option "COL" draws a 2-D histogram with cells
-// represented by a box filled with a color index which is a function
-// of the cell content.
-// If the cell content is N, the color index used will be the color number
-// in colors[N],etc. If the maximum cell content is > ncolors, all
-// cell contents are scaled to ncolors.
-//
-// if ncolors <= 0, a default palette (see below) of 50 colors is defined.
-// This palette is recommended for pads, labels
-//
-// if ncolors == 1 && colors == 0, a pretty palette with a violet to red
-// spectrum is created. We recommend you use this palette when drawing legos,
-// surfaces or contours.
-//
-// if ncolors > 0 and colors == 0, the default palette is used
-// with a maximum of ncolors.
-//
-// The default palette defines:
-//   index  0  to  9 : shades of grey
-//   index 10  to 19 : shades of brown
-//   index 20  to 29 : shades of blue
-//   index 30  to 39 : shades of red
-//   index 40  to 49 : basic colors
-//
-//  The color numbers specified in the palette can be viewed by selecting
-//  the item "colors" in the "VIEW" menu of the canvas toolbar.
-//  The color'a red, green, and blue values can be changed via TColor::SetRGB.
-//
-//   Drawing a sub-range of a 2-D histogram; the [cutg] option
-//   =========================================================
-//   Using a TCutG object, it is possible to draw a sub-range of a 2-D histogram.
-//   One must create a graphical cut (mouse or C++) and specify the name
-//   of the cut between [] in the Draw option.
-//   For example, with a TCutG named "cutg", one can call:
-//      myhist->Draw("surf1 [cutg]");
-//   To invert the cut, it is enough to put a "-" in front of its name:
-//      myhist->Draw("surf1 [-cutg]");
-//   It is possible to apply several cuts ("," means logical AND):
-//      myhist->Draw("surf1 [cutg1,cutg2]");
-//   See a complete example in the tutorial fit2a.C. This example produces
-//   the following picture:
-//
-//Begin_Html
-/*
-<img src="gif/h2_surf_cutg.gif">
-*/
-//End_Html
-//
-//   Drawing options for 3-D histograms
-//   ==================================
-//   By default a 3-d scatter plot is drawn
-//   If option "BOX" is specified, a 3-D box with a volume proportional
-//   to the cell content is drawn.
-//
-//
-//--------------------------------------------------------------------
+   // Control routine to paint any kind of histograms.
+   //
+   // When you call the Draw method of a histogram for the first time (TH1::Draw),
+   // it creates a THistPainter object and saves a pointer to painter as a
+   // data member of the histogram.
+   // The THistPainter class specializes in the drawing of histograms. It is
+   // separate from the histogram so that one can have histograms without
+   // the graphics overhead, for example in a batch program. The choice
+   // to give each histogram have its own painter rather than a central
+   // singleton painter, allows two histograms to be drawn in two threads
+   // without overwriting the painter's values.
+   //
+   // When a displayed histogram is filled again you do not have to call the Draw
+   // method again. The image is refreshed the next time the pad is updated.
+   // A pad is updated after one of these three actions:::Paint
+   //   - a carriage control on the ROOT command line
+   //   - a click inside the pad
+   //   - a call to TPad::Update
+   //
+   // By default a call to TH1::Draw clears the pad of all objects before drawing the
+   // new image of the histogram. You can use the "SAME" option to leave the previous
+   // display intact and superimpose the new histogram. The same histogram can be
+   // drawn with different graphics options in different pads.
+   //
+   // When a displayed histogram is deleted, its image is automatically removed from the pad.
+   //
+   // To create a copy of the histogram when drawing it, you can use TH1::DrawClone. This
+   // will clone the histogram and allow you to change and delete the original one
+   // without affecting the clone.
+   //
+   // Setting the Style
+   // =================
+   // Histograms use the current style (gStyle). When you change the current style and
+   // would like to propagate the change to the histogram you can call TH1::UseCurrentStyle.
+   // You will need to call UseCurrentStyle on each histogram.
+   // When reading many histograms from a file and you wish to update them to the current
+   // style you can use gROOT::ForceStyle and all histograms read after this call
+   // will be updated to use the current style.
+   //
+   //  The following options are supported on all types:
+   //  =================================================
+   //    "AXIS"   : Draw only axis
+   //    "AXIG"   : Draw only grid (if the grid is requested)
+   //    "HIST"   : When an histogram has errors it is visualized by default with
+   //               error bars. To visualize it without errors use the option HIST
+   //               together with the required option (eg "hist same c")
+   //    "SAME"   : Superimpose on previous picture in the same pad
+   //    "CYL"    : Use Cylindrical coordinates
+   //    "POL"    : Use Polar coordinates
+   //    "SPH"    : Use Spherical coordinates
+   //    "PSR"    : Use PseudoRapidity/Phi coordinates
+   //    "LEGO"   : Draw a lego plot with hidden line removal
+   //    "LEGO1"  : Draw a lego plot with hidden surface removal
+   //    "LEGO2"  : Draw a lego plot using colors to show the cell contents
+   //    "SURF"   : Draw a surface plot with hidden line removal
+   //    "SURF1"  : Draw a surface plot with hidden surface removal
+   //    "SURF2"  : Draw a surface plot using colors to show the cell contents
+   //    "SURF3"  : same as SURF with in addition a contour view drawn on the top
+   //    "SURF4"  : Draw a surface using Gouraud shading
+   //    "SURF5"  : Same as SURF3 but only the colored contour is drawn. Used with
+   //               option CYL, SPH or PSR it allows to draw colored contours on a
+   //               sphere, a cylinder or a in pseudo rapidy space. In cartesian
+   //               or polar coordinates, option SURF3 is used.
+   //
+   //  The following options are supported for 1-D types:
+   //    "AH"     : Draw histogram without axis. "A" can be combined with any drawing option.
+   //             : For instance, "AC" draws the histogram as a smooth Curve without axis.
+   //    "]["     : When this option is selected the first and last vertical lines
+   //             : of the histogram are not drawn.
+   //    "B"      : Bar chart option
+   //    "C"      : Draw a smooth Curve througth the histogram bins
+   //    "E"      : Draw error bars
+   //    "E0"     : Draw error bars including bins with o contents
+   //    "E1"     : Draw error bars with perpendicular lines at the edges
+   //    "E2"     : Draw error bars with rectangles
+   //    "E3"     : Draw a fill area througth the end points of the vertical error bars
+   //    "E4"     : Draw a smoothed filled area through the end points of the error bars
+   //    "L"      : Draw a line througth the bin contents
+   //    "P"      : Draw current marker at each bin except empty bins
+   //    "P0"     : Draw current marker at each bin including empty bins
+   //    "*H"     : Draw histogram with a * at each bin
+   //    "LF2"    : Draw histogram like with option "L" but with a fill area.
+   //             : Note that "L" draws also a fill area if the hist fillcolor is set
+   //             : but the fill area corresponds to the histogram contour.
+   //    "9"      : Force histogram to be drawn in high resolution mode.
+   //             : By default, the histogram is drawn in low resolution
+   //             : in case the number of bins is greater than the number of pixels
+   //             : in the current pad.
+   //
+   //
+   //  The following options are supported for 2-D types:
+   //    "ARR"    : arrow mode. Shows gradient between adjacent cells
+   //    "BOX"    : a box is drawn for each cell with surface proportional to the
+   //               content's absolute value. A negative content is marked with a X.
+   //    "BOX1"   : a button is drawn for each cell with surface proportional to 
+   //               content's absolute value. A sunken button is drawn for negative values
+   //               a raised one for positive.
+   //    "COL"    : a box is drawn for each cell with a color scale varying with contents
+   //    "COLZ"   : same as "COL". In addition the color palette is also drawn
+   //    "CONT"   : Draw a contour plot (same as CONT0)
+   //    "CONT0"  : Draw a contour plot using surface colors to distinguish contours
+   //    "CONT1"  : Draw a contour plot using line styles to distinguish contours
+   //    "CONT2"  : Draw a contour plot using the same line style for all contours
+   //    "CONT3"  : Draw a contour plot using fill area colors
+   //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
+   //    "CONT5"  : (TGraph2D only) Draw a contour plot using Delaunay triangles
+   //    "LIST"   : Generate a list of TGraph objects for each contour
+   //    "FB"     : With LEGO or SURFACE, suppress the Front-Box
+   //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
+   //    "SCAT"   : Draw a scatter-plot (default)
+   //    "TEXT"   : Draw bin contents as text
+   //    "TEXTnn" : Draw bin contents as text at angle nn (0 < nn < 90)
+   //    "[cutg]" : Draw only the sub-range selected by the TCutG named "cutg"
+   //
+   // Most options can be concatenated without spaces or commas, for example:
+   //        h->Draw("E1 SAME");
+   //
+   // The options are not case sensitive:
+   //        h->Draw("e1 same");
+   //
+   // The options "BOX", "COL" or "COLZ", use the color palette
+   // defined in the current style (see TStyle::SeTPaletteAxis)
+   //
+   // The options "CONT" or "SURF" or "LEGO" have by default 20 equidistant contour
+   // levels, you can change the number of levels with TH1::SetContour or
+   // TStyle::SetNumberContours.
+   //
+   // You can also set the default drawing option with TH1::SetOption. To see the current
+   // option use TH1::GetOption.
+   //
+   // Setting line, fill, marker, and text attributes
+   // =====================================
+   // The histogram classes inherit from the attribute classes:
+   //    TAttLine, TAttFill, TAttMarker and TAttText.
+   // See the description of these classes for the list of options.
+   //
+   //
+   //  Setting Tick marks on the histogram axis
+   //  ========================================
+   // The TPad::SetTicks method specifies the type of tick marks on the axis.
+   //
+   // Assume tx = gPad->GetTickx() and ty = gPad->GetTicky().
+   //
+   //    tx = 1 ;  tick marks on top side are drawn (inside)
+   //    tx = 2;   tick marks and labels on top side are drawn
+   //    ty = 1;   tick marks on right side are drawn (inside)
+   //    ty = 2;   tick marks and labels on right side are drawn
+   // By default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
+   //
+   // Use TPad::SetTicks(tx,ty) to set these options
+   // See also The TAxis functions to set specific axis attributes.
+   //
+   //  In case multiple collor filled histograms are drawn on the same pad, the fill
+   //  area may hide the axis tick marks. One can force a redraw of the axis
+   //  over all the histograms by calling:
+   //    gPad->RedrawAxis();
+   //
+   //
+   //  Giving titles to the X, Y and Z axis
+   //  =================================
+   //    h->GetXaxis()->SetTitle("X axis title");
+   //    h->GetYaxis()->SetTitle("Y axis title");
+   //  The histogram title and the axis titles can be any TLatex string.
+   //  The titles are part of the persistent histogram.
+   //
+   //
+   //  Superimposing two histograms with different scales in the same pad
+   //  ==================================================================
+   //  The following script creates two histograms, the second histogram is
+   //  the bins integral of the first one. It shows a procedure to
+   //  draw the two histograms in the same pad and it draws the scale of
+   //  the second histogram using a new vertical axis on the right side.
+   //   (see also tutorial transpad.C for a variant of this example)
+   //
+   //   void twoscales() {
+   //    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
+   //
+   //     //create/fill draw h1
+   //     gStyle->SetOptStat(kFALSE);
+   //     TH1F *h1 = new TH1F("h1","my histogram",100,-3,3);
+   //     Int_t i;
+   //     for (i=0;i<10000;i++) h1->Fill(gRandom->Gaus(0,1));
+   //     h1->Draw();
+   //     c1->Update();
+   //
+   //     //create hint1 filled with the bins integral of h1
+   //     TH1F *hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
+   //     Float_t sum = 0;
+   //     for (i=1;i<=100;i++) {
+   //        sum += h1->GetBinContent(i);
+   //        hint1->SetBinContent(i,sum);
+   //     }
+   //
+   //     //scale hint1 to the pad coordinates
+   //     Float_t rightmax = 1.1*hint1->GetMaximum();
+   //     Float_t scale = gPad->GetUymax()/rightmax;
+   //     hint1->SetLineColor(kRed);
+   //     hint1->Scale(scale);
+   //     hint1->Draw("same");
+   //
+   //     //draw an axis on the right side
+   //     TGaxis *axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
+   //           gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
+   //     axis->SetLineColor(kRed);
+   //     axis->SetTextColor(kRed);
+   //     axis->Draw();
+   // }
+   //Begin_Html
+   /*
+   <img src="gif/twoscales.gif">
+   */
+   //End_Html
+   //
+   //
+   // Statistics Display
+   // ======================================
+   // The type of information shown in the histogram statistics box
+   //  can be selected with gStyle->SetOptStat(mode).
+   //
+   //  The mode has up to seven digits that can be set to on(1) or off(0).
+   //
+   //  mode = iourmen  (default = 0001111)
+   //    n = 1;  name of histogram is printed
+   //    e = 1;  number of entries printed
+   //    m = 1;  mean value printed
+   //    r = 1;  rms printed
+   //    u = 1;  number of underflows printed
+   //    o = 1;  number of overflows printed
+   //    i = 1;  integral of bins printed
+   //
+   // For example: gStyle->SetOptStat(11);
+   // displays only the name of histogram and the number of entries.
+   // For example: gStyle->SetOptStat(1101);
+   // displays the name of histogram, mean value and RMS.
+   // WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
+   //          be taken as an octal number !!
+   // SetOptStat can also take any combination of letters IOURMEN as its argument.
+   // For example gStyle->SetOptStat("NE"), gStyle->SetOptStat("NMR") and
+   // gStyle->SetOptStat("RMEN") are equivalent to the examples above.
+   //
+   // When the histogram is drawn, a TPaveStats object is created and added
+   // to the list of functions of the histogram. If a TPaveStats object already
+   // exists in the histogram list of functions, the existing object is just
+   // updated with the current histogram parameters.
+   // With the option "same", the statistic box is not redrawn.
+   // With the option "sames", the statistic box is drawn. If it hiddes
+   // the previous statistics box, you can change its position
+   // with these lines (if h is the pointer to the histogram):
+   //
+   //  Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
+   //  Root > st->SetX1NDC(newx1); //new x start position
+   //  Root > st->SetX2NDC(newx2); //new x end position
+   //
+   // To change the type of information for an histogram with an existing TPaveStats
+   // you should do: st->SetOptStat(mode) where mode has the same meaning than
+   // when calling gStyle->SetOptStat(mode) (see above).
+   //
+   // You can delete the stats box for a histogram TH1* h with h->SetStats(0)
+   // and activate it again with h->SetStats(1).
+   //
+   // Fit Statistics
+   // ==============
+   // You can change the statistics box to display the fit parameters with
+   // the TStyle::SetOptFit(mode) method. This mode has four digits.
+   // mode = pcev  (default = 0111)
+   //    v = 1;  print name/values of parameters
+   //    e = 1;  print errors (if e=1, v must be 1)
+   //    c = 1;  print Chisquare/Number of degress of freedom
+   //    p = 1;  print Probability
+   //
+   // For example: gStyle->SetOptFit(1011);
+   // prints the fit probability, parameter names/values, and errors.
+   //
+   //
+   //  The ERROR bars options
+   //  ======================
+   //   'E' default. Shows only the error bars, not a marker
+   //   'E1' Small lines are drawn at the end of the error bars.
+   //   'E2' Error rectangles are drawn.
+   //   'E3' A filled area is drawn through the end points of the vertical error bars.
+   //   '4' A smoothed filled area is drawn through the end points of the
+   //       vertical error bars.
+   //   'E0' Draw also bins with null contents.
+   //Begin_Html
+   /*
+   <img src="gif/PaintErrors.gif">
+   */
+   //End_Html
+   //
+   //  The BAR options
+   //  ===============
+   //  When the option "bar" or "hbar" is specified, a bar chart is drawn.
+   //   ----Vertical BAR chart: Options "bar","bar0","bar1","bar2","bar3","bar4"
+   //  The bar is filled with the histogram fill color
+   //  The left side of the bar is drawn with a light fill color
+   //  The right side of the bar is drawn with a dark fill color
+   //  The percentage of the bar drawn with either the light or dark color
+   //    is  0 per cent for option "bar" or "bar0"
+   //    is 10 per cent for option "bar1"
+   //    is 20 per cent for option "bar2"
+   //    is 30 per cent for option "bar3"
+   //    is 40 per cent for option "bar4"
+   //
+   //  Use TH1::SetBarWidth to control the bar width (default is the bin width)
+   //  Use TH1::SetBarOffset to control the bar offset (default is 0)
+   //    See example in $ROOTSYS/tutorials/hbars.C
+   //Begin_Html
+   /*
+   <img src="gif/PaintBar.gif">
+   */
+   //End_Html
+   //
+   //   ----Horizontal BAR chart: Options "hbar","hbar0","hbar1","hbar2","hbar3","hbar4"
+   //  An horizontal bar is drawn for each bin.
+   //  The bar is filled with the histogram fill color
+   //  The bottom side of the bar is drawn with a light fill color
+   //  The top side of the bar is drawn with a dark fill color
+   //  The percentage of the bar drawn with either the light or dark color
+   //    is  0 per cent for option "hbar" or "hbar0"
+   //    is 10 per cent for option "hbar1"
+   //    is 20 per cent for option "hbar2"
+   //    is 30 per cent for option "hbar3"
+   //    is 40 per cent for option "hbar4"
+   //
+   //  Use TH1::SetBarWidth to control the bar width (default is the bin width)
+   //  Use TH1::SetBarOffset to control the bar offset (default is 0)
+   //    See example in $ROOTSYS/tutorials/hbars.C
+   //Begin_Html
+   /*
+   <img src="gif/PaintBarH.gif">
+   */
+   //End_Html
+   //
+   //  The SCATter plot option (default for 2-D histograms)
+   // =======================
+   //  For each cell (i,j) a number of points proportional to the cell content is drawn.
+   //  A maximum of 500 points per cell are drawn. If the maximum is above 500
+   //  contents are normalized to 500.
+   //
+   //
+   //  The ARRow option.  Shows gradient between adjacent cells
+   //  ================
+   //    For each cell (i,j) an arrow is drawn
+   //    The orientation of the arrow follows the cell gradient
+   //
+   //
+   //
+   //  The BOX option
+   //  ==============
+   //    For each cell (i,j) a box is drawn with surface proportional to contents
+   //
+   //
+   //  The COLor option
+   //  ==============
+   //  For each cell (i,j) a box is drawn with a color proportional
+   //    to the cell content.
+   //    The color table used is defined in the current style (gStyle).
+   //    The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
+   //Begin_Html
+   /*
+   <img src="gif/h2_c2h.gif">
+   */
+   //End_Html
+   //
+   //
+   //  The TEXT and TEXTnn Option
+   //  ==========================
+   //    For each bin the content is printed.
+   //    The text attributes are:
+   //      - text font = current TStyle font
+   //      - text size = 0.02*padheight*markersize
+   //      - text color= marker color
+   //    "nn" is the angle used to draw the text (0 < nn < 90)
+   //Begin_Html
+   /*
+   <img src="gif/h2_text.gif">
+   */
+   //End_Html
+   //
+   //
+   //  The CONTour options
+   //  ===================
+   //  The following contour options are supported:
+   //    "CONT"   : Draw a contour plot (same as CONT0)
+   //    "CONT0"  : Draw a contour plot using surface colors to distinguish contours
+   //    "CONT1"  : Draw a contour plot using line styles to distinguish contours
+   //    "CONT2"  : Draw a contour plot using the same line style for all contours
+   //    "CONT3"  : Draw a contour plot using fill area colors
+   //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
+   //    "CONT5"  : Draw a contour plot using Delaunay triangles
+   //
+   // The following options select the "CONT4" option and are usefull for
+   // skymaps or exposure maps. (see example in tutorial earth.C)
+   //    "AITOFF"     : Draw a contour via an AITOFF projection
+   //    "MERCATOR"   : Draw a contour via an Mercator projection
+   //    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
+   //    "PARABOLIC"  : Draw a contour via an Parabolic projection
+   //
+   //  The default number of contour levels is 20 equidistant levels and can
+   //  be changed with TH1::SetContour or TStyle::SetNumberContours.
+   //
+   //  When option "LIST" is specified together with option "CONT",
+   //  the points used to draw the contours are saved in the TGraph object
+   //  and are accessible in the following way:
+   //
+   //     TObjArray *contours =
+   //           gROOT->GetListOfSpecials()->FindObject("contours")
+   //     Int_t ncontours = contours->GetSize();
+   //     TList *list = (TList*)contours->At(i);
+   //
+   // Where i is a contour number, and list contains a list of TGraph objects.
+   // For one given contour, more than one disjoint polyline may be generated.
+   // The number of TGraphs per countour is given by list->GetSize().
+   // Here we show only the case to access the first graph in the list.
+   //    TGraph *gr1 = (TGraph*)list->First();
+   //
+   //Begin_Html
+   /*
+   <img src="gif/h2_cont.gif">
+   */
+   //End_Html
+   //
+   //
+   //
+   //  The LEGO options
+   //  ================
+   //    In a lego plot the cell contents are drawn as 3-d boxes, with
+   //    the height of the box proportional to the cell content.
+   //    A lego plot can be represented in several coordinate systems, the
+   //    default system is Cartesian coordinates.
+   //    Other possible coordinate systems are CYL,POL,SPH,PSR.
+   //
+   //    "LEGO"   : Draw a lego plot with hidden line removal
+   //    "LEGO1"  : Draw a lego plot with hidden surface removal
+   //    "LEGO2"  : Draw a lego plot using colors to show the cell contents
+   //
+   //      See TStyle::SeTPaletteAxis to change the color palette.
+   //      We suggest you use palette 1 with the call
+   //        gStyle->SetColorPalette(1)
+   //
+   //Begin_Html
+   /*
+   <img src="gif/h2_lego.gif">
+   */
+   //End_Html
+   //
+   //
+   //   The "SURFace" options
+   //   =====================
+   //  In a surface plot, cell contents are represented as a mesh.
+   //     The height of the mesh is proportional to the cell content.
+   //
+   //  A surface plot can be represented in several coordinate systems.
+   //  The default is cartesian coordinates, and the other possible systems
+   //  are CYL,POL,SPH,PSR.
+   //
+   //    "SURF"   : Draw a surface plot with hidden line removal
+   //    "SURF1"  : Draw a surface plot with hidden surface removal
+   //    "SURF2"  : Draw a surface plot using colors to show the cell contents
+   //    "SURF3"  : same as SURF with in addition a contour view drawn on the top
+   //    "SURF4"  : Draw a surface using Gouraud shading
+   //
+   //  The following picture uses SURF1.
+   //
+   //      See TStyle::SeTPaletteAxis to change the color palette.
+   //      We suggest you use palette 1 with the call
+   //      gStyle->SetColorPalette(1)
+   //
+   //Begin_Html
+   /*
+   <img src="gif/h2_surf.gif">
+   */
+   //End_Html
+   //
+   //
+   //  Option "Z" : Adding the color palette on the right side of the pad
+   //  ==================================================================
+   // When this option is specified, a color palette with an axis indicating
+   // the value of the corresponding color is drawn on the right side of
+   // the picture. In case, not enough space is left, you can increase the size
+   // of the right margin by calling TPad::SetRightMargin.
+   // The attributes used to display the palette axis values are taken from
+   // the Z axis of the object. For example, you can set the labels size
+   // on the palette axis via hist->GetZaxis()->SetLabelSize().
+   //
+   //  Setting the color palette
+   //  =========================
+   // You can set the color palette with TStyle::SeTPaletteAxis, eg
+   //
+   //      gStyle->SeTPaletteAxis(ncolors,colors);
+   //
+   // For example the option "COL" draws a 2-D histogram with cells
+   // represented by a box filled with a color index which is a function
+   // of the cell content.
+   // If the cell content is N, the color index used will be the color number
+   // in colors[N],etc. If the maximum cell content is > ncolors, all
+   // cell contents are scaled to ncolors.
+   //
+   // if ncolors <= 0, a default palette (see below) of 50 colors is defined.
+   // This palette is recommended for pads, labels
+   //
+   // if ncolors == 1 && colors == 0, a pretty palette with a violet to red
+   // spectrum is created. We recommend you use this palette when drawing legos,
+   // surfaces or contours.
+   //
+   // if ncolors > 0 and colors == 0, the default palette is used
+   // with a maximum of ncolors.
+   //
+   // The default palette defines:
+   //   index  0  to  9 : shades of grey
+   //   index 10  to 19 : shades of brown
+   //   index 20  to 29 : shades of blue
+   //   index 30  to 39 : shades of red
+   //   index 40  to 49 : basic colors
+   //
+   //  The color numbers specified in the palette can be viewed by selecting
+   //  the item "colors" in the "VIEW" menu of the canvas toolbar.
+   //  The color'a red, green, and blue values can be changed via TColor::SetRGB.
+   //
+   //   Drawing a sub-range of a 2-D histogram; the [cutg] option
+   //   =========================================================
+   //   Using a TCutG object, it is possible to draw a sub-range of a 2-D histogram.
+   //   One must create a graphical cut (mouse or C++) and specify the name
+   //   of the cut between [] in the Draw option.
+   //   For example, with a TCutG named "cutg", one can call:
+   //      myhist->Draw("surf1 [cutg]");
+   //   To invert the cut, it is enough to put a "-" in front of its name:
+   //      myhist->Draw("surf1 [-cutg]");
+   //   It is possible to apply several cuts ("," means logical AND):
+   //      myhist->Draw("surf1 [cutg1,cutg2]");
+   //   See a complete example in the tutorial fit2a.C. This example produces
+   //   the following picture:
+   //
+   //Begin_Html
+   /*
+   <img src="gif/h2_surf_cutg.gif">
+   */
+   //End_Html
+   //
+   //   Drawing options for 3-D histograms
+   //   ==================================
+   //   By default a 3-d scatter plot is drawn
+   //   If option "BOX" is specified, a 3-D box with a volume proportional
+   //   to the cell content is drawn.
 
    if (fH->GetBuffer()) fH->BufferEmpty(-1);
 
@@ -1410,6 +1393,17 @@ void THistPainter::Paint(Option_t *option)
       }
    }
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) {
+      // In case of 1D histogram, Z axis becomes Y axis.
+      Int_t logysav, logzsav;
+      if (fH->GetDimension() == 1) {
+         logysav = Hoption.Logy;
+         logzsav = Hoption.Logz;
+         Hoption.Logz = 0;
+         if (Hoption.Logy) {
+            Hoption.Logz = 1;
+            Hoption.Logy = 0;
+         }
+      }
       PaintTable(option);
       fH->SetMinimum(minsav);
       if (Hoption.Func) {
@@ -1422,6 +1416,10 @@ void THistPainter::Paint(Option_t *option)
       }
       gCurrentHist = oldhist;
       delete [] fXbuf; delete [] fYbuf;
+      if (fH->GetDimension() == 1) {
+         Hoption.Logy = logysav;
+         Hoption.Logz = logzsav;
+      }
       return;
    }
 
@@ -1430,18 +1428,17 @@ void THistPainter::Paint(Option_t *option)
       return;
    }
 
-//fill Hparam structure with histo parameters
+   // fill Hparam structure with histo parameters
    if (!PaintInit()) {
       delete [] fXbuf; delete [] fYbuf;
       return;
    }
 
-//          Picture surround (if new page) and page number (if requested).
-//          Histogram surround (if not option "Same").
-
+   //          Picture surround (if new page) and page number (if requested).
+   //          Histogram surround (if not option "Same").
    PaintFrame();
-//    -----
-//          Paint histogram axis only
+
+   //          Paint histogram axis only
    Bool_t gridx = gPad->GetGridx();
    Bool_t gridy = gPad->GetGridy();
    if (Hoption.Axis > 0) {
@@ -1458,19 +1455,17 @@ void THistPainter::Paint(Option_t *option)
    }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
 
-//    -----
-//          test for options BAR or HBAR
+   //          test for options BAR or HBAR
    if (Hoption.Bar >= 10) {
       PaintBar(option);
    }
-//    -----
-//          do not draw histogram if error bars required
+
+   //          do not draw histogram if error bars required
    if (!Hoption.Error) {
       if (Hoption.Hist) PaintHist(option);
    }
-//    -----
 
-//         test for error bars or option E
+   //         test for error bars or option E
    if (Hoption.Error) {
       PaintErrors(option);
       if (Hoption.Hist == 2) PaintHist(option);
@@ -1478,7 +1473,7 @@ void THistPainter::Paint(Option_t *option)
 
    if (Hoption.Text) PaintText(option);
 
-//         test for associated function
+   //         test for associated function
    if (Hoption.Func) {
       Hoption_t hoptsave = Hoption;
       Hparam_t  hparsave = Hparam;
@@ -1517,18 +1512,16 @@ paintstat:
 //______________________________________________________________________________
 void THistPainter::PaintArrows(Option_t *)
 {
-//    *-*-*-*-*-*Control function to draw a table as an arrow plot*-*-*-*-*-*
-//               =================================================
-//
-//       For each cell (i,j) an arrow is drawn
-//       The orientation of the arrow follows the cell gradient
-//Begin_Html
-/*
-<img src="gif/PaintArrows.gif">
-*/
-//End_Html
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Control function to draw a table as an arrow plot.
+   //
+   //       For each cell (i,j) an arrow is drawn
+   //       The orientation of the arrow follows the cell gradient
+   //Begin_Html
+   /*
+   <img src="gif/PaintArrows.gif">
+   */
+   //End_Html
+
    Style_t linesav   = fH->GetLineStyle();
    Width_t widthsav  = fH->GetLineWidth();
    fH->SetLineStyle(1);
@@ -1738,7 +1731,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
          umin = Hparam.ymin;
          umax = Hparam.ymax;
       } else {
-         umin = aymin; 	   
+         umin = aymin;
          umax = aymax;
       }
    }
@@ -1780,30 +1773,31 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 //______________________________________________________________________________
 void THistPainter::PaintBar(Option_t *)
 {
-//  Draw a bar chart in a normal pad.
-//     (see PaintBarH to draw a bar chart in a rotated pad)
-// This function is called by THistPainter::Paint when the option "bar"
-// has been specified.
-//
-// A vertical bar is drawn for each bin.
-// The bar is filled with the histogram fill color
-// The left side of the bar is drawn with a light fill color
-// The right side of the bar is drawn with a dark fill color
-// The percentage of the bar drawn with either the light or dark color
-//   is  0 per cent for option "bar" or "bar0"
-//   is 10 per cent for option "bar1"
-//   is 20 per cent for option "bar2"
-//   is 30 per cent for option "bar3"
-//   is 40 per cent for option "bar4"
-//
-// Use TH1::SetBarWidth to control the bar width (default is the bin width)
-// Use TH1::SetBarOffset to control the bar offset (default is 0)
-//   See example in $ROOTSYS/tutorials/hbars.C
-//Begin_Html
-/*
-<img src="gif/PaintBar.gif">
-*/
-//End_Html
+   //  Draw a bar chart in a normal pad.
+   //     (see PaintBarH to draw a bar chart in a rotated pad)
+   //
+   // This function is called by THistPainter::Paint when the option "bar"
+   // has been specified.
+   //
+   // A vertical bar is drawn for each bin.
+   // The bar is filled with the histogram fill color
+   // The left side of the bar is drawn with a light fill color
+   // The right side of the bar is drawn with a dark fill color
+   // The percentage of the bar drawn with either the light or dark color
+   //   is  0 per cent for option "bar" or "bar0"
+   //   is 10 per cent for option "bar1"
+   //   is 20 per cent for option "bar2"
+   //   is 30 per cent for option "bar3"
+   //   is 40 per cent for option "bar4"
+   //
+   // Use TH1::SetBarWidth to control the bar width (default is the bin width)
+   // Use TH1::SetBarOffset to control the bar offset (default is 0)
+   //   See example in $ROOTSYS/tutorials/hbars.C
+   //Begin_Html
+   /*
+   <img src="gif/PaintBar.gif">
+   */
+   //End_Html
 
    Int_t bar = Hoption.Bar - 10;
    Double_t xmin,xmax,ymin,ymax,umin,umax,w,y;
@@ -1844,30 +1838,31 @@ void THistPainter::PaintBar(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintBarH(Option_t *)
 {
-// Draw a bar char in a rotated pad (X vertical, Y horizontal)
-//     (see PaintBar to draw a bar chart in a normal pad)
-// This function is called by THistPainter::Paint when the option "hbar"
-// has been specified.
-//
-// An horizontal bar is drawn for each bin.
-// The bar is filled with the histogram fill color
-// The bottom side of the bar is drawn with a light fill color
-// The top side of the bar is drawn with a dark fill color
-// The percentage of the bar drawn with either the light or dark color
-//   is  0 per cent for option "hbar" or "hbar0"
-//   is 10 per cent for option "hbar1"
-//   is 20 per cent for option "hbar2"
-//   is 30 per cent for option "hbar3"
-//   is 40 per cent for option "hbar4"
-//
-// Use TH1::SetBarWidth to control the bar width (default is the bin width)
-// Use TH1::SetBarOffset to control the bar offset (default is 0)
-//   See example in $ROOTSYS/tutorials/hbars.C
-//Begin_Html
-/*
-<img src="gif/PaintBarH.gif">
-*/
-//End_Html
+   // Draw a bar char in a rotated pad (X vertical, Y horizontal)
+   //     (see PaintBar to draw a bar chart in a normal pad)
+   //
+   // This function is called by THistPainter::Paint when the option "hbar"
+   // has been specified.
+   //
+   // An horizontal bar is drawn for each bin.
+   // The bar is filled with the histogram fill color
+   // The bottom side of the bar is drawn with a light fill color
+   // The top side of the bar is drawn with a dark fill color
+   // The percentage of the bar drawn with either the light or dark color
+   //   is  0 per cent for option "hbar" or "hbar0"
+   //   is 10 per cent for option "hbar1"
+   //   is 20 per cent for option "hbar2"
+   //   is 30 per cent for option "hbar3"
+   //   is 40 per cent for option "hbar4"
+   //
+   // Use TH1::SetBarWidth to control the bar width (default is the bin width)
+   // Use TH1::SetBarOffset to control the bar offset (default is 0)
+   //   See example in $ROOTSYS/tutorials/hbars.C
+   //Begin_Html
+   /*
+   <img src="gif/PaintBarH.gif">
+   */
+   //End_Html
 
    gPad->SetVertical(kFALSE);
 
@@ -1935,25 +1930,24 @@ void THistPainter::PaintBarH(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintBoxes(Option_t *)
 {
-// *Control function to draw a table as a box plot
-//
-// For each cell (i,j) a box is drawn.
-// The size of the box is proportional to the absolute value of the cell content.
-// The cells with a negative content draw with a X on top of the boxes.
-//Begin_Html
-/*
-<img src="gif/PaintBox.gif">
-*/
-//End_Html
-// With option BOX1 a button is drawn for each cell with surface proportional to
-// content's absolute value. A sunken button is drawn for negative values
-// a raised one for positive.
-//Begin_Html
-/*
-<img src="gif/PaintBox1.gif">
-*/
-//End_Html
-//
+   // Control function to draw a table as a box plot.
+   //
+   // For each cell (i,j) a box is drawn.
+   // The size of the box is proportional to the absolute value of the cell content.
+   // The cells with a negative content draw with a X on top of the boxes.
+   //Begin_Html
+   /*
+   <img src="gif/PaintBox.gif">
+   */
+   //End_Html
+   // With option BOX1 a button is drawn for each cell with surface proportional to
+   // content's absolute value. A sunken button is drawn for negative values
+   // a raised one for positive.
+   //Begin_Html
+   /*
+   <img src="gif/PaintBox1.gif">
+   */
+   //End_Html
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
@@ -2141,20 +2135,17 @@ void THistPainter::PaintBoxes(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintColorLevels(Option_t *)
 {
-//    *-*-*-*-*-*Control function to draw a table as a color plot*-*-*-*-*-*
-//               ================================================
-//
-//       For each cell (i,j) a box is drawn with a color proportional
-//       to the cell content.
-//       The color table used is defined in the current style (gStyle).
-//       The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
-//Begin_Html
-/*
-<img src="gif/PaintCol.gif">
-*/
-//End_Html
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Control function to draw a table as a color plot.
+   //
+   //       For each cell (i,j) a box is drawn with a color proportional
+   //       to the cell content.
+   //       The color table used is defined in the current style (gStyle).
+   //       The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
+   //Begin_Html
+   /*
+   <img src="gif/PaintCol.gif">
+   */
+   //End_Html
 
    Double_t z, zc, xk, xstep, yk, ystep, xlow, xup, ylow, yup;
 
@@ -2285,53 +2276,51 @@ void THistPainter::PaintColorLevels(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintContour(Option_t *option)
 {
-//    *-*-*-*-*-*Control function to draw a table as a contour plot*-*-*-*-*-*
-//               =================================================
-//     Hoption.Contour may have the following values:
-//        1  The contour is drawn with filled colour levels. ("cont")
-//       11  Use colour to distinguish contours. ("cont1")
-//       12  Use line style to distinguish contours. ("cont2")
-//       13  Line style and colour are the same for all contours. ("cont3")
-//       14  Same as 1 but uses the "SURF" algorithm ("cont4")
-//           see also options "AITOFF","MERCATOR",etc below
-//       15  Use Delaunay triangles to compute the contours
-//
-//     When option "List" is specified together with option "cont",
-//     the points used to draw the contours are saved in the TGraph format
-//     and are accessible in the following way:
-//    TObjArray *contours =
-//            (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours")
-//    Int_t ncontours = contours->GetSize();
-//    TList *list = (TList*)contours->At(i); //where i is a contour number
-//    list contains a list of TGraph objects. For one given contour, more than
-//    one disjoint polyline may be generated. The number of TGraphs per
-//    countour is given by list->GetSize().
-//    Here we show only the case to access the first graph in the list.
-//       TGraph *gr1 = (TGraph*)list->First();
-//
-//
-//Begin_Html
-/*
-<img src="gif/PaintContour1.gif">
-*/
-//End_Html
-//
-// This function is also called when one of the options below is called;
-// skymaps or exposure maps. (see example in tutorial earth.C)
-//    "AITOFF"     : Draw a contour via an AITOFF projection
-//    "MERCATOR"   : Draw a contour via an Mercator projection
-//    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
-//    "PARABOLIC"  : Draw a contour via an Parabolic projection
-//
-// The tutorial earth.C uses these 4 options and produce the following picture:
-//
-//Begin_Html
-/*
-<img src="gif/PaintContour4Earth.gif">
-*/
-//End_Html
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Control function to draw a table as a contour plot.
+   //
+   //     Hoption.Contour may have the following values:
+   //        1  The contour is drawn with filled colour levels. ("cont")
+   //       11  Use colour to distinguish contours. ("cont1")
+   //       12  Use line style to distinguish contours. ("cont2")
+   //       13  Line style and colour are the same for all contours. ("cont3")
+   //       14  Same as 1 but uses the "SURF" algorithm ("cont4")
+   //           see also options "AITOFF","MERCATOR",etc below
+   //       15  Use Delaunay triangles to compute the contours
+   //
+   //     When option "List" is specified together with option "cont",
+   //     the points used to draw the contours are saved in the TGraph format
+   //     and are accessible in the following way:
+   //    TObjArray *contours =
+   //            (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours")
+   //    Int_t ncontours = contours->GetSize();
+   //    TList *list = (TList*)contours->At(i); //where i is a contour number
+   //    list contains a list of TGraph objects. For one given contour, more than
+   //    one disjoint polyline may be generated. The number of TGraphs per
+   //    countour is given by list->GetSize().
+   //    Here we show only the case to access the first graph in the list.
+   //       TGraph *gr1 = (TGraph*)list->First();
+   //
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintContour1.gif">
+   */
+   //End_Html
+   //
+   // This function is also called when one of the options below is called;
+   // skymaps or exposure maps. (see example in tutorial earth.C)
+   //    "AITOFF"     : Draw a contour via an AITOFF projection
+   //    "MERCATOR"   : Draw a contour via an Mercator projection
+   //    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
+   //    "PARABOLIC"  : Draw a contour via an Parabolic projection
+   //
+   // The tutorial earth.C uses these 4 options and produce the following picture:
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintContour4Earth.gif">
+   */
+   //End_Html
 
    Int_t i, j, count, ncontour, icol, n, lj, m, ix, jx, ljfill;
    Int_t itars, mode, ir[4];
@@ -2503,7 +2492,7 @@ void THistPainter::PaintContour(Option_t *option)
                n = m;
             }
 
-//     Re-order endpoints
+   //     Re-order endpoints
 
             count = 0;
             for (ix=1; ix<=lj-5; ix +=2) {
@@ -2667,9 +2656,7 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
                             Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
                             Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels)
 {
-//    *-*-*-*-*-*Fill the matrix XARR YARR for Contour Plot*-*-*-*-*-*-*-*
-//               ==========================================
-//
+   // Fill the matrix XARR YARR for Contour Plot.
 
    Bool_t vert;
    Double_t tlen, tdif, elev, diff, pdif, xlen;
@@ -2723,36 +2710,35 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
 //______________________________________________________________________________
 void THistPainter::PaintErrors(Option_t *)
 {
-//    *-*-*-*-*-*-*-*-*Draw histogram error bars*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//
-//       Draws error bars for the current histogram. The current polymarker
-//       is drawn at the centre of the errors according to CHOPT:
-//
-//       ' ' Coordinates are expressed in histogram coordinates
-//           (of the last drawn histogram). Error bars are drawn.
-//       '1' Small lines are drawn at the end of the error bars.
-//       '2' Error rectangles are drawn.
-//       '3' A filled area is drawn through the end points of the vertical
-//           error bars.
-//       '4' A smoothed filled area is drawn through the end points of the
-//           vertical error bars.
-//       '0' Turn off the symbols clipping.
-//
-//     Note that for all options, the line and fill attributes of the
-//     histogram are used for the errors or errors contours.
-//
-//     Use gStyle->SetErrorX(dx) to control the size of the error along x.
-//     set dx = 0 to suppress the error along x.
-//
-//     Use gStyle->SetEndErrorSize(np) to control the size of the lines
-//     at the end of the error bars (when option 1 is used).
-//     By default np=1. (np reprersents the number of pixels).
-//Begin_Html
-/*
-<img src="gif/PaintErrors.gif">
-*/
-//End_Html
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Draw histogram error bars.
+   //
+   //       Draws error bars for the current histogram. The current polymarker
+   //       is drawn at the centre of the errors according to CHOPT:
+   //
+   //       ' ' Coordinates are expressed in histogram coordinates
+   //           (of the last drawn histogram). Error bars are drawn.
+   //       '1' Small lines are drawn at the end of the error bars.
+   //       '2' Error rectangles are drawn.
+   //       '3' A filled area is drawn through the end points of the vertical
+   //           error bars.
+   //       '4' A smoothed filled area is drawn through the end points of the
+   //           vertical error bars.
+   //       '0' Turn off the symbols clipping.
+   //
+   //     Note that for all options, the line and fill attributes of the
+   //     histogram are used for the errors or errors contours.
+   //
+   //     Use gStyle->SetErrorX(dx) to control the size of the error along x.
+   //     set dx = 0 to suppress the error along x.
+   //
+   //     Use gStyle->SetEndErrorSize(np) to control the size of the lines
+   //     at the end of the error bars (when option 1 is used).
+   //     By default np=1. (np reprersents the number of pixels).
+   //Begin_Html
+   /*
+   <img src="gif/PaintErrors.gif">
+   */
+   //End_Html
 
    const Int_t kBASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
@@ -2767,7 +2753,6 @@ void THistPainter::PaintErrors(Option_t *)
    Int_t if2 = 0;
    Int_t drawmarker, errormarker;
    Int_t option0, option1, option2, option3, option4, optionE;
-//    _____________________________
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2839,8 +2824,7 @@ void THistPainter::PaintErrors(Option_t *)
    if (Hoption.Logx) logxmin = TMath::Power(10,Hparam.xmin);
    if (Hoption.Logy) logymin = TMath::Power(10,Hparam.ymin);
 
-//    ---------------------- Loop over the points---------------------
-
+   //    ---------------------- Loop over the points---------------------
    for (k=first; k<=last; k++) {
 
       //          get the data
@@ -2880,7 +2864,7 @@ void THistPainter::PaintErrors(Option_t *)
       yi3 = yp - ey1;
       yi4 = yp + ey2;
 
-     //          take the LOG if necessary
+      //          take the LOG if necessary
       if (Hoption.Logx) {
          xi1 = TMath::Log10(TMath::Max(xi1,logxmin));
          xi2 = TMath::Log10(TMath::Max(xi2,logxmin));
@@ -2902,8 +2886,8 @@ void THistPainter::PaintErrors(Option_t *)
       yi3 = TMath::Max(yi3,ymin);
       yi4 = TMath::Min(yi4,ymax);
 
-     //  test if the marker is on the frame limits. If "Yes", the
-     //  marker will not be drawn and the error bars will be readjusted.
+      //  test if the marker is on the frame limits. If "Yes", the
+      //  marker will not be drawn and the error bars will be readjusted.
 
       drawmarker = kTRUE;
       if (!option0 && !option3) {
@@ -2926,7 +2910,7 @@ void THistPainter::PaintErrors(Option_t *)
          if2--;
       }
 
-//          draw the error bars
+      //          draw the error bars
 
       if (optionE && drawmarker) {
          if (yi3 < yi1 - s2y) gPad->PaintLine(xi3,yi3,xi4,yi1 - s2y);
@@ -2947,7 +2931,7 @@ void THistPainter::PaintErrors(Option_t *)
          }
       }
 
-//          draw line at the end of the error bars
+      //          draw line at the end of the error bars
 
       if (option1) {
          if (yi3 < yi1-s2y) gPad->PaintLine(xi3 - bxsize,yi3,xi3 + bxsize,yi3);
@@ -2956,7 +2940,7 @@ void THistPainter::PaintErrors(Option_t *)
          if (xi2 > xi3+s2x) gPad->PaintLine(xi2,yi1 - bysize,xi2,yi1 + bysize);
       }
 
-//          draw the marker
+      //          draw the marker
 
       if (drawmarker) gPad->PaintPolyMarker(1, &xi3, &yi1);
 
@@ -2970,7 +2954,7 @@ L30:
       }
    }  //end of for loop
 
-//          draw the filled area
+   //          draw the filled area
 
    if (option3) {
       TGraph graph;
@@ -3148,8 +3132,8 @@ void THistPainter::Paint2DErrors(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintFrame()
 {
-//    *-*-*-*-*-*-*-*Calculate range and clear pad (canvas)*-*-*-*-*-*-*-*-*-*
-//                   ======================================
+   // Calculate range and clear pad (canvas).
+
    if (Hoption.Same) return;
 
    RecalculateRange();
@@ -3166,23 +3150,22 @@ void THistPainter::PaintFrame()
 //______________________________________________________________________________
 void THistPainter::PaintFunction(Option_t *)
 {
-//    *-*-*-*-*-*-*-*-*Paint functions associated to an histogram*-*-*-*-*-*-*
-//                     ==========================================
-//
-//   An associated function is created by THistPainter::Fit. Note that more than
-//   on fitted function can be associated with one histogram (see THistPainter::Fit).
-//
-//   A TF1 object can be added to the list of associated functions directly
-//   by a user without calling THistPainter::Fit.
-//   To add a new function to the list of associated functions, do
-//     h->GetListOfFunctions()->Add(f1);
-//        or
-//     h->GetListOfFunctions()->Add(f1,someoption);
-//   To retrieve a function by name from this list, do:
-//     TF1 *f1 = (TF1*)h->GetListOfFunctions()->FindObject(name);
-//   or
-//     TF1 *f1 = h->GetFunction(name);
-//
+   // Paint functions associated to an histogram.
+   //
+   //   An associated function is created by THistPainter::Fit. Note that more than
+   //   on fitted function can be associated with one histogram (see THistPainter::Fit).
+   //
+   //   A TF1 object can be added to the list of associated functions directly
+   //   by a user without calling THistPainter::Fit.
+   //   To add a new function to the list of associated functions, do
+   //     h->GetListOfFunctions()->Add(f1);
+   //        or
+   //     h->GetListOfFunctions()->Add(f1,someoption);
+   //   To retrieve a function by name from this list, do:
+   //     TF1 *f1 = (TF1*)h->GetListOfFunctions()->FindObject(name);
+   //   or
+   //     TF1 *f1 = h->GetFunction(name);
+
    TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
    TObject *obj;
 
@@ -3202,8 +3185,7 @@ void THistPainter::PaintFunction(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintHist(Option_t *)
 {
-//    *-*-*-*-*-*-*-*Control routine to draw an histogram*-*-*-*-*-*-*-*-*-*-*
-//                   ====================================
+   // Control routine to draw an histogram.
 
    static char chopth[17];
 
@@ -3224,7 +3206,7 @@ void THistPainter::PaintHist(Option_t *)
    gStyle->SetBarOffset(baroffset);
    gStyle->SetBarWidth(barwidth);
 
-//       Create "LIFE" structure to keep current histogram status
+   //       Create "LIFE" structure to keep current histogram status
 
    first = Hparam.xfirst;
    last  = Hparam.xlast;
@@ -3242,7 +3224,7 @@ void THistPainter::PaintHist(Option_t *)
    Double_t logymin = 0;
    if (Hoption.Logy) logymin = TMath::Power(10,ymin);
 
-//      Loop on histogram bins
+   //      Loop on histogram bins
 
    for (j=first; j<=last;j++) {
       c1 = Hparam.factor*fH->GetBinContent(j);
@@ -3253,7 +3235,7 @@ void THistPainter::PaintHist(Option_t *)
       yb = TMath::Max(yb, ymin);
       yb = TMath::Min(yb, ymax);
       if (Hoption.Plus) {
-//            compute y1, y2
+   //            compute y1, y2
          y1 = keepy[j-first];
          y2 = yb;
          if (Hoption.Plus == 1 || Hoption.Plus == -1) {
@@ -3262,7 +3244,7 @@ void THistPainter::PaintHist(Option_t *)
             else
                y2 = y1 +y2*Hoption.Plus;
          }
-//            compute ym1, ym2
+   //            compute ym1, ym2
          if (!Hoption.Bar) {
             yadd = Hparam.factor*fH->GetBinContent(j);
             if (Hoption.Logy) ycur = TMath::Power(10,keepy[j-first]);
@@ -3297,10 +3279,10 @@ void THistPainter::PaintHist(Option_t *)
             }
          }
 
-//               Compute X1 X2
+   //               Compute X1 X2
          if (Hoption.Logy && c1 <= 0) continue;
 
-//     Update the current plot
+   //     Update the current plot
 
          if (Hoption.Plus == 1 || Hoption.Plus == -1) keepy[j-first-1] = y2;
       }
@@ -3311,14 +3293,14 @@ void THistPainter::PaintHist(Option_t *)
 
    if (Hoption.Plus) return;
 
-//              Draw histogram according to value of FillStyle and FillColor
+   //              Draw histogram according to value of FillStyle and FillColor
 
    if (fixbin) { keepx[0] = Hparam.xmin; keepx[1] = Hparam.xmax; }
    else {
       for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetBinLowEdge(i+first);
    }
 
-//         Prepare Fill area (systematic with option "Bar").
+   //         Prepare Fill area (systematic with option "Bar").
 
    oldhtype = fH->GetFillStyle();
    htype    = oldhtype;
@@ -3328,7 +3310,7 @@ void THistPainter::PaintHist(Option_t *)
 
    Width_t lw = (Width_t)fH->GetLineWidth();
 
-//         Code option for GrapHist
+   //         Code option for GrapHist
 
    if (Hoption.Line) chopth[0] = 'L';
    if (Hoption.Star) chopth[1] = '*';
@@ -3354,7 +3336,7 @@ void THistPainter::PaintHist(Option_t *)
    if (Hoption.Fill == 2)    strcat(chopth,"2");
    if (Hoption.HighRes != 0) strcat(chopth,"9");
 
-//         Option LOGX
+   //         Option LOGX
 
    if (Hoption.Logx) {
       chopth[9]  = 'G';
@@ -3367,7 +3349,7 @@ void THistPainter::PaintHist(Option_t *)
 
    if (Hoption.Off) strcat(chopth,"][");
 
-//         Draw the histogram
+   //         Draw the histogram
 
    TGraph graph;
    graph.SetLineWidth(lw);
@@ -3393,8 +3375,7 @@ void THistPainter::PaintHist(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintH3(Option_t *option)
 {
-//    *-*-*-*-*-*-*-*Control function to draw a 3-D histogram*-*-*-*-*-*-*-*-*
-//                   ========================================
+   // Control function to draw a 3-D histogram.
 
    char *cmd;
    if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"box")) {
@@ -3428,8 +3409,7 @@ void THistPainter::PaintH3(Option_t *option)
 //______________________________________________________________________________
 Int_t THistPainter::PaintInit()
 {
-//    *-*-*-*-*Compute histogram parameters used by the drawing routines*-*-*-*
-//             =========================================================
+   // Compute histogram parameters used by the drawing routines.
 
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) return 1;
 
@@ -3440,7 +3420,7 @@ Int_t THistPainter::PaintInit()
    if (fH->GetMaximumStored() != -1111) maximum = 1;
    if (fH->GetMinimumStored() != -1111) minimum = 1;
 
-//     Compute X axis parameters
+   //     Compute X axis parameters
 
    Int_t last      = fXaxis->GetLast();
    Int_t first     = fXaxis->GetFirst();
@@ -3451,7 +3431,7 @@ Int_t THistPainter::PaintInit()
    Hparam.xmin     = Hparam.xlowedge;
    Hparam.xmax     = fXaxis->GetBinLowEdge(last)+fXaxis->GetBinWidth(last);
 
-//       if log scale in X, replace xmin,max by the log
+   //       if log scale in X, replace xmin,max by the log
    if (Hoption.Logx) {
       if (Hparam.xlowedge <=0 ) {
          Hparam.xlowedge = 0.1*Hparam.xbinsize;
@@ -3469,7 +3449,7 @@ Int_t THistPainter::PaintInit()
       if (Hparam.xfirst < first) Hparam.xfirst = first;
    }
 
-//     Compute Y axis parameters
+   //     Compute Y axis parameters
    Double_t bigp = TMath::Power(10,32);
    Double_t ymax = -bigp;
    Double_t ymin = bigp;
@@ -3524,7 +3504,7 @@ Int_t THistPainter::PaintInit()
       }
    }
 
-//     Take into account maximum , minimum
+   //     Take into account maximum , minimum
 
    if (Hoption.Logy && ymin <= 0) {
       if (ymax >= 1) ymin = TMath::Max(.005,ymax*1e-10);
@@ -3560,7 +3540,7 @@ Int_t THistPainter::PaintInit()
       }
    }
 
-//     take into account normalization factor
+   //     take into account normalization factor
    Hparam.allchan = allchan;
    Stat_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
@@ -3577,12 +3557,10 @@ Int_t THistPainter::PaintInit()
       ymin = temp;
    }
 
-//    ----
-//         For log scales, histogram coordinates are LOG10(ymin) and
-//         LOG10(ymax). Final adjustment (if not option "Same"
-//         or "+" for ymax) of ymax and ymin for logarithmic scale, if
-//         Maximum and Minimum are not defined.
-//    ----
+   //         For log scales, histogram coordinates are LOG10(ymin) and
+   //         LOG10(ymax). Final adjustment (if not option "Same"
+   //         or "+" for ymax) of ymax and ymin for logarithmic scale, if
+   //         Maximum and Minimum are not defined.
    if (Hoption.Logy) {
       if (ymin <=0 || ymax <=0) {
          Error(where, "Cannot set Y axis to log scale");
@@ -3598,11 +3576,10 @@ Int_t THistPainter::PaintInit()
       }
       return 1;
    }
-//    ----
-//         final adjustment of ymin for linear scale.
-//         if minimum is not set , then ymin is set to zero if >0
-//         or to ymin - margin if <0.
-//    ----
+
+   //         final adjustment of ymin for linear scale.
+   //         if minimum is not set , then ymin is set to zero if >0
+   //         or to ymin - margin if <0.
    if (!minimum) {
       if (gStyle->GetHistMinimumZero()) {
          if (ymin >= 0) ymin = 0;
@@ -3613,11 +3590,10 @@ Int_t THistPainter::PaintInit()
          else                                ymin -= dymin;
       }
    }
-//    ----
-//         final adjustment of YMAXI for linear scale (if not option "Same"):
-//         decrease histogram height to MAX% of allowed height if HMAXIM
-//         has not been called.
-//    ----
+
+   //         final adjustment of YMAXI for linear scale (if not option "Same"):
+   //         decrease histogram height to MAX% of allowed height if HMAXIM
+   //         has not been called.
    if (!maximum && !Hoption.Plus) {
       ymax += yMARGIN*(ymax-ymin);
    }
@@ -3629,8 +3605,8 @@ Int_t THistPainter::PaintInit()
 //______________________________________________________________________________
 Int_t THistPainter::PaintInitH()
 {
-//    Compute histogram parameters used by the drawing routines
-//    for a rotated pad
+   //    Compute histogram parameters used by the drawing routines
+   //    for a rotated pad
 
    static const char *where = "PaintInitH";
    Double_t yMARGIN = 0.05;
@@ -3639,7 +3615,7 @@ Int_t THistPainter::PaintInitH()
    if (fH->GetMaximumStored() != -1111) maximum = 1;
    if (fH->GetMinimumStored() != -1111) minimum = 1;
 
-//     Compute X axis parameters
+   //     Compute X axis parameters
 
    Int_t last      = fXaxis->GetLast();
    Int_t first     = fXaxis->GetFirst();
@@ -3650,7 +3626,7 @@ Int_t THistPainter::PaintInitH()
    Hparam.ymin     = Hparam.xlowedge;
    Hparam.ymax     = fXaxis->GetBinLowEdge(last)+fXaxis->GetBinWidth(last);
 
-//       if log scale in Y, replace ymin,max by the log
+   //       if log scale in Y, replace ymin,max by the log
    if (Hoption.Logy) {
       if (Hparam.xlowedge <=0 ) {
          Hparam.xlowedge = 0.1*Hparam.xbinsize;
@@ -3667,7 +3643,7 @@ Int_t THistPainter::PaintInitH()
       if (Hparam.xlast > last) Hparam.xlast = last;
    }
 
-//     Compute Y axis parameters
+   //     Compute Y axis parameters
    Double_t bigp = TMath::Power(10,32);
    Double_t xmax = -bigp;
    Double_t xmin = bigp;
@@ -3706,7 +3682,7 @@ Int_t THistPainter::PaintInitH()
       allchan += c1;
    }
 
-//     Take into account maximum , minimum
+   //     Take into account maximum , minimum
 
    if (Hoption.Logx && xmin <= 0) {
       if (xmax >= 1) xmin = TMath::Max(.5,xmax*1e-10);
@@ -3742,7 +3718,7 @@ Int_t THistPainter::PaintInitH()
       }
    }
 
-//     take into account normalization factor
+   //     take into account normalization factor
    Hparam.allchan = allchan;
    Stat_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
@@ -3752,12 +3728,10 @@ Int_t THistPainter::PaintInitH()
    xmax = factor*xmax;
    xmin = factor*xmin;
 
-//    ----
-//         For log scales, histogram coordinates are LOG10(ymin) and
-//         LOG10(ymax). Final adjustment (if not option "Same"
-//         or "+" for ymax) of ymax and ymin for logarithmic scale, if
-//         Maximum and Minimum are not defined.
-//    ----
+   //         For log scales, histogram coordinates are LOG10(ymin) and
+   //         LOG10(ymax). Final adjustment (if not option "Same"
+   //         or "+" for ymax) of ymax and ymin for logarithmic scale, if
+   //         Maximum and Minimum are not defined.
    if (Hoption.Logx) {
       if (xmin <=0 || xmax <=0) {
          Error(where, "Cannot set Y axis to log scale");
@@ -3773,20 +3747,18 @@ Int_t THistPainter::PaintInitH()
       }
       return 1;
    }
-//    ----
-//         final adjustment of ymin for linear scale.
-//         if minimum is not set , then ymin is set to zero if >0
-//         or to ymin - margin if <0.
-//    ----
+
+   //         final adjustment of ymin for linear scale.
+   //         if minimum is not set , then ymin is set to zero if >0
+   //         or to ymin - margin if <0.
    if (!minimum) {
       if (xmin >= 0) xmin = 0;
       else           xmin -= yMARGIN*(xmax-xmin);
    }
-//    ----
-//         final adjustment of YMAXI for linear scale (if not option "Same"):
-//         decrease histogram height to MAX% of allowed height if HMAXIM
-//         has not been called.
-//    ----
+
+   //         final adjustment of YMAXI for linear scale (if not option "Same"):
+   //         decrease histogram height to MAX% of allowed height if HMAXIM
+   //         has not been called.
    if (!maximum && !Hoption.Plus) {
       xmax += yMARGIN*(xmax-xmin);
    }
@@ -3932,30 +3904,27 @@ void THistPainter::PaintH3Iso()
 //______________________________________________________________________________
 void THistPainter::PaintLego(Option_t *)
 {
-//    *-*-*-*-*-*Control function to draw a table as a lego plot*-*-*-*-*-*
-//               ===============================================
-//
-//        In a lego plot, cell contents are represented as 3-d boxes.
-//        The height of the box is proportional to the cell content.
-//
-//       A lego plot can be represented in several coordinate systems.
-//       Default system is Cartesian coordinates.
-//       Possible systems are CYL,POL,SPH,PSR.
-//
-//      See THistPainter::Draw for the list of Lego options.
-//      See TPainter3dAlgorithms for more examples of lego options.
-//
-//      See TStyle::SeTPaletteAxis to change the color palette.
-//      It is suggested to use palette 1 via the call
-//      gStyle->SetColorPalette(1)
-//
-//Begin_Html
-/*
-<img src="gif/PaintLego1.gif">
-*/
-//End_Html
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Control function to draw a table as a lego plot.
+   //
+   //      In a lego plot, cell contents are represented as 3-d boxes.
+   //      The height of the box is proportional to the cell content.
+   //
+   //      A lego plot can be represented in several coordinate systems.
+   //      Default system is Cartesian coordinates.
+   //      Possible systems are CYL,POL,SPH,PSR.
+   //
+   //      See THistPainter::Draw for the list of Lego options.
+   //      See TPainter3dAlgorithms for more examples of lego options.
+   //
+   //      See TStyle::SeTPaletteAxis to change the color palette.
+   //      It is suggested to use palette 1 via the call
+   //      gStyle->SetColorPalette(1)
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintLego1.gif">
+   */
+   //End_Html
 
    Int_t raster = 1;
    if (Hparam.zmin == 0 && Hparam.zmax == 0) {Hparam.zmin = -1; Hparam.zmax = 1;}
@@ -3977,7 +3946,7 @@ void THistPainter::PaintLego(Option_t *)
    Double_t z1c = zmin;
    Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
-//     Compute the lego limits and instantiate a lego object
+   //     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
    fYbuf[0] =  1;
    fXbuf[1] = -1;
@@ -4013,21 +3982,13 @@ void THistPainter::PaintLego(Option_t *)
       raster  = 0;
    }
 
-   //TView *view = gPad->GetView();
-   //if (view) {
-   //   for (Int_t iv=0;iv<6;iv++) {
-   //      fXbuf[iv] = view->GetRmin()[iv];
-   //      fYbuf[iv] = view->GetRmax()[iv];
-   //   }
-   //}
-
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
 
-//          Create axis object
+   //          Create axis object
 
    TGaxis *axis = new TGaxis();
 
-//                  Initialize the levels on the Z axis
+   //                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
       ndiv = gStyle->GetNumberContours();
@@ -4036,7 +3997,7 @@ void THistPainter::PaintLego(Option_t *)
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-//     Initialize colors for the lighting model (option Lego1 only)
+   //     Initialize colors for the lighting model (option Lego1 only)
    if (Hoption.Lego == 1) {
          Color_t colormain = fH->GetLineColor();
          fLego->SetColorMain(colormain,0);
@@ -4057,7 +4018,7 @@ void THistPainter::PaintLego(Option_t *)
       }
    }
 
-//     Now ready to draw the lego plot
+   //     Now ready to draw the lego plot
    Int_t irep = 0;
 
    TView *view = gPad->GetView();
@@ -4074,7 +4035,7 @@ void THistPainter::PaintLego(Option_t *)
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillStyle(fH->GetFillStyle());
 
-//     Set color/style for back box
+   //     Set color/style for back box
    fLego->SetFillStyle(gPad->GetFrameFillStyle());
    fLego->SetFillColor(gPad->GetFrameFillColor());
    fLego->TAttFill::Modify();
@@ -4093,7 +4054,6 @@ void THistPainter::PaintLego(Option_t *)
    else        fLego->InitMoveScreen(-1.1,1.1);
 
    if (Hoption.Lego == 11 || Hoption.Lego == 12) {
-//      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
@@ -4143,7 +4103,7 @@ void THistPainter::PaintLego(Option_t *)
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
-   if (Hoption.Zscale) PaintPalette();  // MOD MWH
+   if (Hoption.Zscale) PaintPalette();
    delete axis;
    delete fLego; fLego = 0;
 }
@@ -4331,8 +4291,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //______________________________________________________________________________
 void THistPainter::PaintPalette()
 {
-//    *-*-*-*-*-*Paint the color palette on the right side of the pad*-*-*-*-*
-//               ====================================================
+   // Paint the color palette on the right side of the pad.
 
    TPaletteAxis *palette = (TPaletteAxis*)fFunctions->FindObject("palette");
    TView *view = gPad->GetView();
@@ -4366,23 +4325,21 @@ void THistPainter::PaintPalette()
 //______________________________________________________________________________
 void THistPainter::PaintScatterPlot(Option_t *option)
 {
-//    *-*-*-*-*-*Control function to draw a table as a scatter plot*-*-*-*-*
-//               ==================================================
-//
-//       For each cell (i,j) a number of points proportional to the cell
-//       content is drawn.
-//       A maximum of kNMAX points per cell is drawn. If the maximum is above kNMAX
-//       contents are normalized to kNMAX. (kNMAX=2000)/
-//       if option is of the form "scat=ff", (eg scat=1.8, scat=1e-3), then
-//       ff is used as a scale factor to compute the number of dots.
-//       "scat=1" is the default.
-//Begin_Html
-/*
-<img src="gif/PaintScatterPlot.gif">
-*/
-//End_Html
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Control function to draw a table as a scatter plot.
+   //
+   //       For each cell (i,j) a number of points proportional to the cell
+   //       content is drawn.
+   //       A maximum of kNMAX points per cell is drawn. If the maximum is above kNMAX
+   //       contents are normalized to kNMAX. (kNMAX=2000)/
+   //       if option is of the form "scat=ff", (eg scat=1.8, scat=1e-3), then
+   //       ff is used as a scale factor to compute the number of dots.
+   //       "scat=1" is the default.
+   //Begin_Html
+   /*
+   <img src="gif/PaintScatterPlot.gif">
+   */
+   //End_Html
+
    fH->TAttMarker::Modify();
 
    Int_t k, marker;
@@ -4974,36 +4931,34 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 //______________________________________________________________________________
 void THistPainter::PaintSurface(Option_t *)
 {
-//    *-*-*-*-*-*Control function to draw a table as a surface plot*-*-*-*-*-*
-//               ==================================================
-//
-//        In a surface plot, cell contents are represented as a mesh.
-//        The height of the mesh is proportional to the cell content.
-//
-//       A surface plot can be represented in several coordinate systems.
-//       Default system is Cartesian coordinates.
-//       Possible systems are CYL,POL,SPH,PSR.
-//
-//      See THistPainter::Draw for a list of Surface options
-//     The following picture is generated with option SURF1.
-//
-//      See TStyle::SeTPaletteAxis to change the color palette.
-//      It is suggested to use palette 1 via the call
-//      gStyle->SetColorPalette(1)
-//
-//Begin_Html
-/*
-<img src="gif/PaintSurface1.gif">
-*/
-//End_Html
-//     The following picture is generated with option SURF3.
-//Begin_Html
-/*
-<img src="gif/PaintSurface3.gif">
-*/
-//End_Html
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Control function to draw a table as a surface plot.
+   //
+   //     In a surface plot, cell contents are represented as a mesh.
+   //     The height of the mesh is proportional to the cell content.
+   //
+   //     A surface plot can be represented in several coordinate systems.
+   //     Default system is Cartesian coordinates.
+   //     Possible systems are CYL,POL,SPH,PSR.
+   //
+   //     See THistPainter::Draw for a list of Surface options
+   //     The following picture is generated with option SURF1.
+   //
+   //     See TStyle::SeTPaletteAxis to change the color palette.
+   //     It is suggested to use palette 1 via the call
+   //     gStyle->SetColorPalette(1)
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintSurface1.gif">
+   */
+   //End_Html
+   //     The following picture is generated with option SURF3.
+   //Begin_Html
+   /*
+   <img src="gif/PaintSurface3.gif">
+   */
+   //End_Html
+
    const Double_t ydiff = 1;
    const Double_t yligh1 = 10;
    const Double_t qa = 0.15;
@@ -5032,7 +4987,7 @@ void THistPainter::PaintSurface(Option_t *)
    Double_t z1c = zmin;
    Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
-//     Compute the lego limits and instantiate a lego object
+   //     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
    fYbuf[0] =  1;
    fXbuf[1] = -1;
@@ -5068,23 +5023,15 @@ void THistPainter::PaintSurface(Option_t *)
       fYbuf[2] = z2c;
    }
 
-   //TView *view = gPad->GetView();
-   //if (view && !gPad->IsModified()) {
-   //   for (Int_t iv=0;iv<6;iv++) {
-   //      fXbuf[iv] = view->GetRmin()[iv];
-   //      fYbuf[iv] = view->GetRmax()[iv];
-   //   }
-   //}
-
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillColor(fH->GetFillColor());
 
-//          Create axis object
+   //          Create axis object
 
    TGaxis *axis = new TGaxis();
 
-//                  Initialize the levels on the Z axis
+   //                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
       ndiv = gStyle->GetNumberContours();
@@ -5096,11 +5043,11 @@ void THistPainter::PaintSurface(Option_t *)
    if (Hoption.Surf == 13 || Hoption.Surf == 15) fLego->SetMesh(3);
    if (Hoption.Surf == 12 || Hoption.Surf == 14) fLego->SetMesh(0);
 
-//     Close the surface in case of non cartesian coordinates.
+   //     Close the surface in case of non cartesian coordinates.
 
    if (Hoption.System != kCARTESIAN) {nx++; ny++;}
 
-//     Now ready to draw the surface plot
+   //     Now ready to draw the surface plot
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -5113,7 +5060,7 @@ void THistPainter::PaintSurface(Option_t *)
    Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
-//     Set color/style for back box
+   //     Set color/style for back box
    fLego->SetFillStyle(gPad->GetFrameFillStyle());
    fLego->SetFillColor(gPad->GetFrameFillColor());
    fLego->TAttFill::Modify();
@@ -5126,7 +5073,7 @@ void THistPainter::PaintSurface(Option_t *)
    fLego->SetFillColor(fH->GetFillColor());
    fLego->TAttFill::Modify();
 
-//     Draw the filled contour on top
+   //     Draw the filled contour on top
    Int_t icol1 = fH->GetFillColor();
 
    Int_t hoption35 = Hoption.Surf;
@@ -5156,9 +5103,9 @@ void THistPainter::PaintSurface(Option_t *)
       }
    }
 
-//     Gouraud Shading surface
+   //     Gouraud Shading surface
    if (Hoption.Surf == 14) {
-//    Set light sources
+   //    Set light sources
       fLego->LightSource(0, ydiff, 0,0,0,irep);
       fLego->LightSource(1, yligh1 ,1,1,1,irep);
       fLego->SurfaceProperty(qa, qd, qs, 1, irep);
@@ -5186,9 +5133,9 @@ void THistPainter::PaintSurface(Option_t *)
       if (Hoption.System == kRAPIDITY )   fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       if (Hoption.System == kCARTESIAN)   fLego->SurfaceCartesian(90,nx,ny,"BF");
    } else if (Hoption.Surf == 15) {
-// The surface is not drawn in this case.
+   // The surface is not drawn in this case.
    } else {
-//     Draw the surface
+   //     Draw the surface
       if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 16) {
          DefineColorLevels(ndivz);
       } else {
@@ -5232,7 +5179,7 @@ void THistPainter::PaintSurface(Option_t *)
    }
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
 
-   if (Hoption.Zscale) PaintPalette();  // MOD MWH
+   if (Hoption.Zscale) PaintPalette();
 
    delete axis;
    delete fLego; fLego = 0;
@@ -5242,7 +5189,7 @@ void THistPainter::PaintSurface(Option_t *)
 //______________________________________________________________________________
 void THistPainter::PaintTriangles(Option_t *option)
 {
-   // Control function to draw a table using Delaunay triangles
+   // Control function to draw a table using Delaunay triangles.
 
    TGraphDelaunay *dt;
 
@@ -5345,8 +5292,7 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
 //______________________________________________________________________________
 void THistPainter::PaintTable(Option_t *option)
 {
-//    *-*-*-*-*-*-*-*Control function to draw 2-D/3-D tables*-*-*-*-*-*-*-*
-//                   =======================================
+   // Control function to draw 2-D/3-D tables
 
    if (!TableInit()) return;  //fill Hparam structure with histo parameters
 
@@ -5375,8 +5321,6 @@ void THistPainter::PaintTable(Option_t *option)
        !Hoption.Tri  && !(Hoption.Error >= 100)) PaintAxis(kFALSE); // Draw the axes
 
    PaintTitle();    //    Draw histogram title
-//   PaintFile();     //    Draw Current File name corresp to current directory
-//   PaintDate();     //    Draw date/time
 
    TF1 *fit  = 0;
    TIter next(fFunctions);
@@ -5415,7 +5359,7 @@ void THistPainter::PaintText(Option_t *)
    <img src="gif/PaintText.gif">
    */
    //End_Html
-   //
+
    TText text;
    text.SetTextFont(gStyle->GetTextFont());
    text.SetTextColor(fH->GetMarkerColor());
@@ -5501,6 +5445,7 @@ void THistPainter::PaintTF3()
    <img src="gif/PaintTF3.gif">
    */
    //End_Html
+
    Int_t irep;
 
    TGaxis *axis = new TGaxis();
@@ -5622,7 +5567,7 @@ void THistPainter::PaintTitle()
 
    TPaveText *ptitle = new TPaveText(xpos, ypos-ht, xpos+wt, ypos,"blNDC");
 
-//     box with the histogram title
+   //     box with the histogram title
    ptitle->SetFillColor(gStyle->GetTitleFillColor());
    ptitle->SetFillStyle(gStyle->GetTitleStyle());
    ptitle->SetName("title");
@@ -5641,7 +5586,7 @@ void THistPainter::PaintTitle()
 //______________________________________________________________________________
 void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 {
-//  Process message mess
+   //  Process message mess
 
    if (!strcmp(mess,"SetF3")) {
       TPainter3dAlgorithms::SetF3((TF3*)obj);
@@ -5659,7 +5604,7 @@ void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 //______________________________________________________________________________
 Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-   // static function
+   // Static function
    // Convert Right Ascension, Declination to X,Y using an AITOFF projection.
    // This procedure can be used to create an all-sky map in Galactic
    // coordinates with an equal-area Aitoff projection.  Output map
@@ -5690,7 +5635,7 @@ Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Doubl
 //______________________________________________________________________________
 Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-   // static function
+   // Static function
    // Probably the most famous of the various map projections, the Mercator projection
    // takes its name from Mercator who presented it in 1569. It is a cylindrical, conformal projection
    // with no distortion along the equator.
@@ -5700,6 +5645,7 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
    // Greenland. Also, the Former Soviet Union looks much bigger than Africa or South America. One may wonder
    // whether this illusion has had any influence on U.S. foreign policy.' (Source: GMT)
    // code from  Ernst-Jan Buis
+
    Al = l;
    Double_t aid = TMath::Tan((TMath::PiOver2() + b*TMath::DegToRad())/2);
    Ab = TMath::Log(aid);
@@ -5709,8 +5655,9 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
 //______________________________________________________________________________
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-   // static function
+   // Static function
    // code from  Ernst-Jan Buis
+
    Al = l*cos(b*TMath::DegToRad());
    Ab = b;
    return 0;
@@ -5719,8 +5666,9 @@ Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, D
 //______________________________________________________________________________
 Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
-   // static function
+   // Static function
    // code from  Ernst-Jan Buis
+
    Al = l*(2.*TMath::Cos(2*b*TMath::DegToRad()/3) - 1);
    Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
    return 0;
@@ -5729,16 +5677,16 @@ Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Do
 //______________________________________________________________________________
 void THistPainter::RecalculateRange()
 {
-//    *-*-*-*Recompute the histogram range following graphics operations*-*-*
-//           ===========================================================
+   // Recompute the histogram range following graphics operations.
+
    if (Hoption.Same) return;
 
-//     Compute x,y range
+   //     Compute x,y range
    Double_t xmin = Hparam.xmin;
    Double_t xmax = Hparam.xmax;
    Double_t ymin = Hparam.ymin;
    Double_t ymax = Hparam.ymax;
-   // added EJB -->
+
    Double_t xmin_aid, ymin_aid, xmax_aid, ymax_aid;
    if (Hoption.Proj ==1) {
       // TODO : check x range not lower than -180 and not higher than 180
@@ -5822,8 +5770,6 @@ void THistPainter::RecalculateRange()
    Hparam.ymin= ymin;
    Hparam.ymax= ymax;
 
-   // <-- added EJB
-
    Double_t dx   = xmax-xmin;
    Double_t dy   = ymax-ymin;
    Double_t dxr  = dx/(1 - gPad->GetLeftMargin()   - gPad->GetRightMargin());
@@ -5841,11 +5787,9 @@ void THistPainter::RecalculateRange()
 //______________________________________________________________________________
 void THistPainter::SetHistogram(TH1 *h)
 {
-//  set current histogram to h
+   //  set current histogram to h
 
    if (h == 0)  return;
-//   if (h == fH) return ;  //what happens if the old fH has been deleted
-                            //and h created at the same address
    fH = h;
    fXaxis = h->GetXaxis();
    fYaxis = h->GetYaxis();
@@ -5856,8 +5800,7 @@ void THistPainter::SetHistogram(TH1 *h)
 //______________________________________________________________________________
 Int_t THistPainter::TableInit()
 {
-//    *-*-*-*-*-*-*Initialize various options to draw tables*-*-*-*-*-*-*-*
-//                 =========================================
+   // Initialize various options to draw tables.
 
    static const char *where = "TableInit";
 
@@ -5869,7 +5812,7 @@ Int_t THistPainter::TableInit()
    if (fH->GetMaximumStored() != -1111) maximum = 1;
    if (fH->GetMinimumStored() != -1111) minimum = 1;
 
-//    -----------------  Compute X axis parameters
+   //    -----------------  Compute X axis parameters
    first           = fXaxis->GetFirst();
    last            = fXaxis->GetLast();
    Hparam.xlast    = last;
@@ -5879,9 +5822,9 @@ Int_t THistPainter::TableInit()
    Hparam.xmin     = Hparam.xlowedge;
    Hparam.xmax     = fXaxis->GetBinLowEdge(last)+fXaxis->GetBinWidth(last);
 
-//       if log scale in X, replace xmin,max by the log
+   //       if log scale in X, replace xmin,max by the log
    if (Hoption.Logx) {
-//   find the first edge of a bin that is > 0
+   //   find the first edge of a bin that is > 0
       if (Hparam.xlowedge <=0 ) {
          Hparam.xlowedge = fXaxis->GetBinUpEdge(fXaxis->FindFixBin(0.01*Hparam.xbinsize));
          Hparam.xmin  = Hparam.xlowedge;
@@ -5898,7 +5841,7 @@ Int_t THistPainter::TableInit()
       Hparam.xmax  = TMath::Log10(Hparam.xmax);
    }
 
-//    -----------------  Compute Y axis parameters
+   //    -----------------  Compute Y axis parameters
    first           = fYaxis->GetFirst();
    last            = fYaxis->GetLast();
    Hparam.ylast    = last;
@@ -5909,7 +5852,7 @@ Int_t THistPainter::TableInit()
    Hparam.ymin     = Hparam.ylowedge;
    Hparam.ymax     = fYaxis->GetBinLowEdge(last)+fYaxis->GetBinWidth(last);
 
-//       if log scale in Y, replace ymin,max by the log
+   //       if log scale in Y, replace ymin,max by the log
    if (Hoption.Logy) {
       if (Hparam.ylowedge <=0 ) {
          Hparam.ylowedge = fYaxis->GetBinUpEdge(fYaxis->FindFixBin(0.01*Hparam.ybinsize));
@@ -5928,7 +5871,7 @@ Int_t THistPainter::TableInit()
    }
 
 
-//    -----------------  Compute Z axis parameters
+   //    -----------------  Compute Z axis parameters
    Double_t bigp = TMath::Power(10,32);
    zmax = -bigp;
    zmin = bigp;
@@ -5942,16 +5885,12 @@ Int_t THistPainter::TableInit()
             e1 = fH->GetCellError(i,j);
             zmax = TMath::Max(zmax,c1+e1);
          }
-         if (Hoption.Func) {
-//            f1 = GetCellFunction(i,j);
-//            zmax = TMath::Max(zmax,f1);
-         }
          zmin = TMath::Min(zmin,c1);
          allchan += c1;
       }
    }
 
-//     Take into account maximum , minimum
+   //     Take into account maximum , minimum
 
    if (maximum) zmax = fH->GetMaximumStored();
    if (minimum) zmin = fH->GetMinimumStored();
@@ -5967,13 +5906,9 @@ Int_t THistPainter::TableInit()
             return 0;
          }
       }
-//      else {
-//         zmax = zmin + 1;
-//         zmin = zmin - 1;
-//      }
    }
 
-//     take into account normalization factor
+   //     take into account normalization factor
    Hparam.allchan = allchan;
    Stat_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
@@ -5985,12 +5920,10 @@ Int_t THistPainter::TableInit()
    c1 = zmax;
    if (TMath::Abs(zmin) > TMath::Abs(c1)) c1 = zmin;
 
-//    ----
-//         For log scales, histogram coordinates are log10(ymin) and
-//         log10(ymax). Final adjustment (if not option "Same")
-//         or "+" for ymax) of ymax and ymin for logarithmic scale, if
-//         Maximum and Minimum are not defined.
-//    ----
+   //         For log scales, histogram coordinates are log10(ymin) and
+   //         log10(ymax). Final adjustment (if not option "Same")
+   //         or "+" for ymax) of ymax and ymin for logarithmic scale, if
+   //         Maximum and Minimum are not defined.
    if (Hoption.Logz) {
       if (zmin <= 0) {
          zmin = TMath::Min((Double_t)1, (Double_t)0.001*zmax);
@@ -6002,21 +5935,19 @@ Int_t THistPainter::TableInit()
       if (!maximum && !Hoption.Plus) zmax += TMath::Log10(2*(0.9/0.95));
       goto LZMIN;
    }
-//    ----
-//         final adjustment of YMAXI for linear scale (if not option "Same"):
-//         decrease histogram height to MAX% of allowed height if HMAXIM
-//         has not been called.
-//         MAX% is the value in percent which has been set in HPLSET
-//         (default is 90%).
-//    ----
+
+   //         final adjustment of YMAXI for linear scale (if not option "Same"):
+   //         decrease histogram height to MAX% of allowed height if HMAXIM
+   //         has not been called.
+   //         MAX% is the value in percent which has been set in HPLSET
+   //         (default is 90%).
    if (!maximum && !Hoption.Plus) {
       zmax += yMARGIN*(zmax-zmin);
    }
-//    ----
-//         final adjustment of ymin for linear scale.
-//         if minimum is not set , then ymin is set to zero if >0
-//         or to ymin - yMARGIN if <0.
-//    ----
+
+   //         final adjustment of ymin for linear scale.
+   //         if minimum is not set , then ymin is set to zero if >0
+   //         or to ymin - yMARGIN if <0.
    if (!minimum) {
       if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
@@ -6032,7 +5963,7 @@ LZMIN:
    Hparam.zmin = zmin;
    Hparam.zmax = zmax;
 
-//     Set bar offset and width
+   //     Set bar offset and width
    Hparam.baroffset = fH->GetBarOffset();
    Hparam.barwidth  = fH->GetBarWidth();
 
