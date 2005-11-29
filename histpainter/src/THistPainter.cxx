@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.232 2005/11/23 08:50:42 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.233 2005/11/29 12:52:03 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1394,7 +1394,7 @@ void THistPainter::Paint(Option_t *option)
    }
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) {
       // In case of 1D histogram, Z axis becomes Y axis.
-      Int_t logysav, logzsav;
+      Int_t logysav=0, logzsav=0;
       if (fH->GetDimension() == 1) {
          logysav = Hoption.Logy;
          logzsav = Hoption.Logz;
