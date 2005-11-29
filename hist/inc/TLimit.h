@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.5 2005/11/03 16:31:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.6 2005/11/03 20:52:11 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -11,11 +11,12 @@
 #include "TMath.h"
 #endif
 
+#include "TVectorDfwd.h"
+
 class TConfidenceLevel;
 class TRandom;
 class TLimitDataSource;
 class TArrayD;
-class TVectorD;
 class TOrdCollection;
 class TH1;
 

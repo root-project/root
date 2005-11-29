@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.h,v 1.4 2005/11/03 16:31:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.h,v 1.5 2005/11/03 20:52:11 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimitDataSource
@@ -8,8 +8,9 @@
 #include "TObjArray.h"
 #endif
 
+#include "TVectorDfwd.h"
+   
 class TH1;
-class TVectorD;
 
 //_______________________________________________________________________
 //
