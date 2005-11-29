@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.16 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.17 2005/11/29 14:04:00 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -600,7 +600,6 @@ inline void TGLPlane::Normalise()
    Double_t mag = sqrt( fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2] );
 
    if ( mag == 0.0 ) {
-assert(kFALSE);
       Error("TGLPlane::Normalise", "trying to normalise plane with zero magnitude normal");
       return;
    }
