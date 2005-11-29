@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.110 2005/10/26 10:57:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.111 2005/11/29 14:38:31 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1963,9 +1963,9 @@ void TF1::GradientPar(Double_t *x, Double_t *grad, Double_t eps)
    }
    Double_t h;
    TF1 *func = (TF1*)this;
-   Double_t pp[fNpar];
+   Double_t *pp = new Double_t[fNpar];
    //save original parameters
-   Double_t opp[fNpar];
+   Double_t *opp = new Double_t[fNpar];
    Bool_t errorsComputed=kFALSE;
    for (Int_t ipar=0; ipar<fNpar; ipar++){
      pp[ipar]=fParams[ipar];
@@ -1996,6 +1996,9 @@ void TF1::GradientPar(Double_t *x, Double_t *grad, Double_t eps)
    }
    for (Int_t ipar=0; ipar<fNpar; ipar++)
       fParams[ipar]=opp[ipar];
+   
+   delete [] opp;
+   delete [] pp;
 }
 
 //______________________________________________________________________________
