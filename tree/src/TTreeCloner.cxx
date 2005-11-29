@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.1 2005/11/16 20:17:08 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -44,10 +44,10 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
 
    TString opt(method);
    opt.ToLower();
-   if (opt.Contains("SortBasketByBranch")) {
-      fCloneMethod = TTreeCloner::kSortBasketByBranch;
+   if (opt.Contains("sortbasketsbybranch")) {
+      fCloneMethod = TTreeCloner::kSortBasketsByBranch;
    } else {
-      fCloneMethod = TTreeCloner::kSortBasketByOffset;
+      fCloneMethod = TTreeCloner::kSortBasketsByOffset;
    }
 }
  
@@ -267,17 +267,17 @@ void TTreeCloner::SortBaskets()
 {
    // Sort the basket according to the user request.
    
-   // Currently this sort __has to__ preserved the order
-   // of basket for each individual branch
+   // Currently this sort __has to__ preserve the order
+   // of basket for each individual branch.
 
    switch (fCloneMethod) {
-   case kSortBasketByBranch:
-      // nothing to do, it is already sorted.
-      break;
-   case kSortBasketByOffset:
-   default:
-      TMath::Sort( fMaxBaskets, fBasketSeek, fBasketIndex, kFALSE );
-      break;
+      case kSortBasketsByBranch:
+         // nothing to do, it is already sorted.
+         break;
+      case kSortBasketsByOffset:
+      default:
+         TMath::Sort( fMaxBaskets, fBasketSeek, fBasketIndex, kFALSE );
+         break;
    }
 }
 

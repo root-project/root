@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.119 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.120 2005/11/16 20:25:59 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1202,6 +1202,14 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    //   file->mkdir("mydir")->cd();
    //   ch.Merge(file);
    //
+   // If 'option' contains the word 'fast' the merge will be done without 
+   // unzipping or unstreaming the baskets (i.e. direct copy of the raw byte on disk).
+   // If 'option' also containts 'SortBasketsByBranch', for each original tree, 
+   // the branches' baskets will be reordered so that for each branch, all its 
+   // baskets will be stored contiguously.  Typically this will increase the performance 
+   // when reading a low number of branches (2 to 5) but will decrease the performance
+   // when reading more branches (or the full entry).
+   //
    // IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
    // -----------------------------------------
    // When merging many files, it may happen that the resulting file
@@ -1274,7 +1282,7 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
            ) 
       {
          if (LoadTree(i) < 0) break;
-         TTreeCloner t(GetTree(),hnew,"");
+         TTreeCloner t(GetTree(),hnew,option);
          hnew->SetEntries( hnew->GetEntries() + GetTree()->GetEntries() );
          t.Exec();
       }

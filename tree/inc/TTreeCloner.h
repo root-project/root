@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.1 2005/11/16 20:17:08 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -49,9 +49,9 @@ class TTreeCloner {
    UInt_t     fCloneMethod;      //Indicates which cloning method was selected
 
    enum ECloneMethod {
-      kDefault            = 0,
-      kSortBasketByBranch = 1,
-      kSortBasketByOffset = 2
+      kDefault             = 0,
+      kSortBasketsByBranch = 1,
+      kSortBasketsByOffset = 2
    };
    
 public:

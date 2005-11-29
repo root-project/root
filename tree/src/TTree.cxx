@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.269 2005/11/12 08:33:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.270 2005/11/16 20:29:14 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1792,9 +1792,14 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *option)
 //            Once this tree is deleted, all the addresses of the cloned tree
 //            are reset to their default values.
 //
-// If options contains the word 'fast' and nentries is -1 and no branch
+// If 'option' contains the word 'fast' and nentries is -1 and no branch
 // is disabled, the clone will be done without unzipping or unstreaming
 // tbe baskets (i.e. direct copy of the raw byte on disk).
+// If 'option' also containts 'SortBasketsByBranch', the branches' baskets
+// will be reordered so that for each branch, all its baskets will be 
+// stored contiguously.  Typically this will increase the performance when
+// reading a low number of branches (2 to 5) but will decrease the performance
+// when reading more branches (or the full entry).
 //
 // For examples of CloneTree, see tutorials
 //  -copytree:
@@ -1880,7 +1885,7 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *option)
        newtree->GetListOfLeaves()->GetEntries()==GetListOfLeaves()->GetEntries()) {
       
       // Quickly copy the basket without decompression and streaming.
-      TTreeCloner t(this,newtree,"");
+      TTreeCloner t(this,newtree,option);
       newtree->fEntries += fEntries;
       t.Exec();
 
