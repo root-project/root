@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLFile.h,v 1.3 2005/11/24 16:57:23 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLFile.h,v 1.4 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -167,7 +167,7 @@ public:
        kIndexesNone      = 0,
        kIndexesBasic     = 1,
        kIndexesClass     = 2,
-       kIndexesAll       = 3,
+       kIndexesAll       = 3
    };
 
    TSQLFile();
