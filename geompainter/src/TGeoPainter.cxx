@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.72 2005/10/03 15:26:50 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.73 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -438,8 +438,7 @@ void TGeoPainter::DefaultAngles()
       TView *view = gPad->GetView();
       if (!view) return;
       view->SetView(-206,126,75,irep);
-      gPad->Modified();
-      gPad->Update();
+      ModifiedPad();
    }
 }   
 
@@ -451,12 +450,7 @@ void TGeoPainter::DefaultColors()
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next()))
       vol->SetLineColor(vol->GetMaterial()->GetDefaultColor());
-   if (gPad) {
-      if (gPad->GetView()) {
-         gPad->Modified();
-         gPad->Update();
-      }
-   }
+   ModifiedPad();
 }   
 
 //______________________________________________________________________________
@@ -817,7 +811,7 @@ void TGeoPainter::ModifiedPad() const
    if (!view) return;
    view->SetViewChanged();
    gPad->Modified();
-   gPad->Update();
+   if (gROOT->FromPopUp()) gPad->Update();
 }   
 
 //______________________________________________________________________________
@@ -1366,12 +1360,7 @@ void TGeoPainter::SetBombFactors(Double_t bombx, Double_t bomby, Double_t bombz,
    fBombY = bomby;
    fBombZ = bombz;
    fBombR = bombr;
-   if (IsExplodedView()) {
-      if (gPad) {
-         gPad->Modified();
-         gPad->Update();
-      }
-   }
+   if (IsExplodedView()) ModifiedPad();
 }          
 
 //______________________________________________________________________________
@@ -1398,10 +1387,7 @@ void TGeoPainter::SetExplodedView(Int_t ibomb)
       change &= ((fExplodedView==kGeoBombSph)?kFALSE:kTRUE);
    }
    fExplodedView = ibomb;
-   if (change && gPad->GetView()) {
-      gPad->Modified();
-      gPad->Update();
-   }   
+   if (change) ModifiedPad(); 
 }
 
 //______________________________________________________________________________
@@ -1414,11 +1400,7 @@ void TGeoPainter::SetNsegments(Int_t nseg)
    }
    if (fNsegments==nseg) return;
    fNsegments = nseg;
-   if (!gPad) return;
-   if (gPad->GetView()) {    
-      gPad->Modified();
-      gPad->Update();
-   }
+   ModifiedPad();
 }
 
 //______________________________________________________________________________
@@ -1437,8 +1419,7 @@ void TGeoPainter::SetVisLevel(Int_t level) {
    if (!gPad) return;
    if (gPad->GetView()) {
       printf("--- Drawing   %6d nodes with %d visible levels\n",fNVisNodes,fVisLevel);
-      gPad->Modified();
-      gPad->Update();
+      ModifiedPad();
    }
 }
 
@@ -1448,11 +1429,7 @@ void TGeoPainter::SetTopVisible(Bool_t vis)
 // Set top geometry volume as visible.
    if (fTopVisible==vis) return;
    fTopVisible = vis;
-   if (!gPad) return;
-   if (gPad->GetView()) {
-      gPad->Modified();
-      gPad->Update();
-   }
+   ModifiedPad();
 }
    
 //-----------------------------------------------------------------------------
@@ -1471,11 +1448,7 @@ void TGeoPainter::SetVisOption(Int_t option) {
       ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
-   if (!gPad) return;
-   if (gPad->GetView()) {
-      gPad->Modified();
-      gPad->Update();
-   }
+   ModifiedPad();
 }
 
 //______________________________________________________________________________
