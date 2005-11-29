@@ -33,12 +33,19 @@
 class TGLRotateManip : public TGLManip
 {
 private:
+   // Active ring interaction - set on mouse down
+   Bool_t     fShallowRing;
+   Bool_t     fShallowFront;
+   TGLPlane   fActiveRingPlane;
+   TGLVertex3 fActiveRingCenter;
+
+   // Normal interaction tracking (non-shallow)
    TGLLine3 fRingLine;
    TGLLine3 fRingLineOld;
-   mutable TGLLine3 fDebugProj;
 
    void DrawAxisRing(const TGLVertex3 & origin, const TGLVector3 & axis, 
                      Double_t radius, Float_t rgba[4]) const;
+   Double_t CalculateAngleDelta(const TPoint & mouse, const TGLCamera & camera);
    TGLLine3 CalculateRingLine(const TPoint & mouse, const TGLCamera & camera) const;
 
 public:

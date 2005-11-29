@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.22 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.23 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -166,10 +166,11 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
    //  0-------1
 
    // Get four vertices of frustum on the far clipping plane
-   vertex[4] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]);
-   vertex[5] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kBottom], fFrustumPlanes[kRight]);
-   vertex[6] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop],    fFrustumPlanes[kRight]);
-   vertex[7] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop],    fFrustumPlanes[kLeft]);
+   // We assume they always intersect
+   vertex[4] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]).second;
+   vertex[5] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kBottom], fFrustumPlanes[kRight]).second;
+   vertex[6] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop],    fFrustumPlanes[kRight]).second;
+   vertex[7] = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop],    fFrustumPlanes[kLeft]).second;
 
    if (asBox) {
       // Now find the matching four verticies for above, projected onto near clip plane
@@ -179,11 +180,12 @@ TGLBoundingBox TGLCamera::Frustum(Bool_t asBox) const
       vertex[2] = fFrustumPlanes[kNear].NearestOn(vertex[6]);
       vertex[3] = fFrustumPlanes[kNear].NearestOn(vertex[7]);
    } else {
-      // returing true frustum - find verticies at near clipping plane
-      vertex[0] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]);
-      vertex[1] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kRight]);
-      vertex[2] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kTop],    fFrustumPlanes[kRight]);
-      vertex[3] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kTop],    fFrustumPlanes[kLeft]);
+      // Returing true frustum - find verticies at near clipping plane
+      // We assume they always intersect
+      vertex[0] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]).second;
+      vertex[1] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kRight]).second;
+      vertex[2] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kTop],    fFrustumPlanes[kRight]).second;
+      vertex[3] = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kTop],    fFrustumPlanes[kLeft]).second;
    }
 
    return TGLBoundingBox(vertex);
@@ -202,7 +204,7 @@ TGLVertex3 TGLCamera::EyePoint() const
    // other ways from camera values but this is easiest.
    // Note for an ortho camera this will result in an infinite z distance
    // which is theorectically correct although of limited use
-   return Intersection(fFrustumPlanes[kRight], fFrustumPlanes[kLeft], fFrustumPlanes[kTop]);
+   return Intersection(fFrustumPlanes[kRight], fFrustumPlanes[kLeft], fFrustumPlanes[kTop]).second;
 }
 
 //______________________________________________________________________________
@@ -227,9 +229,18 @@ TGLVertex3 TGLCamera::FrustumCenter() const
    if (fCacheDirty) {
       Error("TGLCamera::FrustumCenter()", "cache dirty - must call Apply()");
    }
-   TGLVertex3 nearBottomLeft = Intersection(fFrustumPlanes[kNear], fFrustumPlanes[kBottom], fFrustumPlanes[kLeft]);
-   TGLVertex3 farTopRight    = Intersection(fFrustumPlanes[kFar], fFrustumPlanes[kTop], fFrustumPlanes[kRight]);
-   return nearBottomLeft + (farTopRight - nearBottomLeft)/2.0;
+   std::pair<Bool_t, TGLVertex3> nearBottomLeft = Intersection(fFrustumPlanes[kNear], 
+                                                               fFrustumPlanes[kBottom], 
+                                                               fFrustumPlanes[kLeft]);
+   std::pair<Bool_t, TGLVertex3> farTopRight    = Intersection(fFrustumPlanes[kFar], 
+                                                               fFrustumPlanes[kTop], 
+                                                               fFrustumPlanes[kRight]);
+   // Planes should intersect
+   if (!nearBottomLeft.first || !farTopRight.first) {
+      Error("TGLCamera::FrustumCenter()", "frustum planes invalid");
+      return TGLVertex3(0.0, 0.0, 0.0);
+   }
+   return nearBottomLeft.second + (farTopRight.second - nearBottomLeft.second)/2.0;
 }
 
 //______________________________________________________________________________
@@ -394,7 +405,8 @@ TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
 TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) const
 {
    // Convert a 2D viewport position to 3D world line - the projection of the 
-   // viewport point into 3D space. See also  
+   // viewport point into 3D space. Line runs from near to far camera clip planes
+   // (the minimum and maximum visible depth). See also  
    //    TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
    // for 3D viewport -> 3D world vertex conversions.
    // See also OpenGL gluUnProject & glDepth documentation
@@ -412,8 +424,9 @@ TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) cons
 //______________________________________________________________________________
 TGLLine3 TGLCamera::ViewportToWorld(const TPoint & viewport) const
 {
-   // Convert a 2D viewport TPoint to 3D world line - the projection of the 
-   // viewport TPoint into 3D space. See also  
+   // Convert a 2D viewport position to 3D world line - the projection of the 
+   // viewport point into 3D space. Line runs from near to far camera clip planes
+   // (the minimum and maximum visible depth). See also  
    //    TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
    // for 3D viewport -> 3D world vertex conversions.
    // See also OpenGL gluUnProject & glDepth documentation
@@ -428,13 +441,20 @@ std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(Double_t view
 {
    // Find the intersection of projection of supplied viewport point (a 3D world
    // line - see ViewportToWorld) with supplied world plane. Returns std::pair
-   // of bool and vertex. If line intersects 
+   // of Bool_t and TGLVertex3. If line intersects std::pair.first (Bool_t) is 
+   // kTRUE, and std::pair.second (TGLVertex) contains the intersection vertex. 
+   // If line does not intersect (line and plane parallel) std::pair.first 
+   // (Bool_t) if kFALSE, and std::pair.second (TGLVertex) is invalid.
+   //
+   // NOTE: The projection lines is extended for the plane intersection test
+   // hence the intersection vertex can lie outside the near/far clip regions
+   // (not visible)
    //
    // Camera must have valid frustum cache - call Apply() after last modifcation, before using
    TGLLine3 worldLine = ViewportToWorld(viewportX, viewportY);
 
    // Find intersection of line with plane
-   return worldPlane.Intersection(worldLine);
+   return Intersection(worldPlane, worldLine, kTRUE /* extended */ );
 }
 
 //______________________________________________________________________________

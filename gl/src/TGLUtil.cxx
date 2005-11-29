@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.16 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.17 2005/11/24 12:29:12 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -344,6 +344,75 @@ void TGLPlane::Dump() const
    // Output plane equation to std::out
    std::cout.precision(6);
    std::cout << "Plane : " << fVals[0] << "x + " << fVals[1] << "y + " << fVals[2] << "z + " << fVals[3] << std::endl;
+}
+
+// Some free functions for plane intersections
+
+//______________________________________________________________________________
+std::pair<Bool_t, TGLLine3> Intersection(const TGLPlane & p1, const TGLPlane & p2)
+{
+   // Find 3D line interestion of this plane with 'other'. Returns a std::pair
+   //
+   // first (Bool_t)                   second (TGLLine3)
+   // kTRUE - planes intersect         intersection line between planes
+   // kFALSE - no intersect (parallel) undefined
+   TGLVector3 lineDir = Cross(p1.Norm(), p2.Norm());
+
+   if (lineDir.Mag() == 0.0) {
+      return std::make_pair(kFALSE, TGLLine3(TGLVertex3(0.0, 0.0, 0.0), 
+                                             TGLVector3(0.0, 0.0, 0.0)));
+   }
+   TGLVertex3 linePoint = Cross((p1.Norm()*p2.D() - p2.Norm()*p1.D()), lineDir) / 
+                           Dot(lineDir, lineDir);
+   return std::make_pair(kTRUE, TGLLine3(linePoint, lineDir));
+}
+
+//______________________________________________________________________________
+std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & p1, const TGLPlane & p2, const TGLPlane & p3)
+{
+   Double_t denom = Dot(p1.Norm(), Cross(p2.Norm(), p3.Norm()));
+   if (denom == 0.0) {
+      return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
+   }
+   TGLVector3 vect = (Cross(p2.Norm(),p3.Norm())* -p1.D()) - (Cross(p3.Norm(),p1.Norm())*p2.D()) - (Cross(p1.Norm(),p2.Norm())*p3.D());
+   return std::make_pair(kTRUE, vect / denom);
+}
+
+//______________________________________________________________________________
+std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine3 & line, Bool_t extend)
+{
+   // Find intersection of 3D space 'line' with this plane. If 'extend' is kTRUE
+   // then line extents can be extended (infinite length) to find intersection.
+   // If 'extend' is kFALSE the fixed extents of line is respected. 
+   //
+   // The return a std::pair
+   //
+   // first (Bool_t)                   second (TGLVertex3)
+   // kTRUE - line/plane intersect     intersection vertex on plane
+   // kFALSE - no line/plane intersect undefined
+   //
+   // If intersection is not found (first == kFALSE) & 'extend' was kTRUE (infinite line)
+   // this implies line and plane are parallel. If 'extend' was kFALSE, then 
+   // either line parallel or insuffient length.
+   Double_t denom = -(plane.A()*line.Vector().X() + 
+                      plane.B()*line.Vector().Y() + 
+                      plane.C()*line.Vector().Z());
+
+   if (denom == 0.0) {
+      return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
+   }
+
+   Double_t num = plane.A()*line.Start().X() + plane.B()*line.Start().Y() + 
+                  plane.C()*line.Start().Z() + plane.D();
+   Double_t factor = num/denom;
+
+   // If not extending (projecting) line is length from start enough to reach plane?
+   if (!extend && factor < 0.0 || factor > 1.0) {
+      return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
+   }
+
+   TGLVector3 toPlane = line.Vector() * factor;
+   return std::make_pair(kTRUE, line.Start() + toPlane);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -712,18 +781,18 @@ void TGLUtil::SetDrawColors(const Float_t rgba[4])
    //  
    // diffuse  : rgba
    // ambient  : 0.0 0.0 0.0 1.0
-   // specular : 0.8 0.8 0.8 1.0
-   // emission : rgba/3.0
+   // specular : 0.6 0.6 0.6 1.0
+   // emission : rgba/4.0
    // shininess: 60.0
    //
-   // emission is set so objects with no lighting, but lighting still enabled
-   // as still visible
+   // emission is set so objects with no lights (but lighting still enabled)
+   // are partially visible
    
    
    // Util function to setup GL color for both unlit and lit material
    static Float_t ambient[4] = {0.0, 0.0, 0.0, 1.0};
-   static Float_t specular[4] = {0.8, 0.8, 0.8, 1.0};
-   Float_t emission[4] = {rgba[0]/3.0, rgba[1]/3.0, rgba[2]/3.0, rgba[3]};
+   static Float_t specular[4] = {0.6, 0.6, 0.6, 1.0};
+   Float_t emission[4] = {rgba[0]/4.0, rgba[1]/4.0, rgba[2]/4.0, rgba[3]};
 
    glColor3d(rgba[0], rgba[1], rgba[2]);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);

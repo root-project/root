@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.15 2005/11/16 16:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.16 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 #include <vector>
 #include <assert.h>
 
-// TODO: Split these into own h/cxx files
+// TODO: Split these into own h/cxx files - too long now!
 
 // TODO: Where should these enums live?
 enum  ELODPresets {
@@ -526,7 +526,6 @@ public:
    TGLVector3 Norm() const { return TGLVector3( fVals[0], fVals[1], fVals[2]); }
    Double_t DistanceTo(const TGLVertex3 & vertex) const;
    TGLVertex3 NearestOn(const TGLVertex3 & point) const;
-   std::pair<Bool_t, TGLVertex3> Intersection(const TGLLine3 & line) const; 
 
    // Internal data accessors - for GL API
    const Double_t * CArr() const { return fVals; }
@@ -601,6 +600,7 @@ inline void TGLPlane::Normalise()
    Double_t mag = sqrt( fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2] );
 
    if ( mag == 0.0 ) {
+assert(kFALSE);
       Error("TGLPlane::Normalise", "trying to normalise plane with zero magnitude normal");
       return;
    }
@@ -625,27 +625,10 @@ inline TGLVertex3 TGLPlane::NearestOn(const TGLVertex3 & point) const
    return v;
 }
 
-//______________________________________________________________________________
-inline std::pair<Bool_t, TGLVertex3> TGLPlane::Intersection(const TGLLine3 & line) const
-{
-   Double_t denom = -(A()*line.Vector().X() + B()*line.Vector().Y() + C()*line.Vector().Z());
-
-   if (denom == 0.0) {
-      return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
-   }
-
-   Double_t num = A()*line.Start().X() + B()*line.Start().Y() + C()*line.Start().Z() + D();
-   TGLVector3 toPlane = line.Vector() * (num/denom);
-   return std::make_pair(kTRUE, line.Start() + toPlane);
-}
-
-//______________________________________________________________________________
-inline TGLVertex3 Intersection(const TGLPlane & p1, const TGLPlane & p2, const TGLPlane & p3)
-{
-   Double_t m = Dot(p1.Norm(), Cross(p2.Norm(), p3.Norm()));
-   TGLVector3 v = (Cross(p2.Norm(),p3.Norm())* -p1.D()) - (Cross(p3.Norm(),p1.Norm())*p2.D()) - (Cross(p1.Norm(),p2.Norm())*p3.D());
-   return v / m;
-}
+// Some free functions for planes
+std::pair<Bool_t, TGLLine3>   Intersection(const TGLPlane & p1, const TGLPlane & p2); 
+std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & p1, const TGLPlane & p2, const TGLPlane & p3);
+std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine3 & line, Bool_t extend); 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
