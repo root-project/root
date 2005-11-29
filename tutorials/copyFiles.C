@@ -37,7 +37,7 @@ void CopyDir(TDirectory *source) {
       } else if (cl->InheritsFrom("TTree")) {
          TTree *T = (TTree*)source->Get(key->GetName());
          adir->cd();
-         TTree *newT = T->CloneTree();
+         TTree *newT = T->CloneTree(-1,"fast");
          newT->Write();
       } else {
          source->cd();
