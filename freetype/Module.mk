@@ -106,7 +106,7 @@ else
 		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			FREECC="cc"; \
-			FREE_CFLAGS="+DD64 -Ae"; \
+			FREE_CFLAGS="+DD64 -Ae +W863"; \
 		fi; \
 		if [ $(ARCH) = "aix5" ]; then \
 			FREEZLIB="--without-zlib"; \

@@ -145,7 +145,7 @@ else
 			ACC="gcc -mabi=64"; \
 		fi; \
 		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
-			ACC="cc +DD64 -Ae"; \
+			ACC="cc +DD64 -Ae +W863"; \
 			ACCALT="gcc -mlp64"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
