@@ -27,12 +27,15 @@
    where h1 will be the sum of the 2 histograms in f1 and f2
          T1 will be the merge of the Trees in f1 and f2
 
+   The files may contain sub-directories.
+   
   if the source files contains histograms and Trees, one can skip 
   the Trees with
        hadd -T targetfile source1 source2 ...
   
   Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
-
+         : rewritten from scratch by Rene Brun (30 November 2005)
+            to support files with nested directories.
  */
 
 #include "RConfig.h"
@@ -48,7 +51,7 @@ TList *FileList;
 TFile *Target, *Source;
 Bool_t noTrees;
 
-void MergeRootfile( TDirectory *target, TList *sourcelist );
+void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
 
 int main( int argc, char **argv ) {
 
@@ -104,7 +107,7 @@ int main( int argc, char **argv ) {
     FileList->Add(Source);
   }
 
-  MergeRootfile( Target, FileList );
+  MergeRootfile( Target, FileList,0 );
 
  //must delete Target to avoid a problem with dictionaries in~ TROOT
   delete Target;
@@ -112,17 +115,21 @@ int main( int argc, char **argv ) {
   return 0;
 }
 
-void MergeRootfile( TDirectory *target, TList *sourcelist ) {
+void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) {
 
-  //  cout << "Target path: " << target->GetPath() << endl;
+  TDirectory *dirsav = gDirectory;
+  cout << "Target path: " << target->GetPath() << endl;
   TString path( (char*)strstr( target->GetPath(), ":" ) );
   path.Remove( 0, 2 );
 
-  TFile *first_source = (TFile*)sourcelist->First();
+  TDirectory *first_source = (TDirectory*)sourcelist->First();
   THashList allNames;
   while(first_source) {
-     first_source->cd( path );
-     TDirectory *current_sourcedir = gDirectory;
+     TDirectory *current_sourcedir = first_source->GetDirectory(path);
+     if (!current_sourcedir) {
+        first_source = (TDirectory*)sourcelist->After(first_source);
+        continue;
+     }
 
      // loop over all keys in this directory
      TChain *globChain = 0;
@@ -132,20 +139,19 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
      TH1::AddDirectory(kFALSE);
   
      while ( (key = (TKey*)nextkey())) {
-
+        if (current_sourcedir == target) break;
        //keep only the highest cycle number for each key
        if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
        if (allNames.FindObject(key->GetName())) continue;
        allNames.Add(new TObjString(key->GetName()));
             
        // read object from first source file
-       first_source->cd( path );
+       current_sourcedir->cd();
        TObject *obj = key->ReadObj();
 
        if ( obj->IsA()->InheritsFrom( TH1::Class() ) ) {
          // descendant of TH1 -> merge it
 
-            //cout << "Merging histogram " << obj->GetName() << endl;
          TH1 *h1 = (TH1*)obj;
          TList listH;
 
@@ -155,12 +161,15 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
          while ( nextsource ) {
         
            // make sure we are at the correct directory level by cd'ing to path
-           nextsource->cd( path );
-           TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
-           if (key2) {
-              listH.Add(key2->ReadObj());
-              h1->Merge(&listH);
-              listH.Delete();
+           TDirectory *ndir = nextsource->GetDirectory(path);
+           if (ndir) {
+              ndir->cd();
+              TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
+              if (key2) {
+                 listH.Add(key2->ReadObj());
+                 h1->Merge(&listH);
+                 listH.Delete();
+              }
            }
 
            nextsource = (TFile*)sourcelist->After( nextsource );
@@ -180,13 +189,22 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
             globChain = new TChain(obj_name);
             globChain->Add(first_source->GetName());
             TFile *nextsource = (TFile*)sourcelist->After( first_source );
-            //      const char* file_name = nextsource->GetName();
-            // cout << "file name  " << file_name << endl;
             while ( nextsource ) {     	  
                //do not add to the list a file that does not contain this Tree
                TFile *curf = TFile::Open(nextsource->GetName());
-               if (curf && curf->FindObject(obj_name)) {
-                  globChain->Add(nextsource->GetName());
+               if (curf) {
+                  Bool_t mustAdd = kFALSE;
+                  if (curf->FindKey(obj_name)) {
+                     mustAdd = kTRUE;
+                  } else {
+                     //we could be more clever here. No need to import the object
+                     //we are missing a function in TDirectory
+                     TObject *aobj = curf->Get(obj_name);
+                     if (aobj) { mustAdd = kTRUE; delete aobj;}
+                  }
+                  if (mustAdd) {
+                    globChain->Add(nextsource->GetName());
+                  }
                }
                delete curf;
                nextsource = (TFile*)sourcelist->After( nextsource );
@@ -197,7 +215,6 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
          // it's a subdirectory
 
          cout << "Found subdirectory " << obj->GetName() << endl;
-  
          // create a new subdir of same name and title in the target file
          target->cd();
          TDirectory *newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
@@ -205,7 +222,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
          // newdir is now the starting point of another round of merging
          // newdir still knows its depth within the target file via
          // GetPath(), so we can still figure out where we are in the recursion
-         MergeRootfile( newdir, sourcelist );
+         MergeRootfile( newdir, sourcelist,1);
 
        } else {
 
@@ -222,9 +239,12 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
           target->cd();
        
           //!!if the object is a tree, it is stored in globChain...
-          if(obj->IsA()->InheritsFrom( "TTree" )) {
+          if(obj->IsA()->InheritsFrom( "TDirectory" )) {
+             //printf("cas d'une directory\n");
+          } else if(obj->IsA()->InheritsFrom( "TTree" )) {
              if (!noTrees) {
-                globChain->Merge(target->GetFile(),0,"keep");
+                globChain->ls();
+                globChain->Merge(target->GetFile(),0,"keep fast");
                 delete globChain;
              }
           } else {
@@ -234,10 +254,9 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
        oldkey = key;
 
      } // while ( ( TKey *key = (TKey*)nextkey() ) )
-     sourcelist->Remove(first_source);
-     first_source = (TFile*)sourcelist->First();
+     first_source = (TDirectory*)sourcelist->After(first_source);
   }
   // save modifications to target file
   target->SaveSelf(kTRUE);
-
+  if (!isdir) sourcelist->Remove(sourcelist->First());
 }
