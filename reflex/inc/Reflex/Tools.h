@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -115,8 +115,8 @@ namespace ROOT {
           * @return template Name
           */
          std::string GetTemplateName( const char * name );
-   
 
+   
          /**
           * MakeVector is a utility function to create and initialize a std::vector of
           * number of items
@@ -124,151 +124,378 @@ namespace ROOT {
           * @return output vector
           */
          template <typename T >
-            inline std::vector<T> MakeVector(T t0) { 
-            std::vector<T> v; 
-            v.push_back(t0);
-            return v; 
+           inline std::vector<T> MakeVector(T t0) { 
+           std::vector<T> v; 
+           v.push_back(t0);
+           return v; 
+         }
+         
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1);
+           return v;
          }
   
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1);
-            return v;
-         }
-  
-         template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5); v.push_back(t6);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5); v.push_back(t6); v.push_back(t7);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8 ) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8, T t9 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9 ) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8, T t9, T t10 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
-            v.push_back(t10);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10 ) {
+           std::vector<T> v;
+           v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+           v.push_back(t10);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8, T t9, T t10, T t11 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
-            v.push_back(t10); v.push_back(t11);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11 ) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+           v.push_back(t10); v.push_back(t11);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8, T t9, T t10, T t11, T t12 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
-            v.push_back(t10); v.push_back(t11); v.push_back(t12);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12 ) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2); v.push_back(t3); v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7), v.push_back(t8); v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8, T t9, T t10, T t11, T t12, T t13 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
-            v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13 ) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3); v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8); v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8, T t9, T t10, T t11, T t12, T t13, T t14 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
-            v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14 ) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           return v;
          }
 
          template <typename T >
-            inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
-                                             T t8, T t9, T t10, T t11, T t12, T t13, T t14, T t15 ) {
-            std::vector<T> v;
-            v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
-            v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
-            v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
-            v.push_back(t15);
-            return v;
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15 ) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16 ) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20);
+           return v;
+         }
+ 
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24, T t25) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           v.push_back(t25);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24, T t25, T t26) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           v.push_back(t25); v.push_back(t26);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24, T t25, T t26, T t27) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           v.push_back(t25); v.push_back(t26); v.push_back(t27);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24, T t25, T t26, T t27, T t28) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           v.push_back(t25); v.push_back(t26); v.push_back(t27); v.push_back(t28);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24, T t25, T t26, T t27, T t28,
+                                            T t29) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           v.push_back(t25); v.push_back(t26); v.push_back(t27); v.push_back(t28); v.push_back(t29);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24, T t25, T t26, T t27, T t28,
+                                            T t29, T t30) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           v.push_back(t25); v.push_back(t26); v.push_back(t27); v.push_back(t28); v.push_back(t29);
+           v.push_back(t30);
+           return v;
+         }
+
+         template <typename T >
+           inline std::vector<T> MakeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                            T t8, T t9, T t10, T t11, T t12, T t13, T t14, 
+                                            T t15, T t16, T t17, T t18, T t19, T t20, T t21,
+                                            T t22, T t23, T t24, T t25, T t26, T t27, T t28,
+                                            T t29, T t30, T t31) {
+           std::vector<T> v;
+           v.push_back(t0);  v.push_back(t1);  v.push_back(t2);  v.push_back(t3);  v.push_back(t4);
+           v.push_back(t5);  v.push_back(t6);  v.push_back(t7),  v.push_back(t8);  v.push_back(t9);
+           v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+           v.push_back(t15); v.push_back(t16); v.push_back(t17); v.push_back(t18); v.push_back(t19);
+           v.push_back(t20); v.push_back(t21); v.push_back(t22); v.push_back(t23); v.push_back(t24);
+           v.push_back(t25); v.push_back(t26); v.push_back(t27); v.push_back(t28); v.push_back(t29);
+           v.push_back(t30); v.push_back(t31);
+           return v;
          }
 
          template < typename T > class CheckPointer {
-	 public:
-            static void * Get(const T & value) { return (void*) & value; } 
+         public:
+           static void * Get(const T & value) { return (void*) & value; } 
          };
-
+      
          template < typename T > class CheckPointer < T * > { 
-	 public:
-	    static void * Get(const T & value) { return (void*) value; } 
+         public:
+           static void * Get(const T & value) { return (void*) value; } 
          };
 
       } // namespace Tools

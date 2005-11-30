@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.2 2005/11/24 13:29:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -486,7 +486,7 @@ void ReflexSimple2Test::testFunctionMembers() {
   o = t.Construct();
   CPPUNIT_ASSERT(o);
   
-  CPPUNIT_ASSERT_EQUAL(50,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(51,int(t.FunctionMemberSize()));
   
   m = t.MemberByName("h");
   CPPUNIT_ASSERT(m);
@@ -615,6 +615,16 @@ void ReflexSimple2Test::testFreeFunctions() {
   CPPUNIT_ASSERT_EQUAL(std::string("int (int)"),m.TypeOf().Name(FINAL | F));
   CPPUNIT_ASSERT_EQUAL(std::string("int (int)"),m.TypeOf().Name(QUALIFIED | Q));
   CPPUNIT_ASSERT_EQUAL(std::string("int (int)"),m.TypeOf().Name(SCOPED | QUALIFIED | FINAL | S | Q | F));
+
+  t = Type::ByName("ClassB");
+  CPPUNIT_ASSERT(t);
+  Object o = t.Construct();
+  CPPUNIT_ASSERT(o);
+  int arg = 2;
+  std::vector<void*> argVec;
+  for (int i = 0; i < 20; ++i) argVec.push_back(&arg);
+  int ret = Object_Cast<int>(o.Invoke("funWithManyArgs",argVec));
+  CPPUNIT_ASSERT_EQUAL(ret,40);
 
 }
 
