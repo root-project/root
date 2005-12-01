@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.26 2005/10/13 14:02:37 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.27 2005/11/10 10:36:59 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -348,70 +348,70 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Int_t i, k,ifneg,i1, i2;
-    Double_t x[13], y[13];
-    Double_t z;
-    Double_t p3[24]        /* was [2][12] */;
+   /* Local variables */
+   Int_t i, k,ifneg,i1, i2;
+   Double_t x[13], y[13];
+   Double_t z;
+   Double_t p3[24]        /* was [2][12] */;
 
 
-        TView *view = gPad->GetView();   //Get current view
-        if(!view) return;                //Check if `view` is valid!
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          T R A N S F E R   T O   N O R M A L I S E D   COORDINATES
 
-    /* Parameter adjustments */
-    --t;
-    --iface;
-    xyz -= 4;
-    --icodes;
+   /* Parameter adjustments */
+   --t;
+   --iface;
+   xyz -= 4;
+   --icodes;
 
-    ifneg = 0;
-    for (i = 1; i <= np; ++i) {
-        k = iface[i];
-        if (k < 0) ifneg = 1;
-        if (k < 0) k = -k;
-        view->WCtoNDC(&xyz[k*3 + 1], &p3[2*i - 2]);
-        x[i - 1] = p3[2*i - 2];
-        y[i - 1] = p3[2*i - 1];
-    }
+   ifneg = 0;
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      if (k < 0) ifneg = 1;
+      if (k < 0) k = -k;
+      view->WCtoNDC(&xyz[k*3 + 1], &p3[2*i - 2]);
+      x[i - 1] = p3[2*i - 2];
+      y[i - 1] = p3[2*i - 1];
+   }
 
 //*-*-          F I N D   N O R M A L
 
-    z = 0;
-    for (i = 1; i <= np; ++i) {
-        i1 = i;
-        i2 = i1 + 1;
-        if (i2 > np) i2 = 1;
-        z = z + p3[2*i1 - 1]*p3[2*i2 - 2] - p3[2*i1 - 2] *
-                p3[2*i2 - 1];
-    }
+   z = 0;
+   for (i = 1; i <= np; ++i) {
+      i1 = i;
+      i2 = i1 + 1;
+      if (i2 > np) i2 = 1;
+      z = z + p3[2*i1 - 1]*p3[2*i2 - 2] - p3[2*i1 - 2] *
+              p3[2*i2 - 1];
+   }
 
 //*-*-          D R A W   F A C E
 
-    if (z > 0)         SetFillColor(kF3FillColor1);
-    if (z <= 0) SetFillColor(kF3FillColor2);
-    SetFillStyle(1001);
-    TAttFill::Modify();
-    gPad->PaintFillArea(np, x, y);
+   if (z > 0)         SetFillColor(kF3FillColor1);
+   if (z <= 0) SetFillColor(kF3FillColor2);
+   SetFillStyle(1001);
+   TAttFill::Modify();
+   gPad->PaintFillArea(np, x, y);
 
 //*-*-          D R A W   B O R D E R
 
-    if (ifneg == 0) {
-        SetFillStyle(0);
-        SetFillColor(kF3LineColor);
-        TAttFill::Modify();
-        gPad->PaintFillArea(np, x, y);
-    } else {
-        x[np] = x[0];
-        y[np] = y[0];
-        SetLineColor(kF3LineColor);
-        TAttLine::Modify();
-        for (i = 1; i <= np; ++i) {
-            if (iface[i] > 0) gPad->PaintPolyLine(2, &x[i-1], &y[i-1]);
-        }
-    }
+   if (ifneg == 0) {
+      SetFillStyle(0);
+      SetFillColor(kF3LineColor);
+      TAttFill::Modify();
+      gPad->PaintFillArea(np, x, y);
+   } else {
+      x[np] = x[0];
+      y[np] = y[0];
+      SetLineColor(kF3LineColor);
+      TAttLine::Modify();
+      for (i = 1; i <= np; ++i) {
+         if (iface[i] > 0) gPad->PaintPolyLine(2, &x[i-1], &y[i-1]);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -435,40 +435,40 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Int_t i, k;
-    Double_t x[12], y[12];
-    Double_t p3[36]        /* was [3][12] */;
+   /* Local variables */
+   Int_t i, k;
+   Double_t x[12], y[12];
+   Double_t p3[36]        /* was [3][12] */;
 
 
-        TView *view = gPad->GetView();   //Get current view
-        if(!view) return;                //Check if `view` is valid!
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          T R A N S F E R   T O   N O R M A L I S E D   COORDINATES
 
-    /* Parameter adjustments */
-    --t;
-    --iface;
-    xyz -= 4;
-    --icodes;
+   /* Parameter adjustments */
+   --t;
+   --iface;
+   xyz -= 4;
+   --icodes;
 
-    for (i = 1; i <= np; ++i) {
-        k = iface[i];
-        view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
-        x[i - 1] = p3[i*3 - 3];
-        y[i - 1] = p3[i*3 - 2];
-    }
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
+      x[i - 1] = p3[i*3 - 3];
+      y[i - 1] = p3[i*3 - 2];
+   }
 
 //*-*-          D R A W   F A C E   &   B O R D E R
 
-    FillPolygon(np, p3, &t[1]);
-    if (fMesh == 1) {
-        SetFillColor(1);
-        SetFillStyle(0);
-        TAttFill::Modify();
-        gPad->PaintFillArea(np, x, y);
-    }
+   FillPolygon(np, p3, &t[1]);
+   if (fMesh == 1) {
+      SetFillColor(1);
+      SetFillStyle(0);
+      TAttFill::Modify();
+      gPad->PaintFillArea(np, x, y);
+   }
 }
 
 //______________________________________________________________________________
@@ -496,45 +496,45 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, k;
-    Int_t icol = 0;
-    Double_t x[4], y[4], p3[12]        /* was [3][4] */;
+   Int_t i, k;
+   Int_t icol = 0;
+   Double_t x[4], y[4], p3[12]        /* was [3][4] */;
 
 
-        TView *view = gPad->GetView();   //Get current view
-        if(!view) return;                //Check if `view` is valid!
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 
-    /* Parameter adjustments */
-    --t;
-    --iface;
-    xyz -= 4;
-    --icodes;
+   /* Parameter adjustments */
+   --t;
+   --iface;
+   xyz -= 4;
+   --icodes;
 
-    if (icodes[4] == 6) icol = fColorTop;
-    if (icodes[4] == 5) icol = fColorBottom;
-    if (icodes[4] == 1) icol = fColorMain[icodes[3] - 1];
-    if (icodes[4] == 2) icol = fColorDark[icodes[3] - 1];
-    if (icodes[4] == 3) icol = fColorMain[icodes[3] - 1];
-    if (icodes[4] == 4) icol = fColorDark[icodes[3] - 1];
+   if (icodes[4] == 6) icol = fColorTop;
+   if (icodes[4] == 5) icol = fColorBottom;
+   if (icodes[4] == 1) icol = fColorMain[icodes[3] - 1];
+   if (icodes[4] == 2) icol = fColorDark[icodes[3] - 1];
+   if (icodes[4] == 3) icol = fColorMain[icodes[3] - 1];
+   if (icodes[4] == 4) icol = fColorDark[icodes[3] - 1];
 
-    for (i = 1; i <= np; ++i) {
-        k = iface[i];
-        view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
-        x[i - 1] = p3[i*3 - 3];
-        y[i - 1] = p3[i*3 - 2];
-    }
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      view->WCtoNDC(&xyz[k*3 + 1], &p3[i*3 - 3]);
+      x[i - 1] = p3[i*3 - 3];
+      y[i - 1] = p3[i*3 - 2];
+   }
 
-    SetFillStyle(1001);
-    SetFillColor(icol);
-    TAttFill::Modify();
-    gPad->PaintFillArea(np, x, y);
-    if (fMesh) {
-        SetFillStyle(0);
-        SetFillColor(1);
-        TAttFill::Modify();
-        gPad->PaintFillArea(np, x, y);
-    }
+   SetFillStyle(1001);
+   SetFillColor(icol);
+   TAttFill::Modify();
+   gPad->PaintFillArea(np, x, y);
+   if (fMesh) {
+      SetFillStyle(0);
+      SetFillColor(1);
+      TAttFill::Modify();
+      gPad->PaintFillArea(np, x, y);
+   }
 }
 
 //______________________________________________________________________________
@@ -561,84 +561,84 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t xdel, ydel;
-    Int_t i, k, i1, i2, il, it;
-    Double_t x[2], y[2];
-    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
+   Double_t xdel, ydel;
+   Int_t i, k, i1, i2, il, it;
+   Double_t x[2], y[2];
+   Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
 
 
-    TView *view = gPad->GetView();   //Get current view
-    if(!view) return;                //Check if `view` is valid!
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
 
-    /* Parameter adjustments */
-    --tt;
-    --iface;
-    xyz -= 4;
-    --icodes;
+   /* Parameter adjustments */
+   --tt;
+   --iface;
+   xyz -= 4;
+   --icodes;
 
-    for (i = 1; i <= np; ++i) {
-        k = iface[i];
-        p3[i*3 - 3] = xyz[k*3 + 1];
-        p3[i*3 - 2] = xyz[k*3 + 2];
-        p3[i*3 - 1] = xyz[k*3 + 3];
-    }
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      p3[i*3 - 3] = xyz[k*3 + 1];
+      p3[i*3 - 2] = xyz[k*3 + 2];
+      p3[i*3 - 1] = xyz[k*3 + 3];
+   }
 
 //*-*-          F I N D   L E V E L   L I N E S
 
-    FindLevelLines(np, p3, &tt[1]);
+   FindLevelLines(np, p3, &tt[1]);
 
 //*-*-          D R A W   L E V E L   L I N E S
 
-    SetLineStyle(3);
-    TAttLine::Modify();
-    for (il = 1; il <= fNlines; ++il) {
-        FindVisibleDraw(&fPlines[(2*il + 1)*3 - 9], &fPlines[(2*il + 2)*3 - 9]);
-        view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
-        view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
-        xdel = p2[0] - p1[0];
-        ydel = p2[1] - p1[1];
-        for (it = 1; it <= fNT; ++it) {
-            x[0] = p1[0] + xdel*fT[2*it - 2];
-            y[0] = p1[1] + ydel*fT[2*it - 2];
-            x[1] = p1[0] + xdel*fT[2*it - 1];
-            y[1] = p1[1] + ydel*fT[2*it - 1];
-            gPad->PaintPolyLine(2, x, y);
-        }
-    }
+   SetLineStyle(3);
+   TAttLine::Modify();
+   for (il = 1; il <= fNlines; ++il) {
+      FindVisibleDraw(&fPlines[(2*il + 1)*3 - 9], &fPlines[(2*il + 2)*3 - 9]);
+      view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
+      view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
+      xdel = p2[0] - p1[0];
+      ydel = p2[1] - p1[1];
+      for (it = 1; it <= fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it - 2];
+         y[0] = p1[1] + ydel*fT[2*it - 2];
+         x[1] = p1[0] + xdel*fT[2*it - 1];
+         y[1] = p1[1] + ydel*fT[2*it - 1];
+         gPad->PaintPolyLine(2, x, y);
+      }
+   }
 
 //*-*-          D R A W   F A C E
 
-    SetLineStyle(1);
-    TAttLine::Modify();
-    for (i = 1; i <= np; ++i) {
-        i1 = i;
-        i2 = i + 1;
-        if (i == np) i2 = 1;
-        FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-        view->WCtoNDC(&p3[i1*3 - 3], p1);
-        view->WCtoNDC(&p3[i2*3 - 3], p2);
-        xdel = p2[0] - p1[0];
-        ydel = p2[1] - p1[1];
-        for (it = 1; it <= fNT; ++it) {
-            x[0] = p1[0] + xdel*fT[2*it - 2];
-            y[0] = p1[1] + ydel*fT[2*it - 2];
-            x[1] = p1[0] + xdel*fT[2*it - 1];
-            y[1] = p1[1] + ydel*fT[2*it - 1];
-            gPad->PaintPolyLine(2, x, y);
-        }
-    }
+   SetLineStyle(1);
+   TAttLine::Modify();
+   for (i = 1; i <= np; ++i) {
+      i1 = i;
+      i2 = i + 1;
+      if (i == np) i2 = 1;
+      FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+      view->WCtoNDC(&p3[i1*3 - 3], p1);
+      view->WCtoNDC(&p3[i2*3 - 3], p2);
+      xdel = p2[0] - p1[0];
+      ydel = p2[1] - p1[1];
+      for (it = 1; it <= fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it - 2];
+         y[0] = p1[1] + ydel*fT[2*it - 2];
+         x[1] = p1[0] + xdel*fT[2*it - 1];
+         y[1] = p1[1] + ydel*fT[2*it - 1];
+         gPad->PaintPolyLine(2, x, y);
+      }
+   }
 
 //*-*-          M O D I F Y    S C R E E N
 
-    for (i = 1; i <= np; ++i) {
-        i1 = i;
-        i2 = i + 1;
-        if (i == np) i2 = 1;
-        ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-    }
+   for (i = 1; i <= np; ++i) {
+      i1 = i;
+      i2 = i + 1;
+      if (i == np) i2 = 1;
+      ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+   }
 }
 
 //______________________________________________________________________________
@@ -740,63 +740,62 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t xdel, ydel;
-    Int_t i, k, icol, i1, i2, it;
-    Double_t x[2], y[2];
-    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
+   Double_t xdel, ydel;
+   Int_t i, k, icol, i1, i2, it;
+   Double_t x[2], y[2];
+   Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
 
 
-        TView *view = gPad->GetView();   //Get current view
-        if(!view) return;                //Check if `view` is valid!
-
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
 
-    /* Parameter adjustments */
-    --tt;
-    --iface;
-    xyz -= 4;
-    --icodes;
+   /* Parameter adjustments */
+   --tt;
+   --iface;
+   xyz -= 4;
+   --icodes;
 
-    for (i = 1; i <= np; ++i) {
-        k = iface[i];
-        p3[i*3 - 3] = xyz[k*3 + 1];
-        p3[i*3 - 2] = xyz[k*3 + 2];
-        p3[i*3 - 1] = xyz[k*3 + 3];
-    }
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      p3[i*3 - 3] = xyz[k*3 + 1];
+      p3[i*3 - 2] = xyz[k*3 + 2];
+      p3[i*3 - 1] = xyz[k*3 + 3];
+   }
 
 //*-*-          D R A W   F A C E
 
-    icol = icodes[3];
-    if (icol) SetLineColor(fColorMain[icol - 1]);
-    else      SetLineColor(1);
-    TAttLine::Modify();
-    for (i = 1; i <= np; ++i) {
-        i1 = i;
-        i2 = i + 1;
-        if (i == np) i2 = 1;
-        FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-        view->WCtoNDC(&p3[i1*3 - 3], p1);
-        view->WCtoNDC(&p3[i2*3 - 3], p2);
-        xdel = p2[0] - p1[0];
-        ydel = p2[1] - p1[1];
-        for (it = 1; it <= fNT; ++it) {
-            x[0] = p1[0] + xdel*fT[2*it - 2];
-            y[0] = p1[1] + ydel*fT[2*it - 2];
-            x[1] = p1[0] + xdel*fT[2*it - 1];
-            y[1] = p1[1] + ydel*fT[2*it - 1];
-            gPad->PaintPolyLine(2, x, y);
-        }
-    }
+   icol = icodes[3];
+   if (icol) SetLineColor(fColorMain[icol - 1]);
+   else      SetLineColor(1);
+   TAttLine::Modify();
+   for (i = 1; i <= np; ++i) {
+      i1 = i;
+      i2 = i + 1;
+      if (i == np) i2 = 1;
+      FindVisibleDraw(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+      view->WCtoNDC(&p3[i1*3 - 3], p1);
+      view->WCtoNDC(&p3[i2*3 - 3], p2);
+      xdel = p2[0] - p1[0];
+      ydel = p2[1] - p1[1];
+      for (it = 1; it <= fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it - 2];
+         y[0] = p1[1] + ydel*fT[2*it - 2];
+         x[1] = p1[0] + xdel*fT[2*it - 1];
+         y[1] = p1[1] + ydel*fT[2*it - 1];
+         gPad->PaintPolyLine(2, x, y);
+      }
+   }
 
 //*-*-          M O D I F Y    S C R E E N
 
-    for (i = 1; i <= np; ++i) {
-        i1 = i;
-        i2 = i + 1;
-        if (i == np) i2 = 1;
-        ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
-    }
+   for (i = 1; i <= np; ++i) {
+      i1 = i;
+      i2 = i + 1;
+      if (i == np) i2 = 1;
+      ModifyScreen(&p3[i1*3 - 3], &p3[i2*3 - 3]);
+   }
 }
 
 //______________________________________________________________________________
@@ -822,82 +821,79 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t xdel, ydel;
-    Int_t i, k, i1, i2, il, it;
-    Double_t x[2], y[2];
-    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
-    Double_t pp[24]        /* was [2][12] */;
+   Double_t xdel, ydel;
+   Int_t i, k, i1, i2, il, it;
+   Double_t x[2], y[2];
+   Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
+   Double_t pp[24]        /* was [2][12] */;
 
-
-        TView *view = gPad->GetView();   //Get current view
-        if(!view) return;                //Check if `view` is valid!
-
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
 
-    /* Parameter adjustments */
-    --tt;
-    --iface;
-    xyz -= 4;
-    --icodes;
+   /* Parameter adjustments */
+   --tt;
+   --iface;
+   xyz -= 4;
+   --icodes;
 
-    for (i = 1; i <= np; ++i) {
-        k = iface[i];
-        if (k < 0) k = -k;
-        p3[i*3 - 3] = xyz[k*3 + 1];
-        p3[i*3 - 2] = xyz[k*3 + 2];
-        p3[i*3 - 1] = xyz[k*3 + 3];
-        view->WCtoNDC(&p3[i*3 - 3], &pp[2*i - 2]);
-    }
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      if (k < 0) k = -k;
+      p3[i*3 - 3] = xyz[k*3 + 1];
+      p3[i*3 - 2] = xyz[k*3 + 2];
+      p3[i*3 - 1] = xyz[k*3 + 3];
+      view->WCtoNDC(&p3[i*3 - 3], &pp[2*i - 2]);
+   }
 
 //*-*-          F I N D   L E V E L   L I N E S
 
-    FindLevelLines(np, p3, &tt[1]);
+   FindLevelLines(np, p3, &tt[1]);
 
 //*-*-          D R A W   L E V E L   L I N E S
 
-    SetLineStyle(3);
-    TAttLine::Modify();
-    for (il = 1; il <= fNlines; ++il) {
-        view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
-        view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
-        FindVisibleLine(p1, p2, 100, fNT, fT);
-        xdel = p2[0] - p1[0];
-        ydel = p2[1] - p1[1];
-        for (it = 1; it <= fNT; ++it) {
-            x[0] = p1[0] + xdel*fT[2*it - 2];
-            y[0] = p1[1] + ydel*fT[2*it - 2];
-            x[1] = p1[0] + xdel*fT[2*it - 1];
-            y[1] = p1[1] + ydel*fT[2*it - 1];
-            gPad->PaintPolyLine(2, x, y);
-        }
-    }
+   SetLineStyle(3);
+   TAttLine::Modify();
+   for (il = 1; il <= fNlines; ++il) {
+      view->WCtoNDC(&fPlines[(2*il + 1)*3 - 9], p1);
+      view->WCtoNDC(&fPlines[(2*il + 2)*3 - 9], p2);
+      FindVisibleLine(p1, p2, 100, fNT, fT);
+      xdel = p2[0] - p1[0];
+      ydel = p2[1] - p1[1];
+      for (it = 1; it <= fNT; ++it) {
+         x[0] = p1[0] + xdel*fT[2*it - 2];
+         y[0] = p1[1] + ydel*fT[2*it - 2];
+         x[1] = p1[0] + xdel*fT[2*it - 1];
+         y[1] = p1[1] + ydel*fT[2*it - 1];
+         gPad->PaintPolyLine(2, x, y);
+      }
+   }
 
 //*-*-          D R A W   F A C E
 
-    SetLineStyle(1);
-    TAttLine::Modify();
-    for (i = 1; i <= np; ++i) {
-        if (iface[i] < 0) continue;
-        i1 = i;
-        i2 = i + 1;
-        if (i == np) i2 = 1;
-        FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
-        xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
-        ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
-        for (it = 1; it <= fNT; ++it) {
-            x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
-            y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
-            x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
-            y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
-            gPad->PaintPolyLine(2, x, y);
-        }
-    }
+   SetLineStyle(1);
+   TAttLine::Modify();
+   for (i = 1; i <= np; ++i) {
+      if (iface[i] < 0) continue;
+      i1 = i;
+      i2 = i + 1;
+      if (i == np) i2 = 1;
+      FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
+      xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
+      ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
+      for (it = 1; it <= fNT; ++it) {
+         x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
+         y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
+         x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
+         y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
+         gPad->PaintPolyLine(2, x, y);
+      }
+   }
 
 //*-*-          M O D I F Y    S C R E E N
 
-    FillPolygonBorder(np, pp);
-
+   FillPolygonBorder(np, pp);
 }
 
 //______________________________________________________________________________
@@ -923,58 +919,56 @@ void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t n
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t xdel, ydel;
-    Int_t i, k, icol, i1, i2, it;
-    Double_t p[3], x[2], y[2];
-    Double_t pp[24]        /* was [2][12] */;
+   Double_t xdel, ydel;
+   Int_t i, k, icol, i1, i2, it;
+   Double_t p[3], x[2], y[2];
+   Double_t pp[24]        /* was [2][12] */;
 
-
-        TView *view = gPad->GetView();   //Get current view
-        if(!view) return;                //Check if `view` is valid!
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 //*-*-          C O P Y   P O I N T S   T O   A R R A Y
 
-    /* Parameter adjustments */
-    --tt;
-    --iface;
-    xyz -= 4;
-    --icodes;
+   /* Parameter adjustments */
+   --tt;
+   --iface;
+   xyz -= 4;
+   --icodes;
 
-    for (i = 1; i <= np; ++i) {
-        k = iface[i];
-        if (k < 0) k = -k;
-        view->WCtoNDC(&xyz[k*3 + 1], p);
-        pp[2*i - 2] = p[0];
-        pp[2*i - 1] = p[1];
-    }
+   for (i = 1; i <= np; ++i) {
+      k = iface[i];
+      if (k < 0) k = -k;
+      view->WCtoNDC(&xyz[k*3 + 1], p);
+      pp[2*i - 2] = p[0];
+      pp[2*i - 1] = p[1];
+   }
 
 //*-*-          D R A W   F A C E
 
-    icol = icodes[3];
-    if (icol) SetLineColor(fColorMain[icol - 1]);
-    else      SetLineColor(1);
-    TAttLine::Modify();
-    for (i = 1; i <= np; ++i) {
-        if (iface[i] < 0) continue;
-        i1 = i;
-        i2 = i + 1;
-        if (i == np) i2 = 1;
-        FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
-        xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
-        ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
-        for (it = 1; it <= fNT; ++it) {
-            x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
-            y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
-            x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
-            y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
-            gPad->PaintPolyLine(2, x, y);
-        }
-    }
+   icol = icodes[3];
+   if (icol) SetLineColor(fColorMain[icol - 1]);
+   else      SetLineColor(1);
+   TAttLine::Modify();
+   for (i = 1; i <= np; ++i) {
+      if (iface[i] < 0) continue;
+      i1 = i;
+      i2 = i + 1;
+      if (i == np) i2 = 1;
+      FindVisibleLine(&pp[2*i1 - 2], &pp[2*i2 - 2], 100, fNT, fT);
+      xdel = pp[2*i2 - 2] - pp[2*i1 - 2];
+      ydel = pp[2*i2 - 1] - pp[2*i1 - 1];
+      for (it = 1; it <= fNT; ++it) {
+         x[0] = pp[2*i1 - 2] + xdel*fT[2*it - 2];
+         y[0] = pp[2*i1 - 1] + ydel*fT[2*it - 2];
+         x[1] = pp[2*i1 - 2] + xdel*fT[2*it - 1];
+         y[1] = pp[2*i1 - 1] + ydel*fT[2*it - 1];
+         gPad->PaintPolyLine(2, x, y);
+      }
+   }
 
 //*-*-          M O D I F Y    R A S T E R   S C R E E N
 
-    FillPolygonBorder(np, pp);
-
+   FillPolygonBorder(np, pp);
 }
 
 
@@ -993,72 +987,71 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t ilev, i, k, icol, i1, i2, nl, np;
-    Double_t fmin, fmax;
-    Double_t x[12], y[12], f1, f2;
-    Double_t p3[36]        /* was [3][12] */;
-    Double_t funmin, funmax;
+   Int_t ilev, i, k, icol, i1, i2, nl, np;
+   Double_t fmin, fmax;
+   Double_t x[12], y[12], f1, f2;
+   Double_t p3[36]        /* was [3][12] */;
+   Double_t funmin, funmax;
 
+   /* Parameter adjustments */
+   --f;
+   p -= 4;
 
-    /* Parameter adjustments */
-    --f;
-    p -= 4;
-
-    if (n < 3) {
-       Error("FillPolygon", "illegal number of vertices in polygon (%d)", n);
-       return;
-    }
-    if (fNlevel == 0) {
+   if (n < 3) {
+      Error("FillPolygon", "illegal number of vertices in polygon (%d)", n);
+      return;
+   }
+   if (fNlevel == 0) {
 //     Error("FillPolygon", "illegal call of FillPolygon: no levels");
-       return;
-    }
-    np = n;
-    nl = fNlevel;
-    if (nl < 0) nl = -nl;
-    fmin = f[1];
-    fmax = f[1];
-    for (i = 2; i <= np; ++i) {
-        if (fmin > f[i]) fmin = f[i];
-        if (fmax < f[i]) fmax = f[i];
-    }
-    funmin = fFunLevel[0] - 1;
-    if (fmin < funmin) funmin = fmin - 1;
-    funmax = fFunLevel[nl - 1] + 1;
-    if (fmax > funmax) funmax = fmax + 1;
+      return;
+   }
+   np = n;
+   nl = fNlevel;
+   if (nl < 0) nl = -nl;
+   fmin = f[1];
+   fmax = f[1];
+   for (i = 2; i <= np; ++i) {
+      if (fmin > f[i]) fmin = f[i];
+      if (fmax < f[i]) fmax = f[i];
+   }
+   funmin = fFunLevel[0] - 1;
+   if (fmin < funmin) funmin = fmin - 1;
+   funmax = fFunLevel[nl - 1] + 1;
+   if (fmax > funmax) funmax = fmax + 1;
 
 //*-*-          F I N D   A N D   D R A W   S U B P O L Y G O N S
-    f2 = funmin;
-    for (ilev = 1; ilev <= nl+1; ++ilev) {
+   f2 = funmin;
+   for (ilev = 1; ilev <= nl+1; ++ilev) {
 //*-*-         S E T   L E V E L   L I M I T S
-        f1 = f2;
-        if (ilev == nl + 1) f2 = funmax;
-        else                f2 = fFunLevel[ilev - 1];
-        if (fmax < f1)  return;
-        if (fmin > f2)  continue;
+      f1 = f2;
+      if (ilev == nl + 1) f2 = funmax;
+      else                f2 = fFunLevel[ilev - 1];
+      if (fmax < f1)  return;
+      if (fmin > f2)  continue;
 //*-*-         F I N D   S U B P O L Y G O N
-        k = 0;
-        for (i = 1; i <= np; ++i) {
-            i1 = i;
-            i2 = i + 1;
-            if (i == np) i2 = 1;
-            FindPartEdge(&p[i1*3 + 1], &p[i2*3 + 1], f[i1], f[i2], f1, f2, k, p3);
-        }
+      k = 0;
+      for (i = 1; i <= np; ++i) {
+         i1 = i;
+         i2 = i + 1;
+         if (i == np) i2 = 1;
+         FindPartEdge(&p[i1*3 + 1], &p[i2*3 + 1], f[i1], f[i2], f1, f2, k, p3);
+      }
 //*-*-         D R A W   S U B P O L Y G O N
-        if (k < 3) continue;
-        for (i = 1; i <= k; ++i) {
-            x[i - 1] = p3[i*3 - 3];
-            y[i - 1] = p3[i*3 - 2];
-        }
-     if (ilev==1) {
+      if (k < 3) continue;
+      for (i = 1; i <= k; ++i) {
+         x[i - 1] = p3[i*3 - 3];
+         y[i - 1] = p3[i*3 - 2];
+      }
+      if (ilev==1) {
          icol=gPad->GetFillColor();
-     }else{
+      } else {
          icol = fColorLevel[ilev - 2];
-        }
-     SetFillColor(icol);
-     SetFillStyle(1001);
-     TAttFill::Modify();
-     gPad->PaintFillArea(k, x, y);
-    }
+      }
+      SetFillColor(icol);
+      SetFillStyle(1001);
+      TAttFill::Modify();
+      gPad->PaintFillArea(k, x, y);
+   }
 }
 
 //______________________________________________________________________________
@@ -1072,231 +1065,231 @@ void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t kbit, nbit, step, ymin, ymax, test[kLmax], xcur[kLmax], xnex[kLmax],
-             i, j, k, n, ibase, t, x, y, xscan[24]        /* was [2][kLmax] */,
-             yscan, x1[kLmax+2], y1[kLmax+2], x2[kLmax+2], y2[kLmax+2],
-             ib, nb, dx, dy, iw, nx, xx, yy, signdx, nstart, xx1, xx2, nxa, nxb;
+   Int_t kbit, nbit, step, ymin, ymax, test[kLmax], xcur[kLmax], xnex[kLmax],
+      i, j, k, n, ibase, t, x, y, xscan[24]        /* was [2][kLmax] */,
+      yscan, x1[kLmax+2], y1[kLmax+2], x2[kLmax+2], y2[kLmax+2],
+      ib, nb, dx, dy, iw, nx, xx, yy, signdx, nstart, xx1, xx2, nxa, nxb;
 
 //*-*-          T R A N S F E R   T O   S C R E E N   C O O R D I N A T E S
 
-    /* Parameter adjustments */
-    xy -= 3;
+   /* Parameter adjustments */
+   xy -= 3;
 
-    if (fIfrast) return;
+   if (fIfrast) return;
 
-    n = nn;
-    for (i = 1; i <= n; ++i) {
-        x1[i - 1] = Int_t(fNxrast*((xy[2*i + 1] - fXrast) /fDXrast) - 0.01);
-        y1[i - 1] = Int_t(fNyrast*((xy[2*i + 2] - fYrast) /fDYrast) - 0.01);
-    }
-    x1[n] = x1[0];
-    y1[n] = y1[0];
+   n = nn;
+   for (i = 1; i <= n; ++i) {
+      x1[i - 1] = Int_t(fNxrast*((xy[2*i + 1] - fXrast) /fDXrast) - 0.01);
+      y1[i - 1] = Int_t(fNyrast*((xy[2*i + 2] - fYrast) /fDYrast) - 0.01);
+   }
+   x1[n] = x1[0];
+   y1[n] = y1[0];
 
 //*-*-          F I N D   Y - M I N   A N D   Y - M A X
 //*-*-          S E T   R I G H T   E D G E   O R I E N T A T I O N
 
-    ymin = y1[0];
-    ymax = y1[0];
-    for (i = 1; i <= n; ++i) {
-        if (ymin > y1[i - 1])   ymin = y1[i - 1];
-        if (ymax < y1[i - 1])   ymax = y1[i - 1];
-        if (y1[i - 1] <= y1[i]) {x2[i - 1] = x1[i]; y2[i - 1] = y1[i];}
-        else {
-            x2[i - 1] = x1[i - 1];
-            y2[i - 1] = y1[i - 1];
-            x1[i - 1] = x1[i];
-            y1[i - 1] = y1[i];
-        }
-    }
-    if (ymin >= fNyrast) return;
-    if (ymax < 0)        return;
-    if (ymax >= fNyrast) ymax = fNyrast - 1;
+   ymin = y1[0];
+   ymax = y1[0];
+   for (i = 1; i <= n; ++i) {
+      if (ymin > y1[i - 1])   ymin = y1[i - 1];
+      if (ymax < y1[i - 1])   ymax = y1[i - 1];
+      if (y1[i - 1] <= y1[i]) {x2[i - 1] = x1[i]; y2[i - 1] = y1[i];}
+      else {
+         x2[i - 1] = x1[i - 1];
+         y2[i - 1] = y1[i - 1];
+         x1[i - 1] = x1[i];
+         y1[i - 1] = y1[i];
+      }
+   }
+   if (ymin >= fNyrast) return;
+   if (ymax < 0)        return;
+   if (ymax >= fNyrast) ymax = fNyrast - 1;
 
 //*-*-          S O R T   L I N E S
 
-    for (i = 1; i < n; ++i) {
-        if (y1[i] >= y1[i - 1]) continue;
-        y = y1[i];
-        k = 1;
-        for (j = i - 1; j >= 1; --j) {
-            if (y < y1[j - 1]) continue;
-            k = j + 1;
-            break;
-        }
-        x = x1[i];
-        xx = x2[i];
-        yy = y2[i];
-        for (j = i; j >= k; --j) {
-            x1[j] = x1[j - 1];
-            y1[j] = y1[j - 1];
-            x2[j] = x2[j - 1];
-            y2[j] = y2[j - 1];
-        }
-        x1[k - 1] = x;
-        y1[k - 1] = y;
-        x2[k - 1] = xx;
-        y2[k - 1] = yy;
-    }
+   for (i = 1; i < n; ++i) {
+      if (y1[i] >= y1[i - 1]) continue;
+      y = y1[i];
+      k = 1;
+      for (j = i - 1; j >= 1; --j) {
+         if (y < y1[j - 1]) continue;
+         k = j + 1;
+         break;
+      }
+      x = x1[i];
+      xx = x2[i];
+      yy = y2[i];
+      for (j = i; j >= k; --j) {
+         x1[j] = x1[j - 1];
+         y1[j] = y1[j - 1];
+         x2[j] = x2[j - 1];
+         y2[j] = y2[j - 1];
+      }
+      x1[k - 1] = x;
+      y1[k - 1] = y;
+      x2[k - 1] = xx;
+      y2[k - 1] = yy;
+   }
 
 //*-*-          S E T   I N I T I A L   V A L U E S
 
-    for (i = 1; i <= n; ++i) {
-        xcur[i - 1] = x1[i - 1];
-        dy = y2[i - 1] - y1[i - 1];
-        dx = x2[i - 1] - x1[i - 1];
-        signdx = 1;
-        if (dx < 0)   signdx = -1;
-        if (dx < 0)   dx = -dx;
-        if (dx <= dy) {
-            t = -(dy + 1) / 2 + dx;
-            if (t < 0) {
-                test[i - 1] = t;
-                xnex[i - 1] = xcur[i - 1];
-            } else {
-                test[i - 1] = t - dy;
-                xnex[i - 1] = xcur[i - 1] + signdx;
-            }
-        } else if (dy != 0) {
-            step = (dx - 1) / (dy + dy) + 1;
-            test[i - 1] = step*dy - (dx + 1) / 2 - dx;
-            xnex[i - 1] = xcur[i - 1] + signdx*step;
-        }
-    }
+   for (i = 1; i <= n; ++i) {
+      xcur[i - 1] = x1[i - 1];
+      dy = y2[i - 1] - y1[i - 1];
+      dx = x2[i - 1] - x1[i - 1];
+      signdx = 1;
+      if (dx < 0)   signdx = -1;
+      if (dx < 0)   dx = -dx;
+      if (dx <= dy) {
+         t = -(dy + 1) / 2 + dx;
+         if (t < 0) {
+            test[i - 1] = t;
+            xnex[i - 1] = xcur[i - 1];
+         } else {
+            test[i - 1] = t - dy;
+            xnex[i - 1] = xcur[i - 1] + signdx;
+         }
+      } else if (dy != 0) {
+         step = (dx - 1) / (dy + dy) + 1;
+         test[i - 1] = step*dy - (dx + 1) / 2 - dx;
+         xnex[i - 1] = xcur[i - 1] + signdx*step;
+      }
+   }
 
 //*-*-          L O O P   O N   S C A N   L I N E S
 
-    nstart = 1;
-    for (yscan = ymin; yscan <= ymax; ++yscan) {
-        nx  = 0;
-        nxa = 0;
-        nxb = kLmax + 1;
-        for (i = nstart; i <= n; ++i) {
-            if (y1[i - 1] > yscan) goto L500;
-            if (y2[i - 1] <= yscan) {
-               if (i == nstart)       ++nstart;
-               if (y2[i - 1] != yscan)continue;
-               --nxb;
-               if (x2[i - 1] >= xcur[i - 1]) {
-                  xscan[2*nxb - 2] = xcur[i - 1];
-                  xscan[2*nxb - 1] = x2[i - 1];
-               } else {
-                  xscan[2*nxb - 2] = x2[i - 1];
-                  xscan[2*nxb - 1] = xcur[i - 1];
-               }
-               continue;
+   nstart = 1;
+   for (yscan = ymin; yscan <= ymax; ++yscan) {
+      nx  = 0;
+      nxa = 0;
+      nxb = kLmax + 1;
+      for (i = nstart; i <= n; ++i) {
+         if (y1[i - 1] > yscan) goto L500;
+         if (y2[i - 1] <= yscan) {
+            if (i == nstart)       ++nstart;
+            if (y2[i - 1] != yscan)continue;
+            --nxb;
+            if (x2[i - 1] >= xcur[i - 1]) {
+               xscan[2*nxb - 2] = xcur[i - 1];
+               xscan[2*nxb - 1] = x2[i - 1];
+            } else {
+               xscan[2*nxb - 2] = x2[i - 1];
+               xscan[2*nxb - 1] = xcur[i - 1];
             }
+            continue;
+         }
 
 //*-*-          S T O R E   C U R R E N T  X
 //*-*-          P R E P A R E   X   F O R   N E X T   S C A N - L I N E
 
-            ++nxa;
-            dy = y2[i - 1] - y1[i - 1];
-            dx = x2[i - 1] - x1[i - 1];
-            if (dx >= 0) {
-                signdx = 1;
-                xscan[2*nxa - 2] = xcur[i - 1];
-                xscan[2*nxa - 1] = xnex[i - 1];
-                if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
-                    --xscan[2*nxa - 1];
-                }
-            } else {
-                dx = -dx;
-                signdx = -1;
-                xscan[2*nxa - 2] = xnex[i - 1];
-                xscan[2*nxa - 1] = xcur[i - 1];
-                if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
-                    ++xscan[2*nxa - 2];
-                }
+         ++nxa;
+         dy = y2[i - 1] - y1[i - 1];
+         dx = x2[i - 1] - x1[i - 1];
+         if (dx >= 0) {
+            signdx = 1;
+            xscan[2*nxa - 2] = xcur[i - 1];
+            xscan[2*nxa - 1] = xnex[i - 1];
+            if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
+               --xscan[2*nxa - 1];
             }
-            xcur[i - 1] = xnex[i - 1];
-            if (dx <= dy) {
-               test[i - 1] += dx;
-               if (test[i - 1] < 0) continue;
-               test[i - 1] -= dy;
-               xnex[i - 1] += signdx;
-               continue;
+         } else {
+            dx = -dx;
+            signdx = -1;
+            xscan[2*nxa - 2] = xnex[i - 1];
+            xscan[2*nxa - 1] = xcur[i - 1];
+            if (xscan[2*nxa - 2] != xscan[2*nxa - 1]) {
+               ++xscan[2*nxa - 2];
             }
-            step = dx / dy;
-            t = test[i - 1] + step*dy;
-            if (t >= 0) {
-                test[i - 1] = t - dx;
-                xnex[i - 1] += signdx*step;
-            } else {
-                test[i - 1] = t + dy - dx;
-                xnex[i - 1] += signdx*(step + 1);
-            }
-        }
+         }
+         xcur[i - 1] = xnex[i - 1];
+         if (dx <= dy) {
+            test[i - 1] += dx;
+            if (test[i - 1] < 0) continue;
+            test[i - 1] -= dy;
+            xnex[i - 1] += signdx;
+            continue;
+         }
+         step = dx / dy;
+         t = test[i - 1] + step*dy;
+         if (t >= 0) {
+            test[i - 1] = t - dx;
+            xnex[i - 1] += signdx*step;
+         } else {
+            test[i - 1] = t + dy - dx;
+            xnex[i - 1] += signdx*(step + 1);
+         }
+      }
 
 //*-*-          S O R T   P O I N T S   A L O N G   X
 
 L500:
-        if (yscan < 0) continue;
-        ibase = yscan*fNxrast;
-        if (nxa >= 2) {
-           for (i = 1; i < nxa; ++i) {
-              for (j = i; j >= 1; --j) {
-                 if (xscan[2*j] >= xscan[2*j - 2]) continue;
-                 x = xscan[2*j];
-                 xscan[2*j] = xscan[2*j - 2];
-                 xscan[2*j - 2] = x;
-                 x = xscan[2*j - 1];
-                 xscan[2*j + 1] = xscan[2*j - 1];
-                 xscan[2*j - 1] = x;
-              }
-           }
-           for (i = 1; i <= nxa; i += 2) {
-              ++nx;
-              xscan[2*nx - 2] = xscan[2*i - 2];
-              x = xscan[2*i + 1];
-              if (xscan[2*i - 1] > x) x = xscan[2*i - 1];
-              xscan[2*nx - 1] = x;
-           }
-        }
-        if (nxb <= kLmax) {
-           for (i = nxb; i <= kLmax; ++i) {
-              ++nx;
-              xscan[2*nx - 2] = xscan[2*i - 2];
-              xscan[2*nx - 1] = xscan[2*i - 1];
-           }
-        }
+      if (yscan < 0) continue;
+      ibase = yscan*fNxrast;
+      if (nxa >= 2) {
+         for (i = 1; i < nxa; ++i) {
+            for (j = i; j >= 1; --j) {
+               if (xscan[2*j] >= xscan[2*j - 2]) continue;
+               x = xscan[2*j];
+               xscan[2*j] = xscan[2*j - 2];
+               xscan[2*j - 2] = x;
+               x = xscan[2*j - 1];
+               xscan[2*j + 1] = xscan[2*j - 1];
+               xscan[2*j - 1] = x;
+            }
+         }
+         for (i = 1; i <= nxa; i += 2) {
+            ++nx;
+            xscan[2*nx - 2] = xscan[2*i - 2];
+            x = xscan[2*i + 1];
+            if (xscan[2*i - 1] > x) x = xscan[2*i - 1];
+            xscan[2*nx - 1] = x;
+         }
+      }
+      if (nxb <= kLmax) {
+         for (i = nxb; i <= kLmax; ++i) {
+            ++nx;
+            xscan[2*nx - 2] = xscan[2*i - 2];
+            xscan[2*nx - 1] = xscan[2*i - 1];
+         }
+      }
 //*-*-          C O N C A T E N A T E   A N D   F I L L
 
-        while (nx) {
-           xx1 = xscan[2*nx - 2];
-           xx2 = xscan[2*nx - 1];
-           --nx;
-           k = 1;
-           while (k <= nx) {
-              if ((xscan[2*k - 2] <= xx2 + 1) && (xscan[2*k - 1] >= xx1 - 1)) {
-                 if (xscan[2*k - 2] < xx1)     xx1 = xscan[2*k - 2];
-                 if (xscan[2*k - 1] > xx2)     xx2 = xscan[2*k - 1];
-                 xscan[2*k - 2] = xscan[2*nx - 2];
-                 xscan[2*k - 1] = xscan[2*nx - 1];
-                 --nx;
-              } else  ++k;
-           }
-           if (xx1 < 0)        xx1 = 0;
-           if (xx2 >= fNxrast) xx2 = fNxrast - 1;
-           nbit = xx2 - xx1 + 1;
-           kbit = ibase + xx1;
-           iw = kbit / 30;
-           ib = kbit - iw*30 + 1;
-           iw = iw + 1;
-           nb = 30 - ib + 1;
-           if (nb > nbit) nb = nbit;
-           fRaster[iw - 1] = fRaster[iw - 1] | fMask[fJmask[nb - 1] + ib - 1];
-           nbit -= nb;
-           if (nbit) {
-              while(nbit > 30) {
-                 fRaster[iw] = fMask[464];
-                 ++iw;
-                 nbit += -30;
-              }
-              fRaster[iw] = fRaster[iw] | fMask[fJmask[nbit - 1]];
-              ++iw;
-           }
-        }
-    }
+      while (nx) {
+         xx1 = xscan[2*nx - 2];
+         xx2 = xscan[2*nx - 1];
+         --nx;
+         k = 1;
+         while (k <= nx) {
+            if ((xscan[2*k - 2] <= xx2 + 1) && (xscan[2*k - 1] >= xx1 - 1)) {
+               if (xscan[2*k - 2] < xx1)     xx1 = xscan[2*k - 2];
+               if (xscan[2*k - 1] > xx2)     xx2 = xscan[2*k - 1];
+               xscan[2*k - 2] = xscan[2*nx - 2];
+               xscan[2*k - 1] = xscan[2*nx - 1];
+               --nx;
+            } else  ++k;
+         }
+         if (xx1 < 0)        xx1 = 0;
+         if (xx2 >= fNxrast) xx2 = fNxrast - 1;
+         nbit = xx2 - xx1 + 1;
+         kbit = ibase + xx1;
+         iw = kbit / 30;
+         ib = kbit - iw*30 + 1;
+         iw = iw + 1;
+         nb = 30 - ib + 1;
+         if (nb > nbit) nb = nbit;
+         fRaster[iw - 1] = fRaster[iw - 1] | fMask[fJmask[nb - 1] + ib - 1];
+         nbit -= nb;
+         if (nbit) {
+            while(nbit > 30) {
+               fRaster[iw] = fMask[464];
+               ++iw;
+               nbit += -30;
+            }
+            fRaster[iw] = fRaster[iw] | fMask[fJmask[nbit - 1]];
+            ++iw;
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1313,70 +1306,70 @@ void TPainter3dAlgorithms::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, k, i1, i2, il, nl;
-    Double_t tmin, tmax, d1, d2;
+   Int_t i, k, i1, i2, il, nl;
+   Double_t tmin, tmax, d1, d2;
 
-    /* Parameter adjustments */
-    --t;
-    f -= 4;
+   /* Parameter adjustments */
+   --t;
+   f -= 4;
 
-    /* Function Body */
-    fNlines = 0;
-    if (fNlevel == 0) return;
-    nl = fNlevel;
-    if (nl < 0) nl = -nl;
+   /* Function Body */
+   fNlines = 0;
+   if (fNlevel == 0) return;
+   nl = fNlevel;
+   if (nl < 0) nl = -nl;
 
 //*-*-         F I N D   Tmin   A N D   Tmax
-    tmin = t[1];
-    tmax = t[1];
-    for (i = 2; i <= np; ++i) {
-        if (t[i] < tmin) tmin = t[i];
-        if (t[i] > tmax) tmax = t[i];
-    }
-    if (tmin >= fFunLevel[nl - 1]) return;
-    if (tmax <= fFunLevel[0])      return;
+   tmin = t[1];
+   tmax = t[1];
+   for (i = 2; i <= np; ++i) {
+      if (t[i] < tmin) tmin = t[i];
+      if (t[i] > tmax) tmax = t[i];
+   }
+   if (tmin >= fFunLevel[nl - 1]) return;
+   if (tmax <= fFunLevel[0])      return;
 
 //*-*-          F I N D   L E V E L S   L I N E S
 
-    for (il = 1; il <= nl; ++il) {
-        if (tmin >= fFunLevel[il - 1]) continue;
-        if (tmax <= fFunLevel[il - 1]) return;
-        if (fNlines >= 200)            return;
-        ++fNlines;
-        fLevelLine[fNlines - 1] = il;
-        k = 0;
-        for (i = 1; i <= np; ++i) {
-            i1 = i;
-            i2 = i + 1;
-            if (i == np) i2 = 1;
-            d1 = t[i1] - fFunLevel[il - 1];
-            d2 = t[i2] - fFunLevel[il - 1];
-            if (d1) {
-               if (d1*d2 < 0) goto L320;
-               continue;
-            }
-            ++k;
-            fPlines[(k + 2*fNlines)*3 - 9] = f[i1*3 + 1];
-            fPlines[(k + 2*fNlines)*3 - 8] = f[i1*3 + 2];
-            fPlines[(k + 2*fNlines)*3 - 7] = f[i1*3 + 3];
-            if (k == 1) continue;
-            goto L340;
+   for (il = 1; il <= nl; ++il) {
+      if (tmin >= fFunLevel[il - 1]) continue;
+      if (tmax <= fFunLevel[il - 1]) return;
+      if (fNlines >= 200)            return;
+      ++fNlines;
+      fLevelLine[fNlines - 1] = il;
+      k = 0;
+      for (i = 1; i <= np; ++i) {
+         i1 = i;
+         i2 = i + 1;
+         if (i == np) i2 = 1;
+         d1 = t[i1] - fFunLevel[il - 1];
+         d2 = t[i2] - fFunLevel[il - 1];
+         if (d1) {
+            if (d1*d2 < 0) goto L320;
+            continue;
+         }
+         ++k;
+         fPlines[(k + 2*fNlines)*3 - 9] = f[i1*3 + 1];
+         fPlines[(k + 2*fNlines)*3 - 8] = f[i1*3 + 2];
+         fPlines[(k + 2*fNlines)*3 - 7] = f[i1*3 + 3];
+         if (k == 1) continue;
+         goto L340;
 L320:
-            ++k;
-            d1 /= t[i2] - t[i1];
-            d2 /= t[i2] - t[i1];
-            fPlines[(k + 2*fNlines)*3 - 9] = d2*f[i1*3 + 1] - d1*f[i2*3 + 1];
-            fPlines[(k + 2*fNlines)*3 - 8] = d2*f[i1*3 + 2] - d1*f[i2*3 + 2];
-            fPlines[(k + 2*fNlines)*3 - 7] = d2*f[i1*3 + 3] - d1*f[i2*3 + 3];
-            if (k != 1) goto L340;
-        }
-        if (k != 2) {
-            Error("FindLevelLines", "number of points for line not equal 2");
-            --fNlines;
-        }
+         ++k;
+         d1 /= t[i2] - t[i1];
+         d2 /= t[i2] - t[i1];
+         fPlines[(k + 2*fNlines)*3 - 9] = d2*f[i1*3 + 1] - d1*f[i2*3 + 1];
+         fPlines[(k + 2*fNlines)*3 - 8] = d2*f[i1*3 + 2] - d1*f[i2*3 + 2];
+         fPlines[(k + 2*fNlines)*3 - 7] = d2*f[i1*3 + 3] - d1*f[i2*3 + 3];
+         if (k != 1) goto L340;
+      }
+      if (k != 2) {
+         Error("FindLevelLines", "number of points for line not equal 2");
+         --fNlines;
+      }
 L340:
-        if (il < 0) return;
-    }
+      if (il < 0) return;
+   }
 }
 
 
@@ -1403,149 +1396,149 @@ void TPainter3dAlgorithms::FindPartEdge(Double_t *p1, Double_t *p2, Double_t f1,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t d1, d2;
-    Int_t k1, k2, kk;
+   Double_t d1, d2;
+   Int_t k1, k2, kk;
 
-    /* Parameter adjustments */
-    pp -= 4;
-    --p2;
-    --p1;
+   /* Parameter adjustments */
+   pp -= 4;
+   --p2;
+   --p1;
 
-    k1 = 0;
-    if (f1 < fmin)  k1 = -2;
-    if (f1 == fmin) k1 = -1;
-    if (f1 == fmax) k1 = 1;
-    if (f1 > fmax)  k1 = 2;
-    k2 = 0;
-    if (f2 < fmin)  k2 = -2;
-    if (f2 == fmin) k2 = -1;
-    if (f2 == fmax) k2 = 1;
-    if (f2 > fmax)  k2 = 2;
-    kk = (k1 + 2)*5 + (k2 + 2) + 1;
+   k1 = 0;
+   if (f1 < fmin)  k1 = -2;
+   if (f1 == fmin) k1 = -1;
+   if (f1 == fmax) k1 = 1;
+   if (f1 > fmax)  k1 = 2;
+   k2 = 0;
+   if (f2 < fmin)  k2 = -2;
+   if (f2 == fmin) k2 = -1;
+   if (f2 == fmax) k2 = 1;
+   if (f2 > fmax)  k2 = 2;
+   kk = (k1 + 2)*5 + (k2 + 2) + 1;
 
 //*-*-    K2:    -2  -1   0  +1  +2
 //*-*-    K1:    -2 -1 0 +1 +2
-    switch ((int)kk) {
-        case 1:  return;
-        case 2:  return;
-        case 3:  goto L200;
-        case 4:  goto L200;
-        case 5:  goto L600;
-        case 6:  goto L100;
-        case 7:  goto L100;
-        case 8:  goto L100;
-        case 9:  goto L100;
-        case 10:  goto L500;
-        case 11:  goto L400;
-        case 12:  goto L100;
-        case 13:  goto L100;
-        case 14:  goto L100;
-        case 15:  goto L500;
-        case 16:  goto L400;
-        case 17:  goto L100;
-        case 18:  goto L100;
-        case 19:  goto L100;
-        case 20:  goto L100;
-        case 21:  goto L700;
-        case 22:  goto L300;
-        case 23:  goto L300;
-        case 24:  return;
-        case 25:  return;
-    }
+   switch ((int)kk) {
+      case 1:  return;
+      case 2:  return;
+      case 3:  goto L200;
+      case 4:  goto L200;
+      case 5:  goto L600;
+      case 6:  goto L100;
+      case 7:  goto L100;
+      case 8:  goto L100;
+      case 9:  goto L100;
+      case 10:  goto L500;
+      case 11:  goto L400;
+      case 12:  goto L100;
+      case 13:  goto L100;
+      case 14:  goto L100;
+      case 15:  goto L500;
+      case 16:  goto L400;
+      case 17:  goto L100;
+      case 18:  goto L100;
+      case 19:  goto L100;
+      case 20:  goto L100;
+      case 21:  goto L700;
+      case 22:  goto L300;
+      case 23:  goto L300;
+      case 24:  return;
+      case 25:  return;
+   }
 
 //*-*-          1 - S T   P O I N T
 
 L100:
-    ++kpp;
-    pp[kpp*3 + 1] = p1[1];
-    pp[kpp*3 + 2] = p1[2];
-    pp[kpp*3 + 3] = p1[3];
-    return;
+   ++kpp;
+   pp[kpp*3 + 1] = p1[1];
+   pp[kpp*3 + 2] = p1[2];
+   pp[kpp*3 + 3] = p1[3];
+   return;
 
 //*-*-           I N T E R S E C T I O N   W I T H   Fmin
 
 L200:
-    ++kpp;
-    d1 = (fmin - f1) / (f1 - f2);
-    d2 = (fmin - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
-    return;
+   ++kpp;
+   d1 = (fmin - f1) / (f1 - f2);
+   d2 = (fmin - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   return;
 
 //*-*-           I N T E R S E C T I O N   W I T H   Fmax
 
 L300:
-    ++kpp;
-    d1 = (fmax - f1) / (f1 - f2);
-    d2 = (fmax - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
-    return;
+   ++kpp;
+   d1 = (fmax - f1) / (f1 - f2);
+   d2 = (fmax - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   return;
 
 //*-*-          1 - S T   P O I N T,   I N T E R S E C T I O N  WITH  Fmin
 
 L400:
-    ++kpp;
-    pp[kpp*3 + 1] = p1[1];
-    pp[kpp*3 + 2] = p1[2];
-    pp[kpp*3 + 3] = p1[3];
-    ++kpp;
-    d1 = (fmin - f1) / (f1 - f2);
-    d2 = (fmin - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
-    return;
+   ++kpp;
+   pp[kpp*3 + 1] = p1[1];
+   pp[kpp*3 + 2] = p1[2];
+   pp[kpp*3 + 3] = p1[3];
+   ++kpp;
+   d1 = (fmin - f1) / (f1 - f2);
+   d2 = (fmin - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   return;
 
 //*-*-          1 - S T   P O I N T,   I N T E R S E C T I O N  WITH  Fmax
 
 L500:
-    ++kpp;
-    pp[kpp*3 + 1] = p1[1];
-    pp[kpp*3 + 2] = p1[2];
-    pp[kpp*3 + 3] = p1[3];
-    ++kpp;
-    d1 = (fmax - f1) / (f1 - f2);
-    d2 = (fmax - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
-    return;
+   ++kpp;
+   pp[kpp*3 + 1] = p1[1];
+   pp[kpp*3 + 2] = p1[2];
+   pp[kpp*3 + 3] = p1[3];
+   ++kpp;
+   d1 = (fmax - f1) / (f1 - f2);
+   d2 = (fmax - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   return;
 
 //*-*-           I N T E R S E C T I O N   W I T H   Fmin, Fmax
 
 L600:
-    ++kpp;
-    d1 = (fmin - f1) / (f1 - f2);
-    d2 = (fmin - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
-    ++kpp;
-    d1 = (fmax - f1) / (f1 - f2);
-    d2 = (fmax - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
-    return;
+   ++kpp;
+   d1 = (fmin - f1) / (f1 - f2);
+   d2 = (fmin - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   ++kpp;
+   d1 = (fmax - f1) / (f1 - f2);
+   d2 = (fmax - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   return;
 
 //*-*-          I N T E R S E C T I O N   W I T H   Fmax, Fmin
 
 L700:
-    ++kpp;
-    d1 = (fmax - f1) / (f1 - f2);
-    d2 = (fmax - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
-    ++kpp;
-    d1 = (fmin - f1) / (f1 - f2);
-    d2 = (fmin - f2) / (f1 - f2);
-    pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
-    pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
-    pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   ++kpp;
+   d1 = (fmax - f1) / (f1 - f2);
+   d2 = (fmax - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
+   ++kpp;
+   d1 = (fmin - f1) / (f1 - f2);
+   d2 = (fmin - f2) / (f1 - f2);
+   pp[kpp*3 + 1] = d2*p1[1] - d1*p2[1];
+   pp[kpp*3 + 2] = d2*p1[2] - d1*p2[2];
+   pp[kpp*3 + 3] = d2*p1[3] - d1*p2[3];
 }
 
 
@@ -1560,157 +1553,156 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t yy1u, yy2u;
-    Int_t i, icase, i1, i2, icase1, icase2, iv, ifback;
-    Double_t x1, x2, y1, y2, z1, z2, dd, di;
-    Double_t dt, dy;
-    Double_t tt, uu, ww, yy, yy1, yy2, yy1d, yy2d;
-    Double_t *tn = 0;
-    const Double_t kEpsil = 1.e-6;
-    /* Parameter adjustments */
-    --r2;
-    --r1;
+   Double_t yy1u, yy2u;
+   Int_t i, icase, i1, i2, icase1, icase2, iv, ifback;
+   Double_t x1, x2, y1, y2, z1, z2, dd, di;
+   Double_t dt, dy;
+   Double_t tt, uu, ww, yy, yy1, yy2, yy1d, yy2d;
+   Double_t *tn = 0;
+   const Double_t kEpsil = 1.e-6;
+   /* Parameter adjustments */
+   --r2;
+   --r1;
 
-    if(gPad->GetView()) {
-            tn = gPad->GetView()->GetTN();
-        x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3]  + tn[3];
-            x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3]  + tn[3];
-            y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3]  + tn[7];
-            y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3]  + tn[7];
-            z1 = tn[8]*r1[1] + tn[9]*r1[2] + tn[10]*r1[3] + tn[11];
-            z2 = tn[8]*r2[1] + tn[9]*r2[2] + tn[10]*r2[3] + tn[11];
-    }
-    else {
+   if (gPad->GetView()) {
+      tn = gPad->GetView()->GetTN();
+      x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3]  + tn[3];
+      x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3]  + tn[3];
+      y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3]  + tn[7];
+      y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3]  + tn[7];
+      z1 = tn[8]*r1[1] + tn[9]*r1[2] + tn[10]*r1[3] + tn[11];
+      z2 = tn[8]*r2[1] + tn[9]*r2[2] + tn[10]*r2[3] + tn[11];
+   } else {
       Error("FindVisibleDraw", "no TView in current pad");
-            return;
-    }
+      return;
+   }
 
-    ifback = 0;
-    if (x1 >= x2) {
-       ifback = 1;
-       ww = x1;
-       x1 = x2;
-       x2 = ww;
-       ww = y1;
-       y1 = y2;
-       y2 = ww;
-       ww = z1;
-       z1 = z2;
-       z2 = ww;
-    }
-    fNT = 0;
-    i1 = Int_t((x1 - fX0) / fDX) + 15;
-    i2 = Int_t((x2 - fX0) / fDX) + 15;
-    x1 = fX0 + (i1 - 1)*fDX;
-    x2 = fX0 + (i2 - 1)*fDX;
-  if (i1 != i2) {
+   ifback = 0;
+   if (x1 >= x2) {
+      ifback = 1;
+      ww = x1;
+      x1 = x2;
+      x2 = ww;
+      ww = y1;
+      y1 = y2;
+      y2 = ww;
+      ww = z1;
+      z1 = z2;
+      z2 = ww;
+   }
+   fNT = 0;
+   i1 = Int_t((x1 - fX0) / fDX) + 15;
+   i2 = Int_t((x2 - fX0) / fDX) + 15;
+   x1 = fX0 + (i1 - 1)*fDX;
+   x2 = fX0 + (i2 - 1)*fDX;
+   if (i1 != i2) {
 
 //*-*-          F I N D   V I S I B L E   P A R T S   O F   T H E   L I N E
 
-    di = (Double_t) (i2 - i1);
-    dy = (y2 - y1) / di;
-    dt = 1 / di;
-    iv = -1;
-    for (i = i1; i <= i2 - 1; ++i) {
-        yy1 = y1 + dy*(i - i1);
-        yy2 = yy1 + dy;
-        yy1u = yy1 - fU[2*i - 2];
-        yy1d = yy1 - fD[2*i - 2];
-        yy2u = yy2 - fU[2*i - 1];
-        yy2d = yy2 - fD[2*i - 1];
-        tt = dt*(i - i1);
+      di = (Double_t) (i2 - i1);
+      dy = (y2 - y1) / di;
+      dt = 1 / di;
+      iv = -1;
+      for (i = i1; i <= i2 - 1; ++i) {
+         yy1 = y1 + dy*(i - i1);
+         yy2 = yy1 + dy;
+         yy1u = yy1 - fU[2*i - 2];
+         yy1d = yy1 - fD[2*i - 2];
+         yy2u = yy2 - fU[2*i - 1];
+         yy2d = yy2 - fD[2*i - 1];
+         tt = dt*(i - i1);
 //*-*-         A N A L I Z E   L E F T   S I D E
-        icase1 = 1;
-        if (yy1u >  kEpsil) icase1 = 0;
-        if (yy1d < -kEpsil) icase1 = 2;
-        if ((icase1 == 0 || icase1 == 2) && iv <= 0) {
-           iv = 1;
-           ++fNT;
-           fT[2*fNT - 2] = tt;
-        }
-        if (icase1 == 1 && iv >= 0) {
-           iv = -1;
-           fT[2*fNT - 1] = tt;
-        }
+         icase1 = 1;
+         if (yy1u >  kEpsil) icase1 = 0;
+         if (yy1d < -kEpsil) icase1 = 2;
+         if ((icase1 == 0 || icase1 == 2) && iv <= 0) {
+            iv = 1;
+            ++fNT;
+            fT[2*fNT - 2] = tt;
+         }
+         if (icase1 == 1 && iv >= 0) {
+            iv = -1;
+            fT[2*fNT - 1] = tt;
+         }
 //*-*-         A N A L I Z E   R I G H T   S I D E
-        icase2 = 1;
-        if (yy2u >  kEpsil) icase2 = 0;
-        if (yy2d < -kEpsil) icase2 = 2;
-        icase = icase1*3 + icase2;
-        if (icase == 1) {
-           iv = -1;
-           fT[2*fNT - 1] = tt + dt*(yy1u / (yy1u - yy2u));
-        }
-        if (icase == 2) {
-           fT[2*fNT - 1] = tt + dt*(yy1u / (yy1u - yy2u));
-           ++fNT;
-           fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
-        }
-        if (icase == 3) {
-           iv = 1;
-           ++fNT;
-           fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
-        }
-        if (icase == 5) {
-           iv = 1;
-           ++fNT;
-           fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
-        }
-        if (icase == 6) {
-           fT[2*fNT - 1] = tt + dt*(yy1d / (yy1d - yy2d));
-           ++fNT;
-           fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
-        }
-        if (icase == 7) {
-           iv = -1;
-           fT[2*fNT - 1] = tt + dt*(yy1d / (yy1d - yy2d));
-        }
-        if (fNT + 1 >= 100) break;
-    }
-    if (iv > 0) fT[2*fNT - 1] = 1;
- } else {
+         icase2 = 1;
+         if (yy2u >  kEpsil) icase2 = 0;
+         if (yy2d < -kEpsil) icase2 = 2;
+         icase = icase1*3 + icase2;
+         if (icase == 1) {
+            iv = -1;
+            fT[2*fNT - 1] = tt + dt*(yy1u / (yy1u - yy2u));
+         }
+         if (icase == 2) {
+            fT[2*fNT - 1] = tt + dt*(yy1u / (yy1u - yy2u));
+            ++fNT;
+            fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
+         }
+         if (icase == 3) {
+            iv = 1;
+            ++fNT;
+            fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
+         }
+         if (icase == 5) {
+            iv = 1;
+            ++fNT;
+            fT[2*fNT - 2] = tt + dt*(yy1d / (yy1d - yy2d));
+         }
+         if (icase == 6) {
+            fT[2*fNT - 1] = tt + dt*(yy1d / (yy1d - yy2d));
+            ++fNT;
+            fT[2*fNT - 2] = tt + dt*(yy1u / (yy1u - yy2u));
+         }
+         if (icase == 7) {
+            iv = -1;
+            fT[2*fNT - 1] = tt + dt*(yy1d / (yy1d - yy2d));
+         }
+         if (fNT + 1 >= 100) break;
+      }
+      if (iv > 0) fT[2*fNT - 1] = 1;
+   } else {
 
 //*-*-          V E R T I C A L   L I N E
 
-    fNT = 1;
-    fT[0] = 0;
-    fT[1] = 1;
-    if (y2 <= y1) {
-       if (y2 == y1) { fNT = 0; return;}
-       ifback = 1 - ifback;
-       yy = y1;
-       y1 = y2;
-       y2 = yy;
-    }
-    uu = fU[2*i1 - 2];
-    dd = fD[2*i1 - 2];
-    if (i1 != 1) {
-       if (uu < fU[2*i1 - 3]) uu = fU[2*i1 - 3];
-       if (dd > fD[2*i1 - 3]) dd = fD[2*i1 - 3];
-    }
+      fNT = 1;
+      fT[0] = 0;
+      fT[1] = 1;
+      if (y2 <= y1) {
+         if (y2 == y1) { fNT = 0; return;}
+         ifback = 1 - ifback;
+         yy = y1;
+         y1 = y2;
+         y2 = yy;
+      }
+      uu = fU[2*i1 - 2];
+      dd = fD[2*i1 - 2];
+      if (i1 != 1) {
+         if (uu < fU[2*i1 - 3]) uu = fU[2*i1 - 3];
+         if (dd > fD[2*i1 - 3]) dd = fD[2*i1 - 3];
+      }
 //*-*-         F I N D   V I S I B L E   P A R T   O F   L I N E
-    if (y1 <  uu && y2 >  dd) {
-       if (y1 >= dd && y2 <= uu) {fNT = 0; return;}
-       fNT = 0;
-       if (dd > y1) {
-          ++fNT;
-          fT[2*fNT - 2] = 0;
-          fT[2*fNT - 1] = (dd - y1) / (y2 - y1);
-       }
-       if (uu < y2) {
-          ++fNT;
-          fT[2*fNT - 2] = (uu - y1) / (y2 - y1);
-          fT[2*fNT - 1] = 1;
-       }
-    }
- }
+      if (y1 <  uu && y2 >  dd) {
+         if (y1 >= dd && y2 <= uu) {fNT = 0; return;}
+         fNT = 0;
+         if (dd > y1) {
+            ++fNT;
+            fT[2*fNT - 2] = 0;
+            fT[2*fNT - 1] = (dd - y1) / (y2 - y1);
+         }
+         if (uu < y2) {
+            ++fNT;
+            fT[2*fNT - 2] = (uu - y1) / (y2 - y1);
+            fT[2*fNT - 1] = 1;
+         }
+      }
+   }
 
-    if (ifback == 0) return;
-    if (fNT == 0)    return;
-    for (i = 1; i <= fNT; ++i) {
-        fT[2*i - 2] = 1 - fT[2*i - 2];
-        fT[2*i - 1] = 1 - fT[2*i - 1];
-    }
+   if (ifback == 0) return;
+   if (fNT == 0)    return;
+   for (i = 1; i <= fNT; ++i) {
+      fT[2*i - 2] = 1 - fT[2*i - 2];
+      fT[2*i - 1] = 1 - fT[2*i - 1];
+   }
 }
 
 
@@ -1729,147 +1721,147 @@ void TPainter3dAlgorithms::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntm
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t ddtt;
-    Double_t tcur;
-    Int_t i, incrx, ivis, x1, y1, x2, y2, ib, kb, dx, dy, iw, ix, iy, ifinve, dx2, dy2;
-    Double_t t1, t2;
-    Double_t dt;
-    Double_t tt;
-    /* Parameter adjustments */
-    t -= 3;
-    --p2;
-    --p1;
+   Double_t ddtt;
+   Double_t tcur;
+   Int_t i, incrx, ivis, x1, y1, x2, y2, ib, kb, dx, dy, iw, ix, iy, ifinve, dx2, dy2;
+   Double_t t1, t2;
+   Double_t dt;
+   Double_t tt;
+   /* Parameter adjustments */
+   t -= 3;
+   --p2;
+   --p1;
 
-    if (fIfrast) {
-        nt = 1;
-        t[3] = 0;
-        t[4] = 1;
-        return;
-    }
-    x1 = Int_t(fNxrast*((p1[1] - fXrast) / fDXrast) - 0.01);
-    y1 = Int_t(fNyrast*((p1[2] - fYrast) / fDYrast) - 0.01);
-    x2 = Int_t(fNxrast*((p2[1] - fXrast) / fDXrast) - 0.01);
-    y2 = Int_t(fNyrast*((p2[2] - fYrast) / fDYrast) - 0.01);
-    ifinve = 0;
-    if (y1 > y2) {
-        ifinve = 1;
-        iw = x1;
-        x1 = x2;
-        x2 = iw;
-        iw = y1;
-        y1 = y2;
-        y2 = iw;
-    }
-    nt   = 0;
-    ivis = 0;
-    if (y1 >= fNyrast) return;
-    if (y2 < 0)        return;
-    if (x1 >= fNxrast && x2 >= fNxrast) return;
-    if (x1 < 0 && x2 < 0)               return;
+   if (fIfrast) {
+      nt = 1;
+      t[3] = 0;
+      t[4] = 1;
+      return;
+   }
+   x1 = Int_t(fNxrast*((p1[1] - fXrast) / fDXrast) - 0.01);
+   y1 = Int_t(fNyrast*((p1[2] - fYrast) / fDYrast) - 0.01);
+   x2 = Int_t(fNxrast*((p2[1] - fXrast) / fDXrast) - 0.01);
+   y2 = Int_t(fNyrast*((p2[2] - fYrast) / fDYrast) - 0.01);
+   ifinve = 0;
+   if (y1 > y2) {
+      ifinve = 1;
+      iw = x1;
+      x1 = x2;
+      x2 = iw;
+      iw = y1;
+      y1 = y2;
+      y2 = iw;
+   }
+   nt   = 0;
+   ivis = 0;
+   if (y1 >= fNyrast) return;
+   if (y2 < 0)        return;
+   if (x1 >= fNxrast && x2 >= fNxrast) return;
+   if (x1 < 0 && x2 < 0)               return;
 
 //*-*-          S E T   I N I T I A L   V A L U E S
 
-    incrx = 1;
-    dx = x2 - x1;
-    if (dx < 0) {
-        dx = -dx;
-        incrx = -1;
-    }
-    dy  = y2 - y1;
-    dx2 = dx + dx;
-    dy2 = dy + dy;
-    if (dy > dx) goto L200;
+   incrx = 1;
+   dx = x2 - x1;
+   if (dx < 0) {
+      dx = -dx;
+      incrx = -1;
+   }
+   dy  = y2 - y1;
+   dx2 = dx + dx;
+   dy2 = dy + dy;
+   if (dy > dx) goto L200;
 
 //*-*-          D X   . G T .   D Y
 
-    dt = 1./ (Double_t)(dx + 1.);
-    ddtt = dt*(float).5;
-    tcur = -(Double_t)dt;
-    tt = (Double_t) (-(dx + dy2));
-    iy = y1;
-    kb = iy*fNxrast + x1 - incrx;
-    for (ix = x1; incrx < 0 ? ix >= x2 : ix <= x2; ix += incrx) {
-        kb += incrx;
-        tcur += dt;
-        tt += dy2;
-        if (tt >= 0) {
-            ++iy;
-            tt -= dx2;
-            kb += fNxrast;
-        }
-        if (iy < 0)        goto L110;
-        if (iy >= fNyrast) goto L110;
-        if (ix < 0)        goto L110;
-        if (ix >= fNxrast) goto L110;
-        iw = kb / 30;
-        ib = kb - iw*30 + 1;
-        if (fRaster[iw] & fMask[ib - 1]) goto L110;
-        if (ivis > 0)      continue;
-        ivis = 1;
-        ++nt;
-        t[2*nt + 1] = tcur;
-        continue;
+   dt = 1./ (Double_t)(dx + 1.);
+   ddtt = dt*(float).5;
+   tcur = -(Double_t)dt;
+   tt = (Double_t) (-(dx + dy2));
+   iy = y1;
+   kb = iy*fNxrast + x1 - incrx;
+   for (ix = x1; incrx < 0 ? ix >= x2 : ix <= x2; ix += incrx) {
+      kb += incrx;
+      tcur += dt;
+      tt += dy2;
+      if (tt >= 0) {
+         ++iy;
+         tt -= dx2;
+         kb += fNxrast;
+      }
+      if (iy < 0)        goto L110;
+      if (iy >= fNyrast) goto L110;
+      if (ix < 0)        goto L110;
+      if (ix >= fNxrast) goto L110;
+      iw = kb / 30;
+      ib = kb - iw*30 + 1;
+      if (fRaster[iw] & fMask[ib - 1]) goto L110;
+      if (ivis > 0)      continue;
+      ivis = 1;
+      ++nt;
+      t[2*nt + 1] = tcur;
+      continue;
 L110:
-        if (ivis == 0) continue;
-        ivis = 0;
-        t[2*nt + 2] = tcur;
-        if (nt == ntmax)  goto L300;
-    }
-    if (ivis > 0) t[2*nt + 2] = tcur + dt + ddtt;
-    goto L300;
+      if (ivis == 0) continue;
+      ivis = 0;
+      t[2*nt + 2] = tcur;
+      if (nt == ntmax)  goto L300;
+   }
+   if (ivis > 0) t[2*nt + 2] = tcur + dt + ddtt;
+   goto L300;
 
 //*-*-          D Y   . G T .   D X
 
 L200:
-    dt = 1. / (Double_t)(dy + 1.);
-    ddtt = dt*(float).5;
-    tcur = -(Double_t)dt;
-    tt = (Double_t) (-(dy + dx2));
-    ix = x1;
-    if (y2 >= fNyrast) y2 = fNyrast - 1;
-    kb = (y1 - 1)*fNxrast + ix;
-    for (iy = y1; iy <= y2; ++iy) {
-        kb += fNxrast;
-        tcur += dt;
-        tt += dx2;
-        if (tt >= 0) {
-            ix += incrx;
-            tt -= dy2;
-            kb += incrx;
-        }
-        if (iy < 0)        goto L210;
-        if (ix < 0)        goto L210;
-        if (ix >= fNxrast) goto L210;
-        iw = kb / 30;
-        ib = kb - iw*30 + 1;
-        if (fRaster[iw] & fMask[ib - 1]) goto L210;
-        if (ivis > 0) continue;
-        ivis = 1;
-        ++nt;
-        t[2*nt + 1] = tcur;
-        continue;
+   dt = 1. / (Double_t)(dy + 1.);
+   ddtt = dt*(float).5;
+   tcur = -(Double_t)dt;
+   tt = (Double_t) (-(dy + dx2));
+   ix = x1;
+   if (y2 >= fNyrast) y2 = fNyrast - 1;
+   kb = (y1 - 1)*fNxrast + ix;
+   for (iy = y1; iy <= y2; ++iy) {
+      kb += fNxrast;
+      tcur += dt;
+      tt += dx2;
+      if (tt >= 0) {
+         ix += incrx;
+         tt -= dy2;
+         kb += incrx;
+      }
+      if (iy < 0)        goto L210;
+      if (ix < 0)        goto L210;
+      if (ix >= fNxrast) goto L210;
+      iw = kb / 30;
+      ib = kb - iw*30 + 1;
+      if (fRaster[iw] & fMask[ib - 1]) goto L210;
+      if (ivis > 0) continue;
+      ivis = 1;
+      ++nt;
+      t[2*nt + 1] = tcur;
+      continue;
 L210:
-        if (ivis == 0) continue;
-        ivis = 0;
-        t[2*nt + 2] = tcur;
-        if (nt == ntmax) goto L300;
-    }
-    if (ivis > 0) t[2*nt + 2] = tcur + dt;
+      if (ivis == 0) continue;
+      ivis = 0;
+      t[2*nt + 2] = tcur;
+      if (nt == ntmax) goto L300;
+   }
+   if (ivis > 0) t[2*nt + 2] = tcur + dt;
 
 //*-*-          C H E C K   D I R E C T I O N   O F   P A R A M E T E R
 
 L300:
-    if (nt == 0) return;
-    dt *= 1.1;
-    if (t[3] <= dt) t[3] = 0;
-    if (t[2*nt + 2] >= 1 - dt) t[2*nt + 2] = 1;
-    if (ifinve == 0) return;
-    for (i = 1; i <= nt; ++i) {
-        t1 = t[2*i + 1];
-        t2 = t[2*i + 2];
-        t[2*i + 1] = 1 - t2;
-        t[2*i + 2] = 1 - t1;
-    }
+   if (nt == 0) return;
+   dt *= 1.1;
+   if (t[3] <= dt) t[3] = 0;
+   if (t[2*nt + 2] >= 1 - dt) t[2*nt + 2] = 1;
+   if (ifinve == 0) return;
+   for (i = 1; i <= nt; ++i) {
+      t1 = t[2*i + 1];
+      t2 = t[2*i + 2];
+      t[2*i + 1] = 1 - t2;
+      t[2*i + 2] = 1 - t1;
+   }
 }
 
 //______________________________________________________________________________
@@ -1892,43 +1884,42 @@ void TPainter3dAlgorithms::FrontBox(Double_t ang)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static Int_t iface1[4] = { 1,2,6,5 };
-    static Int_t iface2[4] = { 2,3,7,6 };
+   static Int_t iface1[4] = { 1,2,6,5 };
+   static Int_t iface2[4] = { 2,3,7,6 };
 
-    Double_t cosa, sina;
-    Double_t r[24]        /* was [3][8] */, av[24]        /* was [3][8] */;
-    Int_t icodes[3];
-    Double_t fdummy[1];
-    Int_t i, ix1, ix2, iy1, iy2, iz1, iz2;
-    TView *view = 0;
+   Double_t cosa, sina;
+   Double_t r[24]        /* was [3][8] */, av[24]        /* was [3][8] */;
+   Int_t icodes[3];
+   Double_t fdummy[1];
+   Int_t i, ix1, ix2, iy1, iy2, iz1, iz2;
+   TView *view = 0;
 
-    if(gPad) {
-            view = gPad->GetView();
-            if(!view) {
-              Error("FrontBox", "no TView in current pad");
-                    return;
-            }
-    }
+   if (gPad) {
+      view = gPad->GetView();
+      if (!view) {
+         Error("FrontBox", "no TView in current pad");
+         return;
+      }
+   }
 
-
-    cosa = TMath::Cos(kRad*ang);
-    sina = TMath::Sin(kRad*ang);
-        view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
-    for (i = 1; i <= 8; ++i) {
-        r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2] * cosa;
-        r[i*3 - 2] = av[i*3 - 2] * sina;
-        r[i*3 - 1] = av[i*3 - 1];
-    }
+   cosa = TMath::Cos(kRad*ang);
+   sina = TMath::Sin(kRad*ang);
+   view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
+   for (i = 1; i <= 8; ++i) {
+      r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2] * cosa;
+      r[i*3 - 2] = av[i*3 - 2] * sina;
+      r[i*3 - 1] = av[i*3 - 1];
+   }
 
 //*-*-          D R A W   F O R W A R D   F A C E S
 
-    icodes[0] = 0;
-    icodes[1] = 0;
-    icodes[2] = 0;
-    (this->*fDrawFace)(icodes, r, 4, iface1, fdummy);
-    (this->*fDrawFace)(icodes, r, 4, iface2, fdummy);
+   icodes[0] = 0;
+   icodes[1] = 0;
+   icodes[2] = 0;
+   (this->*fDrawFace)(icodes, r, 4, iface1, fdummy);
+   (this->*fDrawFace)(icodes, r, 4, iface2, fdummy);
 }
 
 //______________________________________________________________________________
@@ -2031,30 +2022,30 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
                x[k + (i + j*3 << 2) - 17] = r*TMath::Cos(phi);
                y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(phi);
                z[k + (i + j*3 << 2) - 17] = r*TMath::Cos(th) / TMath::Sin(th);
-           } else {
+            } else {
                x[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 51];
                y[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 50];
                z[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 49];
-           }
-        }
-        x1 = x[(i + j*3 << 2) - 14] - x[(i + j*3 << 2) - 16];
-        x2 = x[(i + j*3 << 2) - 13] - x[(i + j*3 << 2) - 15];
-        y1 = y[(i + j*3 << 2) - 14] - y[(i + j*3 << 2) - 16];
-        y2 = y[(i + j*3 << 2) - 13] - y[(i + j*3 << 2) - 15];
-        z1 = z[(i + j*3 << 2) - 14] - z[(i + j*3 << 2) - 16];
-        z2 = z[(i + j*3 << 2) - 13] - z[(i + j*3 << 2) - 15];
-        an[(i + j*3)*3 - 12] = y1*z2 - y2*z1;
-        an[(i + j*3)*3 - 11] = z1*x2 - z2*x1;
-        an[(i + j*3)*3 - 10] = x1*y2 - x2*y1;
-        s = TMath::Sqrt(an[(i + j*3)*3 - 12]*an[(i + j*3)*3 - 12] + an[
+            }
+         }
+         x1 = x[(i + j*3 << 2) - 14] - x[(i + j*3 << 2) - 16];
+         x2 = x[(i + j*3 << 2) - 13] - x[(i + j*3 << 2) - 15];
+         y1 = y[(i + j*3 << 2) - 14] - y[(i + j*3 << 2) - 16];
+         y2 = y[(i + j*3 << 2) - 13] - y[(i + j*3 << 2) - 15];
+         z1 = z[(i + j*3 << 2) - 14] - z[(i + j*3 << 2) - 16];
+         z2 = z[(i + j*3 << 2) - 13] - z[(i + j*3 << 2) - 15];
+         an[(i + j*3)*3 - 12] = y1*z2 - y2*z1;
+         an[(i + j*3)*3 - 11] = z1*x2 - z2*x1;
+         an[(i + j*3)*3 - 10] = x1*y2 - x2*y1;
+         s = TMath::Sqrt(an[(i + j*3)*3 - 12]*an[(i + j*3)*3 - 12] + an[
                         (i + j*3)*3 - 11]*an[(i + j*3)*3 - 11] + an[(i
                         + j*3)*3 - 10]*an[(i + j*3)*3 - 10]);
 
-        an[(i + j*3)*3 - 12] /= s;
-        an[(i + j*3)*3 - 11] /= s;
-        an[(i + j*3)*3 - 10] /= s;
-     }
-  }
+         an[(i + j*3)*3 - 12] /= s;
+         an[(i + j*3)*3 - 11] /= s;
+         an[(i + j*3)*3 - 10] /= s;
+      }
+   }
 
 //*-*-         Find average normals
 
@@ -2088,14 +2079,14 @@ void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    fX0 = xmin;
-    fDX = (xmax - xmin) / 1000;
-    for (Int_t i = 1; i <= 1000; ++i) {
-        fU[2*i - 2] = (float)-999;
-        fU[2*i - 1] = (float)-999;
-        fD[2*i - 2] = (float)999;
-        fD[2*i - 1] = (float)999;
-    }
+   fX0 = xmin;
+   fDX = (xmax - xmin) / 1000;
+   for (Int_t i = 1; i <= 1000; ++i) {
+      fU[2*i - 2] = (float)-999;
+      fU[2*i - 1] = (float)-999;
+      fD[2*i - 2] = (float)999;
+      fD[2*i - 1] = (float)999;
+   }
 }
 //______________________________________________________________________________
 void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Int_t nx, Int_t ny  )
@@ -2112,43 +2103,42 @@ void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xma
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, j, k, ib, nb;
+   Int_t i, j, k, ib, nb;
 
-    fNxrast = nx;
-    fNyrast = ny;
-    fXrast  = xmin;
-    fDXrast = xmax - xmin;
-    fYrast  = ymin;
-    fDYrast = ymax - ymin;
+   fNxrast = nx;
+   fNyrast = ny;
+   fXrast  = xmin;
+   fDXrast = xmax - xmin;
+   fYrast  = ymin;
+   fDYrast = ymax - ymin;
 
 //*-*-  Create buffer for raster
-    Int_t buffersize = nx*ny/30 + 1;
-    fRaster = new Int_t[buffersize];
+   Int_t buffersize = nx*ny/30 + 1;
+   fRaster = new Int_t[buffersize];
 
 //*-*-          S E T   M A S K S
 
-    k = 0;
-    Int_t pow2 = 1;
-    for (i = 1; i <= 30; ++i) {
-        fJmask[i - 1] = k;
-        k = k + 30 - i + 1;
-        fMask[i - 1] = pow2;
-        pow2 *= 2;
-    }
-    j = 30;
-    for (nb = 2; nb <= 30; ++nb) {
-        for (ib = 1; ib <= 30 - nb + 1; ++ib) {
-            k = 0;
-            for (i = ib; i <= ib + nb - 1; ++i) k = k | fMask[i - 1];
-            ++j;
-            fMask[j - 1] = k;
-        }
-    }
+   k = 0;
+   Int_t pow2 = 1;
+   for (i = 1; i <= 30; ++i) {
+      fJmask[i - 1] = k;
+      k = k + 30 - i + 1;
+      fMask[i - 1] = pow2;
+      pow2 *= 2;
+   }
+   j = 30;
+   for (nb = 2; nb <= 30; ++nb) {
+      for (ib = 1; ib <= 30 - nb + 1; ++ib) {
+         k = 0;
+         for (i = ib; i <= ib + nb - 1; ++i) k = k | fMask[i - 1];
+         ++j;
+         fMask[j - 1] = k;
+      }
+   }
 
 //*-*-          C L E A R   R A S T E R   S C R E E N
 
-    ClearRaster();
-
+   ClearRaster();
 }
 
 
@@ -2160,170 +2150,169 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, j, ixt, iyt;
-    Double_t xval1l, xval2l, yval1l,  yval2l;
-    Double_t xlab1l, xlab2l, ylab1l, ylab2l;
-    Double_t rinrad = gStyle->GetLegoInnerR();
-    Double_t dangle = 10; //Delta angle for Rapidity option
+   Int_t i, j, ixt, iyt;
+   Double_t xval1l, xval2l, yval1l,  yval2l;
+   Double_t xlab1l, xlab2l, ylab1l, ylab2l;
+   Double_t rinrad = gStyle->GetLegoInnerR();
+   Double_t dangle = 10; //Delta angle for Rapidity option
 
-    /* Parameter adjustments */
-    t -= 5;
-    --vv;
-    ab -= 3;
+   /* Parameter adjustments */
+   t -= 5;
+   --vv;
+   ab -= 3;
 
-    ixt = ia + Hparam.xfirst - 1;
-    iyt = ib + Hparam.yfirst - 1;
+   ixt = ia + Hparam.xfirst - 1;
+   iyt = ib + Hparam.yfirst - 1;
 
 //*-*-             Compute the cell position in cartesian coordinates
 //*-*-             and compute the LOG if necessary
 
-    Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt);
-    Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt);
-    ab[3] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt) + xwid*Hparam.baroffset;
-    ab[4] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt) + ywid*Hparam.baroffset;
-    ab[5] = ab[3] + xwid*Hparam.barwidth;
-    ab[8] = ab[4] + ywid*Hparam.barwidth;
+   Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt);
+   Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt);
+   ab[3] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt) + xwid*Hparam.baroffset;
+   ab[4] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt) + ywid*Hparam.baroffset;
+   ab[5] = ab[3] + xwid*Hparam.barwidth;
+   ab[8] = ab[4] + ywid*Hparam.barwidth;
 
-    if (Hoption.Logx) {
-       if (ab[3] > 0) ab[3]  = TMath::Log10(ab[3]);
-       else           ab[3]  = Hparam.xmin;
-       if (ab[5] > 0) ab[5]  = TMath::Log10(ab[5]);
-       else           ab[5]  = Hparam.xmin;
-    }
-    xval1l = Hparam.xmin;
-    xval2l = Hparam.xmax;
-    if (Hoption.Logy) {
-       if (ab[4] > 0) ab[4]  = TMath::Log10(ab[4]);
-       else           ab[4]  = Hparam.ymin;
-       if (ab[8] > 0) ab[8]  = TMath::Log10(ab[8]);
-       else           ab[8]  = Hparam.ymin;
-    }
-    yval1l = Hparam.ymin;
-    yval2l = Hparam.ymax;
+   if (Hoption.Logx) {
+      if (ab[3] > 0) ab[3]  = TMath::Log10(ab[3]);
+      else           ab[3]  = Hparam.xmin;
+      if (ab[5] > 0) ab[5]  = TMath::Log10(ab[5]);
+      else           ab[5]  = Hparam.xmin;
+   }
+   xval1l = Hparam.xmin;
+   xval2l = Hparam.xmax;
+   if (Hoption.Logy) {
+      if (ab[4] > 0) ab[4]  = TMath::Log10(ab[4]);
+      else           ab[4]  = Hparam.ymin;
+      if (ab[8] > 0) ab[8]  = TMath::Log10(ab[8]);
+      else           ab[8]  = Hparam.ymin;
+   }
+   yval1l = Hparam.ymin;
+   yval2l = Hparam.ymax;
 
-    if (ab[3] < Hparam.xmin) ab[3] = Hparam.xmin;
-    if (ab[4] < Hparam.ymin) ab[4] = Hparam.ymin;
-    if (ab[5] > Hparam.xmax) ab[5] = Hparam.xmax;
-    if (ab[8] > Hparam.ymax) ab[8] = Hparam.ymax;
-    if (ab[5] < Hparam.xmin) ab[5] = Hparam.xmin;
-    if (ab[8] < Hparam.ymin) ab[8] = Hparam.ymin;
+   if (ab[3] < Hparam.xmin) ab[3] = Hparam.xmin;
+   if (ab[4] < Hparam.ymin) ab[4] = Hparam.ymin;
+   if (ab[5] > Hparam.xmax) ab[5] = Hparam.xmax;
+   if (ab[8] > Hparam.ymax) ab[8] = Hparam.ymax;
+   if (ab[5] < Hparam.xmin) ab[5] = Hparam.xmin;
+   if (ab[8] < Hparam.ymin) ab[8] = Hparam.ymin;
 
-    xlab1l = gCurrentHist->GetXaxis()->GetXmin();
-    xlab2l = gCurrentHist->GetXaxis()->GetXmax();
-    if (Hoption.Logx) {
-       if (xlab2l>0) {
-          if (xlab1l>0) xlab1l = TMath::Log10(xlab1l);
-          else          xlab1l = TMath::Log10(0.001*xlab2l);
-          xlab2l = TMath::Log10(xlab2l);
-       }
-    }
-    ylab1l = gCurrentHist->GetYaxis()->GetXmin();
-    ylab2l = gCurrentHist->GetYaxis()->GetXmax();
-    if (Hoption.Logy) {
-       if (ylab2l>0) {
-          if (ylab1l>0) ylab1l = TMath::Log10(ylab1l);
-          else          ylab1l = TMath::Log10(0.001*ylab2l);
-          ylab2l = TMath::Log10(ylab2l);
-       }
-    }
+   xlab1l = gCurrentHist->GetXaxis()->GetXmin();
+   xlab2l = gCurrentHist->GetXaxis()->GetXmax();
+   if (Hoption.Logx) {
+      if (xlab2l>0) {
+         if (xlab1l>0) xlab1l = TMath::Log10(xlab1l);
+         else          xlab1l = TMath::Log10(0.001*xlab2l);
+         xlab2l = TMath::Log10(xlab2l);
+      }
+   }
+   ylab1l = gCurrentHist->GetYaxis()->GetXmin();
+   ylab2l = gCurrentHist->GetYaxis()->GetXmax();
+   if (Hoption.Logy) {
+      if (ylab2l>0) {
+         if (ylab1l>0) ylab1l = TMath::Log10(ylab1l);
+         else          ylab1l = TMath::Log10(0.001*ylab2l);
+         ylab2l = TMath::Log10(ylab2l);
+      }
+   }
 
 //*-*-       Transform the cell position in the required coordinate system
 
-    if (Hoption.System == kPOLAR) {
-        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
-        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
-        ab[4] = (ab[4] - yval1l) / (yval2l - yval1l);
-        ab[8] = (ab[8] - yval1l) / (yval2l - yval1l);
-    } else if (Hoption.System == kCYLINDRICAL) {
-        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
-        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
-    } else if (Hoption.System == kSPHERICAL) {
-        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
-        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
-        ab[4] = 180*(ab[4] - ylab1l) / (ylab2l - ylab1l);
-        ab[8] = 180*(ab[8] - ylab1l) / (ylab2l - ylab1l);
-    } else if (Hoption.System == kRAPIDITY) {
-        ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
-        ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
-        ab[4] = (180 - dangle*2)*(ab[4] - ylab1l) / (ylab2l - ylab1l) + dangle;
-        ab[8] = (180 - dangle*2)*(ab[8] - ylab1l) / (ylab2l - ylab1l) + dangle;
-    }
+   if (Hoption.System == kPOLAR) {
+      ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+      ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
+      ab[4] = (ab[4] - yval1l) / (yval2l - yval1l);
+      ab[8] = (ab[8] - yval1l) / (yval2l - yval1l);
+   } else if (Hoption.System == kCYLINDRICAL) {
+      ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+      ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
+   } else if (Hoption.System == kSPHERICAL) {
+      ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+      ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
+      ab[4] = 180*(ab[4] - ylab1l) / (ylab2l - ylab1l);
+      ab[8] = 180*(ab[8] - ylab1l) / (ylab2l - ylab1l);
+   } else if (Hoption.System == kRAPIDITY) {
+      ab[3] = 360*(ab[3] - xlab1l) / (xlab2l - xlab1l);
+      ab[5] = 360*(ab[5] - xlab1l) / (xlab2l - xlab1l);
+      ab[4] = (180 - dangle*2)*(ab[4] - ylab1l) / (ylab2l - ylab1l) + dangle;
+      ab[8] = (180 - dangle*2)*(ab[8] - ylab1l) / (ylab2l - ylab1l) + dangle;
+   }
 
 //*-*-             Complete the cell coordinates
 
-    ab[6]  = ab[4];
-    ab[7]  = ab[5];
-    ab[9]  = ab[3];
-    ab[10] = ab[8];
+   ab[6]  = ab[4];
+   ab[7]  = ab[5];
+   ab[9]  = ab[3];
+   ab[10] = ab[8];
 
 //*-*-              Get the content of the table, and loop on the
 //*-*-              stack if necessary.
 
-    vv[1] = Hparam.zmin;
-    vv[2] = Hparam.factor*gCurrentHist->GetCellContent(ixt, iyt);
+   vv[1] = Hparam.zmin;
+   vv[2] = Hparam.factor*gCurrentHist->GetCellContent(ixt, iyt);
 
-    // 3D boxes all start from 0
-    if(Hparam.zmin<0){
-       if(vv[2]<0) {
-          vv[1] = vv[2];
-          vv[2] = 0;
-       } else {
-          vv[1]=0;
-       }
-    }
+   // 3D boxes all start from 0
+   if (Hparam.zmin<0) {
+      if (vv[2]<0) {
+         vv[1] = vv[2];
+         vv[2] = 0;
+      } else {
+         vv[1]=0;
+      }
+   }
     
-    TList *stack = gCurrentHist->GetPainter()->GetStack();
-    Int_t nids = 0; //not yet implemented
-    if (stack) nids = stack->GetSize();
-    if (nids) {
-        for (i = 2; i <= nids + 1; ++i) {
-            TH1 *hid = (TH1*)stack->At(i-2);
-            vv[i + 1] = Hparam.factor*hid->GetCellContent(ixt, iyt) + vv[i];
-            vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
-            //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
-        }
-    }
+   TList *stack = gCurrentHist->GetPainter()->GetStack();
+   Int_t nids = 0; //not yet implemented
+   if (stack) nids = stack->GetSize();
+   if (nids) {
+      for (i = 2; i <= nids + 1; ++i) {
+         TH1 *hid = (TH1*)stack->At(i-2);
+         vv[i + 1] = Hparam.factor*hid->GetCellContent(ixt, iyt) + vv[i];
+         vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
+         //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
+      }
+   }
 
-    nv = nids + 2;
-    for (i = 2; i <= nv; ++i) {
-        if (Hoption.Logz) {
-            if (vv[i] > 0)
-               vv[i] = TMath::Max(Hparam.zmin, (Double_t)TMath::Log10(vv[i]));
-            else
-               vv[i] = Hparam.zmin;
-            vv[i] = TMath::Min(vv[i], Hparam.zmax);
-        } else {
+   nv = nids + 2;
+   for (i = 2; i <= nv; ++i) {
+      if (Hoption.Logz) {
+         if (vv[i] > 0)
+            vv[i] = TMath::Max(Hparam.zmin, (Double_t)TMath::Log10(vv[i]));
+         else
+            vv[i] = Hparam.zmin;
+         vv[i] = TMath::Min(vv[i], Hparam.zmax);
+      } else {
             vv[i] = TMath::Max(Hparam.zmin, vv[i]);
             vv[i] = TMath::Min(Hparam.zmax, vv[i]);
-        }
-    }
+      }
+   }
 
-    if (!Hoption.Logz) {
-        i = 3;
-        while (i <= nv) {
-            if (vv[i] < vv[i - 1]) {
-                vv[i - 1] = vv[i];
-                i = 3;
-                continue;
-            }
-            ++i;
-        }
-    }
+   if (!Hoption.Logz) {
+      i = 3;
+      while (i <= nv) {
+         if (vv[i] < vv[i - 1]) {
+            vv[i - 1] = vv[i];
+            i = 3;
+            continue;
+         }
+         ++i;
+      }
+   }
 
 //*-*-          For cylindrical, spherical and pseudo-rapidity, the content
 //*-*-          is mapped onto the radius
 
-    if (Hoption.System == kCYLINDRICAL || Hoption.System == kSPHERICAL || Hoption.System == kRAPIDITY) {
-        for (i = 1; i <= nv; ++i) {
-            vv[i] = (1 - rinrad)*((vv[i] - Hparam.zmin) /
-                    (Hparam.zmax - Hparam.zmin)) + rinrad;
-        }
-    }
+   if (Hoption.System == kCYLINDRICAL || Hoption.System == kSPHERICAL || Hoption.System == kRAPIDITY) {
+      for (i = 1; i <= nv; ++i) {
+         vv[i] = (1 - rinrad)*((vv[i] - Hparam.zmin) /
+                 (Hparam.zmax - Hparam.zmin)) + rinrad;
+      }
+   }
 
-    for (i = 1; i <= nv; ++i) {
-        for (j = 1; j <= 4; ++j) t[j + (i << 2)] = vv[i];
-    }
-
+   for (i = 1; i <= nv; ++i) {
+      for (j = 1; j <= 4; ++j) t[j + (i << 2)] = vv[i];
+   }
 }
 
 //______________________________________________________________________________
@@ -2382,9 +2371,9 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
 
 //*-*-          F I N D   T H E   M O S T   L E F T   P O I N T
 
-   if(gPad) {
+   if (gPad) {
       view = gPad->GetView();
-      if(!view) {
+      if (!view) {
          Error("LegoCartesian", "no TView in current pad");
          return;
       }
@@ -3261,57 +3250,57 @@ void TPainter3dAlgorithms::LightSource(Int_t nl, Double_t yl, Double_t xscr,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Int_t i;
-    Double_t s;
+   /* Local variables */
+   Int_t i;
+   Double_t s;
 
-    irep = 0;
-    if (nl < 0)       goto L100;
-    else if (nl == 0) goto L200;
-    else              goto L300;
+   irep = 0;
+   if (nl < 0)       goto L100;
+   else if (nl == 0) goto L200;
+   else              goto L300;
 
 //*-*-          S W I T C H   O F F   L I G H T S
 L100:
-    fLoff = 1;
-    fYdl = 0;
-    for (i = 1; i <= 4; ++i) {
-        fYls[i - 1] = 0;
-    }
-    return;
+   fLoff = 1;
+   fYdl = 0;
+   for (i = 1; i <= 4; ++i) {
+      fYls[i - 1] = 0;
+   }
+   return;
 //*-*-          S E T   D I F F U S E D   L I G H T
 L200:
-    if (yl < 0) {
-       Error("LightSource", "negative light intensity");
-       irep = -1;
-       return;
-    }
-    fYdl = yl;
-    goto L400;
+   if (yl < 0) {
+      Error("LightSource", "negative light intensity");
+      irep = -1;
+      return;
+   }
+   fYdl = yl;
+   goto L400;
 //*-*-          S E T   L I G H T   S O U R C E
 L300:
-    if (nl > 4 || yl < 0) {
-       Error("LightSource", "illegal light source number (nl=%d, yl=%f)", nl, yl);
-       irep = -1;
-       return;
-    }
-    s = TMath::Sqrt(xscr*xscr + yscr*yscr + zscr*zscr);
-    if (s == 0) {
-       Error("LightSource", "light source is placed at origin");
-       irep = -1;
-       return;
-    }
-    fYls[nl - 1] = yl;
-    fVls[nl*3 - 3] = xscr / s;
-    fVls[nl*3 - 2] = yscr / s;
-    fVls[nl*3 - 1] = zscr / s;
+   if (nl > 4 || yl < 0) {
+      Error("LightSource", "illegal light source number (nl=%d, yl=%f)", nl, yl);
+      irep = -1;
+      return;
+   }
+   s = TMath::Sqrt(xscr*xscr + yscr*yscr + zscr*zscr);
+   if (s == 0) {
+      Error("LightSource", "light source is placed at origin");
+      irep = -1;
+      return;
+   }
+   fYls[nl - 1] = yl;
+   fVls[nl*3 - 3] = xscr / s;
+   fVls[nl*3 - 2] = yscr / s;
+   fVls[nl*3 - 1] = zscr / s;
 //*-*-         C H E C K   L I G H T S
 L400:
-    fLoff = 0;
-    if (fYdl != 0) return;
-    for (i = 1; i <= 4; ++i) {
-        if (fYls[i - 1] != 0) return;
-    }
-    fLoff = 1;
+   fLoff = 0;
+   if (fYdl != 0) return;
+   for (i = 1; i <= 4; ++i) {
+      if (fYls[i - 1] != 0) return;
+   }
+   fLoff = 1;
 }
 
 //______________________________________________________________________________
@@ -3345,46 +3334,46 @@ void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t cosn, cosr;
-    Int_t i;
-    Double_t s, vl[3], vn[3];
+   /* Local variables */
+   Double_t cosn, cosr;
+   Int_t i;
+   Double_t s, vl[3], vn[3];
 
 
-        TView *view = gPad->GetView();   //Get current view
-        if(!view) return;                //Check if `view` is valid!
+   TView *view = gPad->GetView();   //Get current view
+   if(!view) return;                //Check if `view` is valid!
 
 
-    /* Parameter adjustments */
-    --anorm;
+   /* Parameter adjustments */
+   --anorm;
 
-    flum = 0;
-    if (fLoff != 0) return;
+   flum = 0;
+   if (fLoff != 0) return;
 
 //*-*-          T R A N S F E R   N O R M A L  T O   SCREEN COORDINATES
 
-    view->NormalWCtoNDC(&anorm[1], vn);
-    s = TMath::Sqrt(vn[0]*vn[0] + vn[1]*vn[1] + vn[2]*vn[2]);
-    if (vn[2] < 0) s = -(Double_t)s;
-    vn[0] /= s;
-    vn[1] /= s;
-    vn[2] /= s;
+   view->NormalWCtoNDC(&anorm[1], vn);
+   s = TMath::Sqrt(vn[0]*vn[0] + vn[1]*vn[1] + vn[2]*vn[2]);
+   if (vn[2] < 0) s = -(Double_t)s;
+   vn[0] /= s;
+   vn[1] /= s;
+   vn[2] /= s;
 
 //*-*-          F I N D   L U M I N O S I T Y
 
-    flum = fYdl*fQA;
-    for (i = 1; i <= 4; ++i) {
-        if (fYls[i - 1] <= 0) continue;
-        vl[0] = fVls[i*3 - 3];
-        vl[1] = fVls[i*3 - 2];
-        vl[2] = fVls[i*3 - 1];
-        cosn = vl[0]*vn[0] + vl[1]*vn[1] + vl[2]*vn[2];
-        if (cosn < 0) continue;
-        cosr = vn[1]*(vn[2]*vl[1] - vn[1]*vl[2]) - vn[0]*(vn[0]*vl[2]
-                - vn[2]*vl[0]) + vn[2]*cosn;
-        if (cosr <= 0) cosr = 0;
-        flum += fYls[i - 1]*(fQD*cosn + fQS*TMath::Power(cosr, fNqs));
-    }
+   flum = fYdl*fQA;
+   for (i = 1; i <= 4; ++i) {
+      if (fYls[i - 1] <= 0) continue;
+      vl[0] = fVls[i*3 - 3];
+      vl[1] = fVls[i*3 - 2];
+      vl[2] = fVls[i*3 - 1];
+      cosn = vl[0]*vn[0] + vl[1]*vn[1] + vl[2]*vn[2];
+      if (cosn < 0) continue;
+      cosr = vn[1]*(vn[2]*vl[1] - vn[1]*vl[2]) - vn[0]*(vn[0]*vl[2]
+             - vn[2]*vl[0]) + vn[2]*cosn;
+      if (cosr <= 0) cosr = 0;
+      flum += fYls[i - 1]*(fQD*cosn + fQS*TMath::Power(cosr, fNqs));
+   }
 }
 
 //______________________________________________________________________________
@@ -3398,50 +3387,48 @@ void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Int_t i, i1, i2;
-    Double_t x1, x2, y1, y2, dy, ww, yy1, yy2, *tn;
+   /* Local variables */
+   Int_t i, i1, i2;
+   Double_t x1, x2, y1, y2, dy, ww, yy1, yy2, *tn;
 
-    /* Parameter adjustments */
-    --r2;
-    --r1;
+   /* Parameter adjustments */
+   --r2;
+   --r1;
 
-    if(gPad->GetView()) {
-            tn = gPad->GetView()->GetTN();
+   if (gPad->GetView()) {
+      tn = gPad->GetView()->GetTN();
+      x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3] + tn[3];
+      x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3] + tn[3];
+      y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3] + tn[7];
+      y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3] + tn[7];
+   } else {
+      Error("ModifyScreen", "no TView in current pad");
+      return;
+   }
 
-            x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3] + tn[3];
-            x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3] + tn[3];
-            y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3] + tn[7];
-            y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3] + tn[7];
-    }
-    else {
-            Error("ModifyScreen", "no TView in current pad");
-            return;
-    }
-
-    if (x1 >= x2) {
-       ww = x1;
-       x1 = x2;
-       x2 = ww;
-       ww = y1;
-       y1 = y2;
-       y2 = ww;
-    }
-    i1 = Int_t((x1 - fX0) / fDX) + 15;
-    i2 = Int_t((x2 - fX0) / fDX) + 15;
-    if (i1 == i2) return;
+   if (x1 >= x2) {
+      ww = x1;
+      x1 = x2;
+      x2 = ww;
+      ww = y1;
+      y1 = y2;
+      y2 = ww;
+   }
+   i1 = Int_t((x1 - fX0) / fDX) + 15;
+   i2 = Int_t((x2 - fX0) / fDX) + 15;
+   if (i1 == i2) return;
 
 //*-*-          M O D I F Y   B O U N D A R I E S   OF THE SCREEN
 
-    dy = (y2 - y1) / (i2 - i1);
-    for (i = i1; i <= i2 - 1; ++i) {
-        yy1 = y1 + dy*(i - i1);
-        yy2 = yy1 + dy;
-        if (fD[2*i - 2] > yy1) fD[2*i - 2] = yy1;
-        if (fD[2*i - 1] > yy2) fD[2*i - 1] = yy2;
-        if (fU[2*i - 2] < yy1) fU[2*i - 2] = yy1;
-        if (fU[2*i - 1] < yy2) fU[2*i - 1] = yy2;
-    }
+   dy = (y2 - y1) / (i2 - i1);
+   for (i = i1; i <= i2 - 1; ++i) {
+      yy1 = y1 + dy*(i - i1);
+      yy2 = yy1 + dy;
+      if (fD[2*i - 2] > yy1) fD[2*i - 2] = yy1;
+      if (fD[2*i - 1] > yy2) fD[2*i - 1] = yy2;
+      if (fU[2*i - 2] < yy1) fU[2*i - 2] = yy1;
+      if (fU[2*i - 1] < yy2) fU[2*i - 1] = yy2;
+   }
 }
 
 
@@ -3495,6 +3482,7 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOff()
 {
    // static function
    // Set the implicit function clipping box "off".
+
    fgF3Clipping = 0;
 }
 
@@ -3507,6 +3495,7 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
    // Set the implicit function clipping box "on" and define the clipping box.
    // xclip, yclip and zclip is a point within the function range. All the
    // function value having x<=xclip and y<=yclip and z>=zclip are clipped.
+
    fgF3Clipping = 1;
    fgF3XClip = xclip;
    fgF3YClip = yclip;
@@ -3549,25 +3538,25 @@ void TPainter3dAlgorithms::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t 
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t ivis[6], i, k, num;
+   Int_t ivis[6], i, k, num;
 
-    k = Int_t(val);
-    num = 128;
-    for (i = 1; i <= 6; ++i) {
-        ivis[i - 1] = 0;
-        num /= 2;
-        if (k < num) continue;
-        k -= num;
-        ivis[i - 1] = 1;
-    }
-    ir = 1;
-    if (k == 1) ir = -1;
-    iv1 = ivis[5];
-    iv2 = ivis[4];
-    iv3 = ivis[3];
-    iv4 = ivis[2];
-    iv5 = ivis[1];
-    iv6 = ivis[0];
+   k = Int_t(val);
+   num = 128;
+   for (i = 1; i <= 6; ++i) {
+      ivis[i - 1] = 0;
+      num /= 2;
+      if (k < num) continue;
+      k -= num;
+      ivis[i - 1] = 1;
+   }
+   ir = 1;
+   if (k == 1) ir = -1;
+   iv1 = ivis[5];
+   iv2 = ivis[4];
+   iv3 = ivis[3];
+   iv4 = ivis[2];
+   iv5 = ivis[1];
+   iv6 = ivis[0];
 }
 
 
@@ -3586,32 +3575,32 @@ void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Doubl
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t zn, phi;
-    Int_t k = 0;
-    TView *view = 0;
+   /* Local variables */
+   Double_t zn, phi;
+   Int_t k = 0;
+   TView *view = 0;
 
-    if(gPad) {
-            view = gPad->GetView();
-            if(!view) {
-                    Error("SideVisibilityEncode", "no TView in current pad");
-                    return;
-            }
-    }
+   if (gPad) {
+      view = gPad->GetView();
+      if (!view) {
+         Error("SideVisibilityEncode", "no TView in current pad");
+         return;
+      }
+   }
 
-    view->FindNormal(0, 0, 1, zn);
-    if (zn > 0) k += 64;
-    if (zn < 0) k += 32;
-    view->FindNormal(-TMath::Sin(phi2), TMath::Cos(phi2), 0, zn);
-    if (zn > 0) k += 16;
-    view->FindNormal(TMath::Sin(phi1), -TMath::Cos(phi1), 0, zn);
-    if (zn > 0) k += 4;
-    phi = (phi1 + phi2) / (float)2.;
-    view->FindNormal(TMath::Cos(phi), TMath::Sin(phi), 0, zn);
-    if (zn > 0) k += 8;
-    if (zn < 0) k += 2;
-    if (zn <= 0 && iopt == 1 || zn > 0 && iopt == 2) ++k;
-    val = Double_t(k);
+   view->FindNormal(0, 0, 1, zn);
+   if (zn > 0) k += 64;
+   if (zn < 0) k += 32;
+   view->FindNormal(-TMath::Sin(phi2), TMath::Cos(phi2), 0, zn);
+   if (zn > 0) k += 16;
+   view->FindNormal(TMath::Sin(phi1), -TMath::Cos(phi1), 0, zn);
+   if (zn > 0) k += 4;
+   phi = (phi1 + phi2) / (float)2.;
+   view->FindNormal(TMath::Cos(phi), TMath::Sin(phi), 0, zn);
+   if (zn > 0) k += 8;
+   if (zn < 0) k += 2;
+   if (zn <= 0 && iopt == 1 || zn > 0 && iopt == 2) ++k;
+   val = Double_t(k);
 }
 
 
@@ -3636,49 +3625,49 @@ void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    static const char *where = "Spectrum";
+   static const char *where = "Spectrum";
 
-    /* Local variables */
-    Double_t delf;
-    Int_t i;
+   /* Local variables */
+   Double_t delf;
+   Int_t i;
 
-    irep = 0;
-    if (nl == 0) {fNlevel = 0; return; }
+   irep = 0;
+   if (nl == 0) {fNlevel = 0; return; }
 
 //*-*-          C H E C K   P A R A M E T E R S
 
-    if (fmax <= fmin) {
-       Error(where, "fmax (%f) less than fmin (%f)", fmax, fmin);
-       irep = -1;
-       return;
-    }
-    if (nl < 0 || nl > 256) {
-       Error(where, "illegal number of levels (%d)", nl);
-       irep = -1;
-       return;
-    }
-    if (ic < 0) {
-       Error(where, "initial color index is negative");
-       irep = -1;
-       return;
-    }
-    if (idc < 0) {
-       Error(where, "color index increment must be positive");
-       irep = -1;
-    }
+   if (fmax <= fmin) {
+      Error(where, "fmax (%f) less than fmin (%f)", fmax, fmin);
+      irep = -1;
+      return;
+   }
+   if (nl < 0 || nl > 256) {
+      Error(where, "illegal number of levels (%d)", nl);
+      irep = -1;
+      return;
+   }
+   if (ic < 0) {
+      Error(where, "initial color index is negative");
+      irep = -1;
+      return;
+   }
+   if (idc < 0) {
+      Error(where, "color index increment must be positive");
+      irep = -1;
+   }
 
 //*-*-          S E T  S P E C T R
 
-    const Int_t kMAXCOL = 50;
-    delf    = (fmax - fmin) / nl;
-    fNlevel = -(nl + 1);
-    for (i = 1; i <= nl+1; ++i) {
-        fFunLevel[i - 1] = fmin + (i - 1)*delf;
-        fColorLevel[i] = ic + (i - 1)*idc;
-        if (ic <= kMAXCOL && fColorLevel[i] > kMAXCOL) fColorLevel[i] -= kMAXCOL;
-    }
-    fColorLevel[0] = fColorLevel[1];
-    fColorLevel[nl + 1] = fColorLevel[nl];
+   const Int_t kMAXCOL = 50;
+   delf    = (fmax - fmin) / nl;
+   fNlevel = -(nl + 1);
+   for (i = 1; i <= nl+1; ++i) {
+      fFunLevel[i - 1] = fmin + (i - 1)*delf;
+      fColorLevel[i] = ic + (i - 1)*idc;
+      if (ic <= kMAXCOL && fColorLevel[i] > kMAXCOL) fColorLevel[i] -= kMAXCOL;
+   }
+   fColorLevel[0] = fColorLevel[1];
+   fColorLevel[nl + 1] = fColorLevel[nl];
 }
 
 //______________________________________________________________________________
@@ -3710,83 +3699,83 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    Int_t iface[4] = { 1,2,3,4 };
+   Int_t iface[4] = { 1,2,3,4 };
 
-    /* Local variables */
-    Double_t cosa, sina, f[12]        /* was [3][4] */;
-    Int_t i, incrx, incry, i1, ix, iy;
-    Double_t tt[4];
-    Int_t icodes[2], ix1, iy1, ix2, iy2;
-    Double_t xyz[12]        /* was [3][4] */;
-    Double_t *tn;
+   /* Local variables */
+   Double_t cosa, sina, f[12]        /* was [3][4] */;
+   Int_t i, incrx, incry, i1, ix, iy;
+   Double_t tt[4];
+   Int_t icodes[2], ix1, iy1, ix2, iy2;
+   Double_t xyz[12]        /* was [3][4] */;
+   Double_t *tn;
 
-    sina = TMath::Sin(ang*kRad);
-    cosa = TMath::Cos(ang*kRad);
+   sina = TMath::Sin(ang*kRad);
+   cosa = TMath::Cos(ang*kRad);
 
 //*-*-          F I N D   T H E   M O S T   L E F T   P O I N T
 
-        if(gPad->GetView())
-                tn = gPad->GetView()->GetTN();
-        else {
-                Error("SurfaceCartesian", "no TView in current pad");
-                return;
-        }
+   if (gPad->GetView())
+      tn = gPad->GetView()->GetTN();
+   else {
+      Error("SurfaceCartesian", "no TView in current pad");
+      return;
+   }
 
-    i1 = 1;
-    if (tn[0] < 0) i1 = 2;
-    if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+   i1 = 1;
+   if (tn[0] < 0) i1 = 2;
+   if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
 
 //*-*-          D E F I N E   O R D E R   O F   D R A W I N G
 
-    if (*chopt == 'B' || *chopt == 'b') {incrx = -1; incry = -1;}
-    else                                {incrx = 1;  incry = 1;}
-    if (i1 == 1 || i1 == 2) incrx = -incrx;
-    if (i1 == 2 || i1 == 3) incry = -incry;
-    ix1 = 1;
-    iy1 = 1;
-    if (incrx < 0) ix1 = nx;
-    if (incry < 0) iy1 = ny;
-    ix2 = nx - ix1 + 1;
-    iy2 = ny - iy1 + 1;
+   if (*chopt == 'B' || *chopt == 'b') {incrx = -1; incry = -1;}
+   else                                {incrx = 1;  incry = 1;}
+   if (i1 == 1 || i1 == 2) incrx = -incrx;
+   if (i1 == 2 || i1 == 3) incry = -incry;
+   ix1 = 1;
+   iy1 = 1;
+   if (incrx < 0) ix1 = nx;
+   if (incry < 0) iy1 = ny;
+   ix2 = nx - ix1 + 1;
+   iy2 = ny - iy1 + 1;
 
 //*-*-          D R A W   S U R F A C E
 
-    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
-    for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
-        for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
-            if (!painter->IsInside(ix,iy)) continue;
-            (this->*fSurfaceFunction)(ix, iy, f, tt);
-            for (i = 1; i <= 4; ++i) {
-                xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;
-                xyz[i*3 - 2] = f[i*3 - 2]*sina;
-                xyz[i*3 - 1] = f[i*3 - 1];
-                // added EJB -->
-                double al, ab;
-                if (Hoption.Proj == 1 ) {
-                    THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-                    xyz[i*3 - 3] = al;
-                    xyz[i*3 - 2] = ab;
-                } else if (Hoption.Proj == 2 ) {
-                    THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-                    xyz[i*3 - 3] = al;
-                    xyz[i*3 - 2] = ab;
-                } else if (Hoption.Proj == 3) {
-                    THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-                    xyz[i*3 - 3] = al;
-                    xyz[i*3 - 2] = ab;
-                } else if (Hoption.Proj == 4) {
-                    THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
-                    xyz[i*3 - 3] = al;
-                    xyz[i*3 - 2] = ab;
-                }
+   THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
+   for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
+      for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+         if (!painter->IsInside(ix,iy)) continue;
+         (this->*fSurfaceFunction)(ix, iy, f, tt);
+         for (i = 1; i <= 4; ++i) {
+            xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;
+            xyz[i*3 - 2] = f[i*3 - 2]*sina;
+            xyz[i*3 - 1] = f[i*3 - 1];
+            // added EJB -->
+            double al, ab;
+            if (Hoption.Proj == 1 ) {
+               THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+               xyz[i*3 - 3] = al;
+               xyz[i*3 - 2] = ab;
+            } else if (Hoption.Proj == 2 ) {
+               THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+               xyz[i*3 - 3] = al;
+               xyz[i*3 - 2] = ab;
+            } else if (Hoption.Proj == 3) {
+               THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+               xyz[i*3 - 3] = al;
+               xyz[i*3 - 2] = ab;
+            } else if (Hoption.Proj == 4) {
+               THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
+               xyz[i*3 - 3] = al;
+               xyz[i*3 - 2] = ab;
             }
-            icodes[0] = ix;
-            icodes[1] = iy;
-            (this->*fDrawFace)(icodes, xyz, 4, iface, tt);
-        }
-    }
+         }
+         icodes[0] = ix;
+         icodes[1] = iy;
+         (this->*fDrawFace)(icodes, xyz, 4, iface, tt);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -3796,7 +3785,6 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 //*-*                      =============================
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-    /* Initialized data */
 
    static Int_t ixadd[4] = { 0,1,1,0 };
    static Int_t iyadd[4] = { 0,0,1,1 };
@@ -3945,117 +3933,117 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static Int_t iface[4] = { 1,2,3,4 };
-    TView *view = 0;
+   static Int_t iface[4] = { 1,2,3,4 };
+   TView *view = 0;
 
-    if(gPad) {
-            view = gPad->GetView();
-            if(!view) {
-                    Error("SurfacePolar", "no TView in current pad");
-                    return;
-            }
-    }
+   if (gPad) {
+      view = gPad->GetView();
+      if (!view) {
+         Error("SurfacePolar", "no TView in current pad");
+         return;
+      }
+   }
 
 
-    Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
-    Double_t f[12]        /* was [3][4] */;
-    Int_t i, j, incrr, ir1, ir2;
-    Double_t z;
-    Int_t ia, ib, ir, jr, nr, icodes[2];
-    Double_t tt[4];
-    Double_t phi, ttt[4], xyz[12]        /* was [3][4] */;
-    ia = ib = 0;
+   Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
+   Double_t f[12]        /* was [3][4] */;
+   Int_t i, j, incrr, ir1, ir2;
+   Double_t z;
+   Int_t ia, ib, ir, jr, nr, icodes[2];
+   Double_t tt[4];
+   Double_t phi, ttt[4], xyz[12]        /* was [3][4] */;
+   ia = ib = 0;
 
-    if (iordr == 0) {
-        jr   = 1;
-        jphi = 2;
-        nr   = na;
-        nphi = nb;
-    } else {
-        jr   = 2;
-        jphi = 1;
-        nr   = nb;
-        nphi = na;
-    }
-    if (nphi > 180) {
-       Error("SurfacePolar", "too many PHI sectors (%d)", nphi);
-       return;
-    }
-    iopt = 2;
-    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+   if (iordr == 0) {
+      jr   = 1;
+      jphi = 2;
+      nr   = na;
+      nphi = nb;
+   } else {
+      jr   = 2;
+      jphi = 1;
+      nr   = nb;
+      nphi = na;
+   }
+   if (nphi > 180) {
+      Error("SurfacePolar", "too many PHI sectors (%d)", nphi);
+      return;
+   }
+   iopt = 2;
+   if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
 //*-*-       P R E P A R E   P H I   A R R A Y
 //*-*-      F I N D    C R I T I C A L   S E C T O R S
 
-    kphi = nphi;
-    if (iordr == 0) ia = nr;
-    if (iordr != 0) ib = nr;
-    for (i = 1; i <= nphi; ++i) {
-        if (iordr == 0) ib = i;
-        if (iordr != 0) ia = i;
-        (this->*fSurfaceFunction)(ia, ib, f, tt);
-        if (i == 1) fAphi[0] = f[jphi - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
-        fAphi[i] = f[jphi + 5];
-    }
-    view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   kphi = nphi;
+   if (iordr == 0) ia = nr;
+   if (iordr != 0) ib = nr;
+   for (i = 1; i <= nphi; ++i) {
+      if (iordr == 0) ib = i;
+      if (iordr != 0) ia = i;
+      (this->*fSurfaceFunction)(ia, ib, f, tt);
+      if (i == 1) fAphi[0] = f[jphi - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
+      fAphi[i] = f[jphi + 5];
+   }
+   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
 //*-*-       D R A W   S U R F A C E
 
-    incr = 1;
-    iphi = iphi1;
+   incr = 1;
+   iphi = iphi1;
 L100:
-    if (iphi > nphi) goto L300;
+   if (iphi > nphi) goto L300;
 
 //*-*-      F I N D   O R D E R   A L O N G   R
-    if (iordr == 0) {ia = nr;         ib = iphi;}
-    else            {ia = iphi;ib = nr;}
+   if (iordr == 0) {ia = nr;         ib = iphi;}
+   else            {ia = iphi;ib = nr;}
 
-    (this->*fSurfaceFunction)(ia, ib, f, tt);
-    phi = kRad*((f[jphi - 1] + f[jphi + 5]) / 2);
-    view->FindNormal(TMath::Cos(phi), TMath::Sin(phi), 0, z);
-    incrr = 1;
-    ir1 = 1;
-    if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
-        incrr = -1;
-        ir1 = nr;
-    }
-    ir2 = nr - ir1 + 1;
+   (this->*fSurfaceFunction)(ia, ib, f, tt);
+   phi = kRad*((f[jphi - 1] + f[jphi + 5]) / 2);
+   view->FindNormal(TMath::Cos(phi), TMath::Sin(phi), 0, z);
+   incrr = 1;
+   ir1 = 1;
+   if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
+      incrr = -1;
+      ir1 = nr;
+   }
+   ir2 = nr - ir1 + 1;
 //*-*-      D R A W   S U R F A C E   F O R   S E C T O R
-    for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
-        if (iordr == 0) ia = ir;
-        if (iordr != 0) ib = ir;
+   for (ir = ir1; incrr < 0 ? ir >= ir2 : ir <= ir2; ir += incrr) {
+      if (iordr == 0) ia = ir;
+      if (iordr != 0) ib = ir;
 
-        (this->*fSurfaceFunction)(ia, ib, f, tt);
-        for (i = 1; i <= 4; ++i) {
-            j = i;
-            if (iordr != 0 && i == 2) j = 4;
-            if (iordr != 0 && i == 4) j = 2;
-            xyz[j*3 - 3] = f[jr + i*3 - 4]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-            xyz[j*3 - 2] = f[jr + i*3 - 4]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-            xyz[j*3 - 1] = f[i*3 - 1];
-            ttt[j - 1] = tt[i - 1];
-        }
-        icodes[0] = ia;
-        icodes[1] = ib;
-        (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
-    }
+      (this->*fSurfaceFunction)(ia, ib, f, tt);
+      for (i = 1; i <= 4; ++i) {
+         j = i;
+         if (iordr != 0 && i == 2) j = 4;
+         if (iordr != 0 && i == 4) j = 2;
+         xyz[j*3 - 3] = f[jr + i*3 - 4]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+         xyz[j*3 - 2] = f[jr + i*3 - 4]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+         xyz[j*3 - 1] = f[i*3 - 1];
+         ttt[j - 1] = tt[i - 1];
+      }
+      icodes[0] = ia;
+      icodes[1] = ib;
+      (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
+   }
 //*-*-      N E X T   P H I
 L300:
-    iphi += incr;
-    if (iphi == 0)     iphi = kphi;
-    if (iphi > kphi)   iphi = 1;
-    if (iphi != iphi2) goto L100;
-    if (incr == 0) return;
-    if (incr < 0) {
-       incr = 0;
-       goto L100;
-    }
-    incr = -1;
-    iphi = iphi1;
-    goto L300;
+   iphi += incr;
+   if (iphi == 0)     iphi = kphi;
+   if (iphi > kphi)   iphi = 1;
+   if (iphi != iphi2) goto L100;
+   if (incr == 0) return;
+   if (incr < 0) {
+      incr = 0;
+      goto L100;
+   }
+   incr = -1;
+   iphi = iphi1;
+   goto L300;
 }
 
 //______________________________________________________________________________
@@ -4096,111 +4084,110 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
 //End_Html
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static Int_t iface[4] = { 1,2,3,4 };
+   static Int_t iface[4] = { 1,2,3,4 };
 
-    Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
-    Int_t i, j, incrz, nz, iz1, iz2;
-    Int_t ia, ib, iz, jz, icodes[2];
-    Double_t f[12]        /* was [3][4] */;
-    Double_t z;
-    Double_t tt[4];
-    Double_t ttt[4], xyz[12]        /* was [3][4] */;
-    TView *view = 0;
-    ia = ib = 0;
+   Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
+   Int_t i, j, incrz, nz, iz1, iz2;
+   Int_t ia, ib, iz, jz, icodes[2];
+   Double_t f[12]        /* was [3][4] */;
+   Double_t z;
+   Double_t tt[4];
+   Double_t ttt[4], xyz[12]        /* was [3][4] */;
+   TView *view = 0;
+   ia = ib = 0;
 
-    if(gPad) {
-            view = gPad->GetView();
-            if(!view) {
-                    Error("SurfaceCylindrical", "no TView in current pad");
-                    return;
-            }
-    }
+   if (gPad) {
+      view = gPad->GetView();
+      if (!view) {
+         Error("SurfaceCylindrical", "no TView in current pad");
+         return;
+      }
+   }
 
-
-    if (iordr == 0) {
-        jz   = 1;
-        jphi = 2;
-        nz   = na;
-        nphi = nb;
-    } else {
-        jz   = 2;
-        jphi = 1;
-        nz   = nb;
-        nphi = na;
-    }
-    if (nphi > 180) {
-       Error("SurfaceCylindrical", "too many PHI sectors (%d)", nphi);
-       return;
-    }
-    iopt = 2;
-    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+   if (iordr == 0) {
+      jz   = 1;
+      jphi = 2;
+      nz   = na;
+      nphi = nb;
+   } else {
+      jz   = 2;
+      jphi = 1;
+      nz   = nb;
+      nphi = na;
+   }
+   if (nphi > 180) {
+      Error("SurfaceCylindrical", "too many PHI sectors (%d)", nphi);
+      return;
+   }
+   iopt = 2;
+   if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
 //*-*-       P R E P A R E   P H I   A R R A Y
 //*-*-       F I N D    C R I T I C A L   S E C T O R S
 
-    kphi = nphi;
-    if (iordr == 0) ia = nz;
-    if (iordr != 0) ib = nz;
-    for (i = 1; i <= nphi; ++i) {
-        if (iordr == 0) ib = i;
-        if (iordr != 0) ia = i;
-        (this->*fSurfaceFunction)(ia, ib, f, tt);
-        if (i == 1) fAphi[0] = f[jphi - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
-        fAphi[i] = f[jphi + 5];
-    }
-    view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   kphi = nphi;
+   if (iordr == 0) ia = nz;
+   if (iordr != 0) ib = nz;
+   for (i = 1; i <= nphi; ++i) {
+      if (iordr == 0) ib = i;
+      if (iordr != 0) ia = i;
+      (this->*fSurfaceFunction)(ia, ib, f, tt);
+      if (i == 1) fAphi[0] = f[jphi - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
+      fAphi[i] = f[jphi + 5];
+   }
+   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
 //*-*-       F I N D   O R D E R   A L O N G   Z
 
-    incrz = 1;
-    iz1 = 1;
-    view->FindNormal(0, 0, 1, z);
-    if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
-        incrz = -1;
-        iz1 = nz;
-    }
-    iz2 = nz - iz1 + 1;
+   incrz = 1;
+   iz1 = 1;
+   view->FindNormal(0, 0, 1, z);
+   if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
+      incrz = -1;
+      iz1 = nz;
+   }
+   iz2 = nz - iz1 + 1;
 
 //*-*-       D R A W   S U R F A C E
 
-    incr = 1;
-    iphi = iphi1;
+   incr = 1;
+   iphi = iphi1;
 L100:
-    if (iphi > nphi) goto L400;
-    for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
-        if (iordr == 0) {ia = iz;   ib = iphi;}
-        else             {ia = iphi; ib = iz;}
-        (this->*fSurfaceFunction)(ia, ib, f, tt);
-        for (i = 1; i <= 4; ++i) {
-            j = i;
-            if (iordr == 0 && i == 2) j = 4;
-            if (iordr == 0 && i == 4) j = 2;
-            xyz[j*3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-            xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-            xyz[j*3 - 1] = f[jz + i*3 - 4];
-            ttt[j - 1] = tt[i - 1];
-        }
-        icodes[0] = ia;
-        icodes[1] = ib;
-        (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
-    }
+   if (iphi > nphi) goto L400;
+   for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
+      if (iordr == 0) {ia = iz;   ib = iphi;}
+      else             {ia = iphi; ib = iz;}
+      (this->*fSurfaceFunction)(ia, ib, f, tt);
+      for (i = 1; i <= 4; ++i) {
+         j = i;
+         if (iordr == 0 && i == 2) j = 4;
+         if (iordr == 0 && i == 4) j = 2;
+         xyz[j*3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+         xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+         xyz[j*3 - 1] = f[jz + i*3 - 4];
+         ttt[j - 1] = tt[i - 1];
+      }
+      icodes[0] = ia;
+      icodes[1] = ib;
+      (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
+   }
 //*-*-      N E X T   P H I
 L400:
-    iphi += incr;
-    if (iphi == 0)     iphi = kphi;
-    if (iphi > kphi)   iphi = 1;
-    if (iphi != iphi2) goto L100;
-    if (incr ==  0) return;
-    if (incr < 0) {
-       incr = 0;
-       goto L100;
-    }
-    incr = -1;
-    iphi = iphi1;
-    goto L400;
+   iphi += incr;
+   if (iphi == 0)     iphi = kphi;
+   if (iphi > kphi)   iphi = 1;
+   if (iphi != iphi2) goto L100;
+   if (incr ==  0) return;
+   if (incr < 0) {
+      incr = 0;
+      goto L100;
+   }
+   incr = -1;
+   iphi = iphi1;
+   goto L400;
 }
 
 //______________________________________________________________________________
@@ -4237,158 +4224,157 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
-    static Int_t iface[4] = { 1,2,3,4 };
+   /* Initialized data */
+   static Int_t iface[4] = { 1,2,3,4 };
 
-    Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
-    Int_t i, j, incrth, ith, jth, kth, nth, mth, ith1, ith2;
-    Int_t ia, ib, icodes[2];
-    Double_t f[12]        /* was [3][4] */;
-    Double_t tt[4];
-    Double_t phi;
-    Double_t ttt[4], xyz[12]        /* was [3][4] */;
-    TView *view = 0;
-    ia = ib = 0;
+   Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
+   Int_t i, j, incrth, ith, jth, kth, nth, mth, ith1, ith2;
+   Int_t ia, ib, icodes[2];
+   Double_t f[12]        /* was [3][4] */;
+   Double_t tt[4];
+   Double_t phi;
+   Double_t ttt[4], xyz[12]        /* was [3][4] */;
+   TView *view = 0;
+   ia = ib = 0;
 
-    if(gPad) {
-            view = gPad->GetView();
-            if(!view) {
-                    Error("SurfaceSpherical", "no TView in current pad");
-                    return;
-            }
-    }
+   if (gPad) {
+      view = gPad->GetView();
+      if (!view) {
+         Error("SurfaceSpherical", "no TView in current pad");
+         return;
+      }
+   }
 
-
-    if (iordr == 0) {
-        jth  = 1;
-        jphi = 2;
-        nth  = na;
-        nphi = nb;
-    } else {
-        jth  = 2;
-        jphi = 1;
-        nth  = nb;
-        nphi = na;
-    }
-    if (nth > 180)  {
-       Error("SurfaceSpherical", "too many THETA sectors (%d)", nth);
-       return;
-    }
-    if (nphi > 180) {
-       Error("SurfaceSpherical", "too many PHI sectors (%d)", nphi);
-       return;
-    }
-    iopt = 2;
-    if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+   if (iordr == 0) {
+      jth  = 1;
+      jphi = 2;
+      nth  = na;
+      nphi = nb;
+   } else {
+      jth  = 2;
+      jphi = 1;
+      nth  = nb;
+      nphi = na;
+   }
+   if (nth > 180)  {
+      Error("SurfaceSpherical", "too many THETA sectors (%d)", nth);
+      return;
+   }
+   if (nphi > 180) {
+      Error("SurfaceSpherical", "too many PHI sectors (%d)", nphi);
+      return;
+   }
+   iopt = 2;
+   if (*chopt == 'B' || *chopt == 'b') iopt = 1;
 
 //*-*-       P R E P A R E   P H I   A R R A Y
 //*-*-       F I N D    C R I T I C A L   P H I   S E C T O R S
 
-    kphi = nphi;
-    mth = nth / 2;
-    if (mth == 0)    mth = 1;
-    if (iordr == 0) ia = mth;
-    if (iordr != 0) ib = mth;
-    for (i = 1; i <= nphi; ++i) {
-        if (iordr == 0) ib = i;
-        if (iordr != 0) ia = i;
-        (this->*fSurfaceFunction)(ia, ib, f, tt);
-        if (i == 1) fAphi[0] = f[jphi - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
-        fAphi[i] = f[jphi + 5];
-    }
-    view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
+   kphi = nphi;
+   mth = nth / 2;
+   if (mth == 0)    mth = 1;
+   if (iordr == 0) ia = mth;
+   if (iordr != 0) ib = mth;
+   for (i = 1; i <= nphi; ++i) {
+      if (iordr == 0) ib = i;
+      if (iordr != 0) ia = i;
+      (this->*fSurfaceFunction)(ia, ib, f, tt);
+      if (i == 1) fAphi[0] = f[jphi - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + f[jphi - 1]) / (float)2.;
+      fAphi[i] = f[jphi + 5];
+   }
+   view->FindPhiSectors(iopt, kphi, fAphi, iphi1, iphi2);
 
 //*-*-       P R E P A R E   T H E T A   A R R A Y
 
-    if (iordr == 0) ib = 1;
-    if (iordr != 0) ia = 1;
-    for (i = 1; i <= nth; ++i) {
-        if (iordr == 0) ia = i;
-        if (iordr != 0) ib = i;
+   if (iordr == 0) ib = 1;
+   if (iordr != 0) ia = 1;
+   for (i = 1; i <= nth; ++i) {
+      if (iordr == 0) ia = i;
+      if (iordr != 0) ib = i;
 
-        (this->*fSurfaceFunction)(ia, ib, f, tt);
-        if (i == 1) fAphi[0] = f[jth - 1];
-        fAphi[i - 1] = (fAphi[i - 1] + f[jth - 1]) / (float)2.;
-        fAphi[i] = f[jth + 5];
-    }
+      (this->*fSurfaceFunction)(ia, ib, f, tt);
+      if (i == 1) fAphi[0] = f[jth - 1];
+      fAphi[i - 1] = (fAphi[i - 1] + f[jth - 1]) / (float)2.;
+      fAphi[i] = f[jth + 5];
+   }
 
 //*-*-       D R A W   S U R F A C E
 
-    kth  = nth;
-    incr = 1;
-    iphi = iphi1;
+   kth  = nth;
+   incr = 1;
+   iphi = iphi1;
 L100:
-    if (iphi > nphi) goto L500;
+   if (iphi > nphi) goto L500;
 
 //*-*-      F I N D    C R I T I C A L   T H E T A   S E C T O R S
-    if (iordr == 0) {ia = mth; ib = iphi;}
-    else             {ia = iphi;ib = mth;}
+   if (iordr == 0) {ia = mth; ib = iphi;}
+   else             {ia = iphi;ib = mth;}
 
-    (this->*fSurfaceFunction)(ia, ib, f, tt);
-    phi = (f[jphi - 1] + f[jphi + 5]) / (float)2.;
-    view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
-    incrth = 1;
-    ith = ith1;
+   (this->*fSurfaceFunction)(ia, ib, f, tt);
+   phi = (f[jphi - 1] + f[jphi + 5]) / (float)2.;
+   view->FindThetaSectors(iopt, phi, kth, fAphi, ith1, ith2);
+   incrth = 1;
+   ith = ith1;
 L200:
-    if (ith > nth)   goto L400;
-    if (iordr == 0) ia = ith;
-    if (iordr != 0) ib = ith;
+   if (ith > nth)   goto L400;
+   if (iordr == 0) ia = ith;
+   if (iordr != 0) ib = ith;
 
-    (this->*fSurfaceFunction)(ia, ib, f, tt);
-    if (ipsdr == 1) {
-        for (i = 1; i <= 4; ++i) {
-            j = i;
-            if (iordr != 0 && i == 2) j = 4;
-            if (iordr != 0 && i == 4) j = 2;
-            xyz[j * 3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-            xyz[j * 3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-            xyz[j * 3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth  + i*3 - 4]*kRad) /
-                    TMath::Sin(f[jth + i*3 - 4]*kRad);
-            ttt[j - 1] = tt[i - 1];
-        }
-    } else {
-        for (i = 1; i <= 4; ++i) {
-            j = i;
-            if (iordr != 0 && i == 2) j = 4;
-            if (iordr != 0 && i == 4) j = 2;
-            xyz[j*3 - 3] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Cos(f[jphi + i*3 - 4]*kRad);
-            xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Sin(f[jphi + i*3 - 4]*kRad);
-            xyz[j*3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth + i*3 - 4]*kRad);
-            ttt[j - 1] = tt[i - 1];
-        }
-    }
-    icodes[0] = ia;
-    icodes[1] = ib;
-    (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
+   (this->*fSurfaceFunction)(ia, ib, f, tt);
+   if (ipsdr == 1) {
+      for (i = 1; i <= 4; ++i) {
+         j = i;
+         if (iordr != 0 && i == 2) j = 4;
+         if (iordr != 0 && i == 4) j = 2;
+         xyz[j * 3 - 3] = f[i*3 - 1]*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+         xyz[j * 3 - 2] = f[i*3 - 1]*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+         xyz[j * 3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth  + i*3 - 4]*kRad) /
+                          TMath::Sin(f[jth + i*3 - 4]*kRad);
+         ttt[j - 1] = tt[i - 1];
+      }
+   } else {
+      for (i = 1; i <= 4; ++i) {
+         j = i;
+         if (iordr != 0 && i == 2) j = 4;
+         if (iordr != 0 && i == 4) j = 2;
+         xyz[j*3 - 3] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Cos(f[jphi + i*3 - 4]*kRad);
+         xyz[j*3 - 2] = f[i*3 - 1]*TMath::Sin(f[jth + i*3 - 4]*kRad)*TMath::Sin(f[jphi + i*3 - 4]*kRad);
+         xyz[j*3 - 1] = f[i*3 - 1]*TMath::Cos(f[jth + i*3 - 4]*kRad);
+         ttt[j - 1] = tt[i - 1];
+      }
+   }
+   icodes[0] = ia;
+   icodes[1] = ib;
+   (this->*fDrawFace)(icodes, xyz, 4, iface, ttt);
 //*-*-      N E X T   T H E T A
 L400:
-    ith += incrth;
-    if (ith == 0)    ith = kth;
-    if (ith > kth)   ith = 1;
-    if (ith != ith2) goto L200;
-    if (incrth == 0)  goto L500;
-    if (incrth < 0) {
-       incrth = 0;
-       goto L200;
-    }
-    incrth = -1;
-    ith = ith1;
-    goto L400;
+   ith += incrth;
+   if (ith == 0)    ith = kth;
+   if (ith > kth)   ith = 1;
+   if (ith != ith2) goto L200;
+   if (incrth == 0)  goto L500;
+   if (incrth < 0) {
+      incrth = 0;
+      goto L200;
+   }
+   incrth = -1;
+   ith = ith1;
+   goto L400;
 //*-*-      N E X T   P H I
 L500:
-    iphi += incr;
-    if (iphi == 0)     iphi = kphi;
-    if (iphi > kphi)   iphi = 1;
-    if (iphi != iphi2) goto L100;
-    if (incr == 0) return;
-    if (incr < 0) {
-       incr = 0;
-       goto L100;
-    }
-    incr = -1;
-    iphi = iphi1;
-    goto L500;
+   iphi += incr;
+   if (iphi == 0)     iphi = kphi;
+   if (iphi > kphi)   iphi = 1;
+   if (iphi != iphi2) goto L100;
+   if (incr == 0) return;
+   if (incr < 0) {
+      incr = 0;
+      goto L100;
+   }
+   incr = -1;
+   iphi = iphi1;
+   goto L500;
 }
 
 //______________________________________________________________________________
@@ -4411,16 +4397,16 @@ void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t 
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    irep = 0;
-    if (qqa < 0 || qqa > 1 || qqd < 0 || qqd > 1 || qqs < 0 || qqs > 1 || nnqs < 1) {
-       Error("SurfaceProperty", "error in coefficients");
-       irep = -1;
-       return;
-    }
-    fQA  = qqa;
-    fQD  = qqd;
-    fQS  = qqs;
-    fNqs = nnqs;
+   irep = 0;
+   if (qqa < 0 || qqa > 1 || qqd < 0 || qqd > 1 || qqs < 0 || qqs > 1 || nnqs < 1) {
+      Error("SurfaceProperty", "error in coefficients");
+      irep = -1;
+      return;
+   }
+   fQA  = qqa;
+   fQD  = qqd;
+   fQS  = qqs;
+   fNqs = nnqs;
 }
 
 
@@ -4472,13 +4458,13 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
 
    //       D E F I N E   O R D E R   O F   D R A W I N G
    if (*chopt == 'B' || *chopt == 'b') {
-     incrx = +1;
-     incry = +1;
-     incrz = +1;
+      incrx = +1;
+      incry = +1;
+      incrz = +1;
    } else {
-     incrx = -1;
-     incry = -1;
-     incrz = -1;
+      incrx = -1;
+      incry = -1;
+      incrz = -1;
    }
    if (tnorm[8]  < 0.) incrx =-incrx;
    if (tnorm[9]  < 0.) incry =-incry;
@@ -4749,8 +4735,7 @@ void TPainter3dAlgorithms::MarchingCube(Double_t fiso, Double_t p[8][3],
                                  { 5,6,2,1,8,7,3,4 }, { 6,2,1,5,7,3,4,8 },
                                  { 2,1,5,6,3,4,8,7 }, { 1,5,6,2,4,8,7,3 },
                                  { 4,3,7,8,1,2,6,5 }, { 3,7,8,4,2,6,5,1 },
-                                 { 7,8,4,3,6,5,1,2 }, { 8,4,3,7,5,1,2,6 }
-                               };
+                                 { 7,8,4,3,6,5,1,2 }, { 8,4,3,7,5,1,2,6 } };
 
    static Int_t iwhat[21] = { 1,3,5,65,50,67,74,51,177,105,113,58,165,178,
                               254,252,250,190,205,188,181 };
@@ -4887,8 +4872,8 @@ L510:
    // R E M O V E   T R I A N G L E
 L530:
    for ( i=1 ; i<=3 ; i++ ) {
-       itr[i-1] = itria[n-1][i-1];
-       itria[n-1][i-1] = itria[ntria-1][i-1];
+      itr[i-1] = itria[n-1][i-1];
+      itria[n-1][i-1] = itria[ntria-1][i-1];
    }
    ntria = ntria - 1;
    if (ntria == 0) return;
@@ -5024,11 +5009,11 @@ void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
    MarchingCubeSurfacePenetration(fF8[0], fF8[1], fF8[2], fF8[3],
                                   fF8[4], fF8[5], fF8[6], fF8[7], irep);
    if (irep == 0) {
-     ntria = 2;
-     MarchingCubeSetTriangles(ntria, it1, itria);
+      ntria = 2;
+      MarchingCubeSetTriangles(ntria, it1, itria);
    } else {
-     ntria = 6;
-     MarchingCubeSetTriangles(ntria, it2, itria);
+      ntria = 6;
+      MarchingCubeSetTriangles(ntria, it2, itria);
    }
 }
 
@@ -5065,11 +5050,11 @@ void TPainter3dAlgorithms::MarchingCubeCase06(Int_t &nnod, Int_t &ntria,
    MarchingCubeSurfacePenetration(fF8[2], fF8[1], fF8[5], fF8[6],
                                   fF8[3], fF8[0], fF8[4], fF8[7], irep);
    if (irep == 1) {
-     ntria = 7;
-     MarchingCubeSetTriangles(ntria, it3, itria);
+      ntria = 7;
+      MarchingCubeSetTriangles(ntria, it3, itria);
    } else {
-     ntria = 3;
-     MarchingCubeSetTriangles(ntria, it2, itria);
+      ntria = 3;
+      MarchingCubeSetTriangles(ntria, it2, itria);
    }
    return;
 
@@ -5373,10 +5358,10 @@ void TPainter3dAlgorithms::MarchingCubeCase13(Int_t &nnod, Int_t &ntria,
          incr = incr + incr;
       }
       for ( i=1 ; i<=8 ; i++ ) {
-          if (k != iwhat[i-1]) continue;
-          icase = i;
-          kr = nr;
-          goto L200;
+         if (k != iwhat[i-1]) continue;
+         icase = i;
+         kr = nr;
+         goto L200;
       }
    }
    Error("MarchingCubeCase13", "configuration is not found");
@@ -5943,8 +5928,7 @@ void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx,
    Int_t    itria[kNmaxt][3], iorder[kNmaxt], iattr[kNmaxt];
 
    static Int_t ind[8][3] = { { 0,0,0 }, { 1,0,0 }, { 1,0,1 }, { 0,0,1 },
-                              { 0,1,0 }, { 1,1,0 }, { 1,1,1 }, { 0,1,1 }
-                            };
+                              { 0,1,0 }, { 1,1,0 }, { 1,1,1 }, { 0,1,1 } };
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -6035,37 +6019,37 @@ L130:
             for ( isurf=1 ; isurf<=nsurf ; isurf++ ) {
                fsurf = s[isurf-1];
                if (gCurrentHist->GetBinContent(ix,  iy,  iz)   >= fsurf)
-                   goto L210;
+                  goto L210;
                if (gCurrentHist->GetBinContent(ix+1,iy,  iz)   >= fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix,  iy+1,iz)   >= fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix+1,iy+1,iz)   >= fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix,  iy,  iz+1) >= fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix+1,iy,  iz+1) >= fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix,  iy+1,iz+1) >= fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix+1,iy+1,iz+1) >= fsurf)
-                   goto L220;
+                  goto L220;
                continue;
 L210:
                if (gCurrentHist->GetBinContent(ix+1,iy,  iz)   < fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix,  iy+1,iz)   < fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix+1,iy+1,iz)   < fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix,  iy,  iz+1) < fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix+1,iy,  iz+1) < fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix,  iy+1,iz+1) < fsurf)
-                   goto L220;
+                  goto L220;
                if (gCurrentHist->GetBinContent(ix+1,iy+1,iz+1) < fsurf)
-                   goto L220;
+                  goto L220;
                continue;
 
    //       P R E P A R E   C U B E   ( P A R A L L E P I P E D )
