@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStructure.cxx,v 1.3 2005/11/24 16:57:23 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStructure.cxx,v 1.4 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -1318,7 +1318,7 @@ Bool_t TSQLStructure::TryConvertObjectArray(TSqlRegistry* reg, TObjArray* blobs)
    const char* ns = reg->f->SQLNameSeparator();
 
    while (indx<NumChilds()-1) {
-      TSQLStructure* s_ver = GetChild(indx++);
+      //TSQLStructure* s_ver = GetChild(indx++);
       TSQLStructure* s_info = GetChild(indx++);
       TStreamerInfo* info = s_info->GetStreamerInfo();
       Int_t objid = reg->GetNextObjId();
