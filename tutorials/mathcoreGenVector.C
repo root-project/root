@@ -503,6 +503,39 @@ int testRotation() {
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
+  std::cout << "Test Axial Rotations :          ";
+  RotationX rx( pi/3);
+  RotationY ry( pi/4);
+  RotationZ rz( 4*pi/5);
+
+  Rotation3D r3x(rx);
+  Rotation3D r3y(ry);
+  Rotation3D r3z(rz);
+
+  vrot1 = rx * ry * rz * v;
+  vrot2 = r3x * r3y * r3z * v;
+
+  ok+= compare(vrot1.X(), vrot2.X(), "x"); 
+  ok+= compare(vrot1.Y(), vrot2.Y(), "y"); 
+  ok+= compare(vrot1.Z(), vrot2.Z(), "z"); 
+
+  vrot1 = rz * ry * rx * v;
+  vrot2 = r3z * r3y * r3x * v;
+
+  ok+= compare(vrot1.X(), vrot2.X(), "x"); 
+  ok+= compare(vrot1.Y(), vrot2.Y(), "y"); 
+  ok+= compare(vrot1.Z(), vrot2.Z(), "z"); 
+
+  
+  vinv1 = rx.Inverse()*ry.Inverse()*rz.Inverse()*vrot1;
+
+  ok+= compare(vinv1.X(), v.X(), "x"); 
+  ok+= compare(vinv1.Y(), v.Y(), "y"); 
+  ok+= compare(vinv1.Z(), v.Z(), "z"); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+
   std::cout << "Test Inversions :               "; 
 
   EulerAngles s1 = r1.Inverse();
