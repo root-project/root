@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.2 2005/11/29 14:44:59 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -24,7 +24,11 @@
     TVirtualFitter implementation for new C++ Minuit
 */
 
-class ROOT::Minuit2::FunctionMinimum;
+namespace ROOT { 
+  namespace Minuit2 { 
+    class FunctionMinimum;
+  }
+}
 
 class TFitterMinuit : public TVirtualFitter {
 

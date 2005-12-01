@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: LinkDef.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: LinkDef.h,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -21,5 +21,12 @@
 #pragma link C++ class TFitterMinuit;
 #pragma link C++ class TFitterFumili;
 #pragma link C++ class TFcnAdapter;
+
+//#pragma link C++ namespace ROOT::Minuit2;
+
+// #pragma link C++ class ROOT::Minuit2::FCNBase;
+// #pragma link C++ class ROOT::Minuit2::FCNGradientBase;
+// #pragma link C++ class ROOT::Minuit2::FumiliFCNBase;
+
 
 #endif
