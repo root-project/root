@@ -41,8 +41,12 @@ $(REFLEXLIB):   $(REFLEXO) $(MAINLIBS)
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
 
-all-reflex:     $(REFLEXLIB)
-#		cd ./reflex/python; python ./setup.py install --prefix ../../
+genreflex:
+		@if [ -x "`which python`" ]; then                              \
+		cd ./reflex/python; python ./setup.py install --prefix ../../; \
+		else echo "WARNING: No python executable found will not install genreflex script"; fi
+
+all-reflex:     $(REFLEXLIB) genreflex
 
 map-reflex:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(REFLEXLIB) \
