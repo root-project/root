@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.128 2005/11/07 12:16:40 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.129 2005/11/13 17:58:03 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -865,7 +865,10 @@ const char *TWinNTSystem::HostName()
 {
    // Return the system's host name.
 
+   if (fHostname == "")
+      fHostname = ::getenv("COMPUTERNAME");
    if (fHostname == "") {
+      // This requires a DNS query - but we need it for fallback
       char hn[64];
       DWORD il = sizeof(hn);
       ::GetComputerName(hn, &il);
@@ -2440,11 +2443,11 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
       }
 
       /* Ensure SHELL is defined. */
-      if (getenv ("SHELL") == NULL)
+      if (getenv("SHELL") == NULL)
          putenv ((GetVersion () & 0x80000000) ? "SHELL=command" : "SHELL=cmd");
 
       /* Set dir and shell from environment variables. */
-      fPasswords[memberIdx].pw_shell = getenv ("SHELL");
+      fPasswords[memberIdx].pw_shell = getenv("SHELL");
 
       // Find out the SID of the Member.
       LookupSID ((LPCTSTR)szAnsiMemberName, SID_MEMBER, groupIdx, memberIdx);
