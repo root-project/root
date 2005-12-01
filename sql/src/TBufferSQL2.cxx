@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.3 2005/11/24 16:57:23 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.4 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -73,6 +73,7 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode) :
    // Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
    SetParent(0);
+   SetBit(kCannotHandleMemberWiseStreaming);
 }
 
 //______________________________________________________________________________
@@ -94,6 +95,9 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile* file) :
    // Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
    fBufSize = 1000000000;
+
+   // for TClonesArray recognize if this is special case
+   SetBit(kCannotHandleMemberWiseStreaming);
 
    SetParent(file);
    fSQL = file;
@@ -140,7 +144,7 @@ TSQLStructure* TBufferSQL2::SqlWrite(const void* obj, const TClass* cl, Int_t ob
 
    SqlWriteObject(obj, cl);
 
-   if (gDebug>0)
+   if (gDebug>3)
       if (fStructure!=0) {
          cout << "==== Printout of Sql structures ===== " << endl;
          fStructure->Print("*");
@@ -235,7 +239,7 @@ void TBufferSQL2::RegisterPointer(const void* ptr, Int_t objid)
 }
 
 //______________________________________________________________________________
-Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl)
+Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStreamer *streamer, Int_t streamer_index)
 {
    // Write object to buffer
    // If object was written before, only pointer will be stored
@@ -261,7 +265,10 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl)
    Stack()->SetObjectRef(objid, cl);
    RegisterPointer(obj, objid);
 
-   ((TClass*)cl)->Streamer((void*)obj, *this);
+   if (streamer!=0)
+      (*streamer)(*this, (void*) obj, streamer_index);
+   else  
+      ((TClass*)cl)->Streamer((void*)obj, *this);
 
    if (gDebug>1)
       cout << "Done write of " << cl->GetName() << endl;
@@ -272,7 +279,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl)
 }
 
 //______________________________________________________________________________
-void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl)
+void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *streamer, Int_t streamer_index)
 {
    // Read object from the buffer
 
@@ -330,11 +337,11 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl)
    if (gDebug>2)
       cout << "Found object reference " << objid << endl;
 
-   return SqlReadObjectDirect(obj, cl, objid);
+   return SqlReadObjectDirect(obj, cl, objid, streamer, streamer_index);
 }
 
 //______________________________________________________________________________
-void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid)
+void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid, TMemberStreamer *streamer, Int_t streamer_index)
 {
    // Read object data.
    // Class name and version are taken from special objects table.
@@ -402,7 +409,10 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid)
       fCurrentData = objdata;
    }
 
-   objClass->Streamer((void*)obj, *this);
+   if (streamer!=0)
+      (*streamer)(*this, (void*)obj, streamer_index);
+   else  
+      objClass->Streamer((void*)obj, *this);
 
    PopStack();
 
@@ -1132,10 +1142,17 @@ void TBufferSQL2::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement 
 //______________________________________________________________________________
 void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMemberStreamer *streamer)
 {
-   // redefined here to avoid warning message from gcc
+   // Same functionality as TBuffer::ReadFastArray(...) but
+   // instead of calling cl->Streamer(obj,buf) call here
+   // buf.StreamObject(obj, cl). In that case it is easy to understand where
+   // object data is started and finished 
+
+   if (gDebug>2)
+      cout << "TBufferSQL2::ReadFastArray(* " << endl; 
 
    if (streamer) {
-      (*streamer)(*this,start,0);
+      StreamObject(start, streamer, cl, 0); 
+//      (*streamer)(*this,start,0);
       return;
    }
 
@@ -1143,18 +1160,8 @@ void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMember
    char *obj = (char*)start;
    char *end = obj + n*objectSize;
 
-   for(; obj<end; obj+=objectSize) {
-      if (fCurrentData->IsBlobData() &&
-          fCurrentData->VerifyDataType(sqlio::ObjectRef_Arr,kFALSE)) {
-         //cout << "Do job for array 1" << endl;
-         Int_t objid = atoi(fCurrentData->GetValue());
-         fCurrentData->ShiftToNextValue();
-         TClass* cl1 = (TClass*) cl;
-         SqlReadObjectDirect(obj, &cl1, objid);
-      } else
-         ((TClass*)cl)->Streamer(obj,*this);
-   }
-
+   for(; obj<end; obj+=objectSize) 
+      StreamObject(obj, cl);
 
    //   TBuffer::ReadFastArray(start, cl, n, s);
 }
@@ -1162,15 +1169,22 @@ void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMember
 //______________________________________________________________________________
 void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
-   // redefined here to avoid warning message from gcc
+   // Same functionality as TBuffer::ReadFastArray(...) but
+   // instead of calling cl->Streamer(obj,buf) call here
+   // buf.StreamObject(obj, cl). In that case it is easy to understand where
+   // object data is started and finished 
 
+   if (gDebug>2)
+      cout << "TBufferSQL2::ReadFastArray(** " << endl; 
+  
    if (streamer) {
       if (isPreAlloc) {
          for (Int_t j=0;j<n;j++) {
             if (!start[j]) start[j] = ((TClass*)cl)->New();
          }
       }
-      (*streamer)(*this,(void*)start,0);
+      StreamObject((void*)start, streamer, cl, 0); 
+//      (*streamer)(*this,(void*)start,0);
       return;
    }
 
@@ -1184,23 +1198,16 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 
    } else {   //case //-> in comment
 
-      for (Int_t j=0; j<n; j++){
+      for (Int_t j=0; j<n; j++) {
          if (!start[j]) start[j] = ((TClass*)cl)->New();
-         if (fCurrentData->IsBlobData() &&
-             fCurrentData->VerifyDataType(sqlio::ObjectRef_Arr,kFALSE)) {
-            //cout << "Do job for array 2" << endl;
-            Int_t objid = atoi(fCurrentData->GetValue());
-            fCurrentData->ShiftToNextValue();
-            TClass* cl1 = (TClass*) cl;
-            SqlReadObjectDirect(start[j], &cl1, objid);
-         } else
-            ((TClass*)cl)->Streamer(start[j],*this);
+         StreamObject(start[j], cl);
       }
    }
 
    //   TBuffer::ReadFastArray(startp, cl, n, isPreAlloc, s);
 }
 
+//______________________________________________________________________________
 Int_t TBufferSQL2::SqlReadArraySize()
 {
    // Reads array size, written in raw data table.
@@ -1526,10 +1533,14 @@ void TBufferSQL2::WriteFastArrayDouble32(const Double_t  *d, Int_t n, TStreamerE
 //______________________________________________________________________________
 void  TBufferSQL2::WriteFastArray(void  *start,  const TClass *cl, Int_t n, TMemberStreamer *streamer)
 {
-   // Recall TBuffer function to avoid gcc warning message
+   // Same functionality as TBuffer::WriteFastArray(...) but
+   // instead of calling cl->Streamer(obj,buf) call here
+   // buf.StreamObject(obj, cl). In that case it is easy to understand where
+   // object data is started and finished 
 
    if (streamer) {
-      (*streamer)(*this, start, 0);
+      StreamObject(start, streamer, cl, 0); 
+//      (*streamer)(*this, start, 0);
       return;
    }
 
@@ -1537,21 +1548,50 @@ void  TBufferSQL2::WriteFastArray(void  *start,  const TClass *cl, Int_t n, TMem
    if (!n) n=1;
    int size = cl->Size();
 
-   for(Int_t j=0; j<n; j++,obj+=size) {
-      //      PushStack()->SetClassStreamer(cl);
-      ((TClass*)cl)->Streamer(obj,*this);
-      //      PopStack();
-   }
+   for(Int_t j=0; j<n; j++,obj+=size) 
+     StreamObject(obj, cl);
 
    //   TBuffer::WriteFastArray(start, cl, n, s);
 }
 
 //______________________________________________________________________________
-Int_t TBufferSQL2::WriteFastArray(void **startp, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *s)
+Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
-   // Recall TBuffer function to avoid gcc warning message
+   // Same functionality as TBuffer::WriteFastArray(...) but
+   // instead of calling cl->Streamer(obj,buf) call here
+   // buf.StreamObject(obj, cl). In that case it is easy to understand where
+   // object data is started and finished 
+   
+   if (streamer) {
+      StreamObject((void*) start, streamer, cl, 0); 
+//      (*streamer)(*this,(void*)start,0);
+      return 0;
+   }
 
-   return TBuffer::WriteFastArray(startp, cl, n, isPreAlloc, s);
+   int strInfo = 0;
+
+   Int_t res = 0;
+
+   if (!isPreAlloc) {
+
+      for (Int_t j=0;j<n;j++) {
+         //must write StreamerInfo if pointer is null
+         if (!strInfo && !start[j] ) ((TClass*)cl)->GetStreamerInfo()->ForceWriteInfo((TFile *)GetParent());
+         strInfo = 2003;
+         res |= WriteObjectAny(start[j],cl);
+      }
+
+   } else {	//case //-> in comment
+
+      for (Int_t j=0;j<n;j++) {
+         if (!start[j]) start[j] = ((TClass*)cl)->New();
+         StreamObject(start[j], cl);
+      }
+
+   }
+   return res;
+
+//   return TBuffer::WriteFastArray(startp, cl, n, isPreAlloc, s);
 }
 
 //______________________________________________________________________________
@@ -1581,6 +1621,23 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl)
       SqlReadObject(obj);
    else
       SqlWriteObject(obj, cl);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n)
+{
+   // steram object to/from buffer
+
+   if (streamer==0) return;
+   
+   if (gDebug>1)
+      cout << "Stream object of class = " << cl->GetName() << endl;
+//   (*streamer)(*this, obj, n);
+   
+   if (IsReading())
+      SqlReadObject(obj, 0, streamer, n);
+   else
+      SqlWriteObject(obj, cl, streamer, n);
 }
 
 // macro for right shift operator for basic type

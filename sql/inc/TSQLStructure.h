@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLStructure.h,v 1.3 2005/11/24 16:57:23 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLStructure.h,v 1.4 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -176,10 +176,12 @@ public:
      kColParent       = 3,
      kColObject       = 4,
      kColObjectArray  = 5,
-     kColObjectPtr    = 6,
-     kColTString      = 7,
-     kColClonesArray  = 8,
-     kColRawData      = 9
+     kColNormObject   = 6,
+     kColNormObjectArray = 7,
+     kColObjectPtr    = 8,
+     kColTString      = 9,
+     kColClonesArray  = 10,
+     kColRawData      = 11
    };   
   
    ClassDef(TSQLStructure, 1); // Table/structure description used internally by YBufferSQL.

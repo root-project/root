@@ -433,6 +433,10 @@ Bool_t TSQLStructure::IsClonesArray()
    // defines if this structure below node, which correspondes to
    // clones array. Used to force convertion of all data into raw format
 
+   // disable any special handling of TClonesArray
+   
+   return kFALSE;
+
    TSQLStructure* curr = this;
    while (curr!=0) {
       if (curr->GetType()==kSqlObject)
@@ -979,25 +983,25 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* 
 
    Bool_t res = kTRUE;
 
-   Bool_t isclonesarray = (cl==TClonesArray::Class());
+   Bool_t isclonesarray = kFALSE; //(cl==TClonesArray::Class());
 
    if (cl==TObject::Class())
       normstore = StoreTObject(reg);
    else
-      if (cl==TString::Class())
-         normstore = StoreTString(reg);
-      else
-         if (!isclonesarray)
-            if (GetType()==kSqlStreamerInfo)
-               // this is a case when array of objects are stored in blob and each object
-               // has normal streamer. Then it will be stored in normal form and only one tag
-               // will be kept to remind about
-               normstore = StoreClassInNormalForm(reg);
-            else
-               normstore = StoreObjectInNormalForm(reg);
+   if (cl==TString::Class())
+      normstore = StoreTString(reg);
+   else
+      if (!isclonesarray)
+         if (GetType()==kSqlStreamerInfo)
+            // this is a case when array of objects are stored in blob and each object
+            // has normal streamer. Then it will be stored in normal form and only one tag
+            // will be kept to remind about
+            normstore = StoreClassInNormalForm(reg);
+         else
+            normstore = StoreObjectInNormalForm(reg);
 
    if (gDebug>2)
-      cout << "Store object " << objid << " of class " << cl->GetName() << "  normal = " << normstore << endl;
+      cout << "Store object " << objid << " of class " << cl->GetName() << "  normal = " << normstore << " sqltype = " << GetType() << endl;
 
    if (!normstore) {
 
@@ -1157,6 +1161,8 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
       cout << "Element " << elem->GetName()
            << "   type = " << typ
            << "  column = " << columntyp << endl;
+           
+   TString colname = DefineElementColumnName(elem, reg->f);
 
    if (columntyp==kColTString) {
       const char* value;
@@ -1167,10 +1173,6 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
       Int_t sizelimit = reg->f->SQLSmallTextTypeLimit();
 
       const char* stype = reg->f->SQLSmallTextType();
-
-      TString colname = elem->GetName();
-      if (reg->f->GetUseSuffixes())
-         colname+=sqlio::StrSuffix;
 
       if (len<=sizelimit)
          columns->Add(new TSQLColumnData(colname.Data(), stype, value, kFALSE));
@@ -1189,30 +1191,86 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
       Int_t resversion = basecl->GetClassVersion();
       if (!StoreObject(reg, objid.Data(), basecl, kFALSE))
          resversion = -1;
-      TString colname = elem->GetName();
-      if (reg->f->GetUseSuffixes())
-         colname+=sqlio::ParentSuffix;
       columns->Add(new TSQLColumnData(colname.Data(), resversion));
       return kTRUE;
    }
-
+   
    if (columntyp==kColObject) {
-      Int_t objid = reg->GetNextObjId();
+      
       TString sobjid;
-      sobjid.Form("%d",objid);
+      Int_t objid = 0;
+       
+      if (NumChilds()==1) {
+         TSQLStructure* child = GetChild(0);
+         
+         if (child->GetType()==kSqlObject) {
+            if (!child->StoreObject(reg, child->GetValue(), child->GetObjectClass())) return kFALSE;
+            sobjid = child->GetValue(); 
+         } else
+         if (child->GetType()==kSqlPointer)
+            sobjid = child->GetValue(); 
+      }
+       
+      if (sobjid.Length()>0) {
+         objid = sobjid.Atoi(); 
+      } else {
+         //cout << "!!!! Not standard " << elem->GetName() << " class = " << elem->GetClassPointer()->GetName() << endl; 
+         objid = reg->GetNextObjId();
+         sobjid.Form("%d",objid);
+         if (!StoreObject(reg, sobjid.Data(), elem->GetClassPointer()))
+            objid = -1;  // this is a case, when no data was stored for this object
+      }
 
-      if (!StoreObject(reg, sobjid.Data(), elem->GetClassPointer()))
-         objid = -1;  // this is a case, when no data was stored for this object
-
-      TString colname = elem->GetName();
-      if (reg->f->GetUseSuffixes())
-         colname += sqlio::ObjectSuffix;
       columns->Add(new TSQLColumnData(colname.Data(), objid));
+      return kTRUE;
+   }
+   
+   if (columntyp==kColNormObject) {
+       
+      if (NumChilds()!=1) {
+          Error("kColNormObject","NumChilds()=%d", NumChilds());
+          PrintLevel(20);
+          return kFALSE;
+      }
+      TSQLStructure* child = GetChild(0);
+      if ((child->GetType()!=kSqlPointer) && (child->GetType()!=kSqlObject)) return kFALSE;
+
+      Bool_t normal = kTRUE;
+
+      if (child->GetType()==kSqlObject)
+         normal = child->StoreObject(reg, child->GetValue(), child->GetObjectClass());
+
+      if (!normal) {
+         Error("kColNormObject","child->StoreObject fails");
+         return kFALSE;
+      }
+
+      columns->Add(new TSQLColumnData(colname.Data(), "INT", child->GetValue(), kTRUE));
+      return kTRUE;
+   }
+
+   if (columntyp==kColNormObjectArray) {
+      if (elem->GetArrayLength()!=NumChilds()) return kFALSE;
+      
+      for (Int_t index=0;index<NumChilds();index++) {
+         TSQLStructure* child = GetChild(index);
+         if ((child->GetType()!=kSqlPointer) && 
+             (child->GetType()!=kSqlObject)) return kFALSE;
+         Bool_t normal = kTRUE;
+         
+         if (child->GetType()==kSqlObject)
+            normal = child->StoreObject(reg, child->GetValue(), child->GetObjectClass());
+
+         if (!normal) return kFALSE;
+         
+         colname = DefineElementColumnName(elem, reg->f, index);
+
+         columns->Add(new TSQLColumnData(colname.Data(), "INT", child->GetValue(), kTRUE));
+      }
       return kTRUE;
    }
 
    if (columntyp==kColObjectPtr) {
-
       if (NumChilds()!=1) return kFALSE;
       TSQLStructure* child = GetChild(0);
       if ((child->GetType()!=kSqlPointer) && (child->GetType()!=kSqlObject)) return kFALSE;
@@ -1223,10 +1281,6 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
          normal = child->StoreObject(reg, child->GetValue(), child->GetObjectClass());
 
       if (!normal) return kFALSE;
-
-      TString colname = elem->GetName();
-      if (reg->f->GetUseSuffixes())
-         colname += sqlio::PointerSuffix;
 
       columns->Add(new TSQLColumnData(colname.Data(), "INT", child->GetValue(), kTRUE));
       return kTRUE;
@@ -1247,12 +1301,6 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
       if (value==0) return kFALSE;
 
       const char* sqltype = reg->f->SQLCompatibleType(typ);
-
-      TString colname = elem->GetName();
-      if (reg->f->GetUseSuffixes()) {
-         colname+=":";
-         colname+=GetSimpleTypeName(typ);
-      }
 
       columns->Add(new TSQLColumnData(colname.Data(), sqltype, value, IsNumericType(typ)));
 
@@ -1281,8 +1329,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
          Int_t last = index + child->GetRepeatCounter();
 
          while (index<last) {
-            TString colname = elem->GetName();
-            colname+=MakeArrayIndex(elem, index);
+            colname = DefineElementColumnName(elem, reg->f, index);
             columns->Add(new TSQLColumnData(colname.Data(), sqltype, value, kTRUE));
             index++;
          }
@@ -1318,7 +1365,7 @@ Bool_t TSQLStructure::TryConvertObjectArray(TSqlRegistry* reg, TObjArray* blobs)
    const char* ns = reg->f->SQLNameSeparator();
 
    while (indx<NumChilds()-1) {
-      //TSQLStructure* s_ver = GetChild(indx++);
+      indx++; //TSQLStructure* s_ver = GetChild(indx++);
       TSQLStructure* s_info = GetChild(indx++);
       TStreamerInfo* info = s_info->GetStreamerInfo();
       Int_t objid = reg->GetNextObjId();
@@ -1499,6 +1546,33 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
       if (elem->InheritsFrom(TStreamerBase::Class()))
          return kColParent;
 
+   // this is workaround
+   // these two tags stored with WriteFastArray, but read with cl->Streamer()
+   if ((typ==TStreamerInfo::kObject)  ||
+       (typ==TStreamerInfo::kAny))
+      if (elem->GetArrayLength()==0) return kColObject; else
+         if (elem->GetStreamer()==0) return kColObjectArray;
+         
+   if ((typ==TStreamerInfo::kObject)  ||
+       (typ==TStreamerInfo::kAny) ||
+       (typ==TStreamerInfo::kAnyp) ||
+       (typ==TStreamerInfo::kObjectp) ||
+       (typ==TStreamerInfo::kAnyP) ||
+       (typ==TStreamerInfo::kObjectP)) 
+      if ((elem->GetArrayLength()==0) || 
+         (elem->GetStreamer()!=0)) return kColNormObject; 
+                              else return kColNormObjectArray;
+
+   if ((typ==TStreamerInfo::kObject + TStreamerInfo::kOffsetL) ||
+       (typ==TStreamerInfo::kAny + TStreamerInfo::kOffsetL) ||
+       (typ==TStreamerInfo::kAnyp + TStreamerInfo::kOffsetL) ||
+       (typ==TStreamerInfo::kObjectp + TStreamerInfo::kOffsetL) ||
+       (typ==TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL) ||
+       (typ==TStreamerInfo::kObjectP + TStreamerInfo::kOffsetL)) 
+      if (elem->GetStreamer()!=0) return kColNormObject; 
+                             else return kColNormObjectArray;
+
+
    if ((typ==TStreamerInfo::kObject) ||
        (typ==TStreamerInfo::kAny) ||
        (typ==TStreamerInfo::kAnyp) ||
@@ -1553,6 +1627,21 @@ TString TSQLStructure::DefineElementColumnName(TStreamerElement* elem, TSQLFile*
       colname = elemname;
       if (f->GetUseSuffixes())
          colname+=sqlio::ParentSuffix;
+      break;
+   }
+
+   case kColNormObject: {
+      colname = elemname;
+      if (f->GetUseSuffixes())
+         colname += sqlio::ObjectSuffix;
+      break;
+   }
+   
+   case kColNormObjectArray: {
+      colname = elemname;
+      colname+=MakeArrayIndex(elem, indx);
+      if (f->GetUseSuffixes())
+         colname += sqlio::ObjectSuffix;
       break;
    }
 
@@ -1616,30 +1705,21 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
 
    const char* elemname = elem->GetName();
    Bool_t located = kFALSE;
+   
+   TString colname = DefineElementColumnName(elem, f);
 
    switch (coltype) {
    case kColSimple: {
-      TString colname = elemname;
-      if (f->GetUseSuffixes()) {
-         colname+=f->SQLNameSeparator();
-         colname+=GetSimpleTypeName(elem->GetType());
-      }
       located = data->LocateColumn(colname.Data());
       break;
    }
 
    case kColSimpleArray: {
-      TString colname = elemname;
-      colname+=MakeArrayIndex(elem, 0);
       located = data->LocateColumn(colname);
       break;
    }
 
    case kColParent: {
-      TString colname = elemname;
-      if (f->GetUseSuffixes())
-         colname+=sqlio::ParentSuffix;
-
       located = data->LocateColumn(colname.Data());
       if (located==kColUnknown) return kColUnknown;
 
@@ -1679,10 +1759,6 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       // In normal case only version is required. Other object data will be
       // read by TBufferSQL2::IncrementLevel method
    case kColObject: {
-      TString colname = elemname;
-      if (f->GetUseSuffixes())
-         colname += sqlio::ObjectSuffix;
-
       located = data->LocateColumn(colname.Data());
       if (located==kColUnknown) return located;
 
@@ -1727,19 +1803,25 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       // Object id, class of object and so on will be checked
       // when TBuffer::ReadObject method will be called
    case kColObjectPtr: {
-      TString colname = elemname;
-      if (f->GetUseSuffixes())
-         colname += sqlio::PointerSuffix;
-
       located = data->LocateColumn(colname.Data());
       break;
    }
+   
+   // this is case of on object which is treated normally in TBuffer
+   // field should contains objectid.
+   // Object id, class of object and so on will be checked
+   // when TBuffer::StreamObject method will be called
+   case kColNormObject: {
+      located = data->LocateColumn(colname.Data());
+      break;   
+   }
+
+   case kColNormObjectArray: {
+      located = data->LocateColumn(colname.Data());
+      break;   
+   }
 
    case kColTString: {
-      TString colname = elem->GetName();
-      if (f->GetUseSuffixes())
-         colname+=sqlio::StrSuffix;
-
       located = data->LocateColumn(colname);
       if (located==kColUnknown) return located;
       const char* value = data->GetValue();
@@ -1767,19 +1849,12 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
    }
 
    case kColRawData: {
-      TString blobname = elemname;
-      if (f->GetUseSuffixes())
-         blobname += sqlio::RawSuffix;
-      located = data->LocateColumn(blobname.Data(), kTRUE);
+      located = data->LocateColumn(colname.Data(), kTRUE);
       break;
    }
 
    case kColObjectArray: {
-      TString blobname = elemname;
-      if (f->GetUseSuffixes())
-         blobname += sqlio::RawSuffix;
-      located = data->LocateColumn(blobname.Data(), kTRUE);
-
+      located = data->LocateColumn(colname.Data(), kTRUE);
       break;
    }
    }

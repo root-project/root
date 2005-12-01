@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TKeySQL.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TKeySQL.cxx,v 1.3 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -151,12 +151,6 @@ void TKeySQL::StoreObject(const void* obj, const TClass* cl)
    if ((buffer.GetErrorFlag()>0) || (s==0)) {
       Error("StoreObject","Cannot convert object data to TSQLStructure");
       goto zombie;
-   }
-
-   if (gDebug>2) {
-      cout << "==== Printout of Sql structures ===== " << endl;
-      if (s!=0) s->Print("*");
-      cout << "=========== End printout ============ " << endl;
    }
 
    if (cl) fClassName = cl->GetName();

@@ -1,13 +1,5 @@
-// @(#)root/net:$Name:  $:$Id: TBufferSQL2.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.h,v 1.3 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
-
-/*************************************************************************
- * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
 
 
 #ifndef ROOT_TBufferSQL2
@@ -119,9 +111,9 @@ class TBufferSQL2 : public TBuffer {
       const char*      SqlReadValue(const char* tname);
       const char*      SqlReadCharStarValue();
 
-      Int_t            SqlWriteObject(const void* obj, const TClass* objClass);
-      void*            SqlReadObject(void* obj, TClass** cl = 0);
-      void*            SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid);
+      Int_t            SqlWriteObject(const void* obj, const TClass* objClass, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
+      void*            SqlReadObject(void* obj, TClass** cl = 0, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
+      void*            SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
     
    public:
    
@@ -251,6 +243,7 @@ class TBufferSQL2 : public TBuffer {
       virtual void     StreamObject(void *obj, const type_info &typeinfo);
       virtual void     StreamObject(void *obj, const char *className);
       virtual void     StreamObject(void *obj, const TClass *cl);
+      virtual void     StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0);
 
       virtual TBuffer  &operator>>(Bool_t    &b);
       virtual TBuffer  &operator>>(Char_t    &c);
