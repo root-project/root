@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.3 2005/10/28 14:35:39 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.4 2005/11/24 09:24:44 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************
@@ -21,15 +21,9 @@ extern void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t iflag);
 ClassImp(TSPlot)
 
 //____________________________________________________________________
-//Begin_Html
+//Begin_Html <!--
 /* -->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<html>
-
-<body>
-
-</div>
-
 <p>
 <b><font size="+2">Overview</font></b>
 
@@ -427,12 +421,8 @@ The <!-- MATH
 <p>
 The results above can be obtained by running the tutorial TestSPlot.C
 </p>
-<p>
-
-</body></html>
 <!--*/
-
-//End_Html
+//-->End_Html
 
 
 //____________________________________________________________________
