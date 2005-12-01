@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.50 2005/11/16 20:00:16 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.51 2005/11/21 11:17:18 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
    enum { kNotDecompressed = BIT(15) }; //indicates a weird buffer, used by TBasket
    enum { kIsOwner = BIT(16) };  //if set TBuffer owns fBuffer
+   enum { kCannotHandleMemberWiseStreaming = BIT(17) };  //if set TClonesArray should not use memeber wise streaming
    enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
 
    TBuffer(EMode mode);
