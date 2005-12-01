@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.4 2005/10/20 08:22:32 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.5 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TGLOutput.h"
 #include "TGLViewer.h"
 #include "TSystem.h" // For gSystem
 #include "gl2ps.h"
 #include "TError.h"
-#include "Riostream.h"
 #include <assert.h>
 
 //////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.15 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.16 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TGLBoundingBox.h"
 #include "TGLIncludes.h"
-#include "Riostream.h"
 
 #include <math.h>
 

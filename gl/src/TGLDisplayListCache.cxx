@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.6 2005/08/30 10:29:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.7 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TGLDisplayListCache.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 #include "TError.h"
-#include "Riostream.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

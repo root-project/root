@@ -1,5 +1,5 @@
+#include "Riostream.h"
 #include <algorithm>
-#include <iostream>
 #include <string>
 
 #ifdef WIN32

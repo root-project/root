@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.24 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.25 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -10,6 +10,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TGLScene.h"
 #include "TGLCamera.h"
 #include "TGLLogicalShape.h"
@@ -20,7 +21,6 @@
 #include "TGLIncludes.h"
 #include "TError.h"
 #include "TString.h"
-#include "Riostream.h"
 #include "TClass.h" // For non-TObject reflection
 
 #include <algorithm>

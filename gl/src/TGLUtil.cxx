@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.18 2005/11/29 14:04:00 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.19 2005/12/01 09:12:12 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TGLUtil.h"
 #include "TGLBoundingBox.h"
 #include "TGLQuadric.h"
@@ -16,7 +17,6 @@
 
 #include "TError.h"
 #include "TMath.h"
-#include "Riostream.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

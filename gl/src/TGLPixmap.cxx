@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.9 2005/11/24 12:29:12 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.10 2005/11/24 23:30:05 rdm Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include <algorithm>
-#include <iostream>
 #include <utility>
 #include <vector>
 

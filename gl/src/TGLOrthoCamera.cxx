@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.9 2005/11/17 10:38:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.10 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TGLOrthoCamera.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 
 #include "TMath.h"
-#include "Riostream.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
