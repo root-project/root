@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.11 2005/06/24 12:27:29 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.12 2005/08/17 20:08:37 brun Exp $
  // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -22,6 +22,8 @@
 // to the basic Qt graphics, pixmap, text and font handling routines.   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include "TQtRConfig.h"
 
 #ifndef __CINT__
 #include <vector>
@@ -59,8 +61,6 @@ class  QPaintDevice;
 class  QTextCodec;
 
 #include "TVirtualX.h"
-
-#include "TQtRConfig.h"
 
 class TQtMarker;
 
