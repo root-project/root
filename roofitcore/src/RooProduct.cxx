@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.cc,v 1.7 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooProduct.cc,v 1.8 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,6 +29,7 @@
 
 #include "RooFitCore/RooProduct.hh"
 #include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooErrorHandler.hh"
 
 ClassImp(RooProduct)
@@ -36,27 +37,40 @@ ClassImp(RooProduct)
 
 RooProduct::RooProduct()
 {
-  _compIter = _compSet.createIterator() ;
+  _compRIter = _compRSet.createIterator() ;
+  _compCIter = _compCSet.createIterator() ;
+}
+
+
+RooProduct::~RooProduct()
+{
+  delete _compRIter ;
+  delete _compCIter ;
 }
 
 
 RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& prodSet) :
   RooAbsReal(name, title),
-  _compSet("compSet","Set of product components",this)
+  _compRSet("compRSet","Set of real product components",this),
+  _compCSet("compCSet","Set of category product components",this)
 {
   // Constructor
-  _compIter = _compSet.createIterator() ;
+  _compRIter = _compRSet.createIterator() ;
+  _compCIter = _compCSet.createIterator() ;
 
 
   TIterator* compIter = prodSet.createIterator() ;
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)compIter->Next())) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
+    if (dynamic_cast<RooAbsReal*>(comp)) {
+      _compRSet.add(*comp) ;
+    } else if (dynamic_cast<RooAbsCategory*>(comp)) {
+      _compCSet.add(*comp) ;
+    } else {
       cout << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-	   << " is not of type RooAbsReal" << endl ;
+	   << " is not of type RooAbsReal or RooAbsCategory" << endl ;
       RooErrorHandler::softAbort() ;
     }
-    _compSet.add(*comp) ;
   }
 
   delete compIter ;
@@ -66,10 +80,12 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& pro
 
 RooProduct::RooProduct(const RooProduct& other, const char* name) :
   RooAbsReal(other, name), 
-  _compSet("compSet",this,other._compSet)
+  _compRSet("compRSet",this,other._compRSet),
+  _compCSet("compCSet",this,other._compCSet)
 {
   // Copy constructor
-  _compIter = _compSet.createIterator() ;
+  _compRIter = _compRSet.createIterator() ;
+  _compCIter = _compCSet.createIterator() ;
 }
 
 
@@ -78,15 +94,20 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
 Double_t RooProduct::evaluate() const 
 {
   Double_t prod(1) ;
-  _compIter->Reset() ;
 
-  RooAbsReal* comp ;
-  const RooArgSet* nset = _compSet.nset() ;
-  while((comp=(RooAbsReal*)_compIter->Next())) {
-    prod *= comp->getVal(nset) ;
+  _compRIter->Reset() ;
+  RooAbsReal* rcomp ;
+  const RooArgSet* nset = _compRSet.nset() ;
+  while((rcomp=(RooAbsReal*)_compRIter->Next())) {
+    prod *= rcomp->getVal(nset) ;
   }
   
+  _compCIter->Reset() ;
+  RooAbsCategory* ccomp ;
+  while((ccomp=(RooAbsCategory*)_compCIter->Next())) {
+    prod *= ccomp->getIndex() ;
+  }
+
   return prod ;
 }
-
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.cc,v 1.18 2005/06/23 11:44:37 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.19 2005/07/12 11:29:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -109,19 +109,22 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
   // Optionally multiply with fractional normalization
   if (_rangeName) {
 
-    Double_t normInt = pdf.getNorm(nset) ;
-    
-    // Evaluate fraction integral and return normalized by full integral
-    Double_t fracInt = pdf.getNormObj(nset,_rangeName)->getVal() ;
+    globalSelectComp(kTRUE) ;
+    Double_t fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal() ;
+    globalSelectComp(kFALSE) ;
 
-    if ( fracInt == 0. || normInt == 0. || _n == 0.) {
-      cout << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / ( " 
-	   << fracInt << " / " << normInt << " ), for nset = " ;
+
+    if ( fracInt == 0. || _n == 0.) {
+      cout << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / " 
+	   << fracInt << " for nset = " ;
       if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
     }
 
+    nExp /= fracInt ;    
 
-    nExp /= (fracInt / normInt) ;    
+
+    // cout << "RooExtendPdf::expectedEvents(" << GetName() << ") fracInt = " << fracInt << " _n = " << _n << " nExpect = " << nExp << endl ;
+
   }
 
   // Multiply with original Nexpected, if defined

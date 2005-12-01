@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.87 2005/06/23 15:08:54 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.88 2005/07/12 11:29:36 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -129,8 +129,9 @@ public:
   // Accessors to attributes
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
   Bool_t getAttribute(const Text_t* name) const ;
-  inline TIterator* attribIterator() { return _attribList.MakeIterator() ; }
+  inline TIterator* attribIterator() const { return _attribList.MakeIterator() ; }
   inline Bool_t isConstant() const { return getAttribute("Constant") ; }
+  RooLinkedList getCloningAncestors() const ;
 
   // Sorting
   Int_t Compare(const TObject* other) const ;
@@ -158,8 +159,8 @@ public:
   virtual void constOptimize(ConstOpCode opcode) ;
 
 
-  void printCompactTree(const char* indent="",const char* fileName=0) ;
-  void printCompactTree(ostream& os, const char* indent="") ;
+  void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0) ;
+  void printCompactTree(ostream& os, const char* indent="", const char* namePat=0) ;
   virtual void printCompactTreeHook(ostream& os, const char *ind="") ;
 
   inline void setDeleteWatch(Bool_t flag=kTRUE) { _deleteWatch = flag ; } ;

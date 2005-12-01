@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.42 2005/04/18 21:44:40 wverkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.43 2005/07/12 11:29:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -71,7 +71,7 @@ protected:
   mutable RooNormListManager _suppListMgr ;
   mutable RooArgSet* _lastSupNormSet ;
 
-  void updateCoefCache(const RooArgSet* nset, const char* rangeName) const ;
+  void updateCoefCache(const RooArgSet* nset, const RooArgSet* snset, const char* rangeName) const ;
   mutable Double_t* _coefCache ;
   
   friend class RooAddGenContext ;

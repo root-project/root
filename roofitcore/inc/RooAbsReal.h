@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.71 2005/04/18 21:44:23 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.72 2005/06/20 15:44:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,7 +77,7 @@ public:
               { return createIntegral(iset,0,0,rangeName) ; }
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=0) const 
               { return createIntegral(iset,&nset,0,rangeName) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, RooNumIntConfig& cfg, const char* rangeName=0) const 
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const 
               { return createIntegral(iset,&nset,&cfg,rangeName) ; }
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=0) const 
               { return createIntegral(iset,0,&cfg,rangeName) ; }

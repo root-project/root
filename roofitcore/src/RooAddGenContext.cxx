@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddGenContext.cc,v 1.16 2005/04/18 21:44:40 wverkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.17 2005/06/16 09:31:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -110,7 +110,7 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 
 void RooAddGenContext::updateThresholds()
 {
-  _pdf->updateCoefCache(_vars,0) ;  
+  _pdf->updateCoefCache(_vars,_vars,0) ;  
   _coefThresh[0] = 0. ;
   Int_t i ;
   for (i=0 ; i<_nComp ; i++) {

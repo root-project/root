@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.cc,v 1.20 2005/06/16 09:31:23 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.21 2005/06/20 15:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,7 +65,11 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
   // Add auxiliary protovars to _protoVars, if provided
   if (auxProto) {
+//     cout << "RooAbsGenContext::ctor(" << this << ", " << model.GetName() << ") adding following auxProto to _protoVars and _theEvent " << endl ;
+//     auxProto->Print("v") ;
+
     _protoVars.add(*auxProto) ;
+    _theEvent->addClone(*auxProto) ; 
   }
 
   // Remember the default number of events to generate when no prototype dataset is provided.

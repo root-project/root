@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.60 2005/06/16 09:31:31 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.61 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -201,6 +201,7 @@ Double_t RooSimultaneous::evaluate() const
   
   assert(proxy!=0) ;
 
+
   // Return the selected PDF value, normalized by the number of index states
   return ((RooAbsPdf*)(proxy->absArg()))->getVal(_normMgr.lastNormSet()) ; 
 }
@@ -210,15 +211,32 @@ Double_t RooSimultaneous::evaluate() const
 Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const 
 {
   // Return the number of expected events:
-  // the number of expected events of the PDF associated with the current index category state
+  // If the index is in nset, then return the sum of the expected events of all components,
+  // otherwise return the number of expected events of the PDF associated with the current index category state
 
-  // Retrieve the proxy by index name
-  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
-  
-  assert(proxy!=0) ;
+  if (nset->contains(_indexCat.arg())) {
 
-  // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset) ;
+    Double_t sum(0) ;
+
+    TIterator* iter = _pdfProxyList.MakeIterator() ;
+    RooRealProxy* proxy ;
+    while((proxy=(RooRealProxy*)iter->Next())) {      
+      sum += ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset) ;
+    }
+    delete iter ;
+
+    return sum ;
+    
+  } else {
+
+    // Retrieve the proxy by index name
+    RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
+    
+    assert(proxy!=0) ;
+    
+    // Return the selected PDF value, normalized by the number of index states
+    return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset); 
+  }
 }
 
 

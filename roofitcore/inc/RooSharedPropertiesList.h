@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.rdl,v 1.3 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,35 +13,29 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_PRODUCT
-#define ROO_PRODUCT
+#ifndef ROO_SHARED_PROPERTY_LIST
+#define ROO_SHARED_PROPERTY_LIST
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooSetProxy.hh"
+#include "TObject.h"
+#include <assert.h>
+#include "RooFitCore/RooRefCountList.hh"
+#include "RooFitCore/RooSharedProperties.hh"
 
-class RooRealVar;
-class RooArgList ;
-
-class RooProduct : public RooAbsReal {
+class RooSharedPropertiesList : public TObject {
 public:
 
-  RooProduct() ;
-  RooProduct(const char *name, const char *title, const RooArgSet& _prodSet) ;
+  RooSharedPropertiesList() ;
+  virtual ~RooSharedPropertiesList() ;
 
-  RooProduct(const RooProduct& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
-  virtual ~RooProduct() ;
+  RooSharedProperties* registerProperties(RooSharedProperties*) ;
+  void unregisterProperties(RooSharedProperties*) ;
 
 protected:
 
-  RooSetProxy _compRSet ;
-  RooSetProxy _compCSet ;
-  TIterator* _compRIter ;  //! do not persist
-  TIterator* _compCIter ;  //! do not persist
+  RooRefCountList _propList ;
 
-  Double_t evaluate() const;
-
-  ClassDef(RooProduct,1) // Product of RooAbsReal and RooAbsCategory terms
+  ClassDef(RooSharedPropertiesList,0) // Manager for shared properties among clones of certain RooAbsArg-derived types
 };
+
 
 #endif

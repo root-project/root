@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.98 2005/06/20 18:15:16 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.99 2005/06/21 16:42:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -319,21 +319,21 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 }
 
 
-const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const TNamed* rangeName) const 
+const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* iset, const TNamed* rangeName) const 
 {
   // Check normalization is already stored
-  RooAbsReal* norm = _normMgr.getNormalization(this,nset,0,rangeName) ;
+  RooAbsReal* norm = _normMgr.getNormalization(this,nset,iset,rangeName) ;
   if (norm) {
     return norm ;
   }
 
   // If not create it now
-  RooArgSet* depList = getObservables(nset) ;
-  norm = createIntegral(*depList,*getIntegratorConfig(),RooNameReg::str(rangeName)) ;
+  RooArgSet* depList = getObservables(iset) ;
+  norm = createIntegral(*depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName)) ;
   delete depList ;
 
   // Store it in the cache
-  _normMgr.setNormalization(this,nset,0,rangeName,norm) ;
+  _normMgr.setNormalization(this,nset,iset,rangeName,norm) ;
 
   // And return the newly created integral
   return norm ;

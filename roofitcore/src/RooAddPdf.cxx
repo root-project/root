@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.69 2005/06/20 15:44:47 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.70 2005/06/23 11:44:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -469,10 +469,10 @@ void RooAddPdf::syncSuppNormList(const RooArgSet* nset, const char* /*rangeName*
 }
 
 
-void RooAddPdf::updateCoefCache(const RooArgSet* nset, const char* rangeName) const
+void RooAddPdf::updateCoefCache(const RooArgSet* nset, const RooArgSet* snset, const char* rangeName) const
 {
 //   cout << "RAP::updateCC rangeName = " << (rangeName?rangeName:"<null>") << endl ;
-  syncSuppNormList(nset,rangeName) ;
+  syncSuppNormList(snset,rangeName) ;
 
   Int_t i ;
 
@@ -585,7 +585,7 @@ Double_t RooAddPdf::evaluate() const
   Double_t snormVal ;
 
   // Calculate all coefficients
-  updateCoefCache(nset,0) ;
+  updateCoefCache(nset,0,0) ;
 
   Int_t i(0) ;
   while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
@@ -763,7 +763,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
   Int_t i(0) ;
 
 //   cout << "ROP::aIWN updateCoefCache with rangeName = " << (rangeName?rangeName:"<null>") << endl ;
-  updateCoefCache(snormSet,rangeName) ;      
+  updateCoefCache(normSet,snormSet,rangeName) ;      
   while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
     if (_coefCache[i]) {
       snormVal = snormSet ? ((RooAbsReal*) _snormList->at(i))->getVal() : 1.0 ;
@@ -773,14 +773,20 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
       if (pdf->isSelectedComp()) {
 
 	value += val*_coefCache[i]/snormVal ;
-	if (_verboseEval<0) {
-//  	  cout << "RAP::aI: value += " << val << " * " << _coefCache[i] << " / " << snormVal << endl ;
-	}
+//  	if (_verboseEval<0) {
+// 	cout << "RAP::aI(" << GetName() << "): value += " << val << " * " << _coefCache[i] << " / " << snormVal << endl ;
+//  	}
       }
     }
     i++ ;
   }    
 
+//   if (rangeName && !TString(rangeName).Contains("FullRange")) {
+//     cout << "RooAddPdf::aIWN: rangeName = " << rangeName << " returning " << value << " / " << analyticalIntegralWN(code,0,"FullRange") << endl ;
+//     return value / analyticalIntegralWN(code,0,"FullRange") ; 
+//   } 
+
+//   cout << "RooAddPdf::aiWN(" << GetName() << "): rangeName = " << rangeName << " returning " << value << endl ;
   return value ;
 }
 

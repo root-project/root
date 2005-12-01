@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.56 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.57 2005/06/20 15:44:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,7 +41,7 @@ ClassImp(RooRealVar)
 
 Bool_t RooRealVar::_printScientific(kFALSE) ;
 Int_t  RooRealVar::_printSigDigits(5) ;
-
+RooSharedPropertiesList RooRealVar::_sharedPropList ;
 
 RooRealVar::RooRealVar() 
 {
@@ -53,6 +53,9 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1) //, _fitBins(100)
 {
   // Constructor with value and unit
+  _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(new RooRealVarSharedProperties()) ;
+
+  // _instanceList.registerInstance(this) ;
   _binning = new RooUniformBinning(-1,1,100) ;
   _value = value ;
   removeRange();
@@ -65,7 +68,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1) // , _fitBins(100)
 {
   // Constructor with range and unit. Value is set to middle of range
-
+  _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(new RooRealVarSharedProperties()) ;
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
 
   _value= 0.5*(minValue + maxValue);
@@ -80,6 +83,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1)  //, _fitBins(100)
 {
   // Constructor with value, range and unit
+  _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(new RooRealVarSharedProperties()) ;
   _value = value ;
 
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
@@ -93,14 +97,9 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   _asymErrHi(other._asymErrHi)
 {
   // Copy Constructor
-  _binning = other._binning->clone() ;
 
-  TIterator* iter = other._altBinning.MakeIterator() ;
-  RooAbsBinning* binning ;
-  while((binning=(RooAbsBinning*)iter->Next())) {
-    _altBinning.Add(binning->clone()) ;
-  }
-  delete iter ;
+  _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other._sharedProp) ;
+  _binning = other._binning->clone() ;
 }
 
 
@@ -108,7 +107,7 @@ RooRealVar::~RooRealVar()
 {
   // Destructor
   delete _binning ;
-  _altBinning.Delete() ;
+  _sharedPropList.unregisterProperties(_sharedProp) ;
 }
 
 Double_t RooRealVar::getVal(const RooArgSet*) const 
@@ -138,7 +137,7 @@ RooErrorVar* RooRealVar::errorVar() const
 
 Bool_t RooRealVar::hasBinning(const char* name) const
 {
-  return _altBinning.FindObject(name) ? kTRUE : kFALSE ;
+  return _sharedProp->_altBinning.FindObject(name) ? kTRUE : kFALSE ;
 }
 
 
@@ -156,10 +155,25 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
   }
   
   // Check if binning with this name has been created already
-  RooAbsBinning* binning = (RooAbsBinning*) _altBinning.FindObject(name) ;
+  RooAbsBinning* binning = (RooAbsBinning*) (_sharedProp->_altBinning).FindObject(name) ;
   if (binning) {
     return *binning ;
   }
+
+  // If binning is not found, check for it in (live) ancestors in cloning history
+//   RooLinkedList ancestors = getCloningAncestors() ;
+//   TIterator* ancIter = ancestors.MakeIterator() ;
+//   RooRealVar* anc ;
+//   while((anc=(RooRealVar*)ancIter->Next())) {
+//     if (instanceList().isLive(anc) && anc->hasBinning(name)) {
+//       cout << "RooRealVar::getBinning(" << GetName() << ") INFO: this instance of " <<  GetName() << "(" << this << ") has no range named '" 
+// 	   << name << "' but cloning ancestor " << anc << " does, using ancestor range" << endl ;
+//       delete ancIter ;
+//       return anc->getBinning(name,kFALSE,kFALSE) ;
+//     }
+//   }
+//   delete ancIter ;
+
 
   // Return default binning if requested binning doesn't exist
   if (!createOnTheFly) {
@@ -172,7 +186,7 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
     cout << "RooRealVar::getBinning(" << GetName() << ") new range named '" 
 	 << name << "' created with default bounds" << endl ;
   }
-  _altBinning.Add(binning) ;
+  _sharedProp->_altBinning.Add(binning) ;
   
   return *binning ;
 }
@@ -187,9 +201,9 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
   } else {
 
     // Remove any old binning with this name
-    RooAbsBinning* oldBinning = (RooAbsBinning*) _altBinning.FindObject(name) ;
+    RooAbsBinning* oldBinning = (RooAbsBinning*) (_sharedProp->_altBinning).FindObject(name) ;
     if (oldBinning) {
-      _altBinning.Remove(oldBinning) ;
+      _sharedProp->_altBinning.Remove(oldBinning) ;
       delete oldBinning ;
     }
 
@@ -197,7 +211,7 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
     RooAbsBinning* newBinning = binning.clone() ;
     newBinning->SetName(name) ;
     newBinning->SetTitle(name) ;
-    _altBinning.Add(newBinning) ;
+    _sharedProp->_altBinning.Add(newBinning) ;
 
   }
   
@@ -257,7 +271,7 @@ void RooRealVar::setMax(const char* name, Double_t value)
 
 void RooRealVar::setRange(const char* name, Double_t min, Double_t max) 
 {
-  Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
+  Bool_t exists = name ? (_sharedProp->_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
 
   // Set new fit range 
   RooAbsBinning& binning = getBinning(name,kFALSE,kTRUE) ;
@@ -805,6 +819,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
 
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       RooAbsRealLValue::Streamer(R__b);
       if (R__v==1) {
@@ -819,18 +834,28 @@ void RooRealVar::Streamer(TBuffer &R__b)
       R__b >> _error;
       R__b >> _asymErrLo;
       R__b >> _asymErrHi;
-      if (R__v!=1) {
+      if (R__v>=2) {
 	R__b >> _binning;
       }
+      if (R__v>=3) {
+	R__b >> _sharedProp ;
+	// Handle possible creation of multiple instances of sharedProps with same UUID
+	_sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(_sharedProp) ;
+      }
+
       R__b.CheckByteCount(R__s, R__c, RooRealVar::IsA());
+
    } else {
+
       R__c = R__b.WriteVersion(RooRealVar::IsA(), kTRUE);
       RooAbsRealLValue::Streamer(R__b);
       R__b << _error;
       R__b << _asymErrLo;
       R__b << _asymErrHi;
       R__b << _binning;
-      R__b.SetByteCount(R__c, kTRUE);
+      R__b << _sharedProp ;
+      R__b.SetByteCount(R__c, kTRUE);      
+
    }
 }
 

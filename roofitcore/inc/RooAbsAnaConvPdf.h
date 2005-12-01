@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.4 2005/02/25 14:22:48 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.5 2005/06/20 15:44:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,6 +65,8 @@ public:
 protected:
 
   Bool_t _isCopy ;
+
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   virtual Double_t evaluate() const ;
 

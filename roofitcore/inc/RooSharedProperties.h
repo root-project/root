@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.rdl,v 1.3 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,35 +13,27 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_PRODUCT
-#define ROO_PRODUCT
+#ifndef ROO_ABS_SHARED_PROPERTY
+#define ROO_ABS_SHARED_PROPERTY
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooSetProxy.hh"
+#include "TObject.h"
+#include "TUUID.h"
 
-class RooRealVar;
-class RooArgList ;
-
-class RooProduct : public RooAbsReal {
+class RooSharedProperties : public TObject {
 public:
 
-  RooProduct() ;
-  RooProduct(const char *name, const char *title, const RooArgSet& _prodSet) ;
+  RooSharedProperties() ;
+  virtual ~RooSharedProperties() ;
+  Bool_t operator==(const RooSharedProperties& other) ;
 
-  RooProduct(const RooProduct& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
-  virtual ~RooProduct() ;
+  virtual void Print(Option_t* opts=0) const ;
 
 protected:
 
-  RooSetProxy _compRSet ;
-  RooSetProxy _compCSet ;
-  TIterator* _compRIter ;  //! do not persist
-  TIterator* _compCIter ;  //! do not persist
+  TUUID _uuid ; // Unique object ID
 
-  Double_t evaluate() const;
-
-  ClassDef(RooProduct,1) // Product of RooAbsReal and RooAbsCategory terms
+  ClassDef(RooSharedProperties,1) // Abstract interface for shared property implementations
 };
+
 
 #endif

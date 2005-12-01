@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.48 2005/04/18 21:44:51 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.49 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,8 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooUniformBinning.hh"
 #include "RooFitCore/RooNumber.hh"
+#include "RooFitCore/RooSharedPropertiesList.hh"
+#include "RooFitCore/RooRealVarSharedProperties.hh"
 
 class RooArgSet ;
 class RooErrorVar ;
@@ -117,16 +119,15 @@ protected:
 
   Double_t chopAt(Double_t what, Int_t where) const ;
 
-  RooLinkedList _altBinning ;  //! Optional alternative ranges and binnings
-//   Double_t _fitMin ;    // Minimum of fit range [ obsolete ]
-//   Double_t _fitMax ;    // Maximum of fit range [ obsolete ]
-//   Int_t    _fitBins ;   // Number of bins in fit range for binned fits [ obsolete ] 
   Double_t _error;      // Symmetric error associated with current value
   Double_t _asymErrLo ; // Low side of asymmetric error associated with current value
   Double_t _asymErrHi ; // High side of asymmetric error associated with current value
   RooAbsBinning* _binning ; 
 
-  ClassDef(RooRealVar,2) // Real-valued variable 
+  static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
+  RooRealVarSharedProperties* _sharedProp ; // Shared properties associated with this instance
+
+  ClassDef(RooRealVar,3) // Real-valued variable 
 };
 
 

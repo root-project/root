@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.rdl,v 1.3 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,35 +13,24 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_PRODUCT
-#define ROO_PRODUCT
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooSetProxy.hh"
+// -- CLASS DESCRIPTION [AUX] --
 
-class RooRealVar;
-class RooArgList ;
+#include "RooFitCore/RooFit.hh"
+#include "RooFitCore/RooRealVarSharedProperties.hh"
 
-class RooProduct : public RooAbsReal {
-public:
+ClassImp(RooRealVarSharedProperties)
+;
 
-  RooProduct() ;
-  RooProduct(const char *name, const char *title, const RooArgSet& _prodSet) ;
 
-  RooProduct(const RooProduct& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
-  virtual ~RooProduct() ;
+RooRealVarSharedProperties::RooRealVarSharedProperties()
+{
+} 
 
-protected:
 
-  RooSetProxy _compRSet ;
-  RooSetProxy _compCSet ;
-  TIterator* _compRIter ;  //! do not persist
-  TIterator* _compCIter ;  //! do not persist
+RooRealVarSharedProperties::~RooRealVarSharedProperties() 
+{
+  _altBinning.Delete() ;
+} 
 
-  Double_t evaluate() const;
 
-  ClassDef(RooProduct,1) // Product of RooAbsReal and RooAbsCategory terms
-};
-
-#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.53 2005/06/20 15:44:52 wverkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.54 2005/07/12 15:43:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -218,12 +218,14 @@ RooFormula::DefinedValue(Int_t code) {
 
   const RooAbsReal *absReal= dynamic_cast<const RooAbsReal*>(arg);  
   if(0 != absReal) {
+    //cout << "RooFormula::DefinedValue(" << this << "," << GetName() << ") var[" << code << "] --> " << absReal->GetName() << "(" << absReal << ") = " << absReal->getVal(_nset) << endl ;
     return absReal->getVal(_nset) ;
   } else {
     const RooAbsCategory *absCat= dynamic_cast<const RooAbsCategory*>(arg);
     if(0 != absCat) {
       TString& label=((TObjString*)_labelList.At(code))->String() ;
       if (label.IsNull()) {
+	//cout << "RooFormula::DefinedValue(" << this << "," << GetName() << ") var[" << code << "] --> " << absCat->GetName() << "(" << absCat << ") = " << absCat->getIndex() << endl ;
 	return absCat->getIndex() ;
       } else {
 	return absCat->lookupType(label)->getVal() ; // DK: why not call getVal(_nset) here also?

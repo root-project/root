@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.82 2005/06/20 15:44:45 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.83 2005/07/12 11:29:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -171,7 +171,9 @@ private:
 
 protected:
 
-  virtual const RooAbsReal* getNormObj(const RooArgSet* set, const TNamed* rangeName=0) const ;
+public:
+  virtual const RooAbsReal* getNormObj(const RooArgSet* set, const RooArgSet* iset, const TNamed* rangeName=0) const ;
+protected:
 
   // Implementation version
   virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants=kFALSE,

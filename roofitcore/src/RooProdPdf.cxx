@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.59 2005/06/20 15:44:56 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.60 2005/06/23 07:37:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -277,6 +277,8 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
 {
   // Initialize RooProdPdf from a list of RooCmdArg configuration arguments
 
+  Int_t numExtended(0) ;
+
   // Process set of full PDFS
   TIterator* siter = fullPdfSet.createIterator() ;
   RooAbsPdf* pdf ;
@@ -284,6 +286,12 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
     _pdfList.add(*pdf) ;
     RooArgSet* nset1 = new RooArgSet("nset1") ;
     _pdfNSetList.Add(nset1) ;       
+
+    if (pdf->canBeExtended()) {
+      _extendedIndex = _pdfList.index(pdf) ;
+      numExtended++ ;
+    }
+
   }
   delete siter ;
 
@@ -300,6 +308,12 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
       while((pdf=(RooAbsPdf*)siter->Next())) {
 	_pdfList.add(*pdf) ;
 	_pdfNSetList.Add(normSet->snapshot()) ;       
+
+	if (pdf->canBeExtended()) {
+	  _extendedIndex = _pdfList.index(pdf) ;
+	  numExtended++ ;
+	}
+
       }
       delete siter ;
 
@@ -308,6 +322,16 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
       cout << "Unknown arg: " << carg->GetName() << endl ;
     }
   }
+
+  // Protect against multiple extended terms
+  if (numExtended>1) {
+    cout << "RooProdPdf::RooProdPdf(" << GetName() 
+	 << ") WARNING: multiple components with extended terms detected,"
+	 << " product will not be extendible." << endl ;
+    _extendedIndex = -1 ;
+  }
+
+
   delete iter ;
 }
 

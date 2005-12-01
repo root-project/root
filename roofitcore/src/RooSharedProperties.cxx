@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.rdl,v 1.3 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,35 +13,37 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_PRODUCT
-#define ROO_PRODUCT
 
-#include "RooFitCore/RooAbsReal.hh"
-#include "RooFitCore/RooSetProxy.hh"
+// -- CLASS DESCRIPTION [AUX] --
 
-class RooRealVar;
-class RooArgList ;
+#include "RooFitCore/RooFit.hh"
+#include "RooFitCore/RooSharedProperties.hh"
 
-class RooProduct : public RooAbsReal {
-public:
+#include <iostream>
+using std::cout ;
+using std::endl ;
 
-  RooProduct() ;
-  RooProduct(const char *name, const char *title, const RooArgSet& _prodSet) ;
+ClassImp(RooSharedProperties)
+;
 
-  RooProduct(const RooProduct& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
-  virtual ~RooProduct() ;
 
-protected:
+RooSharedProperties::RooSharedProperties() 
+{
+} 
 
-  RooSetProxy _compRSet ;
-  RooSetProxy _compCSet ;
-  TIterator* _compRIter ;  //! do not persist
-  TIterator* _compCIter ;  //! do not persist
 
-  Double_t evaluate() const;
+RooSharedProperties::~RooSharedProperties() 
+{
+} 
 
-  ClassDef(RooProduct,1) // Product of RooAbsReal and RooAbsCategory terms
-};
 
-#endif
+Bool_t RooSharedProperties::operator==(const RooSharedProperties& other) 
+{
+  // Forward comparison to Unique UID component
+  return (_uuid==other._uuid) ;
+}
+
+void RooSharedProperties::Print(Option_t* /*opts*/) const 
+{
+  cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << endl ;
+}

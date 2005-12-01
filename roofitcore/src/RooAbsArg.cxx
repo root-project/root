@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.92 2005/06/20 15:44:43 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.93 2005/07/12 11:29:36 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -779,7 +779,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   
   // Optional subclass post-processing
   ret |= redirectServersHook(newSet,mustReplaceAll,nameChange,isRecursionStep) ;
-
+  
   return ret ;
 }
 
@@ -833,7 +833,6 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
   } else {
     callStack.Add(this) ;
   }
-  
   
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
   Bool_t ret(kFALSE) ;
@@ -1032,7 +1031,7 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
   // options.
 
   if(opt == Standard) {
-    os << ClassName() << "::" << GetName() ;
+    os << ClassName() << "::" << this << "::" << GetName() ;
     Int_t nfill = _nameLength-strlen(GetName()) ;
     while(nfill-- > 0) os << " " ;
     os << ": " ;
@@ -1229,39 +1228,41 @@ void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
 }
 
 
-void RooAbsArg::printCompactTree(const char* indent, const char* filename)
+void RooAbsArg::printCompactTree(const char* indent, const char* filename, const char* namePat)
 {
   if (filename) {
     ofstream ofs(filename) ;
-    printCompactTree(ofs,indent) ;
+    printCompactTree(ofs,indent,namePat) ;
   } else {
-    printCompactTree(cout,indent) ;
+    printCompactTree(cout,indent,namePat) ;
   }
 }
 
 
-void RooAbsArg::printCompactTree(ostream& os, const char* indent)
-{
-  os << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ") " ;
-
-  if (_serverList.GetSize()>0) {
-    switch(operMode()) {
-    case Auto:   os << " [Auto]" << endl ; break ;
-    case AClean: os << " [ACLEAN]" << endl ; break ;
-    case ADirty: os << " [ADIRTY]" << endl ; break ;
+void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* namePat)
+{  
+  if ( !namePat || TString(GetName()).Contains(namePat)) {
+    os << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ") " ;
+    
+    if (_serverList.GetSize()>0) {
+      switch(operMode()) {
+      case Auto:   os << " [Auto]" << endl ; break ;
+      case AClean: os << " [ACLEAN]" << endl ; break ;
+      case ADirty: os << " [ADIRTY]" << endl ; break ;
+      }
+    } else {
+      os << endl ;
     }
-  } else {
-    os << endl ;
-  }
 
-  printCompactTreeHook(os,indent) ;
+    printCompactTreeHook(os,indent) ;
+  }
 
   TString indent2(indent) ;
   indent2 += "  " ;
   TIterator * iter = serverIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    arg->printCompactTree(os,indent2) ;
+    arg->printCompactTree(os,indent2,namePat) ;
   }
   delete iter ;
 }
@@ -1353,4 +1354,29 @@ void RooAbsArg::printCompactTreeHook(ostream&, const char *)
 RooArgSet* RooAbsArg::getVariables() const 
 { 
   return getParameters(RooArgSet()) ; 
+}
+
+
+RooLinkedList RooAbsArg::getCloningAncestors() const
+{
+  // Return ancestors in cloning chain of this RooAbsArg. NOTE: Returned pointers
+  // are not guaranteed to be 'live', so do not dereference without proper caution
+
+  RooLinkedList retVal ;
+
+  TIterator* iter = attribIterator() ;
+  TObjString* attrib ;
+  while((attrib=(TObjString*)iter->Next())) {
+    if (attrib->String().BeginsWith("CloneOf(")) {
+      char buf[128] ;
+      strcpy(buf,attrib->String().Data()) ;
+      strtok(buf,"(") ;
+      char* ptrToken = strtok(0,")") ;
+      RooAbsArg* ptr = (RooAbsArg*) strtol(ptrToken,0,16) ;
+      retVal.Add(ptr) ;
+    }
+  }
+  delete iter ;
+
+  return retVal ;
 }
