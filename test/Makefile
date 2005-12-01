@@ -63,7 +63,7 @@ STRESSLO      = stressLinear.$(ObjSuf)
 STRESSLS      = stressLinear.$(SrcSuf)
 STRESSL       = stressLinear$(ExeSuf)
 
-ifeq ($(shell root-config --has-mathcore),yes)
+ifeq ($(shell $(ROOTCONFIG) --has-mathcore),yes)
 STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
 STRESSVEC    = stressVector$(ExeSuf)

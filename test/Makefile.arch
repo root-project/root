@@ -6,8 +6,14 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-ARCH         := $(shell root-config --arch)
-PLATFORM     := $(shell root-config --platform)
+ifeq ($(shell which root-config > /dev/null 2>&1;echo $?),0)
+ROOTCONFIG   := root-config
+else
+ROOTCONFIG   := $$ROOTSYS/bin/root-config
+endif
+
+ARCH         := $(shell $(ROOTCONFIG) --arch)
+PLATFORM     := $(shell $(ROOTCONFIG) --platform)
 
 CXX           =
 ObjSuf        = o
@@ -16,11 +22,11 @@ ExeSuf        =
 DllSuf        = so
 OutPutOpt     = -o # keep whitespace after "-o"
 
-ROOTCFLAGS   := $(shell root-config --cflags)
-ROOTLDFLAGS  := $(shell root-config --ldflags)
-ROOTLIBS     := $(shell root-config --libs)
-ROOTGLIBS    := $(shell root-config --glibs)
-HASTHREAD    := $(shell root-config --has-thread)
+ROOTCFLAGS   := $(shell $(ROOTCONFIG) --cflags)
+ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
+ROOTLIBS     := $(shell $(ROOTCONFIG) --libs)
+ROOTGLIBS    := $(shell $(ROOTCONFIG) --glibs)
+HASTHREAD    := $(shell $(ROOTCONFIG) --has-thread)
 
 ifeq ($(ARCH),hpuxacc)
 # HP-UX 10.x with aCC
@@ -265,7 +271,7 @@ ifeq ($(ARCH),linuxkcc)
 CXX           = KCC --one_instantiation_per_object
 CXXFLAGS      = -O -fPIC +K0
 LD            = KCC
-LDFLAGS       = -O $(shell root-config --cflags)
+LDFLAGS       = -O $(shell $(ROOTCONFIG) --cflags)
 SOFLAGS       =
 endif
 
