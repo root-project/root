@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3DxAxial.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3DxAxial.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #include "Math/GenVector/Rotation3D.h"
@@ -65,6 +65,82 @@ Rotation3D operator* (RotationZ const & r1, Rotation3D const & r2) {
   // TODO -- recode for much better efficiency!
   return Rotation3D(r1)*r2;
 }
+
+typedef Rotation3D::Scalar Scalar;
+
+// Rx * Ry
+Rotation3D operator* (RotationX const & rx, RotationY const & ry) {
+  Scalar sx = rx.SinAngle();
+  Scalar cx = rx.CosAngle();
+  Scalar sy = ry.SinAngle();
+  Scalar cy = ry.CosAngle();
+  return Rotation3D
+    (  cy     ,  0   ,    sy   , 
+       sx*sy  , cx   , -sx*cy  ,
+      -sy*cx  , sx   ,  cx*cy  ); 
+}
+
+// Rx * Rz
+Rotation3D operator* (RotationX const & rx, RotationZ const & rz) {
+  Scalar sx = rx.SinAngle();
+  Scalar cx = rx.CosAngle();
+  Scalar sz = rz.SinAngle();
+  Scalar cz = rz.CosAngle();
+  return Rotation3D
+    (  cz     ,   -sz ,     0  , 
+       cx*sz  , cx*cz ,   -sx  ,
+       sx*sz  , cz*sx ,    cx  ); 
+}
+
+// Ry * Rx
+Rotation3D operator* (RotationY const & ry, RotationX const & rx) {
+  Scalar sx = rx.SinAngle();
+  Scalar cx = rx.CosAngle();
+  Scalar sy = ry.SinAngle();
+  Scalar cy = ry.CosAngle();
+  return Rotation3D
+    (  cy     , sx*sy ,  sy*cx  , 
+        0     ,    cx ,    -sx  ,
+      -sy     , cy*sx ,  cx*cy  ); 
+}
+
+// Ry * Rz
+Rotation3D operator* (RotationY const & ry, RotationZ const & rz) {
+  Scalar sy = ry.SinAngle();
+  Scalar cy = ry.CosAngle();
+  Scalar sz = rz.SinAngle();
+  Scalar cz = rz.CosAngle();
+  return Rotation3D
+    (  cy*cz  ,-cy*sz ,    sy  , 
+          sz  ,    cz ,     0  ,
+      -cz*sy  , sy*sz ,    cy  ); 
+}
+
+// Rz * Rx
+Rotation3D operator* (RotationZ const & rz, RotationX const & rx) {
+  Scalar sx = rx.SinAngle();
+  Scalar cx = rx.CosAngle();
+  Scalar sz = rz.SinAngle();
+  Scalar cz = rz.CosAngle();
+  return Rotation3D
+    (     cz  ,-cx*sz , sx*sz  , 
+          sz  , cx*cz ,-cz*sx  ,
+           0  ,    sx ,    cx  ); 
+}
+
+// Rz * Ry
+Rotation3D operator* (RotationZ const & rz, RotationY const & ry) {
+  Scalar sy = ry.SinAngle();
+  Scalar cy = ry.CosAngle();
+  Scalar sz = rz.SinAngle();
+  Scalar cz = rz.CosAngle();
+  return Rotation3D
+    (  cy*cz  ,   -sz , cz*sy  , 
+       cy*sz  ,    cz , sy*sz  ,
+         -sy  ,     0 ,    cy  ); 
+}
+
+
 
 
 } //namespace Math

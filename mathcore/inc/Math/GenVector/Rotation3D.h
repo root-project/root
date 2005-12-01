@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: Rotation3D.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -411,11 +411,23 @@ typename Rotation3D::Scalar
 Distance ( const Rotation3D& r1, const R & r2) {return gv_detail::dist(r1,r2);}
 
 /**
-   Multiplication of an axial rotation by a Rotation3D
+   Multiplication of an axial rotation by a Rotation3D 
  */
 Rotation3D operator* (RotationX const & r1, Rotation3D const & r2);
 Rotation3D operator* (RotationY const & r1, Rotation3D const & r2);
 Rotation3D operator* (RotationZ const & r1, Rotation3D const & r2);
+
+/**
+   Multiplication of an axial rotation by another axial Rotation 
+ */
+Rotation3D operator* (RotationX const & r1, RotationY const & r2);
+Rotation3D operator* (RotationX const & r1, RotationZ const & r2);
+
+Rotation3D operator* (RotationY const & r1, RotationX const & r2);
+Rotation3D operator* (RotationY const & r1, RotationZ const & r2);
+
+Rotation3D operator* (RotationZ const & r1, RotationX const & r2);
+Rotation3D operator* (RotationZ const & r1, RotationY const & r2);
 
 /**
    Stream Output and Input

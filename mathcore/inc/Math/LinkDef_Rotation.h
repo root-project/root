@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.3 2005/10/28 10:34:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.1 2005/10/28 15:32:41 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 // rotation functions
@@ -73,3 +73,16 @@
 #pragma link C++ function  ROOT::Math::LorentzRotation::SetComponents (double *, double *);
 #pragma link C++ function  ROOT::Math::LorentzRotation::GetComponents (double *, double *);
 #pragma link C++ function  ROOT::Math::LorentzRotation::operator* (const ROOT::Math::XYZTVector &);
+
+
+//Rotation3D free functions
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationX &, const ROOT::Math::Rotation3D &);
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationY &, const ROOT::Math::Rotation3D &);
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationZ &, const ROOT::Math::Rotation3D &);
+
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationX &, const ROOT::Math::RotationY &);
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationX &, const ROOT::Math::RotationZ &);
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationY &, const ROOT::Math::RotationX &);
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationY &, const ROOT::Math::RotationZ &);
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationZ &, const ROOT::Math::RotationX &);
+#pragma link C++ function  ROOT::Math::operator* (const ROOT::Math::RotationZ &, const ROOT::Math::RotationY &);
