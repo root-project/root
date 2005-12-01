@@ -36,7 +36,6 @@ extralibs=$lastsyslib
 syslibs="msvcrt.lib oldnames.lib kernel32.lib advapi32.lib \
          user32.lib gdi32.lib comdlg32.lib winspool.lib \
          $extralibs"
-userlibs=lib/*.lib
 
 name=`basename $R__LIB .dll`
 
@@ -54,23 +53,19 @@ if [ "$R__PLATFORM" = "win32" ]; then
       echo $cmd
       $cmd
       if [ "$R__LIB" = "lib/libCint.dll" ]; then
-         echo $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $syslibs
-         $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $syslibs
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
+              lib/${name}.exp $syslibs"
       elif [ "$R__LIB" = "lib/libCore.dll" ]; then
-         echo $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCint.lib $syslibs WSock32.lib Oleaut32.lib
-         $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCint.lib $syslibs WSock32.lib Oleaut32.lib
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
+              lib/${name}.exp lib/libCint.lib $R__EXTRA $syslibs WSock32.lib \
+              Oleaut32.lib"
       else
-         echo $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
               lib/${name}.exp $R__EXTRA lib/libCore.lib lib/libCint.lib \
-              $syslibs
-         $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $R__EXTRA lib/libCore.lib lib/libCint.lib \
-              $syslibs
+              $syslibs"
       fi
+      echo $cmd
+      $cmd
    fi
 fi
 
