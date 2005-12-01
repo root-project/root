@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.46 2005/06/09 18:20:02 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.47 2005/11/16 20:07:50 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -551,7 +551,7 @@ void TClonesArray::Streamer(TBuffer &b)
       fLast = nobjects-1;
 
       TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
-      if (CanBypassStreamer()) {
+      if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i])
                fKeep->fCont[i] = (TObject*)fClass->New();
@@ -598,7 +598,7 @@ void TClonesArray::Streamer(TBuffer &b)
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
-      if (CanBypassStreamer()) {
+      if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
          sinfo->WriteBufferClones(b,this,nobjects,-1,0);
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
