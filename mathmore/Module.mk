@@ -20,7 +20,7 @@ GSLETAG      := $(MODDIRS)/headers.d
 ##### libgsl #####
 ifeq ($(PLATFORM),win32)
 GSLLIBA      := $(GSLDIRS)/libgsl.lib
-GSLLIB       := $(LPATH)/libgsl.lib
+#GSLLIB       := $(LPATH)/libgsl.lib
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 GSLBLD        = "libgsl - Win32 Debug"
 else
@@ -28,9 +28,9 @@ GSLBLD        = "libgsl - Win32 Release"
 endif
 else
 GSLLIBA      := $(GSLDIRS)/.libs/libgsl.a
-GSLLIB       := $(LPATH)/libgsl.a
+#GSLLIB       := $(LPATH)/libgsl.a
 endif
-GSLDEP       := $(GSLLIB)
+GSLDEP       := $(GSLLIBA)
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 GSLDBG        = "--enable-gdb"
 else
@@ -86,8 +86,8 @@ include/Math/%.h: $(MATHMOREDIRI)/Math/%.h
 		fi)
 		cp $< $@
 
-$(GSLLIB):      $(GSLLIBA)
-		cp $< $@
+#$(GSLLIB):      $(GSLLIBA)
+#		cp $< $@
 
 $(GSLLIBA):     $(GSLSRCS)
 ifeq ($(PLATFORM),win32)
@@ -144,7 +144,7 @@ $(MATHMORELIB): $(GSLDEP) $(MATHMOREO) $(MATHMOREDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libMathMore.$(SOEXT) $@     \
 		   "$(MATHMOREO) $(MATHMOREDO)"             \
-		   "$(MATHMORELIBEXTRA) $(GSLLIB)"
+		   "$(MATHMORELIBEXTRA) $(GSLLIBA)"
 
 $(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -181,7 +181,7 @@ clean::         clean-mathmore
 
 distclean-mathmore: clean-mathmore
 		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) $(MATHMORELIB)
-		@rm -rf $(GSLLIB) $(GSLDIRS)
+		@rm -rf $(GSLDIRS)
 		@rm -rf include/Math
 
 distclean::     distclean-mathmore
