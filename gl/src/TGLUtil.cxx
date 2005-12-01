@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.17 2005/11/24 12:29:12 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.18 2005/11/29 14:04:00 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -374,8 +374,11 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & p1, const TGLPlane &
    if (denom == 0.0) {
       return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
    }
-   TGLVector3 vect = (Cross(p2.Norm(),p3.Norm())* -p1.D()) - (Cross(p3.Norm(),p1.Norm())*p2.D()) - (Cross(p1.Norm(),p2.Norm())*p3.D());
-   return std::make_pair(kTRUE, vect / denom);
+   TGLVector3 vect = ((Cross(p2.Norm(),p3.Norm())* -p1.D()) - 
+                      (Cross(p3.Norm(),p1.Norm())*p2.D()) - 
+                      (Cross(p1.Norm(),p2.Norm())*p3.D())) / denom;
+   TGLVertex3 interVert(vect.X(), vect.Y(), vect.Z());
+   return std::make_pair(kTRUE, interVert);
 }
 
 //______________________________________________________________________________
