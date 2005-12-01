@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.80 2005/09/04 19:12:32 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.81 2005/10/13 14:57:53 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3461,7 +3461,7 @@ void THtml::MakeIndex(const char *filter)
       // get class & filename
       TClass *classPtr = GetClass((const char *) classNames[nOK]);
       if (!classPtr) continue;
-      if (cname[0] == 'T' && classPtr->GetClassVersion() > 0) classPtr->BuildRealData();
+      //if (cname[0] == 'T' && classPtr->GetClassVersion() > 0) classPtr->BuildRealData();
             
       const char *impname=0;
       if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
