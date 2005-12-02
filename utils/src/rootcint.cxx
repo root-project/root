@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.225 2005/11/16 20:11:35 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.226 2005/11/24 23:30:06 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2125,17 +2125,28 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
 
    int add_template_keyword = NeedTemplateKeyword(cl);
 
+   G__ClassInfo ns = cl.EnclosingSpace();
+   string clsname = cl.Fullname();
+   string nsname;
+   if (ns.IsValid()) {
+     nsname = ns.Fullname();
+     clsname.erase (0, nsname.size() + 2);
+   }
+
+   if (!nsname.empty())
+     fprintf (fp, "namespace %s {\n", nsname.c_str());
+
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
    if (add_template_keyword) fprintf(fp, "template <> ");
    fprintf(fp, "TClass *%s::fgIsA = 0;  // static to hold class pointer\n",
-           cl.Fullname());
+           clsname.c_str());
    fprintf(fp, "\n");
 
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
    if (add_template_keyword) fprintf(fp, "template <> ");
-   fprintf(fp, "const char *%s::Class_Name()\n{\n", cl.Fullname());
+   fprintf(fp, "const char *%s::Class_Name()\n{\n", clsname.c_str());
    fprintf(fp, "   return \"%s\";\n}\n\n", cl.Fullname());
 
    if (1 || !cl.IsTmplt()) {
@@ -2145,31 +2156,34 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
       fprintf(fp, "//_______________________________________");
       fprintf(fp, "_______________________________________\n");
       if (add_template_keyword) fprintf(fp, "template <> ");
-      fprintf(fp, "const char *%s::ImplFileName()\n{\n", cl.Fullname());
+      fprintf(fp, "const char *%s::ImplFileName()\n{\n", clsname.c_str());
       fprintf(fp, "   return ::ROOT::GenerateInitInstance((const ::%s*)0x0)->GetImplFileName();\n}\n\n",
               cl.Fullname());
 
       fprintf(fp, "//_______________________________________");
       fprintf(fp, "_______________________________________\n");
       if (add_template_keyword) fprintf(fp, "template <> ");
-      fprintf(fp, "int %s::ImplFileLine()\n{\n", cl.Fullname());
+      fprintf(fp, "int %s::ImplFileLine()\n{\n", clsname.c_str());
       fprintf(fp, "   return ::ROOT::GenerateInitInstance((const ::%s*)0x0)->GetImplFileLine();\n}\n\n",
               cl.Fullname());
 
       fprintf(fp, "//_______________________________________");
       fprintf(fp, "_______________________________________\n");
       if (add_template_keyword) fprintf(fp, "template <> ");
-      fprintf(fp, "void %s::Dictionary()\n{\n", cl.Fullname());
+      fprintf(fp, "void %s::Dictionary()\n{\n", clsname.c_str());
       fprintf(fp, "   fgIsA = ::ROOT::GenerateInitInstance((const ::%s*)0x0)->GetClass();\n", cl.Fullname());
       fprintf(fp, "}\n\n");
 
       fprintf(fp, "//_______________________________________");
       fprintf(fp, "_______________________________________\n");
       if (add_template_keyword) fprintf(fp, "template <> ");
-      fprintf(fp, "TClass *%s::Class()\n{\n", cl.Fullname());
+      fprintf(fp, "TClass *%s::Class()\n{\n", clsname.c_str());
       fprintf(fp, "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstance((const ::%s*)0x0)->GetClass();\n", cl.Fullname());
       fprintf(fp, "   return fgIsA;\n}\n\n");
    }
+
+   if (!nsname.empty())
+     fprintf (fp, "} // namespace %s\n", nsname.c_str());
 }
 
 //______________________________________________________________________________
@@ -2547,10 +2561,21 @@ void WriteStreamer(G__ClassInfo &cl)
 {
    int add_template_keyword = NeedTemplateKeyword(cl);
 
+   G__ClassInfo ns = cl.EnclosingSpace();
+   string clsname = cl.Fullname();
+   string nsname;
+   if (ns.IsValid()) {
+     nsname = ns.Fullname();
+     clsname.erase (0, nsname.size() + 2);
+   }
+
+   if (!nsname.empty())
+     fprintf (fp, "namespace %s {\n", nsname.c_str());
+
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
    if (add_template_keyword) fprintf(fp, "template <> ");
-   fprintf(fp, "void %s::Streamer(TBuffer &R__b)\n{\n", cl.Fullname());
+   fprintf(fp, "void %s::Streamer(TBuffer &R__b)\n{\n", clsname.c_str());
    fprintf(fp, "   // Stream an object of class %s.\n\n", cl.Fullname());
 
    // In case of VersionID<=0 write dummy streamer only calling
@@ -2578,6 +2603,8 @@ void WriteStreamer(G__ClassInfo &cl)
                  " dummy Streamer() called\"); if (R__b.IsReading()) { }\n", cl.Fullname());
       }
       fprintf(fp, "}\n\n");
+      if (!nsname.empty())
+        fprintf (fp, "} // namespace %s\n", nsname.c_str());
       return;
    }
 
@@ -2864,6 +2891,9 @@ void WriteStreamer(G__ClassInfo &cl)
    if (ubc) fprintf(fp, "      R__b.SetByteCount(R__c, kTRUE);\n");
    fprintf(fp, "   }\n");
    fprintf(fp, "}\n\n");
+
+   if (!nsname.empty())
+     fprintf (fp, "} // namespace %s\n", nsname.c_str());
 }
 
 //______________________________________________________________________________
@@ -2881,10 +2911,21 @@ void WriteAutoStreamer(G__ClassInfo &cl)
       }
    }
 
+   G__ClassInfo ns = cl.EnclosingSpace();
+   string clsname = cl.Fullname();
+   string nsname;
+   if (ns.IsValid()) {
+     nsname = ns.Fullname();
+     clsname.erase (0, nsname.size() + 2);
+   }
+
+   if (!nsname.empty())
+     fprintf (fp, "namespace %s {\n", nsname.c_str());
+
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
    if (add_template_keyword) fprintf(fp, "template <> ");
-   fprintf(fp, "void %s::Streamer(TBuffer &R__b)\n{\n", cl.Fullname());
+   fprintf(fp, "void %s::Streamer(TBuffer &R__b)\n{\n", clsname.c_str());
    fprintf(fp, "   // Stream an object of class %s.\n\n", cl.Fullname());
    fprintf(fp, "   if (R__b.IsReading()) {\n");
    fprintf(fp, "      %s::Class()->ReadBuffer(R__b, this);\n", cl.Fullname());
@@ -2892,6 +2933,9 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    fprintf(fp, "      %s::Class()->WriteBuffer(R__b, this);\n", cl.Fullname());
    fprintf(fp, "   }\n");
    fprintf(fp, "}\n\n");
+
+   if (!nsname.empty())
+     fprintf (fp, "} // namespace %s\n", nsname.c_str());
 }
 
 //______________________________________________________________________________
@@ -3372,9 +3416,18 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
    }
 
    if (!outside) {
+      G__ClassInfo ns = cl.EnclosingSpace();
+      string clsname = cl.Fullname();
+      string nsname;
+      if (ns.IsValid()) {
+        nsname = ns.Fullname();
+        clsname.erase (0, nsname.size() + 2);
+      }
       int add_template_keyword = NeedTemplateKeyword(cl);
+      if (!nsname.empty())
+        fprintf (fp, "namespace %s {\n", nsname.c_str());
       if (add_template_keyword) fprintf(fp, "template <> ");
-      fprintf(fp, "void %s::ShowMembers(TMemberInspector &R__insp, char *R__parent)\n{\n", cl.Fullname());
+      fprintf(fp, "void %s::ShowMembers(TMemberInspector &R__insp, char *R__parent)\n{\n", clsname.c_str());
       if (!cl.IsTmplt()) {
          WriteBodyShowMembers(cl, outside);
       } else {
@@ -3384,6 +3437,10 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
          fprintf(fp, "   ::ROOT::%s_ShowMembers(this, R__insp, R__parent);\n",mappedname.c_str());
       }
       fprintf(fp, "}\n\n");
+
+      if (!nsname.empty())
+        fprintf (fp, "} // namespace %s\n", nsname.c_str());
+
    }
 
 }
@@ -4091,7 +4148,7 @@ int main(int argc, char **argv)
 
    if (argc < 2) {
       fprintf(stderr,
-      "Usage: %s [-v][-v0-4] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+       "Usage: %s [-v][-v0-4] [-reflex] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -4104,6 +4161,7 @@ int main(int argc, char **argv)
    int longheadername = 0;
    string dictpathname;
    string libfilename;
+   bool buildReflexCode = false;
 
    sprintf(autold, autoldtmpl, getpid());
 
@@ -4125,6 +4183,9 @@ int main(int argc, char **argv)
       ic++;
    } else if (!strcmp(argv[ic], "-v4")) {
       gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
+      ic++;
+   } else if (!strcmp(argv[ic], "-reflex")) {
+      buildReflexCode = true;
       ic++;
    }
 
@@ -4162,7 +4223,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "%s\n", help);
       return 1;
    } else if (!strncmp(argv[ic], "-",1)) {
-      fprintf(stderr,"Usage: %s [-v][-v0-4] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+       fprintf(stderr,"Usage: %s [-v][-v0-4] [-reflex] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
                      "and must be before the -f flags\n");
@@ -4394,7 +4455,8 @@ int main(int argc, char **argv)
          argvv[argcc++] = "-DSYSV";
          argvv[argcc++] = "-D__MAKECINT__";
          argvv[argcc++] = "-V";        // include info on private members
-         argvv[argcc++] = "-c-10";
+         if (buildReflexCode) argvv[argcc++] = "-c-3";
+         else                 argvv[argcc++] = "-c-10";
          argvv[argcc++] = "+V";        // turn on class comment mode
          if (!use_preprocessor) {
 #ifdef ROOTBUILD
