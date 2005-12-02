@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.5 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.6 2005/12/02 08:56:21 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -184,7 +184,7 @@ int Method_stub_with_context(StubContext* context,
     context->ProcessResult(result, r);
     if ( context->fRet_byvalue )  G__store_tempobject(*result);
   } 
-  catch ( exception& e ) {
+  catch ( std::exception& e ) {
     string errtxt(e.what());
     errtxt += " (C++ exception)";
     G__genericerror(errtxt.c_str());
@@ -232,7 +232,7 @@ int Constructor_stub_with_context(StubContext* context,
     result->type = 'u';
     result->tagnum = context->fClass_tag;
   }
-  catch ( exception& e ) {
+  catch ( std::exception& e ) {
     string errtxt(e.what());
     errtxt += " (C++ exception)";
     G__genericerror(errtxt.c_str());
