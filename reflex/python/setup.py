@@ -11,7 +11,6 @@ else:
   import os
   from distutils.core import setup
   from distutils import sysconfig
-  from distutils import fancy_getopt 
 
   print "Installing python scripts in package reflex"
 
@@ -26,10 +25,13 @@ else:
       else : top_dir = os.path.realpath(sys.argv[1:][i+1])
 
   setup( name = 'genreflex', version = '0.1', py_modules =
-         ['genreflex.gccdemangler', 'genreflex.gencapa',
-         'genreflex.gendict', 'genreflex.genheader',
-         'genreflex.genreflex', 'genreflex.selclass']
-
+         ['genreflex.gccdemangler',
+          'genreflex.gccxmlpath',
+          'genreflex.gencapa',
+          'genreflex.gendict',
+          'genreflex.genheader',
+          'genreflex.genreflex',
+          'genreflex.selclass']
          )
 
   genreflex_pydir = sysconfig.get_python_lib(prefix=top_dir) + os.sep + 'genreflex' + os.sep

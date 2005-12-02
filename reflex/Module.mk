@@ -29,6 +29,8 @@ ALLLIBS      += $(REFLEXLIB)
 # include all dependency files
 INCLUDEFILES += $(REFLEXDEP)
 
+GCCXMLPATHPY = reflex/python/genreflex/gccxmlpath.py
+
 ##### local rules #####
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 		@(if [ ! -d "include/Reflex" ]; then    \
@@ -42,7 +44,9 @@ $(REFLEXLIB):   $(REFLEXO) $(MAINLIBS)
 		"$(REFLEXLIBEXTRA)"
 
 genreflex:
-		@if [ -x "`which python`" ]; then                              \
+		@if [ -x "`which python`" ]; then \
+		if [ -f $(GCCXMLPATHPY) ]; then rm -f $(GCCXMLPATHPY); fi; \
+		echo "gccxmlpath = '$(GCCXMLDIR)'" > $(GCCXMLPATHPY); \
 		cd ./reflex/python; python ./setup.py install --prefix ../../; \
 		else echo "WARNING: No python executable found will not install genreflex script"; fi
 
@@ -55,7 +59,7 @@ map-reflex:     $(RLIBMAP)
 map::           map-reflex
 
 clean-reflex:
-		@rm -f $(REFLEXO)
+		@rm -f $(REFLEXO) $(GCCXMLPATHPY)
 		@rm -fr reflex/python/build
 		@rm -f bin/genreflex*
 		@rm -fr lib/python*/site-packages/genreflex
