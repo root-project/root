@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.51 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.52 2005/12/01 16:28:56 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -258,6 +258,7 @@ public:
    virtual   void     StreamObject(void *obj, const type_info &typeinfo);
    virtual   void     StreamObject(void *obj, const char *className);
    virtual   void     StreamObject(void *obj, const TClass *cl);
+   virtual   void     StreamObject(TObject *obj);
 
    virtual   TBuffer  &operator>>(Bool_t    &b);
    virtual   TBuffer  &operator>>(Char_t    &c);
