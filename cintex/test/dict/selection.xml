@@ -1,0 +1,40 @@
+<lcgdict>
+  <class pattern="A::B::C::*"/>
+  <class pattern="Global*"/>
+  <class name="Data">
+    <field name="transient1" transient="true" />
+    <field name="transient3" comment="! " />
+    <field name="i" ioname="io_i"/>
+    <field name="l" ioname="io_l"/>
+  </class>
+  <class name="OData"/>
+  <class name="Aggregate"/>
+  <class name="Final"/>
+  <class name="std::vector<Data*>"/>
+  <class name="MyString"/>
+  <class name="simple::test"/>
+  <class name="a::b"/>
+  <class name="c::d"/>
+  <class name="MyInt"/>
+  <class name="SpecialConstructor"/>
+  <function pattern="A::B::C::*"/>
+  <function name="free_function"/>
+  <function name="another_free_function"/>
+  
+  <class name="Ibase"/>
+  <class name="Iderived"/>
+  <function name="I_get"/>
+  <function name="I_set"/>
+
+  <class name="SimpleProperty<std::string,Verifier<std::string> >"/>
+  <class name="Pbase"/>
+  <class name="P"/>
+  <class name="std::vector<const Pbase*>"/>
+  
+  <class name="Obj"/>
+  <class name="ExceptionGenerator"/>
+  <function pattern="by*"/>
+  <exclusion>
+    <class name="A::B::C::MyClass::InnerClass"/>
+  </exclusion>
+</lcgdict>
