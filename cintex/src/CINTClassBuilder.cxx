@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.5 2005/11/21 17:17:15 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -327,6 +327,7 @@ namespace ROOT { namespace Cintex {
   CINTClassBuilder::Bases* CINTClassBuilder::GetBases() {
     if ( fBases ) return fBases;
     Member getbases = fClass.MemberByName("__getBasesTable");
+    if ( !getbases ) getbases = fClass.MemberByName("getBasesTable");
     if( getbases ) {
       fBases = (Bases*)( getbases.Invoke().Address() );
     }

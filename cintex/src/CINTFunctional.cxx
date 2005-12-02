@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.5 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -176,9 +176,22 @@ int Method_stub_with_context(StubContext* context,
 {
   if ( !context->fInitialized ) context->Initialize();
   context->ProcessParam(libp);
-  void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
-  context->ProcessResult(result, r);
-  if ( context->fRet_byvalue )  G__store_tempobject(*result);
+  
+  // Catch here everything since going through the adaptor in the data section
+  // does not transmit the exception 
+  try {
+    void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
+    context->ProcessResult(result, r);
+    if ( context->fRet_byvalue )  G__store_tempobject(*result);
+  } 
+  catch ( exception& e ) {
+    string errtxt(e.what());
+    errtxt += " (C++ exception)";
+    G__genericerror(errtxt.c_str());
+  } 
+  catch (...) {
+    G__genericerror("Unknown C++ exception");
+  }
   return(1);
 }
 
@@ -190,32 +203,43 @@ int Constructor_stub_with_context(StubContext* context,
                                   int /*indx*/ ) 
 {
   if ( !context->fInitialized ) context->Initialize();
-  
   context->ProcessParam(libp);
-  long nary = G__getaryconstruct();
-  size_t size = context->fClass.SizeOf();
-  void* obj;
-  if ( nary ) {
-    if( context->fNewdelfuncs ) {
-      obj = context->fNewdelfuncs->NewArray(nary);
+  
+  // Catch here everything since going through the adaptor in the data section
+  // does not transmit the exception 
+  try {
+    long nary = G__getaryconstruct();
+    size_t size = context->fClass.SizeOf();
+    void* obj;
+    if ( nary ) {
+      if( context->fNewdelfuncs ) {
+        obj = context->fNewdelfuncs->NewArray(nary);
+      }
+      else {
+        obj = ::operator new( nary * size);
+        long p = (long)obj; 
+        for( long i = 0; i < nary; ++i, p += size )
+          (*context->fStub)((void*)p, context->fParam, 0);
+      }
     }
     else {
-      obj = ::operator new( nary * size);
-      long p = (long)obj; 
-      for( long i = 0; i < nary; ++i, p += size )
-        (*context->fStub)((void*)p, context->fParam, 0);
+      obj = ::operator new( size );
+      (*context->fStub)(obj, context->fParam, 0);
     }
+    
+    result->obj.i = (long)obj;
+    result->ref = (long)obj;
+    result->type = 'u';
+    result->tagnum = context->fClass_tag;
   }
-  else {
-    obj = ::operator new( size );
-    (*context->fStub)(obj, context->fParam, 0);
+  catch ( exception& e ) {
+    string errtxt(e.what());
+    errtxt += " (C++ exception)";
+    G__genericerror(errtxt.c_str());
+  } 
+  catch (...) {
+    G__genericerror("Unknown C++ exception");
   }
-  
-  result->obj.i = (long)obj;
-  result->ref = (long)obj;
-  result->type = 'u';
-  result->tagnum = context->fClass_tag;
-
   return(1);
 }
 
@@ -254,52 +278,8 @@ int Destructor_stub_with_context( StubContext* context,
   return 1;
 }
 
-// Static function call with stored function....
-unsigned char s_code_int_staticfunc_4arg[] = {
-  0x55,                               // 0  push        ebp  
-  0x8B, 0xEC,                         // 1  mov         ebp,esp
-  0x8B, 0x45, 0x14,                   // 3  mov         eax,dword ptr [p2]   ; arg[3]
-  0x50,                               // 6  push        eax                  ; puch arg
-  0x8B, 0x45, 0x10,                   // 7  mov         eax,dword ptr [p2]   ; arg[2]
-  0x50,                               // 10 push        eax                  ; puch arg
-  0x8B, 0x45, 0x0C,                   // 11 mov         eax,dword ptr [p1]   ; arg[1]
-  0x50,                               // 14 push        eax                  ; puch arg
-  0x8B, 0x45, 0x08,                   // 15 mov         eax,dword ptr [p0]   ; arg[0]
-  0x50,                               // 18 push        eax                  ; push arg
-  0x68, 0xDE, 0xAD, 0xDE, 0xAD,       // 19 push        <object-ptr> 
-  0xBA, 0xDE, 0xAD, 0xDE, 0xAD,       // 24 mov         edx, <function-pointer>
-  0xFF, 0xD2,                         // 29 call        edx                  ; Off we go!
-  0x83, 0xC4, 0x14,                   // 31 add         esp,20 
-  0x5D,                               // 34 pop         ebp
-  0xC3,                               // 35 ret
-  0x90, 0x90, 0x90                    // 36 nop
-};
 
-// static void __setup(void) {  ((fun)(0xFEEDBABE))((void*)0xDEADCAFE);  }
-static unsigned char s_code_void_staticfunc_0arg[] = {
-  0x55,                                // 0  push        ebp  
-  0x8B, 0xEC,                          // 1  mov         ebp,esp 
-  0x68, 0xFE, 0xCA, 0xAD, 0xDE,        // 3  push        <argument> 
-  0xB8, 0xBE, 0xBA, 0xED, 0xFE,        // 8  mov         eax, <function-pointer> 
-  0xFF, 0xD0,                          // 13 call        eax  
-  0x83, 0xC4, 0x04,                    // 15 add         esp,4 
-  0x5D,                                // 18 pop         ebp  
-  0xC3                                 // 19 ret              
-};
-
-// static void __setup(void) {  ((fun)(0xFEEDBABE))((void*)0xDEADCAFE);  }
-unsigned char s_code_int_staticfunc_1arg[] = {
-  0x55,                               // 0  push        ebp  
-  0x8B, 0xEC,                         // 1  mov         ebp,esp
-  0x8B, 0x45, 0x08,                   // 3  mov         eax,dword ptr [p0]   ; arg[0]
-  0x50,                               // 6  push        eax                  ; push arg
-  0x68, 0xDE, 0xAD, 0xDE, 0xAD,       // 7  push        <object-ptr> 
-  0xBA, 0xDE, 0xAD, 0xDE, 0xAD,       // 12 mov         edx, <function-pointer>
-  0xFF, 0xD2,                         //    call        edx                  ; Off we go!
-  0x83, 0xC4, 0x08,                   //    add         esp,12 
-  0x5D,                               //    pop         ebp
-  0xC3                                //    ret
-};
+//------ Support for functions a state -------------------------------------------------------
 
 char* Allocate_code(const void* src, size_t len)  {
   char* code = new char[len+1];
@@ -324,31 +304,67 @@ char* Allocate_code(const void* src, size_t len)  {
   return code;
 }
 
+//------ Function models-------------------------------------------------------------------
+static void f0a() {
+  typedef void (*f_t)(void*);
+  ((f_t)0xFAFAFAFA)((void*)0xDADADADA);
+}
+static void f1a(void* a0) {
+  typedef void (*f_t)(void*,void*);
+  ((f_t)0xFAFAFAFA)((void*)0xDADADADA, a0);
+}
+static void f4a(void* a0, void* a1, void* a2, void* a3) {
+  typedef void (*f_t)(void*,void*,void*,void*,void*);
+  ((f_t)0xFAFAFAFA)((void*)0xDADADADA, a0, a1, a2, a3);
+}
+
+struct FunctionCode {
+  FunctionCode(int narg) : f_offset(0), a_offset(0), size(0) {
+    if (narg == 0)      code = (char*)f0a;
+    else if (narg == 1) code = (char*)f1a;
+    else if (narg == 4) code = (char*)f4a;
+    char* b = code;
+    for ( size_t o = 0; o < 1000; o++, b++) {
+      if ( *(unsigned int*)b == 0xDADADADA ) a_offset = o;
+      if ( *(unsigned int*)b == 0xFAFAFAFA ) f_offset = o;
+      if ( f_offset && a_offset ) {
+         size = (o + 32) & ~0xF;
+         break;
+      }
+    }
+  }
+  size_t f_offset;
+  size_t a_offset;
+  size_t size;
+  char*  code;
+} s_func4arg(4),s_func0arg(0),s_func1arg(1);
+
+
 G__InterfaceMethod Allocate_stub_function( StubContext* obj, 
        int (*fun)(StubContext*, G__value*, G__CONST char*, G__param*, int ) )
 {
-  char* code = Allocate_code(s_code_int_staticfunc_4arg,sizeof(s_code_int_staticfunc_4arg));
-  *(void**)&code[20] = (void*)obj;
-  *(void**)&code[25] = (void*)fun;
-  obj->fMethodCode = *(G__InterfaceMethod*)&code;
+  char* code = Allocate_code(s_func4arg.code, s_func4arg.size );
+  *(void**)&code[s_func4arg.a_offset] = (void*)obj;
+  *(void**)&code[s_func4arg.f_offset] = (void*)fun;
+  obj->fMethodCode = (G__InterfaceMethod)code;
   return obj->fMethodCode;
 }
 
 
 FuncVoidPtr Allocate_void_function( void* obj, void (*fun)(void*) )
 {
-  char* code = Allocate_code(s_code_void_staticfunc_0arg,sizeof(s_code_void_staticfunc_0arg));
-  *(void**)&code[4] = (void*)obj;
-  *(void**)&code[9] = (void*)fun;
-  return *(FuncVoidPtr*)&code;
+  char* code = Allocate_code(s_func0arg.code, s_func0arg.size);
+  *(void**)&code[s_func0arg.a_offset] = (void*)obj;
+  *(void**)&code[s_func0arg.f_offset] = (void*)fun;
+  return (FuncVoidPtr)code;
 }
 
 FuncArg1Ptr Allocate_1arg_function( void* obj, void* (*fun)(void*, void*) )
 {
-  char* code = Allocate_code(s_code_int_staticfunc_1arg,sizeof(s_code_int_staticfunc_1arg));
-  *(void**)&code[8]  = (void*)obj;
-  *(void**)&code[13] = (void*)fun;
-  return *(FuncArg1Ptr*)&code;
+  char* code = Allocate_code(s_func1arg.code, s_func1arg.size);
+  *(void**)&code[s_func1arg.a_offset] = (void*)obj;
+  *(void**)&code[s_func1arg.a_offset] = (void*)fun;
+  return (FuncArg1Ptr)code;
 }
 
 void Free_function( void* code )
@@ -356,8 +372,5 @@ void Free_function( void* code )
   char* scode = (char*)code;
   delete [] scode;
 }
-
-
-
 
 } }   // seal and cintex namepaces
