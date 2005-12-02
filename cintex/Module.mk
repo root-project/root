@@ -20,6 +20,17 @@ CINTEXDEP    := $(CINTEXO:.o=.d)
 
 CINTEXLIB    := $(LPATH)/libCintex.$(SOEXT)
 
+CINTEXPYS    := $(wildcard $(MODDIR)/python/*.py)
+ifeq ($(PLATFORM),win32)
+CINTEXPY     := $(subst $(MODDIR)/python,bin,$(CINTEXPYS))
+bin/%.py: $(MODDIR)/python/%.py; cp $< $@
+else
+CINTEXPY     := $(subst $(MODDIR)/python,$(LPATH),$(CINTEXPYS))
+$(LPATH)/%.py: $(MODDIR)/python/%.py; cp $< $@
+endif
+CINTEXPYC    := $(CINTEXPY:.py=.pyc)
+CINTEXPYO    := $(CINTEXPY:.py=.pyo)
+
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Cintex/%.h,include/Cintex/%.h,$(CINTEXH))
 ALLLIBS      += $(CINTEXLIB)
@@ -34,7 +45,10 @@ include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 		fi)
 		cp $< $@
 
-$(CINTEXLIB):   $(CINTEXO) $(MAINLIBS) $(CINTEXLIBDEP)
+%.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
+%.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
+
+$(CINTEXLIB):   $(CINTEXO) $(MAINLIBS) $(CINTEXLIBDEP) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libCintex.$(SOEXT) $@ "$(CINTEXO)" \
 		"$(CINTEXLIBEXTRA)"
