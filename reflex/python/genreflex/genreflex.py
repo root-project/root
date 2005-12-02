@@ -24,6 +24,11 @@ class genreflex:
     self.selector        = None
     self.gccxml          = ''
     self.quiet           = False
+    try:
+      import gccxmlpath
+      self.gccxmlpath = gccxmlpath.gccxmlpath
+    except:
+      pass
 #----------------------------------------------------------------------------------
   def usage(self, status = 1) :
     print 'Usage:'
@@ -179,9 +184,9 @@ class genreflex:
       self.gccxml = 'gccxml'
     else :
       if sys.platform == 'win32' :
-        self.gccxml = r'\\cern.ch\dfs\Experiments\sw\lcg\external\gccxml\0.6.0\win32_vc71\gccxml'
+        self.gccxml = r'\\cern.ch\dfs\Experiments\sw\lcg\external\gccxml\0.6.0_patch3\win32_vc71\gccxml'
       else :
-        self.gccxml = '/afs/cern.ch/sw/lcg/external/gccxml/0.6.0_patch1/rh73_gcc323/bin/gccxml'
+        self.gccxml = '/afs/cern.ch/sw/lcg/external/gccxml/0.6.0_patch3/slc3_ia32_gcc323/bin/gccxml'
     #---------------Open selection file-------------------
     try :
       if self.select : self.selector = selclass.selClass(self.select,parse=1)
