@@ -36,6 +36,8 @@ void G__cpp_setuplongif();
 #endif
 #endif
 
+#include "rflx_gendict.h"
+
 /**************************************************************************
 * For C++ dictionary setup
 **************************************************************************/
@@ -993,6 +995,11 @@ int G__main(int argc,char **argv)
           G__iscpp=0;
           G__clock=1;
           break;
+        case R__CPPLINK:
+          linkfilename = "G__cpplink_rflx.cxx";
+          G__iscpp=1;
+          G__cpplock=1;
+          break;
         default:
           linkfilename = "G__cpplink.cxx"; break;
         }
@@ -1311,8 +1318,10 @@ int G__main(int argc,char **argv)
     G__cleardictfile(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
   }
-
-
+  else if (R__CPPLINK == G__globalcomp) {
+    rflx_gendict(linkfilename,sourcefile);
+    return(EXIT_SUCCESS);
+  }
 
   optind--;
   if(G__debugtrace!=0) G__fprinterr(G__serr,"PRE-RUN END\n");

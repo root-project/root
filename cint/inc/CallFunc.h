@@ -54,9 +54,11 @@ G__CallFunc {
   void SetArgArray(long *p,int narg= -1);
   void ResetArg() { para.paran=0; }
   void SetArg(long l) ;
+  void SetArg(unsigned long ul) ;
   void SetArg(double d) ;
   void SetArgRef(long& l) ;
   void SetArgRef(double& d) ;
+  void SetArg( G__value );
 #ifdef G__NATIVELONGLONG
   void SetArg(G__int64 ll);
   void SetArg(G__uint64 ull);

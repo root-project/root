@@ -84,6 +84,7 @@ struct G__string_list *G__CPPSTUB;
 
 char G__preprocess[10];
 int G__ismain=0;
+int R__genReflexCode = 0;
 
 enum G__MODE { G__IDLE, G__CHEADER, G__CSOURCE, G__CPPHEADER, G__CPPSOURCE
 	     , G__LIBRARY , G__CSTUBFILE , G__CPPSTUBFILE
@@ -764,6 +765,11 @@ char **argv;
       mode = G__IDLE;
       exit(EXIT_SUCCESS);
     }
+    /*************************************************************************/
+    else if((strcmp(argv[i],"--reflex") == 0) || strcmp(argv[i],"-r") == 0) {
+      R__genReflexCode = 1;
+      mode = G__IDLE;
+    }
     /*************************************************************************
     * options with 1 argument
     *************************************************************************/
@@ -966,6 +972,7 @@ char **argv;
   FILE *makeinfofp;
   FILE *fp;
   int i;
+  int minusCOption = 1;  /* GOHERE */
 #ifdef G__DJGPP
   char cintsysdir[G__MAXFILENAME];
   int j,k;
@@ -1081,12 +1088,14 @@ char **argv;
   }
   fprintf(fp,"\n");
 
-  fprintf(fp,"LIBS       = ");
+  if (R__genReflexCode) fprintf(fp,"LIBS       = -L$(CINTSYSDIR)/lib/ -lReflex -lCintex");
+  else                  fprintf(fp,"LIBS       = ");
   G__printstringlist(fp,G__LIB,G__PRINTSTRING);
   fprintf(fp,"\n");
   fprintf(fp,"\n");
 
-  fprintf(fp,"CCOPT      = ");
+  if (R__genReflexCode) fprintf(fp,"CCOPT      = -DCINTEX");
+  else                  fprintf(fp,"CCOPT      = ");
   G__printstringlist(fp,G__CCOPT,G__PRINTSTRING);
   fprintf(fp,"\n");
   fprintf(fp,"\n");
@@ -1284,12 +1293,13 @@ char **argv;
 #else
     fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint\n");
 #endif
+    if (R__genReflexCode) minusCOption = 3;
 #ifdef CINTSYSDIR
-    fprintf(fp,"\tcint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
-	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
+    fprintf(fp,"\tcint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-%d -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
+	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess, minusCOption);
 #else
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
-	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-%d -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
+	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess, minusCOption);
 #endif
     if(G__CPPSTUB) fprintf(fp," +STUB $(CPPSTUBCINT) -STUB\n");
     else        fprintf(fp,"\n");

@@ -7929,6 +7929,28 @@ int G__asm_optimize3(int *start)
       pc+=4;
       break;
 
+    case G__ROOTOBJALLOCBEGIN:
+      /***************************************
+      * 0 ROOTOBJALLOCBEGIN
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCBEGIN",pc);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+
+    case G__ROOTOBJALLOCEND:
+      /***************************************
+      * 0 ROOTOBJALLOCEND
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCEND",pc);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+
     case G__PAUSE:
       /***************************************
       * inst
@@ -9307,6 +9329,26 @@ int G__dasm(FILE *fout,int isthrow)
                              ,G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       pc+=4;
+      break;
+
+    case G__ROOTOBJALLOCBEGIN:
+      /***************************************
+      * 0 ROOTOBJALLOCBEGIN
+      ***************************************/
+      if(0==isthrow) {
+        fprintf(fout,"%3x: ROOTOBJALLOCBEGIN\n" ,pc);
+      }
+      ++pc;
+      break;
+
+    case G__ROOTOBJALLOCEND:
+      /***************************************
+      * 0 ROOTOBJALLOCEND
+      ***************************************/
+      if(0==isthrow) {
+        fprintf(fout,"%3x: ROOTOBJALLOCEND\n" ,pc);
+      }
+      ++pc;
       break;
 
     case G__PAUSE:

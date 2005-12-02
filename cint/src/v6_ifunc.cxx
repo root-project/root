@@ -21,6 +21,10 @@
 
 #include "common.h"
 
+extern "C" void G__set_allocpos G__P((long l));
+extern "C" void G__exec_alloc_lock();
+extern "C" void G__exec_alloc_unlock();
+
 extern "C" {
 
 extern int G__const_noerror;
@@ -5143,7 +5147,43 @@ asm_ifunc_start:   /* loop compilation execution label */
   if(
      -1 == p_ifunc->pentry[ifn]->size
      ) {
+
+#ifdef G__ROOT
+    if(memfunc_flag==G__CALLCONSTRUCTOR ||
+       memfunc_flag==G__TRYCONSTRUCTOR  ||
+       memfunc_flag==G__TRYIMPLICITCONSTRUCTOR) {
+      G__exec_alloc_lock();
+      G__set_allocpos(G__getgvp());
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCBEGIN\n" ,G__asm_cp);
+#endif
+	G__asm_inst[G__asm_cp]=G__ROOTOBJALLOCBEGIN;
+	G__inc_cp_asm(1,0);
+      }
+#endif
+      }
+#endif
     G__call_cppfunc(result7,libp,p_ifunc,ifn);
+#ifdef G__ROOT
+    if(memfunc_flag==G__CALLCONSTRUCTOR ||
+       memfunc_flag==G__TRYCONSTRUCTOR  ||
+       memfunc_flag==G__TRYIMPLICITCONSTRUCTOR) {
+      G__set_allocpos(G__PVOID);
+      G__exec_alloc_unlock();
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ROOTOBJALLOCEND\n" ,G__asm_cp);
+#endif
+	G__asm_inst[G__asm_cp]=G__ROOTOBJALLOCEND;
+	G__inc_cp_asm(1,0);
+      }
+#endif
+    }
+#endif
+
     /* recover tag environment */
     G__store_struct_offset = store_inherit_offset ;
     G__tagnum = store_inherit_tagnum ;

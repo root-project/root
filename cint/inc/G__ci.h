@@ -9,7 +9,7 @@
  ************************************************************************
  * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
  *
- * Permission to use, copy, modify and distribute this software and its
+ * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
  * provided that the above copyright notice appear in all copies and
  * that both that copyright notice and this permission notice appear
@@ -25,10 +25,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      6001002
-#define G__CINTVERSIONSTR_V6  "6.1.3, November 11 2005"
-#define G__CINTVERSION_V5      50160002
-#define G__CINTVERSIONSTR_V5  "5.16.3, November 11 2005"
+#define G__CINTVERSION_V6      6001004
+#define G__CINTVERSIONSTR_V6  "6.1.4, November 30 2005"
+#define G__CINTVERSION_V5      50160004
+#define G__CINTVERSIONSTR_V5  "5.16.4, November 30 2005"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -119,7 +119,7 @@
 
 /* Problem remains with autoloading if library is unloaded. Tried to fix it
  * with 2015, but this has problem with ROOT. */
-#define G__OLDIMPLEMENTATION2015
+#define G__OLDIMPLEMENTATION2015 
 
 
 /* If you have problem compiling dictionary with static member function,
@@ -154,11 +154,11 @@
 
 
 /* Change 1706, regarding function overriding, is very risky. So, this is
- * deactivated for now. With this change turned on, loading and unloading
+ * deactivated for now. With this change turned on, loading and unloading 
  * of interpreted and compiled function can be done more robustly. */
 #define G__OLDIMPLEMENTATION1706
 
-/* Rootcint's default link status has been changed from 5.15.57.
+/* Rootcint's default link status has been changed from 5.15.57. 
  * Define following macro if new scheme has problems. */
 /* #define G__OLDIMPLEMENTATION1700 */
 
@@ -173,13 +173,13 @@
 #endif
 
 /* Speed up G__strip_quotation */
-#ifdef G__ROOT
+#ifdef G__ROOT 
 #ifndef G__CPPCONSTSTRING
 #define G__CPPCONSTSTRING
 #endif
 #endif
 
-/* Activate pointer to member function handling in interpreted code.
+/* Activate pointer to member function handling in interpreted code. 
  * Seamless access of pointer to member between interpreted and compiled code
  * is not implemented yet. */
 #ifndef G__PTR2MEMFUNC
@@ -207,11 +207,11 @@
  * not a good way, the feature is turned off */
 #define G__OLDIMPLEMENTATION2001
 
-/* New memory allocation scheme is turned on for ROOT by defining
+/* New memory allocation scheme is turned on for ROOT by defining 
  * following macro. */
 #define G__EXPERIMENTAL1423
 
-/* New memory allocation scheme is turned off for pure Cint by defining
+/* New memory allocation scheme is turned off for pure Cint by defining 
  * following macro. Default on for pure Cint */
 /* #define G__OLDIMPLEMENTATION1423 */
 
@@ -219,9 +219,9 @@
  * and typedefs are defined in source files. Reason of not making this
  * default is because it breaks DLL compatibility. */
 #define G__VARIABLEFPOS
-#define G__TYPEDEFFPOS
+#define G__TYPEDEFFPOS 
 
-/* If you use old g++ and having problem compiling dictionary with
+/* If you use old g++ and having problem compiling dictionary with 
  * true pointer to function with const return value, define following
  * macro to workaround the problem. */
 /* #define G__OLDIMPLEMENTATION1328 */
@@ -235,31 +235,31 @@
 #define G__OLDIMPLEMENTATION1260 /* use isconst info for func overloading */
 #endif
 
-/* New function overloading resolution algorithm which is closer to
+/* New function overloading resolution algorithm which is closer to 
  * ANSI/ISO standard is implemented from cint5.14.35. This is a major
  * change and there are some risks. Define following macro in order to
  * use old algorithm. */
 /* #define G__OLDIMPLEMENTATION1290 */
 
-/* Define G__EXCEPTIONWRAPPER for activating C++ exception catching
+/* Define G__EXCEPTIONWRAPPER for activating C++ exception catching 
  * when calling precompiled function. It is better to define this macro
  * in platform dependency file OTHMACRO flag. Reason of not making this
  * default is because some old compilers may not support exception. */
 /* #define G__EXCEPTIONWRAPPER */
 
-/* Define G__STD_EXCEPTION for using std::exception in exception handler.
+/* Define G__STD_EXCEPTION for using std::exception in exception handler. 
  * If G__STD_EXCEPTION is defined, G__EXCEPTIONWRAPPER is also defined. */
 /* #define G__STD_EXCEPTION */
 
-/* If you define G__REFCONV in platform dependency file, bug fix for
+/* If you define G__REFCONV in platform dependency file, bug fix for 
  * reference argument conversion is activated. This macro breaks DLL
  * compatibility between cint5.14.14 and 5.14.15. If you define
- * G__REFCONV, cint5.14.15 or newer version can load older DLL. But
+ * G__REFCONV, cint5.14.15 or newer version can load older DLL. But 
  * cint5.14.14 or older version can not load DLL that is created by
  * cint5.14.15 or later cint. */
 #define G__REFCONV
 
-/* This change activates bytecode compilation of class object
+/* This change activates bytecode compilation of class object 
  * instantiation in a function. Because the change includes some
  * problems , it is turned off at this moment by defining following
  * macro. */
@@ -267,11 +267,11 @@
 /* define related macros here */
 #endif
 
-/* Scott Snyder's modification Apr1999 9.Improvements for `variable' macros.
+/* Scott Snyder's modification Apr1999 9.Improvements for `variable' macros. 
  * Comment out line below to activate the change */
 #define G__OLDIMPLEMENTATION1062
 
-/* Scott Snyder's modification Apr1999 10.More CRLF problems
+/* Scott Snyder's modification Apr1999 10.More CRLF problems 
  * Comment out line below to activate the change */
 #define G__OLDIMPLEMENTATION1063
 
@@ -282,7 +282,7 @@
 
 /* Unlimited number of function arguments. THIS MODIFICATION IS TURNED OFF
  * because the change did not work. I decided to keep the code somehow. */
-#define G__OLDIMPLEMENTATION834
+#define G__OLDIMPLEMENTATION834 
 
 /**********************************************************************
 * END OF SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -371,7 +371,7 @@
 #define G__WIN32
 #endif
 #endif
-
+  
 /* added by Fons Radamakers in 2000 Oct 2 */
 #if defined(__linux) || defined(__linux__) || defined(linux)
 #   include <features.h>
@@ -415,7 +415,7 @@ typedef unsigned long long G__uint64;
 #endif
 
 /* temporary file generation */
-#if defined(G__WIN32)
+#if defined(G__WIN32) 
 #define G__TMPFILE
 #endif
 
@@ -467,7 +467,7 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 
 
 
-#if defined(G__SIGNEDCHAR)
+#if defined(G__SIGNEDCHAR) 
 typedef signed char G__SIGNEDCHAR_T;
 #else
 typedef char G__SIGNEDCHAR_T;
@@ -554,7 +554,7 @@ extern "C" {   /* extern C 1 */
 #define G__DANGEROUS          0x0002
 #define G__FATAL              0x0004
 
-#if (defined(G__SGICC) || defined(G__DECCXX)) && defined(G__ROOT)
+#if (defined(G__SGICC) || defined(G__DECCXX)) && defined(G__ROOT) 
 #define G__CHECK(ITEM,COND,ACTION)                                       \
  if((G__security=G__SECURE_LEVEL0)&&(G__security&ITEM) && (COND) && G__security_handle(ITEM)) ACTION
 #else
@@ -749,6 +749,9 @@ typedef int (*G__IgnoreInclude)();
 #define G__CSTUB       6
 #define G__CLINK      -2
 
+/* define for Reflex cpp source code */
+#define R__CPPLINK  -3
+
 /* Link macro as function */
 #define G__MACROLINK  (-5)
 
@@ -774,7 +777,7 @@ typedef int (*G__IgnoreInclude)();
 *
 * CAUTION:
 *  Among constants below, changing following parameter cause DLL binary
-* incompatibility.
+* incompatibility. 
 *
 *    G__MAXFUNCPARA
 *
@@ -947,12 +950,12 @@ typedef struct {
 #ifndef __CINT__
 #define G__CONST const
 #else
-#define G__CONST
+#define G__CONST 
 #endif
 
 #else /* __cplusplus */
 
-#define G__CONST
+#define G__CONST 
 
 #endif /* __cplusplus */
 
@@ -1101,7 +1104,7 @@ struct G__bytecodefunc {
 
 /**************************************************************************
  *                                                      1
- *                               2            2
+ *                               2            2          
  *                        proto   interpreted   bytecode  compiled
  * fpos_t pos;            hdrpos  src_fpos      src_fpos  ??
  * void* p;            2  NULL    src_fp        src_fp    ifmethod
@@ -1212,7 +1215,7 @@ struct G__ifunc_table {
   struct G__comment_info comment[G__MAXIFUNC];
 
   void* userparam[G__MAXIFUNC]; /* user parameter array */
-  short vtblindex[G__MAXIFUNC];
+  short vtblindex[G__MAXIFUNC]; 
   short vtblbasetagnum[G__MAXIFUNC];
 };
 
@@ -1284,7 +1287,7 @@ struct G__ifunc_table_VMS {
   struct G__comment_info comment[G__MAXIFUNC];
 
   void* userparam[G__MAXIFUNC];  /* user parameter array */
-  short vtblindex[G__MAXIFUNC];
+  short vtblindex[G__MAXIFUNC]; 
   short vtblbasetagnum[G__MAXIFUNC];
 };
 #endif
@@ -1496,7 +1499,7 @@ struct G__typedef {
   int *index[G__MAXTYPEDEF];
   short parent_tagnum[G__MAXTYPEDEF];
   char iscpplink[G__MAXTYPEDEF];
-  struct G__comment_info comment[G__MAXSTRUCT];
+  struct G__comment_info comment[G__MAXTYPEDEF];
 #ifdef G__TYPEDEFFPOS
   int filenum[G__MAXTYPEDEF];
   int linenum[G__MAXTYPEDEF];
@@ -1640,7 +1643,7 @@ extern G__EXPORT unsigned long G__uint G__P((G__value buf));
 extern G__EXPORT void G__letLonglong G__P((G__value* buf,int type,G__int64 value));
 extern G__EXPORT void G__letULonglong G__P((G__value* buf,int type,G__uint64 value));
 extern G__EXPORT void G__letLongdouble G__P((G__value* buf,int type,long double value));
-extern G__EXPORT G__int64 G__Longlong G__P((G__value buf));
+extern G__EXPORT G__int64 G__Longlong G__P((G__value buf)); 
 extern G__EXPORT G__uint64 G__ULonglong G__P((G__value buf));
 extern G__EXPORT long double G__Longdouble G__P((G__value buf));
 extern G__EXPORT G__int64* G__Longlongref G__P((G__value *buf));
@@ -1704,22 +1707,22 @@ int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 
 typedef struct {
   union {
-    char   d[G__VAARG_SIZE];
-    long   i[G__VAARG_SIZE/sizeof(long)];
+    char d[G__VAARG_SIZE];
+    long i[G__VAARG_SIZE/sizeof(long)];
   } x;
 } G__va_arg_buf;
 
 
 #if (defined(__linux)&&defined(__i386))||defined(_WIN32)||defined(G__CYGWIN)
 /**********************************************
- * Intel architecture, aligns in multiple of 4
+ * Intel architecture, aligns in multiple of 4 
  *    |1111|22  |3   |44444444|55555555555555  |
  **********************************************/
 #define G__VAARG_INC_COPY_N 4
 
 #elif (defined(__linux)&&defined(__ia64__))
 /**********************************************
- * Itanium/linux, aligns in multiple of 8
+ * Itanium/linux, aligns in multiple of 8 
  **********************************************/
 
 #define G__VAARG_INC_COPY_N 8
@@ -1727,10 +1730,10 @@ typedef struct {
 
 #elif defined(__hpux) || defined(__hppa__)
 /**********************************************
- * HP-Precision Architecture,
+ * HP-Precision Architecture, 
  *  Args > 8 bytes are passed by reference.  Args > 4 and <= 8 are
  *  right-justified in 8 bytes.  Args <= 4 are right-justified in
- *  4 bytes.
+ *  4 bytes. 
  **********************************************/
 /* #define G__VAARG_NOSUPPORT */
 
@@ -1785,7 +1788,7 @@ typedef struct {
 
 #else
 /**********************************************
- * Other platforms,
+ * Other platforms, 
  *  Try copying object as value.
  **********************************************/
 #define G__VAARG_NOSUPPORT
@@ -2065,7 +2068,7 @@ extern G__EXPORT void G__set_errmsgcallback(void* p);
 extern G__EXPORT void G__letLonglong G__P((G__value* buf,int type,G__int64 value));
 extern G__EXPORT void G__letULonglong G__P((G__value* buf,int type,G__uint64 value));
 extern G__EXPORT void G__letLongdouble G__P((G__value* buf,int type,long double value));
-extern G__EXPORT G__int64 G__Longlong G__P((G__value buf));
+extern G__EXPORT G__int64 G__Longlong G__P((G__value buf)); 
 extern G__EXPORT G__uint64 G__ULonglong G__P((G__value buf));
 extern G__EXPORT long double G__Longdouble G__P((G__value buf));
 extern G__EXPORT G__int64* G__Longlongref G__P((G__value *buf));
@@ -2397,7 +2400,7 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__tag_memfunc_setup = (int (*) G__P((int tagnum)) ) a25;
 
 #ifdef G__TRUEP2F
-  G__memfunc_setup = (int (*) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
+  G__memfunc_setup = (int (*) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type 
 ,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual))  ) a26;
 #else /* G__TRUEP2F */
   G__memfunc_setup = (int (*) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type

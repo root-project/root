@@ -22,6 +22,10 @@
 #include "Api.h"
 #include "common.h"
 
+extern "C" void G__set_allocpos G__P((long l));
+extern "C" void G__exec_alloc_lock();
+extern "C" void G__exec_alloc_unlock();
+
 #ifndef G__OLDIMPLEMENTATION1586
 static char G__buf[G__ONELINE];
 #endif
@@ -918,7 +922,15 @@ void* G__ClassInfo::New(void *arena)
       if(defaultconstructor) {
 	G__setgvp((long)arena);
 	G__CurrentCall(G__DELETEFREE, this, tagnum);
+#ifdef G__ROOT
+        G__exec_alloc_lock();
+        G__set_allocpos(G__getgvp());
+#endif
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
+#ifdef G__ROOT
+        G__set_allocpos(G__PVOID);
+        G__exec_alloc_unlock();
+#endif
 	G__CurrentCall(G__NOP, 0, 0);
 	G__setgvp((long)G__PVOID);
 	p = (void*)G__int(buf);

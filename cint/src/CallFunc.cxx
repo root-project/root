@@ -192,6 +192,17 @@ void G__CallFunc::SetArg(long l)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
+void G__CallFunc::SetArg(unsigned long ul)
+{
+  para.para[para.paran].obj.ulo = ul;
+  para.para[para.paran].ref = (long)ul;
+  // Following data shouldn't matter, but set just in case
+  para.para[para.paran].type = 'k';
+  para.para[para.paran].tagnum = -1;
+  para.para[para.paran].typenum = -1;
+  ++para.paran; // Increment number of argument
+}
+///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetArg(double d)
 {
   para.para[para.paran].obj.d = d;
@@ -223,6 +234,12 @@ void G__CallFunc::SetArgRef(double& d)
   para.para[para.paran].tagnum = -1;
   para.para[para.paran].typenum = -1;
   ++para.paran; // Increment number of argument
+}
+///////////////////////////////////////////////////////////////////////////
+void G__CallFunc::SetArg( G__value v )
+{
+   para.para[para.paran] = v;
+   ++para.paran;
 }
 #ifdef G__NATIVELONGLONG
 ///////////////////////////////////////////////////////////////////////////
