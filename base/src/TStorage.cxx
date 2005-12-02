@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.18 2005/09/18 13:00:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.19 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -321,6 +321,10 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    return vp;
 }
 
+extern long G__AllocPosition;
+extern "C" long G__getallocpos();
+extern "C" void G__setallocpos(long l);
+
 //______________________________________________________________________________
 void *TStorage::ObjectAlloc(size_t sz)
 {
@@ -337,14 +341,14 @@ void *TStorage::ObjectAlloc(size_t sz)
 #ifndef NOCINT
    // to handle new with placement called via CINT
 #ifndef WIN32
-   if (G__globalvarpointer != G__PVOID) {
-      space = G__globalvarpointer;
-      G__globalvarpointer = G__PVOID;
+   if (G__AllocPosition != G__PVOID) {
+      space = G__AllocPosition;
+      G__AllocPosition = G__PVOID;
    } else
 #else
-   space = G__getgvp();
+   space = G__get_allocpos();
    if ((long)space != G__PVOID) {
-      G__setgvp(G__PVOID);
+      G__set_allocpos(G__PVOID);
    } else
 #endif
 #endif

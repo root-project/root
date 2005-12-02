@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.37 2005/06/23 06:24:27 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.38 2005/06/23 20:51:14 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -46,6 +46,10 @@ void **volatile TThread::fgXArr = 0;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
 
+extern "C" void G__set_alloclockfunc(void(*)());
+extern "C" void G__set_allocunlockfunc(void(*)());
+static void CINT_alloc_lock()   { gGlobalMutex->Lock(); }
+static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
 
 //------------------------------------------------------------------------------
 
@@ -229,6 +233,8 @@ void TThread::Init()
 
    // Create the single global mutex
    gGlobalMutex=new TMutex(kTRUE);
+   G__set_alloclockfunc(CINT_alloc_lock);
+   G__set_allocunlockfunc(CINT_alloc_unlock);
 }
 
 //______________________________________________________________________________
