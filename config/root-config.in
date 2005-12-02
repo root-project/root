@@ -11,6 +11,7 @@ bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
 features="@features@"
+configargs="@configargs@"
 
 if test "$platform" = "win32"; then
    bindir=`cygpath -u $bindir`
@@ -632,6 +633,10 @@ while test $# -gt 0; do
       ### output the header directory
       out="$out $incdir"
       ;;
+    --config)
+      ### output the configure arguments
+      out="$out $configargs"
+      ;;
     --help)
       ### Print a help message
       echo "Usage: `basename $0` [options]"
@@ -653,6 +658,7 @@ while test $# -gt 0; do
       echo "  --noauxlibs           Do not print auxiliary/system libraries"
       echo "  --noauxcflags         Do not print auxiliary compiler flags"
       echo "  --noldflags           Do not print linker flags"
+      echo "  --config              Print arguments used for ./configure"
       echo "  --has-<feature>       Test if <feature> is compiled in"
       echo "  --version             Print the ROOT version"
       exit 0
