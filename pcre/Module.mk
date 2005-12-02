@@ -89,7 +89,7 @@ else
 		fi; \
 		GNUMAKE=$(MAKE) ./configure --with-pic \
 		CC=$$PCRECC CFLAGS="$$PCRE_CFLAGS -O"; \
-		$(MAKE))
+		$(MAKE) libpcre.la)
 endif
 
 all-pcre:       $(PCRELIB)
