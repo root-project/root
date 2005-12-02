@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.4 2005/11/28 23:22:31 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.cxx,v 1.5 2005/12/01 16:30:43 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -1621,6 +1621,14 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl)
       SqlReadObject(obj);
    else
       SqlWriteObject(obj, cl);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::StreamObject(TObject *obj)
+{
+   // steram object to/from buffer
+
+   StreamObject(obj, obj ? obj->IsA() : TObject::Class());
 }
 
 //______________________________________________________________________________

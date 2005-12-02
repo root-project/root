@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.1 2005/05/06 14:25:34 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.2 2005/09/06 09:34:48 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -164,6 +164,7 @@ class TBufferXML : public TBuffer, public TXMLSetup {
       virtual void     StreamObject(void *obj, const type_info &typeinfo);
       virtual void     StreamObject(void *obj, const char *className);
       virtual void     StreamObject(void *obj, const TClass *cl);
+      virtual void     StreamObject(TObject *obj);
 
       virtual TBuffer  &operator>>(Bool_t    &b);
       virtual TBuffer  &operator>>(Char_t    &c);

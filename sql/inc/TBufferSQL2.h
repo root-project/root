@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TBufferSQL2.h,v 1.3 2005/11/28 23:22:31 pcanal Exp $
+// @(#)root/net:$Name:  $:$Id: TBufferSQL2.h,v 1.4 2005/12/01 16:30:43 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 
@@ -243,6 +243,7 @@ class TBufferSQL2 : public TBuffer {
       virtual void     StreamObject(void *obj, const type_info &typeinfo);
       virtual void     StreamObject(void *obj, const char *className);
       virtual void     StreamObject(void *obj, const TClass *cl);
+      virtual void     StreamObject(TObject *obj);
       virtual void     StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0);
 
       virtual TBuffer  &operator>>(Bool_t    &b);

@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.5 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.6 2005/11/22 20:42:37 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -2028,6 +2028,13 @@ void TBufferXML::StreamObject(void *obj, const char *className)
    // steram object to/from buffer
 
    StreamObject(obj, gROOT->GetClass(className));
+}
+
+void TBufferXML::StreamObject(TObject *obj) 
+{
+   // steram object to/from buffer
+
+   StreamObject(obj, obj ? obj->IsA() : TObject::Class());
 }
 
 //______________________________________________________________________________
