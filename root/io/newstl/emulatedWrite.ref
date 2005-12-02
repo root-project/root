@@ -15,3 +15,12 @@ Warning in <TClass::TClass>: no dictionary for class Jet is available
 Warning in <TClass::TClass>: no dictionary for class CaloJet is available
 Warning in <TClass::TClass>: no dictionary for class edm::EDCollection<CaloJet> is available
 Source file 2: cmsJets_1.root
+Target path: result.root:/
+cmsJets_0.root tree:Events entries=1234567890
+cmsJets_1.root tree:Events entries=1234567890
+cmsJets_0.root tree:##Params entries=1234567890
+cmsJets_1.root tree:##Params entries=1234567890
+cmsJets_0.root tree:##Shapes entries=1234567890
+cmsJets_1.root tree:##Shapes entries=1234567890
+cmsJets_0.root tree:##Links entries=1234567890
+cmsJets_1.root tree:##Links entries=1234567890
