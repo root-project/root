@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.3 2005/11/05 15:19:38 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.4 2005/11/07 09:38:09 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -33,6 +33,8 @@
 namespace ROOT { 
 
   namespace Math { 
+
+    class Plane3D; 
 
     typedef  DisplacementVector3D<Cartesian3D<double> > XYZVector; 
     typedef  PositionVector3D<Cartesian3D<double> > XYZPoint; 
@@ -274,6 +276,12 @@ namespace ROOT {
       return  LorentzVector<CoordSystem> (xyzNew.X(), xyzNew.Y(), xyzNew.Z(), q.E() );
     }
 
+    /**
+       Transformation on a 3D plane
+    */
+    Plane3D operator() (const Plane3D & plane) const; 
+          
+
     // skip transformation for arbitrary vectors - not really defined if point or displacement vectors
 
     // same but with operator * 
@@ -286,6 +294,7 @@ namespace ROOT {
     AVector operator * (const AVector & v) const { 
       return operator() (v);
     }
+
 
 
     /**

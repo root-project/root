@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.1 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.2 2005/10/28 16:26:36 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -16,6 +16,7 @@
 #include "Math/GenVector/GenVectorIO.h"
 
 #include "Math/GenVector/Transform3D.h"
+#include "Math/GenVector/Plane3D.h"
 
 #include <cmath>
 #include <algorithm>
@@ -219,6 +220,16 @@ void Transform3D::AssignFrom (const Rotation3D  & r,  const XYZVector & v) {
   fM[kDZ] = vecData[2];
       
  }
+
+/// transformations on a 3D plane
+Plane3D Transform3D::operator() (const Plane3D & plane) const { 
+  XYZVector n = plane.Normal();
+  // take a point on the plane. Use origin projection on the plane
+  // ( -ad, -bd, -cd) if (a**2 + b**2 + c**2 ) = 1
+  double d = plane.HesseDistance();
+  XYZPoint p( - d * n.X() , - d *n.Y(), -d *n.Z() );
+  return Plane3D ( operator() (n), operator() (p) ); 
+}
 
 
 std::ostream & operator<< (std::ostream & os, const Transform3D & t) { 
