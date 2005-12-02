@@ -164,7 +164,7 @@ alphakcc)
    ;;
 alphacxx6)
    # Alpha/OSF with cxx6
-   auxcflags="-tlocal -D__osf__ -D__alpha"
+   auxcflags="-tlocal -D__osf__ -D__alpha -D_USE_STD_IOSTREAM"
    auxlibs="-lm"
    ;;
 alphacxx)
