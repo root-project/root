@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:$:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: TLDAPResult.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -63,7 +63,7 @@ TLDAPEntry *TLDAPResult::CreateEntry(LDAPMessage *entry)
 
    char *dn;
    char *attr;
-   char **vals;
+   BerValue   **vals;
    BerElement *ptr;
 
    dn = ldap_get_dn(fLd, entry);
@@ -71,12 +71,12 @@ TLDAPEntry *TLDAPResult::CreateEntry(LDAPMessage *entry)
    for (attr = ldap_first_attribute(fLd, entry, &ptr); attr != 0;
         attr = ldap_next_attribute(fLd, entry, ptr)) {
       TLDAPAttribute attribute(attr);
-      vals = ldap_get_values(fLd, entry, attr);
+      vals = ldap_get_values_len(fLd, entry, attr);
       if (vals) {
          for (Int_t i = 0; vals[i] != 0; i++) {
-            attribute.AddValue(vals[i]);
+            attribute.AddValue(vals[i]->bv_val);
          }
-         ldap_value_free(vals);
+         ldap_value_free_len(vals);
       }
       ldapentry->AddAttribute(attribute);
    }
