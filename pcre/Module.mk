@@ -87,7 +87,7 @@ else
 			PCRECC="cc"; \
 			PCRE_CFLAGS="+DD64 -Ae"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --with-pic \
+		GNUMAKE=$(MAKE) ./configure --with-pic --disable-shared \
 		CC=$$PCRECC CFLAGS="$$PCRE_CFLAGS -O"; \
 		$(MAKE) libpcre.la)
 endif
