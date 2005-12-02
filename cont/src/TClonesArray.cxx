@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.47 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.48 2005/12/01 16:29:32 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -570,7 +570,7 @@ void TClonesArray::Streamer(TBuffer &b)
                   fClass->New(fKeep->fCont[i]);
 
                fCont[i] = fKeep->fCont[i];
-               fKeep->fCont[i]->Streamer(b);
+               b.StreamObject(fKeep->fCont[i]); 
             }
          }
       }
@@ -608,7 +608,7 @@ void TClonesArray::Streamer(TBuffer &b)
             } else {
                nch = 1;
                b << nch;
-               fCont[i]->Streamer(b);
+               b.StreamObject(fCont[i]);
             }
          }
       }
