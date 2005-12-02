@@ -67,7 +67,7 @@ clean-cintex:
 clean::         clean-cintex
 
 distclean-cintex: clean-cintex
-		@rm -f $(CINTEXDEP) $(CINTEXLIB)
+		@rm -f $(CINTEXDEP) $(CINTEXLIB) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO)
 		@rm -rf include/Cintex
 
 distclean::     distclean-cintex
