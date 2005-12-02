@@ -117,7 +117,6 @@ int main( int argc, char **argv ) {
 
 void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) {
 
-  TDirectory *dirsav = gDirectory;
   cout << "Target path: " << target->GetPath() << endl;
   TString path( (char*)strstr( target->GetPath(), ":" ) );
   path.Remove( 0, 2 );
