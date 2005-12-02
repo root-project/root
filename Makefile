@@ -42,9 +42,9 @@ endif
 
 ##### Modules to build #####
 
-MODULES       = build cint metautils utils base cont meta net auth zip clib \
-                matrix newdelete hist tree freetype graf g3d gpad gui minuit \
-                histpainter treeplayer treeviewer physics postscript \
+MODULES       = build cint metautils pcre utils base cont meta net auth zip \
+                clib matrix newdelete hist tree freetype graf g3d gpad gui \
+                minuit histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp gedold ged quadp \
                 guibuilder xml foam splot smatrix
 
@@ -441,15 +441,15 @@ G__%.d: G__%.cxx $(RMKDEP)
 %.d: %.cxx $(RMKDEP)
 	$(MAKEDEP) $@ "$(CXXFLAGS)" $< > $@
 
-$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
+$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
-	   "$(CORELIBEXTRA) $(CRYPTLIBS)"
+	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 else
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(CORELDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
-	   "$(CORELIBEXTRA) $(CRYPTLIBS)"
+	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 endif
 
 map::   $(RLIBMAP)

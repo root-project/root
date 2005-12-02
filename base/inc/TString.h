@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.40 2005/08/15 21:21:46 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.41 2005/11/21 11:17:18 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -47,6 +47,7 @@ namespace std { using ::string; }
 #endif
 
 class TRegexp;
+class TPRegexp;
 class TString;
 class TSubString;
 class TObjArray;
@@ -272,6 +273,8 @@ public:
    TSubString    operator()(Ssiz_t start, Ssiz_t len);   // Sub-string operator
    TSubString    operator()(const TRegexp &re);          // Match the RE
    TSubString    operator()(const TRegexp &re, Ssiz_t start);
+   TSubString    operator()(TPRegexp &re);               // Match the Perl compatible Regular Expression
+   TSubString    operator()(TPRegexp &re, Ssiz_t start);
    TSubString    SubString(const char *pat, Ssiz_t start = 0,
                            ECaseCompare cmp = kExact);
    char          operator[](Ssiz_t i) const;
@@ -279,6 +282,8 @@ public:
    TSubString    operator()(Ssiz_t start, Ssiz_t len) const;
    TSubString    operator()(const TRegexp &re) const;   // Match the RE
    TSubString    operator()(const TRegexp &re, Ssiz_t start) const;
+   TSubString    operator()(TPRegexp &re) const;        // Match the Perl compatible Regular Expression
+   TSubString    operator()(TPRegexp &re, Ssiz_t start) const;
    TSubString    SubString(const char *pat, Ssiz_t start = 0,
                            ECaseCompare cmp = kExact) const;
 
@@ -300,6 +305,7 @@ public:
    Bool_t       Contains(const char *pat,    ECaseCompare cmp = kExact) const;
    Bool_t       Contains(const TString &pat, ECaseCompare cmp = kExact) const;
    Bool_t       Contains(const TRegexp &pat) const;
+   Bool_t       Contains(TPRegexp &pat) const;
    Int_t        CountChar(Int_t c) const;
    TString      Copy() const;
    const char  *Data() const                 { return fData; }
@@ -318,6 +324,8 @@ public:
                       ECaseCompare cmp) const;
    Ssiz_t       Index(const TRegexp &pat, Ssiz_t i = 0) const;
    Ssiz_t       Index(const TRegexp &pat, Ssiz_t *ext, Ssiz_t i = 0) const;
+   Ssiz_t       Index(TPRegexp &pat, Ssiz_t i = 0) const;
+   Ssiz_t       Index(TPRegexp &pat, Ssiz_t *ext, Ssiz_t i = 0) const;
    TString     &Insert(Ssiz_t pos, const char *s);
    TString     &Insert(Ssiz_t pos, const char *s, Ssiz_t extent);
    TString     &Insert(Ssiz_t pos, const TString &s);
@@ -326,6 +334,7 @@ public:
    Bool_t       IsAlpha() const;
    Bool_t       IsAlnum() const;
    Bool_t       IsDigit() const;
+   Bool_t       IsFloat() const;
    Bool_t       IsHex() const;
    Bool_t       IsNull() const              { return Pref()->fNchars == 0; }
    Ssiz_t       Last(char c) const          { return Pref()->Last(c); }
@@ -415,12 +424,6 @@ extern int strncasecmp(const char *str1, const char *str2, Ssiz_t n);
 inline void TStringRef::UnLink()
 { if (RemoveReference() == 0) delete [] (char*)this; }
 
-inline Int_t TString::Atoi() const
-{ return atoi(fData); }
-
-inline Double_t TString::Atof() const
-{ return atof(fData); }
-
 inline void TString::Cow()
 { if (Pref()->References() > 1) Clone(); }
 
@@ -491,6 +494,9 @@ inline Bool_t TString::Contains(const char *s, ECaseCompare cmp) const
 { return Index(s, s ? strlen(s) : 0, (Ssiz_t)0, cmp) != kNPOS; }
 
 inline Bool_t TString::Contains(const TRegexp &pat) const
+{ return Index(pat, (Ssiz_t)0) != kNPOS; }
+
+inline Bool_t TString::Contains(TPRegexp &pat) const
 { return Index(pat, (Ssiz_t)0) != kNPOS; }
 
 inline Ssiz_t TString::Index(const char *s, Ssiz_t i, ECaseCompare cmp) const

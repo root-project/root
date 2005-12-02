@@ -27,6 +27,7 @@ options="                    \
    enable_asimage            \
    enable_builtin_afterimage \
    enable_builtin_freetype   \
+   enable_builtin_pcre       \
    enable_cern               \
    enable_chirp              \
    enable_cintex             \
@@ -719,6 +720,7 @@ enable/disable options, prefix with either --enable- or --disable-
   asimage            Image processing support, requires libAfterImage
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
   builtin-freetype   Built included libfreetype, or use system libfreetype
+  builtin-pcre       Built included libpcre, or use system libpcre
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
   cintex             Build the libCintex Reflex interface library
@@ -769,6 +771,7 @@ with options, prefix with --with-, enables corresponding support
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   globus             Globus support, path to what should be GLOBUS_LOCATION
+  gccxml             Gccxml support, directory of the gccxml installation
   krb5               Kerberos5 support, location of Kerberos distribution
   krb5-incdir        Kerberos5 support, location of krb5.h
   krb5-libdir        Kerberos5 support, location of libkrb5
@@ -920,6 +923,7 @@ if test $# -gt 0 ; then
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
+      --with-gccxml=*)         gccxml=$optarg        ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
@@ -1171,9 +1175,9 @@ fi
 
 ######################################################################
 #
-### echo %%% libfreetype (builtin or system) - Mandatory lib on Unix
+### echo %%% libfreetype (builtin or system) - Mandatory lib
 #
-# Mandatory test, must succeed
+# Mandatory test, must succeed (see http://www.freetype.org/)
 #
 if test "x$enable_builtin_freetype" = "x" || \
    test "x$enable_builtin_freetype" = "xno" ; then
@@ -1203,6 +1207,39 @@ fi
 message "Checking whether to build included libfreetype6"
 echo "$enable_builtin_freetype"
 
+######################################################################
+#
+### echo %%% libpcre (builtin or system) - Mandatory lib
+#
+# Mandatory test, must succeed (see http://www.pcre.org/)
+#
+if test "x$enable_builtin_pcre" = "x" || \
+   test "x$enable_builtin_pcre" = "xno" ; then
+
+   checking_msg "pcre-config"
+   if `which pcre-config > /dev/null 2>&1` ; then
+      which pcre-config
+
+      message "Checking for libpcre version >= 3.9"
+      pcre_version=`pcre-config --version | \
+          tr '.' ' ' | \
+          awk 'BEGIN { FS = " "; } \
+              { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
+      # First good version is 3.9
+      if test $pcre_version -lt 3009000 ; then
+         echo "no (`pcre-config --version`)"
+         enable_builtin_pcre="yes"
+      else
+         echo "ok"
+         enable_builtin_pcre="no"
+      fi
+   else
+      enable_builtin_pcre="no"
+      echo "not found"
+   fi
+fi
+message "Checking whether to build included libpcre"
+echo "$enable_builtin_pcre"
 
 ######################################################################
 #
@@ -3258,6 +3295,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@builtinafterimage@|$enable_builtin_afterimage|"  \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
+    -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
     -e "s|@buildpeac@|$buildpeac|"              \
     -e "s|@buildxrd@|$buildxrd|"                \
     -e "s|@cernlibdir@|$cernlibdir|"            \
@@ -3294,6 +3332,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@globuslibdir@|$globuslibdir|"        \
     -e "s|@glbextracflags@|$glbextracflags|"    \
     -e "s|@glbpatchcflags@|$glbpatchcflags|"    \
+    -e "s|@gccxml@|$gccxml|"                    \
     -e "s|@iconpath@|$iconpath|"                \
     -e "s|@incdir@|$incdir|"                    \
     -e "s|@krb5incdir@|$krb5incdir|"            \
@@ -3470,6 +3509,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@features@|$features|"           \
+    -e "s|@configargs@|$configargs|"       \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

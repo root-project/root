@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.44 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.45 2005/11/21 11:17:18 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1489,16 +1489,60 @@ Bool_t TString::IsAlnum() const
 //______________________________________________________________________________
 Bool_t TString::IsDigit() const
 {
-   // Returns true if all characters in string are digits (0-9).
-   // Returns false in case string length is 0.
+   // Returns true if all characters in string are digits (0-9) or whitespaces,
+   // i.e. "123456" and "123 456" are both valid integer strings.
+   // Returns false in case string length is 0 or string contains other
+   // characters.
 
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
-   for (Ssiz_t i = 0; i < len; ++i)
-      if (!isdigit(cp[i]))
-         return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i){
+      if (cp[i]!=' ' && !isdigit(cp[i])) return kFALSE;
+   }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsFloat() const
+{
+   // Returns kTRUE if string contains a floating point or integer number.
+   // Examples of valid formats are:
+   //    64320
+   //    64 320
+   //    6 4 3 2 0
+   //    6.4320     6,4320
+   //    6.43e20   6.43E20    6,43e20
+   //    6.43e-20  6.43E-20   6,43e-20
+
+   //we first check if we have an integer, in this case, IsDigit() will be true straight away
+   if (IsDigit()) return kTRUE;
+
+   TString tmp = *this;
+   //now we look for occurrences of '.', ',', e', 'E', '+', '-' and replace each
+   //with '0'. if it is a floating point, IsDigit() will then return kTRUE
+   Int_t i_dot, i_e, i_plus, i_minus, i_comma;
+   i_dot = i_e = i_plus = i_minus = i_comma = -1;
+
+   i_dot = tmp.First('.');
+   if (i_dot > -1) tmp.Replace(i_dot, 1, "0", 1);
+   i_comma = tmp.First(',');
+   if (i_comma > -1) tmp.Replace(i_comma, 1, "0", 1);
+   i_e = tmp.First('e');
+   if (i_e > -1)
+      tmp.Replace(i_e, 1, "0", 1);
+   else {
+      //try for a capital "E"
+      i_e = tmp.First('E');
+      if (i_e > -1) tmp.Replace(i_e, 1, "0", 1);
+   }
+   i_plus = tmp.First('+');
+   if (i_plus > -1) tmp.Replace(i_plus, 1, "0", 1);
+   i_minus = tmp.First('-');
+   if (i_minus > -1) tmp.Replace(i_minus, 1, "0", 1);
+
+   //test if it is now uniquely composed of numbers
+   return tmp.IsDigit();
 }
 
 //______________________________________________________________________________
@@ -1515,6 +1559,68 @@ Bool_t TString::IsHex() const
       if (!isxdigit(cp[i]))
          return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TString::Atoi() const
+{
+   // Return integer value of string.
+   // Valid strings include only digits and whitespace (see IsDigit()),
+   // i.e. "123456", "123 456" and "1 2 3 4        56" are all valid
+   // integer strings whose Atoi() value is 123456.
+
+   //any whitespace ?
+   Int_t end = Index(" ");
+   //if no whitespaces in string, just use atoi()
+   if (end == -1) return atoi(Data());
+   //make temporary string, removing whitespace
+   Int_t start = 0;
+   TString tmp;
+   //loop over all whitespace
+   while (end > -1) {
+      tmp += (*this)(start, end-start);
+      start = end+1; end = Index(" ", start);
+   }
+   //finally add part from last whitespace to end of string
+   end = Length();
+   tmp += (*this)(start, end-start);
+   return atoi(tmp.Data());
+}
+
+//______________________________________________________________________________
+Double_t TString::Atof() const
+{
+   // Return floating-point value contained in string.
+   // Examples of valid strings are:
+   //    64320
+   //    64 320
+   //    6 4 3 2 0
+   //    6.4320     6,4320
+   //    6.43e20   6.43E20    6,43e20
+   //    6.43e-20  6.43E-20   6,43e-20
+
+   //look for a comma and some whitespace
+   Int_t comma = Index(",");
+   Int_t end = Index(" ");
+   //if no commas & no whitespace in string, just use atof()
+   if (comma == -1 && end == -1) return atof(Data());
+   TString tmp = *this;
+   if (comma > -1) {
+      //replace comma with decimal point
+      tmp.Replace(comma, 1, ".");
+   }
+   //no whitespace ?
+   if (end == -1) return atof(tmp.Data());
+   //remove whitespace
+   Int_t start = 0;
+   TString tmp2;
+   while (end > -1) {
+      tmp2 += tmp(start, end-start);
+      start = end+1; end = tmp.Index(" ", start);
+   }
+   end = tmp.Length();
+   tmp2 += tmp(start, end-start);
+   return atof(tmp2.Data());
 }
 
 //______________________________________________________________________________

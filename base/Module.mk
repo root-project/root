@@ -79,10 +79,10 @@ $(BASEDS4):
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH4) $(BASEL4)
 
-$(BASEDO1):     $(BASEDS1)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-$(BASEDO2):     $(BASEDS2)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+$(BASEDO1):     $(BASEDS1) $(PCREDEP)
+		$(CXX) $(NOOPT) $(PCREINC) $(CXXFLAGS) -I. -o $@ -c $<
+$(BASEDO2):     $(BASEDS2) $(PCREDEP)
+		$(CXX) $(NOOPT) $(PCREINC) $(CXXFLAGS) -I. -o $@ -c $<
 ifeq ($(ARCH),linuxicc)
 $(BASEDO3):     $(BASEDS3)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -wd191 -I. -o $@ -c $<
@@ -108,6 +108,9 @@ distclean-base: clean-base
 distclean::     distclean-base
 
 ##### extra rules ######
+base/src/TPRegexp.o: base/src/TPRegexp.cxx $(PCREDEP)
+	$(CXX) $(OPT) $(PCREINC) $(CXXFLAGS) -o $@ -c $<
+
 ifeq ($(ARCH),alphacxx6)
 $(BASEDIRS)/TRandom.o: $(BASEDIRS)/TRandom.cxx
 	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<

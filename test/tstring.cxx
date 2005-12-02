@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: tstring.cxx,v 1.3 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tstring.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
@@ -6,6 +6,7 @@
 #include "Riostream.h"
 #include "TString.h"
 #include "TRegexp.h"
+#include "TPRegexp.h"
 
 
 void Ok(int i, int b)
@@ -128,6 +129,21 @@ int main()
 
    Ok(22, !s10.IsAscii());
    Ok(23, s.IsAscii());
+
+   // some excercises with the Perl Compatible Regular Expressions
+   TString s11("Food is on the foo table.");
+   TPRegexp("\\b(foo)\\s+(\\w+)").Substitute(s11, "round $2");
+   Ok(24, s11=="Food is on the round table.");
+
+   TString s12("pepernotenkoek");
+   TPRegexp("peper(.*)koek").Substitute(s12, "wal$1boom");
+   Ok(25, s12=="walnotenboom");
+
+   TString s13("hihi haha");
+   TPRegexp("^([^ ]*) *([^ ]*)").Substitute(s13, "$2 $1");
+   Ok(26, s13=="haha hihi");
+
+   Ok(27, TPRegexp("^(\\w+) *(\\w+)").Match(s13) == 3);
 
    // test Resize and Strip
    s9.Prepend("   ");
