@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.85 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.86 2005/11/16 20:01:55 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -341,8 +341,7 @@ Bool_t TBuffer::CheckObject(const void *obj, const TClass *ptrClass)
    // the buffer. Returns kTRUE if object already in the buffer,
    // kFALSE otherwise (also if obj is 0 or TBuffer not in writing mode).
 
-   if (!obj || !fMap || !ptrClass || !IsWriting())
-      return kFALSE;
+   if (!obj || !fMap || !ptrClass) return kFALSE;
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
@@ -1561,7 +1560,18 @@ void TBuffer::ReadFastArray(void **start, const TClass *cl, Int_t n,
 
       for (Int_t j=0; j<n; j++){
          //delete the object or collection
-         if (start[j] && TStreamerInfo::CanDelete()) ((TClass*)cl)->Destructor(start[j],kFALSE); // call delete and desctructor
+         if (start[j] && TStreamerInfo::CanDelete() 
+             // There are some cases where the user may set up a pointer in the (default)
+             // constructor but not mark this pointer as transient.  Sometime the value 
+             // of this pointer is the address of one of the object with just created
+             // and the following delete would result in the deletion (possibly of the 
+             // top level object we are goint to return!).
+             // Eventhough this is a user error, we could prevent the crash by simply
+             // adding:
+             // && !CheckObject(start[j],cl) 
+             // However this can increase the read time significantly (10% in the case
+             // of one TLine pointer in the test/Track and run ./Event 200 0 0 20 30000
+             ) ((TClass*)cl)->Destructor(start[j],kFALSE); // call delete and desctructor
          start[j] = ReadObjectAny(cl);
       }
 
@@ -2652,6 +2662,14 @@ void TBuffer::StreamObject(void *obj, const TClass *cl)
    // Stream an object given a pointer to its actual class.
 
    ((TClass*)cl)->Streamer(obj, *this);
+}
+
+//______________________________________________________________________________
+void TBuffer::StreamObject(TObject *obj)
+{
+   // Stream an object inheriting from TObject using its streamer
+
+   obj->Streamer(*this);
 }
 
 //______________________________________________________________________________
