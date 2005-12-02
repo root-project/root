@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPRegexp.h,v 1.1 2005/12/02 16:17:48 rdm Exp $
 // Author: Eddy Offermann   24/06/05
 
 /*************************************************************************
@@ -46,7 +46,7 @@ private:
       kPCRE_GLOBAL     = 0x80000000,
       kPCRE_OPTIMIZE   = 0x40000000,
       kPCRE_DEBUG_MSGS = 0x20000000,
-      kPCRE_INTMASK    = 0x0FFF,
+      kPCRE_INTMASK    = 0x0FFF
    };
 
    TString     fPattern;
