@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.185 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.187 2005/11/25 05:39:33 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -980,7 +980,7 @@ Int_t TBranchElement::Fill()
    }
 
    //if the tree has a TRefTable, set the current branch if branch is not a basic type
-   if (fType > 0 && fType < 10) {
+   if (fType >= 0 && fType < 10) {
       TBranchRef *bref = fTree->GetBranchRef();
       if (bref) bref->SetParent(this);
    }
