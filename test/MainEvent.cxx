@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.27 2003/12/30 18:31:13 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.28 2005/01/12 07:50:02 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -209,6 +209,7 @@ int main(int argc, char **argv)
       TTree::SetBranchStyle(branchStyle);
       TBranch *branch = tree->Branch("event", &event, bufsize,split);
       branch->SetAutoDelete(kFALSE);
+      tree->BranchRef();
       Float_t ptmin = 1;
 
       for (ev = 0; ev < nevent; ev++) {
