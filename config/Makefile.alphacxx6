@@ -17,7 +17,8 @@ endif
 # Compiler:
 CXX           = cxx
 CC            = cc
-CXXFLAGS      = -tlocal -D__osf__ -D__alpha -D"_USE_STD_IOSTREAM" $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -tlocal -D__osf__ -D__alpha -D_USE_STD_IOSTREAM \
+                $(EXTRA_CXXFLAGS)
 CFLAGS        = -D__osf__ -D__alpha $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -tlocal $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
