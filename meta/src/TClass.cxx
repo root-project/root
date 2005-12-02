@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.180 2005/10/10 11:31:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.181 2005/11/16 20:10:11 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2375,13 +2375,26 @@ TClass *TClass::Load(TBuffer &b)
 {
    // Load class description from I/O buffer and return class object.
 
-   char s[80];
+   UInt_t maxsize = 256;
+   char *s = new char[maxsize];
 
-   b.ReadString(s, 80);
+   Int_t pos = b.Length();
+   
+   b.ReadString(s, maxsize);
+   while (strlen(s)==maxsize) {
+      // The classname is too large, try again with a large buffer.
+      b.SetBufferOffset(pos);
+      maxsize = 2*maxsize;
+      delete [] s;
+      s = new char[maxsize];
+      b.ReadString(s, maxsize);
+   }
+
    TClass *cl = gROOT->GetClass(s, kTRUE);
    if (!cl)
       ::Error("TClass::Load", "dictionary of class %s not found", s);
 
+   delete [] s;
    return cl;
 }
 
