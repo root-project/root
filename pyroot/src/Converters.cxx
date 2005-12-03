@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.20 2005/11/24 16:25:18 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.21 2005/11/24 19:49:57 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -165,23 +165,31 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Short,  Short_t,  Long_t, PyInt_FromLong,  PyI
 PYROOT_IMPLEMENT_BASIC_CONVERTER( UShort, UShort_t, Long_t, PyInt_FromLong,  PyInt_AsLong )
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Int,    Int_t,    Long_t, PyInt_FromLong,  PyInt_AsLong )
 
-// the following works fine because sizeof(UInt_t) == sizeof(ULong_t) on 32-bits;
-// it'll also work on 64, but the upper limits may not be flagged properly
-PYROOT_IMPLEMENT_BASIC_CONVERTER( UInt, UInt_t, ULong_t, PyLong_FromUnsignedLong, PyLong_AsUnsignedLong )
-
 //____________________________________________________________________________
-Bool_t PyROOT::TULongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
-{
-   ULong_t ul = PyLong_AsUnsignedLong( pyobject );
-   if ( PyErr_Occurred() ) {
-      if ( PyInt_Check( pyobject ) ) {    // shouldn't be ... bug in python?
+namespace {
+
+   ULong_t ConvertULong( PyObject* pyobject )
+   {
+      ULong_t ul = PyLong_AsUnsignedLong( pyobject );
+      if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
-         ul = (ULong_t)PyInt_AS_LONG( pyobject );
-      } else 
-         return kFALSE;
+         Int_t i = PyInt_AS_LONG( pyobject );
+         if ( 0 <= i ) {
+            ul = (ULong_t)i;
+         } else {
+            PyErr_SetString( PyExc_OverflowError,
+               "can\'t convert negative value to unsigned long long" );
+         }
+      }
+
+      return ul;
    }
 
-   func->SetArg( (Long_t)ul );            // TODO: fix CINT to accept ULong_t
+} // unnamed namespace
+
+Bool_t PyROOT::TULongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   func->SetArg( ConvertULong( pyobject ) );
    if ( PyErr_Occurred() )
       return kFALSE;
    return kTRUE;
@@ -194,18 +202,15 @@ PyObject* PyROOT::TULongConverter::FromMemory( void* address )
 
 Bool_t PyROOT::TULongConverter::ToMemory( PyObject* value, void* address )
 {
-   ULong_t s = (ULong_t)PyLong_AsUnsignedLong( value );
-   if ( PyErr_Occurred() ) {
-      if ( PyInt_Check( value ) ) {    // shouldn't be ... bug in python?
-         PyErr_Clear();
-         s = (ULong_t)PyInt_AS_LONG( value ); 
-      } else
-         return kFALSE;
-   }
-
-   *((ULong_t*)address) = s;
+   ULong_t u = ConvertULong( value );
+   if ( PyErr_Occurred() )
+      return kFALSE;
+   *((ULong_t*)address) = u;
    return kTRUE;
 }
+
+//____________________________________________________________________________
+PYROOT_IMPLEMENT_BASIC_CONVERTER( UInt, UInt_t, ULong_t, PyLong_FromUnsignedLong, PyLong_AsUnsignedLong )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
@@ -296,25 +301,30 @@ Bool_t PyROOT::TLongLongConverter::ToMemory( PyObject* value, void* address )
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TULongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
-{
-   ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
-   if ( PyErr_Occurred() ) {
-      if ( PyInt_Check( pyobject ) ) {    // shouldn't be ... bug in python?
+namespace {
+
+   ULong64_t ConvertULongLong( PyObject* pyobject )
+   {
+      ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
+      if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
          Int_t i = PyInt_AS_LONG( pyobject );
          if ( 0 <= i ) {
             ull = (ULong64_t)i;
          } else {
             PyErr_SetString( PyExc_OverflowError,
-                "can\'t convert negative value to unsigned long long" );
-            return kFALSE;
+               "can\'t convert negative value to unsigned long long" );
          }
-      } else 
-         return kFALSE;
+      }
+
+      return ull;
    }
 
-   func->SetArg( ull );
+} // unnamed namespace
+
+Bool_t PyROOT::TULongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   func->SetArg( ConvertULongLong( pyobject ) );
    if ( PyErr_Occurred() )
       return kFALSE;
    return kTRUE;
@@ -327,22 +337,9 @@ PyObject* PyROOT::TULongLongConverter::FromMemory( void* address )
 
 Bool_t PyROOT::TULongLongConverter::ToMemory( PyObject* value, void* address )
 {
-   ULong64_t ull = PyLong_AsUnsignedLongLong( value );
-   if ( PyErr_Occurred() ) {
-      if ( PyInt_Check( value ) ) {    // shouldn't be ... bug in python?
-         PyErr_Clear();
-         Int_t i = PyInt_AS_LONG( value );
-         if ( 0 <= i ) {
-            ull = (ULong64_t)i;
-         } else {
-            PyErr_SetString( PyExc_OverflowError, 
-                "can\'t convert negative value to unsigned long long" );
-            return kFALSE;
-         }
-      } else
-         return kFALSE;
-   }
-
+   Long64_t ull = ConvertULongLong( value );
+   if ( PyErr_Occurred() )
+      return kFALSE;
    *((ULong64_t*)address) = ull;
    return kTRUE;
 }

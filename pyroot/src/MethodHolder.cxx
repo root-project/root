@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.41 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.42 2005/10/26 05:12:24 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -100,6 +100,9 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self )
       result = TPyExceptionMagic;
    } catch ( std::exception& e ) {
       PyErr_Format( PyExc_Exception, "%s (C++ exception)", e.what() );
+      result = 0;
+   } catch ( ... ) {
+      PyErr_SetString( PyExc_Exception, "unhandled, unknown C++ exception" );
       result = 0;
    }
 

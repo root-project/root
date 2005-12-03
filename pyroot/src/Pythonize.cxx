@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.29 2005/11/17 06:26:35 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.30 2005/11/24 16:25:18 pcanal Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1074,20 +1074,22 @@ namespace {
 
       if ( pyfunc != 0 ) {
       // prepare arguments
+         PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
+            (Int_t*)G__int(libp->para[0]), 1 );
          int npar = G__int(libp->para[0]);
-
+ 
          PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
-            (double*)G__int(libp->para[1]), npar );
+            (Double_t*)G__int(libp->para[1]), npar );
 
          PyObject* arg3 = PyList_New(1);
          PyList_SetItem( arg3, 0, PyFloat_FromDouble( G__double(libp->para[2]) ) );
 
          PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory(
-            (double*)G__int(libp->para[3]), npar );
+            (Double_t*)G__int(libp->para[3]), npar );
 
       // perform actual call
-         result = PyObject_CallFunction( pyfunc, (char*)"iOOOi",
-            npar, arg2, arg3, arg4, (int)G__int(libp->para[4]) );
+         result = PyObject_CallFunction( pyfunc, (char*)"OOOOi",
+            arg1, arg2, arg3, arg4, (int)G__int(libp->para[4]) );
          *(Double_t*)G__Doubleref(&libp->para[2]) = PyFloat_AsDouble( PyList_GetItem( arg3, 0 ) );
 
          Py_DECREF( arg2 ); Py_DECREF( arg3 ); Py_DECREF( arg4 );
