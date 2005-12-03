@@ -58,7 +58,7 @@ INCLUDEFILES += $(MINUIT2DEP)
 ##### local rules #####
 include/Minuit2/%.h: $(MINUIT2DIRI)/Minuit2/%.h
 		@(if [ ! -d "include/Minuit2" ]; then     \
-		   mkdir -p include/Minuit2;                 \
+		   mkdir -p include/Minuit2;              \
 		fi)
 		cp $< $@
 
@@ -97,6 +97,7 @@ clean::         clean-minuit2
 
 distclean-minuit2: clean-minuit2
 		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB)
+		@rm -rf include/Minuit2
 
 distclean::     distclean-minuit2
 
