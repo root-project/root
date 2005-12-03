@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.19 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.20 2005/12/02 22:44:16 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -322,8 +322,8 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
 }
 
 extern long G__AllocPosition;
-extern "C" long G__getallocpos();
-extern "C" void G__setallocpos(long l);
+extern "C" long G__get_allocpos();
+extern "C" void G__set_allocpos(long l);
 
 //______________________________________________________________________________
 void *TStorage::ObjectAlloc(size_t sz)
