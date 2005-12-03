@@ -15,7 +15,6 @@ GSLVERS      := gsl-1.5
 GSLSRCS      := $(MODDIRS)/$(GSLVERS).tar.gz
 GSLDIRS      := $(MODDIRS)/$(GSLVERS)
 GSLDIRI      := -I$(MODDIRS)/$(GSLVERS)
-GSLETAG      := $(MODDIRS)/headers.d
 
 ##### libgsl #####
 ifeq ($(PLATFORM),win32)
@@ -181,7 +180,9 @@ clean::         clean-mathmore
 
 distclean-mathmore: clean-mathmore
 		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) $(MATHMORELIB)
-		@rm -rf $(GSLDIRS)
+		@mv $(GSLSRCS) $(MATHMOREDIRS)/-$(GSLVERS).tar.gz
+		@rm -rf $(MATHMOREDIRS)/gsl-*
+		@mv $(MATHMOREDIRS)/-$(GSLVERS).tar.gz $(GSLSRCS)
 		@rm -rf include/Math
 
 distclean::     distclean-mathmore
