@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.5 2005/12/02 21:35:19 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.6 2005/12/03 15:15:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -107,6 +107,7 @@ namespace ROOT {
     {
       AssignFrom( Rotation3D(r), XYZVector (v) ); 
     }
+#ifdef LATER
     /**
        Construct from a translation (using any vector type) and then a rotation (any rotation object). 
        Requirement on the rotation and vector objects are that they can be transformed in a 
@@ -119,6 +120,7 @@ namespace ROOT {
       Rotation3D r3d(r);
       AssignFrom( r3d, r3d( XYZVector(v) ) ); 
     }
+#endif
 
 #endif
 
