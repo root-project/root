@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.1 2005/10/28 16:26:36 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.cxx,v 1.1 2005/12/02 21:35:19 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -45,7 +45,7 @@ Plane3D::Plane3D(const XYZVector & n, const XYZPoint & p ) :
 {
   fD = - n.Dot(p);
   Normalize();
-  
+ 
 }
 
     // constructor from three points
@@ -54,7 +54,11 @@ Plane3D::Plane3D( const XYZPoint & p1, const XYZPoint & p2, const XYZPoint & p3 
   // plane from thre points
   // normal is (x3-x1) cross (x2 -x1) 
   XYZVector n = (p2-p1).Cross(p3-p1);
-  Plane3D( n, p1);
+  fA = n.X(); 
+  fB = n.Y();
+  fC = n.Z();
+  fD = - n.Dot(p1);
+  Normalize();
 }
 
 // distance plane- point

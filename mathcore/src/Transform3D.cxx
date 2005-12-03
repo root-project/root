@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.2 2005/10/28 16:26:36 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.3 2005/12/02 21:35:19 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -243,6 +243,7 @@ std::ostream & operator<< (std::ostream & os, const Transform3D & t) {
   os << "\n" << m[8] << "  " << m[9] << "  " << m[10]<< "  " << m[11] << "\n";
   return os;
 }
+
 
 
   }  // end namespace Math

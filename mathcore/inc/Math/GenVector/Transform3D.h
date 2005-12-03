@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.4 2005/11/07 09:38:09 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.5 2005/12/02 21:35:19 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -85,6 +85,15 @@ namespace ROOT {
     {
       AssignFrom( r, v ); 
     }
+    /**
+       Construct from a translation and then a rotation (inverse assignment) 
+    */
+    Transform3D( const XYZVector & v, const Rotation3D & r) 
+    {
+      // is equivalent from having first the rotation and then the translation vector rotated
+      AssignFrom( r, r(v) ); 
+    }
+
 
 
 #if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambigous with double * , double *   
@@ -98,6 +107,19 @@ namespace ROOT {
     {
       AssignFrom( Rotation3D(r), XYZVector (v) ); 
     }
+    /**
+       Construct from a translation (using any vector type) and then a rotation (any rotation object). 
+       Requirement on the rotation and vector objects are that they can be transformed in a 
+       Rotation3D class and in a XYZVector 
+    */
+    template <class AVector, class ARotation>
+    Transform3D( const AVector & v, const ARotation & r) 
+    {
+      // is equivalent from having first the rotation and then the translation vector rotated
+      Rotation3D r3d(r);
+      AssignFrom( r3d, r3d( XYZVector(v) ) ); 
+    }
+
 #endif
 
     /**
@@ -138,8 +160,9 @@ namespace ROOT {
       SetComponents (xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
     }
 
+
     /**
-       Construct from a linear algebra matrix of size at least 3x4,
+       Assignment from a linear algebra matrix of size at least 3x4,
        which must support operator()(i,j) to obtain elements (0,0) thru (2,3).
        The 3x3 sub-block is assumed to be the rotation part and the translations vector 
        are described by the 4-th column
@@ -149,6 +172,7 @@ namespace ROOT {
       SetComponents(m); 
       return *this; 
     }
+
 
     // ======== Components ==============
 
@@ -352,7 +376,11 @@ namespace ROOT {
 
   protected: 
 
+    /**
+       make transformation from first a rotation then a translation
+     */
     void  AssignFrom( const Rotation3D & r, const XYZVector & v);  
+
 
     void SetIdentity() ; 
 
