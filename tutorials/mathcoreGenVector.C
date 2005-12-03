@@ -264,14 +264,14 @@ int testPoint3D() {
   Polar3DVector v2(p1.R(), p1.Theta(),p1.Phi()); 
 
   
-#ifdef WHEN_CINT_FIXED
+  //#ifdef WHEN_CINT_FIXED
   RhoEtaPhiPoint q3 = q1 + v2; 
   // point -point in vector does not work yet
   RhoEtaPhiPoint q4 = q3 - v2; 
   ok+= compare( q4.X(), q1.X(), "PV op X"  );
   ok+= compare( q4.Y(), q1.Y(), "PV op Y" );
   ok+= compare( q4.Z(), q1.Z(), "PV op Z" );
-#endif
+  //#endif
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
 
@@ -607,8 +607,57 @@ int testRotation() {
   ok+= compare(p.Y(), v.Y(), "y",10); 
   ok+= compare(p.Z(), v.Z(), "z",10); 
 
+  // test costruct inverse from translation first
+
+  Transform3D tinv2( -d, r2.Inverse() );
+  p = tinv2 * t * v; 
+
+  ok+= compare(p.X(), v.X(), "x",10); 
+  ok+= compare(p.Y(), v.Y(), "y",10); 
+  ok+= compare(p.Z(), v.Z(), "z",10); 
+
+
+  ok+= compare(p.Z(), v.Z(), "z",10); 
+
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
+  std::cout << "Test Plane3D :                  "; 
+
+  // test transfrom a 3D plane
+
+  
+  XYZPoint p1(1,2,3);
+  XYZPoint p2(-2,-1,4);
+  XYZPoint p3(-1,3,2);
+  Plane3D plane(p1,p2,p3);
+
+  n = plane.Normal();
+  // normal is perpendicular to vectors on the planes obtained from subracting the points
+  ok+= compare(n.Dot(p2-p1), 0.0, "n.v12",10); 
+  ok+= compare(n.Dot(p3-p1), 0.0, "n.v13",10); 
+  ok+= compare(n.Dot(p3-p2), 0.0, "n.v23",10); 
+
+  plane1 = t(plane);
+  
+  // transform the points
+  pt1 = t(p1);
+  pt2 = t(p2);
+  pt3 = t(p3);
+  Plane3D plane2(pt1,pt2,pt3);
+
+  n1 = plane1.Normal();
+  n2 = plane2.Normal();
+
+
+  ok+= compare(n1.X(), n2.X(), "a",10); 
+  ok+= compare(n1.Y(), n2.Y(), "b",10); 
+  ok+= compare(n1.Z(), n2.Z(), "c",10); 
+  ok+= compare(plane1.HesseDistance(), plane2.HesseDistance(), "d",10); 
+
+  // check distances  
+  ok += compare(plane1.Distance(pt1), 0.0, "distance",10);
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
 
   std::cout << "Test LorentzRotation :          "; 
 
