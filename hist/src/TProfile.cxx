@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.69 2005/09/27 15:06:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.70 2005/10/28 21:19:15 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TProfile::~TProfile()
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup,Option_t *option)
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup,Option_t *option)
     : TH1D(name,title,nbins,xlow,xup)
 {
 //*-*-*-*-*-*Normal Constructor for Profile histograms*-*-*-*-*-*-*-*-*-*
@@ -141,7 +141,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t *xbins,Axis_t ylow,Axis_t yup,Option_t *option)
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t *xbins,Double_t ylow,Double_t yup,Option_t *option)
     : TH1D(name,title,nbins,xbins)
 {
 //*-*-*-*-*-*Constructor for Profile histograms with variable bin size*-*-*-*-*
@@ -155,7 +155,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup,Axis_t ylow,Axis_t yup,Option_t *option)
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup,Double_t ylow,Double_t yup,Option_t *option)
     : TH1D(name,title,nbins,xlow,xup)
 {
 //*-*-*-*-*-*Constructor for Profile histograms with range in y*-*-*-*-*-*
@@ -431,7 +431,7 @@ Int_t TProfile::BufferEmpty(Int_t action)
 }
 
 //______________________________________________________________________________
-Int_t TProfile::BufferFill(Axis_t x, Axis_t y, Stat_t w)
+Int_t TProfile::BufferFill(Double_t x, Double_t y, Double_t w)
 {
 // accumulate arguments in buffer. When buffer is full, empty the buffer
 // fBuffer[0] = number of entries in buffer
@@ -668,7 +668,7 @@ TH1 *TProfile::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TProfile::Fill(Axis_t x, Axis_t y)
+Int_t TProfile::Fill(Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile histogram (no weights)*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -683,7 +683,7 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y)
    fEntries++;
    bin =fXaxis.FindBin(x);
    AddBinContent(bin, y);
-   fSumw2.fArray[bin] += (Stat_t)y*y;
+   fSumw2.fArray[bin] += (Double_t)y*y;
    fBinEntries.fArray[bin] += 1;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
@@ -698,7 +698,7 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y)
 }
 
 //______________________________________________________________________________
-Int_t TProfile::Fill(const char *namex, Axis_t y)
+Int_t TProfile::Fill(const char *namex, Double_t y)
 {
 // Fill a Profile histogram (no weights)
 //
@@ -710,12 +710,12 @@ Int_t TProfile::Fill(const char *namex, Axis_t y)
    fEntries++;
    bin =fXaxis.FindBin(namex);
    AddBinContent(bin, y);
-   fSumw2.fArray[bin] += (Stat_t)y*y;
+   fSumw2.fArray[bin] += (Double_t)y*y;
    fBinEntries.fArray[bin] += 1;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   Axis_t x = fXaxis.GetBinCenter(bin);
+   Double_t x = fXaxis.GetBinCenter(bin);
    fTsumw++;
    fTsumw2++;
    fTsumwx  += x;
@@ -726,7 +726,7 @@ Int_t TProfile::Fill(const char *namex, Axis_t y)
 }
 
 //______________________________________________________________________________
-Int_t TProfile::Fill(Axis_t x, Axis_t y, Stat_t w)
+Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile histogram with weights*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -738,7 +738,7 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y, Stat_t w)
       if (y <fYmin || y> fYmax) return -1;
    }
 
-   Stat_t z= (w > 0 ? w : -w);
+   Double_t z= (w > 0 ? w : -w);
    fEntries++;
    bin =fXaxis.FindBin(x);
    AddBinContent(bin, z*y);
@@ -757,7 +757,7 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y, Stat_t w)
 }
 
 //______________________________________________________________________________
-Int_t TProfile::Fill(const char *namex, Axis_t y, Stat_t w)
+Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
 {
 // Fill a Profile histogram with weights
 //
@@ -767,7 +767,7 @@ Int_t TProfile::Fill(const char *namex, Axis_t y, Stat_t w)
       if (y <fYmin || y> fYmax) return -1;
    }
 
-   Stat_t z= (w > 0 ? w : -w);
+   Double_t z= (w > 0 ? w : -w);
    fEntries++;
    bin =fXaxis.FindBin(namex);
    AddBinContent(bin, z*y);
@@ -776,7 +776,7 @@ Int_t TProfile::Fill(const char *namex, Axis_t y, Stat_t w)
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   Axis_t x = fXaxis.GetBinCenter(bin);
+   Double_t x = fXaxis.GetBinCenter(bin);
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -788,7 +788,7 @@ Int_t TProfile::Fill(const char *namex, Axis_t y, Stat_t w)
 
 
 //______________________________________________________________________________
-void TProfile::FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Stat_t *w, Int_t stride)
+void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile histogram with weights*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -799,7 +799,7 @@ void TProfile::FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Stat_
          if (y[i] <fYmin || y[i]> fYmax) continue;
       }
 
-      Stat_t z= (w[i] > 0 ? w[i] : -w[i]);
+      Double_t z= (w[i] > 0 ? w[i] : -w[i]);
       fEntries++;
       bin =fXaxis.FindBin(x[i]);
       AddBinContent(bin, z*y[i]);
@@ -818,7 +818,7 @@ void TProfile::FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Stat_
 }
 
 //______________________________________________________________________________
-Stat_t TProfile::GetBinContent(Int_t bin) const
+Double_t TProfile::GetBinContent(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin content of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
@@ -832,7 +832,7 @@ Stat_t TProfile::GetBinContent(Int_t bin) const
 }
 
 //______________________________________________________________________________
-Stat_t TProfile::GetBinEntries(Int_t bin) const
+Double_t TProfile::GetBinEntries(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin entries of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
@@ -844,7 +844,7 @@ Stat_t TProfile::GetBinEntries(Int_t bin) const
 }
 
 //______________________________________________________________________________
-Stat_t TProfile::GetBinError(Int_t bin) const
+Double_t TProfile::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return bin error of a Profile histogram*-*-*-*-*-*-*-*-*-*
 //*-*          =======================================
@@ -878,13 +878,13 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    if (fBuffer) ((TProfile*)this)->BufferEmpty();
 
    if (bin < 0 || bin >= fNcells) return 0;
-   Stat_t cont = fArray[bin];
-   Stat_t sum  = fBinEntries.fArray[bin];
-   Stat_t err2 = fSumw2.fArray[bin];
+   Double_t cont = fArray[bin];
+   Double_t sum  = fBinEntries.fArray[bin];
+   Double_t err2 = fSumw2.fArray[bin];
    if (sum == 0) return 0;
-   Stat_t eprim;
-   Stat_t contsum = cont/sum;
-   Stat_t eprim2  = TMath::Abs(err2/sum - contsum*contsum);
+   Double_t eprim;
+   Double_t contsum = cont/sum;
+   Double_t eprim2  = TMath::Abs(err2/sum - contsum*contsum);
    eprim          = TMath::Sqrt(eprim2);
    Double_t test = 1;
    if (err2 != 0 && sum < 5) test = eprim2*sum/err2;
@@ -895,7 +895,7 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    //if (test < 1.e-4) { test in version 3.01/06
    //if (test < 1.e-4 || eprim2 < 1e-6) { test in version 3.03/09
    if (fgApproximate && fNcells <=1002 && (test < 1.e-4 || eprim2 < 1e-6)) { //3.04
-      Stat_t scont, ssum, serr2;
+      Double_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
          if (fSumw2.fArray[i] <= 0) continue; //added in 3.10/02
@@ -903,8 +903,8 @@ Stat_t TProfile::GetBinError(Int_t bin) const
          ssum  += fBinEntries.fArray[i];
          serr2 += fSumw2.fArray[i];
       }
-      Stat_t scontsum = scont/ssum;
-      Stat_t seprim2  = TMath::Abs(serr2/ssum - scontsum*scontsum);
+      Double_t scontsum = scont/ssum;
+      Double_t seprim2  = TMath::Abs(serr2/ssum - scontsum*scontsum);
       eprim           = 2*TMath::Sqrt(seprim2);
       sum = ssum;
    }
@@ -950,7 +950,7 @@ char* TProfile::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 //______________________________________________________________________________
-void TProfile::GetStats(Stat_t *stats) const
+void TProfile::GetStats(Double_t *stats) const
 {
    // fill the array stats from the contents of this profile
    // The array stats must be correctly dimensionned in the calling program.
@@ -971,8 +971,8 @@ void TProfile::GetStats(Stat_t *stats) const
    // Loop on bins
    Int_t bin, binx;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
-      Stat_t w;
-      Axis_t x;
+      Double_t w;
+      Double_t x;
       for (bin=0;bin<6;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
       for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
@@ -1297,10 +1297,10 @@ Long64_t TProfile::Merge(TCollection *li)
 
 
    //merge bin contents and errors
-   Stat_t stats[kNstat], totstats[kNstat];
+   Double_t stats[kNstat], totstats[kNstat];
    for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
-   Stat_t nentries = GetEntries();
+   Double_t nentries = GetEntries();
    Int_t binx, ix, nx;
    Bool_t canRebin=TestBit(kCanRebin);
    ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
@@ -1360,7 +1360,7 @@ void TProfile::Multiply(TF1 *f1, Double_t c1)
 
 //*-*- Add statistics
    Double_t xx[1], cf1, ac1 = TMath::Abs(c1);
-   Stat_t s1[10];
+   Double_t s1[10];
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
    PutStats(s1);
@@ -1458,7 +1458,7 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TProfile::PutStats(Stat_t *stats)
+void TProfile::PutStats(Double_t *stats)
 {
    // Replace current statistics with the values in array stats
 
@@ -1495,8 +1495,8 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
 //          Statistics will be recomputed from the new bin contents.
 
    Int_t nbins  = fXaxis.GetNbins();
-   Axis_t xmin  = fXaxis.GetXmin();
-   Axis_t xmax  = fXaxis.GetXmax();
+   Double_t xmin  = fXaxis.GetXmin();
+   Double_t xmax  = fXaxis.GetXmax();
    if ((ngroup <= 0) || (ngroup > nbins)) {
       Error("Rebin", "Illegal value of ngroup=%d",ngroup);
       return 0;
@@ -1531,7 +1531,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
    }
 
    if(fXaxis.GetXbins()->GetSize() > 0){ // variable bin sizes
-      Axis_t *bins = new Axis_t[newbins+1];
+      Double_t *bins = new Double_t[newbins+1];
       for(Int_t i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
@@ -1568,7 +1568,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
 }
 
 //______________________________________________________________________________
-void TProfile::RebinAxis(Axis_t x, const char* /* ax */)
+void TProfile::RebinAxis(Double_t x, const char* /* ax */)
 {
 // Profile histogram is resized along x axis such that x is in the axis range.
 // The new axis limits are recomputed by doubling iteratively
@@ -1584,7 +1584,7 @@ void TProfile::RebinAxis(Axis_t x, const char* /* ax */)
    if (axis->GetXmin() >= axis->GetXmax()) return;
    if (axis->GetNbins() <= 0) return;
 
-   Axis_t xmin, xmax;
+   Double_t xmin, xmax;
    if (!FindNewAxisLimits(axis, x, xmin, xmax))
       return;
 
@@ -1709,7 +1709,7 @@ void TProfile::Scale(Double_t c1)
 }
 
 //______________________________________________________________________________
-void TProfile::SetBinEntries(Int_t bin, Stat_t w)
+void TProfile::SetBinEntries(Int_t bin, Double_t w)
 {
 //*-*-*-*-*-*-*-*-*Set the number of entries in bin*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ================================
@@ -1719,7 +1719,7 @@ void TProfile::SetBinEntries(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax)
+void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================
@@ -1732,7 +1732,7 @@ void TProfile::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax)
 }
 
 //______________________________________________________________________________
-void TProfile::SetBins(Int_t nx, const Axis_t *xbins)
+void TProfile::SetBins(Int_t nx, const Double_t *xbins)
 {
 //*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================

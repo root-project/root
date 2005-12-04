@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.67 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.68 2005/09/27 15:00:35 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -49,9 +49,9 @@ TH3::TH3()
 }
 
 //______________________________________________________________________________
-TH3::TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup
-                                     ,Int_t nbinsz,Axis_t zlow,Axis_t zup)
+TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+                                     ,Int_t nbinsy,Double_t ylow,Double_t yup
+                                     ,Int_t nbinsz,Double_t zlow,Double_t zup)
      :TH1(name,title,nbinsx,xlow,xup),
       TAtt3D()
 {
@@ -210,7 +210,7 @@ Int_t TH3::BufferEmpty(Int_t action)
 }
  
 //______________________________________________________________________________
-Int_t TH3::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
+Int_t TH3::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 {
 // accumulate arguments in buffer. When buffer is full, empty the buffer
 // fBuffer[0] = number of entries in buffer
@@ -243,7 +243,7 @@ Int_t TH3::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z)
+Int_t TH3::Fill(Double_t x, Double_t y, Double_t z)
 {
 //*-*-*-*-*-*-*-*-*-*-*Increment cell defined by x,y,z by 1 *-*-*-*-*
 //*-*                  ====================================
@@ -285,7 +285,7 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z)
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
+Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
 {
 //*-*-*-*-*-*-*-*-*-*-*Increment cell defined by x,y,z by a weight w*-*-*-*-*
 //*-*                  =============================================
@@ -330,7 +330,7 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Stat_t w)
+Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_t w)
 {
 // Increment cell defined by namex,namey,namez by a weight w
 //
@@ -349,10 +349,10 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Stat_t 
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Axis_t x = fXaxis.GetBinCenter(binx);
-   Axis_t y = fYaxis.GetBinCenter(biny);
-   Axis_t z = fZaxis.GetBinCenter(binz);
-   Stat_t v = (w > 0 ? w : -w);
+   Double_t x = fXaxis.GetBinCenter(binx);
+   Double_t y = fYaxis.GetBinCenter(biny);
+   Double_t z = fZaxis.GetBinCenter(binz);
+   Double_t v = (w > 0 ? w : -w);
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -368,7 +368,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Stat_t 
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(const char *namex, Axis_t y, const char *namez, Stat_t w)
+Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
 {
 // Increment cell defined by namex,y,namez by a weight w
 //
@@ -389,9 +389,9 @@ Int_t TH3::Fill(const char *namex, Axis_t y, const char *namez, Stat_t w)
       if (!fgStatOverflows) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Axis_t x = fXaxis.GetBinCenter(binx);
-   Axis_t z = fZaxis.GetBinCenter(binz);
-   Stat_t v = (w > 0 ? w : -w);
+   Double_t x = fXaxis.GetBinCenter(binx);
+   Double_t z = fZaxis.GetBinCenter(binz);
+   Double_t v = (w > 0 ? w : -w);
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -407,7 +407,7 @@ Int_t TH3::Fill(const char *namex, Axis_t y, const char *namez, Stat_t w)
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(const char *namex, const char *namey, Axis_t z, Stat_t w)
+Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
 {
 // Increment cell defined by namex,namey,z by a weight w
 //
@@ -428,9 +428,9 @@ Int_t TH3::Fill(const char *namex, const char *namey, Axis_t z, Stat_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   Axis_t x = fXaxis.GetBinCenter(binx);
-   Axis_t y = fYaxis.GetBinCenter(biny);
-   Stat_t v = (w > 0 ? w : -w);
+   Double_t x = fXaxis.GetBinCenter(binx);
+   Double_t y = fYaxis.GetBinCenter(biny);
+   Double_t v = (w > 0 ? w : -w);
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -446,7 +446,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, Axis_t z, Stat_t w)
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(Axis_t x, const char *namey, const char *namez, Stat_t w)
+Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
 {
 // Increment cell defined by x,namey,namezz by a weight w
 //
@@ -467,9 +467,9 @@ Int_t TH3::Fill(Axis_t x, const char *namey, const char *namez, Stat_t w)
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Axis_t y = fYaxis.GetBinCenter(biny);
-   Axis_t z = fZaxis.GetBinCenter(binz);
-   Stat_t v = (w > 0 ? w : -w);
+   Double_t y = fYaxis.GetBinCenter(biny);
+   Double_t z = fZaxis.GetBinCenter(binz);
+   Double_t v = (w > 0 ? w : -w);
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -485,7 +485,7 @@ Int_t TH3::Fill(Axis_t x, const char *namey, const char *namez, Stat_t w)
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w)
+Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
 {
 // Increment cell defined by x,namey,z by a weight w
 //
@@ -508,8 +508,8 @@ Int_t TH3::Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   Axis_t y = fYaxis.GetBinCenter(biny);
-   Stat_t v = (w > 0 ? w : -w);
+   Double_t y = fYaxis.GetBinCenter(biny);
+   Double_t v = (w > 0 ? w : -w);
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -525,7 +525,7 @@ Int_t TH3::Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w)
 }
 
 //______________________________________________________________________________
-Int_t TH3::Fill(Axis_t x, Axis_t y, const char *namez, Stat_t w)
+Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 {
 // Increment cell defined by x,y,namez by a weight w
 //
@@ -548,8 +548,8 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, const char *namez, Stat_t w)
       if (!fgStatOverflows) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   Axis_t z = fZaxis.GetBinCenter(binz);
-   Stat_t v = (w > 0 ? w : -w);
+   Double_t z = fZaxis.GetBinCenter(binz);
+   Double_t v = (w > 0 ? w : -w);
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -662,7 +662,7 @@ void TH3::FillRandom(TH1 *h, Int_t ntimes)
 
    TH3 *h3 = (TH3*)h;
    Int_t loop;
-   Axis_t x,y,z;
+   Double_t x,y,z;
    for (loop=0;loop<ntimes;loop++) {
       h3->GetRandom3(x,y,z);
       Fill(x,y,z,1.);
@@ -774,7 +774,59 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
 }
 
 //______________________________________________________________________________
-Stat_t TH3::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
+Double_t TH3::GetBinWithContent3(Double_t c, Int_t &binx, Int_t &biny, Int_t &binz, Int_t firstx, Int_t lastx, Int_t firsty, Int_t lasty, Int_t firstz, Int_t lastz, Double_t maxdiff) const
+{
+   // compute first cell (binx,biny,binz) in the range [firstx,lastx](firsty,lasty][firstz,lastz] for which
+   // diff = abs(cell_content-c) <= maxdiff
+   // In case several cells in the specified range with diff=0 are found
+   // the first cell found is returned in binx,biny,binz.
+   // In case several cells in the specified range satisfy diff <=maxdiff
+   // the cell with the smallest difference is returned in binx,biny,binz.
+   // In all cases the function returns the smallest difference.
+   //
+   // NOTE1: if firstx <= 0, firstx is set to bin 1
+   //        if (lastx < firstx then firstx is set to the number of bins in X
+   //        ie if firstx=0 and lastx=0 (default) the search is on all bins in X.
+   //        if firsty <= 0, firsty is set to bin 1
+   //        if (lasty < firsty then firsty is set to the number of bins in Y
+   //        ie if firsty=0 and lasty=0 (default) the search is on all bins in Y.
+   //        if firstz <= 0, firstz is set to bin 1
+   //        if (lastz < firstz then firstz is set to the number of bins in Z
+   //        ie if firstz=0 and lastz=0 (default) the search is on all bins in Z.
+   // NOTE2: if maxdiff=0 (default), the first cell with content=c is returned.
+   
+   if (fDimension != 3) {
+      binx = 0;
+      biny = 0;
+      binz = 0;
+      Error("GetBinWithContent3","function is only valid for 3-D histograms");
+      return 0;
+   }
+   if (firstx <= 0) firstx = 1;
+   if (lastx < firstx) lastx = fXaxis.GetNbins();
+   if (firsty <= 0) firsty = 1;
+   if (lasty < firsty) lasty = fYaxis.GetNbins();
+   if (firstz <= 0) firstz = 1;
+   if (lastz < firstz) lastz = fZaxis.GetNbins();
+   Int_t binminx = 0, binminy=0, binminz=0;
+   Double_t diff, curmax = 1.e240;
+   for (Int_t k=firstz;k<=lastz;k++) {
+      for (Int_t j=firsty;j<=lasty;j++) {
+         for (Int_t i=firstx;i<=lastx;i++) {
+            diff = TMath::Abs(GetBinContent(i,j,k)-c);
+            if (diff <= 0) {binx = i; biny=j; binz=k; return diff;}
+            if (diff < curmax) {curmax = diff, binminx=i; binminy=j;binminz=k;}
+         }
+      }
+   }
+   binx = binminx;
+   biny = binminy;
+   binz = binminz;
+   return curmax;
+}
+
+//______________________________________________________________________________
+Double_t TH3::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
 {
 //*-*-*-*-*-*-*-*Return correlation factor between axis1 and axis2*-*-*-*-*
 //*-*            ====================================================
@@ -783,15 +835,15 @@ Stat_t TH3::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
      return 0;
   }
   if (axis1 == axis2) return 1;
-  Stat_t rms1 = GetRMS(axis1);
+  Double_t rms1 = GetRMS(axis1);
   if (rms1 == 0) return 0;
-  Stat_t rms2 = GetRMS(axis2);
+  Double_t rms2 = GetRMS(axis2);
   if (rms2 == 0) return 0;
   return GetCovariance(axis1,axis2)/rms1/rms2;
 }
 
 //______________________________________________________________________________
-Stat_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
+Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
 {
 //*-*-*-*-*-*-*-*Return covariance between axis1 and axis2*-*-*-*-*
 //*-*            ====================================================
@@ -800,19 +852,19 @@ Stat_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
      Error("GetCovariance","Wrong parameters");
      return 0;
   }
-  Stat_t stats[11];
+  Double_t stats[11];
   GetStats(stats);
-  Stat_t sumw   = stats[0];
-  Stat_t sumw2  = stats[1];
-  Stat_t sumwx  = stats[2];
-  Stat_t sumwx2 = stats[3];
-  Stat_t sumwy  = stats[4];
-  Stat_t sumwy2 = stats[5];
-  Stat_t sumwxy = stats[6];
-  Stat_t sumwz  = stats[7];
-  Stat_t sumwz2 = stats[8];
-  Stat_t sumwxz = stats[9];
-  Stat_t sumwyz = stats[10];
+  Double_t sumw   = stats[0];
+  Double_t sumw2  = stats[1];
+  Double_t sumwx  = stats[2];
+  Double_t sumwx2 = stats[3];
+  Double_t sumwy  = stats[4];
+  Double_t sumwy2 = stats[5];
+  Double_t sumwxy = stats[6];
+  Double_t sumwz  = stats[7];
+  Double_t sumwz2 = stats[8];
+  Double_t sumwxz = stats[9];
+  Double_t sumwyz = stats[10];
 
   if (sumw == 0) return 0;
   if (axis1 == 1 && axis2 == 1) {
@@ -838,7 +890,7 @@ Stat_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
 
 
 //______________________________________________________________________________
-void TH3::GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z)
+void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
 {
 // return 3 random numbers along axis x , y and z distributed according
 // the cellcontents of a 3-dim histogram
@@ -867,7 +919,7 @@ void TH3::GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z)
 }
 
 //______________________________________________________________________________
-void TH3::GetStats(Stat_t *stats) const
+void TH3::GetStats(Double_t *stats) const
 {
    // fill the array stats from the contents of this histogram
    // The array stats must be correctly dimensionned in the calling program.
@@ -886,7 +938,7 @@ void TH3::GetStats(Stat_t *stats) const
    if (fBuffer) ((TH3*)this)->BufferEmpty();
    
    Int_t bin, binx, biny, binz;
-   Stat_t w,err;
+   Double_t w,err;
    Double_t x,y,z;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) || fZaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<9;bin++) stats[bin] = 0;
@@ -929,7 +981,7 @@ void TH3::GetStats(Stat_t *stats) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3::Integral(Option_t *option) const
+Double_t TH3::Integral(Option_t *option) const
 {
 //Return integral of bin contents. Only bins in the bins range are considered.
 // By default the integral is computed as the sum of bin contents in the range.
@@ -942,7 +994,7 @@ Stat_t TH3::Integral(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option) const
+Double_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option) const
 {
 //Return integral of bin contents in range [binx1,binx2],[biny1,biny2],[binz1,binz2]
 // for a 3-D histogram
@@ -959,7 +1011,7 @@ Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t b
    if (biny2 > nbinsy+1) biny2 = nbinsy+1;
    if (binz1 < 0) binz1 = 0;
    if (binz2 > nbinsz+1) binz2 = nbinsz+1;
-   Stat_t integral = 0;
+   Double_t integral = 0;
 
 //*-*- Loop on bins in specified range
    TString opt = option;
@@ -1300,10 +1352,10 @@ Long64_t TH3::Merge(TCollection *list)
 
    //merge bin contents and errors
    const Int_t kNstat = 11;
-   Stat_t stats[kNstat], totstats[kNstat];
+   Double_t stats[kNstat], totstats[kNstat];
    for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
-   Stat_t nentries = GetEntries();
+   Double_t nentries = GetEntries();
    Int_t binx, biny, binz, ix, iy, iz, nx, ny, nz, bin, ibin;
    Double_t cu;
    Int_t nbix = fXaxis.GetNbins();
@@ -2117,7 +2169,7 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TH3::PutStats(Stat_t *stats)
+void TH3::PutStats(Double_t *stats)
 {
    // Replace current statistics with the values in array stats
 
@@ -2189,9 +2241,9 @@ TH3C::~TH3C()
 }
 
 //______________________________________________________________________________
-TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup
-                                     ,Int_t nbinsz,Axis_t zlow,Axis_t zup)
+TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+                                     ,Int_t nbinsy,Double_t ylow,Double_t yup
+                                     ,Int_t nbinsz,Double_t zlow,Double_t zup)
      :TH3(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup)
 {
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
@@ -2240,7 +2292,7 @@ void TH3C::AddBinContent(Int_t bin)
 }
 
 //______________________________________________________________________________
-void TH3C::AddBinContent(Int_t bin, Stat_t w)
+void TH3C::AddBinContent(Int_t bin, Double_t w)
 {
 //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==========================
@@ -2275,13 +2327,13 @@ TH1 *TH3C::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3C::GetBinContent(Int_t bin) const
+Double_t TH3C::GetBinContent(Int_t bin) const
 {
    if (fBuffer) ((TH3C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
-   return Stat_t (fArray[bin]);
+   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -2307,7 +2359,7 @@ void TH3C::SetBinsLength(Int_t n)
 }
 
 //______________________________________________________________________________
-void TH3C::SetBinContent(Int_t bin, Stat_t content)
+void TH3C::SetBinContent(Int_t bin, Double_t content)
 {
 // Set bin content
    if (bin < 0) return;
@@ -2416,9 +2468,9 @@ TH3S::~TH3S()
 }
 
 //______________________________________________________________________________
-TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup
-                                     ,Int_t nbinsz,Axis_t zlow,Axis_t zup)
+TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+                                     ,Int_t nbinsy,Double_t ylow,Double_t yup
+                                     ,Int_t nbinsz,Double_t zlow,Double_t zup)
      :TH3(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup)
 {
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
@@ -2466,7 +2518,7 @@ void TH3S::AddBinContent(Int_t bin)
 }
 
 //______________________________________________________________________________
-void TH3S::AddBinContent(Int_t bin, Stat_t w)
+void TH3S::AddBinContent(Int_t bin, Double_t w)
 {
 //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==========================
@@ -2501,13 +2553,13 @@ TH1 *TH3S::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3S::GetBinContent(Int_t bin) const
+Double_t TH3S::GetBinContent(Int_t bin) const
 {
    if (fBuffer) ((TH3S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
-   return Stat_t (fArray[bin]);
+   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -2522,7 +2574,7 @@ void TH3S::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH3S::SetBinContent(Int_t bin, Stat_t content)
+void TH3S::SetBinContent(Int_t bin, Double_t content)
 {
 // Set bin content
    if (bin < 0) return;
@@ -2642,9 +2694,9 @@ TH3I::~TH3I()
 }
 
 //______________________________________________________________________________
-TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup
-                                     ,Int_t nbinsz,Axis_t zlow,Axis_t zup)
+TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+                                     ,Int_t nbinsy,Double_t ylow,Double_t yup
+                                     ,Int_t nbinsz,Double_t zlow,Double_t zup)
      :TH3(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup)
 {
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
@@ -2692,7 +2744,7 @@ void TH3I::AddBinContent(Int_t bin)
 }
 
 //______________________________________________________________________________
-void TH3I::AddBinContent(Int_t bin, Stat_t w)
+void TH3I::AddBinContent(Int_t bin, Double_t w)
 {
 //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==========================
@@ -2727,13 +2779,13 @@ TH1 *TH3I::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3I::GetBinContent(Int_t bin) const
+Double_t TH3I::GetBinContent(Int_t bin) const
 {
    if (fBuffer) ((TH3I*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
-   return Stat_t (fArray[bin]);
+   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -2748,7 +2800,7 @@ void TH3I::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH3I::SetBinContent(Int_t bin, Stat_t content)
+void TH3I::SetBinContent(Int_t bin, Double_t content)
 {
 // Set bin content
    if (bin < 0) return;
@@ -2835,9 +2887,9 @@ TH3F::~TH3F()
 }
 
 //______________________________________________________________________________
-TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup
-                                     ,Int_t nbinsz,Axis_t zlow,Axis_t zup)
+TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+                                     ,Int_t nbinsy,Double_t ylow,Double_t yup
+                                     ,Int_t nbinsz,Double_t zlow,Double_t zup)
      :TH3(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup)
 {
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
@@ -2899,13 +2951,13 @@ TH1 *TH3F::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3F::GetBinContent(Int_t bin) const
+Double_t TH3F::GetBinContent(Int_t bin) const
 {
    if (fBuffer) ((TH3F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
-   return Stat_t (fArray[bin]);
+   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -2920,7 +2972,7 @@ void TH3F::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH3F::SetBinContent(Int_t bin, Stat_t content)
+void TH3F::SetBinContent(Int_t bin, Double_t content)
 {
 // Set bin content
    if (bin < 0) return;
@@ -3040,9 +3092,9 @@ TH3D::~TH3D()
 }
 
 //______________________________________________________________________________
-TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup
-                                     ,Int_t nbinsz,Axis_t zlow,Axis_t zup)
+TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+                                     ,Int_t nbinsy,Double_t ylow,Double_t yup
+                                     ,Int_t nbinsz,Double_t zlow,Double_t zup)
      :TH3(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup)
 {
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
@@ -3104,13 +3156,13 @@ TH1 *TH3D::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Stat_t TH3D::GetBinContent(Int_t bin) const
+Double_t TH3D::GetBinContent(Int_t bin) const
 {
    if (fBuffer) ((TH3D*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
-   return Stat_t (fArray[bin]);
+   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -3125,7 +3177,7 @@ void TH3D::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH3D::SetBinContent(Int_t bin, Stat_t content)
+void TH3D::SetBinContent(Int_t bin, Double_t content)
 {
 // Set bin content
    if (bin < 0) return;

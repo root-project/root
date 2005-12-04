@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.112 2005/11/29 15:04:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.113 2005/11/29 19:02:58 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2649,7 +2649,7 @@ void TF1::Paint(Option_t *option)
 //      if logx, we must bin in logx and not in x !!!
 //      otherwise if several decades, one gets crazy results
       if (xmin > 0 && gPad && gPad->GetLogx()) {
-         Axis_t *xbins    = new Axis_t[fNpx+1];
+         Double_t *xbins    = new Double_t[fNpx+1];
          Double_t xlogmin = TMath::Log10(xmin);
          Double_t xlogmax = TMath::Log10(xmax);
          Double_t dlogx   = (xlogmax-xlogmin)/((Double_t)fNpx);

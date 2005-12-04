@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.5 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.6 2003/08/11 08:27:12 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -48,7 +48,7 @@ TH1K::TH1K(): TH1(), TArrayF()
 }
 
 //______________________________________________________________________________
-TH1K::TH1K(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup,Int_t k)
+TH1K::TH1K(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup,Int_t k)
      : TH1(name,title,nbins,xlow,xup), TArrayF(100)
 {
 //
@@ -68,7 +68,7 @@ TH1K::~TH1K()
 }
 
 //______________________________________________________________________________
-Int_t TH1K::Fill(Axis_t x)
+Int_t TH1K::Fill(Double_t x)
 {
 //*-*-*-*-*-*-*-*-*-*Increment bin with abscissa X by 1*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==================================
@@ -100,7 +100,7 @@ Int_t TH1K::Fill(Axis_t x)
 }
 
 //______________________________________________________________________________
-Stat_t TH1K::GetBinContent(Int_t bin) const
+Double_t TH1K::GetBinContent(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return content of global bin number bin*-*-*-*-*-*-*-*-*-*-*-*
 //*-*          =======================================
@@ -129,7 +129,7 @@ Stat_t TH1K::GetBinContent(Int_t bin) const
 }
 
 //______________________________________________________________________________
-Stat_t TH1K::GetBinError(Int_t bin) const
+Double_t TH1K::GetBinError(Int_t bin) const
 {
 //*-*-*-*-*-*-*Return content of global bin error *-*-*-*-*-*-*-*-*-*-*-*
 //*-*          ===================================

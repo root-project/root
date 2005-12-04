@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.2 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.3 2002/04/19 18:23:59 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -39,13 +39,13 @@ protected:
 public:
     THLimitsFinder();
     virtual ~THLimitsFinder();
-    virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax);
-    virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax);
-    virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax);
+    virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax);
+    virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
+    virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
 
     static  void       Optimize(Double_t A1,  Double_t A2,  Int_t nold
                        ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID, Option_t *option="");
-    static void        OptimizeLimits(Int_t nbins, Int_t &newbins, Axis_t &xmin, Axis_t &xmax, Bool_t isInteger);
+    static void        OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax, Bool_t isInteger);
     static THLimitsFinder *GetLimitsFinder();
     static  void       SetLimitsFinder(THLimitsFinder *finder);
 

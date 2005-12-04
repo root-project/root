@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.67 2005/08/29 10:45:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.68 2005/10/31 17:00:46 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 }
 
 //______________________________________________________________________________
-TAxis::TAxis(Int_t nbins,Axis_t xlow,Axis_t xup): TNamed(), TAttAxis()
+TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 {
 //*-*-*-*-*-*-*-*Axis constructor for axis with fix bin size*-*-*-*-*-*-*-*
 //*-*            ===========================================
@@ -61,7 +61,7 @@ TAxis::TAxis(Int_t nbins,Axis_t xlow,Axis_t xup): TNamed(), TAttAxis()
 }
 
 //______________________________________________________________________________
-TAxis::TAxis(Int_t nbins,const Axis_t *xbins): TNamed(), TAttAxis()
+TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 {
 //*-*-*-*-*-*-*-*Axis constructor for variable bin size*-*-*-*-*-*-*-*-*-*-*
 //*-*            ======================================
@@ -425,7 +425,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-Int_t TAxis::FindBin(Axis_t x)
+Int_t TAxis::FindBin(Double_t x)
 {
 //*-*-*-*-*-*-*-*-*Find bin number corresponding to abscissa x-*-*-*-*-*-*
 //*-*              ===========================================
@@ -499,7 +499,7 @@ Int_t TAxis::FindBin(const char *label)
 }
 
 //______________________________________________________________________________
-Int_t TAxis::FindFixBin(Axis_t x) const
+Int_t TAxis::FindFixBin(Double_t x) const
 {
 //*-*-*-*-*-*-*-*-*Find bin number corresponding to abscissa x-*-*-*-*-*-*
 //*-*              ===========================================
@@ -556,13 +556,13 @@ Int_t TAxis::GetLast() const
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinCenter(Int_t bin) const
+Double_t TAxis::GetBinCenter(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return center of bin*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ====================
-  Axis_t binwidth;
+  Double_t binwidth;
   if (!fXbins.fN || bin<1 || bin>fNbins) {
-     binwidth = (fXmax - fXmin) / Axis_t(fNbins);
+     binwidth = (fXmax - fXmin) / Double_t(fNbins);
      return fXmin + (bin-1) * binwidth + 0.5*binwidth;
   } else {
      binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
@@ -571,25 +571,25 @@ Axis_t TAxis::GetBinCenter(Int_t bin) const
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinLowEdge(Int_t bin) const
+Double_t TAxis::GetBinLowEdge(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return low edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
   if (fXbins.fN && bin > 0 && bin <=fNbins) return fXbins.fArray[bin-1];
-  Axis_t binwidth = (fXmax - fXmin) / Axis_t(fNbins);
+  Double_t binwidth = (fXmax - fXmin) / Double_t(fNbins);
   return fXmin + (bin-1) * binwidth;
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinUpEdge(Int_t bin) const
+Double_t TAxis::GetBinUpEdge(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return up edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
-  Axis_t binwidth;
+  Double_t binwidth;
   if (!fXbins.fN || bin<1 || bin>fNbins) {
-     binwidth = (fXmax - fXmin) / Axis_t(fNbins);
+     binwidth = (fXmax - fXmin) / Double_t(fNbins);
      return fXmin + bin*binwidth;
   } else {
      binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
@@ -598,19 +598,19 @@ Axis_t TAxis::GetBinUpEdge(Int_t bin) const
 }
 
 //______________________________________________________________________________
-Axis_t TAxis::GetBinWidth(Int_t bin) const
+Double_t TAxis::GetBinWidth(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return bin width-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================
   if (bin <1 ) bin = 1;
   if (bin >fNbins) bin = fNbins;
-  if (!fXbins.fN)  return (fXmax - fXmin) / Axis_t(fNbins);
+  if (!fXbins.fN)  return (fXmax - fXmin) / Double_t(fNbins);
    return fXbins.fArray[bin] - fXbins.fArray[bin-1];
 }
 
 
 //______________________________________________________________________________
-void TAxis::GetCenter(Axis_t *center) const
+void TAxis::GetCenter(Double_t *center) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the center of all bins-*-*-*-*-*-*-*
 //*-*              ===========================================
@@ -619,7 +619,7 @@ void TAxis::GetCenter(Axis_t *center) const
 }
 
 //______________________________________________________________________________
-void TAxis::GetLowEdge(Axis_t *edge) const
+void TAxis::GetLowEdge(Double_t *edge) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the lod edge of all bins-*-*-*-*-*-*-*
 //*-*              =============================================
@@ -786,7 +786,7 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
 }
 
 //______________________________________________________________________________
-void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
+void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 {
 //*-*-*-*-*-*-*-*-*Initialize axis with fix bins*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =============================
@@ -815,7 +815,7 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
 }
 
 //______________________________________________________________________________
-void TAxis::Set(Int_t nbins, const Axis_t *xbins)
+void TAxis::Set(Int_t nbins, const Double_t *xbins)
 {
 //*-*-*-*-*-*-*-*-*Initialize axis with variable bins*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==================================
@@ -899,7 +899,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 }
 
 //______________________________________________________________________________
-void TAxis::SetLimits(Axis_t xmin, Axis_t xmax)
+void TAxis::SetLimits(Double_t xmin, Double_t xmax)
 {
 //          Set the axis limits
 
@@ -972,7 +972,7 @@ void TAxis::SetRange(Int_t first, Int_t last)
 
 
 //______________________________________________________________________________
-void TAxis::SetRangeUser(Axis_t ufirst, Axis_t ulast)
+void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 {
 //  Set the viewing range for the axis from ufirst to ulast (in user coordinates)
 //  To set a range using the axis bin numbers, use TAxis::SetRange.

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.8 2003/12/12 17:57:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.9 2005/08/29 10:45:07 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -40,7 +40,7 @@ THLimitsFinder::~THLimitsFinder()
 
 
 //______________________________________________________________________________
-Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
+Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax)
 {
 // compute the best axis limits for the X axis.
 // If the bit kIsInteger is set, the number of channels is also recomputed.
@@ -67,7 +67,7 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 }
 
 //______________________________________________________________________________
-Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax)
+Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
 {
 // compute the best axis limits for the X and Y axis.
 // If the bit kIsInteger is set, the number of channels is also recomputed.
@@ -99,7 +99,7 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ym
 }
 
 //______________________________________________________________________________
-Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax)
+Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
 {
 // compute the best axis limits for the X, Y and Z axis.
 // If the bit kIsInteger is set, the number of channels is also recomputed.
@@ -344,7 +344,7 @@ LOK:
 }
 
 //______________________________________________________________________________
-void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Axis_t &xmin, Axis_t &xmax, Bool_t isInteger)
+void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax, Bool_t isInteger)
 {
 // Optimize axis limits.
 // When isInter=kTRUE, the function makes an integer binwidth

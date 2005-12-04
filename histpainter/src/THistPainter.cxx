@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.233 2005/11/29 12:52:03 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.234 2005/11/29 14:33:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3459,7 +3459,7 @@ Int_t THistPainter::PaintInit()
    Int_t i;
    TObject *f;
    TF1 *f1;
-   Stat_t allchan = 0;
+   Double_t allchan = 0;
    Int_t nonNullErrors = 0;
    TIter   next(fFunctions);
    for (i=first; i<=last;i++) {
@@ -3542,7 +3542,7 @@ Int_t THistPainter::PaintInit()
 
    //     take into account normalization factor
    Hparam.allchan = allchan;
-   Stat_t factor = allchan;
+   Double_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
    if (allchan) factor /= allchan;
    if (factor == 0) factor = 1;
@@ -3653,7 +3653,7 @@ Int_t THistPainter::PaintInitH()
    Int_t i;
    TObject *f;
    TF1 *f1;
-   Stat_t allchan = 0;
+   Double_t allchan = 0;
    TIter   next(fFunctions);
    for (i=first; i<=last;i++) {
       c1 = fH->GetBinContent(i);
@@ -3720,7 +3720,7 @@ Int_t THistPainter::PaintInitH()
 
    //     take into account normalization factor
    Hparam.allchan = allchan;
-   Stat_t factor = allchan;
+   Double_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
    if (allchan) factor /= allchan;
    if (factor == 0) factor = 1;
@@ -4887,7 +4887,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    if (print_under || print_over) {
       //get 3*3 under/overflows for 2d hist
-      Stat_t unov[9];
+      Double_t unov[9];
 
       unov[0] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
       unov[1] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
@@ -5876,7 +5876,7 @@ Int_t THistPainter::TableInit()
    zmax = -bigp;
    zmin = bigp;
    Double_t c1, e1;
-   Stat_t allchan = 0;
+   Double_t allchan = 0;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
          c1 = fH->GetCellContent(i,j);
@@ -5910,7 +5910,7 @@ Int_t THistPainter::TableInit()
 
    //     take into account normalization factor
    Hparam.allchan = allchan;
-   Stat_t factor = allchan;
+   Double_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
    if (allchan) factor /= allchan;
    if (factor == 0) factor = 1;
