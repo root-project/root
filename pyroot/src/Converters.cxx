@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.21 2005/11/24 19:49:57 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.22 2005/12/03 04:00:15 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -210,7 +210,25 @@ Bool_t PyROOT::TULongConverter::ToMemory( PyObject* value, void* address )
 }
 
 //____________________________________________________________________________
-PYROOT_IMPLEMENT_BASIC_CONVERTER( UInt, UInt_t, ULong_t, PyLong_FromUnsignedLong, PyLong_AsUnsignedLong )
+PyObject* PyROOT::TUIntConverter::FromMemory( void* address )
+{
+   return PyLong_FromUnsignedLong( *((UInt_t*)address) );
+}
+
+Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
+{
+   ULong_t u = ConvertULong( value );
+   if ( PyErr_Occurred() )
+      return kFALSE;
+
+   if ( u > (ULong_t)((UInt_t)-1) ) {
+      PyErr_SetString( PyExc_OverflowError, "value to large for unsigned int" );
+      return kFALSE;
+   }
+ 
+   *((UInt_t*)address) = (UInt_t)u;
+   return kTRUE;
+}
 
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
