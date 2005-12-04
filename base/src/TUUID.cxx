@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.18 2003/08/26 11:03:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.19 2005/09/18 13:00:04 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -115,6 +115,7 @@
 #include <string.h>
 #ifdef R__WIN32
 #include "Windows4Root.h"
+#include <Iphlpapi.h>
 #else
 #include <unistd.h>
 #include <sys/time.h>
@@ -398,7 +399,9 @@ void TUUID::GetNodeIdentifier()
    // network interface try random info based on some machine parameters.
 
    static UInt_t adr = 0;
+
    if (gSystem) {
+#ifndef R__WIN32
       if (!adr) {
          TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
          if (addr.IsValid())
@@ -406,6 +409,33 @@ void TUUID::GetNodeIdentifier()
          else
             adr = 1;  // illegal address
       }
+#else
+      // this way to get the machine's IP address is needed because
+      // GetHostByName() on Win32 contacts the DNS which we don't want
+      // as firewall tools like ZoneAlarm are likely to catch it and
+      // alarm the user
+      if (!adr) {
+         PIP_ADAPTER_INFO ainfo = (PIP_ADAPTER_INFO) malloc(sizeof(IP_ADAPTER_INFO));
+         ULONG buflen = sizeof(IP_ADAPTER_INFO);
+         DWORD stat = GetAdaptersInfo(ainfo, &buflen);
+         if (stat == ERROR_BUFFER_OVERFLOW) {
+            free(ainfo);
+            ainfo = (PIP_ADAPTER_INFO) malloc(buflen);
+            stat = GetAdaptersInfo(ainfo, &buflen);
+         }
+         if (stat != ERROR_SUCCESS)
+            adr = 1;  // illegal address
+         else {
+            // take address of first adapter
+            PIP_ADAPTER_INFO adapter = ainfo;
+            int a, b, c, d;
+            sscanf(adapter->IpAddressList.IpAddress.String, "%d.%d.%d.%d",
+                   &a, &b, &c, &d);
+            adr = (a << 24) | (b << 16) | (c << 8) | d;
+         }
+         free(ainfo);
+      }
+#endif
       if (adr > 2) {
          memcpy(fNode, &adr, 4);
          fNode[4] = 0xbe;
