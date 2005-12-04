@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.82 2005/09/27 15:00:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.83 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -982,7 +982,7 @@ Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t fir
       for (Int_t i=firstx;i<=lastx;i++) {
          diff = TMath::Abs(GetBinContent(i,j)-c);
          if (diff <= 0) {binx = i; biny=j; return diff;}
-         if (diff < curmax) {curmax = diff, binminx=i; binminy=j;}
+         if (diff < curmax && diff <= maxdiff) {curmax = diff, binminx=i; binminy=j;}
       }
    }
    binx = binminx;
