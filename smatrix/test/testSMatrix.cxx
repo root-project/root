@@ -41,8 +41,8 @@ int test1() {
   
   // test STL interface
   
-  //double p[2] = {1,2};
-  double m[4] = {1,2,3,4};
+  //float p[2] = {1,2};
+  float m[4] = {1,2,3,4};
   
   //SVector<float, 2> sp(p,2);
   SMatrix<float, 2,2> sm(m,4);
