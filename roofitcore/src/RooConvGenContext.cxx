@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.19 2005/06/20 15:44:50 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.20 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -143,10 +143,6 @@ RooConvGenContext::~RooConvGenContext()
 void RooConvGenContext::printToStream(ostream &os, PrintOption opt, TString indent) const
 {
   RooAbsGenContext::printToStream(os,opt,indent);
-  if(opt >= Standard) {
-    cout << "_pdfVars = " << _pdfVars << endl ;
-    cout << "_modelVars = " << _modelVars << endl ;
-  }
 }
 
 

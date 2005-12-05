@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.48 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.49 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,6 +51,8 @@ RooDataHist::RooDataHist()
   _idxMult = 0 ;  
   _curWeight = 0 ;
   _curIndex = -1 ;
+  _realIter = 0 ;
+
 }
 
 
@@ -529,9 +531,9 @@ RooDataHist::~RooDataHist()
   if (_binv) delete[] _binv ;
   if (_pbinv) delete[] _pbinv ;
   if (_idxMult) delete[] _idxMult ;
-  delete _realIter ;
+  if (_realIter) delete _realIter ;
 
-  removeFromDir(this) ;
+   removeFromDir(this) ;
 }
 
 

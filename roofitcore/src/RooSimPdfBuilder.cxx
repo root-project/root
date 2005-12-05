@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.cc,v 1.31 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.32 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -506,7 +506,9 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   const char* spaceChars = " \t" ;
 
   // Retrieve physics index category
-  char buf[2048] ;
+  Int_t buflen = strlen(((RooStringVar*)buildConfig.find("physModels"))->getVal())+1 ;
+  char *buf = new char[buflen] ;
+
   strcpy(buf,((RooStringVar*)buildConfig.find("physModels"))->getVal()) ;
   RooAbsCategoryLValue* physCat(0) ;
   if (strstr(buf," : ")) {
@@ -515,6 +517,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     if (!physCat) {
       cout << "RooSimPdfBuilder::buildPdf: ERROR physics index category " << physCatName 
 	   << " not found in dataset variables" << endl ;
+      delete[] buf ;
       return 0 ;      
     }
     cout << "RooSimPdfBuilder::buildPdf: category indexing physics model: " << physCatName << endl ;
@@ -533,6 +536,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 
   if (!physName) {
     cout << "RooSimPdfBuilder::buildPdf: ERROR: No models specified, nothing to do!" << endl ;
+    delete[] buf ;
     return 0 ;
   }
 
@@ -560,6 +564,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     if (!physModel) {
       cout << "RooSimPdfBuilder::buildPdf: ERROR requested physics model " 
 	   << physName << " is not defined" << endl ;
+      delete[] buf ;
       return 0 ;
     }    
 
@@ -592,7 +597,12 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   // Create list of dataset categories to be used in splitting
   TList splitStateList ;
   RooArgSet splitCatSet ;
+
+  delete[] buf ; 
+  buflen = strlen(((RooStringVar*)buildConfig.find("splitCats"))->getVal())+1 ;
+  buf = new char[buflen] ;
   strcpy(buf,((RooStringVar*)buildConfig.find("splitCats"))->getVal()) ;
+
   char *catName = strtok(buf,spaceChars) ;
   char *stateList(0) ;
   while(catName) {
@@ -617,6 +627,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     if (!splitCat) {
       cout << "RooSimPdfBuilder::buildPdf: ERROR requested split category " << catName 
 	   << " is not a RooCategory in the dataset" << endl ;
+      delete[] buf ;
       return 0 ;
     }
     splitCatSet.add(*splitCat) ;
@@ -644,6 +655,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	  cout << "RooSimPdfBuilder::buildPdf: ERROR splitCat " << splitCat->GetName() 
 	       << " doesn't have a state named " << stateLabel << endl ;
 	  splitStateList.Delete() ;
+	  delete[] buf ;
 	  return 0 ;
 	}
 	slist->Add((TObject*)type) ;
@@ -671,6 +683,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     auxSplitCloneSet = (RooArgSet*) auxSplitCats->snapshot(kTRUE) ;
     if (!auxSplitCloneSet) {
       cout << "RooSimPdfBuilder::buildPdf(" << GetName() << ") Couldn't deep-clone set auxiliary splitcats, abort." << endl ;
+      delete[] buf ;
       return 0 ;
     }
 
@@ -724,8 +737,12 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     // Parse the splitting rules for this physics model
     RooStringVar* ruleStr = (RooStringVar*) buildConfig.find(physModel->GetName()) ;
     if (ruleStr) {
-      strcpy(buf,ruleStr->getVal()) ;
 
+      delete[] buf ; 
+      buflen = strlen(ruleStr->getVal())+1 ;
+      buf = new char[buflen] ;
+
+      strcpy(buf,ruleStr->getVal()) ;
       char *tokenPtr(0) ;
 
 #ifndef _WIN32
@@ -778,6 +795,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		    delete customizerList ;
 
 		    splitStateList.Delete() ;
+		    delete[] buf ;
 		    return 0 ;
 		  }
 		  compCatSet.add(*cat) ;
@@ -809,6 +827,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		customizerList->Delete() ;
 		delete customizerList ;
 		splitStateList.Delete() ;
+		delete[] buf ;
 		return 0 ;
 	      }
 	    }
@@ -824,6 +843,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	      customizerList->Delete() ;
 	      delete customizerList ;
 	      splitStateList.Delete() ;
+	      delete[] buf ;
 	      return 0 ;	    
 	    }
 	    mode = ParamList ;
@@ -874,6 +894,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  customizerList->Delete() ;
 		  delete customizerList ;
 		  splitStateList.Delete() ;
+		  delete[] buf ;
 		  return 0 ;
 		}
 	      }	      
@@ -886,6 +907,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		customizerList->Delete() ;
 		delete customizerList ;
 		splitStateList.Delete() ;
+		delete[] buf ;
 		return 0 ;
 	      }
 	      splitParamList.add(*param) ;
@@ -901,6 +923,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  customizerList->Delete() ;
 		  delete customizerList ;
 		  splitStateList.Delete() ;
+		  delete[] buf ;
 		  return 0 ;
 		}
 
@@ -916,6 +939,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  customizerList->Delete() ;
 		  delete customizerList ;
 		  splitStateList.Delete() ;
+		  delete[] buf ;
 		  return 0 ;		  
 		}
 
@@ -1074,6 +1098,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   if (auxSplitCloneSet) delete auxSplitCloneSet ;
   delete physIter ;
 
+  delete[] buf ;
   return simPdf ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.cc,v 1.21 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooHistError.cc,v 1.22 2005/07/12 11:29:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -124,6 +124,7 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
     Double_t M = m ;
     Double_t asym = 1.0*(N-M)/(N+M) ;
     Double_t approxErr = sqrt(4.0*n/(N+M)*(1-N/(N+M))/(N+M)) ;
+
     asym1 = asym-nSigma*approxErr ;
     asym2 = asym+nSigma*approxErr ;
     return kTRUE ;

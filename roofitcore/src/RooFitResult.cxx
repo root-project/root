@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.32 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.33 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,11 +47,12 @@
 ClassImp(RooFitResult) 
 ;
 
+
 RooFitResult::RooFitResult(const char* name, const char* title) : 
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0)
 {  
   // Constructor
-  appendToDir(this,kTRUE) ;
+  if (name) appendToDir(this,kTRUE) ;
 }
 
 // added FMV, 08/13/03
@@ -79,6 +80,7 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   while ((corrMatrixRow=(RooArgList*)iter->Next())) 
     _corrMatrix.Add((RooArgList*)corrMatrixRow->snapshot() );
 }
+
 
 
 RooFitResult::~RooFitResult() 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.32 2005/03/22 22:11:41 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.33 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -106,8 +106,7 @@ protected:
   Double_t*      _binv ; //[_arrSize] Bin volume array  
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
-
-
+ 
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
   mutable Double_t _curWgtErrLo ; // Error on weight associated with the current coordinate
   mutable Double_t _curWgtErrHi ; // Error on weight associated with the current coordinate
