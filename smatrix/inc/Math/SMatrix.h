@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix
@@ -71,15 +71,37 @@ public:
   /** @name --- Typedefs --- */
   ///
   typedef T  value_type;
+
+  /** STL iterator interface. */
+  typedef T*  iterator;
+
+  /** STL const_iterator interface. */
+  typedef const T*  const_iterator;
   
   /** @name --- Constructors --- */
-  ///
+
+  /** 
+      Default constructor: 
+   */ 
   SMatrix();
   ///
   SMatrix(const SMatrix<T,D1,D2>& rhs);
   ///
   template <class A>
   SMatrix(const Expr<A,T,D1,D2>& rhs);
+
+  // new constructs using STL iterator interface
+  /**
+   * Constructor with STL iterator interface. The data will be copied into the matrix
+   */
+  template<class InputIterator>
+  SMatrix(InputIterator begin, InputIterator end); 
+
+  /**
+   * Constructor with STL iterator interface. The data will be copied into the matrix
+   */
+  template<class InputIterator>
+  SMatrix(InputIterator begin, unsigned int size); 
 
   // skip this methods (they are too ambigous)
 #ifdef OLD_IMPL
@@ -110,19 +132,19 @@ public:
 
 #ifdef OLD_IMPL
   /// return no. of matrix rows
-  static const unsigned int rows = D1;
+  static const unsigned int kRows = D1;
   /// return no. of matrix columns
-  static const unsigned int cols = D2;
+  static const unsigned int kCols = D2;
   /// return no of elements: rows*columns
-  static const unsigned int size = D1*D2;
+  static const unsigned int kSize = D1*D2;
 #else
   enum { 
   /// return no. of matrix rows
-    rows = D1, 
+    kRows = D1, 
   /// return no. of matrix columns
-    cols = D2,
+    kCols = D2,
   /// return no of elements: rows*columns
-    size = D1*D2
+    kSize = D1*D2
   };
 #endif
   /** @name --- Access functions --- */
@@ -132,6 +154,21 @@ public:
   const T* Array() const;
   /// return pointer to internal array
   T* Array();
+
+  // STL interface
+
+  /** STL iterator interface. */
+  iterator begin();
+
+  /** STL iterator interface. */
+  iterator end();
+
+  /** STL const_iterator interface. */
+  const_iterator begin() const;
+
+  /** STL const_iterator interface. */
+  const_iterator end() const;
+
 
   /** @name --- Operators --- */
   /// element wise comparison
@@ -199,16 +236,58 @@ public:
 #endif
 
   /** @name --- Expert functions --- */
-  /// invert symmetric, pos. def. Matrix via Dsinv
+
+  /**
+     invert symmetric, pos. def. Matrix via Dsinv. 
+     This method change the current matrix
+  */
   bool Sinvert();
+
+  /**
+     invert symmetric, pos. def. Matrix via Dsinv. 
+     This method  returns a new matrix. In case the inversion fails 
+     the current matrix is returned
+  */
+  SMatrix<T,D1,D2>  Sinverse() const;
+
   /** determinant of symmetrc, pos. def. Matrix via Dsfact. \textbf{Note:} this
-      will destroy the contents of the Matrix!*/
+      will destroy the contents of the Matrix!
+  */
   bool Sdet(T& det);
-  /// invert square Matrix via Dinv
+
+  /** determinant of symmetrc, pos. def. Matrix via Dsfact. \textbf{Note:} 
+      this method will preserve the contents of the Matrix!
+  */
+  bool Sdet2(T& det) const;
+
+
+  /**
+     invert square Matrix via Dinv. 
+     This method change the current matrix
+  */
   bool Invert();
-  /** determinant of square Matrix via Dfact. \textbf{Note:} this will destroy
-      the contents of the Matrix! */
+
+  /**
+     invert square Matrix via Dinv. 
+     This method  returns a new matrix. In case the inversion fails 
+     the current matrix is returned
+  */
+  SMatrix<T,D1,D2> Inverse() const;
+
+  /** 
+      determinant of square Matrix via Dfact. \textbf{Note:} this will destroy
+      the contents of the Matrix! 
+  */
   bool Det(T& det);
+
+  /** 
+      determinant of square Matrix via Dfact. \textbf{Note:} this will preserve
+      the content of the Matrix! 
+  */
+  bool Det2(T& det) const;
+
+
+
   /// place a vector in a Matrix row
   template <unsigned int D>
   SMatrix<T,D1,D2>& Place_in_row(const SVector<T,D>& rhs,

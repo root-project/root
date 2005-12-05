@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: LinkDef.h,v 1.1 2005/10/28 15:58:38 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: LinkDef.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -26,6 +26,9 @@
 #pragma link C++ class ROOT::Math::SVector<double,3>+;
 #pragma link C++ class ROOT::Math::SVector<double,4>+;
 #pragma link C++ class ROOT::Math::SVector<double,5>+;
+
+
+
 
 
 #endif

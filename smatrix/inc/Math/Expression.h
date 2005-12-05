@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.2 2005/11/30 16:00:41 rdm Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -80,9 +80,9 @@ public:
   // use enumerations
   enum { 
     ///
-    rows = D, 
+    kRows = D, 
   ///
-    cols = D2
+    kCols = D2
   };
 #endif
 
@@ -99,10 +99,11 @@ public:
     } else {
       os << "[ ";
       for (unsigned int i=0; i < D; ++i) {
-	for (unsigned int j=0; j < D2; ++j) {
+	unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
+	for (unsigned int j=0; j < d2; ++j) {
 	  os << std::setw(12) << apply(i*D2+j);
 	  if ((!((j+1)%12)) && (j < D2-1))
-	  os << std::endl << "         ...";
+	    os << std::endl << "         ...";
 	}
 	if (i != D - 1)
 	os << std::endl  << "  ";

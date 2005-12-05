@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -114,7 +114,7 @@ struct meta_col_dot {
   template <class Matrix, class Vector>
   static inline typename Matrix::value_type f(const Matrix& lhs, const Vector& rhs,
 					      const unsigned int offset) {
-    return lhs.apply(Matrix::cols*I+offset) * rhs.apply(I) + 
+    return lhs.apply(Matrix::kCols*I+offset) * rhs.apply(I) + 
            meta_col_dot<I-1>::f(lhs,rhs,offset);
   }
 };
@@ -251,8 +251,8 @@ struct meta_matrix_dot {
   template <class MatrixA, class MatrixB>
   static inline typename MatrixA::value_type f(const MatrixA& lhs, const MatrixB& rhs,
 					       const unsigned int offset) {
-    return lhs.apply(offset/MatrixB::cols*MatrixA::cols + I) *
-           rhs.apply(MatrixB::cols*I + offset%MatrixB::cols) + 
+    return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols + I) *
+           rhs.apply(MatrixB::kCols*I + offset%MatrixB::kCols) + 
            meta_matrix_dot<I-1>::f(lhs,rhs,offset);
   }
 };
@@ -266,8 +266,8 @@ struct meta_matrix_dot<0> {
   template <class MatrixA, class MatrixB>
   static inline typename MatrixA::value_type f(const MatrixA& lhs, const MatrixB& rhs,
 					       const unsigned int offset) {
-    return lhs.apply(offset/MatrixB::cols*MatrixA::cols) *
-           rhs.apply(offset%MatrixB::cols);
+    return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols) *
+           rhs.apply(offset%MatrixB::kCols);
   }
 };
 

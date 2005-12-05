@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dsfact.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dsfact.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dsfact
@@ -57,11 +57,11 @@ bool Dsfact(Matrix& rhs, typename Matrix::value_type& det) {
 
 #ifdef XXX
   const typename Matrix::value_type* A = rhs.Array();
-  typename Matrix::value_type array[Matrix::size];
+  typename Matrix::value_type array[Matrix::kSize];
   typename Matrix::value_type* a = array;
 
   // copy contents of matrix to working place
-  for(unsigned int i=0; i<Matrix::size; ++i) {
+  for(unsigned int i=0; i<Matrix::kSize; ++i) {
     array[i] = A[i];
   }
 #endif

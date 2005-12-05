@@ -3,6 +3,7 @@
 #include "Math/SMatrix.h"
 
 #include <iostream>
+#include <vector>
 
 using namespace ROOT::Math;
 
@@ -10,24 +11,56 @@ using std::cout;
 using std::endl;
 
 
+//#define TEST_STATIC_CHECK  // for testing compiler failures (static check)
+
 #define XXX
 
 int test1() { 
 
   SVector<float,3> x(4,5,6);
-    SVector<float,2> y(2,3);
-    cout << "x: " << x << endl;
-    cout << "y: " << y << endl;
+  SVector<float,2> y(2.0,3.0);
+  cout << "x: " << x << endl;
+  cout << "y: " << y << endl;
+
+  float yy1=2.; float yy2 = 3;
+  SVector<float,2> y2(yy1,yy2);
+  
+  
+  SMatrix<float,4,3> A;
+  SMatrix<float,2,2> B;
+  
+  A.Place_in_row(y, 1, 1);
+  A.Place_in_col(x + 2, 1, 0);
+  A.Place_at(B , 2, 1);
+  cout << "A: " << endl << A << endl;
+  
+#ifdef TEST_STATIC_CHECK
+  // create a vector of size 2 from 3 arguments
+  SVector<float, 2> v(1,2,3);
+#endif
+  
+  // test STL interface
+  
+  //double p[2] = {1,2};
+  double m[4] = {1,2,3,4};
+  
+  //SVector<float, 2> sp(p,2);
+  SMatrix<float, 2,2> sm(m,4);
+
+  //cout << "sp: " << endl << sp << endl;
+  cout << "sm: " << endl << sm << endl;
+
+  //std::vector<float> vp(sp.begin(), sp.end() );
+  std::vector<float> vm(sm.begin(), sm.end() );
+
+  //SVector<float, 2> sp2(vp.begin(),vp.end());
+  //SVector<float, 2> sp2(vp.begin(),vp.size());
+  SMatrix<float, 2,2> sm2(vm.begin(),vm.end());
+
+  //if ( sp2 != sp) { cout << "Test STL interface for SVector failed" << endl; return -1; }
+  if ( sm2 != sm) { cout << "Test STL interface for SMatrix failed" << endl; return -1; }
     
-    SMatrix<float,4,3> A;
-    SMatrix<float,2,2> B;
-    
-    A.Place_in_row(y, 1, 1);
-    A.Place_in_col(x + 2, 1, 0);
-    A.Place_at(B , 2, 1);
-    cout << "A: " << endl << A << endl;
-    
-    return 0;
+  return 0;
     
 }
 
@@ -210,6 +243,9 @@ int test8() {
 
   return 0;
 }
+
+
+
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \

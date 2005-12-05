@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -68,8 +68,19 @@ public:
   ///
   typedef T  value_type;
 
+  /** STL iterator interface. */
+  typedef T*  iterator;
+
+  /** STL const_iterator interface. */
+  typedef const T*  const_iterator;
+  
   /** @name --- Constructors --- */
-  ///
+
+
+  /** @name --- Constructors --- */
+  /**
+     Default constructor: vector filled with zero values 
+   */
   SVector();
   ///
   template <class A>
@@ -82,8 +93,28 @@ public:
   /// $D1\le D-1$ required!
   template <unsigned int D1>
   SVector(const T& a1, const SVector<T,D1>& rhs);
+
+  // new constructs using STL iterator interface
+  // skip - need to solve the ambiguities 
+#ifdef LATER
+  /**
+   * Constructor with STL iterator interface. The data will be copied into the vector
+   */
+  template<class InputIterator>
+  explicit SVector(InputIterator begin, InputIterator end); 
+
+  /**
+   * Constructor with STL iterator interface. The data will be copied into the vector
+   */
+  template<class InputIterator>
+  explicit SVector(InputIterator begin, unsigned int size); 
+
+#else 
+  // if you use iterator this is not necessary
+
   /// fill from array, len must be equal to D!
   SVector(const T* a, unsigned int len);
+#endif
   ///
   SVector(const T& rhs);
   ///
@@ -113,6 +144,8 @@ public:
 	  const T& a5, const T& a6, const T& a7, const T& a8,
 	  const T& a9, const T& a10);
 
+  
+
   ///
   SVector<T,D>& operator=(const T& rhs);
   ///
@@ -128,6 +161,21 @@ public:
   const T* Array() const;
   /// return pointer to internal array
   T* Array();
+
+  // STL interface
+
+  /** STL iterator interface. */
+  iterator begin();
+
+  /** STL iterator interface. */
+  iterator end();
+
+  /** STL const_iterator interface. */
+  const_iterator begin() const;
+
+  /** STL const_iterator interface. */
+  const_iterator end() const;
+
 
   /** @name --- Operators --- */
   /// element wise comparison

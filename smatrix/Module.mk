@@ -88,3 +88,6 @@ distclean-smatrix: clean-smatrix
 		@rm -rf include/Math
 
 distclean::     distclean-smatrix
+
+test-smatrix: 	all-smatrix
+		@cd $(SMATRIXDIR)/test; make

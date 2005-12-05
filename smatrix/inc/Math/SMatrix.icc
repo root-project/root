@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.iccv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -42,6 +42,8 @@
 #include "Math/Dinv.h"
 #include "Math/Functions.h"
 
+#include "Math/StaticCheck.h"
+
 
 namespace ROOT { 
 
@@ -72,8 +74,30 @@ template <class A>
 SMatrix<T,D1,D2>::SMatrix(const Expr<A,T,D1,D2>& rhs) {
   operator=(rhs);
 }
- 
+
+
+//==============================================================================
+// New Constructors from STL interfaces
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2>
+template <class InputIterator>
+SMatrix<T,D1,D2>::SMatrix(InputIterator begin, InputIterator end) {
+  assert( std::distance(begin,end) <= kSize);
+  std::copy(begin,end, fArray);
+}
+
+template <class T, unsigned int D1, unsigned int D2>
+template <class InputIterator>
+SMatrix<T,D1,D2>::SMatrix(InputIterator begin, unsigned int size) {
+  assert( size <=  kSize);
+  std::copy(begin,begin+size,fArray);
+}
+
+
 #ifdef OLD_IMPL
+//=============================================================================
+// old constructors (disabled)
+//============================================================================
    
 template <class T, unsigned int D1, unsigned int D2>
 SMatrix<T,D1,D2>::SMatrix(const T& rhs, const bool diagonal) {
@@ -378,23 +402,48 @@ bool SMatrix<T,D1,D2>::operator<(const Expr<A,T,D1,D2>& rhs) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Sinvert() {
+  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
   return Dsinv<T,D1,D1>(fArray);
 }
+
+template <class T, unsigned int D1, unsigned int D2>
+inline SMatrix<T,D1,D2> SMatrix<T,D1,D2>::Sinverse() const {
+  SMatrix<T,D1,D2> tmp(*this);
+  tmp.Sinvert();
+  return tmp;
+}
+
+
 
 //==============================================================================
 // sdet
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Sdet(T& det) {
+  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
   return Dsfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
 }
+template <class T, unsigned int D1, unsigned int D2>
+inline bool SMatrix<T,D1,D2>::Sdet2(T& det) const {
+  SMatrix<T,D1,D2> tmp(*this);
+  return tmp.Sdet(det);
+}
+
 
 //==============================================================================
 // invert
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Invert() {
+  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
   return Inverter<D2>::Dinv(*this);
+}
+
+template <class T, unsigned int D1, unsigned int D2>
+inline SMatrix<T,D1,D2> SMatrix<T,D1,D2>::Inverse() const {
+  SMatrix<T,D1,D2> tmp(*this);
+  tmp.Invert();
+  return tmp;
 }
 
 //==============================================================================
@@ -402,8 +451,15 @@ inline bool SMatrix<T,D1,D2>::Invert() {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Det(T& det) {
+  STATIC_CHECK( D1 == D2,SMatrix_not_square); 
   return Dfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
 }
+template <class T, unsigned int D1, unsigned int D2>
+inline bool SMatrix<T,D1,D2>::Det2(T& det) const {
+  SMatrix<T,D1,D2> tmp(*this);
+  return tmp.Det(det);
+}
+
 
 //==============================================================================
 // place_in_row
@@ -586,6 +642,30 @@ template <class T, unsigned int D1, unsigned int D2>
 inline T& SMatrix<T,D1,D2>::operator()(unsigned int i, unsigned int j) {
   return fArray[i*D2+j];
 }
+
+//==============================================================================
+// STL interface
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2>
+inline T * SMatrix<T,D1,D2>::begin() {
+  return fArray;
+}
+
+template <class T, unsigned int D1, unsigned int D2>
+inline T * SMatrix<T,D1,D2>::end() {
+  return fArray + kSize;
+}
+
+template <class T, unsigned int D1, unsigned int D2>
+inline const T * SMatrix<T,D1,D2>::begin() const {
+  return fArray;
+}
+
+template <class T, unsigned int D1, unsigned int D2>
+inline const T * SMatrix<T,D1,D2>::end() const {
+  return fArray + kSize;
+}
+
 
 
   }  // namespace Math
