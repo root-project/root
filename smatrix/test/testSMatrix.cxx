@@ -22,8 +22,8 @@ int test1() {
   cout << "x: " << x << endl;
   cout << "y: " << y << endl;
 
-  float yy1=2.; float yy2 = 3;
-  SVector<float,2> y2(yy1,yy2);
+//   float yy1=2.; float yy2 = 3;
+//   SVector<float,2> y2(yy1,yy2);
   
   
   SMatrix<float,4,3> A;
