@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.4 2005/11/24 14:45:50 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.5 2005/12/05 08:40:34 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.4 2005/11/24 14:45:50 moneta Exp $
+// Last update: $Id: LorentzVector.h,v 1.5 2005/12/05 08:40:34 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -543,7 +543,8 @@ namespace ROOT {
       */
       Scalar Beta() const { 
 	if ( E() == 0 ) { 
-	  if ( P2() == 0) 
+	  if ( P2() == 0)
+            // to avoid Nan 
 	    return 0; 
 	  else { 
 	    GenVector_exception e ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
@@ -555,7 +556,7 @@ namespace ROOT {
 	  GenVector_exception e ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
 	  Throw(e); 
 	}	  
-	return std::sqrt ( P2() / E() *E() );
+	return P() / E();
       }  
       /** 
 	  Return Gamma scalar value
