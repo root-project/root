@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.2 2005/10/28 10:34:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.3 2005/10/28 13:35:00 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -36,6 +36,11 @@ namespace ROOT {
 
     XYZVector operator * (double a, XYZVector v) { 
       return v *= a;
+    }
+
+
+    XYZPoint operator * (double a, XYZPoint p) { 
+      return p *= a;
     }
 
     XYZTVector operator * (double a, XYZTVector v) { 

@@ -104,4 +104,7 @@ distclean-mathcore: clean-mathcore
 
 distclean::     distclean-mathcore
 
+test-mathcore:	all-mathcore
+		@cd $(MATHCOREDIR)/test; make
+
 

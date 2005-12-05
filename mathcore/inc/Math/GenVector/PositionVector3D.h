@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.2 2005/11/02 14:08:46 marafino Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// Last update: $Id: PositionVector3D.h,v 1.2 2005/11/02 14:08:46 marafino Exp $
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1
@@ -380,6 +380,42 @@ namespace ROOT {
         return *this;
       }
 
+      /**
+         multiply this vector by a scalar quantity
+      */
+      PositionVector3D & operator *= (Scalar a) {
+        fCoordinates.Scale(a);
+        return *this;
+      }
+
+      /**
+         divide this vector by a scalar quantity
+      */
+      PositionVector3D & operator /= (Scalar a) {
+        fCoordinates.Scale(1/a);
+        return *this;
+      }
+
+      // The following methods (v*a and v/a) could instead be free functions.
+      // They were moved into the class to solve a problem on AIX.
+      /**
+        Multiply a vector by a real number
+      */
+      PositionVector3D operator * ( Scalar a ) const {
+        PositionVector3D tmp(*this);
+        tmp *= a;
+        return tmp;
+      }
+
+      /**
+         Division of a vector with a real number
+       */
+      PositionVector3D operator / (Scalar a) const {
+        PositionVector3D tmp(*this);
+        tmp /= a;
+        return tmp;
+      }
+
       // Limited backward name compatibility with CLHEP
 
       Scalar x()     const { return X();     }
@@ -414,6 +450,19 @@ namespace ROOT {
 
 // ---------- PositionVector3D class template ends here ----------------
 // ---------------------------------------------------------------------
+
+    /**
+       Multiplication of a position vector by real number  a*v
+    */
+    template <class CoordSystem>
+    inline
+    PositionVector3D<CoordSystem>
+    operator * ( typename PositionVector3D<CoordSystem>::Scalar a,
+                 PositionVector3D<CoordSystem> v) {
+      return v *= a;
+      // Note - passing v by value and using operator *= may save one
+      // copy relative to passing v by const ref and creating a temporary.
+    }
 
     /**
         Difference between two PositionVector3D vectors.
@@ -536,6 +585,7 @@ namespace ROOT {
       return is;
 
     }  // op>> <>()
+
 
 
 

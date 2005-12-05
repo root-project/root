@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.4 2005/11/24 14:45:50 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
+// Last update: $Id: LorentzVector.h,v 1.4 2005/11/24 14:45:50 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -535,6 +535,55 @@ namespace ROOT {
         }
         return BetaVector (vecSum * (-1./eSum));
       }
+      
+      //beta and gamma
+
+      /** 
+	  Return beta scalar value
+      */
+      Scalar Beta() const { 
+	if ( E() == 0 ) { 
+	  if ( P2() == 0) 
+	    return 0; 
+	  else { 
+	    GenVector_exception e ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
+	    Throw(e); 
+	    return 1./E();
+	  }	  
+	}
+	if ( M2() <= 0 ) {     
+	  GenVector_exception e ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
+	  Throw(e); 
+	}	  
+	return std::sqrt ( P2() / E() *E() );
+      }  
+      /** 
+	  Return Gamma scalar value
+      */
+      Scalar Gamma() const { 
+	Scalar v2 = P2();
+	Scalar t2 = E()*E();
+	if (E() == 0) {
+	  if ( P2() == 0) {
+	    return 1;
+	  } else {
+	    GenVector_exception e ("LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
+	    Throw(e); 
+	    return 0;
+	  }
+	}
+	if ( t2 < v2 ) { 
+	    GenVector_exception e ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
+	    Throw(e); 
+	    return 0;
+	}
+	else if ( t2 == v2 ) {
+	    GenVector_exception e ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
+	    Throw(e); 
+	}
+	return 1./std::sqrt(1. - v2/t2 );
+      } /* gamma */
+
 
       // ---- Limited backward name compatibility with CLHEP ----
 
@@ -652,6 +701,7 @@ namespace ROOT {
       return is;
 
     }  // op>> <>()
+
 
 
   } // end namespace Math

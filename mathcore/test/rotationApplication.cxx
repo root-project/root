@@ -32,6 +32,8 @@
 #include "Math/GenVector/RotationY.h"
 #include "Math/GenVector/RotationZ.h"
 
+#include "Math/GenVector/VectorUtil.h"
+
 #include "Math/Vector3Dfwd.h"
 
 #include "CoordinateTraits.h"
