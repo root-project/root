@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.22 2005/12/03 04:00:15 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.23 2005/12/04 06:37:33 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -178,7 +178,7 @@ namespace {
             ul = (ULong_t)i;
          } else {
             PyErr_SetString( PyExc_OverflowError,
-               "can\'t convert negative value to unsigned long long" );
+               "can\'t convert negative value to unsigned long" );
          }
       }
 

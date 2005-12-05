@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.13 2005/09/14 08:07:16 brun Exp $
+// @(#)root/pyroot:$Name: v5-06-00 $:$Id: Executors.cxx,v 1.14 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -57,6 +57,12 @@ PyObject* PyROOT::TULongExecutor::Execute( G__CallFunc* func, void* self )
 PyObject* PyROOT::TLongLongExecutor::Execute( G__CallFunc* func, void* self )
 {
    return PyLong_FromLongLong( (Long64_t)G__Longlong( func->Execute( self ) ) );
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::TULongLongExecutor::Execute( G__CallFunc* func, void* self )
+{
+   return PyLong_FromUnsignedLongLong( (ULong64_t)G__ULonglong( func->Execute( self ) ) );
 }
 
 //____________________________________________________________________________
@@ -296,6 +302,7 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( DoubleRef )
    PYROOT_EXECUTOR_FACTORY( Void )
    PYROOT_EXECUTOR_FACTORY( LongLong )
+   PYROOT_EXECUTOR_FACTORY( ULongLong )
    PYROOT_EXECUTOR_FACTORY( CString )
    PYROOT_EXECUTOR_FACTORY( VoidArray )
    PYROOT_EXECUTOR_FACTORY( ShortArray )
@@ -329,6 +336,7 @@ namespace {
       NFp_t( "long&",              &CreateLongRefExecutor             ),
       NFp_t( "unsigned long",      &CreateULongExecutor               ),
       NFp_t( "long long",          &CreateLongLongExecutor            ),
+      NFp_t( "unsigned long long", &CreateULongLongExecutor           ),
       NFp_t( "float",              &CreateDoubleExecutor              ),
       NFp_t( "float&",             &CreateFloatRefExecutor            ),
       NFp_t( "double",             &CreateDoubleExecutor              ),

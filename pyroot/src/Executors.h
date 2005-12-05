@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.6 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name: v5-06-00 $:$Id: Executors.h,v 1.7 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
@@ -41,6 +41,7 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_EXECUTOR( Int );
    PYROOT_DECLARE_BASIC_EXECUTOR( ULong );
    PYROOT_DECLARE_BASIC_EXECUTOR( LongLong );
+   PYROOT_DECLARE_BASIC_EXECUTOR( ULongLong );
    PYROOT_DECLARE_BASIC_EXECUTOR( Double );
    PYROOT_DECLARE_BASIC_EXECUTOR( Void );
    PYROOT_DECLARE_BASIC_EXECUTOR( CString );
