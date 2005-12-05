@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.26 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.27 2005/11/24 14:23:20 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -74,11 +74,13 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
                      UInt_t width, UInt_t height) :
    fPad(pad),
    fContextMenu(0),
-   fPerspectiveCamera(),
+   fPerspectiveCameraXOZ(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
+   fPerspectiveCameraYOZ(TGLVector3(0.0, 1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
+   fPerspectiveCameraXOY(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 0.0,-1.0)), // XOY floor
    fOrthoXOYCamera(TGLOrthoCamera::kXOY),
    fOrthoXOZCamera(TGLOrthoCamera::kXOZ),
    fOrthoZOYCamera(TGLOrthoCamera::kZOY),
-   fCurrentCamera(&fPerspectiveCamera),
+   fCurrentCamera(&fPerspectiveCameraXOZ),
    fInternalRebuild(kFALSE), 
    fPostSceneBuildSetup(kTRUE),
    fAcceptedAllPhysicals(kTRUE),
@@ -775,7 +777,9 @@ void TGLViewer::SetupCameras()
    // Setup cameras if scene box is not empty
    const TGLBoundingBox & box =  fScene.BoundingBox();
    if (!box.IsEmpty()) {
-      fPerspectiveCamera.Setup(box);
+      fPerspectiveCameraYOZ.Setup(box);
+      fPerspectiveCameraXOZ.Setup(box);
+      fPerspectiveCameraXOY.Setup(box);
       fOrthoXOYCamera.Setup(box);
       fOrthoXOZCamera.Setup(box);
       fOrthoZOYCamera.Setup(box);
@@ -886,12 +890,12 @@ void TGLViewer::SetupClips()
    ClearClips();
 
    const TGLBoundingBox & sceneBox = fScene.BoundingBox();
-   fClipPlane = new TGLClipPlane(TGLPlane(1.0, 0.0, 0.0, 0.0), 
+   fClipPlane = new TGLClipPlane(TGLPlane(0.0, -1.0, 0.0, 0.0), 
                                  sceneBox.Center(), 
                                  sceneBox.Extents().Mag()*5.0);
 
    TGLVector3 halfLengths = sceneBox.Extents() * 0.2501;
-   TGLVertex3 center = sceneBox.Center() - halfLengths;
+   TGLVertex3 center = sceneBox.Center() + halfLengths;
    fClipBox = new TGLClipBox(halfLengths, center);
 }
 
@@ -1186,7 +1190,8 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 //______________________________________________________________________________
 void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 {
-   // Set current active camera - 'cameraType' one of kCameraPerspective,
+   // Set current active camera - 'cameraType' one of:
+   // kCameraPerspectiveX, kCameraPerspectiveY, kCameraPerspectiveZ
    // kCameraXOY, kCameraXOZ,  kCameraZOY 
    if (fScene.IsLocked()) {
       Error("TGLViewer::SetCurrentCamera", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
@@ -1194,8 +1199,16 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
    }
 
    switch(cameraType) {
-      case(kCameraPerspective): {
-         fCurrentCamera = &fPerspectiveCamera;
+      case(kCameraPerspectiveXOZ): {
+         fCurrentCamera = &fPerspectiveCameraXOZ;
+         break;
+      }
+      case(kCameraPerspectiveYOZ): {
+         fCurrentCamera = &fPerspectiveCameraYOZ;
+         break;
+      }
+      case(kCameraPerspectiveXOY): {
+         fCurrentCamera = &fPerspectiveCameraXOY;
          break;
       }
       case(kCameraXOY): {

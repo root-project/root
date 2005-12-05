@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.5 2005/06/21 16:54:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.6 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -29,9 +29,12 @@
 // TArcBall.                                                            //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLPerspectiveCamera : public TGLCamera {
+class TGLPerspectiveCamera : public TGLCamera 
+{
    private:
    // Fields
+   TGLVector3  fHAxis;           //!
+   TGLVector3  fVAxis;           //!
 
    // Set in Setup()
    Double_t    fDollyMin;        //!
@@ -50,7 +53,7 @@ class TGLPerspectiveCamera : public TGLCamera {
    static   UInt_t   fgDollyDeltaSens, fgFOVDeltaSens;
 
 public:
-   TGLPerspectiveCamera();
+   TGLPerspectiveCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLPerspectiveCamera();
 
    virtual void   Setup(const TGLBoundingBox & box);

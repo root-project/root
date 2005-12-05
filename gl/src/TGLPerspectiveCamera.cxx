@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.10 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.11 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -42,10 +42,11 @@ UInt_t   TGLPerspectiveCamera::fgDollyDeltaSens = 500;
 UInt_t   TGLPerspectiveCamera::fgFOVDeltaSens = 500;
 
 //______________________________________________________________________________
-TGLPerspectiveCamera::TGLPerspectiveCamera() :
+TGLPerspectiveCamera::TGLPerspectiveCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis) :
+   fHAxis(hAxis), fVAxis(vAxis),
    fDollyMin(1.0), fDollyDefault(10.0), fDollyMax(100.0),
    fFOV(fgFOVDefault), fDolly(fDollyDefault), 
-   fVRotate(0.0), fHRotate(0.0), 
+   fVRotate(-90.0), fHRotate(90.0), 
    fCenter(0.0, 0.0, 0.0), fTruck(0.0, 0.0, 0.0)
 {
    // Construct perspective camera
@@ -91,8 +92,8 @@ void TGLPerspectiveCamera::Reset()
    // Reset the camera to defaults - reframe the world volume established in Setup()
    // in default state. Note: limits defined in Setup() are not adjusted.
    fFOV = fgFOVDefault;
-   fHRotate = 0.0;
-   fVRotate = -90.0;
+   fHRotate = 90.0;
+   fVRotate = 0.0;
    fTruck.Set(-fCenter.X(), -fCenter.Y(), -fCenter.Z());
    fDolly = fDollyDefault;
    fCacheDirty = kTRUE;
@@ -177,11 +178,11 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xDelta, Int_t yDelta)
    // fractional rotation.   
    fHRotate += static_cast<float>(xDelta)/fViewport.Width() * 360.0;
    fVRotate -= static_cast<float>(yDelta)/fViewport.Height() * 180.0;
-   if ( fVRotate > 0.0 ) {
-      fVRotate = 0.0;
+   if ( fVRotate > 90.0 ) {
+      fVRotate = 90.0;
    }
-   if ( fVRotate < -180.0 ) {
-      fVRotate = -180.0;
+   if ( fVRotate < -90.0 ) {
+      fVRotate = -90.0;
    }
 
    fCacheDirty = kTRUE;
@@ -221,10 +222,17 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
    // ii) setup modelview
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
+
    glTranslated(0, 0, -fDolly);
+
    glRotated(fVRotate, 1.0, 0.0, 0.0);
-   glRotated(fHRotate, 0.0, 0.0, 1.0);
-   glRotated(90, 0.0, 1.0, 0.0);
+   glRotated(fHRotate, 0.0, 1.0, 0.0);
+
+   // Rotate so vertical axis is just that....
+   TGLVector3 zAxis = Cross(fHAxis, fVAxis);
+   TGLMatrix vertMatrix(TGLVertex3(0.0, 0.0, 0.0), zAxis, &fHAxis);
+   glMultMatrixd(vertMatrix.CArr());
+
    glTranslated(fTruck[0], fTruck[1], fTruck[2]);
 
    // iii) update the cached frustum planes so we can get eye point/direction

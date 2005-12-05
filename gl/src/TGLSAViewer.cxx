@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.9 2005/11/16 16:41:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.10 2005/11/22 18:05:46 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -62,8 +62,19 @@ DIRECT SCENE INTERACTIONS\n\n\
    SELECT a shape with Shift+Left mouse button click.\n\n\
    MOVE a selected shape using Shift+Mid mouse drag.\n\n\
    Invoke the CONTEXT menu with Shift+Right mouse click.\n\n\
-PROJECTIONS\n\n\
-   The \"Projections\" menu allows to select the different plane projections\n\n\
+CAMERA\n\n\
+   The \"Camera\" menu is used to select the different projections from \n\
+   the 3D world onto the 2D viewport. There are three perspective cameras:\n\n\
+   \tPerspective (Floor XOZ)\n\
+   \tPerspective (Floor YOZ)\n\
+   \tPerspective (Floor XOY)\n\n\
+   In each case the floor plane (defined by two axes) is kept level.\n\n\
+   There are also three orthographic cameras:\n\n\
+   \tOrthographic (XOY)\n\
+   \tOrthographic (XOZ)\n\
+   \tOrthographic (ZOY)\n\n\
+   In each case the first axis is placed horizontal, the second vertical e.g.\n\
+   XOY means X horizontal, Y vertical.\n\n\
 SHAPES COLOR AND MATERIAL\n\n\
    The selected shape's color can be modified in the Shapes-Color tabs.\n\
    Shape's color is specified by the percentage of red, green, blue light\n\
@@ -118,7 +129,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
    fCompositeFrame(0), fV1(0), fV2(0), fL1(0), fL2(0), fL3(0),
-   fCanvasLayout(0), fMenuBar(0), fFileMenu(0), fViewMenu(0), fHelpMenu(0),
+   fCanvasLayout(0), fMenuBar(0), fFileMenu(0), fCameraMenu(0), fHelpMenu(0),
    fMenuBarLayout(0), fMenuBarItemLayout(0), fMenuBarHelpLayout(0),
    fCanvasWindow(0),
    fEditorTab(0), fShapesTab(0), fSceneTab(0),
@@ -150,12 +161,14 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fFileMenu->AddEntry("&Exit", kGLExit);
    fFileMenu->Associate(fFrame);
 
-   fViewMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
-   fViewMenu->AddEntry("&XOY plane", kGLXOY);
-   fViewMenu->AddEntry("XO&Z plane", kGLXOZ);
-   fViewMenu->AddEntry("&ZOY plane", kGLZOY);
-   fViewMenu->AddEntry("&Perspective view", kGLPersp);
-   fViewMenu->Associate(fFrame);
+   fCameraMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
+   fCameraMenu->AddEntry("Perspective (Floor XOZ)", kGLPerspXOZ);
+   fCameraMenu->AddEntry("Perspective (Floor YOZ)", kGLPerspYOZ);
+   fCameraMenu->AddEntry("Perspective (Floor XOY)", kGLPerspXOY);
+   fCameraMenu->AddEntry("Orthographic (XOY)", kGLXOY);
+   fCameraMenu->AddEntry("Orthographic (XOZ)", kGLXOZ);
+   fCameraMenu->AddEntry("Orthographic (ZOY)", kGLZOY);
+   fCameraMenu->Associate(fFrame);
 
    fHelpMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
    fHelpMenu->AddEntry("Help on GL Viewer...", kGLHelpViewer);
@@ -171,7 +184,7 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    // Create menubar
    fMenuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame | kRaisedFrame);
    fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Projections", fViewMenu, fMenuBarItemLayout);
+   fMenuBar->AddPopup("&Camera", fCameraMenu, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
    fFrame->AddFrame(fMenuBar, fMenuBarLayout);
 
@@ -263,7 +276,7 @@ TGLSAViewer::~TGLSAViewer()
 {
    // Destroy standalone viewer object
    delete fFileMenu;
-   delete fViewMenu;
+   delete fCameraMenu;
    delete fHelpMenu;
    delete fMenuBar;
    delete fMenuBarLayout;
@@ -362,8 +375,14 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLZOY:
             SetCurrentCamera(TGLViewer::kCameraZOY);
             break;
-         case kGLPersp:
-            SetCurrentCamera(TGLViewer::kCameraPerspective);
+         case kGLPerspYOZ:
+            SetCurrentCamera(TGLViewer::kCameraPerspectiveYOZ);
+            break;
+         case kGLPerspXOZ:
+            SetCurrentCamera(TGLViewer::kCameraPerspectiveXOZ);
+            break;
+         case kGLPerspXOY:
+            SetCurrentCamera(TGLViewer::kCameraPerspectiveXOY);
             break;
          case kGLExit:
             // Exit needs to be delayed to avoid bad drawable X ids - GUI

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.7 2005/11/16 16:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.8 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -48,7 +48,7 @@ class TGLSAViewer : public TGLViewer
 {
 public:
    enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
-      kGLXOZ, kGLZOY, kGLPersp, kGLPrintEPS_SIMPLE,
+      kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY, kGLPrintEPS_SIMPLE,
       kGLPrintEPS_BSP, kGLPrintPDF_SIMPLE, kGLPrintPDF_BSP,
       kGLExit };
 
@@ -62,7 +62,7 @@ private:
    TGLayoutHints     *fL1, *fL2, *fL3;
    TGLayoutHints     *fCanvasLayout;
    TGMenuBar         *fMenuBar;
-   TGPopupMenu       *fFileMenu, *fViewMenu, *fHelpMenu;
+   TGPopupMenu       *fFileMenu, *fCameraMenu, *fHelpMenu;
    TGLayoutHints     *fMenuBarLayout;
    TGLayoutHints     *fMenuBarItemLayout;
    TGLayoutHints     *fMenuBarHelpLayout;

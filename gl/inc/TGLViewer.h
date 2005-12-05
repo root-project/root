@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.16 2005/11/16 16:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.17 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -84,7 +84,9 @@ class TGLViewer : public TVirtualViewer3D
    friend class TGLOutput;
 public:
 
-   enum ECameraType { kCameraPerspective, kCameraXOY, kCameraXOZ, kCameraZOY };
+   enum ECameraType { kCameraPerspectiveXOZ, kCameraPerspectiveYOZ, kCameraPerspectiveXOY,
+                      kCameraXOY, kCameraXOZ, kCameraZOY };
+
    enum ELight      { kLightFront =  0x00000001, 
                       kLightTop   =  0x00000002, 
                       kLightBottom = 0x00000004,
@@ -107,11 +109,13 @@ private:
 
    // Cameras
    // TODO: Put in vector and allow external creation
-   TGLPerspectiveCamera fPerspectiveCamera;  //!
-   TGLOrthoCamera       fOrthoXOYCamera;     //!
-   TGLOrthoCamera       fOrthoXOZCamera;     //!
-   TGLOrthoCamera       fOrthoZOYCamera;     //!
-   TGLCamera          * fCurrentCamera;      //!
+   TGLPerspectiveCamera fPerspectiveCameraXOZ; //!
+   TGLPerspectiveCamera fPerspectiveCameraYOZ; //!
+   TGLPerspectiveCamera fPerspectiveCameraXOY; //!
+   TGLOrthoCamera       fOrthoXOYCamera;       //!
+   TGLOrthoCamera       fOrthoXOZCamera;       //!
+   TGLOrthoCamera       fOrthoZOYCamera;       //!
+   TGLCamera          * fCurrentCamera;        //!
 
    // Scene management - to TGLScene or helper object?
    Bool_t            fInternalRebuild;       //! scene rebuild triggered internally/externally?

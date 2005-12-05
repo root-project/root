@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.19 2005/12/01 09:12:12 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.20 2005/12/01 11:04:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -475,13 +475,13 @@ TGLMatrix::TGLMatrix(const TGLVertex3 & translation)
 }
 
 //______________________________________________________________________________
-TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis)
+TGLMatrix::TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis)
 {
    // Construct matrix which when applied puts local origin at 
    // 'origin' and the local Z axis in direction 'z'. Both
    // 'origin' and 'zAxisVec' are expressed in the parent frame
    SetIdentity();
-   Set(origin, zAxis);
+   Set(origin, zAxis, xAxis);
 }
 
 //______________________________________________________________________________
@@ -507,30 +507,36 @@ TGLMatrix::~TGLMatrix()
 }
 
 //______________________________________________________________________________
-void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & z)
+void TGLMatrix::Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis)
 {
    // Set matrix which when applied puts local origin at 
    // 'origin' and the local Z axis in direction 'z'. Both
-   // 'origin' and 'zAxisVec' are expressed in the parent frame
-   TGLVector3 zAxis(z);
-   zAxis.Normalise();
-   TGLVector3 axis; 
-   if (TMath::Abs(zAxis.X()) <= TMath::Abs(zAxis.Y()) && TMath::Abs(zAxis.X()) <= TMath::Abs(zAxis.Z())) {
-      axis.Set(1, 0, 0); 
-   } else if (TMath::Abs(zAxis.Y()) <= TMath::Abs(zAxis.X()) && TMath::Abs(zAxis.Y()) <= TMath::Abs(zAxis.Z())) {
-      axis.Set(0, 1, 0); 
-   } else { 
-      axis.Set(0, 0, 1);
+   // 'origin' and 'z' are expressed in the parent frame
+   TGLVector3 zAxisInt(zAxis);
+   zAxisInt.Normalise();
+
+   TGLVector3 xAxisInt;
+   if (xAxis) {
+      xAxisInt = *xAxis;
+   } else {
+      TGLVector3 arbAxis;
+      if (TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Y()) && TMath::Abs(zAxisInt.X()) <= TMath::Abs(zAxisInt.Z())) {
+         arbAxis.Set(1.0, 0.0, 0.0); 
+      } else if (TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.X()) && TMath::Abs(zAxisInt.Y()) <= TMath::Abs(zAxisInt.Z())) {
+         arbAxis.Set(0.0, 1.0, 0.0); 
+      } else { 
+         arbAxis.Set(0.0, 0.0, 1.0);
+      }
+      xAxisInt = Cross(zAxisInt, arbAxis);
    }
 
-   TGLVector3 xAxis = Cross(zAxis, axis);
-   xAxis.Normalise();
-   TGLVector3 yAxis = Cross(zAxis, xAxis);
+   xAxisInt.Normalise();
+   TGLVector3 yAxisInt = Cross(zAxisInt, xAxisInt);
 
-   fVals[0] = xAxis.X(); fVals[4] = yAxis.X(); fVals[8 ] = zAxis.X(); fVals[12] = origin.X();
-   fVals[1] = xAxis.Y(); fVals[5] = yAxis.Y(); fVals[9 ] = zAxis.Y(); fVals[13] = origin.Y();
-   fVals[2] = xAxis.Z(); fVals[6] = yAxis.Z(); fVals[10] = zAxis.Z(); fVals[14] = origin.Z();
-   fVals[3] = 0.0;       fVals[7] = 0.0;       fVals[11] = 0.0;       fVals[15] = 1.0;
+   fVals[0] = xAxisInt.X(); fVals[4] = yAxisInt.X(); fVals[8 ] = zAxisInt.X(); fVals[12] = origin.X();
+   fVals[1] = xAxisInt.Y(); fVals[5] = yAxisInt.Y(); fVals[9 ] = zAxisInt.Y(); fVals[13] = origin.Y();
+   fVals[2] = xAxisInt.Z(); fVals[6] = yAxisInt.Z(); fVals[10] = zAxisInt.Z(); fVals[14] = origin.Z();
+   fVals[3] = 0.0;          fVals[7] = 0.0;          fVals[11] = 0.0;          fVals[15] = 1.0;
 }
 
 //______________________________________________________________________________

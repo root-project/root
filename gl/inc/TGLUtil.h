@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.17 2005/11/29 14:04:00 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.18 2005/11/29 18:54:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -658,7 +658,7 @@ public:
    TGLMatrix();
    TGLMatrix(Double_t x, Double_t y, Double_t z);
    TGLMatrix(const TGLVertex3 & translation);
-   TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis);
+   TGLMatrix(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis = 0);
    TGLMatrix(const Double_t vals[16]);
    TGLMatrix(const TGLMatrix & other);
    virtual ~TGLMatrix(); // ClassDef introduces virtual fns
@@ -669,7 +669,7 @@ public:
    Double_t operator [] (Int_t index) const;
 
    // Manipulators
-   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis);
+   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 * xAxis = 0);
    void Set(const Double_t vals[16]);
    void SetIdentity();
 
