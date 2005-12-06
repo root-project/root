@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.234 2005/11/29 14:33:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.235 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -859,10 +859,14 @@ void THistPainter::Paint(Option_t *option)
    //               error bars. To visualize it without errors use the option HIST
    //               together with the required option (eg "hist same c")
    //    "SAME"   : Superimpose on previous picture in the same pad
-   //    "CYL"    : Use Cylindrical coordinates
-   //    "POL"    : Use Polar coordinates
-   //    "SPH"    : Use Spherical coordinates
-   //    "PSR"    : Use PseudoRapidity/Phi coordinates
+   //    "CYL"    : Use Cylindrical coordinates. The X coordinate is mapped on
+   //               the angle and the Y coordinate on the cylinder length. 
+   //    "POL"    : Use Polar coordinates. The X coordinate is mapped on the
+   //               angle and the Y coordinate on the radius.
+   //    "SPH"    : Use Spherical coordinates. The X coordinate is mapped on the
+   //               latitude and the Y coordinate on the longitude.
+   //    "PSR"    : Use PseudoRapidity/Phi coordinates. The X coordinate is 
+   //               mapped on Phi.
    //    "LEGO"   : Draw a lego plot with hidden line removal
    //    "LEGO1"  : Draw a lego plot with hidden surface removal
    //    "LEGO2"  : Draw a lego plot using colors to show the cell contents
