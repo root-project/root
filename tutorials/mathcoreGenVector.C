@@ -109,7 +109,7 @@ int testVector3D() {
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
-  std::cout << "Test Cartesian-Cylindrical :    ";
+  std::cout << "Test Cartesian-CylindricalEta : ";
 
   RhoEtaPhiVector v3( v1.Rho(), v1.Eta(), v1.Phi() ); 
 
@@ -122,6 +122,22 @@ int testVector3D() {
   ok+= compare(v1.R(), v3.R(), "r"); 
   ok+= compare(v1.Eta(), v3.Eta(), "eta"); 
   ok+= compare(v1.Rho(), v3.Rho(), "rho"); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+  std::cout << "Test Cartesian-Cylindrical :    ";
+
+  RhoZPhiVector v4( v1.Rho(), v1.Z(), v1.Phi() ); 
+
+  ok = 0;
+  ok+= compare(v1.X(), v4.X(), "x"); 
+  ok+= compare(v1.Y(), v4.Y(), "y"); 
+  ok+= compare(v1.Z(), v4.Z(), "z"); 
+  ok+= compare(v1.Phi(), v4.Phi(), "phi"); 
+  ok+= compare(v1.Theta(), v4.Theta(), "theta"); 
+  ok+= compare(v1.R(), v4.R(), "r"); 
+  ok+= compare(v1.Eta(), v4.Eta(), "eta"); 
+  ok+= compare(v1.Rho(), v4.Rho(), "rho"); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
@@ -154,6 +170,17 @@ int testVector3D() {
   ok+= compare( q4.X(), q1.X(), "op X"  );
   ok+= compare( q4.Y(), q1.Y(), "op Y" );
   ok+= compare( q4.Z(), q1.Z(), "op Z" );
+
+  // test operator == 
+  XYZVector        w1 = v1; 
+  Polar3DVector    w2 = v2; 
+  RhoEtaPhiVector  w3 = v3; 
+  RhoZPhiVector    w4 = v4; 
+  ok+= compare( w1 == v1, static_cast<double>(true), "== XYZ");
+  ok+= compare( w2 == v2, static_cast<double>(true), "== Polar");
+  ok+= compare( w3 == v3, static_cast<double>(true), "== RhoEtaPhi");
+  ok+= compare( w4 == v4, static_cast<double>(true), "== RhoZPhi");
+
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
@@ -205,7 +232,7 @@ int testVector3D() {
 int testPoint3D() { 
 
   std::cout << "\n************************************************************************\n " 
-	    << " Point 3D Test" 
+	    << " Point 3D Tests" 
 	    << "\n************************************************************************\n";
 
 
@@ -230,7 +257,7 @@ int testPoint3D() {
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
-  std::cout << "Test Polar-Cylindrical :        ";
+  std::cout << "Test Polar-CylindricalEta :     ";
 
   RhoEtaPhiPoint p3( p2.Rho(), p2.Eta(), p2.Phi() ); 
 
@@ -247,6 +274,7 @@ int testPoint3D() {
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
   std::cout << "Test operations :               ";
+
   //std::cout << "\nTest Dot and Cross products with Vectors : ";
   Polar3DVector vperp(1.,p1.Theta() + TMath::PiOver2(),p1.Phi() );
   double Dot = p1.Dot(vperp);
@@ -255,6 +283,13 @@ int testPoint3D() {
   XYZPoint vcross = p1.Cross(vperp);
   ok+= compare( vcross.R(), p1.R(),"cross mag"  );
   ok+= compare( vcross.Dot(vperp), 0.0,"cross dir"  );
+
+  XYZPoint pscale1 = 10*p1;
+  XYZPoint pscale2 = pscale1/10;
+  ok+= compare( p1.R(), pscale2.R(), "scale");
+
+  // test operator == 
+  ok+= compare( p1 == pscale2, static_cast<double>(true), "== Point");
 
 
   //RhoEtaPhiPoint q1 = p1;  ! constructor yet not working in CINT
@@ -273,7 +308,7 @@ int testPoint3D() {
   ok+= compare( q4.Z(), q1.Z(), "PV op Z" );
   //#endif
 
-  if (ok == 0) std::cout << "\t\t OK " << std::endl;
+  if (ok == 0) std::cout << "\t OK " << std::endl;
 
 
 //   RhoEtaPhiVector v4 = q3 - q1; 
@@ -291,7 +326,7 @@ int testPoint3D() {
 int testLorentzVector() { 
 
   std::cout << "\n************************************************************************\n " 
-	    << " Loorentz Vector Test" 
+	    << " Loorentz Vector Tests" 
 	    << "\n************************************************************************\n";
 
 
@@ -301,7 +336,7 @@ int testLorentzVector() {
   XYZTVector v1(1.0, 2.0, 3.0, 4.0);
 
 
-  std::cout << "Test Cartesian-Cylindrical4D :  ";
+  std::cout << "Test XYZT - PtEtaPhiE Vectors:  ";
 
   PtEtaPhiEVector v2( v1.Rho(), v1.Eta(), v1.Phi(), v1.E() ); 
 
@@ -316,6 +351,43 @@ int testLorentzVector() {
   ok+= compare(v1.M(), v2.M(), "mass", 5); 
   ok+= compare(v1.Et(), v2.Et(), "et"); 
   ok+= compare(v1.Mt(), v2.Mt(), "mt", 3); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+
+  std::cout << "Test XYZT - PtEtaPhiM Vectors:  ";
+
+  PtEtaPhiMVector v3( v1.Rho(), v1.Eta(), v1.Phi(), v1.M() ); 
+
+  ok = 0;
+  ok+= compare(v1.Px(), v3.X(), "x"); 
+  ok+= compare(v1.Py(), v3.Y(), "y"); 
+  ok+= compare(v1.Pz(), v3.Z(), "z", 2); 
+  ok+= compare(v1.E(), v3.T(), "e"); 
+  ok+= compare(v1.Phi(), v3.Phi(), "phi"); 
+  ok+= compare(v1.Theta(), v3.Theta(), "theta"); 
+  ok+= compare(v1.Pt(), v3.Pt(), "pt"); 
+  ok+= compare(v1.M(), v3.M(), "mass", 5); 
+  ok+= compare(v1.Et(), v3.Et(), "et"); 
+  ok+= compare(v1.Mt(), v3.Mt(), "mt", 3); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+  std::cout << "Test PtEtaPhiE - PxPyPzM Vect.: ";
+
+  PxPyPzMVector v4( v3.X(), v3.Y(), v3.Z(), v3.M() ); 
+
+  ok = 0;
+  ok+= compare(v4.Px(), v3.X(), "x"); 
+  ok+= compare(v4.Py(), v3.Y(), "y"); 
+  ok+= compare(v4.Pz(), v3.Z(), "z",2); 
+  ok+= compare(v4.E(), v3.T(), "e"); 
+  ok+= compare(v4.Phi(), v3.Phi(), "phi"); 
+  ok+= compare(v4.Theta(), v3.Theta(), "theta"); 
+  ok+= compare(v4.Pt(), v3.Pt(), "pt"); 
+  ok+= compare(v4.M(), v3.M(), "mass",5); 
+  ok+= compare(v4.Et(), v3.Et(), "et"); 
+  ok+= compare(v4.Mt(), v3.Mt(), "mt",3); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
@@ -345,7 +417,26 @@ int testLorentzVector() {
   ok+= compare( q4.z(), q1.Z(), "op Z" );
   ok+= compare( q4.t(), q1.E(), "op E" );
 
-  if (ok == 0) std::cout << "\t\t OK " << std::endl;
+  // test operator == 
+  XYZTVector        w1 = v1; 
+  PtEtaPhiEVector   w2 = v2; 
+  PtEtaPhiMVector   w3 = v3; 
+  PxPyPzMVector     w4 = v4; 
+  ok+= compare( w1 == v1, static_cast<double>(true), "== PxPyPzE");
+  ok+= compare( w2 == v2, static_cast<double>(true), "== PtEtaPhiE");
+  ok+= compare( w3 == v3, static_cast<double>(true), "== PtEtaPhiM");
+  ok+= compare( w4 == v4, static_cast<double>(true), "== PxPyPzM");
+  
+  // test gamma beta and boost
+  XYZVector b = q1.BoostToCM();
+  double beta = q1.Beta();
+  double gamma = q1.Gamma();
+
+  ok += compare( b.R(), beta, "beta" );
+  ok += compare( gamma, 1./sqrt( 1 - beta*beta ), "gamma");
+
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
 
   //test setters
  
@@ -368,7 +459,6 @@ int testLorentzVector() {
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
-
 }
 
 
@@ -376,7 +466,7 @@ int testVectorUtil() {
 
  
   std::cout << "\n************************************************************************\n " 
-	    << " Utility Function Test" 
+	    << " Utility Function Tests" 
 	    << "\n************************************************************************\n";
 
   std::cout << "Test Vector utility functions : ";
@@ -451,7 +541,7 @@ int testRotation() {
 
  
   std::cout << "\n************************************************************************\n " 
-	    << " Rotation Test" 
+	    << " Rotation and Transformation Tests" 
 	    << "\n************************************************************************\n";
 
   std::cout << "Test Vector Rotations :         ";
@@ -616,8 +706,15 @@ int testRotation() {
   ok+= compare(p.Y(), v.Y(), "y",10); 
   ok+= compare(p.Z(), v.Z(), "z",10); 
 
+  // test from only rotation and only translation 
+  Transform3D ta( EulerAngles(1.,2.,3.) );
+  Transform3D tb( XYZVector(1,2,3) );
+  Transform3D tc(  Rotation3D(EulerAngles(1.,2.,3.)) ,  XYZVector(1,2,3) );
+  Transform3D td( XYZVector(1,2,3), Rotation3D( EulerAngles(1.,2.,3.) ) );
+  
+  ok+= compare( tc == tb*ta, static_cast<double>(true), "== Rot*Tra");
+  ok+= compare( td == ta*tb, static_cast<double>(true), "== Rot*Tra");
 
-  ok+= compare(p.Z(), v.Z(), "z",10); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
@@ -700,6 +797,48 @@ int testRotation() {
   ok+= compare(lv0.Y(), lv.Y(), "y"); 
   ok+= compare(lv0.Z(), lv.Z(), "z"); 
   ok+= compare(lv0.E(), lv.E(), "t"); 
+
+  if (ok == 0) std::cout << "\t OK " << std::endl;
+
+  // test Boosts
+
+  std::cout << "Test Boost :                    "; 
+
+
+  Boost bst( 0.8,0.7.,0.3);   //  boost 
+
+  lvb = bst ( lv );
+
+  LorentzRotation rl2 (bst);
+
+  lvb2 = rl2 (lv);
+
+  // test with lorentz rotation
+  ok+= compare(lvb.X(), lvb2.X(), "x"); 
+  ok+= compare(lvb.Y(), lvb2.Y(), "y"); 
+  ok+= compare(lvb.Z(), lvb2.Z(), "z"); 
+  ok+= compare(lvb.E(), lvb2.E(), "t"); 
+  ok+= compare(lvb.M(), lv.M(), "m"); // m must stay constant 
+
+
+  // test inverse
+  lv0 = bst.Inverse() * lvb;
+
+  ok+= compare(lv0.X(), lv.X(), "x"); 
+  ok+= compare(lv0.Y(), lv.Y(), "y"); 
+  ok+= compare(lv0.Z(), lv.Z(), "z"); 
+  ok+= compare(lv0.E(), lv.E(), "t"); 
+
+  XYZVector brest = lv.BoostToCM();
+  bst.SetComponents( brest.X(), brest.Y(), brest.Z() );
+
+  XYZTVector lvr = bst * lv; 
+
+  ok+= compare(lvr.X(), 0.0, "x",10); 
+  ok+= compare(lvr.Y(), 0.0, "y",10); 
+  ok+= compare(lvr.Z(), 0.0, "z",10); 
+  ok+= compare(lvr.M(), lv.M(), "m",10); 
+
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
