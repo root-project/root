@@ -54,6 +54,9 @@ class TString;
 class TAxis;
 
 class TGLHistPainter : public TVirtualHistPainter, public TVirtualGLPainter {
+public:
+   enum {kTexLength = 16};
+
 private:
    //If gl hist painter does not support Paint option
    //it has to delegate Paint call to default hist painter
@@ -63,6 +66,8 @@ private:
    enum EGLPaintOption {
       kLego,//for lego and lego1
       kSurface,
+      kSurface1,
+      kSurface2,
       kSurface4,
       kUnsupported
    };
@@ -116,6 +121,9 @@ private:
    mutable TGLVertex3  f2DAxes[8];
 
    mutable Bool_t      f2DPass;
+   mutable UInt_t      fTextureName;
+
+   UChar_t             fTexture[kTexLength * 4];
 
 public:
    TGLHistPainter(TH1 *hist);
@@ -151,6 +159,7 @@ private:
 
    //inner painting stuff
    Bool_t         InitPainter();
+   void           InitTexture();
    Bool_t         SetSizes();
    static Bool_t  SetAxisRange(const TAxis *axis, Bool_t log, Int_t &first, Int_t &last,
                                Double_t &min, Double_t &max);
@@ -168,6 +177,7 @@ private:
    void           PaintLego()const;
    void           PaintSurface()const;
    void           PaintSurface4()const;
+   void           PaintSurface1()const;
 
    void           DrawFrame(Int_t frontPoint)const;
    void           DrawBackPlane(Int_t plane)const;
@@ -200,6 +210,13 @@ private:
                                const TGLVertex3 &v3, const TGLVector3 &normal);
    static void    DrawFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
                            const TGLVector3 &norm1, const TGLVector3 &norm2, const TGLVector3 &norm3);
+   static void    DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+                                   const TGLVertex3 &v3, const TGLVector3 &norm1,
+                                   const TGLVector3 &norm2, const TGLVector3 &norm3,
+                                   Double_t zMin, Double_t zMax);
+   static void    DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2,
+                                  const TGLVertex3 &v3, const TGLVertex3 &v4);
+
    //
    ClassDef(TGLHistPainter, 0) //GL hist painter
 };

@@ -47,12 +47,15 @@ TGLHistPainter::TGLHistPainter(TH1 *hist)
                      fFirstBinY(0), fLastBinY(0),
                      fLogX(kFALSE), fLogY(kFALSE), fLogZ(kFALSE),
                      fGLDevice(-1),
-                     f2DPass(kFALSE)
+                     f2DPass(kFALSE),
+                     fTextureName(0),
+                     fTexture()
 {
    //Each TGLHistPainter has default painter as a member
    //to delegate unsupported calls
 
    InitDefaultPainter();
+   InitTexture();
 }
 
 //______________________________________________________________________________
@@ -297,6 +300,10 @@ void TGLHistPainter::Paint()
    case kSurface:
       PaintSurface();
       break;
+   case kSurface1:
+   case kSurface2:
+      PaintSurface1();
+      break;
    case kSurface4:
       PaintSurface4();
       break;
@@ -319,8 +326,15 @@ TGLHistPainter::EGLPaintOption TGLHistPainter::GetPaintOption(const TString &o)
    start = option.find("surf");
    
    if (start != std::string::npos)
-      if (option.length() == 5 && option[4] == '4')
-         return kSurface4;
+      if (option.length() == 5)
+         switch (option[4]) {
+         case '1':
+            return kSurface1;
+         case '2':
+            return kSurface2;
+         case '4':
+            return kSurface4;
+         }
       else if(option.length() == 4)
          return kSurface;
          
@@ -339,7 +353,7 @@ Bool_t TGLHistPainter::InitPainter()
 
    if (fLastOption == kSurface)
       SetNormals();
-   else if (fLastOption == kSurface4)
+   else if (fLastOption == kSurface4 || fLastOption == kSurface1 || fLastOption == kSurface2)
       SetAverageNormals();
 
    return kTRUE;
@@ -393,15 +407,7 @@ Bool_t TGLHistPainter::SetSizes()
       Error("SetSizes", "log scale is requested for Z, but maximum less or equal 0 (%f)", fMaxZ);
       return kFALSE;
    }
-/*//NEW COMMENTED
-   if (fMinZ >= fMaxZ && fLogZ)
-      if (fMaxZ > 0.) 
-         fMinZ = 0.001 * fMaxZ;
-      else {
-         Error("SetSizes", "log scale is requested for Z, but maximum less or equal 0 (%f)", fMaxZ);
-         return kFALSE;
-   }
-*/
+
    fFactor = fHist->GetNormFactor() > 0 ? fHist->GetNormFactor() : summ;
    if (summ) fFactor /= summ;
    if (!fFactor) fFactor = 1.;
@@ -416,9 +422,7 @@ Bool_t TGLHistPainter::SetSizes()
       }
 
       fMinZ = TMath::Log10(fMinZ);
- //     if (minimum) fMinZ += TMath::Log10(0.5); // ???
       fMaxZ = TMath::Log10(fMaxZ);
-  //    if (maximum) fMaxZ += TMath::Log10(2 * (0.9 / 0.95)); //???
       
       if (positiveMin > 0.)
          fMinZ = TMath::Min(TMath::Log10(positiveMin), fMinZ);
@@ -828,6 +832,150 @@ void TGLHistPainter::PaintSurface4()const
 }
 
 //______________________________________________________________________________
+void TGLHistPainter::PaintSurface1()const
+{
+   //Paints surf1/surf2 options
+   SetCamera();
+   //main light
+   const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
+   glLightfv(GL_LIGHT0, GL_POSITION, pos);
+
+   SetTransformation();
+
+   Int_t fp = FrontPoint();
+   DrawFrame(fp);
+
+   glPushAttrib(GL_LIGHTING_BIT);
+   const Float_t spec[] = {1.f, 1.f, 1.f, 1.f};
+   glMaterialfv(GL_FRONT, GL_SPECULAR, spec);
+   glMaterialf(GL_FRONT, GL_SHININESS, 80.);
+   Float_t diff[] = {0.9f, 0.9f, 0.9f, 1.f};
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, diff);//without it I can get random mixture of texture and color
+
+   glEnable(GL_TEXTURE_1D);
+   glEnable(GL_DEPTH_TEST);
+   glShadeModel(GL_SMOOTH);
+   
+   if (!glIsTexture(fTextureName)) {
+      glGenTextures(1, &fTextureName);
+   }
+
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   glBindTexture(GL_TEXTURE_1D, fTextureName);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, kTexLength, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, fTexture);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+   //cycle through table
+   Int_t nX = fLastBinX - fFirstBinX + 1;
+   Int_t nY = fLastBinY - fFirstBinY + 1;
+
+   //surface "surf2" is partially transparent
+   if (fLastOption == kSurface2) {
+      
+      glDisable(GL_DEPTH_TEST);
+      glDepthMask(GL_FALSE);
+      glEnable(GL_BLEND);
+      glDepthMask(GL_FALSE);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      //blend : to get "correct transparency", I have to draw 
+      //faces starting from the farthest. 
+      switch (fp) {
+      case 2:
+         for (Int_t i = 0; i < nX - 1; ++i)
+            for (Int_t j = 0; j < nY - 1; ++j) {
+               DrawFaceTextured(fMesh[i + 1][j], fMesh[i][j], fMesh[i][j + 1],
+                              fAverageNormals[i + 1][j], fAverageNormals[i][j], 
+                              fAverageNormals[i][j + 1], fMinZScaled, fMaxZScaled);
+               DrawFaceTextured(fMesh[i][j + 1], fMesh[i + 1][j + 1], fMesh[i + 1][j], 
+                              fAverageNormals[i][j + 1], fAverageNormals[i + 1][j + 1], 
+                              fAverageNormals[i + 1][j], fMinZScaled, fMaxZScaled);
+            }
+         break;
+      case 1:
+         for (Int_t i = 0; i < nX - 1; ++i)
+            for (Int_t j = nY - 2; j >= 0; --j) {
+               DrawFaceTextured(fMesh[i + 1][j], fMesh[i][j], fMesh[i][j + 1],
+                              fAverageNormals[i + 1][j], fAverageNormals[i][j], 
+                              fAverageNormals[i][j + 1], fMinZScaled, fMaxZScaled);
+               DrawFaceTextured(fMesh[i][j + 1], fMesh[i + 1][j + 1], fMesh[i + 1][j], 
+                              fAverageNormals[i][j + 1], fAverageNormals[i + 1][j + 1], 
+                              fAverageNormals[i + 1][j], fMinZScaled, fMaxZScaled);
+            }
+         break;
+      case 0:
+         for (Int_t i = nX - 2; i >= 0; --i)
+            for (Int_t j = nY - 2; j >= 0; --j) {
+               DrawFaceTextured(fMesh[i + 1][j], fMesh[i][j], fMesh[i][j + 1],
+                              fAverageNormals[i + 1][j], fAverageNormals[i][j], 
+                              fAverageNormals[i][j + 1], fMinZScaled, fMaxZScaled);
+               DrawFaceTextured(fMesh[i][j + 1], fMesh[i + 1][j + 1], fMesh[i + 1][j], 
+                              fAverageNormals[i][j + 1], fAverageNormals[i + 1][j + 1], 
+                              fAverageNormals[i + 1][j], fMinZScaled, fMaxZScaled);
+            }
+         break;
+      case 3:
+         for (Int_t i = nX - 2; i >= 0; --i)
+            for (Int_t j = 0; j < nY - 1; ++j) {
+               DrawFaceTextured(fMesh[i + 1][j], fMesh[i][j], fMesh[i][j + 1],
+                              fAverageNormals[i + 1][j], fAverageNormals[i][j], 
+                              fAverageNormals[i][j + 1], fMinZScaled, fMaxZScaled);
+               DrawFaceTextured(fMesh[i][j + 1], fMesh[i + 1][j + 1], fMesh[i + 1][j], 
+                              fAverageNormals[i][j + 1], fAverageNormals[i + 1][j + 1], 
+                              fAverageNormals[i + 1][j], fMinZScaled, fMaxZScaled);
+            }
+         break;
+      }
+      
+      glEnable(GL_DEPTH_TEST);
+      glDepthMask(GL_TRUE);
+      glDisable(GL_TEXTURE_1D);
+   } else {
+      //surf1 - textured, non-transparent, with outlines
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glPolygonOffset(1.f, 1.f);
+
+      for (Int_t i = 0; i < nX - 1; ++i)
+         for (Int_t j = 0; j < nY - 1; ++j) {
+            DrawFaceTextured(fMesh[i + 1][j], fMesh[i][j], fMesh[i][j + 1],
+                             fAverageNormals[i + 1][j], fAverageNormals[i][j], 
+                             fAverageNormals[i][j + 1], fMinZScaled, fMaxZScaled);
+            DrawFaceTextured(fMesh[i][j + 1], fMesh[i + 1][j + 1], fMesh[i + 1][j], 
+                             fAverageNormals[i][j + 1], fAverageNormals[i + 1][j + 1], 
+                             fAverageNormals[i + 1][j], fMinZScaled, fMaxZScaled);
+         }
+
+      glDisable(GL_POLYGON_OFFSET_FILL);
+      glDisable(GL_TEXTURE_1D);      
+      //Outlines:
+      glDisable(GL_LIGHTING);
+      glColor3d(0., 0., 0.);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+      for (Int_t i = 0; i < nX - 1; ++i)
+         for (Int_t j = 0; j < nY - 1; ++j)
+            DrawQuadOutline(fMesh[i + 1][j], fMesh[i][j], fMesh[i][j + 1], fMesh[i + 1][j + 1]);
+
+      glEnable(GL_LIGHTING);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   }
+   
+   //restore material properties from stack
+   glPopAttrib();
+
+   DrawZeroPlane();
+
+   glFlush();
+   DrawAxes(fp);
+   
+   glDeleteTextures(1, &fTextureName);
+}
+
+//______________________________________________________________________________
 void TGLHistPainter::SetGLParameters()
 {
    //Sets viewport, bounds for arcball
@@ -1000,6 +1148,39 @@ void TGLHistPainter::DrawFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const 
    glVertex3dv(v2.CArr());
    glNormal3dv(norm3.CArr());
    glVertex3dv(v3.CArr());
+   glEnd();
+}
+
+//______________________________________________________________________________
+void TGLHistPainter::DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+                                      const TGLVertex3 &v3, const TGLVector3 &norm1,
+                                      const TGLVector3 &norm2, const TGLVector3 &norm3,
+                                      Double_t zMin, Double_t zMax)
+{
+   Double_t zRange = zMax - zMin;
+
+   glBegin(GL_POLYGON);
+   glNormal3dv(norm1.CArr());
+   glTexCoord1d((v1.Z() - zMin) / zRange);   
+   glVertex3dv(v1.CArr());
+   glNormal3dv(norm2.CArr());
+   glTexCoord1d((v2.Z() - zMin) / zRange);
+   glVertex3dv(v2.CArr());
+   glNormal3dv(norm3.CArr());
+   glTexCoord1d((v3.Z() - zMin) / zRange);
+   glVertex3dv(v3.CArr());
+   glEnd();   
+}
+
+//______________________________________________________________________________
+void TGLHistPainter::DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+                                     const TGLVertex3 &v3, const TGLVertex3 &v4)
+{
+   glBegin(GL_POLYGON);
+   glVertex3dv(v1.CArr());
+   glVertex3dv(v2.CArr());
+   glVertex3dv(v3.CArr());
+   glVertex3dv(v4.CArr());
    glEnd();
 }
 
@@ -1353,8 +1534,9 @@ void TGLHistPainter::DrawAxes(Int_t frontPoint)const
 
       obj->Paint(lnk->GetOption());
       lnk = static_cast<TObjOptLink *>(lnk->Next());
-   }*/
-   
+   }
+*/
+
    f2DPass = kFALSE;
 
    gGLManager->SelectGLPixmap(fGLDevice);
@@ -1780,4 +1962,55 @@ void TGLHistPainter::ClearBuffer()const
    
    glClearColor(sc[0], sc[1], sc[2], 1.);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+namespace {
+   const GLubyte gDefTexture1[4 * TGLHistPainter::kTexLength] = 
+           {
+          //R    G    B    A
+            128, 0,   255, 200,
+            169, 4,   240, 200,
+            199, 73,  255, 200,
+            222, 149, 253, 200,
+            255, 147, 201, 200,
+            255, 47,  151, 200,
+            232, 0,   116, 200,
+            253, 0,   0,   200,
+            255, 62,  62,  200,
+            217, 111, 15,  200,
+            242, 151, 28,  200,
+            245, 172, 73,  200,
+            251, 205, 68,  200,
+            255, 255, 21,  200,
+            255, 255, 128, 200,
+            255, 255, 185, 200
+           };
+
+   const GLubyte gDefTexture2[4 * TGLHistPainter::kTexLength] = 
+           {
+          //R    G    B    A
+            230, 0,   115, 255,
+            255, 62,  158, 255,
+            255, 113, 113, 255,
+            255, 98,  21,  255,
+            255, 143, 89,  255,
+            249, 158, 23,  255,
+            252, 197, 114, 255,
+            252, 228, 148, 255,
+            66,  189, 121, 255,
+            121, 208, 160, 255,
+            89,  245, 37,  255,
+            183, 251, 159, 255,
+            0,   113, 225, 255,
+            64,  159, 255, 255,
+            145, 200, 255, 255,
+            202, 228, 255, 255
+           };
+}
+
+//______________________________________________________________________________
+void TGLHistPainter::InitTexture()
+{
+   for (Int_t i = 0, e = kTexLength * 4; i < e; ++i)
+      fTexture[i] = gDefTexture1[i];
 }
