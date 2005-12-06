@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.3 2005/12/02 21:35:19 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.4 2005/12/03 15:15:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -198,6 +198,9 @@ void Transform3D::SetIdentity() {
   fM[kZX] = 0.0;  fM[kZY] = 0.0; fM[kZZ] = 1.0; fM[kDZ] = 0.0;
 }
 
+
+
+
  // assign from rotation + translation
 void Transform3D::AssignFrom (const Rotation3D  & r,  const XYZVector & v) {  
   double rotData[9];
@@ -208,7 +211,7 @@ void Transform3D::AssignFrom (const Rotation3D  & r,  const XYZVector & v) {
   // second raw
   for (int i = 0; i < 3; ++i)  
     fM[kYX+i] = rotData[3+i];
-  // first raw
+  // third raw
   for (int i = 0; i < 3; ++i)  
     fM[kZX+i] = rotData[6+i];
 
@@ -220,6 +223,28 @@ void Transform3D::AssignFrom (const Rotation3D  & r,  const XYZVector & v) {
   fM[kDZ] = vecData[2];
       
  }
+
+
+// assign from a translation only (identity rotations) 
+void Transform3D::AssignFrom(const Rotation3D & r) {
+  double rotData[9];
+  r.GetComponents(rotData, rotData +9);
+  for (int i = 0; i < 3; ++i) { 
+    for (int j = 0; j < 3; ++j)  
+      fM[4*i + j] = rotData[3*i+j];
+    // empty vector data
+    fM[4*i + 3] = 0; 
+  }
+}
+
+
+// assign from a translation only (identity rotations) 
+void Transform3D::AssignFrom(const XYZVector & v) {
+  fM[kXX] = 1.0;  fM[kXY] = 0.0; fM[kXZ] = 0.0; fM[kDX] = v.X();
+  fM[kYX] = 0.0;  fM[kYY] = 1.0; fM[kYZ] = 0.0; fM[kDY] = v.Y();
+  fM[kZX] = 0.0;  fM[kZY] = 0.0; fM[kZZ] = 1.0; fM[kDZ] = v.Z();
+}
+
 
 /// transformations on a 3D plane
 Plane3D Transform3D::operator() (const Plane3D & plane) const { 

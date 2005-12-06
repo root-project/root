@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.6 2005/12/03 15:15:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.7 2005/12/03 15:22:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -92,6 +92,40 @@ namespace ROOT {
     {
       // is equivalent from having first the rotation and then the translation vector rotated
       AssignFrom( r, r(v) ); 
+    }
+
+    /**
+       Construct from a 3D Rotation only with zero translation
+    */
+    explicit Transform3D( const Rotation3D & r) { 
+      AssignFrom(r);
+    } 
+    // convenience methods for the other rotations (cannot use templates for conflict with LA)
+    explicit Transform3D( const AxisAngle & r) { 
+      AssignFrom(Rotation3D(r));
+    } 
+    explicit Transform3D( const EulerAngles & r) { 
+      AssignFrom(Rotation3D(r));
+    } 
+    explicit Transform3D( const Quaternion & r) { 
+      AssignFrom(Rotation3D(r));
+    } 
+    // TO DO: implement direct methods for axial rotations without going through Rotation3D
+    explicit Transform3D( const RotationX & r) { 
+      AssignFrom(Rotation3D(r));
+    } 
+    explicit Transform3D( const RotationY & r) { 
+      AssignFrom(Rotation3D(r));
+    } 
+    explicit Transform3D( const RotationZ & r) { 
+      AssignFrom(Rotation3D(r));
+    } 
+
+    /**
+       Construct from a translation only  with an identity rotation
+    */
+    explicit Transform3D( const XYZVector & v) { 
+      AssignFrom(v);
     }
 
 
@@ -365,9 +399,9 @@ namespace ROOT {
       if( fM[6] != rhs.fM[6] )  return false;
       if( fM[7] != rhs.fM[7] )  return false;
       if( fM[8] != rhs.fM[8] )  return false;
-      if( fM[6] != rhs.fM[9] )  return false;
-      if( fM[7] != rhs.fM[10] ) return false;
-      if( fM[8] != rhs.fM[11] ) return false;
+      if( fM[9] != rhs.fM[9] )  return false;
+      if( fM[10]!= rhs.fM[10] ) return false;
+      if( fM[11]!= rhs.fM[11] ) return false;
       return true;
     }
 
@@ -383,7 +417,19 @@ namespace ROOT {
      */
     void  AssignFrom( const Rotation3D & r, const XYZVector & v);  
 
+    /**
+       make transformation from only rotations (zero translation)
+     */
+    void  AssignFrom( const Rotation3D & r);  
 
+    /**
+       make transformation from only translation (identity rotations)
+     */
+    void  AssignFrom( const XYZVector & v);  
+
+    /**
+       Set identity transformation (identity rotation , zero translation)
+     */
     void SetIdentity() ; 
 
   private: 

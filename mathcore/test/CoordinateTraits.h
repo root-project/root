@@ -1,7 +1,7 @@
 #ifndef COORDINATETRAITS_H
 #define COORDINATETRAITS_H
 
-// $Id: CoordinateTraits.h,v 1.5 2005/08/12 15:46:52 fischler Exp $
+// $Id: CoordinateTraits.h,v 1.1 2005/09/19 14:22:38 brun Exp $
 //
 // Coordinate System traits useful for testing purposes.
 //
@@ -14,9 +14,12 @@
 
 #include <string>
 #include <typeinfo>
-#include "Math/GenVector/Cartesian3Dfwd.h"
-#include "Math/GenVector/Polar3Dfwd.h"
+#include "Math/GenVector/Cartesian3D.h"
+#include "Math/GenVector/Cylindrical3D.h"
+#include "Math/GenVector/CylindricalEta3D.h"
+#include "Math/GenVector/Polar3D.h"
 #include "Math/GenVector/PxPyPzE4D.h"
+#include "Math/GenVector/PxPyPzM4D.h"
 #include "Math/GenVector/PtEtaPhiE4D.h"
 #include "Math/GenVector/PtEtaPhiM4D.h"
 
@@ -53,6 +56,16 @@ struct CoordinateTraits < CylindricalEta3D<Scalar> >{
 };
 
 template <class Scalar>
+struct CoordinateTraits < Cylindrical3D<Scalar> >{
+  static const std::string name() {
+    std::string s = "Cylindrical Coordinates <";
+    s += typeid(Scalar).name();
+    s += "> (rho, z, phi)";
+    return s;
+  }
+};
+
+template <class Scalar>
 struct CoordinateTraits < Polar3D<Scalar> >{
   static const std::string name() {
     std::string s = "Polar Coordinates <";
@@ -70,6 +83,16 @@ struct CoordinateTraits < PxPyPzE4D<Scalar> >{
     std::string s = "PxPyPzE4D Coordinates <";
     s += typeid(Scalar).name();
     s += "> (Px, Py, Pz, E)";
+    return s;
+  }
+};
+
+template <class Scalar>
+struct CoordinateTraits < PxPyPzM4D<Scalar> >{
+  static const std::string name() {
+    std::string s = "PxPyPzM4D Coordinates <";
+    s += typeid(Scalar).name();
+    s += "> (Px, Py, Pz, M)";
     return s;
   }
 };

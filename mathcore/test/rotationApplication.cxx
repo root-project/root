@@ -48,8 +48,8 @@ using std::sin;
 using std::cos;
 
 //#define TRACE2
-#define TRACE1
-#define DEBUG
+//#define TRACE1
+//#define DEBUG
 
 using namespace ROOT::Math;
 
@@ -392,6 +392,9 @@ int doTest (TestRotation const & testRotation, XYZVector const & testVector,
   	#ifdef TRACE1
    	std::cout << " done\n";
 	#endif
+
+	if (ret == 0) std::cout << ".";
+
   return ret;
 }
 
@@ -443,8 +446,8 @@ int doTestOfR (TestRotation const & testRotation, XYZVector const & testVector){
    	std::cout << "---- doTestofR ----\n";
 	#endif
   int ret = 0;
-  const double ticks = 32;
-  #ifdef DEBUG
+  const double ticks = 100;  // move from 32 to 100 
+   #ifdef DEBUG
   std::cout << ">>>>> DisplacementVector3D< Cartesian3D<double> \n";
   #endif
   ret |= doTest <R, DisplacementVector3D< Cartesian3D<double> > >
@@ -487,7 +490,11 @@ int doTestOfR (TestRotation const & testRotation, XYZVector const & testVector){
   	#ifdef TRACE1
    	std::cout << " ---- doTestofR ---- done\n";
 	#endif
+
+	if (ret == 0) std::cout << ".";
+
   // TODO - other 4D coordinates
+
   return ret;
 }
 
@@ -495,6 +502,9 @@ int doTestOfR (TestRotation const & testRotation, XYZVector const & testVector){
 int exerciseTestCase (TestRotation const & testRotation, 
 		      XYZVector const & testVector)      
 {
+
+  std::cout << ">>>>> Rotation Tests of " << testVector << "\t\t: " ; 
+
   	#ifdef TRACE1
    	std::cout << "---- exerciseTestCase ----";
 	#endif
@@ -506,6 +516,13 @@ int exerciseTestCase (TestRotation const & testRotation,
   	#ifdef TRACE1
    	std::cout << " done\n";
 	#endif
+
+  if (ret == 0) 
+    std::cout << "\t OK\n"; 
+  else 
+    std::cout << "\t Failed!\n "; 
+
+
   return ret;
 }
 
@@ -533,6 +550,7 @@ int doTestA (XYZVector const & testVector, double ticks) {
   	#ifdef TRACE1
    	std::cout << " done\n";
 	#endif
+	if (ret == 0) std::cout << ".";
   return ret;
 }
 
@@ -550,7 +568,7 @@ int doTestLA (XYZVector const & testVector, double ticks) {
   v.SetXYZT ( x, y, z, t );  
   XYZVector rv;
   for (double angle = -4.0;  angle < 4.0; angle += .15) {
-    std::cout << "\n============ angle is " << angle << "/n";
+    //std::cout << "\n============ angle is " << angle << "\n";
     RotationX rx (angle);
     rv = rxv (angle, testVector);
     ret |= testApplication (rx, v, rv, ticks);  
@@ -564,6 +582,8 @@ int doTestLA (XYZVector const & testVector, double ticks) {
   	#ifdef TRACE1
    	std::cout << " done\n";
 	#endif
+
+	if (ret == 0) std::cout << ".";
   return ret;
 }
 
@@ -615,14 +635,21 @@ int doTestOfAxial (XYZVector const & testVector){
    	std::cout << " ---- doTestofR ---- done\n";
 	#endif
   // TODO - other 4D coordinates
+
+	if (ret == 0) std::cout << ".";
+
    return ret;
 }
 
 int exerciseAxialTest (XYZVector const & testVector)      
 {
+
   	#ifdef TRACE1
    	std::cout << "---- exerciseAxialTest ----";
 	#endif
+
+	std::cout << ">>>>> Axial Rotation Tests of " << testVector << "\t\t: "; 
+
   int ret = 0;
   ret |= doTestOfAxial <RotationX> (testVector);
   ret |= doTestOfAxial <RotationY> (testVector);
@@ -630,6 +657,12 @@ int exerciseAxialTest (XYZVector const & testVector)
   	#ifdef TRACE1
    	std::cout << " done\n";
 	#endif
+
+  if (ret == 0) 
+    std::cout << "\t OK\n"; 
+  else 
+    std::cout << "\t Failed!\n "; 
+
   return ret;
 }
 

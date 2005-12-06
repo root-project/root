@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -60,6 +60,17 @@ namespace ROOT {
     */
     typedef PositionVector3D< Polar3D<float> > Polar3DPointF; 
     typedef Polar3DPoint Polar3DPointD; 
+
+    /**
+       3D Point based on the cylindrical coordinates rho, z, phi in double precision. 
+    */
+    typedef PositionVector3D< Cylindrical3D<double> > RhoZPhiPoint; 
+    /**
+       3D Point based on the cylindrical coordinates rho, z, phi in single precision. 
+    */
+    typedef PositionVector3D< Cylindrical3D<float> > RhoZPhiPointF; 
+    typedef RhoZPhiPoint RhoZPhiPointD; 
+
 
   } // end namespace Math
 

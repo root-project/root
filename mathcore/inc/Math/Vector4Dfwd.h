@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Vector4Dfwd.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Vector4Dfwd.h,v 1.2 2005/10/27 18:00:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -29,6 +29,7 @@ namespace ROOT {
 
     template<typename T> class PxPyPzE4D;  
     template<typename T> class PtEtaPhiE4D;  
+    template<typename T> class PxPyPzM4D;  
     template<typename T> class PtEtaPhiM4D;  
 //     template<typename T> class EEtaPhiMSystem;  
 
@@ -39,6 +40,9 @@ namespace ROOT {
        LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in double precision with metric (-,-,-,+) 
     */
     typedef LorentzVector<PxPyPzE4D<double> > XYZTVector;
+    // for consistency 
+    typedef LorentzVector<PxPyPzE4D<double> > PxPyPzEVector;  
+    
 
     /**
      LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+) 
@@ -46,6 +50,10 @@ namespace ROOT {
     typedef LorentzVector< PxPyPzE4D <float> > XYZTVectorF;
 
     
+    /**
+       LorentzVector based on the x, y, z,  and Mass in double precision
+    */
+    typedef LorentzVector<PxPyPzM4D<double> > PxPyPzMVector;
 
     /**
        LorentzVector based on the cylindrical coordinates Pt, eta, phi and E (rho, eta, phi, t) in double precision

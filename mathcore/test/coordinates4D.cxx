@@ -17,6 +17,7 @@
 #include "Math/GenVector/etaMax.h"
 
 #include "Math/GenVector/PxPyPzE4D.h"
+#include "Math/GenVector/PxPyPzM4D.h"
 #include "Math/GenVector/PtEtaPhiE4D.h"
 #include "Math/GenVector/PtEtaPhiM4D.h"
 #include "Math/GenVector/LorentzVector.h"
@@ -61,23 +62,26 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, int ticks ) {
   if (ss1 == 0 || ss2 == 0) { // TODO - the ss2==0 makes a big change??
     if ( diff > ticks*epsilon ) {
       ret=3;
-      std::cout << "Absolute discrepancy in " << coord << "(): "
+      std::cout << "\nAbsolute discrepancy in " << coord << "(): "
                 << ss1 << " != " << ss2 << "\n"
 	        << "   (Allowed discrepancy is " << ticks*epsilon 
 		<< ")\nDifference is " << diff/epsilon << " ticks\n";
     }
     return ret;
   }
-  if ( (ss1 + ss2 == ss1) != (ss1 + ss2 == ss2) ) {
-      ret=5;
-      std::cout << "Infinity discrepancy in " << coord << "(): "
-                << ss1 << " != " << ss2 << "\n";  
-      return ret;
+  // infinity dicrepancy musy be checked with max precision
+  long double sd1(ss1); 
+  long double sd2(ss2); 
+  if ( (sd1 + sd2 == sd1) != (sd1 + sd2 == sd2) ) {
+    ret=5;
+    std::cout << "\nInfinity discrepancy in " << coord << "(): "
+	      << sd1 << " != " << sd2 << "\n";
+    return ret;
   }
   Scalar denom = ss1 > 0 ? ss1 : -ss1;
   if ((diff/denom > ticks*epsilon) && (diff > ticks*epsilon)) {
     ret=9;
-    std::cout << "Discrepancy in " << coord << "(): "
+    std::cout << "\nDiscrepancy in " << coord << "(): "
               << ss1 << " != " << ss2 << "\n"
 	      << "   (Allowed discrepancy is " << ticks*epsilon*ss1 
               << ")\nDifference is " << (diff/denom)/epsilon << " ticks\n";
@@ -117,6 +121,9 @@ int compare4D (const V1 & v1, const V2 & v2, int ticks) {
 	      << "with v = (" << v1.x() << ", " << v1.y() << ", " 
 	      << v1.z() << ", " << v1.t() << ")\n";
   }
+  else { 
+    std::cout << ".";
+  }
 
   return ret;
 }
@@ -128,7 +135,7 @@ template <class C>
 int test4D ( const LorentzVector<C> & v, int ticks ) {
 
 #ifdef DEBUG
-  std::cout <<"\n>>>>> Testing LorentzVector from " << v << " ticks = " << ticks << std::endl;
+  std::cout <<"\n>>>>> Testing LorentzVector from " << v << " ticks = " << ticks << "\t: ";
 #endif
 
   int ret = 0;
@@ -177,19 +184,23 @@ int test4D ( const LorentzVector<C> & v, int ticks ) {
 
   LorentzVector< PtEtaPhiM4D<double> > vrepm_d ( rho, eta, phi, v.M() );
   ret |= compare4D( vxyzt_d, vrep_d, ticks);
+
+  LorentzVector< PxPyPzM4D  <double> > vxyzm_d ( v.x(), v.y(), v.z(), v.M() );
+  ret |= compare4D( vrep_d, vxyzm_d, ticks);
   
   LorentzVector< PxPyPzE4D<float> >      vxyzt_f (v.x(), v.y(), v.z(), v.t());
+  ret |= compare4D( vxyzt_d, vxyzt_f, ticks);
 
   LorentzVector< PtEtaPhiE4D<float> > vrep_f ( rho, eta, phi, v.t() );
-  ret |= compare4D( vxyzt_d, vxyzt_f, ticks);
-  ret |= compare4D( vxyzt_d, vrep_d, ticks);
   ret |= compare4D( vxyzt_f, vrep_f, ticks);
 
   LorentzVector< PtEtaPhiM4D<float> > vrepm_f ( rho, eta, phi, v.M() );
-  ret |= compare4D( vxyzt_d, vxyzt_f, ticks);
-  ret |= compare4D( vxyzt_d, vrepm_d, ticks);
   ret |= compare4D( vxyzt_f, vrepm_f, ticks);
 
+  LorentzVector< PxPyPzM4D<float> >      vxyzm_f (v.x(), v.y(), v.z(), v.M());
+  ret |= compare4D( vrep_f, vxyzm_f, ticks);
+
+  if (ret == 0) std::cout << "\t OK\n";
   return ret; 
 }
 

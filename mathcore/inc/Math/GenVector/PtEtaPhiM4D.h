@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,13 +13,18 @@
 // Created by: fischler at Wed Jul 21 2005
 //   Similar to PtEtaPhiMSystem by moneta
 // 
-// Last update: $Id: PtEtaPhiM4D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: PtEtaPhiM4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #define ROOT_Math_GenVector_PtEtaPhiM4D  1
 
 #include "Math/GenVector/etaMax.h"
 #include "Math/GenVector/GenVector_exception.h"
+
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+#include "Math/GenVector/PxPyPzE4D.h"
+#endif
 
 #include <cmath>
 
@@ -277,6 +282,35 @@ public:
   Scalar y() const { return Y(); }
   Scalar z() const { return Z(); } 
   Scalar t() const { return E(); } 
+
+
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+
+  // ====== Set member functions for coordinates in other systems =======
+
+  void SetPx(Scalar px) {  
+    GenVector_exception e("PtEtaPhiM4D::SetPx() is not supposed to be called");
+    Throw(e);
+    PxPyPzE4D<Scalar> v(*this); v.SetPx(px); *this = PtEtaPhiM4D<Scalar>(v);
+  }
+  void SetPy(Scalar py) {  
+    GenVector_exception e("PtEtaPhiM4D::SetPx() is not supposed to be called");
+    Throw(e);
+    PxPyPzE4D<Scalar> v(*this); v.SetPy(py); *this = PtEtaPhiM4D<Scalar>(v);
+  }
+  void SetPz(Scalar pz) {  
+    GenVector_exception e("PtEtaPhiM4D::SetPx() is not supposed to be called");
+    Throw(e);
+    PxPyPzE4D<Scalar> v(*this); v.SetPz(pz); *this = PtEtaPhiM4D<Scalar>(v);
+  }
+  void SetE(Scalar t) {  
+    GenVector_exception e("PtEtaPhiM4D::SetE() is not supposed to be called");
+    Throw(e);
+    PxPyPzE4D<Scalar> v(*this); v.SetE(t);   *this = PtEtaPhiM4D<Scalar>(v);
+  }
+
+#endif
 
 private:
 

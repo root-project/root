@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.4 2005/11/24 14:45:50 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.5 2005/12/02 21:35:19 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -15,25 +15,30 @@
 
 #pragma link C++ class ROOT::Math::Cartesian3D<double>+;
 #pragma link C++ class ROOT::Math::Polar3D<double>+;
+#pragma link C++ class ROOT::Math::Cylindrical3D<double>+;
 #pragma link C++ class ROOT::Math::CylindricalEta3D<double>+;
 
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cylindrical3D<double> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<double> >+;
 
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<double> >+;
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cylindrical3D<double> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> >+;
 
 #pragma link C++ class ROOT::Math::PxPyPzE4D<double>+;
 #pragma link C++ class ROOT::Math::PtEtaPhiE4D<double>+;
+#pragma link C++ class ROOT::Math::PxPyPzM4D<double>+;
+#pragma link C++ class ROOT::Math::PtEtaPhiM4D<double>+;
 //#pragma link C++ class ROOT::Math::EEtaPhiMSystem<double>+;
 //#pragma link C++ class ROOT::Math::PtEtaPhiMSystem<double>+;
 
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> >+;
-//#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::EEtaPhiMSystem<double> >+;
-//#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiMSystem<double> >+;
+#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<double> >+;
+#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >+;
 
 // rotations
 #pragma link C++ class ROOT::Math::Rotation3D+;
@@ -65,6 +70,8 @@
 
 #pragma link C++ typedef ROOT::Math::XYZTVector;
 #pragma link C++ typedef ROOT::Math::PtEtaPhiEVector;
+#pragma link C++ typedef ROOT::Math::PxPyPzMVector;
+#pragma link C++ typedef ROOT::Math::PtEtaPhiMVector;
 
 
 

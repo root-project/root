@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:58:46 2005
 // Major revamp:  M. Fischler  at Fri Jun 10 2005
 // 
-// Last update: $Id: CylindricalEta3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: CylindricalEta3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_CylindricalEta3D 
 #define ROOT_Math_GenVector_CylindricalEta3D  1
@@ -26,8 +26,8 @@
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
 #include "Math/GenVector/GenVector_exception.h"
+#include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/Polar3D.h"
-#include "Math/GenVector/CylindricalEta3D.h"
 #endif
  
 

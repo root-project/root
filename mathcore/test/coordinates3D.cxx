@@ -15,6 +15,7 @@
 #include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/Polar3D.h"
 #include "Math/GenVector/CylindricalEta3D.h"
+#include "Math/GenVector/Cylindrical3D.h"
 #include "Math/GenVector/etaMax.h"
 
 #include "Math/Vector3Dfwd.h"
@@ -58,23 +59,26 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, int ticks ) {
   if (ss1 == 0 || ss2 == 0) { // TODO - the ss2==0 makes a big change??
     if ( diff > ticks*epsilon ) {
       ret=3;
-      std::cout << "Absolute discrepancy in " << coord << "(): "
+      std::cout << "\nAbsolute discrepancy in " << coord << "(): "
                 << ss1 << " != " << ss2 << "\n"
                 << "   (Allowed discrepancy is " << ticks*epsilon
                 << ")\nDifference is " << diff/epsilon << " ticks\n";
     }
     return ret;
   }
-  if ( (ss1 + ss2 == ss1) != (ss1 + ss2 == ss2) ) {
-      ret=5;
-      std::cout << "Infinity discrepancy in " << coord << "(): "
-                << ss1 << " != " << ss2 << "\n";
-      return ret;
+  // infinity dicrepancy musy be checked with max precision
+  long double sd1(ss1); 
+  long double sd2(ss2); 
+  if ( (sd1 + sd2 == sd1) != (sd1 + sd2 == sd2) ) {
+    ret=5;
+    std::cout << "\nInfinity discrepancy in " << coord << "(): "
+	      << sd1 << " != " << sd2 << "\n";
+    return ret;
   }
   Scalar denom = ss1 > 0 ? ss1 : -ss1;
   if ((diff/denom > ticks*epsilon) && (diff > ticks*epsilon)) {
     ret=9;
-    std::cout << "Discrepancy in " << coord << "(): "
+    std::cout << "\nDiscrepancy in " << coord << "(): "
               << ss1 << " != " << ss2 << "\n"
               << "   (Allowed discrepancy is " << ticks*epsilon*ss1
               << ")\nDifference is " << (diff/denom)/epsilon << " ticks\n";
@@ -103,12 +107,18 @@ int compare3D (const V1 & v1, const V2 & v2, int ticks) {
   }
 
   if (ret != 0) {
-    std::cout << "Discrepancy detected (see above) is between:\n  "
+    std::cout << "\nDiscrepancy detected (see above) is between:\n  "
               << CoordinateTraits<CoordType1>::name() << " and\n  "
               << CoordinateTraits<CoordType2>::name() << "\n"
               << "with v = (" << v1.x() << ", " << v1.y() << ", " << v1.z()
               << ")\n\n\n";
   }
+  else { 
+#ifdef DEBUG
+    std::cout << ".";
+#endif
+  }
+
 
   return ret;
 }
@@ -127,6 +137,7 @@ int test3D ( const DisplacementVector3D<C> & v, int ticks ) {
   double theta = r>0 ? std::acos ( v.z()/r ) : 0;
   double rho = std::sqrt (v.x()*v.x() + v.y()*v.y());
   double phi = rho>0 ? std::atan2 (v.y(), v.x()) : 0;
+  double z   = v.z();
   DisplacementVector3D< Polar3D<double> > vrtp_d ( r, theta, phi );
 
   double eta;
@@ -161,7 +172,7 @@ int test3D ( const DisplacementVector3D<C> & v, int ticks ) {
   }
 
 #ifdef DEBUG
-  std::cout << ">>>>> Testing DisplacementVector3D " << std::endl;
+  std::cout << "           Testing DisplacementVector3D :  ";
 #endif
 
   DisplacementVector3D< CylindricalEta3D<double> > vrep_d ( rho, eta, phi );
@@ -170,6 +181,12 @@ int test3D ( const DisplacementVector3D<C> & v, int ticks ) {
   ret |= compare3D( vrtp_d, vxyz_d, ticks);
   ret |= compare3D( vxyz_d, vrep_d, ticks);
   ret |= compare3D( vrtp_d, vrep_d, ticks);
+
+  DisplacementVector3D< Cylindrical3D<double> >   vrzp_d ( rho, z, phi );
+
+  ret |= compare3D( vxyz_d, vrzp_d, ticks);
+  ret |= compare3D( vrtp_d, vrzp_d, ticks);
+  ret |= compare3D( vrep_d, vrzp_d, ticks);
 
   DisplacementVector3D< Cartesian3D<float> >      vxyz_f (v.x(), v.y(), v.z());
   DisplacementVector3D< Polar3D<float> >          vrtp_f ( r, theta, phi );
@@ -184,17 +201,20 @@ int test3D ( const DisplacementVector3D<C> & v, int ticks ) {
   ret |= compare3D( vrtp_f, vrep_f, ticks);
 
 #ifdef DEBUG
-  std::cout << ">>>>> Testing PositionVector3D " << std::endl;
+  if (ret == 0) std::cout << "\t OK\n";
+  std::cout << "           Testing PositionVector3D     :   ";
 #endif
 
-#if 0
-  PositionVector3D< Cartesian3D     <double> > pxyz_d; pxyz_d = vxyz_d;
-  PositionVector3D< Polar3D         <double> > prtp_d; pxyz_d = vrtp_d;
-  PositionVector3D< CylindricalEta3D<double> > prep_d; pxyz_d = vrep_d;
 
-  ret |= compare3D( vxyz_d, prtp_d, ticks);
+  PositionVector3D< Cartesian3D     <double> > pxyz_d; pxyz_d = vxyz_d;
+  PositionVector3D< Polar3D         <double> > prtp_d; prtp_d = vrtp_d;
+  PositionVector3D< CylindricalEta3D<double> > prep_d; prep_d = vrep_d;
+  PositionVector3D< Cylindrical3D   <double> > przp_d; przp_d = vrzp_d;
+
+  ret |= compare3D( pxyz_d, prtp_d, ticks);
   ret |= compare3D( vxyz_d, prep_d, ticks);
   ret |= compare3D( vrtp_d, prep_d, ticks);
+  ret |= compare3D( vxyz_d, przp_d, ticks);
 
   PositionVector3D< Cartesian3D<float> >      pxyz_f (v.x(), v.y(), v.z());
   PositionVector3D< Polar3D<float> >          prtp_f ( r, theta, phi );
@@ -207,8 +227,10 @@ int test3D ( const DisplacementVector3D<C> & v, int ticks ) {
   ret |= compare3D( vxyz_f, pxyz_f, ticks);
   ret |= compare3D( vxyz_f, prep_f, ticks);
   ret |= compare3D( vrtp_f, prep_f, ticks);
-#endif
 
+#ifdef DEBUG
+  if (ret == 0) std::cout << "\t\t OK\n";
+#endif
   return ret;
 }
 
@@ -236,8 +258,8 @@ int main () {
 // Larger ratios among coordinates presents a precision challenge
   ret |= test3D (XYZVector ( 16.0, 0.02, .01 )   ,10 );
   ret |= test3D (XYZVector ( -16.0, 0.02, .01 )  ,10 );
-  ret |= test3D (XYZVector ( -.01, 16.0, .01 )   ,10 ); 
-  ret |= test3D (XYZVector ( -.01, -16.0, .01 )  ,10 ); 
+  ret |= test3D (XYZVector ( -.01, 16.0, .01 )   ,2000 ); 
+  ret |= test3D (XYZVector ( -.01, -16.0, .01 )  ,2000 ); 
   ret |= test3D (XYZVector ( 1.0, 2.0, 30.0 )    ,10 );  
   	// NOTE -- these larger erros are likely the results of treating
 	//         the vector in a ctor or assignment as foreign... 
