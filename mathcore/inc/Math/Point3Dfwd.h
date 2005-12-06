@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.2 2005/12/06 17:17:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -26,6 +26,7 @@ namespace ROOT {
     template<class CoordSystem> class PositionVector3D; 
 
     template<typename T> class Cartesian3D;  
+    template<typename T> class Cylindrical3D;  
     template<typename T> class CylindricalEta3D;  
     template<typename T> class Polar3D;  
 
