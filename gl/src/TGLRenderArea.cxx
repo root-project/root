@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.cxx,v 1.4 2005/10/26 14:02:00 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.cxx,v 1.5 2005/11/29 09:25:51 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -41,7 +41,6 @@ TGLWindow::~TGLWindow()
 Bool_t TGLWindow::HandleConfigureNotify(Event_t *event)
 {
    //
-   gVirtualX->ResizeWindow(fId, event->fWidth, event->fHeight);
    Emit("HandleConfigureNotify(Event_t*)", (Long_t)event);
    return kTRUE;
 }

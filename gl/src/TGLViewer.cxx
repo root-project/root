@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.27 2005/11/24 14:23:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.28 2005/12/05 17:34:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1182,9 +1182,20 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
       Error("TGLViewer::SetViewport", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
       return;
    }
+   // Only process if changed
+   if (fViewport.X() == x && fViewport.Y() == y &&
+       fViewport.Width() == width && fViewport.Height() == height) {
+      return;
+   }
+       
    fViewport.Set(x, y, width, height);
    fCurrentCamera->SetViewport(fViewport);
-   RequestDraw();
+   
+   // Request redraw via timer as window resize can result in stream of calls
+   fRedrawTimer->RequestDraw(20, kMed);
+   if (gDebug>2) {
+      Info("TGLViewer::SetViewport", "updated - corner %d,%d dimensions %d,%d", x, y, width, height);          
+   }
 }
 
 //______________________________________________________________________________
