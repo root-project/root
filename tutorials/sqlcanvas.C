@@ -1,5 +1,7 @@
-// to run this macro, you need hsimple.root file
-// from root tutorial page
+// This is slight modification of ntuple1.C example.
+// A canvas with subpads is produced, stored to an sql data base and read back
+// To run this macro, you need the hsimple.root file, produced by the hsimple.C macro
+// Author: S.Linev
 
 // example configuration for MySQL 4.1
 const char* dbname = "mysql://host.domain/test";
@@ -110,12 +112,18 @@ void canvas_write()
    gStyle->SetStatColor(19);
    gBenchmark->Show("ntuple1");
    
-//   TFile* f = TFile::Open("test.root","recreate");
-//   c1->Write("Canvas");
-//   delete f;
-
    TSQLFile* fsql1 = new TSQLFile(dbname, "recreate", username, userpass);
    if (fsql1->IsZombie()) { delete fsql1; return; }
+
+//  changing TSQLFile configuration, you may improve speed 
+//  of reading or writing object to/from sql database
+ 
+//   fsql1->SetUseSuffixes(kFALSE);
+//   fsql1->SetArrayLimit(1000);
+//   fsql1->SetUseIndexes(1);
+//   fsql1->SetTablesType("ISAM");
+//   fsql1->SetUseTransactions(kFALSE);
+
   
    //  Unncomment this line to see all SQL commands in log file
    //  fsql1->StartLogFile("canvas.log");

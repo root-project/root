@@ -1,3 +1,9 @@
+// This is an example illustrating how the TSQLFile class can be used.
+// Histogram, list of TBox and clones array of TBox objects are stored
+// to TSQLFile and read back.
+// Except for the specific TSQLFile configuration, the TSQLFile functionality
+// is absolutely similar to a normal root TFile
+// Author: S.Linev
 
 // example configuration for MySQL 4.1
 const char* dbname = "mysql://host.domain/test";
@@ -12,17 +18,24 @@ const char* userpass = "pass";
 
 void sqltables() 
 {
-    tables_write();
-    tables_read();
+   tables_write();
+   tables_read();
 }
-
 
 void tables_write() 
 {
    // first connect to data base
-   // recreate deletes all your tables !!!! 
+   // "recreate" option delete all your tables !!!! 
    TSQLFile* f = new TSQLFile(dbname, "recreate", username, userpass);
    if (f->IsZombie()) { delete f; return; }
+ 
+   // you can change configuration only until first object 
+   // is writen to TSQLFile
+   f->SetUseSuffixes(kFALSE);
+   f->SetArrayLimit(1000);
+   f->SetUseIndexes(1);
+//   f->SetTablesType("ISAM");
+//   f->SetUseTransactions(kFALSE);
 
    // lets first write histogram
    TH1I* h1 = new TH1I("histo1","histo title", 1000, -4., 4.);
@@ -37,14 +50,15 @@ void tables_write()
       TBox* b = new TBox(n*10,n*100,n*20,n*200);  
       arr->Add(b, Form("option_%d_option",n));
    }
-   arr->Write("arr",TObject::kSingleKey);
- 
-   // dummy, but possible situation
-   // just TObject instance 
-   TObject* t = new TObject;
-   t->Write("tobj");
+   arr->Write("list",TObject::kSingleKey);
 
-   // when file is closed (deleted), StreamerInfos will be stored to database
+   // clones array is also strored as single key
+   TClonesArray clones("TBox",10);
+   for(int n=0;n<10;n++) 
+       new (clones[n]) TBox(n*10,n*100,n*20,n*200);
+   clones.Write("clones",TObject::kSingleKey);
+
+   // close connection to database
    delete f;
 }
 
@@ -55,7 +69,7 @@ void tables_read()
    TSQLFile* f = new TSQLFile(dbname, "open", username, userpass);
    if (f->IsZombie()) { delete f; return; }
    
-   // see list of files
+   // see list of keys
    f->ls();
    
    // get histogram from DB and draw it
@@ -66,16 +80,26 @@ void tables_read()
    }
    
    // get TList with other objects
-   TObject* obj = f->Get("arr");
+   TObject* obj = f->Get("list");
+   cout << "Printout of TList object" << endl;
    if (obj!=0) obj->Print("*");
    delete obj;
 
-   // and just read TObject 
-   obj = f->Get("tobj");
+   // and get TClonesArray
+   obj = f->Get("clones");
+   cout << "Printout of TClonesArray object" << endl;
    if (obj!=0) obj->Print("*");
    delete obj;
+
+   // this is query to select data of hole class from different tables
+   cout << "================ TBox QUERY ================ " << endl;
+   cout << f->MakeSelectQuery(TBox::Class()) << endl;
+   cout << "================ END of TBox QUERY ================ " << endl;
+
+   cout << "================== TH1I QUERY ================ " << endl;
+   cout << f->MakeSelectQuery(TH1I::Class()) << endl;
+   cout << "================ END of TH1I QUERY ================ " << endl;
    
    // close connection to database
    delete f;
 }
-
