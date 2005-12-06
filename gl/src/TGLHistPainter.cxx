@@ -475,7 +475,7 @@ void TGLHistPainter::AdjustScales()
    
    fScaleX = maxDim / xRange;
    fScaleY = maxDim / yRange;
-   fScaleZ = maxDim / zRange / 1.5;
+   fScaleZ = maxDim / zRange / 1.3; //1.5
    fMinXScaled = fMinX * fScaleX;
    fMaxXScaled = fMaxX * fScaleX;
    fMinYScaled = fMinY * fScaleY;
@@ -1002,11 +1002,11 @@ void TGLHistPainter::SetGLParameters()
    else if (fViewport[2] < fViewport[3])
       fry = fViewport[3] / double(fViewport[2]);
 
-   fFrustum[0] = maxDim / 1.15 * frx;
-   fFrustum[1] = maxDim / 1.15 * fry;
+   fFrustum[0] = maxDim;// / 1.15 * frx;
+   fFrustum[1] = maxDim;// / 1.15 * fry;
    fFrustum[2] = maxDim * 0.707;
    fFrustum[3] = 3 * maxDim;
-   fShift = maxDim * 1.7;
+   fShift = maxDim * 1.5;//1.7;
 }
 
 //______________________________________________________________________________
