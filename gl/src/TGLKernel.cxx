@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.38 2005/11/24 12:29:12 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.39 2005/11/24 23:30:05 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -940,8 +940,8 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
          glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
          nextv += pt6;
          for (i=0;i<ndiv;i++) {
-             nextv -= 3;
-             glVertex3fv(nextv);
+            nextv -= 3;
+            glVertex3fv(nextv);
          }
          if (nseg > 0)
             glVertex3fv(nextv+pt3-3);
@@ -956,8 +956,8 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
             exnextv +=3;
          }
          if (nseg > 0) {
-             glVertex3fv(exnextv- pt3);
-             glVertex3fv(nextv  - pt3);
+            glVertex3fv(exnextv- pt3);
+            glVertex3fv(nextv  - pt3);
          }
       }
       glEnd();

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: Rotated.cxx,v 1.4 2005/09/05 14:43:46 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: Rotated.cxx,v 1.5 2005/11/11 15:29:46 couet Exp $
 // Author: O.Couet   17/11/93
 
 #ifndef _XVERTEXT_INCLUDED_
@@ -372,7 +372,7 @@ static int XRotPaintAlignedString(Display *dpy, XFontStruct *font, float angle, 
 
    /* y position */
    if(align==TLEFT || align==TCENTRE || align==TRIGHT)
-       hot_y=(float)item->fRowsIn/2*gRotStyle.fMagnify;
+      hot_y=(float)item->fRowsIn/2*gRotStyle.fMagnify;
    else if(align==MLEFT || align==MCENTRE || align==MRIGHT)
    {
       /*  Modify by O.Couet to have Bottom alignment without font->descent */
@@ -957,12 +957,12 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
 
    /* magnify horizontal text */
    if(gRotStyle.fMagnify!=1.) {
-       imageIn=XRotMagnifyImage(dpy, imageIn);
+      imageIn=XRotMagnifyImage(dpy, imageIn);
 
-       old_cols_in=item->fColsIn;
-       old_rows_in=item->fRowsIn;
-       item->fColsIn=int((float)item->fColsIn*gRotStyle.fMagnify);
-       item->fRowsIn=int((float)item->fRowsIn*gRotStyle.fMagnify);
+      old_cols_in=item->fColsIn;
+      old_rows_in=item->fRowsIn;
+      item->fColsIn=int((float)item->fColsIn*gRotStyle.fMagnify);
+      item->fRowsIn=int((float)item->fRowsIn*gRotStyle.fMagnify);
    }
 
    /* how big will rotated text be ? */
@@ -1047,7 +1047,7 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    if(gRotStyle.fMagnify!=1.) {
       item->fColsIn=old_cols_in;
       item->fRowsIn=old_rows_in;
-  }
+   }
 
 
 #ifdef CACHE_BITMAPS
@@ -1185,8 +1185,8 @@ static void XRotFreeTextItem(Display *dpy, RotatedTextItem_t *item)
    if(item->font_name!=0)
       free(item->font_name);
 
-  free((char *)item->fCornersX);
-  free((char *)item->fCornersY);
+   free((char *)item->fCornersX);
+   free((char *)item->fCornersY);
 
 #ifdef CACHE_BITMAPS
    XFreePixmap(dpy, item->fBitmap);
