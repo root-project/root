@@ -10,7 +10,7 @@ void img2pad()
    img->SetConstRatio(kFALSE);
    img->Draw("N");
 
-   TCanvas *c = gROOT->GetListOfCanvases()->FindObject("rose512.jpg");
+   TCanvas *c = gROOT->GetListOfCanvases()->FindObject("rose512jpg");
    c->SetFixedAspectRatio();
 
    TCanvas *c = new TCanvas("roses", "roses", 800, 800);
