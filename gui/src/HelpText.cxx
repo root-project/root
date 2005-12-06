@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.9 2004/04/24 11:00:04 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.10 2004/07/09 12:34:45 rdm Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
@@ -130,8 +130,8 @@ Its frame is drawn with a special color.\n\
 A canvas may be automatically divided into pads via TPad::Divide.\n\
 When a canvas/pad is divided, one can directly set the current path to one of \n\
 the subdivisions by pointing to this pad with the middle button. For example:\n\
-  c1.Divide(2,3); // create 6 pads (2 divisions along x, 3 along y).\n\
-  To set the current pad to the bottom right pad, do  c1.cd(6);\n\
+   c1.Divide(2,3); // create 6 pads (2 divisions along x, 3 along y).\n\
+   To set the current pad to the bottom right pad, do  c1.cd(6);\n\
 Note that c1.cd() is equivalent to c1.cd(0) and sets the current pad\n\
 to c1 itself.\n\n\
 ";
