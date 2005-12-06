@@ -46,7 +46,7 @@ $(REFLEXLIB):   $(REFLEXO) $(MAINLIBS)
 genreflex:
 		@if [ -x "`which python`" ]; then \
 		if [ -f $(GCCXMLPATHPY) ]; then rm -f $(GCCXMLPATHPY); fi; \
-		echo "gccxmlpath = '$(GCCXMLDIR)'" > $(GCCXMLPATHPY); \
+		echo "gccxmlpath = '$(GCCXML)'" > $(GCCXMLPATHPY); \
 		cd ./reflex/python; python ./setup.py install --prefix ../../; \
 		else echo "WARNING: No python executable found will not install genreflex script"; fi
 
