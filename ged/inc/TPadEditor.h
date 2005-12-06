@@ -53,7 +53,7 @@ protected:
    TGRadioButton       *fBmode1;           // set raised pad border mode
    TGLineWidthComboBox *fBsize;            // set pad border size
    Bool_t               fInit;             // init flag 
-   TGCompositeFrame    *f7;                // container frame;  
+   TGCompositeFrame    *f7;                // container frame  
    
    virtual void ConnectSignals2Slots();
  

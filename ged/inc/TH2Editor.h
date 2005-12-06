@@ -58,8 +58,8 @@ protected:
    TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
    TGCompositeFrame    *fBinContainer;             // Container for fBin
    TGTextEntry         *fTitle;           // histogram title input field
-   TGComboBox	       *fTypeCombo;       // histogram type combo box
-   TGComboBox 	       *fCoordsCombo;     // Coordinate System combo box
+   TGComboBox          *fTypeCombo;       // histogram type combo box
+   TGComboBox          *fCoordsCombo;     // Coordinate System combo box
    TGComboBox          *fContCombo;       // Contour selecting combo box 
    TGLabel             *fColContLbl;      // No. of Contours Label 1
    TGLabel             *fColContLbl1;     // No. of Contours Label 2   
@@ -118,6 +118,7 @@ protected:
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGColorSelect       *fFrameColor;      // Select the Frame Color
    TGedPatternSelect   *fFramePattern;    // Select the Frame Pattern Style
+   TGLabel             *fNameLabel2;      // selected object name on the Binning tab
    
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);

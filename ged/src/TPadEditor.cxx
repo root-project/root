@@ -76,7 +76,6 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGCompositeFrame *f3 = new TGCompositeFrame(f2, 40, 20, kVerticalFrame);
-   f2->AddFrame(f3, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
    fCrosshair = new TGCheckButton(f3, "Crosshair", kPAD_CROSS);
    fCrosshair->SetToolTipText("Set crosshair");
    f3->AddFrame(fCrosshair, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
@@ -86,9 +85,9 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
    fTickX = new TGCheckButton(f3, "TickX", kPAD_TICKX);
    fTickX->SetToolTipText("Set tick marks along X");
    f3->AddFrame(fTickX, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
+   f2->AddFrame(f3, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
 
    TGCompositeFrame *f4 = new TGCompositeFrame(f2, 40, 20, kVerticalFrame);
-   f2->AddFrame(f4, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
    fEditable = new TGCheckButton(f4, "Edit", kPAD_EDIT);
    fEditable->SetToolTipText("Set editable mode");
    f4->AddFrame(fEditable, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
@@ -98,6 +97,7 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
    fTickY = new TGCheckButton(f4, "TickY", kPAD_TICKY);
    fTickY->SetToolTipText("Set tick marks along Y");
    f4->AddFrame(fTickY, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
+   f2->AddFrame(f4, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
 
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
@@ -159,6 +159,12 @@ TPadEditor::~TPadEditor()
 { 
    // Destructor of fill editor.
 
+
+   // children of TGButonGroup are not deleted 
+   delete fBmode;
+   delete fBmode0;
+   delete fBmode1;
+   
    TGFrameElement *el;
    TIter next(GetList());
    

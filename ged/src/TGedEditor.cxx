@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.23 2005/11/11 15:38:30 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.24 2005/11/25 09:56:35 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -63,7 +63,6 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       fCanvas = canvas;
       fClass  = fModel->IsA();
       GetEditors();
-      ConnectToCanvas(canvas);
       SetWindowName(Form("%s_Editor", canvas->GetName()));
    } else {
       fModel  = 0;
@@ -79,14 +78,29 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       if (ch)
          Resize(GetWidth(), ch > 700 ? 700 : ch);
       else
-         Resize(GetWidth(), canvas->GetWh() < 450 ? 450 : canvas->GetWh()+4);  
-                                                   // canvas borders=4pix
+         Resize(GetWidth(), canvas->GetWh()<450 ? 450 : canvas->GetWh() + 4);  
+                                                       // canvas borders=4pix
    } else {
       Resize(GetDefaultSize());
    }
    MapWindow();
 
    gROOT->GetListOfCleanups()->Add(this);
+   if (fCanvas) ConnectToCanvas(fCanvas);
+
+}
+
+//______________________________________________________________________________
+TGedEditor::~TGedEditor()
+{
+   // Editor destructor.
+
+   gROOT->GetListOfCleanups()->Remove(this);
+
+   fStyle->Cleanup(); 
+   //Cleanup() cannot be used because of TH1/2Editors
+   delete fTab;       //delete tab widget and its containers
+   delete fCan;       //delete TGCanvas
 }
 
 //______________________________________________________________________________
@@ -390,21 +404,12 @@ void TGedEditor::DeleteEditors()
             TGedElement *ge;
             while ((ge = (TGedElement *)next1())) {
                editors->Remove(ge);
+               delete ge;
             }
          }
       }
    }
 }  
-
-//______________________________________________________________________________
-TGedEditor::~TGedEditor()
-{
-   // Editor destructor.
-
-   gROOT->GetListOfCleanups()->Remove(this);
-   fStyle->Cleanup();
-   Cleanup();
-}
 
 //______________________________________________________________________________
 void TGedEditor::RecursiveRemove(TObject* obj)

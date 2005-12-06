@@ -86,7 +86,6 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t id, Int_t width,
    f2->AddFrame(fKurtosis, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f3 = new TGCompositeFrame(f1, 40, 20, kVerticalFrame);
-   f1->AddFrame(f3, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
    fEntries = new TGCheckButton(f3, "Entries", kSTAT_ENTRIES);
    fEntries->SetToolTipText("Print the number of entries");
    f3->AddFrame(fEntries, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
@@ -102,6 +101,7 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t id, Int_t width,
    fStatsErrors = new TGCheckButton(f3, "Errors", kSTAT_ERR);
    fStatsErrors->SetToolTipText("Print the errors");
    f3->AddFrame(fStatsErrors, new TGLayoutHints(kLHintsTop, 1, 1, 0, 5));
+   f1->AddFrame(f3, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
 
    AddFrame(f1, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
@@ -119,13 +119,13 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t id, Int_t width,
    f5->AddFrame(fProbability, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f6 = new TGCompositeFrame(f4, 40, 20, kVerticalFrame);
-   f4->AddFrame(f6, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
    fErrors = new TGCheckButton(f6, "Errors", kFIT_ERR);
    fErrors->SetToolTipText("Print the errors");
    f6->AddFrame(fErrors, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    fChisquare = new TGCheckButton(f6, "Chi", kFIT_CHI);
    fChisquare->SetToolTipText("Print Chisquare");
    f6->AddFrame(fChisquare, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   f4->AddFrame(f6, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
 
    AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
@@ -145,12 +145,11 @@ TPaveStatsEditor::~TPaveStatsEditor()
 { 
    // Destructor of fill editor.
 
-   TGFrameElement *el;
+   TGFrameElement *el, *el1;
    TIter next(GetList());
    
    while ((el = (TGFrameElement *)next())) {
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
-         TGFrameElement *el1;
          TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
          while ((el1 = (TGFrameElement *)next1())) {
             if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))

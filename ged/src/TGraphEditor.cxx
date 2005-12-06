@@ -63,21 +63,21 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
                          Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, id, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of graph attribute GUI.
+   // Constructor of graph editor.
    
    fGraph = 0;
 
-// TextEntry to change the title   
+   // TextEntry to change the title   
    MakeTitle("Title");
  
    fTitlePrec = 2;
    fTitle = new TGTextEntry(this, new TGTextBuffer(50), kGRAPH_TITLE);
    fTitle->Resize(135, fTitle->GetDefaultHeight());
    fTitle->SetToolTipText("Enter the graph title string");
-// better take kLHintsLeft and Right - Right is not working at the moment
+   // better take kLHintsLeft and Right - Right is not working at the moment
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
 
-// Radio Buttons to change the draw options of the graph   
+   // Radio Buttons to change the draw options of the graph   
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kVerticalFrame);
    fgr = new TGButtonGroup(f2,3,1,3,5,"Shape");
    fgr->SetRadioButtonExclusive(kTRUE);
@@ -96,13 +96,13 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
    fgr->Show();
    fgr->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
    f2->AddFrame(fgr, new TGLayoutHints(kLHintsLeft, 4, 0, 0, 3));
-// CheckBox to activate/deactivate the drawing of the Marker
+   // CheckBox to activate/deactivate the drawing of the Marker
    fMarkerOnOff = new TGCheckButton(f2,"Show Marker",kMARKER_ONOFF);
    fMarkerOnOff->SetToolTipText("Make Marker visible/invisible");
    f2->AddFrame(fMarkerOnOff, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));   
 
-// initialises the window layout   
+   // initialises the window layout   
    MapSubwindows();
    Layout();
    MapWindow();
@@ -120,6 +120,13 @@ TGraphEditor::~TGraphEditor()
 {
    // Destructor of graph editor.
 
+   // children of TGButonGroup are not deleted 
+   delete fShape;
+   delete fShape0;
+   delete fShape1;
+   delete fShape2;
+   delete fShape3;
+   
    TGFrameElement *el;
    TIter next(GetList());
    
@@ -160,7 +167,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fPad = pad;
    fGraph = (TGraph *)fModel;
 
-// set the Title TextEntry
+   // set the Title TextEntry
    const char *text = fGraph->GetTitle();
    fTitle->SetText(text);
 
@@ -168,7 +175,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    opt.ToUpper();
    Int_t i=0;
    Bool_t make=kFALSE;
-// Remove characters which appear twice in the draw option   
+   // Remove characters which appear twice in the draw option   
    TString dum  = opt;
    Int_t l = opt.Length()-1;
    while (i < l) { 
@@ -181,7 +188,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       }
       i++;
    }
-// initialise the RadioButton group which shows the drawoption
+   // initialise the RadioButton group which shows the drawoption
    if (opt.Contains("C")) {
       fgr->SetButton(kSHAPE_SMOOTH, kTRUE); 
       fDrawShape='C';
@@ -199,9 +206,9 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fDrawShape=' ';
    }
    if (make) SetDrawOption(opt);
-// if the draw option is A, P, AP the P option cannot be removed, 
-// we deactivate the CheckBox
-// also initialising the MarkerOnOff checkbutton (== P option)
+   // if the draw option is A, P, AP the P option cannot be removed, 
+   // we deactivate the CheckBox
+   // also initialising the MarkerOnOff checkbutton (== P option)
    if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
       if (!opt.Contains("P")) 
          opt +="P"; 
@@ -218,8 +225,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
 void TGraphEditor::DoTitle(const char *text)
 {
-   // Slot connected to the title textentry
-   // sets the Title of the graph
+   // Slot for setting the graph title.
   
    fGraph->SetTitle(text);
    Update();
@@ -294,7 +300,7 @@ void TGraphEditor::DoShape(Int_t s)
 
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
-// set/reset the Marker CheckBox
+   // set/reset the Marker CheckBox
    if (opt.Contains("P")) 
       fMarkerOnOff->SetState(kButtonDown);
    else 
@@ -313,8 +319,8 @@ void TGraphEditor::DoShape(Int_t s)
 
 void TGraphEditor::DoMarkerOnOff(Bool_t on)
 {
-   // Slot connected to MarkerOnOff CheckBox: 
-   // Set marker visible/invisible.
+   // Slot for setting markers as visible/invisible.
+   
    TString t = GetDrawOption();
    t.ToUpper();
 
@@ -323,7 +329,7 @@ void TGraphEditor::DoMarkerOnOff(Bool_t on)
       if  (!t.Contains("P")) t+="P";
       fShape->SetState(kButtonEngaged);
    } else {
-   // remove the marker option P
+      // remove the marker option P
       while (t.Contains("P")) t.Remove(t.First("P"),1);
       fShape->SetState(kButtonDisabled);
    }   

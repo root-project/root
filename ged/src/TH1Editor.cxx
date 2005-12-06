@@ -83,9 +83,8 @@
 //      algorithm can create a rebinned histogram from the original data//
 //      i.e. the ntuple.                                                //
 //      To see te differences do:                                       //
-//         TFile f("hsimhe differences do:                              //
 //         TFile f("hsimple.root");                                     //
-//         hpx->Draw("BAR1);         // non ntuple histogram            //
+//         hpx->Draw("BAR1");        // non ntuple histogram            //
 //         ntuple->Draw("px");       // ntuple histogram                //
 //    Non ntuple histogram:                                             //
 //       'Rebin': with the Slider the number of bins (shown in the field//
@@ -155,14 +154,17 @@ ClassImp(TH1Editor)
 
 enum ETH1Wid{
    kTH1_TITLE,
-   kTYPE_HIST, kTYPE_LEGO, kTYPE_LEGO1, kTYPE_LEGO2, kTYPE_SURF, kTYPE_SURF1, kTYPE_SURF2, kTYPE_SURF3, kTYPE_SURF4,  kTYPE_SURF5,
+   kTYPE_HIST,  kTYPE_LEGO,  kTYPE_LEGO1, kTYPE_LEGO2, 
+   kTYPE_SURF,  kTYPE_SURF1, kTYPE_SURF2, kTYPE_SURF3, kTYPE_SURF4, kTYPE_SURF5,
    kCOORDS_CAR, kCOORDS_CYL, kCOORDS_POL, kCOORDS_PSR, kCOORDS_SPH,
-   kERRORS_NO, kERRORS_SIMPLE, kERRORS_EDGES, kERRORS_REC, kERRORS_FILL, kERRORS_CONTOUR,
-   kHIST_TYPE, kCOORD_TYPE, kERROR_TYPE, kMARKER_ONOFF, kB_ONOFF, kBAR_ONOFF,
-   kADD_TYPE, kADD_NONE, kADD_SIMPLE, kADD_SMOOTH, kADD_FILL, kADD_BAR, kADD_LINE,
+   kERRORS_NO,  kERRORS_SIMPLE, kERRORS_EDGES, 
+   kERRORS_REC, kERRORS_FILL,   kERRORS_CONTOUR,
+   kHIST_TYPE,  kCOORD_TYPE, kERROR_TYPE, kMARKER_ONOFF, kB_ONOFF,  kBAR_ONOFF,
+   kADD_TYPE,   kADD_NONE,   kADD_SIMPLE, kADD_SMOOTH,   kADD_FILL, 
+   kADD_BAR,    kADD_LINE,
    kDIM_SIMPLE, kDIM_COMPLEX,
    kPERCENT_TYPE, kPER_0, kPER_10, kPER_20, kPER_30, kPER_40,
-   kBAR_H, kBAR_WIDTH, kBAR_OFFSET,
+   kBAR_H,      kBAR_WIDTH, kBAR_OFFSET,
    kSLIDER_MAX, kSLIDER_MIN, 
    kDELAYED_DRAWING,
    kBINSLIDER, kBINSLIDER1, kBINOFFSET
@@ -188,14 +190,21 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
   
    // Histogram draw options
-   TGCompositeFrame *fHistLbl = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
-   fHistLbl->AddFrame(new TGLabel(fHistLbl,"Histogram"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   fHistLbl->AddFrame(new TGHorizontal3DLine(fHistLbl), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 0));
+   TGCompositeFrame *fHistLbl = new TGCompositeFrame(this, 145, 10, 
+                                                           kHorizontalFrame | 
+                                                           kLHintsExpandX   | 
+                                                           kFixedWidth      | 
+                                                           kOwnBackground);
+   fHistLbl->AddFrame(new TGLabel(fHistLbl,"Histogram"), 
+                      new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fHistLbl->AddFrame(new TGHorizontal3DLine(fHistLbl), 
+                      new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 0));
    AddFrame(fHistLbl, new TGLayoutHints(kLHintsTop,0,0,2,0));
 
    // TGButtonGroup to change: 2D plot <-> 3D plot   
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fDimGroup = new TGHButtonGroup(f2,"Plot");
+   fDimGroup->SetRadioButtonExclusive();
    fDim = new TGRadioButton(fDimGroup,"2-D",kDIM_SIMPLE);
    fDim->SetToolTipText("A 2-d plot of the histogram is dawn");
    fDim0 = new TGRadioButton(fDimGroup,"3-D",kDIM_COMPLEX);
@@ -203,7 +212,7 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fDimGroup->SetLayoutHints(new TGLayoutHints(kLHintsLeft ,-2,3,3,-7),fDim);
    fDimGroup->SetLayoutHints(new TGLayoutHints(kLHintsLeft ,16,-1,3,-7),fDim0);   
    fDimGroup->Show();
-   fDimGroup->ChangeOptions(kFitWidth|kChildFrame|kHorizontalFrame);
+   fDimGroup->ChangeOptions(kFitWidth | kChildFrame | kHorizontalFrame);
    f2->AddFrame(fDimGroup, new TGLayoutHints(kLHintsTop, 4, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 2, 8));
 
@@ -247,7 +256,8 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fAddCombo->Associate(this);
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 3));
    
-   // option related to HIST: some changes needed here! because of inconsistencies   
+   // option related to HIST: some changes needed here! 
+   // because of inconsistencies   
    f15 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
    fAddSimple = new TGCheckButton(f15, "Simple Drawing", kADD_LINE);
    fAddSimple ->SetToolTipText("A simple histogram without errors is drawn (draw option: Hist)");
@@ -268,7 +278,8 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    f8->AddFrame(fAddB, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
-   // Bar CheckBox: draw with option BAR + option selected by fPercentCombo (0..4) e.g. BAR2
+   // Bar CheckBox: draw with option BAR +option selected by 
+   // fPercentCombo (0..4) e.g. BAR2
    f9 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
    fAddBar = new TGCheckButton(f9, "Bar option", kBAR_ONOFF);
    fAddBar ->SetToolTipText("Draw bar chart with bar-option");
@@ -276,9 +287,14 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f9, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0)); 
 
    // Bar Menu => appears when the BAR checkbox is set
-   f10 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
-   f10->AddFrame(new TGLabel(f10,"Bar"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   f10->AddFrame(new TGHorizontal3DLine(f10), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+   f10 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | 
+                                             kLHintsExpandX   | 
+                                             kFixedWidth      | 
+                                             kOwnBackground);
+   f10->AddFrame(new TGLabel(f10,"Bar"), 
+                 new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   f10->AddFrame(new TGHorizontal3DLine(f10), 
+                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f10, new TGLayoutHints(kLHintsTop,0,0,6,4));
 
    // NumberEntry to change the Bar Width   
@@ -286,9 +302,9 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    TGLabel *fWidthLbl = new TGLabel(f11, "W:");                              
    f11->AddFrame(fWidthLbl, new TGLayoutHints(kLHintsLeft, 1, 3, 4, 1));
    fBarWidth = new TGNumberEntry(f11, 1.00, 6, kBAR_WIDTH, 
-                                      TGNumberFormat::kNESRealTwo,
-                                      TGNumberFormat::kNEANonNegative, 
-                                      TGNumberFormat::kNELLimitMinMax, 0.01, 1.);
+                                 TGNumberFormat::kNESRealTwo,
+                                 TGNumberFormat::kNEANonNegative, 
+                                 TGNumberFormat::kNELLimitMinMax, 0.01, 1.);
    fBarWidth->GetNumberEntry()->SetToolTipText("Set bin bar width");
    fBarWidth->Resize(45,20);
    f11->AddFrame(fBarWidth, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 1));
@@ -297,16 +313,16 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    TGLabel *foffsetLbl = new TGLabel(f11, "O:");                              
    f11->AddFrame(foffsetLbl, new TGLayoutHints(kLHintsLeft, 6,3, 4, 1));
    fBarOffset = new TGNumberEntry(f11, 0.00, 5, kBAR_OFFSET, 
-                                      TGNumberFormat::kNESRealTwo,
-                                      TGNumberFormat::kNEAAnyNumber, 
-                                      TGNumberFormat::kNELLimitMinMax, -1., 1.);
+                                  TGNumberFormat::kNESRealTwo,
+                                  TGNumberFormat::kNEAAnyNumber, 
+                                  TGNumberFormat::kNELLimitMinMax, -1., 1.);
    fBarOffset->GetNumberEntry()->SetToolTipText("Set bin bar offset");
    fBarOffset->Resize(50,20);
    f11->AddFrame(fBarOffset, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 1));
    AddFrame(f11, new TGLayoutHints(kLHintsTop, 1, 1, 0, 4));
  
-   // ComboBox which specifies the width of the Bar which should be drawn in another color
-   // i.e. specifies the number in BAR option e.g. Bar2   
+   // ComboBox which specifies the width of the Bar which should be drawn 
+   // in another color i.e. specifies the number in BAR option e.g. BAR2   
    f12 = new TGCompositeFrame(this, 80, 20, kVerticalFrame);
    TGCompositeFrame *f13 = new TGCompositeFrame(f12, 80, 20, kHorizontalFrame);
    TGLabel *percentLabel = new TGLabel(f13, "Percentage:"); 
@@ -323,19 +339,19 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    f12->AddFrame(fMakeHBar, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 0));
    AddFrame(f12, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0)); 
 
-   // Get the pointer to the Parent of the tabs (Style, Bin, Fit) to be able to call Layout, SetTab ...
+   // Get the pointer to the Parent of the tabs (Style, Bin, Fit) 
+   // to be able to call Layout, SetTab ...
    fTab = (TGTab *)(p->GetParent()->GetParent());
 
    CreateBinTab();        // Binning Tab
-   // not available yet   
-//   CreateFitTab();        // Fiting Tab
    
    // to avoid jumping from DoAddBar to DoAddB and vice versa
    fMakeB=kTRUE;
    // to avoid calling SetDrawoption after every change
    fMake=kTRUE;
 
-   fBinHist = 0;     // variable to save a copy of the histogram (when not drawn from an ntuple)
+   fBinHist = 0; // used to save a copy of the histogram 
+                 // (when not drawn from an ntuple)
    fBinOffsetSld->SetRange(0,100);
    fBinOffsetSld->SetPosition(0);
    fOffsetNumberEntry->SetNumber(0.0000);
@@ -362,16 +378,46 @@ TH1Editor::~TH1Editor()
 {
    // Destructor of TH1 editor.
 
-   TGFrameElement *el;
-   TIter next(GetList());
-   
-   while ((el = (TGFrameElement *)next())) {
-      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
+   // children of TGButonGroup are not deleted 
+   delete fDim;
+   delete fDim0;
+
+   TGFrameElement *el, *el1, *el2;
+   TIter nextBinCont(fBinContainer->GetList());
+   while ((el = (TGFrameElement *)nextBinCont())) {
+      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
+         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
+         while ((el1 = (TGFrameElement *)next1())) {
+            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame")) {
+               TIter next2(((TGCompositeFrame *)el1->fFrame)->GetList());
+               while ((el2 = (TGFrameElement *)next2())) {
+                  if (!strcmp(el2->fFrame->ClassName(), "TGCompositeFrame"))
+                     ((TGCompositeFrame *)el2->fFrame)->Cleanup();
+               }
+            }
+            ((TGCompositeFrame *)el1->fFrame)->Cleanup();
+         }
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      }
    }
+   fBinContainer->Cleanup();
+
+   TIter next(GetList());
+   while ((el = (TGFrameElement *)next())) {
+      if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame")) {
+         TIter next1(((TGCompositeFrame *)el->fFrame)->GetList());
+         while ((el1 = (TGFrameElement *)next1())) {
+            if (!strcmp(el1->fFrame->ClassName(), "TGCompositeFrame"))
+               ((TGCompositeFrame *)el1->fFrame)->Cleanup();
+         }
+         ((TGCompositeFrame *)el->fFrame)->Cleanup();
+      }
+   }
+   Cleanup();
+   
    if (fBinHist) delete fBinHist;
    fBinHist = 0;
-   Cleanup();
+   
 }
 
 //______________________________________________________________________________
@@ -390,9 +436,11 @@ void TH1Editor::ConnectSignals2Slots()
    fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()");
    fAddMarker->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddMarker(Bool_t)");
    fAddSimple->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddSimple(Bool_t)");
+
    //change 2D <-> 3D plot
    fDim->Connect("Pressed()","TH1Editor",this,"DoHistSimple()");
    fDim0->Connect("Pressed()","TH1Editor",this,"DoHistComplex()");   
+
    // change Bar Width/Offset, the second connection is needed to have the ability to confirm the value also with enter
    fBarWidth->Connect("ValueSet(Long_t)", "TH1Editor", this, "DoBarWidth()");
    (fBarWidth->GetNumberEntry())->Connect("ReturnPressed()", "TH1Editor", this, "DoBarWidth()");   
@@ -400,9 +448,10 @@ void TH1Editor::ConnectSignals2Slots()
    (fBarOffset->GetNumberEntry())->Connect("ReturnPressed()", "TH1Editor", this, "DoBarOffset()");
    fPercentCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoPercent()");
    fMakeHBar-> Connect("Toggled(Bool_t)","TH1Editor",this,"DoHBar(Bool_t))"); 
-   // Here the connections for the rebinning are created
-   // connect the Slider to the slots who do the rebinning 
-   // here: case of a histogram not derived from an ntuple
+
+   // Connections for rebinning are created - i.e. slider is
+   // connected to the slots that perform the rebinning in the  
+   // case of a histogram not derived from an ntuple.
    fBinSlider->Connect("PositionChanged(Int_t)","TH1Editor",this, "DoBinMoved(Int_t)");  
    fBinSlider->Connect("Released()","TH1Editor",this, "DoBinReleased()"); 
    fBinSlider->Connect("Pressed()","TH1Editor",this, "DoBinPressed()");    
@@ -433,23 +482,30 @@ void TH1Editor::ConnectSignals2Slots()
 
 void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
-   // Pick up the used values of histogram attributes.
+   // Pick up current values of histogram attributes.
    
+   fModel = 0;
+   fPad = 0;
+
    if (obj == 0 || !obj->InheritsFrom(TH1::Class()) || 
        ((TH1*)obj)->GetDimension()!=1 || 
        ((TH1*)obj)->GetEntries() == 0 
        /*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
       SetActive(kFALSE);
       for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
-         if (fTab->GetTabContainer(i)==fBinContainer || fTab->GetTabContainer(i)==fFitContainer) {
-            fTab->GetTabContainer(i)->UnmapWindow();     // Hide the Rebin tab if obj is not inherited from TH1 or 
-            fTab->GetTabTab(i)->UnmapWindow();           // if a TH2, TH3 is drawn
-            fTab->SetEnabled(i,kFALSE);                  // also disable is, then the current tab will be changed
+         if (fTab->GetTabContainer(i) == fBinContainer) {
+             
+            // Hide the Rebin tab if obj is not inherited from TH1 or
+            // if a TH2, TH3 is drawn also disable is, 
+            // then the current tab will be changed
+            fTab->GetTabContainer(i)->UnmapWindow();      
+            fTab->GetTabTab(i)->UnmapWindow();           
+            fTab->SetEnabled(i,kFALSE);                  
          } 
       }
       return;                 
    } 
-
+/*
    TGFrameElement *el;
 
    // calling the SetModel(initialization) of all editors in the BinTab
@@ -457,7 +513,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    while ((el = (TGFrameElement *) nextS1())) {
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class()))
          ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
-   } 
+   } */
 
    if (fBinHist && (obj != fHist)) {
       //we have probably moved to a different pad.
@@ -477,6 +533,13 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = obj;
    fPad = pad;
    fHist = (TH1*)fModel;
+
+   //set the selected object name on Binning tab
+   TString string;
+   string.Append(fModel->GetName());
+   string.Append("::");
+   string.Append(fModel->ClassName());
+   fNameLabel->SetText(new TGString(string));
 
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
@@ -543,7 +606,8 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
          } else fAddCombo->Select(kADD_SIMPLE);
       } else fAddCombo->Select(kADD_NONE);
 
-      if (fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
+      if (fAddCombo->GetSelected()!=kADD_NONE) 
+         fAddSimple->SetState(kButtonDisabled);
       else if (str.Contains("HIST")) {
          if (str=="HIST") fAddSimple->SetState(kButtonDisabled);
          else fAddSimple->SetState(kButtonDown);
@@ -656,7 +720,8 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       HideFrame(f7);
       HideFrame(f8);
    }
-   if (str.Contains("BAR") || (fAddBar->GetState()==kButtonDown) && (fDim->GetState()==kButtonDown)) {
+   if (str.Contains("BAR") || (fAddBar->GetState()==kButtonDown) && 
+       (fDim->GetState()==kButtonDown)) {
       ShowFrame(f10);
       ShowFrame(f11);
       ShowFrame(f12);
@@ -692,7 +757,8 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       else up = div[0]-1;  
       fBinSlider->SetRange(1,up);
       Int_t i = 1;
-      if (fBinSlider->GetMaxPosition()==2 && fBinSlider->GetPosition()==2) fBinSlider->SetPosition(2);
+      if (fBinSlider->GetMaxPosition()==2 && fBinSlider->GetPosition()==2) 
+         fBinSlider->SetPosition(2);
       else { 
          while ( div[i] != nx) i ++;
          fBinSlider->SetPosition(div[0] - i + 1);
@@ -716,10 +782,12 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(nxbinmin));
    fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(nxbinmax));
 
-   fOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, fHist->GetXaxis()->GetBinWidth(1));
+   fOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, 
+                                 fHist->GetXaxis()->GetBinWidth(1));
 
    for (Int_t i=1; i < fTab->GetNumberOfTabs(); i++) {
-      if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
+      if (fTab->GetTabContainer(i)==fBinContainer 
+          /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
          fTab->GetTabContainer(i)->MapWindow();
          fTab->GetTabTab(i)->MapWindow();
          fTab->SetEnabled(i, kTRUE);  
@@ -740,7 +808,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
 void TH1Editor::DoTitle(const char *text)
 {
-   // Slot connected to the title of the histogram .
+   // Slot connected to the histogram title setting.
   
    fHist->SetTitle(text);
    Update();
@@ -750,7 +818,7 @@ void TH1Editor::DoTitle(const char *text)
 
 void TH1Editor::DoAddMarker(Bool_t on)
 {
-   // Slot connected to the marker add checkbox .
+   // Slot connected to the show markers check box.
    
    TString str = GetDrawOption();
    str.ToUpper(); 
@@ -766,28 +834,37 @@ void TH1Editor::DoAddMarker(Bool_t on)
    if (on) {
       if (!dum.Contains("P")) str += "P"; 
       fAddSimple->SetState(kButtonDisabled);
-      if (str.Contains("HIST")) str.Remove(strstr(str.Data(),"HIST")-str.Data(),4);
+      if (str.Contains("HIST")) 
+         str.Remove(strstr(str.Data(),"HIST")-str.Data(),4);
    } else if (fAddMarker->GetState()==kButtonUp) {
       if (str.Contains("POL") || str.Contains("SPH")) {
-         while (dum.Contains("P")) dum.Remove(strstr(dum.Data(),"P")-dum.Data(),1);
+         while (dum.Contains("P")) 
+            dum.Remove(strstr(dum.Data(),"P")-dum.Data(),1);
          if (str.Contains("POL")) str = dum + "POL";
          if (str.Contains("SPH")) str = dum + "SPH";
          if (str.Contains("PSR")) str = dum + "PSR";	 
       } else if (str.Contains("P")) str.Remove(str.First("P"),1); 
-      if ((str=="HIST") || (str=="") || (fAddB->GetState()==kButtonDown) || fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
-      else if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);
-      else fAddSimple->SetState(kButtonUp);
+      if ((str=="HIST") || (str=="") || 
+          (fAddB->GetState()==kButtonDown) || 
+          fAddCombo->GetSelected() != kADD_NONE) 
+         fAddSimple->SetState(kButtonDisabled);
+      else if (str.Contains("HIST")) 
+         fAddSimple->SetState(kButtonDown);
+      else 
+         fAddSimple->SetState(kButtonUp);
    }
-   if (fSameOpt) str += "SAME";
-   if (fMake) SetDrawOption(str);
-   Update();
+   if (fMake) {
+      if (fSameOpt) str += "SAME";
+      SetDrawOption(str);
+      Update();
+   }
 }
 
 //______________________________________________________________________________
 
 void TH1Editor::DoAddB(Bool_t on)
 {
-   // Slot connected to the bar add checkbox .
+   // Slot connected to the bar Add check box.
    
    TString str = GetDrawOption();
    str.ToUpper();
@@ -807,12 +884,16 @@ void TH1Editor::DoAddB(Bool_t on)
          fBarOffset->SetNumber(fHist->GetBarOffset());
          fBarWidth->SetNumber(fHist->GetBarWidth());      
       } else if (fAddB->GetState()==kButtonUp) {
-         while (str.Contains("B")) str.Remove(str.First("B"),1);
+         while (str.Contains("B")) 
+            str.Remove(str.First("B"),1);
          HideFrame(f10);
          HideFrame(f11);
          HideFrame(f12);
          fAddBar->SetState(kButtonUp);
-         if (fAddMarker->GetState()!=kButtonDown && !(str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE)) fAddSimple->SetState(kButtonUp);
+         if (fAddMarker->GetState()!=kButtonDown && 
+             !(str=="" || str=="HIST" || 
+             fAddCombo->GetSelected()!=kADD_NONE)) 
+            fAddSimple->SetState(kButtonUp);
       }
       if (fSameOpt) str += "SAME";
       if (fMake) SetDrawOption(str);
@@ -827,7 +908,7 @@ void TH1Editor::DoAddB(Bool_t on)
 
 void TH1Editor::DoAddBar(Bool_t on)
 {
-   // Slot connected to the bar add checkbox .
+   // Slot connected to the bar Add check box.
    
    Disconnect(fAddMarker);
    TString str = GetDrawOption();
@@ -840,18 +921,31 @@ void TH1Editor::DoAddBar(Bool_t on)
       fMakeB=kFALSE;
       Int_t o = 0;
       if (str.Contains("HBAR")) o=1;
-      if (str.Contains("BAR4")) str.Remove(strstr(str.Data(),"BAR4")-str.Data()-o,4+o);
-      else if (str.Contains("BAR3")) str.Remove(strstr(str.Data(),"BAR3")-str.Data()-o,4+o);
-      else if (str.Contains("BAR2")) str.Remove(strstr(str.Data(),"BAR2")-str.Data()-o,4+o);
-      else if (str.Contains("BAR1")) str.Remove(strstr(str.Data(),"BAR1")-str.Data()-o,4+o);            
-      else if (str.Contains("BAR0")) str.Remove(strstr(str.Data(),"BAR0")-str.Data()-o,4+o);      
-      else if (str.Contains("BAR")) str.Remove(strstr(str.Data(),"BAR")-str.Data()-o,3+o);      
+      if (str.Contains("BAR4")) 
+         str.Remove(strstr(str.Data(),"BAR4")-str.Data()-o,4+o);
+      else if (str.Contains("BAR3")) 
+         str.Remove(strstr(str.Data(),"BAR3")-str.Data()-o,4+o);
+      else if (str.Contains("BAR2")) 
+         str.Remove(strstr(str.Data(),"BAR2")-str.Data()-o,4+o);
+      else if (str.Contains("BAR1")) 
+         str.Remove(strstr(str.Data(),"BAR1")-str.Data()-o,4+o);            
+      else if (str.Contains("BAR0")) 
+         str.Remove(strstr(str.Data(),"BAR0")-str.Data()-o,4+o);      
+      else if (str.Contains("BAR")) 
+         str.Remove(strstr(str.Data(),"BAR")-str.Data()-o,3+o);      
       if (on) {
-         if ((fAddMarker->GetState()==kButtonDown) && (fErrorCombo->GetSelected()==kERRORS_NO) && (fAddSimple->GetState()!=kButtonDisabled)) fAddSimple->SetState(kButtonDisabled);
-         else if ((fAddMarker->GetState()!=kButtonDown) && (fAddSimple->GetState()==kButtonDisabled)) {
-            if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);  
-            else if (fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
-            else fAddSimple->SetState(kButtonUp);
+         if ((fAddMarker->GetState()==kButtonDown) && 
+             (fErrorCombo->GetSelected()==kERRORS_NO) && 
+             (fAddSimple->GetState()!=kButtonDisabled)) 
+            fAddSimple->SetState(kButtonDisabled);
+         else if ((fAddMarker->GetState()!=kButtonDown) && 
+                  (fAddSimple->GetState()==kButtonDisabled)) {
+            if (str.Contains("HIST")) 
+               fAddSimple->SetState(kButtonDown);  
+            else if (fAddCombo->GetSelected()!=kADD_NONE) 
+               fAddSimple->SetState(kButtonDisabled);
+            else 
+               fAddSimple->SetState(kButtonUp);
          }
          switch (fPercentCombo->GetSelected()){
             case(-1): { 
@@ -883,7 +977,8 @@ void TH1Editor::DoAddBar(Bool_t on)
          ShowFrame(f10);
          ShowFrame(f11);
          ShowFrame(f12);
-         if (fMakeHBar->GetState()==kButtonDown) str.Insert(strstr(str.Data(),"BAR")-str.Data(),"H");
+         if (fMakeHBar->GetState()==kButtonDown) 
+            str.Insert(strstr(str.Data(),"BAR")-str.Data(),"H");
          fBarOffset->SetNumber(fHist->GetBarOffset());
          fBarWidth->SetNumber(fHist->GetBarWidth());      
          fAddB->SetState(kButtonDisabled);
@@ -892,9 +987,11 @@ void TH1Editor::DoAddBar(Bool_t on)
          HideFrame(f11); 
          HideFrame(f12);
          fAddB->SetState(kButtonUp);
-         if (fAddMarker->GetState()==kButtonDisabled) fAddMarker->SetState(kButtonUp);
-         if (str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE || 
-             ((fAddMarker->GetState()==kButtonDown) && fErrorCombo->GetSelected()==kERRORS_NO)) 
+         if (fAddMarker->GetState()==kButtonDisabled) 
+            fAddMarker->SetState(kButtonUp);
+         if (str=="" || str=="HIST" || fAddCombo->GetSelected() != kADD_NONE || 
+             ((fAddMarker->GetState() == kButtonDown) && 
+               fErrorCombo->GetSelected() == kERRORS_NO) ) 
             fAddSimple->SetState(kButtonDisabled);
       }
       if (fSameOpt) str += "SAME";
@@ -911,9 +1008,9 @@ void TH1Editor::DoAddBar(Bool_t on)
 
 void TH1Editor::DoAddSimple(Bool_t on)
 {
-   // Slot connected to fAddSimple CheckBox
-   // draws a simple histogram without errors (== HIST draw option)
-   // in combination with some other drawoptions it draws an additional line on top of the bins
+   // Slot connected to fAddSimple check box for drawing a simple histogram
+   // without errors (== HIST draw option) in combination with some other 
+   // draw options. It draws an additional line on the top of the bins.
 
    Disconnect(fAddMarker);
    //   Bool_t make=kFALSE;
@@ -947,7 +1044,7 @@ void TH1Editor::DoAddSimple(Bool_t on)
 
 void TH1Editor::DoHistSimple()
 {
-   // Slot connected to the simple histogram radiobutton
+   // Slot connected to the 2D radio button.
 
    if (fDim->GetState()==kButtonDown){
       TString str ="";
@@ -959,23 +1056,30 @@ void TH1Editor::DoHistSimple()
       ShowFrame(f9);
       ShowFrame(f15);
       ChangeErrorCombo(1);
-      if ((fAddBar->GetState() !=kButtonDown || fAddMarker->GetState()==kButtonDown ) 
-          && (fErrorCombo->GetSelected()==kERRORS_NO)) fAddSimple->SetState(kButtonDisabled);
-      else if ((fAddSimple->GetState()==kButtonDisabled) && (fAddMarker->GetState()!=kButtonDown)) 
+      if ((fAddBar->GetState() != kButtonDown || 
+           fAddMarker->GetState()==kButtonDown ) &&
+          (fErrorCombo->GetSelected()==kERRORS_NO)) 
+         fAddSimple->SetState(kButtonDisabled);
+      else if ((fAddSimple->GetState()==kButtonDisabled) && 
+               (fAddMarker->GetState()!=kButtonDown)) 
          fAddSimple->SetState(kButtonUp);
-      else if (fAddSimple->GetState()!=kButtonUp) fAddSimple->SetState(kButtonDown);
-      if (fAddMarker->GetState()==kButtonDisabled && fAddSimple->GetState()!=kButtonDown) fAddMarker->SetState(kButtonUp);
+      else if (fAddSimple->GetState()!=kButtonUp) 
+         fAddSimple->SetState(kButtonDown);
+      if (fAddMarker->GetState()==kButtonDisabled && 
+          fAddSimple->GetState()!=kButtonDown) 
+         fAddMarker->SetState(kButtonUp);
 
-      if (fErrorCombo->GetSelected()==kERRORS_NO){   
+      if (fErrorCombo->GetSelected()==kERRORS_NO) {   
          ShowFrame(f7);
          ShowFrame(f8);
       } else {
          HideFrame(f7);
          HideFrame(f8);
-         if (fAddBar->GetState()==kButtonDisabled)  fAddBar->SetState(kButtonUp);
+         if (fAddBar->GetState()==kButtonDisabled)
+            fAddBar->SetState(kButtonUp);
       } 
 
-      if ((fAddB->GetState() == kButtonDisabled)){
+      if ((fAddB->GetState() == kButtonDisabled)) {
          if (fAddBar->GetState()==kButtonDown) {
             ShowFrame(f10);
             ShowFrame(f11);
@@ -991,7 +1095,8 @@ void TH1Editor::DoHistSimple()
          ShowFrame(f11);
          HideFrame(f12);
       } 
-      if ((fAddBar->GetState() == kButtonUp) && (fAddB->GetState() == kButtonUp)){
+      if ((fAddBar->GetState() == kButtonUp) && 
+          (fAddB->GetState() == kButtonUp)) {
          HideFrame(f10);  
          HideFrame(f11);
          HideFrame(f12);
@@ -1030,7 +1135,7 @@ void TH1Editor::DoHistSimple()
 
 void TH1Editor::DoHistComplex()
 {
-   // Slot connected to the complex histogram radiobutton
+   // Slot connected to the 3D radio button.
 
    if (fDim0->GetState()==kButtonDown) {
       TString str ="";
@@ -1079,12 +1184,14 @@ void TH1Editor::DoHistComplex()
 void TH1Editor::DoHistChanges()
 {
    // Slot connected to the histogram type, the coordinate type, the error type
-   // and the AddCombobox
+   // and the Add combo box.
    
    fMakeB= kFALSE;
    TGListBox* lb;
-   if (GetHistTypeLabel().Contains("SURF")){ 
-      if (fCoordsCombo->GetSelected()==kCOORDS_CAR || fCoordsCombo->GetSelected()==kCOORDS_SPH) fCoordsCombo->Select(kCOORDS_POL); 
+   if (GetHistTypeLabel().Contains("SURF")) { 
+      if (fCoordsCombo->GetSelected()==kCOORDS_CAR || 
+          fCoordsCombo->GetSelected()==kCOORDS_SPH) 
+         fCoordsCombo->Select(kCOORDS_POL); 
       fCoordsCombo->RemoveEntry(kCOORDS_SPH);
       fCoordsCombo->RemoveEntry(kCOORDS_CAR);
       lb = fCoordsCombo->GetListBox();
@@ -1105,8 +1212,10 @@ void TH1Editor::DoHistChanges()
          ShowFrame(f9);
          fAddMarker->SetState(kButtonDisabled);
          fAddB->SetState(kButtonDisabled);
-         if (fAddBar->GetState()==kButtonDisabled) fAddBar->SetState(kButtonUp);
-         if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
+         if (fAddBar->GetState()==kButtonDisabled) 
+            fAddBar->SetState(kButtonUp);
+         if (fAddSimple->GetState()==kButtonDisabled) 
+            fAddSimple->SetState(kButtonUp);
          fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
          lb = fAddCombo->GetListBox();
          lb->Resize(lb->GetWidth(),19);	 
@@ -1128,8 +1237,11 @@ void TH1Editor::DoHistChanges()
          ShowFrame(f7);
          ShowFrame(f8);
          ShowFrame(f9);
-         if (fAddMarker->GetState()==kButtonDisabled) fAddMarker->SetState(kButtonUp);
-         if (fAddBar->GetState()!=kButtonDown && fAddB->GetState()==kButtonDisabled) fAddB->SetState(kButtonUp);
+         if (fAddMarker->GetState()==kButtonDisabled) 
+            fAddMarker->SetState(kButtonUp);
+         if (fAddBar->GetState() != kButtonDown && 
+             fAddB->GetState()==kButtonDisabled) 
+            fAddB->SetState(kButtonUp);
          if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SIMPLE)==-1)
             ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Simple Line", kADD_SIMPLE);
          if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_SMOOTH)==-1)
@@ -1144,8 +1256,10 @@ void TH1Editor::DoHistChanges()
       if (fAddCombo->GetSelected()!=kADD_NONE) {
          fAddSimple->SetState(kButtonDisabled);
       } else {
-         if (fAddMarker->GetState()==kButtonDown) fAddSimple->SetState(kButtonDisabled);
-         else if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
+         if (fAddMarker->GetState()==kButtonDown) 
+            fAddSimple->SetState(kButtonDisabled);
+         else if (fAddSimple->GetState()==kButtonDisabled) 
+            fAddSimple->SetState(kButtonUp);
       }
    } else if (fDim0->GetState()==kButtonDown) {
       if (GetHistTypeLabel().Contains("LEGO")) {
@@ -1160,10 +1274,14 @@ void TH1Editor::DoHistChanges()
    }        
    if (fMake) {
       TString str = "";
-      if (fDim->GetState()==kButtonDown) str = GetHistErrorLabel()+GetHistAddLabel();
-      else if (fDim0->GetState()==kButtonDown) str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
-      if (fAddSimple->GetState()==kButtonDown) str += "HIST";   
-      if (fSameOpt) str += "SAME";
+      if (fDim->GetState()==kButtonDown) 
+         str = GetHistErrorLabel()+GetHistAddLabel();
+      else if (fDim0->GetState()==kButtonDown) 
+         str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
+      if (fAddSimple->GetState()==kButtonDown) 
+         str += "HIST";   
+      if (fSameOpt) 
+         str += "SAME";
       SetDrawOption(str);
       if (str=="" || str=="HIST") fAddSimple->SetState(kButtonDisabled);
       Update();
@@ -1177,7 +1295,7 @@ void TH1Editor::DoHistChanges()
 
 void TH1Editor::DoBarWidth()
 {
-   // Slot connected to the Bar Width of the Bar Chart
+   // Slot connected to the Bar Width of the Bar Charts.
    
    fHist->SetBarWidth(fBarWidth->GetNumber());
    Update();
@@ -1187,7 +1305,7 @@ void TH1Editor::DoBarWidth()
 
 void TH1Editor::DoBarOffset()
 {
-   // Slot connected to the Bar Offset of the Bar Chart
+   // Slot connected to the Bar Offset of the Bar Charts.
    
    Float_t f = fBarOffset->GetNumber();
    fHist->SetBarOffset(f);
@@ -1198,7 +1316,7 @@ void TH1Editor::DoBarOffset()
 
 void TH1Editor::DoPercent()
 {
-   // Slot connected percentage of ???
+   // Slot connected to the bar percentage settings.
       
    TString str = GetDrawOption();
    str.ToUpper();
@@ -1208,12 +1326,18 @@ void TH1Editor::DoPercent()
       fSameOpt = kFALSE;
    Int_t o = 0;
    if (str.Contains("HBAR")) o=1;
-   if (str.Contains("BAR4")) str.Remove(strstr(str.Data(),"BAR4")-str.Data()-1,4+o);
-   else if (str.Contains("BAR3")) str.Remove(strstr(str.Data(),"BAR3")-str.Data()-o,4+o);
-   else if (str.Contains("BAR2")) str.Remove(strstr(str.Data(),"BAR2")-str.Data()-o,4+o);   
-   else if (str.Contains("BAR1")) str.Remove(strstr(str.Data(),"BAR1")-str.Data()-o,4+o);
-   else if (str.Contains("BAR0")) str.Remove(strstr(str.Data(),"BAR0")-str.Data()-o,4+o);
-   else if (str.Contains("BAR")) str.Remove(strstr(str.Data(),"BAR")-str.Data()-o,3+o);
+   if (str.Contains("BAR4")) 
+      str.Remove(strstr(str.Data(),"BAR4")-str.Data()-1,4+o);
+   else if (str.Contains("BAR3")) 
+      str.Remove(strstr(str.Data(),"BAR3")-str.Data()-o,4+o);
+   else if (str.Contains("BAR2")) 
+      str.Remove(strstr(str.Data(),"BAR2")-str.Data()-o,4+o);   
+   else if (str.Contains("BAR1")) 
+      str.Remove(strstr(str.Data(),"BAR1")-str.Data()-o,4+o);
+   else if (str.Contains("BAR0")) 
+      str.Remove(strstr(str.Data(),"BAR0")-str.Data()-o,4+o);
+   else if (str.Contains("BAR")) 
+      str.Remove(strstr(str.Data(),"BAR")-str.Data()-o,3+o);
    
    if (fMakeHBar->GetState()==kButtonDown) str+="H";
    switch (fPercentCombo->GetSelected()){
@@ -1232,7 +1356,7 @@ void TH1Editor::DoPercent()
 
 void TH1Editor::DoHBar(Bool_t on)
 {
-   // Slot connected to the Horizontal Bar CheckButton
+   // Slot connected to the Horizontal Bar check button.
    
    TString str = GetDrawOption();
    str.ToUpper();
@@ -1241,10 +1365,12 @@ void TH1Editor::DoHBar(Bool_t on)
    else
       fSameOpt = kFALSE;
    if (on) {
-      if (!str.Contains("HBAR")) str.Insert(strstr(str.Data(),"BAR")-str.Data(),"H");
+      if (!str.Contains("HBAR")) 
+         str.Insert(strstr(str.Data(),"BAR")-str.Data(),"H");
    }
    else if (fMakeHBar->GetState()==kButtonUp) {
-      if(str.Contains("HBAR")) str.Remove(strstr(str.Data(),"BAR")-str.Data()-1,1);
+      if (str.Contains("HBAR")) 
+         str.Remove(strstr(str.Data(),"BAR")-str.Data()-1,1);
    }
    if (fSameOpt) str += "SAME";
    if (fMake) SetDrawOption(str);
@@ -1255,8 +1381,8 @@ void TH1Editor::DoHBar(Bool_t on)
 
 void TH1Editor::DoSliderMoved()
 {
-   // Slot connected to the x-Slider
-   // Redraws the Histogram with the new Slider Range
+   // Slot connected to the x-Slider for redrawing of the histogram 
+   // according to the new Slider range.
 
    fPad->GetCanvas()->FeedbackMode(kTRUE); 
    fPad->cd();
@@ -1286,13 +1412,17 @@ void TH1Editor::DoSliderMoved()
       gVirtualX->Update(0);
       fSldMin->SetNumber(xleft);
       fSldMax->SetNumber(xright);
-   }  else  if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown && fCoordsCombo->GetSelected()==kCOORDS_CAR) {
+   }  else  if (fDelaydraw->GetState() == kButtonDown && 
+                fDim0->GetState() == kButtonDown && 
+                fCoordsCombo->GetSelected() == kCOORDS_CAR) {
       static Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
       TView *fView = fPad->GetView();
       Double_t *rmin = fView->GetRmin();
       Double_t *rmax = fView->GetRmax();
-      p1[0] = p4[0] = p5[0] = p8[0] = fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSlider->GetMinPosition())+0.5));
-      p2[0] = p3[0] = p6[0] = p7[0] = fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSlider->GetMaxPosition())+0.5));
+      p1[0] = p4[0] = p5[0] = p8[0] = 
+            fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSlider->GetMinPosition())+0.5));
+      p2[0] = p3[0] = p6[0] = p7[0] = 
+            fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSlider->GetMaxPosition())+0.5));
       p1[1] = p2[1] = p3[1] = p4[1] = rmin[1];
       p5[1] = p6[1] = p7[1] = p8[1] = rmax[1];
       p1[2] = p2[2] = p5[2] = p6[2] = rmin[2];
@@ -1315,23 +1445,25 @@ void TH1Editor::DoSliderMoved()
       }
       fSldMin->SetNumber(p1[0]);
       fSldMax->SetNumber(p2[0]);
-   }  else  if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown) {
+   } else  if (fDelaydraw->GetState() == kButtonDown && 
+               fDim0->GetState() == kButtonDown) {
       fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSlider->GetMinPosition())+0.5)));
       fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge((Int_t)((fSlider->GetMaxPosition())+0.5)));
    } else {
-      fHist->GetXaxis()->SetRange((Int_t)((fSlider->GetMinPosition())+0.5),(Int_t)((fSlider->GetMaxPosition())+0.5));
+      fHist->GetXaxis()->SetRange((Int_t)((fSlider->GetMinPosition())+0.5),
+                                  (Int_t)((fSlider->GetMaxPosition())+0.5));
       fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
       fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast())); 
       fClient->NeedRedraw(fSlider,kTRUE);  
       Update();   
    }
    TTreePlayer *player = (TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer();   
-   if (player) if (player->GetHistogram()== fHist) {
+   if (player && player->GetHistogram() == fHist) {
       Int_t last = fHist->GetXaxis()->GetLast();
       Int_t first = fHist->GetXaxis()->GetFirst();
       fBinNumberEntry1->SetIntNumber(last-first+1);
-// How to redraw the NumberEntry without calling Update?? 
-// Update kills the "virtual" painted box in Delayed draw mode  
+      // How to redraw the NumberEntry without calling Update?? 
+      // Update kills the "virtual" painted box in Delayed draw mode  
       fClient->NeedRedraw(fBinNumberEntry1,kTRUE);
       fTab->Layout();
    }
@@ -1343,15 +1475,16 @@ void TH1Editor::DoSliderMoved()
 
 void TH1Editor::DoSliderPressed()
 {
-   // Slot connected to the x-axis Range slider
-   // Initialising the values for the Slider Movement
+   // Slot connected to the x-axis Range slider for initialising the
+   // values of the slider movement.
    
    fPad->GetCanvas()->FeedbackMode(kTRUE); 
    fPad->cd();
    static Float_t ymin,ymax,xleft,xright;
    Int_t sldmin = (Int_t)((fSlider->GetMinPosition())+0.5);
    Int_t sldmax = (Int_t)((fSlider->GetMaxPosition())+0.5);
-   if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
+   if (fDelaydraw->GetState() == kButtonDown && 
+       fDim->GetState()==kButtonDown) {
       fPad->GetCanvas()->FeedbackMode(kTRUE); 
       fPad->SetLineWidth(1);
       fPad->SetLineColor(2);
@@ -1364,12 +1497,16 @@ void TH1Editor::DoSliderPressed()
       fPx2old   = fPad->XtoAbsPixel(xright);
       fPy2old   = fPad->YtoAbsPixel(ymax);
       gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
-   }  else if (fDelaydraw->GetState()==kButtonDown && fDim0->GetState()==kButtonDown && fCoordsCombo->GetSelected()==kCOORDS_CAR) {
+   } else if (fDelaydraw->GetState() == kButtonDown && 
+              fDim0->GetState() == kButtonDown && 
+              fCoordsCombo->GetSelected() == kCOORDS_CAR) {
       TView *fView = fPad->GetView();
       Double_t *rmin = fView->GetRmin();
       Double_t *rmax = fView->GetRmax();
-      fP1old[0] = fP4old[0] = fP5old[0] = fP8old[0] = fHist->GetXaxis()->GetBinLowEdge(sldmin);
-      fP2old[0] = fP3old[0] = fP6old[0] = fP7old[0] = fHist->GetXaxis()->GetBinUpEdge(sldmax);
+      fP1old[0] = fP4old[0] = fP5old[0] = fP8old[0] = 
+                  fHist->GetXaxis()->GetBinLowEdge(sldmin);
+      fP2old[0] = fP3old[0] = fP6old[0] = fP7old[0] = 
+                  fHist->GetXaxis()->GetBinUpEdge(sldmax);
       fP1old[1] = fP2old[1] = fP3old[1] = fP4old[1] = rmin[1];
       fP5old[1] = fP6old[1] = fP7old[1] = fP8old[1] = rmax[1];
       fP1old[2] = fP2old[2] = fP5old[2] = fP6old[2] = rmin[2]; 
@@ -1387,11 +1524,12 @@ void TH1Editor::DoSliderPressed()
 
 void TH1Editor::DoSliderReleased()
 {
-   // Slot connected to the x-axis Range slider
-   // Finalizing the values from the Slider Movement 
+   // Slot connected to the x-axis Range slider for finalizing the 
+   // values of the slider movement. 
 
    if (fDelaydraw->GetState()==kButtonDown) {
-      fHist->GetXaxis()->SetRange((Int_t)((fSlider->GetMinPosition())+0.5),(Int_t)((fSlider->GetMaxPosition())+0.5));
+      fHist->GetXaxis()->SetRange((Int_t)((fSlider->GetMinPosition())+0.5),
+                                  (Int_t)((fSlider->GetMaxPosition())+0.5));
       fSldMin->SetNumber(fHist->GetXaxis()->GetBinLowEdge(fHist->GetXaxis()->GetFirst()));
       fSldMax->SetNumber(fHist->GetXaxis()->GetBinUpEdge(fHist->GetXaxis()->GetLast()));
       Update();
@@ -1409,18 +1547,22 @@ void TH1Editor::DoSliderReleased()
 
 void TH1Editor::DoAxisRange()
 {
-   // Slot connected to the TextNumberEntryFields which contain the Max/Min value of the x-axis
+   // Slot connected to the number entry fields containing the Max/Min 
+   // value of the x-axis.
    
    Int_t nx = fHist->GetXaxis()->GetNbins();
-   Axis_t width = fHist->GetXaxis()->GetBinWidth(1);
-   Axis_t lowLimit = fHist->GetXaxis()->GetBinLowEdge(1);
-   Axis_t upLimit = fHist->GetXaxis()->GetBinUpEdge(nx);
-   if ((fSldMin->GetNumber()+width/2) < (lowLimit)) fSldMin->SetNumber(lowLimit); 
-   if ((fSldMax->GetNumber()-width/2) > (upLimit)) fSldMax->SetNumber(upLimit); 
+   Double_t width = fHist->GetXaxis()->GetBinWidth(1);
+   Double_t lowLimit = fHist->GetXaxis()->GetBinLowEdge(1);
+   Double_t upLimit = fHist->GetXaxis()->GetBinUpEdge(nx);
+   if ((fSldMin->GetNumber()+width/2) < (lowLimit)) 
+      fSldMin->SetNumber(lowLimit); 
+   if ((fSldMax->GetNumber()-width/2) > (upLimit)) 
+      fSldMax->SetNumber(upLimit); 
 // Set the histogram range and the axis range slider
-   fHist->GetXaxis()->SetRangeUser(fSldMin->GetNumber()+width/2, fSldMax->GetNumber()-width/2);
-   Int_t nxbinmin = fHist -> GetXaxis() -> GetFirst();
-   Int_t nxbinmax = fHist -> GetXaxis() -> GetLast();
+   fHist->GetXaxis()->SetRangeUser(fSldMin->GetNumber()+width/2, 
+                                   fSldMax->GetNumber()-width/2);
+   Int_t nxbinmin = fHist->GetXaxis()->GetFirst();
+   Int_t nxbinmax = fHist->GetXaxis()->GetLast();
    fSlider->SetPosition((Double_t)(nxbinmin),(Double_t)(nxbinmax));
    Update();
 }
@@ -1430,7 +1572,7 @@ void TH1Editor::DoAxisRange()
 void TH1Editor::DoBinReleased()
 {
    // Slot connected to the rebin slider in case of a not ntuple histogram
-   // Updates some other widgets which are related to the rebin slider
+   // Updates some other widgets which are related to the rebin slider.
 
    // draw the rebinned histogram in case of delay draw mode
    if (fDelaydraw->GetState()==kButtonDown){
@@ -1445,23 +1587,28 @@ void TH1Editor::DoBinReleased()
       // delete the histogram which is on the screen
       fPad->cd();
       fHist->Reset();
-      fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax());
+      fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),
+                     fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin(divx[numx]);
       fModel=fHist;
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
-         Axis_t xBinWidth = xaxis->GetBinWidth(1);      
-         xaxis->SetRangeUser(fSldMin->GetNumber()+xBinWidth/2, fSldMax->GetNumber()-xBinWidth/2);      
+         Double_t xBinWidth = xaxis->GetBinWidth(1);      
+         xaxis->SetRangeUser(fSldMin->GetNumber()+xBinWidth/2, 
+                             fSldMax->GetNumber()-xBinWidth/2);      
          fSlider->SetRange(1,(Int_t)nx/divx[numx]);   
-         fSlider->SetPosition(xaxis->FindBin(fSldMin->GetNumber()+xBinWidth/2), xaxis->FindBin(fSldMax->GetNumber()-xBinWidth/2));
-         // the axis range could be changed a little bit by the Rebin algorithm
+         fSlider->SetPosition(xaxis->FindBin(fSldMin->GetNumber()+xBinWidth/2),
+                              xaxis->FindBin(fSldMax->GetNumber()-xBinWidth/2));
+         // the x-axis range could be changed a little bit by Rebin algorithm
          fSldMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
          fSldMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
       }
-      if (fCancel->GetState()==kButtonDisabled) fCancel->SetState(kButtonUp);
-      if (fApply->GetState()==kButtonDisabled) fApply->SetState(kButtonUp);
+      if (fCancel->GetState()==kButtonDisabled) 
+         fCancel->SetState(kButtonUp);
+      if (fApply->GetState()==kButtonDisabled) 
+         fApply->SetState(kButtonUp);
       Update();
    }
 //   fPad->GetCanvas()->Selected(fPad, fHist,  0);      
@@ -1474,9 +1621,10 @@ void TH1Editor::DoBinReleased()
 void TH1Editor::DoBinMoved(Int_t numx)
 {
    // Slot connected to the rebin slider in case of a not ntuple histogram
-   // does the Rebinning of the Histogram 
+   // (does the Rebinning of the histogram). 
 
-   // create a clone in the background, when the slider is moved for the first time
+   // create a clone in the background, when the slider is moved for 
+   // the first time
    if (!fBinHist /*&& fDelaydraw->GetState()!=kButtonDown*/) {
       Int_t* divx = Dividers(fHist->GetXaxis()->GetNbins());
       if (divx[0]==2) return;
@@ -1492,36 +1640,41 @@ void TH1Editor::DoBinMoved(Int_t numx)
    }
    Int_t maxx = (Int_t)nx/divx[numx];
    if (maxx==1) maxx=2;
-   if (fDelaydraw->GetState()==kButtonUp){
+   if (fDelaydraw->GetState() == kButtonUp) {
       fPad->cd();
       fHist->Reset();
-      fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax());
+      fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),
+                     fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin(divx[numx]);
       fModel=fHist;
       TAxis* xaxis = fHist->GetXaxis();
-      Axis_t xBinWidth = xaxis->GetBinWidth(1);
-      xaxis->SetRangeUser(fSldMin->GetNumber()+xBinWidth/2, fSldMax->GetNumber()-xBinWidth/2);
+      Double_t xBinWidth = xaxis->GetBinWidth(1);
+      xaxis->SetRangeUser(fSldMin->GetNumber()+xBinWidth/2,
+                          fSldMax->GetNumber()-xBinWidth/2);
       fSlider->SetRange(1,maxx);
-      fSlider->SetPosition(xaxis->FindBin(fSldMin->GetNumber()+xBinWidth/2), xaxis->FindBin(fSldMax->GetNumber()-xBinWidth/2));
+      fSlider->SetPosition(xaxis->FindBin(fSldMin->GetNumber()+xBinWidth/2),
+                           xaxis->FindBin(fSldMax->GetNumber()-xBinWidth/2));
       // the axis range could be changed a little bit by the Rebin algorithm
       fSldMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
       fSldMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
       fClient->NeedRedraw(fBinSlider,kTRUE);
       Update();
    }
-   if (fCancel->GetState()==kButtonDisabled) fCancel->SetState(kButtonUp);
-   if (fApply->GetState()==kButtonDisabled) fApply->SetState(kButtonUp);
-   if (fBinNumberEntry->GetNumber()!=maxx) fBinNumberEntry->SetNumber(maxx);
+   if (fCancel->GetState()==kButtonDisabled) 
+      fCancel->SetState(kButtonUp);
+   if (fApply->GetState()==kButtonDisabled) 
+      fApply->SetState(kButtonUp);
+   if (fBinNumberEntry->GetNumber()!=maxx) 
+      fBinNumberEntry->SetNumber(maxx);
 }
 
 //______________________________________________________________________________
 
 void TH1Editor::DoBinPressed()
 {
-   // Slot connected to the rebin slider in case of a not ntuple histogram
-   // to avoid stupid things
+   // Slot connected to the rebin slider in case of a not ntuple histogram.
 
    Int_t* d = Dividers(fHist->GetXaxis()->GetNbins());
    if (d[0]==2 && !fBinHist) {
@@ -1537,8 +1690,8 @@ void TH1Editor::DoBinPressed()
 
 void TH1Editor::DoBinReleased1()
 {               
-   // Slot connected to the BinNumber Slider in case of a 'Ntuple histogram'
-   // Does the Rebin
+   // Slot connected to the BinNumber Slider in case of a ntuple histogram
+   // (does the Rebinning of the histogram). 
 
    Double_t oldOffset = fOffsetNumberEntry->GetNumber();   
    Int_t number = fBinSlider1->GetPosition();
@@ -1546,7 +1699,7 @@ void TH1Editor::DoBinReleased1()
    Int_t fact = 0;
    Int_t binNumber = 0;   
    TAxis* xaxis = fHist->GetXaxis();
-//"compute" the scaling factor:
+   // "compute" the scaling factor:
    if (number > 5) fact = number - 4;
    else fact = number - 6;
    TTreePlayer *player = (TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer();
@@ -1554,39 +1707,43 @@ void TH1Editor::DoBinReleased1()
    Int_t first = xaxis->GetFirst();
    Int_t last = xaxis->GetLast();
    Int_t nx = xaxis->GetNbins();
-   Axis_t min = xaxis->GetBinLowEdge(1);         // overall minimum in user coordinates
-   Axis_t max = xaxis->GetBinUpEdge(nx);         // overall maximum in user coordinates
-   Axis_t rmin = xaxis->GetBinLowEdge(first);    // recent minimum in user coordinates
-   Axis_t rmax = xaxis->GetBinUpEdge(last);      // recent minimum in user coordinates
+   Double_t min = xaxis->GetBinLowEdge(1);       // overall min in user coords
+   Double_t max = xaxis->GetBinUpEdge(nx);       // overall max in user coords
+   Double_t rmin = xaxis->GetBinLowEdge(first);  // recent min in user coords
+   Double_t rmax = xaxis->GetBinUpEdge(last);    // recent max in user coords
    
    ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
    ((TH1*)player->GetHistogram())->Reset();
 
-// Get new Number of bins
+   // get new Number of bins
    if (fact > 0) binNumber = fact*nx;
    if (fact < 0) binNumber = (Int_t) ((-1)*nx/fact+0.5);
    if (binNumber < 1) binNumber = 1;
    if (binNumber > 10000) binNumber= 10000;
    Double_t newOffset = 1.*fBinOffsetSld->GetPosition()/100*((max-min)/binNumber);
-// create new histogram - the main job is done by sel->TakeAction()
-   ((TH1*)player->GetHistogram())->SetBins(binNumber,min-oldOffset+newOffset,max-oldOffset+newOffset);
+   // create new histogram - the main job is done by sel->TakeAction()
+   ((TH1*)player->GetHistogram())->SetBins(binNumber,
+                                           min-oldOffset+newOffset,
+                                           max-oldOffset+newOffset);
    TSelectorDraw *sel = (TSelectorDraw*)player->GetSelector();
    if (!sel) return;
    sel->TakeAction();
 
-// Restore and set all the attributes which were changed by TakeAction() 
+   // restore and set all the attributes which were changed by TakeAction() 
    fHist = (TH1*)((TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer())->GetHistogram();
    fSlider->SetRange(1,binNumber);
-   Axis_t binWidth = fHist->GetXaxis()->GetBinWidth(1);
+   Double_t binWidth = fHist->GetXaxis()->GetBinWidth(1);
    fSlider->SetPosition(xaxis->FindBin(rmin), xaxis->FindBin(rmax));
    Double_t offset = 1.*fBinOffsetSld->GetPosition()/100*binWidth;
-   xaxis->SetRange(xaxis->FindBin(rmin+binWidth/2), xaxis->FindBin(rmax-binWidth/2));   // SetRange in binNumbers!
+   xaxis->SetRange(xaxis->FindBin(rmin+binWidth/2), 
+                   xaxis->FindBin(rmax-binWidth/2));   // SetRange in binNumbers!
    fSldMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
    fSldMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
    fBinNumberEntry1->SetNumber(xaxis->GetLast() - xaxis->GetFirst() + 1);   
    fBinSlider1->SetPosition(5);
    fOffsetNumberEntry->SetNumber(offset);
-   fOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, xaxis->GetBinWidth(1));
+   fOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0,
+                                 xaxis->GetBinWidth(1));
    fClient->NeedRedraw(fBinSlider1);
    Update();
 }
@@ -1595,8 +1752,8 @@ void TH1Editor::DoBinReleased1()
 
 void TH1Editor::DoBinMoved1()
 {
-   // Slot connected to the rebin slider in case of an ntuple histogram
-   // Updates the BinNumberEntryField during the BinSlider movement
+   // Slot connected to the rebin slider in case of an ntuple histogram.
+   // It updates the BinNumberEntryField during the BinSlider movement.
    
    TAxis* xaxis = fHist->GetXaxis();
    Int_t first = xaxis->GetFirst();
@@ -1619,7 +1776,7 @@ void TH1Editor::DoBinMoved1()
 
 void TH1Editor::DoBinLabel()
 {
-   // Slot connected to the Bin Number Entry for the Rebin
+   // Slot connected to the Bin number entry of the Rebinning tab.
    
    Int_t num = (Int_t)(fBinNumberEntry->GetNumber());
    Int_t nx = 0;
@@ -1647,7 +1804,7 @@ void TH1Editor::DoBinLabel()
 
 void TH1Editor::DoBinLabel1()
 {
-   // Slot connected to the Bin Number Entry for the Rebin
+   // Slot connected to the Bin number entry of the Rebinning tab.
    
    Double_t oldOffset = fOffsetNumberEntry->GetNumber();
    Int_t num = (Int_t)fBinNumberEntry1->GetNumber();   
@@ -1657,10 +1814,10 @@ void TH1Editor::DoBinLabel1()
    Int_t first = xaxis->GetFirst();
    Int_t last = xaxis->GetLast();
    Int_t nx = xaxis->GetNbins();
-   Axis_t min = xaxis->GetBinLowEdge(1);        // overall minimum in user coordinates
-   Axis_t max = xaxis->GetBinUpEdge(nx);        // overall maximum in user coordinates
-   Axis_t rmin = xaxis->GetBinLowEdge(first);   // recent minimum in user coordinates
-   Axis_t rmax = xaxis->GetBinUpEdge(last);     // recent minimum in user coordinates
+   Double_t min = xaxis->GetBinLowEdge(1);        // overall min in user coords
+   Double_t max = xaxis->GetBinUpEdge(nx);        // overall max in user coords
+   Double_t rmin = xaxis->GetBinLowEdge(first);   // recent min in user coords
+   Double_t rmax = xaxis->GetBinUpEdge(last);     // recent max in user coords
    
    ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
    ((TH1*)player->GetHistogram())->Reset();
@@ -1668,10 +1825,12 @@ void TH1Editor::DoBinLabel1()
 // Calculate the new number of bins in the complete range
    Int_t binNumber = (Int_t) ((max-min)/(rmax - rmin)*num + 0.5);
    if (binNumber < 1) binNumber = 1;
-   if (binNumber > 10000) binNumber= 10000;
+   if (binNumber > 10000) binNumber = 10000;
    Double_t offset = 1.*(fBinOffsetSld->GetPosition())/100*(max-min)/binNumber;
 // create new histogram - the main job is done by sel->TakeAction()
-   ((TH1*)player->GetHistogram())->SetBins(binNumber,min-oldOffset+offset,max-oldOffset+offset);
+   ((TH1*)player->GetHistogram())->SetBins(binNumber,
+                                           min-oldOffset+offset,
+                                           max-oldOffset+offset);
    TSelectorDraw *sel = (TSelectorDraw*)player->GetSelector();
    if (!sel) return;
    sel->TakeAction();
@@ -1679,10 +1838,11 @@ void TH1Editor::DoBinLabel1()
 // Restore and set all the attributes which were changed by TakeAction() 
    fHist = (TH1*)((TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer())->GetHistogram();
    fSlider->SetRange(1,binNumber);
-   Axis_t binWidth = xaxis->GetBinWidth(1);
+   Double_t binWidth = xaxis->GetBinWidth(1);
    fSlider->SetPosition(xaxis->FindBin(rmin), xaxis->FindBin(rmax));
    offset = 1.*fBinOffsetSld->GetPosition()/100*binWidth;
-   xaxis->SetRange(xaxis->FindBin(rmin+binWidth/2), xaxis->FindBin(rmax-binWidth/2));   // SetRange in binNumbers!
+   xaxis->SetRange(xaxis->FindBin(rmin+binWidth/2), 
+                   xaxis->FindBin(rmax-binWidth/2));   // SetRange in binNumbers!
    fSldMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
    fSldMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
    fOffsetNumberEntry->SetNumber(offset);
@@ -1694,9 +1854,8 @@ void TH1Editor::DoBinLabel1()
 
 void TH1Editor::DoOffsetPressed()
 {
-   // Slot connected to the OffSetSlider
-   // saves the OldBinOffset 
-   // nessesary for delay draw mode
+   // Slot connected to the OffSetSlider that saves the OldBinOffset 
+   // (nessesary for delay draw mode).
    
    fOldOffset = fOffsetNumberEntry->GetNumber();
 }
@@ -1705,16 +1864,17 @@ void TH1Editor::DoOffsetPressed()
 
 void TH1Editor::DoOffsetReleased()
 {
-   // Slot connected to the OffSetSlider
-   // changes the origin of the histogram inbetween a binwidth
-   // Rebin the histogram with the new Offset given by the Slider
-   // problem: histogram with variable binwidth??
+   // Slot connected to the OffSetSlider.
+   // It changes the origin of the histogram inbetween a binwidth and
+   // rebin the histogram with the new Offset given by the Slider.
+
+   // !!problem: histogram with variable binwidth??
    // computes the new histogram in "delay draw" mode
    
    if (fDelaydraw->GetState()==kButtonDown) {
       Int_t num = (Int_t) fBinOffsetSld->GetPosition();
       TAxis* xaxis = fHist->GetXaxis();
-      Axis_t binWidth = xaxis->GetBinWidth(1);
+      Double_t binWidth = xaxis->GetBinWidth(1);
       Double_t offset =  1.*num/100*binWidth;
       Double_t oldOffset = fOldOffset;
       Int_t nx = xaxis->GetNbins();   
@@ -1722,22 +1882,25 @@ void TH1Editor::DoOffsetReleased()
       if (!player) return;
       Int_t first = xaxis->GetFirst();
       Int_t last = xaxis->GetLast();
-      Axis_t min = xaxis->GetBinLowEdge(1);          // overall minimum in user coordinates
-      Axis_t max = xaxis->GetBinUpEdge(nx);          // overall maximum in user coordinates
-      Axis_t rmin = xaxis->GetBinLowEdge(first);     // recent minimum in user coordinates
-      Axis_t rmax = xaxis->GetBinUpEdge(last);       // recent minimum in user coordinates
+      Double_t min = xaxis->GetBinLowEdge(1);          // overall min in user coords
+      Double_t max = xaxis->GetBinUpEdge(nx);          // overall max in user coords
+      Double_t rmin = xaxis->GetBinLowEdge(first);     // recent min in user coords
+      Double_t rmax = xaxis->GetBinUpEdge(last);       // recent max in user coords
    
       ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
       ((TH1*)player->GetHistogram())->Reset();
  
-      ((TH1*)player->GetHistogram())->SetBins(nx,min+offset-oldOffset,max+offset-oldOffset);
+      ((TH1*)player->GetHistogram())->SetBins(nx,
+                                              min+offset-oldOffset,
+                                              max+offset-oldOffset);
       TSelectorDraw *sel = (TSelectorDraw*)player->GetSelector();
       if (!sel) return;
       sel->TakeAction();
  
-   // Restore all the attributes which were changed by TakeAction() 
+      // Restore all the attributes which were changed by TakeAction() 
       fHist = (TH1*)((TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer())->GetHistogram();
-      xaxis->SetRange(xaxis->FindBin(rmin+offset-oldOffset+binWidth/2), xaxis->FindBin(rmax+offset-oldOffset-binWidth/2));   // SetRange in binNumbers!
+      xaxis->SetRange(xaxis->FindBin(rmin+offset-oldOffset+binWidth/2), 
+                      xaxis->FindBin(rmax+offset-oldOffset-binWidth/2)); // in binNumbers!
       fSldMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
       fSldMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
       fOffsetNumberEntry->SetNumber(offset);
@@ -1749,14 +1912,15 @@ void TH1Editor::DoOffsetReleased()
 
 void TH1Editor::DoOffsetMoved(Int_t num)
 {
-   // Slot connected to the OffSetSlider
-   // changes the origin of the histogram inbetween a binwidth
-   // Rebin the histogram with the new Offset given by the Slider
-   // histogram with variable binwidth??
-   // only working for histograms with fixed binwidth
+   // Slot connected to the OffSetSlider.
+   // It changes the origin of the histogram inbetween a binwidth and
+   // rebin the histogram with the new offset given by the Slider.
+
+   // !!histogram with variable binwidth??
+   // !!only works for histograms with fixed binwidth
 
    TAxis* xaxis = fHist->GetXaxis();   
-   Axis_t binWidth = xaxis->GetBinWidth(1);
+   Double_t binWidth = xaxis->GetBinWidth(1);
    Double_t offset =  1.*num/100*binWidth;
    if (fDelaydraw->GetState()==kButtonUp) {
       Double_t oldOffset = fOffsetNumberEntry->GetNumber();
@@ -1765,22 +1929,25 @@ void TH1Editor::DoOffsetMoved(Int_t num)
       if (!player) return;
       Int_t first = xaxis->GetFirst();
       Int_t last = xaxis->GetLast();
-      Axis_t min = xaxis->GetBinLowEdge(1);          // overall minimum in user coordinates
-      Axis_t max = xaxis->GetBinUpEdge(nx);          // overall maximum in user coordinates
-      Axis_t rmin = xaxis->GetBinLowEdge(first);     // recent minimum in user coordinates
-      Axis_t rmax = xaxis->GetBinUpEdge(last);       // recent minimum in user coordinates
+      Double_t min = xaxis->GetBinLowEdge(1);          // overall min in user coords
+      Double_t max = xaxis->GetBinUpEdge(nx);          // overall max in user coords
+      Double_t rmin = xaxis->GetBinLowEdge(first);     // recent min in user coords
+      Double_t rmax = xaxis->GetBinUpEdge(last);       // recent max in user coords
    
       ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
       ((TH1*)player->GetHistogram())->Reset();
  
-      ((TH1*)player->GetHistogram())->SetBins(nx,min+offset-oldOffset,max+offset-oldOffset);
+      ((TH1*)player->GetHistogram())->SetBins(nx,
+                                              min+offset-oldOffset,
+                                              max+offset-oldOffset);
       TSelectorDraw *sel = (TSelectorDraw*)player->GetSelector();
       if (!sel) return;
       sel->TakeAction();
  
    // Restore all the attributes which were changed by TakeAction() 
       fHist = (TH1*)((TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer())->GetHistogram();
-      xaxis->SetRange(xaxis->FindBin(rmin+offset-oldOffset+binWidth/2), xaxis->FindBin(rmax+offset-oldOffset-binWidth/2));   // SetRange in binNumbers!
+      xaxis->SetRange(xaxis->FindBin(rmin+offset-oldOffset+binWidth/2), 
+                      xaxis->FindBin(rmax+offset-oldOffset-binWidth/2)); // in binNumbers!
       fSldMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
       fSldMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
       fClient->NeedRedraw(fBinOffsetSld,kTRUE);
@@ -1794,11 +1961,11 @@ void TH1Editor::DoOffsetMoved(Int_t num)
 
 void TH1Editor::DoBinOffset()
 {
-   // Slot connected to the OffSetNumberEntry which is related to the OffSetSlider
-   // changes the origin of the histogram inbetween a binwidth
+   // Slot connected to the OffSetNumberEntry which is related to the 
+   // OffSetSlider changes the origin of the histogram inbetween a binwidth.
 
    TAxis* xaxis = fHist->GetXaxis();   
-   Axis_t binWidth = xaxis->GetBinWidth(1);
+   Double_t binWidth = xaxis->GetBinWidth(1);
    Double_t offset =  fOffsetNumberEntry->GetNumber();
    Double_t oldOffset = 1.*fBinOffsetSld->GetPosition()/100*binWidth;
    Int_t nx = xaxis->GetNbins();   
@@ -1806,22 +1973,25 @@ void TH1Editor::DoBinOffset()
    if (!player) return;
    Int_t first = xaxis->GetFirst();
    Int_t last = xaxis->GetLast();
-   Axis_t min = xaxis->GetBinLowEdge(1);          // overall minimum in user coordinates
-   Axis_t max = xaxis->GetBinUpEdge(nx);          // overall maximum in user coordinates
-   Axis_t rmin = xaxis->GetBinLowEdge(first);     // recent minimum in user coordinates
-   Axis_t rmax = xaxis->GetBinUpEdge(last);       // recent minimum in user coordinates
+   Double_t min = xaxis->GetBinLowEdge(1);          // overall min in user coords
+   Double_t max = xaxis->GetBinUpEdge(nx);          // overall max in user coords
+   Double_t rmin = xaxis->GetBinLowEdge(first);     // recent min in user coords
+   Double_t rmax = xaxis->GetBinUpEdge(last);       // recent max in user coords
    
    ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
    ((TH1*)player->GetHistogram())->Reset();
 
-   ((TH1*)player->GetHistogram())->SetBins(nx,min+offset-oldOffset,max+offset-oldOffset);
+   ((TH1*)player->GetHistogram())->SetBins(nx,
+                                           min+offset-oldOffset,
+                                           max+offset-oldOffset);
    TSelectorDraw *sel = (TSelectorDraw*)player->GetSelector();
    if (!sel) return;
    sel->TakeAction();
 
-// Restore all the attributes which were changed by TakeAction() 
+    // Restore all the attributes which were changed by TakeAction() 
    fHist = (TH1*)((TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer())->GetHistogram();
-   xaxis->SetRange(xaxis->FindBin(rmin+offset-oldOffset+binWidth/2), xaxis->FindBin(rmax+offset-oldOffset-binWidth/2));   // SetRange in binNumbers!
+   xaxis->SetRange(xaxis->FindBin(rmin+offset-oldOffset+binWidth/2),
+                   xaxis->FindBin(rmax+offset-oldOffset-binWidth/2)); // in binNumbers!
    fSldMin->SetNumber(xaxis->GetBinLowEdge(xaxis->GetFirst()));
    fSldMax->SetNumber(xaxis->GetBinUpEdge(xaxis->GetLast()));
    fBinOffsetSld->SetPosition((Int_t)(offset/binWidth*100));
@@ -1832,11 +2002,12 @@ void TH1Editor::DoBinOffset()
 
 void TH1Editor::DoApply()
 {
-   // Slot connected to the Apply Button 
+   // Slot connected to the Apply button of the Binning tab.
    
    Int_t ret = 0;
-   new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(), "TH1 Editor", \
-   "Replace origin histogram with rebinned one?", kMBIconQuestion, kMBYes | kMBNo, &ret, kVerticalFrame);
+   new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(), 
+                "TH1 Editor", "Replace origin histogram with rebinned one?", 
+                kMBIconQuestion, kMBYes | kMBNo, &ret, kVerticalFrame);
    if (ret==1) {
       if (fBinHist) {
          delete fBinHist;
@@ -1848,8 +2019,10 @@ void TH1Editor::DoApply()
       if (div[0]-1 <= 1) up = 2;
       else up = div[0]-1; 
       fBinSlider->SetRange(1,up);
-      if (fBinSlider->GetMaxPosition()==2 && div[0]==2 ) fBinSlider->SetPosition(2);
-      else fBinSlider->SetPosition(1);
+      if (fBinSlider->GetMaxPosition()==2 && div[0]==2 ) 
+         fBinSlider->SetPosition(2);
+      else 
+         fBinSlider->SetPosition(1);
       fCancel->SetState(kButtonDisabled);
       fApply->SetState(kButtonDisabled);
       Update();
@@ -1860,12 +2033,14 @@ void TH1Editor::DoApply()
 
 void TH1Editor::DoCancel()
 {
-   // Slot connected to the Cancel Button in the Rebinned histogram Window
+   // Slot connected to the Cancel button of the Binning tab.
    
    if (fBinHist) {
       fPad->cd();
       fHist->Reset();
-      fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax());
+      fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),
+                     fBinHist->GetXaxis()->GetXmin(),
+                     fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
       delete fBinHist;
       fBinHist = 0;
@@ -1885,7 +2060,7 @@ void TH1Editor::DoCancel()
 
 TString TH1Editor::GetHistTypeLabel()
 {
-   // Returns the immediate histogram type (HIST, LEGO1-2, SURF1-5)
+   // Returns the selected histogram type (HIST, LEGO1-2, SURF1-5).
 
    TString s="";
    switch (fTypeCombo->GetSelected()){
@@ -1909,7 +2084,7 @@ TString TH1Editor::GetHistTypeLabel()
 
 TString TH1Editor::GetHistCoordsLabel()
 {
-   // Returns the immediate coordinate system of the histogram (POL, CYL, SPH,PSR)
+   // Return the selected coordinate system of the histogram (POL,CYL,SPH,PSR).
 
    TString s="";
    if (fDim->GetState()!=kButtonDown) {
@@ -1931,7 +2106,7 @@ TString TH1Editor::GetHistCoordsLabel()
 
 TString TH1Editor::GetHistErrorLabel()
 {
-   // Returns the immediate error type (E,E1-5)
+   // Return the selected error type (E,E1-5).
    
    TString s="";
    switch (fErrorCombo->GetSelected()){
@@ -1952,7 +2127,7 @@ TString TH1Editor::GetHistErrorLabel()
 
 TString TH1Editor::GetHistAddLabel()
 {
-   // Returns the immediate shape of the histogram (C, L, LF2)
+   // Return the selected shape of the histogram (C, L, LF2).
    
    TString s="";
    switch (fAddCombo->GetSelected()){
@@ -2004,7 +2179,7 @@ TGComboBox* TH1Editor::BuildHistTypeComboBox(TGFrame* parent, Int_t id)
 
 TGComboBox* TH1Editor::BuildHistCoordsComboBox(TGFrame* parent, Int_t id)
 {
-   // Create histogram coordinate system type combo box.
+   // Create coordinate system type combo box.
 
    TGComboBox *c = new TGComboBox(parent, id);
 
@@ -2023,7 +2198,7 @@ TGComboBox* TH1Editor::BuildHistCoordsComboBox(TGFrame* parent, Int_t id)
 
 TGComboBox* TH1Editor::BuildHistErrorComboBox(TGFrame* parent, Int_t id)
 {
-   // Create histogram error type combo box.
+   // Create error type combo box.
 
    TGComboBox *c = new TGComboBox(parent, id);
 
@@ -2041,7 +2216,7 @@ TGComboBox* TH1Editor::BuildHistErrorComboBox(TGFrame* parent, Int_t id)
 
 TGComboBox* TH1Editor::BuildHistAddComboBox(TGFrame* parent, Int_t id)
 {
-   // Create histogram Line/Bar adding combo box.
+   // Create Line/Bar combo box.
 
    TGComboBox *c = new TGComboBox(parent, id);
 
@@ -2058,7 +2233,7 @@ TGComboBox* TH1Editor::BuildHistAddComboBox(TGFrame* parent, Int_t id)
 
 TGComboBox* TH1Editor::BuildPercentComboBox(TGFrame* parent, Int_t id)
 {
-   // Create Percentage Combo Box for Bar Option
+   // Create Percentage combo box for bar option.
    
    TGComboBox *c = new TGComboBox(parent, id);
    
@@ -2077,7 +2252,7 @@ TGComboBox* TH1Editor::BuildPercentComboBox(TGFrame* parent, Int_t id)
 
 void TH1Editor::ChangeErrorCombo(Int_t i)
 {
-   // Changes the display of the error combobox
+   // Change the error combo box entry.
    
    switch (i){
       case 0: {
@@ -2107,7 +2282,8 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
 
 void TH1Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4) 
 {
-   // Paints a square in 3
+   // Paint a 3D box.
+   
    fPad->GetCanvas()->FeedbackMode(kTRUE); 
    fPad->SetLineWidth(1);
    fPad->SetLineColor(2);
@@ -2122,8 +2298,8 @@ void TH1Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4)
 
 Int_t* TH1Editor::Dividers(Int_t n)
 {
-   // gives an array of the dividers of n (without the trivial divider n))
-   // in the first entry the number of dividers is saved.
+   // Return an array of dividers of n (without the trivial divider n).
+   // The number of dividers is saved in the first entry.
    
    if (n <= 0) {
       Int_t* div = new Int_t[1];
@@ -2135,7 +2311,7 @@ Int_t* TH1Editor::Dividers(Int_t n)
       div[0]=div[1]=1;
       return div;
    }  
-   Int_t* div = new Int_t[(Int_t) n/2];
+   Int_t* div = new Int_t[(Int_t) n/2+2];
    div[0]=0; 
    div[1]=1;
 
@@ -2157,52 +2333,75 @@ Int_t* TH1Editor::Dividers(Int_t n)
 
 void TH1Editor::CreateBinTab()
 {
-   // Creates the BinTab
+   // Create the Binning tab.
   
    fBinContainer = fTab->AddTab("Binning");
    fBin = new TGCompositeFrame(fBinContainer, 80, 20, kVerticalFrame);
-   fBin->AddFrame(new TGedNameFrame(fBin, 1000), new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
 
-   TGCompositeFrame *title1 = new TGCompositeFrame(fBin, 145, 10, kHorizontalFrame | 
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
-   title1->AddFrame(new TGLabel(title1, "Rebin"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   TGCompositeFrame *fNameBin = new TGCompositeFrame(fBin, 145, 10, 
+                                                           kHorizontalFrame | 
+                                                           kFixedWidth      | 
+                                                           kOwnBackground);
+   fNameBin->AddFrame(new TGLabel(fNameBin,"Name"), 
+                      new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fNameBin->AddFrame(new TGHorizontal3DLine(fNameBin), 
+                      new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+   fBin->AddFrame(fNameBin, new TGLayoutHints(kLHintsTop));
+
+   fNameLabel = new TGLabel(fBin, "");
+   Pixel_t color;
+   gClient->GetColorByName("#ff0000", color);
+   fNameLabel->SetTextColor(color, kFALSE);
+   fBin->AddFrame(fNameLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+
+   TGCompositeFrame *title1 = new TGCompositeFrame(fBin, 145, 10, 
+                                                         kHorizontalFrame | 
+                                                         kLHintsExpandX   | 
+                                                         kFixedWidth      | 
+                                                         kOwnBackground);
+   title1->AddFrame(new TGLabel(title1, "Rebin"), 
+                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    title1->AddFrame(new TGHorizontal3DLine(title1),
-                new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+                    new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    fBin->AddFrame(title1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
 
-// Editor for rebinning a histogram which does NOT derive from an Ntuple
-   
+   // Widgets for rebinning a histogram which does NOT derive from a ntuple
    fBinCont = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame);
-   TGCompositeFrame *f18 = new TGCompositeFrame(fBinCont, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f18 = new TGCompositeFrame(fBinCont, 80, 20, 
+                                                          kHorizontalFrame);
    fBinSlider  = new TGHSlider(f18, 100, kSlider1 | kScaleBoth);
    fBinSlider->Resize(107,20); 
    f18->AddFrame(fBinSlider, new TGLayoutHints(kLHintsLeft, 3,0,0,3));
    fBinCont->AddFrame(f18, new TGLayoutHints(kLHintsTop, 15, 7, 3, 5));
    
-   TGCompositeFrame *f20 = new TGCompositeFrame(fBinCont, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f20 = new TGCompositeFrame(fBinCont, 80, 20, 
+                                                          kHorizontalFrame);
    TGLabel *binLabel1 = new TGLabel(f20, "# of Bins:");
    f20->AddFrame(binLabel1, new TGLayoutHints(kLHintsLeft, 7, 1, 2, 1));
    fBinNumberEntry = new TGNumberEntryField(f20, kBINSLIDER, 0.0,  
-                                      TGNumberFormat::kNESInteger);
+                                            TGNumberFormat::kNESInteger);
    ((TGTextEntry*)fBinNumberEntry)->SetToolTipText("Set the number of bins in the rebinned histogram");
    fBinNumberEntry->Resize(57,20);
    f20->AddFrame(fBinNumberEntry, new TGLayoutHints(kLHintsRight, 21, 0, 0, 0));
    fBinCont->AddFrame(f20, new TGLayoutHints(kLHintsTop, 0, 7, 3, 4));
    
-// Check Buttons to Apply or Delete the histogram which is rebinned an shown on the screen
-
-   TGCompositeFrame *f23 = new TGCompositeFrame(fBinCont, 118, 20, kHorizontalFrame | kFixedWidth);
+   // Text buttons to Apply or Delete the rebinned histogram
+   TGCompositeFrame *f23 = new TGCompositeFrame(fBinCont, 118, 20, 
+                                                          kHorizontalFrame | 
+                                                          kFixedWidth);
    fApply = new TGTextButton(f23, " &Apply ");
-   f23->AddFrame(fApply, new TGLayoutHints(kLHintsExpandX | kLHintsLeft , 0, 3, 4, 4));
+   f23->AddFrame(fApply, 
+                 new TGLayoutHints(kLHintsExpandX | kLHintsLeft , 0, 3, 4, 4));
    fCancel = new TGTextButton(f23, " &Ignore ");
-   f23->AddFrame(fCancel, new TGLayoutHints(kLHintsExpandX | kLHintsLeft, 3, 0, 4, 4));
+   f23->AddFrame(fCancel, 
+                 new TGLayoutHints(kLHintsExpandX | kLHintsLeft, 3, 0, 4, 4));
    fBinCont->AddFrame(f23, new TGLayoutHints(kLHintsTop, 20, 3, 3, 4));
    fBin->AddFrame(fBinCont,new TGLayoutHints(kLHintsTop| kLHintsExpandX)); 
    
-// Editor for rebinning a histogram which derives from an Ntuple
-
+   // Widgets for rebinning a histogram which derives from a ntuple
    fBinCont1 = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame);   
-   TGCompositeFrame *f21 = new TGCompositeFrame(fBinCont1, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f21 = new TGCompositeFrame(fBinCont1, 80, 20, 
+                                                           kHorizontalFrame);
    fBinSlider1  = new TGHSlider(f21, 100, kSlider1 | kScaleBoth);
    fBinSlider1->Resize(107,20); 
    fBinSlider1->SetRange(1,9);
@@ -2211,8 +2410,9 @@ void TH1Editor::CreateBinTab()
    f21->AddFrame(fBinSlider1, new TGLayoutHints(kLHintsLeft, 3,0,0,3));
    fBinCont1->AddFrame(f21, new TGLayoutHints(kLHintsTop, 15, 7, 5, 0));
 
-//  lettering of the Rebin Slider
-   TGCompositeFrame *f24 = new TGCompositeFrame(fBinCont1, 80, 20, kHorizontalFrame);   
+   //  Lettering of the Rebin Slider
+   TGCompositeFrame *f24 = new TGCompositeFrame(fBinCont1, 80, 20, 
+                                                           kHorizontalFrame);   
    TGLabel *l1 = new TGLabel(f24, "-5");
    f24->AddFrame(l1, new TGLayoutHints(kLHintsLeft, 18, 1, -1, 0));
    TGLabel *l2 = new TGLabel(f24, "-2");
@@ -2223,64 +2423,76 @@ void TH1Editor::CreateBinTab()
    f24->AddFrame(l4, new TGLayoutHints(kLHintsLeft, 32, 3, -1, 0));
    fBinCont1->AddFrame(f24, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
       
-   TGCompositeFrame *f22 = new TGCompositeFrame(fBinCont1, 140, 20, kHorizontalFrame);
+   TGCompositeFrame *f22 = new TGCompositeFrame(fBinCont1, 140, 20, 
+                                                           kHorizontalFrame);
    TGLabel *binLabel2 = new TGLabel(f22, "# of Bins:");
    f22->AddFrame(binLabel2, new TGLayoutHints(kLHintsLeft, 7, 1, 4, 1));
 
    fBinNumberEntry1 = new TGNumberEntryField(f22, kBINSLIDER1, 0.0,  
-                                      TGNumberFormat::kNESInteger);
+                                             TGNumberFormat::kNESInteger);
    ((TGTextEntry*)fBinNumberEntry1)->SetToolTipText("Set the number of bins in the rebinned histogram");
    fBinNumberEntry1->Resize(57,20);
-   f22->AddFrame(fBinNumberEntry1, new TGLayoutHints(kLHintsLeft, 21, 0, 2, 0));   // left, right, top, bottom
+   f22->AddFrame(fBinNumberEntry1, new TGLayoutHints(kLHintsLeft, 21, 0, 2, 0));
    fBinCont1->AddFrame(f22, new TGLayoutHints(kLHintsTop, 0, 7, 2, 4));
 
-   TGCompositeFrame *f26 = new TGCompositeFrame(fBinCont1, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f26 = new TGCompositeFrame(fBinCont1, 80, 20, 
+                                                           kHorizontalFrame);
    TGLabel *offsetLbl = new TGLabel(f26, "BinOffset:");
    f26->AddFrame(offsetLbl, new TGLayoutHints(kLHintsLeft, 6, 1, 2, 1));
    fOffsetNumberEntry = new TGNumberEntryField(f26, kBINOFFSET, 0.0,  
-                                      TGNumberFormat::kNESRealFour,
-                                      TGNumberFormat::kNEAAnyNumber,
-                                      TGNumberFormat::kNELLimitMinMax, 0., 1.);
+                                               TGNumberFormat::kNESRealFour,
+                                               TGNumberFormat::kNEAAnyNumber,
+                                               TGNumberFormat::kNELLimitMinMax, 
+                                               0., 1.);
    ((TGTextEntry*)fOffsetNumberEntry)->SetToolTipText("Add an offset to the origin of the histogram");
    fOffsetNumberEntry->Resize(57,20);
-   f26->AddFrame(fOffsetNumberEntry, new TGLayoutHints(kLHintsRight, 21, 0, 0, 0));
+   f26->AddFrame(fOffsetNumberEntry, 
+                 new TGLayoutHints(kLHintsRight, 21, 0, 0, 0));
    fBinCont1->AddFrame(f26, new TGLayoutHints(kLHintsTop, 0, 7, 3, 1));
 
-   TGCompositeFrame *f25 = new TGCompositeFrame(fBinCont1, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f25 = new TGCompositeFrame(fBinCont1, 80, 20, 
+                                                           kHorizontalFrame);
    fBinOffsetSld  = new TGHSlider(f25, 100, kSlider1 | kScaleBoth);
    fBinOffsetSld->Resize(107,20); 
    f25->AddFrame(fBinOffsetSld, new TGLayoutHints(kLHintsLeft, 15,0,0,2));
    fBinCont1->AddFrame(f25, new TGLayoutHints(kLHintsTop, 3, 7, 3, 3));
    fBin->AddFrame(fBinCont1, new TGLayoutHints(kLHintsTop));
    
-// Axis Range Sliders
-   
-   TGCompositeFrame *sldCont = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame); 
-   TGCompositeFrame *title2 = new TGCompositeFrame(sldCont, 145, 10, kHorizontalFrame | 
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
-   title2->AddFrame(new TGLabel(title2, "Axis Range"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   // Sliders for axis range
+   TGCompositeFrame *sldCont = new TGCompositeFrame(fBin, 80, 20, 
+                                                          kVerticalFrame); 
+   TGCompositeFrame *title2 = new TGCompositeFrame(sldCont, 145, 10, 
+                                                            kHorizontalFrame | 
+                                                            kLHintsExpandX   | 
+                                                            kFixedWidth      | 
+                                                            kOwnBackground);
+   title2->AddFrame(new TGLabel(title2, "Axis Range"), 
+                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    title2->AddFrame(new TGHorizontal3DLine(title2),
-                new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+                    new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    sldCont->AddFrame(title2, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
 
-   TGCompositeFrame *f14 = new TGCompositeFrame(sldCont, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f14 = new TGCompositeFrame(sldCont, 80, 20, 
+                                                         kHorizontalFrame);
    TGLabel *fSliderLbl = new TGLabel(f14,"x:");
-   f14->AddFrame(fSliderLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4,4, 4, 1)); 
+   f14->AddFrame(fSliderLbl, 
+                 new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4,4, 4, 1)); 
    fSlider = new TGDoubleHSlider(f14, 1, 2);
    fSlider->Resize(118,20);
    f14->AddFrame(fSlider, new TGLayoutHints(kLHintsLeft));
    sldCont->AddFrame(f14, new TGLayoutHints(kLHintsTop, 3, 7, 4, 1));
    
-   TGCompositeFrame *f16 = new TGCompositeFrame(sldCont, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f16 = new TGCompositeFrame(sldCont, 80, 20, 
+                                                         kHorizontalFrame);
    fSldMin = new TGNumberEntryField(f16, kSLIDER_MIN, 0.0,  
-                                      TGNumberFormat::kNESRealTwo,
-                                      TGNumberFormat::kNEAAnyNumber);
+                                    TGNumberFormat::kNESRealTwo,
+                                    TGNumberFormat::kNEAAnyNumber);
    ((TGTextEntry*)fSldMin)->SetToolTipText("Set the minimum value of the x-axis");
    fSldMin->Resize(57,20);
    f16->AddFrame(fSldMin, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    fSldMax = new TGNumberEntryField(f16, kSLIDER_MAX, 0.0,  
-                                      TGNumberFormat::kNESRealTwo,
-                                      TGNumberFormat::kNEAAnyNumber);
+                                    TGNumberFormat::kNESRealTwo,
+                                    TGNumberFormat::kNEAAnyNumber);
    ((TGTextEntry*)fSldMax)->SetToolTipText("Set the maximum value of the x-axis");
    fSldMax->Resize(57,20);
    f16->AddFrame(fSldMax, new TGLayoutHints(kLHintsLeft, 4, 0, 0, 0));
@@ -2292,24 +2504,6 @@ void TH1Editor::CreateBinTab()
    f17->AddFrame(fDelaydraw, new TGLayoutHints(kLHintsLeft, 6, 1, 2, 0));
    sldCont->AddFrame(f17, new TGLayoutHints(kLHintsTop, 1, 1, 5, 0)); 
    fBin->AddFrame(sldCont, new TGLayoutHints(kLHintsTop));
-   fBinContainer->AddFrame(fBin, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
-}
-   
-//______________________________________________________________________________
-
-void TH1Editor::CreateFitTab()
-{   
-   // Creates the Fit Tab
-
-   fFitContainer = fTab->AddTab("Fitting");
-   fFit = new TGCompositeFrame(fFitContainer, 80, 20, kVerticalFrame);
-   fFit->AddFrame(new TGedNameFrame(fFit, 1001), new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
-
-   TGCompositeFrame *title3 = new TGCompositeFrame(fFit, 145, 10, kHorizontalFrame | 
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
-   title3->AddFrame(new TGLabel(title3, "Empty"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   title3->AddFrame(new TGHorizontal3DLine(title3), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
-   fFit->AddFrame(title3, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
-
-   fFitContainer->AddFrame(fFit, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
+   fBinContainer->AddFrame(fBin, 
+                           new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
 }

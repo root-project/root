@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.7 2005/11/11 15:38:30 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.8 2005/11/25 09:56:35 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -76,8 +76,11 @@ void TGedFrame::MakeTitle(const char *title)
    // Create attribute frame title.
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
-   f1->AddFrame(new TGLabel(f1, title), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+                                                              kLHintsExpandX | 
+                                                              kFixedWidth | 
+                                                              kOwnBackground);
+   f1->AddFrame(new TGLabel(f1, title), 
+                new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1),
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
@@ -160,9 +163,13 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
 {
    // Create the frame containing the selected object name.
 
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
-   f1->AddFrame(new TGLabel(f1,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | 
+                                            kFixedWidth      | 
+                                            kOwnBackground);
+   f1->AddFrame(new TGLabel(f1,"Name"), 
+                new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   f1->AddFrame(new TGHorizontal3DLine(f1), 
+                new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));
 
    f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
@@ -209,7 +216,6 @@ void TGedNameFrame::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    string.Append(fModel->GetName());
    string.Append("::");
    string.Append(fModel->ClassName());
-
    fLabel->SetText(new TGString(string));
 
    SetActive();

@@ -54,18 +54,15 @@ protected:
    Bool_t               fSameOpt;         // flag for option "same"
    TGTab               *fTab;             // Pointer to the Tab Parent
    TGCompositeFrame    *fBin;             // Contains the Binning Widgets
-   TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
-   TGCompositeFrame    *fStyle;           // Contains the Style Widgets  
    TGCompositeFrame    *fBinContainer;    // Container for fBin
-   TGCompositeFrame    *fFitContainer;    // Container for fFit
    Int_t                fTitlePrec;       // font precision level
    TGTextEntry         *fTitle;           // histogram title input field
    TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
    TGRadioButton       *fDim;             // 2D-Plot RadioButton             
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton    
-   TGComboBox	       *fTypeCombo;       // histogram type combo box
-   TGComboBox 	       *fCoordsCombo;     // Coordinate System combo box   
-   TGComboBox 	       *fErrorCombo;      // Error combo box   
+   TGComboBox	         *fTypeCombo;       // histogram type combo box
+   TGComboBox 	        *fCoordsCombo;     // Coordinate System combo box   
+   TGComboBox 	        *fErrorCombo;      // Error combo box   
    TGCheckButton       *fHistOnOff;       // Draw a simple histogram with default options 
    TGCheckButton       *fAddMarker;       // Draw a Marker on top of each bin
    TGCheckButton       *fAddB;            // Draw a Bar Chart   
@@ -101,7 +98,8 @@ protected:
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGTextButton        *fApply;           // Apply-Button to accept the rebinned histogram
    TGTextButton        *fCancel;          // Cancel-Button to reprobate the rebinned histogram
-   
+   TGLabel             *fNameLabel;       // selected object name on the Binning tab
+      
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);       // builts the Type ComboBox
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);     // builts the Coordinate ComboBox
    static  TGComboBox *BuildHistErrorComboBox(TGFrame *parent, Int_t id);      // builts the Error ComboBox
@@ -139,7 +137,6 @@ private:
    TString              GetHistAddLabel();        // Get the histogram addon (smooth line, simple line, ..)
    void ChangeErrorCombo(Int_t i);
    void CreateBinTab();                           // Creates the Bin Tab (part of the constructor)
-   void CreateFitTab();                           // Creates the Fit Tab (part of the constructor)
 
    
 public:
