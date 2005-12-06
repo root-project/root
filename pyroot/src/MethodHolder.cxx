@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.42 2005/10/26 05:12:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.43 2005/12/03 04:00:15 pcanal Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -67,7 +67,6 @@ inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& other )
 
    fArgsRequired = -1;
    fOffset       =  0;
-   fTagnum       = -1;
 
 // being uninitialized will trigger setting up caches as appropriate
    fIsInitialized  = kFALSE;
@@ -174,20 +173,6 @@ Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
 }
 
 //____________________________________________________________________________
-inline void PyROOT::TMethodHolder::CalcOffset_( void* obj, TClass* klass )
-{
-// actual offset calculation, as needed
-   Long_t derivedtagnum = klass->GetClassInfo() ? klass->GetClassInfo()->Tagnum() : -1;
-
-   if ( derivedtagnum != fTagnum ) {
-      fOffset = G__isanybase(
-         fClass->GetClassInfo() ? fClass->GetClassInfo()->Tagnum() : -1,
-         derivedtagnum, (Long_t)obj );
-      fTagnum = derivedtagnum;
-   }
-}
-
-//____________________________________________________________________________
 void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 {
 // helper to report errors in a consistent format (derefs msg)
@@ -225,7 +210,6 @@ PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TMethod* method ) :
    fExecutor      =  0;
    fArgsRequired  = -1;
    fOffset        =  0;
-   fTagnum        = -1;
 
    fIsInitialized = kFALSE;
 }
@@ -238,7 +222,6 @@ PyROOT::TMethodHolder::TMethodHolder( TFunction* function ) :
    fExecutor      =  0;
    fArgsRequired  = -1;
    fOffset        =  0;
-   fTagnum        = -1;
 
    fIsInitialized = kFALSE;
 }
@@ -427,18 +410,22 @@ PyObject* PyROOT::TMethodHolder::operator()( ObjectProxy* self, PyObject* args, 
       return 0;
    }
 
+// get its class
+   TClass* klass = self->ObjectIsA();
+
 // reset this method's offset for the object as appropriate
-   CalcOffset_( object, self->ObjectIsA() );
+   int objTag  = klass->GetClassInfo()  ? klass->GetClassInfo()->Tagnum()  : -1;   // derived
+   int methTag = fClass->GetClassInfo() ? fClass->GetClassInfo()->Tagnum() : -1;   // base
+   fOffset = objTag == methTag ? 0 : G__isanybase( methTag, objTag, (Long_t)object );
 
 // actual call; recycle self instead of new object for same address objects
-   PyObject* pyobject = Execute( self->GetObject() );
-   if ( ObjectProxy_Check( pyobject ) &&
-        ((ObjectProxy*)pyobject)->GetObject() == self->GetObject() &&
-        ((ObjectProxy*)pyobject)->ObjectIsA() == self->ObjectIsA() ) {
+   ObjectProxy* pyobj = (ObjectProxy*)Execute( object );
+   if ( ObjectProxy_Check( pyobj ) &&
+        pyobj->GetObject() == object && pyobj->ObjectIsA() == klass ) {
       Py_INCREF( (PyObject*)self );
-      Py_DECREF( pyobject );
+      Py_DECREF( pyobj );
       return (PyObject*)self;
    }
 
-   return pyobject;
+   return (PyObject*)pyobj;
 }
