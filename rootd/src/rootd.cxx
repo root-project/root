@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.108 2005/08/17 12:58:41 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.109 2005/09/04 19:46:03 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1095,10 +1095,12 @@ void RootdOpen(const char *msg)
    if (create && !access(gFile, F_OK))
       Error(ErrFatal, kErrFileExists, "RootdOpen: file %s already exists", gFile);
 
+   int wasupdt = 0;
    if (update) {
       if (access(gFile, F_OK)) {
          update = 0;
          create = 1;
+         wasupdt = 1;
          strcpy(gOption, "create");
       }
       if (update && access(gFile, W_OK))
@@ -1139,7 +1141,7 @@ void RootdOpen(const char *msg)
          Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
       }
 
-      gWritable = 1;
+      gWritable = wasupdt ? 2 : 1;
 
    } else {
 #ifndef WIN32
