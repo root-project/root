@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.235 2005/12/04 10:51:27 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.236 2005/12/06 14:35:41 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1626,7 +1626,8 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
 
    static char chopt[10] = "";
    Double_t gridl = 0;
-   Int_t ndiv, ndivx, ndivy, nx1, nx2,ndivsave;
+   Int_t ndiv, ndivx, ndivy, nx1, nx2, ndivsave;
+   Int_t useHparam = 0;
    Double_t umin, umax, uminsave, umaxsave;
 
    Double_t axmin = gPad->GetUxmin();
@@ -1635,6 +1636,20 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    Double_t aymax = gPad->GetUymax();
    char *cw = 0;
    TGaxis axis;
+
+   // In case of option 'cont4' or in case of option 'same' over a 'cont4 plot' 
+   // Hparam must be use for the axis limits.
+   if (Hoption.Contour == 14) useHparam = 1;
+   if (Hoption.Same) {
+      TObject *obj;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((obj=next())) {
+         if (strstr(obj->GetDrawOption(),"cont4")) {
+            useHparam = 1;
+            break;
+         }
+      }
+   }
 
    // Paint X axis
    ndivx = fXaxis->GetNdivisions();
@@ -1655,11 +1670,10 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    }
 
    // Define X-Axis limits
-   // In case of CONT4 the axis limits must be taken from Hparam
    if (Hoption.Logx) {
       strcat(chopt, "G");
       ndiv = TMath::Abs(ndivx);
-      if (Hoption.Contour == 14) {
+      if (useHparam) {
          umin = TMath::Power(10,Hparam.xmin);
          umax = TMath::Power(10,Hparam.xmax);
       } else {
@@ -1668,7 +1682,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       }
    } else {
       ndiv = TMath::Abs(ndivx);
-      if (Hoption.Contour == 14) {
+      if (useHparam) {
          umin = Hparam.xmin;
          umax = Hparam.xmax;
       } else {
@@ -1718,11 +1732,10 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    }
 
    // Define Y-Axis limits
-   // In case of CONT4 the axis limits must be taken from Hparam
    if (Hoption.Logy) {
       strcat(chopt, "G");
       ndiv = TMath::Abs(ndivy);
-      if (Hoption.Contour == 14) {
+      if (useHparam) {
          umin = TMath::Power(10,Hparam.ymin);
          umax = TMath::Power(10,Hparam.ymax);
       } else {
@@ -1731,7 +1744,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       }
    } else {
       ndiv = TMath::Abs(ndivy);
-      if (Hoption.Contour == 14) {
+      if (useHparam) {
          umin = Hparam.ymin;
          umax = Hparam.ymax;
       } else {
