@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -36,9 +36,9 @@ namespace {
         Type t_void = TypeBuilder("void");
         Type t_int  = TypeBuilder("int");
         ClassBuilderT< Cintex >("Cintex", PUBLIC)
-         .AddFunctionMember(FunctionTypeBuilder(t_void), "enable", Enable, 0, 0, PUBLIC | STATIC)
-         .AddFunctionMember(FunctionTypeBuilder(t_void, t_int), "setDebug", SetDebug, 0, 0, PUBLIC | STATIC)
-         .AddFunctionMember(FunctionTypeBuilder(t_int), "debug", Debug, 0, 0, PUBLIC | STATIC);
+         .AddFunctionMember(FunctionTypeBuilder(t_void), "Enable", Enable, 0, 0, PUBLIC | STATIC)
+         .AddFunctionMember(FunctionTypeBuilder(t_void, t_int), "SetDebug", SetDebug, 0, 0, PUBLIC | STATIC)
+         .AddFunctionMember(FunctionTypeBuilder(t_int), "Debug", Debug, 0, 0, PUBLIC | STATIC);
         //--CINT class builder
 	      Type t = Type::ByName("Cintex");
         ROOT::Cintex::CINTClassBuilder::Get(t).Setup();

@@ -1,25 +1,38 @@
-## system modules
+""" PyCintex emulation module.
+    This module emulates the functionality provided by PyLCGDict and PyLCGDict2
+    implementations of Python bindings using the Reflection dictionaries.
+    The current implementation is based on Reflex dictionaries with PyROOT.
+    PyROOT provides the basic pyhton bindings to C++ and Cintex to populate 
+    CINT dictionaries from Reflex ones.
+"""
+#---- system modules--------------------------------------------------
 import os, sys, exceptions, string
 
+#---- Import PyROOT module -------------------------------------------
 import ROOT
 from libPyROOT import makeRootClass
-
 ROOT.SetMemoryPolicy( ROOT.kMemoryStrict )
-## Load Cintex module and enable conversions Reflex->CINT
 
-def loadDict( dict ) :
+#--- LoadDictionary function and aliases -----------------------------
+def loadDictionary(name) :
   if sys.platform == 'win32' :
-    ROOT.gSystem.Load(dict)
+    sc = ROOT.gSystem.Load(name)
   else :
-    ROOT.gSystem.Load('lib' + dict)
+    sc = ROOT.gSystem.Load('lib' + name)
+  if sc == -1 : raise "Error Loading dictionary" 
+loadDict = loadDictionary
 
-loadDict('lcg_Cintex')
-ROOT.Cintex.setDebug(0)
-ROOT.Cintex.enable()
+#--- Load Cintex module and enable conversions Reflex->CINT-----------
+ROOT.gSystem.Load('libReflex')
+ROOT.gSystem.Load('libCintex')
+ROOT.Cintex.SetDebug(0)
+ROOT.Cintex.Enable()
 
-def makeNamespace( name ) :
+#--- Other functions needed -------------------------------------------
+def Namespace( name ) :
   if name == '' : return ROOT
   else :          return getattr(ROOT,name)
+makeNamespace = Namespace
 
 def makeClass( name ) :
   return makeRootClass(name)
@@ -37,10 +50,17 @@ def getAllClasses( ) :
     else : break
   return classes
 
-## Global namespace
+#--- Global namespace and global objects -------------------------------
 gbl  = makeNamespace('')
 NULL = ROOT.NULL
+class double(float): pass
+class short(int): pass
+class long_int(int): pass
+class unsigned_short(int): pass
+class unsigned_int(int): pass
+class unsigned_long(long): pass
 
+#--- For test purposes --------------------------------------------------
 if __name__ == '__main__' :
   loadDict('test_CintexDict')
 
