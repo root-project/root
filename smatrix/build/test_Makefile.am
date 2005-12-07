@@ -1,0 +1,18 @@
+# @(#)root/mathcore:$Name:  $:$Id: test_Makefile.am,v 1.1 2005/09/20 13:52:26 brun Exp $
+# Author: L. Moneta    2005  
+#
+## Process this file with automake to produce Makefile.in .
+#
+
+check_PROGRAMS =  testSMatrix #testKalman testOperations
+
+testSMatrix_SOURCES =  testSMatrix.cxx
+
+
+INCLUDES = -I$(top_srcdir)/inc
+
+#testSMatrix_LDADD =  $(top_builddir)/src/libMathCore.la
+
+
+
+

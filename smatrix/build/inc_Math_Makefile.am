@@ -1,0 +1,35 @@
+# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.4 2005/12/06 17:17:48 moneta Exp $
+# Author: L. Moneta    2005  
+#
+## Process this file with automake to produce Makefile.in .
+#
+#
+
+# The following is set, otherwise it would follow GNU conventions.
+AUTOMAKE_OPTIONS = foreign
+
+mathdir = $(includedir)/Math
+
+
+math_HEADERS =           	       \
+         BinaryOperators.h             \
+         CramerInversion.icc           \
+         Dfact.h                       \
+         Dfactir.h                     \
+         Dfinv.h                       \
+         Dinv.h                        \
+         Dsfact.h                      \
+         Dsinv.h                       \
+         Expression.h                  \
+         Functions.h                   \
+         MatrixFunctions.h             \
+         MConfig.h                     \
+         SMatrix.h                     \
+         SMatrix.icc                   \
+         StaticCheck.h                 \
+         SVector.h                     \
+         SVector.icc                   \
+         UnaryOperators.h              
+
+
+
