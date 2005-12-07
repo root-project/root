@@ -213,6 +213,7 @@ CLARENSLIBS    := @clarenslibs@
 
 BUILDPEAC      := @buildpeac@
 
+CPPUNIT        := @cppunit@
 GCCXML         := @gccxml@
 
 INSTALL        := cp -dpR

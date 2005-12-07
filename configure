@@ -768,6 +768,7 @@ with options, prefix with --with-, enables corresponding support
   cern-libdir        HBOOK converter, location of CERNLIB libraries
   chirp-incdir       Chirp support, location of chirp_client.h
   chirp-libdir       Chirp support, location of libchirp_client
+  cppunit            Cppunit testing, directory of the cppunit installation
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   globus             Globus support, path to what should be GLOBUS_LOCATION
@@ -920,6 +921,7 @@ if test $# -gt 0 ; then
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
+      --with-cppunit=*)        cppunit=$optarg       ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
@@ -3306,6 +3308,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@clarensincdir@|$clarensincdir|"      \
     -e "s|@clarenslibs@|$clarenslibs|"          \
     -e "s|@cintincdir@|$cintincdir|"            \
+    -e "s|@cppunit@|$cppunit|"                  \
     -e "s|@datadir@|$datadir|"                  \
     -e "s|@dcapincdir@|$dcapincdir|"            \
     -e "s|@comerrlib@|$comerrlib|"              \
