@@ -54,7 +54,7 @@ fi
 
 echo "Making $ROOTAEXE..."
 $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS lib/libfreetype.a
+   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
@@ -63,7 +63,7 @@ fi
 
 echo "Making $PROOFAEXE..."
 $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS lib/libfreetype.a
+   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
