@@ -61,20 +61,20 @@ include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 
 .PRECIOUS: $(GRFLXPY)
 
-$(GRFLXDD)/%.py: $(GRFLXSD)/%.py
-		@(if [ ! -d "lib/python/genreflex" ]; then \
-		  mkdir -p lib/python/genreflex; fi )
-		cp $< $@
-
 $(GCCXMLPATHPY):
 		@(if [ ! -d "lib/python/genreflex" ]; then \
 		  mkdir -p lib/python/genreflex; fi )
 		@echo "gccxmlpath = '$(GCCXML)'" > $(GCCXMLPATHPY);
 
-$(GRFLXDD)/%.pyc: $(GCCXMLPATHPY) $(GRFLXDD)/%.py
+$(GRFLXDD)/%.py: $(GRFLXSD)/%.py $(GCCXMLPATHPY) 
+		@(if [ ! -d "lib/python/genreflex" ]; then \
+		  mkdir -p lib/python/genreflex; fi )
+		cp $< $@
+
+$(GRFLXDD)/%.pyc: $(GRFLXDD)/%.py
 		@python -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(GENREFLEX): $(GRFLXPYC)
+$(GENREFLEX): $(GRFLXPYC) 
 		@echo $(GNRFLX_L1) > $(GENREFLEX)
 		@echo $(GNRFLX_L2) >> $(GENREFLEX)
 ifneq ($(PLATFORM),win32)
