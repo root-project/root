@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.3 2005/12/07 15:27:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.4 2005/12/07 17:25:43 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix
@@ -361,7 +361,7 @@ public:
      a vector of sizes N = D1 * (D1 + 1)/2. 
      It works only for square matrices with D1==D2, otherwise it will produce a compile error
    */ 
-#ifndef UNSUPPORTED
+#ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
   SVector<T, D1 * (D2 +1)/2> UpperBlock() const;
 #else
   template<unsigned int N>
@@ -372,7 +372,7 @@ public:
      a vector of sizes N = D1 * (D1 + 1)/2. 
      It works only for square matrices with D1==D2, otherwise it will produce a compile error
    */ 
-#ifndef UNSUPPORTED
+#ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
   SVector<T, D1 * (D2 +1)/2> LowerBlock() const;
 #else
   template<unsigned int N>

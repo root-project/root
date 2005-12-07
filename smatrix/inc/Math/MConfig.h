@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MConfig.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MConfig.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MConfig_
@@ -15,6 +15,8 @@
 
 #if defined(__sun) && !defined(linux) 
 #include <stdlib.h>
+// Solaris does not support expression like D1*(D1+1)/2 as template parameters
+#define UNSUPPORTED_TEMPLATE_EXPRESSION
 #endif
 
 
