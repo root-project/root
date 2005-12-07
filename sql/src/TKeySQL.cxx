@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TKeySQL.cxx,v 1.3 2005/11/28 23:22:31 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.4 2005/12/01 16:30:43 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************

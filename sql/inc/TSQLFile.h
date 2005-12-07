@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLFile.h,v 1.4 2005/11/28 23:22:31 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.5 2005/11/29 05:29:15 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
