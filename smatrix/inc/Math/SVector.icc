@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.icc,v 1.2 2005/12/05 16:33:47 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector_icc
@@ -503,12 +503,32 @@ template <class T, unsigned int D>
 inline T& SVector<T,D>::operator()(unsigned int i) { return fArray[i]; }
 
 //==============================================================================
+// SubVector
+//==============================================================================
+template <class T, unsigned int D>
+template <unsigned int N>  
+SVector<T,N> SVector<T,D>::Sub(const unsigned int row) const { 
+
+  STATIC_CHECK( N <= D,SVector_dimension_too_small); 
+
+  assert(row + N <= D);
+
+  SVector<T,N> tmp;
+  // need to use std::copy ??
+  for(unsigned int i=0; i<N; ++i) {
+      tmp[i] = fArray[i+row];
+  }
+  return tmp;
+}
+
+//==============================================================================
 // operator<<
 //==============================================================================
 template <class T, unsigned int D>
 inline std::ostream& operator<<(std::ostream& os, const SVector<T,D>& rhs) {
   return rhs.Print(os);
 }
+
 
 
 

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.2 2005/12/05 16:33:47 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -252,6 +252,15 @@ public:
   /// place a sub-vector starting at <row>
   template <class A, unsigned int D2>
   SVector<T,D>& Place_at(const Expr<A,T,D2>& rhs, const unsigned int row);
+
+  /**
+     return a subvector of size N starting at the value row
+     Condition  row+N <= D
+   */ 
+  template <unsigned int N >  
+  SVector<T,N> Sub(const unsigned int row) const;
+
+
   /// used by operator<<()
   std::ostream& Print(std::ostream& os) const;
 

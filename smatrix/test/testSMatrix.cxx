@@ -285,8 +285,8 @@ int test10() {
   std::cout << " v23 =  " << v23 << " \tv69 = " << v69 << std::endl;
   iret |= compare( Dot(v23,v69),(2*6+3*9) ); 
   
-  SMatrix<double,2,2> subA1 = A.SubMatrix<2,2>( 1,0);
-  SMatrix<double,2,3> subA2 = A.SubMatrix<2,3>( 0,0);
+  SMatrix<double,2,2> subA1 = A.Sub<2,2>( 1,0);
+  SMatrix<double,2,3> subA2 = A.Sub<2,3>( 0,0);
   std::cout << " subA1 =  " << subA1 << " \nsubA2 = " << subA2 << std::endl;
   iret |= compare ( subA1(0,0), subA2(1,0)); 
   iret |= compare ( subA1(0,1), subA2(1,1)); 
@@ -297,6 +297,7 @@ int test10() {
   std::cout << " diagonal =  " << diag << std::endl; 
   iret |= compare( Mag2(diag) , 1+5*5+9*9 ); 
 
+
   SMatrix<double,3> B = Transpose(A);
   std::cout << " B = " << B << std::endl;
 
@@ -305,6 +306,12 @@ int test10() {
   std::cout << " vU =  " << vU << " \tvL = " << vL << std::endl;
   // need to test mag since order can change
   iret |= compare( Mag(vU), Mag(vL) ); 
+
+  // test subvector
+  SVector<double,3> subV = vU.Sub<3>(1);
+  std::cout << " sub vU =  " << subV << std::endl;
+
+  iret |= compare( vU[2], subV[1] ); 
   
  
   return iret;
