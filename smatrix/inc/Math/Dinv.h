@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.2 2005/11/29 13:47:17 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dinv
@@ -166,11 +166,14 @@ public:
 //==============================================================================
 // Inverter<3>
 //==============================================================================
+
 template <>
 class Inverter<3> {
 public:
   ///
   template <class Matrix>
+
+#ifdef OLD_IMPL
   static bool Dinv(Matrix& rhs) {
 
     typename Matrix::value_type* a = rhs.Array();
@@ -234,6 +237,43 @@ public:
     a[8] = s * c33;
     return true;
   }
+#else
+  // use Cramer Rule
+  static bool Dinv(Matrix& rhs); 
+#endif
+};
+
+/** 
+    Inverter<4> Using Cramers rule.
+*/
+template <>
+class Inverter<4> {
+public:
+  ///
+  template <class Matrix>
+  static bool Dinv(Matrix& rhs); 
+};
+
+/** 
+    Inverter<5> Using Cramers rule.
+*/
+template <>
+class Inverter<5> {
+public:
+  ///
+  template <class Matrix>
+  static bool Dinv(Matrix& rhs); 
+};
+
+/** 
+    Inverter<6> Using Cramers rule.
+*/
+template <>
+class Inverter<6> {
+public:
+  ///
+  template <class Matrix>
+  static bool Dinv(Matrix& rhs); 
 };
 
 
@@ -242,5 +282,6 @@ public:
 }  // namespace ROOT
           
 
+#include "CramerInversion.icc"
 
 #endif  /* ROOT_Math_Dinv */
