@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.7 2005/12/03 15:22:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.8 2005/12/06 17:17:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -23,6 +23,12 @@
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/LorentzVector.h"
 #include "Math/GenVector/Rotation3D.h"
+#include "Math/GenVector/AxisAnglefwd.h"
+#include "Math/GenVector/EulerAnglesfwd.h"
+#include "Math/GenVector/Quaternionfwd.h"
+#include "Math/GenVector/RotationXfwd.h"
+#include "Math/GenVector/RotationYfwd.h"
+#include "Math/GenVector/RotationZfwd.h"
 
 #include <iostream>
 
@@ -122,7 +128,16 @@ namespace ROOT {
     } 
 
     /**
-       Construct from a translation only  with an identity rotation
+       Construct from a translation only, represented by any DisplacementVector3D 
+       and with an identity rotation
+    */
+    template<class CoordSystem>
+    explicit Transform3D( const DisplacementVector3D<CoordSystem> & v) { 
+      AssignFrom(XYZVector(v));
+    }
+    /**
+       Construct from a translation only, represented by a Cartesian 3D Vector,  
+       and with an identity rotation
     */
     explicit Transform3D( const XYZVector & v) { 
       AssignFrom(v);
@@ -130,33 +145,34 @@ namespace ROOT {
 
 
 
-#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambigous with double * , double *   
+    //#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambigous with double * , double *   
     /**
-       Construct from a rotation (any rotation object)  and then a translation (using any vector type)
+       Construct from a rotation (any rotation object)  and then a translation 
+       (represented by any DisplacementVector)
        The requirements on the rotation and vector objects are that they can be transformed in a 
        Rotation3D class and in a XYZVector
     */
-    template <class ARotation, class AVector>
-    Transform3D( const ARotation & r, const AVector & v) 
+    // to do : change to displacement vector3D
+    template <class ARotation, class CoordSystem>
+    Transform3D( const ARotation & r, const DisplacementVector3D<CoordSystem> & v) 
     {
       AssignFrom( Rotation3D(r), XYZVector (v) ); 
     }
-#ifdef LATER
     /**
-       Construct from a translation (using any vector type) and then a rotation (any rotation object). 
+       Construct from a translation (using any type of DisplacementVector ) 
+       and then a rotation (any rotation object). 
        Requirement on the rotation and vector objects are that they can be transformed in a 
        Rotation3D class and in a XYZVector 
     */
-    template <class AVector, class ARotation>
-    Transform3D( const AVector & v, const ARotation & r) 
+    template <class ARotation, class CoordSystem>
+    Transform3D(const DisplacementVector3D<CoordSystem> & v , const ARotation & r) 
     {
       // is equivalent from having first the rotation and then the translation vector rotated
       Rotation3D r3d(r);
       AssignFrom( r3d, r3d( XYZVector(v) ) ); 
     }
-#endif
 
-#endif
+    //#endif
 
     /**
        Construct transformation from one coordinate system defined by three points (orgin + two axis) to 
