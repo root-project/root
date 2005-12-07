@@ -43,11 +43,11 @@ GRFLXPYC := $(subst .py,.pyc,$(GRFLXPY))
 ifeq ($(PLATFORM),win32)
 GENREFLEX = bin\genreflex.bat
 GNRFLX_L1 = "" #"@echo off"
-GNRFLX_L2 = "" #"python %ROOTSYS%/lib/python/genreflex/genrefle.py %*"
+GNRFLX_L2 = "" #"python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
 else
 GENREFLEX = bin/genreflex
 GNRFLX_L1 = "\#!/bin/csh -f"
-GNRFLX_L2 = 'python $${ROOTSYS}/lib/python/genreflex/genreflex.py $$*'
+GNRFLX_L2 = 'python $$0:h/../lib/python/genreflex/genreflex.py $$*'
 endif
 
 
