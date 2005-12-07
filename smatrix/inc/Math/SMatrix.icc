@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.5 2005/12/07 17:32:45 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.6 2005/12/07 17:35:08 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -82,14 +82,17 @@ SMatrix<T,D1,D2>::SMatrix(const Expr<A,T,D1,D2>& rhs) {
 template <class T, unsigned int D1, unsigned int D2>
 template <class InputIterator>
 SMatrix<T,D1,D2>::SMatrix(InputIterator begin, InputIterator end) {
-  assert( std::distance(begin,end) <= kSize);
+  // std::distance does not work on Solaris
+  //assert( std::distance(begin,end) <= kSize);
+  // require size match exactly (better)
+  assert( begin + kSize == end);
   std::copy(begin,end, fArray);
 }
 
 template <class T, unsigned int D1, unsigned int D2>
 template <class InputIterator>
 SMatrix<T,D1,D2>::SMatrix(InputIterator begin, unsigned int size) {
-  assert( size <=  kSize);
+  assert( size ==  kSize);
   std::copy(begin,begin+size,fArray);
 }
 

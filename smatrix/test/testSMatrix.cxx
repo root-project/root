@@ -301,8 +301,15 @@ int test10() {
   SMatrix<double,3> B = Transpose(A);
   std::cout << " B = " << B << std::endl;
 
+#ifdef UNSUPPORTED_TEMPLATE_EXPRESSION
+  // in this case  function is templated. Need to pass the 6 
+  SVector<double,6> vU = A.UpperBlock<6>();
+  SVector<double,6> vL = B.LowerBlock<6>();
+#else 
+  // standards
   SVector<double,6> vU = A.UpperBlock();
   SVector<double,6> vL = B.LowerBlock();
+#endif
   std::cout << " vU =  " << vU << " \tvL = " << vL << std::endl;
   // need to test mag since order can change
   iret |= compare( Mag(vU), Mag(vL) ); 

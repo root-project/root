@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.4 2005/12/07 17:25:43 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.5 2005/12/07 17:32:45 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix
@@ -93,12 +93,14 @@ public:
   // new constructs using STL iterator interface
   /**
    * Constructor with STL iterator interface. The data will be copied into the matrix
+   * Size of the matrix must match size of the iterators 
    */
   template<class InputIterator>
   SMatrix(InputIterator begin, InputIterator end); 
 
   /**
    * Constructor with STL iterator interface. The data will be copied into the matrix
+   * In this case the value passed size must be equal to the matrix size (D1*D2)
    */
   template<class InputIterator>
   SMatrix(InputIterator begin, unsigned int size); 
