@@ -135,7 +135,7 @@ int test_smatrix_kalman() {
 
 
 	  x = xp + K0 * (m- H * xp);
-	  tmp = Cp * transpose(H);
+	  tmp = Cp * Transpose(H);
 	  Rinv = V + H * tmp;
 
 	  bool test = Rinv.Invert();

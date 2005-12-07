@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.2 2005/12/05 16:33:47 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -438,7 +438,7 @@ protected:
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
 inline Expr<TransposeOp<SMatrix<T,D1,D2>,T,D1,D2>, T, D2, D1>
- transpose(const SMatrix<T,D1,D2>& rhs) {
+ Transpose(const SMatrix<T,D1,D2>& rhs) {
   typedef TransposeOp<SMatrix<T,D1,D2>,T,D1,D2> MatTrOp;
 
   return Expr<MatTrOp, T, D2, D1>(MatTrOp(rhs));
@@ -449,7 +449,7 @@ inline Expr<TransposeOp<SMatrix<T,D1,D2>,T,D1,D2>, T, D2, D1>
 //==============================================================================
 template <class A, class T, unsigned int D1, unsigned int D2>
 inline Expr<TransposeOp<Expr<A,T,D1,D2>,T,D1,D2>, T, D2, D1>
- transpose(const Expr<A,T,D1,D2>& rhs) {
+ Transpose(const Expr<A,T,D1,D2>& rhs) {
   typedef TransposeOp<Expr<A,T,D1,D2>,T,D1,D2> MatTrOp;
 
   return Expr<MatTrOp, T, D2, D1>(MatTrOp(rhs));

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.2 2005/12/05 16:33:47 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix
@@ -318,11 +318,73 @@ public:
   SMatrix<T,D1,D2>& Place_at(const Expr<A,T,D3,D4>& rhs,
 			     const unsigned int row,
 			     const unsigned int col);
-  /// return a Matrix row as a vector
+
+  /** 
+      return a full Matrix row as a vector (copy the content in a new vector)
+  */ 
   SVector<T,D2> Row(const unsigned int therow) const;
-  /// return a Matrix column as a vector
+
+  /** 
+      return a full Matrix column as a vector (copy the content in a new vector)
+  */
   SVector<T,D1> Col(const unsigned int thecol) const;
-  /// used by operator<<()
+
+  /**
+     return a slice of therow as a vector starting at the colum value col0 until col0+N. 
+     Condition  col0+N <= D2
+   */ 
+  template <unsigned int N>  
+  SVector<T,N> SubRow(const unsigned int therow, const unsigned int col0 = 0 ) const;
+
+  /**
+     return a slice of the column as a vector starting at the row value row0 until row0+Dsub.
+     Condition  row0+N <= D1
+   */ 
+  template <unsigned int N>  
+  SVector<T,N> SubCol(const unsigned int thecol, const unsigned int row0 = 0) const;
+
+  /**
+     return a submatrix with the upper left corner at the values (row0, col0) and with sizes N1, N2
+     Condition  row0+N1 <= D1 && col0+N2 <=D2
+   */ 
+  template <unsigned int N1, unsigned int N2 >  
+  SMatrix<T,N1,N2> SubMatrix(const unsigned int row0, const unsigned int col0) const;
+
+  /**
+     return diagonal elements of a matrix as a Vector.  
+     It works only for squared matrices D1 == D2, otherwise it will produce a compile error
+   */ 
+  SVector<T,D1> Diagonal() const;
+
+  /**
+     return the upper Triangular block of the matrices (including the diagonal) as 
+     a vector of sizes N = D1 * (D1 + 1)/2. 
+     It works only for square matrices with D1==D2, otherwise it will produce a compile error
+   */ 
+#ifndef UNSUPPORTED
+  SVector<T, D1 * (D2 +1)/2> UpperBlock() const;
+#else
+  template<unsigned int N>
+  SVector<T,N> UpperBlock() const;
+#endif
+  /**
+     return the lower Triangular block of the matrices (including the diagonal) as 
+     a vector of sizes N = D1 * (D1 + 1)/2. 
+     It works only for square matrices with D1==D2, otherwise it will produce a compile error
+   */ 
+#ifndef UNSUPPORTED
+  SVector<T, D1 * (D2 +1)/2> LowerBlock() const;
+#else
+  template<unsigned int N>
+  SVector<T,N> LowerBlock() const;
+#endif
+
+
+
+
+  // submatrices 
+
+  /// Print: used by operator<<()
   std::ostream& Print(std::ostream& os) const;
 
 private:

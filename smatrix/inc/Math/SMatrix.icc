@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.2 2005/12/05 16:33:47 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -575,7 +575,7 @@ SVector<T,D2> SMatrix<T,D1,D2>::Row(const unsigned int therow) const {
 
   const unsigned int offset = therow*D2;
 
-  static SVector<T,D2> tmp;
+  /*static*/  SVector<T,D2> tmp;
   for(unsigned int i=0; i<D2; ++i) {
     tmp[i] = fArray[offset+i];
   }
@@ -588,7 +588,7 @@ SVector<T,D2> SMatrix<T,D1,D2>::Row(const unsigned int therow) const {
 template <class T, unsigned int D1, unsigned int D2>
 SVector<T,D1> SMatrix<T,D1,D2>::Col(const unsigned int thecol) const {
 
-  static SVector<T,D1> tmp;
+  /*static */ SVector<T,D1> tmp;
   for(unsigned int i=0; i<D1; ++i) {
     tmp[i] = fArray[thecol+i*D2];
   }
@@ -665,6 +665,136 @@ template <class T, unsigned int D1, unsigned int D2>
 inline const T * SMatrix<T,D1,D2>::end() const {
   return fArray + kSize;
 }
+
+
+
+//==============================================================================
+// SubMatrices and slices of columns and rows
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2>
+template <unsigned int N>  
+SVector<T,N> SMatrix<T,D1,D2>::SubRow(const unsigned int therow, const unsigned int col0 ) const { 
+
+  const unsigned int offset = therow*D2 + col0;
+
+  STATIC_CHECK( N <= D2,SVector_dimension_too_small); 
+  assert(col0 + N <= D2);
+
+  SVector<T,N> tmp;
+  for(unsigned int i=0; i<N; ++i) {
+    tmp[i] = fArray[offset+i];
+  }
+  return tmp;
+}
+
+template <class T, unsigned int D1, unsigned int D2>
+template <unsigned int N>  
+SVector<T,N> SMatrix<T,D1,D2>::SubCol(const unsigned int thecol, const unsigned int row0 ) const { 
+
+  const unsigned int offset = thecol + row0*D1;
+
+  STATIC_CHECK( N <= D1,SVector_dimension_too_small); 
+  assert(row0 + N <= D1);
+
+  SVector<T,N> tmp;
+  for(unsigned int i=0; i<N; ++i) {
+    tmp[i] = fArray[offset+i*D1];
+  }
+  return tmp;
+}
+
+// submatrix
+template <class T, unsigned int D1, unsigned int D2>
+template <unsigned int N1, unsigned int N2>  
+SMatrix<T,N1,N2> SMatrix<T,D1,D2>::SubMatrix(const unsigned int row0, const unsigned int col0) const { 
+
+  STATIC_CHECK( N1 <= D1,Smatrix_dimension1_too_small); 
+  STATIC_CHECK( N2 <= D2,Smatrix_dimension2_too_small); 
+  assert(row0 + N1 <= D1);
+  assert(col0 + N2 <= D2);
+
+  SMatrix<T,N1,N2> tmp;
+  for(unsigned int i=0; i<N1; ++i) {
+    for(unsigned int j=0; j<N2; ++j) {
+      tmp(i,j) = fArray[(i+row0)*D2+j+col0];
+    }
+  }
+  return tmp;
+}
+
+//diagonal
+template <class T, unsigned int D1, unsigned int D2>
+SVector<T,D1> SMatrix<T,D1,D2>::Diagonal( ) const { 
+
+  // only for squared matrices
+  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+
+  SVector<T,D1> tmp;
+  for(unsigned int i=0; i<D1; ++i) {
+    tmp[i] = fArray[ i*D2 + i];
+  }
+  return tmp;
+}
+
+//upper block
+template <class T, unsigned int D1, unsigned int D2>
+#ifndef UNSUPPORTED
+SVector<T, D1 * (D2 +1)/2 >  SMatrix<T,D1,D2>::UpperBlock( ) const { 
+#else
+template <unsigned int N>  
+SVector<T,N> SMatrix<T,D1,D2>::UpperBlock( ) const { 
+#endif
+  // only for squared matrices
+  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+
+#ifndef UNSUPPORTED
+  SVector<T, D1 * (D2 +1)/2 >  tmp;
+#else
+  // N must be equal D1 *(D1 +1)/2
+  STATIC_CHECK( N == D1*(D1+1)/2,SVector_Wrong_Size );
+  SVector<T,N> tmp;
+#endif
+
+  int k = 0;
+  for(unsigned int i=0; i<D1; ++i) {
+    for(unsigned int j=i; j<D2; ++j) {
+      tmp[k] = fArray[ i*D2 + j];
+      k++;
+    }
+  }
+  return tmp;
+}
+
+//lower block
+template <class T, unsigned int D1, unsigned int D2>
+#ifndef UNSUPPORTED
+SVector<T, D1 * (D2 +1)/2 >  SMatrix<T,D1,D2>::LowerBlock( ) const { 
+#else
+template <unsigned int N>  
+SVector<T,N> SMatrix<T,D1,D2>::LowerBlock( ) const { 
+#endif
+
+  // only for squared matrices
+  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+
+#ifndef UNSUPPORTED
+  SVector<T, D1 * (D2 +1)/2 >  tmp;
+#else
+  // N must be equal D1 *(D1 +1)/2
+  STATIC_CHECK( N == D1*(D1+1)/2,SVector_Wrong_Size );
+  SVector<T,N> tmp;
+#endif
+
+  int k = 0;
+  for(unsigned int i=0; i<D1; ++i) {
+    for(unsigned int j=0; j<=i; ++j) {
+      tmp[k] = fArray[ i*D2 + j];
+      k++;
+    }
+  }
+  return tmp;
+}
+
 
 
 

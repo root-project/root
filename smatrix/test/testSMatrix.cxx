@@ -15,6 +15,12 @@ using std::endl;
 
 #define XXX
 
+int compare( double a, double b) { 
+  if (a == b) return 0; 
+  std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
+  return 1;
+}
+
 int test1() { 
 
   SVector<float,3> x(4,5,6);
@@ -96,8 +102,9 @@ int test3() {
   cout << "Determinant: " << det << endl;
   // WARNING: A has changed!!
   cout << "A again: " << endl << A << endl;
+  A = B; 
 
-  A.Sinvert();
+  A.Invert();
   cout << "A^-1: " << endl << A << endl;
 
   // check if this is really the inverse:
@@ -244,8 +251,64 @@ int test8() {
   return 0;
 }
 
+int test9() { 
+  // test non mutating inversions
+  SMatrix<double,3> A;
+  A(0,0) = A(0,1) = A(1,0) = 1;
+  A(1,1) = A(2,2) = 2;
 
 
+  double det = 0.;
+  A.Det2(det);
+  cout << "Determinant: " << det << endl;
+
+  SMatrix<double,3> Ainv = A.Inverse();
+  cout << "A^-1: " << endl << Ainv << endl;
+
+  // check if this is really the inverse:
+  cout << "A^-1 * A: " << endl << Ainv * A << endl;
+
+  return 0;
+}
+
+int test10() { 
+  // test slices
+  int iret = 0;
+  double d[9] = { 1,2,3,4,5,6,7,8,9};
+  SMatrix<double,3> A( d,d+9);
+
+  cout << "A: " << A << endl;
+
+  SVector<double,2> v23 = A.SubRow<2>( 0,1);    
+  SVector<double,2> v69 = A.SubCol<2>( 2,1);    
+
+  std::cout << " v23 =  " << v23 << " \tv69 = " << v69 << std::endl;
+  iret |= compare( Dot(v23,v69),(2*6+3*9) ); 
+  
+  SMatrix<double,2,2> subA1 = A.SubMatrix<2,2>( 1,0);
+  SMatrix<double,2,3> subA2 = A.SubMatrix<2,3>( 0,0);
+  std::cout << " subA1 =  " << subA1 << " \nsubA2 = " << subA2 << std::endl;
+  iret |= compare ( subA1(0,0), subA2(1,0)); 
+  iret |= compare ( subA1(0,1), subA2(1,1)); 
+
+
+
+  SVector<double,3> diag = A.Diagonal();
+  std::cout << " diagonal =  " << diag << std::endl; 
+  iret |= compare( Mag2(diag) , 1+5*5+9*9 ); 
+
+  SMatrix<double,3> B = Transpose(A);
+  std::cout << " B = " << B << std::endl;
+
+  SVector<double,6> vU = A.UpperBlock();
+  SVector<double,6> vL = B.LowerBlock();
+  std::cout << " vU =  " << vU << " \tvL = " << vL << std::endl;
+  // need to test mag since order can change
+  iret |= compare( Mag(vU), Mag(vL) ); 
+  
+ 
+  return iret;
+}
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
@@ -266,6 +329,8 @@ int main(void) {
   TEST(6);
   TEST(7);
   TEST(8);
+  TEST(9);
+  TEST(10);
 
   return 0;
 }
