@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.14 2004/07/09 06:26:45 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.15 2005/03/16 06:22:37 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -174,7 +174,7 @@ static int DrawCreditItem(HDC hDC, const char *creditItem, const char **members,
          drawRect.right = gCreditsRect.right;
          drawRect.bottom = y + lineSpacing;
          if (draw)
-             DrawTextEx(hDC, credit, strlen(credit), &drawRect, DT_LEFT, 0);
+            DrawTextEx(hDC, credit, strlen(credit), &drawRect, DT_LEFT, 0);
          y += lineSpacing;
          strcpy(credit, "   ");
       }
@@ -683,7 +683,7 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
          DisplayGraphic(hWnd, hDC);
          SetBkMode(hDC, TRANSPARENT);
          if(hFont)
-             SelectObject(hDC, hFont);
+            SelectObject(hDC, hFont);
          DrawVersion(hDC);
          EndPaint(hWnd, &ps);
          gShow = TRUE;
