@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.10 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.11 2005/12/05 17:34:45 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -154,11 +154,11 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
 
    // Menus creation
    fFileMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
-   fFileMenu->AddEntry("&Print EPS", kGLPrintEPS_SIMPLE);
-   fFileMenu->AddEntry("&Print EPS (High quality)", kGLPrintEPS_BSP);
-   fFileMenu->AddEntry("&Print PDF", kGLPrintPDF_SIMPLE);
-   fFileMenu->AddEntry("&Print PDF (High quality)", kGLPrintPDF_BSP);
-   fFileMenu->AddEntry("&Exit", kGLExit);
+   fFileMenu->AddEntry("Print &EPS", kGLPrintEPS_SIMPLE);
+   fFileMenu->AddEntry("Print EP&S (High quality)", kGLPrintEPS_BSP);
+   fFileMenu->AddEntry("Print &PDF", kGLPrintPDF_SIMPLE);
+   fFileMenu->AddEntry("Print P&DF (High quality)", kGLPrintPDF_BSP);
+   fFileMenu->AddEntry("E&xit", kGLExit);
    fFileMenu->Associate(fFrame);
 
    fCameraMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
