@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.264 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.265 2005/12/04 11:10:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5524,7 +5524,10 @@ Double_t TH1::Integral(Int_t binx1, Int_t binx2, Option_t *option) const
 // if option "width" is specified, the integral is the sum of
 // the bin contents multiplied by the bin width in x.
 
+   Int_t nbinsx = GetNbinsX();
    if (binx1 < 0) binx1 = 0;
+   if (binx2 > nbinsx+1) binx2 = nbinsx+1;
+   if (binx2 < binx1)    binx2 = nbinsx;
    Double_t integral = 0;
 
 //   - Loop on bins in specified range

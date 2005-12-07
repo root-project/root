@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.69 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.70 2005/12/04 11:10:21 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1007,10 +1007,13 @@ Double_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t
    Int_t nbinsz = GetNbinsZ();
    if (binx1 < 0) binx1 = 0;
    if (binx2 > nbinsx+1) binx2 = nbinsx+1;
+   if (binx2 < binx1)    binx2 = nbinsx;
    if (biny1 < 0) biny1 = 0;
    if (biny2 > nbinsy+1) biny2 = nbinsy+1;
+   if (biny2 < biny1)    biny2 = nbinsy;
    if (binz1 < 0) binz1 = 0;
    if (binz2 > nbinsz+1) binz2 = nbinsz+1;
+   if (binz2 < binz1)    binz2 = nbinsz;
    Double_t integral = 0;
 
 //*-*- Loop on bins in specified range
