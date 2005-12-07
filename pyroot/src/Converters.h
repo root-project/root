@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.16 2005/11/24 19:49:57 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.17 2005/12/03 04:00:15 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -13,6 +13,7 @@ class G__CallFunc;
 class G__TypeInfo;
 
 // Standard
+#include <limits.h>
 #include <string>
 #include <map>
 
@@ -91,7 +92,7 @@ namespace PyROOT {
 
    class TCStringConverter : public TConverter {
    public:
-      TCStringConverter( UInt_t maxSize = (UInt_t)-1 ) : fMaxSize( maxSize ) {}
+      TCStringConverter( UInt_t maxSize = UINT_MAX ) : fMaxSize( maxSize ) {}
 
    public:
       virtual Bool_t SetArg( PyObject*, G__CallFunc* );
@@ -163,9 +164,9 @@ namespace PyROOT {
       TClassRef fClass;
    };
 
-   class TRefRootObjectConverter : public TRootObjectConverter {
+   class TStrictRootObjectConverter : public TRootObjectConverter {
    public:
-      TRefRootObjectConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
+      TStrictRootObjectConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
          TRootObjectConverter( klass, keepControl ) {}
 
    protected:

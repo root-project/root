@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.23 2005/12/04 06:37:33 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.24 2005/12/05 17:40:54 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -93,9 +93,7 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, G__CallFunc* func
                                                                              \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )            \
 {                                                                            \
-   type buf[2]; buf[1] = (type)'\0';                                         \
-   buf[0] = *((type*)address);                                               \
-   return PyString_FromString( (char*)buf );                                 \
+   return PyString_FromFormat( "%c", *((type*)address) );                    \
 }                                                                            \
                                                                              \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address )\
@@ -221,7 +219,7 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
    if ( PyErr_Occurred() )
       return kFALSE;
 
-   if ( u > (ULong_t)((UInt_t)-1) ) {
+   if ( u > (ULong_t)UINT_MAX ) {
       PyErr_SetString( PyExc_OverflowError, "value to large for unsigned int" );
       return kFALSE;
    }
@@ -375,7 +373,7 @@ Bool_t PyROOT::TCStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
 // verify (too long string will cause truncation, no crash)
    if ( fMaxSize < (UInt_t)fBuffer.size() )
       PyErr_Warn( PyExc_RuntimeWarning, "string too long for char array (truncated)" );
-   else if ( fMaxSize != (UInt_t)-1 )
+   else if ( fMaxSize != UINT_MAX )
       fBuffer.resize( fMaxSize, '\0' );      // padd remainder of buffer as needed
 
 // set the value and declare success
@@ -385,7 +383,7 @@ Bool_t PyROOT::TCStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
 
 PyObject* PyROOT::TCStringConverter::FromMemory( void* address ) {
    if ( address && *(char**)address ) {
-      if ( fMaxSize != (UInt_t)-1 ) {        // need to prevent reading beyond boundary
+      if ( fMaxSize != UINT_MAX ) {          // need to prevent reading beyond boundary
          std::string buf( *(char**)address, fMaxSize );
          return PyString_FromString( buf.c_str() );
       }
@@ -406,7 +404,7 @@ Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address ) {
    if ( fMaxSize < (UInt_t)PyString_GET_SIZE( value ) )
       PyErr_Warn( PyExc_RuntimeWarning, "string too long for char array (truncated)" );
 
-   if ( fMaxSize != (UInt_t)-1 )
+   if ( fMaxSize != UINT_MAX )
       strncpy( *(char**)address, s, fMaxSize );   // padds remainder
    else
       strcpy( *(char**)address, s );
@@ -857,9 +855,9 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       else if ( cpd == "*" )
          result = new TRootObjectConverter( klass, control );
       else if ( cpd == "&" )
-         result = new TRefRootObjectConverter( klass, control );
+         result = new TStrictRootObjectConverter( klass, control );
       else if ( cpd == "" )               // by value
-         result = new TRootObjectConverter( klass, kTRUE );
+         result = new TStrictRootObjectConverter( klass, kTRUE );
 
    } else if ( ti.Property() & G__BIT_ISENUM ) {
    // special case (CINT): represent enums as unsigned integers

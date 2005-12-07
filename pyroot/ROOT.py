@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.32 2005/11/17 06:26:35 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.33 2005/11/24 17:08:36 rdm Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/16/05
+# Last: 12/06/05
 
 """PyROOT user module.
 
@@ -14,11 +14,10 @@
 """
 
 ## system modules
-import os, sys, exceptions, inspect, re
+import os, sys
 import string as pystring
-import thread, time
 
-## there's no version_info (nor inspect module) in 1.5.2
+## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
     raise ImportError, 'Python Version 2.2 or above is required.'
 
@@ -87,7 +86,7 @@ sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
-__version__ = '3.2.0'
+__version__ = '3.3.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 __pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'gVirtualX',
@@ -167,7 +166,7 @@ gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
 ### RINT command emulation ------------------------------------------------------
 def _excepthook( exctype, value, traceb ):
  # catch syntax errors only (they contain the full line)
-   if isinstance( value, exceptions.SyntaxError ) and value.text:
+   if isinstance( value, SyntaxError ) and value.text:
       cmd, arg = split( value.text[:-1] )
 
     # mimic ROOT/CINT commands
@@ -226,51 +225,56 @@ _orig_dhook = sys.displayhook
 sys.displayhook = _displayhook
 
 
-### root thread to prevent GUIs from starving -----------------------------------
-if not gROOT.IsBatch():
-   def _processRootEvents():
-      global gSystem
-      gSystemProcessEvents = gSystem.ProcessEvents
-      while 1:
-         try:
-            gSystemProcessEvents()
-            time.sleep( 0.01 )
-         except: # in case gSystem gets destroyed early on exit
-            pass
+### helper to prevent GUIs from starving
+def _processRootEvents( controller ):
+    import time
+    global gSystem
 
-   thread.start_new_thread( _processRootEvents, () )
+    while controller.keeppolling:
+       try:
+          gSystem.ProcessEvents()
+          time.sleep( 0.01 )
+       except: # in case gSystem gets destroyed early on exit
+          pass
 
 
 ### allow loading ROOT classes as attributes ------------------------------------
-_thismodule = sys.modules[ __name__ ]
-
 class ModuleFacade( object ):
-   def __init__( self ):
+   def __init__( self, module ):
+      self.module = module
+
+    # root thread to prevent GUIs from starving
+      if not self.module.gROOT.IsBatch():
+         import threading, time
+         self.keeppolling = 1
+         self.thread = threading.Thread( None, _processRootEvents, None, ( self, ) )
+         self.thread.start()
+
     # store already available ROOT objects to prevent spurious lookups
-      for name in _thismodule.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
-          self.__dict__[ name ] = getattr( _thismodule, name )
+      for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
+          self.__dict__[ name ] = getattr( self.module, name )
 
       for name in std.stlclasses:
           exec 'self.%(name)s = std.%(name)s' % { 'name' : name }
 
-      self.__dict__[ '__doc__'  ] = _thismodule.__doc__
-      self.__dict__[ '__name__' ] = _thismodule.__name__
+      self.__dict__[ '__doc__'  ] = self.module.__doc__
+      self.__dict__[ '__name__' ] = self.module.__name__
 
    def __getattr__( self, name ):
     # support for "from ROOT import *" at the module level
       if name == '__all__':
          caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
 
-         for name in _thismodule.__pseudo__all__:
-            caller.__dict__[ name ] = getattr( _thismodule, name )
+         for name in self.module.__pseudo__all__:
+            caller.__dict__[ name ] = getattr( self.module, name )
 
          sys.modules[ 'libPyROOT' ].gPad = gPad
 
        # make the distionary of the calling module ROOT lazy
-         _thismodule.setRootLazyLookup( caller.__dict__ )
+         self.module.setRootLazyLookup( caller.__dict__ )
 
        # the actual __all__ is empty
-         return _thismodule.__all__
+         return self.module.__all__
 
     # block search for privates
       if name[0:2] == '__':
@@ -295,8 +299,35 @@ class ModuleFacade( object ):
             self.__dict__[ name ] = attr               # normal member
             return attr
 
-
     # reaching this point means failure ...
       raise AttributeError( name )
 
-sys.modules[ __name__ ] = ModuleFacade()
+sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
+del ModuleFacade
+
+
+### b/c of circular references, the facade needs explicit cleanup ---------------
+import atexit
+def cleanup():
+ # restore hooks
+   import sys
+   sys.displayhook = sys.__displayhook__
+   if not __builtins__.has_key( '__IPYTHON__' ):
+      sys.excepthook = sys.__excepthook__
+
+   facade = sys.modules[ __name__ ]
+
+ # shutdown GUI thread, as appropriate
+   if hasattr( facade, 'thread' ):
+      facade.keeppolling = 0
+
+ # destroy ROOT module
+   del sys.modules[ 'libPyROOT' ]
+   del facade.module
+
+ # destroy facade
+   del sys.modules[ facade.__name__ ]
+   del facade
+
+atexit.register( cleanup )
+del cleanup, atexit

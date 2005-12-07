@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name: v5-06-00 $:$Id: Executors.cxx,v 1.14 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.15 2005/12/05 17:40:54 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -35,10 +35,7 @@ PyObject* PyROOT::TLongExecutor::Execute( G__CallFunc* func, void* self )
 //____________________________________________________________________________
 PyObject* PyROOT::TCharExecutor::Execute( G__CallFunc* func, void* self )
 {
-   Long_t result = func->ExecInt( self );
-   char c[2]; c[1] = '\0';
-   c[0] = (char) result;
-   return PyString_FromString( c );
+   return PyString_FromFormat( "%c", (int)func->ExecInt( self ) );
 }
 
 //____________________________________________________________________________
