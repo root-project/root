@@ -62,6 +62,8 @@ include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 .PRECIOUS: $(GRFLXPY)
 
 $(GRFLXDD)/%.py: $(GRFLXSD)/%.py
+		@(if [ ! -d "lib/python/genreflex" ]; then \
+		  mkdir -p lib/python/genreflex; fi )
 		cp $< $@
 
 $(GCCXMLPATHPY):
