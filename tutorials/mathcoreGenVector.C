@@ -761,21 +761,44 @@ int testRotation() {
   XYZTVector lv(1.,2.,3.,4.);
   
   // test from rotx (using boosts and 3D rotations not yet impl.)
-  RotationX rx(pi/4);
-  LorentzRotation rl(rx);
+  // rx,ry and rz already defined
+  Rotation3D r3d = rx*ry*rz; 
+
+  LorentzRotation rlx(rx);
+  LorentzRotation rly(ry);
+  LorentzRotation rlz(rz);
+
+  LorentzRotation rl0 = rlx*rly*rlz;
+  LorentzRotation rl1( r3d);
+  
+//   cout << rl << endl;
+//   cout << rl0 << endl;
+//   int eq = rl0 == rl;
+//   cout << eq << endl;
+//   double d1[16];
+//   double d2[16];
+//   rl.GetComponents(d1,d1+16);
+//   rl0.GetComponents(d2,d2+16);
+//   for (int i = 0; i < 16; ++i) 
+//     ok+= compare(d1[i], d2[i], "i",1); 
+
+  //ok+= compare( rl == rl2, static_cast<double>(true), " LorenzRot");
+
+
   //  cout << Rotation3D(rx) << endl;
 
-  XYZTVector lv1 = rl * lv; 
+  XYZTVector lv0 = rl0 * lv; 
 
-  XYZTVector lv2 = rx * lv; 
-    
-  ok+= compare(lv1.X(), lv2.X(), "x"); 
-  ok+= compare(lv1.Y(), lv2.Y(), "y"); 
-  ok+= compare(lv1.Z(), lv2.Z(), "z"); 
-  ok+= compare(lv1.E(), lv2.E(), "t"); 
+  XYZTVector lv1 = rl1 * lv; 
+
+  XYZTVector lv2 = r3d * lv; 
+
+
+  ok+= compare(lv1== lv2,true,"V0==V2"); 
+  ok+= compare(lv1== lv2,true,"V1==V2"); 
 
   double rlData[16];
-  rl.GetComponents(rlData, rlData+16);
+  rl0.GetComponents(rlData, rlData+16);
   TMatrixD ml(4,4,rlData); 
   //  ml.Print();
   double lvData[4];
@@ -791,7 +814,7 @@ int testRotation() {
 
   // test inverse 
 
-  XYZTVector lv0 = rl * rl.Inverse() * lv; 
+  XYZTVector lv0 = rl0 * rl0.Inverse() * lv; 
 
   ok+= compare(lv0.X(), lv.X(), "x"); 
   ok+= compare(lv0.Y(), lv.Y(), "y"); 
@@ -805,7 +828,8 @@ int testRotation() {
   std::cout << "Test Boost :                    "; 
 
 
-  Boost bst( 0.8,0.7.,0.3);   //  boost 
+  Boost bst( 0.3,0.4,0.5);   //  boost (must be <= 1)
+
 
   lvb = bst ( lv );
 
@@ -813,21 +837,22 @@ int testRotation() {
 
   lvb2 = rl2 (lv);
 
+
   // test with lorentz rotation
   ok+= compare(lvb.X(), lvb2.X(), "x"); 
   ok+= compare(lvb.Y(), lvb2.Y(), "y"); 
   ok+= compare(lvb.Z(), lvb2.Z(), "z"); 
   ok+= compare(lvb.E(), lvb2.E(), "t"); 
-  ok+= compare(lvb.M(), lv.M(), "m"); // m must stay constant 
+  ok+= compare(lvb.M(), lv.M(), "m",10); // m must stay constant 
 
 
   // test inverse
   lv0 = bst.Inverse() * lvb;
 
-  ok+= compare(lv0.X(), lv.X(), "x"); 
-  ok+= compare(lv0.Y(), lv.Y(), "y"); 
-  ok+= compare(lv0.Z(), lv.Z(), "z"); 
-  ok+= compare(lv0.E(), lv.E(), "t"); 
+  ok+= compare(lv0.X(), lv.X(), "x",5); 
+  ok+= compare(lv0.Y(), lv.Y(), "y",5); 
+  ok+= compare(lv0.Z(), lv.Z(), "z",3); 
+  ok+= compare(lv0.E(), lv.E(), "t",3); 
 
   XYZVector brest = lv.BoostToCM();
   bst.SetComponents( brest.X(), brest.Y(), brest.Z() );
