@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.70 2005/06/16 09:31:32 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.71 2005/06/20 15:45:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -830,6 +830,16 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
   // Split a dataset in a series of subsets, each corresponding
   // to a state of splitCat
   TList* dsetList = new TList ;
+
+  // Construct set of variables to be included in split sets = full set - split category
+  RooArgSet subsetVars(*get()) ;
+  if (splitCat.isDerived()) {
+    RooArgSet* vars = splitCat.getVariables() ;
+    subsetVars.remove(*vars,kTRUE,kTRUE) ;
+    delete vars ;
+  } else {
+    subsetVars.remove(splitCat,kTRUE,kTRUE) ;
+  }
   
   // Loop over dataset and copy event to matching subset
   Int_t i ;
@@ -837,7 +847,7 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
     const RooArgSet* row =  get(i) ;
     RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getLabel()) ;
     if (!subset) {
-      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel()) ;
+      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel(),&subsetVars) ;
       dsetList->Add((RooAbsArg*)subset) ;
     }
     subset->add(*row,weight()) ;

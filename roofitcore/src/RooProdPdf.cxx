@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.60 2005/06/23 07:37:30 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.61 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -680,7 +680,8 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       partIntOwnedList->addOwned(*prodtmp) ;
 
       const char* intname = makeRGPPName("SPECINT_",compTermSet,outerIntDeps,RooArgSet(),isetRangeName) ;
-      RooRealIntegral* inttmp = new RooRealIntegral(intname,intname,*prodtmp,outerIntDeps) ;
+      RooRealIntegral* inttmp = new RooRealIntegral(intname,intname,*prodtmp,outerIntDeps,0,0,isetRangeName) ;
+
       partIntOwnedList->addOwned(*inttmp) ;
       partIntList->add(*inttmp);
 

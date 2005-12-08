@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.29 2005/04/18 21:44:20 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.30 2005/06/16 09:31:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,7 +38,7 @@ public:
   RooAbsData(const char *name, const char *title, const RooArgSet& vars) ;
   RooAbsData(const RooAbsData& other, const char* newname = 0) ;
   virtual ~RooAbsData() ;
-  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0) const = 0 ;
+  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0) const = 0 ;
 
   // Reduction methods
   RooAbsData* reduce(RooCmdArg arg1,RooCmdArg arg2=RooCmdArg(),RooCmdArg arg3=RooCmdArg(),RooCmdArg arg4=RooCmdArg(),

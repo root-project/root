@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.rdl,v 1.56 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.57 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,7 +44,7 @@ public:
   virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
 
-  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0) const ;
+  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0) const ;
 
   RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
 
