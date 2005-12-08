@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.48 2005/12/01 16:29:32 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.49 2005/12/02 22:39:22 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -301,7 +301,8 @@ void TClonesArray::Delete(Option_t *)
    // memory (e.g. objects inheriting from TNamed or containing TStrings
    // allocate memory). If not you better use Clear() since if is faster.
 
-   for (Int_t i = 0; i < fSize; i++)
+   Long_t dtoronly = TObject::GetDtorOnly();
+   for (Int_t i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
          // Tell custom operator delete() not to delete space when
          // object fCont[i] is deleted. Only destructors are called
@@ -309,6 +310,9 @@ void TClonesArray::Delete(Option_t *)
          TObject::SetDtorOnly(fCont[i]);
          delete fCont[i];
       }
+   }
+   // Restore the state.
+   TObject::SetDtorOnly((void*)dtoronly);
 
    // Protect against erroneously setting of owner bit.
    SetOwner(kFALSE);
@@ -362,9 +366,12 @@ void TClonesArray::ExpandCreate(Int_t n)
 
    Int_t i;
    for (i = 0; i < n; i++) {
-      if (!fKeep->fCont[i])
+      if (!fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
-
+      } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+         // The object has been delete (or never initilized)
+         fClass->New(fKeep->fCont[i]);    
+      }
       fCont[i] = fKeep->fCont[i];
    }
 
@@ -397,9 +404,12 @@ void TClonesArray::ExpandCreateFast(Int_t n)
 
    Int_t i;
    for (i = 0; i < n; i++) {
-      if (!fKeep->fCont[i])
+      if (!fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
-
+      } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+         // The object has been delete (or never initilized)
+         fClass->New(fKeep->fCont[i]);    
+      }
       fCont[i] = fKeep->fCont[i];
    }
    fLast = n - 1;
@@ -419,8 +429,10 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
       // Tell custom operator delete() not to delete space when
       // object fCont[i] is deleted. Only destructors are called
       // for this object.
+      Long_t dtoronly = TObject::GetDtorOnly();
       TObject::SetDtorOnly(fCont[i]);
       delete fCont[i];
+      TObject::SetDtorOnly((void*)dtoronly);
    }
 
    if (fCont[i]) {
@@ -449,8 +461,10 @@ TObject *TClonesArray::Remove(TObject *obj)
       // Tell custom operator delete() not to delete space when
       // object fCont[i] is deleted. Only destructors are called
       // for this object.
+      Long_t dtoronly = TObject::GetDtorOnly();
       TObject::SetDtorOnly(fCont[i]);
       delete fCont[i];
+      TObject::SetDtorOnly((void*)dtoronly);
    }
 
    fCont[i] = 0;
@@ -553,8 +567,12 @@ void TClonesArray::Streamer(TBuffer &b)
       TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
       if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
          for (Int_t i = 0; i < nobjects; i++) {
-            if (!fKeep->fCont[i])
+            if (!fKeep->fCont[i]) {
                fKeep->fCont[i] = (TObject*)fClass->New();
+            } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+               // The object has been delete (or never initilized)
+               fClass->New(fKeep->fCont[i]);    
+            }
 
             fCont[i] = fKeep->fCont[i];
          }
