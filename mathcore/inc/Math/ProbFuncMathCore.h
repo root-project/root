@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.h,v 1.1 2005/06/28 09:55:13 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 #ifndef ROOT_Math_ProbFuncMathCore
@@ -29,23 +29,52 @@ namespace Math {
 
   /**
 
-  Cumulative distribution function (upper tail) of the Cauchy 
-  distribution which is also called Breit-Wigner or Lorentzian
-  distribution.
+  Cumulative distribution function (upper tail) of the Breit_Wigner 
+  distribution and it is similar (just a different parameter definition) to the 
+  Cauchy distribution (see #cauchy_prob )
 
   \f[ D(x) = \int_{x}^{+\infty} \frac{1}{\pi} \frac{\frac{1}{2} \Gamma}{x'^2 + (\frac{1}{2} \Gamma)^2} dx' \f]
 
-  For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #cauchy_prob which 
-  will call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
   
   @ingroup StatFunc
 
   */
-
   double breitwigner_prob(double x, double gamma, double x0 = 0);
+
+
+  /**
+
+  Cumulative distribution function (lower tail) of the Breit_Wigner 
+  distribution and it is similar (just a different parameter definition) to the 
+  Cauchy distribution (see #cauchy_quant )
+
+  \f[ D(x) = \int_{-\infty}^{x} \frac{1}{\pi} \frac{b}{x'^2 + (\frac{1}{2} \Gamma)^2} dx' \f]
+ 
+  
+  @ingroup StatFunc
+
+  */
+  double breitwigner_quant(double x, double gamma, double x0 = 0);
+
+
+
+  /**
+
+  Cumulative distribution function (upper tail) of the 
+  Cauchy distribution which is also Lorentzian distribution.
+  It is similar (just a different parameter definition) to the 
+  Breit_Wigner distribution (see #breitwigner_prob )
+
+  \f[ D(x) = \int_{x}^{+\infty} \frac{1}{\pi} \frac{ b }{ (x'-m)^2 + b^2} dx' \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
+  Mathworld</A>. 
+  
+  @ingroup StatFunc
+
+  */
+  double cauchy_prob(double x, double b, double x0 = 0);
 
 
 
@@ -53,73 +82,27 @@ namespace Math {
   /**
 
   Cumulative distribution function (lower tail) of the 
-  Cauchy distribution which is also called Breit-Wigner 
-  or Lorentzian distribution.
+  Cauchy distribution which is also Lorentzian distribution.
+  It is similar (just a different parameter definition) to the 
+  Breit_Wigner distribution (see #breitwigner_quant )
 
-  \f[ D(x) = \int_{-\infty}^{x} \frac{1}{\pi} \frac{\frac{1}{2} \Gamma}{x'^2 + (\frac{1}{2} \Gamma)^2} dx' \f]
+  \f[ D(x) = \int_{-\infty}^{x} \frac{1}{\pi} \frac{ b }{ (x'-m)^2 + b^2} dx' \f]
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #cauchy_quant which 
-  will call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
+  Mathworld</A>. 
+
   
   @ingroup StatFunc
 
   */
-
-  double breitwigner_quant(double x, double gamma, double x0 = 0);
+  double cauchy_quant(double x, double b, double x0 = 0);
 
 
 
 
   /**
-
-  Cumulative distribution function (upper tail) of the Cauchy 
-  distribution which is also called Breit-Wigner or Lorentzian
-  distribution.
-
-  \f[ D(x) = \int_{x}^{+\infty} \frac{1}{\pi} \frac{\frac{1}{2} \Gamma}{x'^2 + (\frac{1}{2} \Gamma)^2} dx' \f]
-
-  For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #breitwigner_prob which 
-  will call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
-  
-  @ingroup StatFunc
-
-  */
-
-  double cauchy_prob(double x, double gamma, double x0 = 0);
-
-
-
-
-  /**
-
-  Cumulative distribution function (lower tail) of the Cauchy 
-  distribution which is also called Breit-Wigner or Lorentzian
-  distribution.
-
-  \f[ D(x) = \int_{-\infty}^{x} \frac{1}{\pi} \frac{\frac{1}{2} \Gamma}{x'^2 + (\frac{1}{2} \Gamma)^2} dx' \f]
-
-  For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #breitwigner_quant which 
-  will call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
-  
-  @ingroup StatFunc
-
-  */
-
-  double cauchy_quant(double x, double gamma, double x0 = 0);
-
-
-
-
-  /**
+   \if later
 
   Cumulative distribution function of the \f$\chi^2\f$ distribution 
   with \f$r\f$ degrees of freedom (upper tail).
@@ -128,11 +111,12 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
+
+   \endif
   */
 
   //double chisquared_prob(double x, double r);
@@ -142,6 +126,7 @@ namespace Math {
 
   /**
 
+   \if later
   Cumulative distribution function of the \f$\chi^2\f$ distribution 
   with \f$r\f$ degrees of freedom (lower tail).
 
@@ -153,10 +138,11 @@ namespace Math {
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
   
   @ingroup StatFunc
-
+  
+  \endif
   */
 
-  //double chisquared_quant(double x, double r);
+  // double chisquared_quant(double x, double r);
 
 
 
@@ -170,8 +156,7 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ExponentialDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC291">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -191,8 +176,7 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ExponentialDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC291">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -202,8 +186,8 @@ namespace Math {
 
 
 
-
   /**
+  \if later
 
   Cumulative distribution function of the F-distribution 
   (upper tail).
@@ -216,16 +200,17 @@ namespace Math {
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC304">GSL</A>.
   
   @ingroup StatFunc
+  \endif
 
   */
 
-  //double fdistribution_prob(double x, double n, double m);
+  /* double fdistribution_prob(double x, double n, double m); */
 
 
 
 
   /**
-
+  \if later
   Cumulative distribution function of the F-distribution 
   (lower tail).
 
@@ -238,14 +223,16 @@ namespace Math {
   
   @ingroup StatFunc
 
+  \endif
   */
 
-  //double fdistribution_quant(double x, double n, double m);
+  // double fdistribution_quant(double x, double n, double m);
 
 
 
 
   /**
+     \if later
 
   Cumulative distribution function of the gamma distribution 
   (upper tail).
@@ -259,14 +246,16 @@ namespace Math {
   
   @ingroup StatFunc
 
+  \endif
   */
 
-  //double gamma_prob(double x, double alpha, double theta);
+  // double gamma_prob(double x, double alpha, double theta);
  
 
 
 
   /**
+  \if later
 
   Cumulative distribution function of the gamma distribution 
   (lower tail).
@@ -280,10 +269,10 @@ namespace Math {
   
   @ingroup StatFunc
 
+  \endif
   */
 
   //double gamma_quant(double x, double alpha, double theta);
- 
 
 
 
@@ -297,8 +286,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_prob which will 
-  call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC288">GSL</A>.
+  call the same implementation. 
 
   @ingroup StatFunc
 
@@ -318,8 +306,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_quant which will 
-  call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC288">GSL</A>.
+  call the same implementation. 
 
   @ingroup StatFunc
  
@@ -339,8 +326,7 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC302">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -360,8 +346,7 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC302">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -382,8 +367,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #gaussian_prob which will 
-  call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC288">GSL</A>.
+  call the same implementation. 
 
   @ingroup StatFunc
 
@@ -403,8 +387,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #gaussian_quant which will 
-  call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC288">GSL</A>.
+  call the same implementation. 
 
   @ingroup StatFunc
  
@@ -416,6 +399,7 @@ namespace Math {
 
 
   /**
+     \if later
 
   Cumulative distribution function of Student's  
   t-distribution (upper tail).
@@ -424,11 +408,11 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC305">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
+   \endif
   */
 
   //double tdistribution_prob(double x, double r);
@@ -437,7 +421,7 @@ namespace Math {
 
 
   /**
-
+    \if later
   Cumulative distribution function of Student's  
   t-distribution (lower tail).
 
@@ -450,6 +434,7 @@ namespace Math {
   
   @ingroup StatFunc
 
+    \endif
   */
 
   //double tdistribution_quant(double x, double r);
@@ -466,8 +451,7 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/UniformDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC301">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -487,8 +471,7 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/UniformDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC301">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 

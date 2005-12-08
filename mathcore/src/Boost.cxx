@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.cxx,v 1.2 2005/11/24 15:36:23 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.cxx,v 1.3 2005/12/08 15:52:41 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -23,37 +23,43 @@
 #include <cmath>
 #include <algorithm>
 
-#ifdef TEX
+//#ifdef TEX
+/**   
+
 	A variable names bgamma appears in several places in this file. A few
 	words of elaboration are needed to make its meaning clear.  On page 69
 	of Misner, Thorne and Wheeler, (Exercise 2.7) the elements of the matrix
 	for a general Lorentz boost are given as
 
-		\Lambda^j'_k = \Lambda^k'_j
-			     = (\gamma - 1) n^j n^k + \delta^{jk}
+	\f[	\Lambda^{j'}_k = \Lambda^{k'}_j
+			     = (\gamma - 1) n^j n^k + \delta^{jk}  \f]
 
 	where the n^i are unit vectors in the direction of the three spatial
-	axes.  Using the definitions, n^i = \beta_i/\beta, then, for example,
+	axes.  Using the definitions, \f$ n^i = \beta_i/\beta \f$ , then, for example,
 
-		\Lambda_{xy} = (\gamma - 1) n_x n_y
-			     = (\gamma - 1) \beta_x \beta_y/\beta^2
+	\f[	\Lambda_{xy} = (\gamma - 1) n_x n_y
+			     = (\gamma - 1) \beta_x \beta_y/\beta^2  \f]
 
-	By definition, 	\gamma^2 = 1/(1 - \beta^2)
+	By definition, \f[	\gamma^2 = 1/(1 - \beta^2)  \f]
 
-	so that		\gamma^2 \beta^2 = \gamma^2 - 1
+	so that	\f[	\gamma^2 \beta^2 = \gamma^2 - 1  \f]
 
-	or		\beta^2 = (\gamma^2 - 1)/\gamma^2
+	or	\f[	\beta^2 = (\gamma^2 - 1)/\gamma^2  \f]
 
-	If we insert this into the expression for \Lambda_{xy}, we get
+	If we insert this into the expression for \f$ \Lambda_{xy} \f$, we get
 
-		\Lambda_{xy} = (\gamma - 1) \gamma^2/(\gamma^2 - 1) \beta_x \beta_y
+	\f[	\Lambda_{xy} = (\gamma - 1) \gamma^2/(\gamma^2 - 1) \beta_x \beta_y \f]
 
 	or, finally
 
-		\Lambda_{xy} = \gamma^2/(\gamma+1) \beta_x \beta_y
+	\f[	\Lambda_{xy} = \gamma^2/(\gamma+1) \beta_x \beta_y  \f]
 
-	The expression \gamma^2/(\gamma+1) is what we call bgamma in the code below.
-#endif
+	The expression \f$ \gamma^2/(\gamma+1) \f$ is what we call <em>bgamma</em> in the code below.
+
+	\class ROOT::Math::Boost
+*/
+//#endif
+
 namespace ROOT {
 
   namespace Math {
@@ -64,6 +70,7 @@ void Boost::SetIdentity() {
                                fM[ZZ] = 1.0; fM[ZT] = 0.0;
                                              fM[TT] = 1.0;
 }
+
 
 void
 Boost::SetComponents (Scalar bx, Scalar by, Scalar bz) {

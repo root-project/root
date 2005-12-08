@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.cxx,v 1.1 2005/06/28 09:55:13 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 
@@ -33,17 +33,17 @@ namespace Math {
 
   
 
-  double cauchy_prob(double x, double gamma, double x0) {
+  double cauchy_prob(double x, double b, double x0) {
 
-    return 0.5 - std::atan(2.0 * (x-x0) / gamma) / M_PI;
+    return 0.5 - std::atan( (x-x0) / b) / M_PI;
 
   }
 
 
 
-  double cauchy_quant(double x, double gamma, double x0) {
+  double cauchy_quant(double x, double b, double x0) {
 
-    return 0.5 + std::atan(2.0 * (x-x0) / gamma) / M_PI;
+    return 0.5 + std::atan( (x-x0) / b) / M_PI;
 
   }
 

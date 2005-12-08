@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.3 2005/09/19 08:27:08 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.4 2005/11/24 17:08:35 rdm Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -57,8 +57,7 @@ namespace Math {
 
   for \f$ 0 \leq k \leq n \f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/BinomialDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC317">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -71,16 +70,12 @@ namespace Math {
 
   /**
 
-  Probability density function of the Cauchy distribution which is also
-  called Breit-Wigner or Lorentzian distribution.
+  Probability density function of Breit-Wigner distribution, which is similar, just 
+  a different definition of the parameters, to the Cauchy distribution 
+  (see  #cauchy_pdf )
 
   \f[ p(x) = \frac{1}{\pi} \frac{\frac{1}{2} \Gamma}{x^2 + (\frac{1}{2} \Gamma)^2} \f]
 
-  For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #cauchy_pdf which 
-  will call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
   
   @ingroup StatFunc
 
@@ -94,21 +89,21 @@ namespace Math {
   /**
 
   Probability density function of the Cauchy distribution which is also
-  called Breit-Wigner or Lorentzian distribution.
+  called Lorentzian distribution.
+
   
-  \f[ p(x) = \frac{1}{\pi} \frac{\frac{1}{2} \Gamma}{x^2 + (\frac{1}{2} \Gamma)^2} \f]
+  \f[ p(x) = \frac{1}{\pi} \frac{ b }{ (x-m)^2 + b^2} \f]
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #breitwigner_pdf which 
-  will call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
+  Mathworld</A>. It is also related to the #breitwigner_pdf which 
+  will call the same implementation.
   
   @ingroup StatFunc
 
   */
 
-  double cauchy_pdf(double x, double gamma, double x0 = 0);
+  double cauchy_pdf(double x, double b = 1, double x0 = 0);
 
 
 
@@ -122,8 +117,7 @@ namespace Math {
 
   for \f$x \geq 0\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -142,8 +136,8 @@ namespace Math {
 
   for x>0. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ExponentialDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC291">GSL</A>.
+  Mathworld</A>. 
+
   
   @ingroup StatFunc
 
@@ -162,8 +156,7 @@ namespace Math {
 
   for x>=0. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/F-Distribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC304">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -183,8 +176,7 @@ namespace Math {
 
   for x>0. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -204,8 +196,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_pdf which will 
-  call the same implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC288">GSL</A>.
+  call the same implementation. 
 
   @ingroup StatFunc
  
@@ -215,8 +206,8 @@ namespace Math {
 
 
 
-
   /**
+  \if later
 
   Probability density function of the Landau distribution.
 
@@ -224,15 +215,14 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
-  CERNLIB</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC297">GSL</A>.
+  CERNLIB</A>. 
   
   @ingroup StatFunc
 
+  \endif
   */
 
-  //double landau_pdf(double x);
-
+  // double landau_pdf(double x); 
 
 
 
@@ -244,8 +234,8 @@ namespace Math {
 
   for x>0. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC302">GSL</A>.
+  Mathworld</A>. 
+
   
   @ingroup StatFunc
 
@@ -265,8 +255,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #gaussian_pdf which will call the same 
-  implementation. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC288">GSL</A>.
+  implementation. 
 
   @ingroup StatFunc
  
@@ -285,8 +274,7 @@ namespace Math {
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/PoissonDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC315">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -305,8 +293,7 @@ namespace Math {
 
   for \f$k \geq 0\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC305">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 
@@ -325,8 +312,7 @@ namespace Math {
 
   if \f$a \leq x<b\f$ and 0 otherwise. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/UniformDistribution.html">
-  Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC301">GSL</A>.
+  Mathworld</A>. 
   
   @ingroup StatFunc
 

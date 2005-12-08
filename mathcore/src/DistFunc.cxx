@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.cxx,v 1.4 2005/09/19 08:27:08 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFunc.cxx,v 1.5 2005/11/24 17:08:35 rdm Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -41,14 +41,14 @@ namespace Math {
     double gammahalf = gamma/2.0;
     return gammahalf/(M_PI * ((x-x0)*(x-x0) + gammahalf*gammahalf));
 
+
   }
 
-
   
-  double cauchy_pdf(double x, double gamma, double x0) {
 
-    double gammahalf = gamma/2.0;
-    return gammahalf/(M_PI * ((x-x0)*(x-x0) + gammahalf*gammahalf));
+  double cauchy_pdf(double x, double b, double x0) {
+
+    return b/(M_PI * ((x-x0)*(x-x0) + b*b));
 
   }
 
