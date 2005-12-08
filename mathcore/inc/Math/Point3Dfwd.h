@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.2 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.3 2005/12/06 20:31:51 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -39,7 +39,7 @@ namespace ROOT {
     /**
        3D Point based on the cartesian corrdinates x,y,z in single precision
     */
-    typedef PositionVector3D< Cartesian3D<double> > XYZPointF; 
+    typedef PositionVector3D< Cartesian3D<float> > XYZPointF; 
     typedef XYZPoint XYZPointD; 
     
     /**
