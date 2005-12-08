@@ -11,7 +11,7 @@ ROOFITDIR    := $(MODDIR)
 ROOFITDIRS   := $(ROOFITDIR)/src
 ROOFITDIRI   := $(ROOFITDIR)/inc
 
-ROOFITVERS   := roofit_2.06
+ROOFITVERS   := roofit_2.07
 ROOFITSRCS   := $(MODDIR)/$(ROOFITVERS).src.tgz
 ROOFITETAG   := $(MODDIR)/headers.d
 
@@ -35,9 +35,10 @@ ROOFITH1     := Roo1DTable.h Roo2DKeysPdf.h RooAbsAnaConvPdf.h RooAbsArg.h RooAb
                 RooAbsRootFinder.h RooAbsString.h RooAcceptReject.h RooAdaptiveGaussKronrodIntegrator1D.h RooAddGenContext.h \
                 RooAddition.h RooAddModel.h RooAddPdf.h RooAICRegistry.h RooArgList.h RooArgProxy.h RooArgSet.h RooArgusBG.h \
                 RooBCPEffDecay.h RooBCPGenDecay.h RooBDecay.h RooBifurGauss.h RooBinning.h RooBlindTools.h RooBMixDecay.h \
-                RooBreitWigner.h RooBrentRootFinder.h RooBukinPdf.h RooCategory.h RooCategoryProxy.h RooCatType.h RooCBShape.h \
-                RooChebychev.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooComplex.h RooConstVar.h RooConvCoefVar.h \
-                RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h  RooGlobalFunc.h
+                RooBreitWigner.h RooBrentRootFinder.h RooBukinPdf.h RooCategory.h RooCategoryProxy.h RooCategorySharedProperties.h \
+                RooCatType.h RooCBShape.h RooChebychev.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooComplex.h \
+                RooConstVar.h RooConvCoefVar.h RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h \
+                 RooGlobalFunc.h
 ROOFITH2     := RooDataHist.h RooDataProjBinding.h RooDataSet.h RooDecay.h RooDirItem.h RooDouble.h RooDstD0BG.h RooEffGenContext.h \
                 RooEfficiency.h RooEffProd.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooExponential.h RooExtendPdf.h \
                 RooFitResult.h RooFormula.h RooFormulaVar.h RooGaussian.h RooGaussKronrodIntegrator1D.h RooGaussModel.h \
@@ -46,17 +47,18 @@ ROOFITH2     := RooDataHist.h RooDataProjBinding.h RooDataSet.h RooDecay.h RooDi
                 RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h RooInt.h RooInvTransform.h RooKeysPdf.h \
                 RooLandau.h RooLinearVar.h RooLinkedListElem.h RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h \
                 RooList.h RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h RooMCIntegrator.h RooMCStudy.h \
-                RooMinuit.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h  RooFit.h
-ROOFITH3     := RooNameReg.h RooNameSet.h RooNLLVar.h RooNonCPEigenDecay.h RooNormListManager.h RooNormManager.h RooNormSetCache.h \
+                RooMinuit.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h  RooFit.h
+ROOFITH3     := RooNameSet.h RooNLLVar.h RooNonCPEigenDecay.h RooNormListManager.h RooNormManager.h RooNormSetCache.h \
                 RooNovosibirsk.h RooNumber.h RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h \
                 RooParametricStepFunction.h RooPlotable.h RooPlot.h RooPolynomial.h RooPolyVar.h RooPrintable.h RooProdGenContext.h \
                 RooProdPdf.h RooProduct.h RooPullVar.h RooQuasiRandomGenerator.h RooRandom.h RooRangeBinning.h RooRealAnalytic.h \
                 RooRealBinding.h RooRealConstant.h RooRealIntegral.h RooRealMPFE.h RooRealProxy.h RooRealSumPdf.h RooRealVar.h \
-                RooRefCountList.h RooResolutionModel.h RooScaledFunc.h RooSegmentedIntegrator1D.h RooSegmentedIntegrator2D.h \
-                RooSetPair.h RooSetProxy.h RooSimGenContext.h RooSimPdfBuilder.h RooSimultaneous.h RooStreamParser.h \
-                RooStringVar.h RooSuperCategory.h RooTable.h RooThreshEntry.h RooThresholdCategory.h RooTObjWrap.h \
-                RooTrace.h RooTreeData.h RooTruthModel.h RooUnblindCPAsymVar.h RooUnblindOffset.h RooUnblindPrecision.h \
-                RooUnblindUniform.h RooUniformBinning.h RooVoigtian.h 
+                RooRealVarSharedProperties.h RooRefCountList.h RooResolutionModel.h RooScaledFunc.h RooSegmentedIntegrator1D.h \
+                RooSegmentedIntegrator2D.h RooSetPair.h RooSetProxy.h RooSharedProperties.h RooSharedPropertiesList.h \
+                RooSimGenContext.h RooSimPdfBuilder.h RooSimultaneous.h RooStreamParser.h RooStringVar.h RooSuperCategory.h \
+                RooTable.h RooThreshEntry.h RooThresholdCategory.h RooTObjWrap.h RooTrace.h RooTreeData.h RooTruthModel.h \
+                RooUnblindCPAsymVar.h RooUnblindOffset.h RooUnblindPrecision.h RooUnblindUniform.h RooUniformBinning.h \
+                RooVoigtian.h 
 
 ROOFITH1     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH1))
 ROOFITH2     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH2))
@@ -84,7 +86,11 @@ $(ROOFITETAG): $(ROOFITSRCS)
 		@(if [ ! -d src ]; then \
 		   echo "*** Extracting roofit source ..."; \
 		   cd roofit ; \
-		   gunzip -c $(ROOFITVERS).src.tgz | tar xf -; \
+		   if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
+		      gtar xzf $(ROOFITVERS).src.tgz; \
+		   else \
+		      gunzip -c $(ROOFITVERS).src.tgz | tar xf -; \
+		   fi; \
 		   etag=`basename $(ROOFITETAG)` ; \
 		   touch $$etag ; \
 		fi)
