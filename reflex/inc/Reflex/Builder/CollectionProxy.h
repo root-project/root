@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.4 2005/11/21 17:24:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.5 2005/11/23 16:08:08 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -62,7 +62,7 @@ namespace ROOT {
          typedef T           Iter_t;
          char                buff[64];
          size_t              idx;
-         size_t              Size;
+         size_t              size;
          void*               object;
          void*               start;
          void*               temp;
@@ -76,7 +76,7 @@ namespace ROOT {
 #endif
 
       template <typename T> struct Address {
-         static void* AddressGet(T ref) {
+         static void* addressGet(T ref) {
             return (void*)&ref;
          }
       };
@@ -99,30 +99,30 @@ namespace ROOT {
          static inline PCont_t object(void* ptr)   {
             return PCont_t(PEnv_t(ptr)->object);
          }
-         static void* Size(void* env)  {
+         static void* size(void* env)  {
             PEnv_t  e = PEnv_t(env);
-            e->Size   = PCont_t(e->object)->Size();
-            return &e->Size;
+            e->size   = PCont_t(e->object)->size();
+            return &e->size;
          }
-         static void* Clear(void* env)  {
-            object(env)->Clear();
+         static void* clear(void* env)  {
+            object(env)->clear();
             return 0;
          }
-         static void* First(void* env)  {
+         static void* first(void* env)  {
             PEnv_t  e = PEnv_t(env);
             PCont_t c = PCont_t(e->object);
             // Assume iterators do not need destruction
             ::new(e->buff) Iter_t(c->begin()); 
-            e->Size  = c->Size();
-            if ( 0 == e->Size ) return e->start = 0;
+            e->size  = c->size();
+            if ( 0 == e->size ) return e->start = 0;
 #ifdef _KCC  // KAI compiler
             RFLX_TYPENAME T::value_type& ref = *(e->iter());
 #else
             RFLX_TYPENAME T::const_reference ref = *(e->iter());
 #endif
-            return e->start = AddressGet(ref);
+            return e->start = addressGet(ref);
          }
-         static void* Next(void* env)  {
+         static void* next(void* env)  {
             PEnv_t  e = PEnv_t(env);
             PCont_t c = PCont_t(e->object);
             for (; e->idx > 0 && e->iter() != c->end(); ++(e->iter()), --e->idx );
@@ -133,16 +133,16 @@ namespace ROOT {
 #else
             RFLX_TYPENAME T::const_reference ref = *(e->iter());
 #endif
-            return AddressGet(ref);
+            return addressGet(ref);
          }
-         static void* Construct(void* env)  {
+         static void* construct(void* env)  {
             PEnv_t  e = PEnv_t(env);
             PValue_t m = PValue_t(e->start);
-            for (size_t i=0; i<e->Size; ++i, ++m)  
+            for (size_t i=0; i<e->size; ++i, ++m)  
                ::new(m) Value_t();
             return 0;
          }
-         static void* Collect(void* env)  {
+         static void* collect(void* env)  {
             PEnv_t   e = PEnv_t(env);
             PCont_t  c = PCont_t(e->object);
             PValue_t m = PValue_t(e->start);
@@ -150,10 +150,10 @@ namespace ROOT {
                ::new(m) Value_t(*i);
             return 0;
          }
-         static void* Destruct(void* env)  {
+         static void* destruct(void* env)  {
             PEnv_t   e = PEnv_t(env);
             PValue_t m = PValue_t(e->start);
-            for (size_t i=0; i < e->Size; ++i, ++m )
+            for (size_t i=0; i < e->size; ++i, ++m )
                m->~Value_t();
             return 0;
          }
@@ -176,18 +176,18 @@ namespace ROOT {
          typedef Env_t                 *PEnv_t;
          typedef Cont_t                *PCont_t;
          typedef Value_t               *PValue_t;
-         static void* reSize(void* env)  {
+         static void* resize(void* env)  {
             PEnv_t  e = PEnv_t(env);
             PCont_t c = PCont_t(e->object);
-            c->reSize(e->Size);
+            c->resize(e->size);
             e->idx = 0;
-            return e->start = AddressGet(*c->begin());
+            return e->start = addressGet(*c->begin());
          }
-         static void* Feed(void* env)  {
+         static void* feed(void* env)  {
             PEnv_t   e = PEnv_t(env);
             PCont_t  c = PCont_t(e->object);
             PValue_t m = PValue_t(e->start);
-            for (size_t i=0; i<e->Size; ++i, ++m)
+            for (size_t i=0; i<e->size; ++i, ++m)
                c->push_back(*m);
             return 0;
          }
@@ -213,15 +213,15 @@ namespace ROOT {
          typedef Env_t                 *PEnv_t;
          typedef Cont_t                *PCont_t;
          typedef Value_t               *PValue_t;
-         static void* Feed(void* env)  {
+         static void* feed(void* env)  {
             PEnv_t   e = PEnv_t(env);
             PCont_t  c = PCont_t(e->object);
             PValue_t m = PValue_t(e->start);
-            for (size_t i=0; i<e->Size; ++i, ++m)
+            for (size_t i=0; i<e->size; ++i, ++m)
                c->insert(*m);
             return 0;
          }
-         static void* reSize(void* /* env */ )  {
+         static void* resize(void* /* env */ )  {
             return 0;
          }
          static int value_offset()  {
@@ -246,15 +246,15 @@ namespace ROOT {
          typedef Env_t                 *PEnv_t;
          typedef Cont_t                *PCont_t;
          typedef Value_t               *PValue_t;
-         static void* Feed(void* env)  {
+         static void* feed(void* env)  {
             PEnv_t   e = PEnv_t(env);
             PCont_t  c = PCont_t(e->object);
             PValue_t m = PValue_t(e->start);
-            for (size_t i=0; i<e->Size; ++i, ++m)
+            for (size_t i=0; i<e->size; ++i, ++m)
                c->insert(*m);
             return 0;
          }
-         static void* reSize(void* /* env */ )  {
+         static void* resize(void* /* env */ )  {
             return 0;
          }
          static int value_offset()  {
@@ -263,7 +263,7 @@ namespace ROOT {
       };
 
       // Need specialization for boolean references due to stupid STL vector<bool>
-      template<> inline void* ROOT::Reflex::Address<std::vector<bool,std::allocator<bool> >::const_reference>::AddressGet(std::vector<bool,std::allocator<bool> >::const_reference ) {
+      template<> inline void* ROOT::Reflex::Address<std::vector<bool,std::allocator<bool> >::const_reference>::addressGet(std::vector<bool,std::allocator<bool> >::const_reference ) {
          return 0;
       }
 
@@ -302,17 +302,17 @@ namespace ROOT {
             Pair_t* ptr = (Pair_t*)0x1000;
             CollFuncTable*  p  = new CollFuncTable();
             p->iter_size       = sizeof(typename T::Iter_t);
-            p->value_diff      = ((char*)&ptr->second) - ((char*)&ptr->First);
+            p->value_diff      = ((char*)&ptr->second) - ((char*)&ptr->first);
             p->value_offset    = T::value_offset();
-            p->size_func       = T::Size;
-            p->first_func      = T::First;
-            p->next_func       = T::Next;
-            p->clear_func      = T::Clear;
-            p->resize_func     = T::reSize;
-            p->collect_func    = T::Collect;
-            p->construct_func  = T::Construct;
-            p->destruct_func   = T::Destruct;
-            p->feed_func       = T::Feed;
+            p->size_func       = T::size;
+            p->first_func      = T::first;
+            p->next_func       = T::next;
+            p->clear_func      = T::clear;
+            p->resize_func     = T::resize;
+            p->collect_func    = T::collect;
+            p->construct_func  = T::construct;
+            p->destruct_func   = T::destruct;
+            p->feed_func       = T::feed;
             return p;
          }
       };
