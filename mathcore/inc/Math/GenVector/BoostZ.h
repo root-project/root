@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostZ.h,v 1.1 2005/11/16 19:30:47 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostZ.h,v 1.1 2005/11/24 14:45:50 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: BoostZ.h,v 1.1 2005/11/16 19:30:47 marafino Exp $
+// Last update: $Id: BoostZ.h,v 1.1 2005/11/24 14:45:50 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_BoostZ
 #define ROOT_Math_GenVector_BoostZ 1
@@ -68,19 +68,6 @@ public:
    */
   BoostZ(Scalar beta_z) { SetComponents(beta_z); }
 
-  /**
-     Construct given a beta vector (which must have methods x(), y(), z())
-   */
-  template <class Avector>
-  explicit
-  BoostZ(const Avector & beta) { SetComponents(0.0, 0.0, beta.x()); }
-
-  /**
-     Construct given a pair of pointers or iterators defining the
-     beginning and end of an array of three Scalars to use as beta_x, _y, and _z
-   */
-  template<class IT>
-  BoostZ(IT begin, IT end) { SetComponents(begin,end); }
 
   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
@@ -104,33 +91,21 @@ public:
   void
   GetComponents (Scalar& beta_z) const;
 
-  /**
-     Set components from a beta vector 
-  */
-  template <class Avector>
-  void
-  SetComponents (const Avector & beta) 
-		  	{ SetComponents(0.0, 0.0, beta.z()); } 
 
-  /**
-     Set given a pair of pointers or iterators defining the beginning and end of 
-     an array of three Scalars to use as beta_x,beta _y, and beta_z
-   */
-  template<class IT>
-  void SetComponents(IT begin, IT end) {
-    assert (end==begin+3);
-    SetComponents (*begin, *(begin+1), *(begin+2));
-  }
+  /** 
+      Retrieve the beta of the Boost 
+   */ 
+  Scalar Beta() const { return fBeta; }
 
-  /**
-     Get given a pair of pointers or iterators defining the beginning and end of 
-     an array of three Scalars into which to place beta_x, beta_y, and beta_z
-   */
-  template<class IT>
-  void GetComponents(IT begin, IT end) const {
-    assert (end==begin+3);
-    GetComponents (*begin, *(begin+1), *(begin+2));
-  }
+  /** 
+      Retrieve the gamma of the Boost 
+   */ 
+  Scalar Gamma() const { return fGamma; }
+
+  /** 
+      Set the given beta of the Boost 
+   */ 
+  void  SetBeta(Scalar beta) { SetComponents(beta); }
    
   /**
      The beta vector for this boost
@@ -220,6 +195,13 @@ private:
 };  // BoostZ
 
 // ============ Class BoostZ ends here ============
+
+/**
+   Stream Output and Input
+ */
+  // TODO - I/O should be put in the manipulator form 
+
+std::ostream & operator<< (std::ostream & os, const BoostZ & b);
 
 
 } //namespace Math

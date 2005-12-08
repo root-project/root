@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.3 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.4 2005/10/27 18:00:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -32,9 +32,10 @@ namespace Math {
   /**
      EulerAngles class describing rotation as three angles (Euler Angles).
      The Euler angles definition matches that of Classical Mechanics (Goldstein).
-     See also 
+     It is also the same convention defined in 
      <A HREF="http://mathworld.wolfram.com/EulerAngles.html">mathworld</A> 
-     Euler angles definition.
+     and used in Mathematica and CLHEP. Note that the ROOT class TRotation defines 
+     a slightly different convention. 
 
      @ingroup GenVector
   */

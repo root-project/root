@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.2 2005/11/16 19:30:47 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.1 2005/11/24 14:45:50 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.2 2005/11/16 19:30:47 marafino Exp $
+// Last update: $Id: Boost.h,v 1.1 2005/11/24 14:45:50 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -67,7 +67,7 @@ public:
   /**
       Default constructor (identity transformation)
   */
-  Boost();
+  Boost() { SetIdentity(); }
 
   /**
      Construct given a three Scalars beta_x, beta_y, and beta_z
@@ -238,6 +238,10 @@ public:
     return ! operator==(rhs);
   }
 
+protected: 
+
+  void SetIdentity();
+
 private:
 
   Scalar fM[10];
@@ -245,6 +249,13 @@ private:
 };  // Boost
 
 // ============ Class Boost ends here ============
+
+/**
+   Stream Output and Input
+ */
+  // TODO - I/O should be put in the manipulator form 
+
+std::ostream & operator<< (std::ostream & os, const Boost & b);
 
 
 } //namespace Math

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.4 2005/11/16 19:30:47 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.6 2005/11/24 14:45:50 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.4 2005/11/16 19:30:47 marafino Exp $
+// Last update: $Id: LorentzRotation.h,v 1.6 2005/11/24 14:45:50 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -363,26 +363,28 @@ public:
    */
   LorentzRotation operator * (const LorentzRotation & r) const;
 
-#ifdef TODO_LATER
+  //#ifdef TODO_LATER
   /**
      Multiply (combine) this Lorentz rotation by a pure Lorentz boost
    */
-  LorentzRotation operator * (const Boost  & b) const; // TODO
-  LorentzRotation operator * (const BoostX & b) const; // TODO
-  LorentzRotation operator * (const BoostY & b) const; // TODO
-  LorentzRotation operator * (const BoostZ & b) const; // TODO
+  //TODO: implement directly in a more efficient way. Now are implemented 
+  // going through another LorentzRotation
+  LorentzRotation operator * (const Boost  & b) const  { LorentzRotation tmp(b); return (*this)*tmp; }
+  LorentzRotation operator * (const BoostX & b) const  { LorentzRotation tmp(b); return (*this)*tmp; } 
+  LorentzRotation operator * (const BoostY & b) const  { LorentzRotation tmp(b); return (*this)*tmp; }
+  LorentzRotation operator * (const BoostZ & b) const  { LorentzRotation tmp(b); return (*this)*tmp; }
 
   /**
      Multiply (combine) this Lorentz rotation by a 3-D Rotation
    */
-  LorentzRotation operator * (const Rotation3D  & r) const; // TODO
-  LorentzRotation operator * (const AxisAngle   & a) const; // TODO
-  LorentzRotation operator * (const EulerAngles & e) const; // TODO
-  LorentzRotation operator * (const Quaternion  & q) const; // TODO
-  LorentzRotation operator * (const RotationX  & rx) const; // TODO
-  LorentzRotation operator * (const RotationY  & ry) const; // TODO
-  LorentzRotation operator * (const RotationZ  & rz) const; // TODO
-#endif
+  LorentzRotation operator * (const Rotation3D  & r) const { LorentzRotation tmp(r); return (*this)*tmp; }
+  LorentzRotation operator * (const AxisAngle   & a) const { LorentzRotation tmp(a); return (*this)*tmp; }
+  LorentzRotation operator * (const EulerAngles & e) const { LorentzRotation tmp(e); return (*this)*tmp; }
+  LorentzRotation operator * (const Quaternion  & q) const { LorentzRotation tmp(q); return (*this)*tmp; }
+  LorentzRotation operator * (const RotationX  & rx) const { LorentzRotation tmp(rx); return (*this)*tmp; }
+  LorentzRotation operator * (const RotationY  & ry) const { LorentzRotation tmp(ry); return (*this)*tmp; }
+  LorentzRotation operator * (const RotationZ  & rz) const { LorentzRotation tmp(rz); return (*this)*tmp; }
+  //#endif
 
   /**
      Post-Multiply (on right) by another LorentzRotation, Boost, or 
@@ -411,6 +413,14 @@ private:
 };  // LorentzRotation
 
 // ============ Class LorentzRotation ends here ============
+
+
+/**
+   Stream Output and Input
+ */
+  // TODO - I/O should be put in the manipulator form 
+
+std::ostream & operator<< (std::ostream & os, const LorentzRotation & r);
 
 // ============================================ vetted to here  ============
 

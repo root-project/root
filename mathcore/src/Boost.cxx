@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.cxx,v 1.1 2005/11/24 14:45:50 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.cxx,v 1.2 2005/11/24 15:36:23 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -58,7 +58,7 @@ namespace ROOT {
 
   namespace Math {
 
-Boost::Boost() {
+void Boost::SetIdentity() {
   fM[XX] = 1.0;  fM[XY] = 0.0; fM[XZ] = 0.0; fM[XT] = 0.0;
                  fM[YY] = 1.0; fM[YZ] = 0.0; fM[YT] = 0.0;
                                fM[ZZ] = 1.0; fM[ZT] = 0.0;
@@ -72,6 +72,7 @@ Boost::SetComponents (Scalar bx, Scalar by, Scalar bz) {
     GenVector_exception e ( 
       "Beta Vector supplied to set Boost represents speed >= c");
     Throw(e);
+    // SetIdentity(); 
     return;
   }    
   Scalar gamma = 1.0 / std::sqrt(1.0 - bp2);
@@ -161,6 +162,21 @@ Inverse() const {
   Boost I(*this);
   I.Invert();
   return I; 
+}
+
+
+// ========== I/O =====================
+
+std::ostream & operator<< (std::ostream & os, const Boost & b) {
+  // TODO - this will need changing for machine-readable issues
+  //        and even the human readable form needs formatiing improvements
+  double m[16];
+  b.GetLorentzRotation(m);
+  os << "\n" << m[0]  << "  " << m[1]  << "  " << m[2]  << "  " << m[3]; 
+  os << "\n" << "\t"  << "  " << m[5]  << "  " << m[6]  << "  " << m[7]; 
+  os << "\n" << "\t"  << "  " << "\t"  << "  " << m[10] << "  " << m[11]; 
+  os << "\n" << "\t"  << "  " << "\t"  << "  " << "\t"  << "  " << m[15] << "\n";
+  return os;
 }
 
 } //namespace Math

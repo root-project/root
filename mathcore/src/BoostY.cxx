@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostY.cpp,v 1.1 2005/11/16 19:30:47 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostY.cxx,v 1.1 2005/11/24 14:45:50 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -105,6 +105,13 @@ Inverse() const {
   BoostY I(*this);
   I.Invert();
   return I; 
+}
+
+// ========== I/O =====================
+
+std::ostream & operator<< (std::ostream & os, const BoostY & b) {
+  os << " BoostY( beta: " << b.Beta() << ", gamma: " << b.Gamma() << " ) ";
+  return os;
 }
 
 } //namespace Math

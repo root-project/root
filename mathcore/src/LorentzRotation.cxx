@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.3 2005/10/18 09:13:34 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -47,7 +47,7 @@ LorentzRotation::LorentzRotation(Rotation3D  const & r) {
    					     fM[XT] = 0.0;
    					     fM[YT] = 0.0;
    					     fM[ZT] = 0.0;
-  fM[ZX] = 0.0;  fM[ZY] = 0.0; fM[ZZ] = 0.0; fM[ZT] = 1.0;
+  fM[TX] = 0.0;  fM[TY] = 0.0; fM[TZ] = 0.0; fM[TT] = 1.0;
 }
 
 LorentzRotation::LorentzRotation(AxisAngle  const & a) {  
@@ -227,6 +227,19 @@ operator * (const LorentzRotation & r) const {
     , fM[TX]*r.fM[XZ] + fM[TY]*r.fM[YZ] + fM[TZ]*r.fM[ZZ] + fM[TT]*r.fM[TZ]
     , fM[TX]*r.fM[XT] + fM[TY]*r.fM[YT] + fM[TZ]*r.fM[ZT] + fM[TT]*r.fM[TT]
     );    
+}
+
+
+std::ostream & operator<< (std::ostream & os, const LorentzRotation & r) {
+  // TODO - this will need changing for machine-readable issues
+  //        and even the human readable form needs formatiing improvements
+  double m[16];
+  r.GetComponents(m, m+16);
+  os << "\n" << m[0]  << "  " << m[1]  << "  " << m[2]  << "  " << m[3]; 
+  os << "\n" << m[4]  << "  " << m[5]  << "  " << m[6]  << "  " << m[7]; 
+  os << "\n" << m[8]  << "  " << m[9]  << "  " << m[10] << "  " << m[11]; 
+  os << "\n" << m[12] << "  " << m[13] << "  " << m[14] << "  " << m[15] << "\n";
+  return os;
 }
 
 
