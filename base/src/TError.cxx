@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.11 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.12 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -181,6 +181,9 @@ again:
    if (!buf)
       buf = new char[buf_size];
 
+   if (fmt==0) {
+      fmt = "no error message provided";
+   }
    Int_t n = vsnprintf(buf, buf_size, fmt, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
@@ -188,7 +191,12 @@ again:
       buf_size *= 2;
       delete [] buf;
       buf = 0;
-      goto again;
+      if (buf_size < 0) {
+         buf_size = 2048;
+         fmt = Form("ErrorHandler format error with %s\n",fmt);
+      } else {
+         goto again;
+      }
    }
    if (level >= kSysError && level < kFatal)
       bp = Form("%s (%s)", buf, gSystem->GetError());
