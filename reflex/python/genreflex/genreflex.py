@@ -207,7 +207,7 @@ class genreflex:
       else :
         dicfile = os.path.join(self.outputDir,name+file_extension)
       #---------------Parse the header file with GCC_XML
-      cmd  = '%s %s -fxml=%s %s' %(self.gccxml, source, xmlfile, self.cppopt)
+      cmd  = '%s %s -fxml=%s %s -D__REFLEX__' %(self.gccxml, source, xmlfile, self.cppopt)
       if not self.quiet : print 'Parsing file %s with GCC_XML' % source,
       status = os.system(cmd)
       if status :
@@ -229,7 +229,7 @@ class genreflex:
           capfile = os.path.join(self.capabilities, 'capabilities.cpp')
         else :
           capfile = os.path.join(self.outputDir, self.capabilities)
-        gencapa.genCapabilities(capfile, name,  cnames, self.dictVersion)
+        gencapa.genCapabilities(capfile, name,  cnames)
     #------------Report unused class selections in selection
     if self.selector : 
       warnings += self.selector.reportUnusedClasses()

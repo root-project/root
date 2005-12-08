@@ -488,37 +488,45 @@ class genDictionary(object) :
     if typeAttrs.has_key('access') and typeAttrs['access'] in ('private','protected') : return type['attrs']['id']
     return 0
 #----------------------------------------------------------------------------------
-  def genClassShadow(self, attrs ) :
+  def genClassShadow(self, attrs, inner = 0 ) :
     bases = self.getBases( attrs['id'] )
-    cls = self.genTypeName(attrs['id'])
+    if inner : cls = attrs['name']
+    else     : cls = self.genTypeName(attrs['id'])
     clt = string.translate(str(cls), self.transtable)
     typ = self.xref[attrs['id']]['elem'].lower()
+    indent = inner * 2 * ' '
     if not bases : 
-      c = '%s %s {\npublic:\n' % (typ, clt)
+      c = indent + '%s %s {\n%s  public:\n' % (typ, clt, indent)
     else :
-      c = '%s %s : ' % (typ, clt)
+      c = indent + '%s %s : ' % (typ, clt)
       for b in bases :
         if b.get('virtual','') == '1' : acc = 'virtual ' + b['access']
         else                          : acc = b['access']
-        c += '%s %s' % ( acc , self.genTypeName(b['type'],colon=True) )
+        c += indent + '%s %s' % ( acc , self.genTypeName(b['type'],colon=True) )
         if b is not bases[-1] : c += ', ' 
-      c += ' {\npublic:\n'
+      c += indent + ' {\n' + indent +'  public:\n'
+    c += indent + '  %s();\n' % (clt)
     if  self.isClassVirtual( attrs ) :
-      c += '  virtual ~%s() throw() {}\n' % ( clt )
+      c += indent + '  virtual ~%s() throw();\n' % ( clt )
     members = attrs.get('members','')
     memList = members.split()
     for m in memList :
-      if self.xref[m]['elem'] in ('Field',) :
-        a = self.xref[m]['attrs']
-        t = self.genTypeName(a['type'],colon=True)
+      member = self.xref[m]
+      if member['elem'] in ('Class','Struct') :
+        c += self.genClassShadow(member['attrs'], inner + 1)
+    for m in memList :
+      member = self.xref[m]
+      if member['elem'] in ('Field',) :
+        a = member['attrs']
+        t = self.genTypeName(a['type'],colon=True,const=True)
         noPublicType = self.checkAccessibleType(self.xref[a['type']])
         if ( noPublicType ) :
           t = string.translate(str(t), self.transtable2)[2:]
           c += self.genClassShadow(self.xref[noPublicType]['attrs'])
-        if t[-1] == ']'         : c += '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
-        elif t.find(')(') != -1 : c += '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
-        else                    : c += '  %s %s;\n' % ( t, a['name'] )
-    c += '};\n'
+        if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
+        elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
+        else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
+    c += indent + '};\n'
     return c    
 #----------------------------------------------------------------------------------
   def genTypedefBuild(self, attrs, childs) :
@@ -1103,7 +1111,7 @@ class genDictionary(object) :
     clt      = string.translate(str(cl), self.transtable)
     t        = getTemplateArgs(cl)[0]
     s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
-    s += '  return ROOT::Reflex::Proxy< %s >::generate();\n' % (cl,)
+    s += '  return ROOT::Reflex::Proxy< %s >::Generate();\n' % (cl,)
     s += '}\n'
     return s
 #----BasesMap stuff--------------------------------------------------------

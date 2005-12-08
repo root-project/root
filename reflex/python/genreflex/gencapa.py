@@ -22,12 +22,11 @@ extern "C" void SEAL_CAPABILITIES (const char**& names, int& n )
 """
 
 #----------------------------------------------------------------------------------
-def genCapabilities(capfile, dicfile, classes, dictVersion) :
+def genCapabilities(capfile, dicfile, classes) :
   startmark = '//--Begin ' + dicfile + '\n'
   endmark   = '//--End   ' + dicfile + '\n'
   finalmark = '//--Final End\n'
-  capaPre = 'LCGDict'
-  if dictVersion == 'reflex' : capaPre = 'LCGReflex'
+  capaPre = 'LCGReflex'
   new_lines = ['  "'+capaPre+'/%s",\n' % c for c in classes]
   if not os.path.exists(capfile) :
     lines = [ line+'\n' for line in model.split('\n')]
