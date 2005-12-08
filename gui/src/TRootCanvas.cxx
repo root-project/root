@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.87 2005/11/17 14:43:17 couet Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.88 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -587,6 +587,8 @@ TRootCanvas::~TRootCanvas()
    if (fToolBar) {
       Disconnect(fToolDock, "Docked()",   this, "AdjustSize()");
       Disconnect(fToolDock, "Undocked()", this, "AdjustSize()");
+      fToolBar->Cleanup();
+      delete fToolBar;
    }
 
    if (!MustCleanup()) {
@@ -602,11 +604,7 @@ TRootCanvas::~TRootCanvas()
       delete fToolBarSep;
       delete fToolDock;
       delete fToolBarLayout;
-      delete fVertical1;
-      delete fVertical2;
       delete fHorizontal1;
-      delete fVertical1Layout;
-      delete fVertical2Layout;
       delete fHorizontal1Layout;
 
       delete fMenuBar;
@@ -614,7 +612,6 @@ TRootCanvas::~TRootCanvas()
       delete fMenuBarItemLayout;
       delete fMenuBarHelpLayout;
       delete fCanvasLayout;
-      delete fToolBar;
    }
 
    delete fFileMenu;
