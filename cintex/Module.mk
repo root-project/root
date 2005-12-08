@@ -38,6 +38,19 @@ ALLLIBS      += $(CINTEXLIB)
 # include all dependency files
 INCLUDEFILES += $(CINTEXDEP)
 
+# test suite
+REFLEXLL = -Llib -lReflex
+CINTEXLL = -Llib -lCintex
+
+GENREFLEXX = ../../../bin/genreflex
+
+TESTD    = $(CINTEXDIR)/test
+TESTLIBD = $(TESTD)/dict
+TESTLIBH = $(TESTLIBD)/CintexTest.h
+TESTLIBS = $(subst .h,_rflx.cpp,$(TESTLIBH))
+TESTLIBO = $(subst .cpp,.o,$(TESTLIBS))
+TESTLIB  = $(subst $(TESTLIBD)/,lib/libtest_,$(subst _rflx.o,Rflx.$(SOEXT),$(TESTLIBO)))
+
 ##### local rules #####
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 		@(if [ ! -d "include/Cintex" ]; then    \
@@ -61,8 +74,11 @@ map-cintex:     $(RLIBMAP)
 
 map::           map-cintex
 
-clean-cintex:
+clean-cintex: clean-check-cintex
 		@rm -f $(CINTEXO)
+
+clean-check-cintex:
+		@rm -f $(TESTLIBS) $(TESTLIBO)
 
 clean::         clean-cintex
 
@@ -72,4 +88,17 @@ distclean-cintex: clean-cintex
 
 distclean::     distclean-cintex
 
+# test suite
+
+check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(TESTLIB) 
+		export ROOTSYS=`pwd`; root
+
+lib/libtest_%Rflx.$(SOEXT) : $(TESTLIBD)/%_rflx.o
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
+
+%_rflx.o : %_rflx.cpp
+		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
+
+$(TESTLIBS) :
+		cd $(TESTLIBD); $(GENREFLEXX) CintexTest.h -s selection.xml -I../../../include
 
