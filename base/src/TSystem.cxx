@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.132 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.133 2005/11/21 11:17:18 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2263,11 +2263,43 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
         || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
       // The library has already been built and loaded.
 
+
+      Bool_t reload = kFALSE;
+      TNamed *libinfo = (TNamed*)fCompiled->FindObject(library);
+      if (libinfo) {
+         Long_t load_time = libinfo->GetUniqueID();
+         Long_t lib_time;
+         if ( gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) == 0 
+              && (lib_time>load_time)) {
+            reload = kTRUE;
+         }
+      }
+
+      if ( !recompile && reload ) {
+ 
+         ::Info("ACLiC","%s has been modified and will be reloaded",
+                libname.Data());
+         if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
+            // The library is being used. We can not unload it.
+            return kFALSE;
+         }
+         TNamed *k = new TNamed(library,library);
+         Long_t lib_time;
+         gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+         k->SetUniqueID(lib_time);
+         if (!keep) k->SetBit(kMustCleanup);
+         fCompiled->Add(k); 
+
+         return !gSystem->Load(library);
+      }
+
       ::Info("ACLiC","%s script has already been compiled and loaded",
                 modified ? "modified" : "unmodified");
+
       if ( !recompile ) {
          return kTRUE;
       } else {
+
 #ifdef R__KCC
          ::Error("ACLiC","shared library can not be updated (when using the KCC compiler)!");
          return kFALSE;
@@ -2288,7 +2320,16 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    }
    if (!recompile) {
       // The library already exist, let's just load it.
-      if (loadLib) return !gSystem->Load(library);
+      if (loadLib) {
+         TNamed *k = new TNamed(library,library);
+         Long_t lib_time;
+         gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+         k->SetUniqueID(lib_time);
+         if (!keep) k->SetBit(kMustCleanup);
+         fCompiled->Add(k); 
+
+         return !gSystem->Load(library);
+      }
       else return kTRUE;
    }
 
@@ -2615,7 +2656,12 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    if ( result ) {
 
-      if (!keep) fCompiled->Add(new TObjString( library ));
+      TNamed *k = new TNamed(library,library);
+      Long_t lib_time;
+      gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+      k->SetUniqueID(lib_time);
+      if (!keep) k->SetBit(kMustCleanup);
+      fCompiled->Add(k); 
 
 #ifndef NOCINT
       // This is intended to force a failure if not all symbols needed
@@ -3058,7 +3104,8 @@ void TSystem::CleanCompiledMacros()
    // Remove the shared libs produced by the CompileMacro() function.
 
    TIter next(fCompiled);
-   TObjString *lib;
-   while ((lib = (TObjString*)next()))
-      Unlink(lib->GetString().Data());
+   TNamed *lib;
+   while ((lib = (TNamed*)next())) {
+      if (lib->TestBit(kMustCleanup)) Unlink(lib->GetTitle()); 
+   }
 }
