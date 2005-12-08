@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 #include "gsl/gsl_cdf.h"
@@ -25,17 +25,17 @@ namespace Math {
 
 
 
-  double cauchy_prob_inv(double z, double gamma) {
+  double cauchy_prob_inv(double z, double b) {
 
-    return gsl_cdf_cauchy_Qinv(z, gamma/2.0);
+    return gsl_cdf_cauchy_Qinv(z, b);
 
   }
 
 
 
-  double cauchy_quant_inv(double z, double gamma) {
+  double cauchy_quant_inv(double z, double b) {
 
-    return gsl_cdf_cauchy_Pinv(z, gamma/2.0);
+    return gsl_cdf_cauchy_Pinv(z, b);
 
   }
 

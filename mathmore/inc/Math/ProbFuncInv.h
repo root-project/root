@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.h,v 1.2 2005/09/20 06:22:34 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -65,12 +65,12 @@ namespace Math {
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the upper tail of the Cauchy distribution (#breitwigner_prob) 
-  which is also called Breit-Wigner or Lorentzian distribution. For 
+  function of the upper tail of the Breit-Wigner distribution (#breitwigner_prob) 
+  which is similar to the Cauchy distribution. For 
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #cauchy_prob_inv which 
-  will call the same implementation. The implementation used is that of 
+  Mathworld</A>. It is evaluated using the same implementation of 
+  #cauchy_prob_inv. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
   
   @ingroup StatFunc
@@ -85,12 +85,12 @@ namespace Math {
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the lower tail of the Cauchy distribution (#breitwigner_quant) 
-  which is also called Breit-Wigner or Lorentzian distribution. For 
+  function of the lower tail of the Breit_Wigner distribution (#breitwigner_quant) 
+  which is similar to the Cauchy distribution. For  
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #cauchy_quant_inv which 
-  will call the same implementation. The implementation used is that of 
+  Mathworld</A>. It is evaluated using the same implementation of 
+  #cauchy_quant_inv. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
   
   @ingroup StatFunc
@@ -106,18 +106,17 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the Cauchy distribution (#cauchy_prob) 
-  which is also called Breit-Wigner or Lorentzian distribution. For 
+  which is also called Lorentzian distribution. For 
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #breitwigner_prob_inv which 
-  will call the same implementation. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
   
   @ingroup StatFunc
 
   */
 
-  double cauchy_prob_inv(double z, double gamma);
+  double cauchy_prob_inv(double z, double b);
 
 
 
@@ -129,15 +128,14 @@ namespace Math {
   which is also called Breit-Wigner or Lorentzian distribution. For 
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
-  Mathworld</A>. It can also be evaluated using #breitwigner_quant_inv which 
-  will call the same implementation. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC294">GSL</A>.
   
   @ingroup StatFunc
 
   */
 
-  double cauchy_quant_inv(double z, double gamma);
+  double cauchy_quant_inv(double z, double b);
 
 
 
