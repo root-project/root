@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.14 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.15 2005/11/22 20:42:37 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -549,7 +549,8 @@ Bool_t TXMLFile::ReadFromFile()
    }
    fXML->UnlinkNode(fStreamerInfoNode);
 
-   ReadStreamerInfo();
+   if (fStreamerInfoNode!=0)
+      ReadStreamerInfo();
 
    if (IsUseDtd())
       if (!fXML->ValidateDocument(fDoc, gDebug>0)) {
@@ -578,7 +579,7 @@ Bool_t TXMLFile::ReadFromFile()
    }
 
    fXML->CleanNode(fRootNode);
-
+   
    return kTRUE;
 }
 
