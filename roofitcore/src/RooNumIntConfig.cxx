@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.8 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.9 2005/07/12 15:43:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,8 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsIntegrator.hh"
 #include "RooFitCore/RooNumIntFactory.hh"
+
+#include "TClass.h"
 
 ClassImp(RooNumIntConfig)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.rdl,v 1.23 2005/06/20 15:44:49 wverkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.24 2005/06/23 15:08:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 
 #include "Riostream.h"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
+
+#include "RooFitCore/RooSharedPropertiesList.hh"
+#include "RooFitCore/RooCategorySharedProperties.hh"
 
 class RooCategory : public RooAbsCategoryLValue {
 public:
@@ -50,11 +53,12 @@ public:
   void addToRange(const char* rangeName, const char* stateNameList) ;
   Bool_t isStateInRange(const char* rangeName, const char* stateName) const ;
   virtual Bool_t inRange(const char* rangeName) const { return isStateInRange(rangeName,getLabel()) ; } 
-  virtual Bool_t hasRange(const char* rangeName) const { return _altRanges.FindObject(rangeName) ? kTRUE : kFALSE ; }
+  virtual Bool_t hasRange(const char* rangeName) const { return _sharedProp->_altRanges.FindObject(rangeName) ? kTRUE : kFALSE ; }
  
 protected:
 
-  RooLinkedList _altRanges ; //! alternative range definitions for categories ;
+  static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
+  RooCategorySharedProperties* _sharedProp ; // Shared properties associated with this instance
 
   virtual RooCatType evaluate() const { return RooCatType() ;} // dummy because we overload getIndex()/getLabel()
 

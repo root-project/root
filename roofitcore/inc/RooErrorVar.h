@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.rdl,v 1.13 2005/04/18 21:44:44 wverkerke Exp $
+ *    File: $Id: RooErrorVar.rdl,v 1.14 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,6 @@
 #include "Riostream.h"
 #include <math.h>
 #include <float.h>
-#include "TString.h"
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"

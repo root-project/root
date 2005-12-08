@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooImproperIntegrator1D.cc,v 1.15 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.16 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,6 +31,7 @@
 
 #include "Riostream.h"
 #include <math.h>
+#include "TClass.h"
 
 ClassImp(RooImproperIntegrator1D)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.rdl,v 1.11 2005/06/20 15:44:53 wverkerke Exp $
+ *    File: $Id: RooHtml.rdl,v 1.12 2005/07/12 15:43:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,7 @@
 
 #include "THtml.h"
 #include "TString.h"
+#include "TList.h"
 
 #include <fstream>
 

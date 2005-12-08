@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.cc,v 1.25 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.26 2005/06/23 15:08:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
+#include "TClass.h"
 #include "RooFitCore/RooSuperCategory.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooArgSet.hh"

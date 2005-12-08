@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCategory.rdl,v 1.6 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMultiCategory.rdl,v 1.7 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_MULTI_CATEGORY
 #define ROO_MULTI_CATEGORY
 
-#include "TObjArray.h"
+class TObject ;
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooCatType.hh"
 #include "RooFitCore/RooArgSet.hh"

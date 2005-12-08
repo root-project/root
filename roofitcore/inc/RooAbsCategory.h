@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.rdl,v 1.35 2005/04/18 21:44:18 wverkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.36 2005/06/20 15:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,9 +17,7 @@
 #define ROO_ABS_CATEGORY
 
 #include "Riostream.h"
-#include "TNamed.h"
 #include "TObjArray.h"
-#include "THashList.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooCatType.hh"
 

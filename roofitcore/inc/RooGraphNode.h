@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphNode.rdl,v 1.8 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGraphNode.rdl,v 1.9 2005/06/20 15:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,8 +21,7 @@
 #include <fstream>
 #include "TString.h"
 #include "TObject.h"
-#include "TEllipse.h"
-#include "TText.h"
+class TEllipse ;
 
 class RooGraphNode : public TObject {
 private:

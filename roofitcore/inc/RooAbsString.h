@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsString.rdl,v 1.23 2005/04/18 21:44:24 wverkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.24 2005/06/20 15:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,6 @@
 #ifndef ROO_ABS_STRING
 #define ROO_ABS_STRING
 
-#include "TObjString.h"
 #include "RooFitCore/RooAbsArg.hh"
 
 class RooArgSet ;

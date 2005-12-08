@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCustomizer.cc,v 1.20 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.21 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -105,6 +105,7 @@
 
 #include "TString.h"
 #include "TString.h"
+#include "TStopwatch.h"
 
 #include "RooFitCore/RooAbsCategoryLValue.hh" 
 #include "RooFitCore/RooAbsCategory.hh"

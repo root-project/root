@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.cc,v 1.27 2005/06/20 15:44:49 wverkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.28 2005/06/23 15:08:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,11 +35,16 @@
 ClassImp(RooCategory) 
 ;
 
+RooSharedPropertiesList RooCategory::_sharedPropList ;
+
 
 RooCategory::RooCategory(const char *name, const char *title) : 
   RooAbsCategoryLValue(name,title)
 {
   // Constructor. Types must be defined using defineType() before variable can be used
+
+  _sharedProp = (RooCategorySharedProperties*) _sharedPropList.registerProperties(new RooCategorySharedProperties()) ;
+
   setValueDirty() ;  
   setShapeDirty() ;  
 }
@@ -49,22 +54,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name)
 {
   // Copy constructor
-
-  // Copy ranges
-  TIterator* iter = other._altRanges.MakeIterator() ;
-  TList* origTypeList ;
-  while((origTypeList=(TList*)iter->Next())) {
-    TList* typeList = new TList ;
-    typeList->SetName(origTypeList->GetName()) ;
-    TIterator* iter2 = origTypeList->MakeIterator() ;
-    RooCatType* state ;
-    while((state=(RooCatType*)iter2->Next())) {
-      typeList->Add(const_cast<RooCatType*>(lookupType(state->GetName()))) ;
-    }
-    delete iter2 ;
-    _altRanges.Add(typeList) ;
-  }
-  delete iter ;
+  _sharedProp =  (RooCategorySharedProperties*) _sharedPropList.registerProperties(other._sharedProp) ;
 
 }
 
@@ -72,9 +62,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
 RooCategory::~RooCategory()
 {
   // Destructor
-
-  // Delete ranges
-  _altRanges.Delete() ;
+  _sharedPropList.unregisterProperties(_sharedProp) ;
 }
 
 
@@ -177,7 +165,7 @@ void RooCategory::clearRange(const char* name, Bool_t silent)
   }
   
   // Find the list that represents this range
-  TList* rangeNameList = static_cast<TList*>(_altRanges.FindObject(name)) ;
+  TList* rangeNameList = static_cast<TList*>(_sharedProp->_altRanges.FindObject(name)) ;
 
   // If it exists, clear it 
   if (rangeNameList) {
@@ -204,7 +192,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
   }
   
   // Find the list that represents this range
-  TList* rangeNameList = static_cast<TList*>(_altRanges.FindObject(name)) ;
+  TList* rangeNameList = static_cast<TList*>(_sharedProp->_altRanges.FindObject(name)) ;
 
   // If it does not exist, create it on the fly
   if (!rangeNameList) {
@@ -213,7 +201,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
 
     rangeNameList = new TList ;
     rangeNameList->SetName(name) ;
-    _altRanges.Add(rangeNameList) ;    
+    _sharedProp->_altRanges.Add(rangeNameList) ;    
   }
 
   // Parse list of state names, verify that each is valid and add them to the list
@@ -244,7 +232,7 @@ Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName)
 
   
   // Find the list that represents this range
-  TList* rangeNameList = static_cast<TList*>(_altRanges.FindObject(rangeName)) ;
+  TList* rangeNameList = static_cast<TList*>(_sharedProp->_altRanges.FindObject(rangeName)) ;
 
   // If the range doesn't exist create range with all valid states included
   if (rangeNameList) {

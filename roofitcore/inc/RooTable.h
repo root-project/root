@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTable.rdl,v 1.12 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooTable.rdl,v 1.13 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,6 @@
 #include "Riostream.h"
 #include <assert.h>
 #include "TNamed.h"
-#include "THashList.h"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooPrintable.hh"
 

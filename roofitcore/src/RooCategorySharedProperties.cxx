@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooThreshEntry.rdl,v 1.10 2005/06/20 15:45:14 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,34 +13,24 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_THRESH_ENTRY
-#define ROO_THRESH_ENTRY
 
-#include "Riostream.h"
-#include "TNamed.h"
-#include "RooFitCore/RooCatType.hh"
+// -- CLASS DESCRIPTION [AUX] --
 
-class RooThreshEntry : public TObject {
-public:
-  inline RooThreshEntry() : TObject(), _thresh(0), _cat() {} 
-  virtual ~RooThreshEntry() {} ;
-  RooThreshEntry(Double_t thresh, const RooCatType& cat) ;
-  RooThreshEntry(const RooThreshEntry& other) ;
-  virtual TObject* Clone(const char*) const { return new RooThreshEntry(*this); }
+#include "RooFitCore/RooFit.hh"
+#include "RooFitCore/RooCategorySharedProperties.hh"
 
-  virtual Int_t Compare(const TObject *) const ;
-  virtual Bool_t IsSortable() const { return kTRUE ; }
-
-  inline Double_t thresh() const { return _thresh ; }
-  inline const RooCatType& cat() const { return _cat ; }
-
-protected:
-
-  Double_t _thresh ;
-  RooCatType _cat ;
-	
-  ClassDef(RooThreshEntry,1) // Utility class, holding a threshold/category state pair
-} ;
+ClassImp(RooCategorySharedProperties)
+;
 
 
-#endif
+RooCategorySharedProperties::RooCategorySharedProperties()
+{
+} 
+
+
+RooCategorySharedProperties::~RooCategorySharedProperties() 
+{
+  _altRanges.Delete() ;
+} 
+
+

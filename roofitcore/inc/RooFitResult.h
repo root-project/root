@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.rdl,v 1.20 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.21 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,15 +17,16 @@
 #define ROO_FIT_RESULT
 
 #include "Riostream.h"
-#include "TObject.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooDirItem.hh"
 #include "RooFitCore/RooArgList.hh"
 
-class TMatrix ;
+#include "TMatrixFfwd.h"
+
 class RooArgSet ;
 class RooPlot;
+class TObject ;
 typedef RooArgSet* pRooArgSet ;
 
 class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
@@ -112,7 +113,7 @@ protected:
   TList       _corrMatrix ;   // Correlation matrix (list of RooArgLists)
 
   mutable RooArgList *_randomPars; //! List of floating parameters with most recent random perturbation applied
-  mutable TMatrix *_Lt;            //! triangular matrix used for generate random perturbations
+  mutable TMatrixF* _Lt;            //! triangular matrix used for generate random perturbations
 
   ClassDef(RooFitResult,1) // Container class for fit result
 };
