@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.45 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.46 2005/12/02 16:17:48 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1742,6 +1742,11 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    if (hint > slowBufferSize) {
       delete [] slowBuffer;
       slowBufferSize = 2 * hint;
+      if (hint < 0 || slowBufferSize < 0) {
+         slowBufferSize = 0;
+         slowBuffer = 0;
+         return 0;
+      }
       slowBuffer = new char[slowBufferSize];
    }
 
@@ -1751,6 +1756,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    if (n == -1 || n >= slowBufferSize) {
       if (n == -1) n = 2 * slowBufferSize;
       if (n == slowBufferSize) n++;
+      if (n <= 0) return 0; // int overflow!
       return SlowFormat(format, ap, n);
    }
 
