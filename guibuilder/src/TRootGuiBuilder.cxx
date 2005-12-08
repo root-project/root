@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.16 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.17 2005/08/30 12:30:11 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -877,7 +877,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
       root->SetEditable(kTRUE);
       SetEditable(kTRUE);
       return kFALSE;
-  }
+   }
 
    dir = fi.fIniDir;
    overwr = fi.fOverwrite;
@@ -928,7 +928,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
       root->SetEditable(kTRUE);
       SetEditable(kTRUE);
       return kFALSE;
-  }
+   }
 
    dir = fi.fIniDir;
    overwr = fi.fOverwrite;

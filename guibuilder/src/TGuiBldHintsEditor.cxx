@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.2 2004/09/14 09:57:58 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -151,6 +151,7 @@ TGuiBldHintsEditor::TGuiBldHintsEditor(const TGWindow *p, TGuiBldEditor *e) :
 //______________________________________________________________________________
 void  TGuiBldHintsEditor::ChangeSelected(TGFrame *frame)
 {
+   //
 
    if (!frame) return;
 

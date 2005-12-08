@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.31 2004/12/09 22:55:06 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.32 2005/02/18 11:22:28 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -3195,6 +3195,7 @@ void TGuiBldDragManager::HideGrabRectangles()
 //______________________________________________________________________________
 void TGuiBldDragManager::DeletePropertyEditor()
 {
+   //
 
    if (!fEditor) return;
 

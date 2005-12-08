@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.6 2004/10/07 09:56:53 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.7 2005/07/05 12:36:06 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -186,7 +186,7 @@ TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *edi
 class TGuiBldBorderFrame : public TGHorizontalFrame {
 
 private:
- enum  EBldBorderFrameMode { kBldBorderNone, kBldBorderSunken,
+   enum  EBldBorderFrameMode { kBldBorderNone, kBldBorderSunken,
                              kBldBorderPlain, kBldBorderRaised, kBldBorderDouble };
 
 private:
