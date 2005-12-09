@@ -23,11 +23,15 @@ TESTKALMANOBJ     = testKalman.$(ObjSuf)
 TESTKALMANSRC     = testKalman.$(SrcSuf)
 TESTKALMAN        = testKalman$(ExeSuf)
 
+TESTIOOBJ     = testIO.$(ObjSuf)
+TESTIOSRC     = testIO.$(SrcSuf)
+TESTIO        = testIO$(ExeSuf)
 
-OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ)
+
+OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ)
 
 
-PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN)
+PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO)
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -48,13 +52,18 @@ $(TESTKALMAN):        $(TESTKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
+$(TESTIO):        $(TESTIOOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
 
 
 clean:
-		@rm -f $(OBJS) core
+		@rm -f $(OBJS) core *.root
 
 distclean:      clean
 		@rm -f $(PROGRAMS) 
+
 
 
 .SUFFIXES: .$(SrcSuf)
