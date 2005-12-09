@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.56 2005/10/06 21:40:03 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.57 2005/11/09 16:20:29 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -764,8 +764,8 @@ void TSelectorDraw::Begin(TTree *tree)
    if (!fV4 && fVar4)   fV4 = new Double_t[fTree->GetEstimate()];
    if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
 
-   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
-   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
+   fVmin[0] = fVmin[1] = fVmin[2] = fVmin[3] =  FLT_MAX; //in float.h
+   fVmax[0] = fVmax[1] = fVmax[2] = fVmax[3] = -fVmin[0];
 }
 
 //______________________________________________________________________________
@@ -1237,15 +1237,18 @@ void TSelectorDraw::TakeAction()
          h2->GetListOfFunctions()->Add(grs, "P");
          for (col=0;col<ncolors;col++) {
             gr = new TGraph();
-            gr->SetMarkerColor(col);
+            gr->SetMarkerColor(gStyle->GetColorPalette(col));
             gr->SetMarkerStyle(fTree->GetMarkerStyle());
             gr->SetMarkerSize(fTree->GetMarkerSize());
             grs->AddAt(gr,col);
          }
       }
+      h2->SetEntries(fNfill);
+      h2->SetMinimum(fVmin[2]);
+      h2->SetMaximum(fVmax[2]);
       // Fill the graphs acording to the color
       for (i=0;i<fNfill;i++) {
-         col = Int_t((ncolors-1)*((fV3[i]-fVmin[2])/(fVmax[2]-fVmin[2])));
+         col = Int_t(ncolors*((fV3[i]-fVmin[2])/(fVmax[2]-fVmin[2])));
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
          gr = (TGraph*)grs->UncheckedAt(col);
@@ -1277,14 +1280,17 @@ void TSelectorDraw::TakeAction()
          h3->GetListOfFunctions()->Add(pms);
          for (col=0;col<ncolors;col++) {
             pm3d = new TPolyMarker3D();
-            pm3d->SetMarkerColor(col);
+            pm3d->SetMarkerColor(gStyle->GetColorPalette(col));
             pm3d->SetMarkerStyle(fTree->GetMarkerStyle());
             pm3d->SetMarkerSize(fTree->GetMarkerSize());
             pms->AddAt(pm3d,col);
          }
       }
+      h3->SetEntries(fNfill);
+      h3->SetMinimum(fVmin[3]);
+      h3->SetMaximum(fVmax[3]);
       for (i=0;i<fNfill;i++) {
-         col = Int_t(fV4[i]);
+         col = Int_t(ncolors*((fV4[i]-fVmin[3])/(fVmax[3]-fVmin[3])));
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
          pm3d = (TPolyMarker3D*)pms->UncheckedAt(col);
@@ -1508,6 +1514,8 @@ void TSelectorDraw::TakeEstimate()
             if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
             if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
             if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+            if (fVmin[3] > fV4[i]) fVmin[3] = fV4[i];
+            if (fVmax[3] < fV4[i]) fVmax[3] = fV4[i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3,fVmin[2],fVmax[2],fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
