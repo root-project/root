@@ -163,6 +163,10 @@ N: Markus Frank
 E: Markus.Frank@cern.ch
 D: STL I/O and TBranchElement splitting
 
+N: John Frankland
+E: frankland@ganil.fr
+D: TString contributions
+
 N: Keisuke Fujii
 E: fujiik@jlcuxf.kek.jp
 D: port to MacOS X
@@ -352,6 +356,10 @@ D: improvements in tutorial hadd.C to take into account Trees
 N: Maxim Nikulin
 E: nikulin@gorodok.net
 D: improvements in the TGraph suite memory management functions
+
+N: Paul Nilsson
+E: Paul.Nilsson@cern.ch
+D: PROOF contributions (TProofResources classes)
 
 N: John Odonnell
 E: odonnell@lanl.gov
