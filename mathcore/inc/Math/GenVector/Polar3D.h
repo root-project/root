@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.3 2005/12/09 15:57:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:40:03 2005
 // Major revamp:  M. Fischler  at Wed Jun  8 2005
 // 
-// Last update: $Id: Polar3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: Polar3D.h,v 1.3 2005/12/09 15:57:48 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Polar3D 
 #define ROOT_Math_GenVector_Polar3D  1
@@ -24,8 +24,6 @@
 #include <cmath>
 #include <limits>
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-#endif
  
 namespace ROOT { 
 

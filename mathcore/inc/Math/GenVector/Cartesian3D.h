@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.3 2005/12/09 15:57:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -33,9 +33,6 @@
 #include "Math/GenVector/Polar3Dfwd.h"
 #include "Math/GenVector/etaMax.h"
 
-
-#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-#endif
 
 namespace ROOT { 
 
