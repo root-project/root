@@ -38,7 +38,9 @@ GCCXMLPATHPY := $(GRFLXDD)/gccxmlpath.py
 GRFLXS   := $(wildcard $(GRFLXSD)/*.py)
 GRFLXPY  := $(patsubst $(GRFLXSD)/%.py,$(GRFLXDD)/%.py,$(GRFLXS))
 GRFLXPY  += $(GCCXMLPATHPY)
+ifneq ($(BUILDPYTHON),no)
 GRFLXPYC := $(subst .py,.pyc,$(GRFLXPY))
+endif
 
 ifeq ($(PLATFORM),win32)
 GENREFLEX = bin/genreflex.bat
@@ -70,7 +72,7 @@ RFLX_UNITTESTS = $(RFLX_TESTD)/test_Reflex_generate.cxx    \
                  $(RFLX_TESTD)/test_ReflexBuilder_unit.cxx \
                  $(RFLX_TESTD)/test_Reflex_unit.cxx        \
                  $(RFLX_TESTD)/test_Reflex_simple1.cxx     \
-                 $(RFLX_TESTD)/test_Reflex_simple2.cxx 
+                 $(RFLX_TESTD)/test_Reflex_simple2.cxx
 RFLX_UNITTESTO = $(subst .cxx,.o,$(RFLX_UNITTESTS))
 RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 
@@ -88,7 +90,7 @@ $(GCCXMLPATHPY):
 		  mkdir -p lib/python/genreflex; fi )
 		@echo "gccxmlpath = '$(GCCXML)'" > $(GCCXMLPATHPY);
 
-$(GRFLXDD)/%.py: $(GRFLXSD)/%.py $(GCCXMLPATHPY) 
+$(GRFLXDD)/%.py: $(GRFLXSD)/%.py $(GCCXMLPATHPY)
 		@(if [ ! -d "lib/python/genreflex" ]; then \
 		  mkdir -p lib/python/genreflex; fi )
 		cp $< $@
@@ -96,19 +98,19 @@ $(GRFLXDD)/%.py: $(GRFLXSD)/%.py $(GCCXMLPATHPY)
 $(GRFLXDD)/%.pyc: $(GRFLXDD)/%.py
 		@python -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(GENREFLEX): $(GRFLXPYC) 
+$(GENREFLEX): $(GRFLXPYC)
 		@echo $(GNRFLX_L1) > $(GENREFLEX)
 		@echo $(GNRFLX_L2) >> $(GENREFLEX)
 ifneq ($(PLATFORM),win32)
 		@chmod a+x $(GENREFLEX)
 endif
 
-$(REFLEXLIB): $(GENREFLEX) $(REFLEXO)
+$(REFLEXLIB): $(GENREFLEX) $(REFLEXO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
 
-all-reflex:     $(REFLEXLIB) 
+all-reflex:     $(REFLEXLIB)
 
 map-reflex:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(REFLEXLIB) \
@@ -124,7 +126,7 @@ clean-check-reflex:
 		@rm -f $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
 
 clean-reflex: clean-genreflex clean-check-reflex
-		@rm -f $(REFLEXO) 
+		@rm -f $(REFLEXO)
 
 clean::         clean-reflex
 
@@ -157,7 +159,7 @@ $(RFLX_TESTLIBS2) :
 		cd $(RFLX_TESTD); $(RFLX_GENREFLEXX) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
 
 $(RFLX_UNITTESTO) : %.o : %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI) -Ireflex -c $< -o $@ 
+		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI) -Ireflex -c $< -o $@
 
 $(RFLX_UNITTESTX) : % : %.o
 		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL)

@@ -36,7 +36,7 @@ INCLUDEFILES += $(RFIODEP)
 include/%.h:    $(RFIODIRI)/%.h
 		cp $< $@
 
-$(RFIOLIB):     $(RFIOO) $(RFIODO) $(MAINLIBS)
+$(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRFIO.$(SOEXT) $@ "$(RFIOO) $(RFIODO)" \
 		   "$(RFIOLIBEXTRA) $(SHIFTLIBDIR) $(SHIFTLIB)"

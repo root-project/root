@@ -36,7 +36,7 @@ INCLUDEFILES += $(SPLOTDEP)
 include/%.h:    $(SPLOTDIRI)/%.h
 		cp $< $@
 
-$(SPLOTLIB):   $(SPLOTO) $(SPLOTDO) $(MAINLIBS) $(SPLOTLIBDEP)
+$(SPLOTLIB):   $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSPlot.$(SOEXT) $@ "$(SPLOTO) $(SPLOTDO)" \
 		   "$(SPLOTLIBEXTRA)"

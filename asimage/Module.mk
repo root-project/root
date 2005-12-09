@@ -191,7 +191,7 @@ endif
 
 ##### libASImage #####
 $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
-                $(MAINLIBS) $(ASIMAGELIBDEP)
+                $(ORDER_) $(MAINLIBS) $(ASIMAGELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
@@ -208,7 +208,7 @@ $(ASIMAGEDO):   $(ASIMAGEDS) $(ASTEPLIB)
 
 ##### libASImageGui #####
 $(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASTEPDEP) $(FREETYPEDEP) \
-                   $(MAINLIBS) $(ASIMAGEGUILIBDEP)
+                   $(ORDER_) $(MAINLIBS) $(ASIMAGEGUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImageGui.$(SOEXT) $@ \
 		   "$(ASIMAGEGUIO) $(ASIMAGEGUIDO)" \
@@ -225,7 +225,7 @@ $(ASIMAGEGUIDO): $(ASIMAGEGUIDS) $(ASTEPLIB)
 
 ##### libASPluginGS #####
 $(ASIMAGEGSLIB):  $(ASIMAGEGSO) $(ASIMAGEGSDO) $(ASTEPDEP) $(FREETYPEDEP) \
-                  $(MAINLIBS) $(ASIMAGEGSLIBDEP)
+                  $(ORDER_) $(MAINLIBS) $(ASIMAGEGSLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASPluginGS.$(SOEXT) $@ \
 		   "$(ASIMAGEGSO) $(ASIMAGEGSDO)" \

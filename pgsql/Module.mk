@@ -36,7 +36,7 @@ INCLUDEFILES += $(PGSQLDEP)
 include/%.h:    $(PGSQLDIRI)/%.h
 		cp $< $@
 
-$(PGSQLLIB):    $(PGSQLO) $(PGSQLDO) $(MAINLIBS)
+$(PGSQLLIB):    $(PGSQLO) $(PGSQLDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libPgSQL.$(SOEXT) $@ "$(PGSQLO) $(PGSQLDO)" \
 		   "$(PGSQLLIBEXTRA) $(PGSQLLIBDIR) $(PGSQLCLILIB)"

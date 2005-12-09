@@ -62,7 +62,7 @@ include/%.cw:    $(GQTDIRI)/%.cw
 include/%.pri:    $(GQTDIRI)/%.pri
 		cp $< $@
       
-$(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(MAINLIBS) $(GQTLIBDEP)
+$(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ \
 		   "$(GQTO) $(GQTMOCO) $(GQTDO)" \

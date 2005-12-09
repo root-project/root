@@ -38,7 +38,7 @@ INCLUDEFILES += $(X11DEP)
 include/%.h:    $(X11DIRI)/%.h
 		cp $< $@
 
-$(X11LIB):      $(X11O) $(X11DO) $(MAINLIBS)
+$(X11LIB):      $(X11O) $(X11DO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11.$(SOEXT) $@ "$(X11O) $(X11DO)" \
 		   "$(X11LIBEXTRA) $(XLIBS)"

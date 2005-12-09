@@ -37,7 +37,7 @@ INCLUDEFILES += $(VMCDEP)
 include/%.h:    $(VMCDIRI)/%.h
 		cp $< $@
 
-$(VMCLIB):      $(VMCO) $(VMCDO) $(MAINLIBS) $(VMCLIBDEP)
+$(VMCLIB):      $(VMCO) $(VMCDO) $(ORDER_) $(MAINLIBS) $(VMCLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libVMC.$(SOEXT) $@ "$(VMCO) $(VMCDO)" \
 		   "$(VMCLIBEXTRA)"

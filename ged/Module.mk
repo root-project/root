@@ -36,7 +36,7 @@ INCLUDEFILES += $(GEDDEP)
 include/%.h:    $(GEDDIRI)/%.h
 		cp $< $@
 
-$(GEDLIB):      $(GEDO) $(GEDDO) $(MAINLIBS) $(GEDLIBDEP)
+$(GEDLIB):      $(GEDO) $(GEDDO) $(ORDER_) $(MAINLIBS) $(GEDLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGed.$(SOEXT) $@ "$(GEDO) $(GEDDO)" \
 		   "$(GEDLIBEXTRA)"

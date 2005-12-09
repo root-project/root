@@ -36,7 +36,7 @@ INCLUDEFILES += $(QUADPDEP)
 include/%.h:    $(QUADPDIRI)/%.h
 		cp $< $@
 
-$(QUADPLIB):    $(QUADPO) $(QUADPDO) $(MAINLIBS) $(QUADPLIBDEP)
+$(QUADPLIB):    $(QUADPO) $(QUADPDO) $(ORDER_) $(MAINLIBS) $(QUADPLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libQuadp.$(SOEXT) $@ "$(QUADPO) $(QUADPDO)" \
 		   "$(QUADPLIBEXTRA)"

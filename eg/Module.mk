@@ -37,7 +37,7 @@ INCLUDEFILES += $(EGDEP)
 include/%.h:    $(EGDIRI)/%.h
 		cp $< $@
 
-$(EGLIB):       $(EGO) $(EGDO) $(MAINLIBS) $(EGLIBDEP)
+$(EGLIB):       $(EGO) $(EGDO) $(ORDER_) $(MAINLIBS) $(EGLIBDEP)
 ifeq ($(PLATFORM),macosx)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEG.$(SOEXT) $@ "$(EGO) $(EGDO)" \

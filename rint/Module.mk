@@ -36,7 +36,7 @@ INCLUDEFILES += $(RINTDEP)
 include/%.h:    $(RINTDIRI)/%.h
 		cp $< $@
 
-$(RINTLIB):     $(RINTO) $(RINTDO) $(MAINLIBS)
+$(RINTLIB):     $(RINTO) $(RINTDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRint.$(SOEXT) $@ "$(RINTO) $(RINTDO)" \
 		   "$(RINTLIBEXTRA)"

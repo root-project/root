@@ -77,7 +77,7 @@ $(GDKLIBA):     $(GDKSRC)
 		  nmake -nologo -f makefile.msc)
 
 $(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPEDEP) $(GDKLIB) $(GDKDLL) \
-                $(MAINLIBS) $(WIN32GDKLIBDEP)
+                $(ORDER_) $(MAINLIBS) $(WIN32GDKLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libWin32gdk.$(SOEXT) $@ \
 		   "$(WIN32GDKO) $(WIN32GDKDO)" \

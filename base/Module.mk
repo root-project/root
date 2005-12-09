@@ -64,6 +64,10 @@ INCLUDEFILES += $(BASEDEP)
 include/%.h:    $(BASEDIRI)/%.h
 		cp $< $@
 
+# Explicitely state this dependency.
+# rmkdepend does not pick it up if $(COMPILEDATA) doesn't exist yet.
+base/src/TSystem.d base/src/TSystem.o: $(COMPILEDATA)
+
 $(BASEDS1):     $(BASEH1) $(BASEL1) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH1) $(BASEL1)

@@ -55,7 +55,7 @@ INCLUDEFILES += $(GEOMDEP)
 include/%.h:    $(GEOMDIRI)/%.h
 		cp $< $@
 
-$(GEOMLIB):     $(GEOMO) $(GEOMDO) $(MAINLIBS) $(GEOMLIBDEP)
+$(GEOMLIB):     $(GEOMO) $(GEOMDO) $(ORDER_) $(MAINLIBS) $(GEOMLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGeom.$(SOEXT) $@ "$(GEOMO) $(GEOMDO)" \
 		   "$(GEOMLIBEXTRA)"

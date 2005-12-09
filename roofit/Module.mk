@@ -38,7 +38,7 @@ ROOFITH1     := Roo1DTable.h Roo2DKeysPdf.h RooAbsAnaConvPdf.h RooAbsArg.h RooAb
                 RooBreitWigner.h RooBrentRootFinder.h RooBukinPdf.h RooCategory.h RooCategoryProxy.h RooCategorySharedProperties.h \
                 RooCatType.h RooCBShape.h RooChebychev.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooComplex.h \
                 RooConstVar.h RooConvCoefVar.h RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h \
-                 RooGlobalFunc.h
+                RooGlobalFunc.h
 ROOFITH2     := RooDataHist.h RooDataProjBinding.h RooDataSet.h RooDecay.h RooDirItem.h RooDouble.h RooDstD0BG.h RooEffGenContext.h \
                 RooEfficiency.h RooEffProd.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooExponential.h RooExtendPdf.h \
                 RooFitResult.h RooFormula.h RooFormulaVar.h RooGaussian.h RooGaussKronrodIntegrator1D.h RooGaussModel.h \
@@ -58,7 +58,7 @@ ROOFITH3     := RooNameSet.h RooNLLVar.h RooNonCPEigenDecay.h RooNormListManager
                 RooSimGenContext.h RooSimPdfBuilder.h RooSimultaneous.h RooStreamParser.h RooStringVar.h RooSuperCategory.h \
                 RooTable.h RooThreshEntry.h RooThresholdCategory.h RooTObjWrap.h RooTrace.h RooTreeData.h RooTruthModel.h \
                 RooUnblindCPAsymVar.h RooUnblindOffset.h RooUnblindPrecision.h RooUnblindUniform.h RooUniformBinning.h \
-                RooVoigtian.h 
+                RooVoigtian.h
 
 ROOFITH1     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH1))
 ROOFITH2     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH2))
@@ -101,7 +101,7 @@ $(ROOFITH):     $(ROOFITETAG)
 $(ROOFITINCH):  include/%.h: $(ROOFITDIRI)/%.h
 		cp $< $@
 
-$(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(MAINLIBS) $(ROOFITLIBDEP)
+$(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRooFit.$(SOEXT) $@ "$(ROOFITO) $(ROOFITDO)" \
 		   "$(ROOFITLIBEXTRA)"

@@ -31,7 +31,7 @@ INCLUDEFILES += $(NEWDEP)
 include/%.h:    $(NEWDIRI)/%.h
 		cp $< $@
 
-$(NEWLIB):      $(NEWO) $(MAINLIBS)
+$(NEWLIB):      $(NEWO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNew.$(SOEXT) $@ "$(NEWO)" "$(NEWLIBEXTRA)"
 

@@ -36,7 +36,7 @@ INCLUDEFILES += $(HISTDEP)
 include/%.h:    $(HISTDIRI)/%.h
 		cp $< $@
 
-$(HISTLIB):     $(HISTO) $(HISTDO) $(MAINLIBS) $(HISTLIBDEP)
+$(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHist.$(SOEXT) $@ "$(HISTO) $(HISTDO)" \
 		   "$(HISTLIBEXTRA)"

@@ -53,7 +53,7 @@ include/Math/%.icc: $(SMATRIXDIRI)/%.icc
 		fi)
 		cp $< $@
 
-$(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(MAINLIBS)
+$(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libSmatrix.$(SOEXT) $@     \
 		   "$(SMATRIXO) $(SMATRIXDO)"             \

@@ -36,7 +36,7 @@ INCLUDEFILES += $(MYSQLDEP)
 include/%.h:    $(MYSQLDIRI)/%.h
 		cp $< $@
 
-$(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(MAINLIBS)
+$(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMySQL.$(SOEXT) $@ "$(MYSQLO) $(MYSQLDO)" \
 		   "$(MYSQLLIBEXTRA) $(MYSQLLIBDIR) $(MYSQLCLILIB)"

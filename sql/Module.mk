@@ -36,7 +36,7 @@ INCLUDEFILES += $(SQLDEP)
 include/%.h:    $(SQLDIRI)/%.h
 		cp $< $@
 
-$(SQLLIB):      $(SQLO) $(SQLDO) $(MAINLIBS) $(SQLLIBDEP)
+$(SQLLIB):      $(SQLO) $(SQLDO) $(ORDER_) $(MAINLIBS) $(SQLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSQL.$(SOEXT) $@ "$(SQLO) $(SQLDO)" \
 		   "$(SQLLIBEXTRA)"

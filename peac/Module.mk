@@ -57,7 +57,7 @@ INCLUDEFILES += $(PEACDEP) $(PEACGUIDEP)
 include/%.h:    $(PEACDIRI)/%.h
 		cp $< $@
 
-$(PEACLIB):     $(PEACO) $(PEACDO) $(MAINLIBS) $(PEACLIBDEP)
+$(PEACLIB):     $(PEACO) $(PEACDO) $(ORDER_) $(MAINLIBS) $(PEACLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libPeac.$(SOEXT) $@ "$(PEACO) $(PEACDO)" \
 		   "$(PEACLIBEXTRA)"
@@ -69,7 +69,7 @@ $(PEACDS):      $(PEACH) $(PEACL) $(ROOTCINTTMP)
 $(PEACDO):      $(PEACDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-$(PEACGUILIB):  $(PEACGUIO) $(PEACGUIDO) $(MAINLIBS) $(PEACGUILIBDEP)
+$(PEACGUILIB):  $(PEACGUIO) $(PEACGUIDO) $(ORDER_) $(MAINLIBS) $(PEACGUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libPeacGui.$(SOEXT) $@ \
 		   "$(PEACGUIO) $(PEACGUIDO)" \

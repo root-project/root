@@ -36,7 +36,7 @@ INCLUDEFILES += $(FOAMDEP)
 include/%.h:    $(FOAMDIRI)/%.h
 		cp $< $@
 
-$(FOAMLIB):     $(FOAMO) $(FOAMDO) $(MAINLIBS) $(FOAMLIBDEP)
+$(FOAMLIB):     $(FOAMO) $(FOAMDO) $(ORDER_) $(MAINLIBS) $(FOAMLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libFoam.$(SOEXT) $@ "$(FOAMO) $(FOAMDO)" \
 		   "$(FOAMLIBEXTRA)"

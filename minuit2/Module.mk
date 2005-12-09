@@ -66,7 +66,7 @@ include/%.h:    $(MINUIT2DIRI)/%.h
 		cp $< $@
 
 
-$(MINUIT2LIB):  $(MINUIT2O) $(MINUIT2DO) $(MAINLIBS) $(MINUIT2LIBDEP)
+$(MINUIT2LIB):  $(MINUIT2O) $(MINUIT2DO) $(ORDER_) $(MAINLIBS) $(MINUIT2LIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMinuit2.$(SOEXT) $@ \
 		   "$(MINUIT2O) $(MINUIT2DO)" \

@@ -36,7 +36,7 @@ INCLUDEFILES += $(HTMLDEP)
 include/%.h:    $(HTMLDIRI)/%.h
 		cp $< $@
 
-$(HTMLLIB):     $(HTMLO) $(HTMLDO) $(MAINLIBS) $(HTMLLIBDEP)
+$(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHtml.$(SOEXT) $@ "$(HTMLO) $(HTMLDO)" \
 		   "$(HTMLLIBEXTRA)"

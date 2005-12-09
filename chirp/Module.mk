@@ -35,7 +35,7 @@ INCLUDEFILES += $(CHIRPDEP)
 include/%.h:    $(CHIRPDIRI)/%.h
 		cp $< $@
 
-$(CHIRPLIB):    $(CHIRPO) $(CHIRPDO) $(MAINLIBS)
+$(CHIRPLIB):    $(CHIRPO) $(CHIRPDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libChirp.$(SOEXT) $@ "$(CHIRPO) $(CHIRPDO)" \
 		   "$(CHIRPLIBEXTRA) $(CHIRPLIBDIR) $(CHIRPCLILIB)"

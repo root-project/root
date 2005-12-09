@@ -36,7 +36,7 @@ INCLUDEFILES += $(LDAPDEP)
 include/%.h:    $(LDAPDIRI)/%.h
 		cp $< $@
 
-$(LDAPLIB):     $(LDAPO) $(LDAPDO) $(MAINLIBS)
+$(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRLDAP.$(SOEXT) $@ "$(LDAPO) $(LDAPDO)" \
 		   "$(LDAPLIBEXTRA) $(LDAPLIBDIR) $(LDAPCLILIB)"

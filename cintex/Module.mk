@@ -28,8 +28,10 @@ else
 CINTEXPY     := $(subst $(MODDIR)/python,$(LPATH),$(CINTEXPYS))
 $(LPATH)/%.py: $(MODDIR)/python/%.py; cp $< $@
 endif
+ifneq ($(BUILDPYTHON),no)
 CINTEXPYC    := $(CINTEXPY:.py=.pyc)
 CINTEXPYO    := $(CINTEXPY:.py=.pyo)
+endif
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Cintex/%.h,include/Cintex/%.h,$(CINTEXH))
@@ -61,7 +63,7 @@ include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 %.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(CINTEXLIB):   $(CINTEXO) $(MAINLIBS) $(CINTEXLIBDEP) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO)
+$(CINTEXLIB):   $(CINTEXO) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO) $(ORDER_) $(MAINLIBS) $(CINTEXLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libCintex.$(SOEXT) $@ "$(CINTEXO)" \
 		"$(CINTEXLIBEXTRA)"
@@ -89,16 +91,15 @@ distclean-cintex: clean-cintex
 distclean::     distclean-cintex
 
 # test suite
-
-check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(TESTLIB) 
+check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(TESTLIB)
 		export ROOTSYS=`pwd`; root
 
 lib/libtest_%Rflx.$(SOEXT) : $(TESTLIBD)/%_rflx.o
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
 
-%_rflx.o : %_rflx.cpp
+%_rflx.o: %_rflx.cpp
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
 
-$(TESTLIBS) :
+$(TESTLIBS):
 		cd $(TESTLIBD); $(GENREFLEXX) CintexTest.h -s selection.xml -I../../../include
 

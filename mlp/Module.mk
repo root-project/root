@@ -36,7 +36,7 @@ INCLUDEFILES += $(MLPDEP)
 include/%.h:    $(MLPDIRI)/%.h
 		cp $< $@
 
-$(MLPLIB):      $(MLPO) $(MLPDO) $(MAINLIBS) $(MLPLIBDEP)
+$(MLPLIB):      $(MLPO) $(MLPDO) $(ORDER_) $(MAINLIBS) $(MLPLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMLP.$(SOEXT) $@ "$(MLPO) $(MLPDO)" \
 		   "$(MLPLIBEXTRA)"

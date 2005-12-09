@@ -36,7 +36,7 @@ INCLUDEFILES += $(GPADDEP)
 include/%.h:    $(GPADDIRI)/%.h
 		cp $< $@
 
-$(GPADLIB):     $(GPADO) $(GPADDO) $(MAINLIBS) $(GPADLIBDEP)
+$(GPADLIB):     $(GPADO) $(GPADDO) $(ORDER_) $(MAINLIBS) $(GPADLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGpad.$(SOEXT) $@ "$(GPADO) $(GPADDO)" \
 		   "$(GPADLIBEXTRA)"

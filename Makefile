@@ -314,8 +314,12 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
 ifeq ($(EXPLICITLINK),yes)
 MAINLIBS      = $(CORELIB) $(CINTLIB)
+MAKE_VERSION_MAJOR = $(word 1,$(subst ., ,$(MAKE_VERSION)))
+MAKE_VERSION_MINOR = $(word 2,$(subst ., ,$(MAKE_VERSION)))
+ORDER_       := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 -o $(MAKE_VERSION_MAJOR) -eq 3 -a $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
 else
 MAINLIBS      =
+ORDER_        =
 endif
 
 ##### all #####

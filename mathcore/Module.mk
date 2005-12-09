@@ -71,7 +71,7 @@ include/Math/%.h: $(MATHCOREDIRI)/Math/%.h
 		fi)
 		cp $< $@
 
-$(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(MAINLIBS)
+$(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libMathCore.$(SOEXT) $@     \
 		   "$(MATHCOREO) $(MATHCOREDO)"             \

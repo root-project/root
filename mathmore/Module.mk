@@ -139,7 +139,7 @@ else
 		$(MAKE))
 endif
 
-$(MATHMORELIB): $(GSLDEP) $(MATHMOREO) $(MATHMOREDO) $(MAINLIBS)
+$(MATHMORELIB): $(GSLDEP) $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libMathMore.$(SOEXT) $@     \
 		   "$(MATHMOREO) $(MATHMOREDO)"             \

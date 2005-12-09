@@ -36,7 +36,7 @@ INCLUDEFILES += $(SAPDBDEP)
 include/%.h:    $(SAPDBDIRI)/%.h
 		cp $< $@
 
-$(SAPDBLIB):    $(SAPDBO) $(SAPDBDO) $(MAINLIBS)
+$(SAPDBLIB):    $(SAPDBO) $(SAPDBDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSapDB.$(SOEXT) $@ "$(SAPDBO) $(SAPDBDO)" \
 		   "$(SAPDBLIBEXTRA) $(SAPDBLIBDIR) $(SAPDBCLILIB)"

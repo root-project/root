@@ -36,7 +36,7 @@ INCLUDEFILES += $(XMLDEP)
 include/%.h:    $(XMLDIRI)/%.h
 		cp $< $@
 
-$(XMLLIB):      $(XMLO) $(XMLDO) $(MAINLIBS)
+$(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)"
 

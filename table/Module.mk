@@ -36,7 +36,7 @@ INCLUDEFILES += $(TABLEDEP)
 include/%.h:    $(TABLEDIRI)/%.h
 		cp $< $@
 
-$(TABLELIB):    $(TABLEO) $(TABLEDO) $(MAINLIBS) $(TABLELIBDEP)
+$(TABLELIB):    $(TABLEO) $(TABLEDO) $(ORDER_) $(MAINLIBS) $(TABLELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libTable.$(SOEXT) $@ "$(TABLEO) $(TABLEDO)" \
 		   "$(TABLELIBEXTRA)"
