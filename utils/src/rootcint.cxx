@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.226 2005/11/24 23:30:06 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.227 2005/12/02 22:36:11 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4139,6 +4139,30 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    ReplaceFile(tmpdictname,dictnameh);
 }
 
+string bundlename;
+string tname;
+string dictsrc;
+
+//______________________________________________________________________________
+void CleanupOnExit(int code) {
+   // removes tmp files, and (if code!=0) output files
+   if (!bundlename.empty()) unlink(bundlename.c_str());
+   if (!tname.empty()) unlink(tname.c_str());
+   if (autold[0]) unlink(autold);
+   if (code) {
+      if (!dictsrc.empty()) {
+         unlink(dictsrc.c_str());
+         // also remove the .d file belonging to dictsrc
+         size_t posExt=dictsrc.rfind('.');
+         if (posExt!=string::npos) {
+            dictsrc.replace(posExt, dictsrc.length(), ".d");
+            unlink(dictsrc.c_str());
+         }
+      }
+   }
+}
+
+
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
@@ -4148,7 +4172,7 @@ int main(int argc, char **argv)
 
    if (argc < 2) {
       fprintf(stderr,
-       "Usage: %s [-v][-v0-4] [-reflex] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+       "Usage: %s [-v][-v0-4] [-cint|-reflex|-gccxml] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -4161,7 +4185,20 @@ int main(int argc, char **argv)
    int longheadername = 0;
    string dictpathname;
    string libfilename;
-   bool buildReflexCode = false;
+   const char *env_dict_type=getenv("ROOTDICTTYPE");
+   enum EDictType {
+      kDictTypeCint,
+      kDictTypeReflex,
+      kDictTypeGCCXML
+   } dict_type = kDictTypeCint;
+
+   if (env_dict_type)
+      if (!strcmp(env_dict_type, "cint"))
+         dict_type=kDictTypeCint;
+      else if (!strcmp(env_dict_type, "reflex"))
+         dict_type=kDictTypeReflex;
+      else if (!strcmp(env_dict_type, "gccxml"))
+         dict_type=kDictTypeGCCXML;
 
    sprintf(autold, autoldtmpl, getpid());
 
@@ -4184,8 +4221,14 @@ int main(int argc, char **argv)
    } else if (!strcmp(argv[ic], "-v4")) {
       gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
       ic++;
+   } else if (!strcmp(argv[ic], "-cint")) {
+      dict_type = kDictTypeCint;
+      ic++;
    } else if (!strcmp(argv[ic], "-reflex")) {
-      buildReflexCode = true;
+      dict_type = kDictTypeReflex;
+      ic++;
+   } else if (!strcmp(argv[ic], "-gccxml")) {
+      dict_type = kDictTypeGCCXML;
       ic++;
    }
 
@@ -4268,6 +4311,7 @@ int main(int argc, char **argv)
          }
       }
 
+      dictsrc=argv[ic];
       fp = fopen(argv[ic], "w");
       if (fp) fclose(fp);    // make sure file is created and empty
       ifl = ic;
@@ -4310,6 +4354,36 @@ int main(int argc, char **argv)
    // included only once.
    for (i = 1; i < argc; i++)
       if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
+
+   // Call GCCXML if requested
+   if (dict_type==kDictTypeGCCXML) {
+      string gccxml_rootcint_call;
+#ifndef ROOTBUILD
+      if (getenv("ROOTSYS")) {
+         gccxml_rootcint_call=getenv("ROOTSYS");
+# ifdef WIN32
+         gccxml_rootcint_call+="\\bin\\";
+# else
+         gccxml_rootcint_call+="/bin/";
+# endif
+      }
+#else
+# ifdef WIN32
+      gccxml_rootcint_call="bin\\";
+# else
+      gccxml_rootcint_call="bin/";
+# endif
+#endif
+      gccxml_rootcint_call+="genreflex-rootcint";
+      for (int iarg=1; iarg<argc; ++iarg) {
+         gccxml_rootcint_call+=" ";
+         gccxml_rootcint_call+=argv[iarg];
+      }
+      printf("Calling %s\n", gccxml_rootcint_call.c_str());
+      int rc=system(gccxml_rootcint_call.c_str());
+      if (!rc) return 0;
+      else dict_type=kDictTypeReflex; // fall back to reflex
+   }
 
 #ifndef __CINT__
    int   argcc, iv, il;
@@ -4455,8 +4529,9 @@ int main(int argc, char **argv)
          argvv[argcc++] = "-DSYSV";
          argvv[argcc++] = "-D__MAKECINT__";
          argvv[argcc++] = "-V";        // include info on private members
-         if (buildReflexCode) argvv[argcc++] = "-c-3";
-         else                 argvv[argcc++] = "-c-10";
+         if (dict_type==kDictTypeReflex) 
+            argvv[argcc++] = "-c-3";
+         else argvv[argcc++] = "-c-10";
          argvv[argcc++] = "+V";        // turn on class comment mode
          if (!use_preprocessor) {
 #ifdef ROOTBUILD
@@ -4476,7 +4551,6 @@ int main(int argc, char **argv)
    iv = 0;
    il = 0;
 
-   string bundlename;
    char esc_arg[512];
    bool insertedBundle = false;
    FILE *bundle = 0;
@@ -4542,6 +4616,7 @@ int main(int argc, char **argv)
    if (gLiblistPrefix.length()) G__set_beforeparse_hook (EnableAutoLoading);
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
+      CleanupOnExit(1);
       return 1;
    } else {
       if (ifl) {
@@ -4550,6 +4625,7 @@ int main(int argc, char **argv)
             // The dictionary file was not created by CINT.
             // There mush have been an error.
             Error(0, "%s: error loading headers...\n", argv[0]);
+            CleanupOnExit(1);
             return 1;
          }
          fclose(fpd);
@@ -4563,13 +4639,13 @@ int main(int argc, char **argv)
 
    // Check if code goes to stdout or cint file, use temporary file
    // for prepending of the rootcint generated code (STK)
-   string tname;
    if (ifl) {
       tname = R__tmpnam();
       fp = fopen(tname.c_str(), "w");
       if (!fp) {
          Error(0, "rootcint: failed to open %s in main\n",
                tname.c_str());
+         CleanupOnExit(1);
          return 1;
       }
    } else
@@ -4649,12 +4725,7 @@ int main(int argc, char **argv)
    }
    if (!fpld) {
       Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
-      if (use_preprocessor) remove(bundlename.c_str());
-      if (!il) remove(autold);
-      if (ifl) {
-         remove(tname.c_str());
-         remove(argv[ifl]);
-      }
+      CleanupOnExit(1);
       return 1;
    }
 
@@ -4754,7 +4825,7 @@ int main(int argc, char **argv)
    if (has_input_error) {
       // Be a little bit makefile friendly and remove the dictionary in case of error.
       // We could add an option -k to keep the file even in case of error.
-      if (ifl) remove(argv[ifl]);
+      CleanupOnExit(1);
       exit(1);
    }
 
@@ -4994,6 +5065,7 @@ int main(int argc, char **argv)
    }
 
    G__setglobalcomp(-1);  // G__CPPLINK
+   CleanupOnExit(0);
    G__exit(0);
 
    return 0;
