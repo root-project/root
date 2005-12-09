@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.4 2005/11/24 09:24:44 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.5 2005/12/01 16:09:46 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************
@@ -668,7 +668,7 @@ void TSPlot::FillXvarHists(Int_t nbins)
          h->Fill(fXvar(j, i));
       fXvarHists.Add(h);
    }
-
+                    
 }
 
 //____________________________________________________________________
@@ -776,7 +776,7 @@ void TSPlot::FillYpdfHists(Int_t nbins)
          //TH1D *h = new TH1D(name, name, nbins, ypdfmin[ispecies*fNy+i], ypdfmax[ispecies*fNy+i]);
          TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+fNy+ispecies*fNy+i), fMinmax(1, fNx+fNy+ispecies*fNy+i)); 
          for (j=0; j<fNevents; j++)
-            h->Fill(j, ispecies*fNy+i);
+            h->Fill(fYpdf(j, ispecies*fNy+i));
          fYpdfHists.Add(h);
       }
    }
@@ -847,7 +847,7 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
    //Fill histograms of y-variables (exluded from the fit), weighted with sWeights
    for (Int_t iexcl=0; iexcl<fNy; iexcl++){
       for(Int_t ispecies=0; ispecies<fNSpecies; ispecies++){
-            sprintf(name, "y%dspecies%d", iexcl, ispecies);
+            sprintf(name, "y%d_species%d", iexcl, ispecies);
             TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+iexcl), fMinmax(1, fNx+iexcl));
             h->Sumw2();
             for (Int_t ievent=0; ievent<fNevents; ievent++)
@@ -872,6 +872,73 @@ TObjArray *TSPlot::GetSWeightsHists()
    return &fSWeightsHists;
 }
 
+//____________________________________________________________________
+void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Double_t max, Int_t nspecies)
+{
+   //The Fill...Hist() methods fill the histograms with the real limits on the variables
+   //This method allows to refill the specified histogram with user-set boundaries min and max
+   //Parameters:
+   //type = 1 - histogram of x variable #nvar
+   //     = 2 - histogram of y variable #nvar
+   //     = 3 - histogram of y_pdf for y #nvar and species #nspecies
+   //     = 4 - histogram of x variable #nvar, species #nspecies, WITH sWeights
+   //     = 5 - histogram of y variable #nvar, species #nspecies, WITH sWeights
+
+   if (type<1 || type>5){
+      Error("RefillHist", "type must lie between 1 and 5");
+      return;
+   }
+   char name[20];
+   Int_t j;
+   TH1D *hremove;
+   if (type==1){
+      hremove = (TH1D*)fXvarHists.RemoveAt(nvar);
+      delete hremove;
+      sprintf(name,"x%d",nvar);
+      TH1D *h = new TH1D(name, name, nbins, min, max);
+      for (j=0; j<fNevents;j++)
+         h->Fill(fXvar(j, nvar));
+      fXvarHists.AddAt(h, nvar);
+   }
+   if (type==2){
+      hremove = (TH1D*)fYvarHists.RemoveAt(nvar);
+      delete hremove;
+      sprintf(name, "y%d", nvar);
+      TH1D *h = new TH1D(name, name, nbins, min, max);
+      for (j=0; j<fNevents;j++)
+         h->Fill(fYvar(j, nvar));
+      fXvarHists.AddAt(h, nvar); 
+   }
+   if (type==3){
+      hremove = (TH1D*)fYpdfHists.RemoveAt(nspecies*fNy+nvar);
+      delete hremove;
+      sprintf(name, "pdf_species%d_y%d", nspecies, nvar);
+      TH1D *h=new TH1D(name, name, nbins, min, max);
+      for (j=0; j<fNevents; j++)
+         h->Fill(fYpdf(j, nspecies*fNy+nvar));
+      fYpdfHists.AddAt(h, nspecies*fNy+nvar);
+   }
+   if (type==4){
+      hremove = (TH1D*)fSWeightsHists.RemoveAt(fNSpecies*nvar+nspecies);
+      delete hremove;
+      sprintf(name, "x%d_species%d", nvar, nspecies);
+      TH1D *h = new TH1D(name, name, nbins, min, max);
+      h->Sumw2();
+      for (Int_t ievent=0; ievent<fNevents; ievent++)
+         h->Fill(fXvar(ievent, nvar), fSWeights(ievent, nspecies));
+      fSWeightsHists.AddAt(h, fNSpecies*nvar+nspecies);
+   }
+   if (type==5){
+      hremove = (TH1D*)fSWeightsHists.RemoveAt(fNx*fNSpecies + fNSpecies*nvar+nspecies);
+      delete hremove;
+      sprintf(name, "y%d_species%d", nvar, nspecies);
+      TH1D *h = new TH1D(name, name, nbins, min, max);
+      h->Sumw2();
+      for (Int_t ievent=0; ievent<fNevents; ievent++)
+         h->Fill(fYvar(ievent, nvar), fSWeights(ievent, nspecies));
+      fSWeightsHists.AddAt(h, fNx*fNSpecies + fNSpecies*nvar+nspecies); 
+   }  
+}
 //____________________________________________________________________
 TH1D *TSPlot::GetSWeightsHist(Int_t ixvar, Int_t ispecies,Int_t iyexcl)
 {
@@ -993,6 +1060,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 //*-*- loop on all selected entries
    // fSelectedRows = 0;
    Int_t tnumber = -1;
+   Long64_t selectedrows=0;
    for (entry=firstentry;entry<firstentry+fNevents;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
@@ -1028,30 +1096,48 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
          for (i=0;i<ncols;i++) {
             xvars[i] = var[i]->EvalInstance(inst);
          }
+         
          curentry = entry-firstentry;
+         //printf("event#%d\n", curentry);
+         //for (i=0; i<ncols; i++)
+          //  printf("xvars[%d]=%f\n", i, xvars[i]);
+         //selectedrows++;
          for (i=0; i<fNx; i++){
-            fXvar(curentry, i) = xvars[i];
-            if (fXvar(curentry, i) < fMinmax(0, i))
-               fMinmax(0, i)=fXvar(curentry, i);
-            if (fXvar(curentry, i) > fMinmax(1, i))
-               fMinmax(1, i)=fXvar(curentry, i);
+            fXvar(selectedrows, i) = xvars[i];
+            if (fXvar(selectedrows, i) < fMinmax(0, i))
+               fMinmax(0, i)=fXvar(selectedrows, i);
+            if (fXvar(selectedrows, i) > fMinmax(1, i))
+               fMinmax(1, i)=fXvar(selectedrows, i);
          }
          for (i=0; i<fNy; i++){
-            fYvar(curentry, i) = xvars[i+fNx];
-            if (fYvar(curentry, i) < fMinmax(0, i+fNx))
-               fMinmax(0, i+fNx) = fYvar(curentry, i);
-            if (fYvar(curentry, i) > fMinmax(1, i+fNx))
-               fMinmax(1, i+fNx) = fYvar(curentry, i);
+            fYvar(selectedrows, i) = xvars[i+fNx];
+            //printf("y_in_loop(%d, %d)=%f, xvars[%d]=%f\n", selectedrows, i, fYvar(selectedrows, i), i+fNx, xvars[i+fNx]);
+            if (fYvar(selectedrows, i) < fMinmax(0, i+fNx))
+               fMinmax(0, i+fNx) = fYvar(selectedrows, i);
+            if (fYvar(selectedrows, i) > fMinmax(1, i+fNx))
+               fMinmax(1, i+fNx) = fYvar(selectedrows, i);
             for (Int_t j=0; j<fNSpecies; j++){
-               fYpdf(curentry, j*fNy + i)=xvars[j*fNy + i+fNx+fNy];
-               if (fYpdf(curentry, j*fNy+i) < fMinmax(0, j*fNy+i+fNx+fNy))
-                  fMinmax(0, j*fNy+i+fNx+fNy) = fYpdf(curentry, j*fNy+i);
-               if (fYpdf(curentry, j*fNy+i) > fMinmax(1, j*fNy+i+fNx+fNy))
-                  fMinmax(1, j*fNy+i+fNx+fNy) = fYpdf(curentry, j*fNy+i);
+               fYpdf(selectedrows, j*fNy + i)=xvars[j*fNy + i+fNx+fNy];
+               if (fYpdf(selectedrows, j*fNy+i) < fMinmax(0, j*fNy+i+fNx+fNy))
+                  fMinmax(0, j*fNy+i+fNx+fNy) = fYpdf(selectedrows, j*fNy+i);
+               if (fYpdf(selectedrows, j*fNy+i) > fMinmax(1, j*fNy+i+fNx+fNy))
+                  fMinmax(1, j*fNy+i+fNx+fNy) = fYpdf(selectedrows, j*fNy+i);
             }
          }
+      selectedrows++;   
       }
    }
+   fNevents=selectedrows;
+  // for (i=0; i<fNevents; i++){
+    //  printf("event#%d\n", i);
+      //for (Int_t iy=0; iy<fNy; iy++)
+        // printf("y[%d]=%f\n", iy, fYvar(i, iy));
+      //for (Int_t ispecies=0; ispecies<fNSpecies; ispecies++){
+      //   for (Int_t iy=0; iy<fNy; iy++)
+        //    printf("ypdf[sp. %d, y %d]=%f\n", ispecies, iy, fYpdf(i, ispecies*fNy+iy));
+     // }
+   //}
+   delete [] xvars;
 }
 
 //____________________________________________________________________

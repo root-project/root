@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.h,v 1.1 2005/10/27 19:33:41 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.h,v 1.2 2005/11/24 09:24:44 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005
 
 /**********************************************************************
@@ -59,6 +59,9 @@ public:
    void       FillYpdfHists(Int_t nbins = 100);
    void       FillSWeightsHists(Int_t nbins = 50);
 
+   Int_t      GetNevents()  {return fNevents;}
+   Int_t      GetNspecies() {return fNSpecies;}
+
    TObjArray* GetSWeightsHists();
    TH1D*      GetSWeightsHist(Int_t ixvar, Int_t ispecies,Int_t iyexcl=-1);
    TObjArray* GetXvarHists();
@@ -74,6 +77,7 @@ public:
    TString*   GetTreeExpression() {return fVarexp;}
    void       MakeSPlot(Option_t* option="v");
 
+   void       RefillHist(Int_t type, Int_t var, Int_t nbins, Double_t min, Double_t max, Int_t nspecies=-1);
    void       SetNX(Int_t nx){fNx=nx;}
    void       SetNY(Int_t ny){fNy=ny;}
    void       SetNSpecies(Int_t ns){fNSpecies=ns;}
