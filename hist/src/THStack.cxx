@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.37 2005/10/02 17:31:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.38 2005/10/06 13:45:28 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -687,7 +687,11 @@ void THStack::Paint(Option_t *option)
    if (nostack) {
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
       for (Int_t i=0;i<nhists;i++) {
-         sprintf(loption,"%ssame%s",noption,lnk->GetOption());
+         if (strstr(lnk->GetOption(),"same")) {
+            sprintf(loption,"%s%s",noption,lnk->GetOption());
+         } else {
+            sprintf(loption,"%ssame%s",noption,lnk->GetOption());
+         }
          fHists->At(i)->Paint(loption);
          lnk = (TObjOptLink*)lnk->Next();
       }
@@ -696,7 +700,11 @@ void THStack::Paint(Option_t *option)
       TH1 *h1;
       Int_t h1col, h1fill;
       for (Int_t i=0;i<nhists;i++) {
-         sprintf(loption,"%ssame%s",noption,lnk->GetOption());
+         if (strstr(lnk->GetOption(),"same")) {
+            sprintf(loption,"%s%s",noption,lnk->GetOption());
+         } else {
+            sprintf(loption,"%ssame%s",noption,lnk->GetOption());
+         }
          h1 = (TH1*)fStack->At(nhists-i-1);
          if (i>0) {
             // Erase before drawing the histogram 
