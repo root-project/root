@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.52 2005/08/09 19:13:50 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.53 2005/08/11 21:19:05 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -140,8 +140,18 @@ const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
 
 R__EXTERN Int_t gDebug;
 
-
 //---- ClassDef macros ---------------------------------------------------------
+
+#ifdef __REFLEX__
+
+// When generating Reflex dictionaries the generation of ClassDef/Imp funcitons 
+// shall be disabled as they are simulated by Cintex.
+#define ClassDef(name,id)
+#define ClassImp(name)
+#define ClassDefT(name,id)
+#define ClassImpT(name,Tmpl)
+
+#else
 
 typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp, char *R__parent);
 class TVirtualIsAProxy;
@@ -401,5 +411,7 @@ namespace ROOT {                                                     \
    R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
 }
 #endif
+
+#endif // __REFLEX__
 
 #endif
