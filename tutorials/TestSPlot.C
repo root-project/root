@@ -80,7 +80,7 @@ void TestSPlot()
    pt->SetTextFont(20);
    pt->SetTextColor(4);
    pt->AddText("sPlots of Mes and F signal and background,");
-   pt->AddText("obtained by running the tutorial TestSPlot.C on BABAR Monter Carlo data (sPlot_toyMC.fit)");
+   pt->AddText("obtained by running the tutorial TestSPlot.C on BABAR Monte Carlo data (sPlot_toyMC.fit)");
    TText *t3=pt->AddText("M. Pivk and F. R. Le Diberder, Nucl.Inst.Meth.A (in press), physics/0402083");
    t3->SetTextColor(1);
    t3->SetTextFont(30);
