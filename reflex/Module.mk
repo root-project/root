@@ -55,24 +55,24 @@ CPPUNITI   = -I$(CPPUNIT)/include
 CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
 REFLEXLL   = -Llib -lReflex
 
-GENREFLEXX = ../../bin/genreflex
+RFLX_GENREFLEXX = ../../bin/genreflex
 
-TESTD      = $(REFLEXDIR)/test
-TESTLIBD1  = $(TESTD)/testDict1
-TESTLIBD2  = $(TESTD)/testDict2
-TESTLIBS1  = $(TESTD)/Reflex_rflx.cpp
-TESTLIBS2  = $(TESTD)/Class2Dict_rflx.cpp
-TESTLIBS   = $(TESTLIBS1) $(TESTLIBS2)
-TESTLIBO   = $(subst .cpp,.o,$(TESTLIBS))
-TESTLIB    = $(subst $(TESTD)/,lib/libtest_,$(subst _rflx.o,Rflx.$(SOEXT),$(TESTLIBO)))
+RFLX_TESTD      = $(REFLEXDIR)/test
+RFLX_TESTLIBD1  = $(RFLX_TESTD)/testDict1
+RFLX_TESTLIBD2  = $(RFLX_TESTD)/testDict2
+RFLX_TESTLIBS1  = $(RFLX_TESTD)/Reflex_rflx.cpp
+RFLX_TESTLIBS2  = $(RFLX_TESTD)/Class2Dict_rflx.cpp
+RFLX_TESTLIBS   = $(RFLX_TESTLIBS1) $(RFLX_TESTLIBS2)
+RFLX_TESTLIBO   = $(subst .cpp,.o,$(RFLX_TESTLIBS))
+RFLX_TESTLIB    = $(subst $(RFLX_TESTD)/,lib/libtest_,$(subst _rflx.o,Rflx.$(SOEXT),$(RFLX_TESTLIBO)))
 
-UNITTESTS = $(TESTD)/test_Reflex_generate.cxx    \
-            $(TESTD)/test_ReflexBuilder_unit.cxx \
-            $(TESTD)/test_Reflex_unit.cxx        \
-            $(TESTD)/test_Reflex_simple1.cxx     \
-            $(TESTD)/test_Reflex_simple2.cxx 
-UNITTESTO = $(subst .cxx,.o,$(UNITTESTS))
-UNITTESTX = $(subst .cxx,,$(UNITTESTS))
+RFLX_UNITTESTS = $(RFLX_TESTD)/test_Reflex_generate.cxx    \
+                 $(RFLX_TESTD)/test_ReflexBuilder_unit.cxx \
+                 $(RFLX_TESTD)/test_Reflex_unit.cxx        \
+                 $(RFLX_TESTD)/test_Reflex_simple1.cxx     \
+                 $(RFLX_TESTD)/test_Reflex_simple2.cxx 
+RFLX_UNITTESTO = $(subst .cxx,.o,$(RFLX_UNITTESTS))
+RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 
 ##### local rules #####
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
@@ -121,7 +121,7 @@ clean-genreflex:
 		@rm -fr lib/python/genreflex
 
 clean-check-reflex:
-		@rm -f $(TESTLIBS) $(TESTLIBO) $(UNITTESTO) $(UNITTESTX)
+		@rm -f $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
 
 clean-reflex: clean-genreflex clean-check-reflex
 		@rm -f $(REFLEXO) 
@@ -136,29 +136,29 @@ distclean::     distclean-reflex
 
 # test suite
 
-check-reflex: $(REFLEXLIB) $(TESTLIB) $(UNITTESTX)
+check-reflex: $(REFLEXLIB) $(RFLX_TESTLIB) $(RFLX_UNITTESTX)
 		@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
-		$(TESTD)/test_Reflex_generate
-		$(TESTD)/test_Reflex_simple1
-		$(TESTD)/test_Reflex_simple2
-		$(TESTD)/test_Reflex_unit
-		$(TESTD)/test_ReflexBuilder_unit
+		$(RFLX_TESTD)/test_Reflex_generate
+		$(RFLX_TESTD)/test_Reflex_simple1
+		$(RFLX_TESTD)/test_Reflex_simple2
+		$(RFLX_TESTD)/test_Reflex_unit
+		$(RFLX_TESTD)/test_ReflexBuilder_unit
 
-lib/libtest_%Rflx.$(SOEXT) : $(TESTD)/%_rflx.o
+lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
 
 %_rflx.o : %_rflx.cpp
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
 
-$(TESTLIBS1) :
-		cd $(TESTD); $(GENREFLEXX) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
+$(RFLX_TESTLIBS1) :
+		cd $(RFLX_TESTD); $(RFLX_GENREFLEXX) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
 
-$(TESTLIBS2) :
-		cd $(TESTD); $(GENREFLEXX) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
+$(RFLX_TESTLIBS2) :
+		cd $(RFLX_TESTD); $(RFLX_GENREFLEXX) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
 
-$(UNITTESTO) : %.o : %.cxx
+$(RFLX_UNITTESTO) : %.o : %.cxx
 		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI) -Ireflex -c $< -o $@ 
 
-$(UNITTESTX) : % : %.o
+$(RFLX_UNITTESTX) : % : %.o
 		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL)
 
