@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.55 2005/06/02 21:41:30 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.56 2005/06/03 12:30:22 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1357,6 +1357,184 @@ TVectorD &Add(TVectorD &target,Double_t scalar,const TVectorD &source)
   } else {
     while ( tp < ftp )
       *tp++ += scalar * *sp++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &Add(TVectorD &target,Double_t scalar,const TMatrixD &a,const TVectorD &source)
+{   
+  // Modify addition: target += scalar * A * source.
+  
+  Assert(target.IsValid());
+  Assert(a.IsValid());
+  if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
+    Error("Add(TVectorD &,Double_t,const TMatrixD &,const TVectorD &)","target vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  Assert(source.IsValid());
+  if (a.GetNcols() != source.GetNrows() || a.GetColLwb() != source.GetLwb()) {
+    Error("Add(TVectorD &,Double_t,const TMatrixD &,const TVectorD &)","source vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t * const sp = source.GetMatrixArray();  // sources vector ptr
+  const Double_t *       mp = a.GetMatrixArray();       // Matrix row ptr
+        Double_t *       tp = target.GetMatrixArray();  // Target vector ptr
+#ifdef CBLAS
+    cblas_dsymv(CblasRowMajor,CblasUpper,fNrows,scalar,mp,fNrows,sp,1,0.0,tp,1);
+#else
+  const Double_t * const sp_last = sp+source.GetNrows();
+  const Double_t * const tp_last = tp+target.GetNrows();
+  if (scalar == 1.0) {
+    while (tp < tp_last) {
+      const Double_t *sp1 = sp;
+      Double_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += sum;
+    }
+  } else if (scalar == -1.0) {
+    while (tp < tp_last) {
+      const Double_t *sp1 = sp;
+      Double_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ -= sum;
+    }
+  } else {
+    while (tp < tp_last) {
+      const Double_t *sp1 = sp;
+      Double_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += scalar * sum;
+    }
+  }
+
+  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+#endif
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &Add(TVectorD &target,Double_t scalar,const TMatrixDSym &a,const TVectorD &source)
+{
+  // Modify addition: target += A * source.
+
+  Assert(target.IsValid());
+  Assert(source.IsValid());
+  Assert(a.IsValid());
+  if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
+    Error("Add(TVectorD &,Double_t,const TMatrixDSym &,const TVectorD &)","target vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t * const sp = source.GetMatrixArray();  // sources vector ptr
+  const Double_t *       mp = a.GetMatrixArray();       // Matrix row ptr
+        Double_t *       tp = target.GetMatrixArray();  // Target vector ptr
+#ifdef CBLAS
+    cblas_dsymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp,fNrows,sp,1,0.0,tp,1);
+#else
+  const Double_t * const sp_last = sp+source.GetNrows();
+  const Double_t * const tp_last = tp+target.GetNrows();
+  if (scalar == 1.0) {
+    while (tp < tp_last) {
+      const Double_t *sp1 = sp;
+      Double_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += sum;
+    }
+  } else if (scalar == -1.0) {
+    while (tp < tp_last) {
+      const Double_t *sp1 = sp;
+      Double_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ -= sum;
+    }
+  } else {
+    while (tp < tp_last) {
+      const Double_t *sp1 = sp;
+      Double_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += scalar * sum;
+    }
+  }
+  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+#endif
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &Add(TVectorD &target,Double_t scalar,const TMatrixDSparse &a,const TVectorD &source)
+{
+  // Modify addition: target += A * source.
+
+  Assert(target.IsValid());
+  Assert(a.IsValid());
+  if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
+    Error("Add(TVectorD &,Double_t,const TMatrixDSparse &,const TVectorD &)","target vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  Assert(source.IsValid());
+  if (a.GetNcols() != source.GetNrows() || a.GetColLwb() != source.GetLwb()) {
+    Error("Add(TVectorD &,Double_t,const TMatrixDSparse &,const TVectorD &)","target vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Int_t    * const pRowIndex = a.GetRowIndexArray();
+  const Int_t    * const pColIndex = a.GetColIndexArray();
+  const Double_t * const mp        = a.GetMatrixArray();     // Matrix row ptr
+
+  const Double_t * const sp = source.GetMatrixArray(); // Source vector ptr
+        Double_t *       tp = target.GetMatrixArray(); // Target vector ptr
+
+  if (scalar == 1.0) {
+    for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
+      const Int_t sIndex = pRowIndex[irow];
+      const Int_t eIndex = pRowIndex[irow+1];
+      Double_t sum = 0.0;
+      for (Int_t index = sIndex; index < eIndex; index++) {
+        const Int_t icol = pColIndex[index];
+        sum += mp[index]*sp[icol];
+      }
+      tp[irow] += sum;
+    }
+  } else if (scalar == -1.0) {
+    for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
+      const Int_t sIndex = pRowIndex[irow];
+      const Int_t eIndex = pRowIndex[irow+1];
+      Double_t sum = 0.0;
+      for (Int_t index = sIndex; index < eIndex; index++) {
+        const Int_t icol = pColIndex[index];
+        sum += mp[index]*sp[icol];
+      } 
+      tp[irow] -= sum;
+    } 
+  } else {
+    for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
+      const Int_t sIndex = pRowIndex[irow]; 
+      const Int_t eIndex = pRowIndex[irow+1];
+      Double_t sum = 0.0; 
+      for (Int_t index = sIndex; index < eIndex; index++) {
+        const Int_t icol = pColIndex[index];
+        sum += mp[index]*sp[icol];
+      }
+      tp[irow] += scalar * sum;
+    }
   }
 
   return target;

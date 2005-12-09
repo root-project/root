@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.22 2005/01/06 06:37:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.23 2005/03/28 20:38:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -842,8 +842,6 @@ Double_t TMatrixDSym::Determinant() const
   TDecompLU lu(tmp,fTol);
   Double_t d1,d2;
   lu.Det(d1,d2);
-  if (TMath::Abs(d2) > 52.0)
-   ::Warning("TMatrixDSym::Determinant","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
   return d1*TMath::Power(2.0,d2);
 }
 
@@ -1099,6 +1097,38 @@ TMatrixDSym &TMatrixDSym::Similarity(const TMatrixDSym &b)
 #endif
 
   return *this;
+}
+
+//______________________________________________________________________________
+Double_t TMatrixDSym::Similarity(const TVectorD &v)
+{
+// Calculate scalar v * (*this) * v^T
+
+  Assert(this->IsValid());
+  Assert(v.IsValid());
+
+  if (this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
+    Error("Similarity(const TVectorD &)","vector and matrix incompatible");
+    this->Invalidate();
+    return -1.;
+  }
+ 
+  const Double_t *mp = this->GetMatrixArray(); // Matrix row ptr
+  const Double_t *vp = v.GetMatrixArray();     // vector ptr
+
+  Double_t sum1 = 0;
+  const Double_t * const vp_first = vp;
+  const Double_t * const vp_last  = vp+v.GetNrows();
+  while (vp < vp_last) {
+    Double_t sum2 = 0;
+    for (const Double_t *sp = vp_first; sp < vp_last; )
+      sum2 += *mp++ * *sp++;
+    sum1 += sum2 * *vp++;
+  }
+
+  Assert(mp == this->GetMatrixArray()+this->GetNoElements());
+
+  return sum1;
 }
 
 //______________________________________________________________________________

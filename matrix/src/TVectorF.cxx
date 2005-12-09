@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.28 2005/06/02 21:57:48 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.29 2005/06/03 12:30:22 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1229,6 +1229,119 @@ TVectorF &Add(TVectorF &target,Float_t scalar,const TVectorF &source)
     while ( tp < ftp )
       *tp++ += scalar * *sp++;
   }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorF &Add(TVectorF &target,Float_t scalar,const TMatrixFSym &a,const TVectorF &source)
+{
+  // Modify addition: target += A * source.
+
+  Assert(target.IsValid());
+  Assert(source.IsValid());
+  Assert(a.IsValid());
+  if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
+    Error("Add(TVectorF &,Float_t,const TMatrixFSym &,const TVectorF &)","target vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Float_t * const sp = source.GetMatrixArray();  // sources vector ptr
+  const Float_t *       mp = a.GetMatrixArray();       // Matrix row ptr
+        Float_t *       tp = target.GetMatrixArray();  // Target vector ptr
+#ifdef CBLAS
+    cblas_ssymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp,fNrows,sp,1,0.0,tp,1);
+#else
+  const Float_t * const sp_last = sp+source.GetNrows();
+  const Float_t * const tp_last = tp+target.GetNrows();
+  if (scalar == 1.0) {
+    while (tp < tp_last) {
+      const Float_t *sp1 = sp;
+      Float_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += sum;
+    }
+  } else if (scalar == -1.0) {
+    while (tp < tp_last) {
+      const Float_t *sp1 = sp;
+      Float_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ -= sum;
+    }
+  } else {
+    while (tp < tp_last) {
+      const Float_t *sp1 = sp;
+      Float_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += scalar * sum;
+    }
+  }
+  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+#endif
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorF &Add(TVectorF &target,Float_t scalar,const TMatrixF &a,const TVectorF &source)
+{   
+  // Modify addition: target += scalar * A * source.
+  
+  Assert(target.IsValid());
+  Assert(a.IsValid());
+  if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
+    Error("Add(TVectorF &,Float_t,const TMatrixF &,const TVectorF &)","target vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  Assert(source.IsValid());
+  if (a.GetNcols() != source.GetNrows() || a.GetColLwb() != source.GetLwb()) {
+    Error("Add(TVectorF &,Float_t,const TMatrixF &,const TVectorF &)","source vector and matrix are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Float_t * const sp = source.GetMatrixArray();  // sources vector ptr
+  const Float_t *       mp = a.GetMatrixArray();       // Matrix row ptr
+        Float_t *       tp = target.GetMatrixArray();  // Target vector ptr
+#ifdef CBLAS
+    cblas_ssymv(CblasRowMajor,CblasUpper,fNrows,scalar,mp,fNrows,sp,1,0.0,tp,1);
+#else
+  const Float_t * const sp_last = sp+source.GetNrows();
+  const Float_t * const tp_last = tp+target.GetNrows();
+  if (scalar == 1.0) {
+    while (tp < tp_last) {
+      const Float_t *sp1 = sp;
+      Float_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += sum;
+    }
+  } else if (scalar == -1.0) {
+    while (tp < tp_last) {
+      const Float_t *sp1 = sp;
+      Float_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ -= sum;
+    }
+  } else {
+    while (tp < tp_last) {
+      const Float_t *sp1 = sp;
+      Float_t sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++ += scalar * sum;
+    }
+  }
+
+  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+#endif
 
   return target;
 }

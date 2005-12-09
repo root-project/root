@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.19 2004/10/24 06:21:19 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.20 2005/01/06 06:37:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1087,6 +1087,38 @@ TMatrixFSym &TMatrixFSym::Similarity(const TMatrixFSym &b)
 #endif
 
   return *this;
+}
+
+//______________________________________________________________________________
+Float_t TMatrixFSym::Similarity(const TVectorF &v)
+{
+// Calculate scalar v * (*this) * v^T
+
+  Assert(this->IsValid());
+  Assert(v.IsValid());
+  
+  if (this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
+    Error("Similarity(const TVectorF &)","vector and matrix incompatible");
+    this->Invalidate();
+    return -1.;
+  } 
+  
+  const Float_t *mp = this->GetMatrixArray(); // Matrix row ptr
+  const Float_t *vp = v.GetMatrixArray();     // vector ptr 
+  
+  Float_t sum1 = 0;
+  const Float_t * const vp_first = vp;
+  const Float_t * const vp_last  = vp+v.GetNrows();
+  while (vp < vp_last) {
+    Float_t sum2 = 0;
+    for (const Float_t *sp = vp_first; sp < vp_last; )
+      sum2 += *mp++ * *sp++; 
+    sum1 += sum2 * *vp++;
+  }
+
+  Assert(mp == this->GetMatrixArray()+this->GetNoElements());
+
+  return sum1;
 }
 
 //______________________________________________________________________________

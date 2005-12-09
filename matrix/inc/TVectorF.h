@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.16 2005/06/02 21:57:48 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.17 2005/06/03 12:30:22 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -197,21 +197,25 @@ Float_t   operator*     (const TVectorF    &source1,const TVectorF &source2);
 TVectorF  operator*     (const TMatrixF    &a,      const TVectorF &source);
 TVectorF  operator*     (const TMatrixFSym &a,      const TVectorF &source);
 TVectorF  operator*     (      Float_t      val,    const TVectorF &source);
-TVectorF  &Add          (      TVectorF    &target,       Float_t  scalar,const TVectorF &source);
-TVectorF  &AddElemMult  (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+TVectorF  &Add          (      TVectorF    &target,       Float_t   scalar, const TVectorF       &source);
+TVectorF  &Add          (      TVectorF    &target,       Float_t   scalar, const TMatrixF       &a,
+                         const TVectorF    &source);
+TVectorF  &Add          (      TVectorF    &target,       Float_t   scalar, const TMatrixFSym    &a,
+                         const TVectorF    &source);
+TVectorF  &AddElemMult  (      TVectorF    &target,       Float_t   scalar, const TVectorF       &source1,
                          const TVectorF    &source2);
-TVectorF  &AddElemMult  (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+TVectorF  &AddElemMult  (      TVectorF    &target,       Float_t   scalar, const TVectorF       &source1,
                          const TVectorF    &source2,const TVectorF &select);
-TVectorF  &AddElemDiv   (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+TVectorF  &AddElemDiv   (      TVectorF    &target,       Float_t   scalar, const TVectorF       &source1,
                          const TVectorF    &source2);
-TVectorF  &AddElemDiv   (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
+TVectorF  &AddElemDiv   (      TVectorF    &target,       Float_t   scalar, const TVectorF       &source1,
                          const TVectorF    &source2,const TVectorF &select);
 TVectorF  &ElementMult  (      TVectorF    &target, const TVectorF &source);
-TVectorF  &ElementMult  (      TVectorF    &target, const TVectorF &source,const TVectorF &select);
+TVectorF  &ElementMult  (      TVectorF    &target, const TVectorF &source, const TVectorF       &select);
 TVectorF  &ElementDiv   (      TVectorF    &target, const TVectorF &source);
-TVectorF  &ElementDiv   (      TVectorF    &target, const TVectorF &source,const TVectorF &select);
-Bool_t     AreCompatible(const TVectorF    &source1,const TVectorF &source2,Int_t verbose=0);
-Bool_t     AreCompatible(const TVectorF    &source1,const TVectorD &source2,Int_t verbose=0);
+TVectorF  &ElementDiv   (      TVectorF    &target, const TVectorF &source, const TVectorF       &select);
+Bool_t     AreCompatible(const TVectorF    &source1,const TVectorF &source2,      Int_t           verbose=0);
+Bool_t     AreCompatible(const TVectorF    &source1,const TVectorD &source2,      Int_t           verbose=0);
 void       Compare      (const TVectorF    &source1,const TVectorF &source2);
 
 // Service functions (useful in the verification code).
