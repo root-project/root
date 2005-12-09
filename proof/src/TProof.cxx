@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.125 2005/11/14 15:22:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.126 2005/11/14 21:36:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -66,7 +66,8 @@
 #include "TMutex.h"
 #include "TObjString.h"
 #include "Getline.h"
-
+#include "TProofNodeInfo.h"
+#include "TProofResourcesStatic.h"
 
 TVirtualMutex *gProofMutex = 0;
 
@@ -453,267 +454,195 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
    if (IsMaster()) {
+      // Parse the config file
+      TProofResourcesStatic *resources = new TProofResourcesStatic(fConfDir, fConfFile);
+      fConfFile = resources->GetFileName(); // Update the global file name (with path)
+      PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fConfFile.Data());
 
-      TString fconf;
-      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), fConfFile.Data());
-      PDB(kGlobal,2)
-         Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
-      if (gSystem->AccessPathName(fconf, kReadPermission)) {
-         fconf.Form("%s/proof/etc/%s", fConfDir.Data(), fConfFile.Data());
-         PDB(kGlobal,2)
-            Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
-         if (gSystem->AccessPathName(fconf, kReadPermission)) {
-            Error("StartSlaves", "no PROOF config file found");
-            return kFALSE;
+      // Get the master
+      TProofNodeInfo *master = resources->GetMaster();
+      if (master) {
+         fImage = master->GetImage();
+      }
+      if (!master || (fImage.Length() == 0)) {
+         Error("StartSlaves",
+               "no appropriate master line found in %s", fConfFile.Data());
+         return kFALSE;
+      }
+
+      // Get all workers
+      TList *workerList = resources->GetWorkers();
+      UInt_t nSlaves = workerList->GetSize();
+      UInt_t nSlavesDone = 0;
+      Int_t ord = 0;
+
+      if (nSlaves == 0) {
+         Error("StartSlaves", "Found no workers in %s", fConfFile.Data());
+         return kFALSE;
+      }
+
+      // Init arrays for threads, if neeeded
+      std::vector<TProofThread *> thrHandlers;
+      if (parallel) {
+         thrHandlers.reserve(nSlaves);
+         if (thrHandlers.max_size() < nSlaves) {
+            PDB(kGlobal,1)
+               Info("StartSlaves","cannot reserve enough space for thread"
+                    " handlers - switch to serial startup");
+            parallel = kFALSE;
          }
       }
 
-      PDB(kGlobal,1)
-         Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
+      // Loop over all workers and start them
+      TListIter next(workerList);
+      TObject *to;
+      TProofNodeInfo *worker;
+      while ((to = next())) {
+         // Get the next worker from the list
+         worker = (TProofNodeInfo *)to;
 
-      UInt_t nSlaves = 0;
-      UInt_t nSlavesDone = 0;
+         // Read back worker node info
+         const Char_t *image = worker->GetImage().Data();
+         const Char_t *workdir = worker->GetWorkDir().Data();
+         Int_t perfidx = worker->GetPerfIndex();
+         Int_t sport = worker->GetPort();
+         if (sport == -1) sport = fPort;
 
-      FILE *pconf;
-      if ((pconf = fopen(fconf, "r"))) {
-
-         fConfFile = fconf;
-
-         // read the config file
-         char line[1024];
-         TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-
-         int  ord = 0;
-         // check for valid master line
-         while (fgets(line, sizeof(line), pconf)) {
-            char word[12][128];
-            if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
-                word[0], word[1],
-                word[2], word[3], word[4], word[5], word[6],
-                word[7], word[8], word[9], word[10], word[11]);
-
-            // see if master may run on this node, accept both old "node"
-            // and new "master" lines
-            if (nword >= 2 &&
-                (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
-                !fImage.Length()) {
-               TString node = TUrl(word[1]).GetHost();
-               TInetAddress a = gSystem->GetHostByName(node);
-               if (!host.CompareTo(a.GetHostName()) || node == "localhost") {
-                  const char *image = strstr(word[1], node.Data());
-                  const char *workdir = kPROOF_WorkDir;
-                  for (int i = 2; i < nword; i++) {
-
-                     if (!strncmp(word[i], "image=", 6))
-                        image = word[i]+6;
-                     if (!strncmp(word[i], "workdir=", 8))
-                        workdir = word[i]+8;
-
-                  }
-                  const char* expworkdir = gSystem->ExpandPathName(workdir);
-                  if (!strcmp(expworkdir,gProofServ->GetWorkDir())) {
-                     fImage = image;
-                  }
-                  delete [] (char *) expworkdir;
-               }
-            } else if (nword >= 2 &&
-               (!strcmp(word[0], "slave") || !strcmp(word[0], "worker"))) {
-               nSlaves++;
-            }
-         }
-
-         if (fImage.Length() == 0) {
-            fclose(pconf);
-            Error("StartSlaves",
-                  "no appropriate master line found in %s", fconf.Data());
-            return kFALSE;
-         }
-
-         // Init arrays for threads, if neeeded
-         std::vector<TProofThread *> thrHandlers;
+         // create slave server
+         TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
          if (parallel) {
-            thrHandlers.reserve(nSlaves);
-            if (thrHandlers.max_size() < nSlaves) {
-               PDB(kGlobal,1)
-                  Info("StartSlaves","cannot reserve enough space for thread"
-                       " handlers - switch to serial startup");
-               parallel = kFALSE;
-            }
-         }
-
-         // check for valid slave lines and start slaves
-         rewind(pconf);
-         while (fgets(line, sizeof(line), pconf)) {
-            char word[12][128];
-            if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
-                word[0], word[1],
-                word[2], word[3], word[4], word[5], word[6],
-                word[7], word[8], word[9], word[10], word[11]);
-
-            // find all slave servers, accept both "slave" and "worker" lines
-            if (nword >= 2 &&
-                (!strcmp(word[0], "slave") || !strcmp(word[0], "worker"))) {
-               int perfidx  = 100;
-               int sport    = fPort;
-
-               const char *image = word[1];
-               const char *workdir = 0;
-               for (int i = 2; i < nword; i++) {
-
-                  if (!strncmp(word[i], "perf=", 5))
-                     perfidx = atoi(word[i]+5);
-                  if (!strncmp(word[i], "image=", 6))
-                     image = word[i]+6;
-                  if (!strncmp(word[i], "port=", 5))
-                     sport = atoi(word[i]+5);
-                  if (!strncmp(word[i], "workdir=", 8))
-                     workdir = word[i]+8;
-
-               }
-
-               // create slave server
-               TString fullord = TString(gProofServ->GetOrdinal()) +
-                                 "." + ((Long_t) ord);
-               if (parallel) {
-
-                  // Prepare arguments
-                  TProofThreadArg *ta = new TProofThreadArg(word[1], sport,
-                                           fullord, perfidx, image, workdir,
-                                           fSlaves, this);
-                  if (ta) {
-                     // The type of the thread func makes it a detached thread
-                     TThread *th = new TThread(SlaveStartupThread, ta);
-                     if (!th) {
-                        Info("StartSlaves","Can't create startup thread:"
-                                      " out of system resources");
-                        SafeDelete(ta);
-                     } else {
-                        // Save in vector
-                        thrHandlers.push_back(new TProofThread(th, ta));
-                        // Run the thread
-                        th->Run();
-
-                        // Notify opening of connection
-                        nSlavesDone++;
-                        TMessage m(kPROOF_SERVERSTARTED);
-                        m << TString("Opening connections to workers") << nSlaves
-                          << nSlavesDone << kTRUE;
-                        gProofServ->GetSocket()->Send(m);
-                     }
-                  } else {
-                     Info("StartSlaves","Can't create thread arguments object:"
-                                      " out of system resources");
-                  }
-
+            // Prepare arguments
+	   TProofThreadArg *ta = new TProofThreadArg(worker->GetNodeName().Data(), sport,
+                                                      fullord, perfidx, image, workdir,
+                                                      fSlaves, this);
+            if (ta) {
+               // The type of the thread func makes it a detached thread
+               TThread *th = new TThread(SlaveStartupThread, ta);
+               if (!th) {
+                  Info("StartSlaves","Can't create startup thread:"
+                       " out of system resources");
+                  SafeDelete(ta);
                } else {
-                  // create slave server
-                  TSlave *slave = CreateSlave(word[1], sport, fullord, perfidx,
-                                              image, workdir);
-
-                  // Add to global list (we will add to the monitor list after
-                  // finalizing the server startup)
-                  Bool_t slaveOk = kTRUE;
-                  if (slave->IsValid()) {
-                     fSlaves->Add(slave);
-                  } else {
-                     slaveOk = kFALSE;
-                     fBadSlaves->Add(slave);
-                  }
-                  PDB(kGlobal,3)
-                     Info("StartSlaves", "worker on host %s created"
-                                         " and added to list", word[1]);
-
+                  // Save in vector
+                  thrHandlers.push_back(new TProofThread(th, ta));
+                  // Run the thread
+                  th->Run();
                   // Notify opening of connection
                   nSlavesDone++;
                   TMessage m(kPROOF_SERVERSTARTED);
                   m << TString("Opening connections to workers") << nSlaves
-                    << nSlavesDone << slaveOk;
+                    << nSlavesDone << kTRUE;
                   gProofServ->GetSocket()->Send(m);
                }
-               ord++;
+            } // end if (ta)
+            else {
+               Info("StartSlaves","Can't create thread arguments object:"
+                    " out of system resources");
             }
+         } // end if parallel
+         else {
+            // create slave server
+ 	    TSlave *slave = CreateSlave(worker->GetNodeName().Data(), sport,
+                                        fullord, perfidx, image, workdir);
+
+            // Add to global list (we will add to the monitor list after
+            // finalizing the server startup)
+            Bool_t slaveOk = kTRUE;
+            if (slave->IsValid()) {
+               fSlaves->Add(slave);
+            } else {
+               slaveOk = kFALSE;
+               fBadSlaves->Add(slave);
+            }
+            PDB(kGlobal,3)
+               Info("StartSlaves", "worker on host %s created"
+                    " and added to list", worker->GetNodeName().Data());
+
+            // Notify opening of connection
+            nSlavesDone++;
+            TMessage m(kPROOF_SERVERSTARTED);
+            m << TString("Opening connections to workers") << nSlaves
+              << nSlavesDone << slaveOk;
+            gProofServ->GetSocket()->Send(m);
+         }
+         ord++;
+      } //end of worker loop
+
+      // Cleanup
+      delete resources;
+      resources = 0;
+
+      nSlavesDone = 0;
+      if (parallel) {
+         // Wait completion of startup operations
+         std::vector<TProofThread *>::iterator i;
+         for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+            TProofThread *pt = *i;
+
+            // Wait on this condition
+            if (pt && pt->fThread->GetState() == TThread::kRunningState) {
+               PDB(kGlobal,3)
+                  Info("Init",
+                       "parallel startup: waiting for worker %s (%s:%d)",
+                       pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
+                       pt->fArgs->fPort);
+               pt->fThread->Join();
+            }
+
+            // Notify end of startup operations
+            nSlavesDone++;
+            TMessage m(kPROOF_SERVERSTARTED);
+            m << TString("Setting up worker servers") << nSlaves
+              << nSlavesDone << kTRUE;
+            gProofServ->GetSocket()->Send(m);
          }
 
-         nSlavesDone = 0;
-         if (parallel) {
-
-            // Wait completion of startup operations
-            std::vector<TProofThread *>::iterator i;
-            for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
-               TProofThread *pt = *i;
-
-               // Wait on this condition
-               if (pt && pt->fThread->GetState() == TThread::kRunningState) {
-                  PDB(kGlobal,3)
-                     Info("Init",
-                          "parallel startup: waiting for worker %s (%s:%d)",
-                           pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
-                           pt->fArgs->fPort);
-                  pt->fThread->Join();
-               }
-
-               // Notify end of startup operations
-               nSlavesDone++;
-               TMessage m(kPROOF_SERVERSTARTED);
-               m << TString("Setting up worker servers") << nSlaves
-                 << nSlavesDone << kTRUE;
-               gProofServ->GetSocket()->Send(m);
-            }
-
-            TIter next(fSlaves);
-            TSlave *sl = 0;
-            while ((sl = (TSlave *)next())) {
-               if (sl->IsValid())
-                  fAllMonitor->Add(sl->GetSocket());
-               else
-                  fBadSlaves->Add(sl);
-            }
-
-            // We can cleanup now
-            while (!thrHandlers.empty()) {
-               i = thrHandlers.end()-1;
-               if (*i) {
-                  SafeDelete(*i);
-                  thrHandlers.erase(i);
-               }
-            }
-
-         } else {
-
-            // Here we finalize the server startup: in this way the bulk
-            // of remote operations are almost parallelized
-            TIter nxsl(fSlaves);
-            TSlave *sl = 0;
-            while ((sl = (TSlave *) nxsl())) {
-
-               // Finalize setup of the server
-               sl->SetupServ(TSlave::kSlave, 0);
-
-               // Monitor good slaves
-               Bool_t slaveOk = kTRUE;
-               if (sl->IsValid()) {
-                  fAllMonitor->Add(sl->GetSocket());
-               } else {
-                  slaveOk = kFALSE;
-                  fBadSlaves->Add(sl);
-               }
-
-               // Notify end of startup operations
-               nSlavesDone++;
-               TMessage m(kPROOF_SERVERSTARTED);
-               m << TString("Setting up worker servers") << nSlaves
-                 << nSlavesDone << slaveOk;
-               gProofServ->GetSocket()->Send(m);
-            }
+         TIter next(fSlaves);
+         TSlave *sl = 0;
+         while ((sl = (TSlave *)next())) {
+            if (sl->IsValid())
+               fAllMonitor->Add(sl->GetSocket());
+            else
+               fBadSlaves->Add(sl);
          }
 
-      }
-      fclose(pconf);
+         // We can cleanup now
+         while (!thrHandlers.empty()) {
+            i = thrHandlers.end()-1;
+            if (*i) {
+               SafeDelete(*i);
+               thrHandlers.erase(i);
+            }
+         }
+      } // end if parallel
+      else {
+         // Here we finalize the server startup: in this way the bulk
+         // of remote operations are almost parallelized
+         TIter nxsl(fSlaves);
+         TSlave *sl = 0;
+         while ((sl = (TSlave *) nxsl())) {
+            // Finalize setup of the server
+            sl->SetupServ(TSlave::kSlave, 0);
 
-   } else {
+            // Monitor good slaves
+            Bool_t slaveOk = kTRUE;
+            if (sl->IsValid()) {
+               fAllMonitor->Add(sl->GetSocket());
+            } else {
+               slaveOk = kFALSE;
+               fBadSlaves->Add(sl);
+            }
 
+            // Notify end of startup operations
+            nSlavesDone++;
+            TMessage m(kPROOF_SERVERSTARTED);
+            m << TString("Setting up worker servers") << nSlaves
+              << nSlavesDone << slaveOk;
+            gProofServ->GetSocket()->Send(m);
+         } // end while
+      } // end else (if parallel)
+   } // end if IsMaster
+   else {
       // create master server
       fprintf(stderr,"Starting master: opening connection ... \n");
       TString url = fMaster;
@@ -722,17 +651,15 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
       TSlave *slave = CreateSubmaster(url, fPort, "0", "master", 0);
 
       if (slave->IsValid()) {
-
          // Notify
          fprintf(stderr,"Starting master:"
-                        " connection open: setting up server ...             \r");
+                 " connection open: setting up server ...             \r");
          StartupMessage("Connection to master opened", kTRUE, 1, 1);
 
          // Finalize setup of the server
          slave->SetupServ(TSlave::kMaster, fConfFile);
 
          if (slave->IsValid()) {
-
             // Notify
             fprintf(stderr,"Starting master: OK                                     \n");
             StartupMessage("Master started", kTRUE, 1, 1);
@@ -775,7 +702,6 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
             // Notify
             fprintf(stderr,"Starting master: failure\n");
          }
-
       } else {
          delete slave;
          Error("StartSlaves", "failed to connect to a PROOF master server");

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.109 2005/09/28 15:32:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.110 2005/11/07 12:20:40 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -79,6 +79,8 @@
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "compiledata.h"
+#include "TProofResourcesStatic.h"
+#include "TProofNodeInfo.h"
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -f";
@@ -2199,54 +2201,20 @@ void TProofServ::Setup()
       // strip off any prooftype directives
       TString conffile = fConfFile;
       conffile.Remove(0, 1 + conffile.Index(":"));
+
       // parse config file to find working directory
-      TString fconf;
-      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), conffile.Data());
-      PDB(kGlobal,2) Info("Setup", "checking PROOF config file %s", fconf.Data());
-      if (gSystem->AccessPathName(fconf, kReadPermission)) {
-         fconf.Form("%s/proof/etc/%s", fConfDir.Data(), conffile.Data());
-         PDB(kGlobal,2) Info("Setup", "checking PROOF config file %s", fconf.Data());
-         if (gSystem->AccessPathName(fconf, kReadPermission)) {
-            fconf = "";
-         }
+      TProofResourcesStatic *resources = new TProofResourcesStatic();
+      if (resources->IsValid()) {
+         TString tmpWorkDir = resources->GetWorkDir(fConfDir, conffile); 
+         if (tmpWorkDir != "") fWorkDir = tmpWorkDir;
+      } else {
+         Error("Setup", "could not read work dir from config file %s", conffile.Data());
+         gSystem->Exit(1);
       }
 
-      if (!fconf.IsNull()) {
-         if (FILE *pconf = fopen(fconf, "r")) {
-            // read the config file looking at node lines
-            char line[1024];
-            TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-            // check for valid master line
-            while (fgets(line, sizeof(line), pconf)) {
-               char word[12][128];
-               if (line[0] == '#') continue;   // skip comment lines
-               Int_t nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
-                   word[0], word[1],
-                   word[2], word[3], word[4], word[5], word[6],
-                   word[7], word[8], word[9], word[10], word[11]);
-
-               // see if master may run on this node, accept both old "node"
-               // and new "master" lines
-               if (nword >= 2 &&
-                   (!strcmp(word[0], "node") || !strcmp(word[0], "master"))) {
-                  TString node = TUrl(word[1]).GetHost();
-                  TInetAddress a = gSystem->GetHostByName(node);
-                  if (!host.CompareTo(a.GetHostName()) || node == "localhost") {
-                     for (Int_t i = 2; i < nword; i++) {
-
-                        if (!strncmp(word[i], "workdir=", 8))
-                           fWorkDir = word[i]+8;
-
-                     }
-                  }
-               }
-            }
-            fclose(pconf);
-         } else {
-            Error("Setup", "could not open config file %s", fconf.Data());
-            gSystem->Exit(1);
-         }
-      }
+      // Cleanup
+      delete resources;
+      resources = 0;
    }
 
    // goto to the main PROOF working directory
@@ -2328,7 +2296,7 @@ void TProofServ::Setup()
 
    // Session tag
    fSessionTag = Form("%s-%s-%d-%d", fOrdinal.Data(), host.Data(),
-                          TTimeStamp().GetSec(),gSystem->GetPid());
+                      TTimeStamp().GetSec(),gSystem->GetPid());
 
    // create session directory and make it the working directory
    fSessionDir = fWorkDir;
