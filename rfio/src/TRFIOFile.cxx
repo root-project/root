@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.31 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.32 2005/02/28 17:28:12 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -334,18 +334,11 @@ Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
    // Read specified byte range from remote file via rfiod daemon.
    // Returns kTRUE in case of error.
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = GetRelOffset();
-      if ((st = fCache->ReadBuffer(off, buf, len)) < 0) {
-         Error("ReadBuffer", "error reading from cache");
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         Seek(off + len);
-         return kFALSE;
-      }
+      return kFALSE;
    }
 
    return TFile::ReadBuffer(buf, len);
@@ -359,18 +352,11 @@ Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
 
    if (!IsOpen() || !fWritable) return kTRUE;
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = GetRelOffset();
-      if ((st = fCache->WriteBuffer(off, buf, len)) < 0) {
-         Error("WriteBuffer", "error writing to cache");
+   Int_t st;
+   if ((st = WriteBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         Seek(off + len);
-         return kFALSE;
-      }
+      return kFALSE;
    }
 
    return TFile::WriteBuffer(buf, len);
