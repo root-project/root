@@ -868,6 +868,9 @@ void* G__ClassInfo::New(int n)
 	G__CurrentCall(G__NOP, 0, 0);
 	G__cpp_aryconstruct = 0;
 	p = (void*)G__int(buf);
+	// Record that we have allocated an array, and how many
+	// elements that array has, for use by the G__calldtor function.
+	G__alloc_newarraylist((long) p, n);
       }
       else {
 	p = (void*)NULL;
@@ -885,10 +888,21 @@ void* G__ClassInfo::New(int n)
       char temp[G__ONELINE];
       int known=0;
       p = malloc(G__struct.size[tagnum]*n);
+      // Record that we have allocated an array, and how many
+      // elements that array has, for use by the G__calldtor function.
+      G__alloc_newarraylist((long) p, n);
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
       G__tagnum = tagnum;
       G__store_struct_offset = (long)p;
+      //// Do it this way for an array cookie implementation.
+      ////p = malloc((G__struct.size[tagnum]*n)+(2*sizeof(int)));
+      ////int* pp = (int*) p;
+      ////pp[0] = G__struct.size[tagnum];
+      ////pp[1] = n;
+      ////G__store_struct_offset = (long)(((char*)p) + (2*sizeof(int)));
+      ////... at end adjust returned pointer address ...
+      ////p = ((char*) p) + (2 * sizeof(int));
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       for(i=0;i<n;i++) {
 	G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
@@ -966,9 +980,132 @@ void* G__ClassInfo::New(void *arena)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
+void* G__ClassInfo::New(int n, void *arena)
+{
+  if(IsValid() && (n > 0)) {
+    void *p;
+    G__value buf=G__null;
+    if (!class_property) Property();
+    if(class_property&G__BIT_ISCPPCOMPILED) {
+      // C++ precompiled class,struct
+      struct G__param para;
+      G__InterfaceMethod defaultconstructor;
+      para.paran=0;
+      if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
+      defaultconstructor
+	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
+      if(defaultconstructor) {
+	G__cpp_aryconstruct = n;
+	G__setgvp((long)arena);
+	G__CurrentCall(G__DELETEFREE, this, tagnum);
+	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
+	G__CurrentCall(G__NOP, 0, 0);
+	G__setgvp((long)G__PVOID);
+	G__cpp_aryconstruct = 0;
+	p = (void*)G__int(buf);
+	// Record that we have allocated an array, and how many
+	// elements that array has, for use by the G__calldtor function.
+	G__alloc_newarraylist((long) p, n);
+      }
+      else {
+	p = (void*)NULL;
+      }
+    }
+    else if(class_property&G__BIT_ISCCOMPILED) {
+      // C precompiled class,struct
+      p = arena;
+    }
+    else {
+      // Interpreted class,struct
+      long store_struct_offset;
+      long store_tagnum;
+      char temp[G__ONELINE];
+      int known=0;
+      p = arena;
+      // Record that we have allocated an array, and how many
+      // elements that array has, for use by the delete[] operator.
+      G__alloc_newarraylist((long) p, n);
+      store_tagnum = G__tagnum;
+      store_struct_offset = G__store_struct_offset;
+      G__tagnum = tagnum;
+      G__store_struct_offset = (long) p;
+      //// Do it this way for an array cookie implementation.
+      ////p = arena;
+      ////int* pp = (int*) p;
+      ////pp[0] = G__struct.size[tagnum];
+      ////pp[1] = n;
+      ////G__store_struct_offset = (long)(((char*)p) + (2*sizeof(int)));
+      ////... at end adjust returned pointer address ...
+      ////p = ((char*) p) + (2 * sizeof(int));
+      sprintf(temp,"%s()",G__struct.name[tagnum]);
+      for (int i = 0; i < n; ++i) {
+        G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
+        if (!known) break;
+	G__store_struct_offset += G__struct.size[tagnum];
+      }
+      G__store_struct_offset = store_struct_offset;
+      G__tagnum = (int)store_tagnum;
+    }
+    return(p);
+  }
+  else {
+    return((void*)NULL);
+  }
+}
+///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::Delete(void* p) const { G__calldtor(p,tagnum,1); }
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::Destruct(void* p) const { G__calldtor(p,tagnum,0); }
+///////////////////////////////////////////////////////////////////////////
+void G__ClassInfo::DeleteArray(void* ary, int dtorOnly)
+{
+  // Array Destruction, with optional deletion.
+  if (!IsValid()) return;
+  if (!class_property) {
+    Property();
+  }
+  if (class_property & G__BIT_ISCPPCOMPILED) {
+    // C++ precompiled class,struct
+    // Fetch the number of elements in the array that
+    // we saved when we originally allocated it.
+    G__cpp_aryconstruct = G__free_newarraylist((long) ary);
+    if (dtorOnly) {
+      Destruct(ary);
+    } else {
+      Delete(ary);
+    }
+    G__cpp_aryconstruct = 0;
+  }
+  else if (class_property & G__BIT_ISCCOMPILED) {
+    // C precompiled class,struct
+    if (!dtorOnly) {
+      free(ary);
+    }
+  }
+  else {
+    // Interpreted class,struct
+    // Fetch the number of elements in the array that
+    // we saved when we originally allocated it.
+    int n = G__free_newarraylist((long) ary);
+    int element_size = G__struct.size[tagnum];
+    //// Do it this way for an array cookie implementation.
+    ////int* pp = (int*) ary;
+    ////int n = pp[-1];
+    ////int element_size = pp[-2];
+    char* r = ((char*) ary) + ((n - 1) * element_size) ;
+    int status = 0;
+    for (int i = n; i > 0; --i) {
+      status = G__calldtor(r, tagnum, 0);
+      // ???FIX ME:  What does status mean here?
+      // if (!status) break;
+      r -= element_size;
+    }
+    if (!dtorOnly) {
+      free(ary);
+    }
+  }
+  return;
+}
 ///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::CheckValidRootInfo()
 {

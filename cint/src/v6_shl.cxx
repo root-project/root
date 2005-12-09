@@ -21,6 +21,10 @@
 #include "common.h"
 #include "dllrev.h"
 
+extern "C" {
+  void G__set_alloclockfunc(void(*foo)());
+  void G__set_allocunlockfunc(void(*foo)());
+}
 
 /*********************************************************************
 * dynamic link library(shared library) enhancement
@@ -592,7 +596,8 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*, void*));
 #elif !defined(G__OLDIMPLEMENTATION1546)
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
@@ -605,7 +610,8 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+        void*));
 #else
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
@@ -618,7 +624,7 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
         void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-        void*,void*,void*,void*,void*,void*,void*,void*));
+        void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
 #endif
 
 /**************************************************************************
@@ -762,6 +768,8 @@ void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,char *fname)
         ,(void*)G__set_errmsgcallback
 #endif
    ,(void*)G__get_ifile
+        ,(void*)G__set_alloclockfunc
+        ,(void*)G__set_allocunlockfunc
         );
 }
 

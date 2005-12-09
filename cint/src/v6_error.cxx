@@ -460,7 +460,15 @@ int G__changeconsterror(char *item,char *categ)
 **************************************************************************/
 int G__printlinenum()
 {
-  G__fprinterr(G__serr," FILE:%s LINE:%d\n" 
+  char* format=" FILE:%s LINE:%d\n";
+#ifdef VISUAL_CPLUSPLUS
+  // make error msg Visual Studio compatible
+  format=" %s(%d)\n";
+#elif defined(G__ROOT)
+  // make error msg GCC compatible
+  format=" %s:%d:\n";
+#endif
+  G__fprinterr(G__serr, format
           ,G__stripfilename(G__ifile.name),G__ifile.line_number);
   return(0);
 }

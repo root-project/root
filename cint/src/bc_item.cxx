@@ -239,7 +239,7 @@ G__value G__blockscope_expr::pointer_operator(const string& item,int& i) {
   else {
     // error
   }
-  return G__value();
+  return G__null;
 }
 ////////////////////////////////////////////////////////////////////
 G__value G__blockscope_expr::index_operator(const string& item,int& i) {
@@ -387,7 +387,7 @@ G__value G__blockscope_expr::fcall_operator(const string& /* item */,int& /* i *
   //   G__getexpr(expr)
   //   G__getexpr(expr)
   //   LD_FUNC function paran
-   return G__value();
+   return G__null;
 }
 
 ////////////////////////////////////////////////////////////////////

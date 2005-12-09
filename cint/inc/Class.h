@@ -104,8 +104,10 @@ G__ClassInfo {
   void *New();
   void *New(int n);
   void *New(void *arena);
+  void *New(int n, void* arena);
   void Delete(void* p) const ;
   void Destruct(void* p) const ;
+  void DeleteArray(void* ary, int dtorOnly = 0);
   int InstanceCount(); 
   void ResetInstanceCount();
   void IncInstanceCount();

@@ -26,6 +26,9 @@
 
 extern "C" {
 
+void G__set_alloclockfunc(void(*foo)());
+void G__set_allocunlockfunc(void(*foo)());
+
 #if defined(G__WIN32)
 #include <windows.h>
 int getopt(int argc,char **argv,char *optlist);
@@ -4920,6 +4923,19 @@ int G__library_func(G__value *result7,char *funcname,G__param *libp,int hash)
   
 
 
+  if(strcmp(funcname,"G__set_alloclockfunc")==0) {
+    if(G__no_exec_compile) return(1);
+    G__set_alloclockfunc((void(*)())G__int(libp->para[0]));
+    *result7 = G__null;
+    return(1);
+  }
+  
+  if(strcmp(funcname,"G__set_allocunlockfunc")==0) {
+    if(G__no_exec_compile) return(1);
+    G__set_allocunlockfunc((void(*)())G__int(libp->para[0]));
+    *result7 = G__null;
+    return(1);
+  }
   
   return(0);
   

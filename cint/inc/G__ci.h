@@ -25,10 +25,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      6001004
-#define G__CINTVERSIONSTR_V6  "6.1.4, November 30 2005"
-#define G__CINTVERSION_V5      50160004
-#define G__CINTVERSIONSTR_V5  "5.16.4, November 30 2005"
+#define G__CINTVERSION_V6      6001005
+#define G__CINTVERSIONSTR_V6  "6.1.5, November 30 2005"
+#define G__CINTVERSION_V5      50160005
+#define G__CINTVERSIONSTR_V5  "5.16.5, November 30 2005"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -2227,6 +2227,9 @@ static G__uint64* (*G__ULonglongref) G__P((G__value *buf));
 static long double* (*G__Longdoubleref) G__P((G__value *buf));
 static struct G__input_file* (*G__get_ifile) G__P((void));
 
+static void (*G__set_alloclockfunc) G__P((void*));
+static void (*G__set_allocunlockfunc) G__P((void*));
+
 #ifdef G__MULTITHREADLIBCINTC
 G__EXPORT void G__SetCCintApiPointers(
 #else
@@ -2371,6 +2374,8 @@ G__EXPORT void G__SetCppCintApiPointers(
                 ,void* a135
                 ,void* a136
                 ,void* a137
+                ,void* a138
+                ,void* a139
                 )
 {
   G__main = (int (*) G__P((int argc,char **argv)) ) a1;
@@ -2520,6 +2525,8 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__ULonglongref=(void (*) G__P((G__value *buf)))a135;
   G__Longdoubleref=(void (*) G__P((G__value *buf)))a136;
   G__get_ifile = (struct G__intput_ifile* (*) G__P((void)) ) a137;
+  G__set_alloclockfunc   = (void (*) G__P((void* foo)) ) a138;
+  G__set_allocunlockfunc = (void (*) G__P((void* foo)) ) a139;
 }
 
 #endif /* G__MULTITHREADLIBCINT */

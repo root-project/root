@@ -21,6 +21,9 @@
 /* Define one of following */
 #define G__OLDIMPLEMENTATION1922 /* keep opening all header files for +V +P */
 
+#include <string>
+#include <list>
+
 #ifdef _WIN32
 #include "process.h"
 #endif
@@ -92,7 +95,7 @@ static FILE* G__copytotmpfile(char *prepname)
     G__genericerror("Internal error: G__copytotmpfile() 1\n");
     return((FILE*)NULL);
   }
-  ofp = tmpfile();
+  ofp = fopen(G__tmpnam(0),"w+b");
   if(!ofp) {
     G__genericerror("Internal error: G__copytotmpfile() 2\n");
     fclose(ifp);
@@ -111,7 +114,7 @@ static void G__copysourcetotmp(char *prepname,G__input_file *pifile, int fentry)
 {
   if(G__copyflag && 0==prepname[0]) {
     FILE *fpout;
-    fpout = tmpfile();
+    fpout = fopen(G__tmpnam(0),"w");
     if(!fpout) {
       G__genericerror("Internal error: can not open tmpfile.");
       return;
@@ -2370,11 +2373,24 @@ int G__setTMPDIR(char *badname)
 #endif
 }
 
+class G__Tmpnam_Files {
+public:
+  G__Tmpnam_Files() {}
+  ~G__Tmpnam_Files() {
+    for (std::list<std::string>::iterator iFile=fFiles.begin(); 
+        iFile!=fFiles.end(); ++iFile)
+      unlink(iFile->c_str());
+  }
+  void Add(const char* name) {fFiles.push_back(name);}
+  std::list<std::string> fFiles;
+};
+
 /**************************************************************************
 * G__tmpnam()
 **************************************************************************/
 char* G__tmpnam(char *name)
 {
+  static G__Tmpnam_Files G__tmpfiles;
 #if defined(G__TMPFILE) 
   const char *appendix="_cint";
   static char tempname[G__MAXFILENAME];
@@ -2393,14 +2409,18 @@ char* G__tmpnam(char *name)
     if(strlen(name)<G__MAXFILENAME-10) 
       sprintf(name+strlen(name),"%d%d",pid%10000,now%10000);
     if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
+    G__tmpfiles.Add(name);
     return(name);
   }
   else {
     strcpy(tempname,(tmp=tempnam(G__tmpdir,"")));
     free((void*)tmp);
-    if(strlen(name)<G__MAXFILENAME-10) 
-      sprintf(name+strlen(name),"%d%d",pid%10000,now%10000);
-    if(strlen(tempname)<G__MAXFILENAME-6) strcat(tempname,appendix);
+    size_t lentemp=strlen(tempname);
+    if(lentemp<G__MAXFILENAME-10) 
+      sprintf(tempname+lentemp,"%d%d",pid%10000,now%10000);
+    if(strlen(tempname)<G__MAXFILENAME-strlen(appendix)-1) 
+      strcat(tempname,appendix);
+    G__tmpfiles.Add(tempname);
     return(tempname);
   }
 
@@ -2408,21 +2428,27 @@ char* G__tmpnam(char *name)
   const char *appendix="_cint";
   tmpnam(name);
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
+  G__tmpfiles.Add(name);
   return(name);
 
 #elif /*defined(G__NEVER) && */ ((__GNUC__>=3)||((__GNUC__>=2)&&(__GNUC_MINOR__>=96)))&&(defined(__linux)||defined(__linux__))
   /* After all, mkstemp creates more problem than a solution. */
+  static char tempname[G__MAXFILENAME];
   const char *appendix="_cint";
+
+  if (name==0) name = tempname;
   strcpy(name,"/tmp/XXXXXX");
   close(mkstemp(name));/*mkstemp not only generate file name but also opens the file*/
   remove(name); /* mkstemp creates this file anyway. Delete it. questionable */
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
+  G__tmpfiles.Add(name);
   return(name);
 
 #else
   const char *appendix="_cint";
   tmpnam(name);
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
+  G__tmpfiles.Add(name);
   return(name);
 
 #endif

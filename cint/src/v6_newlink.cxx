@@ -912,7 +912,10 @@ int G__cleardictfile(int flag)
     G__fprinterr(G__serr,"!!!\n");
   }
 #ifdef G__GENWINDEF
-  if(G__WINDEF) free(G__WINDEF);
+  if(G__WINDEF) {
+    /* unlink(G__WINDEF); */
+    free(G__WINDEF);
+  }
 #endif
   if(G__CPPLINK_H) free(G__CPPLINK_H);
   if(G__CPPLINK_C) free(G__CPPLINK_C);
@@ -1752,7 +1755,12 @@ void G__set_globalcomp(char *mode,char *linkfilename,char *dllid)
     strcpy(G__CPPLINK_C,buf);
 
 #ifdef G__GENWINDEF
-    sprintf(buf,"%s.def",G__PROJNAME);
+    if (G__PROJNAME[0])
+      sprintf(buf,"%s.def",G__PROJNAME);
+    else if (G__DLLID[0])
+      sprintf(buf,"%s.def",G__DLLID);
+    else 
+      sprintf(buf,"%s.def","G__lib");
     G__WINDEF = (char*)malloc(strlen(buf)+1);
     strcpy(G__WINDEF,buf);
     G__write_windef_header();
@@ -2807,16 +2815,19 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
   else {
     if(0==m) {
       if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
-        fprintf(fp,"   if(G__getaryconstruct())\n");
-        fprintf(fp,"     if(G__PVOID==G__getgvp())\n");
+        fprintf(fp,  "   if(G__getaryconstruct())\n");
+        fprintf(fp,  "     if(G__PVOID==G__getgvp())\n");
         if(isprotecteddtor) {
           fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
         }
         else {
           fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
         }
-        fprintf(fp,"     else {\n");
-        fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
+        fprintf(fp,  "     else {\n");
+        //???FIX ME: This is wrong, we do not construct a real array
+        //???FIX ME: with an array cookie here, and we do have placement
+        //???FIX ME: new available, so we should.
+        fprintf(fp,  "       for(int i=0;i<G__getaryconstruct();i++)\n");
         if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
              && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
            )
@@ -2824,9 +2835,9 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
                   ,G__NEWID,buf);
         else
           fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,buf);
-        fprintf(fp,"%s;\n",buf);
-        fprintf(fp,"       p=(%s*)G__getgvp();\n",buf);
-        fprintf(fp,"     }\n");
+        fprintf(fp,  "%s;\n",buf);
+        fprintf(fp,  "       p=(%s*)G__getgvp();\n",buf);
+        fprintf(fp,  "     }\n");
         if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
              && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
            )
@@ -2837,18 +2848,34 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       }
       else {
         if(isprotecteddtor) {
-          fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
+          fprintf(fp,   "   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
         }
         else {
-          fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
+          fprintf(fp,   "   if(G__getaryconstruct()) {\n");
+          fprintf(fp,   "     if(G__PVOID==G__getgvp()) {\n");
+          fprintf(fp,   "       p=new %s[G__getaryconstruct()];\n" ,buf);
+          fprintf(fp,   "     } else {\n");
+          if ((G__is_operator_newdelete & G__DUMMYARG_NEWDELETE) && !(G__struct.funcs[tagnum] & G__HAS_OPERATORNEW1ARG)) {
+            fprintf(fp, "       p=::new((G__%s_tag*)G__getgvp()) %s[G__getaryconstruct()];\n", G__NEWID, buf);
+          } else {
+            //???FIX ME: We are not honoring the placement request here,
+            //???FIX ME: so we should print an error message, but this
+            //???FIX ME: interacts with the operator new in TObject, so
+            //???FIX ME: it is not really that easy.
+            fprintf(fp, "       p=new %s[G__getaryconstruct()];\n", buf);
+          }
+          fprintf(fp,   "     }\n");
+          fprintf(fp,   "   }\n");
         }
-        if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
-             && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
-           )
-          fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
-                  ,G__NEWID,buf);
+        if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG))
+          fprintf(fp,   "   else p=::new((G__%s_tag*)G__getgvp()) %s;\n", G__NEWID, buf);
         else
-          fprintf(fp,"   else                    p=new %s;\n" ,buf);}
+          //???FIX ME: Should test G__PVOID==G__getgvp() here and
+          //???FIX ME: print an error if we are refusing to honor
+          //???FIX ME: a placement new, but this interacts with the
+          //???FIX ME: operator new in TObject, so it is not really
+          //???FIX ME: that easy.
+          fprintf(fp,   "   else p=new %s;\n", buf);}
     }
     else {
       if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
