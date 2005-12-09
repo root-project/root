@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtEvent.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,13 +19,13 @@
 
 class TQtObject;
 class TWaitCondition;
-
-
-class TQtEvent : public QCustomEvent {
+//______________________________________________________________________________
+class TQtEvent : public QCustomEvent 
+{
 
 private:
     TWaitCondition *fCondition;
-    void   **fResult; // QApplication owns QEvent and will destroy it
+    ULong_t *fResult;   // QApplication owns QEvent and will destroy it
     QObject *fReceiver;
     QEvent  *fThatEvent;
 
@@ -33,9 +33,9 @@ public:
     TQtEvent(int code);
     TQtEvent(QObject *o, QEvent *e);
     virtual ~TQtEvent(){}
-    void SetWait(TWaitCondition &condition,void *&result);
+    void SetWait(TWaitCondition &condition,ULong_t &result);
     void SetWait(TWaitCondition &condition);
-    void SetResult(void *e=0);
+    void SetResult(ULong_t e=0);
  //   QEvent *WaitResult(); too dangerous
     bool Notify();
     virtual void ExecuteCB(){;}

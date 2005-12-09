@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtThreadStub.h,v 1.4 2005/02/08 07:36:08 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThreadStub.h,v 1.5 2005/03/04 07:11:54 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -53,12 +53,12 @@ type _NAME1_(THREADCLASS)::method()        \
       ev(QObject *obj): TQtEvent(0) {setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-        SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method()); \
+        SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method()); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER));                  \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                        \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);             \
     w.wait();                              \
@@ -166,12 +166,12 @@ type _NAME1_(THREADCLASS)::method(type1 par1)\
       ev(QObject *obj,type1 p1): TQtEvent(0), par1(p1) {setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-        SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1)); \
+        SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1)); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1);             \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
@@ -238,12 +238,12 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2) \
       ev(QObject *obj,type1 p1,type2 p2):TQtEvent(0), par1(p1), par2(p2) {setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-        SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2)); \
+        SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2)); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2);        \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                        \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
@@ -314,12 +314,12 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3) \
       ev(QObject *obj,type1 p1,type2 p2,type3 p3):TQtEvent(0),par1(p1),par2(p2),par3(p3){setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-        SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2,par3)); \
+        SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2,par3)); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3);   \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                        \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
@@ -422,12 +422,12 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4) \
       ev(QObject *obj,type1 p1,type2 p2,type3 p3,type4 p4):TQtEvent(0), par1(p1), par2(p2),par3(p3),par4(p4) {setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-        SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2,par3,par4)); \
+        SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2,par3,par4)); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4);  \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                        \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
@@ -535,12 +535,12 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
            , par1(p1), par2(p2),par3(p3),par4(p4),par5(p5) {setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-         SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2,par3,par4,par5)); \
+         SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1,par2,par3,par4,par5)); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5);     \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                        \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);             \
     w.wait();                              \
@@ -689,13 +689,13 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
            , par1(p1), par2(p2),par3(p3),par4(p4),par5(p5),par6(p6),par7(p7) {setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-        SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::\
+        SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::\
         method(par1,par2,par3,par4,par5,par6,par7)); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6,par7);  \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                        \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
@@ -824,13 +824,13 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
            , par1(p1), par2(p2),par3(p3),par4(p4),par5(p5),par6(p6),par7(p7),par8(p8),par9(p9),par10(p10),par11(p11) {setData(obj);} \
       void ExecuteCB()                     \
       {                                    \
-        SetResult((void *)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::\
+        SetResult((unsigned long)((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::\
         method(par1,par2,par3,par4,par5,par6,par7,par8,par9,par10,par11)); \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6,par7,par8,par9,par10,par11);  \
     TWaitCondition w;                      \
-    void *result=0;                        \
+    unsigned long result=0;                        \
     e->SetWait(w,result);                  \
     TGQt::PostQtEvent(this,e);            \
     w.wait();                              \

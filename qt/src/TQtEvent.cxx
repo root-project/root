@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtEvent.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -41,7 +41,7 @@ bool TQtEvent::Notify()
   return r;
 }
 //______________________________________________________________________________
-void TQtEvent::SetResult(void *e)
+void TQtEvent::SetResult(ULong_t e)
 {
   if (fResult)   *fResult = e;
   if (fCondition) fCondition->wakeOne();
@@ -52,7 +52,7 @@ void TQtEvent::SetWait(TWaitCondition &condition)
   fCondition = &condition;
 }
 //______________________________________________________________________________
-void TQtEvent::SetWait(TWaitCondition &condition, void *&result)
+void TQtEvent::SetWait(TWaitCondition &condition, ULong_t &result)
 {
   SetWait(condition);
   fResult    = &result;
