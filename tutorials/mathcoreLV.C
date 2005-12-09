@@ -29,7 +29,7 @@ void write(int n) {
 
   std::vector<ROOT::Math::XYZTVector>  tracks; 
   std::vector<ROOT::Math::XYZTVector> * pTracks = &tracks; 
-  t1.Branch("tracks","std::vector<XYZTVector>",&pTracks);
+  t1.Branch("tracks","std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pTracks);
 
   timer.Start();
   for (int i = 0; i < n; ++i) { 
@@ -74,7 +74,7 @@ void read() {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  std::vector<ROOT::Math::XYZTVector> * pTracks = 0;
+  std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > * pTracks = 0;
   t1->SetBranchAddress("tracks",&pTracks);
 
   timer.Start();
