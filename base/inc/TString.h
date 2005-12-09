@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.41 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.42 2005/12/02 16:17:48 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -336,9 +336,10 @@ public:
    Bool_t       IsDigit() const;
    Bool_t       IsFloat() const;
    Bool_t       IsHex() const;
-   Bool_t       IsNull() const              { return Pref()->fNchars == 0; }
-   Ssiz_t       Last(char c) const          { return Pref()->Last(c); }
-   Ssiz_t       Length() const              { return Pref()->fNchars; }
+   Bool_t       IsNull() const         { return Pref()->fNchars == 0; }
+   Bool_t       IsWhitespace() const   { return (Length() == CountChar(' ')); }
+   Ssiz_t       Last(char c) const     { return Pref()->Last(c); }
+   Ssiz_t       Length() const         { return Pref()->fNchars; }
    Bool_t       MaybeRegexp() const;
    Bool_t       MaybeWildcard() const;
    TString     &Prepend(const char *cs);     // Prepend a character string
