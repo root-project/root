@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.23 2005/01/14 10:21:05 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.24 2005/02/28 17:28:12 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -300,7 +300,6 @@ const char *TDCacheFile::GetDcapVersion()
 
    return getDcapVersion();
 }
-
 
 //______________________________________________________________________________
 Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
