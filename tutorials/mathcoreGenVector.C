@@ -14,23 +14,37 @@
 // root[0]: .x  mathcoreGenVector.C
 
 
+#include "TMatrixD.h"
+#include "TVectorD.h"
+
+
+#ifndef __CINT__
+#include "Math/Point3D.h"
+#include "Math/Vector3D.h"
+#include "Math/Vector4D.h"
+#include "Math/Rotation3D.h"
+#include "Math/EulerAngles.h"
+#include "Math/AxisAngle.h"
+#include "Math/Quaternion.h"
+#include "Math/RotationX.h"
+#include "Math/RotationY.h"
+#include "Math/RotationZ.h"
+#include "Math/LorentzRotation.h"
+#include "Math/Boost.h"
+#include "Math/BoostX.h"
+#include "Math/BoostY.h"
+#include "Math/BoostZ.h"
+#include "Math/Transform3D.h"
+#include "Math/Plane3D.h"
+#include "Math/VectorUtil.h"
+
+using namespace ROOT::Math;
+
+#endif
+
 int ntest = 0; 
 int nfail = 0; 
 int ok = 0;
-
-void mathcoreGenVector() {
-
-  gSystem->Load("libMathCore");
-  using namespace ROOT::Math;
- 
-  testVector3D();
-  testPoint3D();
-  testLorentzVector();
-  testVectorUtil();
-  testRotation();
-
-  std::cout << "\n\nNumber of tests " << ntest << " failed = " << nfail << std::endl;
-}
 
 
 int compare( double v1, double v2, const char* name, double Scale = 1.0) {
@@ -40,6 +54,7 @@ int compare( double v1, double v2, const char* name, double Scale = 1.0) {
   double eps = Scale* 2.22044604925031308e-16; 
   int iret = 0; 
   double delta = v2 - v1;
+  double d = 0;
   if (delta < 0 ) delta = - delta; 
   if (v1 == 0 || v2 == 0) { 
     if  (delta > eps ) { 
@@ -48,7 +63,7 @@ int compare( double v1, double v2, const char* name, double Scale = 1.0) {
   }
   // skip case v1 or v2 is infinity
   else { 
-     double d = v1; 
+     d = v1; 
 
     if ( v1 < 0) d = -d; 
     // add also case when delta is small by default
@@ -79,7 +94,6 @@ int testVector3D() {
 	    << "\n************************************************************************\n";
 
 
-  int ret = 0;
 
   XYZVector v1(0.01, 0.02, 16);
   //XYZVector v1(1.0, 2.0, 3.0);
@@ -105,7 +119,7 @@ int testVector3D() {
   ok+= compare(v1.Theta(), v2.Theta(), "theta"); 
   ok+= compare(v1.R(), v2.R(), "r"); 
   ok+= compare(v1.Eta(), v2.Eta(), "eta"); 
-  ok+= ok+= compare(v1.Rho(), v2.Rho(), "rho"); 
+  ok+= compare(v1.Rho(), v2.Rho(), "rho"); 
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
@@ -196,7 +210,7 @@ int testVector3D() {
   ok+= compare( q2.Z(), q1.Z(), "setXYZ Z" );
 
   q2.SetCoordinates( 2.0*q1.Rho(), q1.Eta(), q1.Phi() );
-  q1s = 2.0*q1;
+  XYZVector q1s = 2.0*q1;
   ok+= compare( q2.X(), q1s.X(), "set X"  );
   ok+= compare( q2.Y(), q1s.Y(), "set Y" );
   ok+= compare( q2.Z(), q1s.Z(), "set Z" );
@@ -224,7 +238,7 @@ int testVector3D() {
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
   
-
+  return ok; 
 }
 
 
@@ -236,7 +250,6 @@ int testPoint3D() {
 	    << "\n************************************************************************\n";
 
 
-  int ret = 0;
 
   //XYZPoint p1(0.00001, 0.00001, 30000000000.0);
   XYZPoint p1(1.0, 2.0, 3.0);
@@ -316,7 +329,7 @@ int testPoint3D() {
 //   ok+= compare( v4.Y(), v2.Y(), "op Y" );
 //   ok+= compare( v4.Z(), v2.Z(), "op Z" );
 
-
+  return ok;
 
 }
 
@@ -330,7 +343,6 @@ int testLorentzVector() {
 	    << "\n************************************************************************\n";
 
 
-  int ret = 0;
 
   //XYZTVector v1(0.00001, 0.00001, 30000000000.0);
   XYZTVector v1(1.0, 2.0, 3.0, 4.0);
@@ -450,7 +462,7 @@ int testLorentzVector() {
   ok+= compare( q2.T(), q1.E(), "setXYZT E" );
 
   q2.SetCoordinates( 2.0*q1.Rho(), q1.Eta(), q1.Phi(), 2.0*q1.E() );
-  q1s = q1*2.0;
+  XYZTVector q1s = q1*2.0;
   ok+= compare( q2.X(), q1s.X(), "set X"  );
   ok+= compare( q2.Y(), q1s.Y(), "set Y" );
   ok+= compare( q2.Z(), q1s.Z(), "set Z" ,2);
@@ -459,6 +471,8 @@ int testLorentzVector() {
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
+
+  return ok;
 }
 
 
@@ -532,6 +546,7 @@ int testVectorUtil() {
 
   if (ok == 0) std::cout << "\t\t OK " << std::endl;
 
+  return ok;
 
 }
 
@@ -602,8 +617,8 @@ int testRotation() {
   Rotation3D r3y(ry);
   Rotation3D r3z(rz);
 
-  vrot1 = rx * ry * rz * v;
-  vrot2 = r3x * r3y * r3z * v;
+  XYZPoint vrot1 = rx * ry * rz * v;
+  XYZPoint vrot2 = r3x * r3y * r3z * v;
 
   ok+= compare(vrot1.X(), vrot2.X(), "x"); 
   ok+= compare(vrot1.Y(), vrot2.Y(), "y"); 
@@ -617,7 +632,7 @@ int testRotation() {
   ok+= compare(vrot1.Z(), vrot2.Z(), "z"); 
 
   
-  vinv1 = rx.Inverse()*ry.Inverse()*rz.Inverse()*vrot1;
+  XYZPoint vinv1 = rx.Inverse()*ry.Inverse()*rz.Inverse()*vrot1;
 
   ok+= compare(vinv1.X(), v.X(), "x"); 
   ok+= compare(vinv1.Y(), v.Y(), "y"); 
@@ -643,13 +658,13 @@ int testRotation() {
   ok+= compare(p.Y(), v.Y(), "y",10); 
   ok+= compare(p.Z(), v.Z(), "z",10); 
 
-  XYZPoint p = s3 * r3 * v; 
+  p = s3 * r3 * v; 
   // axis angle inversion not very precise
   ok+= compare(p.X(), v.X(), "x",1E9); 
   ok+= compare(p.Y(), v.Y(), "y",1E9); 
   ok+= compare(p.Z(), v.Z(), "z",1E9); 
 
-  XYZPoint p = s4 * r4 * v; 
+  p = s4 * r4 * v; 
   
   ok+= compare(p.X(), v.X(), "x",10); 
   ok+= compare(p.Y(), v.Y(), "y",10); 
@@ -728,22 +743,22 @@ int testRotation() {
   XYZPoint p3(-1,3,2);
   Plane3D plane(p1,p2,p3);
 
-  n = plane.Normal();
+  XYZVector n = plane.Normal();
   // normal is perpendicular to vectors on the planes obtained from subracting the points
   ok+= compare(n.Dot(p2-p1), 0.0, "n.v12",10); 
   ok+= compare(n.Dot(p3-p1), 0.0, "n.v13",10); 
   ok+= compare(n.Dot(p3-p2), 0.0, "n.v23",10); 
 
-  plane1 = t(plane);
+  Plane3D plane1 = t(plane);
   
   // transform the points
-  pt1 = t(p1);
-  pt2 = t(p2);
-  pt3 = t(p3);
+  XYZPoint pt1 = t(p1);
+  XYZPoint pt2 = t(p2);
+  XYZPoint pt3 = t(p3);
   Plane3D plane2(pt1,pt2,pt3);
 
-  n1 = plane1.Normal();
-  n2 = plane2.Normal();
+  XYZVector n1 = plane1.Normal();
+  XYZVector n2 = plane2.Normal();
 
 
   ok+= compare(n1.X(), n2.X(), "a",10); 
@@ -805,7 +820,7 @@ int testRotation() {
   lv.GetCoordinates(lvData);
   TVectorD ql(4,lvData); 
 
-  qlr = ml*ql; 
+  TVectorD qlr = ml*ql; 
 
   ok+= compare(lv1.X(), qlr(0), "x"); 
   ok+= compare(lv1.Y(), qlr(1), "y"); 
@@ -814,7 +829,7 @@ int testRotation() {
 
   // test inverse 
 
-  XYZTVector lv0 = rl0 * rl0.Inverse() * lv; 
+  lv0 = rl0 * rl0.Inverse() * lv; 
 
   ok+= compare(lv0.X(), lv.X(), "x"); 
   ok+= compare(lv0.Y(), lv.Y(), "y"); 
@@ -831,11 +846,11 @@ int testRotation() {
   Boost bst( 0.3,0.4,0.5);   //  boost (must be <= 1)
 
 
-  lvb = bst ( lv );
+  XYZTVector lvb = bst ( lv );
 
   LorentzRotation rl2 (bst);
 
-  lvb2 = rl2 (lv);
+  XYZTVector lvb2 = rl2 (lv);
 
 
   // test with lorentz rotation
@@ -867,4 +882,23 @@ int testRotation() {
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
+  return ok;
 }
+
+
+void mathcoreGenVector() {
+
+#ifdef __CINT__
+  gSystem->Load("libMathCore");
+  using namespace ROOT::Math;
+#endif
+ 
+  testVector3D();
+  testPoint3D();
+  testLorentzVector();
+  testVectorUtil();
+  testRotation();
+
+  std::cout << "\n\nNumber of tests " << ntest << " failed = " << nfail << std::endl;
+}
+

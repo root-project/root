@@ -12,24 +12,33 @@
 //
 //   root[0]: .x  mathcoreVectorCollection.C
      
- 
-
-void mathcoreVectorCollection() { 
-
-  
-  int nEvents = 10000;
-
-  write(nEvents);
-
-  read();
-}
 
 
-void write(int n) { 
 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
-  using namespace ROOT::Math;
+#include "TRandom.h"
+#include "TStopwatch.h"
+#include "TSystem.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TCanvas.h"
+
+#include <iostream>
+
+// CINT does not understand some files included by LorentzVector
+#ifndef __CINT__
+#include "Math/Vector3D.h"
+#include "Math/Vector4D.h"
+
+using namespace ROOT::Math;
+
+#endif
+
+
+
+double write(int n) { 
+
+
 
   TRandom R; 
   TStopwatch timer;
@@ -38,16 +47,16 @@ void write(int n) {
   TFile f1("mathcoreLV.root","RECREATE");
 
   // create tree
-  TTree t1("t1","Tree with new XYZTVector");
+  TTree t1("t1","Tree with new LorentzVector");
 
   std::vector<ROOT::Math::XYZTVector>  tracks; 
   std::vector<ROOT::Math::XYZTVector> * pTracks = &tracks; 
-  t1.Branch("tracks","std::vector<XYZTVector>",&pTracks);
+  t1.Branch("tracks","std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pTracks);
 
   double M = 0.13957;  // set pi+ mass
 
-
   timer.Start();
+  double sum = 0;
   for (int i = 0; i < n; ++i) { 
     int nPart = R.Poisson(5);
     pTracks->clear();
@@ -55,7 +64,7 @@ void write(int n) {
     for (int j = 0; j < nPart; ++j) {
       double px = R.Gaus(0,10);
       double py = R.Gaus(0,10);
-      double pt = sqrt(px**2 +py**2);
+      double pt = sqrt(px*px +py*py);
       double eta = R.Uniform(-3,3);
       double phi = R.Uniform(0.0 , 2*TMath::Pi() );
       RhoEtaPhiVector vcyl( pt, eta, phi); 
@@ -64,9 +73,9 @@ void write(int n) {
       XYZTVector q( vcyl.X(), vcyl.Y(), vcyl.Z(), E);
       // fill track vector
       pTracks->push_back(q);
+      // evaluate sum of components to check 
+      sum += q.x()+q.y()+q.z()+q.t();
     }
-    
-
     t1.Fill(); 
   }
 
@@ -75,17 +84,17 @@ void write(int n) {
   std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
 
   t1.Print();
+  return sum;
 }
 
 
-void read() { 
 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
-  using namespace ROOT::Math;
+double read() { 
+
 
   TRandom R; 
   TStopwatch timer;
+
 
   TH1D * h1 = new TH1D("h1","total event  energy ",100,0,1000.);
   TH1D * h2 = new TH1D("h2","Number of track per event",21,-0.5,20.5);
@@ -100,16 +109,17 @@ void read() {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  std::vector<ROOT::Math::XYZTVector> * pTracks = 0;
+  std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > * pTracks = 0;
   t1->SetBranchAddress("tracks",&pTracks);
 
   timer.Start();
   int n = (int) t1->GetEntries();
   std::cout << " Tree Entries " << n << std::endl; 
-  double etot=0;
+  double sum=0;
   for (int i = 0; i < n; ++i) { 
     t1->GetEntry(i);
     int ntrk = pTracks->size(); 
+    h3->Fill(ntrk);
     XYZTVector q; 
     for (int j = 0; j < ntrk; ++j) { 
       XYZTVector v = (*pTracks)[j]; 
@@ -118,6 +128,7 @@ void read() {
       h4->Fill(v.Pt());
       h5->Fill(v.Eta());
       h6->Fill(cos(v.Theta()));
+      sum += v.x() + v.y() + v.z() + v.t();
     }
     h1->Fill(q.E() );
     h2->Fill(ntrk);
@@ -147,7 +158,40 @@ void read() {
   c1->cd(6);
   h6->Draw();
 
+  return sum;
 }
 
 
+
+int mathcoreVectorCollection() { 
+
+
+#ifdef __CINT__
+
+  gSystem->Load("libMathCore");  
+  gSystem->Load("libPhysics");  
+  // in CINT need to do that after having loading the library
+  using namespace ROOT::Math;
+#endif
+
   
+  int nEvents = 10000;
+
+  double s1 = write(nEvents);
+
+  double s2 = read();
+
+  if (fabs(s1-s2) > 1E-15 ) { 
+    std::cout << "ERROR: Found difference in Vector when reading  ( " << s1 << " != " << s2 << " ) " << std::endl;
+    return -1;
+  }
+  return 0;
+}
+
+
+#ifndef __CINT__
+int main() { 
+  return mathcoreVectorCollection(); 
+}
+#endif
+

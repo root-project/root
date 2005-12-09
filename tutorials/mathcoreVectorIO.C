@@ -6,24 +6,31 @@
 //
 // root[0]: .x  mathcoreVectorIO.C
 
+
+
+#include "TRandom.h"
+#include "TStopwatch.h"
+#include "TSystem.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TCanvas.h"
+
+#include "TLorentzVector.h"
+#include <iostream>
+
+// CINT does not understand some files included by LorentzVector
+#ifndef __CINT__
+#include "Math/Vector4D.h"
+
+using namespace ROOT::Math;
+
+#endif
  
-
-void mathcoreVectorIO() { 
-
-  
-  int nEvents = 100000;
-
-  write(nEvents);
-
-  read();
-}
 
 
 void write(int n) { 
 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
-  using namespace ROOT::Math;
 
   TRandom R; 
   TStopwatch timer;
@@ -47,7 +54,7 @@ void write(int n) {
   TTree t1("t1","Tree with new LorentzVector");
 
   XYZTVector *v1 = new XYZTVector();
-  t1.Branch("LV branch","XYZTVector",&v1);
+  t1.Branch("LV branch","ROOT::Math::XYZTVector",&v1);
 
   timer.Start();
   for (int i = 0; i < n; ++i) { 
@@ -100,9 +107,6 @@ void read() {
 
 
 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
-  using namespace ROOT::Math;
 
   TRandom R; 
   TStopwatch timer;
@@ -134,7 +138,7 @@ void read() {
   timer.Stop();
   std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
 
-  std::cout << " E average" << i<< "  " << etot << "  " << etot/double(i) << endl; 
+  std::cout << " E average" << n<< "  " << etot << "  " << etot/double(n) << endl; 
 
 
   // create tree with old LV 
@@ -147,7 +151,7 @@ void read() {
   t2->SetBranchAddress("TLV branch",&v2);
 
   timer.Start();
-  int n = (int) t2->GetEntries();
+  n = (int) t2->GetEntries();
   std::cout << " Tree Entries " << n << std::endl; 
   etot = 0;
   for (int i = 0; i < n; ++i) { 
@@ -161,8 +165,25 @@ void read() {
 
   timer.Stop();
   std::cout << " Time for old Vector " << timer.RealTime() << "  " << timer.CpuTime() << endl; 
-  std::cout << " E average" << etot/double(i) << endl; 
+  std::cout << " E average" << etot/double(n) << endl; 
 }
 
 
+
+void mathcoreVectorIO() { 
+
+
+#ifdef __CINT__
+  gSystem->Load("libMathCore");  
+  gSystem->Load("libPhysics");  
+  using namespace ROOT::Math;
+#endif
+
+  
+  int nEvents = 100000;
+
+  write(nEvents);
+
+  read();
+}
   
