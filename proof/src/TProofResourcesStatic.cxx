@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.1 2005/12/09 01:12:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.2 2005/12/09 01:22:35 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -294,7 +294,7 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const TString &confDir,
          }
 
          // Check the master work directory
-         if (strcmp(gSystem->ExpandPathName(fMaster->GetWorkDir()),
+         if (strcmp(gSystem->ExpandPathName(fMaster->GetWorkDir().Data()),
                     gProofServ->GetWorkDir())) {
             Error("ReadConfigFile","Bad work directory: %s", fMaster->GetWorkDir().Data());
             status = kFALSE;

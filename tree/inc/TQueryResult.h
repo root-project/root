@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.1 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.2 2005/09/24 11:33:41 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -45,7 +45,6 @@ class TQueryResult;
 
 
 Bool_t operator==(const TQueryResult &qr1, const TQueryResult &qr2);
-Bool_t operator!=(const TQueryResult &qr1, const TQueryResult &qr2);
 
 
 class TQueryResult : public TNamed {
