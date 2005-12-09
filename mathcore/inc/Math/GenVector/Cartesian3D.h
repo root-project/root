@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -35,8 +35,6 @@
 
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-#include "Math/GenVector/GenVector_exception.h"
-#include "Math/GenVector/CylindricalEta3D.h"
 #endif
 
 namespace ROOT { 
@@ -210,39 +208,24 @@ public :
     return *this;
   }
 
+
+
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
 
   // ====== Set member functions for coordinates in other systems =======
 
-  void SetR(Scalar r) {  
-    GenVector_exception e("Cartesian3D::SetR() is not supposed to be called");
-    Throw(e);
-    Polar3D<Scalar> v(*this); v.SetR(r); *this = Cartesian3D<Scalar>(v);
-  }
-  void SetTheta(Scalar theta) {  
-    GenVector_exception e("Cartesian3D::SetTheta() is not supposed to be called");
-    Throw(e);
-    Polar3D<Scalar> v(*this); v.SetTheta(theta); *this = Cartesian3D<Scalar>(v);
-  }
-  void SetPhi(Scalar phi) {  
-    GenVector_exception e("Cartesian3D::SetPhi() is not supposed to be called");
-    Throw(e);
-    Polar3D<Scalar> v(*this); v.SetPhi(phi); *this = Cartesian3D<Scalar>(v);
-  }
-  void SetRho(Scalar rho) {  
-    GenVector_exception e("Cartesian3D::SetRho() is not supposed to be called");
-    Throw(e);
-    CylindricalEta3D<Scalar> v(*this); v.SetRho(rho); 
-    *this = Cartesian3D<Scalar>(v);
-  }
-  void SetEta(Scalar eta) {  
-    GenVector_exception e("Cartesian3D::SetEta() is not supposed to be called");
-    Throw(e);
-    CylindricalEta3D<Scalar> v(*this); v.SetEta(eta); 
-    *this = Cartesian3D<Scalar>(v);
-  }
+  void SetR(Scalar r);
+  
+  void SetTheta(Scalar theta);  
+  
+  void SetPhi(Scalar phi); 
+  
+  void SetRho(Scalar rho); 
+  
+  void SetEta(Scalar eta);
 
 #endif
+
 
 private:
 
@@ -254,9 +237,73 @@ private:
   T fZ; 
 };
 
+
   } // end namespace Math
 
 } // end namespace ROOT
+
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+// need to put here setter methods to resolve nasty cyclical dependencies 
+// I need to include other coordinate systems only when Cartesian is already defined 
+// since they depend on it
+
+#include "Math/GenVector/GenVector_exception.h"
+#include "Math/GenVector/CylindricalEta3D.h"
+#include "Math/GenVector/Polar3D.h"
+
+  // ====== Set member functions for coordinates in other systems =======
+
+namespace ROOT { 
+
+  namespace Math { 
+
+template <class T>  
+void Cartesian3D<T>::SetR(Scalar r) {  
+    GenVector_exception e("Cartesian3D::SetR() is not supposed to be called");
+    Throw(e);
+    Polar3D<Scalar> v(*this); v.SetR(r); *this = Cartesian3D<Scalar>(v);
+  }
+
+template <class T>  
+void Cartesian3D<T>::SetTheta(Scalar theta) {  
+    GenVector_exception e("Cartesian3D::SetTheta() is not supposed to be called");
+    Throw(e);
+    Polar3D<Scalar> v(*this); v.SetTheta(theta); *this = Cartesian3D<Scalar>(v);
+  }
+
+template <class T>  
+void Cartesian3D<T>::SetPhi(Scalar phi) {  
+    GenVector_exception e("Cartesian3D::SetPhi() is not supposed to be called");
+    Throw(e);
+    Polar3D<Scalar> v(*this); v.SetPhi(phi); *this = Cartesian3D<Scalar>(v);
+  }
+
+template <class T>  
+void Cartesian3D<T>::SetRho(Scalar rho) {  
+    GenVector_exception e("Cartesian3D::SetRho() is not supposed to be called");
+    Throw(e);
+    CylindricalEta3D<Scalar> v(*this); v.SetRho(rho); 
+    *this = Cartesian3D<Scalar>(v);
+  }
+
+template <class T>  
+void Cartesian3D<T>::SetEta(Scalar eta) {  
+    GenVector_exception e("Cartesian3D::SetEta() is not supposed to be called");
+    Throw(e);
+    CylindricalEta3D<Scalar> v(*this); v.SetEta(eta); 
+    *this = Cartesian3D<Scalar>(v);
+  }
+
+
+
+  } // end namespace Math
+
+} // end namespace ROOT
+
+#endif
+
+
 
 
 #endif /* ROOT_Math_GenVector_Cartesian3D  */

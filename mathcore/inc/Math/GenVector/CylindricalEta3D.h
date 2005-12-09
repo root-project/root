@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.3 2005/12/06 17:17:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:58:46 2005
 // Major revamp:  M. Fischler  at Fri Jun 10 2005
 // 
-// Last update: $Id: CylindricalEta3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: CylindricalEta3D.h,v 1.3 2005/12/06 17:17:48 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_CylindricalEta3D 
 #define ROOT_Math_GenVector_CylindricalEta3D  1
@@ -25,9 +25,6 @@
 #include <limits>
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-#include "Math/GenVector/GenVector_exception.h"
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/Polar3D.h"
 #endif
  
 
@@ -228,36 +225,16 @@ public :
 
   // ====== Set member functions for coordinates in other systems =======
 
-  void SetX(Scalar x) {  
-    GenVector_exception e("CylindricalEta3D::SetX() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetX(x); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
-  void SetY(Scalar y) {  
-    GenVector_exception e("CylindricalEta3D::SetY() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetY(y); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
-  void SetZ(Scalar z) {  
-    GenVector_exception e("CylindricalEta3D::SetZ() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetZ(z); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
-  void SetR(Scalar r) {  
-    GenVector_exception e("CylindricalEta3D::SetR() is not supposed to be called");
-    Throw(e);
-    Polar3D<Scalar> v(*this); v.SetR(r); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
-  void SetTheta(Scalar theta) {  
-    GenVector_exception e("CylindricalEta3D::SetTheta() is not supposed to be called");
-    Throw(e);
-    Polar3D<Scalar> v(*this); v.SetTheta(theta); 
-    *this = CylindricalEta3D<Scalar>(v);
-  }
+  void SetX(Scalar x); 
+
+  void SetY(Scalar y); 
+  
+  void SetZ(Scalar z); 
+  
+  void SetR(Scalar r);
+  
+  void SetTheta(Scalar theta);  
+
 
 #endif
 
@@ -272,6 +249,67 @@ private:
   } // end namespace Math
 
 } // end namespace ROOT
+
+
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+// need to put here setter methods to resolve nasty cyclical dependencies 
+// I need to include other coordinate systems only when Cartesian is already defined 
+// since they depend on it
+
+#include "Math/GenVector/GenVector_exception.h"
+#include "Math/GenVector/Cartesian3D.h"
+#include "Math/GenVector/Polar3D.h"
+
+  // ====== Set member functions for coordinates in other systems =======
+
+namespace ROOT { 
+
+  namespace Math { 
+
+template <class T>  
+void CylindricalEta3D<T>::SetX(Scalar x) {  
+    GenVector_exception e("CylindricalEta3D::SetX() is not supposed to be called");
+    Throw(e);
+    Cartesian3D<Scalar> v(*this); v.SetX(x); 
+    *this = CylindricalEta3D<Scalar>(v);
+  }
+template <class T>  
+void CylindricalEta3D<T>::SetY(Scalar y) {  
+    GenVector_exception e("CylindricalEta3D::SetY() is not supposed to be called");
+    Throw(e);
+    Cartesian3D<Scalar> v(*this); v.SetY(y); 
+    *this = CylindricalEta3D<Scalar>(v);
+  }
+template <class T>  
+void CylindricalEta3D<T>::SetZ(Scalar z) {  
+    GenVector_exception e("CylindricalEta3D::SetZ() is not supposed to be called");
+    Throw(e);
+    Cartesian3D<Scalar> v(*this); v.SetZ(z); 
+    *this = CylindricalEta3D<Scalar>(v);
+  }
+template <class T>  
+void CylindricalEta3D<T>::SetR(Scalar r) {  
+    GenVector_exception e("CylindricalEta3D::SetR() is not supposed to be called");
+    Throw(e);
+    Polar3D<Scalar> v(*this); v.SetR(r); 
+    *this = CylindricalEta3D<Scalar>(v);
+  }
+template <class T>  
+void CylindricalEta3D<T>::SetTheta(Scalar theta) {  
+    GenVector_exception e("CylindricalEta3D::SetTheta() is not supposed to be called");
+    Throw(e);
+    Polar3D<Scalar> v(*this); v.SetTheta(theta); 
+    *this = CylindricalEta3D<Scalar>(v);
+  }
+
+
+
+  } // end namespace Math
+
+} // end namespace ROOT
+
+#endif
 
 
 #endif /* ROOT_Math_GenVector_CylindricalEta3D  */

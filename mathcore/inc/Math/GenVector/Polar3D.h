@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:40:03 2005
 // Major revamp:  M. Fischler  at Wed Jun  8 2005
 // 
-// Last update: $Id: Polar3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: Polar3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
 // 
 #ifndef ROOT_Math_GenVector_Polar3D 
 #define ROOT_Math_GenVector_Polar3D  1
@@ -25,9 +25,6 @@
 #include <limits>
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-#include "Math/GenVector/GenVector_exception.h"
-#include "Math/GenVector/Cartesian3D.h"
-#include "Math/GenVector/CylindricalEta3D.h"
 #endif
  
 namespace ROOT { 
@@ -210,33 +207,15 @@ public :
 
   // ====== Set member functions for coordinates in other systems =======
 
-  void SetX(Scalar x) {  
-    GenVector_exception e("Polar3D::SetX() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetX(x); *this = Polar3D<Scalar>(v);
-  }
-  void SetY(Scalar y) {  
-    GenVector_exception e("Polar3D::SetY() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetY(y); *this = Polar3D<Scalar>(v);
-  }
-  void SetZ(Scalar z) {  
-    GenVector_exception e("Polar3D::SetZ() is not supposed to be called");
-    Throw(e);
-    Cartesian3D<Scalar> v(*this); v.SetZ(z); *this = Polar3D<Scalar>(v);
-  }
-  void SetRho(Scalar rho) {  
-    GenVector_exception e("Polar3D::SetRho() is not supposed to be called");
-    Throw(e);
-    CylindricalEta3D<Scalar> v(*this); v.SetRho(rho); 
-    *this = Polar3D<Scalar>(v);
-  }
-  void SetEta(Scalar eta) {  
-    GenVector_exception e("Polar3D::SetEta() is not supposed to be called");
-    Throw(e);
-    CylindricalEta3D<Scalar> v(*this); v.SetEta(eta); 
-    *this = Polar3D<Scalar>(v);
-  }
+  void SetX(Scalar x);
+
+  void SetY(Scalar y); 
+
+  void SetZ(Scalar z);
+
+  void SetRho(Scalar rho);  
+
+  void SetEta(Scalar eta); 
 
 #endif
 
@@ -251,6 +230,63 @@ private:
   } // end namespace Math
 
 } // end namespace ROOT
+
+
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+
+  // ====== Set member functions for coordinates in other systems =======
+
+
+#include "Math/GenVector/GenVector_exception.h"
+#include "Math/GenVector/Cartesian3D.h"
+#include "Math/GenVector/CylindricalEta3D.h"
+
+
+namespace ROOT { 
+
+  namespace Math { 
+
+template <class T>  
+void Polar3D<T>::SetX(Scalar x) {  
+    GenVector_exception e("Polar3D::SetX() is not supposed to be called");
+    Throw(e);
+    Cartesian3D<Scalar> v(*this); v.SetX(x); *this = Polar3D<Scalar>(v);
+  }
+template <class T>  
+void Polar3D<T>::SetY(Scalar y) {  
+    GenVector_exception e("Polar3D::SetY() is not supposed to be called");
+    Throw(e);
+    Cartesian3D<Scalar> v(*this); v.SetY(y); *this = Polar3D<Scalar>(v);
+  }
+template <class T>  
+void Polar3D<T>::SetZ(Scalar z) {  
+    GenVector_exception e("Polar3D::SetZ() is not supposed to be called");
+    Throw(e);
+    Cartesian3D<Scalar> v(*this); v.SetZ(z); *this = Polar3D<Scalar>(v);
+  }
+template <class T>  
+void Polar3D<T>::SetRho(Scalar rho) {  
+    GenVector_exception e("Polar3D::SetRho() is not supposed to be called");
+    Throw(e);
+    CylindricalEta3D<Scalar> v(*this); v.SetRho(rho); 
+    *this = Polar3D<Scalar>(v);
+  }
+template <class T>  
+void Polar3D<T>::SetEta(Scalar eta) {  
+    GenVector_exception e("Polar3D::SetEta() is not supposed to be called");
+    Throw(e);
+    CylindricalEta3D<Scalar> v(*this); v.SetEta(eta); 
+    *this = Polar3D<Scalar>(v);
+  }
+
+
+
+  } // end namespace Math
+
+} // end namespace ROOT
+
+#endif  
 
 
 #endif /* ROOT_Math_GenVector_Polar3D  */
