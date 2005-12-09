@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.1 2005/12/09 01:12:17 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -355,7 +355,7 @@ TString TProofResourcesStatic::GetWorkDir(const TString &confDir,
 
       // Process one line at the time
       for (Int_t j = 0; j < numberOfLines; j++) {
-	 line = ((TObjString *)lines->At(j))->GetString();
+         line = ((TObjString *)lines->At(j))->GetString();
          line = line.Strip(TString::kBoth);
 
          // Unless this line was empty or a comment, interpret the line
