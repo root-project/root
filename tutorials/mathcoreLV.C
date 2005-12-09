@@ -1,22 +1,30 @@
-
 /// Cint macro to test writing of mathcore Lorentz Vectors in a Tree
 
-void mathcoreLV() { 
-
-  
-  int nEvents = 10000;
-
-  write(nEvents);
-
-  read();
-}
 
 
-void write(int n) { 
+#include "TRandom.h"
+#include "TStopwatch.h"
+#include "TSystem.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TCanvas.h"
 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
-  using namespace ROOT::Math;
+#include <iostream>
+
+// CINT does not understand some files included by LorentzVector
+#ifndef __CINT__
+#include "Math/Vector4D.h"
+
+using namespace ROOT::Math;
+
+#endif
+
+
+
+double write(int n) { 
+
+
 
   TRandom R; 
   TStopwatch timer;
@@ -32,6 +40,7 @@ void write(int n) {
   t1.Branch("tracks","std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pTracks);
 
   timer.Start();
+  double sum = 0;
   for (int i = 0; i < n; ++i) { 
     int nPart = R.Poisson(5);
     pTracks->clear();
@@ -43,6 +52,8 @@ void write(int n) {
       double E  = TMath::Max(R.Gaus(100,30),0.0);
       XYZTVector v1(Px,Py,Pz,E);
       pTracks->push_back(v1);
+      // evaluate sum of components to check 
+      sum += Px + Py + Pz + E;
     }
     t1.Fill(); 
   }
@@ -52,14 +63,13 @@ void write(int n) {
   std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
 
   t1.Print();
+  return sum;
 }
 
 
-void read() { 
 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
-  using namespace ROOT::Math;
+double read() { 
+
 
   TRandom R; 
   TStopwatch timer;
@@ -80,7 +90,7 @@ void read() {
   timer.Start();
   int n = (int) t1->GetEntries();
   std::cout << " Tree Entries " << n << std::endl; 
-  double etot=0;
+  double sum=0;
   for (int i = 0; i < n; ++i) { 
     t1->GetEntry(i);
     int ntrk = pTracks->size(); 
@@ -90,6 +100,7 @@ void read() {
       XYZTVector v = (*pTracks)[j]; 
       q += v; 
       h2->Fill(v.E());
+      sum += v.x() + v.y() + v.z() + v.t();
     }
     h1->Fill(q.M() );
   }
@@ -109,7 +120,40 @@ void read() {
   c1->cd(3);
   h3->Draw();
 
+  return sum;
 }
 
 
+
+int mathcoreLV() { 
+
+
+  gSystem->Load("libMathCore");  
+  gSystem->Load("libPhysics");  
+
+#ifdef __CINT__
+  // in CINT need to do that after having loading the library
+  using namespace ROOT::Math;
+#endif
+
   
+  int nEvents = 10000;
+
+  double s1 = write(nEvents);
+
+  double s2 = read();
+
+  if (fabs(s1-s2) > 1E-16 ) { 
+    std::cout << "ERROR: Found difference in Vector when reading  ( " << s1 << " != " << s2 << " ) " << std::endl;
+    return -1;
+  }
+  return 0;
+}
+
+
+#ifndef __CINT__
+int main() { 
+  return mathcoreLV(); 
+}
+#endif
+
