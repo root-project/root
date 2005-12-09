@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.9 2005/10/27 10:00:41 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.10 2005/12/09 16:24:34 rdm Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -26,6 +26,8 @@
 #include "Riostream.h"
 #include "TSystem.h"
 #include "TUrl.h"
+#include "TFileInfo.h"
+
 
 ClassImp(TAlienResult)
 

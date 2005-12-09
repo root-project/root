@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.6 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.7 2005/12/09 16:24:34 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -27,10 +27,6 @@
 #include "TList.h"
 #endif
 
-#ifndef ROOT_TFileInfo
-#include "TFileInfo.h"
-#endif
-
 
 class TGridResult : public TList {
 
@@ -46,9 +42,9 @@ public:
       { MayNotUse("GetPath"); return 0; }
    virtual const char *GetKey(UInt_t, const char*) const
       { MayNotUse("GetKey"); return 0; }
-   Bool_t  SetKey(UInt_t, const char*, const char*) 
+   virtual Bool_t      SetKey(UInt_t, const char*, const char*)
       { MayNotUse("SetKey"); return 0; }
-   virtual TList *GetFileInfoList() const
+   virtual TList      *GetFileInfoList() const
       { MayNotUse("GetFileInfoList"); return 0; }
 
    ClassDef(TGridResult,1)  // ABC defining interface to GRID result set
