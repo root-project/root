@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.9 2005/06/17 14:56:08 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.10 2005/09/04 09:51:19 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -72,6 +72,7 @@
 //  W.Rolke, A. Lopez, J. Conrad and Fred James
 //  "Limits and Confidence Intervals in presence of nuisance parameters"
 //   http://lanl.arxiv.org/abs/physics/0403059
+//   Nucl.Instrum.Meth.A551:493-503,2005
 //
 //  Should I use TRolke, TFeldmanCousins, TLimit?
 //  ============================================
