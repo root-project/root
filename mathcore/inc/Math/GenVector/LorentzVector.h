@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.5 2005/12/05 08:40:34 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.6 2005/12/05 10:33:32 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.5 2005/12/05 08:40:34 moneta Exp $
+// Last update: $Id: LorentzVector.h,v 1.6 2005/12/05 10:33:32 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -285,13 +285,13 @@ namespace ROOT {
 
       /**
          return the transverse energy squared
-         \f[ e_t = \frac{E^2 p_{\perp}^2 }{ |p|^2 }
+         \f[ e_t = \frac{E^2 p_{\perp}^2 }{ |p|^2 } \f]
       */
       Scalar Et2() const { return fCoordinates.Et2(); }
 
       /**
          return the transverse energy
-         \f[ e_t = \sqrt{ \frac{E^2 p_{\perp}^2 }{ |p|^2 } } X sign(E)
+         \f[ e_t = \sqrt{ \frac{E^2 p_{\perp}^2 }{ |p|^2 } } X sign(E) \f]
       */
       Scalar Et() const { return fCoordinates.Et(); }
 
