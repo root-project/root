@@ -29,7 +29,7 @@ ALLLIBS      += $(REFLEXLIB)
 # include all dependency files
 INCLUDEFILES += $(REFLEXDEP)
 
-
+# genreflex
 GRFLXSD := $(REFLEXDIR)/python/genreflex
 GRFLXDD := lib/python/genreflex
 
@@ -41,7 +41,7 @@ GRFLXPY  += $(GCCXMLPATHPY)
 GRFLXPYC := $(subst .py,.pyc,$(GRFLXPY))
 
 ifeq ($(PLATFORM),win32)
-GENREFLEX = bin\genreflex.bat
+GENREFLEX = bin/genreflex.bat
 GNRFLX_L1 = "" #"@echo off"
 GNRFLX_L2 = "" #"python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
 else
@@ -50,7 +50,29 @@ GNRFLX_L1 = "\#!/bin/csh -f"
 GNRFLX_L2 = 'python $$0:h/../lib/python/genreflex/genreflex.py $$*'
 endif
 
+# test suite
+CPPUNITI   = -I$(CPPUNIT)/include
+CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
+REFLEXLL   = -Llib -lReflex
 
+GENREFLEXX = ../../bin/genreflex
+
+TESTD      = $(REFLEXDIR)/test
+TESTLIBD1  = $(TESTD)/testDict1
+TESTLIBD2  = $(TESTD)/testDict2
+TESTLIBS1  = $(TESTD)/Reflex_rflx.cpp
+TESTLIBS2  = $(TESTD)/Class2Dict_rflx.cpp
+TESTLIBS   = $(TESTLIBS1) $(TESTLIBS2)
+TESTLIBO   = $(subst .cpp,.o,$(TESTLIBS))
+TESTLIB    = $(subst $(TESTD)/,lib/libtest_,$(subst _rflx.o,Rflx.$(SOEXT),$(TESTLIBO)))
+
+UNITTESTS = $(TESTD)/test_Reflex_generate.cxx    \
+            $(TESTD)/test_ReflexBuilder_unit.cxx \
+            $(TESTD)/test_Reflex_unit.cxx        \
+            $(TESTD)/test_Reflex_simple1.cxx     \
+            $(TESTD)/test_Reflex_simple2.cxx 
+UNITTESTO = $(subst .cxx,.o,$(UNITTESTS))
+UNITTESTX = $(subst .cxx,,$(UNITTESTS))
 
 ##### local rules #####
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
@@ -98,7 +120,10 @@ clean-genreflex:
 		@rm -f bin/genreflex*
 		@rm -fr lib/python/genreflex
 
-clean-reflex: clean-genreflex
+clean-check-reflex:
+		@rm -f $(TESTLIBS) $(TESTLIBO) $(UNITTESTO) $(UNITTESTX)
+
+clean-reflex: clean-genreflex clean-check-reflex
 		@rm -f $(REFLEXO) 
 
 clean::         clean-reflex
@@ -111,11 +136,29 @@ distclean::     distclean-reflex
 
 # test suite
 
-testDict1: 
-		cd $(REFLEXDIR)/test/testDict1; python ../../python/genreflex/genreflex.py ../../inc/Reflex/Reflex.h -s selection.xml --gccxmlpath=$(GCCXML) -I../../inc
-		$(CXX) -c $(CXXFLAGS) $(REFLEXDIR)/test/testDict1/Reflex_rflx.cpp
-		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" libtestDict1.$(SOEXT) Reflex_rflx.o -lReflex
+check-reflex: $(REFLEXLIB) $(TESTLIB) $(UNITTESTX)
+		@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
+		$(TESTD)/test_Reflex_generate
+		$(TESTD)/test_Reflex_simple1
+		$(TESTD)/test_Reflex_simple2
+		$(TESTD)/test_Reflex_unit
+		$(TESTD)/test_ReflexBuilder_unit
 
-check-reflex: testDict1 
+lib/libtest_%Rflx.$(SOEXT) : $(TESTD)/%_rflx.o
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
 
-#testDict2 test_Reflex_unit test_ReflexBuilder_unit test_Reflex_simple1 test_Reflex_simple2 test_Reflex_generate
+%_rflx.o : %_rflx.cpp
+		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
+
+$(TESTLIBS1) :
+		cd $(TESTD); $(GENREFLEXX) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
+
+$(TESTLIBS2) :
+		cd $(TESTD); $(GENREFLEXX) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
+
+$(UNITTESTO) : %.o : %.cxx
+		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI) -Ireflex -c $< -o $@ 
+
+$(UNITTESTX) : % : %.o
+		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL)
+
