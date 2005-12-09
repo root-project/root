@@ -181,8 +181,8 @@ int mathcoreVectorCollection() {
 
   double s2 = read();
 
-  if (fabs(s1-s2) > 1E-15 ) { 
-    std::cout << "ERROR: Found difference in Vector when reading  ( " << s1 << " != " << s2 << " ) " << std::endl;
+  if (fabs(s1-s2) > s1*1.E-15 ) { 
+    std::cout << "ERROR: Found difference in Vector when reading  ( " << s1 << " != " << s2 << " diff = " << fabs(s1-s2) << " ) " << std::endl;
     return -1;
   }
   return 0;
