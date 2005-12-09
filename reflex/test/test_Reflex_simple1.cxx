@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -55,9 +55,9 @@ public:
 void ReflexSimple1Test::loadLibrary() {
  void * libInstance = 0;
  #if defined (_WIN32)
-   libInstance = LoadLibrary("test_Reflex1Rflx.dll");
+   libInstance = LoadLibrary("test_ReflexRflx.dll");
  #else
-   libInstance = dlopen("libtest_Reflex1Rflx.so", RTLD_LAZY);
+   libInstance = dlopen("libtest_ReflexRflx.so", RTLD_LAZY);
  #endif
    CPPUNIT_ASSERT(libInstance);
 }

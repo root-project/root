@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #include "Reflex/Reflex.h"
@@ -104,9 +104,9 @@ int main() {
 
   void* libInstance = 0;  
 #ifdef _WIN32
-  libInstance = LoadLibrary("test_Reflex2Rflx.dll");
+  libInstance = LoadLibrary("test_Class2DictRflx.dll");
 #else
-  libInstance = dlopen("libtest_Reflex2Rflx.so", RTLD_LAZY);
+  libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
 #endif
   if ( !libInstance ) {
     std::cout << "Could not load dictionary " << std::endl;
