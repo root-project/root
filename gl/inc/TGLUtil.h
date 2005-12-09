@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.18 2005/11/29 18:54:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.19 2005/12/05 17:34:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -45,32 +45,6 @@ enum EOverlap
    kInside = 0,
    kPartial,
    kOutside
-};
-
-// TODO: Put this into a proper draw style flag UInt_t
-// seperated into viewer/scene/physical/logical sections
-// modify TGLDrawable to cache on shape subset
-enum EDrawStyle
-{
-   kFill = 0, 
-   kOutline, 
-   kWireFrame
-};
-
-// TODO: These need to be seen by TGLSAViewer, TGLScene, TGLClipEditor, TGLAxesEditor
-// Need to to find a better place really....
-enum EClipType 
-{ 
-   kClipNone = 0, 
-   kClipPlane, 
-   kClipBox
-};
-
-enum EAxesType 
-{ 
-   kAxesNone = 0, 
-   kAxesEdge, 
-   kAxesOrigin
 };
 
 //////////////////////////////////////////////////////////////////////////

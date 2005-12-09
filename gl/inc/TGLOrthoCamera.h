@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.7 2005/11/08 19:18:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.8 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -56,6 +56,8 @@ private:
 
 public:
 
+   // TODO: Convert this so define by pair of vectors as per perspective 
+   // camera
    TGLOrthoCamera(EType type);
    virtual ~TGLOrthoCamera();
 
@@ -66,6 +68,9 @@ public:
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0);
+
+   // External scripting control
+   void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
 
    ClassDef(TGLOrthoCamera,0) // an orthogonal view camera
 };

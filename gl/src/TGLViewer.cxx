@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.28 2005/12/05 17:34:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.29 2005/12/06 17:52:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1199,38 +1199,47 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 }
 
 //______________________________________________________________________________
+void TGLViewer::SetDrawStyle(EDrawStyle drawStyle)
+{
+   // Set the draw style - one of kFill, kWireframe, kOutline
+   fDrawStyle = drawStyle;
+   RequestDraw();
+}
+
+//______________________________________________________________________________
 void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 {
    // Set current active camera - 'cameraType' one of:
-   // kCameraPerspectiveX, kCameraPerspectiveY, kCameraPerspectiveZ
-   // kCameraXOY, kCameraXOZ,  kCameraZOY 
+   // kCameraPerspX, kCameraPerspY, kCameraPerspZ
+   // kCameraOrthoXOY, kCameraOrthoXOZ, kCameraOrthoZOY 
    if (fScene.IsLocked()) {
       Error("TGLViewer::SetCurrentCamera", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
       return;
    }
 
+   // TODO: Move these into a vector!
    switch(cameraType) {
-      case(kCameraPerspectiveXOZ): {
+      case(kCameraPerspXOZ): {
          fCurrentCamera = &fPerspectiveCameraXOZ;
          break;
       }
-      case(kCameraPerspectiveYOZ): {
+      case(kCameraPerspYOZ): {
          fCurrentCamera = &fPerspectiveCameraYOZ;
          break;
       }
-      case(kCameraPerspectiveXOY): {
+      case(kCameraPerspXOY): {
          fCurrentCamera = &fPerspectiveCameraXOY;
          break;
       }
-      case(kCameraXOY): {
+      case(kCameraOrthoXOY): {
          fCurrentCamera = &fOrthoXOYCamera;
          break;
       }
-      case(kCameraXOZ): {
+      case(kCameraOrthoXOZ): {
          fCurrentCamera = &fOrthoXOZCamera;
          break;
       }
-      case(kCameraZOY): {
+      case(kCameraOrthoZOY): {
          fCurrentCamera = &fOrthoZOYCamera;
          break;
       }
@@ -1244,7 +1253,98 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
    fCurrentCamera->SetViewport(fViewport);
 
    // And viewer is redrawn
-   RequestDraw();
+   RequestDraw(kHigh);
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetOrthoCamera(ECameraType camera, Double_t left, Double_t right, 
+                               Double_t top, Double_t bottom)
+{
+   // Set an orthographic camera to supplied configuration - note this does not need
+   // to be the current camera - though you will not see the effect if it is not.
+   //
+   // 'camera' defines the ortho camera - one of kCameraOrthoXOY, kCameraOrthoXOZ, kCameraOrthoZOY
+   // 'left' / 'right' / 'top' / 'bottom' define the WORLD coordinates which
+   // corresepond with the left/right/top/bottom positions on the GL viewer viewport
+   // E.g. for kCameraOrthoXOY camera left/right are X world coords, 
+   // top/bottom are Y world coords
+   // As this is an orthographic camera the other axis (in eye direction) is 
+   // no relevant. The near/far clip planes are set automatically based in scene
+   // contents
+
+   // TODO: Move these into a vector!
+   switch(camera) {
+      case(kCameraOrthoXOY): {
+         fOrthoXOYCamera.Configure(left, right, top, bottom);
+         if (fCurrentCamera == &fOrthoXOYCamera) {
+            RequestDraw(kHigh);
+         }
+         break;
+      }
+      case(kCameraOrthoXOZ): {
+         fOrthoXOZCamera.Configure(left, right, top, bottom);
+         if (fCurrentCamera == &fOrthoXOZCamera) {
+            RequestDraw(kHigh);
+         }
+         break;
+      }
+      case(kCameraOrthoZOY): {
+         fOrthoZOYCamera.Configure(left, right, top, bottom);
+         if (fCurrentCamera == &fOrthoZOYCamera) {
+            RequestDraw(kHigh);
+         }
+         break;
+      }
+      default: {
+         Error("TGLViewer::SetOrthoCamera", "invalid camera type");
+         break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly, 
+                              Double_t center[3], Double_t hRotate, Double_t vRotate)
+{
+   // Set a perspective camera to supplied configuration - note this does not need
+   // to be the current camera - though you will not see the effect if it is not.
+   //
+   // 'camera' defines the persp camera - one of kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY
+   // 'fov' - field of view (lens angle) in degrees (clamped to 0.1 - 170.0)
+   // 'dolly' - distance from 'center'
+   // 'center' - world position from which dolly/hRotate/vRotate are measured
+   //             camera rotates round this, always facing in (in center of viewport)
+   // 'hRotate' - horizontal rotation from initial configuration in degrees
+   // 'hRotate' - vertical rotation from initial configuration in degrees
+
+   // TODO: Move these into a vector!
+   switch(camera) {
+      case(kCameraPerspXOZ): {
+         fPerspectiveCameraXOZ.Configure(fov, dolly, center, hRotate, vRotate);
+         if (fCurrentCamera == &fPerspectiveCameraXOZ) {
+            RequestDraw(kHigh);
+         }
+         break;
+      }
+      case(kCameraPerspYOZ): {
+         fPerspectiveCameraYOZ.Configure(fov, dolly, center, hRotate, vRotate);
+         if (fCurrentCamera == &fPerspectiveCameraYOZ) {
+            RequestDraw(kHigh);
+         }
+         break;
+      }
+      case(kCameraPerspXOY): {
+         fPerspectiveCameraXOY.Configure(fov, dolly, center, hRotate, vRotate);
+         if (fCurrentCamera == &fPerspectiveCameraXOY) {
+            RequestDraw(kHigh);
+         }
+         break;
+      }
+      default: {
+         Error("TGLViewer::SetPerspectiveCamera", "invalid camera type");
+         break;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1264,56 +1364,77 @@ void TGLViewer::ToggleLight(ELight light)
 }
 
 //______________________________________________________________________________
-void TGLViewer::GetGuideState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const
+void TGLViewer::SetLight(ELight light, Bool_t on)
 {
-   // Fetch the state of guides (axes & reference markers) into arguments
-   axesType = fAxesType;
-   referenceOn = fReferenceOn;
-   referencePos = fReferencePos;
-}
+   // Set light on/off - 'light' one of kFront, kTop, kBottom, kLeft, kRight
 
-//______________________________________________________________________________
-void TGLViewer::SetGuideState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos)
-{
-   // Set the state of guides (axes & reference markers) from arguments
-   fAxesType = axesType;
-   fReferenceOn = referenceOn;
-   fReferencePos = referencePos;
+   // N.B. We can't directly call glEnable here as may not be in correct gl context
+   // adjust mask and set when drawing
+   if (light >= kLightMask) {
+      Error("TGLViewer::ToggleLight", "invalid light type");
+      return;
+   }
+
+   if (on) {
+      fLightState |= light;
+   } else {
+      fLightState &= ~light;
+   }
    RequestDraw();
 }
 
 //______________________________________________________________________________
-void TGLViewer::GetClipState(EClipType type, std::vector<Double_t> & data) const
+void TGLViewer::GetGuideState(EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const
+{
+   // Fetch the state of guides (axes & reference markers) into arguments
+   axesType = fAxesType;
+   referenceOn = fReferenceOn;
+   referencePos[0] = fReferencePos.X();
+   referencePos[1] = fReferencePos.Y();
+   referencePos[2] = fReferencePos.Z();
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetGuideState(EAxesType axesType, Bool_t referenceOn, const Double_t referencePos[3])
+{
+   // Set the state of guides (axes & reference markers) from arguments
+   fAxesType = axesType;
+   fReferenceOn = referenceOn;
+   fReferencePos.Set(referencePos[0], referencePos[1], referencePos[2]);
+   RequestDraw();
+}
+
+//______________________________________________________________________________
+void TGLViewer::GetClipState(EClipType type, Double_t data[6]) const
 {
    // Get state of clip object 'type' into data vector:
    //
    // 'type' requested        'data' contents returned
    // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
    // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
-   data.clear();
    if (type == kClipPlane) {
       TGLPlaneSet_t planes;
       fClipPlane->PlaneSet(planes);
-      data.push_back(planes[0].A());
-      data.push_back(planes[0].B());
-      data.push_back(planes[0].C());
-      data.push_back(planes[0].D());
+      data[0] = planes[0].A();
+      data[1] = planes[0].B();
+      data[2] = planes[0].C();
+      data[3] = planes[0].D();
    } else if (type == kClipBox) {
       const TGLBoundingBox & box = fClipBox->BoundingBox();
       TGLVector3 ext = box.Extents();
-      data.push_back(box.Center().X());
-      data.push_back(box.Center().Y());
-      data.push_back(box.Center().Z());
-      data.push_back(box.Extents().X());
-      data.push_back(box.Extents().Y());
-      data.push_back(box.Extents().Z());
+      data[0] = box.Center().X();
+      data[1] = box.Center().Y();
+      data[2] = box.Center().Z();
+      data[3] = box.Extents().X();
+      data[4] = box.Extents().Y();
+      data[5] = box.Extents().Z();
    } else {
       Error("TGLViewer::GetClipState", "invalid clip type");
    }
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetClipState(EClipType type, const std::vector<Double_t> & data)
+void TGLViewer::SetClipState(EClipType type, const Double_t data[6])
 {
    // Set state of clip object 'type' into data vector:
    //
@@ -1354,19 +1475,19 @@ void TGLViewer::SetClipState(EClipType type, const std::vector<Double_t> & data)
 }
 
 //______________________________________________________________________________
-EClipType TGLViewer::GetCurrentClip() const
+TGLViewer::EClipType TGLViewer::GetCurrentClip() const
 {
    // Get current type active in viewer - returns one of kClipNone
    // kClipPlane or kClipBox
    if (fCurrentClip == 0) {
-      return kClipNone;
+      return TGLViewer::kClipNone;
    } else if (fCurrentClip == fClipPlane) {
-      return kClipPlane;
+      return TGLViewer::kClipPlane;
    } else if (fCurrentClip == fClipBox) {
-      return kClipBox;
+      return TGLViewer::kClipBox;
    } else {
       Error("TGLViewer::GetCurrentClip" , "Unknown clip type");
-      return kClipNone;
+      return TGLViewer::kClipNone;
    }
 }
 

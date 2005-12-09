@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.25 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.26 2005/12/01 11:04:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -22,6 +22,7 @@
 #include "TError.h"
 #include "TString.h"
 #include "TClass.h" // For non-TObject reflection
+#include "TGLViewer.h" // Remove once shared enums moved to a better place
 
 #include <algorithm>
 
@@ -290,7 +291,7 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 
 //______________________________________________________________________________
 //TODO: Merge style and LOD into general draw style flag
-void TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t LOD, 
                     Double_t timeout, const TGLClip * clip)
 {
    // Draw out scene into current GL context, using passed arguments:
@@ -327,21 +328,21 @@ void TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD,
    // to ensure we are in correct thread/context under Windows
    // TODO: Could detect change and only mod if changed for speed
    switch (style) {
-      case (kFill): {
+      case (TGLViewer::kFill): {
          glEnable(GL_LIGHTING);
          glEnable(GL_CULL_FACE);
          glPolygonMode(GL_FRONT, GL_FILL);
          glClearColor(0.0, 0.0, 0.0, 1.0); // Black
          break;
       }
-      case (kWireFrame): {
+      case (TGLViewer::kWireFrame): {
          glDisable(GL_CULL_FACE);
          glDisable(GL_LIGHTING);
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
          glClearColor(0.0, 0.0, 0.0, 1.0); // Black
          break;
       }
-      case (kOutline): {
+      case (TGLViewer::kOutline): {
          glEnable(GL_LIGHTING);
          glEnable(GL_CULL_FACE);
          glPolygonMode(GL_FRONT, GL_FILL);
@@ -437,7 +438,7 @@ void TGLScene::Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD,
 }
 
 //______________________________________________________________________________
-void TGLScene::DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD, 
                         Double_t timeout, const std::vector<TGLPlane> * clipPlanes)
 {
    // Perform a internal draw pass - multiple passes are required for some
@@ -463,9 +464,9 @@ void TGLScene::DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD,
 
    // Setup draw style function pointer
    void (TGLPhysicalShape::*drawPtr)(UInt_t)const = &TGLPhysicalShape::Draw;
-   if (style == kWireFrame) {
+   if (style == TGLViewer::kWireFrame) {
       drawPtr = &TGLPhysicalShape::DrawWireFrame;
-   } else if (style == kOutline) {
+   } else if (style == TGLViewer::kOutline) {
       drawPtr = &TGLPhysicalShape::DrawOutline;
   }
 
@@ -600,25 +601,25 @@ void TGLScene::DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD,
       //BBOX is white for wireframe mode and fill,
       //red for outlines
       switch (style) {
-      case kFill:
-      case kWireFrame :
+      case TGLViewer::kFill:
+      case TGLViewer::kWireFrame :
          glColor3d(1., 1., 1.);
 
          break;
-      case kOutline:
+      case TGLViewer::kOutline:
          glColor3d(1., 0., 0.);
          
          break;
       }
 
-      if (style == kFill || style == kOutline) {
+      if (style == TGLViewer::kFill || style == TGLViewer::kOutline) {
          glDisable(GL_LIGHTING);
       }
       glDisable(GL_DEPTH_TEST);
 
       fSelectedPhysical->BoundingBox().Draw();
 
-      if (style == kFill || style == kOutline) {
+      if (style == TGLViewer::kFill || style == TGLViewer::kOutline) {
          glEnable(GL_LIGHTING);
       }
       glEnable(GL_DEPTH_TEST);
@@ -671,7 +672,7 @@ Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const T
 }
 
 //______________________________________________________________________________
-void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TGLVertex3 * reference) const
+void TGLScene::DrawGuides(const TGLCamera & camera, Int_t axesType, const TGLVertex3 * reference) const
 {
    // Draw out scene guides - axes and reference marker
    //
@@ -692,10 +693,10 @@ void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TG
       TGLUtil::DrawSphere(*reference, referenceSize.Mag(), referenceColor);
    }
 
-   if (axesType != kAxesOrigin) {
+   if (axesType != TGLViewer::kAxesOrigin) {
       glEnable(GL_DEPTH_TEST);
    }
-   if (axesType == kAxesNone) {
+   if (axesType == TGLViewer::kAxesNone) {
       return;
    }
 
@@ -719,7 +720,7 @@ void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TG
       TGLVertex3 start;
       TGLVector3 vector;
    
-      if (axesType == kAxesOrigin) {
+      if (axesType == TGLViewer::kAxesOrigin) {
          // Through origin axes
          start[(i+1)%3] = 0.0;
          start[(i+2)%3] = 0.0;
@@ -758,7 +759,7 @@ void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TG
    }
 
    // Draw origin sphere(s)
-   if (axesType == kAxesOrigin) {
+   if (axesType == TGLViewer::kAxesOrigin) {
       // Single white origin sphere at 0, 0, 0
       Float_t white[4] = { 1.0, 1.0, 1.0, 1.0 };
       TGLUtil::DrawSphere(TGLVertex3(0.0, 0.0, 0.0), pixelSize*2.0, white);  
@@ -787,7 +788,7 @@ void TGLScene::DrawGuides(const TGLCamera & camera, EAxesType axesType, const TG
    for (UInt_t k = 0; k < 3; k++) {
       TGLUtil::SetDrawColors(axesColors[k*2+1]);
       TGLVertex3 minPos, maxPos;
-      if (axesType == kAxesOrigin) {
+      if (axesType == TGLViewer::kAxesOrigin) {
          minPos[(k+1)%3] = 0.0;
          minPos[(k+2)%3] = 0.0;
       } else {
@@ -898,7 +899,7 @@ UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamer
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::Select(const TGLCamera & camera, EDrawStyle style, const TGLClip * clip)
+Bool_t TGLScene::Select(const TGLCamera & camera, Int_t style, const TGLClip * clip)
 {
    // Perform select draw using arguments:
    //

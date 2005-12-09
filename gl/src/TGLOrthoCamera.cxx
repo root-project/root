@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.10 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.11 2005/12/01 11:04:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -175,9 +175,6 @@ Bool_t TGLOrthoCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
    // Truck the camera - 'move camera parallel to film plane'. The film 
    // plane is defined by the EyePoint() / EyeDirection() pair. Define motion 
    // using center point (x/y) and delta (xDelta/yDelta) - the mouse motion. 
-   // For an perspecive camera the trucking can only track the mouse at
-   // a fixed Z depth - in this case we choose the minimum - the near 
-   // clipping plane. Objects on this plane track the mouse movement.
    //
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
    //
@@ -199,7 +196,8 @@ Bool_t TGLOrthoCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
 Bool_t TGLOrthoCamera::Rotate(Int_t /*xDelta*/, Int_t /*yDelta*/)
 {
    // Rotate the camera - 'swivel round the view volume center'.
-   // Ignored at present. Could let the user or external code create non-axis
+   // Ignored at present for orthographic cameras - have a fixed direction. 
+   // Could let the user or external code create non-axis
    // ortho projects by adjusting H/V rotations in future.
    //
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
@@ -281,4 +279,33 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickR
    if (fCacheDirty) {
       UpdateCache();
    }
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::Configure(Double_t left, Double_t right, 
+                               Double_t top, Double_t bottom)
+{
+   // Configure the camera state
+   Double_t width = right - left;
+   Double_t height = top - bottom;
+
+   Double_t xZoom = width/fVolume.Extents().X();
+   Double_t yZoom = height/fVolume.Extents().Y();
+
+   fZoom = (xZoom > yZoom) ? xZoom : yZoom;
+
+   // kXOY : X Horz. / Y Vert (looking towards +Z, Y up)
+   // kXOZ : X Horz. / Z Vert (looking towards +Y, Z up)
+   // kZOY : Z Horz. / Y Vert (looking towards +X, Y up)
+   if (fType == kXOY) {
+      fTruck.X() = right - left;
+      fTruck.Y() = top - bottom;
+   } else if (fType == kXOZ) {
+      fTruck.X() = right - left;
+      fTruck.Z() = top - bottom;
+   } else if (fType == kZOY) {
+      fTruck.Z() = right - left;
+      fTruck.Y() = top - bottom;
+   }
+   fCacheDirty = kTRUE;
 }

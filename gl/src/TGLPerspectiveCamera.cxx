@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.11 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.12 2005/12/05 17:34:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -298,4 +298,31 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
       Info("TGLPerspectiveCamera::Apply", "fTruck (%f,%f,%f)", fTruck[0], fTruck[1], fTruck[2]);
       Info("TGLPerspectiveCamera::Apply", "Near %f Far %f", nearClipDist, farClipDist);
    }
+}
+
+//______________________________________________________________________________
+void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t center[3], 
+                                     Double_t hRotate, Double_t vRotate)
+{
+   fFOV = fov;
+   fDolly = dolly;
+   fCenter.Set(center[0], center[1], center[2]);
+   fHRotate = hRotate;
+   fVRotate = vRotate;
+
+   // Don't generally constrain external configuration
+   // However exceeding the vRotate limits or silly FOV values will 
+   // cause very weird behaviour or projections so fix these
+   if (fVRotate > 90.0) {
+      fVRotate = 90.0;
+   }
+   if (fVRotate < -90.0) {
+      fVRotate = -90.0;
+   }
+   if (fFOV > 170.0) {
+      fFOV = 170.0;
+   } else if (fFOV < 0.1) {
+      fFOV = 0.1;
+   }
+   fCacheDirty = kTRUE;
 }

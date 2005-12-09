@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.14 2005/11/16 16:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.15 2005/11/23 10:47:52 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
-#ifndef ROOT_TGLUtil
-#include "TGLUtil.h" // For clip type enum
+#ifndef ROOT_TGLViewer
+#include "TGLViewer.h" // For viewer enums - to be reconsidered
 #endif
 
 class TGLStandalone;
@@ -171,18 +171,18 @@ private:
 class TGLClipEditor : public TGCompositeFrame {
 private:
 
-   TGLSAViewer   *fViewer;
-   TList          fTrash;
-   TGLayoutHints  *fL1, *fL2;
-   TGButton       *fApplyButton;
-   TGButtonGroup    * fTypeButtons;
-   TGCompositeFrame * fPlanePropFrame;
-   TGNumberEntry    * fPlaneProp[4];
-   TGCompositeFrame * fBoxPropFrame;
-   TGNumberEntry    * fBoxProp[6];
-
-   TGCheckButton  *fEdit;
-   EClipType       fCurrentClip;
+   TGLSAViewer         *fViewer;
+   TList                fTrash;
+   TGLayoutHints       *fL1, *fL2;
+   TGButton            *fApplyButton;
+   TGButtonGroup       *fTypeButtons;
+   TGCompositeFrame    *fPlanePropFrame;
+   TGNumberEntry       *fPlaneProp[4];
+   TGCompositeFrame    *fBoxPropFrame;
+   TGNumberEntry       *fBoxProp[6];
+   TGCheckButton       *fEdit;
+   TGLViewer::EClipType fCurrentClip; // Nasty - need to move
+                                      // all common enums out somewhere else
 
 public:
    TGLClipEditor(const TGWindow *parent, TGLSAViewer *viewer);   
@@ -193,10 +193,10 @@ public:
    void UpdateViewer();
 
    // External viewer interface
-   void GetState(EClipType type, std::vector<Double_t> & data) const;
-   void SetState(EClipType type, const std::vector<Double_t> & data);
-   void GetCurrent(EClipType & type, Bool_t & edit) const;
-   void SetCurrent(EClipType type);
+   void GetState(TGLViewer::EClipType type, Double_t data[6]) const;
+   void SetState(TGLViewer::EClipType type, const Double_t data[6]);
+   void GetCurrent(TGLViewer::EClipType & type, Bool_t & edit) const;
+   void SetCurrent(TGLViewer::EClipType type);
 
    void HideParts();
 
@@ -270,8 +270,8 @@ public:
    TGLGuideEditor(const TGWindow *parent, TGLSAViewer *viewer);
 
    void Update();
-   void GetState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const;
-   void SetState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos);
+   void GetState(TGLViewer::EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const;
+   void SetState(TGLViewer::EAxesType axesType, Bool_t referenceOn, const Double_t referencePos[3]);
 
    ClassDef(TGLGuideEditor, 0); // GL Viewer guides editor GUI component
 };

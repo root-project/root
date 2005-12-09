@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.11 2005/12/05 17:34:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.12 2005/12/07 16:39:23 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -367,22 +367,22 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_BSP);
             break;
          case kGLXOY:
-            SetCurrentCamera(TGLViewer::kCameraXOY);
+            SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
             break;
          case kGLXOZ:
-            SetCurrentCamera(TGLViewer::kCameraXOZ);
+            SetCurrentCamera(TGLViewer::kCameraOrthoXOZ);
             break;
          case kGLZOY:
-            SetCurrentCamera(TGLViewer::kCameraZOY);
+            SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
             break;
          case kGLPerspYOZ:
-            SetCurrentCamera(TGLViewer::kCameraPerspectiveYOZ);
+            SetCurrentCamera(TGLViewer::kCameraPerspYOZ);
             break;
          case kGLPerspXOZ:
-            SetCurrentCamera(TGLViewer::kCameraPerspectiveXOZ);
+            SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
             break;
          case kGLPerspXOY:
-            SetCurrentCamera(TGLViewer::kCameraPerspectiveXOY);
+            SetCurrentCamera(TGLViewer::kCameraPerspXOY);
             break;
          case kGLExit:
             // Exit needs to be delayed to avoid bad drawable X ids - GUI
@@ -426,7 +426,7 @@ void TGLSAViewer::ProcessGUIEvent(Int_t wid)
       }
       // Sync clipping
       EClipType clipType;
-      std::vector<Double_t> clipData;
+      Double_t clipData[6];
       Bool_t  clipEdit;
       fClipEditor->GetCurrent(clipType, clipEdit);
       fClipEditor->GetState(clipType, clipData);
@@ -455,7 +455,7 @@ void TGLSAViewer::ProcessGUIEvent(Int_t wid)
       }
       EAxesType axesType;
       Bool_t referenceOn;
-      TGLVertex3 referencePos;
+      Double_t referencePos[3];
       fGuideEditor->GetState(axesType, referenceOn, referencePos);
       SetGuideState(axesType, referenceOn, referencePos);
       break;
@@ -484,7 +484,7 @@ void TGLSAViewer::ClipChanged()
    // Update GUI components for embedded viewer clipping change
 
    EClipType type = GetCurrentClip();
-   std::vector<Double_t> data;
+   Double_t data[6];
    GetClipState(type, data);
    fClipEditor->SetState(type, data);
    fClipEditor->SetCurrent(type);
@@ -502,7 +502,7 @@ void TGLSAViewer::PostSceneBuildSetup()
    // Now synconise the GUI
    
    // Default clips
-   std::vector<Double_t> data;
+   Double_t data[6];
    GetClipState(kClipPlane, data);
    fClipEditor->SetState(kClipPlane, data);
    GetClipState(kClipBox, data);
@@ -512,7 +512,7 @@ void TGLSAViewer::PostSceneBuildSetup()
    // Guides
    EAxesType axesType;
    Bool_t referenceOn;
-   TGLVertex3 referencePos;
+   Double_t referencePos[3];
    GetGuideState(axesType, referenceOn, referencePos);
    fGuideEditor->SetState(axesType, referenceOn, referencePos);
 }

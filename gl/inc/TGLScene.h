@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.17 2005/11/16 16:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.18 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -110,7 +110,7 @@ private:
    static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const TGLPhysicalShape * shape2);
 
    // Internal draw passes - repeated calls for cliping
-   void  DrawPass(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+   void  DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD, 
                   Double_t timeout, const std::vector<TGLPlane> * clipPlanes = 0);
    
    // Misc
@@ -134,11 +134,11 @@ public:
 
    // Drawing/Selection
    const TGLBoundingBox & BoundingBox() const; 
-   void                   Draw(const TGLCamera & camera, EDrawStyle style, UInt_t LOD, 
+   void                   Draw(const TGLCamera & camera, Int_t style, UInt_t LOD, 
                                Double_t timeout, const TGLClip * clip);
-   void                   DrawGuides(const TGLCamera & camera, EAxesType axesType, 
+   void                   DrawGuides(const TGLCamera & camera, Int_t axesType, 
                                      const TGLVertex3 * reference) const;
-   Bool_t                 Select(const TGLCamera & camera, EDrawStyle style, const TGLClip * clip);
+   Bool_t                 Select(const TGLCamera & camera, Int_t style, const TGLClip * clip);
 
    // Logical Shape Management
    void                    AdoptLogical(TGLLogicalShape & shape);

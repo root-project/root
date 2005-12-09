@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.17 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.18 2005/12/05 17:34:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -84,8 +84,8 @@ class TGLViewer : public TVirtualViewer3D
    friend class TGLOutput;
 public:
 
-   enum ECameraType { kCameraPerspectiveXOZ, kCameraPerspectiveYOZ, kCameraPerspectiveXOY,
-                      kCameraXOY, kCameraXOZ, kCameraZOY };
+   enum ECameraType { kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY,
+                      kCameraOrthoXOY, kCameraOrthoXOZ, kCameraOrthoZOY };
 
    enum ELight      { kLightFront =  0x00000001, 
                       kLightTop   =  0x00000002, 
@@ -93,6 +93,14 @@ public:
                       kLightLeft   = 0x00000008,
                       kLightRight  = 0x00000010, 
                       kLightMask   = 0x0000001f }; 
+
+   // TODO: Put this into a proper draw style flag UInt_t
+   // seperated into viewer/scene/physical/logical sections
+   // modify TGLDrawable to cache on shape subset
+   enum EDrawStyle { kFill, kOutline, kWireFrame };
+   enum EClipType  { kClipNone, kClipPlane, kClipBox };
+   enum EAxesType  { kAxesNone, kAxesEdge, kAxesOrigin };
+
 private:
    // TODO: Consider what to push up to protected, pull out to TGLScene
    // TGLCamera or other external helpers
@@ -225,12 +233,17 @@ public:
    virtual void   AddCompositeOp(UInt_t operation);
 
    // External GUI component interface
+   void  SetDrawStyle(EDrawStyle drawStyle);
    void  SetCurrentCamera(ECameraType camera);
+   void  SetOrthoCamera(ECameraType camera, Double_t left, Double_t right, Double_t top, Double_t bottom);
+   void  SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly, 
+                              Double_t center[3], Double_t hRotate, Double_t vRotate);
    void  ToggleLight(ELight light);
-   void  GetGuideState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const;
-   void  SetGuideState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos);
-   void  GetClipState(EClipType type, std::vector<Double_t> & data) const;
-   void  SetClipState(EClipType type, const std::vector<Double_t> & data);
+   void  SetLight(ELight light, Bool_t on);
+   void  GetGuideState(EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const;
+   void  SetGuideState(EAxesType axesType, Bool_t referenceOn, const Double_t referencePos[3]);
+   void  GetClipState(EClipType type, Double_t data[6]) const;
+   void  SetClipState(EClipType type, const Double_t data[6]);
    EClipType GetCurrentClip() const;
    void  SetCurrentClip(EClipType type, Bool_t edit);
    void  SetSelectedColor(const Float_t rgba[17]);

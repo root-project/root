@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.6 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.7 2005/12/05 17:34:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -63,6 +63,10 @@ public:
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
    virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0);
+
+   // External scripting control
+   void Configure(Double_t fov, Double_t dolly, Double_t center[3], 
+                  Double_t hRotate, Double_t vRotate);
 
    ClassDef(TGLPerspectiveCamera,0) // a perspective view camera
 };

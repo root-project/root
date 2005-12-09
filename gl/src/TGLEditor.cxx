@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.22 2005/11/23 10:47:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.23 2005/11/29 09:25:51 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -590,7 +590,7 @@ ClassImp(TGLClipEditor)
 //______________________________________________________________________________
 TGLClipEditor::TGLClipEditor(const TGWindow *parent, TGLSAViewer *v) : 
    TGCompositeFrame(parent, 100, 100, kVerticalFrame),
-                    fViewer(v), fCurrentClip(kClipNone)
+                    fViewer(v), fCurrentClip(TGLViewer::kClipNone)
 {
    // Construct clip editor GUI component, parented by window 'parent',
    // bound to viewer 'v'
@@ -689,17 +689,17 @@ void TGLClipEditor::ClipTypeChanged(Int_t id)
    // Clip type radio button changed - update viewer
    switch(id) { // Radio button ids run from 1
       case(1): {
-         SetCurrent(kClipNone);
+         SetCurrent(TGLViewer::kClipNone);
          fEdit->SetState(kButtonDisabled);
          break;
       }
       case(2): {
-         SetCurrent(kClipPlane);
+         SetCurrent(TGLViewer::kClipPlane);
          fEdit->SetState(kButtonUp);
          break;
       }
       case(3): {
-         SetCurrent(kClipBox);
+         SetCurrent(TGLViewer::kClipBox);
          fEdit->SetState(kButtonUp);
          break;
       }
@@ -718,20 +718,19 @@ void TGLClipEditor::UpdateViewer()
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::GetState(EClipType type, std::vector<Double_t> & data) const
+void TGLClipEditor::GetState(TGLViewer::EClipType type, Double_t data[6]) const
 {
    // Fetch GUI state for clip if 'type' into 'data' vector
    UInt_t i;
-   data.clear();
-   if (type == kNone) {
+   if (type == TGLViewer::kClipNone) {
       // Nothing to do
-   } else if (type == kClipPlane) {
+   } else if (type == TGLViewer::kClipPlane) {
       for (i=0; i<4; i++) {
-         data.push_back(fPlaneProp[i]->GetNumber());
+         data[i] = fPlaneProp[i]->GetNumber();
       }
-   } else if (type == kClipBox) {
+   } else if (type == TGLViewer::kClipBox) {
       for (i=0; i<6; i++) {
-         data.push_back(fBoxProp[i]->GetNumber());
+         data[i] = fBoxProp[i]->GetNumber();
       }
    } else {
       Error("TGLClipEditor::GetClipState", "Invalid clip type");
@@ -739,17 +738,17 @@ void TGLClipEditor::GetState(EClipType type, std::vector<Double_t> & data) const
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::SetState(EClipType type, const std::vector<Double_t> & data)
+void TGLClipEditor::SetState(TGLViewer::EClipType type, const Double_t data[6])
 {
    // Set GUI state for clip 'type from 'data' vector
    UInt_t i;
-   if (type == kNone) {
+   if (type == TGLViewer::kClipNone) {
       // Nothing to do
-   } else if (type == kClipPlane) {
+   } else if (type == TGLViewer::kClipPlane) {
       for (i=0; i<4; i++) {
          fPlaneProp[i]->SetNumber(data[i]);
       }
-   } else if (type == kClipBox) {
+   } else if (type == TGLViewer::kClipBox) {
       for (i=0; i<6; i++) {
          fBoxProp[i]->SetNumber(data[i]);
       }
@@ -760,7 +759,7 @@ void TGLClipEditor::SetState(EClipType type, const std::vector<Double_t> & data)
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::GetCurrent(EClipType & type, Bool_t & edit) const
+void TGLClipEditor::GetCurrent(TGLViewer::EClipType & type, Bool_t & edit) const
 {
    // Get current (active) GUI clip type into 'type', and in viewer edit
    // state into 'edit'
@@ -769,24 +768,24 @@ void TGLClipEditor::GetCurrent(EClipType & type, Bool_t & edit) const
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::SetCurrent(EClipType type)
+void TGLClipEditor::SetCurrent(TGLViewer::EClipType type)
 {
    // Set current (active) GUI clip type from 'type'
    fCurrentClip = type;
    switch(fCurrentClip) {
-      case(kClipNone): {
+      case(TGLViewer::kClipNone): {
          fTypeButtons->SetButton(1);
          HideFrame(fPlanePropFrame);
          HideFrame(fBoxPropFrame);
          break;
       }
-      case(kClipPlane): {
+      case(TGLViewer::kClipPlane): {
          fTypeButtons->SetButton(2);
          ShowFrame(fPlanePropFrame);
          HideFrame(fBoxPropFrame);
          break;
       }
-      case(kClipBox): {
+      case(TGLViewer::kClipBox): {
          fTypeButtons->SetButton(3);
          HideFrame(fPlanePropFrame);
          ShowFrame(fBoxPropFrame);
@@ -951,7 +950,7 @@ void TGLGuideEditor::Update()
 }
 
 //______________________________________________________________________________
-void TGLGuideEditor::GetState(EAxesType & axesType, Bool_t & referenceOn, TGLVertex3 & referencePos) const
+void TGLGuideEditor::GetState(TGLViewer::EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const
 {
    // Get GUI state into arguments:
    // 'axesType'     - axes type - one of EAxesType - kAxesNone/kAxesPlane/kAxesBox
@@ -962,17 +961,17 @@ void TGLGuideEditor::GetState(EAxesType & axesType, Bool_t & referenceOn, TGLVer
    for (Int_t i = 1; i < 4; i++) { 
       TGButton * button = fAxesContainer->GetButton(i);
       if (button && button->IsDown()) {
-         axesType = EAxesType(i-1);
+         axesType = TGLViewer::EAxesType(i-1);
       }
    }
    referenceOn = fReferenceOn->IsDown();
-   referencePos.Set(fReferencePos[0]->GetNumber(),
-                    fReferencePos[1]->GetNumber(),
-                    fReferencePos[2]->GetNumber());
+   referencePos[0] = fReferencePos[0]->GetNumber();
+   referencePos[1] = fReferencePos[1]->GetNumber();
+   referencePos[2] = fReferencePos[2]->GetNumber();
 }
 
 //______________________________________________________________________________
-void TGLGuideEditor::SetState(EAxesType axesType, Bool_t referenceOn, const TGLVertex3 & referencePos)
+void TGLGuideEditor::SetState(TGLViewer::EAxesType axesType, Bool_t referenceOn, const Double_t referencePos[3])
 {
    // Set GUI state from arguments:
    // 'axesType'     - axes type - one of EAxesType - kAxesNone/kAxesPlane/kAxesBox
