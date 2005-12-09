@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.21 2005/05/31 13:28:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.22 2005/09/04 15:16:12 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -311,9 +311,10 @@ TUrl &TUrl::operator=(const TUrl &rhs)
 }
 
 //______________________________________________________________________________
-const char *TUrl::GetUrl()
+const char *TUrl::GetUrl(Bool_t withDeflt)
 {
-   // Return full URL.
+   // Return full URL. If withDflt is kTRUE, explicitly add the port even
+   // if it matches the default value for the URL protocol.
 
    if (IsValid() && fUrl == "") {
       // Handle special protocol cases: file:, rfio:, etc.
@@ -362,7 +363,7 @@ const char *TUrl::GetUrl()
          }
          fUrl += "@";
       }
-      if (!deflt) {
+      if (!deflt || withDeflt) {
          char p[10];
          sprintf(p, "%d", fPort);
          fUrl = fUrl + fHost + ":" + p + fFile;

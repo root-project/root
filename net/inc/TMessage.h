@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.7 2004/05/05 14:43:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.8 2005/07/18 16:20:52 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -35,6 +35,7 @@ class TMessage : public TBuffer {
 friend class TAuthenticate;
 friend class TSocket;
 friend class TPSocket;
+friend class TXSocket;
 
 private:
    UInt_t   fWhat;        //Message type

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TSemaphore.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TSemaphore.h,v 1.2 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    TSemaphore(UInt_t initial = 1);
    virtual ~TSemaphore() { }
 
-   Int_t  Wait();
+   Int_t  Wait(Int_t millisec = 0);
    Int_t  TryWait();
    Int_t  Post();
 

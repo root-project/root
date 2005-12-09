@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.8 2005/05/20 10:02:45 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.9 2005/09/04 15:36:31 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
    TUrl &operator=(const TUrl &rhs);
    virtual ~TUrl() { }
 
-   const char *GetUrl();
+   const char *GetUrl(Bool_t withDeflt = kFALSE);
    const char *GetProtocol() const { return fProtocol; }
    const char *GetUser() const { return fUser; }
    const char *GetPasswd() const { return fPasswd; }

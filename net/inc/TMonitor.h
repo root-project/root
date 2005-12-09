@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.6 2004/10/18 14:03:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.7 2004/12/15 17:48:03 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -40,6 +40,7 @@ class TSocket;
 class TMonitor : public TObject , public TQObject {
 
 friend class TSocketHandler;
+friend class TXSocketHandler;
 friend class TTimeOutTimer;
 
 private:

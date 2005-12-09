@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TSemaphore.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TSemaphore.cxx,v 1.2 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -31,29 +31,40 @@ TSemaphore::TSemaphore(UInt_t initial) : fCond(&fMutex)
 }
 
 //______________________________________________________________________________
-Int_t TSemaphore::Wait()
+Int_t TSemaphore::Wait(Int_t millisec)
 {
    // If semaphore value is > 0 then decrement it and carry on. If it's
-   // already 0 then block.
+   // already 0 then block. If millisec > 0, apply a relative timeout
+   // of millisec milliseconds.
 
-   int r = fMutex.Lock();
-   if (r) { Error("Wait","Lock returns %d [%ld]", r, TThread::SelfId()); return r; }
+   Int_t rc = 0;
+
+   if ((rc = fMutex.Lock())) {
+      Error("Wait","Lock returns %d [%ld]", rc, TThread::SelfId());
+      return rc;
+   }
 
    while (fValue == 0) {
-      int rc = fCond.Wait();
 
-      if (rc != 0) {
-         Error("Wait","TCondition::Wait() returns %d [%ld]", rc, TThread::SelfId());
-         r = fMutex.UnLock();
-         if (r) Error("Wait","UnLock on error returns %d [%ld]", r, TThread::SelfId());
-         return rc;
+      int crc = (millisec > 0) ? fCond.TimedWaitRelative(millisec)
+                               : fCond.Wait();
+
+      if (crc != 0) {
+         Error("Wait", "TCondition::Wait() returns %d [%ld]",
+               crc, TThread::SelfId());
+         if ((rc = fMutex.UnLock()))
+            Error("Wait", "UnLock on error returns %d [%ld]",
+                  rc, TThread::SelfId());
+         return crc;
       }
    }
 
    fValue--;
 
-   r = fMutex.UnLock();
-   if (r) { Error("Wait","UnLock returns %d [%ld]", r, TThread::SelfId()); return r; }
+   if ((rc = fMutex.UnLock())) {
+      Error("Wait", "UnLock returns %d [%ld]", rc, TThread::SelfId());
+      return rc;
+   }
 
    return 0;
 }
