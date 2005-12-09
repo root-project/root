@@ -24,11 +24,6 @@ class genreflex:
     self.selector        = None
     self.gccxml          = ''
     self.quiet           = False
-    try:
-      import gccxmlpath
-      self.gccxmlpath = gccxmlpath.gccxmlpath
-    except:
-      pass
 #----------------------------------------------------------------------------------
   def usage(self, status = 1) :
     print 'Usage:'
@@ -178,6 +173,11 @@ class genreflex:
         self.usage()
       for l in open(self.select).readlines() : classes.append(l[:-1])
     #----------GCCXML command------------------------------
+    try:
+      import gccxmlpath
+      self.gccxmlpath = gccxmlpath.gccxmlpath
+    except:
+      pass
     if self.gccxmlpath :
       self.gccxml = self.gccxmlpath + os.sep + 'gccxml'
     elif self.which('gccxml') :
