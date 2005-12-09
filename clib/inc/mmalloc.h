@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: mmalloc.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -27,7 +27,6 @@
 #endif
 
 #define PTR                 void *
-#define CONST               const
 #define PARAMS(paramlist)   paramlist
 
 #ifdef WIN32

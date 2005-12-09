@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: mmcheck.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /* Standard debugging hooks for `mmalloc'.
@@ -60,7 +60,7 @@ struct hdr
 static void
 checkhdr (mdp, hdr)
   struct mdesc *mdp;
-  CONST struct hdr *hdr;
+  const struct hdr *hdr;
 {
   if (hdr -> magic != MAGICWORD ||
       ((char *) &hdr[1])[hdr -> size] != MAGICBYTE)
