@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.5 2005/08/12 15:46:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.6 2005/09/23 13:04:53 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -46,6 +46,8 @@ public:
       { MayNotUse("GetPath"); return 0; }
    virtual const char *GetKey(UInt_t, const char*) const
       { MayNotUse("GetKey"); return 0; }
+   Bool_t  SetKey(UInt_t, const char*, const char*) 
+      { MayNotUse("SetKey"); return 0; }
    virtual TList *GetFileInfoList() const
       { MayNotUse("GetFileInfoList"); return 0; }
 

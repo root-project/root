@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.6 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.7 2005/10/27 10:00:41 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -39,6 +39,7 @@ public:
    virtual const char *GetFileNamePath(UInt_t i) const;         // returns the full path + file name of list item i
    virtual const char *GetPath(UInt_t i) const;                 // returns the file path of list item i
    virtual const char *GetKey(UInt_t i, const char *key) const; // returns the key value of list item i
+   virtual Bool_t      SetKey(UInt_t i, const char *key, const char *value);            // set the key value of list item i
    virtual TList      *GetFileInfoList() const;                 // returns a new allocated List of TFileInfo Objects
    void                Print(Option_t *option="") const;
    void                Print(Option_t *wildcard, Option_t *option) const;

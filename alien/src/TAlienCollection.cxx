@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:$:$Id: TAlienCollection.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.3 2005/09/23 13:04:53 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -16,15 +16,18 @@
 // Class which manages collection of files on AliEn middleware.         //
 // The file collection is in the form of an XML file.                   //
 //                                                                      //
+// The internal list is managed as follows:                             //
+// TList* ===> TMap*(file) ===> TMap*(attributes)                       //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TAlienCollection.h"
+#include "TAlienResult.h"
 #include "TList.h"
 #include "TMap.h"
 #include "TFile.h"
 #include "TXMLEngine.h"
 #include "TObjString.h"
-#include "glite_file_operations.h"
 
 ClassImp(TAlienCollection)
 
@@ -130,13 +133,36 @@ void TAlienCollection::ParseXML()
          XMLNodePointer_t xfile = xml.GetChild(xevent);
          if (!xfile) continue;
 
+         Bool_t firstfile=kTRUE;
          do {
             // here we have an event file
             // get the attributes;
             xml.GetAttr(xfile, "lfn");
             xml.GetAttr(xfile, "turl");
-            // Use turl
-            files->Add(new TObjString(xml.GetAttr(xfile,"name")) , new TObjString(xml.GetAttr(xfile,"turl")));
+
+            TMap *attributes = new TMap();
+	    TObjString* oname = new TObjString(xml.GetAttr(xfile,"name"));
+	    TObjString* oturl = new TObjString(xml.GetAttr(xfile,"turl"));
+	    TObjString* olfn  = new TObjString(xml.GetAttr(xfile,"lfn"));
+	    TObjString* omd5  = new TObjString(xml.GetAttr(xfile,"md5"));
+	    TObjString* osize = new TObjString(xml.GetAttr(xfile,"size"));
+	    TObjString* oguid = new TObjString(xml.GetAttr(xfile,"guid"));
+	    TObjString* oseStringlist = new TObjString(xml.GetAttr(xfile,"seStringlist"));
+
+	    attributes->Add(new TObjString("name"),oname);
+	    attributes->Add(new TObjString("turl"),oturl);
+	    attributes->Add(new TObjString("lfn"),olfn);
+	    attributes->Add(new TObjString("md5"),omd5);
+	    attributes->Add(new TObjString("size"),osize);
+	    attributes->Add(new TObjString("guid"),oguid);
+	    attributes->Add(new TObjString("seStringlist"),oseStringlist);
+            files->Add(new TObjString(xml.GetAttr(xfile,"name")) , attributes);
+
+	    // we add the first file always as a file without name to the map
+	    if (firstfile) {
+	      files->Add(new TObjString(""),attributes);
+	      firstfile=kFALSE;
+	    }
          } while ((xfile = xml.GetNext(xfile)));
          fEventList->Add(files);
       }
@@ -169,7 +195,7 @@ const char *TAlienCollection::GetTURL(const char* filename) const
 }
 
 //______________________________________________________________________________
-void TAlienCollection::Print(Option_t *opt) const
+void TAlienCollection::Print(Option_t *) const
 {
    // Print event file collection.
 
@@ -185,38 +211,6 @@ void TAlienCollection::Print(Option_t *opt) const
 }
 
 //______________________________________________________________________________
-TAlienCollection *TAlienCollection::Query(const char *path, const char *pattern, Int_t maxresult)
-{
-   Int_t nresults=0;
-   TAlienCollection* coll = new TAlienCollection(0);
-   if ((nresults=glite_find(path,pattern,maxresult))<0) {
-      coll->Error("Query","Could not execute Query!\n");
-      delete coll;
-      return 0;
-   }
-
-   if (coll) {
-      // fill them into the stringlist
-      Int_t found=0;
-      for (Int_t i = 0 ; i < nresults; i++) {
-         const char* field = glite_getfindresult("lfn",i);
-         if (field) {
-            found++;
-            TMap *files = new TMap();
-            TString turl = "alien://" + TString(field);
-            TString bname="";
-            files->Add(new TObjString(bname) , new TObjString(turl));
-            coll->GetEventList()->Add(files);
-         } else {
-            break;
-         }
-      }
-      coll->Info("Query","I found %d Files for you!",found);
-   }
-   return coll;
-}
-
-//______________________________________________________________________________
 TDSet *TAlienCollection::GetDataset(const char *type, const char *objname ,
                                     const char *dir)
 {
@@ -229,7 +223,26 @@ TDSet *TAlienCollection::GetDataset(const char *type, const char *objname ,
 
    while ( (mapp = Next())) {
       if (((TObjString*)fCurrent->GetValue("")))
-         dset->Add(((TObjString*)fCurrent->GetValue(""))->GetName());
+         dset->Add( ((TMap*)(fCurrent->GetValue("")))->GetValue("turl")->GetName());;
    }
    return dset;
+}
+
+//______________________________________________________________________________
+TGridResult *TAlienCollection::GetGridResult(const char *filename,Bool_t publicaccess)
+{
+   Reset();
+   TMap* mapp;
+   TGridResult* result = new TAlienResult();
+
+   while ( (mapp = Next())) {
+     if (((TObjString*)fCurrent->GetValue(filename))) {
+       TMap* attributes = (TMap*)fCurrent->GetValue(filename)->Clone();
+       if (publicaccess) {
+          attributes->Add(new TObjString("options"), new TObjString("&publicaccess=1"));
+       }
+       result->Add(attributes);
+     }
+   }
+   return dynamic_cast<TGridResult*>(result);
 }

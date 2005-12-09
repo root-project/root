@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.16 2005/10/06 09:38:48 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.17 2005/10/27 16:36:38 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -230,8 +230,11 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
       fgInitDone = kTRUE;
    }
 
+   // Remove anchors from the URL!
+   TUrl urlnoanchor(url);
+   urlnoanchor.SetAnchor("");
    // Create an instance
-   CreateXClient(url, option, netopt);
+   CreateXClient(urlnoanchor.GetUrl(), option, netopt);
 }
 
 //_____________________________________________________________________________
@@ -530,6 +533,9 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    }
 
    Bool_t result = kFALSE;
+
+   if (bufferLength==0)
+      return 0;
 
    Int_t st;
    if ((st = ReadBufferViaCache(buffer, bufferLength))) {

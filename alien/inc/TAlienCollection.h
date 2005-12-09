@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.2 2005/09/23 13:04:53 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -19,6 +19,9 @@
 // Class which manages collection of files on AliEn middleware.         //
 // The file collection is in the form of an XML file.                   //
 //                                                                      //
+// The internal list is managed as follows:                             //
+// TList* ===> TMap*(file) ===> TMap*(attributes)                       //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TGridCollection
@@ -29,6 +32,9 @@
 #endif
 #ifndef ROOT_TDSet
 #include "TDSet.h"
+#endif
+#ifndef ROOT_TGridResult
+#include "TGridResult.h"
 #endif
 
 class TMap;
@@ -53,17 +59,17 @@ public:
 
    virtual ~TAlienCollection();
 
-   void        Reset();
-   TMap       *Next();
-   const char *GetTURL(const char *name) const;
-   void        Print(Option_t *opt) const;
-   TFile      *OpenFile(const char *filename) const;
-   TList      *GetEventList() const { return fEventList; }
+   void         Reset();
+   TMap        *Next();
+   const char  *GetTURL(const char *name) const;
+   void         Print(Option_t *opt) const;
+   TFile       *OpenFile(const char *filename) const;
+   TList       *GetEventList() const { return fEventList; }
 
-   TDSet      *GetDataset(const char *type, const char *objname = "*", const char *dir = "/");
+   TDSet       *GetDataset(const char *type, const char *objname = "*", const char *dir = "/");
+   TGridResult *GetGridResult(const char *filename="", Bool_t publicaccess=kFALSE);
 
    static TAlienCollection *Open(const char *localcollectionfile);
-   static TAlienCollection *Query(const char *path, const char *pattern, Int_t maxfiles=1000);
 
    ClassDef(TAlienCollection,1)  // Manages collection of files on AliEn
 };

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.12 2005/09/25 23:01:26 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.13 2005/10/27 10:00:41 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -53,6 +53,15 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    //     "alien:///alice/test.root?&se=Alice::CERN::Storage"
    // The default SE is specified by the enviroment variable alien_CLOSE_SE
    //
+   // The URL option "?locate=1" can be appended to a URL to use the TAlienFile
+   // interface to locate a file which is accessed by a logical file name.
+   // The file name is replaced by an TURL containing the file catalogue
+   // authorization envelope. This can be used f.e. to get file access authorization
+   // through a client to be used on a PROOF cluster reading data from
+   // authorization-envelope enabled xrootd servers. The "locate" option
+   // enforces only the retrieval of the access envelope but does not
+   // create a physical connection to an xrootd server.
+   //
    // If the file specified in the URL does not exist, is not accessable
    // or can not be created the kZombie bit will be set in the TAlienFile
    // object. Use IsZombie() to see if the file is accessable.
@@ -69,6 +78,29 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    fOption = option;
 
    TString newurl = AccessURL(lUrl.GetUrl(), fOption, ftitle, compress);
+   Bool_t lLocate = kFALSE;
+
+   // get the options and check if this is just to prelocate the file ....
+   TString urloptions=lUrl.GetOptions();
+   TObjArray *objOptions = urloptions.Tokenize("&");
+   for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+      TString loption = ((TObjString*)objOptions->At(n))->GetName();
+      TObjArray *objTags = loption.Tokenize("=");
+      if (objTags->GetEntries() == 2) {
+         TString key   =  ((TObjString*)objTags->At(0))->GetName();
+         TString value =  ((TObjString*)objTags->At(1))->GetName();
+         if ( (key == "locate") && (value == "1") ) {
+            lLocate=kTRUE;
+         }
+      }
+      delete objTags;
+   }
+   delete objOptions;
+
+   if (lLocate) {
+     SetName(newurl);
+     return;
+   }
 
    TUrl nUrl(newurl.Data());
    TString oldopt;
@@ -277,6 +309,11 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    fAuthz = authzStr->GetName();
 
    newurl = urlStr->GetName();
+   stmp = purl.GetAnchor();
+   if (stmp != "") {
+     newurl += "#";
+     newurl += purl.GetAnchor();
+   }
    newurl += TString("?&authz=");
    newurl += authzStr->GetName();
 

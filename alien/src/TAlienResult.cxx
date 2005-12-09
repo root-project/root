@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.8 2005/09/25 23:01:27 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.9 2005/10/27 10:00:41 rdm Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TMap.h"
 #include "Riostream.h"
 #include "TSystem.h"
+#include "TUrl.h"
 
 ClassImp(TAlienResult)
 
@@ -109,6 +110,24 @@ const char *TAlienResult::GetKey(UInt_t i, const char* key) const
 }
 
 //______________________________________________________________________________
+Bool_t TAlienResult::SetKey(UInt_t i, const char* key, const char* value)
+{
+   if (At(i)) {
+      TPair* entry;
+      if ((entry=(TPair*)((TMap*)At(i))->FindObject(key))) {
+         TObject* val = ((TMap*)At(i))->Remove((TObject*) entry->Key());
+         if (val) {
+            delete val;
+         }
+      }
+      ((TMap*)At(i))->Add((TObject*) (new TObjString(key)),
+                          (TObject*) (new TObjString(value)));
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 TList *TAlienResult::GetFileInfoList() const
 {
    TList* newfileinfolist = new TList();
@@ -123,13 +142,26 @@ TList *TAlienResult::GetFileInfoList() const
 
       const char* md5  = GetKey(i,"md5");
       const char* uuid = GetKey(i,"guid");
+      const char* msd  = GetKey(i,"msd");
+
       if (md5 && !strlen(md5))
          md5=0;
       if (uuid && !strlen(uuid))
          uuid=0;
+      if (msd && !strlen(msd))
+         msd=0;
 
       TString turl = GetKey(i,"turl");
 
+      if (msd) {
+         TUrl urlturl(turl);
+         TString options = urlturl.GetOptions();
+         options += "&msd=";
+         options += msd;
+         urlturl.SetOptions(options);
+         turl = urlturl.GetUrl();
+      }
+      Info("GetFileInfoList","Adding Url %s with Msd %s\n",turl.Data(),msd);
       newfileinfolist->Add (new TFileInfo(turl, size, uuid, md5));
    }
    return newfileinfolist;
