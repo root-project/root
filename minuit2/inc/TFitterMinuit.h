@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.2 2005/11/29 14:44:59 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.3 2005/12/01 10:26:05 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -110,6 +110,11 @@ public:
   void SetMinimumTolerance(double mintol) { fMinTolerance = mintol; }
 
   double MinimumTolerance() const { return fMinTolerance; }
+
+  /// create the minimizer type (Migard or Simplex)
+  //  can be re-implemented in the derived classes 
+
+  virtual void CreateMinimizer(EMinimizerType = kMigrad ); 
   
 
 protected: 
@@ -120,10 +125,6 @@ protected:
 
   virtual void SetMinimizer( ROOT::Minuit2::ModularFunctionMinimizer * m) { fMinimizer = m; }
 
-
-  // re -implemented in derived classes 
-
-  virtual void CreateMinimizer(EMinimizerType = kMigrad ); 
 
   // functions to create FCN - re-implemented in derived class (GFumili)
 

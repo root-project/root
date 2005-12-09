@@ -21,26 +21,18 @@ USERFUNCSRC      = testUserFunc.$(SrcSuf)
 USERFUNC         = testUserFunc$(ExeSuf)
 
 
-# ANDYOBJ      = testAndy.$(ObjSuf)
-# ANDYSRC      = testAndy.$(SrcSuf)
-# ANDY         = testAndy$(ExeSuf)
+GRAPHOBJ       = testGraph.$(ObjSuf)
+GRAPHSRC       = testGraph.$(SrcSuf)
+GRAPH          = testGraph$(ExeSuf)
 
-GRAPHOBJ      = testGraph.$(ObjSuf)
-GRAPHSRC      = testGraph.$(SrcSuf)
-GRAPH        = testGraph$(ExeSuf)
+MINIMIZEOBJ      = testMinimize.$(ObjSuf)
+MINIMIZESRC      = testMinimize.$(SrcSuf)
+MINIMIZE         = testMinimize$(ExeSuf)
 
 
-OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ)
-#                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
-#                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-#                 $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO)  $(TESTBITSO) \
-#                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO)
+OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ) $(MINIMIZEOBJ)
 
-PROGRAMS      = $(USERFUNC)  $(GRAPH)
-#                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-#                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-#                 $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
-#                 $(THREADS) $(STRESSVEC)
+PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE)
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -51,11 +43,11 @@ $(USERFUNC):    $(USERFUNCOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-# $(ANDY):        $(ANDYOBJ)
-# 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
-# 		@echo "$@ done"
-
 $(GRAPH): 	$(GRAPHOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(MINIMIZE): 	$(MINIMIZEOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
@@ -65,10 +57,8 @@ clean:
 		@rm -f $(OBJS) core
 
 distclean:      clean
-		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
+		@rm -f $(PROGRAMS)  *Dict.* *.def *.exp \
 		   *.root *.ps *.so *.lib *.dll *.d .def so_locations
-		@rm -rf cxx_repository
-		-@cd RootShower && $(MAKE) distclea
 
 .SUFFIXES: .$(SrcSuf)
 

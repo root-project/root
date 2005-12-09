@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.2 2005/10/27 17:22:16 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -122,8 +122,4 @@ int main(int argc, char **argv)
    return 0;
 }
 #endif
-/*
-int main() { 
-  fitGraph(500); 
-}
-*/
+

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: LinkDef.h,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: LinkDef.h,v 1.2 2005/12/01 10:26:05 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -24,9 +24,9 @@
 
 //#pragma link C++ namespace ROOT::Minuit2;
 
-// #pragma link C++ class ROOT::Minuit2::FCNBase;
-// #pragma link C++ class ROOT::Minuit2::FCNGradientBase;
-// #pragma link C++ class ROOT::Minuit2::FumiliFCNBase;
+#pragma link C++ class ROOT::Minuit2::FCNBase;
+#pragma link C++ class ROOT::Minuit2::FCNGradientBase;
+#pragma link C++ class ROOT::Minuit2::FumiliFCNBase;
 
 
 #endif
