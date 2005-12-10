@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.6 2005/12/07 17:35:08 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.7 2005/12/07 17:56:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -798,7 +798,45 @@ SVector<T,N> SMatrix<T,D1,D2>::LowerBlock( ) const {
   return tmp;
 }
 
+/// construct from upper/lower block
 
+//lower block
+template <class T, unsigned int D1, unsigned int D2>
+#ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
+SMatrix<T,D1,D2>::SMatrix(const SVector<T, D1*(D2+1)/2 >  & v, bool lower ) { 
+#else
+template <unsigned int N>  
+SMatrix<T,D1,D2>::SMatrix(const SVector<T, N >  & v, bool lower ) {
+#endif
+
+  // only for squared matrices
+  STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+
+#ifdef UNSUPPORTED_TEMPLATE_EXPRESSION
+  STATIC_CHECK( N == D1*(D1+1)/2,SVector_Wrong_Size );
+#endif
+
+  int k = 0;
+  if (lower) { 
+    // case of lower block 
+    for(unsigned int i=0; i<D1; ++i) {
+      for(unsigned int j=0; j<=i; ++j) {
+	fArray[ i*D2 + j] = v[k];
+	if ( i != j) fArray[ j*D2 + i] = v[k];
+	k++;
+      }
+    }
+  } else {
+    // case of upper block 
+    for(unsigned int i=0; i<D1; ++i) {
+      for(unsigned int j=i; j<D2; ++j) {
+	fArray[ i*D2 + j] = v[k];
+	if ( i != j) fArray[ j*D2 + i] = v[k];
+	k++;
+      }
+    }
+  }
+}
 
 
   }  // namespace Math

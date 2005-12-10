@@ -320,6 +320,15 @@ int test10() {
 
   iret |= compare( vU[2], subV[1] ); 
   
+  // test constructor from subVectors
+  SMatrix<double,3> C(vU);
+  SMatrix<double,3> D(vL,true);
+
+  std::cout << " C =  " << C << std::endl;
+  std::cout << " D =  " << D << std::endl;
+
+  iret |= compare( C==D, true ); 
+
  
   return iret;
 }

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.5 2005/12/07 17:32:45 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.6 2005/12/07 17:56:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix
@@ -125,6 +125,17 @@ public:
 
   /// assign from a scalar value 
   SMatrix<T,D1,D2>& operator=(const T& rhs);
+#endif
+
+  /** 
+      construct a symmetric matrix from a SVector containing the upper(lower) 
+      part of a triangular matrix
+  */
+#ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
+  SMatrix(const SVector<T, D1*(D2+1)/2> & v, bool lower = false );
+#else
+  template<unsigned int N>
+  SMatrix(const SVector<T,N> & v, bool lower = false );
 #endif
 
   ///

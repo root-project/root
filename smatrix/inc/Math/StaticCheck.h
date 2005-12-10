@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: StaticCheck.h,v 1.1 2005/12/05 16:33:47 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: StaticCheck.h,v 1.1 2005/12/05 16:36:51 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 
@@ -31,7 +31,7 @@
 #include <cassert>
 
 #define STATIC_CHECK(expr, msg) \
-           std::cerr << "ERROR:   "  << #msg << std::endl; \
+           if (!(expr) ) std::cerr << "ERROR:   "  << #msg << std::endl; \
            assert(expr);
 
 #else 
