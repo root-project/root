@@ -41,7 +41,7 @@ $(RINTLIB):     $(RINTO) $(RINTDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libRint.$(SOEXT) $@ "$(RINTO) $(RINTDO)" \
 		   "$(RINTLIBEXTRA)"
 
-$(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMP)
+$(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RINTH) $(RINTL)
 

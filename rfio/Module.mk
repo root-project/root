@@ -41,7 +41,7 @@ $(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libRFIO.$(SOEXT) $@ "$(RFIOO) $(RFIODO)" \
 		   "$(RFIOLIBEXTRA) $(SHIFTLIBDIR) $(SHIFTLIB)"
 
-$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMP)
+$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RFIOH) $(RFIOL)
 

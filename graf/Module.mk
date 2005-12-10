@@ -50,10 +50,10 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GRAFLI
 		   "$(GRAFO) $(GRAFDO)" \
 		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GRAFLIBEXTRA)"
 
-$(GRAFDS1):     $(GRAFHD) $(GRAFL1) $(ROOTCINTTMP)
+$(GRAFDS1):     $(GRAFHD) $(GRAFL1) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GRAFHD) $(GRAFL1)
-$(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMP)
+$(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL2)
 

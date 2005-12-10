@@ -41,7 +41,7 @@ $(QTROOTLIB):   $(QTROOTO) $(QTROOTDO) $(ORDER_) $(MAINLIBS) $(QTROOTLIBDEP)
 		   "$(SOFLAGS)" libQtRoot.$(SOEXT) $@ "$(QTROOTO) $(QTROOTDO)" \
 		   "$(QTROOTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
-$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMP)
+$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTROOTH) $(QTROOTL)
 

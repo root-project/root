@@ -43,7 +43,7 @@ $(X11LIB):      $(X11O) $(X11DO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libGX11.$(SOEXT) $@ "$(X11O) $(X11DO)" \
 		   "$(X11LIBEXTRA) $(XLIBS)"
 
-$(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMP)
+$(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X11H1) $(X11L)
 

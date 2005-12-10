@@ -48,7 +48,7 @@ else
 		   "$(EGLIBEXTRA)"
 endif
 
-$(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMP)
+$(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(EGH1) $(EGL)
 

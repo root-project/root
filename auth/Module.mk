@@ -60,7 +60,7 @@ $(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(ORDER_) $(MAINLIBS) $(RAUTHLIBDEP)
 		   "$(SOFLAGS)" libRootAuth.$(SOEXT) $@ "$(RAUTHO) $(RAUTHDO)" \
 		   "$(RAUTHLIBEXTRA) $(EXTRA_RAUTHLIBS)"
 
-$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMP)
+$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RAUTHH) $(RAUTHL)
 

@@ -55,13 +55,21 @@ if [ "$R__PLATFORM" = "win32" ]; then
       if [ "$R__LIB" = "lib/libCint.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
               lib/${name}.exp $syslibs"
-      elif [ "$R__LIB" = "lib/libCore.dll" ]; then
+      elif [ "$R__LIB" = "lib/libReflex.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCint.lib $R__EXTRA $syslibs WSock32.lib \
+              lib/${name}.exp $R__EXTRA $syslibs"
+      elif [ "$R__LIB" = "lib/libCore.dll" ]; then
+         if [ "$(bin/root-config --dicttype)" != "cint" ]; then
+             needReflex="lib/libReflex.lib"
+         fi
+         cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
+              lib/${name}.exp lib/libCint.lib $needReflex\
+              $R__EXTRA $syslibs WSock32.lib \
               Oleaut32.lib Iphlpapi.lib"
       else
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $R__EXTRA lib/libCore.lib lib/libCint.lib \
+              lib/${name}.exp $R__EXTRA lib/libCore.lib \
+              lib/libCint.lib $needReflex \
               $syslibs"
       fi
       echo $cmd

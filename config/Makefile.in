@@ -100,6 +100,11 @@ DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
 DCAPINCDIR     := $(filter-out /usr/include, @dcapincdir@)
 
+BUILDGFAL      := @buildgfal@
+GFALLIBDIR     := @gfallibdir@
+GFALCLILIB     := @gfallib@
+GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
+
 BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@
 CHIRPCLILIB    := @chirplib@
@@ -215,6 +220,8 @@ BUILDPEAC      := @buildpeac@
 
 CPPUNIT        := @cppunit@
 GCCXML         := @gccxml@
+
+ROOTDICTTYPE   := @dicttype@
 
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR

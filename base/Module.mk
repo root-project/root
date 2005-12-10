@@ -68,13 +68,13 @@ include/%.h:    $(BASEDIRI)/%.h
 # rmkdepend does not pick it up if $(COMPILEDATA) doesn't exist yet.
 base/src/TSystem.d base/src/TSystem.o: $(COMPILEDATA)
 
-$(BASEDS1):     $(BASEH1) $(BASEL1) $(ROOTCINTTMP)
+$(BASEDS1):     $(BASEH1) $(BASEL1) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH1) $(BASEL1)
-$(BASEDS2):     $(BASEH1) $(BASEL2) $(ROOTCINTTMP)
+$(BASEDS2):     $(BASEH1) $(BASEL2) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH1) $(BASEL2)
-$(BASEDS3):     $(BASEH3) $(BASEL3) $(ROOTCINTTMP)
+$(BASEDS3):     $(BASEH3) $(BASEL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH3) $(BASEL3)
 # pre-requisites intentionally not specified... should be called only

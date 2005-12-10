@@ -16,8 +16,8 @@ ROOTCINTS    := $(MODDIRS)/rootcint.cxx $(wildcard $(MODDIRS)/R*.cxx)
 ROOTCINTO    := $(ROOTCINTS:.cxx=.o)
 ROOTCINTDEP  := $(ROOTCINTO:.o=.d)
 ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
-ROOTCINTTMP  := $(MODDIRS)/rootcint_tmp$(EXEEXT)
-ROOTCINT     := bin/rootcint$(EXEEXT)
+ROOTCINTTMPEXE:= $(MODDIRS)/rootcint_tmp$(EXEEXT)
+ROOTCINTEXE  := bin/rootcint$(EXEEXT)
 
 ##### rlibmap #####
 RLIBMAPS     := $(MODDIRS)/rlibmap.cxx
@@ -29,11 +29,11 @@ RLIBMAP      := bin/rlibmap$(EXEEXT)
 INCLUDEFILES += $(ROOTCINTDEP) $(RLIBMAPDEP)
 
 ##### local rules #####
-$(ROOTCINT):    $(CINTLIB) $(ROOTCINTO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
+$(ROOTCINTEXE): $(CINTLIB) $(ROOTCINTO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTCINTO) $(METAUTILSO) \
 		   $(RPATH) $(CINTLIBS) $(CILIBS)
 
-$(ROOTCINTTMP): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
+$(ROOTCINTTMPEXE): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ \
 		   $(ROOTCINTTMPO) $(METAUTILSO) $(CINTTMPO) $(CILIBS)
 
@@ -44,7 +44,7 @@ else
 		$(LD) $(LDFLAGS) -o $@ $< imagehlp.lib
 endif
 
-all-utils:      $(ROOTCINTTMP) $(ROOTCINT) $(RLIBMAP)
+all-utils:      $(ROOTCINTTMPEXE) $(ROOTCINTEXE) $(RLIBMAP)
 
 clean-utils:
 		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO) $(RLIBMAPO)
@@ -52,7 +52,7 @@ clean-utils:
 clean::         clean-utils
 
 distclean-utils: clean-utils
-		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMP) $(ROOTCINT) \
+		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMPEXE) $(ROOTCINTEXE) \
 		   $(RLIBMAPDEP) $(RLIBMAP) \
 		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib
 

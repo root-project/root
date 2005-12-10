@@ -43,7 +43,7 @@ $(VENUSLIB):    $(VENUSO) $(VENUSDO) $(ORDER_) $(MAINLIBS) $(VENUSLIBDEP)
 		   "$(VENUSO) $(VENUSDO)" \
 		   "$(VENUSLIBEXTRA) $(FVENUSLIBDIR) $(FVENUSLIB)"
 
-$(VENUSDS):     $(VENUSH1) $(VENUSL) $(ROOTCINTTMP)
+$(VENUSDS):     $(VENUSH1) $(VENUSL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(VENUSH1) $(VENUSL)
 

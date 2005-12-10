@@ -95,7 +95,7 @@ $(ROOFITETAG): $(ROOFITSRCS)
 		   touch $$etag ; \
 		fi)
 
-$(ROOFITH):     $(ROOFITETAG)
+$(ROOFITH) $(ROOFITL1) $(ROOFITL2) $(ROOFITL3): $(ROOFITETAG)
 
 # Use static rule here instead of implicit rule
 $(ROOFITINCH):  include/%.h: $(ROOFITDIRI)/%.h
@@ -106,15 +106,15 @@ $(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 		   "$(SOFLAGS)" libRooFit.$(SOEXT) $@ "$(ROOFITO) $(ROOFITDO)" \
 		   "$(ROOFITLIBEXTRA)"
 
-$(ROOFITDS1):   $(ROOFITETAG) $(ROOFITH1) $(ROOFITL1) $(ROOTCINTTMP)
+$(ROOFITDS1):   $(ROOFITETAG) $(ROOFITH1) $(ROOFITL1) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITH1) $(ROOFITL1)
 
-$(ROOFITDS2):   $(ROOFITETAG) $(ROOFITH2) $(ROOFITL2) $(ROOTCINTTMP)
+$(ROOFITDS2):   $(ROOFITETAG) $(ROOFITH2) $(ROOFITL2) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITH2) $(ROOFITL2)
 
-$(ROOFITDS3):   $(ROOFITETAG) $(ROOFITH3) $(ROOFITL3) $(ROOTCINTTMP)
+$(ROOFITDS3):   $(ROOFITETAG) $(ROOFITH3) $(ROOFITL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITH3) $(ROOFITL3)
 

@@ -41,7 +41,7 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 		   "$(SOFLAGS)" libHtml.$(SOEXT) $@ "$(HTMLO) $(HTMLDO)" \
 		   "$(HTMLLIBEXTRA)"
 
-$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMP)
+$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HTMLH) $(HTMLL)
 

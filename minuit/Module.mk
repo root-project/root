@@ -41,7 +41,7 @@ $(MINUITLIB):   $(MINUITO) $(MINUITDO) $(ORDER_) $(MAINLIBS) $(MINUITLIBDEP)
 		   "$(SOFLAGS)" libMinuit.$(SOEXT) $@ "$(MINUITO) $(MINUITDO)" \
 		   "$(MINUITLIBEXTRA)"
 
-$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMP)
+$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MINUITH) $(MINUITL)
 

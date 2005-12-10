@@ -12,6 +12,7 @@ libdir=@libdir@
 incdir=@incdir@
 features="@features@"
 configargs="@configargs@"
+dicttype=@dicttype@
 
 if test "$platform" = "win32"; then
    bindir=`cygpath -u $bindir`
@@ -25,6 +26,11 @@ newlib="-lNew"
 rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
           -lPostscript -lMatrix -lPhysics"
 rootglibs="-lGui"
+
+if test "$dicttype" = "reflex" -o "$dicttype" = "gccxml"; then
+    rootlibs="$rootlibs -lReflex"
+fi
+
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Hist       \
               -include:_G__cpp_setupG__Graf1      \
@@ -410,7 +416,7 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -636,6 +642,10 @@ while test $# -gt 0; do
     --config)
       ### output the configure arguments
       out="$out $configargs"
+      ;;
+    --dicttype)
+      ### output the dictionary type
+      out="$out $dicttype"
       ;;
     --help)
       ### Print a help message

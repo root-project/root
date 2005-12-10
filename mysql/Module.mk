@@ -41,7 +41,7 @@ $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libMySQL.$(SOEXT) $@ "$(MYSQLO) $(MYSQLDO)" \
 		   "$(MYSQLLIBEXTRA) $(MYSQLLIBDIR) $(MYSQLCLILIB)"
 
-$(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMP)
+$(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MYSQLH) $(MYSQLL)
 

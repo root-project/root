@@ -41,7 +41,7 @@ $(ORACLELIB):   $(ORACLEO) $(ORACLEDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libOracle.$(SOEXT) $@ "$(ORACLEO) $(ORACLEDO)" \
 		   "$(ORACLELIBEXTRA) $(ORACLELIBDIR) $(ORACLECLILIB)"
 
-$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMP)
+$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ORACLEH) $(ORACLEL)
 

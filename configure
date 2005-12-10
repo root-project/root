@@ -35,6 +35,7 @@ options="                    \
    enable_dcache             \
    enable_exceptions         \
    enable_explicitlink       \
+   enable_gfal               \
    enable_globus             \
    enable_krb5               \
    enable_ldap               \
@@ -106,6 +107,7 @@ PGSQL            \
 QTDIR            \
 SAPDB            \
 RFIO             \
+GFAL             \
 CERNLIB          \
 PYTHIA           \
 PYTHIA6          \
@@ -126,6 +128,7 @@ ROOFIT           \
 MINUIT2          \
 TABLE            \
 XMLDIR           \
+ROOTDICTTYPE     \
 "
 configenvvars=
 for c in $envvars ; do
@@ -728,6 +731,7 @@ enable/disable options, prefix with either --enable- or --disable-
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
+  gfal               GFAL support, requires libgfal
   globus             Globus authentication support, requires Globus toolkit
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
@@ -771,6 +775,7 @@ with options, prefix with --with-, enables corresponding support
   cppunit            Cppunit testing, directory of the cppunit installation
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
+  dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
   globus             Globus support, path to what should be GLOBUS_LOCATION
   gccxml             Gccxml support, directory of the gccxml installation
   krb5               Kerberos5 support, location of Kerberos distribution
@@ -924,6 +929,9 @@ if test $# -gt 0 ; then
       --with-cppunit=*)        cppunit=$optarg       ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
+      --with-dicttype=*)       dicttype=$optarg      ;;
+      --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
+      --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
       --with-gccxml=*)         gccxml=$optarg        ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
@@ -1558,6 +1566,34 @@ if test ! "x$enable_rfio" = "xno" ; then
            win32)      shiftincdir="$shiftincdir $shiftincdir/../win32"
                        shiftlib="$shiftlib WSock32.lib Ws2_32.lib" ;;
         esac
+    fi
+fi
+
+######################################################################
+#
+### echo %%% GFAL Support - Third party libraries
+#
+# (See http://grid-deployment.web.cern.ch/grid-deployment/gis/GFAL/gfal.3.html)
+#
+# If the user has set the flags "--disable-gfal", we don't check for
+# GFAL at all.
+#
+if test ! "x$enable_gfal" = "xno"; then
+    # Check for GFAL include and library
+    check_header "gfal_api.h" "$gfalincdir" $GFAL $GFAL/include \
+	/opt/lcg/include /opt/gfal/include /usr/local/lcg/include \
+	/usr/local/gfal/include
+    gfalinc=$found_hdr
+    gfalincdir=$found_dir
+
+    check_library "libgfal" "$enable_shared" "$gfallibdir" \
+	$GFAL $GFAL/lib /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
+	/usr/local/gfal/lib
+    gfallib=$found_lib
+    gfallibdir=$found_dir
+
+    if test "x$gfalincdir" = "x" || test "x$gfallib" = "x"; then
+        enable_gfal="no"
     fi
 fi
 
@@ -3044,6 +3080,47 @@ echo "$buildpeac"
 
 ######################################################################
 #
+### echo %%% What dictionaries to build
+#
+# Can be either cint (default), reflex, or gccxml.
+# Option will be passed to rootcint(_tmp),
+# and root-config --libs will have -lReflex if needed.
+#
+
+# --with-dicttype overrides env var ROOTDICTTYPE
+if test "x$dicttype" = "x" ; then
+    dicttype="$ROOTDICTTYPE"
+fi
+
+# set default to cint
+if test "x$dicttype" = "x"; then
+    dicttype=cint
+fi
+
+case "$dicttype" in
+    cint);;
+    reflex | gccxml)
+        # check that cintex is enabled for reflex/gccxml
+        if ! test "x$enable_cintex" = "xyes"; then
+            echo "Cannot generate $dicttype dictionaries with cintex disabled."
+            dicttype=cint
+        fi ;;
+    *)
+        echo "Unknown dictionary \"$dicttype\"."
+        echo "  Must be one of cint, reflex, gccxml."
+        dicttype=cint
+        ROOTDICTTYPE="trigger print info"
+        ;;
+esac
+
+# Print info if dicttype!=cint, or --with-dict overrides $ROOTDICTTYPE
+if test ! "x$dicttype" = "xcint" \
+     -o ! "x$dicttype" = "x$ROOTDICTTYPE"; then
+    echo "Generating $dicttype dictionaries."
+fi
+
+######################################################################
+#
 ### echo %%% Debian or Red Hat package list
 #
 # If we're asked to build for a set of RPMs or Debian packages, we
@@ -3057,6 +3134,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
     test "x$enable_clarens" = "xyes" && pkglist="$pkglist root-plugin-clarens"
     test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
+    test "x$enable_gfal"    = "xyes" && pkglist="$pkglist root-plugin-gfal"
     test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
     test "x$enable_ldap"    = "xyes" && pkglist="$pkglist root-plugin-ldap"
@@ -3317,6 +3395,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@cryptolibdir@|$cryptolibdir|"        \
     -e "s|@dcaplib@|$dcaplib|"                  \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
+    -e "s|@dicttype@|$dicttype|"                \
     -e "s|@docdir@|$docdir|"                    \
     -e "s|@elispdir@|$elispdir|"                \
     -e "s|@buildmathcore@|$enable_mathcore|"    \
@@ -3330,6 +3409,9 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@etcdir@|$etcdir|"                    \
     -e "s|@exceptions@|$enable_exceptions|"     \
     -e "s|@explicitlink@|$enable_explicitlink|" \
+    -e "s|@gfalincdir@|$gfalincdir|"            \
+    -e "s|@gfallib@|$gfallib|"                  \
+    -e "s|@gfallibdir@|$gfallibdir|"            \
     -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@globuslib@|$globuslib|"              \
     -e "s|@globuslibdir@|$globuslibdir|"        \
@@ -3431,6 +3513,7 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@buildqt@|$enable_qt|"                \
     -e "s|@buildshift@|$enable_rfio|"           \
     -e "s|@builddcap@|$enable_dcache|"          \
+    -e "s|@buildgfal@|$enable_gfal|"            \
     -e "s|@buildchirp@|$enable_chirp|"          \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
@@ -3513,6 +3596,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@features@|$features|"           \
     -e "s|@configargs@|$configargs|"       \
+    -e "s|@dicttype@|$dicttype|"           \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

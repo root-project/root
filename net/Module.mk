@@ -36,7 +36,7 @@ INCLUDEFILES += $(NETDEP)
 include/%.h:    $(NETDIRI)/%.h
 		cp $< $@
 
-$(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMP)
+$(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 

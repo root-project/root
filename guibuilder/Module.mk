@@ -41,7 +41,7 @@ $(GUIBLDLIB):   $(GUIBLDO) $(GUIBLDDO) $(ORDER_) $(MAINLIBS) $(GUIBLDLIBDEP)
 		   "$(SOFLAGS)" libGuiBld.$(SOEXT) $@ "$(GUIBLDO) $(GUIBLDDO)" \
 		   "$(GUIBLDLIBEXTRA)"
 
-$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMP)
+$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIBLDH) $(GUIBLDL)
 

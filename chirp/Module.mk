@@ -40,7 +40,7 @@ $(CHIRPLIB):    $(CHIRPO) $(CHIRPDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libChirp.$(SOEXT) $@ "$(CHIRPO) $(CHIRPDO)" \
 		   "$(CHIRPLIBEXTRA) $(CHIRPLIBDIR) $(CHIRPCLILIB)"
 
-$(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMP)
+$(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CHIRPH) $(CHIRPL)
 

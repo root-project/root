@@ -41,7 +41,7 @@ $(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libRLDAP.$(SOEXT) $@ "$(LDAPO) $(LDAPDO)" \
 		   "$(LDAPLIBEXTRA) $(LDAPLIBDIR) $(LDAPCLILIB)"
 
-$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMP)
+$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(LDAPH) $(LDAPL)
 

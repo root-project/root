@@ -87,6 +87,9 @@ endif
 ifeq ($(BUILDDCAP),yes)
 MODULES      += dcache
 endif
+ifeq ($(BUILDGFAL),yes)
+MODULES      += gfal
+endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += chirp
 endif
@@ -177,7 +180,7 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd proof dcache chirp hbook alien asimage \
-                ldap mlp krb5auth rpdutils globusauth pyroot ruby \
+                ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot xrootd netx clarens peac oracle xmlparser \
                 mathcore mathmore reflex cintex roofit minuit2
 MODULES      := $(sort $(MODULES))   # removes duplicates
@@ -271,6 +274,11 @@ endif
 
 ##### Utilities #####
 
+ifneq ($(ROOTDICTTYPE),cint)
+ROOTCINTTMP   = $(ROOTCINTTMPEXE) $(addprefix -,$(ROOTDICTTYPE))
+else
+ROOTCINTTMP   = $(ROOTCINTTMPEXE)
+endif
 MAKEDEP       = build/unix/depend.sh
 MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      = build/unix/makedist.sh
@@ -314,6 +322,9 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
 ifeq ($(EXPLICITLINK),yes)
 MAINLIBS      = $(CORELIB) $(CINTLIB)
+ifneq ($(ROOTDICTTYPE),cint)
+MAINLIBS     := $(MAINLIBS) $(REFLEXLIB)
+endif
 MAKE_VERSION_MAJOR = $(word 1,$(subst ., ,$(MAKE_VERSION)))
 MAKE_VERSION_MINOR = $(word 2,$(subst ., ,$(MAKE_VERSION)))
 ORDER_       := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 -o $(MAKE_VERSION_MAJOR) -eq 3 -a $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
@@ -628,7 +639,7 @@ maintainer-clean:: distclean
 version: $(CINTTMP)
 	@$(MAKEVERSION)
 
-cintdlls: $(CINTTMP) $(ROOTCINTTMP)
+cintdlls: $(CINTTMP) $(ROOTCINTTMPEXE)
 	@$(MAKECINTDLLS) $(PLATFORM) "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
 	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
@@ -874,6 +885,7 @@ showbuild:
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "DCAPLIB            = $(DCAPLIB)"
+	@echo "GFALLIB            = $(GFALLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "ORACLEINCDIR       = $(ORACLEINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
