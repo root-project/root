@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.24 2005/02/28 17:28:12 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.25 2005/12/09 09:35:28 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -432,16 +432,16 @@ Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
    struct stat64 & statbuf = fStatBuffer; // reference the cache
 
    if (fOption != "READ" || !fStatCached) {
-     // We are not in read mode, or the file status information is not yet
-     // in the cache.  Update or read the status information with dc_stat().
+      // We are not in read mode, or the file status information is not yet
+      // in the cache. Update or read the status information with dc_stat().
 
-     const char *path = GetName();
-     TString pathString = GetDcapPath(path);
-     path = pathString.Data();
+      const char *path = GetName();
+      TString pathString = GetDcapPath(path);
+      path = pathString.Data();
 
-     if ( (path != NULL) && (dc_stat64(path, &statbuf) >= 0) ) {
-        fStatCached = kTRUE;
-     }
+      if ((path != NULL) && (dc_stat64(path, &statbuf) >= 0)) {
+         fStatCached = kTRUE;
+      }
    }
 
    if (fStatCached) {
