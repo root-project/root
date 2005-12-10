@@ -2425,7 +2425,10 @@ char* G__tmpnam(char *name)
   }
 
 #elif defined(__CINT__)
+  static char tempname[G__MAXFILENAME];
   const char *appendix="_cint";
+
+  if (name==0) name = tempname;
   tmpnam(name);
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
   G__tmpfiles.Add(name);
@@ -2445,7 +2448,10 @@ char* G__tmpnam(char *name)
   return(name);
 
 #else
+  static char tempname[G__MAXFILENAME];
   const char *appendix="_cint";
+
+  if (name==0) name = tempname;
   tmpnam(name);
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
   G__tmpfiles.Add(name);
