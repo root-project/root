@@ -59,12 +59,11 @@ double testInnerProd_S(const M & a, const V & v, double & time) {
 
 //inversion
 template<class M> 
-void  testInv_S(const M & a,  double & time, M& result){ 
+void  testInv_S( const M & a,  double & time, M& result){ 
   test::Timer t(time,"inv ");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = a; 
-      result.Invert();  
+      result = a.Inverse();  
     }
 }
 
@@ -75,13 +74,9 @@ template<class V>
 double testDot_T(const V & v1, const V & v2, double & time) {  
   test::Timer t(time,"dot ");
   double result=0; 
-  int size = v1.GetNrows();
-  assert(size == v2.GetNrows() );
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = 0;
-      for (int i = 0; i < size; ++i) 
-	result += v1(i)*v2(i);
+      result = v1*v2;
     }
   return result; 
 }
@@ -90,14 +85,10 @@ template<class M, class V>
 double testInnerProd_T(const M & a, const V & v, double & time) {  
   test::Timer t(time,"prod");
   double result=0; 
-  int size = v.GetNrows();
   for (int l = 0; l < NLOOP; l++) 	
     {
       V tmp = a * v;
-      //result = v * tmp;  
-      result = 0; 
-      for (int i = 0; i < size; ++i) 
-	result += v(i)*tmp(i);
+      result = v * tmp;
     }
   return result; 
 }
