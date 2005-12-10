@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.175 2005/11/23 17:18:06 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.176 2005/11/24 08:55:13 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -80,7 +80,7 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
    // Graph default constructor.
 
-   fNpoints   = 0;
+   fNpoints   = -1;  //will be reset to 0 in CtorAllocate
    CtorAllocate();
 }
 
@@ -500,19 +500,16 @@ Bool_t TGraph::CtorAllocate()
    fMaximum = -1111;
    fMinimum = -1111;
    SetBit(kClipFrame);
+   fFunctions = 0;
+   if (fNpoints >= 0) fFunctions = new TList;
    if (fNpoints <= 0) {
-      fFunctions = 0;
       fNpoints = 0;
       fMaxSize   = 0;
       fX         = 0;
       fY         = 0;
-      if (fNpoints < 0) {
-         Error("TGraph", "illegal number of points (%d)", fNpoints);
-      }
       return kFALSE;
    } else {
       fMaxSize   = fNpoints;
-      fFunctions = new TList;
       fX = new Double_t[fMaxSize];
       fY = new Double_t[fMaxSize];
    }
