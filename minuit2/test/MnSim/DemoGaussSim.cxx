@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: DemoGaussSim.cppv 1.0 2005/11/29 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: DemoGaussSim.cxx,v 1.1 2005/11/29 17:53:53 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -220,6 +220,52 @@ int main() {
       std::cout<<e1<<std::endl;
       std::cout<<e2<<std::endl;
     }
+  }
+
+  {
+    // demostrate MINOS Error analysis with limits
+
+    // create Minuit parameters with names
+    MnUserParameters upar;
+    upar.Add("mean", mean, 0.1);
+    upar.Add("sigma", rms, 0.1);
+    upar.Add("area", area, 0.1);
+
+    double meanLow = -50.03;
+    double rmsUp = 1.55;
+    std::cout << "sigma Limit: " << rmsUp << "\tmean limit: " << meanLow << std::endl;
+    // test Lower limits
+    upar.SetLowerLimit("mean", meanLow);
+    // test Upper limits
+    upar.SetUpperLimit("sigma", rmsUp);
+
+    // create Migrad minimizer
+    MnMigrad migrad(fFCN, upar);
+
+    // Minimize
+    FunctionMinimum min = migrad();
+
+    // create MINOS Error factory
+    MnMinos Minos(fFCN, min);
+
+    {
+      // 3-sigma MINOS errors (minimal interface)
+      fFCN.SetErrorDef(9.);
+      std::pair<double,double> e0 = Minos(0);
+      std::pair<double,double> e1 = Minos(1);
+      std::pair<double,double> e2 = Minos(2);
+
+      
+      // output
+      std::cout<<"3-sigma Minos errors with limits: "<<std::endl;
+      std::cout.precision(16);
+      std::cout<<"par0: "<<min.UserState().Value("mean")<<" "<<e0.first<<" "<<e0.second<<std::endl;
+      std::cout<<"par1: "<<min.UserState().Value(1)<<" "<<e1.first<<" "<<e1.second<<std::endl;
+      std::cout<<"par2: "<<min.UserState().Value("area")<<" "<<e2.first<<" "<<e2.second<<std::endl;
+
+
+    }
+
   }
 
   {

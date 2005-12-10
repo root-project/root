@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MinosError.h,v 1.4.2.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MinosError.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -42,9 +42,11 @@ public:
     return std::pair<double,double>(Lower(), Upper());
   }
   double Lower() const {
+    if ( AtLowerLimit() ) return LowerState().Parameter( Parameter() ).LowerLimit() -  fMinValue;
     return -1.*LowerState().Error(Parameter())*(1. + fLower.Value());
   }
   double Upper() const {
+    if ( AtUpperLimit() ) return UpperState().Parameter( Parameter() ).UpperLimit() -  fMinValue;  
     return UpperState().Error(Parameter())*(1. + fUpper.Value());
   }
   unsigned int Parameter() const {return fParameter;}

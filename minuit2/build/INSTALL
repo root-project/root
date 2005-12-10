@@ -2,7 +2,7 @@ To install Minuit2 from CVS do the following:
 	
    >   cvs -d :pserver:cvs@root.cern.ch:/user/cvs login  (password:  cvs ) 
 
-   >   cvs -d :pserver:cvs@root.cern.ch:/user/cvs co -d mathcore root/mathcore
+   >   cvs -d :pserver:cvs@root.cern.ch:/user/cvs co -d Minuit2 root/minuit2
 
 
    >   cd minuit2 
