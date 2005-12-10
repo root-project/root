@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.4 2005/09/18 11:51:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.5 2005/12/09 01:12:17 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,6 +42,8 @@ TProofCondor::TProofCondor(const char *masterurl, const char *conffile,
 {
    // Start proof using condor
 
+   fUrl = TUrl(masterurl);
+
    if (!conffile || strlen(conffile) == 0) {
       conffile = kPROOF_ConfFile;
    } else if (!strncasecmp(conffile, "condor:", 7)) {
@@ -65,7 +67,7 @@ TProofCondor::~TProofCondor()
 }
 
 //______________________________________________________________________________
-Bool_t TProofCondor::StartSlaves(Bool_t parallel)
+Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
 {
    // non static config
 
@@ -203,8 +205,8 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
             if (pt && pt->fThread->GetState() == TThread::kRunningState) {
                Info("Init",
                     "parallel startup: waiting for slave %s (%s:%d)",
-                    pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
-                    pt->fArgs->fPort);
+                    pt->fArgs->fOrd.Data(), pt->fArgs->fUrl->GetHost(),
+                    pt->fArgs->fUrl->GetPort());
                pt->fThread->Join();
             }
          }
@@ -266,7 +268,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel)
          }
 
          // create slave
-         TSlave *slave = CreateSlave(c->fHostname, c->fPort, c->fOrdinal,
+         TSlave *slave = CreateSlave(Form("%s:d",c->fHostname.Data(), c->fPort), c->fOrdinal,
                                      c->fPerfIdx, c->fImage, c->fWorkDir);
 
          // add slave to appropriate list

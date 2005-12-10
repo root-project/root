@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.22 2005/09/23 13:04:53 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.23 2005/10/11 12:39:36 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -165,6 +165,8 @@
 #pragma link C++ class TLockGuard;
 #pragma link C++ class TRedirectOutputGuard;
 #pragma link C++ class TVirtualProof;
+#pragma link C++ class TVirtualProofMgr;
+#pragma link C++ class TVirtualProofDesc;
 #pragma link C++ class TVirtualPerfStats;
 #pragma link C++ enum TVirtualPerfStats::EEventType;
 

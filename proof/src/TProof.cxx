@@ -65,6 +65,7 @@
 #include "TSemaphore.h"
 #include "TMutex.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "Getline.h"
 #include "TProofNodeInfo.h"
 #include "TProofResourcesStatic.h"
@@ -76,25 +77,25 @@ TVirtualMutex *gProofMutex = 0;
 TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
                                  Int_t pe, const char *i, const char *w,
                                  TList *s, TProof *prf)
-  : fHost(h), fPort(po), fOrd(o), fPerf(pe), fImage(i), fWorkdir(w),
+  : fOrd(o), fPerf(pe), fImage(i), fWorkdir(w),
     fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
     fType(TSlave::kSlave)
 {
+   fUrl = new TUrl(Form("%s:%d",h,po));
 }
 
 //______________________________________________________________________________
 TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
                                  TList *s, TProof *prf)
-  : fHost(0), fPort(-1), fOrd(0), fPerf(-1), fImage(0), fWorkdir(0),
+  : fUrl(0), fOrd(0), fPerf(-1), fImage(0), fWorkdir(0),
     fSlaves(s), fProof(prf), fCslave(csl), fClaims(clist),
     fType(TSlave::kSlave)
 {
    if (csl) {
-      fHost    = csl->fHostname;
+      fUrl     = new TUrl(Form("%s:%d",csl->fHostname.Data(),csl->fPort));
       fImage   = csl->fImage;
       fOrd     = csl->fOrdinal;
       fWorkdir = csl->fWorkDir;
-      fPort    = csl->fPort;
       fPerf    = csl->fPerfIdx;
    }
 }
@@ -103,10 +104,11 @@ TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
 TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
                                  const char *i, const char *w, const char *m,
                                 TList *s, TProof *prf)
-  : fHost(h), fPort(po), fOrd(o), fPerf(-1), fImage(i), fWorkdir(w),
+  : fOrd(o), fPerf(-1), fImage(i), fWorkdir(w),
     fMsd(m), fSlaves(s), fProof(prf), fCslave(0), fClaims(0),
     fType(TSlave::kSlave)
 {
+   fUrl = new TUrl(Form("%s:%d",h,po));
 }
 
 //----- PROOF Interrupt signal handler -----------------------------------------
@@ -197,8 +199,8 @@ ClassImp(TProof)
 TSemaphore    *TProof::fgSemaphore = 0;
 
 //______________________________________________________________________________
-TProof::TProof(const char *masterurl, const char *conffile,
-               const char *confdir, Int_t loglevel)
+TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
+               Int_t loglevel, const char *alias): fUrl(masterurl)
 {
    // Create a PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
@@ -216,15 +218,18 @@ TProof::TProof(const char *masterurl, const char *conffile,
    if (!confdir  || strlen(confdir) == 0)
       confdir = kPROOF_ConfDir;
 
-   gROOT->GetListOfProofs()->Add(this);
+   Init(masterurl, conffile, confdir, loglevel, alias);
 
-   Init(masterurl, conffile, confdir, loglevel);
+   // Old-style server type: we add this to the list and set the global pointer
+   if (IsProofd() || IsMaster())
+      gROOT->GetListOfProofs()->Add(this);
 
+   // Still needed by the packetizers: needs to be changed 
    gProof = this;
 }
 
 //______________________________________________________________________________
-TProof::TProof()
+TProof::TProof() : fUrl("")
 {
    // Protected constructor to be used by classes deriving from TProof
    // (they have to call Init themselves and override StartSlaves
@@ -273,20 +278,11 @@ TProof::~TProof()
       if (fLogFileName.Length())
          gSystem->Unlink(fLogFileName);
    }
-   {
-      R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfSockets()->Remove(this);
-   }
-
-   gROOT->GetListOfProofs()->Remove(this);
-   if (gProof == this)
-      // Set previous one as default
-      gProof = (TVirtualProof *) gROOT->GetListOfProofs()->Last();
 }
 
 //______________________________________________________________________________
 Int_t TProof::Init(const char *masterurl, const char *conffile,
-                   const char *confdir, Int_t loglevel)
+                   const char *confdir, Int_t loglevel, const char *alias)
 {
    // Start the PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
@@ -299,42 +295,61 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    fValid = kFALSE;
 
-   TUrl *u;
-   if (!masterurl || !*masterurl)
-      u = new TUrl("proof://__master__");
-   else if (strstr(masterurl, "://"))
-      u = new TUrl(masterurl);
-   else
-      u = new TUrl(Form("proof://%s", masterurl));
+   if (strlen(fUrl.GetOptions()) > 0 && !(strncmp(fUrl.GetOptions(),"std",3))) {
+      fServType = TVirtualProofMgr::kProofd;
+      fUrl.SetOptions("");
+   }
 
-   fUser           = u->GetUser();
-   if (!(fUser.Length())) {
+   if (!masterurl || !*masterurl) {
+      fUrl.SetProtocol("proof");
+      fUrl.SetHost("__master__");
+   } else if (!(strstr(masterurl, "://"))) {
+      fUrl.SetProtocol("proof");
+   }
+   if (fUrl.GetPort() == TUrl(" ").GetPort())
+      fUrl.SetPort(TUrl("proof:// ").GetPort());
+
+   // If in attach mode, options is filled with additiona info
+   Bool_t attach = kFALSE;
+   if (strlen(fUrl.GetOptions()) > 0) {
+      attach = kTRUE;
+      // A flag from the GUI
+      TString opts = fUrl.GetOptions();
+      if (opts.Contains("GUI")) {
+         SetBit(TVirtualProof::kUsingSessionGui);
+         opts.Remove(opts.Index("GUI"));
+         fUrl.SetOptions(opts);
+      }
+   }
+
+   if (strlen(fUrl.GetUser()) <= 0) {
       // Get user logon name
       UserGroup_t *pw = gSystem->GetUserInfo();
       if (pw) {
-         fUser = TString(pw->fUser);
+         fUrl.SetUser(pw->fUser);
          delete pw;
       }
    }
-   fMaster         = u->GetHost();
-   fPort           = u->GetPort();
+   fMaster         = fUrl.GetHost();
    fConfDir        = confdir;
    fConfFile       = conffile;
    fWorkDir        = gSystem->WorkingDirectory();
    fLogLevel       = loglevel;
    fProtocol       = kPROOF_Protocol;
-   fMasterServ     = fMaster == "__master__" ? kTRUE : kFALSE;
+   fMasterServ     = (fMaster == "__master__") ? kTRUE : kFALSE;
    fSendGroupView  = kTRUE;
    fImage          = fMasterServ ? "" : "<local>";
    fIntHandler     = 0;
    fStatus         = 0;
    fSlaveInfo      = 0;
    fChains         = new TList;
-   fUrlProtocol    = u->GetProtocol();
-   delete u;
 
    fProgressDialog        = 0;
    fProgressDialogStarted = kFALSE;
+
+   // Default alias is the master name
+   TString      al = (alias) ? alias : fMaster.Data();
+   SetAlias(al);
 
    // Client logging of messages from the master and slaves
    fRedirLog = kFALSE;
@@ -360,6 +375,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fMaxDrawQueries = 1;
    fSeqNum = 0;
 
+   // Remote ID of the session 
+   fSessionID = -1;
+
    // Part of active query
    fWaitingSlaves = 0;
 
@@ -378,10 +396,11 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fAllMonitor       = new TMonitor;
    fActiveMonitor    = new TMonitor;
    fUniqueMonitor    = new TMonitor;
+   fCurrentMonitor   = 0;
 
    // Master may want parallel startup
    Bool_t parallelStartup = kFALSE;
-   if (IsMaster()) {
+   if (!attach && IsMaster()) {
       parallelStartup = gEnv->GetValue("Proof.ParallelStartup", kFALSE);
       PDB(kGlobal,1) Info("Init", "Parallel Startup: %s",
                           parallelStartup ? "kTRUE" : "kFALSE");
@@ -419,7 +438,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    }
 
    // Start slaves
-   if (!StartSlaves(parallelStartup)) return 0;
+   if (!StartSlaves(parallelStartup, attach)) return 0;
 
    if (fgSemaphore) {
      SafeDelete(fgSemaphore);
@@ -432,10 +451,15 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fAllMonitor->DeActivateAll();
 
    // By default go into parallel mode
-   GoParallel(9999);
+   GoParallel(9999, attach);
 
    // Send relevant initial state to slaves
-   SendInitialState();
+   if (!attach)
+      SendInitialState();
+
+   // Done at this point, the alias will be communicated to the coordinator, if any
+   if (!IsMaster())
+      SetAlias(al);
 
    SetActive(kFALSE);
 
@@ -447,17 +471,19 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 }
 
 //______________________________________________________________________________
-Bool_t TProof::StartSlaves(Bool_t parallel)
+Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
 {
    // Start up PROOF slaves.
 
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
    if (IsMaster()) {
+
       // Parse the config file
       TProofResourcesStatic *resources = new TProofResourcesStatic(fConfDir, fConfFile);
       fConfFile = resources->GetFileName(); // Update the global file name (with path)
-      PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fConfFile.Data());
+      PDB(kGlobal,1)
+         Info("StartSlaves", "using PROOF config file: %s", fConfFile.Data());
 
       // Get the master
       TProofNodeInfo *master = resources->GetMaster();
@@ -506,13 +532,14 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
          const Char_t *workdir = worker->GetWorkDir().Data();
          Int_t perfidx = worker->GetPerfIndex();
          Int_t sport = worker->GetPort();
-         if (sport == -1) sport = fPort;
+         if (sport == -1)
+            sport = fUrl.GetPort();
 
          // create slave server
          TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
          if (parallel) {
             // Prepare arguments
-	   TProofThreadArg *ta = new TProofThreadArg(worker->GetNodeName().Data(), sport,
+            TProofThreadArg *ta = new TProofThreadArg(worker->GetNodeName().Data(), sport,
                                                       fullord, perfidx, image, workdir,
                                                       fSlaves, this);
             if (ta) {
@@ -542,8 +569,9 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
          } // end if parallel
          else {
             // create slave server
- 	    TSlave *slave = CreateSlave(worker->GetNodeName().Data(), sport,
-                                        fullord, perfidx, image, workdir);
+            TUrl u(Form("%s:%d",worker->GetNodeName().Data(), sport));
+            TSlave *slave = CreateSlave(u.GetUrl(), fullord, perfidx,
+                                        image, workdir);
 
             // Add to global list (we will add to the monitor list after
             // finalizing the server startup)
@@ -574,6 +602,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
 
       nSlavesDone = 0;
       if (parallel) {
+
          // Wait completion of startup operations
          std::vector<TProofThread *>::iterator i;
          for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
@@ -584,8 +613,8 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                PDB(kGlobal,3)
                   Info("Init",
                        "parallel startup: waiting for worker %s (%s:%d)",
-                       pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
-                       pt->fArgs->fPort);
+                        pt->fArgs->fOrd.Data(), pt->fArgs->fUrl->GetHost(),
+                        pt->fArgs->fUrl->GetPort());
                pt->fThread->Join();
             }
 
@@ -614,13 +643,15 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                thrHandlers.erase(i);
             }
          }
-      } // end if parallel
-      else {
+
+      } else {
+
          // Here we finalize the server startup: in this way the bulk
          // of remote operations are almost parallelized
          TIter nxsl(fSlaves);
          TSlave *sl = 0;
          while ((sl = (TSlave *) nxsl())) {
+
             // Finalize setup of the server
             sl->SetupServ(TSlave::kSlave, 0);
 
@@ -639,69 +670,96 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
             m << TString("Setting up worker servers") << nSlaves
               << nSlavesDone << slaveOk;
             gProofServ->GetSocket()->Send(m);
-         } // end while
-      } // end else (if parallel)
-   } // end if IsMaster
-   else {
+         }
+      }
+
+   } else {
+
       // create master server
       fprintf(stderr,"Starting master: opening connection ... \n");
-      TString url = fMaster;
-      if (fUser.Length() > 0)
-         url.Insert(0,Form("%s@",fUser.Data()));
-      TSlave *slave = CreateSubmaster(url, fPort, "0", "master", 0);
+      TSlave *slave = CreateSubmaster(fUrl.GetUrl(), "0", "master", 0);
 
       if (slave->IsValid()) {
+
          // Notify
          fprintf(stderr,"Starting master:"
-                 " connection open: setting up server ...             \r");
+                        " connection open: setting up server ...             \r");
          StartupMessage("Connection to master opened", kTRUE, 1, 1);
 
-         // Finalize setup of the server
-         slave->SetupServ(TSlave::kMaster, fConfFile);
+         if (!attach) {
+            // Finalize setup of the server
+            slave->SetupServ(TSlave::kMaster, fConfFile);
 
-         if (slave->IsValid()) {
+            if (slave->IsValid()) {
+
+               // Notify
+               fprintf(stderr,"Starting master: OK                                     \n");
+               StartupMessage("Master started", kTRUE, 1, 1);
+
+               // check protocol compatibility
+               // protocol 1 is not supported anymore
+               if (fProtocol == 1) {
+                  Error("StartSlaves",
+                        "client and remote protocols not compatible (%d and %d)",
+                        kPROOF_Protocol, fProtocol);
+                  delete slave;
+                  return kFALSE;
+               }
+
+               fSlaves->Add(slave);
+               fAllMonitor->Add(slave->GetSocket());
+               Collect(slave);
+               if (slave->GetStatus() == -99) {
+                  Error("StartSlaves", "not allowed to connect to PROOF master server");
+                  return 0;
+               }
+
+               if (!slave->IsValid()) {
+                  delete slave;
+                  Error("StartSlaves",
+                        "failed to setup connection with PROOF master server");
+                  return kFALSE;
+               }
+
+               fIntHandler = new TProofInterruptHandler(this);
+               fIntHandler->Add();
+
+               if (!gROOT->IsBatch()) {
+                  if ((fProgressDialog =
+                     gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
+                     if (fProgressDialog->LoadPlugin() == -1)
+                        fProgressDialog = 0;
+               }
+            } else {
+               // Notify
+               fprintf(stderr,"Starting master: failure\n");
+            }
+         } else {
+
             // Notify
-            fprintf(stderr,"Starting master: OK                                     \n");
-            StartupMessage("Master started", kTRUE, 1, 1);
+            if (attach) {
+               fprintf(stderr,"Starting master: OK                                     \n");
+               StartupMessage("Master attached", kTRUE, 1, 1);
 
-            // check protocol compatability
-            // protocol 1 is not supported anymore
-            if (fProtocol == 1) {
-               Error("StartSlaves",
-                     "client and remote protocols not compatible (%d and %d)",
-                     kPROOF_Protocol, fProtocol);
-               delete slave;
-               return kFALSE;
+               if (!gROOT->IsBatch()) {
+                  if ((fProgressDialog =
+                     gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
+                     if (fProgressDialog->LoadPlugin() == -1)
+                        fProgressDialog = 0;
+               }
+            } else {
+               fprintf(stderr,"Starting manager: OK                                    \n");
+               StartupMessage("Manager started", kTRUE, 1, 1);
             }
 
             fSlaves->Add(slave);
             fAllMonitor->Add(slave->GetSocket());
-            Collect(slave);
-            if (slave->GetStatus() == -99) {
-               Error("StartSlaves", "not allowed to connect to PROOF master server");
-               return 0;
-            }
-
-            if (!slave->IsValid()) {
-               delete slave;
-               Error("StartSlaves",
-                     "failed to setup connection with PROOF master server");
-               return kFALSE;
-            }
 
             fIntHandler = new TProofInterruptHandler(this);
             fIntHandler->Add();
 
-            if (!gROOT->IsBatch()) {
-               if ((fProgressDialog =
-                    gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
-                  if (fProgressDialog->LoadPlugin() == -1)
-                     fProgressDialog = 0;
-            }
-         } else {
-            // Notify
-            fprintf(stderr,"Starting master: failure\n");
          }
+
       } else {
          delete slave;
          Error("StartSlaves", "failed to connect to a PROOF master server");
@@ -713,18 +771,20 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
 }
 
 //______________________________________________________________________________
-void TProof::Close(Option_t *)
+void TProof::Close(Option_t *opt)
 {
    // Close all open slave servers.
+   // Client can decide to shutdown the remote session by passing option is 'S'
+   // or 's'. Default for clients is detach, if supported. Masters always
+   // shutdown the remote counterpart.
 
    if (fSlaves) {
       if (fIntHandler) fIntHandler->Remove();
 
-      // If local client ...
-      if (!IsMaster()) {
-         // ... tell master and slaves to stop
-         Interrupt(kShutdownInterrupt, kAll);
-      }
+      TIter nxs(fSlaves);
+      TSlave *sl = 0;
+      while ((sl = (TSlave *)nxs()))
+         sl->Close(opt);
 
       fActiveSlaves->Clear("nodelete");
       fUniqueSlaves->Clear("nodelete");
@@ -732,17 +792,35 @@ void TProof::Close(Option_t *)
       fBadSlaves->Clear("nodelete");
       fSlaves->Delete();
    }
+
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfSockets()->Remove(this);
+
+      if (IsProofd()) {
+
+         gROOT->GetListOfProofs()->Remove(this);
+         if (gProof && gProof == this) {
+            // Set previous proofd-related as default
+            TIter pvp(gROOT->GetListOfProofs(), kIterBackward);
+            while ((gProof = (TVirtualProof *)pvp())) {
+               if (gProof->IsProofd())
+                  break;
+            }
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
-TSlave *TProof::CreateSlave(const char *host, Int_t port, const char *ord,
+TSlave *TProof::CreateSlave(const char *url, const char *ord,
                             Int_t perf, const char *image, const char *workdir)
 {
    // Create a new TSlave of type TSlave::kSlave.
    // Note: creation of TSlave is private with TProof as a friend.
    // Derived classes must use this function to create slaves.
 
-   TSlave* sl = TSlave::Create(host, port, ord, perf, image,
+   TSlave* sl = TSlave::Create(url, ord, perf, image,
                                this, TSlave::kSlave, workdir, 0);
 
    if (sl->IsValid()) {
@@ -756,14 +834,14 @@ TSlave *TProof::CreateSlave(const char *host, Int_t port, const char *ord,
 }
 
 //______________________________________________________________________________
-TSlave *TProof::CreateSubmaster(const char *host, Int_t port, const char *ord,
+TSlave *TProof::CreateSubmaster(const char *url, const char *ord,
                                 const char *image, const char *msd)
 {
    // Create a new TSlave of type TSlave::kMaster.
    // Note: creation of TSlave is private with TProof as a friend.
    // Derived classes must use this function to create slaves.
 
-   TSlave *sl = TSlave::Create(host, port, ord, 100, image, this,
+   TSlave *sl = TSlave::Create(url, ord, 100, image, this,
                                TSlave::kMaster, 0, msd);
 
    if (sl->IsValid()) {
@@ -1411,6 +1489,9 @@ Int_t TProof::Collect(TMonitor *mon)
 
    DeActivateAsyncInput();
 
+   // Used by external code to know what we are monitoring
+   fCurrentMonitor = mon;
+
    // We want messages on the main window during synchronous collection,
    // but we save the present status to restore it at the end
    Bool_t saveRedirLog = fRedirLog;
@@ -1443,9 +1524,24 @@ Int_t TProof::Collect(TMonitor *mon)
    // Restore redirection setting
    fRedirLog = saveRedirLog;
 
+   // To avoid useless loops in external code
+   fCurrentMonitor = 0;
+
    ActivateAsyncInput();
 
    return cnt;
+}
+//______________________________________________________________________________
+void TProof::CleanGDirectory(TList *ol)
+{
+   // Remove links to objects in list 'ol' from gDirectory
+
+   if (ol) {
+      TIter nxo(ol);
+      TObject *o = 0;
+      while ((o = nxo()))
+         gDirectory->RecursiveRemove(o);
+   }
 }
 
 //______________________________________________________________________________
@@ -1474,6 +1570,9 @@ Int_t TProof::CollectInputFrom(TSocket *s)
    }
 
    what = mess->What();
+
+   PDB(kGlobal,3)
+     Info("CollectInputFrom","got %d",what);
 
    switch (what) {
 
@@ -1554,8 +1653,9 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_LOGDONE:
          sl = FindSlave(s);
          (*mess) >> sl->fStatus >> sl->fParallel;
-         PDB(kGlobal,2) Info("Collect:kPROOF_LOGDONE","status %d  parallel %d",
-            sl->fStatus, sl->fParallel);
+         PDB(kGlobal,2)
+            Info("Collect:kPROOF_LOGDONE","status %d  parallel %d",
+                 sl->fStatus, sl->fParallel);
          if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
          rc = 1;
          break;
@@ -1591,8 +1691,11 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   // Add query to the result list in TProofPlayer
                   fPlayer->AddQueryResult(pq);
                   fPlayer->SetCurrentQuery(pq);
-                  // Close the output list
-                  out = (TList *) pq->GetOutputList()->Clone();
+                  // To avoid accidental cleanups from anywhere else
+                  // remove objects from gDirectory and clone the list
+                  out = pq->GetOutputList();
+                  CleanGDirectory(out);
+                  out = (TList *) out->Clone();
                   // Notify the GUI that the result arrived
                   QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                } else {
@@ -1758,8 +1861,10 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          {
             PDB(kGlobal,2) Info("Collect:kPROOF_SESSIONTAG","Enter");
 
-            // We have received the sequential number
-            (*mess) >> fSessionTag;
+            // We have received the unique tag and save it as name of this object
+            TString stag;
+            (*mess) >> stag;
+            SetName(stag);
          }
          break;
 
@@ -1808,8 +1913,14 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          {
             // answer contains number of processed events;
             Long64_t events;
-            (*mess) >> events;
+            Bool_t abort = kFALSE;
+            if (fProtocol > 8)
+               (*mess) >> events >> abort;
+            else
+               (*mess) >> events;
             fPlayer->AddEventsProcessed(events);
+            if (!IsMaster())
+               Emit("StopProcess(Bool_t)", abort);
             break;
          }
 
@@ -2018,8 +2129,9 @@ void TProof::Print(Option_t *option) const
       TSlave *sl = (TSlave *)fActiveSlaves->First();
       if (sl) {
          TString sc;
-         Printf("Security context:         %s",
-                                        sl->GetSocket()->GetSecContext()->AsString(sc));
+         if (sl->GetSocket()->GetSecContext())
+            Printf("Security context:         %s",
+                                      sl->GetSocket()->GetSecContext()->AsString(sc));
          Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());
       } else {
          Printf("Security context:         Error - No connection");
@@ -2452,9 +2564,6 @@ void TProof::StopProcess(Bool_t abort)
          s->Send(msg);
       }
    }
-
-   // To update the GUIs
-   Emit("StopProcess(Bool_t)", abort);
 }
 
 //______________________________________________________________________________
@@ -3017,7 +3126,7 @@ Int_t TProof::SetParallel(Int_t nodes)
 }
 
 //______________________________________________________________________________
-Int_t TProof::GoParallel(Int_t nodes)
+Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
 {
    // Go in parallel mode with at most "nodes" slaves. Since the fSlaves
    // list is sorted by slave performace the active list will contain first
@@ -3045,7 +3154,13 @@ Int_t TProof::GoParallel(Int_t nodes)
             slavenodes = 1;
          } else if (sl->GetSlaveType() == TSlave::kMaster) {
             TMessage mess(kPROOF_PARALLEL);
-            mess << nodes-cnt;
+            if (!attach) {
+               mess << nodes-cnt;
+            } else {
+               // To get the number of slaves
+               mess.SetWhat(kPROOF_LOGFILE);
+               mess << -1 << -1;
+            }
             if (sl->GetSocket()->Send(mess) == -1) {
                MarkBad(sl);
                slavenodes = 0;
@@ -3074,7 +3189,8 @@ Int_t TProof::GoParallel(Int_t nodes)
    FindUniqueSlaves();
 
    // Send new group-view to slaves
-   SendGroupView();
+   if (!attach)
+      SendGroupView();
 
    Int_t n = GetParallel();
    if (IsMaster()) {
@@ -3895,7 +4011,8 @@ void TProof::DeleteDrawFeedback(TDrawFeedback *f)
 //______________________________________________________________________________
 TList *TProof::GetOutputNames()
 {
-//   FIXME: to be written
+   //   FIXME: to be written
+
    return 0;
 /*
    TMessage msg(kPROOF_GETOUTPUTLIST);
@@ -3913,6 +4030,7 @@ TList *TProof::GetOutputNames()
    }
    mon.ActivateAll();
    ((TProof*)gProof)->DeActivateAsyncInput();
+   ((TProof*)gProof)->fCurrentMonitor = &mon;
 
    while (mon.GetActive() != 0) {
       TSocket *sock = mon.Select();
@@ -3945,6 +4063,7 @@ TList *TProof::GetOutputNames()
       }
       delete reply;
    }
+   ((TProof*)gProof)->fCurrentMonitor = 0;
 
    return outputList;
 */
@@ -3980,12 +4099,16 @@ TProofPlayer *TProof::MakePlayer()
 //______________________________________________________________________________
 void TProof::AddChain(TChain *chain)
 {
+   // Add chain to data set
+
    fChains->Add(chain);
 }
 
 //______________________________________________________________________________
 void TProof::RemoveChain(TChain *chain)
 {
+   // Remove chain from data set
+
    fChains->Remove(chain);
 }
 
@@ -4000,18 +4123,18 @@ void *TProof::SlaveStartupThread(void *arg)
 
    PDB(kGlobal,1)
       ::Info("TProof::SlaveStartupThread",
-             "Starting slave %s on host %s", ta->fOrd.Data(), ta->fHost.Data());
+             "Starting slave %s on host %s", ta->fOrd.Data(), ta->fUrl->GetHost());
 
    TSlave *sl = 0;
    if (ta->fType == TSlave::kSlave) {
       // Open the connection
-      sl = ta->fProof->CreateSlave(ta->fHost, ta->fPort, ta->fOrd,
+      sl = ta->fProof->CreateSlave(ta->fUrl->GetUrl(), ta->fOrd,
                                    ta->fPerf, ta->fImage, ta->fWorkdir);
       // Finalize setup of the server
       sl->SetupServ(TSlave::kSlave, 0);
    } else {
       // Open the connection
-      sl = ta->fProof->CreateSubmaster(ta->fHost, ta->fPort, ta->fOrd,
+      sl = ta->fProof->CreateSubmaster(ta->fUrl->GetUrl(), ta->fOrd,
                                        ta->fImage, ta->fMsd);
       // Finalize setup of the server
       sl->SetupServ(TSlave::kMaster, ta->fWorkdir);
@@ -4034,7 +4157,7 @@ void *TProof::SlaveStartupThread(void *arg)
    PDB(kGlobal,1)
       ::Info("TProof::SlaveStartupThread",
              "slave %s on host %s created and added to list",
-             ta->fOrd.Data(), ta->fHost.Data());
+             ta->fOrd.Data(), ta->fUrl->GetHost());
 
    if (fgSemaphore) fgSemaphore->Post();
 
@@ -4128,7 +4251,7 @@ void TProof::ShowLog(Int_t qry)
       TQueryResult *pq = 0;
       if (qry == -2) {
          // Pickup the last one
-         pq = (TQueryResult *)(GetQueryResults()->Last());
+         pq = (GetQueryResults()) ? ((TQueryResult *)(GetQueryResults()->Last())) : 0;
          if (!pq) {
             GetListOfQueries();
             if (fQueries)
@@ -4136,10 +4259,12 @@ void TProof::ShowLog(Int_t qry)
          }
       } else if (qry > 0) {
          TList *queries = GetQueryResults();
-         TIter nxq(queries);
-         while ((pq = (TQueryResult *)nxq()))
-            if (qry == pq->GetSeqNum())
-               break;
+         if (queries) {
+            TIter nxq(queries);
+            while ((pq = (TQueryResult *)nxq()))
+               if (qry == pq->GetSeqNum())
+                  break;
+         }
          if (!pq) {
             queries = GetListOfQueries();
             TIter nxq(queries);
@@ -4218,4 +4343,79 @@ void TProof::ShowLog(Int_t qry)
    // Restore original pointer
    if (qry > -1)
       lseek(fileno(fLogFileR), (off_t) nowlog, SEEK_SET);
+}
+
+//______________________________________________________________________________
+void TProof::cd(Int_t id)
+{
+   // Set session with 'id' the default one. If 'id' is not found in the list,
+   // the current session is set as default
+
+   if (GetManager()) {
+      TVirtualProofDesc *d = GetManager()->GetProofDesc(id);
+      if (d) {
+         if (d->GetProof()) {
+            gProof = d->GetProof();
+            return;
+         }
+      }
+
+      // Id not found or undefined: set as default this session
+      gProof = this;
+   }
+
+   return;
+}
+
+//______________________________________________________________________________
+void TProof::Detach(Option_t *opt)
+{
+   // Detach this instance to its proofserv.
+   // If opt is 'S' or 's' the remote server is shutdown
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) return;
+
+   // Close session (we always close the physical connection)
+   Close(opt);
+
+   // Update info in the table of our manager, if any
+   if (GetManager() && GetManager()->QuerySessions("L")) {
+      TIter nxd(GetManager()->QuerySessions("L"));
+      TVirtualProofDesc *d = 0;
+      while ((d = (TVirtualProofDesc *)nxd())) {
+         if (d->GetProof() == this) {
+            d->SetProof(0);
+            GetManager()->QuerySessions("L")->Remove(d);
+            break;
+         }
+      }
+   }
+
+   // Delete this instance
+   delete this;
+
+   return;
+}
+
+//______________________________________________________________________________
+void TProof::SetAlias(const char *alias)
+{
+   // Set an alias for this session. If reconnection is supported, the alias
+   // will be communicated to the remote coordinator so that it can be recovered
+   // when reconnecting
+
+   // Set it locally
+   TNamed::SetTitle(alias);
+
+   // Nothing to do if not in contact with coordinator
+   if (!IsValid()) return;
+
+   if (!IsProofd() && !IsMaster()) {
+      TSlave *sl = (TSlave *) fActiveSlaves->First();
+      if (sl)
+         sl->SetAlias(alias);
+   }
+
+   return;
 }

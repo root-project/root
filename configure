@@ -2174,10 +2174,10 @@ echo $xrdcomm
 
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
-    hasnetx=""
+    hasxrd=""
 else
     buildxrd="no"
-    hasnetx="#"
+    hasxrd="#"
 fi
 
 ######################################################################
@@ -3612,7 +3612,7 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@iconpath@|$iconpath|"           \
-    -e "s|@hasnetx@|$hasnetx|"             \
+    -e "s|@hasxrd@|$hasxrd|"             \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
 echo "done"

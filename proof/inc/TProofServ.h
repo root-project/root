@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.32 2005/09/17 14:02:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.33 2005/09/18 01:06:02 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -55,6 +55,8 @@ typedef Int_t (*OldProofServAuthSetup_t)(TSocket *, Bool_t, Int_t,
 
 class TProofServ : public TApplication {
 
+friend class TXProofServ;
+
 private:
    TString       fService;          //service we are running, either "proofserv" or "proofslave"
    TString       fUser;             //user as which we run
@@ -101,7 +103,7 @@ private:
 
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
-   void          RedirectOutput();
+   virtual void  RedirectOutput();
    Int_t         CatMotd();
    Int_t         LockDir(const TString &lock);
    Int_t         UnlockDir(const TString &lock);
@@ -145,6 +147,8 @@ public:
    TProofServ(Int_t *argc, char **argv);
    virtual ~TProofServ();
 
+   virtual void  CreateServer();
+
    TProof        *GetProof()      const { return fProof; }
    const char    *GetService()    const { return fService; }
    const char    *GetConfDir()    const { return fConfDir; }
@@ -178,11 +182,11 @@ public:
    TDSetElement  *GetNextPacket(Long64_t totalEntries = -1);
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
-   void           SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
+   virtual void   SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void           SendStatistics();
    void           SendParallel();
 
-   void           Terminate(Int_t status);
+   virtual void   Terminate(Int_t status);
 
    static Bool_t      IsActive();
    static TProofServ *This();

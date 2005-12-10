@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.22 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.23 2005/11/14 21:36:03 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -22,8 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TVirtualProofMgr
+#include "TVirtualProofMgr.h"
 #endif
 #ifndef ROOT_TQObject
 #include "TQObject.h"
@@ -43,7 +43,7 @@ class TQueryResult;
 class TVirtualProof;
 R__EXTERN TVirtualProof *gProof;
 
-class TVirtualProof : public TObject, public TQObject {
+class TVirtualProof : public TNamed, public TQObject {
 
 public:
    // PROOF status bits
@@ -53,17 +53,21 @@ public:
    enum EQueryMode { kSync = 0, kAsync = 1 };
 
 protected:
-   EQueryMode   fQueryMode;    // default query mode
+   TVirtualProofMgr::EServType  fServType;  // Type of server: proofd, XrdProofd
+   TVirtualProofMgr            *fManager;   // Manager to which this session belongs (if any)
+   EQueryMode                   fQueryMode; // default query mode
 
-   TVirtualProof() : fQueryMode(kSync) { }
+   TVirtualProof() : fServType(TVirtualProofMgr::kXProofd), fQueryMode(kSync) { }
 
 public:
    TVirtualProof(const char * /*masterurl*/, const char * /*conffile*/ = 0,
                  const char * /*confdir*/ = 0, Int_t /*loglevel*/ = 0)
-      : fQueryMode(kSync) { }
+      : fServType(TVirtualProofMgr::kXProofd), fManager(0), fQueryMode(kSync) { }
    virtual ~TVirtualProof() { Emit("~TVirtualProof()"); }
 
-   virtual void        cd() { gProof = this; }
+   virtual void        cd(Int_t = -1) { gProof = this; }
+
+   virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
 
    virtual Int_t       Ping() = 0;
    virtual Int_t       Exec(const char *cmd) = 0;
@@ -113,23 +117,28 @@ public:
    virtual const char *GetConfFile() const = 0;
    virtual const char *GetUser() const = 0;
    virtual const char *GetWorkDir() const = 0;
-   virtual const char *GetSessionTag() const = 0;
+   virtual const char *GetSessionTag() const { return GetName(); }
    virtual const char *GetImage() const = 0;
+   virtual const char *GetUrl() = 0;
    virtual Int_t       GetPort() const = 0;
    virtual Int_t       GetRemoteProtocol() const = 0;
    virtual Int_t       GetClientProtocol() const = 0;
    virtual Int_t       GetStatus() const = 0;
    virtual Int_t       GetLogLevel() const = 0;
    virtual Int_t       GetParallel() const = 0;
+   virtual Int_t       GetSessionID() const { return -1; }
    virtual TList      *GetSlaveInfo() = 0;
 
    virtual EQueryMode  GetQueryMode() const { return fQueryMode; }
    virtual void        SetQueryType(EQueryMode mode) { fQueryMode = mode; }
 
+   virtual TVirtualProofMgr::EServType   GetServType() const { return fServType; }
+
    virtual Long64_t    GetBytesRead() const = 0;
    virtual Float_t     GetRealTime() const = 0;
    virtual Float_t     GetCpuTime() const = 0;
 
+   virtual Bool_t      IsProofd() const { return (fServType == TVirtualProofMgr::kProofd); }
    virtual Bool_t      IsMaster() const = 0;
    virtual Bool_t      IsValid() const = 0;
    virtual Bool_t      IsParallel() const = 0;
@@ -178,10 +187,14 @@ public:
    virtual void        RemoveChain(TChain* chain) = 0;
 
    virtual TDrawFeedback *CreateDrawFeedback() = 0;
-   virtual void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt) = 0;
-   virtual void           DeleteDrawFeedback(TDrawFeedback *f) = 0;
+   virtual void        SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt) = 0;
+   virtual void        DeleteDrawFeedback(TDrawFeedback *f) = 0;
+
+   virtual void        Detach(Option_t * = "") = 0;
+
+   virtual TVirtualProofMgr *GetManager() { return fManager; }
+   virtual void        SetManager(TVirtualProofMgr *mgr) { fManager = mgr; }
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };
-
 #endif

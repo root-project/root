@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.9 2005/11/07 12:20:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.10 2005/12/09 01:12:17 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,6 +47,8 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
 {
    // Start super master PROOF session.
 
+   fUrl = TUrl(masterurl);
+
    if (!conffile || strlen(conffile) == 0)
       conffile = kPROOF_ConfFile;
    else if (!strncasecmp(conffile, "sm:", 3))
@@ -58,7 +60,7 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
 }
 
 //______________________________________________________________________________
-Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
+Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel, Bool_t)
 {
    // Start up PROOF submasters.
 
@@ -116,14 +118,15 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
       const Char_t *image = submaster->GetImage();
       const Char_t *msd = submaster->GetMsd();
       Int_t sport = submaster->GetPort();
-      if (sport == -1) sport = fPort;
+      if (sport == -1)
+         sport = fUrl.GetPort();
 
       TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
       if (parallel) {
          // Prepare arguments
          TProofThreadArg *ta =
-	   new TProofThreadArg(submaster->GetNodeName().Data(), sport, fullord, image,
-				conffile, msd, fSlaves, this);
+             new TProofThreadArg(submaster->GetNodeName().Data(), sport,
+                                 fullord, image, conffile, msd, fSlaves, this);
          if (ta) {
             // Change default type
             ta->fType = TSlave::kMaster;
@@ -138,7 +141,6 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
                thrHandlers.push_back(new TProofThread(th,ta));
                // Run the thread
                th->Run();
-
                // Notify opening of connection
                nSubmastersDone++;
                TMessage m(kPROOF_SERVERSTARTED);
@@ -153,8 +155,9 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
       } // end if (parallel)
       else {
          // create submaster server
-	TSlave *slave = CreateSubmaster(submaster->GetNodeName().Data(), sport,
-                                         fullord, image, msd);
+         TSlave *slave =
+            CreateSubmaster(Form("%s:%d", submaster->GetNodeName().Data(), sport),
+                            fullord, image, msd);
 
          // Add to global list (we will add to the monitor list after
          // finalizing the server startup)
@@ -168,8 +171,8 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
          }
 
          PDB(kGlobal,3)
-	    Info("StartSlaves","submaster on host %s created and"
-		 " added to list", submaster->GetNodeName().Data());
+            Info("StartSlaves","submaster on host %s created and"
+                 " added to list", submaster->GetNodeName().Data());
 
          // Notify opening of connection
          nSubmastersDone++;
@@ -198,8 +201,8 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
             PDB(kGlobal,3)
                Info("StartSlaves",
                     "parallel startup: waiting for submaster %s (%s:%d)",
-                    pt->fArgs->fOrd.Data(), pt->fArgs->fHost.Data(),
-                    pt->fArgs->fPort);
+                    pt->fArgs->fOrd.Data(), pt->fArgs->fUrl->GetHost(),
+                    pt->fArgs->fUrl->GetPort());
             pt->fThread->Join();
          }
 

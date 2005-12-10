@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.1 2002/09/16 10:57:57 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TList.h"
 #include "TVirtualProof.h"
 
 TVirtualProof *gProof = 0;

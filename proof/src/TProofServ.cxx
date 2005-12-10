@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.110 2005/11/07 12:20:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.111 2005/12/09 01:12:17 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -240,9 +240,26 @@ ClassImp(TProofServ)
 TProofServ::TProofServ(Int_t *argc, char **argv)
        : TApplication("proofserv", argc, argv, 0, -1)
 {
-   // Create an application environment. The TProofServ environment provides
-   // an eventloop via inheritance of TApplication.
+   // Main constructor. Create an application environment. The TProofServ
+   // environment provides an eventloop via inheritance of TApplication.
+   // Actual server creation work is done in CreateServer() to allow
+   // overloading.
 
+   // crude check on number of arguments
+   if (*argc < 2) {
+     Fatal("TProofServ", "Must have at least 1 arguments (see  proofd).");
+     exit(1);
+   }
+
+   // Parse options
+   GetOptions(argc, argv);
+}
+
+//______________________________________________________________________________
+void TProofServ::CreateServer()
+{
+   // Finalize the server setup. If master, create the TProof instance to talk
+   // the worker or submaster nodes.
 
    // wait (loop) to allow debugger to connect
    if (gEnv->GetValue("Proof.GdbHook",0) == 3) {
@@ -250,20 +267,14 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
          ;
    }
 
-   // crude check on number of arguments
-   if (*argc<2) {
-     Fatal("TProofServ", "Must have at least 1 arguments (see  proofd).");
-     exit(1);
-   }
-
    // get socket to be used (setup in proofd)
    if (!(gSystem->Getenv("ROOTOPENSOCK"))) {
-     Fatal("TProofServ", "Socket setup by proofd undefined");
+     Fatal("CreateServer", "Socket setup by proofd undefined");
      exit(1);
    }
    Int_t sock = strtol(gSystem->Getenv("ROOTOPENSOCK"), (char **)0, 10);
    if (sock <= 0) {
-     Fatal("TProofServ", "Invalid socket descriptor number (%d)", sock);
+     Fatal("CreateServer", "Invalid socket descriptor number (%d)", sock);
      exit(1);
    }
 
@@ -318,10 +329,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
    gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
    gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask",~0);
    if (gProofDebugLevel > 0)
-      Info("TProofServ", "DebugLevel %d Mask %u", gProofDebugLevel, gProofDebugMask);
-
-   // process startup options, find out if we are a master or a slave
-   GetOptions(argc, argv);
+      Info("CreateServer", "DebugLevel %d Mask %u", gProofDebugLevel, gProofDebugMask);
 
    // debug hooks
    if (IsMaster()) {
@@ -339,7 +347,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
    }
 
    if (gProofDebugLevel > 0)
-      Info("TProofServ", "Service %s ConfDir %s IsMaster %d\n",
+      Info("CreateServer", "Service %s ConfDir %s IsMaster %d\n",
            fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
 
    Setup();
@@ -412,7 +420,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
       // Get plugin manager to load appropriate TVirtualProof from
       TPluginManager *pm = gROOT->GetPluginManager();
       if (!pm) {
-         Error("TProofServ", "no plugin manager found");
+         Error("CreateServer", "no plugin manager found");
          SendLogFile(-99);
          Terminate(0);
       }
@@ -420,7 +428,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
       // Find the appropriate handler
       TPluginHandler *h = pm->FindHandler("TVirtualProof", fConfFile);
       if (!h) {
-         Error("TProofServ", "no plugin found for TVirtualProof with a"
+         Error("CreateServer", "no plugin found for TVirtualProof with a"
                              " config file of '%s'", fConfFile.Data());
          SendLogFile(-99);
          Terminate(0);
@@ -428,7 +436,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
 
       // load the plugin
       if (h->LoadPlugin() == -1) {
-         Error("TProofServ", "plugin for TVirtualProof could not be loaded");
+         Error("CreateServer", "plugin for TVirtualProof could not be loaded");
          SendLogFile(-99);
          Terminate(0);
       }
@@ -439,7 +447,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv)
                                                           fConfDir.Data(),
                                                           fLogLevel));
       if (!fProof || !fProof->IsValid()) {
-         Error("TProofServ", "plugin for TVirtualProof could not be executed");
+         Error("CreateServer", "plugin for TVirtualProof could not be executed");
          delete fProof;
          fProof = 0;
          SendLogFile(-99);
@@ -1447,6 +1455,11 @@ void TProofServ::HandleSocketInputDuringProcess()
          SendLogFile();
          break;
 
+      case kPROOF_GETSTATS:
+         // Send statistics
+         SendStatistics();
+         break;
+
       case kPROOF_LOGFILE:
          {
             Int_t start, end;
@@ -2255,7 +2268,7 @@ void TProofServ::Setup()
 #endif
 
    if (gSystem->AccessPathName(fWorkDir)) {
-      gSystem->MakeDirectory(fWorkDir);
+      gSystem->mkdir(fWorkDir, kTRUE);
       if (!gSystem->ChangeDirectory(fWorkDir)) {
          SysError("Setup", "can not change to PROOF directory %s",
                   fWorkDir.Data());
@@ -2263,7 +2276,7 @@ void TProofServ::Setup()
    } else {
       if (!gSystem->ChangeDirectory(fWorkDir)) {
          gSystem->Unlink(fWorkDir);
-         gSystem->MakeDirectory(fWorkDir);
+         gSystem->mkdir(fWorkDir, kTRUE);
          if (!gSystem->ChangeDirectory(fWorkDir)) {
             SysError("Setup", "can not change to PROOF directory %s",
                      fWorkDir.Data());
@@ -3239,8 +3252,14 @@ void TProofServ::HandleProcess(TMessage *mess)
 
          // Return number of events processed
          if (p->GetExitStatus() != TProofPlayer::kFinished) {
+            Bool_t abort =
+              (p->GetExitStatus() == TProofPlayer::kAborted) ? kTRUE : kFALSE;
             TMessage m(kPROOF_STOPPROCESS);
-            m << p->GetEventsProcessed();
+            if (fProtocol > 8) {
+               m << p->GetEventsProcessed() << abort;
+            } else {
+               m << p->GetEventsProcessed();
+            }
             fSocket->Send(m);
          }
 

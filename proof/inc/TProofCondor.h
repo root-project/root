@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name: v4-04-02 $:$Id: TProof.h,v 1.55 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.h,v 1.1 2005/06/22 20:25:28 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -43,7 +43,7 @@ private:
    TTimer  *fTimer;  //timer for delayed Condor COD suspend
 
 protected:
-   Bool_t   StartSlaves(Bool_t parallel);
+   Bool_t   StartSlaves(Bool_t parallel, Bool_t);
    TString  GetJobAd();
 
 public:

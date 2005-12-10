@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.17 2005/08/15 15:57:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.18 2005/09/17 13:52:54 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #endif
 
 class TFileHandler;
+class TObjString;
 class TProof;
 
 // Hook to external function setting up authentication related stuff
@@ -45,14 +46,27 @@ typedef Int_t (*OldSlaveAuthSetup_t)(TSocket *, Bool_t, TString, TString);
 class TSlave : public TObject {
 
 friend class TProof;
+friend class TXSlave;
 
 public:
-   enum ESlaveType {
-      kMaster,
-      kSlave
-   };
+
+   enum ESlaveType { kMaster, kSlave };
 
 private:
+
+   TSlave(const TSlave &s) : TObject(s) { }
+   TSlave(const char *host, const char *ord, Int_t perf,
+          const char *image, TProof *proof, Int_t stype,
+          const char *workdir, const char *msd);
+
+   Int_t  OldAuthSetup(Bool_t master, TString wconf);
+   void   Init(const char *host, Int_t port, Int_t stype);
+   void   operator=(const TSlave &) { }
+
+   static TSlave *Create(const char *url, const char *ord, Int_t perf,
+                         const char *image, TProof *proof, Int_t stype,
+                         const char *workdir, const char *msd);
+protected:
    TString       fName;      //slave's hostname
    TString       fImage;     //slave's image name
    TString       fProofWorkDir; //base proofserv working directory (info obtained from slave)
@@ -73,30 +87,17 @@ private:
    Int_t         fParallel;  //number of active slaves
    TString       fMsd;       //mass storage domain of slave
 
-   TSlave(const TSlave &s) : TObject(s) { }
-   void operator=(const TSlave &) { }
-
-   TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
-          const char *image, TProof *proof, ESlaveType stype,
-          const char *workdir, const char *msd);
-
-   void  Init(TSocket *s, ESlaveType stype);
-   Int_t OldAuthSetup(Bool_t master, TString wconf);
-
-   static TSlave *Create(const char *host, Int_t port, const char *ord, Int_t perf,
-                         const char *image, TProof *proof, ESlaveType stype,
-                         const char *workdir, const char *msd);
-
-protected:
    TSlave();
-   virtual void  Init(const char *host, Int_t port, ESlaveType stype);
+   void          Init(TSocket *s, Int_t stype);
    virtual void  Interrupt(Int_t type);
    virtual Int_t Ping();
+   virtual TObjString *SendCoordinator(Int_t kind, const char *msg = 0);
+   virtual void  SetAlias(const char *alias);
 
 public:
    virtual ~TSlave();
 
-   void           Close(Option_t *opt = "");
+   virtual void   Close(Option_t *opt = "");
 
    Int_t          Compare(const TObject *obj) const;
    Bool_t         IsSortable() const { return kTRUE; }
@@ -115,7 +116,7 @@ public:
    Long64_t       GetBytesRead() const { return fBytesRead; }
    Float_t        GetRealTime() const { return fRealTime; }
    Float_t        GetCpuTime() const { return fCpuTime; }
-   ESlaveType     GetSlaveType() const { return fSlaveType; }
+   Int_t          GetSlaveType() const { return (Int_t)fSlaveType; }
    Int_t          GetStatus() const { return fStatus; }
    Int_t          GetParallel() const { return fParallel; }
    TString        GetMsd() const { return fMsd; }
@@ -126,7 +127,7 @@ public:
 
    void           Print(Option_t *option="") const;
 
-   virtual void   SetupServ(ESlaveType stype, const char *conffile);
+   virtual void   SetupServ(Int_t stype, const char *conffile);
 
    ClassDef(TSlave,0)  //PROOF slave server
 };

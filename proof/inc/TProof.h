@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.70 2005/10/11 12:32:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -48,6 +48,9 @@
 #ifndef ROOT_TThread
 #include "TThread.h"
 #endif
+#ifndef ROOT_TUrl
+#include "TUrl.h"
+#endif
 
 #include <map>
 
@@ -55,6 +58,7 @@
 namespace std { using ::map; }
 #endif
 
+#define CANNOTUSE(x) Info(x,"Not manager: cannot use this method")
 
 class TMessage;
 class TMonitor;
@@ -88,7 +92,7 @@ class TVirtualMutex;
 // 7 -> 8: return number of entries in GetNextPacket
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 8;             // protocol version number
+const Int_t       kPROOF_Protocol = 9;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
@@ -106,8 +110,7 @@ R__EXTERN TVirtualMutex *gProofMutex;
 // Helper classes used for parallel startup
 class TProofThreadArg {
 public:
-   TString       fHost;
-   Int_t         fPort;
+   TUrl         *fUrl;
    TString       fOrd;
    Int_t         fPerf;
    TString       fImage;
@@ -130,7 +133,7 @@ public:
                    const char *i, const char *w, const char *m,
                    TList *s, TProof *prf);
 
-   virtual ~TProofThreadArg() { }
+   virtual ~TProofThreadArg() { if (fUrl) delete fUrl; }
 };
 
 // PROOF Thread class for parallel startup
@@ -203,9 +206,14 @@ friend class TProofPlayer;
 friend class TProofPlayerRemote;
 friend class TProofProgressDialog;
 friend class TSlave;
+friend class TXSlave;
+friend class TXSocket;     // to access kPing
+friend class TXSocketHandler; // to access fCurrentMonitor and CollectInputFrom
+friend class TXProofServ;  // to access EUrgent
 
 private:
    enum EUrgent {
+      kPing          = 0,
       kHardInterrupt = 1,
       kSoftInterrupt,
       kShutdownInterrupt
@@ -238,11 +246,8 @@ private:
    };
 
    Bool_t          fValid;          //is this a valid proof object
-   TString         fMaster;         //name of master server (use "" if this is a master)
+   TString         fMaster;         //master server ("" if a master); used in the browser
    TString         fWorkDir;        //current work directory on remote servers
-   TString         fSessionTag;     //unique tag of the remote session
-   TString         fUser;           //user under which to run
-   TString         fUrlProtocol;    //net protocol name
    Int_t           fLogLevel;       //server debug logging level
    Int_t           fStatus;         //remote return status (part of kPROOF_LOGDONE)
    TList          *fSlaveInfo;      //!list returned by kPROOF_GETSLAVEINFO
@@ -253,6 +258,7 @@ private:
    TList          *fNonUniqueMasters; //list of all active masters with a nonunique file system
    TMonitor       *fActiveMonitor;  //monitor activity on all active slave sockets
    TMonitor       *fUniqueMonitor;  //monitor activity on all unique slave sockets
+   TMonitor       *fCurrentMonitor; //caurrently active monitor
    Long64_t        fBytesRead;      //bytes read by all slaves during the session
    Float_t         fRealTime;       //realtime spent by all slaves during the session
    Float_t         fCpuTime;        //CPU time spent by all slaves during the session
@@ -286,13 +292,15 @@ private:
    Int_t           fMaxDrawQueries; //max number of draw queries kept
    Int_t           fSeqNum;         //Remote sequential # of the last query submitted
 
+   Int_t           fSessionID;      //Remote ID of the session
+
 protected:
    enum ESlaves { kAll, kActive, kUnique };
 
+   TUrl            fUrl;            //Url of the master
    TString         fConfFile;       //file containing config information
    TString         fConfDir;        //directory containing cluster config information
    TString         fImage;          //master's image name
-   Int_t           fPort;           //port we are connected to (proofd = 1093)
    Int_t           fProtocol;       //remote PROOF server protocol version number
    TList          *fSlaves;         //list of all slave servers as in config file
    TList          *fBadSlaves;      //dead slaves (subset of all slaves)
@@ -306,6 +314,8 @@ protected:
 private:
    TProof(const TProof &);           // not implemented
    void operator=(const TProof &);   // idem
+
+   void     CleanGDirectory(TList *ol);
 
    Int_t    Exec(const char *cmd, ESlaves list);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
@@ -321,7 +331,7 @@ private:
    void     Interrupt(EUrgent type, ESlaves list = kActive);
    void     AskStatistics();
    void     AskParallel();
-   Int_t    GoParallel(Int_t nodes);
+   Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
    Int_t    BuildPackage(const char *package);
    Int_t    LoadPackage(const char *package);
@@ -368,17 +378,17 @@ private:
 protected:
    TProof(); // For derived classes to use
    Int_t           Init(const char *masterurl, const char *conffile,
-                        const char *confdir, Int_t loglevel);
-   virtual Bool_t  StartSlaves(Bool_t parallel);
+                        const char *confdir, Int_t loglevel, const char *alias = 0);
+   virtual Bool_t  StartSlaves(Bool_t parallel, Bool_t attach = kFALSE);
 
    void                  SetPlayer(TProofPlayer *player) { fPlayer = player; };
    TProofPlayer         *GetPlayer() const { return fPlayer; };
    virtual TProofPlayer *MakePlayer();
 
    TList  *GetListOfActiveSlaves() const { return fActiveSlaves; }
-   TSlave *CreateSlave(const char *host, Int_t port, const char *ord,
+   TSlave *CreateSlave(const char *url, const char *ord,
                        Int_t perf, const char *image, const char *workdir);
-   TSlave *CreateSubmaster(const char *host, Int_t port, const char *ord,
+   TSlave *CreateSubmaster(const char *url, const char *ord,
                            const char *image, const char *msd);
 
    Int_t    Collect(ESlaves list = kActive);
@@ -393,8 +403,10 @@ protected:
 
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
-          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0);
+          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0, const char *alias = 0);
    virtual ~TProof();
+
+   void        cd(Int_t id = -1);
 
    Int_t       Ping();
    Int_t       Exec(const char *cmd);
@@ -440,17 +452,17 @@ public:
    const char *GetMaster() const { return fMaster; }
    const char *GetConfDir() const { return fConfDir; }
    const char *GetConfFile() const { return fConfFile; }
-   const char *GetUser() const { return fUser; }
+   const char *GetUser() const { return fUrl.GetUser(); }
    const char *GetWorkDir() const { return fWorkDir; }
-   const char *GetSessionTag() const { return fSessionTag; }
    const char *GetImage() const { return fImage; }
-   const char *GetUrlProtocol() const { return fUrlProtocol; }
-   Int_t       GetPort() const { return fPort; }
+   const char *GetUrl() { return fUrl.GetUrl(); }
+   Int_t       GetPort() const { return fUrl.GetPort(); }
    Int_t       GetRemoteProtocol() const { return fProtocol; }
    Int_t       GetClientProtocol() const { return kPROOF_Protocol; }
    Int_t       GetStatus() const { return fStatus; }
    Int_t       GetLogLevel() const { return fLogLevel; }
    Int_t       GetParallel() const;
+   Int_t       GetSessionID() const { return fSessionID; }
    TList      *GetSlaveInfo();
 
    EQueryMode  GetQueryMode() const;
@@ -513,6 +525,10 @@ public:
    TDrawFeedback *CreateDrawFeedback();
    void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
    void           DeleteDrawFeedback(TDrawFeedback *f);
+
+   void           Detach(Option_t *opt = "");
+
+   void           SetAlias(const char *alias="");
 
    ClassDef(TProof,0)  //PROOF control class
 };

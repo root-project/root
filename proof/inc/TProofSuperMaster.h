@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.h,v 1.2 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.h,v 1.3 2005/06/26 17:59:06 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -39,7 +39,7 @@ class TProofSuperMaster : public TProof {
 friend class TProofPlayerSuperMaster;
 
 protected:
-   Bool_t  StartSlaves(Bool_t);
+   Bool_t  StartSlaves(Bool_t, Bool_t);
    Int_t   Process(TDSet *set, const char *selector,
                    Option_t *option = "", Long64_t nentries = -1,
                    Long64_t firstentry = 0, TEventList *evl = 0);

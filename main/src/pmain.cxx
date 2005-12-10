@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.2 2000/11/21 12:26:37 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.3 2001/04/20 17:56:50 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 
 #include "TROOT.h"
 #include "TProofServ.h"
-
+#include "TPluginManager.h"
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
@@ -33,8 +33,26 @@ int main(int argc, char **argv)
 #endif
 
    gROOT->SetBatch();
-   TProofServ *theApp = new TProofServ(&argc, argv);
+   TProofServ *theApp = 0;
 
+   // The third argument is the plugin identifier
+   if (argc > 2) {
+     TPluginHandler *h = 0;
+     if ((h = gROOT->GetPluginManager()->FindHandler("TProofServ",argv[2])) &&
+        h->LoadPlugin() == 0) {
+        theApp = (TProofServ *) h->ExecPlugin(2, &argc, argv);
+     }
+   }
+
+   // Starndard server as default
+   if (!theApp) {
+      theApp = new TProofServ(&argc, argv);
+   }
+
+   // Actual server creation
+   theApp->CreateServer();
+
+   // Ready to run
    theApp->Run();
 
    delete theApp;

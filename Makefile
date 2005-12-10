@@ -274,11 +274,7 @@ endif
 
 ##### Utilities #####
 
-ifneq ($(ROOTDICTTYPE),cint)
 ROOTCINTTMP   = $(ROOTCINTTMPEXE) $(addprefix -,$(ROOTDICTTYPE))
-else
-ROOTCINTTMP   = $(ROOTCINTTMPEXE)
-endif
 MAKEDEP       = build/unix/depend.sh
 MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      = build/unix/makedist.sh

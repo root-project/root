@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.45 2005/09/17 13:52:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.46 2005/11/01 18:32:04 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TApplication.h"
 #include "TSlave.h"
 #include "TProof.h"
 #include "TSystem.h"
@@ -32,24 +33,33 @@
 #include "TThread.h"
 #include "TSocket.h"
 #include "TPluginManager.h"
+#include "TObjString.h"
 
 ClassImp(TSlave)
 
 //______________________________________________________________________________
-TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
-               const char *image, TProof *proof, ESlaveType stype,
+TSlave::TSlave(const char *url, const char *ord, Int_t perf,
+               const char *image, TProof *proof, Int_t stype,
                const char *workdir, const char *msd)
-  : fName(host), fImage(image), fProofWorkDir(workdir),
-    fWorkDir(workdir), fPort(port),
+  : fImage(image), fProofWorkDir(workdir),
+    fWorkDir(workdir), fPort(-1),
     fOrdinal(ord), fPerfIdx(perf),
     fProtocol(0), fSocket(0), fProof(proof),
     fInput(0), fBytesRead(0), fRealTime(0),
-    fCpuTime(0), fSlaveType(stype), fStatus(0),
+    fCpuTime(0), fSlaveType((ESlaveType)stype), fStatus(0),
     fParallel(0), fMsd(msd)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
+   fName = url;
+   fPort = TUrl(url).GetPort();
+   TString sp(Form(":%d", fPort));
+   Int_t ip = kNPOS;
+   if ((ip = fName.Index(sp)) != kNPOS)
+      fName.Remove(ip);
+   if ((ip = fName.Index(TUrl(url).GetUser())) != kNPOS)
+      fName.Remove(0,ip);
 
-   Init(host, port, stype);
+   Init(url, -1, stype);
 }
 
 //______________________________________________________________________________
@@ -73,7 +83,7 @@ TSlave::TSlave()
 }
 
 //______________________________________________________________________________
-void TSlave::Init(const char *host, Int_t port, ESlaveType stype)
+void TSlave::Init(const char *host, Int_t port, Int_t stype)
 {
    // Init a PROOF slave object. Called via the TSlave ctor.
    // The Init method is technology specific and is overwritten by derived
@@ -81,22 +91,25 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype)
 
    // The url contains information about the server type: make sure
    // it is 'proofd' or alike
-   TString hurl(fProof->GetUrlProtocol());
-   hurl.Insert(5, 'd');
-   // Add host, port (and user) information
-   hurl += TString(Form("://%s:%d", host, port));
+   TString proto = fProof->fUrl.GetProtocol();
+   proto.Insert(5, 'd');
+
+   TUrl hurl(host);
+   hurl.SetProtocol(proto);
+   if (port > 0)
+      hurl.SetPort(port);
 
    // Add information about our status (Client or Master)
    TString iam;
    if (fProof->IsMaster() && stype == kSlave) {
       iam = "Master";
-      hurl += TString("/?SM");
+      hurl.SetOptions("SM");
    } else if (fProof->IsMaster() && stype == kMaster) {
       iam = "Master";
-      hurl += TString("/?MM");
+      hurl.SetOptions("MM");
    } else if (!fProof->IsMaster() && stype == kMaster) {
       iam = "Local Client";
-      hurl += TString("/?MC");
+      hurl.SetOptions("MC");
    } else {
       Error("Init","Impossible PROOF <-> SlaveType Configuration Requested");
       Assert(0);
@@ -107,7 +120,7 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype)
    // to perform authentication (optimization needed to avoid a double
    // opening in case this is called by TXSlave).
    Int_t wsize = 65536;
-   fSocket = TSocket::CreateAuthSocket(hurl, 0, wsize, fSocket);
+   fSocket = TSocket::CreateAuthSocket(hurl.GetUrl(), 0, wsize, fSocket);
 
    if (!fSocket || !fSocket->IsAuthenticated()) {
       SafeDelete(fSocket);
@@ -142,7 +155,7 @@ void TSlave::Init(const char *host, Int_t port, ESlaveType stype)
 }
 
 //______________________________________________________________________________
-void TSlave::SetupServ(ESlaveType stype, const char *conffile)
+void TSlave::SetupServ(Int_t stype, const char *conffile)
 {
    // Init a PROOF slave object. Called via the TSlave ctor.
    // The Init method is technology specific and is overwritten by derived
@@ -218,12 +231,13 @@ void TSlave::SetupServ(ESlaveType stype, const char *conffile)
 }
 
 //______________________________________________________________________________
-void TSlave::Init(TSocket *s, ESlaveType stype)
+void TSlave::Init(TSocket *s, Int_t stype)
 {
    // Init a PROOF slave object using the connection opened via s. Used to
    // avoid double opening when an attempt via TXSlave found a remote proofd.
 
-   Init(s->GetInetAddress().GetHostName(), s->GetPort(), stype);
+   fSocket = s;
+   TSlave::Init(s->GetInetAddress().GetHostName(), s->GetPort(), stype);
 }
 
 //______________________________________________________________________________
@@ -235,11 +249,18 @@ TSlave::~TSlave()
 }
 
 //______________________________________________________________________________
-void TSlave::Close(Option_t *)
+void TSlave::Close(Option_t *opt)
 {
    // Close slave socket.
 
    if (fSocket) {
+
+      // If local client ...
+      if (!(fProof->IsMaster()) && !strncasecmp(opt,"S",1)) {
+         // ... tell master and slaves to stop
+         Interrupt(TProof::kShutdownInterrupt);
+      }
+
       // deactivate used sec context if talking to proofd daemon running
       // an old protocol (sec context disactivated remotely)
       TSecContext *sc = fSocket->GetSecContext();
@@ -294,7 +315,7 @@ void TSlave::Print(Option_t *) const
    TString sc;
 
    Printf("*** Slave %s  (%s)", fOrdinal.Data(), fSocket ? "valid" : "invalid");
-   Printf("    Host name:               %s", GetName());
+   Printf("    Host name:               %s", TUrl(GetName()).GetHost());
    Printf("    Port number:             %d", GetPort());
    if (fSocket) {
       Printf("    User:                    %s", GetUser());
@@ -369,8 +390,8 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
 }
 
 //______________________________________________________________________________
-TSlave *TSlave::Create(const char *host, Int_t port, const char *ord, Int_t perf,
-                       const char *image, TProof *proof, ESlaveType stype,
+TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
+                       const char *image, TProof *proof, Int_t stype,
                        const char *workdir, const char *msd)
 {
    // Static method returning the appropriate TSlave object for the remote
@@ -378,14 +399,25 @@ TSlave *TSlave::Create(const char *host, Int_t port, const char *ord, Int_t perf
 
    TSlave *s = 0;
 
+   // No need to try a XPD connection in some well defined cases
+   Bool_t tryxpd = kTRUE;
+   if (!(proof->IsMaster())) {
+      if (proof->IsProofd())
+         tryxpd = kFALSE;
+   } else {
+      if (gApplication &&
+         (gApplication->Argc() < 3 || strncmp(gApplication->Argv(2),"xpd",3)))
+         tryxpd = kFALSE;
+   }
+
    // If we have TXSlave the plugin manager will find it
    TPluginHandler *h = 0;
-   if ((h = gROOT->GetPluginManager()->FindHandler("TSlave")) &&
+   if (tryxpd && (h = gROOT->GetPluginManager()->FindHandler("TSlave","xpd")) &&
        h->LoadPlugin() == 0) {
-      s = (TSlave *) h->ExecPlugin(10, host, port, ord, perf, image, proof, stype,
-                                       workdir, msd);
+      s = (TSlave *) h->ExecPlugin(8, url, ord, perf, image, proof, stype,
+                                      workdir, msd);
    } else {
-      s = new TSlave(host, port, ord, perf, image, proof, stype, workdir, msd);
+      s = new TSlave(url, ord, perf, image, proof, stype, workdir, msd);
    }
 
    return s;
@@ -526,4 +558,27 @@ void TSlave::Interrupt(Int_t type)
       // Unexpected message, just receive log file
       fProof->Collect(this);
    }
+}
+
+//______________________________________________________________________________
+TObjString *TSlave::SendCoordinator(Int_t, const char *)
+{
+   // Send message to intermediate coordinator. Only meaningful when there is one,
+   // i.e. in XPD framework
+
+   if (gDebug > 0)
+      Info("SendCoordinator","method not implemented for this communication layer");
+   return 0;
+}
+
+//______________________________________________________________________________
+void TSlave::SetAlias(const char *)
+{
+   // Set an alias for this session. If reconnection is supported, the alias
+   // will be communicated to the remote coordinator so that it can be recovered
+   // when reconnecting
+
+   if (gDebug > 0)
+      Info("SetAlias","method not implemented for this communication layer");
+   return;
 }

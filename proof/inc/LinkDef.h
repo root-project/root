@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.30 2005/09/18 01:06:02 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.31 2005/12/09 01:12:16 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,6 +22,7 @@
 #pragma link C++ global gProofDebugMask;
 #pragma link C++ global gProofDebugLevel;
 
+#pragma link C++ class TProofMgr;
 #pragma link C++ class TProof;
 #pragma link C++ class TProofCondor;
 #pragma link C++ class TProofSuperMaster;

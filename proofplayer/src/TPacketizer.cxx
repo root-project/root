@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.27 2005/07/21 17:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.28 2005/09/16 08:48:38 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -566,6 +566,9 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
    ((TProof*)gProof)->DeActivateAsyncInput();
 
+   // Some monitoring systems (TXSocketHandler) need to know this 
+   ((TProof*)gProof)->fCurrentMonitor = &mon;
+
    Bool_t done = kFALSE;
    while (kTRUE) {
 
@@ -728,6 +731,9 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    // report std. output from slaves??
 
    ((TProof*)gProof)->ActivateAsyncInput();
+
+   // This needs to be reset
+   ((TProof*)gProof)->fCurrentMonitor = 0;
 
    if (!done) {
       // we ran out of slaves ...

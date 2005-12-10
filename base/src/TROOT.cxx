@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.168 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.169 2005/11/24 23:30:05 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -107,7 +107,9 @@
 #include "TObjString.h"
 #include "TVirtualUtilHist.h"
 #include "TAuthenticate.h"
+#include "TUrl.h"
 #include "TVirtualProof.h"
+#include "TVirtualProofMgr.h"
 #include "TVirtualMutex.h"
 
 #include <string>
@@ -1725,24 +1727,13 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
 
    // Make sure libProof and dependents are loaded and TProof can be created,
    // dependents are loaded via the information in the [system].rootmap file
-   TPluginManager *pm = gROOT->GetPluginManager();
-   if (!pm) {
-      Error("Proof", "plugin manager not found");
-      return 0;
-   }
-
-   // Load regular TProof for client
-   TPluginHandler *h = pm->FindHandler("TVirtualProof", "");
-   if (!h) {
-      Error("Proof", "no plugin found for TVirtualProof");
-      return 0;
-   }
-   if (h->LoadPlugin() == -1) {
-      Error("Proof", "plugin for TVirtualProof could not be loaded");
-      return 0;
-   }
-
    if (!cluster) {
+
+      TPluginManager *pm = gROOT->GetPluginManager();
+      if (!pm) {
+         Error("Proof", "plugin manager not found");
+         return 0;
+      }
 
       if (IsBatch()) {
          Error("Proof", "we are in batch mode, cannot show PROOF Session Viewer");
@@ -1763,20 +1754,54 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
 
    } else {
 
+      TVirtualProof *proof = 0;
+
       if (!strlen(cluster))
          cluster = "proof://localhost";
 
-      // start the PROOF session
-      TVirtualProof *proof = 0;
-      proof = (TVirtualProof*) h->ExecPlugin(4, cluster, conffile, confdir,
-                                             loglevel);
-      if (!proof || !proof->IsValid()) {
-         Error("Proof", "plugin for TVirtualProof could not be executed");
-         delete proof;
-         return 0;
+      TUrl u(cluster);
+      if (!strcmp(u.GetProtocol(),TUrl("a").GetProtocol()))
+         u.SetProtocol("proof");
+      if (u.GetPort() == TUrl("a").GetPort())
+         u.SetPort(1093);
+
+      // Find out if we are required to attach to an existing session
+      TString o(u.GetOptions());
+      Bool_t attach = kFALSE;
+      Int_t locid = -1;
+      if (o.Length() > 0) {
+         if (o.IsDigit()) {
+            attach = kTRUE;
+            locid = o.Atoi();
+         }
+         u.SetOptions("");
+      }
+
+      // Init the manager
+      TVirtualProofMgr *mgr = TVirtualProofMgr::Create(u.GetUrl());
+
+      if (mgr) {
+
+         if (attach) {
+            TVirtualProofDesc *d = 0;
+            if ((d = (TVirtualProofDesc *) mgr->GetProofDesc(locid))) {
+               proof = (TVirtualProof*) mgr->AttachSession(locid);
+               if (!proof || !proof->IsValid()) {
+                  Error("Proof", "new session could not be attached");
+                  SafeDelete(proof);
+               }
+            }
+         }
+
+         // start the PROOF session
+         proof = (TVirtualProof*) mgr->CreateSession(conffile, confdir, loglevel);
+         if (!proof || !proof->IsValid()) {
+            Error("Proof", "new session could not be created");
+            SafeDelete(proof);
+            return 0;
+         }
       }
       return proof;
-
    }
 }
 

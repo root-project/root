@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.39 2005/07/21 17:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.40 2005/09/16 08:48:38 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -586,6 +586,9 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
    ((TProof*)gProof)->DeActivateAsyncInput();
 
+   // Some monitoring systems (TXSocketHandler) need to know this 
+   ((TProof*)gProof)->fCurrentMonitor = &mon;
+
    while (kTRUE) {
 
       // send work
@@ -736,6 +739,9 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
    // report std. output from slaves??
 
    ((TProof*)gProof)->ActivateAsyncInput();
+
+   // This needs to be reset
+   ((TProof*)gProof)->fCurrentMonitor = 0;
 
    // compute the offset for each file element
    Long64_t offset = 0;
