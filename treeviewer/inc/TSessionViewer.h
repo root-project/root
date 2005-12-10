@@ -84,6 +84,7 @@ class TCanvas;
 class TEnv;
 struct UserGroup_t;
 
+class TVirtualProofMgr;
 class TVirtualProof;
 class TSessionViewer;
 class TSessionLogView;
@@ -145,6 +146,7 @@ enum EMenuIdentification {
 class TSessionDescription : public TObject {
 
 public:
+   TString            fTag;         // session unique identifier
    TString            fName;        // session name
    TString            fAddress;     // server address
    Int_t              fPort;        // communication port
@@ -152,6 +154,7 @@ public:
    Int_t              fLogLevel;    // log (debug) level
    TString            fUserName;    // user name (on server)
    Bool_t             fConnected;   // kTRUE if connected
+   Bool_t             fAttached;    // kTRUE if attached
    Bool_t             fLocal;       // kTRUE if session is local
    Bool_t             fSync;        // kTRUE if in sync mode
    Bool_t             fAutoEnable;  // enable packages at session startup time
@@ -159,6 +162,7 @@ public:
    TList             *fPackages;    // list of packages
    TQueryDescription *fActQuery;    // current (actual) query
    TVirtualProof     *fProof;       // pointer on TVirtualProof used by this session
+   TVirtualProofMgr  *fProofMgr;    // Proof sessions manager
    Int_t              fNbHistos;    // number of feedback histos
 
    const char        *GetName() const { return fName; }
@@ -321,6 +325,7 @@ public:
    void     OnMultipleSelection(Bool_t on);
    void     OnStartupEnable(Bool_t on);
    void     ProofInfos();
+   void     ShutdownSession();
    void     UpdatePackages();
 
    ClassDef(TSessionFrame, 0) // Session frame
@@ -605,6 +610,7 @@ public:
    void     DeleteQuery();
    void     ReadConfiguration(const char *filename = 0);
    void     UpdateListOfProofs();
+   void     UpdateListOfSessions();
    void     WriteConfiguration(const char *filename = 0);
    void     SetBusy(Bool_t busy = kTRUE) { fBusy = busy; }
    void     SetChangePic(Bool_t change) { fChangePic = change;}

@@ -147,8 +147,9 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
 TNewChainDlg::~TNewChainDlg()
 {
    // Delete chain dialog.
-
    if (IsZombie()) return;
+   delete fLVContainer;
+   delete fContents;
    Cleanup();
 }
 
@@ -157,7 +158,8 @@ void TNewChainDlg::OnElementSelected(TObject *obj)
 {
    // Emits OnElementSelected signal if dset is not zero.
 
-   if (obj) {
+   if (obj && (obj->IsA() == TChain::Class() ||
+       obj->IsA() == TDSet::Class())) {
       Emit("OnElementSelected(TObject *)", (Long_t)obj);
    }
 }
@@ -214,6 +216,7 @@ void TNewChainDlg::UpdateList()
    Resize();
 }
 
+//______________________________________________________________________________
 void TNewChainDlg::DisplayDirectory(const TString &fname)
 {
    // Display content of directory.
@@ -226,6 +229,7 @@ void TNewChainDlg::DisplayDirectory(const TString &fname)
    Resize();
 }
 
+//______________________________________________________________________________
 void TNewChainDlg::OnDoubleClick(TGLVEntry* f, Int_t btn)
 {
    // Handle double click in the File container.
@@ -264,6 +268,7 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case 0:
                      // Apply button
+                     fOkButton->SetEnabled(kFALSE);
                      OnElementSelected(fChain);
                      DeleteWindow();
                      break;
