@@ -1,6 +1,8 @@
 #include "Riostream.h"
 #include "TString.h"
 #include "TPRegexp.h"
+#include "TClonesArray.h"
+#include "TObjString.h"
 
 //-------------------------------------------------------------------------------------------
 //
@@ -15,7 +17,7 @@
 //              http://perldoc.perl.org/perlre.html
 //
 // ROOT has this capability through the use of the P(erl) C(ompatible) R(egular) E(xpression)
-//  - library, PCRE, see http://ww.pcre.org
+//  - library, PCRE, see http://www.pcre.org
 //
 // Its functionality can be accessed through the TPRegexp and TString class .
 // Note that in patterns taken from Perl all backslash character have to be replaced in the
