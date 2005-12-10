@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: mnddot.cpp,v 1.1.6.2 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: mnddot.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -55,10 +55,10 @@ double mnddot(unsigned int n, const double* dx, int incx, const double* dy,
     ix = 1;
     iy = 1;
     if (incx < 0) {
-	ix = (-(n) + 1) * incx + 1;
+	ix = (-static_cast<int>(n) + 1) * incx + 1;
     }
     if (incy < 0) {
-	iy = (-(n) + 1) * incy + 1;
+	iy = (-static_cast<int>(n) + 1) * incy + 1;
     }
     i__1 = n;
     for (i__ = 1; i__ <= i__1; ++i__) {
