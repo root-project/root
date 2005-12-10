@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.15 2005/11/03 16:31:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.16 2005/11/03 20:52:11 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -314,9 +314,11 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
       TH1 *newsignal = (TH1*)(output->GetSignal()->At(channel));
       TH1 *oldsignal = (TH1*)(input->GetSignal()->At(channel));
       if(stat)
-         for(int i=1; i<=newsignal->GetNbinsX(); i++) {
+         for(int i=1; i<=newsignal->GetNbinsX(); i++) 
             newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
-         }
+      else
+         for(int i=1; i<=newsignal->GetNbinsX(); i++) 
+            newsignal->SetBinContent(i,oldsignal->GetBinContent(i));
       newsignal->Scale(1 + serrf[channel]);
       newsignal->SetDirectory(0);
       TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
@@ -324,6 +326,9 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
       if(stat)
          for(int i=1; i<=newbackground->GetNbinsX(); i++)
             newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
+      else
+         for(int i=1; i<=newbackground->GetNbinsX(); i++)
+            newbackground->SetBinContent(i,oldbackground->GetBinContent(i));
       newbackground->Scale(1 + berrf[channel]);
       newbackground->SetDirectory(0);
    }
