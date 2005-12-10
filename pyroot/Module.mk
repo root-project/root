@@ -50,8 +50,8 @@ include/%.h:    $(PYROOTDIRI)/%.h
 %.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTLIBSDEP) $(ROOTPY) $(ROOTPYC) \
-                $(ROOTPYO)
+$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
+                $(ROOTLIBSDEP) 
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \

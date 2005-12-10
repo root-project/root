@@ -211,7 +211,7 @@ PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib \
                 $(LPATH)/libThread.lib
 endif
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-ROOTLIBSDEP   = $(CORELIB) $(CINTLIB) $(HISTLIB) \
+ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 ifeq ($(FORCELINK),yes)
 # Force linking of not referenced libraries
