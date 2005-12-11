@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.112 2005/11/16 20:10:45 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.113 2005/11/24 23:30:05 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1001,7 +1001,10 @@ Int_t TCint::LoadLibraryMap()
                         // std is not declared but is also ignored by CINT!
                         break;
                      } else {
-                        G__set_class_autoloading_table((char*)base.Data(), lib);
+                        // Only declared the namespace do not specify any library because 
+                        // the namespace might be spread over several libraries and we do not
+                        // know (yet?) which one the user will need!
+                        G__set_class_autoloading_table((char*)base.Data(), ""); 
                      }
                      ++k;
                   }
@@ -1047,15 +1050,16 @@ Int_t TCint::AutoLoad(const char *cls)
       }
       const char *lib = ((TObjString*)tokens->At(0))->GetName();
 
-      if (gROOT->LoadClass(cls, lib) == 0) {
-         if (gDebug > 0)
-            ::Info("TCint::AutoLoad", "loaded library %s for class %s",
-                   lib, cls);
-         status = 1;
-      } else
-         ::Error("TCint::AutoLoad", "failure loading library %s for class %s",
-                 lib, cls);
-
+      if (lib[0]) {
+         if (gROOT->LoadClass(cls, lib) == 0) {
+            if (gDebug > 0)
+               ::Info("TCint::AutoLoad", "loaded library %s for class %s",
+               lib, cls);
+            status = 1;
+         } else
+            ::Error("TCint::AutoLoad", "failure loading library %s for class %s",
+            lib, cls);
+      }
       delete tokens;
    }
 
@@ -1091,14 +1095,16 @@ Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
       delete tokens;
    }
 
-   if (gROOT->LoadClass(cls, lib) == 0) {
-      if (gDebug > 0)
-         ::Info("TCint::AutoLoadCallback", "loaded library %s for class %s",
-                lib, cls);
-      return 1;
-   } else
-      ::Error("TCint::AutoLoadCallback", "failure loading library %s for class %s",
-              lib, cls);
+   if (lib[0]) {
+      if (gROOT->LoadClass(cls, lib) == 0) {
+         if (gDebug > 0)
+            ::Info("TCint::AutoLoadCallback", "loaded library %s for class %s",
+            lib, cls);
+         return 1;
+      } else
+         ::Error("TCint::AutoLoadCallback", "failure loading library %s for class %s",
+         lib, cls);
+   }
    return 0;
 }
 
