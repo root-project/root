@@ -1,5 +1,5 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.6 2005/12/07 17:56:35 moneta Exp $
-// Authors: T. Glebe, L. Moneta    2005  
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.7 2005/12/10 21:40:25 moneta Exp $
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
 #define ROOT_Math_SMatrix
@@ -47,9 +47,9 @@
 #include "Math/Expression.h"
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
     template <class T, unsigned int D> class SVector;
 
@@ -58,7 +58,7 @@ namespace ROOT {
 
 /** SMatrix.
     A generic fixed size n x m Matrix class.q
-    
+
     @memo SMatrix
     @author T. Glebe
 */
@@ -77,12 +77,12 @@ public:
 
   /** STL const_iterator interface. */
   typedef const T*  const_iterator;
-  
+
   /** @name --- Constructors --- */
 
-  /** 
-      Default constructor: 
-   */ 
+  /**
+      Default constructor:
+   */
   SMatrix();
   ///
   SMatrix(const SMatrix<T,D1,D2>& rhs);
@@ -93,22 +93,22 @@ public:
   // new constructs using STL iterator interface
   /**
    * Constructor with STL iterator interface. The data will be copied into the matrix
-   * Size of the matrix must match size of the iterators 
+   * Size of the matrix must match size of the iterators
    */
   template<class InputIterator>
-  SMatrix(InputIterator begin, InputIterator end); 
+  SMatrix(InputIterator begin, InputIterator end);
 
   /**
    * Constructor with STL iterator interface. The data will be copied into the matrix
    * In this case the value passed size must be equal to the matrix size (D1*D2)
    */
   template<class InputIterator>
-  SMatrix(InputIterator begin, unsigned int size); 
+  SMatrix(InputIterator begin, unsigned int size);
 
   // skip this methods (they are too ambigous)
 #ifdef OLD_IMPL
   /// 2nd arg: set only diagonal?
-  SMatrix(const T& rhs, const bool diagonal=false);
+  SMatrix(const T& rhs, bool diagonal=false);
   /// constructor via dyadic product
   SMatrix(const SVector<T,D1>& rhs);
   /// constructor via dyadic product
@@ -118,17 +118,17 @@ public:
   /** constructor via array, triag=true: array contains only upper/lower
       triangular part of a symmetric matrix, len: length of array */
   template <class T1>
-  //SMatrix(const T1* a, const bool triang=false, const unsigned int len=D1*D2);
+  //SMatrix(const T1* a, bool triang=false, unsigned int len=D1*D2);
   // to avoid clash with TRootIOconst
-  SMatrix(const T1* a, const bool triang, const unsigned int len=D1*D2);
+  SMatrix(const T1* a, bool triang, unsigned int len=D1*D2);
 
 
-  /// assign from a scalar value 
+  /// assign from a scalar value
   SMatrix<T,D1,D2>& operator=(const T& rhs);
 #endif
 
-  /** 
-      construct a symmetric matrix from a SVector containing the upper(lower) 
+  /**
+      construct a symmetric matrix from a SVector containing the upper(lower)
       part of a triangular matrix
   */
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
@@ -151,9 +151,9 @@ public:
   /// return no of elements: rows*columns
   static const unsigned int kSize = D1*D2;
 #else
-  enum { 
+  enum {
   /// return no. of matrix rows
-    kRows = D1, 
+    kRows = D1,
   /// return no. of matrix columns
     kCols = D2,
   /// return no of elements: rows*columns
@@ -251,14 +251,14 @@ public:
   /** @name --- Expert functions --- */
 
   /**
-     invert symmetric, pos. def. Matrix via Dsinv. 
+     invert symmetric, pos. def. Matrix via Dsinv.
      This method change the current matrix
   */
   bool Sinvert();
 
   /**
-     invert symmetric, pos. def. Matrix via Dsinv. 
-     This method  returns a new matrix. In case the inversion fails 
+     invert symmetric, pos. def. Matrix via Dsinv.
+     This method  returns a new matrix. In case the inversion fails
      the current matrix is returned
   */
   SMatrix<T,D1,D2>  Sinverse() const;
@@ -268,34 +268,34 @@ public:
   */
   bool Sdet(T& det);
 
-  /** determinant of symmetrc, pos. def. Matrix via Dsfact. \textbf{Note:} 
+  /** determinant of symmetrc, pos. def. Matrix via Dsfact. \textbf{Note:}
       this method will preserve the contents of the Matrix!
   */
   bool Sdet2(T& det) const;
 
 
   /**
-     invert square Matrix via Dinv. 
+     invert square Matrix via Dinv.
      This method change the current matrix
   */
   bool Invert();
 
   /**
-     invert square Matrix via Dinv. 
-     This method  returns a new matrix. In case the inversion fails 
+     invert square Matrix via Dinv.
+     This method  returns a new matrix. In case the inversion fails
      the current matrix is returned
   */
   SMatrix<T,D1,D2> Inverse() const;
 
-  /** 
+  /**
       determinant of square Matrix via Dfact. \textbf{Note:} this will destroy
-      the contents of the Matrix! 
+      the contents of the Matrix!
   */
   bool Det(T& det);
 
-  /** 
+  /**
       determinant of square Matrix via Dfact. \textbf{Note:} this will preserve
-      the content of the Matrix! 
+      the content of the Matrix!
   */
   bool Det2(T& det) const;
 
@@ -304,76 +304,76 @@ public:
   /// place a vector in a Matrix row
   template <unsigned int D>
   SMatrix<T,D1,D2>& Place_in_row(const SVector<T,D>& rhs,
-				 const unsigned int row,
-				 const unsigned int col);
+				 unsigned int row,
+				 unsigned int col);
   /// place a vector expression in a Matrix row
   template <class A, unsigned int D>
   SMatrix<T,D1,D2>& Place_in_row(const Expr<A,T,D>& rhs,
-				 const unsigned int row,
-				 const unsigned int col);
+				 unsigned int row,
+				 unsigned int col);
   /// place a vector in a Matrix column
   template <unsigned int D>
   SMatrix<T,D1,D2>& Place_in_col(const SVector<T,D>& rhs,
-				 const unsigned int row,
-				 const unsigned int col);
+				 unsigned int row,
+				 unsigned int col);
   /// place a vector expression in a Matrix column
   template <class A, unsigned int D>
   SMatrix<T,D1,D2>& Place_in_col(const Expr<A,T,D>& rhs,
-				 const unsigned int row,
-				 const unsigned int col);
+				 unsigned int row,
+				 unsigned int col);
   /// place a matrix in this matrix
   template <unsigned int D3, unsigned int D4>
   SMatrix<T,D1,D2>& Place_at(const SMatrix<T,D3,D4>& rhs,
-			     const unsigned int row,
-			     const unsigned int col);
+			     unsigned int row,
+			     unsigned int col);
   /// place a matrix expression in this matrix
   template <class A, unsigned int D3, unsigned int D4>
   SMatrix<T,D1,D2>& Place_at(const Expr<A,T,D3,D4>& rhs,
-			     const unsigned int row,
-			     const unsigned int col);
-
-  /** 
-      return a full Matrix row as a vector (copy the content in a new vector)
-  */ 
-  SVector<T,D2> Row(const unsigned int therow) const;
-
-  /** 
-      return a full Matrix column as a vector (copy the content in a new vector)
-  */
-  SVector<T,D1> Col(const unsigned int thecol) const;
+			     unsigned int row,
+			     unsigned int col);
 
   /**
-     return a slice of therow as a vector starting at the colum value col0 until col0+N. 
+      return a full Matrix row as a vector (copy the content in a new vector)
+  */
+  SVector<T,D2> Row(unsigned int therow) const;
+
+  /**
+      return a full Matrix column as a vector (copy the content in a new vector)
+  */
+  SVector<T,D1> Col(unsigned int thecol) const;
+
+  /**
+     return a slice of therow as a vector starting at the colum value col0 until col0+N.
      Condition  col0+N <= D2
-   */ 
-  template <unsigned int N>  
-  SVector<T,N> SubRow(const unsigned int therow, const unsigned int col0 = 0 ) const;
+   */
+  template <unsigned int N>
+  SVector<T,N> SubRow(unsigned int therow, unsigned int col0 = 0 ) const;
 
   /**
      return a slice of the column as a vector starting at the row value row0 until row0+Dsub.
      Condition  row0+N <= D1
-   */ 
-  template <unsigned int N>  
-  SVector<T,N> SubCol(const unsigned int thecol, const unsigned int row0 = 0) const;
+   */
+  template <unsigned int N>
+  SVector<T,N> SubCol(unsigned int thecol, unsigned int row0 = 0) const;
 
   /**
      return a submatrix with the upper left corner at the values (row0, col0) and with sizes N1, N2
      Condition  row0+N1 <= D1 && col0+N2 <=D2
-   */ 
-  template <unsigned int N1, unsigned int N2 >  
-  SMatrix<T,N1,N2> Sub(const unsigned int row0, const unsigned int col0) const;
+   */
+  template <unsigned int N1, unsigned int N2 >
+  SMatrix<T,N1,N2> Sub(unsigned int row0, unsigned int col0) const;
 
   /**
-     return diagonal elements of a matrix as a Vector.  
+     return diagonal elements of a matrix as a Vector.
      It works only for squared matrices D1 == D2, otherwise it will produce a compile error
-   */ 
+   */
   SVector<T,D1> Diagonal() const;
 
   /**
-     return the upper Triangular block of the matrices (including the diagonal) as 
-     a vector of sizes N = D1 * (D1 + 1)/2. 
+     return the upper Triangular block of the matrices (including the diagonal) as
+     a vector of sizes N = D1 * (D1 + 1)/2.
      It works only for square matrices with D1==D2, otherwise it will produce a compile error
-   */ 
+   */
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
   SVector<T, D1 * (D2 +1)/2> UpperBlock() const;
 #else
@@ -381,10 +381,10 @@ public:
   SVector<T,N> UpperBlock() const;
 #endif
   /**
-     return the lower Triangular block of the matrices (including the diagonal) as 
-     a vector of sizes N = D1 * (D1 + 1)/2. 
+     return the lower Triangular block of the matrices (including the diagonal) as
+     a vector of sizes N = D1 * (D1 + 1)/2.
      It works only for square matrices with D1==D2, otherwise it will produce a compile error
-   */ 
+   */
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
   SVector<T, D1 * (D2 +1)/2> LowerBlock() const;
 #else
@@ -395,7 +395,7 @@ public:
 
 
 
-  // submatrices 
+  // submatrices
 
   /// Print: used by operator<<()
   std::ostream& Print(std::ostream& os) const;
@@ -418,13 +418,13 @@ inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1
   }  // namespace Math
 
 }  // namespace ROOT
-          
 
 
 
 
 
-#ifndef __CINT__ 
+
+#ifndef __CINT__
 
 #include "Math/SMatrix.icc"
 // include Matrix-Vector multiplication

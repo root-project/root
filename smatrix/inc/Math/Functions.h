@@ -1,5 +1,5 @@
-// @(#)root/smatrix:$Name:  $:$Id: Functions.hv 1.0 2005/11/24 12:00:00 moneta Exp $
-// Authors: T. Glebe, L. Moneta    2005  
+// @(#)root/smatrix:$Name:  $:$Id: Functions.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Functions
 #define ROOT_Math_Functions
@@ -35,9 +35,9 @@
 #include "Math/Expression.h"
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
@@ -64,8 +64,8 @@ inline const T Square(const T& x) { return x*x; }
 // maximum
 //==============================================================================
 template <class T>
-inline const T Maximum(const T& lhs, const T& rhs) { 
-  return (lhs > rhs) ? lhs : rhs; 
+inline const T Maximum(const T& lhs, const T& rhs) {
+  return (lhs > rhs) ? lhs : rhs;
 }
 
 /** minimum.
@@ -77,8 +77,8 @@ inline const T Maximum(const T& lhs, const T& rhs) {
 // minimum
 //==============================================================================
 template <class T>
-inline const T Minimum(const T& lhs, const T& rhs) { 
-  return (lhs < rhs) ? lhs : rhs; 
+inline const T Minimum(const T& lhs, const T& rhs) {
+  return (lhs < rhs) ? lhs : rhs;
 }
 
 /** round.
@@ -104,7 +104,7 @@ inline int Round(const T& x) {
 // sign
 //==============================================================================
 template <class T>
-inline const int Sign(const T& x) { return (x==0)? 0 : (x<0)? -1 : 1; }
+inline int Sign(const T& x) { return (x==0)? 0 : (x<0)? -1 : 1; }
 
 //==============================================================================
 // meta_dot
@@ -238,7 +238,7 @@ inline T Mag(const Expr<A,T,D>& rhs) {
 
 /** Lmag2.
     Template to compute $|\vec{v}|^2 = v_0^2 - v_1^2 - v_2^2 -v_3^2$.
-    
+
     @author T. Glebe
 */
 //==============================================================================
@@ -254,7 +254,7 @@ inline T Lmag2(const SVector<T,4>& rhs) {
 //==============================================================================
 template <class A, class T>
 inline T Lmag2(const Expr<A,T,4>& rhs) {
-  return Square(rhs.apply(0)) 
+  return Square(rhs.apply(0))
     - Square(rhs.apply(1)) - Square(rhs.apply(2)) - Square(rhs.apply(3));
 }
 
@@ -386,7 +386,7 @@ inline Expr<BinaryOp<DivOp<T>, Expr<A,T,D>, Constant<T>, T>, T, D>
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 
 #endif   /* ROOT_Math_Functions */
