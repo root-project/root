@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.16 2005/03/01 14:53:12 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.17 2005/11/04 09:17:05 brun Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -157,7 +157,7 @@ int RemoveLib(const string &solib, bool fullpath, FILE *fp)
    char *fbuf = new char[siz+1];
    char *fptr = fbuf;
 
-   while (fgets(fptr, siz - size_t(fptr-fbuf), fp)) {
+   while (fgets(fptr, 1+siz - size_t(fptr-fbuf), fp)) {
 
       char *line = new char[strlen(fptr)+1];
       strcpy(line, fptr);
@@ -173,7 +173,7 @@ int RemoveLib(const string &solib, bool fullpath, FILE *fp)
       delete [] line;
 
       // fgets() should return 0 in this case but doesn't
-      if (siz - size_t(fptr - fbuf) <= 0)
+      if ( (siz - size_t(fptr - fbuf)) <= 0)
          break;
    }
 
