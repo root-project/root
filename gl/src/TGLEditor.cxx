@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.23 2005/11/29 09:25:51 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.24 2005/12/09 18:09:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -93,15 +93,15 @@ TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGLSAViewer *v)
    fRGBA[15] = 1.f, fRGBA[16] = 60.f;
    //Small gl-window with sphere
    TGCanvas *viewCanvas = new TGCanvas(this, 120, 120, kSunkenFrame | kDoubleBorder);
-   fTrash.Add(viewCanvas);
+   fTrash.AddLast(viewCanvas);
    Window_t wid = viewCanvas->GetViewPort()->GetId();
    fGLWin = gVirtualGL->CreateGLWindow(wid);
    fMatView = new TGLMatView(viewCanvas->GetViewPort(), fGLWin, this);
-   fTrash.Add(fMatView);
+   fTrash.AddLast(fMatView);
    fCtx = gVirtualGL->CreateContext(fGLWin);
    viewCanvas->SetContainer(fMatView);
    fFrameLayout = new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2);
-   fTrash.Add(fFrameLayout);
+   fTrash.AddLast(fFrameLayout);
    AddFrame(viewCanvas, fFrameLayout);
 
    CreateRadioButtons();
@@ -111,15 +111,15 @@ TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGLSAViewer *v)
    CreateSliders();
    //apply button creation
    TGLayoutHints *widLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 2, 2, 5, 0);
-   fTrash.Add(widLayout);
+   fTrash.AddLast(widLayout);
    fApplyButton = new TGTextButton(this, "Apply", kTBa);
-   fTrash.Add(fApplyButton);
+   fTrash.AddLast(fApplyButton);
    AddFrame(fApplyButton, widLayout);
    fApplyButton->SetState(kButtonDisabled);
    fApplyButton->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
    
    fApplyFamily = new TGTextButton(this, "Apply to family", kTBaf);
-   fTrash.Add(fApplyFamily);
+   fTrash.AddLast(fApplyFamily);
    AddFrame(fApplyFamily, widLayout);
    fApplyFamily->SetState(kButtonDisabled);
    fApplyFamily->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
@@ -265,29 +265,29 @@ void TGLColorEditor::CreateRadioButtons()
 {
    // Create Diffuse/Ambient/Specular/Emissive radio buttons and sub-frames
    TGGroupFrame *partFrame = new TGGroupFrame(this, "Color components:", kLHintsTop | kLHintsCenterX);
-   fTrash.Add(partFrame);
+   fTrash.AddLast(partFrame);
    partFrame->SetTitlePos(TGGroupFrame::kLeft);
    AddFrame(partFrame, fFrameLayout);
    TGMatrixLayout *ml = new TGMatrixLayout(partFrame, 0, 1, 10);
-   fTrash.Add(ml);
    partFrame->SetLayoutManager(ml);
+   // partFrame will delete the layout manager ml for us so don't add to fTrash
 
    fLightTypes[kDiffuse] = new TGRadioButton(partFrame, "Diffuse", kCPd);
    fLightTypes[kDiffuse]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
    fLightTypes[kDiffuse]->SetToolTipText("Diffuse component of color");	
-   fTrash.Add(fLightTypes[kDiffuse]);
+   fTrash.AddLast(fLightTypes[kDiffuse]);
    fLightTypes[kAmbient] = new TGRadioButton(partFrame, "Ambient", kCPa);
    fLightTypes[kAmbient]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
    fLightTypes[kAmbient]->SetToolTipText("Ambient component of color");	
-   fTrash.Add(fLightTypes[kAmbient]);
+   fTrash.AddLast(fLightTypes[kAmbient]);
    fLightTypes[kSpecular] = new TGRadioButton(partFrame, "Specular", kCPs);
    fLightTypes[kSpecular]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
    fLightTypes[kSpecular]->SetToolTipText("Specular component of color");	
-   fTrash.Add(fLightTypes[kSpecular]);
+   fTrash.AddLast(fLightTypes[kSpecular]);
    fLightTypes[kEmission] = new TGRadioButton(partFrame, "Emissive", kCPe);
    fLightTypes[kEmission]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
    fLightTypes[kEmission]->SetToolTipText("Emissive component of color");	
-   fTrash.Add(fLightTypes[kEmission]);
+   fTrash.AddLast(fLightTypes[kEmission]);
 
    partFrame->AddFrame(fLightTypes[kDiffuse]);
    partFrame->AddFrame(fLightTypes[kAmbient]);
@@ -300,50 +300,50 @@ void TGLColorEditor::CreateSliders()
 {
    // Create Red/Green/BlueAlpha/Shine sliders
    fRedSlider = new TGHSlider(this, 100, kSlider1 | kScaleBoth, kHSr);
-   fTrash.Add(fRedSlider);
+   fTrash.AddLast(fRedSlider);
    fRedSlider->Connect("PositionChanged(Int_t)", "TGLColorEditor", this, "DoSlider(Int_t)");
    fRedSlider->SetRange(0, 100);
    fRedSlider->SetPosition(Int_t(fRGBA[0] * 100));
 
    fGreenSlider = new TGHSlider(this, 100, kSlider1 | kScaleBoth, kHSg);
-   fTrash.Add(fGreenSlider);
+   fTrash.AddLast(fGreenSlider);
    fGreenSlider->Connect("PositionChanged(Int_t)", "TGLColorEditor", this, "DoSlider(Int_t)");
    fGreenSlider->SetRange(0, 100);
    fGreenSlider->SetPosition(Int_t(fRGBA[1] * 100));
 
    fBlueSlider = new TGHSlider(this, 100, kSlider1 | kScaleBoth, kHSb);
-   fTrash.Add(fBlueSlider);
+   fTrash.AddLast(fBlueSlider);
    fBlueSlider->Connect("PositionChanged(Int_t)", "TGLColorEditor", this, "DoSlider(Int_t)");
    fBlueSlider->SetRange(0, 100);
    fBlueSlider->SetPosition(Int_t(fRGBA[2] * 100));
 
    fAlphaSlider = new TGHSlider(this, 100, kSlider1 | kScaleBoth, kHSa);
-   fTrash.Add(fAlphaSlider);
+   fTrash.AddLast(fAlphaSlider);
    fAlphaSlider->Connect("PositionChanged(Int_t)", "TGLColorEditor", this, "DoSlider(Int_t)");
    fAlphaSlider->SetRange(0, 100);
    fAlphaSlider->SetPosition(Int_t(fRGBA[3] * 100));
 
    fShineSlider = new TGHSlider(this, 100, kSlider1 | kScaleBoth, kHSs);
-   fTrash.Add(fShineSlider);
+   fTrash.AddLast(fShineSlider);
    fShineSlider->Connect("PositionChanged(Int_t)", "TGLColorEditor", this, "DoSlider(Int_t)");
    fShineSlider->SetRange(0, 128);
 
    TGLabel *labelInfo[5] = {0};
    labelInfo[0] = new TGLabel(this, "Red :");
-   fTrash.Add(labelInfo[0]);
+   fTrash.AddLast(labelInfo[0]);
    labelInfo[1] = new TGLabel(this, "Green :");
-   fTrash.Add(labelInfo[1]);
+   fTrash.AddLast(labelInfo[1]);
    labelInfo[2] = new TGLabel(this, "Blue :");
-   fTrash.Add(labelInfo[2]);
+   fTrash.AddLast(labelInfo[2]);
    labelInfo[3] = new TGLabel(this, "Opacity :");
-   fTrash.Add(labelInfo[3]);
+   fTrash.AddLast(labelInfo[3]);
    labelInfo[4] = new TGLabel(this, "Shine :");
-   fTrash.Add(labelInfo[4]);
+   fTrash.AddLast(labelInfo[4]);
 
    TGLayoutHints *layout1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 0, 0, 0);
-   fTrash.Add(layout1);
+   fTrash.AddLast(layout1);
    TGLayoutHints *layout2 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 0, 0);
-   fTrash.Add(layout2);
+   fTrash.AddLast(layout2);
 
    AddFrame(labelInfo[0], layout1);
    AddFrame(fRedSlider, layout2);
@@ -445,6 +445,11 @@ TGLGeometryEditor::TGLGeometryEditor(const TGWindow *parent, TGLSAViewer *v)
    AddFrame(fApplyButton, fL1);
    fApplyButton->SetState(kButtonDisabled);
    fApplyButton->Connect("Pressed()", "TGLGeometryEditor", this, "DoButton()");
+}
+
+//______________________________________________________________________________
+TGLGeometryEditor::~TGLGeometryEditor()
+{
 }
 
 //______________________________________________________________________________
@@ -600,6 +605,11 @@ TGLClipEditor::TGLClipEditor(const TGWindow *parent, TGLSAViewer *v) :
    fL2 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3);
    fTrash.AddLast(fL2);
    CreateControls();
+}
+
+//______________________________________________________________________________
+TGLClipEditor::~TGLClipEditor()
+{
 }
 
 //______________________________________________________________________________
@@ -816,41 +826,47 @@ TGLLightEditor::TGLLightEditor(const TGWindow *parent, TGLSAViewer *v)
    // bound to viewer 'v'
    fTrash.SetOwner(kTRUE);
    TGGroupFrame *ligFrame = new TGGroupFrame(this, "Sources", kLHintsTop | kLHintsCenterX);
-   fTrash.Add(ligFrame);
+   fTrash.AddLast(ligFrame);
    ligFrame->SetTitlePos(TGGroupFrame::kLeft);
    TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3);
+	fTrash.AddLast(l);
    AddFrame(ligFrame, l);
    
    TGMatrixLayout *ml = new TGMatrixLayout(ligFrame, 0, 1, 10);
-   fTrash.Add(ml);
    ligFrame->SetLayoutManager(ml);
+   // ligFrame will delete the layout manager ml for us so don't add to fTrash
 
    fLights[kTop] = new TGCheckButton(ligFrame, "Top", kTBTop);
    fLights[kTop]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
    fLights[kTop]->SetState(kButtonDown);
-   fTrash.Add(fLights[kTop]);
+   fTrash.AddLast(fLights[kTop]);
    fLights[kRight] = new TGCheckButton(ligFrame, "Right", kTBRight);
    fLights[kRight]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
    fLights[kRight]->SetState(kButtonDown);
-   fTrash.Add(fLights[kRight]);
+   fTrash.AddLast(fLights[kRight]);
    fLights[kBottom] = new TGCheckButton(ligFrame, "Bottom", kTBBottom);
    fLights[kBottom]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
    fLights[kBottom]->SetState(kButtonDown);
-   fTrash.Add(fLights[kBottom]);
+   fTrash.AddLast(fLights[kBottom]);
    fLights[kLeft] = new TGCheckButton(ligFrame, "Left", kTBLeft);
    fLights[kLeft]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
    fLights[kLeft]->SetState(kButtonDown);
-   fTrash.Add(fLights[kLeft]);
+   fTrash.AddLast(fLights[kLeft]);
    fLights[kFront] = new TGCheckButton(ligFrame, "Front", kTBFront);
    fLights[kFront]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
    fLights[kFront]->SetState(kButtonDown);
-   fTrash.Add(fLights[kFront]);
+   fTrash.AddLast(fLights[kFront]);
 
    ligFrame->AddFrame(fLights[kTop]);
    ligFrame->AddFrame(fLights[kRight]);
    ligFrame->AddFrame(fLights[kBottom]);
    ligFrame->AddFrame(fLights[kLeft]);
    ligFrame->AddFrame(fLights[kFront]);
+}
+
+//______________________________________________________________________________
+TGLLightEditor::~TGLLightEditor()
+{
 }
 
 //______________________________________________________________________________
@@ -939,6 +955,11 @@ TGLGuideEditor::TGLGuideEditor(const TGWindow *parent, TGLSAViewer *v) :
    fReferencePos[2]->Connect("ValueSet(Long_t)", "TGLGuideEditor", 
                              this, "Update()");
    axesNone->SetState(kButtonDown);
+}
+
+//______________________________________________________________________________
+TGLGuideEditor::~TGLGuideEditor()
+{
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.15 2005/11/23 10:47:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.16 2005/12/09 18:09:35 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -143,6 +143,7 @@ private:
 
 public:
    TGLGeometryEditor(const TGWindow *parent, TGLSAViewer *viewer);
+   ~TGLGeometryEditor();
 
    void SetCenter(const Double_t *center);
    void SetScale(const Double_t *scale);
@@ -186,6 +187,7 @@ private:
 
 public:
    TGLClipEditor(const TGWindow *parent, TGLSAViewer *viewer);   
+   ~TGLClipEditor();
 
    // Internal GUI event callbacks
    void ClipValueChanged(Long_t);
@@ -227,8 +229,8 @@ private:
       kTot      
    };
    
-   TGButton       *fLights[kTot];
    TGLSAViewer    *fViewer;
+   TGButton       *fLights[kTot];
    TList           fTrash;
    
    TGLLightEditor(const TGLLightEditor &);
@@ -236,6 +238,7 @@ private:
 
 public:
    TGLLightEditor(const TGWindow *parent, TGLSAViewer *viewer);
+   ~TGLLightEditor();
    
    void DoButton();
    
@@ -268,6 +271,7 @@ private:
 
 public:
    TGLGuideEditor(const TGWindow *parent, TGLSAViewer *viewer);
+   ~TGLGuideEditor();
 
    void Update();
    void GetState(TGLViewer::EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const;

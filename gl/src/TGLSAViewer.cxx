@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.12 2005/12/07 16:39:23 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.13 2005/12/09 18:09:35 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -275,25 +275,30 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
 TGLSAViewer::~TGLSAViewer()
 {
    // Destroy standalone viewer object
-   delete fFileMenu;
-   delete fCameraMenu;
-   delete fHelpMenu;
-   delete fMenuBar;
-   delete fMenuBarLayout;
-   delete fMenuBarHelpLayout;
-   delete fMenuBarItemLayout;
+   delete fCanvasLayout;
    delete fGLArea;
    delete fCanvasWindow;
-   delete fCanvasLayout;
-   delete fV1;
-   delete fV2;
-   delete fCompositeFrame;
-   delete fL1;
    delete fL2;
+   delete fV2;
+   delete fGeomEditor;
+   delete fColorEditor;
+   delete fShapesTab;
+   delete fGuideEditor;
+   delete fLightEditor;
+   delete fClipEditor;
+   delete fSceneTab;
+   delete fL1;
    delete fL3;
    delete fEditorTab;
-   delete fSceneTab;
-   delete fShapesTab;
+   delete fV1;
+   delete fCompositeFrame;
+   delete fMenuBar;
+   delete fMenuBarHelpLayout;
+   delete fMenuBarItemLayout;
+   delete fMenuBarLayout;
+   delete fHelpMenu;
+   delete fCameraMenu;
+   delete fFileMenu;
    delete fFrame;
 }
 
