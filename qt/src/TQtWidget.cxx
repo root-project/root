@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.58 2005/09/07 18:47:55 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.60 2005/12/09 03:43:45 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -250,7 +250,6 @@ void TQtWidget::Refresh()
       c->Update();
    }
 }
-
 //_____________________________________________________________________________
 void TQtWidget::resize (int w, int h)
 {
@@ -326,7 +325,7 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
    //    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3,
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
-   if (c){
+   if (c || !fWrapper ){
       switch (e->button ())
       {
       case Qt::LeftButton:  rootButton = kButton1Down; break;
@@ -338,6 +337,8 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
          c->HandleInput(rootButton, e->x(), e->y());
          e->accept(); EmitSignal(kMousePressEvent); return;
       }
+   } else {
+      e->ignore();
    }
    QWidget::mousePressEvent(e);
 }
@@ -350,10 +351,12 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    //  kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24
    EEventType rootButton = kMouseMotion;
    TCanvas *c = Canvas();
-   if (c){
+   if (c || !fWrapper){
       if (e->state() & LeftButton) { rootButton = kButton1Motion; }
       c->HandleInput(rootButton, e->x(), e->y());
       e->accept();  EmitSignal(kMouseMoveEvent); return;
+   } else {
+      e->ignore();
    }
    QWidget::mouseMoveEvent(e);
 }
@@ -365,7 +368,7 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
    //   kButton1Up     = 11, kButton2Up     = 12, kButton3Up     = 13
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
-   if (c){
+   if (c || !fWrapper){
       switch (e->button())
       {
       case Qt::LeftButton:  rootButton = kButton1Up; break;
@@ -378,6 +381,8 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
          gPad->Modified();
          e->accept(); EmitSignal(kMouseReleaseEvent);return;
       }
+   } else {
+      e->ignore();
    }
    QWidget::mouseReleaseEvent(e);
 }
@@ -389,7 +394,7 @@ void TQtWidget::mouseDoubleClickEvent(QMouseEvent * e)
    //  kButton1Double = 61, kButton2Double = 62, kButton3Double = 63
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
-   if (c){
+   if (c || !fWrapper){
       switch (e->button())
       {
       case Qt::LeftButton:  rootButton = kButton1Double; break;
@@ -401,6 +406,8 @@ void TQtWidget::mouseDoubleClickEvent(QMouseEvent * e)
          c->HandleInput(rootButton, e->x(), e->y());
          e->accept(); EmitSignal(kMouseDoubleClickEvent);return;
       }
+   }  else {
+      e->ignore();
    }
    QWidget::mouseDoubleClickEvent(e);
 }
@@ -410,9 +417,11 @@ void TQtWidget::keyPressEvent(QKeyEvent * e)
    //  Map the Qt key press event to the ROOT TCanvas events
    // kKeyDown  =  4
    TCanvas *c = Canvas();
-   if (c){
+   if (c || !fWrapper){
       c->HandleInput(kKeyPress, e->ascii(), e->key());
       EmitSignal(kKeyPressEvent);
+   } else {
+      e->ignore();
    }
    QWidget::keyPressEvent(e);
 }
@@ -429,10 +438,10 @@ void TQtWidget::enterEvent(QEvent *e)
    // Map the Qt mouse enters widget event to the ROOT TCanvas events
    // kMouseEnter    = 52
    TCanvas *c = Canvas();
-   if (c){
+   if (c || !fWrapper){
       c->HandleInput(kMouseEnter, 0, 0);
       EmitSignal(kEnterEvent);
-  }
+   } 
    QWidget::enterEvent(e);
 }
 //_____________________________________________________________________________
@@ -441,7 +450,7 @@ void TQtWidget::leaveEvent (QEvent *e)
    //  Map the Qt mouse leaves widget event to the ROOT TCanvas events
    // kMouseLeave    = 53
    TCanvas *c = Canvas();
-   if (c){
+   if (c || !fWrapper){
       c->HandleInput(kMouseLeave, 0, 0);
       EmitSignal(kLeaveEvent);
    }

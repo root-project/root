@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.8 2005/08/17 20:08:37 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.9 2005/10/27 06:41:23 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 //  TQtClientWidget is QFrame designed to back the ROOT GUI TGWindow class objects
 //
 //
-// TQtClientWidget  is a QFrame implemantation backing  ROOT TGWindow objects
+// TQtClientWidget  is a QFrame implementation backing  ROOT TGWindow objects
 // It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
 //
 // Since ROOT has a habit to destroy the widget many times, to protect the C++ QWidget
@@ -40,17 +40,16 @@
 //______________________________________________________________________________
 TQtClientWidget::~TQtClientWidget()
 {
-   // fprintf(stderr, "dtor %p\n", this);
+   // fprintf(stderr, "TQtClientWidget::~TQtClientWidget dtor %p\n", this);
    // remove the event filter
    TQtClientFilter *f = gQt->QClientFilter();
-   removeEventFilter(f);
-   f->SetPointerGrabber(0);
+   // Do we still grabbing anything ?
+   if (f) f->GrabPointer(this, 0, 0, 0, kFALSE);  // ungrab pointer
    disconnect();
    if (fGuard) fGuard->DisconnectChildren(this);
-   fPointerCursor = 0; // to prevent the cursor shape restoring
+   fNormalPointerCursor = 0; // to prevent the cursor shape restoring
    UnSetButtonMask(true);
    UnSetKeyMask();
-   UnSetPointerMask(true);
    if (!IsClosing())
       gQt->SendDestroyEvent(this);  // notify TGClient we have been destroyed
 }
@@ -81,25 +80,39 @@ bool TQtClientWidget::IsGrabbed(Event_t &ev)
    //   ·    A passive grab on the same button/key combination does not exist
    //        on any ancestor of grab_window.
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   if (!fEventMask || isHidden()) return kFALSE;
-   //Test whether the current button is grabbed by this window
    bool grab = false;
-   bool mask = (ev.fState & fGrabButtonMask) || (fGrabButtonMask & kAnyModifier);
-   if ((fButton == kAnyButton) && mask) grab = true;
-   else grab = (fButton == EMouseButton(ev.fCode)) && mask;
-   // Check whether this window holds the pointer coordinate
-   TQtClientWidget *w = (TQtClientWidget *)TGQt::wid(ev.fWindow);
-   if (grab && (w != this) ) {
-      QRect absRect   = frameGeometry();
-      QWidget *parent = parentWidget();
-      if (parent) {
-          QPoint absPos = parent->mapToGlobal(pos());
-          absRect.moveTopLeft(absPos);
-      }
-      grab = absRect.contains(ev.fXRoot,ev.fYRoot);
-   }
-   if (grab)  GrabEvent(ev);
-   // fprintf(stderr,"---- TQtClientWidget::IsGrabbed grab=%d \n",grab);
+   QWidget *parent = parentWidget();
+//   fprintf(stderr,"\n -1- TQtClientWidget::IsGrabbed  parent = %p mask %o register = %d "
+//          , parent, ButtonEventMask(),TGQt::IsRegistered(parent));
+   if (     ButtonEventMask()
+         && !isHidden() 
+         && !(   parent 
+               && dynamic_cast<TQtClientWidget*>(parent)  // TGQt::IsRegistered(parent)
+               && ((TQtClientWidget *)parent)->IsGrabbed(ev)
+             )
+      )
+      {
+
+        //Test whether the current button is grabbed by this window
+        bool mask = (ev.fState & fGrabButtonMask) || (fGrabButtonMask & kAnyModifier);
+        
+        if ((fButton == kAnyButton) && mask)
+           grab = true;
+        else 
+           grab = (fButton == EMouseButton(ev.fCode)) && mask;
+        
+        // Check whether this window holds the pointer coordinate
+        TQtClientWidget *w = (TQtClientWidget *)TGQt::wid(ev.fWindow);
+        if (grab && (w != this) ) {
+           QRect absRect = geometry();
+           QPoint absPos = mapToGlobal(QPoint(0,0));
+           absRect.moveTopLeft(absPos);
+           grab = absRect.contains(ev.fXRoot,ev.fYRoot);
+        }
+
+        if (grab)   GrabEvent(ev);
+     }
+   //  fprintf(stderr," this = %p grab=%d \n", this, grab);
    // TGQt::PrintEvent(ev);
 
    return grab;
@@ -135,25 +148,30 @@ TQtClientWidget *TQtClientWidget::IsKeyGrabbed(const Event_t &ev)
    return grabbed;
 }
 //______________________________________________________________________________
-void TQtClientWidget::GrabEvent(Event_t &ev, bool own)
+void TQtClientWidget::GrabEvent(Event_t &ev, bool /*own*/)
 {
    // replace the original Windows_t  with the grabbing id and
    // re-caclulate the mouse coordinate
    // to respect the new Windows_t id if any
    TQtClientWidget *w = (TQtClientWidget *)TGQt::wid(ev.fWindow);
    if (w != this) {
-      if (own) {
-         QPoint mapped = mapFromGlobal(QPoint(ev.fXRoot,ev.fYRoot));
-         // Correct the event
-         ev.fX      = mapped.x();
-         ev.fY      = mapped.y();
-      } else {
-        // replace the original Windows_t  with the grabbing id
-         ev.fWindow          = TGQt::wid(this);
-        // fprintf(stderr,"---- TQtClientWidget::GrabEvent\n");
-      }
-      // TGQt::PrintEvent(ev);
+      QPoint mapped = mapFromGlobal(QPoint(ev.fXRoot,ev.fYRoot));
+      // Correct the event
+      ev.fX      = mapped.x();
+      ev.fY      = mapped.y();
+      // replace the original Windows_t  with the grabbing id
+      ev.fWindow          = TGQt::wid(this);
+      // fprintf(stderr,"---- TQtClientWidget::GrabEvent\n");
    }
+  // TGQt::PrintEvent(ev);
+}
+//______________________________________________________________________________
+void TQtClientWidget::SelectInput (UInt_t evmask) 
+{
+   // Select input and chech whether qwe nat mouse tracking
+   fSelectEventMask=evmask;
+   assert(fSelectEventMask != (UInt_t) -1);
+   setMouseTracking( fSelectEventMask & kPointerMotionMask );
 }
 //______________________________________________________________________________
 void TQtClientWidget::SetButtonMask(UInt_t modifier,EMouseButton button)
@@ -177,39 +195,6 @@ void TQtClientWidget::UnSetButtonMask(bool dtor)
       if (f) {
          if ( !dtor ) disconnect(this,SIGNAL(destroyed(QObject *)),f,SLOT(RemoveButtonGrab(QObject *)));
          f->RemoveButtonGrab(this);
-      }
-   }
-}
-//______________________________________________________________________________
-void TQtClientWidget::SetPointerMask(UInt_t modifier, Cursor_t cursor, Bool_t owner_events)
-{
-   // Set the pointer mask
-
-   fGrabPointerMask = modifier;
-   fPointerOwner    = owner_events;
-   fPointerCursor   = (QCursor *)cursor;
-   TQtClientFilter *f = gQt->QClientFilter();
-   // fprintf(stderr," TQtClientWidget::SetPointerMask %p %d %d\n",this, fGrabPointerMask, fPointerOwner);
-   if (f) {
-      f->AppendPointerGrab(this);
-   }
-}
-//______________________________________________________________________________
-void TQtClientWidget::UnSetPointerMask(bool dtor)
-{
-   // Unset the pointer mask
-
-   if (fGrabPointerMask) {
-      fGrabPointerMask = 0;
-      TQtClientFilter *f = gQt->QClientFilter();
-      // restore the cursor shape
-      if ( this == QWidget::mouseGrabber() ) {
-         releaseMouse();
-         SetCursor();
-      }
-      // fprintf(stderr," TQtClientWidget::UnSetPointerMask %p\n", this);
-      if (f && !dtor) {
-         f->RemovePointerGrab(this);
       }
    }
 }
@@ -337,5 +322,5 @@ void TQtClientWidget::polish()
    // and before it is shown the very first time.
 
    QWidget::polish();
-   setMouseTracking(true);
+   // setMouseTracking(true);
 }

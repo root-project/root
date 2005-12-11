@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.21 2005/10/19 05:07:23 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.22 2005/10/27 06:41:23 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -660,7 +660,6 @@ Window_t TGQt::GetWindowID(Int_t id) {
       canvasWidget->SetRootID(client);
       client->SetCanvasWidget(canvasWidget);
       canvasWidget->setMouseTracking(kFALSE);
-      client->setMouseTracking(kTRUE);
    }
    return rootwid(client);
 }
@@ -1087,6 +1086,7 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
    // Create QWidget to back TGWindow ROOT GUI object
 
    QWidget *pWidget = parent ? wid(parent):0;
+//   if ( !pWidget) pWidget = QApplication::desktop();
    if (pWidget == QApplication::desktop())  pWidget = 0;
    TQtClientWidget *win = 0;
       // we don't want to introduce the high level class depedency at this point yet.
@@ -1720,7 +1720,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
  }
 //______________________________________________________________________________
  void         TGQt::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
-                       UInt_t evmask, Window_t confine, Cursor_t /*cursor*/,
+                       UInt_t evmask, Window_t confine, Cursor_t cursor,
                        Bool_t grab)
  {
    // Establish passive grab on a certain mouse button. That is, when a
@@ -1737,16 +1737,16 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
     //   ·    A passive grab on the same button/key combination does not exist
     //        on any ancestor of grab_window.
 
-   // fprintf(stderr,"TGQt::GrabButton has no QT-based implementation yet \"0x%x\" id=%d QWidget = %p\n"
-   //   ,evmask,id,((TQtClientWidget*)wid(id)));
+//    fprintf(stderr,"TGQt::GrabButton \"0x%x\" id=%x QWidget = %p\n"
+//       ,evmask,id,((TQtClientWidget*)wid(id)));
     if (id == kNone) return;
     assert(confine==kNone);
     if (grab ) {
 //       if (cursor == kNone) {
-          ((TQtClientWidget*)wid(id))->SetButtonMask(modifier,button); //grabMouse();
-          ((TQtClientWidget*)wid(id))->SetEventMask(evmask); //grabMouse();
+          ((TQtClientWidget*)wid(id))->SetButtonMask(modifier,button); 
+          ((TQtClientWidget*)wid(id))->SetButtonEventMask(evmask,cursor);
     } else {
-          ((TQtClientWidget*)wid(id))->UnSetButtonMask(); //grabMouse();
+          ((TQtClientWidget*)wid(id))->UnSetButtonMask();
     }
 }
 
@@ -1775,43 +1775,22 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
        // For either value of owner_events, unreported events are discarded.
        //-------------------------------------------------------------------
 
-   //
-   //    grab     owner_event && id == current id           *
-   //  o------>o---------------------------------->o--------------->o-->
-   //          |             *                     |  grab pointer  |
-   //          |                                   |                |
-   //          |           evmask                  |                |
-   //          |---------------------------------->|                |
-   //          |             *                                      |
-   //          |                      *                             |
-   //          |--------------------------------------------------->|
-   //                             discard event
-   //
     assert(confine==kNone);
+    TQtClientWidget *gw = (id == kNone) ?  0: cwid(id);
+    // Do we still grabbing anything ?
     if (grab) {
-       if (id == kNone) return;
-       fPointerGrabber = cwid(id);
-       fPointerGrabber->SetPointerMask(evmask,cursor,owner_events);
-       // fprintf(stderr,"TGQt::GrabPointer grabbing with the cursor: owner=%d wid = %p %p\n", owner_events, wid(id), fPointerGrabber);
-       QCursor *cursorPtr = 0;
-       if (cursor != kNone)  cursorPtr = (QCursor *) cursor;
-       if (!owner_events)
-       {
-          // fprintf(stderr,"TGQt::GrabPointer grabbing with the cursor: %p\n", wid(id));
-          if (cursor != kNone) wid(id)->grabMouse(*cursorPtr);
-          else wid(id)->grabMouse();
-       } else {
-          if (cursor != kNone) wid(id)->setCursor(*cursorPtr);
-       }
+       if ( !gw )  return;
+       fPointerGrabber = gw;
+       // fprintf(stderr,"TGQt::GrabPointer grabbing with the cursor: owner=%d wid = %x %p\n", owner_events, id, gw);
     } else {
-       if ( (id == kNone) && fPointerGrabber) {
-          fPointerGrabber->UnSetPointerMask();
-          fPointerGrabber = 0;
-       } else if (id != kNone) {
-          if (cwid(id) == fPointerGrabber) fPointerGrabber = 0;
-          cwid(id)->UnSetPointerMask();
-       }
+       if (!gw) gw = fPointerGrabber;
+       // fprintf(stderr,"TGQt::GrabPointer ungrabbing with the cursor: owner=%d wid =  %x grabber =%p \n"
+       //      , owner_events, id, gw );
+       fPointerGrabber = 0;
     }
+    TQtClientFilter *f = QClientFilter();
+    if (f) 
+        f->GrabPointer(gw, evmask,0,(QCursor *)cursor, grab, owner_events);
  }
 //______________________________________________________________________________
  void         TGQt::SetWindowName(Window_t id, char *name)
@@ -2270,20 +2249,6 @@ void         TGQt::TranslateCoordinates(Window_t src, Window_t dest,
    TQtClientWidget* tmpW = dynamic_cast<TQtClientWidget*>(wDst->childAt ( destX, destY, false ));
    if (tmpW) {
       child = wid(tmpW);
-   } else {
-#if 0
-      fprintf(stderr,"TGQt::TranslateCoordinates Id src =%d; id dst %d\n", src,dest);
-      QObjectList *list = wDst->queryList("QWidget");
-      if (list) {
-        QObjectListIt it (*list);
-        QWidget *qo = 0;
-        while( (qo = (QWidget *)it.current())  ) {
-          ++it;
-          fprintf(stderr," \t %s %d %d w=%d h=%d \n",  qo->name("defaultName"),qo->x(),qo->y(),qo->width(),qo->height());
-        }
-        delete list;
-     }
-#endif
    }
    dest_x = destX; dest_y = destY;
    // fprintf(stderr," Translate the  coordinate src %d %d, dst %d %d; child = %d \n", src_x, src_y, dest_x, dest_y, child);

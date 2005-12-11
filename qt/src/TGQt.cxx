@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.24 2005/07/13 20:10:12 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.25 2005/08/17 20:08:37 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -282,12 +282,15 @@ QWidget      *TGQt::wid(Window_t id)
    else
       dev = (QPaintDevice *)id;
 
-   if ( dev->devType() != QInternal::Widget) {
-        fprintf(stderr," %s %i type=%d QInternal::Widget = %d\n", "TGQt::wid", __LINE__
+
+#if 0
+     if ( dev->devType() != QInternal::Widget) {
+        fprintf(stderr," %s %i type=%d QInternal::Widget = %d id =%x id = %d\n", "TGQt::wid", __LINE__
            , dev->devType()
-           , QInternal::Widget);
+           , QInternal::Widget, id, id );
 //           , (const char *)dev->name(), (const char *)dev->className(), QInternal::Widget);
    }
+#endif
    assert(dev->devType() == QInternal::Widget);
    return (QWidget *)dev;
 }
@@ -625,7 +628,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.107 2005/07/19 16:57:27 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.111 2005/12/09 04:29:43 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -781,11 +784,12 @@ Int_t TGQt::InitWindow(ULong_t window)
 
  //     QWidget *parent = (window == kDefault) ? 0 : dynamic_cast<QWidget *>(iwid(window));
  //   QWidget *parent = (window == kDefault) ? 0 : (QWidget *)iwid(window);
-   if (parent && gDebug==3) {
-      // fprintf(stderr," New Canvas window with the parent %s\n",(const char *)parent->name());
-   }
    wid = new TQtWidget(parent,"virtualx",Qt::WStyle_NoBorder,FALSE);
    wid->setCursor(*fCursors[kCross]);
+   if (parent && gDebug==3) 
+   {
+      // fprintf(stderr," ---- >  New Canvas window %p with the parent %s parent id=%p\n",wid, (const char *)parent->name(), rootwid(parent));
+   }
 
    return fWidgetArray->GetFreeId(wid);
 }
@@ -1580,9 +1584,10 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
      reqDialog.fEdit.setText(QString(text).stripWhiteSpace());
      int yFrame = reqDialog.frameGeometry().height() - reqDialog.geometry().height() + reqDialog.fontMetrics().height();
      reqDialog.move(w->mapToGlobal(QPoint(x,y-yFrame)));
-     if (QClientFilter() && QClientFilter()->GetPointerGrabber() ) {
+     if (QClientFilter() && QClientFilter()->PointerGrabber() ) {
         // suspend the mouse grabbing for a while
-        QClientFilter()->SetPointerGrabber(0);
+//        QClientFilter()->SetPointerGrabber(0);
+        QClientFilter()->PointerGrabber()->DisactivateGrabbing();
      }
      res = reqDialog.exec();
      if (res == QDialog::Accepted ) {
@@ -1590,9 +1595,10 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
         qstrcpy(text, (const char *)r);
      }
      reqDialog.hide();
-     if (QClientFilter()) {
+     if (QClientFilter() && QClientFilter()->PointerGrabber()) {
         // Restore the grabbing
-        QClientFilter()->SetPointerGrabber(fPointerGrabber);
+//        QClientFilter()->SetPointerGrabber(fPointerGrabber);
+        QClientFilter()->PointerGrabber()->ActivateGrabbing();
      }
   }
   return res == QDialog::Accepted ? 1 : 0;
@@ -2195,7 +2201,7 @@ void  TGQt::SetRGB(int cindex, float r, float g, float b)
       //    if (cindex >= fPallete.size()) fPallete.resize(cindex+1);
       //    fPallete[cindex].setRgb((r*BIGGEST_RGB_VALUE)
       fPallete[cindex] = QColor(
-         int(r*BIGGEST_RGB_VALUE+0.5)
+          int(r*BIGGEST_RGB_VALUE+0.5)
          ,int(g*BIGGEST_RGB_VALUE+0.5)
          ,int(b*BIGGEST_RGB_VALUE+0.5)
          );

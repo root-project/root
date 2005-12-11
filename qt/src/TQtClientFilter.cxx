@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.12 2005/10/19 05:07:23 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.13 2005/10/27 06:41:23 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include "TQtClientFilter.h"
 #include "TQtRConfig.h"
 
@@ -30,11 +31,18 @@
 
 #include "KeySymbols.h"
 #define QTCLOSE_DESTROY_RESPOND 1
+
 ClassImp(TQtClientFilter)
 
-//
-//  TQtClientFilter  is Qt "eventFilter" to map Qt event to ROOT event
-//
+TQtClientWidget *TQtClientFilter::fgPointerGrabber=0;
+TQtClientWidget *TQtClientFilter::fgButtonGrabber =0;
+TQtClientWidget *TQtClientFilter::fgActiveGrabber =0;
+
+UInt_t           TQtClientFilter::fgGrabPointerEventMask = 0;
+Bool_t           TQtClientFilter::fgGrabPointerOwner     = kFALSE;
+QCursor         *TQtClientFilter::fgGrabPointerCursor    = 0;
+
+TQtPointerGrabber *TQtClientFilter::fgGrabber = 0;
 
 //______________________________________________________________________________________
 static inline UInt_t  MapModifierState(Qt::ButtonState qState)
@@ -72,6 +80,12 @@ static inline void MapEvent( QWheelEvent &qev, Event_t &ev)
    // fprintf(stderr, "QEvent::Wheel %p %d child=%p\n",ev.fWindow, ev.fCode, ev.fUser[0]);
 }
 //______________________________________________________________________________________
+inline Bool_t TQtClientFilter::IsGrabSelected(UInt_t selectEventMask)
+{
+   // return the selection by "grabButton" / "grabPointer"
+   return fgGrabber ? fgGrabber->IsGrabSelected(selectEventMask) : kFALSE;
+}
+//______________________________________________________________________________________
 static inline void MapEvent(QMouseEvent &qev, Event_t &ev)
 {
    ev.fX      = qev.x();
@@ -104,7 +118,7 @@ static inline void MapEvent(QMouseEvent &qev, Event_t &ev)
    if (ev.fCode)
       ev.fUser[0] = TGQt::rootwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
 
-   qev.ignore(); // propage the mouse event further
+   qev.ignore(); // propagate the mouse event further
 }
 
 
@@ -178,9 +192,9 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
       else if (  ( Qt::Key_0 <= key && key <= Qt::Key_9)  ) 
             text =    '0'  + (key - Qt::Key_0);
    }
-            
+ 
     // we have to accomodate the new ROOT GUI logic.
-    // the information about the "ctrl" key should provided TWICE nowadays 12.04.2005 vf.
+    // the information about the "ctrl" key should be provided TWICE nowadays 12.04.2005 vf.
 //   }
    return text;
 #endif
@@ -221,36 +235,6 @@ static inline void MapEvent(const TQUserEvent &qev, Event_t &ev)
 {
    qev.getData(ev);
 }
-//______________________________________________________________________________________
-static inline TQtClientWidget *GrabEvent(Event_t &event/*,QPtrList<TQtClientWidget> &grabList*/)
-{
-   // Substitute the orginal window with the grabbed one if any
-#if 1
-   TQtClientWidget *grabbedWidget = (TQtClientWidget *)TGQt::wid(event.fWindow);
-   while (grabbedWidget && !(grabbedWidget->IsGrabbed(event))) {
-      QWidget *w = grabbedWidget->parentWidget();
-      grabbedWidget = (TQtClientWidget *)w;
-   }
-   return grabbedWidget;
-#else
-   TQtClientWidget *grabbedWidget = grabList.first();
-   while (grabbedWidget && !(grabbedWidget->IsGrabbed(event)))
-      grabbedWidget = grabList.next();
-#endif
-}
-//______________________________________________________________________________________
-static inline bool GrabPointer(Event_t &event,TQtClientWidget * grabber)
-{
-   // fprintf(stderr,"GrabPointer grabber=%p; event.Window=%d\n",grabber, event.fWindow);
-   if (grabber) {
-      if (grabber->IsGrabOwner()) return true;
-      else if (grabber->IsPointerGrabbed(event)) {
-         grabber->GrabEvent(event);
-         return true;
-      }
-   }
-   return false;
-}
 //______________________________________________________________________________
 TQtClientFilter::~TQtClientFilter()
 {
@@ -263,12 +247,33 @@ TQtClientFilter::~TQtClientFilter()
       fRootEventQueue = 0;
    }
 }
+//______________________________________________________________________________
+static inline bool IsMouseCursorInside()
+{
+   // Detect whether the mouse cursor is inside of any application widget
+   bool inside = false;
+   QPoint absPostion = QCursor::pos();
+   QWidget *currentW = QApplication::widgetAt(absPostion);
+   // fprintf(stderr,"  -0-  IsMouseCursorInside frame=%p, grabber=%p, "
+   //           , currentW,QWidget::mouseGrabber());
+   if (currentW) {
+      QRect widgetRect = currentW->geometry();
+      widgetRect.moveTopLeft(currentW->mapToGlobal(QPoint(0,0)));
+      inside = widgetRect.contains(absPostion);
+      // fprintf(stderr," widget x=%d, y=%d, cursor x=%d, y=%d"
+      //      ,widgetRect.x(),widgetRect.y(),absPostion.x(),absPostion.y());
+   }
+   // fprintf(stderr," inside = %d \n",inside);
+   return inside;
+}
+
 #ifdef QTCLOSE_DESTROY_RESPOND
 //______________________________________________________________________________
 static void SendCloseMessage(Event_t &closeEvent)
 {
    // Send close message to window provided via closeEvent.
    // This method should be called just the user closes the window via WM
+   // See: TGMainFrame::SendCloseMessage() 
 
    if (closeEvent.fType != kDestroyNotify) return;
    Event_t event = closeEvent;
@@ -283,7 +288,9 @@ static void SendCloseMessage(Event_t &closeEvent)
    event.fUser[2] = 0;
    event.fUser[3] = 0;
    event.fUser[4] = 0;
-   // fprintf(stderr,"SendCloseMessage Closing %p \n", (void *)event.fWindow);
+   // fprintf(stderr,"SendCloseMessage Closing id=%p widget=%p\n"
+   //      , (void *)event.fWindow, (TQtClientWidget*)TGQt::wid(event.fWindow));
+   
    gVirtualX->SendEvent(event.fWindow, &event);
 }
 #endif
@@ -294,6 +301,21 @@ void DebugMe() {
 }
 
 //______________________________________________________________________________
+static inline QWidget *widgetAt(int x, int y)
+{
+   // Find the child window (Qt itself can not do that :( strange :)
+   QWidget *w = (TQtClientWidget *)QApplication::widgetAt(x,y);
+   w = w ? w->childAt(w->mapFromGlobal(QPoint(x, y ) ), TRUE ) : 0;
+   return w;
+}
+//______________________________________________________________________________
+inline bool TQtClientFilter::SelectGrab(Event_t &event, UInt_t selectEventMask,QMouseEvent &mouse) 
+{
+   // Select Event:  --  04.12.2005  --
+   return fgGrabber ? fgGrabber->SelectGrab(event,selectEventMask, mouse) : kFALSE;
+}
+
+//______________________________________________________________________________
 bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    // Dispatch The Qt event from event queue to Event_t structure
    // Not all of the event fields are valid for each event type,
@@ -301,8 +323,8 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
 
    // Set to default event. This method however, should never be called.
    // check whether we are getting the desktop event
-   ULong_t selectEventMask = 0;
-   Bool_t  grabEvent       = kFALSE;
+   UInt_t selectEventMask = 0;
+   Bool_t  grabSelectEvent    = kFALSE;
    static TStopwatch *filterTime = 0;
    static int neventProcessed = 0;
    neventProcessed ++;
@@ -312,7 +334,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
 
    // Cast it carefully
    TQtClientWidget *frame = dynamic_cast<TQtClientWidget *>(qWidget);
-   if (!frame)    {
+   if (!(frame /* && gQt->IsRegistered(frame)  */) )    {
          if (filterTime) filterTime->Stop();
          return kFALSE; // it is a desktop, it is NOT ROOT gui object
    }
@@ -334,44 +356,46 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    event.fYRoot     = pointRoot.y();
 
    QMouseEvent *mouseEvent = 0;
-   QWheelEvent *wheelEvent = 0; //    
+   QWheelEvent *wheelEvent = 0; //
    QKeyEvent   *keyEvent   = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
    QFocusEvent *focusEvent = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
    Bool_t destroyNotify = kFALSE; // by default we have to ignore all Qt::Close events
+   // DumpRootEvent(event);
+   
    switch ( e->type() ) {
       case QEvent::Wheel:                // mouse wheel event
          event.fType = kButtonPress;
          wheelEvent  = (QWheelEvent *)e;
          MapEvent(*wheelEvent,event);
          selectEventMask |=  kButtonPressMask;
-         // See QEvent::MouseButtonPress event also
-         if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
-         {
-            ((QMouseEvent *)e)->accept();
-            grabEvent = kTRUE;
-         };
          break;
+         
       case QEvent::MouseButtonPress:     // mouse button pressed
          event.fType   = kButtonPress;
          mouseEvent = (QMouseEvent *)e;
          MapEvent(*mouseEvent,event);
          selectEventMask |=  kButtonPressMask;
-         // Passive grab
-#if 0         
-         if ( fPointerGrabber ) {
-//            ((QMouseEvent *)e)->accept();
-            grabEvent = kTRUE;
-         } else 
-#endif             
-            if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
+         mouseEvent->accept();
+         if (    !fgGrabber
+              &&  fButtonGrabList.findRef(frame) >=0 
+              &&  frame->IsGrabbed(event) )
          {
-            ((QMouseEvent *)e)->accept();
-            grabEvent = kTRUE;
-         } else {
-            // delete &event;
-            // return kTRUE;  // We do not need the standard Qt processing
-            // return kFALSE;  // We do not need the standard Qt processing
-         };
+ //           mouseEvent->accept();
+            GrabPointer(frame, frame->ButtonEventMask(),0,frame->GrabButtonCursor(), kTRUE,kFALSE);
+
+            // fprintf(stderr," 1. -- QEvent::MouseButtonPress -- Check the redundant grabbing %p frame %p \n", QWidget::mouseGrabber(), frame);
+            // Make sure fgButtonGrabber is Ok. GrabPointer zeros fgButtonGrabber!!!
+            fgButtonGrabber = frame;
+            grabSelectEvent = kTRUE;
+            // fprintf(stderr," 2. -- QEvent::MouseButtonPress --  turn grabbing on id = %x widget = %p, event=%p\n", TGQt::rootwid(frame), frame,e);
+         }
+         else {
+            grabSelectEvent = SelectGrab(event,selectEventMask,*mouseEvent);
+
+            // it was grabbed ny Qt anyway, Check it
+            // fprintf(stderr," 3. -- Event::MouseButtonPress -- Qt grabber %p Check the redundant grabbing current frame=%p active grabbing frame = %p; grabSelectEvent=%d. event=%p ROOT grabber %p\n"
+            //      , QWidget::mouseGrabber(), frame, fgActiveGrabber,grabSelectEvent,e,fgPointerGrabber);
+         }
          break;
 
       case QEvent::MouseButtonRelease:   // mouse button released
@@ -379,17 +403,17 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          mouseEvent = (QMouseEvent *)e;
          MapEvent(*mouseEvent,event);
          selectEventMask |=  kButtonReleaseMask;
-         if ( fPointerGrabber ) {
-//            ((QMouseEvent *)e)->accept();
-            grabEvent = kTRUE;
-         } else if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
-         {
-            ((QMouseEvent *)e)->accept();
-             grabEvent = kTRUE;
-         } else {
-            //delete &event;
-            //return kTRUE;  // We do not need the standard Qt processing
-         };
+         // fprintf(stderr, "QEvent::MouseButtonRelease, turn grabbing OFF id = %x widget = %p,Qt grabber =%p,button grabber%p, pointer grabber=%p\n"
+         //      , TGQt::rootwid(frame), frame, QWidget::mouseGrabber(),fgButtonGrabber,fgPointerGrabber);
+         if (fgButtonGrabber) {
+            grabSelectEvent =  SelectGrab(event,selectEventMask,*mouseEvent);
+            if ( !(mouseEvent->stateAfter() & Qt::MouseButtonMask)) {
+                GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
+            } 
+         }
+         else {
+            grabSelectEvent = SelectGrab(event,selectEventMask,*mouseEvent);
+          }
          break;
 
       case QEvent::MouseButtonDblClick:
@@ -399,14 +423,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          mouseEvent = (QMouseEvent *)e;
          MapEvent(*mouseEvent,event);
          selectEventMask |=  kButtonPressMask;
-         if ( fPointerGrabber ) {
-            //            ((QMouseEvent *)e)->accept();
-            grabEvent = kTRUE;
-         } else if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
-         {
-            ((QMouseEvent *)e)->accept();
-            grabEvent = kTRUE;
-         };
+         grabSelectEvent = SelectGrab(event,selectEventMask,*mouseEvent);
 #endif
          break;
 
@@ -415,31 +432,22 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          mouseEvent = (QMouseEvent *)e;
          MapEvent(*mouseEvent,event);
          selectEventMask |=  kPointerMotionMask;
-         if (event.fCode == kButton1 || event.fCode == kButton2 || event.fCode == kButton3)
+         if ( (mouseEvent->stateAfter() & Qt::MouseButtonMask) )
+         {       selectEventMask |=  kButtonMotionMask;        }
+         
+         grabSelectEvent = SelectGrab(event,selectEventMask,*mouseEvent);
+#if 0
          {
-            selectEventMask |=  kButtonMotionMask;
+            TQtClientWidget *w = (TQtClientWidget*)TGQt::wid(event.fWindow); // to print
+            UInt_t eventMask = w->SelectEventMask();
+            UInt_t pointerMask = w->PointerMask();
+             // fprintf(stderr," 1. QMouseMove event widget id = %x pointer =%p; frame = %p; select = %d\n", event.fWindow, w, frame, grabSelectEvent);
+             // fprintf(stderr," 2. QMouseMove pointer mask %o, event mask = %o, current mask = %o inout selected = %d\n",pointerMask, eventMask, selectEventMask,
+             //      frame->IsEventSelected(selectEventMask));
          }
-         //// check grabbing
+#endif
 
-         if (fIsGrabbing && fPointerGrabber &&  QApplication::widgetAt(mouseEvent->globalPos()))
-         {
-            fIsGrabbing = false;
-            fPointerGrabber->releaseMouse();
-         }
-         // Active grab
-         if ( GrabPointer(event, fPointerGrabber)) {
-            grabEvent = kTRUE;
-            ((QMouseEvent *)e)->accept();
-         } else if ( event.fCode && fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) ) {
-            grabEvent = kTRUE;
-            ((QMouseEvent *)e)->accept();
-         } else if (frame->GetCanvasWidget())  {
-            ((QMouseEvent *)e)->accept();
-         } else {
-            delete &event;  // discard this event
-            if (filterTime) filterTime->Stop();
-            return kFALSE;  // We do need this event to be propagated to its parent by Qt
-         }
+         // grabSelectEvent = IsGrabSelected(selectEventMask);
          break;
       case QEvent::KeyPress:             // key pressed
          event.fType   = kGKeyPress;
@@ -447,12 +455,12 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          MapEvent(*keyEvent,event);
          selectEventMask |=  kKeyPressMask;
          {
-            TQtClientWidget *grabber = 0;
+           TQtClientWidget *grabber = 0;
            if (fKeyGrabber) grabber = fKeyGrabber->IsKeyGrabbed(event);
            if (!grabber)    grabber = frame->      IsKeyGrabbed(event);
            if (grabber) {
               grabber->GrabEvent(event,false);
-              grabEvent = kTRUE;
+              grabSelectEvent  = kTRUE; // to be revised later, It was: grabEvent = kTRUE;
               ((QKeyEvent *)e)->accept();
            } else {
               ((QKeyEvent *)e)->ignore();
@@ -472,7 +480,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
            TQtClientWidget *grabber = frame->IsKeyGrabbed(event);
            if (grabber) {
               grabber->GrabEvent(event,false);
-              grabEvent = kTRUE;
+              grabSelectEvent  = kTRUE; // to be revised later, It was: grabEvent = kTRUE;
               ((QKeyEvent *)e)->accept();
            } else {
               ((QKeyEvent *)e)->ignore();
@@ -496,24 +504,28 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          // fprintf(stderr, "       case OUT QEvent::FocusEvent:frame = %x; \n",TGQt::wid(frame));
          break;
       case QEvent::Enter:                // mouse enters widget
-         event.fType   = kEnterNotify;
-         selectEventMask |=  kEnterWindowMask;
+         event.fType      = kEnterNotify;
+         selectEventMask |= kEnterWindowMask | kPointerMotionMask ;
+         grabSelectEvent  = IsGrabSelected(selectEventMask);
+         // fprintf(stderr,"  QEvent::Enter == frame=%p, active = %p, pointer = %p;  button =%p, grabber = %p\n"
+         //       , frame, fgActiveGrabber, fgPointerGrabber, fgButtonGrabber, QWidget::mouseGrabber());
          break;
       case QEvent::Leave:                // mouse leaves widget
-         event.fType   = kLeaveNotify;
-         if (fPointerGrabber && !fIsGrabbing && fPointerGrabber->IsGrabOwner() && frame->isTopLevel() )
-         {
-            // Let's grab it to hook all messages
-            // fprintf(stderr," QEvent::Leave frame=%p top=%d parent=%p\n", frame, frame->isTopLevel(),frame->parentWidget());
-            fPointerGrabber->grabMouse();
-            fIsGrabbing = true;
-         }
-         selectEventMask |=  kLeaveWindowMask;
+         event.fType      = kLeaveNotify;
+         selectEventMask |= kLeaveWindowMask | kPointerMotionMask;
+         grabSelectEvent  = IsGrabSelected(selectEventMask);
+         // fprintf(stderr," 1. QEvent::LEAVE == cursor = %p, frame=%p, active = %p, pointer = %p button =%p; grabber = %p  grabSelect =%d, id=%x\n"
+         //       , QApplication::widgetAt(QCursor::pos() )
+         //       , frame, fgActiveGrabber, fgPointerGrabber, fgButtonGrabber, QWidget::mouseGrabber(), grabSelectEvent, TGQt::rootwid(fgPointerGrabber)
+         //       );
+         if ( fgGrabber )fgGrabber->ActivateGrabbing();
          break;
       case QEvent::Close:
          event.fType   = kDestroyNotify;
-//        ((QCloseEvent *)e)->accept();
-          ((QCloseEvent *)e)->ignore();
+         selectEventMask |=  kStructureNotifyMask;
+         if (fgGrabber && fgGrabber->IsGrabbing(frame) ) {
+            GrabPointer(0, 0, 0, 0,kFALSE);
+         }
 #ifndef QTCLOSE_DESTROY_RESPOND
          if ( e->spontaneous() && frame->DeleteNotify() )
          {
@@ -521,37 +533,28 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
             destroyNotify = kTRUE;
             ((QCloseEvent *)e)->accept();
          }
-#endif
-         // fprintf(stderr, " QEvent::Close spontaneous %d: for %p \n",e->spontaneous(),frame);
-         if (fIsGrabbing && (fPointerGrabber == frame))
-         {
-            fIsGrabbing = false;
-            gVirtualX->GrabPointer(0, 0, 0, 0,kFALSE);
-         }
-#ifdef QTCLOSE_DESTROY_RESPOND
+#else
+         // fprintf(stderr, " QEvent::Close spontaneous %d: for %p flag = %d\n",e->spontaneous(),frame,destroyNotify);
          frame->SetClosing(); // to avoid the double notification
  // ROOT GUI does not expect this messages to be dispatched.
          if (!e->spontaneous() ) 
          {
-            // Ignore this Qt event, ROOT is willing to close the widget
-            ((QCloseEvent *)e)->accept();
             if (frame->DeleteNotify() ) {
                frame->SetDeleteNotify(kFALSE);
+               // Ignore this Qt event, ROOT is willing to close the widget
+               ((QCloseEvent *)e)->accept();
                SendCloseMessage(event);
             }
          }
 #endif
-         selectEventMask |=  kStructureNotifyMask;
          break;
       case QEvent::Destroy:              //  during object destruction
          event.fType   = kDestroyNotify;
-         if (fIsGrabbing && (fPointerGrabber == frame))
-         {
-            fIsGrabbing = false;
-            gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
-         }
          selectEventMask |=  kStructureNotifyMask;
-         fprintf(stderr, " Event::Destroy: \n");
+         if (fgGrabber && fgGrabber->IsGrabbing(frame) ) {
+            GrabPointer(0, 0, 0, 0,kFALSE);
+         }
+         // fprintf(stderr, " QEvent::Destroy spontaneous %d: for %p  flag = %d\n",e->spontaneous(),frame,destroyNotify);
 #ifdef QTCLOSE_DESTROY_RESPOND
          // ROOT GUI does not expect this messages to be dispatched.
          SendCloseMessage(event); // nothing to do here yet 
@@ -587,21 +590,22 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
           // this is the platform depended part
          event.fType   = kSelectionClear; // , kSelectionRequest, kSelectionNotify;
 #endif
-         grabEvent = kTRUE;
+         // grabSelectEvent  = kTRUE; // to be revised later, It was: grabEvent = kTRUE;
          selectEventMask |=  kStructureNotifyMask;
          break;
      default:
          if ( e->type() >= TQUserEvent::Id()) {
             // event.fType = kClientMessage; ..event type will be set by MapEvent anyway
             MapEvent(*(TQUserEvent *)e,event);
-            grabEvent = kTRUE;
+            grabSelectEvent  = kTRUE; // to be revised later, It was: grabEvent = kTRUE;
             if (event.fType != kClientMessage && event.fType != kDestroyNotify)
                 fprintf(stderr, "** Error ** TQUserEvent:  %d %d\n", event.fType, kClientMessage);
             else if (event.fType == kDestroyNotify) {
                //  remove all events related to the dead window
-#ifdef QTDEBUG
+               // fprintf(stderr,"kClientEvent kDestroyNotify %p id=%x event\n",((TQtClientWidget*)(TGQt::wid(event.fWindow))), event.fWindow);
+ #ifdef QTDEBUG
                int nRemoved = fRootEventQueue->RemoveItems(&event);
-               fprintf(stderr,"kDestroyNotify %p %d events have been removed from the queue\n",event.fWindow,nRemoved );
+               fprintf(stderr,"kClientMessage kDestroyNotify %p %d events have been removed from the queue\n",event.fWindow,nRemoved );
 #endif
             }
             // else fprintf(stderr, "TQUserEvent: %p  %d %d\n", event.fWindow, event.fType, kClientMessage);
@@ -629,12 +633,19 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
       justInit = true;
    }
 
-   if ( grabEvent || destroyNotify || ((TQtClientWidget*)(TGQt::wid(event.fWindow)))->IsEventSelected(selectEventMask) )
+   if ( destroyNotify 
+       || (event.fType == kClientMessage) || (event.fType == kDestroyNotify)  ||
+       (
+           (  (grabSelectEvent && ( mouseEvent  || (event.fType == kEnterNotify ) || (event.fType == kLeaveNotify ) ) )
+         ||
+           ( (!fgGrabber || !( mouseEvent  || (event.fType == kEnterNotify ) || (event.fType == kLeaveNotify ) ) )
+            && 
+            ((TQtClientWidget*)(TGQt::wid(event.fWindow)))->IsEventSelected(selectEventMask) ) ) ) )
    {
 //---------------------------------------------------------------------------
 //    QT message has been mapped to ROOT one and ready to be shipped out
 //---------------------------------------------------------------------------
-      fRootEventQueue->enqueue(&event);
+     fRootEventQueue->enqueue(&event);
 //---------------------------------------------------------------------------
    } else {
       delete &event;
@@ -664,9 +675,11 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    if (keyEvent   && !keyEvent->isAccepted ()   ) return kFALSE;
    if (focusEvent                               ) return kFALSE;
    switch (e->type() ) {
-      case QEvent::Show:                 // Widget was shown on screen,
-      case QEvent::ShowWindowRequest:    //  (obsolete)  widget's window should be mapped
-      case QEvent::Hide:                //   widget's window should be unmapped
+      case QEvent::Show:                 //  Widget was shown on screen,
+      case QEvent::ShowWindowRequest:    // (obsolete)  widget's window should be mapped
+      case QEvent::Hide:                 //  widget's window should be unmapped
+      case QEvent::Leave:
+      case QEvent::Enter:
          if (filterTime) filterTime->Stop();
          return kFALSE;
       default: break;
@@ -679,21 +692,216 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
 }
 
 //______________________________________________________________________________
-void TQtClientFilter::AppendPointerGrab(TQtClientWidget *widget)
+void TQtClientFilter::GrabPointer(TQtClientWidget *grabber, UInt_t evmask, Window_t /*confine*/,
+                                    QCursor *cursor, Bool_t grab, Bool_t owner_events)
 {
-   if (fPointerGrabber) RemovePointerGrab(fPointerGrabber);
-   fPointerGrabber = widget;
-   connect(widget,SIGNAL(destroyed(QObject *)),this,SLOT(RemovePointerGrab(QObject *)));
-}
-//______________________________________________________________________________
-void TQtClientFilter::RemovePointerGrab(QObject *widget)
-{
-   if (!widget && fPointerGrabber ) fPointerGrabber->UnSetPointerMask();
-   else if (widget) {
-      fPointerGrabber = 0;
-      // is it regisetered ?
-       TQtClientWidget *w = (TQtClientWidget *)widget;
-       if (w && gQt->IsRegistered(w))
-          disconnect(widget,SIGNAL(destroyed(QObject *)),this,SLOT(RemovePointerGrab(QObject *)));
+    // Set the X11 style active grabbing for ROOT TG widgets
+   TQtPointerGrabber *gr = fgGrabber; fgGrabber = 0; 
+   if (gr) {
+      if (gr->IsGrabbing(fgButtonGrabber)) fgButtonGrabber = 0;
+      delete gr;
+   }
+   if (grab) {
+        fgGrabber = new TQtPointerGrabber (grabber,evmask,grabber->SelectEventMask()
+                                    , cursor, grab, owner_events);
    }
 }
+
+//______________________________________________________________________________
+//
+//   class TQtPointerGrabber  to implement X11 style mouse grabbing under Qt
+//______________________________________________________________________________
+
+//______________________________________________________________________________
+TQtPointerGrabber::TQtPointerGrabber(TQtClientWidget *grabber, UInt_t evGrabMask
+                                    , UInt_t evInputMask, QCursor *cursor
+                                    , Bool_t grab, Bool_t owner_events
+                                    , QWidget *confine)
+{
+   fIsActive= kFALSE;
+   SetGrabPointer(grabber,evGrabMask, evInputMask,cursor,grab,owner_events, confine);
+}
+//______________________________________________________________________________
+TQtPointerGrabber::~TQtPointerGrabber()
+{
+   SetGrabPointer(0,0,0,0,kFALSE);
+}
+//______________________________________________________________________________
+inline void TQtPointerGrabber::ActivateGrabbing(bool on)
+{
+   // Activate the active mouse pointer event grabbing.
+   static int grabCounter = 0;
+   assert (fPointerGrabber);
+   QWidget *qtGrabber = QWidget::mouseGrabber();
+   if (on) {
+      if (qtGrabber != fPointerGrabber) {
+         if (qtGrabber) qtGrabber->releaseMouse();
+            if (fPointerGrabber->isVisible() ) {
+            if (fGrabPointerCursor) fPointerGrabber->grabMouse(*fGrabPointerCursor);
+            else                    fPointerGrabber->grabMouse();
+            if (!QApplication::hasGlobalMouseTracking () )
+                 QApplication::setGlobalMouseTracking (true);
+            grabCounter++;
+         }
+      }
+      // assert (grabCounter < 2);
+   } else {
+      if (fIsActive && (qtGrabber != fPointerGrabber))  {
+         fprintf(stderr," ** Attention ** TQtPointerGrabber::ActivateGrabbing qtGrabber %p == fPointerGrabber %p\n", qtGrabber, fPointerGrabber);
+      }
+      if (qtGrabber) qtGrabber->releaseMouse();
+      if (fGrabPointerCursor) fPointerGrabber->SetCursor();
+      if (QApplication::hasGlobalMouseTracking () )
+          QApplication::setGlobalMouseTracking (false);
+   }
+   fIsActive = on;
+   // Make sure the result is correct
+   QWidget *grabber = QWidget::mouseGrabber();
+   assert ( !fPointerGrabber->isVisible() || (fIsActive && (grabber == fPointerGrabber))
+           || (!fIsActive && !grabber) );
+}
+//______________________________________________________________________________
+inline void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber
+                             , UInt_t evGrabMask, UInt_t evInputMask
+                             , QCursor *cursor, Bool_t grab, Bool_t owner_events
+                             , QWidget *confine)
+{
+   if (grab) {
+      // Grab widget. 
+      fPointerGrabber       = grabber;
+      fGrabPointerEventMask = evGrabMask;
+      fInputPointerEventMask= evInputMask;
+      fGrabPointerOwner     = owner_events;
+      fGrabPointerCursor    = cursor;
+      fPointerConfine       = confine;
+      // Set the mouse tracking
+      fPointerGrabber->setMouseTracking( fGrabPointerEventMask & kPointerMotionMask );
+ } else {
+      // Restore the normal mouse tracking.
+      fPointerGrabber->setMouseTracking( fInputPointerEventMask & kPointerMotionMask );
+            
+      // Ungrab the widget.
+      DisactivateGrabbing();
+      
+      fPointerGrabber       = 0;
+      fGrabPointerEventMask = 0;
+      fGrabPointerOwner     = kFALSE;
+      fGrabPointerCursor    = 0;
+      fPointerConfine       = 0;
+ }
+ // fprintf(stderr," TQtPointerGrabber::SetGrabPointer : -- grab= %d; grabber = %p; PointerMask=%o; normal Mask = %o; owner = %d\n"
+ //         ,  grab, fPointerGrabber,  fGrabPointerEventMask, fInputPointerEventMask
+ //         ,  fGrabPointerOwner);
+
+}
+//______________________________________________________________________________
+inline bool TQtPointerGrabber::SelectGrab(Event_t &event, UInt_t selectEventMask, QMouseEvent &mouse)
+{ 
+  // Select Event:  --  25.11.2005  --
+  TQtClientWidget *widget = (TQtClientWidget*)TGQt::wid(event.fWindow);
+  bool pass2Root = FALSE;
+
+  QWidget *grabber = QWidget::mouseGrabber();
+  TQtClientWidget *pointerGrabber =  fPointerGrabber;
+  if (fIsActive && grabber && (grabber != (QWidget *)pointerGrabber) )
+  {
+     // This is a Qt automical grabbing we have to fight with :)
+     // fprintf(stderr, "1.  TQtPointerGrabber::SelectGrab Qt grabber to fight with Qt grabber = %p, ROOT grabber = %p\n"
+     //      , this, grabber );
+     DisactivateGrabbing();
+     grabber = QWidget::mouseGrabber();
+  }
+  bool inside = FALSE;
+  if ( ( inside = IsMouseCursorInside() ) ) {
+      if ( grabber ) {
+           if ( fGrabPointerOwner ) { 
+                // The cursor has "Entered" the application
+                // Disable the Qt automatic grabbing
+                DisactivateGrabbing();
+                // Generate the Enter Event 
+                // . . . to be done yet . . . 
+                
+                // Find the child widget there to pass event to
+                widget = (TQtClientWidget *)widgetAt(event.fXRoot,event.fYRoot);
+                if (widget == pointerGrabber) widget = 0;
+           } else {
+              // re-grab it as needed 
+              ActivateGrabbing();
+              widget = 0;
+           }
+      } else {
+         // we remained inside
+         // make sure our flag is Ok. (To disable the possible Qt interfere) 
+         if (!fGrabPointerOwner) 
+         { 
+            ActivateGrabbing();
+            widget = 0;
+         } else {
+            DisactivateGrabbing();
+            if (widget == pointerGrabber) widget = 0;
+         }
+      }
+      // fprintf(stderr, "2. TQtPointerGrabber::SelectGrab  grabber = %p, ROOT grabber = %p widget=%p, globalTracjing =%d, MouseGrabber=%p want=%x\n"
+      //      , grabber,pointerGrabber, widget, QApplication::hasGlobalMouseTracking (),QWidget::mouseGrabber(),WantEvent(widget, selectEventMask)); 
+
+   } else { // The mouse cursor is outside of the application
+       if ( !grabber ) {
+          ActivateGrabbing();
+          grabber = pointerGrabber;
+       } else {
+         //  make sure it is our grab
+         assert (grabber == (QWidget *)pointerGrabber );
+       }
+       widget = 0;
+   }
+   
+   // Check the selection
+   if (! (fGrabPointerOwner || inside) )
+   {
+      mouse.accept();
+      if ( IsGrabSelected (selectEventMask) ) {
+          // Grab this event.
+         pointerGrabber->GrabEvent(event);
+         // fprintf(stderr," QtPointerGrabber::SelectGrab  1.1. Active grabbing %p id =%x inside = %d\n",
+         //        pointerGrabber, event.fWindow, inside);
+         pass2Root = TRUE;
+      }
+   } else {
+     if ( IsGrabSelected (selectEventMask) ) {
+        // Look for the the grabbing parent.
+        if (widget) {
+           pass2Root = (widget->SelectEventMask() & selectEventMask);
+           // fprintf(stderr," QtPointerGrabber::SelectGrab  1.3. As usual grabbing %p id =%x inside = %d, pass=%d mask %o; Qt  grabber=%p\n",
+           //     widget, event.fWindow, inside, pass2Root, selectEventMask,  QWidget::mouseGrabber() );
+           if (!pass2Root) {
+              TQtClientWidget *parent = (TQtClientWidget *)widget->parentWidget();
+              // Look up ahead
+              while (parent  && !(parent->SelectEventMask() & selectEventMask) && (parent != pointerGrabber) )
+              {      parent = (TQtClientWidget *)parent->parentWidget();      }
+              if (!parent || parent == pointerGrabber )  widget =0;
+              else if (parent && (parent != pointerGrabber) ) {
+                 // fprintf(stderr," QtPointerGrabber::SelectGrab  1.4. Expect next parent  grabbing %p mask %o; Qt grabber=%p\n",
+                 //      parent, selectEventMask,  QWidget::mouseGrabber() );
+              }
+           }
+        }
+        if (!widget) {
+           pointerGrabber->GrabEvent(event);
+           // fprintf(stderr," QtPointerGrabber::SelectGrab  1.5. Active grabbing %p id =%x inside = %d\n",
+           //     pointerGrabber, event.fWindow, inside);
+           pass2Root = TRUE;
+           mouse.accept();
+        }
+     } else if (widget) {
+         pass2Root = widget->SelectEventMask() & selectEventMask;
+         // fprintf(stderr," QtPointerGrabber::SelectGrab  1.6. As usual grabbing %p id =%x inside = %d, pass=%d mask %o\n",
+         //       pointerGrabber, event.fWindow, inside, pass2Root, selectEventMask );
+         // if (pass2Root) mouse.accept();       
+     }
+   }
+
+   return pass2Root;
+ }
+//______________________________________________________________________________
+inline Bool_t TQtPointerGrabber::IsGrabSelected(UInt_t selectEventMask) const
+{  return  fGrabPointerEventMask & selectEventMask; }

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.25 2005/07/10 00:34:57 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.26 2005/12/09 03:41:34 fine Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 class TQtNextEventMessage;
 class TQtEventQueue;
 // class TQtClientWidget;
+class TQtPointerGrabber;
 
 class TQtClientFilter : public QObject {
 #ifndef __CINT__
@@ -55,36 +56,94 @@ protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;
    QPtrList<TQtClientWidget>  fButtonGrabList;
-   TQtClientWidget           *fPointerGrabber;
+   static TQtClientWidget    *fgPointerGrabber;
+   static TQtClientWidget    *fgButtonGrabber;
+   static TQtClientWidget    *fgActiveGrabber;
    TQtClientWidget           *fKeyGrabber;
-   Bool_t                     fIsGrabbing;
-
+   UInt_t                     fInputEventMask;
+   static UInt_t              fgGrabPointerEventMask;
+   static Bool_t              fgGrabPointerOwner;
+   static QCursor            *fgGrabPointerCursor;
+   // static Bool_t              fIsGrabbing;
+   static TQtPointerGrabber  *fgGrabber;
 protected:
    bool eventFilter( QObject *o, QEvent *e );
    TQtEventQueue *Queue();
-   TQtClientWidget    *GetPointerGrabber() const    { return fPointerGrabber;}
-   void SetPointerGrabber(TQtClientWidget *grabber) { fPointerGrabber = grabber;}
    void SetKeyGrabber(TQtClientWidget *grabber)     { fKeyGrabber = grabber;}
    void UnSetKeyGrabber(TQtClientWidget *grabber)   { if (fKeyGrabber == grabber) fKeyGrabber = 0; }
+   void RestoreLostGrabbing(Event_t &event);
+   static Bool_t IsGrabSelected(UInt_t selectEventMask);
+   static Bool_t SelectGrab(Event_t &event, UInt_t selectEventMask, QMouseEvent &me);
 public:
-   TQtClientFilter():fRootEventQueue(0),fNotifyClient(0),fPointerGrabber(0),fKeyGrabber(0),fIsGrabbing(kFALSE ){;}
+   TQtClientFilter():fRootEventQueue(0),fNotifyClient(0),fKeyGrabber(0){;}
    virtual ~TQtClientFilter();
+   static TQtClientWidget    *GetPointerGrabber();
+   static TQtClientWidget    *GetButtonGrabber();
+   static void SetButtonGrabber(TQtClientWidget *grabber);
+   static void GrabPointer(TQtClientWidget *grabber, UInt_t evmask, Window_t confine,
+                                    QCursor *cursor, Bool_t grab = kTRUE,
+                                    Bool_t owner_events = kTRUE);
+   static TQtPointerGrabber *PointerGrabber() { return fgGrabber; }
 public slots:
    void AppendButtonGrab (TQtClientWidget *);
-   void AppendPointerGrab(TQtClientWidget *);
    void RemoveButtonGrab (QObject *);
-   void RemovePointerGrab(QObject *);
 //MOC_SKIP_BEGIN
    ClassDef(TQtClientFilter,0) // Map Qt and ROOT event
 //MOC_SKIP_END
 };
 
+//
+//  TQtClientFilter is a Qt "eventFilter" to map Qt event to ROOT event
+//
+class QWidget;
+class QCursor;
+
+class TQtPointerGrabber {
+private:
+   UInt_t           fGrabPointerEventMask;
+   UInt_t           fInputPointerEventMask;
+   Bool_t           fGrabPointerOwner;
+   QCursor         *fGrabPointerCursor;
+   TQtClientWidget *fPointerGrabber;
+   QWidget         *fPointerConfine;
+   Bool_t           fIsActive;        // Do we active grabbing with WM
+public:
+   TQtPointerGrabber(TQtClientWidget *grabber, UInt_t evGrabMask, UInt_t evInputMask,
+                                    QCursor *cursor, Bool_t grab = kTRUE,
+                                    Bool_t owner_events = kTRUE, QWidget *confine=0);
+   ~TQtPointerGrabber();
+   void   ActivateGrabbing(bool on=TRUE);
+   void   DisactivateGrabbing(){ ActivateGrabbing(kFALSE); }
+   Bool_t IsGrabSelected(UInt_t selectEventMask) const;
+   Bool_t IsGrabbing(TQtClientWidget *grabbed) const { return (grabbed == fPointerGrabber); }
+   void   SetGrabPointer( TQtClientWidget *grabber, UInt_t evGrabMask, UInt_t evInputMask
+                       , QCursor *cursor, Bool_t grab = kTRUE
+                       , Bool_t owner_events = kTRUE, QWidget *confine=0);
+   bool   SelectGrab(Event_t &event, UInt_t selectEventMask,QMouseEvent &mouse);
+};
+
+//______________________________________________________________________________
+inline TQtClientWidget *TQtClientFilter::GetPointerGrabber()
+{  return fgPointerGrabber;                                       }
+
+//______________________________________________________________________________
+inline TQtClientWidget *TQtClientFilter::GetButtonGrabber() 
+{  return fgButtonGrabber;                                              }
+
+//______________________________________________________________________________
+inline void TQtClientFilter::SetButtonGrabber(TQtClientWidget *grabber)
+{  fgButtonGrabber = grabber;                                           }
+   
 //______________________________________________________________________________
 inline   void TQtClientFilter::AppendButtonGrab(TQtClientWidget *widget)
 {  fButtonGrabList.append(widget);}
 //______________________________________________________________________________
 inline   void TQtClientFilter::RemoveButtonGrab(QObject *widget)
-{ fButtonGrabList.remove((TQtClientWidget *)widget);}
+{ 
+   TQtClientWidget *wid = (TQtClientWidget *)widget;
+   if ((fgButtonGrabber == wid) && fgGrabber) fgGrabber->DisactivateGrabbing();
+   fButtonGrabList.remove(wid);
+}
 
 //______________________________________________________________________________
 inline   TQtEventQueue *TQtClientFilter::Queue() {
