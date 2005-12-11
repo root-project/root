@@ -298,6 +298,9 @@ check_library() {
             i="$i64"
         fi
         for l in $i ; do
+            if test ! -d $l ; then
+		continue
+            fi
             for j in ${libs} ; do
 	        # if we found the file (it's readable by user), we set the
 	        # logical variables and are on our way, otherwise we continue
@@ -1993,7 +1996,7 @@ if test ! "x$enable_python" = "xno" ; then
     else
         pythonlibflags=
         case $platform in
-            win32) pythonlibflags="-nodefaultlib:python23" ;;
+            win32) pythonlibflags="-nodefaultlib:`basename $pythonlib`" ;;
         esac
     fi
 fi
