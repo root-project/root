@@ -70,9 +70,9 @@ std::string rflx_tools::decorate_stl_type(const std::string & name)
 
    if (isSTLType) {
       return "std::" + name;
-      std::string lname = "std::" + name;
-      std::cout << lname << std::endl;
-      return lname;
+      //std::string lname = "std::" + name;
+      //std::cout << lname << std::endl;
+      //return lname;
    } else
       return name;
 }

@@ -232,8 +232,8 @@ int G__MethodInfo::NDefaultArg()
     if(ifunc->para_nu[index]) {
       int i,defaultnu=0;
       for(i=ifunc->para_nu[index]-1;i>=0;i--) {
-	if(ifunc->para_default[index][i]) ++defaultnu;
-	else return(defaultnu);
+	     if(ifunc->para_default[index][i]) ++defaultnu;
+	     else return(defaultnu);
       }
       return(defaultnu);
     }
@@ -241,10 +241,7 @@ int G__MethodInfo::NDefaultArg()
       return(0);
     }
   }
-  else {
-    return(-1);
-  }
-  return(-1); // dummy 
+  return(-1);
 }
 ///////////////////////////////////////////////////////////////////////////
 int G__MethodInfo::HasVarArgs()
