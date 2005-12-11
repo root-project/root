@@ -392,7 +392,7 @@ int G__class_autoloading(int tagnum)
     if(G__p_class_autoloading) {
       int res;
       G__enable_autoloading = 0;
-      res = (*G__p_class_autoloading)(G__struct.name[tagnum],libname);
+      res = (*G__p_class_autoloading)(G__fulltagname(tagnum,1),libname);
       G__enable_autoloading = 1;
       return(res);
     }
