@@ -268,7 +268,7 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    fSync->SetToolTipText("Default Process Mode");
    fSync->SetState(kButtonDown);
 
-   AddFrame(fBtnAdd = new TGTextButton(this, "              Add              "),
+   AddFrame(fBtnAdd = new TGTextButton(this, "             Save             "),
             new TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 15, 5));
    fBtnAdd->SetToolTipText("Add server to the list");
    fBtnAdd->Connect("Clicked()", "TSessionServerFrame", this,
@@ -372,6 +372,22 @@ void TSessionServerFrame::OnBtnConnectClicked()
    if (fViewer->IsBusy())
       return;
 
+   if (!fViewer->GetSessions()->FindObject(fTxtName->GetText())) {
+      OnBtnAddClicked();
+   }
+   else {
+      fViewer->GetActDesc()->fAddress = fTxtAddress->GetText();
+      fViewer->GetActDesc()->fPort = fNumPort->GetIntNumber();
+      if (strlen(fTxtConfig->GetText()) > 1)
+         fViewer->GetActDesc()->fConfigFile = TString(fTxtConfig->GetText());
+      else
+         fViewer->GetActDesc()->fConfigFile = "";
+      fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
+      fViewer->GetActDesc()->fUserName = fTxtUsrName->GetText();
+      fViewer->GetActDesc()->fSync = (fSync->GetState() == kButtonDown);
+      if (fViewer->IsAutoSave())
+         fViewer->WriteConfiguration();
+   }
    // set flag busy
    fViewer->SetBusy();
    // avoid input events in list tree while connecting
@@ -395,11 +411,6 @@ void TSessionServerFrame::OnBtnConnectClicked()
       url += ":";
       url += fNumPort->GetIntNumber();
    }
-   fViewer->GetActDesc()->fLogLevel = fLogLevel->GetIntNumber();
-   if (strlen(fTxtConfig->GetText()) > 1)
-      fViewer->GetActDesc()->fConfigFile = TString(fTxtConfig->GetText());
-   else
-      fViewer->GetActDesc()->fConfigFile = "";
 
    TVirtualProofDesc *desc;
    fViewer->GetActDesc()->fProofMgr = TVirtualProofMgr::Create(url);
@@ -562,6 +573,8 @@ void TSessionServerFrame::OnBtnAddClicked()
    // Add newly created session configuration in the list of sessions.
 
    Int_t retval;
+   Bool_t newSession = kTRUE;
+   TSessionDescription* desc = 0;
    // do nothing if connection in progress
    if (fViewer->IsBusy())
       return;
@@ -574,23 +587,34 @@ void TSessionServerFrame::OnBtnAddClicked()
                     kMBIconExclamation, kMBOk, &retval);
       return;
    }
-   if (fViewer->GetSessions()->FindObject(fTxtName->GetText())) {
-      new TGMsgBox(fClient->GetRoot(), fViewer, "Error Adding Session",
-          Form("The session name \"%s\" already exists !", fTxtName->GetText()),
-          kMBIconExclamation, kMBOk, &retval);
-      return;
+   TObject *obj = fViewer->GetSessions()->FindObject(fTxtName->GetText());
+   if (obj)
+      desc = dynamic_cast<TSessionDescription*>(obj);
+   if (desc) {
+      new TGMsgBox(fClient->GetRoot(), fViewer, "Adding Session",
+          Form("The session \"%s\" already exists ! Overwrite ?", 
+          fTxtName->GetText()), kMBIconQuestion, kMBYes | kMBNo | 
+          kMBCancel, &retval);
+      if (retval != kMBOk)
+         return;
+      newSession = kFALSE;
    }
-   TSessionDescription* desc = new TSessionDescription();
-   desc->fName = fTxtName->GetText();
-   desc->fTag = "";
+   if (newSession) {
+      desc = new TSessionDescription();
+      desc->fName = fTxtName->GetText();
+      desc->fTag = "";
+      desc->fQueries = new TList();
+      desc->fPackages = new TList();
+      desc->fActQuery = 0;
+      desc->fProof = 0;
+      desc->fProofMgr = 0;
+      desc->fAutoEnable = kFALSE;
+   }
    desc->fAddress = fTxtAddress->GetText();
    desc->fPort = fNumPort->GetIntNumber();
    desc->fConnected = kFALSE;
    desc->fAttached = kFALSE;
    desc->fLocal = kFALSE;
-   desc->fQueries = new TList();
-   desc->fPackages = new TList();
-   desc->fActQuery = 0;
    if (strlen(fTxtConfig->GetText()) > 1)
       desc->fConfigFile = TString(fTxtConfig->GetText());
    else
@@ -598,24 +622,23 @@ void TSessionServerFrame::OnBtnAddClicked()
    desc->fLogLevel = fLogLevel->GetIntNumber();
    desc->fUserName = fTxtUsrName->GetText();
    desc->fSync = (fSync->GetState() == kButtonDown);
-   desc->fAutoEnable = kFALSE;
-   desc->fProof = 0;
-   desc->fProofMgr = 0;
-   // add newly created session config to our session list
-   fViewer->GetSessions()->Add((TObject *)desc);
-   // save into configuration file
-   TGListTreeItem *item = fViewer->GetSessionHierarchy()->AddItem(
-         fViewer->GetSessionItem(), desc->fName.Data(),
-         fViewer->GetProofDisconPict(), fViewer->GetProofDisconPict());
-   fViewer->GetSessionHierarchy()->SetToolTipItem(item, "Proof Session");
-   item->SetUserData(desc);
-   fViewer->GetSessionHierarchy()->ClearHighlighted();
-   fViewer->GetSessionHierarchy()->OpenItem(fViewer->GetSessionItem());
-   fViewer->GetSessionHierarchy()->OpenItem(item);
-   fViewer->GetSessionHierarchy()->HighlightItem(item);
-   fViewer->GetSessionHierarchy()->SetSelected(item);
-   fClient->NeedRedraw(fViewer->GetSessionHierarchy());
-   fViewer->OnListTreeClicked(item, 1, 0, 0);
+   if (newSession) {
+      // add newly created session config to our session list
+      fViewer->GetSessions()->Add((TObject *)desc);
+      // save into configuration file
+      TGListTreeItem *item = fViewer->GetSessionHierarchy()->AddItem(
+            fViewer->GetSessionItem(), desc->fName.Data(),
+            fViewer->GetProofDisconPict(), fViewer->GetProofDisconPict());
+      fViewer->GetSessionHierarchy()->SetToolTipItem(item, "Proof Session");
+      item->SetUserData(desc);
+      fViewer->GetSessionHierarchy()->ClearHighlighted();
+      fViewer->GetSessionHierarchy()->OpenItem(fViewer->GetSessionItem());
+      fViewer->GetSessionHierarchy()->OpenItem(item);
+      fViewer->GetSessionHierarchy()->HighlightItem(item);
+      fViewer->GetSessionHierarchy()->SetSelected(item);
+      fClient->NeedRedraw(fViewer->GetSessionHierarchy());
+      fViewer->OnListTreeClicked(item, 1, 0, 0);
+   }
    HideFrame(fBtnAdd);
    if (fViewer->IsAutoSave())
       fViewer->WriteConfiguration();
@@ -3240,7 +3263,7 @@ void TSessionViewer::UpdateListOfSessions()
             newdesc->fUserName   = fActDesc->fUserName;
             newdesc->fPort       = fActDesc->fPort;
             newdesc->fLogLevel   = 0;
-            newdesc->fAddress    = pdesc->GetTitle();
+            newdesc->fAddress    = fActDesc->fAddress;
          }
          newdesc->fQueries    = new TList();
          newdesc->fPackages   = new TList();
@@ -3765,14 +3788,15 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
                fSessionFrame->GetTab()->GetTabTab("Options"));
       }
       // proof session not connected
-      if ((!fActDesc->fLocal) && (!fActDesc->fConnected) &&
-          (!fActDesc->fAttached) && (fActFrame != fServerFrame)) {
+      if ((!fActDesc->fLocal) && (!fActDesc->fAttached) &&
+          (fActFrame != fServerFrame)) {
          fV2->HideFrame(fActFrame);
          fV2->ShowFrame(fServerFrame);
          fActFrame = fServerFrame;
       }
       // proof session connected
-      if ((!fActDesc->fLocal) && (fActDesc->fConnected)) {
+      if ((!fActDesc->fLocal) && (fActDesc->fConnected) &&
+          (fActDesc->fAttached)) {
          if (fActFrame != fSessionFrame) {
             fV2->HideFrame(fActFrame);
             fV2->ShowFrame(fSessionFrame);
