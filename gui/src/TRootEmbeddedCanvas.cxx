@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.16 2005/08/10 14:00:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.17 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -69,8 +69,8 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
    fCanvas = c;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask,
-                    kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
@@ -126,7 +126,7 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
 }
 
 //______________________________________________________________________________
-void TRootEmbeddedCanvas::AdoptCanvas(TCanvas *c) 
+void TRootEmbeddedCanvas::AdoptCanvas(TCanvas *c)
 {
    //
 

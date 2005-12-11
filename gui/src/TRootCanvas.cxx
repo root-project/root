@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.88 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.89 2005/12/08 21:48:48 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -248,8 +248,8 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
    fCanvas = c;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask,
-                         kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
@@ -532,7 +532,7 @@ void TRootCanvas::CreateCanvas(const char *name)
             Warning("CreateCanvas", "Cannot init gl window, will use default instead\n");
       }
    }
-   
+
    if (fCanvasID == -1)
       fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
 
