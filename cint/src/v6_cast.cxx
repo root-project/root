@@ -489,7 +489,6 @@ G__value G__castvalue(char *casttype,G__value result3)
       result3.typenum = -1;
       break;
     }
-    break;
     if(strcmp(casttype,"signedlonglong")==0) {
       type='n'+castflag;
       result3.tagnum = -1;
