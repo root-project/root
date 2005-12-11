@@ -3930,6 +3930,8 @@ void TSessionViewer::OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t /*btn*
 {
    // Handle mouse double clicks in list tree (connect to server).
 
+   if (entry == fSessionItem)
+      return;
    if (entry->GetParent()->GetParent() == 0) { // Server
       if (entry->GetUserData()) {
          TObject *obj = (TObject *)entry->GetUserData();
