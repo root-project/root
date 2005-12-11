@@ -193,6 +193,7 @@ int test_tmatrix_kalman() {
 
   for (int k = 0; k < npass; k++) 
   {
+
       MnMatrix H(first,second);
       for(int i = 0; i < first; i++)
 	for(int j = 0; j < second; j++)
@@ -235,36 +236,30 @@ int test_tmatrix_kalman() {
 // 	Cp.Print();
 //       }
 
-      {    
-	double x2 = 0;
-	MnVector x(second);
-	MnMatrix tmp(second,first);
-	MnMatrix Rinv(first,first);
-	MnMatrix K(second,first);
-	MnMatrix C(second,second);
-	MnVector vtmp(first);
-
-	test::Timer t("TMatrix Kalman ");
-	for (int l = 0; l < NLOOP; l++) 
-	{
-	  //MnVector x = xp + K0*(m-H*xp);
-	  x = xp + K0*(m-H*xp);
-	  MnMatrix HT = H;
-	  //MnMatrix tmp = Cp*HT.Transpose(HT);
-	  tmp = Cp*HT.Transpose(HT);
-	  double det;
-	  //MnMatrix Rinv =(V + H *tmp).InvertFast(&det);
-	  Rinv =(V + H *tmp).InvertFast(&det);
-	  //MnMatrix K = tmp * Rinv;
-	  //MnMatrix C = (I - K * H) * Cp;
-	  //K = tmp * Rinv;
-	  C = (I - tmp* Rinv * H) * Cp;
-	  vtmp = m-H*xp;
-	  x2 = vtmp * (Rinv * vtmp);
-	}
-	//std::cout << k << " chi2 " << x2 << std::endl;
-	x2sum += x2;
+    {
+      double x2 = 0;
+      TVectorD x(second);
+      TMatrixD Rinv(first,first);
+      TMatrixDSym RinvSym;
+      TMatrixD K(second,first);
+      TMatrixD C(second,second);
+      TVectorD tmp1(first);
+      TMatrixD tmp2(second,first);
+      
+      test::Timer t("TMatrix Kalman ");
+      for (Int_t l = 0; l < NLOOP; l++)
+      {
+        tmp1 = m; Add(tmp1,-1.0,H,xp);
+        x = xp; Add(x,+1.0,K0,tmp1);
+        tmp2 = TMatrixD(Cp,TMatrixD::kMultTranspose,H);
+        Rinv = V ; Rinv += TMatrixD(H,TMatrixD::kMult,tmp2);
+        RinvSym.Use(first,Rinv.GetMatrixArray()); RinvSym.InvertFast();
+        C = Cp; C -= TMatrixD(TMatrixD(tmp2,TMatrixD::kMult,Rinv),TMatrixD::kMult,TMatrixD(H,TMatrixD::kMult,Cp));
+        x2 = RinvSym.Similarity(tmp1);
       }
+      x2sum += x2;
+    }
+
       //   }
   }  
   //tr.dump();
