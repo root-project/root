@@ -41,6 +41,7 @@ options="                    \
    enable_ldap               \
    enable_mathcore           \
    enable_mathmore           \
+   enable_monalisa           \
    enable_mysql              \
    enable_opengl             \
    enable_oracle             \
@@ -119,6 +120,7 @@ ALIEN            \
 ASIMAGE          \
 LDAP             \
 GLOBUS_LOCATION  \
+MONALISA         \
 SRP              \
 SSL              \
 AFS              \
@@ -741,6 +743,7 @@ enable/disable options, prefix with either --enable- or --disable-
   mathcore           Build the new libMathCore math library
   mathmore           Build the new libMathMore extended math library
   minuit2            Build the new libMinuit2 minimizer library
+  monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
   opengl             OpenGL support, requires libGL and libGLU
   oracle             Oracle support, requires libocci
@@ -779,13 +782,17 @@ with options, prefix with --with-, enables corresponding support
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
-  globus             Globus support, path to what should be GLOBUS_LOCATION
+  gfal-incdir        GFAL support, location of gfal_api.h
+  gfal-libdir        GFAL support, location of libgfal
   gccxml             Gccxml support, directory of the gccxml installation
+  globus             Globus support, path to what should be GLOBUS_LOCATION
   krb5               Kerberos5 support, location of Kerberos distribution
   krb5-incdir        Kerberos5 support, location of krb5.h
   krb5-libdir        Kerberos5 support, location of libkrb5
   ldap-incdir        LDAP support, location of ldap.h
   ldap-libdir        LDAP support, location of libldap
+  monalisa-incdir    Monalisa support, location of ApMon.h
+  monalisa-libdir    Monalisa support, location of libapmoncpp
   mysql-incdir       MySQL support, location of mysql.h
   mysql-libdir       MySQL support, location of libmysqlclient
   opengl-incdir      OpenGL support, location of GL/gl.h
@@ -942,10 +949,12 @@ if test $# -gt 0 ; then
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
-      --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
-      --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
       --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
+      --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
+      --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
+      --with-monalisa-incdir=*)monalisaincdir=$optarg; enable_monalisa="yes";;
+      --with-monalisa-libdir=*)monalisalibdir=$optarg; enable_monalisa="yes";;
       --with-oracle-incdir=*)  oracleincdir=$optarg  ; enable_oracle="yes"  ;;
       --with-oracle-libdir=*)  oraclelibdir=$optarg  ; enable_oracle="yes"  ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
@@ -1597,6 +1606,33 @@ if test ! "x$enable_gfal" = "xno"; then
 
     if test "x$gfalincdir" = "x" || test "x$gfallib" = "x"; then
         enable_gfal="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% Monalisa Support - Third party libraries
+#
+# (See http://monalisa.cacr.caltech.edu/monalisa__Download__ApMon.html)
+#
+# If the user has set the flags "--disable-monalisa", we don't check for
+# Monalisa at all.
+#
+if test ! "x$enable_monalisa" = "xno"; then
+    # Check for Monalisa include and library
+    check_header "ApMon.h" "$monalisaincdir" $MONALISA $MONALISA/include \
+	/usr/local/include /opt/monalisa/include /usr/include
+    monalisainc=$found_hdr
+    monalisaincdir=$found_dir
+
+    check_library "libapmoncpp" "$enable_shared" "$monalisalibdir" \
+	$MONALISA $MONALISA/lib /usr/local/lib /opt/monalisa/lib \
+	/usr/lib
+    monalisalib=$found_lib
+    monalisalibdir=$found_dir
+
+    if test "x$monalisaincdir" = "x" || test "x$monalisalib" = "x"; then
+        enable_monalisa="no"
     fi
 fi
 
@@ -3142,6 +3178,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
     test "x$enable_ldap"    = "xyes" && pkglist="$pkglist root-plugin-ldap"
     test "x$enable_minuit2" = "xyes" && pkglist="$pkglist root-plugin-minuit2"
+    test "x$enable_monalisa"= "xyes" && pkglist="$pkglist root-plugin-monalisa"
     test "x$enable_mysql"   = "xyes" && pkglist="$pkglist root-plugin-mysql"
     test "x$enable_opengl"  = "xyes" && pkglist="$pkglist root-plugin-gl"
     test "x$enable_oracle"  = "xyes" && pkglist="$pkglist root-plugin-oracle"
@@ -3407,6 +3444,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
+    -e "s|@buildmonalisa@|$enable_monalisa|"    \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
@@ -3439,6 +3477,9 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@macrodir@|$macrodir|"                \
     -e "s|@mandir@|$mandir|"                    \
     -e "s|@mkliboption@|$mkliboption|"          \
+    -e "s|@monalisaincdir@|$monalisaincdir|"    \
+    -e "s|@monalisalib@|$monalisalib|"          \
+    -e "s|@monalisalibdir@|$monalisalibdir|"    \
     -e "s|@mysqlincdir@|$mysqlincdir|"          \
     -e "s|@mysqllib@|$mysqllib|"                \
     -e "s|@mysqllibdir@|$mysqllibdir|"          \

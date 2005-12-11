@@ -154,6 +154,9 @@ endif
 ifeq ($(BUILDLDAP),yes)
 MODULES      += ldap
 endif
+ifeq ($(BUILDMONALISA),yes)
+MODULES      += monalisa
+endif
 ifeq ($(BUILDGLOBUS),yes)
 MODULES      += globusauth
 endif
@@ -182,7 +185,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio thread \
                 rootx rootd proofd proof dcache chirp hbook alien asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot xrootd netx clarens peac oracle xmlparser \
-                mathcore mathmore reflex cintex roofit minuit2
+                mathcore mathmore reflex cintex roofit minuit2 monalisa
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -897,6 +900,8 @@ showbuild:
 	@echo "SRPUTILLIB         = $(SRPUTILLIB)"
 	@echo "LDAPINCDIR         = $(LDAPINCDIR)"
 	@echo "LDAPCLILIB         = $(LDAPCLILIB)"
+	@echo "MONALISAINCDIR     = $(MONALISAINCDIR)"
+	@echo "MONALISACLILIB     = $(MONALISACLILIB)"
 	@echo "QTLIBDIR           = $(QTLIBDIR)"
 	@echo "QTLIB              = $(QTLIB)"
 	@echo "QTINCDIR           = $(QTINCDIR)"
