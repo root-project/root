@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.13 2005/10/27 06:41:23 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.14 2005/12/11 10:51:39 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -403,8 +403,8 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          mouseEvent = (QMouseEvent *)e;
          MapEvent(*mouseEvent,event);
          selectEventMask |=  kButtonReleaseMask;
-         // fprintf(stderr, "QEvent::MouseButtonRelease, turn grabbing OFF id = %x widget = %p,Qt grabber =%p,button grabber%p, pointer grabber=%p\n"
-         //      , TGQt::rootwid(frame), frame, QWidget::mouseGrabber(),fgButtonGrabber,fgPointerGrabber);
+         // fprintf(stderr, "QEvent::MouseButtonRelease, turn grabbing OFF id = %x widget = %p,Qt grabber =%p,button grabber%p; qt event=%p\n"
+         //      , TGQt::rootwid(frame), frame, QWidget::mouseGrabber(),fgButtonGrabber,e);
          if (fgButtonGrabber) {
             grabSelectEvent =  SelectGrab(event,selectEventMask,*mouseEvent);
             if ( !(mouseEvent->stateAfter() & Qt::MouseButtonMask)) {
@@ -685,10 +685,8 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
       default: break;
 //      case QEvent::Paint:                //   widget's window should be mapped
    };
- // }
-  return frame->GetCanvasWidget()==0;
- //  return kTRUE; // eat event. We want the special processing via TGClient
- // fClient?fClient->ProcessOneEvent(event):kFALSE;
+  // return frame->GetCanvasWidget()==0;
+  return kTRUE; // eat event. We want the special processing via TGClient
 }
 
 //______________________________________________________________________________

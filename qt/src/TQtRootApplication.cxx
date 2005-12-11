@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TQtRootApplication.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TQtRootApplication.cxx,v 1.2 2005/12/09 21:19:53 fine Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -14,9 +14,9 @@
 // TQtRootApplication                                                   //
 //                                                                      //
 // This class create the ROOT native GUI version of the ROOT            //
-// application environment. This in contrast to the Win32 version.      //
-// Once the native widgets work on Win32 this class can be folded into  //
-// the TApplication class (since all graphic will go via TVirtualX).    //
+// application environment. This to support the Win32 version.          //
+// Once the native widgets work on Win32 this class can be removed later//
+// (since all graphic will go via TVirtualX).                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +31,8 @@
 TQtRootApplication::TQtRootApplication(const char *appClassName,
                                    Int_t *argc, char **argv)
 {
+   // An implementation of the TApplicationImp for Qt-based GUI.
+   
    fApplicationName = appClassName;
    fDisplay         = 0;
 
