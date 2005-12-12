@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.4 2005/12/08 18:44:58 axel Exp $
+//$Id: rflx_gensrc.cxx,v 1.2 2005/12/09 23:38:42 pcanal Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -55,7 +55,7 @@ void rflx_gensrc::gen_file()
    std::ofstream s(m_dictfile.c_str());
    s << m_hd.str()
        << m_td.str()
-       << m_sh.str()
+//       << m_sh.str() fixme!
        << m_cd.str()
        << m_ff.str()
        << m_fv.str()
@@ -405,8 +405,11 @@ void rflx_gensrc::gen_classdictdefs(G__ClassInfo & ci)
    }
    if (!hasConstructor) {
       m_cd << ind() <<
-          "static void * constructor_auto(void* mem, const std::vector<void*>&, void*) { return ::new(mem) ::"
-          << fclname << "(); }" << std::endl;
+          "static void * constructor_auto(void* mem, const std::vector<void*>&, void*) { ";
+      if (ci.Property() & G__BIT_ISABSTRACT)
+         m_cd << " return 0; }" << std::endl;
+      else 
+         m_cd << "return ::new(mem) ::" << fclname << "(); }" << std::endl;
    }
    --ind;
    m_cd << ind() << "};" << std::endl << std::endl;
@@ -500,8 +503,9 @@ void rflx_gensrc::gen_datamemberdefs(G__ClassInfo & ci)
              << ind() << ".AddDataMember(" << gen_type(*dm.
                                                        Type()) << ", \"" <<
              dm.Name()
-             << "\", OffsetOf" << offnum << "(::" << fclname << ", " << dm.
-             Name() << "), " << dm_modifiers << ")";
+//             << "\", OffsetOf" << offnum << "(::" << fclname << ", " << dm.
+//             Name() << "), " << dm_modifiers << ")";
+             << "\", 0, " << dm_modifiers << ")"; // fixme!
       }
    }
 }
@@ -724,6 +728,8 @@ void rflx_gensrc::gen_stubfuncdecl_params(std::ostringstream & s,
       // arg type IS NOT a pointer
       if (!(ma.Property() & G__BIT_ISPOINTER))
          pStr = "*";
+      if ((ma.Property() & G__BIT_ISREFERENCE))
+         pStr = "*";
       if (ma.Property() & G__BIT_ISCONSTANT)
          cvStr += "const ";
       s << pStr << "(" << cvStr << rflx_tools::stub_type_name(ma.Type()->
@@ -810,6 +816,11 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
                 "(void* mem, const std::vector<void*>& arg, void*) {" <<
                 std::endl;
             ++ind;
+            if (ci.Property() & G__BIT_ISABSTRACT) {
+               s << "  return 0; // pure virtual" << std::endl
+                 << "}" << std::endl << std::endl;
+               continue;
+            }
          } else {
             s << ind() << "void* " << cldname << "::" << "method_" <<
                 ++mNum <<

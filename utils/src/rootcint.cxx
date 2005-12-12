@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.227 2005/12/02 22:36:11 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.228 2005/12/09 23:37:15 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1061,8 +1061,8 @@ bool HasDefaultConstructor(G__ClassInfo& cl, string *arg)
       } else {
          proto += '*';
       }
-      G__MethodInfo methodinfo = cl.GetMethod(cl.TmpltName(),proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
-      G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
+      G__MethodInfo methodinfo  = cl.GetMethod(cl.TmpltName(),proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
+      G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),     proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
 
       if (methodinfo.IsValid()) {
 
@@ -4160,6 +4160,15 @@ void CleanupOnExit(int code) {
          }
       }
    }
+   // also remove the .def file created by CINT.
+   {
+      size_t posExt=dictsrc.rfind('.');
+      if (posExt!=string::npos) {
+         dictsrc.replace(posExt, dictsrc.length(), ".def");
+         unlink(dictsrc.c_str());
+      }
+   }
+
 }
 
 
@@ -4221,7 +4230,8 @@ int main(int argc, char **argv)
    } else if (!strcmp(argv[ic], "-v4")) {
       gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
       ic++;
-   } else if (!strcmp(argv[ic], "-cint")) {
+   }
+   if (!strcmp(argv[ic], "-cint")) {
       dict_type = kDictTypeCint;
       ic++;
    } else if (!strcmp(argv[ic], "-reflex")) {
@@ -4230,6 +4240,11 @@ int main(int argc, char **argv)
    } else if (!strcmp(argv[ic], "-gccxml")) {
       dict_type = kDictTypeGCCXML;
       ic++;
+   }
+
+   if (dict_type==kDictTypeGCCXML) {
+      int rc =  system("genreflex-rootcint --gccxml-available");
+      if (rc) dict_type=kDictTypeReflex; // fall back to reflex
    }
 
    const char* libprefix = "--lib-list-prefix=";
@@ -4354,36 +4369,6 @@ int main(int argc, char **argv)
    // included only once.
    for (i = 1; i < argc; i++)
       if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
-
-   // Call GCCXML if requested
-   if (dict_type==kDictTypeGCCXML) {
-      string gccxml_rootcint_call;
-#ifndef ROOTBUILD
-      if (getenv("ROOTSYS")) {
-         gccxml_rootcint_call=getenv("ROOTSYS");
-# ifdef WIN32
-         gccxml_rootcint_call+="\\bin\\";
-# else
-         gccxml_rootcint_call+="/bin/";
-# endif
-      }
-#else
-# ifdef WIN32
-      gccxml_rootcint_call="bin\\";
-# else
-      gccxml_rootcint_call="bin/";
-# endif
-#endif
-      gccxml_rootcint_call+="genreflex-rootcint";
-      for (int iarg=1; iarg<argc; ++iarg) {
-         gccxml_rootcint_call+=" ";
-         gccxml_rootcint_call+=argv[iarg];
-      }
-      printf("Calling %s\n", gccxml_rootcint_call.c_str());
-      int rc=system(gccxml_rootcint_call.c_str());
-      if (!rc) return 0;
-      else dict_type=kDictTypeReflex; // fall back to reflex
-   }
 
 #ifndef __CINT__
    int   argcc, iv, il;
@@ -4529,8 +4514,9 @@ int main(int argc, char **argv)
          argvv[argcc++] = "-DSYSV";
          argvv[argcc++] = "-D__MAKECINT__";
          argvv[argcc++] = "-V";        // include info on private members
-         if (dict_type==kDictTypeReflex) 
-            argvv[argcc++] = "-c-3";
+         if (dict_type==kDictTypeReflex) {
+            argvv[argcc++] = "-c-3"; 
+         }
          else argvv[argcc++] = "-c-10";
          argvv[argcc++] = "+V";        // turn on class comment mode
          if (!use_preprocessor) {
@@ -4632,8 +4618,66 @@ int main(int argc, char **argv)
       }
    }
    G__setglobalcomp(0);  // G__NOLINK
-
 #endif
+
+   // We ran cint to load the in-memory database,
+   // so that the I/O code can be properly generated.
+   // So now let's call GCCXML if requested
+   if (dict_type==kDictTypeGCCXML) {
+      string gccxml_rootcint_call;
+#ifndef ROOTBUILD
+      if (getenv("ROOTSYS")) {
+         gccxml_rootcint_call=getenv("ROOTSYS");
+# ifdef WIN32
+         gccxml_rootcint_call+="\\bin\\";
+# else
+         gccxml_rootcint_call+="/bin/";
+# endif
+      }
+#else
+# ifdef WIN32
+      gccxml_rootcint_call="bin\\";
+# else
+      gccxml_rootcint_call="bin/";
+# endif
+#endif
+      gccxml_rootcint_call+="genreflex-rootcint";
+
+      for (int iarg=1; iarg<argc; ++iarg) {
+         gccxml_rootcint_call+=" ";
+         gccxml_rootcint_call+=argv[iarg];
+
+         if (!strcmp(argv[iarg], "-c")) {
+            for (i = 0; path[i][0]; i++) {
+               gccxml_rootcint_call+=" ";
+               gccxml_rootcint_call+=path[i];
+            }
+            gccxml_rootcint_call+=" -DR__GCCXML";
+#ifdef ROOTBUILD
+            gccxml_rootcint_call+=" -DG__NOCINTDLL";
+#endif
+            gccxml_rootcint_call+=" -DTRUE=1";
+            gccxml_rootcint_call+=" -DFALSE=0";
+            gccxml_rootcint_call+=" -DR__EXTERN=extern";
+            gccxml_rootcint_call+=" -Dexternalref=extern";
+            gccxml_rootcint_call+=" -DSYSV";
+#ifdef ROOTBUILD
+            gccxml_rootcint_call+=" base/inc/TROOT.h";
+            gccxml_rootcint_call+=" base/inc/TMemberInspector.h";
+#else
+            gccxml_rootcint_call+=" TROOT.h";
+            gccxml_rootcint_call+=" TMemberInspector.h";
+#endif
+         }
+      }
+      printf("Calling %s\n", gccxml_rootcint_call.c_str());
+      int rc=system(gccxml_rootcint_call.c_str());
+      if (rc) {
+         CleanupOnExit(rc);
+         return rc;
+      }
+   }
+
    if (use_preprocessor && icc)
       ReplaceBundleInDict(argv[ifl], bundlename);
 
@@ -5040,6 +5084,9 @@ int main(int argc, char **argv)
             fprintf(fpd, "%s", line);
             // 'linesToSkip' is because we want to put it after #defined private/protected
             if (++nl == linesToSkip && icc) {
+               if (dict_type==kDictTypeGCCXML) {
+                  fprintf(fpd, "#define G__DICTIONARY gccxml\n");
+               }
                if (longheadername && dictpathname.length() ) {
                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf);
                } else {

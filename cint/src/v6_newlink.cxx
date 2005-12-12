@@ -8710,7 +8710,9 @@ void G__gen_extra_include() {
        add the files at the beginning of the dictionary header file
        (Specifically, the extra include files have to be include 
        before any forward declarations!) */
-    
+
+    if (!G__CPPLINK_H) return;
+
     tempfile = (char*) malloc(strlen(G__CPPLINK_H)+6);
     sprintf(tempfile,"%s.temp", G__CPPLINK_H);
     rename(G__CPPLINK_H,tempfile);
