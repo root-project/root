@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.16 2005/11/29 14:43:59 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.17 2005/11/29 19:02:58 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TGraph2D.h"
 #include "TMultiGraph.h"
 #include "TRandom.h"
+#include "TObjString.h"
 
 
 ClassImp(TLinearFitter)
@@ -80,7 +81,7 @@ ClassImp(TLinearFitter)
 //      -Polynomials can be used like "pol3", .."polN"
 //      -If fitting a more than 3-dimensional formula, variables should
 //       be numbered as follows:
-//       -- x0, x1, x2... For example, to fit  "1 ++ x0 ++ x1 ++ x2 ++ x3*x3"
+//       -- x[0], x[1], x[2]... For example, to fit  "1 ++ x[0] ++ x[1] ++ x[2] ++ x[3]*x[3]"
 //  2.2 Setting the formula:
 //    2.2.1 If fitting a 1-2-3-dimensional formula, one can create a
 //          TF123 based on a linear expression and pass this function
@@ -93,14 +94,16 @@ ClassImp(TLinearFitter)
 //            just like when the TH1::Fit or TGraph::Fit is used
 //          --A linear function of this kind is by no means different
 //            from any other function, it can be drawn, evaluated, etc.
+//
+//          --For multidimensional fitting, TFormulas of the form:
+//            x[0]++...++x[n] can be used
 //    2.2.2 There is no need to create the function if you don't want to,
 //          the formula can be set by expression:
 //          --Example:
 //            // 2 is the number of dimensions
 //            TLinearFitter *lf = new TLinearFitter(2);
 //            lf->SetFormula("x ++ y ++ x*x*y*y");
-//          --That's the only way to go, if you want to fit in more
-//            than 3 dimensions
+//
 //    2.2.3 The fastest functions to compute are polynomials and hyperplanes.
 //          --Polynomials are set the usual way: "pol1", "pol2",...
 //          --Hyperplanes are set by expression "hyp3", "hyp4", ...
@@ -252,7 +255,9 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
 {
    //This constructor uses a linear function. How to create it?
    //TFormula now accepts formulas of the following kind:
-   //TFormula("f", "x++y++z++x*x"). Other than the look, it's in no
+   //TFormula("f", "x++y++z++x*x") or 
+   //TFormula("f", "x[0]++x[1]++x[2]*x[2]");
+   //Other than the look, it's in no
    //way different from the regular formula, it can be evaluated,
    //drawn, etc.
    //The option is to store or not to store the data
@@ -406,14 +411,13 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
          //general case
          for (ii=0; ii<fNfunctions; ii++){
             if (!fFunctions.IsEmpty()){
-               TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(ii));
-               val[ii]=f1->EvalPar(0, x)/e;
+               TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(ii));
+               val[ii]=f1->EvalPar(x)/e;
             } else {
                TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
-               val[ii]=f->EvalPar(0, x)/e;
+               val[ii]=f->EvalPar(x)/e;
             }
          }
-
       }
    }
    //additional matrices for numerical stability
@@ -564,8 +568,8 @@ void TLinearFitter::Chisquare()
                      temp += fParams(i+1)*fX(point, i);
                } else {
                   for (j=0; j<fNfunctions; j++) {
-                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, point).GetPtr());
+                     TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(j));
+                     val[j] = f1->EvalPar(TMatrixDRow(fX, point).GetPtr());
                      temp += fParams(j)*val[j];
                   }
                }
@@ -1115,24 +1119,27 @@ void TLinearFitter::SetFormula(const char *formula)
   //Additive parts should be separated by "++".
   //Examples (ai are parameters to fit):
   //1.fitting function: a0*x0 + a1*x1 + a2*x2
-  //  input formula "x0++x1++x2"
+  //  input formula "x[0]++x[1]++x[2]"
   //2.TMath functions can be used:
-  //  fitting function: a0*TMath::Gaus(x0, 0, 1) + a1*x1
-  //  input formula:    "TMath::Gaus(x0, 0, 1)++x1"
+  //  fitting function: a0*TMath::Gaus(x, 0, 1) + a1*y
+  //  input formula:    "TMath::Gaus(x, 0, 1)++y"
   //fills the array of functions
 
    Int_t size, special = 0;
-   Int_t i, j;
-
-   Int_t len = strlen(formula);
-   fFormulaSize = len;
-   fFormula = new char[len+1];
+   Int_t i;
+   Bool_t isHyper = kFALSE;
+   //Int_t len = strlen(formula);
+   if (fInputFunction)
+      fInputFunction = 0;
+   fFormulaSize = strlen(formula);
+   fFormula = new char[fFormulaSize+1];
    strcpy(fFormula, formula);
    fSpecial = 0;
    //in case of a hyperplane:
    char *fstring;
    fstring = (char *)strstr(fFormula, "hyp");
    if (fstring!=NULL){
+      isHyper = kTRUE;
       fstring+=3;
       sscanf(fstring, "%d", &size);
       //+1 for the constant term
@@ -1140,74 +1147,52 @@ void TLinearFitter::SetFormula(const char *formula)
       fSpecial=200+size;
    }
 
-   TString sstring(fFormula);
-   sstring = sstring.ReplaceAll("++", 2, "|", 1);
-
-   char *copyformula=new char[fFormulaSize+30];
-   strcpy(copyformula, sstring.Data());
-
-   //count the number of functions
-   fstring=strtok(copyformula, "|");
-   j=0;
-   while (fstring!=NULL){
-      j++;
-      fstring=strtok(NULL, "|");
-   }
-
-   //change the size of functions array and clear it
-   if (!fFunctions.IsEmpty())
-      fFunctions.Clear();
-
-   fNfunctions=j;
-   fFunctions.Expand(fNfunctions);
-
-   //replace xn by [n]
-   char pattern[5];
-   char replacement[6]; 
-
-   for (i=0; i<fNdim; i++){
-      sprintf(pattern, "x%d", i);
-      sprintf(replacement, "[%d]", i);
-      sstring = sstring.ReplaceAll(pattern, Int_t(i/10)+2, replacement, Int_t(i/10)+3);
-   }
-   //replace the regular x, y, z
-
-   sstring = sstring.ReplaceAll("y", 1, "[1]", 3);
-   sstring = sstring.ReplaceAll("z", 1, "[2]", 3);
-   //check in order not to replace the x in exp
-   fstring = (char*)strchr(sstring.Data(), 'x');
-   while (fstring){
-      Int_t offset = fstring - sstring.Data();
-      if (*(fstring-1)!='e' && *(fstring+1)!='p')
-         sstring.Replace(fstring - sstring.Data(), 1, "[0]",3);
-      else
-         offset++;
-      fstring = (char*)strchr(sstring.Data()+offset, 'x');
-   }
-
-   //fill the array of functions
-   j=0;
-   if (fSpecial==0){
+   if (fSpecial==0) {
       //in case it's not a hyperplane
-      strcpy(copyformula, sstring.Data());
-      fstring=strtok(copyformula, "|");
-      while (fstring!=NULL){
-         TF1 *f=new TF1("f", fstring, -1, 1);
-         special=f->GetNumber();
-         if (!f) {
-            Error("TLinearFitter", "f not allocated");
-            return;
-         }
-         fFunctions.Add(f);
-         fstring=strtok(NULL, "|");
+      TString sstring(fFormula);
+      sstring = sstring.ReplaceAll("++", 2, "|", 1);
+      TString replaceformula;
+
+      //count the number of functions
+
+      TObjArray *oa = sstring.Tokenize("|");
+
+      //change the size of functions array and clear it
+      if (!fFunctions.IsEmpty())
+         fFunctions.Clear();
+
+      fNfunctions = oa->GetEntriesFast();
+      fFunctions.Expand(fNfunctions);
+
+      //check if the old notation of xi is used somewhere instead of x[i]
+      char pattern[5];
+      char replacement[6];
+      for (i=0; i<fNdim; i++){
+         sprintf(pattern, "x%d", i);
+         sprintf(replacement, "x[%d]", i);
+         sstring = sstring.ReplaceAll(pattern, Int_t(i/10)+2, replacement, Int_t(i/10)+4);
       }
 
+      //fill the array of functions
+      oa = sstring.Tokenize("|");
+      for (Int_t i=0; i<fNfunctions; i++) {
+         replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
+         TFormula *f = new TFormula("f", replaceformula.Data());
+         if (!f) {
+            Error("TLinearFitter", "f_linear not allocated");
+            return;
+         }
+         special=f->GetNumber();
+         fFunctions.Add(f);
+      }
+      
       if ((fNfunctions==1)&&(special>299)&&(special<310)){
          //if fitting a polynomial
          size=special-299;
          fSpecial=100+size;
       } else
          size=fNfunctions;
+      oa->Delete();
    }
    fNfunctions=size;
    //change the size of design matrix
@@ -1248,7 +1233,10 @@ void TLinearFitter::SetFormula(TFormula *function)
    Int_t special, size;
    fInputFunction=function;
    fNfunctions=fInputFunction->GetNpar();
+   fSpecial = 0;
    special=fInputFunction->GetNumber();
+   if (!fFunctions.IsEmpty())
+      fFunctions.Delete();
 
    if ((special>299)&&(special<310)){
       //if fitting a polynomial

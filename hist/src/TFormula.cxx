@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.109 2005/11/13 02:24:14 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.110 2005/11/13 02:43:54 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2993,39 +2993,11 @@ void TFormula::ProcessLinear(TString &formula)
    }
    
    fLinearParts.Expand(nf);
+
    //break up the formula and fill the array of linear parts
-   Int_t len=formula2.Capacity();
-   char *fstring;
-
    TString replaceformula;
-   TString sstring(formula2, len + 50);
-
-   sstring = sstring.ReplaceAll("x0",2,"[0]",3);
-
-   sstring = sstring.ReplaceAll("y", 1,"[1]",3);
-
-   sstring = sstring.ReplaceAll("x1",2, "[1]",3);
-
-   sstring = sstring.ReplaceAll("z", 1,"[2]",3);
-
-   sstring = sstring.ReplaceAll("x2",2,"[2]", 3);
-
-   sstring = sstring.ReplaceAll("x3",2,"[3]", 3);
-   //careful not to replace the "x" in "exp"
-   fstring= (char*)strchr(sstring.Data(), 'x');
-   while (fstring){
-     //replacement="[0]";
-      Int_t offset = fstring - sstring.Data();
-      if (*(fstring-1)!='e' && *(fstring+1)!='p')
-         sstring.Replace(fstring-sstring.Data(), 1,"[0]",3);
-      else
-         offset++;
-      fstring = (char*)strchr(sstring.Data()+offset, 'x');   
-   }
-
-   //fill the array of functions
-   sstring = sstring.ReplaceAll("++", 2, "|", 1);
-   TObjArray *oa = sstring.Tokenize("|");
+   formula2 = formula2.ReplaceAll("++", 2, "|", 1);
+   TObjArray *oa = formula2.Tokenize("|");
    for (Int_t i=0; i<nf; i++) {
       replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
       TFormula *f = new TFormula("f", replaceformula.Data());
