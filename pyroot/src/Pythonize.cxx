@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.30 2005/11/24 16:25:18 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.31 2005/12/03 04:00:15 pcanal Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -18,6 +18,7 @@
 #include "TCollection.h"
 #include "TDirectory.h"
 #include "TSeqCollection.h"
+#include "TClonesArray.h"
 #include "TObject.h"
 #include "TFunction.h"
 
@@ -531,6 +532,56 @@ namespace {
       }
 
       return index;
+   }
+
+//- TClonesArray behaviour -----------------------------------------------------
+   PyObject* TClonesArraySetItem( PyObject*, PyObject* args )
+   {
+   // TClonesArray sets objects by constructing them in-place; which is impossible
+   // to support as the python object given as value must exist a priori. It can,
+   // however, by memcpy'd and stolen, caveat emptor.
+      ObjectProxy* self = 0, *pyobj = 0; PyObject* idx = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!OO!:__setitem__" ),
+                &ObjectProxy_Type, &self, &idx, &ObjectProxy_Type, &pyobj ) )
+         return 0;
+
+      if ( ! pyobj->GetObject() ) {
+         PyErr_SetString( PyExc_ValueError, "can not copy null object; use del for deletion" );
+         return 0;
+      }
+
+      PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
+      if ( ! pyindex )
+         return 0;
+      int index = (int)PyLong_AsLong( pyindex );
+      Py_DECREF( pyindex );
+
+   // get hold of the actual TClonesArray
+      TClonesArray* cla =
+         (TClonesArray*)self->ObjectIsA()->DynamicCast( TClonesArray::Class(), self->GetObject() );
+
+      if ( ! cla ) {
+         PyErr_SetString( PyExc_TypeError, "attempt to call with null object" );
+         return 0;
+      }
+
+      if ( cla->GetClass() != pyobj->ObjectIsA() ) {
+         PyErr_Format( PyExc_TypeError, "require object of type %s, but %s given",
+            cla->GetClass()->GetName(), pyobj->ObjectIsA()->GetName() );
+      }
+
+   // destroy old stuff, if applicable
+      if ( ((const TClonesArray&)*cla)[index] ) {
+         cla->RemoveAt( index );
+      }
+
+   // accessing an entry will result get new, unitialized memory (if properly used)
+      void* address = (*cla)[index];
+      pyobj->Release();
+      memcpy( address, pyobj->GetObject(), cla->GetClass()->Size() );
+
+      Py_INCREF( Py_None );
+      return Py_None;
    }
 
 //- vector behaviour as primitives --------------------------------------------
@@ -1423,6 +1474,18 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "sort",    (PyCFunction) TSeqCollectionSort );
 
       Utility::AddToClass( pyclass, "index", (PyCFunction) TSeqCollectionIndex );
+
+      return kTRUE;
+   }
+
+   if ( name == "TClonesArray" ) {
+   // restore base TSeqCollection operator[] to prevent random object creation (it's
+   // functionality is equivalent to the operator[](int) const of TClonesArray, but
+   // there's no guarantee it'll be selected over the non-const version)
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) TSeqCollectionGetItem );
+
+   // this setitem should be used with as much care as the C++ one
+      Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) TClonesArraySetItem );
 
       return kTRUE;
    }
