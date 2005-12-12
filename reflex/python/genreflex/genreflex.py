@@ -187,7 +187,7 @@ class genreflex:
       self.gccxml = 'gccxml'
     else :
       if sys.platform == 'win32' :
-        self.gccxml = r'\\cern.ch\dfs\Experiments\sw\lcg\external\gccxml\0.6.0_patch3\win32_vc71\gccxml'
+        self.gccxml = r'\\cern.ch\dfs\Experiments\sw\lcg\external\gccxml\0.6.0_patch3\win32_vc71\bin\gccxml'
       else :
         self.gccxml = '/afs/cern.ch/sw/lcg/external/gccxml/0.6.0_patch3/slc3_ia32_gcc323/bin/gccxml'
     #---------------Open selection file-------------------
