@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.6 2005/12/02 08:56:21 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.7 2005/12/02 12:56:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -319,30 +319,33 @@ static void f4a(void* a0, void* a1, void* a2, void* a3) {
 }
 
 struct FunctionCode {
-  FunctionCode(int narg) : f_offset(0), a_offset(0), size(0) {
-    if (narg == 0)      code = (char*)f0a;
-    else if (narg == 1) code = (char*)f1a;
-    else if (narg == 4) code = (char*)f4a;
-    char* b = code;
-    for ( size_t o = 0; o < 1000; o++, b++) {
-      if ( *(unsigned int*)b == 0xDADADADA ) a_offset = o;
-      if ( *(unsigned int*)b == 0xFAFAFAFA ) f_offset = o;
-      if ( f_offset && a_offset ) {
-         size = (o + 32) & ~0xF;
-         break;
+   FunctionCode(int narg) : f_offset(0), a_offset(0), size(0) {
+      if (narg == 0)      code = (char*)f0a;
+      else if (narg == 1) code = (char*)f1a;
+      else if (narg == 4) code = (char*)f4a;
+      char* b = code;
+      for ( size_t o = 0; o < 1000; o++, b++) {
+         if ( *(unsigned int*)b == 0xDADADADA ) a_offset = o;
+         if ( *(unsigned int*)b == 0xFAFAFAFA ) f_offset = o;
+         if ( f_offset && a_offset ) {
+            fprintf(stderr,"cintex %d %d %d\n",o,o+32,(o + 32) & ~0xF);
+            size = (o + 32) & ~0xF;
+            fprintf(stderr,"cintex %d\n",size);
+            break;
+         }
       }
-    }
-  }
-  size_t f_offset;
-  size_t a_offset;
-  size_t size;
-  char*  code;
-} s_func4arg(4),s_func0arg(0),s_func1arg(1);
+   }
+   size_t f_offset;
+   size_t a_offset;
+   size_t size;
+   char*  code;
+};
 
 
 G__InterfaceMethod Allocate_stub_function( StubContext* obj, 
        int (*fun)(StubContext*, G__value*, G__CONST char*, G__param*, int ) )
 {
+  static FunctionCode s_func4arg(4);
   char* code = Allocate_code(s_func4arg.code, s_func4arg.size );
   *(void**)&code[s_func4arg.a_offset] = (void*)obj;
   *(void**)&code[s_func4arg.f_offset] = (void*)fun;
@@ -353,14 +356,16 @@ G__InterfaceMethod Allocate_stub_function( StubContext* obj,
 
 FuncVoidPtr Allocate_void_function( void* obj, void (*fun)(void*) )
 {
-  char* code = Allocate_code(s_func0arg.code, s_func0arg.size);
-  *(void**)&code[s_func0arg.a_offset] = (void*)obj;
-  *(void**)&code[s_func0arg.f_offset] = (void*)fun;
-  return (FuncVoidPtr)code;
+   static FunctionCode s_func0arg(0);
+   char* code = Allocate_code(s_func0arg.code, s_func0arg.size);
+   *(void**)&code[s_func0arg.a_offset] = (void*)obj;
+   *(void**)&code[s_func0arg.f_offset] = (void*)fun;
+   return (FuncVoidPtr)code;
 }
 
 FuncArg1Ptr Allocate_1arg_function( void* obj, void* (*fun)(void*, void*) )
 {
+  static FunctionCode s_func1arg(1);
   char* code = Allocate_code(s_func1arg.code, s_func1arg.size);
   *(void**)&code[s_func1arg.a_offset] = (void*)obj;
   *(void**)&code[s_func1arg.a_offset] = (void*)fun;
