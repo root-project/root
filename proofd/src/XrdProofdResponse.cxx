@@ -1,4 +1,5 @@
-// Author: G. Ganis  June 2005
+// @(#)root/proofd:$Name:$:$Id:$
+// Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

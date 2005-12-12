@@ -1,4 +1,5 @@
-// Author: G. Ganis  June 2005
+// @(#)root/proofd:$Name:$:$Id:$
+// Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -409,9 +410,6 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    // Function: Establish configuration at load time.
    // Output: 0 upon success or !0 otherwise.
 
-   extern int optind, opterr;
-   char c;
-
    // Copy out the special info we want to use at top level
    fgEDest.logger(pi->eDest->logger());
    XrdProofdTrace = new XrdOucTrace(&fgEDest);
@@ -419,22 +417,6 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    fgBPool        = pi->BPool;
    fgReadWait     = pi->readWait;
    fgPort         = pi->Port;
-
-   // Process any command line options
-   opterr = 0;
-   optind = 1;
-   if (pi->argc > 1 && '-' == *(pi->argv[1]))
-      while ((c=getopt(pi->argc,pi->argv,"mrst")) && ((unsigned char)c != 0xff)) {
-         switch(c) {
-         case 'm':
-            break;
-         case 's':
-            putenv((char *)"XRDWORKER=1");
-            break;
-         default:
-            fgEDest.Say(0, "Warning, ignoring invalid option ", pi->argv[optind-1]);
-         }
-      }
 
    // Pre-initialize some i/o values
    fgMaxBuffsz = fgBPool->MaxSize();

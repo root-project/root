@@ -1,3 +1,5 @@
+// @(#)root/proofx:$Name:$:$Id:$
+// Author: Gerardo Ganis  12/12/2005
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -1172,50 +1174,38 @@ void TXSocket::InitEnvs()
    // Init environment variables for XrdClient
 
    // Set debug level
-   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
-
-   // List of domains where redirection is allowed
-   TString allowRE = gEnv->GetValue("XNet.RedirDomainAllowRE", "");
-   if (allowRE.Length() > 0)
-      EnvPutString(NAME_REDIRDOMAINALLOW_RE, allowRE.Data());
-
-   // List of domains where redirection is denied
-   TString denyRE  = gEnv->GetValue("XNet.RedirDomainDenyRE", "");
-   if (denyRE.Length() > 0)
-      EnvPutString(NAME_REDIRDOMAINDENY_RE, denyRE.Data());
+   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XProof.Debug", 0));
+   if (gEnv->GetValue("XProof.Debug", 0) > 0)
+      XrdProofdTrace->What = TRACE_REQ;
+      if (gEnv->GetValue("XProof.Debug", 0) > 1)
+         XrdProofdTrace->What = TRACE_ALL;
 
    // List of domains where connection is allowed
-   TString allowCO = gEnv->GetValue("XNet.ConnectDomainAllowRE", "");
+   TString allowCO = gEnv->GetValue("XProof.ConnectDomainAllowRE", "");
    if (allowCO.Length() > 0)
       EnvPutString(NAME_CONNECTDOMAINALLOW_RE, allowCO.Data());
 
    // List of domains where connection is denied
-   TString denyCO  = gEnv->GetValue("XNet.ConnectDomainDenyRE", "");
+   TString denyCO  = gEnv->GetValue("XProof.ConnectDomainDenyRE", "");
    if (denyCO.Length() > 0)
       EnvPutString(NAME_CONNECTDOMAINDENY_RE, denyCO.Data());
 
    // Connect Timeout
-   Int_t connTO = gEnv->GetValue("XNet.ConnectTimeout",
-                                  DFLT_CONNECTTIMEOUT);
+   Int_t connTO = gEnv->GetValue("XProof.ConnectTimeout", 2);
    EnvPutInt(NAME_CONNECTTIMEOUT, connTO);
 
    // Reconnect Timeout
-   Int_t recoTO = gEnv->GetValue("XNet.ReconnectTimeout",
+   Int_t recoTO = gEnv->GetValue("XProof.ReconnectTimeout",
                                   DFLT_RECONNECTTIMEOUT);
    EnvPutInt(NAME_RECONNECTTIMEOUT, recoTO);
 
    // Request Timeout
-   Int_t requTO = gEnv->GetValue("XNet.RequestTimeout",
+   Int_t requTO = gEnv->GetValue("XProof.RequestTimeout",
                                   DFLT_REQUESTTIMEOUT);
    EnvPutInt(NAME_REQUESTTIMEOUT, requTO);
 
-   // Max number of redirections
-   Int_t maxRedir = gEnv->GetValue("XNet.MaxRedirectCount",
-                                    DFLT_MAXREDIRECTCOUNT);
-   EnvPutInt(NAME_MAXREDIRECTCOUNT, maxRedir);
-
    // Whether to use a separate thread for garbage collection
-   Int_t garbCollTh = gEnv->GetValue("XNet.StartGarbageCollectorThread",
+   Int_t garbCollTh = gEnv->GetValue("XProof.StartGarbageCollectorThread",
                                       DFLT_STARTGARBAGECOLLECTORTHREAD);
    EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
 
@@ -1223,8 +1213,7 @@ void TXSocket::InitEnvs()
    EnvPutInt(NAME_GOASYNC, 1);
 
    // Max number of retries on first connect
-   Int_t maxRetries = gEnv->GetValue("XNet.TryConnect",
-                                     DFLT_FIRSTCONNECTMAXCNT);
+   Int_t maxRetries = gEnv->GetValue("XProof.FirstConnectMaxCnt",5);
    EnvPutInt(NAME_FIRSTCONNECTMAXCNT, maxRetries);
 
    // No automatic proofd backward-compatibility

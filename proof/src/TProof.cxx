@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.128 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.129 2005/12/12 12:54:27 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -503,11 +503,6 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
       UInt_t nSlavesDone = 0;
       Int_t ord = 0;
 
-      if (nSlaves == 0) {
-         Error("StartSlaves", "Found no workers in %s", fConfFile.Data());
-         return kFALSE;
-      }
-
       // Init arrays for threads, if neeeded
       std::vector<TProofThread *> thrHandlers;
       if (parallel) {
@@ -540,9 +535,10 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
          TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
          if (parallel) {
             // Prepare arguments
-            TProofThreadArg *ta = new TProofThreadArg(worker->GetNodeName().Data(), sport,
-                                                      fullord, perfidx, image, workdir,
-                                                      fSlaves, this);
+            TProofThreadArg *ta =
+               new TProofThreadArg(worker->GetNodeName().Data(), sport,
+                                   fullord, perfidx, image, workdir,
+                                   fSlaves, this);
             if (ta) {
                // The type of the thread func makes it a detached thread
                TThread *th = new TThread(SlaveStartupThread, ta);

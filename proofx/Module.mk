@@ -1,7 +1,7 @@
 # Module.mk for the proofx module
 # Copyright (c) 2005 Rene Brun and Fons Rademakers
 #
-# Author: G. Ganis, 26/11/2005
+# Author: Gerardo Ganis  12/12/2005
 
 MODDIR       := proofx
 MODDIRS      := $(MODDIR)/src
@@ -51,8 +51,6 @@ PROOFXINCEXTRA += $(XROOTDDIRI:%=-I%)
 PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 
 # Xrootd client libs
-# PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-#		  $(XROOTDDIRL)/libXrdSec.a $(XROOTDDIRL)/libXrdNet.a
 PROOFXLIBEXTRA := $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 		  $(XROOTDDIRL)/libXrdNet.a
 
