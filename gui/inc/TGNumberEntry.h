@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.5 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.6 2005/04/07 14:43:35 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -150,6 +150,7 @@ public:
    virtual void   TextChanged(const char *text = 0);
    virtual void   ReturnPressed();
    virtual void   Layout();
+   virtual void   InvalidInput(const char *instr) { Emit("InvalidInput(char*)", instr); }   //*SIGNAL*
 
    ClassDef(TGNumberEntryField,0)  // A text entry field used by a TGNumberEntry
 };

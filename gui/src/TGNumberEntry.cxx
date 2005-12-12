@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.15 2005/10/17 10:20:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.16 2005/11/17 19:09:28 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1693,9 +1693,17 @@ void TGNumberEntryField::ReturnPressed()
 {
    // Return was pressed.
    
+   TString instr, outstr;
+   instr = TGTextEntry::GetBuffer()->GetString();
+   
    if (fNeedsVerification) {
       // make sure we have a valid number by increasing it by 0
       IncreaseNumber(kNSSSmall, 0, kFALSE);
+   }
+   outstr = TGTextEntry::GetBuffer()->GetString();
+   if (instr != outstr) {
+      InvalidInput(instr);
+      gVirtualX->Bell(0);
    }
    TGTextEntry::ReturnPressed();
 }
