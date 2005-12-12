@@ -333,6 +333,49 @@ int test10() {
   return iret;
 }
 
+
+int test11() { 
+
+  int iret = 0;
+  double dSym[15] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+  double d3[10] = {1,2,3,4,5,6,7,8,9,10};
+  double d2[10] = {10,1,4,5,8,2,3,6,7,9};
+
+  SVector<double,15> vsym(dSym,15);
+  
+  SMatrix<double,5,5> m1(vsym);
+  SMatrix<double,2,5> m2(d2,d2+10);
+  SMatrix<double,5,2> m3(d3,d3+10);
+  SMatrix<double,5,5> I; 
+
+  SMatrix<double,5,5> m32 = m3*m2;
+
+  SMatrix<double,5,5> m4 = m1 -  m32 * m1; 
+  SMatrix<double,5,5> m5 = m3*m2;
+  // in smatrix this should not be done since a temporary object storing 
+  //  m5 * m1 first is not computed 
+  m5 =  m1 - m5 * m1;
+
+  // this works probably becuse here multiplication is done first
+  
+  SMatrix<double,5,5> m6 = m3*m2;
+  m6 =  - m6 * m1 + m1;
+
+  
+  std::cout << m4 << std::endl;
+  std::cout << m5 << std::endl;
+  //  std::cout << m6 << std::endl;
+
+  // this is test will fail because operation is done at the same time
+  iret |= compare( m4==m5, false ); 
+  iret |= compare( m4==m6, true ); 
+
+
+
+  return iret;
+}
+
+
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
   if (test##N() == 0) std::cout << " Test " << itest << "  OK " << std::endl;   \
@@ -354,6 +397,7 @@ int main(void) {
   TEST(8);
   TEST(9);
   TEST(10);
+  TEST(11);
 
   return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.7 2005/12/10 21:40:25 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.8 2005/12/11 00:24:49 rdm Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -224,10 +224,14 @@ public:
 
   SMatrix<T,D1,D2>& operator-=(const SMatrix<T,D1,D2>& rhs);
 
+#ifdef OLD_IMPL
+  // this operations are not well defines 
+  // in th eold impl they were implemented not as matrix - matrix multiplication, but as 
+  //  m(i,j)*m(i,j) multiplication
   SMatrix<T,D1,D2>& operator*=(const SMatrix<T,D1,D2>& rhs);
 
   SMatrix<T,D1,D2>& operator/=(const SMatrix<T,D1,D2>& rhs);
-
+#endif
 
 #ifndef __CINT__
   ///
@@ -239,12 +243,14 @@ public:
   SMatrix<T,D1,D2>& operator-=(const Expr<A,T,D1,D2>& rhs);
   ///
   ///
+#ifdef OLD_IMPL
   template <class A>
   SMatrix<T,D1,D2>& operator*=(const Expr<A,T,D1,D2>& rhs);
   ///
   ///
   template <class A>
   SMatrix<T,D1,D2>& operator/=(const Expr<A,T,D1,D2>& rhs);
+#endif
 
 #endif
 

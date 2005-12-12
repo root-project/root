@@ -41,7 +41,7 @@ all:            $(PROGRAMS)
 
 
 $(TESTSMATRIX):   $(TESTSMATRIXOBJ)
-		    $(LD) $(LDFLAGS) $^  $(OutPutOpt)$@
+		    $(LD) $(LDFLAGS) $^   $(OutPutOpt)$@
 		    @echo "$@ done"
 
 $(TESTOPERATIONS):   $(TESTOPERATIONSOBJ)

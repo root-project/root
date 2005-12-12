@@ -58,7 +58,7 @@ int test_smatrix_kalman() {
    
   int npass = NITER; 
   TRandom3 r(111);
-  double x2sum = 0;
+  double x2sum = 0, c2sum = 0;
   for (int k = 0; k < npass; k++) {
 
 
@@ -118,7 +118,7 @@ int test_smatrix_kalman() {
 	
     
     {
-      double x2 = 0;
+      double x2 = 0,c2 = 0;
       test::Timer t("SMatrix Kalman ");
 
       MnVectorM x; 
@@ -126,6 +126,9 @@ int test_smatrix_kalman() {
       MnSymMatrixNN Rinv; 
       MnMatrixMN K; 
       MnSymMatrixMM C; 
+      //MnMatrixNM tmp2; 
+      MnMatrixMM tmp2; 
+      MnVectorN vtmp1; 
       MnVectorN vtmp; 
 
       for (int l = 0; l < NLOOP; l++) 	
@@ -133,10 +136,11 @@ int test_smatrix_kalman() {
 
 
 
-
-	  x = xp + K0 * (m- H * xp);
+	  vtmp1 = H*xp -m;
+	  //x = xp + K0 * (m- H * xp);
+	  x = xp - K0 * vtmp1;
 	  tmp = Cp * Transpose(H);
-	  Rinv = V + H * tmp;
+	  Rinv = V;  Rinv +=  H * tmp;
 
 	  bool test = Rinv.Invert();
  	  if(!test) { 
@@ -144,20 +148,27 @@ int test_smatrix_kalman() {
 	    std::cout << Rinv << std::endl;
 	  }
 
-	  K =  tmp * Rinv; 
-	  C = ( I - K * H ) * Cp;
-	  //x2 = product(Rinv,m-H*xp);  // this does not compile on WIN32
-	  vtmp = m-H*xp; 
-	  x2 = Dot(vtmp, Rinv*vtmp);
-	
+	  K =  tmp * Rinv ; 
+	  tmp2 = K * H;
+	  C = Cp - tmp2 * Cp;
+	  //C = ( I - K * H ) * Cp;
+	  //x2 = Product(Rinv,m-H*xp);  // this does not compile on WIN32
+ 	  vtmp = m-H*xp; 
+ 	  x2 = Dot(vtmp, Rinv*vtmp);
+
 	}
 	//std::cout << k << " chi2 = " << x2 << std::endl;
       x2sum += x2;
+      c2 = 0;
+      for (int i=0; i<NDIM2; ++i)
+	for (int j=0; j<NDIM2; ++j)
+	  c2 += C(i,j);
+      c2sum += c2;
     }
   }
   //tr.dump();
 
-  std::cout << "x2sum = " << x2sum << std::endl;
+  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
 
   return 0;
 }
@@ -189,7 +200,7 @@ int test_tmatrix_kalman() {
    
   int npass = NITER; 
   TRandom3 r(111);
-  double x2sum = 0;
+  double x2sum = 0,c2sum = 0;
 
   for (int k = 0; k < npass; k++) 
   {
@@ -237,7 +248,7 @@ int test_tmatrix_kalman() {
 //       }
 
     {
-      double x2 = 0;
+      double x2 = 0,c2 = 0;
       TVectorD x(second);
       TMatrixD Rinv(first,first);
       TMatrixDSym RinvSym;
@@ -256,15 +267,20 @@ int test_tmatrix_kalman() {
         RinvSym.Use(first,Rinv.GetMatrixArray()); RinvSym.InvertFast();
         C = Cp; C -= TMatrixD(TMatrixD(tmp2,TMatrixD::kMult,Rinv),TMatrixD::kMult,TMatrixD(H,TMatrixD::kMult,Cp));
         x2 = RinvSym.Similarity(tmp1);
+
       }
-      x2sum += x2;
+      x2sum += x2; 
+      c2 = 0;
+      for (int i=0; i<NDIM2; ++i)
+	for (int j=0; j<NDIM2; ++j)
+	  c2 += C(i,j);
+      c2sum += c2;
     }
 
       //   }
   }  
   //tr.dump();
-  //print sum of x2 to check that result is same as other tests
-  std::cout << "x2sum = " << x2sum << std::endl;
+  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
   
   return 0;
 }
