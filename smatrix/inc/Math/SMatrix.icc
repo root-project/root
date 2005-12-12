@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.8 2005/12/10 21:40:25 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.9 2005/12/12 11:35:10 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -103,7 +103,7 @@ SMatrix<T,D1,D2>::SMatrix(InputIterator begin, unsigned int size) {
 //============================================================================
    
 template <class T, unsigned int D1, unsigned int D2>
-SMatrix<T,D1,D2>::SMatrix(const T& rhs, const bool diagonal) {
+SMatrix<T,D1,D2>::SMatrix(const T& rhs, bool diagonal) {
   if(diagonal) {
     // symmetric matrix!
     assert(D1==D2);
@@ -142,7 +142,7 @@ SMatrix<T,D1,D2>::SMatrix(const Expr<A,T,D1>& rhs) {
 
 template <class T, unsigned int D1, unsigned int D2>
 template <class T1>
-SMatrix<T,D1,D2>::SMatrix(const T1* a, const bool triang, const unsigned int len) {
+SMatrix<T,D1,D2>::SMatrix(const T1* a, bool triang, unsigned int len) {
   // fill from array with lower triangular matrix?
   if(triang==false) {
     for(unsigned int i=0; i<len; ++i) {
@@ -471,8 +471,8 @@ inline bool SMatrix<T,D1,D2>::Det2(T& det) const {
 template <class T, unsigned int D1, unsigned int D2>
 template <unsigned int D>
 SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_row(const SVector<T,D>& rhs,
-						 const unsigned int row,
-						 const unsigned int col) {
+						 unsigned int row,
+						 unsigned int col) {
 
   assert(col+D <= D2);
 
@@ -488,8 +488,8 @@ SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_row(const SVector<T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2>
 template <class A, unsigned int D>
 SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_row(const Expr<A,T,D>& rhs,
-						 const unsigned int row,
-						 const unsigned int col) {
+						 unsigned int row,
+						 unsigned int col) {
 
   assert(col+D <= D2);
 
@@ -505,8 +505,8 @@ SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_row(const Expr<A,T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2>
 template <unsigned int D>
 SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_col(const SVector<T,D>& rhs,
-						 const unsigned int row,
-						 const unsigned int col) {
+						 unsigned int row,
+						 unsigned int col) {
 
   assert(row+D <= D1);
 
@@ -522,8 +522,8 @@ SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_col(const SVector<T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2>
 template <class A, unsigned int D>
 SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_col(const Expr<A,T,D>& rhs,
-						 const unsigned int row,
-						 const unsigned int col) {
+						 unsigned int row,
+						 unsigned int col) {
 
   assert(row+D <= D1);
 
@@ -539,8 +539,8 @@ SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_in_col(const Expr<A,T,D>& rhs,
 template <class T, unsigned int D1, unsigned int D2>
 template <unsigned int D3, unsigned int D4>
 SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_at(const SMatrix<T,D3,D4>& rhs,
-					     const unsigned int row,
-					     const unsigned int col) {
+					     unsigned int row,
+					     unsigned int col) {
   assert(row+D3 <= D1 && col+D4 <= D2);
 
   const unsigned int offset = row*D2+col;
@@ -558,8 +558,8 @@ SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_at(const SMatrix<T,D3,D4>& rhs,
 template <class T, unsigned int D1, unsigned int D2>
 template <class A, unsigned int D3, unsigned int D4>
 SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_at(const Expr<A,T,D3,D4>& rhs,
-					     const unsigned int row,
-					     const unsigned int col) {
+					     unsigned int row,
+					     unsigned int col) {
   assert(row+D3 <= D1 && col+D4 <= D2);
 
   const unsigned int offset = row*D2+col;
@@ -575,7 +575,7 @@ SMatrix<T,D1,D2>& SMatrix<T,D1,D2>::Place_at(const Expr<A,T,D3,D4>& rhs,
 // row
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
-SVector<T,D2> SMatrix<T,D1,D2>::Row(const unsigned int therow) const {
+SVector<T,D2> SMatrix<T,D1,D2>::Row(unsigned int therow) const {
 
   const unsigned int offset = therow*D2;
 
@@ -590,7 +590,7 @@ SVector<T,D2> SMatrix<T,D1,D2>::Row(const unsigned int therow) const {
 // col
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
-SVector<T,D1> SMatrix<T,D1,D2>::Col(const unsigned int thecol) const {
+SVector<T,D1> SMatrix<T,D1,D2>::Col(unsigned int thecol) const {
 
   /*static */ SVector<T,D1> tmp;
   for(unsigned int i=0; i<D1; ++i) {
@@ -677,7 +677,7 @@ inline const T * SMatrix<T,D1,D2>::end() const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2>
 template <unsigned int N>  
-SVector<T,N> SMatrix<T,D1,D2>::SubRow(const unsigned int therow, const unsigned int col0 ) const { 
+SVector<T,N> SMatrix<T,D1,D2>::SubRow(unsigned int therow, unsigned int col0 ) const { 
 
   const unsigned int offset = therow*D2 + col0;
 
@@ -693,7 +693,7 @@ SVector<T,N> SMatrix<T,D1,D2>::SubRow(const unsigned int therow, const unsigned 
 
 template <class T, unsigned int D1, unsigned int D2>
 template <unsigned int N>  
-SVector<T,N> SMatrix<T,D1,D2>::SubCol(const unsigned int thecol, const unsigned int row0 ) const { 
+SVector<T,N> SMatrix<T,D1,D2>::SubCol(unsigned int thecol, unsigned int row0 ) const { 
 
   const unsigned int offset = thecol + row0*D1;
 
@@ -710,7 +710,7 @@ SVector<T,N> SMatrix<T,D1,D2>::SubCol(const unsigned int thecol, const unsigned 
 // submatrix
 template <class T, unsigned int D1, unsigned int D2>
 template <unsigned int N1, unsigned int N2>  
-SMatrix<T,N1,N2> SMatrix<T,D1,D2>::Sub(const unsigned int row0, const unsigned int col0) const { 
+SMatrix<T,N1,N2> SMatrix<T,D1,D2>::Sub(unsigned int row0, unsigned int col0) const { 
 
   STATIC_CHECK( N1 <= D1,Smatrix_dimension1_too_small); 
   STATIC_CHECK( N2 <= D2,Smatrix_dimension2_too_small); 
