@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -30,15 +30,15 @@ namespace ROOT { namespace Cintex {
 
   void CINTFunctionBuilder::Setup() {
 
-    Scope ScopeNth = fFunction.DeclaringScope();
-    bool global = ScopeNth.IsTopScope();
+    Scope scope = fFunction.DeclaringScope();
+    bool global = scope.IsTopScope();
 
     if ( global ) {
       G__lastifuncposition();
     }
     else {
-      CINTScopeBuilder::Setup(ScopeNth);
-      string sname = ScopeNth.Name(SCOPED);
+      CINTScopeBuilder::Setup(scope);
+      string sname = scope.Name(SCOPED);
       int ns_tag = G__search_tagname(sname.c_str(),'n');
       G__tag_memfunc_setup(ns_tag);
     }
@@ -71,7 +71,7 @@ namespace ROOT { namespace Cintex {
     string funcname = function.Name();
     int hash, tmp;
 
-    //---Return TypeNth----------------
+    //---Return type ----------------
     Type rt = function.TypeOf().ReturnType();
     reference = rt.IsReference() ? 1 : 0;
     while ( rt.IsTypedef() ) rt = rt.ToType();
@@ -140,4 +140,5 @@ namespace ROOT { namespace Cintex {
                        );
 
   }
+
 }}

@@ -319,7 +319,7 @@ struct DefaultArguments {
   }
   char* f_char( char* c = "string value") { return c; }
   std::string f_string( std::string c = std::string("string value") ) { return c; }
-  DefaultArguments f_defarg( DefaultArguments d = DefaultArguments(9, 9.9), bool b = false ) { return d; }
+  DefaultArguments f_defarg( DefaultArguments d = DefaultArguments(9, 9.9), bool = false ) { return d; }
   int i() { return m_i; }
   double f() { return m_f; }
   int m_i;
@@ -604,6 +604,29 @@ namespace {
   };
 }
 
+//-----Enumeration test--------------------------------------------------------------
+namespace A {
+  enum E1 {
+    one = 1,
+    two = 2,
+    hundred = 100
+  };
+}
+
+enum E2 {
+  E2_one = 1,
+  E2_two = 2,
+  E2_hundred = 100
+};
+
+//----Variable test------------------------------------------------------------------
+int gMyInt = 123;
+
+namespace A {
+  A::B::C::MyClass* gMyPointer = 0;
+}
+
+
 #include <stdexcept>
 
 class ExceptionGenerator {
@@ -612,4 +635,3 @@ class ExceptionGenerator {
     ~ExceptionGenerator() {}
     void doThrow( bool b ) {if (b) throw std::logic_error("My Exception in method"); }
 };
-

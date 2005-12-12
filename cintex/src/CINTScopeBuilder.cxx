@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTScopeBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -26,29 +26,29 @@ using namespace std;
 
 namespace ROOT { namespace Cintex {
 
-  void CINTScopeBuilder::Setup(const Scope& ScopeNth) {
-    if ( ScopeNth ) {
-      if ( ScopeNth.IsTopScope() ) return;
-      Setup( ScopeNth.DeclaringScope() );
+  void CINTScopeBuilder::Setup(const Scope& scope) {
+    if ( scope ) {
+      if (scope.IsTopScope() ) return;
+      Setup( scope.DeclaringScope() );
     }
     else {
-      if ( ScopeNth.Name() == "" ) return;
-      Scope dcl_scope = Scope::ByName(Tools::GetScopeName(ScopeNth.Name(SCOPED)));
+      if ( scope.Name() == "" ) return;
+      Scope dcl_scope = Scope::ByName(Tools::GetScopeName(scope.Name(SCOPED)));
       if( dcl_scope.Id() ) Setup(dcl_scope);
     }
-    string sname = CintName(ScopeNth.Name(SCOPED));
+    string sname = CintName(scope.Name(SCOPED));
     G__linked_taginfo taginfo;
     taginfo.tagnum  = -1;   // >> need to be pre-initialized to be understood by CINT
-    if (ScopeNth.IsNamespace() )  taginfo.tagtype = 'n';
-    else if (ScopeNth.IsClass() ) taginfo.tagtype = 'c';
-    else                       taginfo.tagtype = 'u'; // Undefined!!!
+    if (scope.IsNamespace() )  taginfo.tagtype = 'n';
+    else if (scope.IsClass() ) taginfo.tagtype = 'c';
+    else                       taginfo.tagtype = 'n'; // Undefined. Assume namespace
     taginfo.tagname = sname.c_str();
     taginfo.tagnum = G__defined_tagname(taginfo.tagname, 2);
     G__ClassInfo info(taginfo.tagnum);
     if ( !info.IsLoaded() )  {
       G__get_linked_tagnum(&taginfo);
       //--Setup the namespace---
-      if ( ScopeNth.IsClass() )  {                  //--Setup the class ScopeNth
+      if ( scope.IsClass() )  {                  //--Setup the class scope
         CINTClassBuilder::Get(Type::ByName(sname));
       }
       else {
@@ -67,26 +67,26 @@ namespace ROOT { namespace Cintex {
     return;
   }
 
-  void CINTScopeBuilder::Setup(const Type& TypeNth) {
-    if ( TypeNth.IsFunction() ) {
-      Setup(TypeNth.ReturnType());
-      for ( size_t i = 0; i < TypeNth.FunctionParameterSize(); i++ ) Setup(TypeNth.FunctionParameterAt(i));
+  void CINTScopeBuilder::Setup(const Type& type) {
+    if ( type.IsFunction() ) {
+      Setup(type.ReturnType());
+      for ( size_t i = 0; i < type.FunctionParameterSize(); i++ ) Setup(type.FunctionParameterAt(i));
     }
-    else if ( TypeNth.IsTypedef() ) {
-      CINTTypedefBuilder::Setup(TypeNth);
-      Setup(TypeNth.ToType());
+    else if ( type.IsTypedef() ) {
+      CINTTypedefBuilder::Setup(type);
+      Setup(type.ToType());
     }
-    else if ( TypeNth.IsEnum() ) {
-      CINTEnumBuilder::Setup(TypeNth);
-      Setup(TypeNth.DeclaringScope());
+    else if ( type.IsEnum() ) {
+      CINTEnumBuilder::Setup(type);
+      Setup(type.DeclaringScope());
     }
     else {
-      Scope ScopeNth = TypeNth.DeclaringScope();
-      if ( ScopeNth ) Setup(ScopeNth);
+      Scope scope = type.DeclaringScope();
+      if ( scope ) Setup(scope);
       else {
         // Type not yet defined. Get the ScopeNth anyway...
-        ScopeNth = Scope::ByName(Tools::GetScopeName(TypeNth.Name(SCOPED)));
-        if( ScopeNth.Id() ) Setup(ScopeNth);
+        scope = Scope::ByName(Tools::GetScopeName(type.Name(SCOPED)));
+        if( scope.Id() ) Setup(scope);
       }
     }
   }

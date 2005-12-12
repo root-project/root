@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.5 2005/11/21 17:17:15 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.6 2005/12/02 08:56:21 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -16,6 +16,7 @@
 #include "CINTClassBuilder.h"
 #include "CINTScopeBuilder.h"
 #include "CINTFunctionBuilder.h"
+#include "CINTVariableBuilder.h"
 #include "CINTFunctional.h"
 #include "Api.h"
 #include <list>
@@ -35,25 +36,6 @@ namespace ROOT { namespace Cintex {
     PendingBase( const Type& t, int n, size_t o) : basetype(t), tagnum(n), offset(o) {}
   };
 
-  class CommentBuffer  {
-  private:
-    typedef std::vector<char*> VecC;
-    VecC fC;
-    CommentBuffer() {}
-    ~CommentBuffer()  {
-      for(VecC::iterator i=fC.begin(); i != fC.end(); ++i)
-        delete [] *i;
-      fC.clear();
-    }
-  public:
-    static CommentBuffer& Instance()  {     
-      static CommentBuffer inst;
-      return inst;
-    }
-    void add(char* cm)  {
-      fC.push_back(cm);
-    }
-  };
 
   static list<PendingBase>& pendingBases() {
      static list<PendingBase> s_pendingBases;
@@ -116,12 +98,12 @@ namespace ROOT { namespace Cintex {
 
   void CINTClassBuilder::Setup_tagtable() {
 
-    // Setup ScopeNth
-    Scope ScopeNth = fClass.DeclaringScope();
-    if ( ScopeNth ) CINTScopeBuilder::Setup(ScopeNth);
+    // Setup scope
+    Scope scope = fClass.DeclaringScope();
+    if ( scope ) CINTScopeBuilder::Setup(scope);
     else {
-      ScopeNth = Scope::ByName(Tools::GetScopeName(fClass.Name(SCOPED)));
-      if( ScopeNth.Id() ) CINTScopeBuilder::Setup(ScopeNth);
+      scope = Scope::ByName(Tools::GetScopeName(fClass.Name(SCOPED)));
+      if( scope.Id() ) CINTScopeBuilder::Setup(scope);
     }
 
     // Setup tag number
@@ -160,8 +142,8 @@ namespace ROOT { namespace Cintex {
 
     G__tagtable_setup( fTaginfo->tagnum,    // tag number
                        fClass.SizeOf(),     // size
-                       G__CPPLINK,           // cpplink
-                       rootFlag,             // isabstract
+                       G__CPPLINK,          // cpplink
+                       rootFlag,            // isabstract
                        comment.empty() ? 0 : comment.c_str(), // comment
                        fSetup_memvar,       // G__setup_memvarMyClass
                        fSetup_memfunc);     // G__setup_memfuncMyClass
@@ -193,9 +175,8 @@ namespace ROOT { namespace Cintex {
     for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) 
       CINTScopeBuilder::Setup(fClass.DataMemberAt(i).TypeOf());
 
-    const char* ref_t = "pool::Reference";
-    const char* tok_t = "pool::Token";
     G__tag_memvar_setup(fTaginfo->tagnum);
+
     // Set placeholder for virtual function table if the class is virtual
     if ( fClass.IsVirtual() ) {
       G__memvar_setup((void*)0,'l',0,0,-1,-1,-1,4,"G__virtualinfo=",0,0);
@@ -203,122 +184,9 @@ namespace ROOT { namespace Cintex {
 
     if ( ! IsSTL(fClass.Name(SCOPED)) )  {
       for ( size_t i = 0; i < fClass.DataMemberSize(); i++ ) {
+
         Member dm = fClass.DataMemberAt(i);
-        char* comment = NULL;
-        std::string cm = dm.Properties().HasKey("comment") ? 
-          dm.Properties().PropertyAsString("comment") : std::string("");
-
-        Type t = dm.TypeOf();
-        while ( t.IsTypedef() ) t = t.ToType();
-        if ( !t && dm.IsTransient() )  {
-          if( Cintex::Debug() ) std::cout << "Ignore transient MemberNth: " << fName << "::" 
-            << dm.Name() << " [No valid reflection class]" << std::endl;
-          continue;
-        }
-        else if ( !t )  {
-          if( Cintex::Debug() > 0 )  {
-            std::cout << "WARNING: Member: " << fName << "::" 
-                      << dm.Name() << " [No valid reflection class]"
-                      << std::endl;
-          }
-          //throw std::runtime_error("Member: "+fName+"::"+dm.Name()+" [No valid reflection class]");
-        }
-        //--- Add the necessary artificial comments ------ 
-        if ( dm.IsTransient() ||
-             IsSTL(fName) || 
-             IsTypeOf(fClass, ref_t) || 
-             IsTypeOf(fClass, tok_t) )  {
-          char* com = new char[cm.length()+4];
-          ::sprintf(com,"! %s",cm.c_str());
-          comment = com;
-          CommentBuffer::Instance().add(comment);
-        }
-        else if ( (t.IsClass() || t.IsStruct()) && 
-                  (IsTypeOf(t,ref_t) || IsTypeOf(t,tok_t)) )  {
-          char* com = new char[cm.length()+4];
-          ::sprintf(com,"|| %s",cm.c_str());
-          comment = com;
-          CommentBuffer::Instance().add(comment);
-        }
-        else if ( !cm.empty() )  {
-          char* com = new char[cm.length()+4];
-          ::strcpy(com, cm.c_str());
-          comment = com;
-          CommentBuffer::Instance().add(comment);
-        }
-        Indirection  indir = IndirectionGet(dm.TypeOf());
-        CintTypeDesc type = CintType(indir.second);
-        string dname = dm.Properties().HasKey("ioname") ? 
-                       dm.Properties().PropertyAsString("ioname") : dm.Name();
-        ostringstream ost;
-        if ( t.IsArray() ) ost << dname << "[" << t.ArrayLength() << "]=";
-        else               ost << dname << "=";
-        string expr = ost.str();
-        int member_type     = type.first;
-        int member_indir    = 0;
-        int member_tagnum   = -1;
-        int member_typnum   = -1;
-        int member_isstatic = dm.IsStatic() ? G__LOCALSTATIC : G__AUTO;
-        switch(indir.first)  {
-          case 0: 
-            break;
-          case 1:
-            member_type -= 'a'-'A';            // if pointer: 'f' -> 'F' etc.
-            break;
-          default:
-            member_type -= 'a'-'A';            // if pointer: 'f' -> 'F' etc.
-            member_indir = indir.first;
-          break;
-        }
-
-        if ( type.first == 'u' )  {
-          //dependencies.push_back(indir.second);
-          member_tagnum = CintTag(type.second);
-          if ( typeid(longlong) == indir.second.TypeInfo() )
-            ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGLONG);
-          else if ( typeid(ulonglong) == indir.second.TypeInfo() )
-            ::G__loadlonglong(&member_tagnum, &member_typnum, G__ULONGLONG);
-          else if ( typeid(long double) == indir.second.TypeInfo() )
-            ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGDOUBLE);
-        }
-
-        int member_access = 0;
-        if ( dm.IsPrivate() )        member_access = G__PRIVATE;
-        else if ( dm.IsProtected() ) member_access = G__PROTECTED;
-        else if ( dm.IsPublic() )    member_access = G__PUBLIC;
-
-        if ( Cintex::Debug() > 2 )  {
-          std::cout
-          << std::setw(16) << std::left << "declareField>"
-          << "  [" << char(member_type) 
-          << "," << std::right << std::setw(3) << dm.Offset()
-          << "," << std::right << std::setw(2) << member_indir 
-          << "," << std::right << std::setw(3) << member_tagnum
-          << "] " 
-          << (dm.TypeOf().IsConst() ? "const " : "")
-          << std::left << std::setw(7)
-          << (G__AUTO==member_isstatic ? "auto " : "static ")
-          << std::left << std::setw(24) << dname
-          << " \"" << (char*)(comment ? comment : "(None)") << "\""
-          << std::endl
-          << std::setw(16) << std::left << "declareField>"
-          << "  Type:" 
-          << std::left << std::setw(24) << "["+t.Name(SCOPED)+"]"
-          << " DeclBy:" << fTaginfo->tagname
-          << std::endl;
-        }
-        ::G__memvar_setup((void*)dm.Offset(),                         // p
-                          member_type,                                // type
-                          member_indir,                               // indirection
-                          dm.TypeOf().IsConst(),                        // const
-                          member_tagnum,                              // tagnum
-                          member_typnum,                              // typenum
-                          member_isstatic,                            // statictype
-                          member_access,                              // accessin
-                          expr.c_str(),                               // expression
-                          0,                                          // define macro
-                          comment                                     // comment
-        );
+        CINTVariableBuilder::Setup(dm);
       }
     }
     G__tag_memvar_reset();

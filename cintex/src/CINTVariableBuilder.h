@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Cintex_CINTFunctionBuilder
-#define ROOT_Cintex_CINTFunctionBuilder
+#ifndef ROOT_Cintex_CINTVariableBuilder
+#define ROOT_Cintex_CINTVariableBuilder
 
 #include "Reflex/Type.h"
 #include "CINTdefs.h"
@@ -18,17 +18,17 @@
 namespace ROOT {
   namespace Cintex {
 
-    class CINTFunctionBuilder {
+    class CINTVariableBuilder {
     public:
-      CINTFunctionBuilder(const ROOT::Reflex::Member& m);
-      ~CINTFunctionBuilder();
+      CINTVariableBuilder(const ROOT::Reflex::Member& m);
+      ~CINTVariableBuilder();
       void Setup(void);
       static void Setup(const ROOT::Reflex::Member&);
     private:
-      const ROOT::Reflex::Member&  fFunction;
+      const ROOT::Reflex::Member&  fVariable;
     };
-
+    
   }
 }
 
-#endif // ROOT_Cintex_CINTFunctionBuilder
+#endif // ROOT_Cintex_CINTVariableBuilder

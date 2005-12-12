@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.5 2005/12/07 21:33:59 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,7 +18,9 @@
 #include "Cintex/Cintex.h"
 #include "CINTClassBuilder.h"
 #include "CINTFunctionBuilder.h"
+#include "CINTVariableBuilder.h"
 #include "CINTTypedefBuilder.h"
+#include "CINTEnumBuilder.h"
 #include "ROOTClassEnhancer.h"
 #include <iostream>
 
@@ -90,12 +92,12 @@ namespace ROOT {
 
       ( * Instance().fCallback)( Type::TypeAt(i) );
     }
-    //---Convert to CINT all existing free functions
+    //---Convert to CINT all existing free functions and variables
     for ( size_t n = 0; n < Scope::ScopeSize(); n++ ) {
       Scope ns = Scope::ScopeAt(n);
       if ( ns.IsNamespace() ) {
-        for( size_t m = 0; m < ns.FunctionMemberSize(); m++ ) {
-          ( * Instance().fCallback)( ns.FunctionMemberAt(m) );
+        for( size_t m = 0; m < ns.MemberSize(); m++ ) {
+          ( * Instance().fCallback)( ns.MemberAt(m) );
         }
       }
     }
@@ -128,6 +130,9 @@ namespace ROOT {
     else if ( t.IsTypedef() ) {
       CINTTypedefBuilder::Setup(t);
     }
+    else if ( t.IsEnum() ) {
+      CINTEnumBuilder::Setup(t);
+    } 
   }
   
   void Callback::operator () ( const Member& m ) {
@@ -135,5 +140,9 @@ namespace ROOT {
       if( Cintex::Debug() ) cout << "Building function " << m.Name(SCOPED|QUALIFIED) << endl; 
       CINTFunctionBuilder(m).Setup();
     }
+    else if ( m.IsDataMember() ) {
+      if( Cintex::Debug() ) cout << "Building variable " << m.Name(SCOPED|QUALIFIED) << endl; 
+      CINTVariableBuilder(m).Setup();
+    } 
   }
 }}

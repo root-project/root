@@ -9,10 +9,7 @@ import unittest
 import sys
 
 import PyCintex
-if sys.platform == 'win32' :
- PyCintex.loadDict('test_CintexDict')
-else :
- PyCintex.loadDict('test_CintexDictRflx')
+PyCintex.loadDict('test_CintexTestRflx')
 
 class BasicsTestCase(unittest.TestCase):
   def setUp(self):

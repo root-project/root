@@ -157,9 +157,9 @@ bool test_ReadTransientData() {
 
   Data* d = (Data*)fi.FindObjectAny("d0");
   failUnless(d->checkPattern(0),"Direct");
-  failUnless(d->transient1 == 1,"");
-  failUnless(d->transient2 == 2,"");
-  failUnless(d->transient3 == 3,"");
+  failUnlessEqual(d->transient1, 1,"");
+  failUnlessEqual(d->transient2, 2,"");
+  failUnlessEqual(d->transient3, 3,"");
 
   fi.Close();
   return true;
@@ -167,17 +167,13 @@ bool test_ReadTransientData() {
 
 void test_Persistency()
 {
-  //gROOT->ProcessLine(".O 0");  // Disable CINT optimization
-  if ( strcmp(gSystem->GetBuildArch(),"linux") == 0) { 
-    gSystem->Load("liblcg_Cintex");
-    gSystem->Load("libtest_CintexDictRflx");
-  }
-  else {
-    gSystem->Load("lcg_Cintex");
-    gSystem->Load("test_CintexDict");
-  }
-  Cintex::setDebug(0);
-  Cintex::enable();
+  gSystem->Load("libReflex");
+  gSystem->Load("test_CintexTestRflx");
+  gSystem->Load("libCintex");
+
+
+  Cintex::SetDebug(0);
+  Cintex::Enable();
   
   //gROOT->GetClass("Data")->GetStreamerInfo()->ls();
   cout << "ObjectInitialization: "      << (test_ObjectInitialization()      ? "OK" : "FAIL") << endl;

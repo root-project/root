@@ -46,12 +46,12 @@ CINTEXLL = -Llib -lCintex
 
 GENREFLEXX = ../../../bin/genreflex
 
-TESTD    = $(CINTEXDIR)/test
-TESTLIBD = $(TESTD)/dict
-TESTLIBH = $(TESTLIBD)/CintexTest.h
-TESTLIBS = $(subst .h,_rflx.cpp,$(TESTLIBH))
-TESTLIBO = $(subst .cpp,.o,$(TESTLIBS))
-TESTLIB  = $(subst $(TESTLIBD)/,lib/libtest_,$(subst _rflx.o,Rflx.$(SOEXT),$(TESTLIBO)))
+CINTEXTESTD    = $(CINTEXDIR)/test
+CINTEXTESTLIBD = $(CINTEXTESTD)/dict
+CINTEXTESTLIBH = $(CINTEXTESTLIBD)/CintexTest.h
+CINTEXTESTLIBS = $(subst .h,_rflx.cpp,$(CINTEXTESTLIBH))
+CINTEXTESTLIBO = $(subst .cpp,.o,$(CINTEXTESTLIBS))
+CINTEXTESTLIB  = $(subst $(CINTEXTESTLIBD)/,lib/test_,$(subst _rflx.o,Rflx.$(SOEXT),$(CINTEXTESTLIBO)))
 
 ##### local rules #####
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
@@ -90,16 +90,20 @@ distclean-cintex: clean-cintex
 
 distclean::     distclean-cintex
 
-# test suite
-check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(TESTLIB)
-		export ROOTSYS=`pwd`; root
 
-lib/libtest_%Rflx.$(SOEXT) : $(TESTLIBD)/%_rflx.o
+#### test suite ####
+
+check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTLIB) 
+		export ROOTSYS=`pwd`; bin/root -b -q cintex/test/test_Cintex.C
+		export ROOTSYS=`pwd`; bin/root -b -q cintex/test/test_Persistency.C
+
+lib/test_%Rflx.$(SOEXT) : $(CINTEXTESTLIBD)/%_rflx.o
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
 
 %_rflx.o: %_rflx.cpp
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
 
-$(TESTLIBS):
-		cd $(TESTLIBD); $(GENREFLEXX) CintexTest.h -s selection.xml -I../../../include
+$(CINTEXTESTLIBS) : $(CINTEXTESTLIBH) $(CINTEXTESTLIBD)/selection.xml
+		cd $(CINTEXTESTLIBD); $(GENREFLEXX) CintexTest.h -s selection.xml --quiet --comments
+
 

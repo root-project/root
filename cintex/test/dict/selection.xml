@@ -33,7 +33,15 @@
   
   <class name="Obj"/>
   <class name="ExceptionGenerator"/>
+
   <function pattern="by*"/>
+
+  <enum name="E2"/>
+  <enum name="A::E1"/>
+
+  <variable name="gMyInt"/>
+  <variable pattern="A::g*"/>
+
   <exclusion>
     <class name="A::B::C::MyClass::InnerClass"/>
   </exclusion>

@@ -302,21 +302,28 @@ bool test_ObjectArrays() {
   return true;
 }
 
+bool test_Enums() {
+  failUnlessEqual( A::one, 1,  "Enums: value one");
+  failUnlessEqual( A::two, 2,  "Enums: value two");
+  failUnlessEqual( E2_one, 1,  "Enums: global value one");
+  failUnlessEqual( E2_two, 2,  "Enums: global value two");
+  return true;
+}
+
+bool test_Variables() {
+  failUnlessEqual( gMyInt, 123,  "Variables: global int");
+  failUnlessEqual( A::gMyPointer, 0,  "Variables: namespace pointer");
+  return true;
+}
+
 
 void test_Cintex()
 {
-  if ( strcmp(gSystem->GetBuildArch(),"linux") == 0) { 
-    gSystem->Load("liblcg_Cintex");
-    Cintex::enable();
-    gSystem->Load("libtest_CintexDictRflx");
-  } else {
-    gSystem->Load("lcg_Cintex");
-    gSystem->Load("test_CintexDict");
-    Cintex::setDebug(0);
-    Cintex::enable();
-  }
-//  Cintex::setDebug(1); 
-//  Cintex::enable();
+  gSystem->Load("libReflex");
+  gSystem->Load("libCintex");
+  Cintex::Enable();
+  Cintex::SetDebug(0);
+  gSystem->Load("test_CintexTestRflx");
 
   cout << "DoSomething: "        << (test_DoSomething()        ? "OK" : "FAIL") << endl;
   cout << "PrimitiveArgs: "      << (test_PrimitiveArgs()      ? "OK" : "FAIL") << endl;
@@ -335,4 +342,6 @@ void test_Cintex()
   cout << "NestedClasses: "      << (test_NestedClasses()      ? "OK" : "FAIL") << endl;
   cout << "FunctionPointer: "    << (test_FunctionPointer()    ? "OK" : "FAIL") << endl;
   cout << "ObjectArrays: "       << (test_ObjectArrays()       ? "OK" : "FAIL") << endl;
+  cout << "Enums: "              << (test_Enums()              ? "OK" : "FAIL") << endl;
+  cout << "Variables: "          << (test_Variables()          ? "OK" : "FAIL") << endl;
 }

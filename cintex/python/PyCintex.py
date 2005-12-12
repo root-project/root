@@ -18,7 +18,7 @@ def loadDictionary(name) :
   if sys.platform == 'win32' :
     sc = ROOT.gSystem.Load(name)
   else :
-    sc = ROOT.gSystem.Load('lib' + name)
+    sc = ROOT.gSystem.Load(name)
   if sc == -1 : raise "Error Loading dictionary" 
 loadDict = loadDictionary
 

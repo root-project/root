@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,33 +18,63 @@
 #include "CINTEnumBuilder.h"
 #include "Api.h"
 
+#include <sstream>
 
 using namespace ROOT::Reflex;
 using namespace std;
 
 namespace ROOT { namespace Cintex {
 
-  void CINTEnumBuilder::Setup(const Type& t) {
-    if ( t.IsEnum() )  {
-      string Name = t.Name(SCOPED);
-      int tagnum = ::G__defined_tagname(Name.c_str(), 2);
+  void CINTEnumBuilder::Setup(const Type& e) {
+    if ( e.IsEnum() )  {
+      string name = e.Name(SCOPED);
+      int tagnum = ::G__defined_tagname(name.c_str(), 2);
       if( -1 != tagnum ) return;
 
       if ( Cintex::Debug() )  {
-        std::cout << "Building enum " << Name << std::endl;
+        cout << "Building enum " << name << endl;
       }
 
-      Scope ScopeNth = t.DeclaringScope();
-      CINTScopeBuilder::Setup( ScopeNth );
+      Scope scope = e.DeclaringScope();
+      CINTScopeBuilder::Setup( scope );
 
       G__linked_taginfo taginfo;
       taginfo.tagnum  = -1;
       taginfo.tagtype = 'e';
-      taginfo.tagname = Name.c_str();
+      taginfo.tagname = name.c_str();
       G__get_linked_tagnum(&taginfo);
       tagnum = taginfo.tagnum;
-
       ::G__tagtable_setup( tagnum, sizeof(int), -1, 0,(char*)NULL, NULL, NULL);
+
+      //--- setup enum values -------
+      int isstatic;
+      if ( scope.IsTopScope() ) {
+        isstatic = -1;
+        /* Setting up global variables */
+        ::G__resetplocal();
+      }
+      else {
+        string sname = scope.Name(SCOPED);
+        int stagnum = ::G__defined_tagname(sname.c_str(), 2);
+        isstatic = -2;
+        if( -1 == stagnum ) return;
+        ::G__tag_memvar_setup(stagnum);
+      }
+      for ( size_t i = 0; i < e.DataMemberSize(); i++ ) {
+        stringstream s;
+        s << e.DataMemberAt(i).Name() << "=" << (int)e.DataMemberAt(i).Offset();
+        
+        string item = s.str();
+        if ( Cintex::Debug() ) cout << "  item " << i << " " << item  <<endl;
+        ::G__memvar_setup((void*)G__PVOID, 'i', 0, 1, tagnum, -1, isstatic, 1, item.c_str(), 0, (char*)NULL);
+      }
+      if ( scope.IsTopScope() ) {
+        ::G__resetglobalenv();
+      }
+      else {
+        ::G__tag_memvar_reset();
+      }
+      
     }
   }
 }}
