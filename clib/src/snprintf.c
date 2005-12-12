@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.6 2004/10/06 11:20:50 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.7 2005/12/08 17:36:18 pcanal Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -501,7 +501,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                   case 's':
                      str_val = va_arg(ap, char *);
 
-                     if (str_val == NULL || str_val == -1)
+                     if (str_val == NULL || ((long)str_val) == -1)
                         str_val = "(null)";
 
                      if (!precision_specified)
