@@ -494,39 +494,31 @@ void TGLHistPainter::FillVertices()
    Int_t nY = fLastBinY - fFirstBinY + 1;
 
    if (fLastOption == kLego) {
-      fTable.resize((nX + 1) * (nY + 1));
-      fTable.SetRowLen(nY + 1);
+      fX.resize(nX + 1);
+      fY.resize(nY + 1);
 
       for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir)
-         for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
-            if (fLogX) fTable[i][j].first = TMath::Log10(fAxisX->GetBinLowEdge(ir)) * fScaleX;
-            else fTable[i][j].first = fAxisX->GetBinLowEdge(ir) * fScaleX;
-            if (fLogY) fTable[i][j].second = TMath::Log10(fAxisY->GetBinLowEdge(jr)) * fScaleY;
-            else fTable[i][j].second = fAxisY->GetBinLowEdge(jr) * fScaleY;
-         }
+         if (fLogX) 
+            fX[i] = TMath::Log10(fAxisX->GetBinLowEdge(ir)) * fScaleX;
+         else 
+            fX[i] = fAxisX->GetBinLowEdge(ir) * fScaleX;
+
+      for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr)
+         if (fLogY) 
+            fY[j] = TMath::Log10(fAxisY->GetBinLowEdge(jr)) * fScaleY;
+         else 
+            fY[j] = fAxisY->GetBinLowEdge(jr) * fScaleY;
 
       Double_t maxX = fAxisX->GetBinLowEdge(fLastBinX) + fAxisX->GetBinWidth(fLastBinX);
 
-      for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
-         if (fLogX) fTable[nX][j].first = TMath::Log10(maxX) * fScaleX;
-         else fTable[nX][j].first = maxX * fScaleX;
-         if (fLogY) fTable[nX][j].second = TMath::Log10(fAxisY->GetBinLowEdge(jr)) * fScaleY;
-         else fTable[nX][j].second = fAxisY->GetBinLowEdge(jr) * fScaleY;
-      }
+      if (fLogX) fX[nX] = TMath::Log10(maxX) * fScaleX;
+      else fX[nX] = maxX * fScaleX;
 
       Double_t maxY = fAxisY->GetBinLowEdge(fLastBinY) + fAxisY->GetBinWidth(fLastBinY);
 
-      for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir) {
-         if (fLogX) fTable[i][nY].first = TMath::Log10(fAxisX->GetBinLowEdge(ir)) * fScaleX;
-         else fTable[i][nY].first = fAxisX->GetBinLowEdge(ir) * fScaleX;
-         if (fLogY) fTable[i][nY].second = TMath::Log10(maxY) * fScaleY;
-         else fTable[i][nY].second = maxY * fScaleY;
-      }
+      if (fLogY) fY[nY] = TMath::Log10(maxY) * fScaleY;
+      else fY[nY] = maxY * fScaleY;
 
-      if (fLogX) fTable[nX][nY].first = TMath::Log10(maxX) * fScaleX;
-      else fTable[nX][nY].first = maxX * fScaleX;
-      if (fLogY) fTable[nX][nY].second = TMath::Log10(maxY) * fScaleY;
-      else fTable[nX][nY].second = maxY * fScaleY;
    } else {
       fMesh.resize(nX * nY);
       fMesh.SetRowLen(nY);
@@ -673,12 +665,7 @@ void TGLHistPainter::PaintLego()const
 
    for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir)
       for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
-         Double_t xMin = fTable[i][j].first;
-         Double_t xMax = fTable[i + 1][j].first;
-         Double_t yMin = fTable[i][j].second;
-         Double_t yMax = fTable[i][j + 1].second;
-
-         Double_t zMin = 0.;//fMinZ * fScaleZ;
+         Double_t zMin = 0.;
          Double_t zMax = fHist->GetCellContent(ir, jr);
 
          if (fLogZ)
@@ -689,7 +676,7 @@ void TGLHistPainter::PaintLego()const
          else zMax *= fScaleZ;
 
 
-         DrawBox(xMin, xMax, yMin, yMax, zMin, zMax, fp);
+         DrawBox(fX[i], fX[i + 1], fY[j], fY[j + 1], zMin, zMax, fp);
       }
 
    glDisable(GL_POLYGON_OFFSET_FILL);
@@ -701,12 +688,7 @@ void TGLHistPainter::PaintLego()const
 
    for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir)
       for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
-         Double_t xMin = fTable[i][j].first;
-         Double_t xMax = fTable[i + 1][j].first;
-         Double_t yMin = fTable[i][j].second;
-         Double_t yMax = fTable[i][j + 1].second;
-
-         Double_t zMin = 0.;//fMinZ * fScaleZ;
+         Double_t zMin = 0.;
          Double_t zMax = fHist->GetCellContent(ir, jr);
 
          if (fLogZ)
@@ -717,7 +699,7 @@ void TGLHistPainter::PaintLego()const
          else zMax *= fScaleZ;
 
          
-         DrawBox(xMin, xMax, yMin, yMax, zMin, zMax, fp);
+         DrawBox(fX[i], fX[i + 1], fY[j], fY[j + 1], zMin, zMax, fp);
       }
 
    glPolygonMode(GL_FRONT, GL_FILL);
@@ -1712,8 +1694,9 @@ void TGLHistPainter::DrawLegoProfileX(Int_t plane)const
    const Double_t normal[] = {0., plane == 1 ? 1. : -1., 0.};
 
    for (Int_t i = 0, ir = fFirstBinX; i < nBins; ++i, ++ir) {
-      Double_t xMin = fTable[i][0].first;
-      Double_t xMax = fTable[i + 1][0].first;
+      Double_t xMin = fX[i];
+      Double_t xMax = fX[i + 1];
+
       PD_t z = GetMaxRowContent(ir);
       //MAXROW      
       if (fLogZ) {
@@ -1751,8 +1734,9 @@ void TGLHistPainter::DrawLegoProfileY(Int_t plane)const
    const Double_t normal[] = {plane ? -1. : 1., 0., 0.};
    
    for (Int_t i = 0, ir = fFirstBinY; i < nBins; ++i, ++ir) {
-      Double_t yMin = fTable[0][i].second;
-      Double_t yMax = fTable[0][i + 1].second;
+      Double_t yMin = fY[i];
+      Double_t yMax = fY[i + 1];
+
       PD_t z = GetMaxColumnContent(ir);
       //MAXCOL
       if (fLogZ) {

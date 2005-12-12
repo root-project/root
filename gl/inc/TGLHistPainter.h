@@ -21,6 +21,7 @@
 #endif
 
 namespace Root_GL {
+
    template<class T>
    class T2DArray : public std::vector<T> {
    private:
@@ -110,7 +111,9 @@ private:
    Bool_t               fLogY;
    Bool_t               fLogZ;
    
-   Root_GL::T2DArray<std::pair<Double_t, Double_t> >fTable;
+   std::vector<Double_t> fX;
+   std::vector<Double_t> fY;
+
    Root_GL::T2DArray<TGLVertex3> fMesh;
    Root_GL::T2DArray<std::pair<TGLVector3, TGLVector3> > fFaceNormals;
    Root_GL::T2DArray<TGLVector3> fAverageNormals;
