@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.13 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.14 2005/11/24 17:28:07 couet Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -57,6 +57,7 @@ TMarker3DBox::TMarker3DBox()
    fZ         = 0;
    fTheta     = 0;
    fPhi       = 0;
+   SetBit(kTemporary,kFALSE);
 }
 
 
@@ -77,6 +78,7 @@ TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
    fTheta     = theta;
    fPhi       = phi;
    fRefObject = 0;
+   SetBit(kTemporary,kFALSE);
 }
 
 
@@ -152,7 +154,14 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
    buffer.ClearSectionsValid();
 
    // Section kCore
-   buffer.fID           = this;
+
+   // If we are just a temporary object then no 'real object' to
+   // pass to viewer
+   if (TestBit(kTemporary)) {
+      buffer.fID = 0;
+   } else {
+      buffer.fID           = this;
+   }
    buffer.fColor        = GetLineColor();   
    buffer.fTransparency = 0;    
    buffer.fLocalFrame   = kFALSE; 
@@ -274,6 +283,7 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
 
    //Draw TMarker3DBox with size proportional to cell content
    TMarker3DBox m3;
+   m3.SetBit(kTemporary,kTRUE);
    m3.SetRefObject(h);
    m3.SetDirection(0,0);
    m3.SetLineColor(h->GetMarkerColor());

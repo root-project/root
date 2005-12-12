@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.6 2005/03/09 18:19:25 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.7 2005/11/24 17:28:06 couet Exp $
 // Author: "Valery fine"   31/10/97
 
 /*************************************************************************
@@ -56,6 +56,8 @@ protected:
    Float_t  fTheta;           // Angle of box z axis with respect to main Z axis
    Float_t  fPhi;             // Angle of box x axis with respect to main Xaxis
    TObject *fRefObject;       // Pointer to an object
+
+   enum { kTemporary = BIT(23) }; // Use TObject::fBits to record if we are temporary
 
 public:
    TMarker3DBox();

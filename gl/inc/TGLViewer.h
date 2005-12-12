@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.18 2005/12/05 17:34:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.19 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -129,6 +129,7 @@ private:
    Bool_t            fInternalRebuild;       //! scene rebuild triggered internally/externally?
    Bool_t            fPostSceneBuildSetup;   //! setup viewer after (re)build complete?
    Bool_t            fAcceptedAllPhysicals;  //! did we take all physicals offered in AddObject()
+   Bool_t            fForceAcceptAll;        //! force taking of all logicals/physicals in AddObject()
    Bool_t            fInternalPIDs;          //! using internal physical IDs
    UInt_t            fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
 

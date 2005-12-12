@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.29 2005/12/06 17:52:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.30 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -84,6 +84,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fInternalRebuild(kFALSE), 
    fPostSceneBuildSetup(kTRUE),
    fAcceptedAllPhysicals(kTRUE),
+   fForceAcceptAll(kFALSE),
    fInternalPIDs(kFALSE), 
    fNextInternalPID(1), // 0 reserved
    fComposite(0), fCSLevel(0),
@@ -168,6 +169,9 @@ void TGLViewer::BeginScene()
    {
       // Potentially using external physical IDs
       fInternalPIDs = kFALSE;
+
+      // Reset force acceptance of all
+      fForceAcceptAll = kFALSE;
 
       // Reset camera interest to ensure we respond to
       // new scene range
@@ -362,8 +366,21 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
    }
 
    // TODO: Could be static and save possible double lookup?
-   TGLLogicalShape * logical = fScene.FindLogical(reinterpret_cast<ULong_t>(buffer.fID));
    TGLPhysicalShape * physical = fScene.FindPhysical(physicalID);
+   TGLLogicalShape * logical = 0;
+
+   // If we have a valid (non-zero) ID in buffer see if the logical is already cached
+   if (buffer.fID) {
+      logical = fScene.FindLogical(reinterpret_cast<ULong_t>(buffer.fID));
+   } else if (!fForceAcceptAll) {
+      // If client is passing zero fID buffers we need to force accepting of all
+      // so scene is never rebuilt (we can't detect cached items). Client
+      // can't mix objects in scene with external or zero ids
+      fForceAcceptAll = kTRUE;
+      if (fNextInternalPID > 1) {
+         Error("TGLViewer::AddObject", "zero fID objects can't be mixed with non-zero ones");
+      }
+   }
 
    // Function can be called twice if extra buffer filling for logical 
    // is required - record last physical ID to detect
@@ -395,47 +412,49 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
       }
       // New physical 
       else {
-         // First test interest in camera - requires a bounding box
-         TGLBoundingBox box;
-         
-         // If already have logical use it's BB
-         if (logical) {
-            box = logical->BoundingBox();
-         }
-         // else if bounding box in buffer valid use this
-         else if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
-            box.Set(buffer.fBBVertex);
-
-         // otherwise we need to use raw points to build a bounding box with
-         // If raw sections not set it will be requested by ValidateObjectBuffer
-         // below and we will re-enter here
-         } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
-            box.SetAligned(buffer.NbPnts(), buffer.fPnts);
-         }
-      
-         // Box is valid?
-         if (!box.IsEmpty()) {
-            // Test transformed box with camera
-            box.Transform(TGLMatrix(buffer.fLocalMaster));
-            Bool_t ofInterest = CurrentCamera().OfInterest(box);
-               
-            // For external PID request children if physical of interest
-            if (addChildren &&!fInternalPIDs) {
-               *addChildren = ofInterest;
+         if (!fForceAcceptAll) {
+            // First test interest in camera - requires a bounding box
+            TGLBoundingBox box;
+            
+            // If already have logical use it's BB
+            if (logical) {
+               box = logical->BoundingBox();
             }
+            // else if bounding box in buffer valid use this
+            else if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
+               box.Set(buffer.fBBVertex);
 
-            // Physical is of interest? If not record rejection
-            if (!ofInterest) {
-               ++fRejectedPhysicals;
-               fAcceptedAllPhysicals = kFALSE;
-
-               // Always increment the internal physical ID so they
-               // match external object sequence
-               if (fInternalPIDs) {
-                  fNextInternalPID++;
+            // otherwise we need to use raw points to build a bounding box with
+            // If raw sections not set it will be requested by ValidateObjectBuffer
+            // below and we will re-enter here
+            } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
+               box.SetAligned(buffer.NbPnts(), buffer.fPnts);
+            }
+         
+            // Box is valid?
+            if (!box.IsEmpty()) {
+               // Test transformed box with camera
+               box.Transform(TGLMatrix(buffer.fLocalMaster));
+               Bool_t ofInterest = CurrentCamera().OfInterest(box);
+                  
+               // For external PID request children if physical of interest
+               if (addChildren &&!fInternalPIDs) {
+                  *addChildren = ofInterest;
                }
-               return TBuffer3D::kNone;
-            } 
+
+               // Physical is of interest? If not record rejection
+               if (!ofInterest) {
+                  ++fRejectedPhysicals;
+                  fAcceptedAllPhysicals = kFALSE;
+
+                  // Always increment the internal physical ID so they
+                  // match external object sequence
+                  if (fInternalPIDs) {
+                     fNextInternalPID++;
+                  }
+                  return TBuffer3D::kNone;
+               } 
+            }
          }
       }
 

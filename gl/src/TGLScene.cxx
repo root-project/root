@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.26 2005/12/01 11:04:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.27 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -87,14 +87,24 @@ void TGLScene::AdoptLogical(TGLLogicalShape & shape)
       return;
    }
 
-   // TODO: Very inefficient check - disable
-   assert(fLogicalShapes.find(shape.ID()) == fLogicalShapes.end());
+   // We can have mulitple instance of logical shapes with a zero ID
+   // Very inefficient check - disabled
+   /*if (shape.ID() != 0U) {
+      assert(fLogicalShapes.find(shape.ID()) == fLogicalShapes.end());
+   }*/
    fLogicalShapes.insert(LogicalShapeMapValueType_t(shape.ID(), &shape));
 }
 
 //______________________________________________________________________________
 Bool_t TGLScene::DestroyLogical(ULong_t ID)
 {
+   // Zero ID logical shapes are not unique - this simple means the external object
+   // does not exist - should never be asked to destroy these singularly
+   if (ID == 0U) {
+      Error("TGLScene::DestroyLogical", "asked to destory non-unqiue 0 ID logical shape");
+      return kFALSE;
+   }
+
    // Destroy logical shape defined by unique 'ID'
    // Returns kTRUE if found/destroyed - kFALSE otherwise
    if (fLock != kModifyLock) {
@@ -154,6 +164,13 @@ UInt_t TGLScene::DestroyLogicals()
 //______________________________________________________________________________
 TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
 {
+   // Zero ID logical shapes are not unique - this simple means the external object
+   // does not exist - should never be asked to seach for this
+   if (ID == 0U) {
+      Error("TGLScene::FindLogical", "asked to find non-unqiue 0 ID logical shape");
+      return 0;
+   }
+
    // Find and return logical shape identified by unqiue 'ID' 
    // Returns 0 if not found
    LogicalShapeMapCIt_t it = fLogicalShapes.find(ID);
