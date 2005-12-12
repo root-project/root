@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.5 2005/11/30 13:22:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -79,7 +79,7 @@ namespace ROOT{
                          const std::type_info & ti = typeid(UnknownType));
 
       Type EnumTypeBuilder( const char *, 
-                            const char *,
+                            const char * items = "",
                             const std::type_info & ti = typeid(UnknownType));
 
       Type TypedefTypeBuilder( const char * Name, 

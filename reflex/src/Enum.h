@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -36,6 +36,20 @@ namespace ROOT {
 
          /** destructor */
          virtual ~Enum();
+
+
+         /**
+          * operator Scope will return the corresponding scope of this type if
+          * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
+          */                                       
+         operator Scope() const;
+
+
+         /**
+          * operator Type will return the corresponding Type object
+          * @return Type corresponding to this TypeBase
+          */
+         operator Type() const;
 
 
          /**
@@ -127,6 +141,20 @@ namespace ROOT {
 } //namespace ROOT
 
 #include "Reflex/Member.h"
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Enum::operator ROOT::Reflex::Scope () const {
+//-------------------------------------------------------------------------------
+   return ScopeBase::operator Scope();
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Enum::operator ROOT::Reflex::Type () const {
+//-------------------------------------------------------------------------------
+   return TypeBase::operator Type();
+}
+
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Enum::DataMember_Begin() const {

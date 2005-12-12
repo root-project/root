@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.h,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.h,v 1.3 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -23,22 +23,22 @@ namespace ROOT{
       class Enum;
 
       /**
-       * @class EnumBuilderImpl EnumBuilder.h Reflex/Builder/EnumBuilder.h
+       * @class EnumBuilder EnumBuilder.h Reflex/Builder/EnumBuilder.h
        * @author Stefan Roiser
        * @date 14/3/2005
        * @ingroup RefBld
        */
-      class EnumBuilderImpl {
+      class EnumBuilder {
 
       public:
       
          /** constructor */
-         EnumBuilderImpl( const char * nam,
-                          const std::type_info & ti );
+         EnumBuilder( const char * name,
+                      const std::type_info & ti );
 
 
          /** destructor */
-         virtual ~EnumBuilderImpl() {}
+        virtual ~EnumBuilder();
 
 
          /** 
@@ -48,8 +48,8 @@ namespace ROOT{
           * @param  value the value of the PropertyNth
           * @return a reference to the building class
           */
-         void AddItem ( const char * nam,
-                        long value );
+         EnumBuilder &  AddItem ( const char * nam,
+                                  long value );
 
 
          /** 
@@ -57,8 +57,8 @@ namespace ROOT{
           * @param  key the PropertyNth key
           * @param  value the value of the PropertyNth
           */
-         void AddProperty( const char * key,
-                           Any value );
+         EnumBuilder & AddProperty( const char * key,
+                            Any value );
 
 
          /** 
@@ -66,8 +66,8 @@ namespace ROOT{
           * @param  key the PropertyNth key
           * @param  value the value of the PropertyNth
           */
-         void AddProperty( const char * key,
-                           const char * value );
+         EnumBuilder &  AddProperty( const char * key,
+                                     const char * value );
 
       private:
 
@@ -77,7 +77,7 @@ namespace ROOT{
          /** last added enum item */
          Member fLastMember;
 
-      }; // class EnumBuilderImpl
+      }; // class EnumBuilder
 
 
       /** 
@@ -87,20 +87,20 @@ namespace ROOT{
        * @date 30/3/2004
        */
       template < typename T >
-         class EnumBuilder  {
+         class EnumBuilderT  {
 
          public:            
 
          /** constructor */
-         EnumBuilder();
+         EnumBuilderT();
 
 
          /** constructor */
-         EnumBuilder( const char * nam );
+         EnumBuilderT( const char * nam );
 
 
          /** destructor */
-         virtual ~EnumBuilder() {}
+         virtual ~EnumBuilderT() {}
 
 
          /** 
@@ -109,8 +109,8 @@ namespace ROOT{
           * @param  value the value of the item
           * @return a reference to the building class
           */
-         EnumBuilder & AddItem( const char * nam, 
-                                long value );
+         EnumBuilderT & AddItem( const char * nam, 
+                                 long value );
 
 
          /** 
@@ -121,13 +121,13 @@ namespace ROOT{
           * @return a reference to the building class
           */
          template  < typename P >
-            EnumBuilder & AddProperty( const char * key, 
-                                       P value );
+            EnumBuilderT & AddProperty( const char * key, 
+                                        P value );
 
          private:
 
          /** the enums and values */
-         EnumBuilderImpl fEnumBuilderImpl;
+         EnumBuilder fEnumBuilderImpl;
 
       }; // class EnumBuilder
 
@@ -137,7 +137,7 @@ namespace ROOT{
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::EnumBuilder<T>::EnumBuilder() 
+inline ROOT::Reflex::EnumBuilderT<T>::EnumBuilderT() 
 //-------------------------------------------------------------------------------
    : fEnumBuilderImpl( Tools::Demangle( typeid(T) ).c_str(), 
                        typeid(T) ) {}
@@ -145,7 +145,7 @@ inline ROOT::Reflex::EnumBuilder<T>::EnumBuilder()
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::EnumBuilder<T>::EnumBuilder( const char * nam )
+inline ROOT::Reflex::EnumBuilderT<T>::EnumBuilderT( const char * nam )
 //-------------------------------------------------------------------------------
    : fEnumBuilderImpl( nam, 
                        typeid(UnknownType) ) {}
@@ -153,9 +153,9 @@ inline ROOT::Reflex::EnumBuilder<T>::EnumBuilder( const char * nam )
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::EnumBuilder<T> & 
-ROOT::Reflex::EnumBuilder<T>::AddItem( const char * nam, 
-                                       long value ) {
+inline ROOT::Reflex::EnumBuilderT<T> & 
+ROOT::Reflex::EnumBuilderT<T>::AddItem( const char * nam, 
+                                        long value ) {
 //-------------------------------------------------------------------------------
    fEnumBuilderImpl.AddItem( nam, value );
    return * this;
@@ -164,9 +164,9 @@ ROOT::Reflex::EnumBuilder<T>::AddItem( const char * nam,
 
 //-------------------------------------------------------------------------------
 template < typename T > template < typename P >
-inline ROOT::Reflex::EnumBuilder<T> & 
-ROOT::Reflex::EnumBuilder<T>::AddProperty( const char * key, 
-                                           P value ) {
+inline ROOT::Reflex::EnumBuilderT<T> & 
+ROOT::Reflex::EnumBuilderT<T>::AddProperty( const char * key, 
+                                            P value ) {
 //-------------------------------------------------------------------------------
    fEnumBuilderImpl.AddProperty( key, value );
    return * this;

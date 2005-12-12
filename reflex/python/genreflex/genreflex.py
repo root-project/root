@@ -51,6 +51,8 @@ class genreflex:
                <properties prop1="value1" [prop2="value2"]/>
              </class>
              <function [name="funcname"] [pattern="wildname"] />
+             <enum [name="enumname"] [patter="wildname"] />
+             <variable [name="varname"] [patter="wildname"] />
            [</selection>]
            <exclusion>
              <class [name="classname"] [pattern="wildname"] />
@@ -221,7 +223,9 @@ class genreflex:
       dg.parse(xmlfile)
       classes   = dg.selclasses(self.selector, self.deep)
       functions = dg.selfunctions(self.selector)
-      cnames, warnings, errors = dg.generate(dicfile, classes, functions )
+      enums     = dg.selenums(self.selector)
+      variables = dg.selvariables(self.selector)
+      cnames, warnings, errors = dg.generate(dicfile, classes, functions, enums, variables )
       total_warnings += warnings
     #------------Produce Seal Capabilities source file------
       if self.capabilities :

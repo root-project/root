@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -12,6 +12,7 @@
 #include "Reflex/Builder/VariableBuilder.h"
 
 #include "Namespace.h"
+#include "DataMember.h"
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
@@ -73,29 +74,30 @@ ROOT::Reflex::VariableBuilder::VariableBuilder( const char * nam,
                                                 unsigned int modifiers) 
    : fDataMember( Member()) {
 //-------------------------------------------------------------------------------
-   std::string sname = std::string( nam );
-   size_t pos = sname.rfind( "::" );
-   std::string declScope = sname.substr( pos + 2 );
-   std::string memName = sname.substr( 0, pos );
-  
+   std::string declScope = Tools::GetScopeName(nam);
+   std::string memName = Tools::GetBaseName(nam);
+   
    Scope sc = Scope::ByName(declScope);
   
    if ( ! sc ) {
       sc = (new Namespace(declScope.c_str()))->ThisScope();
    }
   
-   if ( ! sc.IsNamespace()) throw RuntimeError("Declaring At is not a namespace");
+   if ( ! sc.IsNamespace()) throw RuntimeError("Declaring scope is not a namespace");
 
-   sc.AddDataMember( memName.c_str(),
-                     typ,
-                     offs,
-                     modifiers );
+   DataMember* dm = new DataMember( memName.c_str(),
+                                    typ,
+                                    offs,
+                                    modifiers );
+   sc.AddDataMember(Member(dm));
+   fDataMember = Member(dm);
 }
 
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::VariableBuilder::~VariableBuilder() {
 //-------------------------------------------------------------------------------
+  
    FireFunctionCallback( fDataMember );
 }
 

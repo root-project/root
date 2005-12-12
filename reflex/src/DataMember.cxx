@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: DataMember.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: DataMember.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -49,12 +49,12 @@ std::string ROOT::Reflex::DataMember::Name( unsigned int mod ) const {
       if ( IsMutable())         { s += "mutable ";   }
    }
 
-   if ( DeclaringScope().IsEnum()) {
+   if ( mod & SCOPED && DeclaringScope().IsEnum()) {
       if ( DeclaringScope().DeclaringScope()) {
          std::string sc = DeclaringScope().DeclaringScope().Name(SCOPED);
          if ( sc != "::" ) s += sc + "::";
       }
-      s += MemberBase::Name( mod & FINAL & QUALIFIED );
+      s += MemberBase::Name( mod & ~SCOPED );
    }
    else {
       s += MemberBase::Name( mod );

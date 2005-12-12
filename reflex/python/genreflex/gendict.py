@@ -20,6 +20,8 @@ class genDictionary(object) :
     self.basictypes = []
     self.methods    = []
     self.functions  = []
+    self.enums      = []
+    self.variables  = []
     self.vtables    = {}
     self.hfile      = os.path.normpath(hfile).replace(os.sep,'/')
     self.pool       = opts.get('pool',False)
@@ -36,7 +38,7 @@ class genDictionary(object) :
     self.warnings   = 0
     self.comments           = opts.get('comments', False)
     self.no_membertypedefs  = opts.get('no_membertypedefs', False)
-    self.selectionname      = 'ROOT::Reflex::selection'
+    self.selectionname      = 'ROOT::Reflex::Select'
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
@@ -54,6 +56,10 @@ class genDictionary(object) :
       self.classes.append(attrs)
     elif name in ('Function',) :
       self.functions.append(attrs)
+    elif name in ('Enumeration',) :
+      self.enums.append(attrs)
+    elif name in ('Variable',) :
+      self.variables.append(attrs)
     elif name in ('OperatorFunction',) :
       attrs['operator'] = 'true'
       self.functions.append(attrs)
@@ -212,6 +218,26 @@ class genDictionary(object) :
           selec.append(f)
     return selec
 #----------------------------------------------------------------------------------
+  def selenums(self, sel) :
+    selec = []
+    self.selector = sel  # remember the selector
+    if self.selector :
+      for e in self.enums :
+        ename = self.genTypeName(e['id'])
+        if self.selector.selenum( ename ) and not self.selector.excenum( ename ) :
+          selec.append(e)
+    return selec
+#---------------------------------------------------------------------------------
+  def selvariables(self, sel) :
+    selec = []
+    self.selector = sel  # remember the selector
+    if self.selector :
+      for v in self.variables :
+        varname = self.genTypeName(v['id'])
+        if self.selector.selvariable( varname ) and not self.selector.excvariable( varname ) :
+          selec.append(v)
+    return selec
+#----------------------------------------------------------------------------------
   def getdependent(self, cid, types ) :
     elem  = self.xref[cid]['elem']
     attrs = self.xref[cid]['attrs']
@@ -232,7 +258,7 @@ class genDictionary(object) :
             if b[:8]  == 'private:'   : b = b[8:]
             self.getdependent(b, types)
 #----------------------------------------------------------------------------------
-  def generate(self, file, selclasses, selfunctions) :
+  def generate(self, file, selclasses, selfunctions, selenums, selvariables) :
     names = []
     f = open(file,'w') 
     f.write(self.genHeaders(False))
@@ -252,7 +278,7 @@ class genDictionary(object) :
         f_shadow += self.genClassShadow(c)
     f_shadow += '}\n\n'
     f_buffer += self.genFunctionsStubs( selfunctions )
-    f_buffer += self.genInstantiateDict(selclasses, selfunctions)
+    f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write(self.genAllTypes())
     f.write(f_shadow)
     f.write(f_buffer)
@@ -289,6 +315,7 @@ class genDictionary(object) :
     else                                            : return 0
 #----------------------------------------------------------------------------------
   def filefilter(self, attrs):
+    if self.genTypeName(attrs['id'])[:len(self.selectionname)] == self.selectionname : return 0
     fileid = attrs['file']
     if self.files[fileid]['name'] == self.hfile : return 1
     else : return 0
@@ -414,10 +441,12 @@ class genDictionary(object) :
     c += 'using namespace ROOT::Reflex;\n\n'
     return c
 #----------------------------------------------------------------------------------
-  def genInstantiateDict( self, selclasses, selfunctions) :
+  def genInstantiateDict( self, selclasses, selfunctions, selenums, selvariables) :
     c = 'namespace {\n  struct Dictionaries {\n    Dictionaries() {\n'
     c += self.genNamespaces(selclasses)
     c += self.genFunctions(selfunctions)
+    c += self.genEnums(selenums)
+    c += self.genVariables(selvariables)
     for attrs in selclasses :
       if 'incomplete' not in attrs : 
         clf = self.genTypeName(attrs['id'], colon=True)
@@ -495,38 +524,41 @@ class genDictionary(object) :
     clt = string.translate(str(cls), self.transtable)
     typ = self.xref[attrs['id']]['elem'].lower()
     indent = inner * 2 * ' '
-    if not bases : 
-      c = indent + '%s %s {\n%s  public:\n' % (typ, clt, indent)
-    else :
-      c = indent + '%s %s : ' % (typ, clt)
-      for b in bases :
-        if b.get('virtual','') == '1' : acc = 'virtual ' + b['access']
-        else                          : acc = b['access']
-        c += indent + '%s %s' % ( acc , self.genTypeName(b['type'],colon=True) )
-        if b is not bases[-1] : c += ', ' 
-      c += indent + ' {\n' + indent +'  public:\n'
-    c += indent + '  %s();\n' % (clt)
-    if  self.isClassVirtual( attrs ) :
-      c += indent + '  virtual ~%s() throw();\n' % ( clt )
-    members = attrs.get('members','')
-    memList = members.split()
-    for m in memList :
-      member = self.xref[m]
-      if member['elem'] in ('Class','Struct') :
-        c += self.genClassShadow(member['attrs'], inner + 1)
-    for m in memList :
-      member = self.xref[m]
-      if member['elem'] in ('Field',) :
-        a = member['attrs']
-        t = self.genTypeName(a['type'],colon=True,const=True)
-        noPublicType = self.checkAccessibleType(self.xref[a['type']])
-        if ( noPublicType ) :
-          t = string.translate(str(t), self.transtable2)[2:]
-          c += self.genClassShadow(self.xref[noPublicType]['attrs'])
-        if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
-        elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
-        else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
-    c += indent + '};\n'
+    if typ == 'enumeration' :
+      c = indent + 'enum %s {};\n' % clt
+    else:
+      if not bases : 
+        c = indent + '%s %s {\n%s  public:\n' % (typ, clt, indent)
+      else :
+        c = indent + '%s %s : ' % (typ, clt)
+        for b in bases :
+          if b.get('virtual','') == '1' : acc = 'virtual ' + b['access']
+          else                          : acc = b['access']
+          c += indent + '%s %s' % ( acc , self.genTypeName(b['type'],colon=True) )
+          if b is not bases[-1] : c += ', ' 
+        c += indent + ' {\n' + indent +'  public:\n'
+      c += indent + '  %s();\n' % (clt)
+      if  self.isClassVirtual( attrs ) :
+        c += indent + '  virtual ~%s() throw();\n' % ( clt )
+      members = attrs.get('members','')
+      memList = members.split()
+      for m in memList :
+        member = self.xref[m]
+        if member['elem'] in ('Class','Struct') :
+          c += self.genClassShadow(member['attrs'], inner + 1)
+      for m in memList :
+        member = self.xref[m]
+        if member['elem'] in ('Field',) :
+          a = member['attrs']
+          t = self.genTypeName(a['type'],colon=True,const=True)
+          noPublicType = self.checkAccessibleType(self.xref[a['type']])
+          if ( noPublicType ) :
+            t = string.translate(str(t), self.transtable2)[2:]
+            c += self.genClassShadow(self.xref[noPublicType]['attrs'])
+          if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
+          elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
+          else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
+      c += indent + '};\n'
     return c    
 #----------------------------------------------------------------------------------
   def genTypedefBuild(self, attrs, childs) :
@@ -544,7 +576,10 @@ class genDictionary(object) :
     if self.isUnnamedType(name) :
       s += '  .AddEnum("%s", "%s", &typeid(UnnamedEnum))' % (name[name.rfind('::')+3:], values) 
     else :
-      s += '  .AddEnum< %s >("%s")' % (name, values)
+      if attrs.get('access') in ('protected','private'):
+        s += '  .AddEnum("%s", "%s")' % (name, values)        
+      else:
+        s += '  .AddEnum("%s", "%s", &typeid(%s))' % (name, values, name)
     return s 
 #----------------------------------------------------------------------------------
   def genScopeName(self, attrs, enum=False, const=False, colon=False) :
@@ -640,6 +675,8 @@ class genDictionary(object) :
         for a in args : c += ', '+ self.genTypeID(a['type'])
         c += ')'
         return c
+      elif elem in ('Variable',) :
+        self.genTypeID(attrs['type'])
       else :
         pass
     # Add this type in the list of types...
@@ -688,9 +725,10 @@ class genDictionary(object) :
         elif elem == 'Enumeration' :
           sc = self.genTypeName(attrs['context'])
           if sc : sc += '::'
-          items = self.xref[id]['subelems']
-          values = string.join([ item['name'] + '=' + item['init'] for item in items],';"\n  "')          
-          c += 'EnumTypeBuilder("' + sc + attrs['name'] + '", "' + values + '");\n'
+          # items = self.xref[id]['subelems']
+          # values = string.join([ item['name'] + '=' + item['init'] for item in items],';"\n  "')          
+          #c += 'EnumTypeBuilder("' + sc + attrs['name'] + '", "' + values + '");\n'
+          c += 'EnumTypeBuilder("' + sc + attrs['name'] + '");\n'
         else :
          name = ''
          if 'context' in attrs :
@@ -785,6 +823,31 @@ class genDictionary(object) :
       i += 1;
     return s
 #----------------------------------------------------------------------------------
+  def genEnums(self, selenums) :
+    s = ''
+    i = 0;
+    for e in selenums :
+      id   = e['id']
+      cname = self.genTypeName(id, colon=True)
+      name  = self.genTypeName(id)
+      s += '      EnumBuilder("%s",typeid(%s))' % (name, cname)
+      items = self.xref[id]['subelems']
+      for item in items :
+        s += '\n        .AddItem("%s",%s)' % (item['name'], item['init'])
+      s += ';\n'
+    return s
+#----------------------------------------------------------------------------------
+  def genVariables(self, selvars) :
+    s = ''
+    i = 0;
+    for v in selvars :
+      id   = v['id']
+      cname = self.genTypeName(id, colon=True)
+      name  = self.genTypeName(id)
+      mod   = self.genModifier(v, None)
+      s += '      VariableBuilder("%s", %s, (size_t)&%s, %s );\n' % (name, self.genTypeID(v['type']),self.genTypeName(id), mod)
+    return s
+ #----------------------------------------------------------------------------------
   def countColonsForOffset(self, name) :
     prn = 0
     cnt = 0

@@ -46,10 +46,16 @@ ifeq ($(PLATFORM),win32)
 GENREFLEX = bin/genreflex.bat
 GNRFLX_L1 = "" #"@echo off"
 GNRFLX_L2 = "" #"python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
+GENRFLXRC = bin/genreflex-rootcint.bat
+GRFLXRC_L1 = "" #"@echo off"
+GRFLXRC_L2 = "" #"python %~d0%~p0\..\lib\python\genreflex\genreflex-rootcint.py %*"
 else
 GENREFLEX = bin/genreflex
 GNRFLX_L1 = "\#!/bin/csh -f"
 GNRFLX_L2 = 'python $$0:h/../lib/python/genreflex/genreflex.py $$*'
+GENRFLXRC = bin/genreflex-rootcint
+GRFLXRC_L1 = "\#!/bin/csh -f"
+GRFLXRC_L2 = 'python $$0:h/../lib/python/genreflex/genreflex-rootcint.py $$*'
 endif
 
 # test suite
@@ -105,7 +111,14 @@ ifneq ($(PLATFORM),win32)
 		@chmod a+x $(GENREFLEX)
 endif
 
-$(REFLEXLIB): $(GENREFLEX) $(REFLEXO) $(ORDER_) $(MAINLIBS)
+$(GENRFLXRC) : $(GRFLXPYC)
+		@echo $(GRFLXRC_L1) > $(GENRFLXRC)
+		@echo $(GRFLXRC_L2) >> $(GENRFLXRC)
+ifneq ($(PLATFORM),win32)
+		@chmod a+x $(GENRFLXRC)
+endif
+
+$(REFLEXLIB): $(GENREFLEX) $(GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
@@ -162,5 +175,5 @@ $(RFLX_UNITTESTO) : %.o : %.cxx
 		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI) -Ireflex -c $< -o $@
 
 $(RFLX_UNITTESTX) : % : %.o
-		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL)
+		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL) -ldl
 

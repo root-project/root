@@ -12,13 +12,19 @@ import os, sys, string, time, fnmatch
 class selClass :
 #----------------------------------------------------------------------------------
   def __init__(self, file, parse=0):
-    self.file       = file
+    self.file           = file
     self.sel_classes    = []
     self.exc_classes    = []
     self.sel_functions  = []
     self.exc_functions  = []
+    self.sel_enums      = []
+    self.exc_enums      = []
+    self.sel_vars       = []
+    self.exc_vars       = []
     self.classes   = self.sel_classes
     self.functions = self.sel_functions
+    self.enums     = self.sel_enums
+    self.vars      = self.sel_vars
     if parse : self.parse()
 #----------------------------------------------------------------------------------
   def parse(self):
@@ -59,9 +65,13 @@ class selClass :
           n_name = n_name.replace(e[0],e[1])
         n_name = n_name.replace(' ','')
         attrs['n_name'] = n_name
-    if name in ('function','operator'):
+    elif name in ('function','operator'):
       self.functions.append({'attrs':attrs})
       if 'name' in attrs :  attrs['name'] = attrs['name'].replace(' ','')
+    elif name in ('enum',):
+      self.enums.append({'attrs':attrs})
+    elif name in ('variable',):
+      self.vars.append({'attrs':attrs})
     elif name in ('field',) :
       self.classes[-1]['fields'].append(attrs)
     elif name in ('method',) :
@@ -153,6 +163,34 @@ class selClass :
       attrs = f['attrs']
       if 'name' in attrs  and attrs['name'] == funcname : return attrs 
       if 'pattern' in attrs and matchpattern(funcname, attrs['pattern']) : return attrs
+    return None
+#----------------------------------------------------------------------------------
+  def selenum(self, enumname ) :
+    for enum in self.sel_enums :
+      attrs = enum['attrs']
+      if 'name' in attrs and attrs['name'] == enumname :  return attrs
+      if 'pattern' in attrs and matchpattern(enumname,attrs['pattern']) : return attrs
+    return None
+#----------------------------------------------------------------------------------
+  def excenum(self, enumname ) :
+    for enum in self.exc_enums :
+      attrs = enum['attrs']
+      if 'name' in attrs  and attrs['name'] == enumname : return attrs 
+      if 'pattern' in attrs and matchpattern(enumname, attrs['pattern']) : return attrs
+    return None
+#----------------------------------------------------------------------------------
+  def selvariable(self, varname ) :
+    for var in self.sel_vars :
+      attrs = var['attrs']
+      if 'name' in attrs and attrs['name'] == varname :  return attrs
+      if 'pattern' in attrs and matchpattern(varname,attrs['pattern']) : return attrs
+    return None
+#----------------------------------------------------------------------------------
+  def excvariable(self, varname ) :
+    for var in self.exc_vars :
+      attrs = var['attrs']
+      if 'name' in attrs  and attrs['name'] == varname : return attrs 
+      if 'pattern' in attrs and matchpattern(varname, attrs['pattern']) : return attrs
     return None
 #----------------------------------------------------------------------------------
   def reportUnusedClasses(self) :

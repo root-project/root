@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -526,8 +526,8 @@ namespace g {
 }
 void ReflexBuilderUnitTest::enumbuilder()
 {  
-  EnumBuilder<enum1>().AddItem("a", val_a).AddItem("b", val_b).AddItem("c", val_c);
-  EnumBuilder<g::enum2>().AddItem("i", g::i).AddItem("j", g::j).AddItem("k", g::k);
+  EnumBuilderT<enum1>().AddItem("a", val_a).AddItem("b", val_b).AddItem("c", val_c);
+  EnumBuilderT<g::enum2>().AddItem("i", g::i).AddItem("j", g::j).AddItem("k", g::k);
   Type e1 = Type::ByName("enum1");
   CPPUNIT_ASSERT(e1);
   CPPUNIT_ASSERT(e1.IsEnum());

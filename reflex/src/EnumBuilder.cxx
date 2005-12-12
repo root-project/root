@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -10,44 +10,53 @@
 // This software is provided "as is" without express or implied warranty.
 
 #include "Reflex/Builder/EnumBuilder.h"
-
 #include "Reflex/Member.h"
+#include "Reflex/Callback.h"
 
 #include "DataMember.h"
 #include "Enum.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::EnumBuilderImpl::EnumBuilderImpl( const char * nam,
-                                                const std::type_info & ti ) {
+ROOT::Reflex::EnumBuilder::EnumBuilder( const char * nam,
+                                        const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
    fEnum = new Enum( nam, ti );
 }
 
+//-------------------------------------------------------------------------------
+ROOT::Reflex::EnumBuilder::~EnumBuilder() {
+//-------------------------------------------------------------------------------
+   FireClassCallback( *fEnum );
+}
+
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::EnumBuilderImpl::AddItem( const char * nam,
-                                             long value ) {  
+ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddItem( const char * nam,
+                                                                long value ) {  
 //-------------------------------------------------------------------------------
    fEnum->AddDataMember( Member(new DataMember( nam, 
                                                 Type::ByName("int"), 
                                                 value, 
                                                 0 )));
+   return *this;
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::EnumBuilderImpl::AddProperty( const char * key,
-                                                 Any value ) {
+ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddProperty( const char * key,
+                                                                    Any value ) {
 //-------------------------------------------------------------------------------
    if ( fLastMember ) fLastMember.Properties().AddProperty( key , value );
    else                fEnum->Properties().AddProperty( key, value );
+   return *this;
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::EnumBuilderImpl::AddProperty( const char * key,
-                                                 const char * value ) {
+ROOT::Reflex::EnumBuilder &  ROOT::Reflex::EnumBuilder::AddProperty( const char * key,
+                                                                     const char * value ) {
 //-------------------------------------------------------------------------------
    AddProperty( key, Any(value));
+   return *this;
 }
 
