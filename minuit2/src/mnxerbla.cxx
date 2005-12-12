@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: mnxerbla.cpp,v 1.2.2.3 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: mnxerbla.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -12,10 +12,7 @@
 	-lf2c -lm   (in that order)
 */
 
-#if defined(__alpha) 
-#define __USE_STD_IOSTREAM
-#endif
-
+#include "Minuit2/MnConfig.h"
 #include <iostream>
 
 namespace ROOT {

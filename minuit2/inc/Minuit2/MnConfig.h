@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnConfig.h,v 1.1.2.2 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnConfig.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -26,15 +26,5 @@
 #if defined(__sun) && !defined(linux) 
 #include <stdlib.h>
 #endif
-
-namespace ROOT {
-
-   namespace Minuit2 {
-
-
-
-  }  // namespace Minuit2
-
-}  // namespace ROOT
 
 #endif
