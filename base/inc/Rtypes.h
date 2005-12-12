@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.54 2005/12/09 23:33:16 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.55 2005/12/10 23:00:59 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -140,6 +140,7 @@ const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
 
 R__EXTERN Int_t gDebug;
 
+
 //---- ClassDef macros ---------------------------------------------------------
 
 typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp, char *R__parent);
@@ -232,17 +233,6 @@ namespace ROOT {
 #ifndef ROOT_TGenericClassInfo
 #include "TGenericClassInfo.h"
 #endif
-
-#ifdef __REFLEX__
-
-// When generating Reflex dictionaries the generation of ClassDef/Imp funcitons 
-// shall be disabled as they are simulated by Cintex.
-#define ClassDef(name,id)
-#define ClassImp(name)
-#define ClassDefT(name,id)
-#define ClassImpT(name,Tmpl)
-
-#else
 
 // Common part of ClassDef definition.
 // ImplFileLine() is not part of it since CINT uses that as trigger for
@@ -389,7 +379,6 @@ public: \
 #define ClassDef3T2(name,Tmpl1,Tmpl2,Tmpl3)
 #define ClassImp3T(name,Tmpl1,Tmpl2,Tmpl3) templateClassImp(name)
 
-#endif // __REFLEX__
 
 //---- Macro to set the class version of non instrumented classes --------------
 
