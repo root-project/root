@@ -91,5 +91,11 @@ distclean-proofx: clean-proofx
 distclean::     distclean-proofx
 
 ##### extra rules ######
+ifeq ($(ARCH),linuxicc)
+# remove when xrootd has moved from strstream.h -> sstream.
+$(PROOFXO): %.o: %.cxx $(XROOTDETAG)
+	$(CXX) $(OPT) -Wno-deprecated $(CXXFLAGS) $(PROOFXINCEXTRA) -o $@ -c $<
+else
 $(PROOFXO): %.o: %.cxx $(XROOTDETAG)
 	$(CXX) $(OPT) $(CXXFLAGS) $(PROOFXINCEXTRA) -o $@ -c $<
+endif
