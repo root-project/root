@@ -300,6 +300,7 @@ check_library() {
             i="$i64"
         fi
         for l in $i ; do
+            l=`echo $l | sed 's,^//,/,'`
             if test ! -d $l ; then
 		continue
             fi
@@ -319,20 +320,21 @@ check_library() {
                         else
                             found_dir=$l
                             found_lib=$j
-                            break 4
+                            # skip cygwin libraries when in pure Win32 mode
+                            if test "x$platform" = "xwin32"; then
+                                case $found_dir in
+                                    /lib|/lib/*|/usr/*) found_dir="no" ;;
+                                    *) break 4;;
+                                esac
+                            else
+                              break 4
+                            fi
                         fi
                     fi
                 done
             done
         done
     done
-
-    # skip cygwin libraries when in pure Win32 mode
-    if test "x$platform" = "xwin32"; then
-        case $found_dir in
-           /lib|/lib/*|/usr/*) found_dir="no" ;;
-        esac
-    fi
 
     echo $found_dir
     unset libs
@@ -429,17 +431,18 @@ check_header()  {
             if test -r $i/$j ; then
                 found_dir=$i
                 found_hdr=$j
-                break 2
+                # skip cygwin headers when in pure Win32 mode
+                if test "x$platform" = "xwin32"; then
+                    case $found_dir in
+                        /usr/*) found_dir="no" ;;
+                        *) break 2;;
+                    esac
+                else
+                    break 2
+                fi
             fi
         done
     done
-
-    # skip cygwin headers when in pure Win32 mode
-    if test "x$platform" = "xwin32"; then
-        case $found_dir in
-           /usr/*) found_dir="no" ;;
-        esac
-    fi
 
     echo $found_dir
 
@@ -1994,7 +1997,8 @@ fi
 #
 if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
-    pythonhdrdirs="$PYTHONDIR/include/python2.4 $PYTHONDIR/include/python2.3 \
+    pythonhdrdirs="\
+        $PYTHONDIR/include/python2.4 $PYTHONDIR/include/python2.3 \
         $PYTHONDIR/include/python2.2 $PYTHONDIR/include \
         /Library/Frameworks/Python.framework/Versions/2.4/include/python2.4 \
         /System/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4 \
@@ -2003,8 +2007,8 @@ if test ! "x$enable_python" = "xno" ; then
         /usr/local/include/python2.4 /usr/local/include/python2.3 \
         /usr/local/include/python2.2 \
         /usr/include/python2.4 /usr/include/python2.3 /usr/include/python2.2"
-    if test "x$platform" = win32 ; then
-	pythonhdrdirs="$pythonhdrdirs 
+    if test "x$platform" = xwin32 ; then
+	pythonhdrdirs="$pythonhdrdirs \
         /cygdrive/c/Python24/include /cygdrive/c/Python23/include \
         /cygdrive/c/Python22/include"
     fi
@@ -2013,7 +2017,7 @@ if test ! "x$enable_python" = "xno" ; then
     pythonincdir=$found_dir
 
     pythonlibdirs="\
-	$PYTHONDIR/lib/python2.4/config $PYTHONDIR/lib/python2.3/config \
+        $PYTHONDIR/lib/python2.4/config $PYTHONDIR/lib/python2.3/config \
         $PYTHONDIR/lib/python2.2/config $PYTHONDIR/lib $PYTHONDIR/libs \
         /Library/Frameworks/Python.framework/Versions/2.4 \
         /System/Library/Frameworks/Python.framework/Versions/2.4 \
@@ -2024,7 +2028,7 @@ if test ! "x$enable_python" = "xno" ; then
         /usr/lib/python2.4/config /usr/lib/python2.3/config \
         /usr/lib/python2.2/config"
 
-    if test "x$platform" = win32 ; then
+    if test "x$platform" = xwin32 ; then
 	pythonlibdirs="$pythonlibdirs \
         /cygdrive/c/Python24/libs /cygdrive/c/Python23/libs \
         /cygdrive/c/Python22/libs"
