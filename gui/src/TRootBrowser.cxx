@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.85 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.86 2005/11/25 13:39:43 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1462,7 +1462,6 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
          }
          Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
       }
-      BrowseTextFile(obj->GetName());
 
       ////////// new TFile was opened. Add it to the browser /////
       if (gFile && (wasf != gFile) && ext.EndsWith(".root")) {
@@ -1479,6 +1478,8 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
             return;
          }
       }
+
+      BrowseTextFile(obj->GetName());
 
       /////////////// cache and change file's icon ///////////////////////
       TVirtualPad *nowp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
