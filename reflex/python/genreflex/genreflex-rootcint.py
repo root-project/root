@@ -113,7 +113,7 @@ if __name__ == "__main__":
   rc.gen_temp_header()
 
   gr = genreflex.genreflex()
-  gr_args = ['',rc.dict_header,'-o',rc.dict_filename,'-I.','-Iinclude','-DTRUE=1','-DFALSE=0','-Dexternalref=extern','-DSYSV','-D__MAKECINT__']
+  gr_args = ['',rc.dict_header,'-o',rc.dict_filename,'-I.','-Iinclude','-DTRUE=1','-DFALSE=0','-Dexternalref=extern','-DSYSV','-D__MAKECINT__','-DR__EXTERN=extern']
   gr_args += rc.gccxml_ppopts
   gr.parse_args(gr_args)
   gr.check_files_dirs()
