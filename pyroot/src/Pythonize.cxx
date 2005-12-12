@@ -12,6 +12,7 @@
 #include "PyBufferFactory.h"
 #include "FunctionHolder.h"
 #include "Converters.h"
+#include "MemoryRegulator.h"
 
 // ROOT
 #include "TClass.h"
@@ -545,11 +546,6 @@ namespace {
                 &ObjectProxy_Type, &self, &idx, &ObjectProxy_Type, &pyobj ) )
          return 0;
 
-      if ( ! pyobj->GetObject() ) {
-         PyErr_SetString( PyExc_ValueError, "can not copy null object; use del for deletion" );
-         return 0;
-      }
-
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
       if ( ! pyindex )
          return 0;
@@ -575,10 +571,13 @@ namespace {
          cla->RemoveAt( index );
       }
 
-   // accessing an entry will result get new, unitialized memory (if properly used)
-      void* address = (*cla)[index];
-      pyobj->Release();
-      memcpy( address, pyobj->GetObject(), cla->GetClass()->Size() );
+      if ( pyobj->GetObject() ) {
+      // accessing an entry will result get new, unitialized memory (if properly used)
+         TObject* object = (*cla)[index];
+         pyobj->Release();
+         TMemoryRegulator::RegisterObject( pyobj, object );
+         memcpy( (void*)object, pyobj->GetObject(), cla->GetClass()->Size() );
+      }
 
       Py_INCREF( Py_None );
       return Py_None;
