@@ -1624,13 +1624,14 @@ fi
 if test ! "x$enable_monalisa" = "xno"; then
     # Check for Monalisa include and library
     check_header "ApMon.h" "$monalisaincdir" $MONALISA $MONALISA/include \
-	/usr/local/include /opt/monalisa/include /usr/include
+	/usr/local/include /opt/alien/api/include /opt/monalisa/include \
+        /usr/include
     monalisainc=$found_hdr
     monalisaincdir=$found_dir
 
     check_library "libapmoncpp" "$enable_shared" "$monalisalibdir" \
-	$MONALISA $MONALISA/lib /usr/local/lib /opt/monalisa/lib \
-	/usr/lib
+	$MONALISA $MONALISA/lib /usr/local/lib /opt/alien/api/lib \
+        /opt/monalisa/lib /usr/lib
     monalisalib=$found_lib
     monalisalibdir=$found_dir
 
