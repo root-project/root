@@ -414,6 +414,20 @@ void TSessionServerFrame::OnBtnConnectClicked()
 
    TVirtualProofDesc *desc;
    fViewer->GetActDesc()->fProofMgr = TVirtualProofMgr::Create(url);
+   if (!fViewer->GetActDesc()->fProofMgr->IsValid()) {
+      // hide connection progress bar from status bar
+      fViewer->GetStatusBar()->GetBarPart(0)->HideFrame(fViewer->GetConnectProg());
+      // release busy flag
+      fViewer->SetBusy(kFALSE);
+      // restore cursors and input
+      gVirtualX->SetCursor(GetId(), 0);
+      gVirtualX->GrabButton(fViewer->GetSessionHierarchy()->GetId(), kAnyButton,
+            kAnyModifier, kButtonPressMask | kButtonReleaseMask, kNone, kNone);
+      fViewer->GetSessionHierarchy()->AddInput(kPointerMotionMask |
+            kEnterWindowMask | kLeaveWindowMask | kKeyPressMask);
+      gVirtualX->SetCursor(fViewer->GetSessionHierarchy()->GetId(), 0);
+      return;
+   }
    fViewer->UpdateListOfSessions();
    // check if the session already exist before to recreate it
    TList *sessions = fViewer->GetActDesc()->fProofMgr->QuerySessions("");
