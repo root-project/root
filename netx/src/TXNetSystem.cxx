@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.cxx,v 1.61 2005/05/31 13:29:12 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.1 2005/10/27 16:36:38 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -83,7 +83,6 @@ TXNetSystem::TXNetSystem(const char *url) : TNetSystem()
    if (fClientAdmin->Connect()) {
       fIsXRootd = kTRUE;
    } else {
-#if 1
       if (fgRootdBC) {
          Bool_t isRootd =
             (fClientAdmin->GetClientConn()->GetServerType() == XrdClientConn::kSTRootd);
@@ -144,15 +143,6 @@ TXNetSystem::TXNetSystem(const char *url) : TNetSystem()
                "while opening the connection at %s - exit", url);
          return;
       }
-
-#else
-      if (fClientAdmin->GetClientConn()->GetServerType() == XrdClientConn::kSTRootd) {
-         fIsXRootd = kFALSE;
-         if (gDebug > 1)
-            Info("TXNetSystem","Calling TNetSystem::Create");
-         TNetSystem::Create(url);
-      }
-#endif
    }
 
    return;
@@ -161,16 +151,7 @@ TXNetSystem::TXNetSystem(const char *url) : TNetSystem()
 //_____________________________________________________________________________
 TXNetSystem::~TXNetSystem()
 {
-   // Dtor
-
-#if 0
-   if (fIsRootd) {
-      if (gDebug > 1)
-         Info("~TXNetSystem","Calling TNetFile::Close");
-      TNetSystem::Close(opt);
-      return;
-   }
-#endif
+   // Destructor
 
    if (fIsXRootd && fClientAdmin)
       delete fClientAdmin;
@@ -258,6 +239,11 @@ void TXNetSystem::InitXrdClient()
    TString autolog = gEnv->GetValue("XSec.Pwd.AutoLogin","1");
    if (autolog.Length() > 0)
       gSystem->Setenv("XrdSecPWDAUTOLOG",autolog.Data());
+
+   // Old style netrc file
+   TString netrc;
+   netrc.Form("%s/.rootnetrc",gSystem->HomeDirectory());
+   gSystem->Setenv("XrdSecNETRC", netrc.Data());
 
    TString alogfile = gEnv->GetValue("XSec.Pwd.ALogFile","");
    if (alogfile.Length() > 0)

@@ -50,7 +50,7 @@ NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 
 # Xrootd client libs
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-		$(XROOTDDIRL)/libXrdSec.a $(XROOTDDIRL)/libXrdNet.a
+		$(XROOTDDIRL)/libXrdNet.a
 
 ##### local rules #####
 include/%.h:    $(NETXDIRI)/%.h

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.17 2005/10/27 16:36:38 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.18 2005/12/09 16:24:34 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -164,6 +164,11 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
       TString autolog = gEnv->GetValue("XSec.Pwd.AutoLogin","1");
       if (autolog.Length() > 0)
          gSystem->Setenv("XrdSecPWDAUTOLOG",autolog.Data());
+
+      // Old style netrc file
+      TString netrc;
+      netrc.Form("%s/.rootnetrc",gSystem->HomeDirectory());
+      gSystem->Setenv("XrdSecNETRC", netrc.Data());
 
       TString alogfile = gEnv->GetValue("XSec.Pwd.ALogFile","");
       if (alogfile.Length() > 0)
@@ -481,14 +486,30 @@ void TXNetFile::Open(Option_t *option)
    if (create || update || recreate)
       fWritable = 1;
    //
+   // Update requires the file existing: check that and switch to create,
+   // if the file is not found.
+   if (update) {
+      if (gSystem->AccessPathName(fUrl.GetUrl(), kFileExists)) {
+         update = kFALSE;
+         create = kTRUE;
+      }
+      if (update) {
+         if (gSystem->AccessPathName(fUrl.GetUrl(), kWritePermission)) {
+            Error("Open", "no write permission, could not open file %s",
+                          fUrl.GetUrl());
+            return;
+         }
+         openOpt |= kXR_open_updt;
+      }
+   }
+
+   //
    // Create and Recreate are correlated
    if (recreate) {
       openOpt |= kXR_delete;
    } else if (create) {
       openOpt |= kXR_new;
    }
-   if (update)
-      openOpt |= kXR_open_updt;
    if (read)
       openOpt |= kXR_open_read;
 

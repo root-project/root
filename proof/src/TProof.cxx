@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.126 2005/11/14 21:36:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.128 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -438,11 +438,11 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    }
 
    // Start slaves
-   if (!StartSlaves(parallelStartup, attach)) return 0;
+   if (!StartSlaves(parallelStartup, attach))
+      return 0;
 
-   if (fgSemaphore) {
+   if (fgSemaphore)
      SafeDelete(fgSemaphore);
-   }
 
    // we are now properly initialized
    fValid = kTRUE;
@@ -480,7 +480,8 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
    if (IsMaster()) {
 
       // Parse the config file
-      TProofResourcesStatic *resources = new TProofResourcesStatic(fConfDir, fConfFile);
+      TProofResourcesStatic *resources =
+         new TProofResourcesStatic(fConfDir, fConfFile);
       fConfFile = resources->GetFileName(); // Update the global file name (with path)
       PDB(kGlobal,1)
          Info("StartSlaves", "using PROOF config file: %s", fConfFile.Data());
@@ -702,6 +703,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                   Error("StartSlaves",
                         "client and remote protocols not compatible (%d and %d)",
                         kPROOF_Protocol, fProtocol);
+                  slave->Close("S");
                   delete slave;
                   return kFALSE;
                }
@@ -710,11 +712,18 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                fAllMonitor->Add(slave->GetSocket());
                Collect(slave);
                if (slave->GetStatus() == -99) {
+                  fSlaves->Remove(slave);
+                  fAllMonitor->Remove(slave->GetSocket());
+                  slave->Close("S");
+                  delete slave;
                   Error("StartSlaves", "not allowed to connect to PROOF master server");
                   return 0;
                }
 
                if (!slave->IsValid()) {
+                  fSlaves->Remove(slave);
+                  fAllMonitor->Remove(slave->GetSocket());
+                  slave->Close("S");
                   delete slave;
                   Error("StartSlaves",
                         "failed to setup connection with PROOF master server");

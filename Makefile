@@ -55,12 +55,12 @@ SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gcc)
-MODULES      += unix x11 x11ttf x3d rootx rpdutils rootd proofd
+MODULES      += unix x11 x11ttf x3d rootx
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
-MODULES      += unix x11 x11ttf x3d rootx rpdutils rootd proofd
+MODULES      += unix x11 x11ttf x3d rootx
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
@@ -176,6 +176,12 @@ endif
 ifeq ($(BUILDPEAC),yes)
 MODULES      += peac
 endif
+ifneq ($(ARCH),win32)
+MODULES      += rpdutils rootd proofd
+endif
+ifeq ($(BUILDXRD),yes)
+MODULES      += proofx
+endif
 
 -include MyModules.mk   # allow local modules
 
@@ -184,7 +190,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd proof dcache chirp hbook alien asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
-                qt qtroot xrootd netx clarens peac oracle xmlparser \
+                qt qtroot xrootd netx proofx clarens peac oracle xmlparser \
                 mathcore mathmore reflex cintex roofit minuit2 monalisa
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif

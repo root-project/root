@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.17 2005/09/27 16:10:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.18 2005/09/28 14:51:05 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -64,10 +64,11 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
 
    // title label
    char buf[256];
-   sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel slaves:",
+   sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel workers:",
            fProof ? fProof->GetMaster() : "<dummy>",
            fProof ? fProof->GetParallel() : 0);
-   fDialog->AddFrame(new TGLabel(fDialog, buf),
+   fTitleLab = new TGLabel(fDialog, buf),
+   fDialog->AddFrame(fTitleLab,
                      new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
    sprintf(buf,"Selector: %s", selector);
    fSelector = new TGLabel(fDialog, buf);
@@ -231,6 +232,12 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    // Reset dialog box preparing for new query
    char buf[512];
 
+   // Update title
+   sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel workers:",
+           fProof ? fProof->GetMaster() : "<dummy>",
+           fProof ? fProof->GetParallel() : 0);
+   fTitleLab->SetText(buf);
+
    // Reset members
    fFiles         = files;
    fFirst         = first;
@@ -274,7 +281,14 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
 
+   char buf[256];
    static const char *cproc[] = { "running", "done", "STOPPED", "ABORTED" };
+
+   // Update title
+   sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel workers:",
+           fProof ? fProof->GetMaster() : "<dummy>",
+           fProof ? fProof->GetParallel() : 0);
+   fTitleLab->SetText(buf);
 
    if (total < 0)
       total = fPrevTotal;
@@ -284,7 +298,6 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
    if (fPrevProcessed == processed)
       return;
 
-   char buf[256];
    if (fEntries != total) {
       fEntries = total;
       sprintf(buf, "%d files, number of events %lld, starting event %lld",

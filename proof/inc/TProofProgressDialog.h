@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.7 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.8 2005/08/31 11:11:06 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -56,6 +56,7 @@ private:
    TGCheckButton      *fLogQueryToggle;
    TGTextBuffer       *fTextQuery;
    TGTextEntry        *fEntry;
+   TGLabel            *fTitleLab;
    TGLabel            *fFilesEvents;
    TGLabel            *fProcessed;
    TGLabel            *fTotal;
