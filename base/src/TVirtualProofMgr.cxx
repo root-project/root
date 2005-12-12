@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.23 2005/11/14 21:36:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.1 2005/12/10 16:51:57 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -203,7 +203,6 @@ TVirtualProofMgr *TVirtualProofMgr::Create(const char *url, Int_t loglevel,
 {
    // Static method returning the appropriate TProofMgr object using
    // the plugin manager.
-
    TVirtualProofMgr *m= 0;
 
    // Make sure we do not have already a manager for this URL
@@ -212,29 +211,35 @@ TVirtualProofMgr *TVirtualProofMgr::Create(const char *url, Int_t loglevel,
       TIter nxm(lm);
       while ((m = (TVirtualProofMgr *)nxm()))
          if (m->MatchUrl(url))
-            return m;
+            if (m->IsValid()) {
+               return m;
+            } else {
+               fgListOfManagers.Remove(m);
+               SafeDelete(m);
+               break;
+            }
    }
 
    m = 0;
    TPluginHandler *h = 0;
+   Bool_t trystd = kTRUE;
 
    // If required, we assume first that the remote server is based on XrdProofd
    if (xpd) {
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualProofMgr", "xpd")) &&
            h->LoadPlugin() == 0) {
          m = (TVirtualProofMgr *) h->ExecPlugin(3, url, loglevel, alias);
-         if (m && !(m->IsValid()))
-            SafeDelete(m);
+         // Update trystd flag
+         trystd = (m && !(m->IsValid()) && m->IsProofd()) ? kTRUE : kFALSE;
       }
    }
 
    // If the first attempt failed, we instantiate an old interface
-   if (!m) {
+   if (trystd) {
+      SafeDelete(m);
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualProofMgr", "std")) &&
-         h->LoadPlugin() == 0) {
+           h->LoadPlugin() == 0) {
          m = (TVirtualProofMgr *) h->ExecPlugin(3, url, loglevel, alias);
-         if (m && !(m->IsValid()))
-            SafeDelete(m);
       }
    }
 
