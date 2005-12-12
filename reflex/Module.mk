@@ -44,11 +44,11 @@ endif
 
 ifeq ($(PLATFORM),win32)
 GENREFLEX = bin/genreflex.bat
-GNRFLX_L1 = "" #"@echo off"
-GNRFLX_L2 = "" #"python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
+GNRFLX_L1 = "@echo off"
+GNRFLX_L2 = "python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
 GENRFLXRC = bin/genreflex-rootcint.bat
-GRFLXRC_L1 = "" #"@echo off"
-GRFLXRC_L2 = "" #"python %~d0%~p0\..\lib\python\genreflex\genreflex-rootcint.py %*"
+GRFLXRC_L1 = "@echo off"
+GRFLXRC_L2 = "python %~d0%~p0\..\lib\python\genreflex\genreflex-rootcint.py %*"
 else
 GENREFLEX = bin/genreflex
 GNRFLX_L1 = "\#!/bin/csh -f"

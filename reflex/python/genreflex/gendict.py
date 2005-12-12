@@ -38,6 +38,7 @@ class genDictionary(object) :
     self.warnings   = 0
     self.comments           = opts.get('comments', False)
     self.no_membertypedefs  = opts.get('no_membertypedefs', False)
+    self.generated_shadow_classes = []
     self.selectionname      = 'ROOT::Reflex::Select'
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
@@ -518,6 +519,7 @@ class genDictionary(object) :
     return 0
 #----------------------------------------------------------------------------------
   def genClassShadow(self, attrs, inner = 0 ) :
+    self.generated_shadow_classes.append(attrs['id'])
     bases = self.getBases( attrs['id'] )
     if inner : cls = attrs['name']
     else     : cls = self.genTypeName(attrs['id'])
@@ -544,7 +546,7 @@ class genDictionary(object) :
       memList = members.split()
       for m in memList :
         member = self.xref[m]
-        if member['elem'] in ('Class','Struct') :
+        if member['elem'] in ('Class','Struct'):
           c += self.genClassShadow(member['attrs'], inner + 1)
       for m in memList :
         member = self.xref[m]
@@ -552,9 +554,11 @@ class genDictionary(object) :
           a = member['attrs']
           t = self.genTypeName(a['type'],colon=True,const=True)
           noPublicType = self.checkAccessibleType(self.xref[a['type']])
-          if ( noPublicType ) :
-            t = string.translate(str(t), self.transtable2)[2:]
-            c += self.genClassShadow(self.xref[noPublicType]['attrs'])
+          if ( noPublicType ):
+            noPubTypeAttrs = self.xref[noPublicType]['attrs']
+            if ( noPubTypeAttrs['id'] not in self.generated_shadow_classes ):
+              t = string.translate(str(t), self.transtable2)[2:]
+              c += self.genClassShadow(noPubTypeAttrs)
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
           elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
           else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
