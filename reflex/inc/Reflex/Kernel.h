@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.6 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.7 2005/12/12 14:40:45 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -23,7 +23,9 @@
 #endif
 
 #if defined(__alpha) && !defined(__linux)
+#ifndef __USE_STD_IOSTREAM
 #define __USE_STD_IOSTREAM
+#endif
 #endif
 
 // Some pragmas to avoid warnings in VisualC
