@@ -59,16 +59,20 @@ $(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(ORDER_) $(MAINLIBS)
 		   "$(SMATRIXO) $(SMATRIXDO)"             \
 		   "$(SMATRIXLIBEXTRA)"
 
-
 $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		@echo "for files $(SMATRIXDH1)"
 		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL)
 #		python reflex/python/genreflex/genreflex.py $(SMATRIXDIRS)/Dict.h -I$(SMATRIXDIRI) --selection_file=$(SMATRIXDIRS)/Selection.xml -o $(SMATRIXDIRS)/G__Smatrix.cxx
 
-
+ifeq ($(ARCH),linuxicc)
+# silence warning messages about subscripts being out of range
+$(SMATRIXDO):  $(SMATRIXDS)
+		$(CXX) $(NOOPT) -wd175 $(CXXFLAGS) -I. -I$(SMATRIXDIRI) -o $@ -c $<
+else
 $(SMATRIXDO):  $(SMATRIXDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(SMATRIXDIRI) -o $@ -c $<
+endif
 
 all-smatrix:   $(SMATRIXLIB)
 
@@ -86,8 +90,9 @@ clean::         clean-smatrix
 distclean-smatrix: clean-smatrix
 		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDH) $(SMATRIXLIB)
 		@rm -rf include/Math
+		-@cd $(SMATRIXDIR)/test && $(MAKE) distclean
 
 distclean::     distclean-smatrix
 
 test-smatrix: 	all-smatrix
-		@cd $(SMATRIXDIR)/test; make
+		@cd $(SMATRIXDIR)/test && $(MAKE)
