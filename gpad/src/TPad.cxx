@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.214 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.215 2005/11/28 08:58:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5443,6 +5443,10 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // (if any), otherwise a default 'pad' type is returned
 
    Bool_t validType = kFALSE;
+   
+   if (strstr(type, "ogle") && ! fCanvas->UseGL())
+      type = "pad";
+   
    if (type && type[0]) {
       // Extract plugins types supporting TVirtualViewer3D - cannot be done
       // directly with plugin manager at present
