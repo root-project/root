@@ -66,6 +66,7 @@ private:
 
    enum EGLPaintOption {
       kLego,//for lego and lego1
+      kLego2,
       kSurface,
       kSurface1,
       kSurface2,
@@ -178,6 +179,7 @@ private:
    void           SetGLParameters();
 
    void           PaintLego()const;
+   void           PaintLego2()const;
    void           PaintSurface()const;
    void           PaintSurface4()const;
    void           PaintSurface1()const;
@@ -207,8 +209,12 @@ private:
    Bool_t         Select(Int_t x, Int_t y)const;
    void           SelectAxes(Int_t front, Int_t x, Int_t y)const;           
    //
-   static void    DrawBox(Double_t xmin, Double_t xmax, Double_t ymin, 
-                          Double_t ymax, Double_t zmin, Double_t zmax, Int_t frontPoint);
+   static void    DrawBoxFront(Double_t xmin, Double_t xmax, Double_t ymin, 
+                               Double_t ymax, Double_t zmin, Double_t zmax,
+                               Int_t frontPoint);
+   void           DrawBoxFrontTextured(Double_t xmin, Double_t xmax, Double_t ymin, 
+                                       Double_t ymax, Double_t zmin, Double_t zmax,
+                                       Int_t frontPoint)const;
    static void    DrawFlatFace(const TGLVertex3 &v1, const TGLVertex3 &v2, 
                                const TGLVertex3 &v3, const TGLVector3 &normal);
    static void    DrawFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,

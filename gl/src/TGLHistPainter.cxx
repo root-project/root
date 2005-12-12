@@ -297,6 +297,9 @@ void TGLHistPainter::Paint()
    case kLego :
       PaintLego();
       break;
+   case kLego2 :
+      PaintLego2();
+      break;
    case kSurface:
       PaintSurface();
       break;
@@ -318,15 +321,23 @@ TGLHistPainter::EGLPaintOption TGLHistPainter::GetPaintOption(const TString &o)
 
    std::string option(o.Data());
    std::string::size_type start = option.find("lego");
+   std::string::size_type len = 0;
 
    if (start != std::string::npos)
-      if (option.length() == 5 && option[4] == '1' || option.length() == 4)
+      if ((len = option.length()) == 5) {// && option[4] == '1' || option.length() == 4)
+         switch (option[4]) {
+         case '1':
+            return kLego; //will be kLego1 in future
+         case '2':
+            return kLego2;
+         }
+      } else if (len == 4)
          return kLego;
    
    start = option.find("surf");
    
    if (start != std::string::npos)
-      if (option.length() == 5)
+      if ((len = option.length()) == 5)
          switch (option[4]) {
          case '1':
             return kSurface1;
@@ -335,7 +346,7 @@ TGLHistPainter::EGLPaintOption TGLHistPainter::GetPaintOption(const TString &o)
          case '4':
             return kSurface4;
          }
-      else if(option.length() == 4)
+      else if(len == 4)
          return kSurface;
          
    return kUnsupported;
@@ -493,7 +504,7 @@ void TGLHistPainter::FillVertices()
    Int_t nX = fLastBinX - fFirstBinX + 1;
    Int_t nY = fLastBinY - fFirstBinY + 1;
 
-   if (fLastOption == kLego) {
+   if (fLastOption == kLego || fLastOption == kLego2) {
       fX.resize(nX + 1);
       fY.resize(nY + 1);
 
@@ -518,7 +529,6 @@ void TGLHistPainter::FillVertices()
 
       if (fLogY) fY[nY] = TMath::Log10(maxY) * fScaleY;
       else fY[nY] = maxY * fScaleY;
-
    } else {
       fMesh.resize(nX * nY);
       fMesh.SetRowLen(nY);
@@ -621,7 +631,7 @@ void TGLHistPainter::InitGL()const
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
 
-   if (fLastOption == kLego)//with lego we should avoid back faces (or lego is really sloooow)
+   if (fLastOption == kLego || fLastOption == kLego2)//with lego we should avoid back faces (or lego is really sloooow)
       glEnable(GL_CULL_FACE), glCullFace(GL_BACK);
    else //for surface we cannot cull faces, because we can look at the surface "from bottom"
       glDisable(GL_CULL_FACE);
@@ -665,7 +675,6 @@ void TGLHistPainter::PaintLego()const
 
    for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir)
       for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
-         Double_t zMin = 0.;
          Double_t zMax = fHist->GetCellContent(ir, jr);
 
          if (fLogZ)
@@ -675,8 +684,7 @@ void TGLHistPainter::PaintLego()const
                zMax = TMath::Log10(zMax) * fScaleZ;
          else zMax *= fScaleZ;
 
-
-         DrawBox(fX[i], fX[i + 1], fY[j], fY[j + 1], zMin, zMax, fp);
+         DrawBoxFront(fX[i], fX[i + 1], fY[j], fY[j + 1], 0., zMax, fp);
       }
 
    glDisable(GL_POLYGON_OFFSET_FILL);
@@ -688,7 +696,6 @@ void TGLHistPainter::PaintLego()const
 
    for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir)
       for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
-         Double_t zMin = 0.;
          Double_t zMax = fHist->GetCellContent(ir, jr);
 
          if (fLogZ)
@@ -698,8 +705,104 @@ void TGLHistPainter::PaintLego()const
                zMax = TMath::Log10(zMax) * fScaleZ;
          else zMax *= fScaleZ;
 
-         
-         DrawBox(fX[i], fX[i + 1], fY[j], fY[j + 1], zMin, zMax, fp);
+         DrawBoxFront(fX[i], fX[i + 1], fY[j], fY[j + 1], 0., zMax, fp);
+      }
+
+   glPolygonMode(GL_FRONT, GL_FILL);
+   glEnable(GL_LIGHTING);
+
+   //restore material properties from stack
+   glPopAttrib();
+
+   DrawZeroPlane();
+
+   glFlush();
+   //now, gl drawing is finished, axes are drawn by TVirtualX
+   DrawAxes(fp);
+}
+
+//______________________________________________________________________________
+void TGLHistPainter::PaintLego2()const
+{
+   //Draws lego2 and "profiles" on the back planes
+
+   SetCamera();
+   //main light
+   const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
+   glLightfv(GL_LIGHT0, GL_POSITION, pos);
+
+   SetTransformation();
+   
+   Int_t fp = FrontPoint();
+   DrawFrame(fp);
+
+   glPushAttrib(GL_LIGHTING_BIT);
+   const Float_t spec[] = {1.f, 1.f, 1.f, 1.f};
+   glMaterialfv(GL_FRONT, GL_SPECULAR, spec);
+   glMaterialf(GL_FRONT, GL_SHININESS, 80.);
+   Float_t diff[] = {0.9f, 0.9f, 0.9f, 1.f};
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, diff);//without it I can get random mixture of texture and color
+
+   glEnable(GL_TEXTURE_1D);
+   glEnable(GL_DEPTH_TEST);
+   glShadeModel(GL_SMOOTH);
+   
+   if (!glIsTexture(fTextureName)) {
+      glGenTextures(1, &fTextureName);
+   }
+
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   glBindTexture(GL_TEXTURE_1D, fTextureName);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, kTexLength, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, fTexture);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+   
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(1.f, 1.f);
+
+   //cycle through table
+   Int_t nX = fLastBinX - fFirstBinX + 1;
+   Int_t nY = fLastBinY - fFirstBinY + 1;
+
+   for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir)
+      for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
+         Double_t zMax = fHist->GetCellContent(ir, jr);
+
+         if (fLogZ)
+            if (zMax <= 0.)
+               continue;//I simply ignore this bizzare situation
+            else 
+               zMax = TMath::Log10(zMax) * fScaleZ;
+         else zMax *= fScaleZ;
+
+         DrawBoxFrontTextured(fX[i], fX[i + 1], fY[j], fY[j + 1], 0., zMax, fp);
+      }
+      
+   glDisable(GL_POLYGON_OFFSET_FILL);
+
+   glDisable(GL_TEXTURE_1D);      
+   glDeleteTextures(1, &fTextureName);
+   
+      //outlines cycle
+   glDisable(GL_LIGHTING);
+   glColor3d(0., 0., 0.);
+   glPolygonMode(GL_FRONT, GL_LINE);
+
+   for (Int_t i = 0, ir = fFirstBinX; i < nX; ++i, ++ir)
+      for (Int_t j = 0, jr = fFirstBinY; j < nY; ++j, ++jr) {
+         Double_t zMax = fHist->GetCellContent(ir, jr);
+
+         if (fLogZ)
+            if (zMax <= 0.)
+               continue;//I simply ignore this bizzare situation
+            else 
+               zMax = TMath::Log10(zMax) * fScaleZ;
+         else zMax *= fScaleZ;
+
+         DrawBoxFront(fX[i], fX[i + 1], fY[j], fY[j + 1], 0., zMax, fp);
       }
 
    glPolygonMode(GL_FRONT, GL_FILL);
@@ -992,7 +1095,7 @@ void TGLHistPainter::SetGLParameters()
 }
 
 //______________________________________________________________________________
-void TGLHistPainter::DrawBox(Double_t xmin, Double_t xmax, Double_t ymin, 
+void TGLHistPainter::DrawBoxFront(Double_t xmin, Double_t xmax, Double_t ymin, 
                              Double_t ymax, Double_t zmin, Double_t zmax, Int_t fp)
 {
    //Draws lego's bar as 3d box
@@ -1097,6 +1200,161 @@ void TGLHistPainter::DrawBox(Double_t xmin, Double_t xmax, Double_t ymin,
       glVertex3d(xmax, ymax, zmax);
       glVertex3d(xmax, ymax, zmin);
       glVertex3d(xmin, ymax, zmin);
+      glVertex3d(xmin, ymax, zmax);
+      glEnd();
+      break;
+   }
+}
+
+//______________________________________________________________________________
+void TGLHistPainter::DrawBoxFrontTextured(Double_t xmin, Double_t xmax, Double_t ymin, 
+                                          Double_t ymax, Double_t zmin, Double_t zmax,
+                                          Int_t fp)const
+{
+   //Draws lego's bar as 3d box
+   
+   if (zmax < zmin) 
+      std::swap(zmax, zmin);
+
+   Double_t zRange = fMaxZScaled - fMinZScaled;
+
+   //top and bottom are always drawn (though I can skip one them)
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., 1.);
+   glTexCoord1d((zmax - fMinZScaled) / zRange);   
+   glVertex3d(xmax, ymin, zmax);
+   glTexCoord1d((zmax - fMinZScaled) / zRange);   
+   glVertex3d(xmax, ymax, zmax);
+   glTexCoord1d((zmax - fMinZScaled) / zRange);   
+   glVertex3d(xmin, ymax, zmax);
+   glTexCoord1d((zmax - fMinZScaled) / zRange);
+   glVertex3d(xmin, ymin, zmax);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+   glNormal3d(0., 0., -1.);
+   glTexCoord1d((zmin - fMinZScaled) / zRange);
+   glVertex3d(xmax, ymin, zmin);
+   glTexCoord1d((zmin - fMinZScaled) / zRange);
+   glVertex3d(xmin, ymin, zmin);
+   glTexCoord1d((zmin - fMinZScaled) / zRange);
+   glVertex3d(xmin, ymax, zmin);
+   glTexCoord1d((zmin - fMinZScaled) / zRange);
+   glVertex3d(xmax, ymax, zmin);
+   glEnd();
+
+   //two back faces cannot be seen, I know, which point is front, so I can
+   //escape passing to polygons to gl.
+   //For example : plane 0, I draw it only if front point is 3 or 0
+   /*
+               | z
+               |
+               |       |
+               |   0   |
+               |      3|
+            |1 0----|--3 ------>y
+            | / 2   | /
+            |/      |/
+            1-------2
+           / 
+          /
+           x
+   */
+
+   switch (fp) {
+   case 0://0 is the front point, draw planes 0 and 1
+      glBegin(GL_POLYGON);
+      glNormal3d(-1., 0., 0.);//plane 0
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmax);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymax, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymax, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmin);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glNormal3d(0., -1., 0.);//plane 1
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmax);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmin);
+      glEnd();
+      break;
+   case 1://1 is the front point, draw planes 1 and 2
+      glBegin(GL_POLYGON);
+      glNormal3d(0., -1., 0.);//plane 1
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmax);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmin);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glNormal3d(1., 0., 0.);//plane 2
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymax, zmin);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymax, zmax);
+      glEnd();
+      break;
+   case 2://2 is the front point, draw planes 2 and 3
+      glBegin(GL_POLYGON);
+      glNormal3d(1., 0., 0.);//plane 2
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymin, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymax, zmin);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymax, zmax);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glNormal3d(0., 1., 0.);//plane 3
+      glTexCoord1d((zmax - fMinZScaled) / zRange); 
+      glVertex3d(xmax, ymax, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymax, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymax, zmin);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymax, zmax);
+      glEnd();
+      break;
+   case 3://3 is the front point, draw planes 3 and 0
+      glBegin(GL_POLYGON);
+      glNormal3d(-1., 0., 0.);//plane 0
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmax);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymax, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymax, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymin, zmin);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glNormal3d(0., 1., 0.);//plane 3
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymax, zmax);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmax, ymax, zmin);
+      glTexCoord1d((zmin - fMinZScaled) / zRange);
+      glVertex3d(xmin, ymax, zmin);
+      glTexCoord1d((zmax - fMinZScaled) / zRange);
       glVertex3d(xmin, ymax, zmax);
       glEnd();
       break;
@@ -1667,16 +1925,17 @@ void TGLHistPainter::DrawProfile(Int_t plane)const
    glEnable(GL_BLEND);
    glDepthMask(GL_FALSE);
    glDisable(GL_DEPTH_TEST);
-   if (fLastOption == kLego)
+   if (fLastOption == kLego || fLastOption == kLego2)
       glDisable(GL_CULL_FACE);//to avoid point order checks during bin drawing
 
    if (!plane || plane == 2)
-      fLastOption == kLego ? DrawLegoProfileY(plane) : DrawSurfaceProfileY(plane);
+      fLastOption == kLego || fLastOption == kLego2 ? DrawLegoProfileY(plane) : DrawSurfaceProfileY(plane);
    else
-      fLastOption == kLego ? DrawLegoProfileX(plane) : DrawSurfaceProfileX(plane);
+      fLastOption == kLego || fLastOption == kLego2 ? DrawLegoProfileX(plane) : DrawSurfaceProfileX(plane);
 
-   if (fLastOption == kLego)
+   if (fLastOption == kLego || fLastOption == kLego2)
       glEnable(GL_CULL_FACE);
+      
    glEnable(GL_DEPTH_TEST);
    glDepthMask(GL_TRUE);
    glDisable(GL_BLEND);
