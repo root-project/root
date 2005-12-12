@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.5 2005/11/11 07:18:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.6 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -28,6 +28,10 @@
 
 // Some pragmas to avoid warnings in VisualC
 #ifdef _WIN32
+// windows.h defines CONST
+#ifdef CONST
+#undef CONST
+#endif
 // Disable warning C4786: identifier was truncated to '255' characters in the debug information
 #pragma warning ( disable : 4786 )
 // Disable warning C4291: no matching operator delete found; memory will not be freed if 
