@@ -25,15 +25,15 @@ class genreflex_rootcint:
       gccxmlbin = 'gccxml'
     try:
       import gccxmlpath
-      if os.path.isfile(gccxmlpath.gccxmlpath+os.sep+gccxmlbin) : sys.exit(1)
+      if os.path.isfile(gccxmlpath.gccxmlpath+os.sep+gccxmlbin) : sys.exit(0)
     except:
       pass
     if sys.platform == 'win32' :
       gccxmlbin = r'\\cern.ch\dfs\Experiments\sw\lcg\external\gccxml\0.6.0_patch3\win32_vc71\bin\gccxml'
     else :
       gccxmlbin = '/afs/cern.ch/sw/lcg/external/gccxml/0.6.0_patch3/slc3_ia32_gcc323/bin/gccxml'
-    if os.path.isfile(gccxmlbin) : sys.exit(1)
-    sys.exit(0)
+    if os.path.isfile(gccxmlbin) : sys.exit(0)
+    sys.exit(1)
 
   def parse_args(self):
     options = sys.argv[1:]
@@ -43,7 +43,7 @@ class genreflex_rootcint:
       print sys.argv[0], ': ERROR:', e
       self.usage()
     for o,a in optlist:
-      if o in ('--gccxml-available') : self.test_gccxml()
+      if o in ('--gccxml-available',) : self.test_gccxml()
       if o in ('-c','-v','-l','-p','-g','-r') : pass
       if o in ('-D','-I') :
         self.gccxml_ppopts.append(o+a)
@@ -113,7 +113,7 @@ if __name__ == "__main__":
   rc.gen_temp_header()
 
   gr = genreflex.genreflex()
-  gr_args = ['',rc.dict_header,'-o',rc.dict_filename,'-I.','-Iinclude','-D__CINT__','-DTRUE=1','-DFALSE=0','-Dexternalref=extern','-DSYSV','-D__MAKECINT__']
+  gr_args = ['',rc.dict_header,'-o',rc.dict_filename,'-I.','-Iinclude','-DTRUE=1','-DFALSE=0','-Dexternalref=extern','-DSYSV','-D__MAKECINT__']
   gr_args += rc.gccxml_ppopts
   gr.parse_args(gr_args)
   gr.check_files_dirs()
