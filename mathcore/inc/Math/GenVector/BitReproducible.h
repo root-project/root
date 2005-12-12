@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BitReproducible.h,v 1.3 2005/09/19 15:50:04 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -12,13 +12,15 @@
 //
 // Created by: fischler  at Mon Jun 25  2005
 //
-// Last update: $Id: BitReproducible.h,v 1.2 2005/09/19 09:57:07 brun Exp $
+// Last update: $Id: BitReproducible.h,v 1.3 2005/09/19 15:50:04 brun Exp $
 //
 #ifndef ROOT_Math_GenVector_BitReproducible 
 #define ROOT_Math_GenVector_BitReproducible  1
 
 #if defined(__alpha) 
+#ifndef __USE_STD_IOSTREAM
 #define __USE_STD_IOSTREAM
+#endif
 #endif
 
 #include <iostream>
