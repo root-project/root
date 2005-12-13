@@ -12,7 +12,7 @@
    TGenPhaseSpace event;
    event.SetDecay(W, 3, masses);
 
-   TH2F h2("h2","h2", 50,1.1,1.8, 50,1.1,1.8);
+   TH2F h2("h2","h2", 50,1.1,1.8, 50,1.1,1.95);
 
    for (Int_t n=0;n<100000;n++) {
       Double_t weight = event.Generate();

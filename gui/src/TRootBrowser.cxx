@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.86 2005/11/25 13:39:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.87 2005/12/12 09:03:40 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -92,6 +92,9 @@ enum ERootBrowserCommands {
    kViewHidden,
    kViewRefresh,
    kViewFind,
+   kViewExec,
+   kViewInterrupt,
+   kViewSave,
 
    kViewArrangeByName,     // Arrange submenu
    kViewArrangeByType,
@@ -153,6 +156,10 @@ static ToolBarData_t gToolBarData[] = {
    { "tb_refresh.xpm",   "Refresh (F5)",   kFALSE, kViewRefresh, 0 },
    { "",                 "",               kFALSE, -1, 0 },
    { "tb_find.xpm",      "Find (Ctrl-F)",  kFALSE, kViewFind, 0 },
+   { "",                 "",               kFALSE, -1, 0 },
+   { "macro_t.xpm",      "Execute Macro",  kFALSE, kViewExec, 0 },
+   { "interrupt.xpm",    "Interrupt Macro",kFALSE, kViewInterrupt, 0 },
+   { "filesaveas.xpm",   "Save Macro",     kFALSE, kViewSave, 0 },
    { 0,                  0,                kFALSE, 0, 0 }
 };
 
@@ -984,6 +991,7 @@ void TRootBrowser::CreateBrowser(const char *name)
       fToolBar->AddButton(this, &gToolBarData[i], spacing);
       spacing = 0;
    }
+
    fDrawOption = new TGComboBox(fToolBar, "");
    TGTextEntry *dropt_entry = fDrawOption->GetTextEntry();
    dropt_entry->SetToolTipText("Object Draw Option", 300);
@@ -1108,6 +1116,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    MapSubwindows();
    SetDefaults();
    Resize();
+   ShowMacroButtons(kFALSE);
 
    Connect(fLt, "Checked(TObject*, Bool_t)", "TRootBrowser",
            this, "Checked(TObject *,Bool_t)");
@@ -1503,14 +1512,17 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
             nowp->Update();
             img->FromPad(nowp);
 
-            UInt_t w, h;
-            const UInt_t sz = 72;
+            if (!img->IsValid()) {
+               return;
+            }
+
+            static const UInt_t sz = 72;
+            UInt_t w = sz;
+            UInt_t h = sz;
 
             if (img->GetWidth() > img->GetHeight()) {
-               w = sz;
                h = (img->GetHeight()*sz)/img->GetWidth();
-            } else {
-               h = sz;
+            } else { 
                w = (img->GetWidth()*sz)/img->GetHeight();
             }
 
@@ -2334,14 +2346,15 @@ void TRootBrowser::Refresh(Bool_t force)
 {
    // Refresh the browser contents.
 
-   if (fTextEdit) {
+   Bool_t refresh = fBrowser && fBrowser->GetRefreshFlag();
+
+   if (fTextEdit && !gROOT->IsExecutingMacro()) {
       fTextEdit->LoadFile(fTextFileName.Data());
       fClient->NeedRedraw(fTextEdit);
       return;
    }
 
-   if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force)
-      && !fIconBox->WasGrouped()
+   if ( (refresh || force) && !fIconBox->WasGrouped()
       && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
 
       TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
@@ -2550,6 +2563,7 @@ void TRootBrowser::HideTextEdit()
 
    if (!fTextEdit) return;
 
+   ShowMacroButtons(kFALSE);
    fTextEdit->UnmapWindow();
    fV2->RemoveFrame(fTextEdit);
    fV2->AddFrame(fListView, fExpandLayout);
@@ -2602,7 +2616,11 @@ void TRootBrowser::BrowseTextFile(const char *file)
    fTextEdit->LoadFile(file);
    if (loaded) return;
 
-   fTextEdit->SetReadOnly();
+   if (fTextFileName.EndsWith(".C")) {
+      ShowMacroButtons();
+   } else {
+      fTextEdit->SetReadOnly();
+   }
    fListView->UnmapWindow();
    fV2->RemoveFrame(fListView);
    fTextEdit->MapWindow();
@@ -2623,6 +2641,58 @@ void TRootBrowser::BrowseTextFile(const char *file)
 
    if (btn2) {
       btn2->SetState(kButtonUp);
+   }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::ExecMacro()
+{
+   // executed browsed text macro
+
+   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(), 
+                                           fTextFileName.Data());
+   gROOT->SetExecutingMacro(kTRUE);
+   fTextEdit->SaveFile(tmpfile, kFALSE);
+   gROOT->Macro(tmpfile);
+   gSystem->Unlink(tmpfile);
+   delete tmpfile;
+   gROOT->SetExecutingMacro(kFALSE);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::InterruptMacro()
+{
+   // interrupt browsed macro execution
+
+   gROOT->SetInterrupt(kTRUE);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::ShowMacroButtons(Bool_t show)
+{
+   // show/hide macro buttons
+
+   TGButton *bt1 = fToolBar->GetButton(kViewExec);
+   TGButton *bt2 = fToolBar->GetButton(kViewInterrupt);
+   TGButton *bt3 = fToolBar->GetButton(kViewSave);
+
+   static Bool_t connected = kFALSE;
+
+   if (!show) {
+      bt1->UnmapWindow();
+      bt2->UnmapWindow();
+      bt3->UnmapWindow();
+   } else {
+      bt1->MapWindow();
+      bt2->MapWindow();
+      bt3->MapWindow();
+
+      if (!connected && fTextEdit) {
+         bt1->Connect("Pressed()", "TRootBrowser", this, "ExecMacro()");
+         bt2->Connect("Pressed()", "TRootBrowser", this, "InterruptMacro()");
+         bt3->Connect("Released()", "TGTextEdit", fTextEdit, "SaveFile(=0,kTRUE)");
+         connected = kTRUE;
+      }
    }
 }
 

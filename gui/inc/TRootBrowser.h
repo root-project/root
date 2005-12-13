@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.19 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.20 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -96,6 +96,7 @@ private:
    void  Search();
    void  BrowseTextFile(const char *file);
    void  HideTextEdit();
+   void  ShowMacroButtons(Bool_t show = kTRUE);
 
    Bool_t  HistoryBackward();
    Bool_t  HistoryForward();
@@ -118,10 +119,10 @@ protected:
    Bool_t               fTreeLock;          // true when we want to lock TGListTree
    Int_t                fViewMode;          // current IconBox view mode
    Int_t                fSortMode;          // current IconBox sort mode
-   TGTextEdit          *fTextEdit;          // text 
+   TGTextEdit          *fTextEdit;          // contents of browsed text file
 
 public:
-   TRootBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 500, UInt_t height = 300);
+   TRootBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500);
    TRootBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootBrowser();
 
@@ -159,6 +160,10 @@ public:
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void     ReallyDelete();
+
+   // auxilary (a la privae) methods
+   void     ExecMacro();
+   void     InterruptMacro();
 
    ClassDef(TRootBrowser,0)  //ROOT native GUI version of browser
 };

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.14 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.15 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -93,8 +93,8 @@ TBrowser::TBrowser(const char *name, const char *title)
       fImp = 0;
    } else {
       Float_t cx = gStyle->GetScreenFactor();
-      UInt_t w = UInt_t(cx*640);
-      UInt_t h = UInt_t(cx*400);
+      UInt_t w = UInt_t(cx*800);
+      UInt_t h = UInt_t(cx*500);
 
       fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
       Create();
@@ -134,8 +134,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title)
    // Create a new browser with a name, title, width and height for TObject *obj.
 
    Float_t cx = gStyle->GetScreenFactor();
-   UInt_t w = UInt_t(cx*640);
-   UInt_t h = UInt_t(cx*400);
+   UInt_t w = UInt_t(cx*800);
+   UInt_t h = UInt_t(cx*500);
 
    fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
    Create(obj);
@@ -175,8 +175,8 @@ TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
    // Create a new browser with a name, title, width and height for TObject *obj.
 
    Float_t cx = gStyle->GetScreenFactor();
-   UInt_t w = UInt_t(cx*640);
-   UInt_t h = UInt_t(cx*400);
+   UInt_t w = UInt_t(cx*800);
+   UInt_t h = UInt_t(cx*500);
 
    fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
 
