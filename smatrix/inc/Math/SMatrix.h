@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.8 2005/12/11 00:24:49 rdm Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.9 2005/12/12 11:35:10 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -46,6 +46,11 @@
 
 #include "Math/Expression.h"
 
+//doxygen tag
+/**
+   @defgroup SMatrix Matrix and Vector classes
+*/
+
 
 namespace ROOT {
 
@@ -56,9 +61,12 @@ namespace ROOT {
 
 
 
-/** SMatrix.
-    A generic fixed size n x m Matrix class.q
-
+/** 
+    SMatrix: a generic fixed size n x m Matrix class.
+    The class is template on the scalar type and on the matrix sizes: 
+    D1 = number of rows and D2 = number of columns.
+    
+    @ingroup SMatrix
     @memo SMatrix
     @author T. Glebe
 */
