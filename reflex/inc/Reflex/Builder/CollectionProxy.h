@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.5 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.6 2005/12/08 06:43:32 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -359,7 +359,7 @@ namespace ROOT {
          }
       };
       // Specialization for std::Set 
-      template <class K, class T, class A> struct Proxy< std::Set<K,T,A> > {
+      template <class K, class T, class A> struct Proxy< std::set<K,T,A> > {
          static CollFuncTable* Generate()  {
             return CFTGenerator<Insert<std::Set<K,T,A> > >::Generate();
          }
