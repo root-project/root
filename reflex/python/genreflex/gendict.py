@@ -31,7 +31,6 @@ class genDictionary(object) :
     self.cppselect  = {} 
     self.last_id    = ''
     self.transtable = string.maketrans('<>&*,: ().', '__rp__s___')
-    self.transtable2 = string.maketrans('<>,: ().','____s___')
     self.ignoremeth = ('rbegin', 'rend', '_Eq','_Lt', 'value_comp')
     self.x_id       = iter(xrange(sys.maxint))
     self.errors     = 0
@@ -558,8 +557,8 @@ class genDictionary(object) :
           noPublicType = self.checkAccessibleType(self.xref[a['type']])
           if ( noPublicType ):
             noPubTypeAttrs = self.xref[noPublicType]['attrs']
-            t = string.translate(str(t), self.transtable2)[2:]
-            if ( t not in self.generated_shadow_classes ):
+            #t = string.translate(str(t), self.transtable2)[2:]
+            if ( string.translate(str(self.genTypeName(noPubTypeAttrs['id'])), self.transtable) not in self.generated_shadow_classes ):
               c += self.genClassShadow(noPubTypeAttrs)
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
           elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
@@ -1213,7 +1212,7 @@ class genDictionary(object) :
     cid      = attrs['context']
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
-    s  = 'void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'] )
+    s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'] )
     s += '  static NewDelFunctions s_funcs;\n'
     s += '  s_funcs.fNew         = NewDelFunctionsT< %s >::new_T;\n' % cl
     s += '  s_funcs.fNewArray    = NewDelFunctionsT< %s >::newArray_T;\n' % cl
