@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.2 2005/09/20 06:22:34 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -285,7 +285,7 @@ namespace Math {
   (also called irregular (cylindrical) Bessel functions or
   (cylindrical) Neumann functions).
 
-  \f[ N_{\nu} (x) = Y_{\nu} (x) = \left\{ \begin{array}{cl} \frac{J_{\nu} \cos{\nu \pi}-J_{-\nu}(x)}{\sin{\nu \pi}}  & \mbox{for non-integral $\nu$} \\ \lif{\mu \to \nu} \frac{J_{\mu} \cos{\mu \pi}-J_{-\mu}(x)}{\sin{\mu \pi}}  & \mbox{for integral $\nu$} \end{array} \right.  \f]
+  \f[ N_{\nu} (x) = Y_{\nu} (x) = \left\{ \begin{array}{cl} \frac{J_{\nu} \cos{\nu \pi}-J_{-\nu}(x)}{\sin{\nu \pi}}  & \mbox{for non-integral $\nu$} \\ \lim{\mu \to \nu} \frac{J_{\mu} \cos{\mu \pi}-J_{-\mu}(x)}{\sin{\mu \pi}}  & \mbox{for integral $\nu$} \end{array} \right.  \f]
 
    For detailed description see 
   <A HREF="http://mathworld.wolfram.com/BesselFunctionoftheSecondKind.html">
