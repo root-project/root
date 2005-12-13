@@ -470,14 +470,18 @@ void TSessionServerFrame::OnBtnConnectClicked()
       }
    }
    if (fViewer->GetActDesc()->fProof == 0) {
-      fViewer->GetActDesc()->fProof = fViewer->GetActDesc()->fProofMgr->CreateSession(
+      if (fViewer->GetActDesc()->fProofMgr->IsValid()) {
+         fViewer->GetActDesc()->fProof = fViewer->GetActDesc()->fProofMgr->CreateSession(
          fViewer->GetActDesc()->fConfigFile);
-      sessions = fViewer->GetActDesc()->fProofMgr->QuerySessions("");
-      desc = (TVirtualProofDesc *)sessions->Last();
-      fViewer->GetActDesc()->fProof->SetAlias(fViewer->GetActDesc()->fName);
-      fViewer->GetActDesc()->fTag = desc->GetName();
-      fViewer->GetActDesc()->fConnected = kTRUE;
-      fViewer->GetActDesc()->fAttached = kTRUE;
+         sessions = fViewer->GetActDesc()->fProofMgr->QuerySessions("");
+         desc = (TVirtualProofDesc *)sessions->Last();
+         if (desc) {
+            fViewer->GetActDesc()->fProof->SetAlias(fViewer->GetActDesc()->fName);
+            fViewer->GetActDesc()->fTag = desc->GetName();
+            fViewer->GetActDesc()->fConnected = kTRUE;
+            fViewer->GetActDesc()->fAttached = kTRUE;
+         }
+      }
    }
    if (fViewer->GetActDesc()->fProof) {
       fViewer->GetActDesc()->fConfigFile = fViewer->GetActDesc()->fProof->GetConfFile();
