@@ -19,31 +19,38 @@ class genreflex_rootcint:
     pass
 
   def test_gccxml(self):
+    gccxmlfound = 1
     if sys.platform == 'win32':
       gccxmlbin = 'gccxml.exe'
     else:
       gccxmlbin = 'gccxml'
     try:
       import gccxmlpath
-      if os.path.isfile(gccxmlpath.gccxmlpath+os.sep+gccxmlbin) : sys.exit(0)
+      if os.path.isfile(gccxmlpath.gccxmlpath+os.sep+gccxmlbin) : gccxmlfound = 0
     except:
       pass
     if sys.platform == 'win32' :
       gccxmlbin = r'\\cern.ch\dfs\Experiments\sw\lcg\external\gccxml\0.6.0_patch3\win32_vc71\bin\gccxml'
     else :
       gccxmlbin = '/afs/cern.ch/sw/lcg/external/gccxml/0.6.0_patch3/slc3_ia32_gcc323/bin/gccxml'
-    if os.path.isfile(gccxmlbin) : sys.exit(0)
-    sys.exit(1)
+    if os.path.isfile(gccxmlbin) : gccxmlfound = 0
+    return gccxmlfound
 
   def parse_args(self):
     options = sys.argv[1:]
+    options2 = []
+    # FIXME: removing again TROOT.h and TMemberInspector.h from the options as they are
+    # passed in by rootcint, but before the options (gnu style doesn't like it)
+    # --> fix is to remove the two headers from the invocation in rootcint.cxx
+    for o in options :
+      if o.find('TROOT.h') == -1 and o.find('TMemberInspector.h') == -1 : options2.append(o)
     try:
-      optlist,args = getopt.getopt(options,'cv:lf:pg:r:D:I:',['gccxml-available'])
+      optlist,args = getopt.getopt(options2,'cv:lf:pg:r:D:I:',['gccxml-available'])
     except getopt.GetoptError, e:
       print sys.argv[0], ': ERROR:', e
       self.usage()
     for o,a in optlist:
-      if o in ('--gccxml-available',) : self.test_gccxml()
+      if o in ('--gccxml-available',) : sys.exit(self.test_gccxml())
       if o in ('-c','-v','-l','-p','-g','-r') : pass
       if o in ('-D','-I') :
         self.gccxml_ppopts.append(o+a)
@@ -113,7 +120,7 @@ if __name__ == "__main__":
   rc.gen_temp_header()
 
   gr = genreflex.genreflex()
-  gr_args = ['',rc.dict_header,'-o',rc.dict_filename,'-I.','-Iinclude','-DTRUE=1','-DFALSE=0','-Dexternalref=extern','-DSYSV','-D__MAKECINT__','-DR__EXTERN=extern']
+  gr_args = ['',rc.dict_header,'-o',rc.dict_filename,'--comments','-I.','-Iinclude','-DTRUE=1','-DFALSE=0','-Dexternalref=extern','-DSYSV','-D__MAKECINT__','-DR__EXTERN=extern']
   gr_args += rc.gccxml_ppopts
   gr.parse_args(gr_args)
   gr.check_files_dirs()

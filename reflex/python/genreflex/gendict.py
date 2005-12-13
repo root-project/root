@@ -282,7 +282,9 @@ class genDictionary(object) :
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write(self.genAllTypes())
     f.write(f_shadow)
+    f.write('namespace {\n')
     f.write(f_buffer)
+    f.write('} // unnamed namespace\n')
     f.close()
     return names, self.warnings, self.errors
 #----------------------------------------------------------------------------------
@@ -519,11 +521,11 @@ class genDictionary(object) :
     return 0
 #----------------------------------------------------------------------------------
   def genClassShadow(self, attrs, inner = 0 ) :
-    self.generated_shadow_classes.append(attrs['id'])
     bases = self.getBases( attrs['id'] )
     if inner : cls = attrs['name']
     else     : cls = self.genTypeName(attrs['id'])
     clt = string.translate(str(cls), self.transtable)
+    self.generated_shadow_classes.append(clt)
     typ = self.xref[attrs['id']]['elem'].lower()
     indent = inner * 2 * ' '
     if typ == 'enumeration' :
@@ -556,8 +558,8 @@ class genDictionary(object) :
           noPublicType = self.checkAccessibleType(self.xref[a['type']])
           if ( noPublicType ):
             noPubTypeAttrs = self.xref[noPublicType]['attrs']
-            if ( noPubTypeAttrs['id'] not in self.generated_shadow_classes ):
-              t = string.translate(str(t), self.transtable2)[2:]
+            t = string.translate(str(t), self.transtable2)[2:]
+            if ( t not in self.generated_shadow_classes ):
               c += self.genClassShadow(noPubTypeAttrs)
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
           elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
