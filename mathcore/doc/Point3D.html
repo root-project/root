@@ -5,13 +5,18 @@
   \page Point3DPage  Point3D Classes
 
 
-The following types of Point are defined by defaults: 
+
+To avoid exposing templated parameter to the users, typedefs are defined for all types of  vectors based an double's and float's. To use them, one must include the header file <em>Math/Point3D.h</em>.
+The following typedef's, defined in the header file <em>Math/Point3Dfwd.h</em>, are available for the different instantiations of the template class ROOT::Math::PositionVector3D:    
+
 
 <ul>
 <li>ROOT::Math::XYZPoint  point based on x,y,z coordinates (cartesian) in double precision
 <li>ROOT::Math::XYZPointF  point based on x,y,z coordinates (cartesian) in float precision
 <li>ROOT::Math::Polar3DPoint point based on r,theta,phi coordinates (polar) in double precision
 <li>ROOT::Math::Polar3DPointF point based on r,theta,phi coordinates (polar) in float precision
+<li>ROOT::Math::RhoZPhiPoint point based on rho,z,phi coordinates (cylindrical using z) in double precision
+<li>ROOT::Math::RhoZPhiPointF point based on rho,z,phi coordinates (cylindrical using z) in float precision
 <li>ROOT::Math::RhoEtaPhiPoint point based on rho,eta,phi coordinates (cylindrical using eta instead of z) in double precision
 <li>ROOT::Math::RhoEtaPhiPointF point based on rho,eta,phi coordinates (cylindrical using eta instead of z) in float precision
 </ul>
@@ -37,25 +42,31 @@ This con be another Point3D based on a different coordinate system types or even
 </pre>
 
 <h4>Coordinate Accessors and Setter Methods</h4>
-For the Points classes we have the same methods as for the Vector classes. 
-See the example for the \ref Vector3DPage.
+For the Points classes we have the same getter and setter methods as for the Vector classes. 
+See the examples for the \ref Vector3DPage.
 
-<h4>Arithmetic Operations</h4>
-The following operations are possible between Point3D and Vector3D classes: 
-( p is a one of the Point3D class, v is a Vector3D class ) 
+<h4>Point-Vector Operations</h4>
+The following operations are possible between points and vector classes: 
+( p1 ,p2 and p3 are instantiations of the ROOT::Math::PositionVector3D class, p1 and p3 of the same type v1 and v2 are a ROOT::Math::DisplacementVector3D class ) 
 <pre>
-p += v; 
-p -= v;   
-</pre>
-In addition between Point 3D classes, the following operations are possibles returning Points or Vectors 
-( points and vectors can be in different coordinate system but the returned type,  p3 (v3) is the same type of p1 (v1) )   
-<pre>
-p3 = p1 + v2;   
-p3 = v1 + p2;  
-p3 = p1 - v2;   
-p3 = v1 - p2;      
-v3 = p1 - p2;    // difference between points returns a vector 
+p1 += v1; 
+p1 -= v1;   
+p3 = p1 + v1;      // p1 and p3 are the same type 
+p3 = v1 + p1;      // p3 is based on the same coordinate system as v1    
+p3 = p1 - v1;   
+p3 = v1 - p1;      
+v2 = p1 - p2;    // difference between points returns a vector v2 based on the same coordinate system as p1
 </pre>
 Note that additions between two points is NOT possible and the difference between points returns a vector. 
+
+<h4>Other Operations</h4>
+Exactly as for the 3D Vectors, the following operations are allowed: 
+<ul>
+<li>comparison of points
+<li>scaling and division of points with a scalar
+<li>dot and cross product with any type of vector
+</ul>
+
+
 
 */

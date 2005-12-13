@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.6 2005/12/05 10:33:32 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.7 2005/12/09 14:47:30 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.6 2005/12/05 10:33:32 moneta Exp $
+// Last update: $Id: LorentzVector.h,v 1.7 2005/12/09 14:47:30 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -325,7 +325,7 @@ namespace ROOT {
         scalar (Dot) product of two LorentzVector vectors (metric is -,-,-,+)
         Enable the product using any other LorentzVector implementing
         the x(), y() , y() and t() member functions
-        \param  q  any LorentzVector implementing the x(), y() , Z() and t()
+        \param  q  any LorentzVector implementing the x(), y() , z() and t()
                 member functions
         \return the result of v.q of type according to the base scalar type of v
      */
@@ -338,7 +338,7 @@ namespace ROOT {
       /**
          Self addition with another Vector ( v+= q )
          Enable the addition with any other LorentzVector
-         \param  q  any LorentzVector implementing the x(), y() , Z() and t()
+         \param  q  any LorentzVector implementing the x(), y() , z() and t()
                 member functions
       */
       template< class OtherLorentzVector >
@@ -350,7 +350,7 @@ namespace ROOT {
       /**
          Self subtraion of another Vector from this ( v-= q )
          Enable the addition with any other LorentzVector
-         \param  q  any LorentzVector implementing the x(), y() , Z() and t()
+         \param  q  any LorentzVector implementing the x(), y() , z() and t()
                 member functions
       */
       template< class OtherLorentzVector >
@@ -362,7 +362,7 @@ namespace ROOT {
       /**
          addition of two LorentzVectors (v3 = v1 + v2)
          Enable the addition with any other LorentzVector
-         \param  q  any LorentzVector implementing the x(), y() , Z() and t()
+         \param  v2  any LorentzVector implementing the x(), y() , z() and t()
                 member functions
          \return a new LorentzVector of the same type as v1
       */
@@ -376,7 +376,7 @@ namespace ROOT {
       /**
          subtraction of two LorentzVectors (v3 = v1 - v2)
           Enable the subtraction of any other LorentzVector
-         \param  q  any LorentzVector implementing the x(), y() , Z() and t()
+         \param  v2  any LorentzVector implementing the x(), y() , z() and t()
                 member functions
          \return a new LorentzVector of the same type as v1
      */
@@ -407,7 +407,6 @@ namespace ROOT {
 
       /**
          product of a LorentzVector by a scalar quantity
-         \param v  mathcore::LorentzVector based on any coordinate system
          \param a  scalar quantity of type a
          \return a new mathcoreLorentzVector q = v * a same type as v
       */
@@ -419,7 +418,6 @@ namespace ROOT {
 
       /**
          Divide a LorentzVector by a scalar quantity
-         \param v  mathcore::LorentzVector based on any coordinate system
          \param a  scalar quantity of type a
          \return a new mathcoreLorentzVector q = v / a same type as v
       */

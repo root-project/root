@@ -5,12 +5,15 @@
   \page LorentzVectorPage  LorentzVector Classes
 
 
-The following types of LorentzVector are defined by defaults: 
+To avoid exposing templated parameter to the users, typedefs are defined for all types of  vectors based an double's and float's. To use them, one must include the header file <em>Math/Vector4D.h</em>.
+The following typedef's, defined in the header file <em>Math/Vector4Dfwd.h</em>, are available for the different instantiations of the template class ROOT::Math::LorentzVector:    
 
 <ul>
 <li>ROOT::Math::XYZTVector  vector based on x,y,z,t coordinates (cartesian) in double precision
 <li>ROOT::Math::XYZTVectorF  vector based on x,y,z,t coordinates (cartesian) in float precision
 <li>ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates  in double precision
+<li>ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates  in double precision
+<li>ROOT::Math::PxPyPzMVector vector based on px,py,pz and M (mass) coordinates  in double precision
 </ul>
 The metric used for all the LorentzVector's is (-,-,-,+)
 
