@@ -54,7 +54,7 @@ class genreflex_rootcint:
       if o in ('-c','-v','-l','-p','-g','-r') : pass
       if o in ('-D','-I') :
         self.gccxml_ppopts.append(o+a)
-      if o in ('-f') :
+      if o in ('-f',) :
         self.dict_filename = a
     self.header_files = args
 
