@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.2 2005/12/09 23:38:42 pcanal Exp $
+//$Id: rflx_gensrc.cxx,v 1.3 2005/12/12 23:05:48 brun Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -163,9 +163,8 @@ void rflx_gensrc::gen_header()
        endl << "#include \"" << m_sourcefile << "\"" << std::
        endl << "#undef private" << std::endl << "#undef protected" << std::
        endl << "#include \"Reflex/Builder/ReflexBuilder.h\"" << std::
-       endl << "#if defined (CINTEX)" << std::
        endl << "#include \"Cintex/Cintex.h\"" << std::
-       endl << "#endif" << std::endl << "#include <typeinfo>" << std::
+       endl << "#include <typeinfo>" << std::
        endl << "namespace ROOT { namespace Reflex { } }" << std::
        endl <<
        "namespace seal { namespace reflex { using namespace ROOT::Reflex; } }"
@@ -388,14 +387,16 @@ void rflx_gensrc::gen_classdictdefs(G__ClassInfo & ci)
    G__MethodInfo fm(ci);
    while (fm.Next()) {
       if (strlen(fm.Name())) {
+         std::string fmname = fm.Name();
+         if (fmname == clname)
+            hasConstructor = true;
          if (!(fm.Property() & G__BIT_ISPUBLIC))
             continue;
-         std::string fmname = fm.Name();
+
          if (fmname == clname) {
             gen_decl('c', ++cNum);
-            hasConstructor = true;
          }                      // constructor
-         else if (fmname == ("~" + clname)) {
+         else if (fmname[0] == '~') {
             gen_decl('d', 0, clname, fclname);
          }                      // destructor
          else {
@@ -558,13 +559,10 @@ void rflx_gensrc::gen_functionmemberdefs(G__ClassInfo & ci)
    G__MethodInfo fm(ci);
    bool hasConstructor = false;
    while (fm.Next()) {
-      if (!(fm.Property() & G__BIT_ISPUBLIC))
-         continue;
       std::string fmname = fm.Name();
 
       if (fmname.length()) {
          std::string fm_modifiers = "";
-
 
          G__ifunc_table *ift = (G__ifunc_table *) fm.Handle();
          int index = fm.Index();
@@ -594,8 +592,11 @@ void rflx_gensrc::gen_functionmemberdefs(G__ClassInfo & ci)
             hasConstructor = true;
          }
 
+         if (!(fm.Property() & G__BIT_ISPUBLIC))
+            continue;
+
          bool isDestructor = false;
-         if (fmname == ("~" + clname))
+         if (fmname[0] == '~')
             isDestructor = true;
 
          if (isConstructor || isDestructor)
@@ -685,8 +686,11 @@ int rflx_gensrc::gen_stubfuncdecl_header(std::ostringstream & s,
    }
    // struct/class
    else if (retT == 'u') {
-      s << ind() << "return new " << retname << "(" << objcaststr << fmname
-          << "(";
+      size_t startRetType=0;
+      if (!retname.compare(0,6,"const ")) 
+         startRetType=6;
+      s << ind() << "return new " << retname.substr(startRetType) << "(" 
+        << objcaststr << fmname << "(";
       moffset +=
           ind.get() + retname.length() + objcaststr.length() +
           fmname.length() + 13;
@@ -732,9 +736,18 @@ void rflx_gensrc::gen_stubfuncdecl_params(std::ostringstream & s,
          pStr = "*";
       if (ma.Property() & G__BIT_ISCONSTANT)
          cvStr += "const ";
-      s << pStr << "(" << cvStr << rflx_tools::stub_type_name(ma.Type()->
-                                                              TrueName())
-          << pStr << ")arg[" << maNum << "]";
+      s << pStr << "(" << cvStr;
+      if (ma.Type()->Name() && strstr(ma.Type()->Name(),"(*)"))
+         // func ptr
+         s << ma.Type()->Name();
+      else if (! ma.Type()->Fullname() &&
+         !strcmp(ma.Type()->TrueName(),"void*") && 
+         strcmp(ma.Type()->Name(),"void*"))
+         // func ptr with typedef
+         s << ma.Type()->Name() << pStr;
+      else
+         s << rflx_tools::stub_type_name(ma.Type()->TrueName()) << pStr;
+      s << ")arg[" << maNum << "]";
       ++maNum;
    }
 }
@@ -1085,11 +1098,9 @@ void rflx_gensrc::gen_dictinstances()
    ++ind;
    m_di << ind() << "_Dictionaries() {" << std::endl;
    ++ind;
-   m_di << "#if defined (CINTEX)" << std::endl;
    m_di << ind() << "ROOT::Cintex::Cintex::Enable();" << std::endl;
-   m_di << "#if defined (DEBUG)" << std::endl;
+   m_di << "#if defined (CINTEX_DEBUG)" << std::endl;
    m_di << ind() << "ROOT::Cintex::Cintex::SetDebug(1);" << std::endl;
-   m_di << "#endif" << std::endl;
    m_di << "#endif" << std::endl;
    m_di << ind() << "__reflex__free__functions__dict__" << rflx_tools::
        escape_class_name(m_sourcefile) << "();" << std::endl;
@@ -1104,8 +1115,23 @@ void rflx_gensrc::gen_dictinstances()
    m_di << ind() << "}" << std::endl;
    --ind;
    m_di << ind() << "};" << std::endl;
-   m_di << ind() << "static _Dictionaries instance_" << rflx_tools::
-       escape_class_name(m_sourcefile) << ";" << std::endl;
+
+   // generate an external C func called "G__cpp_setup"dictfile, to be compatible with cint
+   std::string staticName=m_dictfile;
+   size_t posExt=staticName.find('.');
+   if (posExt!=std::string::npos)
+      staticName.erase(posExt);
+   size_t posDirEnd=staticName.rfind('/');
+   size_t posDirEndBackSlash=staticName.rfind('\\');
+   if (posDirEndBackSlash!=std::string::npos && posDirEnd<posDirEndBackSlash)
+      posDirEnd=posDirEndBackSlash;
+   if (posDirEnd!=std::string::npos)
+      staticName.erase(0,posDirEnd+1);
+
+   m_di << ind() << "static _Dictionaries G__cpp_setup" << staticName << "_dict;"  << std::endl;
+
    --ind;
    m_di << ind() << "}" << std::endl;
+
+   m_di << ind() << "extern \"C\" void G__cpp_setup" << staticName << "(void) {}" << std::endl;
 }

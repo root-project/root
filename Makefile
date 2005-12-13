@@ -328,7 +328,7 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 ifeq ($(EXPLICITLINK),yes)
 MAINLIBS      = $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
-MAINLIBS     := $(MAINLIBS) $(REFLEXLIB)
+MAINLIBS     := $(MAINLIBS) $(REFLEXLIB) $(CINTEXLIB)
 endif
 MAKE_VERSION_MAJOR = $(word 1,$(subst ., ,$(MAKE_VERSION)))
 MAKE_VERSION_MINOR = $(word 2,$(subst ., ,$(MAKE_VERSION)))

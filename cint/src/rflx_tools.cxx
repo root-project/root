@@ -5,7 +5,7 @@
 std::string rflx_tools::escape_class_name(const std::string & name)
 {
 
-   std::string rpl_chars = "<>,*: ./~";
+   std::string rpl_chars = "<>,*: ./~&";
    std::string lname = name;
    for (size_t i = 0; i < name.length(); ++i) {
       if (rpl_chars.find(lname[i]) != std::string::npos)
