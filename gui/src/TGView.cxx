@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.14 2005/08/18 14:13:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.15 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -697,4 +697,12 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 
    DrawRegion(points[0].fX, points[0].fY,
               points[2].fX - points[0].fX, points[2].fY - points[0].fY);
+}
+
+//______________________________________________________________________________
+void TGView::SetBackgroundColor(Pixel_t col)
+{
+   // set  background color
+
+   fCanvas->SetBackgroundColor(col); 
 }

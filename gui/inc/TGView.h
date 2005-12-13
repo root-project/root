@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.12 2005/08/18 14:13:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.13 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -83,6 +83,9 @@ public:
           Pixel_t back = GetWhitePixel());
 
    virtual ~TGView();
+
+   TGViewFrame   *GetCanvas() const { return fCanvas; }
+   virtual void   SetBackgroundColor(Pixel_t col);
 
    virtual void   Clear(Option_t * = "");
    virtual void   SetVisibleStart(Int_t newTop, Int_t direction);

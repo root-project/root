@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.87 2005/12/12 09:03:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.88 2005/12/13 16:03:42 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -63,6 +63,7 @@
 #include "THashTable.h"
 #include "TMethod.h"
 #include "TGeoVolume.h"
+#include "TColor.h"
 
 #include "HelpText.h"
 
@@ -2348,7 +2349,7 @@ void TRootBrowser::Refresh(Bool_t force)
 
    Bool_t refresh = fBrowser && fBrowser->GetRefreshFlag();
 
-   if (fTextEdit && !gROOT->IsExecutingMacro()) {
+   if (fTextEdit && !gROOT->IsExecutingMacro() && force) {
       fTextEdit->LoadFile(fTextFileName.Data());
       fClient->NeedRedraw(fTextEdit);
       return;
@@ -2567,6 +2568,8 @@ void TRootBrowser::HideTextEdit()
    fTextEdit->UnmapWindow();
    fV2->RemoveFrame(fTextEdit);
    fV2->AddFrame(fListView, fExpandLayout);
+   TGButton *savbtn = fToolBar->GetButton(kViewSave);
+   savbtn->Disconnect();
    fTextEdit->DestroyWindow();
    delete fTextEdit;
    fTextEdit = 0;
@@ -2606,11 +2609,15 @@ void TRootBrowser::BrowseTextFile(const char *file)
    if (!fTextEdit) {
       fTextEdit = new TGTextEdit(fV2, fV2->GetWidth(), fV2->GetHeight(),
                                  kSunkenFrame | kDoubleBorder);
+      TColor *col = gROOT->GetColor(19);
+      fTextEdit->SetBackgroundColor(col->GetPixel());
       if (TGSearchDialog::SearchDialog()) {
          TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit",
                                                  fTextEdit, "Search(char *,Bool_t,Bool_t)");
       }
       fV2->AddFrame(fTextEdit, fExpandLayout);
+      TGButton *savbtn = fToolBar->GetButton(kViewSave);
+      savbtn->Connect("Released()", "TGTextEdit", fTextEdit, "SaveFile(=0,kTRUE)");
    }
    fTextFileName = file;
    fTextEdit->LoadFile(file);
@@ -2651,6 +2658,7 @@ void TRootBrowser::ExecMacro()
 
    char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(), 
                                            fTextFileName.Data());
+
    gROOT->SetExecutingMacro(kTRUE);
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gROOT->Macro(tmpfile);
@@ -2690,10 +2698,7 @@ void TRootBrowser::ShowMacroButtons(Bool_t show)
       if (!connected && fTextEdit) {
          bt1->Connect("Pressed()", "TRootBrowser", this, "ExecMacro()");
          bt2->Connect("Pressed()", "TRootBrowser", this, "InterruptMacro()");
-         bt3->Connect("Released()", "TGTextEdit", fTextEdit, "SaveFile(=0,kTRUE)");
          connected = kTRUE;
       }
    }
 }
-
-
