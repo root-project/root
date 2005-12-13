@@ -35,6 +35,16 @@ ifeq ($(PROOFLIB),)
 PROOFSERV    :=
 endif
 
+##### xproofd #####
+ifneq ($(XROOTDDIR),)
+XPROOFDLIBS  := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
+		$(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a
+XPROOFD      := bin/xproofd$(EXEEXT)
+else
+XPROOFDLIBS  :=
+XPROOFD      :=
+endif
+
 ##### hadd #####
 HADDS        := $(MODDIRS)/hadd.cxx
 HADDO        := $(HADDS:.cxx=.o)
@@ -87,7 +97,7 @@ SSH2RPD         :=
 endif
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) $(XPROOFD)
 ifeq ($(BUILDHBOOK),yes)
 ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
@@ -109,6 +119,9 @@ $(PROOFSERV):   $(PROOFSERVO) $(ROOTLIBSDEP) $(PROOFLIB) \
                 $(TREEPLAYERLIB) $(THREADLIB)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) $(ROOTULIBS) \
 		   $(RPATH) $(ROOTLIBS) $(PROOFLIBS) $(SYSLIBS)
+
+$(XPROOFD):     $(XPDO) $(XPROOFDLIBS)
+		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDLIBS) $(SYSLIBS)
 
 $(HADD):        $(HADDO) $(ROOTLIBSDEP) $(MATRIXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(ROOTULIBS) \
@@ -135,20 +148,20 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 
 ifeq ($(BUILDHBOOK),yes)
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) \
-               $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
+               $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) $(XPROOFD)
 else
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) $(XPROOFD)
 endif
 
 clean-main:
 		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) \
-		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO)
+		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO) $(XPROOFD)
 
 clean::         clean-main
 
 distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERV) $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) \
-		   $(G2ROOT) $(G2ROOTOLD) $(SSH2RPDDEP) $(SSH2RPD)
+		   $(G2ROOT) $(G2ROOTOLD) $(SSH2RPDDEP) $(SSH2RPD) $(XPROOFD)
 
 distclean::     distclean-main

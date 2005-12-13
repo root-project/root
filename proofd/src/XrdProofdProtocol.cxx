@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:$:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -90,8 +90,6 @@ char                 *XrdProofdProtocol::fgSecLib   = 0;
 char                 *XrdProofdProtocol::fgPrgmSrv  = 0;
 char                 *XrdProofdProtocol::fgROOTsys  = 0;
 char                 *XrdProofdProtocol::fgTMPdir   = 0;
-XrdNet               *XrdProofdProtocol::fgUNIXSock = 0;
-char                 *XrdProofdProtocol::fgUNIXSockPath = 0;
 XrdScheduler         *XrdProofdProtocol::fgSched    = 0;
 XrdOucError           XrdProofdProtocol::fgEDest(0, "Proofd");
 std::list<XrdProofClient *> XrdProofdProtocol::fgProofClients;  // keeps track of all users
@@ -266,6 +264,8 @@ XrdProofdProtocol::XrdProofdProtocol(const char *rsys, int intwait)
    fBuff      = 0;
    fTopClient = 0;
    fSrvType   = kXPD_TopMaster;
+   fUNIXSock = 0;
+   fUNIXSockPath = 0;
 
    // Instantiate a Proofd protocol object
    Reset();
@@ -284,24 +284,6 @@ XrdProofdProtocol::XrdProofdProtocol(const char *rsys, int intwait)
                   " could not allocate space for the server application path");
    else 
       sprintf(fgPrgmSrv, "%s/bin/proofserv", fgROOTsys);
-
-   // UNIX socket for internal communications (to/from proofsrv)
-   if (!fgUNIXSock) {
-      fgUNIXSock = new XrdNet(&fgEDest);
-      fgUNIXSockPath = new char[strlen(fgTMPdir)+strlen("/xpdsock_XXXXXX")+2];
-      sprintf(fgUNIXSockPath,"%s/xpdsock_XXXXXX",fgTMPdir);
-      int fd = mkstemp(fgUNIXSockPath);
-      if (fd > -1) {
-         close(fd);
-         if (fgUNIXSock->Bind(fgUNIXSockPath))
-            fgEDest.Say(0, "XrdProofdProtocol: warning:"
-                        " problems binding to UNIX socket; path:", fgUNIXSockPath);
-         else
-            fgEDest.Say(0, "XrdProofdProtocol: path for UNIX socket is ", fgUNIXSockPath);
-      } else
-         fgEDest.Say(0, "XrdProofdProtocol: unable to generate unique"
-                     " path for UNIX socket; tried path ", fgUNIXSockPath);
-   }
 }
 
 //______________________________________________________________________________
@@ -401,6 +383,14 @@ void XrdProofdProtocol::Reset()
    fClient = 0;
    fAuthProt = 0;
    memset(&fEntity, 0, sizeof(fEntity));
+
+   // Unix socket
+   SafeDelete(fUNIXSock);
+   if (fUNIXSockPath) {
+      unlink(fUNIXSockPath);
+      delete[] fUNIXSockPath;
+   }
+   fUNIXSockPath = 0;
 }
 
 //______________________________________________________________________________
@@ -1025,6 +1015,40 @@ int XrdProofdProtocol::MapClient(bool all)
               "; capacity = "<<fPClient->fClients.capacity());
    }
 
+   // UNIX socket for internal communications (to/from proofsrv)
+   if (!fUNIXSock && !proofsrv) {
+      fUNIXSock = new XrdNet(&fgEDest);
+      fUNIXSockPath = new char[strlen(fgTMPdir)+strlen("/xpdsock_XXXXXX")+2];
+      sprintf(fUNIXSockPath,"%s/xpdsock_XXXXXX",fgTMPdir);
+      int fd = mkstemp(fUNIXSockPath);
+      if (fd > -1) {
+         close(fd);
+         if (fUNIXSock->Bind(fUNIXSockPath)) {
+            PRINT("MapClient: warning:"
+                  " problems binding to UNIX socket; path: " <<fUNIXSockPath);
+            return 0;
+         } else
+            TRACEP(REQ,"MapClient: path for UNIX for socket is " <<fUNIXSockPath);
+      } else {
+         PRINT("MapClient: unable to generate unique"
+               " path for UNIX socket; tried path " << fUNIXSockPath);
+         return 0;
+      }
+
+      // Set ownership of the socket file to the client
+      if (getuid() == 0) {
+         struct passwd *pw = getpwnam(fClientID);
+         if (!pw) {
+            PRINT("MapClient: client unknown to getpwnam");
+            return 0;
+         }
+         if (chown(fUNIXSockPath, pw->pw_uid, pw->pw_gid) == -1) {
+            PRINT("MapClient: cannot set user ownership on UNIX socket");
+            return 0;
+         }
+      }
+   }
+
    // Document this login
    if (!(fStatus & XPD_NEED_AUTH))
       fgEDest.Log(OUC_LOG_01, ":MapClient", fLink->ID, "login");
@@ -1352,8 +1376,8 @@ void XrdProofdProtocol::SetProofServEnv(int psid)
    putenv(ev);
 
    // Set Open socket
-   ev = new char[20 + strlen(fgUNIXSockPath)];
-   sprintf(ev, "ROOTOPENSOCK=%s", fgUNIXSockPath);
+   ev = new char[20 + strlen(fUNIXSockPath)];
+   sprintf(ev, "ROOTOPENSOCK=%s", fUNIXSockPath);
    putenv(ev);
 
    // Entity
@@ -1484,7 +1508,7 @@ int XrdProofdProtocol::Create()
    int lnkopts = 0;
 
    // Perform regular accept
-   if (!(fgUNIXSock->Accept(peerpsrv, XRDNET_NODNTRIM, 5*fgInternalWait))) {
+   if (!(fUNIXSock->Accept(peerpsrv, XRDNET_NODNTRIM, 5*fgInternalWait))) {
       // Try kill
       bool iskilled = (kill(pid, SIGKILL) == 0);
 

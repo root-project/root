@@ -108,6 +108,8 @@ public:
    unsigned char                 fCapVer;
    kXR_int32                     fSrvType;    // Master or Worker
    bool                          fTopClient;  // External client (not ProofServ)
+   XrdNet                       *fUNIXSock; // UNIX server socket for internal connections
+   char                         *fUNIXSockPath; // UNIX server socket path
 
    XrdProofClient               *fPClient;    // Our reference XrdProofClient
    kXR_int32                     fCID;        // Reference ID of this client
@@ -136,8 +138,6 @@ public:
    static char                  *fgROOTsys;  // ROOTSYS
    static char                  *fgTMPdir;  // directory for temporary files
 
-   static XrdNet                *fgUNIXSock; // UNIX server socket for internal connections
-   static char                  *fgUNIXSockPath; // UNIX server socket path
    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
 
    static XrdOucMutex            fgXPDMutex;  // Mutex for static area
