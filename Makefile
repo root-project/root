@@ -206,6 +206,9 @@ RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
+ifneq ($(ROOTDICTTYPE),cint)
+ROOTLIBS     := $(ROOTLIBS) -lCintex -lReflex
+endif
 RINTLIBS     := -lRint
 PROOFLIBS    := -lProof -lTreePlayer -lThread
 else
@@ -215,6 +218,9 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
+ifneq ($(ROOTDICTTYPE),cint)
+ROOTLIBS     := $(ROOTLIBS) $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
+endif
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib \
                 $(LPATH)/libThread.lib
@@ -328,7 +334,7 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 ifeq ($(EXPLICITLINK),yes)
 MAINLIBS      = $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
-MAINLIBS     := $(MAINLIBS) $(REFLEXLIB) $(CINTEXLIB)
+MAINLIBS     := $(MAINLIBS) $(CINTEXLIB) $(REFLEXLIB)
 endif
 MAKE_VERSION_MAJOR = $(word 1,$(subst ., ,$(MAKE_VERSION)))
 MAKE_VERSION_MINOR = $(word 2,$(subst ., ,$(MAKE_VERSION)))
