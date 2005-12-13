@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:$:$Id:$
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -94,6 +94,8 @@ Int_t TXProofMgr::Init(Int_t)
    if (!(fSocket = new TXSocket(u,'M')) || !(fSocket->IsValid())) {
       if (!fSocket || !(fSocket->IsServProofd())) 
          Error("Init", "while opening the connection to %s - exit", u.Data());
+      if (fSocket && fSocket->IsServProofd())
+         fServType = TVirtualProofMgr::kProofd;
       return -1;
    }
 

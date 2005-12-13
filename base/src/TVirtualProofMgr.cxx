@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.1 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.2 2005/12/12 17:59:17 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -100,7 +100,7 @@ TVirtualProof *TVirtualProofMgr::CreateSession(const char *cfg,
      (TVirtualProof*) h->ExecPlugin(4, fUrl.GetUrl(), cfg, cfgdir, loglevel);
    fUrl.SetOptions("");
 
-   if (p) {
+   if (p && p->IsValid()) {
 
       // Set reference manager
       p->SetManager(this);
@@ -125,6 +125,7 @@ TVirtualProof *TVirtualProofMgr::CreateSession(const char *cfg,
    } else {
       // Session creation failed
       Error("CreateSession", "creating PROOF session");
+      SafeDelete(p);
    }
 
    // We are done
@@ -142,6 +143,14 @@ Bool_t TVirtualProofMgr::MatchUrl(const char *url)
    // Correct URL protocol
    if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
       u.SetProtocol("proof");
+
+   // Correct port
+   if (u.GetPort() == TUrl("a").GetPort()) {
+      Int_t port = gSystem->GetServiceByName("rootd");
+      if (port < 0)
+         port = 1094;
+      u.SetPort(port);
+   }
 
    // Get the url host FQDN ...
    TInetAddress addr = gSystem->GetHostByName(u.GetHost());
@@ -246,7 +255,7 @@ TVirtualProofMgr *TVirtualProofMgr::Create(const char *url, Int_t loglevel,
    // Record the new manager, if any
    if (m) {
       fgListOfManagers.Add(m);
-      if (!(m->IsProofd())) {
+      if (m->IsValid() && !(m->IsProofd())) {
          R__LOCKGUARD2(gROOTMutex);
          gROOT->GetListOfProofs()->Add(m);
          gROOT->GetListOfSockets()->Add(m);

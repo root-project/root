@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:$:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -681,6 +681,11 @@ bool XrdProofConn::GetAccessToSrv()
 
    case kSTProofd:
       TRACE(REQ,"XrdProofConn::GetAccessToSrv: server at "<<URLTAG<<" is a proofd");
+      // Close correctly this connection to proofd
+      kXR_int32 dum[2];
+      dum[0] = (kXR_int32)htonl(0);
+      dum[1] = (kXR_int32)htonl(2032);
+      WriteRaw(&dum[0], sizeof(dum));
       Close("P");
       return 0;
 

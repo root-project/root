@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.169 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.170 2005/12/10 16:51:57 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1765,13 +1765,14 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
       if (u.GetPort() == TUrl("a").GetPort())
          u.SetPort(1093);
 
-      // Find out if we are required to attach to an existing session
+      // Find out if we are required to attach to a specific session
       TString o(u.GetOptions());
-      Bool_t attach = kFALSE;
       Int_t locid = -1;
+      Bool_t create = kFALSE;
       if (o.Length() > 0) {
-         if (o.IsDigit()) {
-            attach = kTRUE;
+         if (o.BeginsWith("N",TString::kIgnoreCase)) {
+            create = kTRUE;
+         } else if (o.IsDigit()) {
             locid = o.Atoi();
          }
          u.SetOptions("");
@@ -1780,25 +1781,34 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
       // Init the manager
       TVirtualProofMgr *mgr = TVirtualProofMgr::Create(u.GetUrl());
 
-      if (mgr) {
+      if (mgr && mgr->IsValid()) {
 
+         // If XProofd we always attempt an attach first
+         Bool_t attach = (create || mgr->IsProofd()) ? kFALSE : kTRUE;
          if (attach) {
             TVirtualProofDesc *d = 0;
-            if ((d = (TVirtualProofDesc *) mgr->GetProofDesc(locid))) {
-               proof = (TVirtualProof*) mgr->AttachSession(locid);
+            if (locid < 0)
+               // Get the list of sessions
+               d = (TVirtualProofDesc *) mgr->QuerySessions("")->First();
+            else
+               d = (TVirtualProofDesc *) mgr->GetProofDesc(locid);
+            if (d) {
+               proof = (TVirtualProof*) mgr->AttachSession(d->GetLocalId());
                if (!proof || !proof->IsValid()) {
-                  Error("Proof", "new session could not be attached");
+                  if (locid)
+                     Error("Proof", "new session could not be attached");
                   SafeDelete(proof);
                }
             }
          }
 
          // start the PROOF session
-         proof = (TVirtualProof*) mgr->CreateSession(conffile, confdir, loglevel);
-         if (!proof || !proof->IsValid()) {
-            Error("Proof", "new session could not be created");
-            SafeDelete(proof);
-            return 0;
+         if (!proof) {
+            proof = (TVirtualProof*) mgr->CreateSession(conffile, confdir, loglevel);
+            if (!proof || !proof->IsValid()) {
+               Error("Proof", "new session could not be created");
+               SafeDelete(proof);
+            }
          }
       }
       return proof;

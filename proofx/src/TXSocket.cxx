@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:$:$Id:$
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -151,10 +151,6 @@ TXSocket::TXSocket(const char *url,
       }
    }
 
-   // Set max number of tries and timeout
-   EnvPutInt(NAME_FIRSTCONNECTMAXCNT, gEnv->GetValue("XProof.ConnectMaxTry", DFLT_CONNECTMAXTRY));
-   EnvPutInt(NAME_CONNECTTIMEOUT, gEnv->GetValue("XProof.ConnectTimeout", DFLT_CONNECTTIMEOUT));
-
    if (url) {
 
       // Create connection
@@ -178,13 +174,11 @@ TXSocket::TXSocket(const char *url,
       }
 
       // Fill some info
-      fUser = fConn->fUser.c_str();
       fHost = fConn->fHost.c_str();
       fPort = fConn->fPort;
 
       // Also in the base class
       fUrl = fConn->fUrl.GetUrl().c_str();
-      fRemoteProtocol = fConn->fRemoteProtocol;
       fAddress.fPort = fPort;
 
       // This is needed for the reader thread to signal an interrupt
