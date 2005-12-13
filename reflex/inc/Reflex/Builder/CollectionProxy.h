@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.6 2005/12/08 06:43:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.7 2005/12/13 09:22:31 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -21,7 +21,7 @@ namespace std {
    template <class T, class A>  class list;
    template <class T, class A>  class queue;
    template <class T, class A>  class stack;
-   template <class K, class T, class A>  class Set;
+   template <class K, class T, class A>  class set;
    template <class K, class T, class A>  class multiset;
    template <class K, class T, class R, class A>  class map;
    template <class K, class T, class R, class A>  class multimap;
