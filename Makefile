@@ -776,7 +776,7 @@ uninstall:
 	else \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(CINT)`; \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(MAKECINT)`; \
-	   rm -f $(DESTDIR)$(BINDIR)/`basename $(ROOTCINT)`; \
+	   rm -f $(DESTDIR)$(BINDIR)/`basename $(ROOTCINTEXE)`; \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(RMKDEP)`; \
 	   if [ "x$(BINDEXP)" != "x" ] ; then \
 	      rm -f $(DESTDIR)$(BINDIR)/`basename $(BINDEXP)`; \
