@@ -35,16 +35,6 @@ ifeq ($(PROOFLIB),)
 PROOFSERV    :=
 endif
 
-##### xproofd #####
-ifneq ($(XROOTDDIR),)
-XPROOFDLIBS  := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
-		$(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a
-XPROOFD      := bin/xproofd$(EXEEXT)
-else
-XPROOFDLIBS  :=
-XPROOFD      :=
-endif
-
 ##### hadd #####
 HADDS        := $(MODDIRS)/hadd.cxx
 HADDO        := $(HADDS:.cxx=.o)
@@ -119,9 +109,6 @@ $(PROOFSERV):   $(PROOFSERVO) $(ROOTLIBSDEP) $(PROOFLIB) \
                 $(TREEPLAYERLIB) $(THREADLIB)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) $(ROOTULIBS) \
 		   $(RPATH) $(ROOTLIBS) $(PROOFLIBS) $(SYSLIBS)
-
-$(XPROOFD):     $(XPDO) $(XPROOFDLIBS)
-		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDLIBS) $(SYSLIBS)
 
 $(HADD):        $(HADDO) $(ROOTLIBSDEP) $(MATRIXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(ROOTULIBS) \

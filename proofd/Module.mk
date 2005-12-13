@@ -50,6 +50,12 @@ XPDINCEXTRA  := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA  += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA  += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 		$(XROOTDDIRL)/libXrdNet.a
+XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
+		$(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a
+XPROOFDEXE   := bin/xproofd
+else
+XPROOFDEXELIBS :=
+XPROOFDEXE     :=
 endif
 
 # used in the main Makefile
@@ -57,6 +63,7 @@ ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
 ALLEXECS     += $(PROOFDEXE)
 ifeq ($(BUILDXRD),yes)
 ALLLIBS      += $(XPDLIB)
+ALLEXECS     += $(XPROOFDEXE)
 endif
 
 # include all dependency files
@@ -74,12 +81,15 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
+$(XPROOFDEXE):   $(XPDO) $(XPROOFDEXELIBS)
+		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS)
+
 $(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPLUGINS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO)" \
 		   "$(XPDLIBEXTRA)"
 
-all-proofd:     $(PROOFDEXE) $(XPDLIB)
+all-proofd:     $(PROOFDEXE) $(XPROOFDEXE) $(XPDLIB)
 
 clean-proofd:
 		@rm -f $(PROOFDEXEO) $(XPDO)
