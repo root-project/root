@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisa.cxx,v 1.15 2005/10/04 10:34:04 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisa.cxx,v 1.1 2005/12/11 02:39:28 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TMonaLisa::TMonaLisa(const char *monid, const char *montag,
    //              ---> <key3> - <value3>
    //              ---> <key4> - <value4>
    //
-   // The parameter monid is equivalent to the MonaLisa farm name, for the
+   // The parameter monid is equivalent to the MonaLisa node name, for the
    // case of process monitoring it can be just an identifier to classify
    // the type of jobs e.g. "PROOF_PROCESSING".
    // If monid is not specified, TMonaLisa tries to set it in this order
@@ -77,7 +77,7 @@ TMonaLisa::TMonaLisa(const char *monid, const char *montag,
    // - ALIEN_MASTERJOB_ID
    // - ALIEN_PROC_ID
    //
-   // The parameter montag is equivalent to the MonaLisa node name, for the
+   // The parameter montag is equivalent to the MonaLisa farm name, for the
    // case of process monitoring it can be a process identifier e.g. a PROOF
    // session ID.
    //
