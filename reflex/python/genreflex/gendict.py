@@ -557,7 +557,12 @@ class genDictionary(object) :
           noPublicType = self.checkAccessibleType(self.xref[a['type']])
           if ( noPublicType ):
             noPubTypeAttrs = self.xref[noPublicType]['attrs']
-            #t = string.translate(str(t), self.transtable2)[2:]
+            tend = ''
+            while t[-1] in ('*','&') :
+              tend = tend + t[-1]
+              t = t[:-1]
+            t = string.translate(str(t), self.transtable)[2:]
+            t += tend
             if ( string.translate(str(self.genTypeName(noPubTypeAttrs['id'])), self.transtable) not in self.generated_shadow_classes ):
               c += self.genClassShadow(noPubTypeAttrs)
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
