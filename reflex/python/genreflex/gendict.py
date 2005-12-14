@@ -515,16 +515,16 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def checkAccessibleType( self, type ):
     while type['elem'] in ('PointerType','Typedef') : type = self.xref[type['attrs']['type']]
-    typeAttrs = type['attrs']
-    if typeAttrs.has_key('access') and typeAttrs['access'] in ('private','protected') : return type['attrs']['id']
+    attrs = type['attrs']
+    if 'access' in attrs and attrs['access'] in ('private','protected') : return attrs['id']
+    if 'context' in attrs and self.checkAccessibleType(self.xref[attrs['context']]) : return attrs['id']
     return 0
 #----------------------------------------------------------------------------------
   def genClassShadow(self, attrs, inner = 0 ) :
+    inner_shadows = {}
     bases = self.getBases( attrs['id'] )
-    if inner : cls = attrs['name']
-    else     : cls = self.genTypeName(attrs['id'])
+    cls = self.genTypeName(attrs['id'],const=True,colon=True)
     clt = string.translate(str(cls), self.transtable)
-    self.generated_shadow_classes.append(clt)
     typ = self.xref[attrs['id']]['elem'].lower()
     indent = inner * 2 * ' '
     if typ == 'enumeration' :
@@ -547,24 +547,32 @@ class genDictionary(object) :
       memList = members.split()
       for m in memList :
         member = self.xref[m]
-        if member['elem'] in ('Class','Struct'):
-          c += self.genClassShadow(member['attrs'], inner + 1)
+        if member['elem'] in ('Class','Struct','Union','Enumeration') \
+           and 'access' in member['attrs'] \
+           and member['attrs']['access'] in ('private','protected') :
+          cmem = self.genTypeName(member['attrs']['id'],const=True,colon=True)
+          if cmem != cls and cmem not in inner_shadows :
+            inner_shadows[cmem] = string.translate(str(cmem), self.transtable)
+            c += self.genClassShadow(member['attrs'], inner + 1)
       for m in memList :
         member = self.xref[m]
         if member['elem'] in ('Field',) :
           a = member['attrs']
           t = self.genTypeName(a['type'],colon=True,const=True)
+          #---- Check for non public types------------------------
           noPublicType = self.checkAccessibleType(self.xref[a['type']])
           if ( noPublicType ):
             noPubTypeAttrs = self.xref[noPublicType]['attrs']
-            tend = ''
-            while t[-1] in ('*','&') :
-              tend = tend + t[-1]
-              t = t[:-1]
-            t = string.translate(str(t), self.transtable)[2:]
-            t += tend
-            if ( string.translate(str(self.genTypeName(noPubTypeAttrs['id'])), self.transtable) not in self.generated_shadow_classes ):
-              c += self.genClassShadow(noPubTypeAttrs)
+            cmem = self.genTypeName(noPubTypeAttrs['id'],const=True,colon=True)
+            if cmem != cls and cmem not in inner_shadows :
+              inner_shadows[cmem] = string.translate(str(cmem), self.transtable)
+              c += self.genClassShadow(noPubTypeAttrs, inner + 1)
+          #---- translate the type with the inner shadow type-----  
+          ikeys = inner_shadows.keys()
+          ikeys.sort(lambda x,y : len(y) - len(x))
+          for ikey in ikeys :      
+            if   t.find(ikey) == 0      : t = t.replace(ikey, inner_shadows[ikey])     # change current class by shadow name 
+            elif t.find(ikey[2:]) != -1 : t = t.replace(ikey[2:], inner_shadows[ikey]) # idem without leading ::
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
           elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
           else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
@@ -891,7 +899,7 @@ class genDictionary(object) :
     if self.selector : xattrs = self.selector.selfield( cls,name)
     else             : xattrs = None
     mod = self.genModifier(attrs,xattrs)
-    shadow = '__shadow__::' + string.translate( str(cls), self.transtable)
+    shadow = '__shadow__::' + string.translate( str(cl), self.transtable)
     c = '  .AddDataMember(%s, "%s", OffsetOf(%s, %s), %s)' % (self.genTypeID(attrs['type']), name, shadow, name, mod)
     c += self.genCommentProperty(attrs)
     # Other properties
@@ -1153,7 +1161,7 @@ class genDictionary(object) :
              'access' not in self.xref[m]['attrs'] and not self.isDestructorNonPublic(attrs['id']):
           # NewDel functions extra function
           id = u'_x%d' % self.x_id.next()
-          new_attrs = { 'id':id, 'context':attrs['id'] }
+          new_attrs = { 'id':id, 'context':attrs['id'], 'artificial':'true' }
           self.xref[id] = {'elem':'GetNewDelFunctions', 'attrs':new_attrs,'subelems':[] }
           attrs['members'] += u' ' + id    
     # Bases extra function
@@ -1212,7 +1220,8 @@ class genDictionary(object) :
   def genGetNewDelFunctionsDecl( self, attrs, args ) :
     return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genGetNewDelFunctionsBuild( self, attrs, args ) :
-    return '  .AddFunctionMember<void*(void)>("__getNewDelFunctions", method%s)' % (attrs['id'])
+    mod = self.genModifier(attrs, None)  
+    return '  .AddFunctionMember<void*(void)>("__getNewDelFunctions", method%s, 0, 0, %s)' % (attrs['id'], mod)
   def genGetNewDelFunctionsDef( self, attrs, args ) :
     cid      = attrs['context']
     cl       = self.genTypeName(cid, colon=True)
@@ -1258,6 +1267,9 @@ class genDictionary(object) :
     if 'members' in attrs : members = attrs['members'].split()
     else                  : members = []
     cid = attrs['id']
+    for c in self.classes :
+      if c['context'] == cid and c['id'] not in members :
+        attrs['members'] += u' ' + c['id']
     for m in self.methods :
       if m['context'] == cid and m['id'] not in members :
         # replace the mame by the complete templated name. Use the demangle module for that

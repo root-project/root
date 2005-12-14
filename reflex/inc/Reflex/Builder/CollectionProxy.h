@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.8 2005/12/13 09:59:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.9 2005/12/13 10:00:42 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -199,7 +199,7 @@ namespace ROOT {
       /** @class TCollectionProxy::Map TCollectionProxy.h TCollectionProxy.h 
        *
        * Small helper to encapsulate all necessary data accesses for 
-       * containers like Set, multiset etc.
+       * containers like set, multiset etc.
        *
        * @author  M.Frank
        * @version 1.0
@@ -358,7 +358,7 @@ namespace ROOT {
             return CFTGenerator<Pushback<std::deque<T,A> > >::Generate();
          }
       };
-      // Specialization for std::Set 
+      // Specialization for std::set 
       template <class K, class T, class A> struct Proxy< std::set<K,T,A> > {
          static CollFuncTable* Generate()  {
             return CFTGenerator<Insert<std::set<K,T,A> > >::Generate();
