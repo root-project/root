@@ -104,7 +104,7 @@ distclean::     distclean-proofd
 ##### extra rules ######
 $(PROOFDDIRS)/proofd.o: $(PROOFDDIRS)/proofd.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<
-ifeq ($(ARCH),linuxicc)
+ifneq (,$(findstring $(CXX),"g++ icc"))
 # remove when xrootd has moved from strstream.h -> sstream.
 $(XPDO): %.o: %.cxx
 	$(CXX) $(OPT) -Wno-deprecated $(CXXFLAGS) $(XPDINCEXTRA) -o $@ -c $<
