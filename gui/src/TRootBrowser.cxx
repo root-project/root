@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.88 2005/12/13 16:03:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.89 2005/12/13 16:58:07 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2595,8 +2595,8 @@ void TRootBrowser::BrowseTextFile(const char *file)
    const int bufferSize = 1024;
    char buffer[bufferSize];
 
-   FILE *fd = fopen(file, "r");
-   int sz = fread(buffer, bufferSize, 1, fd);
+   FILE *fd = fopen(file, "rb");
+   int sz = fread(buffer, 1, bufferSize, fd);
    fclose(fd);
 
    if (isBinary(buffer, sz)) {
