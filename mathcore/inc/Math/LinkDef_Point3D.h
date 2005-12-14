@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Point3D.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Point3D.h,v 1.2 2005/10/27 18:00:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -115,7 +115,6 @@
 #pragma link C++ function  ROOT::Math::operator-(ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> >, const  ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> > &);
 #pragma link C++ function  ROOT::Math::operator-(ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> >, const  ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > &);
 
-#endif
 
 // utility functions
 

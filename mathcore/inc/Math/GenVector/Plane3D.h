@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.1 2005/12/02 12:00:50 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.1 2005/12/02 21:35:19 moneta Exp $
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by:    moneta   at Fri Dec 02   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.1 2005/11/24 14:45:50 moneta Exp $
+// Last update: $Id: Plane3D.h,v 1.1 2005/12/02 21:35:19 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1
@@ -34,8 +34,8 @@ namespace ROOT {
         Class describing a geometrical plane in 3D. 
 	A Plane3D is a 2 dimensional surface spanned by two linearly independent vectors.  
         The plane is described by the equation 
-	$a*x + b*y + c*z + d = 0$ where (a,b,c) are the components of the 
-        normal vector to the plane $n = (a,b,c)$ and $d = - n \dot x$, where x is any point 
+	\f$ a*x + b*y + c*z + d = 0 \f$ where (a,b,c) are the components of the 
+        normal vector to the plane \f$ n = (a,b,c)  \f$ and \f$ d = - n \dot x \f$, where x is any point 
 	belonging to plane. 
 	More information on the mathematics describing a plane in 3D is available on 
 	<A HREF=http://mathworld.wolfram.com/Plane.html>MathWord</A>.
@@ -99,8 +99,8 @@ namespace ROOT {
       /**
          constructor from three generic point belonging to the plane
 	 \param p1 point1 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-	 \param p1 point2 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-	 \param p1 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
+	 \param p2 point2 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
+	 \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
       */
       template <class T1, class T2, class T3>
       Plane3D(const  PositionVector3D<T1> & p1, const  PositionVector3D<T2> & p2, const  PositionVector3D<T3> & p3  ) : 
@@ -160,13 +160,13 @@ namespace ROOT {
 
       /**
 	 Return the projection of a Cartesian point to a plane
-	 \patam p Point expressed as PositionVector3D<Cartesian3D<double> >
+	 \param p Point expressed as PositionVector3D<Cartesian3D<double> >
       */
       XYZPoint ProjectOntoPlane(const XYZPoint & p) const; 
 
       /**
 	 Return the projection of a point to a plane
-	 \patam p Point expressed as generic ROOT::Math::PositionVector3D
+	 \param p Point expressed as generic ROOT::Math::PositionVector3D
       */
       template <class T> 
       PositionVector3D<T> ProjectOntoPlane(const PositionVector3D<T> & p) const { 
