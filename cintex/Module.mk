@@ -63,7 +63,8 @@ include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 %.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(CINTEXLIB):   $(CINTEXO) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO) $(ORDER_) $(MAINLIBS) $(CINTEXLIBDEP)
+$(CINTEXLIB):   $(CINTEXO) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO) \
+                $(ORDER_) $(subst $(CINTEXLIB),,$(MAINLIBS)) $(CINTEXLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libCintex.$(SOEXT) $@ "$(CINTEXO)" \
 		"$(CINTEXLIBEXTRA)"

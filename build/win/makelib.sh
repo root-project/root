@@ -60,22 +60,19 @@ if [ "$R__PLATFORM" = "win32" ]; then
               lib/${name}.exp $R__EXTRA $syslibs"
       elif [ "$R__LIB" = "lib/libCintex.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libReflex.lib $R__EXTRA $syslibs"
+              lib/${name}.exp lib/libCore.lib lib/libReflex.lib \
+              lib/libCint.lib $R__EXTRA $syslibs"
       elif [ "$R__LIB" = "lib/libCore.dll" ]; then
-         if [ "$(bin/root-config --dicttype)" != "cint" ]; then
-             needReflex="lib/libCintex.lib lib/libReflex.lib"
-         fi
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp lib/libCint.lib $needReflex\
-              $R__EXTRA $syslibs WSock32.lib \
-              Oleaut32.lib Iphlpapi.lib"
+              lib/${name}.exp lib/libCint.lib \
+              $R__EXTRA $syslibs WSock32.lib Oleaut32.lib Iphlpapi.lib"
       else
          if [ "$(bin/root-config --dicttype)" != "cint" ]; then
              needReflex="lib/libCintex.lib lib/libReflex.lib"
          fi
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
-              lib/${name}.exp $R__EXTRA lib/libCore.lib \
-              lib/libCint.lib $needReflex \
+              lib/${name}.exp $R__EXTRA \
+              $needReflex lib/libCore.lib lib/libCint.lib \
               $syslibs"
       fi
       echo $cmd

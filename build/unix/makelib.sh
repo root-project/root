@@ -51,9 +51,9 @@ if [ "x$EXPLICIT" = "xyes" ]; then
           fi
       fi
       if [ $LIB != "lib/libCore.$soext" ]; then
-         EXPLLNKCORE="-Llib -lCore -lCint $NEEDREFLEX"
+         EXPLLNKCORE="-Llib $NEEDREFLEX -lCore -lCint"
       else
-         EXPLLNKCORE="-Llib -lCint $NEEDREFLEX"
+         EXPLLNKCORE="-Llib -lCint"
       fi
    fi
 fi
