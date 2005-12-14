@@ -12,8 +12,16 @@ expressions such that these expressions can be transformed at compile time to
 code which is equivalent to hand optimized code in a low-level language like FORTRAN
 or C (see for example ref. 1) 
 <p>
-The SMatrix has been deeveloped initially by T. Glebe of the  Max-Planck-Institut, Heidelberg, as part of the HeraB analysis framework. A subset of the original package has been now incorporated in the %ROOT distribution, with the aim to provide to the LHC experiments a stand-alone and high performant matrix package for reconstruction. The API of the current package differs from the original one, in order to be complient to the %ROOT coding conventions. 
-
+The SMatrix has been deeveloped initially by T. Glebe of the  Max-Planck-Institut, Heidelberg, as part of the HeraB analysis framework. A subset of the original package has been now incorporated in the %ROOT distribution, with the aim to provide to the LHC experiments a stand-alone and high performant matrix package for reconstruction. The API of the current package differs from the original one, in order to be compliant to the %ROOT coding conventions. 
+<p>
+SMatrix contains generic \ref SMatrix to describe matrix and vector of arbitrary dimensions and of arbitrary type. The classes are templated on the scalar type and on the size of the matrix (number of crows and columns) or the vector. Therefore, the size has to be known at compile time. SMatrix does not contain 
+separated classes to describe symmetric matrices. One should then model a symmetric matrix with the ROOT::Math::SMatrix class, instantiated with dimension D1=D2.
+<br> 
+It is not in the mandate of this package to provide a complete linear algebra functionality for these classes. What is provided are the matrix-matrix, matrix-vector, vector-vector operations, plus some extra functionality for square matrices, like inversion, which is based on the optimized Cramer method for squared matrices of size up to 6x6, and determinant calculation.  
+<p>  
+The SMatrix package contains only header files. Normally one does not need to build any library. In the %ROOT distribution a library, <em>libSmatrix</em> is produced with the C++ dictionary information for some squared matrices and vectors. 
+<br>
+The current version of SMatrix can be downloaded from <A HREF="http://seal.web.cern.ch/seal/MathLibs/5_0_8/SMatrix-5.08.00.tar.gz">here</A>. If you want to install the header files or run the test <em>configure</em> script and then <em>make install</em> or <em>make check</em> to build the tests. No dictionary library is built in this case. 
  
 <h2>References</h2>
 <ol>
