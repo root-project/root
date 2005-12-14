@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.83 2005/11/16 20:10:45 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.84 2005/11/23 04:47:30 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -572,11 +572,16 @@ void TStreamerBase::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       TStreamerElement::Streamer(R__b);
-      fBaseClass = gROOT->GetClass(GetName());
+      // If the class owning the TStreamerElement and the base class are not
+      // loaded, on the file their streamer info might be in the following 
+      // order (derived class,base class) and hence the base class is not
+      // yet emulated.
+      fBaseClass = (TClass*)-1; 
       if (R__v > 2) {
          R__b >> fBaseVersion;
       } else {
          // could have been: fBaseVersion = GetClassPointer()->GetClassVersion();
+         fBaseClass = gROOT->GetClass(GetName());         
          fBaseVersion = fBaseClass->GetClassVersion();
       }
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));

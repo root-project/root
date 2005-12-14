@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.181 2005/11/16 20:10:11 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.182 2005/12/02 23:55:07 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1008,6 +1008,11 @@ void TClass::BuildEmulatedRealData(const char *name, Int_t offset, TClass *cl)
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%d\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
       }
+      //if (fClassInfo==0 && element->IsBase()) {
+      //   if (fBase==0) fBase = new TList;
+      //   TClass *base = element->GetClassPointer();
+      //   fBase->Add(new TBaseClass(this, cl, eoffset));
+      //}
    }
 }
 
@@ -1545,9 +1550,9 @@ TList *TClass::GetListOfBases()
 {
    // Return list containing the TBaseClass(es) of a class.
 
-   if (!fClassInfo) return 0;
-
    if (!fBase) {
+      if (!fClassInfo) return 0;
+
       if (!gInterpreter)
          Fatal("GetListOfBases", "gInterpreter not initialized");
 
@@ -2143,7 +2148,7 @@ Bool_t TClass::InheritsFrom(const char *classname) const
 
    if (strcmp(GetName(), classname) == 0) return kTRUE;
 
-   if (!fClassInfo) return kFALSE;
+   if (!fClassInfo) return InheritsFrom(TClass::GetClass("classname"));
 
    // cast const away (only for member fBase which can be set in GetListOfBases())
    if (((TClass *)this)->GetBaseClass(classname)) return kTRUE;
