@@ -6,61 +6,57 @@
  \page ExtUsagePage Examples with external Packages
 
 
-<h2>Connection to Linear Algebra classes</h2>
+<h3>Connection to Linear Algebra classes</h3>
 
 It is possible to use the Vector and Rotation classes together with the Linear Algebra classes. 
-It is possiible to  construct any 3D or 4D Vector from a Linear Agebra Vector class which implements the 
-operator[]. It is required also to pass the index of the first coordinate in the Lineas Algebra vector. 
-It is then assumed that the other coordinates, will be following contigously.  
+It is possible to  set and get the contents of any 3D or 4D Vector from a Linear Agebra Vector class 
+which implements an iterator or something which behaves like an iterator. For example a pointer to a C array 
+(double *) behaves like an iterator. 
+It is then assumed that the coordinates, like (x,y,z) will be stored contigously.  
 
 <pre>
-TVectorD       r2(N)           // %ROOT Linear Algebra Vector containing many vectors
-XYZVector      v2(&r2[INDEX])   // construct vector from x=r[INDEX], y=r[INDEX+1], z=r[INDEX+2]
-
-
-HepVector      c(4)            // CLHEP Linear algebra vector
-XYZTVector     q(&c[0])        // construct using px=c[0], py=c[1], pz=c[2], E=c[4]
-
+TVectorD       r2(N)                        // %ROOT Linear Algebra Vector containing many vectors
+XYZVector      v2; 
+v2.SetCoordinates(&r2[INDEX],&r2[index]+3); // construct vector from x=r[INDEX], y=r[INDEX+1], z=r[INDEX+2]
+</pre>
+To fill a Linear Algebra Vector from a 3D or 4D Vector, with GetComponents() one can get the internal coordinate data.
+<pre>
+HepVector      c(3);                        // CLHEP Linear algebra vector
+v2.GetCoordinates(&c[0],&c[index]+3 )       // fill HepVector c with c[0] = x, c[1] = y , c[2] = z
+</pre>
+Or using TVectorD
+<pre>
+double * data[3];
+v2.GetCoordinates(data,data+3);        
+TVectorD       r1(3,data);                  // create a new Linear Algebra vector copying the data
+</pre> 
+In the case of transformations, constructor and method to Set/Get components exist with Linear Algebra matrices. 
+The requisite is that the matrix data are stored, for example in the cse of a LorentzRotation, from (0,0) thru (3,3)
+<pre>
+TMatrixD(4,4) m;
+LorentzRotation r(m)                        // create LorentzRotation from matrix m  
+r.GetComponents(m)                          // fill matrix m with LorentzRotation components
 </pre>
 
-To construct a Linear Algebra Vector from a 3D or 4D Vector, a method to access the internal data is provided. This is provided only for Vectors and Points based on Cartesian coordinates, where it is garanted that the data are stored contigously in memory. 
-Example: 
+<h3>Connection to Other Vector classes</h3>
 
-<pre>
-XYZVector      v(x,y,z);
-double * data;
-v.GetCoordinates(data);        
-
-TVectorD       r1(3,data);  // create a new Linear Algebra vector copying the data
-TVectorD       r2;
-</pre> 
-
-<h2>Connection to Other Vector classes</h2>
-
-The ROOT::Math 3D and 4D vectors can be constructed and assigned from any Vectors which has the following pre-conditions: 
-\item for 3D Vectors and Points must implement the x(), y() ans z() methods
-\item for LorentzVectors must implement the px(), py(), pz() and e() methods. 
-
-Example: 
+The  3D and 4D vectors of teh GenVector package can be constructed and assigned from any Vector which has the following pre-conditions: 
+<ul>
+<li> for 3D Vectors and Points must implement the x(), y() ans z() methods
+<li> for LorentzVectors must implement the x(), y(), z() and t() methods. 
+</ul>
+ 
 <pre> 
 CLHEP::Hep3Vector hv; 
-XYZVector  v1(hv);                              //  create  3D Vector from  CLHEP 3D Vector
+XYZVector  v1(hv);                          //  create  3D Vector from  CLHEP 3D Vector
 
 HepGeom::Point3D<double>  hp; 
-XYZPoint p1(hp);                                // create a 3D Point from CLHEP geom Point
+XYZPoint p1(hp);                            // create a 3D Point from CLHEP geom Point
 
 CLHEP::HepLorentzVector  hq; 
-LorentzVector q(hq);                            // create a L.V. from CLHEP L.V.
+XYZTVector    q(hq);                        // create a LorentzVector  from CLHEP L.V.
 </pre>
 
-
-Using the behavior of TVector3 and TLorentzVector as Linear Algebra Vectors (they do implement the operator[] ), we can also create a ROOT::Math Vector from them as we do from a linear algebra vector. 
-
-<pre>
-TLorentzVector tq; 
-LorentzVector  q;
-q.SetCoordinates( &tq[0] );
-</pre>                                         
 
 */
  

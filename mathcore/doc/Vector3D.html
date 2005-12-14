@@ -47,7 +47,7 @@ v1.X(); v1.X(); v1.Z()                     // returns cartesian components for t
 v1.Rho(); v1.Eta(); v1.Phi()               // returns cylindrical components for the cartesian vector v1
 r2.X(); r2.Y(); r2.Z()                     // returns cartesian components for the cylindrical vector r2
 </pre>
-All the coordinates of the vector can be retrieved with the GetCoordinates method: 
+In addition, all the 3 coordinates of the vector can be retrieved with the GetCoordinates method: 
 <pre>
 double d[3];
 v1.GetCoordinates(d);                     // fill d array with (x,y,z) components of v1
@@ -55,15 +55,16 @@ r2.GetCoordinates(d);                     // fill d array with (r,eta,phi) compo
 std::vector<double> vc(3);                 
 v1.GetCoordinates(vc.begin(),vc.end());   // fill std::vector with (x,y,z) components of v1
 </pre>
-To get more information on all the coordinate accessors see the ROOT::Math::DisplacementVector3D documentation.
+To get more information on all the coordinate accessors see the reference documentation of ROOT::Math::DisplacementVector3D.
 
 <h4>Setter Methods</h4>
 One can set only all the three coordinates via: 
-<ul>
-<li> SetCoordinates( c1, c2, c3)  which sets the three basic coordinates, x,y,z for a XYZVector and r,theta,phi for a Polar3DVector. 
-<li> SetXYZ ( x, y, z) which sets the three cartesian components. 
-<li> Single coordinate setter methods like SetX() or SetY() are available for the basic vector coordinates; for example (x,y,z) for a cartesian vector and (rho, theta, phi) for a polar vector. Attempting to do a SetX() on a Polar vector will not compile.  
-</ul>
+<pre>
+v1.SetCoordinates(c1,c2,c3);               // sets the (x,y,z) for a XYZVector  
+r2.SetCoordinates(c1,c2,c3);               // sets r,theta,phi for a Polar3DVector
+r2.SetXYZ(x,y,z);                          // sets the three cartesian components for the Polar3DVector
+</pre> 
+Single coordinate setter methods are available for the basic vector coordinates, like SetX() for a XYZVector or SetR() for a polar vector. Attempting to do a SetX() on a polar vector will not compile.  
 <pre>
 XYZVector v1;      v1.SetX(1)             // OK setting x for a Cartesian vector
 Polar3DVector v2;  v2.SetX(1)             // ERROR: cannot set  X for a Polar vector. Method will not compile
