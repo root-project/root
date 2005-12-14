@@ -858,7 +858,7 @@ int testRotation() {
   ok+= compare(lvb.Y(), lvb2.Y(), "y"); 
   ok+= compare(lvb.Z(), lvb2.Z(), "z"); 
   ok+= compare(lvb.E(), lvb2.E(), "t"); 
-  ok+= compare(lvb.M(), lv.M(), "m",10); // m must stay constant 
+  ok+= compare(lvb.M(), lv.M(), "m",50); // m must stay constant 
 
 
   // test inverse
