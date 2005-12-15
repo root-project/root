@@ -90,6 +90,7 @@ public:
    int           Process2();
    void          Reset();
    int           SendMsg();
+   void          SetIgnoreZombieChild();
    void          SetProofServEnv(int psid);
    int           SetUserEnvironment(const char *usr, const char *dir = 0);
 

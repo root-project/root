@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.3 2005/12/13 17:59:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -49,7 +50,21 @@
     defined(__APPLE__) || defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <sys/types.h>
+#endif
+
+// To ignore zombie childs
 #include <signal.h>
+#include <sys/param.h>
+#if defined(__sun) || defined(__sgi)
+#  include <fcntl.h>
+#endif
+#include <sys/wait.h>
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || \
+    defined(__APPLE__) || defined(__hpux)
+#define USE_SIGCHLD
+#if !defined(__hpux)
+#define	SIGCLD SIGCHLD
+#endif
 #endif
 
 #include "XrdVersion.hh"
@@ -196,6 +211,23 @@ XrdSecService *XrdProofdProtocol::LoadSecurity(char *seclib, char *cfn)
    // All done
    return cia;
 }
+
+#if defined(USE_SIGCHLD)
+//______________________________________________________________________________
+static void SigChild(int)
+{
+   int         pid;
+#if defined(__hpux) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
+    defined(__APPLE__)
+   int status;
+#else
+   union wait  status;
+#endif
+
+   while ((pid = wait3(&status, WNOHANG, 0)) > 0)
+      ;
+}
+#endif
 
 //_________________________________________________________________________________
 extern "C"
@@ -1510,22 +1542,19 @@ int XrdProofdProtocol::Create()
    // Perform regular accept
    if (!(fUNIXSock->Accept(peerpsrv, XRDNET_NODNTRIM, 5*fgInternalWait))) {
       // Try kill
-      bool iskilled = (kill(pid, SIGKILL) == 0);
-
-      // Reset the instance
-      xps->Reset();
-
-      // Callback not received in time: kill the child and fail
-      if (iskilled)
+      if (kill(pid, SIGKILL) == 0)
          fResponse.Send(kXP_ServerError, "did not receive callback: process killed");
       else
          fResponse.Send(kXP_ServerError, "did not receive callback:"
                         " process could not be killed");
+      xps->Reset();
       return rc;
    }
 
    // Allocate a new network object
    if (!(linkpsrv = XrdLink::Alloc(peerpsrv, lnkopts))) {
+      kill(pid, SIGKILL);
+      xps->Reset();
       fResponse.Send(kXP_ServerError, "could not allocate network object");
       return rc;
 
@@ -1538,8 +1567,10 @@ int XrdProofdProtocol::Create()
       // Get a protocol object off the stack (if none, allocate a new one)
       XrdProtocol *xp = Match(linkpsrv);
       if (!xp) {
+         kill(pid, SIGKILL);
          fResponse.Send(kXP_ServerError, "Match failed: protocol error");
          linkpsrv->Close();
+         xps->Reset();
          return rc;
       }
 
@@ -1548,8 +1579,10 @@ int XrdProofdProtocol::Create()
 
       // Attach this link to the appropriate poller and enable it.
       if (!XrdPoll::Attach(linkpsrv)) {
+         kill(pid, SIGKILL);
          fResponse.Send(kXP_ServerError, "could not attach new internal link to poller");
          linkpsrv->Close();
+         xps->Reset();
          return rc;
       }
 
@@ -1559,6 +1592,9 @@ int XrdProofdProtocol::Create()
       // Schedule it
       fgSched->Schedule((XrdJob *)linkpsrv);
    }
+
+   // Ignore childs when they terminate, so they do not become zombies
+   SetIgnoreZombieChild();
 
    // Set ID
    xps->SetSrv(pid);
@@ -1583,6 +1619,32 @@ int XrdProofdProtocol::Create()
 
    // Over
    return rc;
+}
+
+//______________________________________________________________________________
+void XrdProofdProtocol::SetIgnoreZombieChild()
+{
+   // Do want to have childs become zombies and clog up the system.
+   // With SysV all we need to do is ignore the signal.
+   // With BSD, however, we have to catch each signal
+   // and execute the wait3() system call.
+   // Code copied & pasted from rpdutils/src/daemons.cxx .
+
+#ifdef USE_SIGCHLD
+   signal(SIGCLD, SigChild);
+#else
+#if defined(__alpha) && !defined(linux)
+   struct sigaction oldsigact, sigact;
+   sigact.sa_handler = SIG_IGN;
+   sigemptyset(&sigact.sa_mask);
+   sigact.sa_flags = SA_NOCLDWAIT;
+   sigaction(SIGCHLD, &sigact, &oldsigact);
+#elif defined(__sun)
+   sigignore(SIGCHLD);
+#else
+   signal(SIGCLD, SIG_IGN);
+#endif
+#endif
 }
 
 //_____________________________________________________________________________
