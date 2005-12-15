@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.14 2005/12/11 10:51:39 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.15 2005/12/11 20:47:51 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -309,7 +309,7 @@ static inline QWidget *widgetAt(int x, int y)
    return w;
 }
 //______________________________________________________________________________
-inline bool TQtClientFilter::SelectGrab(Event_t &event, UInt_t selectEventMask,QMouseEvent &mouse) 
+bool TQtClientFilter::SelectGrab(Event_t &event, UInt_t selectEventMask,QMouseEvent &mouse) 
 {
    // Select Event:  --  04.12.2005  --
    return fgGrabber ? fgGrabber->SelectGrab(event,selectEventMask, mouse) : kFALSE;
@@ -725,7 +725,7 @@ TQtPointerGrabber::~TQtPointerGrabber()
    SetGrabPointer(0,0,0,0,kFALSE);
 }
 //______________________________________________________________________________
-inline void TQtPointerGrabber::ActivateGrabbing(bool on)
+void TQtPointerGrabber::ActivateGrabbing(bool on)
 {
    // Activate the active mouse pointer event grabbing.
    static int grabCounter = 0;
@@ -759,7 +759,7 @@ inline void TQtPointerGrabber::ActivateGrabbing(bool on)
            || (!fIsActive && !grabber) );
 }
 //______________________________________________________________________________
-inline void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber
+void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber
                              , UInt_t evGrabMask, UInt_t evInputMask
                              , QCursor *cursor, Bool_t grab, Bool_t owner_events
                              , QWidget *confine)
@@ -793,7 +793,7 @@ inline void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber
 
 }
 //______________________________________________________________________________
-inline bool TQtPointerGrabber::SelectGrab(Event_t &event, UInt_t selectEventMask, QMouseEvent &mouse)
+bool TQtPointerGrabber::SelectGrab(Event_t &event, UInt_t selectEventMask, QMouseEvent &mouse)
 { 
   // Select Event:  --  25.11.2005  --
   TQtClientWidget *widget = (TQtClientWidget*)TGQt::wid(event.fWindow);
@@ -901,5 +901,5 @@ inline bool TQtPointerGrabber::SelectGrab(Event_t &event, UInt_t selectEventMask
    return pass2Root;
  }
 //______________________________________________________________________________
-inline Bool_t TQtPointerGrabber::IsGrabSelected(UInt_t selectEventMask) const
+Bool_t TQtPointerGrabber::IsGrabSelected(UInt_t selectEventMask) const
 {  return  fGrabPointerEventMask & selectEventMask; }
