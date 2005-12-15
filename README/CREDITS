@@ -399,6 +399,10 @@ N: Filip Pizlo
 E: pizlo@purdue.edu
 D: TBits extension and test program testbits.cxx
 
+N: Muriel Pivk
+E: Muriel.Pivk@cern.ch
+D: class TSPlot
+
 N: Timur Pocheptsov
 E: Timur.Pocheptsov@cern.ch
 D: Advanced OpenGL viewer.
@@ -422,6 +426,10 @@ D: various contributions to GUI classes
 N: Stefan Roiser
 E: Stefan.Roiser@cern.ch
 D: Reflex and Cintex
+
+N: Paul Russo
+E: russo@fnal.gov
+D: Improvements in I/o
 
 N: Pawel Sawicki
 E: Pawel.Sawicki@ifj.edu.pl
