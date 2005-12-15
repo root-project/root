@@ -63,7 +63,7 @@ if [ ! -d "$dir" ] ; then
 	    read selection
 	    echo ""
 	    case $selection in
-	        1 ) mktest $dir ; addtest $dir $testname; exit 1;;
+	        1 ) ./mktest $dir ; ./addtest $dir $testname; exit 1;;
 	        0 ) exit ;;
 	        * ) echo "Please enter 1 or 0"
 	    esac
