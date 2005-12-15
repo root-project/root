@@ -46,13 +46,13 @@ endif
 
 # Extra include paths and libs
 ifeq ($(BUILDXRD),yes)
-XPDINCEXTRA  := $(XROOTDDIRI:%=-I%)
-XPDINCEXTRA  += $(PROOFDDIRI:%=-I%)
-XPDLIBEXTRA  += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-		$(XROOTDDIRL)/libXrdNet.a
+XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
+XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
+XPDLIBEXTRA    += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
+                  $(XROOTDDIRL)/libXrdNet.a
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
-		$(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a
-XPROOFDEXE   := bin/xproofd
+                  $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a
+XPROOFDEXE     := bin/xproofd
 else
 XPROOFDEXELIBS :=
 XPROOFDEXE     :=
@@ -81,7 +81,7 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
-$(XPROOFDEXE):   $(XPDO) $(XPROOFDEXELIBS)
+$(XPROOFDEXE):  $(XPDO) $(XRDPLUGINS)
 		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS)
 
 $(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPLUGINS)
@@ -97,7 +97,8 @@ clean-proofd:
 clean::         clean-proofd
 
 distclean-proofd: clean-proofd
-		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPDDEP) $(XPDLIB)
+		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPDDEP) $(XPDLIB) \
+		   $(XPROOFDEXE)
 
 distclean::     distclean-proofd
 

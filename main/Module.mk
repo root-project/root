@@ -87,7 +87,7 @@ SSH2RPD         :=
 endif
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) $(XPROOFD)
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
 ifeq ($(BUILDHBOOK),yes)
 ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
@@ -135,20 +135,20 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 
 ifeq ($(BUILDHBOOK),yes)
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) \
-               $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) $(XPROOFD)
+               $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 else
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) $(XPROOFD)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
 endif
 
 clean-main:
 		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) \
-		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO) $(XPROOFD)
+		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO)
 
 clean::         clean-main
 
 distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERV) $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) \
-		   $(G2ROOT) $(G2ROOTOLD) $(SSH2RPDDEP) $(SSH2RPD) $(XPROOFD)
+		   $(G2ROOT) $(G2ROOTOLD) $(SSH2RPDDEP) $(SSH2RPD)
 
 distclean::     distclean-main
