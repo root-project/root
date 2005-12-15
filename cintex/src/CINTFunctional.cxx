@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.7 2005/12/02 12:56:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.8 2005/12/12 23:17:32 pcanal Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -305,17 +305,25 @@ char* Allocate_code(const void* src, size_t len)  {
 }
 
 //------ Function models-------------------------------------------------------------------
+#if INT_MAX < LONG_MAX
+  #define FUNCPATTERN 0xFAFAFAFAFAFAFAFAL
+  #define DATAPATTERN 0xDADADADADADADADAL
+#else
+  #define FUNCPATTERN 0xFAFAFAFAL
+  #define DATAPATTERN 0xDADADADAL
+#endif
+
 static void f0a() {
   typedef void (*f_t)(void*);
-  ((f_t)0xFAFAFAFA)((void*)0xDADADADA);
+  ((f_t)FUNCPATTERN)((void*)DATAPATTERN);
 }
 static void f1a(void* a0) {
   typedef void (*f_t)(void*,void*);
-  ((f_t)0xFAFAFAFA)((void*)0xDADADADA, a0);
+  ((f_t)FUNCPATTERN)((void*)DATAPATTERN, a0);
 }
 static void f4a(void* a0, void* a1, void* a2, void* a3) {
   typedef void (*f_t)(void*,void*,void*,void*,void*);
-  ((f_t)0xFAFAFAFA)((void*)0xDADADADA, a0, a1, a2, a3);
+  ((f_t)FUNCPATTERN)((void*)DATAPATTERN, a0, a1, a2, a3);
 }
 
 struct FunctionCode {
@@ -325,12 +333,10 @@ struct FunctionCode {
       else if (narg == 4) code = (char*)f4a;
       char* b = code;
       for ( size_t o = 0; o < 1000; o++, b++) {
-         if ( *(unsigned int*)b == 0xDADADADA ) a_offset = o;
-         if ( *(unsigned int*)b == 0xFAFAFAFA ) f_offset = o;
+         if ( *(size_t*)b == DATAPATTERN ) a_offset = o;
+         if ( *(size_t*)b == FUNCPATTERN ) f_offset = o;
          if ( f_offset && a_offset ) {
-            fprintf(stderr,"cintex %d %d %d\n",o,o+32,(o + 32) & ~0xF);
             size = (o + 32) & ~0xF;
-            fprintf(stderr,"cintex %d\n",size);
             break;
          }
       }
@@ -341,6 +347,8 @@ struct FunctionCode {
    char*  code;
 };
 
+#undef DATAPATTERN
+#undef FUNCPATTERN
 
 G__InterfaceMethod Allocate_stub_function( StubContext* obj, 
        int (*fun)(StubContext*, G__value*, G__CONST char*, G__param*, int ) )
