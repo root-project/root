@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.29 2005/06/23 06:24:27 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.30 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -142,7 +142,7 @@ void TCollection::Draw(Option_t *option)
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
-   Int_t nch = strlen(option);
+   Int_t nch = (option ? strlen(option) : 0);
 
    while ((object = next())) {
       TString s = object->GetName();

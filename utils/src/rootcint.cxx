@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.228 2005/12/09 23:37:15 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.229 2005/12/12 23:05:48 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -589,15 +589,14 @@ void LoadLibraryMap() {
                            // std is not declared but is also ignored by CINT!
                            break;
                         } else {
-                           gAutoloads[base] = line;
+                           gAutoloads[base] = ""; // We never load namespaces on their own.
                            if (sbuffer < base.size()+20) {
                               delete [] buffer;
                               buffer = new char[base.size()+20];
                               sbuffer = base.size()+20;
                            }
                            strcpy(buffer,base.c_str());
-                           G__set_class_autoloading_table(buffer,
-                                                          (char*)line.c_str());
+                           G__set_class_autoloading_table(buffer,""); // We never load namespaces on their own.
                         }
                         ++k;
                      }
@@ -619,8 +618,7 @@ void LoadLibraryMap() {
                sbuffer = classname.size()+20;
             }
             strcpy(buffer,classname.c_str());
-            G__set_class_autoloading_table(buffer,
-                                           (char*)line.c_str());
+            G__set_class_autoloading_table(buffer,(char*)line.c_str());
          }
       }
    }

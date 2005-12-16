@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.3 2005/12/12 23:05:48 brun Exp $
+//$Id: rflx_gensrc.cxx,v 1.4 2005/12/13 16:30:19 brun Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -687,7 +687,7 @@ int rflx_gensrc::gen_stubfuncdecl_header(std::ostringstream & s,
    // struct/class
    else if (retT == 'u') {
       size_t startRetType=0;
-      if (!retname.compare(0,6,"const ")) 
+      if (!strncmp(retname.c_str(), "const ", 6)) 
          startRetType=6;
       s << ind() << "return new " << retname.substr(startRetType) << "(" 
         << objcaststr << fmname << "(";
