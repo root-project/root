@@ -259,9 +259,11 @@ endif
 ##### gcc version #####
 
 ifneq ($(findstring gnu,$(COMPILER)),)
-GCC_MAJOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
-GCC_MINOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
-GCC_VERS     := gcc-$(GCC_MAJOR).$(GCC_MINOR)
+GCC_MAJOR     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
+GCC_MINOR     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
+GCC_PATCH     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f3)
+GCC_VERS      := gcc-$(GCC_MAJOR).$(GCC_MINOR)
+GCC_VERS_FULL := gcc-$(GCC_MAJOR).$(GCC_MINOR).$(GCC_PATCH)
 endif
 
 ##### f77 options #####

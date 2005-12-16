@@ -68,3 +68,11 @@ distclean-treeplayer: clean-treeplayer
 		   $(TREEPLAYERLIB)
 
 distclean::     distclean-treeplayer
+
+##### extra rules ######
+ifeq ($(ARCH),macosx)
+ifeq ($(GCC_VERS_FULL),gcc-4.0.1)
+$(TREEPLAYERDIRS)/TTreeFormula.o: $(TREEPLAYERDIRS)/TTreeFormula.cxx
+	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<
+endif
+endif
