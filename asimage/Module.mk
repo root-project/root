@@ -161,9 +161,6 @@ else
 		if [ "$(ASPNGINCDIR)" != "" ]; then \
 			PNGINCDIR="--with-png-includes=$(ASPNGINCDIR)"; \
 		fi; \
-		if [ "$(ASTIFFINCDIR)" != "" ]; then \
-			TIFFINCDIR="--with-tiff-includes=$(ASTIFFINCDIR)"; \
-		fi; \
 		if [ "$(ASGIFINCDIR)" != "" ]; then \
 			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
 			NOUNGIF="--with-ungif --with-builtin-ungif=no"; \
@@ -176,6 +173,7 @@ else
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
 		--with-ttf $$TTFINCDIR \
+		--with-tiff=no \
 		--with-afterbase=no \
 		--disable-glx \
 		$$MMX \
@@ -183,7 +181,6 @@ else
 		--with-builtin-ungif \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \
-		$$TIFFINCDIR \
 		$$GIFINCDIR; \
 		$(MAKE))
 endif
