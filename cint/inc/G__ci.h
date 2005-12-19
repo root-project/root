@@ -815,8 +815,8 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXTYPEDEF  8000  /* typedef table */
 #endif
 #else
-#define G__MAXSTRUCT   4000  /* struct table */
-#define G__MAXTYPEDEF  4000  /* typedef table */
+#define G__MAXSTRUCT   8000  /* struct table */
+#define G__MAXTYPEDEF  8000  /* typedef table */
 #endif
 
 /* G__MAXIFUNC and G__MEMDEPTH are not real limit
