@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.89 2005/12/13 16:58:07 brun Exp $
+// @(#)root/gui:$Name: v5-08-00 $:$Id: TRootBrowser.cxx,v 1.90 2005/12/14 13:12:19 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -62,7 +62,6 @@
 #include "KeySymbols.h"
 #include "THashTable.h"
 #include "TMethod.h"
-#include "TGeoVolume.h"
 #include "TColor.h"
 
 #include "HelpText.h"
@@ -434,7 +433,7 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
    const char *iconname = xpm ? obj->GetName() : name;
 
    if (obj->IsA()->InheritsFrom("TGeoVolume")) {
-      iconname = ((TGeoVolume *)(obj))->GetShape()->GetName();
+      iconname = obj->GetIconName() ? obj->GetIconName() : obj->IsA()->GetName();
    }
 
    if (fCachedPicName == iconname) {

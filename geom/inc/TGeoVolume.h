@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.42 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.43 2005/11/28 12:55:35 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -149,6 +149,7 @@ public:
    TObject        *GetField() const                  {return fField;}
    TGeoPatternFinder *GetFinder() const              {return fFinder;}
    TGeoVoxelFinder   *GetVoxels() const              {return fVoxels;}
+   const char     *GetIconName() const               {return fShape->GetName();}
    Int_t           GetIndex(const TGeoNode *node) const;
    TGeoNode       *GetNode(const char *name) const;
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->UncheckedAt(i);}
