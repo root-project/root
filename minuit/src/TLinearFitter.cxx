@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.17 2005/11/29 19:02:58 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.18 2005/12/12 14:39:15 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -1925,7 +1925,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                } else {
                   for (j=0; j<fNfunctions; j++) {
                      TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
+                     val[j] = f1->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
                      func += fParams(j)*val[j];
                   }
                }
@@ -1959,7 +1959,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                } else {
                   for (j=0; j<fNfunctions; j++) {
                      TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, i).GetPtr());
+                     val[j] = f1->EvalPar(TMatrixDRow(fX, i).GetPtr());
                      func += fParams(j)*val[j];
                   }
                }
@@ -1969,7 +1969,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
        }
    }
    //take h with smallest residuals
-   KOrdStat(n, residuals, h-1, index);
+   TMath::KOrdStat(n, residuals, h-1, index);
    //add them to the design matrix
    fDesign.Zero();
    fAtb.Zero();
@@ -2008,7 +2008,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                } else {
                   for (j=0; j<fNfunctions; j++) {
                      TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, itemp).GetPtr());
+                     val[j] = f1->EvalPar(TMatrixDRow(fX, itemp).GetPtr());
                      func += fParams(j)*val[j];
                   }
                }
@@ -2040,7 +2040,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
                } else {
                   for (j=0; j<fNfunctions; j++) {
                      TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(0, TMatrixDRow(fX, index[i]).GetPtr());
+                     val[j] = f1->EvalPar(TMatrixDRow(fX, index[i]).GetPtr());
                      func += fParams(j)*val[j];
                   }
                }
@@ -2175,74 +2175,6 @@ void TLinearFitter::RDraw(Int_t *subdat, Int_t *indsubdat)
                }
             }
          }
-      }
-   }
-   
-}
-
-//____________________________________________________________________________
-Double_t TLinearFitter::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work)
-{
-  //copy of the TMath::KOrdStat because I need an Int_t work array
-
-   Bool_t isAllocated = kFALSE;
-   const Int_t kWorkMax=100;
-   Int_t i, ir, j, l, mid;
-   Int_t arr;
-   Int_t *ind;
-   Int_t workLocal[kWorkMax];
-   Int_t temp;
-
-
-   if (work) {
-      ind = work;
-   } else {
-      ind = workLocal;
-      if (ntotal > kWorkMax) {
-         isAllocated = kTRUE;
-         ind = new Int_t[ntotal];
-      }
-   }
-
-   for (Int_t ii=0; ii<ntotal; ii++) {
-      ind[ii]=ii;
-   }
-   Int_t rk = k;
-   l=0;
-   ir = ntotal-1;
-   for(;;) {
-      if (ir<=l+1) { //active partition contains 1 or 2 elements
-         if (ir == l+1 && a[ind[ir]]<a[ind[l]])
-            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
-         Double_t tmp = a[ind[rk]];
-         if (isAllocated)
-            delete [] ind;
-         return tmp;
-      } else {
-         mid = (l+ir) >> 1; //choose median of left, center and right
-         {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
-         if (a[ind[l]]>a[ind[ir]])  //also rearrange so that a[l]<=a[l+1]
-            {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
-
-         if (a[ind[l+1]]>a[ind[ir]])
-            {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
-
-         if (a[ind[l]]>a[ind[l+1]])
-                {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
-
-         i=l+1;        //initialize pointers for partitioning
-         j=ir;
-         arr = ind[l+1];
-         for (;;) {
-            do i++; while (a[ind[i]]<a[arr]);
-            do j--; while (a[ind[j]]>a[arr]);
-            if (j<i) break;  //pointers crossed, partitioning complete
-               {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
-         }
-         ind[l+1]=ind[j];
-         ind[j]=arr;
-         if (j>=rk) ir = j-1; //keep active the partition that
-         if (j<=rk) l=i;      //contains the k_th element
       }
    }
 }
