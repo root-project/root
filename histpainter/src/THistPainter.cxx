@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.236 2005/12/06 14:35:41 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.237 2005/12/07 17:19:49 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2950,7 +2950,7 @@ void THistPainter::PaintErrors(Option_t *)
 
       //          draw line at the end of the error bars
 
-      if (option1) {
+      if (option1 && drawmarker) {
          if (yi3 < yi1-s2y) gPad->PaintLine(xi3 - bxsize,yi3,xi3 + bxsize,yi3);
          if (yi4 > yi1+s2y) gPad->PaintLine(xi3 - bxsize,yi4,xi3 + bxsize,yi4);
          if (xi1 < xi3-s2x) gPad->PaintLine(xi1,yi1 - bysize,xi1,yi1 + bysize);
