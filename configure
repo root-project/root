@@ -3429,7 +3429,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@builtinafterimage@|$enable_builtin_afterimage|"  \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
-    -e "s|@buildpeac@|$buildpeac|"              \
     -e "s|@buildxrd@|$buildxrd|"                \
     -e "s|@cernlibdir@|$cernlibdir|"            \
     -e "s|@cernlibs@|$cernlib|"                 \
@@ -3585,7 +3584,7 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
     -e "s|@buildclarens@|$enable_clarens|"      \
-    -e "s|@buildpeac@|$enable_peac|"            \
+    -e "s|@buildpeac@|$buildpeac|"              \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 
