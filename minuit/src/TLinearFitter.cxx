@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.18 2005/12/12 14:39:15 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.19 2005/12/19 17:40:36 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -299,7 +299,7 @@ TLinearFitter::~TLinearFitter()
       delete [] fFormula;
   
    fFormula = 0;
-   delete [] fFixedParams;
+   if (fFixedParams) delete [] fFixedParams;
    fFixedParams = 0;
    fInputFunction = 0;
    fFunctions.Delete();
@@ -1193,6 +1193,7 @@ void TLinearFitter::SetFormula(const char *formula)
       } else
          size=fNfunctions;
       oa->Delete();
+      delete oa;
    }
    fNfunctions=size;
    //change the size of design matrix
@@ -1207,7 +1208,7 @@ void TLinearFitter::SetFormula(const char *formula)
    //
    if (fFixedParams)
       delete [] fFixedParams;
-   fFixedParams=new Bool_t(size);
+   fFixedParams=new Bool_t[size];
    fDesign.Zero();
    fAtb.Zero();
    fDesignTemp.Zero();
