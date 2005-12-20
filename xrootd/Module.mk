@@ -93,6 +93,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		linuxia64ecc:*)  xopt="--ccflavour=icc --use-xrd-strlcpy";; \
 		linuxx8664gcc:*) xopt="--ccflavour=gccx8664 --use-xrd-strlcpy";; \
 		linuxx8664icc:*) xopt="--ccflavour=iccx8664 --use-xrd-strlcpy";; \
+		linuxppc64gcc:*) xopt="--ccflavour=gccppc64 --use-xrd-strlcpy";; \
 		linux*:*)        xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		macos*:*)        xopt="--ccflavour=macos";; \
 		solarisgcc:5.8)  xopt="--ccflavour=gcc";; \
@@ -100,7 +101,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		solarisgcc:5.9)  xopt="--ccflavour=gcc";; \
 		solaris*:5.9)    xopt="--ccflavour=sunCC";; \
 		solarisgcc:*)    xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
-		solaris*:*)      xopt="--ccflavour=sunCC  --use-xrd-strlcpy";; \
+		solaris*:*)      xopt="--ccflavour=sunCC --use-xrd-strlcpy";; \
 		win32gcc:*)      xopt="win32gcc";; \
 		*)               xopt="";; \
 		esac; \
