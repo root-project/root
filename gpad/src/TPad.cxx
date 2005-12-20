@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.215 2005/11/28 08:58:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.216 2005/12/12 14:56:29 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5444,7 +5444,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    Bool_t validType = kFALSE;
    
-   if (strstr(type, "ogle") && ! fCanvas->UseGL())
+   if ( (!type || !type[0] || strstr(type, "ogle")) && ! fCanvas->UseGL())
       type = "pad";
    
    if (type && type[0]) {
