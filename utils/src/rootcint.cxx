@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name: v5-08-00-patches $:$Id: rootcint.cxx,v 1.229 2005/12/12 23:05:48 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.230 2005/12/16 11:34:13 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
