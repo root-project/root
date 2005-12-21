@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.7 2005/11/29 14:43:59 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.9 2005/12/19 17:40:36 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -208,7 +208,6 @@ private:
 
    //robust fitting functions:
    Int_t     Partition(Int_t nmini, Int_t *indsubdat);
-   Double_t  KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work);
    void      RDraw(Int_t *subdat, Int_t *indsubdat);
    void      CreateSubset(Int_t ntotal, Int_t h, Int_t *index);
    Double_t  CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *index, Int_t *subdat, Int_t start, Int_t end);
