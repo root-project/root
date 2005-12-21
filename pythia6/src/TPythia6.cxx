@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.19 2005/09/04 19:08:11 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.20 2005/11/21 11:25:37 rdm Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +92,10 @@ TPythia6*  TPythia6::fgInstance = 0;
 #  define tpythia6_open_fortran_file tpythia6_open_fortran_file_
 #  define tpythia6_close_fortran_file tpythia6_close_fortran_file_
 #  define pythia6_common_address pythia6_common_block_address_
+# else
+#  define pythia6_common_address pythia6_common_address 
+#  define tpythia6_open_fortran_file tpythia6_open_fortran_file_
+#  define tpythia6_close_fortran_file tpythia6_close_fortran_file_
 # endif
 # define type_of_call
 #else
