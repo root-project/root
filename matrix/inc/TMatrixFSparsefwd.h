@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixFSparse;
+template<class Element> class TMatrixTSparse;
+typedef TMatrixTSparse<Float_t> TMatrixFSparse;
 
 #endif

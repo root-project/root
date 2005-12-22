@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixD;
+template<class Element> class TMatrixT;
+typedef TMatrixT<Double_t> TMatrixD;
 
 #endif

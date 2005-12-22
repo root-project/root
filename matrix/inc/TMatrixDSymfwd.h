@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixDSym;
+template<class Element> class TMatrixTSym;
+typedef TMatrixTSym<Double_t> TMatrixDSym;
 
 #endif

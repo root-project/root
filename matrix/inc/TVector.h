@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.24 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.25 2004/01/29 16:03:33 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -16,12 +16,15 @@
 //                                                                      //
 // TVector                                                              //
 //                                                                      //
-// Vectors in the linear algebra package                                //
+//  Instantation of TVectorT<Float_t>                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVectorF
-#include "TVectorF.h"
+#ifndef ROOT_TVectorT
+#include "TVectorT.h"
+#endif
+#ifndef ROOT_TVectorfwd
+#include "TVectorfwd.h"
 #endif
 
 #endif

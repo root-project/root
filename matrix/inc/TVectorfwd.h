@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TVector;
+template<class Element> class TVectorT;
+typedef TVectorT<Float_t> TVector;
 
 #endif

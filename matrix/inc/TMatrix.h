@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.26 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -16,12 +16,13 @@
 //                                                                      //
 // TMatrix                                                              //
 //                                                                      //
-// Implementation of a general matrix in the linear algebra package     //
+//  Instantation of TMatrixT<Float_t>                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TMatrixF
 #include "TMatrixF.h"
 #endif
+typedef TMatrixT<Float_t> TMatrix;
 
 #endif

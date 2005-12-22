@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.8 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.9 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -20,6 +20,9 @@
 
 #ifndef ROOT_TDecompBase
 #include "TDecompBase.h"
+#endif
+#ifndef ROOT_TMatrixDSym
+#include "TMatrixDSym.h"
 #endif
 
 class TDecompChol : public TDecompBase

@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixDSparse;
+template<class Element> class TMatrixTSparse;
+typedef TMatrixTSparse<Double_t> TMatrixDSparse;
 
 #endif

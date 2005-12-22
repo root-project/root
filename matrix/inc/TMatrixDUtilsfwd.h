@@ -30,23 +30,42 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixDRow_const;
-class TMatrixDColumn_const;
-class TMatrixDDiag_const;
-class TMatrixDFlat_const;
-class TMatrixDSub_const;
-class TMatrixDSparseRow_const;
-class TMatrixDSparseDiag_const;
+template<class Element> class TMatrixTRow_const;
+template<class Element> class TMatrixTColumn_const;
+template<class Element> class TMatrixTDiag_const;
+template<class Element> class TMatrixTFlat_const;
+template<class Element> class TMatrixTSub_const;
+template<class Element> class TMatrixTSparseRow_const;
+template<class Element> class TMatrixTSparseDiag_const;
 
-class TMatrixDRow;
-class TMatrixDColumn;
-class TMatrixDDiag;
-class TMatrixDFlat;
-class TMatrixDSub;
-class TMatrixDSparseRow;
-class TMatrixDSparseDiag;
+template<class Element> class TMatrixTRow;
+template<class Element> class TMatrixTColumn;
+template<class Element> class TMatrixTDiag;
+template<class Element> class TMatrixTFlat;
+template<class Element> class TMatrixTSub;
+template<class Element> class TMatrixTSparseRow;
+template<class Element> class TMatrixTSparseDiag;
 
-class TElementActionD;
-class TElementPosActionD;
+template<class Element> class TElementActionT;
+template<class Element> class TElementPosActionT;
+
+typedef TMatrixTRow_const       <Double_t> TMatrixDRow_const;
+typedef TMatrixTColumn_const    <Double_t> TMatrixDColumn_const;
+typedef TMatrixTDiag_const      <Double_t> TMatrixDDiag_const;
+typedef TMatrixTFlat_const      <Double_t> TMatrixDFlat_const;
+typedef TMatrixTSub_const       <Double_t> TMatrixDSub_const;
+typedef TMatrixTSparseRow_const <Double_t> TMatrixDSparseRow_const;
+typedef TMatrixTSparseDiag_const<Double_t> TMatrixDSparseDiag_const;
+
+typedef TMatrixTRow             <Double_t> TMatrixDRow;
+typedef TMatrixTColumn          <Double_t> TMatrixDColumn;
+typedef TMatrixTDiag            <Double_t> TMatrixDDiag;
+typedef TMatrixTFlat            <Double_t> TMatrixDFlat;
+typedef TMatrixTSub             <Double_t> TMatrixDSub;
+typedef TMatrixTSparseRow       <Double_t> TMatrixDSparseRow;
+typedef TMatrixTSparseDiag      <Double_t> TMatrixDSparseDiag;
+
+typedef TElementActionT         <Double_t> TElementActionD;
+typedef TElementPosActionT      <Double_t> TElementPosActionD;
 
 #endif

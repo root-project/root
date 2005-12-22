@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.16 2005/09/02 11:04:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.17 2005/09/03 13:12:35 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -380,9 +380,9 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b)
   //   b : (m)     vector
   //   x : (n)     vector
 
-  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,A));
+  TDecompChol ch(TMatrixDSym(TMatrixDSym::kAtA,A));
   Bool_t ok;
-  return ch.Solve(TMatrixD(TMatrixDBase::kTransposed,A)*b,ok);
+  return ch.Solve(TMatrixD(TMatrixD::kTransposed,A)*b,ok);
 }
 
 //______________________________________________________________________________
@@ -407,9 +407,9 @@ TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
     TMatrixDRow(mAw,irow) *= 1/std(irow);
     mBw(irow) /= std(irow);
   }
-  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,mAw));
+  TDecompChol ch(TMatrixDSym(TMatrixDSym::kAtA,mAw));
   Bool_t ok;
-  return ch.Solve(TMatrixD(TMatrixDBase::kTransposed,mAw)*mBw,ok);
+  return ch.Solve(TMatrixD(TMatrixD::kTransposed,mAw)*mBw,ok);
 }
 
 //______________________________________________________________________________
@@ -421,8 +421,8 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B)
   //   B : (m x nb) matrix, nb >= 1
   //  mX : (n x nb) matrix
 
-  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,A));
-  TMatrixD mX(A,TMatrixDBase::kTransposeMult,B);
+  TDecompChol ch(TMatrixDSym(TMatrixDSym::kAtA,A));
+  TMatrixD mX(A,TMatrixD::kTransposeMult,B);
   ch.MultiSolve(mX);
   return mX;
 }
@@ -445,8 +445,8 @@ TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std)
     TMatrixDRow(mBw,irow) *= 1/std(irow);
   }
 
-  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,mAw));
-  TMatrixD mX(mAw,TMatrixDBase::kTransposeMult,mBw);
+  TDecompChol ch(TMatrixDSym(TMatrixDSym::kAtA,mAw));
+  TMatrixD mX(mAw,TMatrixD::kTransposeMult,mBw);
   ch.MultiSolve(mX);
   return mX;
 }

@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TVectorD;
+template<class Element> class TVectorT;
+typedef TVectorT<Double_t> TVectorD;
 
 #endif

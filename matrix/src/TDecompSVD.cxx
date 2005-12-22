@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.21 2004/12/02 11:53:30 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.22 2005/02/15 16:17:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -529,7 +529,7 @@ const TMatrixD TDecompSVD::GetMatrix()
   const Int_t colLwb = this->GetColLwb();
   TMatrixD s(nRows,nCols); s.Shift(colLwb,colLwb);
   TMatrixDDiag diag(s); diag = fSig;
-  const TMatrixD vt(TMatrixDBase::kTransposed,fV);
+  const TMatrixD vt(TMatrixD::kTransposed,fV);
   return fU * s * vt;
 }
 

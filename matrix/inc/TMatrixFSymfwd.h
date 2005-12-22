@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixFSym;
+template<class Element> class TMatrixTSym;
+typedef TMatrixTSym<Float_t> TMatrixFSym;
 
 #endif

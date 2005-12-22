@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixF;
+template<class Element> class TMatrixT;
+typedef TMatrixT<Float_t> TMatrixF;
 
 #endif

@@ -20,6 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMatrixDBase;
+template<class Element> class TMatrixTBase;
+typedef TMatrixTBase<Double_t> TMatrixDBase;
 
 #endif
