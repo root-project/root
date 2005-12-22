@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.h,v 1.2 2005/11/24 09:24:44 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.h,v 1.3 2005/12/09 17:46:03 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005
 
 /**********************************************************************
@@ -10,9 +10,10 @@
 #ifndef ROOT_TSPLot
 #define ROOT_TSPlot
 
-#include "TMatrixD.h"
 #include "TObjArray.h"
 #include "TString.h"
+#include "TMatrixT.h"
+#include "TMatrixDfwd.h"
 
 class TH1D;
 class TTree;
