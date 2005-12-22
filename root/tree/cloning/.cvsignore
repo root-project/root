@@ -1,2 +1,3 @@
  *.root *.log 
  hsimple.out 
+Event.h copiedEvent*
