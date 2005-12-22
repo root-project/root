@@ -14,9 +14,9 @@
  *
 */
 
-#define ROOT_RELEASE "5.08/00"
-#define ROOT_RELEASE_DATE "Dec 13 2005"
-#define ROOT_RELEASE_TIME "00:06:34"
+#define ROOT_RELEASE "5.08/00a"
+#define ROOT_RELEASE_DATE "Dec 22 2005"
+#define ROOT_RELEASE_TIME "01:29:33"
 #define ROOT_VERSION_CODE 329728
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
