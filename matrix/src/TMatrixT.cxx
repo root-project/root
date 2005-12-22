@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.80 2005/04/05 12:47:11 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1368,8 +1368,8 @@ template<class Element>
 void TMatrixT<Element>::Determinant(Double_t &d1,Double_t &d2) const
 {
   const TMatrixT<Element> &tmp = *this;
-  //TDecompLU lu(TMatrixD(tmp),Double_t(this->fTol));
-  //lu.Det(d1,d2);
+  TDecompLU lu(tmp,Double_t(this->fTol));
+  lu.Det(d1,d2);
 }
 
 //______________________________________________________________________________
