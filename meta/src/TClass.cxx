@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.182 2005/12/02 23:55:07 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.183 2005/12/14 16:49:10 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2761,12 +2761,10 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
    //
    // if code==1 data members of type enum are not counted in the checksum
 
+   if (fCheckSum && code != 1) return fCheckSum;
+
+   UInt_t id = 0;
    int il;
-
-   UInt_t id = fCheckSum;
-   if (code == 1) id = 0;
-   if (id) return id;
-
    TString name = GetName();
    TString type;
    il = name.Length();
@@ -2812,7 +2810,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 
       }/*EndMembLoop*/
    }
-   ((TClass*)this)->fCheckSum =id;
+   ((TClass*)this)->fCheckSum = id;
    return id;
 }
 
