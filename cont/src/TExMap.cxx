@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.8 2005/02/01 14:43:57 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.9 2005/12/22 19:03:11 pcanal Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -91,16 +91,13 @@ void TExMap::AddAt(UInt_t slot, ULong_t hash, Long_t key, Long_t value)
 {
    // Add an (key,value) pair to the table. The key should be unique.
    // If the 'slot' is open, use it to store the value,
-   // this function __assumes__ that slot correspond to the correct
-   // place in the table.  This is usually used in conjuction with
-   // GetValue wiht 3 parameters:
+   // otherwise revert to Add(hash,key,value)
+   // This is usually used in conjuction with GetValue wiht 3 parameters:
    // if ((idx = (ULong_t)fMap->GetValue(hash, key, slot)) != 0) {
    //    ... 
    // } else {
    //    fMap->AddAt(slot,hash,key,value);
    // }
-
-
 
    if (!fTable) return;
 
