@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.4 2005/01/26 06:42:23 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.5 2005/02/01 14:43:56 rdm Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -65,11 +65,13 @@ public:
 
    void      Add(ULong_t hash, Long_t key, Long_t value);
    void      Add(Long_t key, Long_t value) { Add(key, key, value); }
+   void      AddAt(UInt_t slot, ULong_t hash, Long_t key, Long_t value);
    void      Delete(Option_t *opt = "");
    Int_t     Capacity() const { return fSize; }
    Int_t     GetSize() const { return fTally; }
    Long_t    GetValue(ULong_t hash, Long_t key);
    Long_t    GetValue(Long_t key) { return GetValue(key, key); }
+   Long_t    GetValue(ULong_t hash, Long_t key, UInt_t &slot);
    void      Remove(ULong_t hash, Long_t key);
    void      Remove(Long_t key) { Remove(key, key); }
 

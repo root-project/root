@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.7 2005/01/26 09:57:24 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.8 2005/02/01 14:43:57 rdm Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -33,14 +33,18 @@ TExMap::TExMap(Int_t mapSize)
    // Create a TExMap.
 
    // needed for automatic resizing to guarantee that one slot is always empty
-   if (mapSize < 4) mapSize = 4;
-
-   fSize  = (Int_t)TMath::NextPrime(mapSize);
+   if (mapSize < 4) mapSize = 5;
+   
+   switch (mapSize) {
+      // Avoid calling NextPrime for the common case:
+      case   5: fSize = 5; break;
+      case 503: fSize = 503; break;
+      default:
+         fSize  = (Int_t)TMath::NextPrime(mapSize);
+   }
    fTable = new Assoc_t [fSize];
 
-   for (int i = fSize; --i >= 0;) {
-      fTable[i].Clear();
-   }
+   memset(fTable,0,sizeof(Assoc_t)*fSize);
    fTally = 0;
 }
 
@@ -68,8 +72,7 @@ void TExMap::Add(ULong_t hash, Long_t key, Long_t value)
 {
    // Add an (key,value) pair to the table. The key should be unique.
 
-   if (!fTable)
-      return;
+   if (!fTable) return;
 
    Int_t slot = FindElement(hash, key);
    if (!fTable[slot].InUse()) {
@@ -81,6 +84,36 @@ void TExMap::Add(ULong_t hash, Long_t key, Long_t value)
          Expand(2 * fSize);
    } else
       Error("Add", "key %ld is not unique", key);
+}
+
+//______________________________________________________________________________
+void TExMap::AddAt(UInt_t slot, ULong_t hash, Long_t key, Long_t value)
+{
+   // Add an (key,value) pair to the table. The key should be unique.
+   // If the 'slot' is open, use it to store the value,
+   // this function __assumes__ that slot correspond to the correct
+   // place in the table.  This is usually used in conjuction with
+   // GetValue wiht 3 parameters:
+   // if ((idx = (ULong_t)fMap->GetValue(hash, key, slot)) != 0) {
+   //    ... 
+   // } else {
+   //    fMap->AddAt(slot,hash,key,value);
+   // }
+
+
+
+   if (!fTable) return;
+
+   if (!fTable[slot].InUse()) {
+      fTable[slot].SetHash(hash);
+      fTable[slot].fKey = key;
+      fTable[slot].fValue = value;
+      fTally++;
+      if (HighWaterMark())
+         Expand(2 * fSize);
+   } else {
+      Add(hash,key,value);
+   }
 }
 
 //______________________________________________________________________________
@@ -116,10 +149,7 @@ void TExMap::Delete(Option_t *)
 {
    // Delete all entries stored in the TExMap.
 
-   for (int i = fSize; --i >= 0;) {
-      fTable[i].Clear();
-   }
-
+   memset(fTable,0,sizeof(Assoc_t)*fSize);
    fTally = 0;
 }
 
@@ -138,6 +168,29 @@ Long_t TExMap::GetValue(ULong_t hash, Long_t key)
       if (!fTable[slot].InUse()) return 0;
       if (key == fTable[slot].fKey) return fTable[slot].fValue;
       if (++slot == fSize) slot = 0;
+   } while (firstSlot != slot);
+
+   Error("GetValue", "table full");
+   return 0;
+}
+
+//______________________________________________________________________________
+Long_t TExMap::GetValue(ULong_t hash, Long_t key, UInt_t &slot)
+{
+   // Return the value belonging to specified key and hash value. If key not
+   // found return 0.
+   // In 'slot', return the index of the slot used or the first empty slot.
+   // (to be used with AddAt).
+
+   if (!fTable) { slot = 0; return 0; }
+
+   hash |= 0x1;
+   slot = Int_t(hash % fSize);
+   UInt_t firstSlot = slot;
+   do {
+      if (!fTable[slot].InUse()) return 0;
+      if (key == fTable[slot].fKey) return fTable[slot].fValue;
+      if (++slot == (UInt_t)fSize) slot = 0;
    } while (firstSlot != slot);
 
    Error("GetValue", "table full");
