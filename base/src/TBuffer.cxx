@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.86 2005/11/16 20:01:55 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.87 2005/12/02 22:38:34 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -339,7 +339,7 @@ Bool_t TBuffer::CheckObject(const void *obj, const TClass *ptrClass)
 {
    // Check if the specified object of the specified class is already in
    // the buffer. Returns kTRUE if object already in the buffer,
-   // kFALSE otherwise (also if obj is 0 or TBuffer not in writing mode).
+   // kFALSE otherwise (also if obj is 0 ).
 
    if (!obj || !fMap || !ptrClass) return kFALSE;
 
@@ -347,11 +347,9 @@ Bool_t TBuffer::CheckObject(const void *obj, const TClass *ptrClass)
 
    ULong_t idx;
 
-   if (clActual) {
+   if (clActual && (ptrClass != clActual)) {
       const char *temp = (const char*) obj;
-      Int_t offset = (ptrClass != clActual) ?
-                     clActual->GetBaseClassOffset(ptrClass) : 0;
-      temp -= offset;
+      temp -= clActual->GetBaseClassOffset(ptrClass);
       idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
    } else {
       idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
@@ -428,18 +426,20 @@ void TBuffer::MapObject(const TObject *obj, UInt_t offset)
    // contains (via via) a pointer to itself. In that case offset must be 1
    // (default value for offset).
 
-   if (!fMap) InitMap();
-
    if (IsWriting()) {
+      if (!fMap) InitMap();
+
       if (obj) {
          CheckCount(offset);
-         ULong_t hash = ((TObject*)obj)->TObject::Hash();
+         ULong_t hash = Void_Hash(obj);
          fMap->Add(hash, (Long_t)obj, offset);
          // No need to keep track of the class in write mode
          // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
          fMapCount++;
       }
    } else {
+      if (!fMap || !fClassMap) InitMap();
+
       fMap->Add(offset, (Long_t)obj);
       fClassMap->Add(offset,
              (obj && obj != (TObject*)-1) ? (Long_t)((TObject*)obj)->IsA() : 0);
@@ -457,9 +457,9 @@ void TBuffer::MapObject(const void *obj, const TClass* cl, UInt_t offset)
    // contains (via via) a pointer to itself. In that case offset must be 1
    // (default value for offset).
 
-   if (!fMap) InitMap();
-
    if (IsWriting()) {
+      if (!fMap) InitMap();
+
       if (obj) {
          CheckCount(offset);
          ULong_t hash = Void_Hash(obj);
@@ -469,6 +469,8 @@ void TBuffer::MapObject(const void *obj, const TClass* cl, UInt_t offset)
          fMapCount++;
       }
    } else {
+      if (!fMap || !fClassMap) InitMap();
+
       fMap->Add(offset, (Long_t)obj);
       fClassMap->Add(offset, (Long_t)cl);
       fMapCount++;
@@ -532,6 +534,9 @@ void TBuffer::InitMap()
          fMap = new TExMap(fMapSize);
          fMap->Add(0, kNullTag);      // put kNullTag in slot 0
          fMapCount = 1;
+      } else if (fMapCount==0) {
+         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
+         fMapCount = 1;
       }
       if (!fClassMap) {
          fClassMap = new TExMap(fMapSize);
@@ -559,10 +564,8 @@ void TBuffer::ResetMap()
 {
    // Delete existing fMap and reset map counter.
 
-   delete fMap;
-   delete fClassMap;
-   fMap          = 0;
-   fClassMap     = 0;
+   if (fMap) fMap->Delete();
+   if (fClassMap) fClassMap->Delete();
    fMapCount     = 0;
    fDisplacement = 0;
 
@@ -2279,52 +2282,62 @@ void TBuffer::WriteObject(const void *actualObjectStart, const TClass *actualCla
 
    Assert(IsWriting());
 
-   // make sure fMap is initialized
-   InitMap();
-
-   ULong_t idx;
-
    if (!actualObjectStart) {
 
       // save kNullTag to represent NULL pointer
       *this << kNullTag;
 
-   } else if ((idx = (ULong_t)fMap->GetValue(Void_Hash(actualObjectStart), (Long_t)actualObjectStart)) != 0) {
-
-      // truncation is OK the value we did put in the map is an 30-bit offset
-      // and not a pointer
-      UInt_t objIdx = UInt_t(idx);
-
-      // save index of already stored object
-      *this << objIdx;
-
    } else {
 
-      // A warning to let the user know it will need to change the class code
-      // to  be able to read this back.
-      if (actualClass->HasDefaultConstructor() == 0) {
-         Warning("WriteObjectAny", "since %s had no public constructor\n"
-                 "\twhich can be called without argument, objects of this class\n"
-                 "\tcan not be read with the current library. You would need to\n"
-                 "\tadd a default constructor before attempting to read it.",
-                 actualClass->GetName());
+      // make sure fMap is initialized
+      InitMap();
+
+      ULong_t idx;
+      UInt_t slot;
+      ULong_t hash = Void_Hash(actualObjectStart);
+
+      if ((idx = (ULong_t)fMap->GetValue(hash, (Long_t)actualObjectStart, slot)) != 0) {
+
+         // truncation is OK the value we did put in the map is an 30-bit offset
+         // and not a pointer
+         UInt_t objIdx = UInt_t(idx);
+
+         // save index of already stored object
+         *this << objIdx;
+
+      } else {
+
+         // A warning to let the user know it will need to change the class code
+         // to  be able to read this back.
+         if (actualClass->HasDefaultConstructor() == 0) {
+            Warning("WriteObjectAny", "since %s had no public constructor\n"
+               "\twhich can be called without argument, objects of this class\n"
+               "\tcan not be read with the current library. You would need to\n"
+               "\tadd a default constructor before attempting to read it.",
+               actualClass->GetName());
+         }
+
+         // reserve space for leading byte count
+         UInt_t cntpos = UInt_t(fBufCur-fBuffer);
+         fBufCur += sizeof(UInt_t);
+
+         // write class of object first
+         WriteClass(actualClass);
+
+         // add to map before writing rest of object (to handle self reference)
+         // (+kMapOffset so it's != kNullTag)
+         //MapObject(actualObjectStart, actualClass, cntpos+kMapOffset);
+         UInt_t offset = cntpos+kMapOffset;
+         fMap->AddAt(slot, hash, (Long_t)actualObjectStart, offset);
+         // No need to keep track of the class in write mode
+         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
+         fMapCount++;
+
+         ((TClass*)actualClass)->Streamer((void*)actualObjectStart,*this);
+
+         // write byte count
+         SetByteCount(cntpos);
       }
-
-      // reserve space for leading byte count
-      UInt_t cntpos = UInt_t(fBufCur-fBuffer);
-      fBufCur += sizeof(UInt_t);
-
-      // write class of object first
-      WriteClass(actualClass);
-
-      // add to map before writing rest of object (to handle self reference)
-      // (+kMapOffset so it's != kNullTag)
-      MapObject(actualObjectStart, actualClass, cntpos+kMapOffset);
-
-      ((TClass*)actualClass)->Streamer((void*)actualObjectStart,*this);
-
-      // write byte count
-      SetByteCount(cntpos);
    }
 }
 
@@ -2352,17 +2365,14 @@ Int_t TBuffer::WriteObjectAny(const void *obj, const TClass *ptrClass)
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   if (clActual) {
+   if (clActual && (clActual != ptrClass)) {
       const char *temp = (const char*) obj;
-      // clActual->GetStreamerInfo();
-      Int_t offset = (ptrClass != clActual) ?
-                     clActual->GetBaseClassOffset(ptrClass) : 0;
-      temp -= offset;
+      temp -= clActual->GetBaseClassOffset(ptrClass);
       WriteObject(temp, clActual);
       return 1;
    } else {
       WriteObject(obj, ptrClass);
-      return 2;
+      return 1 + (clActual==0);
    }
 }
 
@@ -2457,8 +2467,10 @@ void TBuffer::WriteClass(const TClass *cl)
    Assert(IsWriting());
 
    ULong_t idx;
+   ULong_t hash = Void_Hash(cl);
+   UInt_t slot;
 
-   if ((idx = (ULong_t)fMap->GetValue(((TObject *)cl)->TObject::Hash(), (Long_t)cl)) != 0) {
+   if ((idx = (ULong_t)fMap->GetValue(hash, (Long_t)cl,slot)) != 0) {
 
       // truncation is OK the value we did put in the map is an 30-bit offset
       // and not a pointer
@@ -2479,7 +2491,9 @@ void TBuffer::WriteClass(const TClass *cl)
       cl->Store(*this);
 
       // store new class reference in fMap (+kMapOffset so it's != kNullTag)
-      MapObject(cl, offset+kMapOffset);
+      CheckCount(offset+kMapOffset);
+      fMap->AddAt(slot, hash, (Long_t)cl, offset+kMapOffset);
+      fMapCount++;
    }
 }
 
@@ -2572,16 +2586,15 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
    }
 
    Version_t version = cl->GetClassVersion();
-   if (version > kMaxVersion) {
-      Error("WriteVersion", "version number cannot be larger than %hd)",
-            kMaxVersion);
-      version = kMaxVersion;
-   }
-
-   if (cl->IsForeign() && version<=1) {
+   if (version<=1 && cl->IsForeign()) {
       *this << Version_t(0);
       *this << cl->GetCheckSum();
    } else {
+      if (version > kMaxVersion) {
+         Error("WriteVersion", "version number cannot be larger than %hd)",
+               kMaxVersion);
+         version = kMaxVersion;
+      }
       *this <<version;
    }
 
@@ -2603,17 +2616,16 @@ UInt_t TBuffer::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
    }
 
    Version_t version = cl->GetClassVersion();
-   if (version > kMaxVersion) {
-      Error("WriteVersionMemberWise", "version number cannot be larger than %hd)",
-            kMaxVersion);
-      version = kMaxVersion;
-   }
-
-   if (cl->IsForeign() && version<=1) {
+   if (version<=1 && cl->IsForeign()) {
       Error("WriteVersionMemberWise", "Member-wise streaming of foreign collection not yet implemented!");
       *this << Version_t(0);
       *this << cl->GetCheckSum();
    } else {
+      if (version > kMaxVersion) {
+         Error("WriteVersionMemberWise", "version number cannot be larger than %hd)",
+               kMaxVersion);
+         version = kMaxVersion;
+      }
       version |= kStreamedMemberWise;
       *this <<version;
    }
