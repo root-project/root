@@ -301,8 +301,7 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
     loop:
       if (k != 0) {
         // since sDiag(k) == 0 perform Givens transform with result oDiag[k] = 0
-        //if ((bmx+sDiag(k))-bmx == 0.0)
-        if (TMath::Abs(sDiag(k)) < DBL_EPSILON)
+        if (TMath::Abs(sDiag(k)) < DBL_EPSILON*bmx)
           Diag_1(v,sDiag,oDiag,k);
 
         // find l (1 <= l <=k) so that either oDiag(l) = 0 or sDiag(l-1) = 0.
@@ -318,15 +317,11 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
             elzero = 0;
             break;
           }
-          // This convergence criterion is not platform independent,let's
-          // rephrase it
-          //else if ((bmx-oDiag(l))-bmx == 0.0) {
-          else if (TMath::Abs(oDiag(l)) < DBL_EPSILON) {
+          else if (TMath::Abs(oDiag(l)) < DBL_EPSILON*bmx) {
             elzero = 1;
             break;
           }
-          //else if ((bmx+sDiag(l-1))-bmx == 0.0)
-          else if (TMath::Abs(sDiag(l-1)) < DBL_EPSILON)
+          else if (TMath::Abs(sDiag(l-1)) < DBL_EPSILON*bmx)
             elzero = 0;
         }
         if (l > 0 && !elzero)
@@ -397,13 +392,35 @@ void TDecompSVD::Diag_3(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,
   Double_t *pO = oDiag.GetMatrixArray();
 
   // determine shift parameter
-  Double_t f = ((pS[k-1]-pS[k])*(pS[k-1]+pS[k])+(pO[k-1]-pO[k])*(pO[k-1]+pO[k]))/
-                (2.*pO[k]*pS[k-1]);
 
-  const Double_t g = (TMath::Abs(f) > 1.e+10) ? TMath::Abs(f) :TMath::Sqrt(1.+f*f);
-  const Double_t t = (f >= 0.) ? f+g : f-g;
+  const Double_t psk1 = pS[k-1];
+  const Double_t psk  = pS[k];
+  const Double_t pok1 = pO[k-1];
+  const Double_t pok  = pO[k];
+  const Double_t psl  = pS[l];
 
-  f = ((pS[l]-pS[k])*(pS[l]+pS[k])+pO[k]*(pS[k-1]/t-pO[k]))/pS[l];
+  Double_t f;
+  if (psl == 0.0 || pok == 0.0 || psk1 == 0.0) {
+    const Double_t b = ((psk1-psk)*(psk1+psk)+pok1*pok1)/2.0;
+    const Double_t c = (psk*pok1)*(psk*pok1);
+
+    Double_t shift = 0.0;
+    if ((b != 0.0) | (c != 0.0)) {
+      shift = TMath::Sqrt(b*b+c);
+      if (b < 0.0)
+        shift = -shift;
+      shift = c/(b+shift);
+    }
+
+    f = (psl+psk)*(psl-psk)+shift;
+  }
+  else {
+    f = ((psk1-psk)*(psk1+psk)+(pok1-pok)*(pok1+pok))/(2.*pok*psk1);
+    const Double_t g = TMath::Hypot(1.,f);
+    const Double_t t = (f >= 0.) ? f+g : f-g;
+
+    f = ((psl-psk)*(psl+psk)+pok*(psk1/t-pok))/psl;
+  }
 
   const Int_t nCol_v = v.GetNcols();
   const Int_t nCol_u = u.GetNcols();

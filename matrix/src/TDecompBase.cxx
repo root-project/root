@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.15 2004/07/12 20:00:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.16 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -456,20 +456,18 @@ void DefGivens(Double_t v1,Double_t v2,Double_t &c,Double_t &s)
   const Double_t a2 = TMath::Abs(v2);
   if (a1 > a2) {
     const Double_t w = v2/v1;
-    const Double_t q = TMath::Sqrt(1.+w*w);
+    const Double_t q = TMath::Hypot(1.,w);
     c = 1./q;
     if (v1 < 0.) c = -c;
     s = c*w;
-  }
-  else {
+  } else {
     if (v2 != 0) {
       const Double_t w = v1/v2;
-      const Double_t q = TMath::Sqrt(1.+w*w);
+      const Double_t q = TMath::Hypot(1.,w);
       s = 1./q;
       if (v2 < 0.) s = -s;
       c = s*w;
-    }
-    else {
+    } else {
       c = 1.;
       s = 0.;
     }
@@ -487,24 +485,22 @@ void DefAplGivens(Double_t &v1,Double_t &v2,Double_t &c,Double_t &s)
   const Double_t a2 = TMath::Abs(v2);
   if (a1 > a2) {
     const Double_t w = v2/v1;
-    const Double_t q = TMath::Sqrt(1.+w*w);
+    const Double_t q = TMath::Hypot(1.,w);
     c = 1./q;
     if (v1 < 0.) c = -c;
     s  = c*w;
     v1 = a1*q;
     v2 = 0.;
-  }
-  else {
+  } else {
     if (v2 != 0) {
       const Double_t w = v1/v2;
-      const Double_t q = TMath::Sqrt(1.+w*w);
+      const Double_t q = TMath::Hypot(1.,w);
       s = 1./q;
       if (v2 < 0.) s = -s;
       c  = s*w;
       v1 = a2*q;
       v2 = 0.;
-    }
-    else {
+    } else {
       c = 1.;
       s = 0.;
     }
@@ -517,7 +513,7 @@ void ApplyGivens(Double_t &z1,Double_t &z2,Double_t c,Double_t s)
 // Apply a Givens transformation as defined by c and s to the vector compenents
 // v1 and v2 .
 
-  const Double_t w  = z1*c+z2*s;
+  const Double_t w = z1*c+z2*s;
   z2 = -z1*s+z2*c;
   z1 = w;
 }
