@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.25 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1048,10 +1048,10 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSub_const<Element> &ms)
   const Int_t ncols = this->fMatrix->GetNcols();
 
   // One row of the old_target matrix
-  Element work[this->kWorkMax];
+  Element work[kWorkMax];
   Bool_t isAllocated = kFALSE;
   Element *trp = work;
-  if (this->fNcolsSub > this->kWorkMax) {
+  if (this->fNcolsSub > kWorkMax) {
     isAllocated = kTRUE;
     trp = new Element[this->fNcolsSub];
   }
@@ -1131,10 +1131,10 @@ void TMatrixTSub<Element>::operator*=(const TMatrixT<Element> &source)
   const Int_t ncols = this->fMatrix->GetNcols();
 
   // One row of the old_target matrix
-  Element work[this->kWorkMax];
+  Element work[kWorkMax];
   Bool_t isAllocated = kFALSE;
   Element *trp = work;
-  if (this->fNcolsSub > this->kWorkMax) {
+  if (this->fNcolsSub > kWorkMax) {
     isAllocated = kTRUE;
     trp = new Element[this->fNcolsSub];
   }
@@ -1188,10 +1188,10 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSym<Element> &source)
   const Int_t ncols = this->fMatrix->GetNcols();
 
   // One row of the old_target matrix
-  Element work[this->kWorkMax];
+  Element work[kWorkMax];
   Bool_t isAllocated = kFALSE;
   Element *trp = work;
-  if (this->fNcolsSub > this->kWorkMax) {
+  if (this->fNcolsSub > kWorkMax) {
     isAllocated = kTRUE;
     trp = new Element[this->fNcolsSub];
   }

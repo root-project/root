@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.43 2005/01/06 06:37:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.1 2005/12/22 09:13:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -68,6 +68,7 @@ protected:
 
 public:
 
+  enum {kWorkMax = 100};
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 

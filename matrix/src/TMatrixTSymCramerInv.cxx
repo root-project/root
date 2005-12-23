@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixTSymCramerInv.cxx,v 1.3 2005/09/03 13:12:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixTSymCramerInv.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************
@@ -124,27 +124,27 @@ Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
   return kTRUE;
 }
 
-// Fij are indices for a 4x4 symmetric matrix.
+// SFij are indices for a 4x4 symmetric matrix.
 
-#define F00 0
-#define F01 1
-#define F02 2
-#define F03 3
+#define SF00 0
+#define SF01 1
+#define SF02 2
+#define SF03 3
 
-#define F10 1
-#define F11 5
-#define F12 6
-#define F13 7
+#define SF10 1
+#define SF11 5
+#define SF12 6
+#define SF13 7
 
-#define F20 2
-#define F21 6
-#define F22 10
-#define F23 11
+#define SF20 2
+#define SF21 6
+#define SF22 10
+#define SF23 11
 
-#define F30 3
-#define F31 7
-#define F32 11
-#define F33 15
+#define SF30 3
+#define SF31 7
+#define SF32 11
+#define SF33 15
 
 //______________________________________________________________________________
 template<class Element> 
@@ -160,48 +160,48 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
 
   // Find all NECESSARY 2x2 dets:  (14 of them)
 
-  const Double_t mDet2_12_01 = pM[F10]*pM[F21] - pM[F11]*pM[F20];
-  const Double_t mDet2_12_02 = pM[F10]*pM[F22] - pM[F12]*pM[F20];
-  const Double_t mDet2_12_12 = pM[F11]*pM[F22] - pM[F12]*pM[F21];
-  const Double_t mDet2_13_01 = pM[F10]*pM[F31] - pM[F11]*pM[F30];
-  const Double_t mDet2_13_02 = pM[F10]*pM[F32] - pM[F12]*pM[F30];
-  const Double_t mDet2_13_03 = pM[F10]*pM[F33] - pM[F13]*pM[F30];
-  const Double_t mDet2_13_12 = pM[F11]*pM[F32] - pM[F12]*pM[F31];
-  const Double_t mDet2_13_13 = pM[F11]*pM[F33] - pM[F13]*pM[F31];
-  const Double_t mDet2_23_01 = pM[F20]*pM[F31] - pM[F21]*pM[F30];
-  const Double_t mDet2_23_02 = pM[F20]*pM[F32] - pM[F22]*pM[F30];
-  const Double_t mDet2_23_03 = pM[F20]*pM[F33] - pM[F23]*pM[F30];
-  const Double_t mDet2_23_12 = pM[F21]*pM[F32] - pM[F22]*pM[F31];
-  const Double_t mDet2_23_13 = pM[F21]*pM[F33] - pM[F23]*pM[F31];
-  const Double_t mDet2_23_23 = pM[F22]*pM[F33] - pM[F23]*pM[F32];
+  const Double_t mDet2_12_01 = pM[SF10]*pM[SF21] - pM[SF11]*pM[SF20];
+  const Double_t mDet2_12_02 = pM[SF10]*pM[SF22] - pM[SF12]*pM[SF20];
+  const Double_t mDet2_12_12 = pM[SF11]*pM[SF22] - pM[SF12]*pM[SF21];
+  const Double_t mDet2_13_01 = pM[SF10]*pM[SF31] - pM[SF11]*pM[SF30];
+  const Double_t mDet2_13_02 = pM[SF10]*pM[SF32] - pM[SF12]*pM[SF30];
+  const Double_t mDet2_13_03 = pM[SF10]*pM[SF33] - pM[SF13]*pM[SF30];
+  const Double_t mDet2_13_12 = pM[SF11]*pM[SF32] - pM[SF12]*pM[SF31];
+  const Double_t mDet2_13_13 = pM[SF11]*pM[SF33] - pM[SF13]*pM[SF31];
+  const Double_t mDet2_23_01 = pM[SF20]*pM[SF31] - pM[SF21]*pM[SF30];
+  const Double_t mDet2_23_02 = pM[SF20]*pM[SF32] - pM[SF22]*pM[SF30];
+  const Double_t mDet2_23_03 = pM[SF20]*pM[SF33] - pM[SF23]*pM[SF30];
+  const Double_t mDet2_23_12 = pM[SF21]*pM[SF32] - pM[SF22]*pM[SF31];
+  const Double_t mDet2_23_13 = pM[SF21]*pM[SF33] - pM[SF23]*pM[SF31];
+  const Double_t mDet2_23_23 = pM[SF22]*pM[SF33] - pM[SF23]*pM[SF32];
 
-  // Find all NECESSFRY 3x3 dets:   (10 of them)
+  // SFind all NECESSSFRY 3x3 dets:   (10 of them)
   
-  const Double_t mDet3_012_012 = pM[F00]*mDet2_12_12 - pM[F01]*mDet2_12_02
-                               + pM[F02]*mDet2_12_01;
-  const Double_t mDet3_013_012 = pM[F00]*mDet2_13_12 - pM[F01]*mDet2_13_02
-                               + pM[F02]*mDet2_13_01;
-  const Double_t mDet3_013_013 = pM[F00]*mDet2_13_13 - pM[F01]*mDet2_13_03
-                               + pM[F03]*mDet2_13_01;
-  const Double_t mDet3_023_012 = pM[F00]*mDet2_23_12 - pM[F01]*mDet2_23_02
-                               + pM[F02]*mDet2_23_01;
-  const Double_t mDet3_023_013 = pM[F00]*mDet2_23_13 - pM[F01]*mDet2_23_03
-                               + pM[F03]*mDet2_23_01;
-  const Double_t mDet3_023_023 = pM[F00]*mDet2_23_23 - pM[F02]*mDet2_23_03
-                               + pM[F03]*mDet2_23_02;
-  const Double_t mDet3_123_012 = pM[F10]*mDet2_23_12 - pM[F11]*mDet2_23_02
-                               + pM[F12]*mDet2_23_01;
-  const Double_t mDet3_123_013 = pM[F10]*mDet2_23_13 - pM[F11]*mDet2_23_03
-                               + pM[F13]*mDet2_23_01;
-  const Double_t mDet3_123_023 = pM[F10]*mDet2_23_23 - pM[F12]*mDet2_23_03
-                               + pM[F13]*mDet2_23_02;
-  const Double_t mDet3_123_123 = pM[F11]*mDet2_23_23 - pM[F12]*mDet2_23_13
-                               + pM[F13]*mDet2_23_12;
+  const Double_t mDet3_012_012 = pM[SF00]*mDet2_12_12 - pM[SF01]*mDet2_12_02
+                               + pM[SF02]*mDet2_12_01;
+  const Double_t mDet3_013_012 = pM[SF00]*mDet2_13_12 - pM[SF01]*mDet2_13_02
+                               + pM[SF02]*mDet2_13_01;
+  const Double_t mDet3_013_013 = pM[SF00]*mDet2_13_13 - pM[SF01]*mDet2_13_03
+                               + pM[SF03]*mDet2_13_01;
+  const Double_t mDet3_023_012 = pM[SF00]*mDet2_23_12 - pM[SF01]*mDet2_23_02
+                               + pM[SF02]*mDet2_23_01;
+  const Double_t mDet3_023_013 = pM[SF00]*mDet2_23_13 - pM[SF01]*mDet2_23_03
+                               + pM[SF03]*mDet2_23_01;
+  const Double_t mDet3_023_023 = pM[SF00]*mDet2_23_23 - pM[SF02]*mDet2_23_03
+                               + pM[SF03]*mDet2_23_02;
+  const Double_t mDet3_123_012 = pM[SF10]*mDet2_23_12 - pM[SF11]*mDet2_23_02
+                               + pM[SF12]*mDet2_23_01;
+  const Double_t mDet3_123_013 = pM[SF10]*mDet2_23_13 - pM[SF11]*mDet2_23_03
+                               + pM[SF13]*mDet2_23_01;
+  const Double_t mDet3_123_023 = pM[SF10]*mDet2_23_23 - pM[SF12]*mDet2_23_03
+                               + pM[SF13]*mDet2_23_02;
+  const Double_t mDet3_123_123 = pM[SF11]*mDet2_23_23 - pM[SF12]*mDet2_23_13
+                               + pM[SF13]*mDet2_23_12;
 
   // Find the 4x4 det:
 
-  const Double_t det = pM[F00]*mDet3_123_123 - pM[F01]*mDet3_123_023
-                       + pM[F02]*mDet3_123_013 - pM[F03]*mDet3_123_012;
+  const Double_t det = pM[SF00]*mDet3_123_123 - pM[SF01]*mDet3_123_023
+                       + pM[SF02]*mDet3_123_013 - pM[SF03]*mDet3_123_012;
 
   if (determ)
     *determ = det;
@@ -212,19 +212,19 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
   const Double_t oneOverDet = 1.0/det;
   const Double_t mn1OverDet = - oneOverDet;
 
-  pM[F00] =  mDet3_123_123 * oneOverDet;
-  pM[F01] =  mDet3_123_023 * mn1OverDet;
-  pM[F02] =  mDet3_123_013 * oneOverDet;
-  pM[F03] =  mDet3_123_012 * mn1OverDet;
+  pM[SF00] =  mDet3_123_123 * oneOverDet;
+  pM[SF01] =  mDet3_123_023 * mn1OverDet;
+  pM[SF02] =  mDet3_123_013 * oneOverDet;
+  pM[SF03] =  mDet3_123_012 * mn1OverDet;
 
-  pM[F11] =  mDet3_023_023 * oneOverDet;
-  pM[F12] =  mDet3_023_013 * mn1OverDet;
-  pM[F13] =  mDet3_023_012 * oneOverDet;
+  pM[SF11] =  mDet3_023_023 * oneOverDet;
+  pM[SF12] =  mDet3_023_013 * mn1OverDet;
+  pM[SF13] =  mDet3_023_012 * oneOverDet;
 
-  pM[F22] =  mDet3_013_013 * oneOverDet;
-  pM[F23] =  mDet3_013_012 * mn1OverDet;
+  pM[SF22] =  mDet3_013_013 * oneOverDet;
+  pM[SF23] =  mDet3_013_012 * mn1OverDet;
 
-  pM[F33] =  mDet3_012_012 * oneOverDet;
+  pM[SF33] =  mDet3_012_012 * oneOverDet;
 
   for (Int_t irow = 0; irow < 4; irow++) {
     const Int_t rowOff1 = irow*4; 
@@ -239,35 +239,35 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
 
 // Mij are indices for a 5x5 matrix.
     
-#define M00 0
-#define M01 1
-#define M02 2
-#define M03 3
-#define M04 4
+#define SM00 0
+#define SM01 1
+#define SM02 2
+#define SM03 3
+#define SM04 4
   
-#define M10 1
-#define M11 6
-#define M12 7
-#define M13 8
-#define M14 9
+#define SM10 1
+#define SM11 6
+#define SM12 7
+#define SM13 8
+#define SM14 9
 
-#define M20 2
-#define M21 7
-#define M22 12
-#define M23 13
-#define M24 14
+#define SM20 2
+#define SM21 7
+#define SM22 12
+#define SM23 13
+#define SM24 14
 
-#define M30 3
-#define M31 8
-#define M32 13
-#define M33 18
-#define M34 19
+#define SM30 3
+#define SM31 8
+#define SM32 13
+#define SM33 18
+#define SM34 19
 
-#define M40 4
-#define M41 9
-#define M42 14
-#define M43 19
-#define M44 24
+#define SM40 4
+#define SM41 9
+#define SM42 14
+#define SM43 19
+#define SM44 24
 
 //______________________________________________________________________________
 template<class Element> 
@@ -283,102 +283,102 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
 
   // Find all NECESSARY 2x2 dets:  (25 of them)
 
-  const Double_t mDet2_23_01 = pM[M20]*pM[M31] - pM[M21]*pM[M30];
-  const Double_t mDet2_23_02 = pM[M20]*pM[M32] - pM[M22]*pM[M30];
-  const Double_t mDet2_23_03 = pM[M20]*pM[M33] - pM[M23]*pM[M30];
-  const Double_t mDet2_23_12 = pM[M21]*pM[M32] - pM[M22]*pM[M31];
-  const Double_t mDet2_23_13 = pM[M21]*pM[M33] - pM[M23]*pM[M31];
-  const Double_t mDet2_23_23 = pM[M22]*pM[M33] - pM[M23]*pM[M32];
-  const Double_t mDet2_24_01 = pM[M20]*pM[M41] - pM[M21]*pM[M40];
-  const Double_t mDet2_24_02 = pM[M20]*pM[M42] - pM[M22]*pM[M40];
-  const Double_t mDet2_24_03 = pM[M20]*pM[M43] - pM[M23]*pM[M40];
-  const Double_t mDet2_24_04 = pM[M20]*pM[M44] - pM[M24]*pM[M40];
-  const Double_t mDet2_24_12 = pM[M21]*pM[M42] - pM[M22]*pM[M41];
-  const Double_t mDet2_24_13 = pM[M21]*pM[M43] - pM[M23]*pM[M41];
-  const Double_t mDet2_24_14 = pM[M21]*pM[M44] - pM[M24]*pM[M41];
-  const Double_t mDet2_24_23 = pM[M22]*pM[M43] - pM[M23]*pM[M42];
-  const Double_t mDet2_24_24 = pM[M22]*pM[M44] - pM[M24]*pM[M42];
-  const Double_t mDet2_34_01 = pM[M30]*pM[M41] - pM[M31]*pM[M40];
-  const Double_t mDet2_34_02 = pM[M30]*pM[M42] - pM[M32]*pM[M40];
-  const Double_t mDet2_34_03 = pM[M30]*pM[M43] - pM[M33]*pM[M40];
-  const Double_t mDet2_34_04 = pM[M30]*pM[M44] - pM[M34]*pM[M40];
-  const Double_t mDet2_34_12 = pM[M31]*pM[M42] - pM[M32]*pM[M41];
-  const Double_t mDet2_34_13 = pM[M31]*pM[M43] - pM[M33]*pM[M41];
-  const Double_t mDet2_34_14 = pM[M31]*pM[M44] - pM[M34]*pM[M41];
-  const Double_t mDet2_34_23 = pM[M32]*pM[M43] - pM[M33]*pM[M42];
-  const Double_t mDet2_34_24 = pM[M32]*pM[M44] - pM[M34]*pM[M42];
-  const Double_t mDet2_34_34 = pM[M33]*pM[M44] - pM[M34]*pM[M43];
+  const Double_t mDet2_23_01 = pM[SM20]*pM[SM31] - pM[SM21]*pM[SM30];
+  const Double_t mDet2_23_02 = pM[SM20]*pM[SM32] - pM[SM22]*pM[SM30];
+  const Double_t mDet2_23_03 = pM[SM20]*pM[SM33] - pM[SM23]*pM[SM30];
+  const Double_t mDet2_23_12 = pM[SM21]*pM[SM32] - pM[SM22]*pM[SM31];
+  const Double_t mDet2_23_13 = pM[SM21]*pM[SM33] - pM[SM23]*pM[SM31];
+  const Double_t mDet2_23_23 = pM[SM22]*pM[SM33] - pM[SM23]*pM[SM32];
+  const Double_t mDet2_24_01 = pM[SM20]*pM[SM41] - pM[SM21]*pM[SM40];
+  const Double_t mDet2_24_02 = pM[SM20]*pM[SM42] - pM[SM22]*pM[SM40];
+  const Double_t mDet2_24_03 = pM[SM20]*pM[SM43] - pM[SM23]*pM[SM40];
+  const Double_t mDet2_24_04 = pM[SM20]*pM[SM44] - pM[SM24]*pM[SM40];
+  const Double_t mDet2_24_12 = pM[SM21]*pM[SM42] - pM[SM22]*pM[SM41];
+  const Double_t mDet2_24_13 = pM[SM21]*pM[SM43] - pM[SM23]*pM[SM41];
+  const Double_t mDet2_24_14 = pM[SM21]*pM[SM44] - pM[SM24]*pM[SM41];
+  const Double_t mDet2_24_23 = pM[SM22]*pM[SM43] - pM[SM23]*pM[SM42];
+  const Double_t mDet2_24_24 = pM[SM22]*pM[SM44] - pM[SM24]*pM[SM42];
+  const Double_t mDet2_34_01 = pM[SM30]*pM[SM41] - pM[SM31]*pM[SM40];
+  const Double_t mDet2_34_02 = pM[SM30]*pM[SM42] - pM[SM32]*pM[SM40];
+  const Double_t mDet2_34_03 = pM[SM30]*pM[SM43] - pM[SM33]*pM[SM40];
+  const Double_t mDet2_34_04 = pM[SM30]*pM[SM44] - pM[SM34]*pM[SM40];
+  const Double_t mDet2_34_12 = pM[SM31]*pM[SM42] - pM[SM32]*pM[SM41];
+  const Double_t mDet2_34_13 = pM[SM31]*pM[SM43] - pM[SM33]*pM[SM41];
+  const Double_t mDet2_34_14 = pM[SM31]*pM[SM44] - pM[SM34]*pM[SM41];
+  const Double_t mDet2_34_23 = pM[SM32]*pM[SM43] - pM[SM33]*pM[SM42];
+  const Double_t mDet2_34_24 = pM[SM32]*pM[SM44] - pM[SM34]*pM[SM42];
+  const Double_t mDet2_34_34 = pM[SM33]*pM[SM44] - pM[SM34]*pM[SM43];
 
   // Find all NECESSARY 3x3 dets:   (30 of them)
 
-  const Double_t mDet3_123_012 = pM[M10]*mDet2_23_12 - pM[M11]*mDet2_23_02 + pM[M12]*mDet2_23_01;
-  const Double_t mDet3_123_013 = pM[M10]*mDet2_23_13 - pM[M11]*mDet2_23_03 + pM[M13]*mDet2_23_01;
-  const Double_t mDet3_123_023 = pM[M10]*mDet2_23_23 - pM[M12]*mDet2_23_03 + pM[M13]*mDet2_23_02;
-  const Double_t mDet3_123_123 = pM[M11]*mDet2_23_23 - pM[M12]*mDet2_23_13 + pM[M13]*mDet2_23_12;
-  const Double_t mDet3_124_012 = pM[M10]*mDet2_24_12 - pM[M11]*mDet2_24_02 + pM[M12]*mDet2_24_01;
-  const Double_t mDet3_124_013 = pM[M10]*mDet2_24_13 - pM[M11]*mDet2_24_03 + pM[M13]*mDet2_24_01;
-  const Double_t mDet3_124_014 = pM[M10]*mDet2_24_14 - pM[M11]*mDet2_24_04 + pM[M14]*mDet2_24_01;
-  const Double_t mDet3_124_023 = pM[M10]*mDet2_24_23 - pM[M12]*mDet2_24_03 + pM[M13]*mDet2_24_02;
-  const Double_t mDet3_124_024 = pM[M10]*mDet2_24_24 - pM[M12]*mDet2_24_04 + pM[M14]*mDet2_24_02;
-  const Double_t mDet3_124_123 = pM[M11]*mDet2_24_23 - pM[M12]*mDet2_24_13 + pM[M13]*mDet2_24_12;
-  const Double_t mDet3_124_124 = pM[M11]*mDet2_24_24 - pM[M12]*mDet2_24_14 + pM[M14]*mDet2_24_12;
-  const Double_t mDet3_134_012 = pM[M10]*mDet2_34_12 - pM[M11]*mDet2_34_02 + pM[M12]*mDet2_34_01;
-  const Double_t mDet3_134_013 = pM[M10]*mDet2_34_13 - pM[M11]*mDet2_34_03 + pM[M13]*mDet2_34_01;
-  const Double_t mDet3_134_014 = pM[M10]*mDet2_34_14 - pM[M11]*mDet2_34_04 + pM[M14]*mDet2_34_01;
-  const Double_t mDet3_134_023 = pM[M10]*mDet2_34_23 - pM[M12]*mDet2_34_03 + pM[M13]*mDet2_34_02;
-  const Double_t mDet3_134_024 = pM[M10]*mDet2_34_24 - pM[M12]*mDet2_34_04 + pM[M14]*mDet2_34_02;
-  const Double_t mDet3_134_034 = pM[M10]*mDet2_34_34 - pM[M13]*mDet2_34_04 + pM[M14]*mDet2_34_03;
-  const Double_t mDet3_134_123 = pM[M11]*mDet2_34_23 - pM[M12]*mDet2_34_13 + pM[M13]*mDet2_34_12;
-  const Double_t mDet3_134_124 = pM[M11]*mDet2_34_24 - pM[M12]*mDet2_34_14 + pM[M14]*mDet2_34_12;
-  const Double_t mDet3_134_134 = pM[M11]*mDet2_34_34 - pM[M13]*mDet2_34_14 + pM[M14]*mDet2_34_13;
-  const Double_t mDet3_234_012 = pM[M20]*mDet2_34_12 - pM[M21]*mDet2_34_02 + pM[M22]*mDet2_34_01;
-  const Double_t mDet3_234_013 = pM[M20]*mDet2_34_13 - pM[M21]*mDet2_34_03 + pM[M23]*mDet2_34_01;
-  const Double_t mDet3_234_014 = pM[M20]*mDet2_34_14 - pM[M21]*mDet2_34_04 + pM[M24]*mDet2_34_01;
-  const Double_t mDet3_234_023 = pM[M20]*mDet2_34_23 - pM[M22]*mDet2_34_03 + pM[M23]*mDet2_34_02;
-  const Double_t mDet3_234_024 = pM[M20]*mDet2_34_24 - pM[M22]*mDet2_34_04 + pM[M24]*mDet2_34_02;
-  const Double_t mDet3_234_034 = pM[M20]*mDet2_34_34 - pM[M23]*mDet2_34_04 + pM[M24]*mDet2_34_03;
-  const Double_t mDet3_234_123 = pM[M21]*mDet2_34_23 - pM[M22]*mDet2_34_13 + pM[M23]*mDet2_34_12;
-  const Double_t mDet3_234_124 = pM[M21]*mDet2_34_24 - pM[M22]*mDet2_34_14 + pM[M24]*mDet2_34_12;
-  const Double_t mDet3_234_134 = pM[M21]*mDet2_34_34 - pM[M23]*mDet2_34_14 + pM[M24]*mDet2_34_13;
-  const Double_t mDet3_234_234 = pM[M22]*mDet2_34_34 - pM[M23]*mDet2_34_24 + pM[M24]*mDet2_34_23;
+  const Double_t mDet3_123_012 = pM[SM10]*mDet2_23_12 - pM[SM11]*mDet2_23_02 + pM[SM12]*mDet2_23_01;
+  const Double_t mDet3_123_013 = pM[SM10]*mDet2_23_13 - pM[SM11]*mDet2_23_03 + pM[SM13]*mDet2_23_01;
+  const Double_t mDet3_123_023 = pM[SM10]*mDet2_23_23 - pM[SM12]*mDet2_23_03 + pM[SM13]*mDet2_23_02;
+  const Double_t mDet3_123_123 = pM[SM11]*mDet2_23_23 - pM[SM12]*mDet2_23_13 + pM[SM13]*mDet2_23_12;
+  const Double_t mDet3_124_012 = pM[SM10]*mDet2_24_12 - pM[SM11]*mDet2_24_02 + pM[SM12]*mDet2_24_01;
+  const Double_t mDet3_124_013 = pM[SM10]*mDet2_24_13 - pM[SM11]*mDet2_24_03 + pM[SM13]*mDet2_24_01;
+  const Double_t mDet3_124_014 = pM[SM10]*mDet2_24_14 - pM[SM11]*mDet2_24_04 + pM[SM14]*mDet2_24_01;
+  const Double_t mDet3_124_023 = pM[SM10]*mDet2_24_23 - pM[SM12]*mDet2_24_03 + pM[SM13]*mDet2_24_02;
+  const Double_t mDet3_124_024 = pM[SM10]*mDet2_24_24 - pM[SM12]*mDet2_24_04 + pM[SM14]*mDet2_24_02;
+  const Double_t mDet3_124_123 = pM[SM11]*mDet2_24_23 - pM[SM12]*mDet2_24_13 + pM[SM13]*mDet2_24_12;
+  const Double_t mDet3_124_124 = pM[SM11]*mDet2_24_24 - pM[SM12]*mDet2_24_14 + pM[SM14]*mDet2_24_12;
+  const Double_t mDet3_134_012 = pM[SM10]*mDet2_34_12 - pM[SM11]*mDet2_34_02 + pM[SM12]*mDet2_34_01;
+  const Double_t mDet3_134_013 = pM[SM10]*mDet2_34_13 - pM[SM11]*mDet2_34_03 + pM[SM13]*mDet2_34_01;
+  const Double_t mDet3_134_014 = pM[SM10]*mDet2_34_14 - pM[SM11]*mDet2_34_04 + pM[SM14]*mDet2_34_01;
+  const Double_t mDet3_134_023 = pM[SM10]*mDet2_34_23 - pM[SM12]*mDet2_34_03 + pM[SM13]*mDet2_34_02;
+  const Double_t mDet3_134_024 = pM[SM10]*mDet2_34_24 - pM[SM12]*mDet2_34_04 + pM[SM14]*mDet2_34_02;
+  const Double_t mDet3_134_034 = pM[SM10]*mDet2_34_34 - pM[SM13]*mDet2_34_04 + pM[SM14]*mDet2_34_03;
+  const Double_t mDet3_134_123 = pM[SM11]*mDet2_34_23 - pM[SM12]*mDet2_34_13 + pM[SM13]*mDet2_34_12;
+  const Double_t mDet3_134_124 = pM[SM11]*mDet2_34_24 - pM[SM12]*mDet2_34_14 + pM[SM14]*mDet2_34_12;
+  const Double_t mDet3_134_134 = pM[SM11]*mDet2_34_34 - pM[SM13]*mDet2_34_14 + pM[SM14]*mDet2_34_13;
+  const Double_t mDet3_234_012 = pM[SM20]*mDet2_34_12 - pM[SM21]*mDet2_34_02 + pM[SM22]*mDet2_34_01;
+  const Double_t mDet3_234_013 = pM[SM20]*mDet2_34_13 - pM[SM21]*mDet2_34_03 + pM[SM23]*mDet2_34_01;
+  const Double_t mDet3_234_014 = pM[SM20]*mDet2_34_14 - pM[SM21]*mDet2_34_04 + pM[SM24]*mDet2_34_01;
+  const Double_t mDet3_234_023 = pM[SM20]*mDet2_34_23 - pM[SM22]*mDet2_34_03 + pM[SM23]*mDet2_34_02;
+  const Double_t mDet3_234_024 = pM[SM20]*mDet2_34_24 - pM[SM22]*mDet2_34_04 + pM[SM24]*mDet2_34_02;
+  const Double_t mDet3_234_034 = pM[SM20]*mDet2_34_34 - pM[SM23]*mDet2_34_04 + pM[SM24]*mDet2_34_03;
+  const Double_t mDet3_234_123 = pM[SM21]*mDet2_34_23 - pM[SM22]*mDet2_34_13 + pM[SM23]*mDet2_34_12;
+  const Double_t mDet3_234_124 = pM[SM21]*mDet2_34_24 - pM[SM22]*mDet2_34_14 + pM[SM24]*mDet2_34_12;
+  const Double_t mDet3_234_134 = pM[SM21]*mDet2_34_34 - pM[SM23]*mDet2_34_14 + pM[SM24]*mDet2_34_13;
+  const Double_t mDet3_234_234 = pM[SM22]*mDet2_34_34 - pM[SM23]*mDet2_34_24 + pM[SM24]*mDet2_34_23;
 
   // Find all NECESSARY 4x4 dets:   (15 of them)
 
-  const Double_t mDet4_0123_0123 = pM[M00]*mDet3_123_123 - pM[M01]*mDet3_123_023
-                                 + pM[M02]*mDet3_123_013 - pM[M03]*mDet3_123_012;
-  const Double_t mDet4_0124_0123 = pM[M00]*mDet3_124_123 - pM[M01]*mDet3_124_023
-                                 + pM[M02]*mDet3_124_013 - pM[M03]*mDet3_124_012;
-  const Double_t mDet4_0124_0124 = pM[M00]*mDet3_124_124 - pM[M01]*mDet3_124_024
-                                 + pM[M02]*mDet3_124_014 - pM[M04]*mDet3_124_012;
-  const Double_t mDet4_0134_0123 = pM[M00]*mDet3_134_123 - pM[M01]*mDet3_134_023
-                                 + pM[M02]*mDet3_134_013 - pM[M03]*mDet3_134_012;
-  const Double_t mDet4_0134_0124 = pM[M00]*mDet3_134_124 - pM[M01]*mDet3_134_024
-                                 + pM[M02]*mDet3_134_014 - pM[M04]*mDet3_134_012;
-  const Double_t mDet4_0134_0134 = pM[M00]*mDet3_134_134 - pM[M01]*mDet3_134_034
-                                 + pM[M03]*mDet3_134_014 - pM[M04]*mDet3_134_013;
-  const Double_t mDet4_0234_0123 = pM[M00]*mDet3_234_123 - pM[M01]*mDet3_234_023
-                                 + pM[M02]*mDet3_234_013 - pM[M03]*mDet3_234_012;
-  const Double_t mDet4_0234_0124 = pM[M00]*mDet3_234_124 - pM[M01]*mDet3_234_024
-                                 + pM[M02]*mDet3_234_014 - pM[M04]*mDet3_234_012;
-  const Double_t mDet4_0234_0134 = pM[M00]*mDet3_234_134 - pM[M01]*mDet3_234_034
-                                 + pM[M03]*mDet3_234_014 - pM[M04]*mDet3_234_013;
-  const Double_t mDet4_0234_0234 = pM[M00]*mDet3_234_234 - pM[M02]*mDet3_234_034
-                                 + pM[M03]*mDet3_234_024 - pM[M04]*mDet3_234_023;
-  const Double_t mDet4_1234_0123 = pM[M10]*mDet3_234_123 - pM[M11]*mDet3_234_023
-                                 + pM[M12]*mDet3_234_013 - pM[M13]*mDet3_234_012;
-  const Double_t mDet4_1234_0124 = pM[M10]*mDet3_234_124 - pM[M11]*mDet3_234_024
-                                 + pM[M12]*mDet3_234_014 - pM[M14]*mDet3_234_012;
-  const Double_t mDet4_1234_0134 = pM[M10]*mDet3_234_134 - pM[M11]*mDet3_234_034
-                                 + pM[M13]*mDet3_234_014 - pM[M14]*mDet3_234_013;
-  const Double_t mDet4_1234_0234 = pM[M10]*mDet3_234_234 - pM[M12]*mDet3_234_034
-                                 + pM[M13]*mDet3_234_024 - pM[M14]*mDet3_234_023;
-  const Double_t mDet4_1234_1234 = pM[M11]*mDet3_234_234 - pM[M12]*mDet3_234_134
-                                 + pM[M13]*mDet3_234_124 - pM[M14]*mDet3_234_123;
+  const Double_t mDet4_0123_0123 = pM[SM00]*mDet3_123_123 - pM[SM01]*mDet3_123_023
+                                 + pM[SM02]*mDet3_123_013 - pM[SM03]*mDet3_123_012;
+  const Double_t mDet4_0124_0123 = pM[SM00]*mDet3_124_123 - pM[SM01]*mDet3_124_023
+                                 + pM[SM02]*mDet3_124_013 - pM[SM03]*mDet3_124_012;
+  const Double_t mDet4_0124_0124 = pM[SM00]*mDet3_124_124 - pM[SM01]*mDet3_124_024
+                                 + pM[SM02]*mDet3_124_014 - pM[SM04]*mDet3_124_012;
+  const Double_t mDet4_0134_0123 = pM[SM00]*mDet3_134_123 - pM[SM01]*mDet3_134_023
+                                 + pM[SM02]*mDet3_134_013 - pM[SM03]*mDet3_134_012;
+  const Double_t mDet4_0134_0124 = pM[SM00]*mDet3_134_124 - pM[SM01]*mDet3_134_024
+                                 + pM[SM02]*mDet3_134_014 - pM[SM04]*mDet3_134_012;
+  const Double_t mDet4_0134_0134 = pM[SM00]*mDet3_134_134 - pM[SM01]*mDet3_134_034
+                                 + pM[SM03]*mDet3_134_014 - pM[SM04]*mDet3_134_013;
+  const Double_t mDet4_0234_0123 = pM[SM00]*mDet3_234_123 - pM[SM01]*mDet3_234_023
+                                 + pM[SM02]*mDet3_234_013 - pM[SM03]*mDet3_234_012;
+  const Double_t mDet4_0234_0124 = pM[SM00]*mDet3_234_124 - pM[SM01]*mDet3_234_024
+                                 + pM[SM02]*mDet3_234_014 - pM[SM04]*mDet3_234_012;
+  const Double_t mDet4_0234_0134 = pM[SM00]*mDet3_234_134 - pM[SM01]*mDet3_234_034
+                                 + pM[SM03]*mDet3_234_014 - pM[SM04]*mDet3_234_013;
+  const Double_t mDet4_0234_0234 = pM[SM00]*mDet3_234_234 - pM[SM02]*mDet3_234_034
+                                 + pM[SM03]*mDet3_234_024 - pM[SM04]*mDet3_234_023;
+  const Double_t mDet4_1234_0123 = pM[SM10]*mDet3_234_123 - pM[SM11]*mDet3_234_023
+                                 + pM[SM12]*mDet3_234_013 - pM[SM13]*mDet3_234_012;
+  const Double_t mDet4_1234_0124 = pM[SM10]*mDet3_234_124 - pM[SM11]*mDet3_234_024
+                                 + pM[SM12]*mDet3_234_014 - pM[SM14]*mDet3_234_012;
+  const Double_t mDet4_1234_0134 = pM[SM10]*mDet3_234_134 - pM[SM11]*mDet3_234_034
+                                 + pM[SM13]*mDet3_234_014 - pM[SM14]*mDet3_234_013;
+  const Double_t mDet4_1234_0234 = pM[SM10]*mDet3_234_234 - pM[SM12]*mDet3_234_034
+                                 + pM[SM13]*mDet3_234_024 - pM[SM14]*mDet3_234_023;
+  const Double_t mDet4_1234_1234 = pM[SM11]*mDet3_234_234 - pM[SM12]*mDet3_234_134
+                                 + pM[SM13]*mDet3_234_124 - pM[SM14]*mDet3_234_123;
 
   // Find the 5x5 det:
 
-  const Double_t det = pM[M00]*mDet4_1234_1234 - pM[M01]*mDet4_1234_0234 + pM[M02]*mDet4_1234_0134
-                       - pM[M03]*mDet4_1234_0124 + pM[M04]*mDet4_1234_0123;
+  const Double_t det = pM[SM00]*mDet4_1234_1234 - pM[SM01]*mDet4_1234_0234 + pM[SM02]*mDet4_1234_0134
+                       - pM[SM03]*mDet4_1234_0124 + pM[SM04]*mDet4_1234_0123;
   if (determ)
     *determ = det;
 
@@ -388,25 +388,25 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
   const Double_t oneOverDet = 1.0/det;
   const Double_t mn1OverDet = - oneOverDet;
 
-  pM[M00] = mDet4_1234_1234 * oneOverDet;
-  pM[M01] = mDet4_1234_0234 * mn1OverDet;
-  pM[M02] = mDet4_1234_0134 * oneOverDet;
-  pM[M03] = mDet4_1234_0124 * mn1OverDet;
-  pM[M04] = mDet4_1234_0123 * oneOverDet;
+  pM[SM00] = mDet4_1234_1234 * oneOverDet;
+  pM[SM01] = mDet4_1234_0234 * mn1OverDet;
+  pM[SM02] = mDet4_1234_0134 * oneOverDet;
+  pM[SM03] = mDet4_1234_0124 * mn1OverDet;
+  pM[SM04] = mDet4_1234_0123 * oneOverDet;
 
-  pM[M11] = mDet4_0234_0234 * oneOverDet;
-  pM[M12] = mDet4_0234_0134 * mn1OverDet;
-  pM[M13] = mDet4_0234_0124 * oneOverDet;
-  pM[M14] = mDet4_0234_0123 * mn1OverDet;
+  pM[SM11] = mDet4_0234_0234 * oneOverDet;
+  pM[SM12] = mDet4_0234_0134 * mn1OverDet;
+  pM[SM13] = mDet4_0234_0124 * oneOverDet;
+  pM[SM14] = mDet4_0234_0123 * mn1OverDet;
 
-  pM[M22] = mDet4_0134_0134 * oneOverDet;
-  pM[M23] = mDet4_0134_0124 * mn1OverDet;
-  pM[M24] = mDet4_0134_0123 * oneOverDet;
+  pM[SM22] = mDet4_0134_0134 * oneOverDet;
+  pM[SM23] = mDet4_0134_0124 * mn1OverDet;
+  pM[SM24] = mDet4_0134_0123 * oneOverDet;
 
-  pM[M33] = mDet4_0124_0124 * oneOverDet;
-  pM[M34] = mDet4_0124_0123 * mn1OverDet;
+  pM[SM33] = mDet4_0124_0124 * oneOverDet;
+  pM[SM34] = mDet4_0124_0123 * mn1OverDet;
 
-  pM[M44] = mDet4_0123_0123 * oneOverDet;
+  pM[SM44] = mDet4_0123_0123 * oneOverDet;
 
   for (Int_t irow = 0; irow < 5; irow++) {
     const Int_t rowOff1 = irow*5; 
@@ -421,47 +421,47 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
 
 // Aij are indices for a 6x6 symmetric matrix.
 
-#define A00 0
-#define A01 1
-#define A02 2
-#define A03 3
-#define A04 4
-#define A05 5
+#define SA00 0
+#define SA01 1
+#define SA02 2
+#define SA03 3
+#define SA04 4
+#define SA05 5
 
-#define A10 1
-#define A11 7
-#define A12 8
-#define A13 9
-#define A14 10
-#define A15 11
+#define SA10 1
+#define SA11 7
+#define SA12 8
+#define SA13 9
+#define SA14 10
+#define SA15 11
 
-#define A20 2
-#define A21 8
-#define A22 14
-#define A23 15
-#define A24 16
-#define A25 17
+#define SA20 2
+#define SA21 8
+#define SA22 14
+#define SA23 15
+#define SA24 16
+#define SA25 17
 
-#define A30 3
-#define A31 9
-#define A32 15
-#define A33 21
-#define A34 22
-#define A35 23
+#define SA30 3
+#define SA31 9
+#define SA32 15
+#define SA33 21
+#define SA34 22
+#define SA35 23
 
-#define A40 4
-#define A41 10
-#define A42 16
-#define A43 22
-#define A44 28
-#define A45 29
+#define SA40 4
+#define SA41 10
+#define SA42 16
+#define SA43 22
+#define SA44 28
+#define SA45 29
 
-#define A50 5
-#define A51 11
-#define A52 17
-#define A53 23
-#define A54 29
-#define A55 35
+#define SA50 5
+#define SA51 11
+#define SA52 17
+#define SA53 23
+#define SA54 29
+#define SA55 35
 
 //______________________________________________________________________________
 template<class Element> 
@@ -475,278 +475,278 @@ Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
 
   Element *pM = m.GetMatrixArray();
 
-  // Find all NECESSARY 2x2 dets:  (39 of them)
+  // Find all NECESSSARY 2x2 dets:  (39 of them)
 
-  const Double_t mDet2_34_01 = pM[A30]*pM[A41] - pM[A31]*pM[A40];
-  const Double_t mDet2_34_02 = pM[A30]*pM[A42] - pM[A32]*pM[A40];
-  const Double_t mDet2_34_03 = pM[A30]*pM[A43] - pM[A33]*pM[A40];
-  const Double_t mDet2_34_04 = pM[A30]*pM[A44] - pM[A34]*pM[A40];
-  const Double_t mDet2_34_12 = pM[A31]*pM[A42] - pM[A32]*pM[A41];
-  const Double_t mDet2_34_13 = pM[A31]*pM[A43] - pM[A33]*pM[A41];
-  const Double_t mDet2_34_14 = pM[A31]*pM[A44] - pM[A34]*pM[A41];
-  const Double_t mDet2_34_23 = pM[A32]*pM[A43] - pM[A33]*pM[A42];
-  const Double_t mDet2_34_24 = pM[A32]*pM[A44] - pM[A34]*pM[A42];
-  const Double_t mDet2_34_34 = pM[A33]*pM[A44] - pM[A34]*pM[A43];
-  const Double_t mDet2_35_01 = pM[A30]*pM[A51] - pM[A31]*pM[A50];
-  const Double_t mDet2_35_02 = pM[A30]*pM[A52] - pM[A32]*pM[A50];
-  const Double_t mDet2_35_03 = pM[A30]*pM[A53] - pM[A33]*pM[A50];
-  const Double_t mDet2_35_04 = pM[A30]*pM[A54] - pM[A34]*pM[A50];
-  const Double_t mDet2_35_05 = pM[A30]*pM[A55] - pM[A35]*pM[A50];
-  const Double_t mDet2_35_12 = pM[A31]*pM[A52] - pM[A32]*pM[A51];
-  const Double_t mDet2_35_13 = pM[A31]*pM[A53] - pM[A33]*pM[A51];
-  const Double_t mDet2_35_14 = pM[A31]*pM[A54] - pM[A34]*pM[A51];
-  const Double_t mDet2_35_15 = pM[A31]*pM[A55] - pM[A35]*pM[A51];
-  const Double_t mDet2_35_23 = pM[A32]*pM[A53] - pM[A33]*pM[A52];
-  const Double_t mDet2_35_24 = pM[A32]*pM[A54] - pM[A34]*pM[A52];
-  const Double_t mDet2_35_25 = pM[A32]*pM[A55] - pM[A35]*pM[A52];
-  const Double_t mDet2_35_34 = pM[A33]*pM[A54] - pM[A34]*pM[A53];
-  const Double_t mDet2_35_35 = pM[A33]*pM[A55] - pM[A35]*pM[A53];
-  const Double_t mDet2_45_01 = pM[A40]*pM[A51] - pM[A41]*pM[A50];
-  const Double_t mDet2_45_02 = pM[A40]*pM[A52] - pM[A42]*pM[A50];
-  const Double_t mDet2_45_03 = pM[A40]*pM[A53] - pM[A43]*pM[A50];
-  const Double_t mDet2_45_04 = pM[A40]*pM[A54] - pM[A44]*pM[A50];
-  const Double_t mDet2_45_05 = pM[A40]*pM[A55] - pM[A45]*pM[A50];
-  const Double_t mDet2_45_12 = pM[A41]*pM[A52] - pM[A42]*pM[A51];
-  const Double_t mDet2_45_13 = pM[A41]*pM[A53] - pM[A43]*pM[A51];
-  const Double_t mDet2_45_14 = pM[A41]*pM[A54] - pM[A44]*pM[A51];
-  const Double_t mDet2_45_15 = pM[A41]*pM[A55] - pM[A45]*pM[A51];
-  const Double_t mDet2_45_23 = pM[A42]*pM[A53] - pM[A43]*pM[A52];
-  const Double_t mDet2_45_24 = pM[A42]*pM[A54] - pM[A44]*pM[A52];
-  const Double_t mDet2_45_25 = pM[A42]*pM[A55] - pM[A45]*pM[A52];
-  const Double_t mDet2_45_34 = pM[A43]*pM[A54] - pM[A44]*pM[A53];
-  const Double_t mDet2_45_35 = pM[A43]*pM[A55] - pM[A45]*pM[A53];
-  const Double_t mDet2_45_45 = pM[A44]*pM[A55] - pM[A45]*pM[A54];
+  const Double_t mDet2_34_01 = pM[SA30]*pM[SA41] - pM[SA31]*pM[SA40];
+  const Double_t mDet2_34_02 = pM[SA30]*pM[SA42] - pM[SA32]*pM[SA40];
+  const Double_t mDet2_34_03 = pM[SA30]*pM[SA43] - pM[SA33]*pM[SA40];
+  const Double_t mDet2_34_04 = pM[SA30]*pM[SA44] - pM[SA34]*pM[SA40];
+  const Double_t mDet2_34_12 = pM[SA31]*pM[SA42] - pM[SA32]*pM[SA41];
+  const Double_t mDet2_34_13 = pM[SA31]*pM[SA43] - pM[SA33]*pM[SA41];
+  const Double_t mDet2_34_14 = pM[SA31]*pM[SA44] - pM[SA34]*pM[SA41];
+  const Double_t mDet2_34_23 = pM[SA32]*pM[SA43] - pM[SA33]*pM[SA42];
+  const Double_t mDet2_34_24 = pM[SA32]*pM[SA44] - pM[SA34]*pM[SA42];
+  const Double_t mDet2_34_34 = pM[SA33]*pM[SA44] - pM[SA34]*pM[SA43];
+  const Double_t mDet2_35_01 = pM[SA30]*pM[SA51] - pM[SA31]*pM[SA50];
+  const Double_t mDet2_35_02 = pM[SA30]*pM[SA52] - pM[SA32]*pM[SA50];
+  const Double_t mDet2_35_03 = pM[SA30]*pM[SA53] - pM[SA33]*pM[SA50];
+  const Double_t mDet2_35_04 = pM[SA30]*pM[SA54] - pM[SA34]*pM[SA50];
+  const Double_t mDet2_35_05 = pM[SA30]*pM[SA55] - pM[SA35]*pM[SA50];
+  const Double_t mDet2_35_12 = pM[SA31]*pM[SA52] - pM[SA32]*pM[SA51];
+  const Double_t mDet2_35_13 = pM[SA31]*pM[SA53] - pM[SA33]*pM[SA51];
+  const Double_t mDet2_35_14 = pM[SA31]*pM[SA54] - pM[SA34]*pM[SA51];
+  const Double_t mDet2_35_15 = pM[SA31]*pM[SA55] - pM[SA35]*pM[SA51];
+  const Double_t mDet2_35_23 = pM[SA32]*pM[SA53] - pM[SA33]*pM[SA52];
+  const Double_t mDet2_35_24 = pM[SA32]*pM[SA54] - pM[SA34]*pM[SA52];
+  const Double_t mDet2_35_25 = pM[SA32]*pM[SA55] - pM[SA35]*pM[SA52];
+  const Double_t mDet2_35_34 = pM[SA33]*pM[SA54] - pM[SA34]*pM[SA53];
+  const Double_t mDet2_35_35 = pM[SA33]*pM[SA55] - pM[SA35]*pM[SA53];
+  const Double_t mDet2_45_01 = pM[SA40]*pM[SA51] - pM[SA41]*pM[SA50];
+  const Double_t mDet2_45_02 = pM[SA40]*pM[SA52] - pM[SA42]*pM[SA50];
+  const Double_t mDet2_45_03 = pM[SA40]*pM[SA53] - pM[SA43]*pM[SA50];
+  const Double_t mDet2_45_04 = pM[SA40]*pM[SA54] - pM[SA44]*pM[SA50];
+  const Double_t mDet2_45_05 = pM[SA40]*pM[SA55] - pM[SA45]*pM[SA50];
+  const Double_t mDet2_45_12 = pM[SA41]*pM[SA52] - pM[SA42]*pM[SA51];
+  const Double_t mDet2_45_13 = pM[SA41]*pM[SA53] - pM[SA43]*pM[SA51];
+  const Double_t mDet2_45_14 = pM[SA41]*pM[SA54] - pM[SA44]*pM[SA51];
+  const Double_t mDet2_45_15 = pM[SA41]*pM[SA55] - pM[SA45]*pM[SA51];
+  const Double_t mDet2_45_23 = pM[SA42]*pM[SA53] - pM[SA43]*pM[SA52];
+  const Double_t mDet2_45_24 = pM[SA42]*pM[SA54] - pM[SA44]*pM[SA52];
+  const Double_t mDet2_45_25 = pM[SA42]*pM[SA55] - pM[SA45]*pM[SA52];
+  const Double_t mDet2_45_34 = pM[SA43]*pM[SA54] - pM[SA44]*pM[SA53];
+  const Double_t mDet2_45_35 = pM[SA43]*pM[SA55] - pM[SA45]*pM[SA53];
+  const Double_t mDet2_45_45 = pM[SA44]*pM[SA55] - pM[SA45]*pM[SA54];
 
-  // Find all NECESSARY 3x3 dets:  (65 of them)
+  // Find all NECESSSARY 3x3 dets:  (65 of them)
 
-  const Double_t mDet3_234_012 = pM[A20]*mDet2_34_12 - pM[A21]*mDet2_34_02 + pM[A22]*mDet2_34_01;
-  const Double_t mDet3_234_013 = pM[A20]*mDet2_34_13 - pM[A21]*mDet2_34_03 + pM[A23]*mDet2_34_01;
-  const Double_t mDet3_234_014 = pM[A20]*mDet2_34_14 - pM[A21]*mDet2_34_04 + pM[A24]*mDet2_34_01;
-  const Double_t mDet3_234_023 = pM[A20]*mDet2_34_23 - pM[A22]*mDet2_34_03 + pM[A23]*mDet2_34_02;
-  const Double_t mDet3_234_024 = pM[A20]*mDet2_34_24 - pM[A22]*mDet2_34_04 + pM[A24]*mDet2_34_02;
-  const Double_t mDet3_234_034 = pM[A20]*mDet2_34_34 - pM[A23]*mDet2_34_04 + pM[A24]*mDet2_34_03;
-  const Double_t mDet3_234_123 = pM[A21]*mDet2_34_23 - pM[A22]*mDet2_34_13 + pM[A23]*mDet2_34_12;
-  const Double_t mDet3_234_124 = pM[A21]*mDet2_34_24 - pM[A22]*mDet2_34_14 + pM[A24]*mDet2_34_12;
-  const Double_t mDet3_234_134 = pM[A21]*mDet2_34_34 - pM[A23]*mDet2_34_14 + pM[A24]*mDet2_34_13;
-  const Double_t mDet3_234_234 = pM[A22]*mDet2_34_34 - pM[A23]*mDet2_34_24 + pM[A24]*mDet2_34_23;
-  const Double_t mDet3_235_012 = pM[A20]*mDet2_35_12 - pM[A21]*mDet2_35_02 + pM[A22]*mDet2_35_01;
-  const Double_t mDet3_235_013 = pM[A20]*mDet2_35_13 - pM[A21]*mDet2_35_03 + pM[A23]*mDet2_35_01;
-  const Double_t mDet3_235_014 = pM[A20]*mDet2_35_14 - pM[A21]*mDet2_35_04 + pM[A24]*mDet2_35_01;
-  const Double_t mDet3_235_015 = pM[A20]*mDet2_35_15 - pM[A21]*mDet2_35_05 + pM[A25]*mDet2_35_01;
-  const Double_t mDet3_235_023 = pM[A20]*mDet2_35_23 - pM[A22]*mDet2_35_03 + pM[A23]*mDet2_35_02;
-  const Double_t mDet3_235_024 = pM[A20]*mDet2_35_24 - pM[A22]*mDet2_35_04 + pM[A24]*mDet2_35_02;
-  const Double_t mDet3_235_025 = pM[A20]*mDet2_35_25 - pM[A22]*mDet2_35_05 + pM[A25]*mDet2_35_02;
-  const Double_t mDet3_235_034 = pM[A20]*mDet2_35_34 - pM[A23]*mDet2_35_04 + pM[A24]*mDet2_35_03;
-  const Double_t mDet3_235_035 = pM[A20]*mDet2_35_35 - pM[A23]*mDet2_35_05 + pM[A25]*mDet2_35_03;
-  const Double_t mDet3_235_123 = pM[A21]*mDet2_35_23 - pM[A22]*mDet2_35_13 + pM[A23]*mDet2_35_12;
-  const Double_t mDet3_235_124 = pM[A21]*mDet2_35_24 - pM[A22]*mDet2_35_14 + pM[A24]*mDet2_35_12;
-  const Double_t mDet3_235_125 = pM[A21]*mDet2_35_25 - pM[A22]*mDet2_35_15 + pM[A25]*mDet2_35_12;
-  const Double_t mDet3_235_134 = pM[A21]*mDet2_35_34 - pM[A23]*mDet2_35_14 + pM[A24]*mDet2_35_13;
-  const Double_t mDet3_235_135 = pM[A21]*mDet2_35_35 - pM[A23]*mDet2_35_15 + pM[A25]*mDet2_35_13;
-  const Double_t mDet3_235_234 = pM[A22]*mDet2_35_34 - pM[A23]*mDet2_35_24 + pM[A24]*mDet2_35_23;
-  const Double_t mDet3_235_235 = pM[A22]*mDet2_35_35 - pM[A23]*mDet2_35_25 + pM[A25]*mDet2_35_23;
-  const Double_t mDet3_245_012 = pM[A20]*mDet2_45_12 - pM[A21]*mDet2_45_02 + pM[A22]*mDet2_45_01;
-  const Double_t mDet3_245_013 = pM[A20]*mDet2_45_13 - pM[A21]*mDet2_45_03 + pM[A23]*mDet2_45_01;
-  const Double_t mDet3_245_014 = pM[A20]*mDet2_45_14 - pM[A21]*mDet2_45_04 + pM[A24]*mDet2_45_01;
-  const Double_t mDet3_245_015 = pM[A20]*mDet2_45_15 - pM[A21]*mDet2_45_05 + pM[A25]*mDet2_45_01;
-  const Double_t mDet3_245_023 = pM[A20]*mDet2_45_23 - pM[A22]*mDet2_45_03 + pM[A23]*mDet2_45_02;
-  const Double_t mDet3_245_024 = pM[A20]*mDet2_45_24 - pM[A22]*mDet2_45_04 + pM[A24]*mDet2_45_02;
-  const Double_t mDet3_245_025 = pM[A20]*mDet2_45_25 - pM[A22]*mDet2_45_05 + pM[A25]*mDet2_45_02;
-  const Double_t mDet3_245_034 = pM[A20]*mDet2_45_34 - pM[A23]*mDet2_45_04 + pM[A24]*mDet2_45_03;
-  const Double_t mDet3_245_035 = pM[A20]*mDet2_45_35 - pM[A23]*mDet2_45_05 + pM[A25]*mDet2_45_03;
-  const Double_t mDet3_245_045 = pM[A20]*mDet2_45_45 - pM[A24]*mDet2_45_05 + pM[A25]*mDet2_45_04;
-  const Double_t mDet3_245_123 = pM[A21]*mDet2_45_23 - pM[A22]*mDet2_45_13 + pM[A23]*mDet2_45_12;
-  const Double_t mDet3_245_124 = pM[A21]*mDet2_45_24 - pM[A22]*mDet2_45_14 + pM[A24]*mDet2_45_12;
-  const Double_t mDet3_245_125 = pM[A21]*mDet2_45_25 - pM[A22]*mDet2_45_15 + pM[A25]*mDet2_45_12;
-  const Double_t mDet3_245_134 = pM[A21]*mDet2_45_34 - pM[A23]*mDet2_45_14 + pM[A24]*mDet2_45_13;
-  const Double_t mDet3_245_135 = pM[A21]*mDet2_45_35 - pM[A23]*mDet2_45_15 + pM[A25]*mDet2_45_13;
-  const Double_t mDet3_245_145 = pM[A21]*mDet2_45_45 - pM[A24]*mDet2_45_15 + pM[A25]*mDet2_45_14;
-  const Double_t mDet3_245_234 = pM[A22]*mDet2_45_34 - pM[A23]*mDet2_45_24 + pM[A24]*mDet2_45_23;
-  const Double_t mDet3_245_235 = pM[A22]*mDet2_45_35 - pM[A23]*mDet2_45_25 + pM[A25]*mDet2_45_23;
-  const Double_t mDet3_245_245 = pM[A22]*mDet2_45_45 - pM[A24]*mDet2_45_25 + pM[A25]*mDet2_45_24;
-  const Double_t mDet3_345_012 = pM[A30]*mDet2_45_12 - pM[A31]*mDet2_45_02 + pM[A32]*mDet2_45_01;
-  const Double_t mDet3_345_013 = pM[A30]*mDet2_45_13 - pM[A31]*mDet2_45_03 + pM[A33]*mDet2_45_01;
-  const Double_t mDet3_345_014 = pM[A30]*mDet2_45_14 - pM[A31]*mDet2_45_04 + pM[A34]*mDet2_45_01;
-  const Double_t mDet3_345_015 = pM[A30]*mDet2_45_15 - pM[A31]*mDet2_45_05 + pM[A35]*mDet2_45_01;
-  const Double_t mDet3_345_023 = pM[A30]*mDet2_45_23 - pM[A32]*mDet2_45_03 + pM[A33]*mDet2_45_02;
-  const Double_t mDet3_345_024 = pM[A30]*mDet2_45_24 - pM[A32]*mDet2_45_04 + pM[A34]*mDet2_45_02;
-  const Double_t mDet3_345_025 = pM[A30]*mDet2_45_25 - pM[A32]*mDet2_45_05 + pM[A35]*mDet2_45_02;
-  const Double_t mDet3_345_034 = pM[A30]*mDet2_45_34 - pM[A33]*mDet2_45_04 + pM[A34]*mDet2_45_03;
-  const Double_t mDet3_345_035 = pM[A30]*mDet2_45_35 - pM[A33]*mDet2_45_05 + pM[A35]*mDet2_45_03;
-  const Double_t mDet3_345_045 = pM[A30]*mDet2_45_45 - pM[A34]*mDet2_45_05 + pM[A35]*mDet2_45_04;
-  const Double_t mDet3_345_123 = pM[A31]*mDet2_45_23 - pM[A32]*mDet2_45_13 + pM[A33]*mDet2_45_12;
-  const Double_t mDet3_345_124 = pM[A31]*mDet2_45_24 - pM[A32]*mDet2_45_14 + pM[A34]*mDet2_45_12;
-  const Double_t mDet3_345_125 = pM[A31]*mDet2_45_25 - pM[A32]*mDet2_45_15 + pM[A35]*mDet2_45_12;
-  const Double_t mDet3_345_134 = pM[A31]*mDet2_45_34 - pM[A33]*mDet2_45_14 + pM[A34]*mDet2_45_13;
-  const Double_t mDet3_345_135 = pM[A31]*mDet2_45_35 - pM[A33]*mDet2_45_15 + pM[A35]*mDet2_45_13;
-  const Double_t mDet3_345_145 = pM[A31]*mDet2_45_45 - pM[A34]*mDet2_45_15 + pM[A35]*mDet2_45_14;
-  const Double_t mDet3_345_234 = pM[A32]*mDet2_45_34 - pM[A33]*mDet2_45_24 + pM[A34]*mDet2_45_23;
-  const Double_t mDet3_345_235 = pM[A32]*mDet2_45_35 - pM[A33]*mDet2_45_25 + pM[A35]*mDet2_45_23;
-  const Double_t mDet3_345_245 = pM[A32]*mDet2_45_45 - pM[A34]*mDet2_45_25 + pM[A35]*mDet2_45_24;
-  const Double_t mDet3_345_345 = pM[A33]*mDet2_45_45 - pM[A34]*mDet2_45_35 + pM[A35]*mDet2_45_34;
+  const Double_t mDet3_234_012 = pM[SA20]*mDet2_34_12 - pM[SA21]*mDet2_34_02 + pM[SA22]*mDet2_34_01;
+  const Double_t mDet3_234_013 = pM[SA20]*mDet2_34_13 - pM[SA21]*mDet2_34_03 + pM[SA23]*mDet2_34_01;
+  const Double_t mDet3_234_014 = pM[SA20]*mDet2_34_14 - pM[SA21]*mDet2_34_04 + pM[SA24]*mDet2_34_01;
+  const Double_t mDet3_234_023 = pM[SA20]*mDet2_34_23 - pM[SA22]*mDet2_34_03 + pM[SA23]*mDet2_34_02;
+  const Double_t mDet3_234_024 = pM[SA20]*mDet2_34_24 - pM[SA22]*mDet2_34_04 + pM[SA24]*mDet2_34_02;
+  const Double_t mDet3_234_034 = pM[SA20]*mDet2_34_34 - pM[SA23]*mDet2_34_04 + pM[SA24]*mDet2_34_03;
+  const Double_t mDet3_234_123 = pM[SA21]*mDet2_34_23 - pM[SA22]*mDet2_34_13 + pM[SA23]*mDet2_34_12;
+  const Double_t mDet3_234_124 = pM[SA21]*mDet2_34_24 - pM[SA22]*mDet2_34_14 + pM[SA24]*mDet2_34_12;
+  const Double_t mDet3_234_134 = pM[SA21]*mDet2_34_34 - pM[SA23]*mDet2_34_14 + pM[SA24]*mDet2_34_13;
+  const Double_t mDet3_234_234 = pM[SA22]*mDet2_34_34 - pM[SA23]*mDet2_34_24 + pM[SA24]*mDet2_34_23;
+  const Double_t mDet3_235_012 = pM[SA20]*mDet2_35_12 - pM[SA21]*mDet2_35_02 + pM[SA22]*mDet2_35_01;
+  const Double_t mDet3_235_013 = pM[SA20]*mDet2_35_13 - pM[SA21]*mDet2_35_03 + pM[SA23]*mDet2_35_01;
+  const Double_t mDet3_235_014 = pM[SA20]*mDet2_35_14 - pM[SA21]*mDet2_35_04 + pM[SA24]*mDet2_35_01;
+  const Double_t mDet3_235_015 = pM[SA20]*mDet2_35_15 - pM[SA21]*mDet2_35_05 + pM[SA25]*mDet2_35_01;
+  const Double_t mDet3_235_023 = pM[SA20]*mDet2_35_23 - pM[SA22]*mDet2_35_03 + pM[SA23]*mDet2_35_02;
+  const Double_t mDet3_235_024 = pM[SA20]*mDet2_35_24 - pM[SA22]*mDet2_35_04 + pM[SA24]*mDet2_35_02;
+  const Double_t mDet3_235_025 = pM[SA20]*mDet2_35_25 - pM[SA22]*mDet2_35_05 + pM[SA25]*mDet2_35_02;
+  const Double_t mDet3_235_034 = pM[SA20]*mDet2_35_34 - pM[SA23]*mDet2_35_04 + pM[SA24]*mDet2_35_03;
+  const Double_t mDet3_235_035 = pM[SA20]*mDet2_35_35 - pM[SA23]*mDet2_35_05 + pM[SA25]*mDet2_35_03;
+  const Double_t mDet3_235_123 = pM[SA21]*mDet2_35_23 - pM[SA22]*mDet2_35_13 + pM[SA23]*mDet2_35_12;
+  const Double_t mDet3_235_124 = pM[SA21]*mDet2_35_24 - pM[SA22]*mDet2_35_14 + pM[SA24]*mDet2_35_12;
+  const Double_t mDet3_235_125 = pM[SA21]*mDet2_35_25 - pM[SA22]*mDet2_35_15 + pM[SA25]*mDet2_35_12;
+  const Double_t mDet3_235_134 = pM[SA21]*mDet2_35_34 - pM[SA23]*mDet2_35_14 + pM[SA24]*mDet2_35_13;
+  const Double_t mDet3_235_135 = pM[SA21]*mDet2_35_35 - pM[SA23]*mDet2_35_15 + pM[SA25]*mDet2_35_13;
+  const Double_t mDet3_235_234 = pM[SA22]*mDet2_35_34 - pM[SA23]*mDet2_35_24 + pM[SA24]*mDet2_35_23;
+  const Double_t mDet3_235_235 = pM[SA22]*mDet2_35_35 - pM[SA23]*mDet2_35_25 + pM[SA25]*mDet2_35_23;
+  const Double_t mDet3_245_012 = pM[SA20]*mDet2_45_12 - pM[SA21]*mDet2_45_02 + pM[SA22]*mDet2_45_01;
+  const Double_t mDet3_245_013 = pM[SA20]*mDet2_45_13 - pM[SA21]*mDet2_45_03 + pM[SA23]*mDet2_45_01;
+  const Double_t mDet3_245_014 = pM[SA20]*mDet2_45_14 - pM[SA21]*mDet2_45_04 + pM[SA24]*mDet2_45_01;
+  const Double_t mDet3_245_015 = pM[SA20]*mDet2_45_15 - pM[SA21]*mDet2_45_05 + pM[SA25]*mDet2_45_01;
+  const Double_t mDet3_245_023 = pM[SA20]*mDet2_45_23 - pM[SA22]*mDet2_45_03 + pM[SA23]*mDet2_45_02;
+  const Double_t mDet3_245_024 = pM[SA20]*mDet2_45_24 - pM[SA22]*mDet2_45_04 + pM[SA24]*mDet2_45_02;
+  const Double_t mDet3_245_025 = pM[SA20]*mDet2_45_25 - pM[SA22]*mDet2_45_05 + pM[SA25]*mDet2_45_02;
+  const Double_t mDet3_245_034 = pM[SA20]*mDet2_45_34 - pM[SA23]*mDet2_45_04 + pM[SA24]*mDet2_45_03;
+  const Double_t mDet3_245_035 = pM[SA20]*mDet2_45_35 - pM[SA23]*mDet2_45_05 + pM[SA25]*mDet2_45_03;
+  const Double_t mDet3_245_045 = pM[SA20]*mDet2_45_45 - pM[SA24]*mDet2_45_05 + pM[SA25]*mDet2_45_04;
+  const Double_t mDet3_245_123 = pM[SA21]*mDet2_45_23 - pM[SA22]*mDet2_45_13 + pM[SA23]*mDet2_45_12;
+  const Double_t mDet3_245_124 = pM[SA21]*mDet2_45_24 - pM[SA22]*mDet2_45_14 + pM[SA24]*mDet2_45_12;
+  const Double_t mDet3_245_125 = pM[SA21]*mDet2_45_25 - pM[SA22]*mDet2_45_15 + pM[SA25]*mDet2_45_12;
+  const Double_t mDet3_245_134 = pM[SA21]*mDet2_45_34 - pM[SA23]*mDet2_45_14 + pM[SA24]*mDet2_45_13;
+  const Double_t mDet3_245_135 = pM[SA21]*mDet2_45_35 - pM[SA23]*mDet2_45_15 + pM[SA25]*mDet2_45_13;
+  const Double_t mDet3_245_145 = pM[SA21]*mDet2_45_45 - pM[SA24]*mDet2_45_15 + pM[SA25]*mDet2_45_14;
+  const Double_t mDet3_245_234 = pM[SA22]*mDet2_45_34 - pM[SA23]*mDet2_45_24 + pM[SA24]*mDet2_45_23;
+  const Double_t mDet3_245_235 = pM[SA22]*mDet2_45_35 - pM[SA23]*mDet2_45_25 + pM[SA25]*mDet2_45_23;
+  const Double_t mDet3_245_245 = pM[SA22]*mDet2_45_45 - pM[SA24]*mDet2_45_25 + pM[SA25]*mDet2_45_24;
+  const Double_t mDet3_345_012 = pM[SA30]*mDet2_45_12 - pM[SA31]*mDet2_45_02 + pM[SA32]*mDet2_45_01;
+  const Double_t mDet3_345_013 = pM[SA30]*mDet2_45_13 - pM[SA31]*mDet2_45_03 + pM[SA33]*mDet2_45_01;
+  const Double_t mDet3_345_014 = pM[SA30]*mDet2_45_14 - pM[SA31]*mDet2_45_04 + pM[SA34]*mDet2_45_01;
+  const Double_t mDet3_345_015 = pM[SA30]*mDet2_45_15 - pM[SA31]*mDet2_45_05 + pM[SA35]*mDet2_45_01;
+  const Double_t mDet3_345_023 = pM[SA30]*mDet2_45_23 - pM[SA32]*mDet2_45_03 + pM[SA33]*mDet2_45_02;
+  const Double_t mDet3_345_024 = pM[SA30]*mDet2_45_24 - pM[SA32]*mDet2_45_04 + pM[SA34]*mDet2_45_02;
+  const Double_t mDet3_345_025 = pM[SA30]*mDet2_45_25 - pM[SA32]*mDet2_45_05 + pM[SA35]*mDet2_45_02;
+  const Double_t mDet3_345_034 = pM[SA30]*mDet2_45_34 - pM[SA33]*mDet2_45_04 + pM[SA34]*mDet2_45_03;
+  const Double_t mDet3_345_035 = pM[SA30]*mDet2_45_35 - pM[SA33]*mDet2_45_05 + pM[SA35]*mDet2_45_03;
+  const Double_t mDet3_345_045 = pM[SA30]*mDet2_45_45 - pM[SA34]*mDet2_45_05 + pM[SA35]*mDet2_45_04;
+  const Double_t mDet3_345_123 = pM[SA31]*mDet2_45_23 - pM[SA32]*mDet2_45_13 + pM[SA33]*mDet2_45_12;
+  const Double_t mDet3_345_124 = pM[SA31]*mDet2_45_24 - pM[SA32]*mDet2_45_14 + pM[SA34]*mDet2_45_12;
+  const Double_t mDet3_345_125 = pM[SA31]*mDet2_45_25 - pM[SA32]*mDet2_45_15 + pM[SA35]*mDet2_45_12;
+  const Double_t mDet3_345_134 = pM[SA31]*mDet2_45_34 - pM[SA33]*mDet2_45_14 + pM[SA34]*mDet2_45_13;
+  const Double_t mDet3_345_135 = pM[SA31]*mDet2_45_35 - pM[SA33]*mDet2_45_15 + pM[SA35]*mDet2_45_13;
+  const Double_t mDet3_345_145 = pM[SA31]*mDet2_45_45 - pM[SA34]*mDet2_45_15 + pM[SA35]*mDet2_45_14;
+  const Double_t mDet3_345_234 = pM[SA32]*mDet2_45_34 - pM[SA33]*mDet2_45_24 + pM[SA34]*mDet2_45_23;
+  const Double_t mDet3_345_235 = pM[SA32]*mDet2_45_35 - pM[SA33]*mDet2_45_25 + pM[SA35]*mDet2_45_23;
+  const Double_t mDet3_345_245 = pM[SA32]*mDet2_45_45 - pM[SA34]*mDet2_45_25 + pM[SA35]*mDet2_45_24;
+  const Double_t mDet3_345_345 = pM[SA33]*mDet2_45_45 - pM[SA34]*mDet2_45_35 + pM[SA35]*mDet2_45_34;
 
-  // Find all NECESSARY 4x4 dets:  (55 of them)
+  // Find all NECESSSARY 4x4 dets:  (55 of them)
 
-  const Double_t mDet4_1234_0123 = pM[A10]*mDet3_234_123 - pM[A11]*mDet3_234_023
-                                 + pM[A12]*mDet3_234_013 - pM[A13]*mDet3_234_012;
-  const Double_t mDet4_1234_0124 = pM[A10]*mDet3_234_124 - pM[A11]*mDet3_234_024
-                                 + pM[A12]*mDet3_234_014 - pM[A14]*mDet3_234_012;
-  const Double_t mDet4_1234_0134 = pM[A10]*mDet3_234_134 - pM[A11]*mDet3_234_034
-                                 + pM[A13]*mDet3_234_014 - pM[A14]*mDet3_234_013;
-  const Double_t mDet4_1234_0234 = pM[A10]*mDet3_234_234 - pM[A12]*mDet3_234_034
-                                 + pM[A13]*mDet3_234_024 - pM[A14]*mDet3_234_023;
-  const Double_t mDet4_1234_1234 = pM[A11]*mDet3_234_234 - pM[A12]*mDet3_234_134
-                                 + pM[A13]*mDet3_234_124 - pM[A14]*mDet3_234_123;
-  const Double_t mDet4_1235_0123 = pM[A10]*mDet3_235_123 - pM[A11]*mDet3_235_023
-                                 + pM[A12]*mDet3_235_013 - pM[A13]*mDet3_235_012;
-  const Double_t mDet4_1235_0124 = pM[A10]*mDet3_235_124 - pM[A11]*mDet3_235_024
-                                 + pM[A12]*mDet3_235_014 - pM[A14]*mDet3_235_012;
-  const Double_t mDet4_1235_0125 = pM[A10]*mDet3_235_125 - pM[A11]*mDet3_235_025
-                                 + pM[A12]*mDet3_235_015 - pM[A15]*mDet3_235_012;
-  const Double_t mDet4_1235_0134 = pM[A10]*mDet3_235_134 - pM[A11]*mDet3_235_034
-                                 + pM[A13]*mDet3_235_014 - pM[A14]*mDet3_235_013;
-  const Double_t mDet4_1235_0135 = pM[A10]*mDet3_235_135 - pM[A11]*mDet3_235_035
-                                 + pM[A13]*mDet3_235_015 - pM[A15]*mDet3_235_013;
-  const Double_t mDet4_1235_0234 = pM[A10]*mDet3_235_234 - pM[A12]*mDet3_235_034
-                                 + pM[A13]*mDet3_235_024 - pM[A14]*mDet3_235_023;
-  const Double_t mDet4_1235_0235 = pM[A10]*mDet3_235_235 - pM[A12]*mDet3_235_035
-                                 + pM[A13]*mDet3_235_025 - pM[A15]*mDet3_235_023;
-  const Double_t mDet4_1235_1234 = pM[A11]*mDet3_235_234 - pM[A12]*mDet3_235_134
-                                 + pM[A13]*mDet3_235_124 - pM[A14]*mDet3_235_123;
-  const Double_t mDet4_1235_1235 = pM[A11]*mDet3_235_235 - pM[A12]*mDet3_235_135
-                                 + pM[A13]*mDet3_235_125 - pM[A15]*mDet3_235_123;
-  const Double_t mDet4_1245_0123 = pM[A10]*mDet3_245_123 - pM[A11]*mDet3_245_023
-                                 + pM[A12]*mDet3_245_013 - pM[A13]*mDet3_245_012;
-  const Double_t mDet4_1245_0124 = pM[A10]*mDet3_245_124 - pM[A11]*mDet3_245_024
-                                 + pM[A12]*mDet3_245_014 - pM[A14]*mDet3_245_012;
-  const Double_t mDet4_1245_0125 = pM[A10]*mDet3_245_125 - pM[A11]*mDet3_245_025
-                                 + pM[A12]*mDet3_245_015 - pM[A15]*mDet3_245_012;
-  const Double_t mDet4_1245_0134 = pM[A10]*mDet3_245_134 - pM[A11]*mDet3_245_034
-                                 + pM[A13]*mDet3_245_014 - pM[A14]*mDet3_245_013;
-  const Double_t mDet4_1245_0135 = pM[A10]*mDet3_245_135 - pM[A11]*mDet3_245_035
-                                 + pM[A13]*mDet3_245_015 - pM[A15]*mDet3_245_013;
-  const Double_t mDet4_1245_0145 = pM[A10]*mDet3_245_145 - pM[A11]*mDet3_245_045
-                                 + pM[A14]*mDet3_245_015 - pM[A15]*mDet3_245_014;
-  const Double_t mDet4_1245_0234 = pM[A10]*mDet3_245_234 - pM[A12]*mDet3_245_034
-                                 + pM[A13]*mDet3_245_024 - pM[A14]*mDet3_245_023;
-  const Double_t mDet4_1245_0235 = pM[A10]*mDet3_245_235 - pM[A12]*mDet3_245_035
-                                 + pM[A13]*mDet3_245_025 - pM[A15]*mDet3_245_023;
-  const Double_t mDet4_1245_0245 = pM[A10]*mDet3_245_245 - pM[A12]*mDet3_245_045
-                                 + pM[A14]*mDet3_245_025 - pM[A15]*mDet3_245_024;
-  const Double_t mDet4_1245_1234 = pM[A11]*mDet3_245_234 - pM[A12]*mDet3_245_134
-                                 + pM[A13]*mDet3_245_124 - pM[A14]*mDet3_245_123;
-  const Double_t mDet4_1245_1235 = pM[A11]*mDet3_245_235 - pM[A12]*mDet3_245_135
-                                 + pM[A13]*mDet3_245_125 - pM[A15]*mDet3_245_123;
-  const Double_t mDet4_1245_1245 = pM[A11]*mDet3_245_245 - pM[A12]*mDet3_245_145
-                                 + pM[A14]*mDet3_245_125 - pM[A15]*mDet3_245_124;
-  const Double_t mDet4_1345_0123 = pM[A10]*mDet3_345_123 - pM[A11]*mDet3_345_023
-                                 + pM[A12]*mDet3_345_013 - pM[A13]*mDet3_345_012;
-  const Double_t mDet4_1345_0124 = pM[A10]*mDet3_345_124 - pM[A11]*mDet3_345_024
-                                 + pM[A12]*mDet3_345_014 - pM[A14]*mDet3_345_012;
-  const Double_t mDet4_1345_0125 = pM[A10]*mDet3_345_125 - pM[A11]*mDet3_345_025
-                                 + pM[A12]*mDet3_345_015 - pM[A15]*mDet3_345_012;
-  const Double_t mDet4_1345_0134 = pM[A10]*mDet3_345_134 - pM[A11]*mDet3_345_034
-                                 + pM[A13]*mDet3_345_014 - pM[A14]*mDet3_345_013;
-  const Double_t mDet4_1345_0135 = pM[A10]*mDet3_345_135 - pM[A11]*mDet3_345_035
-                                 + pM[A13]*mDet3_345_015 - pM[A15]*mDet3_345_013;
-  const Double_t mDet4_1345_0145 = pM[A10]*mDet3_345_145 - pM[A11]*mDet3_345_045
-                                 + pM[A14]*mDet3_345_015 - pM[A15]*mDet3_345_014;
-  const Double_t mDet4_1345_0234 = pM[A10]*mDet3_345_234 - pM[A12]*mDet3_345_034
-                                 + pM[A13]*mDet3_345_024 - pM[A14]*mDet3_345_023;
-  const Double_t mDet4_1345_0235 = pM[A10]*mDet3_345_235 - pM[A12]*mDet3_345_035
-                                 + pM[A13]*mDet3_345_025 - pM[A15]*mDet3_345_023;
-  const Double_t mDet4_1345_0245 = pM[A10]*mDet3_345_245 - pM[A12]*mDet3_345_045
-                                 + pM[A14]*mDet3_345_025 - pM[A15]*mDet3_345_024;
-  const Double_t mDet4_1345_0345 = pM[A10]*mDet3_345_345 - pM[A13]*mDet3_345_045
-                                 + pM[A14]*mDet3_345_035 - pM[A15]*mDet3_345_034;
-  const Double_t mDet4_1345_1234 = pM[A11]*mDet3_345_234 - pM[A12]*mDet3_345_134
-                                 + pM[A13]*mDet3_345_124 - pM[A14]*mDet3_345_123;
-  const Double_t mDet4_1345_1235 = pM[A11]*mDet3_345_235 - pM[A12]*mDet3_345_135
-                                 + pM[A13]*mDet3_345_125 - pM[A15]*mDet3_345_123;
-  const Double_t mDet4_1345_1245 = pM[A11]*mDet3_345_245 - pM[A12]*mDet3_345_145
-                                 + pM[A14]*mDet3_345_125 - pM[A15]*mDet3_345_124;
-  const Double_t mDet4_1345_1345 = pM[A11]*mDet3_345_345 - pM[A13]*mDet3_345_145
-                                 + pM[A14]*mDet3_345_135 - pM[A15]*mDet3_345_134;
-  const Double_t mDet4_2345_0123 = pM[A20]*mDet3_345_123 - pM[A21]*mDet3_345_023
-                                 + pM[A22]*mDet3_345_013 - pM[A23]*mDet3_345_012;
-  const Double_t mDet4_2345_0124 = pM[A20]*mDet3_345_124 - pM[A21]*mDet3_345_024
-                                 + pM[A22]*mDet3_345_014 - pM[A24]*mDet3_345_012;
-  const Double_t mDet4_2345_0125 = pM[A20]*mDet3_345_125 - pM[A21]*mDet3_345_025
-                                 + pM[A22]*mDet3_345_015 - pM[A25]*mDet3_345_012;
-  const Double_t mDet4_2345_0134 = pM[A20]*mDet3_345_134 - pM[A21]*mDet3_345_034
-                                 + pM[A23]*mDet3_345_014 - pM[A24]*mDet3_345_013;
-  const Double_t mDet4_2345_0135 = pM[A20]*mDet3_345_135 - pM[A21]*mDet3_345_035
-                                 + pM[A23]*mDet3_345_015 - pM[A25]*mDet3_345_013;
-  const Double_t mDet4_2345_0145 = pM[A20]*mDet3_345_145 - pM[A21]*mDet3_345_045
-                                 + pM[A24]*mDet3_345_015 - pM[A25]*mDet3_345_014;
-  const Double_t mDet4_2345_0234 = pM[A20]*mDet3_345_234 - pM[A22]*mDet3_345_034
-                                 + pM[A23]*mDet3_345_024 - pM[A24]*mDet3_345_023;
-  const Double_t mDet4_2345_0235 = pM[A20]*mDet3_345_235 - pM[A22]*mDet3_345_035
-                                 + pM[A23]*mDet3_345_025 - pM[A25]*mDet3_345_023;
-  const Double_t mDet4_2345_0245 = pM[A20]*mDet3_345_245 - pM[A22]*mDet3_345_045
-                                 + pM[A24]*mDet3_345_025 - pM[A25]*mDet3_345_024;
-  const Double_t mDet4_2345_0345 = pM[A20]*mDet3_345_345 - pM[A23]*mDet3_345_045
-                                 + pM[A24]*mDet3_345_035 - pM[A25]*mDet3_345_034;
-  const Double_t mDet4_2345_1234 = pM[A21]*mDet3_345_234 - pM[A22]*mDet3_345_134
-                                 + pM[A23]*mDet3_345_124 - pM[A24]*mDet3_345_123;
-  const Double_t mDet4_2345_1235 = pM[A21]*mDet3_345_235 - pM[A22]*mDet3_345_135
-                                 + pM[A23]*mDet3_345_125 - pM[A25]*mDet3_345_123;
-  const Double_t mDet4_2345_1245 = pM[A21]*mDet3_345_245 - pM[A22]*mDet3_345_145
-                                 + pM[A24]*mDet3_345_125 - pM[A25]*mDet3_345_124;
-  const Double_t mDet4_2345_1345 = pM[A21]*mDet3_345_345 - pM[A23]*mDet3_345_145
-                                 + pM[A24]*mDet3_345_135 - pM[A25]*mDet3_345_134;
-  const Double_t mDet4_2345_2345 = pM[A22]*mDet3_345_345 - pM[A23]*mDet3_345_245
-                                 + pM[A24]*mDet3_345_235 - pM[A25]*mDet3_345_234;
+  const Double_t mDet4_1234_0123 = pM[SA10]*mDet3_234_123 - pM[SA11]*mDet3_234_023
+                                 + pM[SA12]*mDet3_234_013 - pM[SA13]*mDet3_234_012;
+  const Double_t mDet4_1234_0124 = pM[SA10]*mDet3_234_124 - pM[SA11]*mDet3_234_024
+                                 + pM[SA12]*mDet3_234_014 - pM[SA14]*mDet3_234_012;
+  const Double_t mDet4_1234_0134 = pM[SA10]*mDet3_234_134 - pM[SA11]*mDet3_234_034
+                                 + pM[SA13]*mDet3_234_014 - pM[SA14]*mDet3_234_013;
+  const Double_t mDet4_1234_0234 = pM[SA10]*mDet3_234_234 - pM[SA12]*mDet3_234_034
+                                 + pM[SA13]*mDet3_234_024 - pM[SA14]*mDet3_234_023;
+  const Double_t mDet4_1234_1234 = pM[SA11]*mDet3_234_234 - pM[SA12]*mDet3_234_134
+                                 + pM[SA13]*mDet3_234_124 - pM[SA14]*mDet3_234_123;
+  const Double_t mDet4_1235_0123 = pM[SA10]*mDet3_235_123 - pM[SA11]*mDet3_235_023
+                                 + pM[SA12]*mDet3_235_013 - pM[SA13]*mDet3_235_012;
+  const Double_t mDet4_1235_0124 = pM[SA10]*mDet3_235_124 - pM[SA11]*mDet3_235_024
+                                 + pM[SA12]*mDet3_235_014 - pM[SA14]*mDet3_235_012;
+  const Double_t mDet4_1235_0125 = pM[SA10]*mDet3_235_125 - pM[SA11]*mDet3_235_025
+                                 + pM[SA12]*mDet3_235_015 - pM[SA15]*mDet3_235_012;
+  const Double_t mDet4_1235_0134 = pM[SA10]*mDet3_235_134 - pM[SA11]*mDet3_235_034
+                                 + pM[SA13]*mDet3_235_014 - pM[SA14]*mDet3_235_013;
+  const Double_t mDet4_1235_0135 = pM[SA10]*mDet3_235_135 - pM[SA11]*mDet3_235_035
+                                 + pM[SA13]*mDet3_235_015 - pM[SA15]*mDet3_235_013;
+  const Double_t mDet4_1235_0234 = pM[SA10]*mDet3_235_234 - pM[SA12]*mDet3_235_034
+                                 + pM[SA13]*mDet3_235_024 - pM[SA14]*mDet3_235_023;
+  const Double_t mDet4_1235_0235 = pM[SA10]*mDet3_235_235 - pM[SA12]*mDet3_235_035
+                                 + pM[SA13]*mDet3_235_025 - pM[SA15]*mDet3_235_023;
+  const Double_t mDet4_1235_1234 = pM[SA11]*mDet3_235_234 - pM[SA12]*mDet3_235_134
+                                 + pM[SA13]*mDet3_235_124 - pM[SA14]*mDet3_235_123;
+  const Double_t mDet4_1235_1235 = pM[SA11]*mDet3_235_235 - pM[SA12]*mDet3_235_135
+                                 + pM[SA13]*mDet3_235_125 - pM[SA15]*mDet3_235_123;
+  const Double_t mDet4_1245_0123 = pM[SA10]*mDet3_245_123 - pM[SA11]*mDet3_245_023
+                                 + pM[SA12]*mDet3_245_013 - pM[SA13]*mDet3_245_012;
+  const Double_t mDet4_1245_0124 = pM[SA10]*mDet3_245_124 - pM[SA11]*mDet3_245_024
+                                 + pM[SA12]*mDet3_245_014 - pM[SA14]*mDet3_245_012;
+  const Double_t mDet4_1245_0125 = pM[SA10]*mDet3_245_125 - pM[SA11]*mDet3_245_025
+                                 + pM[SA12]*mDet3_245_015 - pM[SA15]*mDet3_245_012;
+  const Double_t mDet4_1245_0134 = pM[SA10]*mDet3_245_134 - pM[SA11]*mDet3_245_034
+                                 + pM[SA13]*mDet3_245_014 - pM[SA14]*mDet3_245_013;
+  const Double_t mDet4_1245_0135 = pM[SA10]*mDet3_245_135 - pM[SA11]*mDet3_245_035
+                                 + pM[SA13]*mDet3_245_015 - pM[SA15]*mDet3_245_013;
+  const Double_t mDet4_1245_0145 = pM[SA10]*mDet3_245_145 - pM[SA11]*mDet3_245_045
+                                 + pM[SA14]*mDet3_245_015 - pM[SA15]*mDet3_245_014;
+  const Double_t mDet4_1245_0234 = pM[SA10]*mDet3_245_234 - pM[SA12]*mDet3_245_034
+                                 + pM[SA13]*mDet3_245_024 - pM[SA14]*mDet3_245_023;
+  const Double_t mDet4_1245_0235 = pM[SA10]*mDet3_245_235 - pM[SA12]*mDet3_245_035
+                                 + pM[SA13]*mDet3_245_025 - pM[SA15]*mDet3_245_023;
+  const Double_t mDet4_1245_0245 = pM[SA10]*mDet3_245_245 - pM[SA12]*mDet3_245_045
+                                 + pM[SA14]*mDet3_245_025 - pM[SA15]*mDet3_245_024;
+  const Double_t mDet4_1245_1234 = pM[SA11]*mDet3_245_234 - pM[SA12]*mDet3_245_134
+                                 + pM[SA13]*mDet3_245_124 - pM[SA14]*mDet3_245_123;
+  const Double_t mDet4_1245_1235 = pM[SA11]*mDet3_245_235 - pM[SA12]*mDet3_245_135
+                                 + pM[SA13]*mDet3_245_125 - pM[SA15]*mDet3_245_123;
+  const Double_t mDet4_1245_1245 = pM[SA11]*mDet3_245_245 - pM[SA12]*mDet3_245_145
+                                 + pM[SA14]*mDet3_245_125 - pM[SA15]*mDet3_245_124;
+  const Double_t mDet4_1345_0123 = pM[SA10]*mDet3_345_123 - pM[SA11]*mDet3_345_023
+                                 + pM[SA12]*mDet3_345_013 - pM[SA13]*mDet3_345_012;
+  const Double_t mDet4_1345_0124 = pM[SA10]*mDet3_345_124 - pM[SA11]*mDet3_345_024
+                                 + pM[SA12]*mDet3_345_014 - pM[SA14]*mDet3_345_012;
+  const Double_t mDet4_1345_0125 = pM[SA10]*mDet3_345_125 - pM[SA11]*mDet3_345_025
+                                 + pM[SA12]*mDet3_345_015 - pM[SA15]*mDet3_345_012;
+  const Double_t mDet4_1345_0134 = pM[SA10]*mDet3_345_134 - pM[SA11]*mDet3_345_034
+                                 + pM[SA13]*mDet3_345_014 - pM[SA14]*mDet3_345_013;
+  const Double_t mDet4_1345_0135 = pM[SA10]*mDet3_345_135 - pM[SA11]*mDet3_345_035
+                                 + pM[SA13]*mDet3_345_015 - pM[SA15]*mDet3_345_013;
+  const Double_t mDet4_1345_0145 = pM[SA10]*mDet3_345_145 - pM[SA11]*mDet3_345_045
+                                 + pM[SA14]*mDet3_345_015 - pM[SA15]*mDet3_345_014;
+  const Double_t mDet4_1345_0234 = pM[SA10]*mDet3_345_234 - pM[SA12]*mDet3_345_034
+                                 + pM[SA13]*mDet3_345_024 - pM[SA14]*mDet3_345_023;
+  const Double_t mDet4_1345_0235 = pM[SA10]*mDet3_345_235 - pM[SA12]*mDet3_345_035
+                                 + pM[SA13]*mDet3_345_025 - pM[SA15]*mDet3_345_023;
+  const Double_t mDet4_1345_0245 = pM[SA10]*mDet3_345_245 - pM[SA12]*mDet3_345_045
+                                 + pM[SA14]*mDet3_345_025 - pM[SA15]*mDet3_345_024;
+  const Double_t mDet4_1345_0345 = pM[SA10]*mDet3_345_345 - pM[SA13]*mDet3_345_045
+                                 + pM[SA14]*mDet3_345_035 - pM[SA15]*mDet3_345_034;
+  const Double_t mDet4_1345_1234 = pM[SA11]*mDet3_345_234 - pM[SA12]*mDet3_345_134
+                                 + pM[SA13]*mDet3_345_124 - pM[SA14]*mDet3_345_123;
+  const Double_t mDet4_1345_1235 = pM[SA11]*mDet3_345_235 - pM[SA12]*mDet3_345_135
+                                 + pM[SA13]*mDet3_345_125 - pM[SA15]*mDet3_345_123;
+  const Double_t mDet4_1345_1245 = pM[SA11]*mDet3_345_245 - pM[SA12]*mDet3_345_145
+                                 + pM[SA14]*mDet3_345_125 - pM[SA15]*mDet3_345_124;
+  const Double_t mDet4_1345_1345 = pM[SA11]*mDet3_345_345 - pM[SA13]*mDet3_345_145
+                                 + pM[SA14]*mDet3_345_135 - pM[SA15]*mDet3_345_134;
+  const Double_t mDet4_2345_0123 = pM[SA20]*mDet3_345_123 - pM[SA21]*mDet3_345_023
+                                 + pM[SA22]*mDet3_345_013 - pM[SA23]*mDet3_345_012;
+  const Double_t mDet4_2345_0124 = pM[SA20]*mDet3_345_124 - pM[SA21]*mDet3_345_024
+                                 + pM[SA22]*mDet3_345_014 - pM[SA24]*mDet3_345_012;
+  const Double_t mDet4_2345_0125 = pM[SA20]*mDet3_345_125 - pM[SA21]*mDet3_345_025
+                                 + pM[SA22]*mDet3_345_015 - pM[SA25]*mDet3_345_012;
+  const Double_t mDet4_2345_0134 = pM[SA20]*mDet3_345_134 - pM[SA21]*mDet3_345_034
+                                 + pM[SA23]*mDet3_345_014 - pM[SA24]*mDet3_345_013;
+  const Double_t mDet4_2345_0135 = pM[SA20]*mDet3_345_135 - pM[SA21]*mDet3_345_035
+                                 + pM[SA23]*mDet3_345_015 - pM[SA25]*mDet3_345_013;
+  const Double_t mDet4_2345_0145 = pM[SA20]*mDet3_345_145 - pM[SA21]*mDet3_345_045
+                                 + pM[SA24]*mDet3_345_015 - pM[SA25]*mDet3_345_014;
+  const Double_t mDet4_2345_0234 = pM[SA20]*mDet3_345_234 - pM[SA22]*mDet3_345_034
+                                 + pM[SA23]*mDet3_345_024 - pM[SA24]*mDet3_345_023;
+  const Double_t mDet4_2345_0235 = pM[SA20]*mDet3_345_235 - pM[SA22]*mDet3_345_035
+                                 + pM[SA23]*mDet3_345_025 - pM[SA25]*mDet3_345_023;
+  const Double_t mDet4_2345_0245 = pM[SA20]*mDet3_345_245 - pM[SA22]*mDet3_345_045
+                                 + pM[SA24]*mDet3_345_025 - pM[SA25]*mDet3_345_024;
+  const Double_t mDet4_2345_0345 = pM[SA20]*mDet3_345_345 - pM[SA23]*mDet3_345_045
+                                 + pM[SA24]*mDet3_345_035 - pM[SA25]*mDet3_345_034;
+  const Double_t mDet4_2345_1234 = pM[SA21]*mDet3_345_234 - pM[SA22]*mDet3_345_134
+                                 + pM[SA23]*mDet3_345_124 - pM[SA24]*mDet3_345_123;
+  const Double_t mDet4_2345_1235 = pM[SA21]*mDet3_345_235 - pM[SA22]*mDet3_345_135
+                                 + pM[SA23]*mDet3_345_125 - pM[SA25]*mDet3_345_123;
+  const Double_t mDet4_2345_1245 = pM[SA21]*mDet3_345_245 - pM[SA22]*mDet3_345_145
+                                 + pM[SA24]*mDet3_345_125 - pM[SA25]*mDet3_345_124;
+  const Double_t mDet4_2345_1345 = pM[SA21]*mDet3_345_345 - pM[SA23]*mDet3_345_145
+                                 + pM[SA24]*mDet3_345_135 - pM[SA25]*mDet3_345_134;
+  const Double_t mDet4_2345_2345 = pM[SA22]*mDet3_345_345 - pM[SA23]*mDet3_345_245
+                                 + pM[SA24]*mDet3_345_235 - pM[SA25]*mDet3_345_234;
 
-  // Find all NECESSARY 5x5 dets:  (19 of them)
+  // Find all NECESSSARY 5x5 dets:  (19 of them)
 
-  const Double_t mDet5_01234_01234 = pM[A00]*mDet4_1234_1234 - pM[A01]*mDet4_1234_0234
-                                   + pM[A02]*mDet4_1234_0134 - pM[A03]*mDet4_1234_0124 + pM[A04]*mDet4_1234_0123;
-  const Double_t mDet5_01235_01234 = pM[A00]*mDet4_1235_1234 - pM[A01]*mDet4_1235_0234
-                                   + pM[A02]*mDet4_1235_0134 - pM[A03]*mDet4_1235_0124 + pM[A04]*mDet4_1235_0123;
-  const Double_t mDet5_01235_01235 = pM[A00]*mDet4_1235_1235 - pM[A01]*mDet4_1235_0235
-                                   + pM[A02]*mDet4_1235_0135 - pM[A03]*mDet4_1235_0125 + pM[A05]*mDet4_1235_0123;
-  const Double_t mDet5_01245_01234 = pM[A00]*mDet4_1245_1234 - pM[A01]*mDet4_1245_0234
-                                   + pM[A02]*mDet4_1245_0134 - pM[A03]*mDet4_1245_0124 + pM[A04]*mDet4_1245_0123;
-  const Double_t mDet5_01245_01235 = pM[A00]*mDet4_1245_1235 - pM[A01]*mDet4_1245_0235
-                                   + pM[A02]*mDet4_1245_0135 - pM[A03]*mDet4_1245_0125 + pM[A05]*mDet4_1245_0123;
-  const Double_t mDet5_01245_01245 = pM[A00]*mDet4_1245_1245 - pM[A01]*mDet4_1245_0245
-                                   + pM[A02]*mDet4_1245_0145 - pM[A04]*mDet4_1245_0125 + pM[A05]*mDet4_1245_0124;
-  const Double_t mDet5_01345_01234 = pM[A00]*mDet4_1345_1234 - pM[A01]*mDet4_1345_0234
-                                   + pM[A02]*mDet4_1345_0134 - pM[A03]*mDet4_1345_0124 + pM[A04]*mDet4_1345_0123;
-  const Double_t mDet5_01345_01235 = pM[A00]*mDet4_1345_1235 - pM[A01]*mDet4_1345_0235
-                                   + pM[A02]*mDet4_1345_0135 - pM[A03]*mDet4_1345_0125 + pM[A05]*mDet4_1345_0123;
-  const Double_t mDet5_01345_01245 = pM[A00]*mDet4_1345_1245 - pM[A01]*mDet4_1345_0245
-                                   + pM[A02]*mDet4_1345_0145 - pM[A04]*mDet4_1345_0125 + pM[A05]*mDet4_1345_0124;
-  const Double_t mDet5_01345_01345 = pM[A00]*mDet4_1345_1345 - pM[A01]*mDet4_1345_0345
-                                   + pM[A03]*mDet4_1345_0145 - pM[A04]*mDet4_1345_0135 + pM[A05]*mDet4_1345_0134;
-  const Double_t mDet5_02345_01234 = pM[A00]*mDet4_2345_1234 - pM[A01]*mDet4_2345_0234
-                                   + pM[A02]*mDet4_2345_0134 - pM[A03]*mDet4_2345_0124 + pM[A04]*mDet4_2345_0123;
-  const Double_t mDet5_02345_01235 = pM[A00]*mDet4_2345_1235 - pM[A01]*mDet4_2345_0235
-                                   + pM[A02]*mDet4_2345_0135 - pM[A03]*mDet4_2345_0125 + pM[A05]*mDet4_2345_0123;
-  const Double_t mDet5_02345_01245 = pM[A00]*mDet4_2345_1245 - pM[A01]*mDet4_2345_0245
-                                   + pM[A02]*mDet4_2345_0145 - pM[A04]*mDet4_2345_0125 + pM[A05]*mDet4_2345_0124;
-  const Double_t mDet5_02345_01345 = pM[A00]*mDet4_2345_1345 - pM[A01]*mDet4_2345_0345
-                                   + pM[A03]*mDet4_2345_0145 - pM[A04]*mDet4_2345_0135 + pM[A05]*mDet4_2345_0134;
-  const Double_t mDet5_02345_02345 = pM[A00]*mDet4_2345_2345 - pM[A02]*mDet4_2345_0345
-                                   + pM[A03]*mDet4_2345_0245 - pM[A04]*mDet4_2345_0235 + pM[A05]*mDet4_2345_0234;
-  const Double_t mDet5_12345_01234 = pM[A10]*mDet4_2345_1234 - pM[A11]*mDet4_2345_0234
-                                   + pM[A12]*mDet4_2345_0134 - pM[A13]*mDet4_2345_0124 + pM[A14]*mDet4_2345_0123;
-  const Double_t mDet5_12345_01235 = pM[A10]*mDet4_2345_1235 - pM[A11]*mDet4_2345_0235
-                                   + pM[A12]*mDet4_2345_0135 - pM[A13]*mDet4_2345_0125 + pM[A15]*mDet4_2345_0123;
-  const Double_t mDet5_12345_01245 = pM[A10]*mDet4_2345_1245 - pM[A11]*mDet4_2345_0245
-                                   + pM[A12]*mDet4_2345_0145 - pM[A14]*mDet4_2345_0125 + pM[A15]*mDet4_2345_0124;
-  const Double_t mDet5_12345_01345 = pM[A10]*mDet4_2345_1345 - pM[A11]*mDet4_2345_0345
-                                   + pM[A13]*mDet4_2345_0145 - pM[A14]*mDet4_2345_0135 + pM[A15]*mDet4_2345_0134;
-  const Double_t mDet5_12345_02345 = pM[A10]*mDet4_2345_2345 - pM[A12]*mDet4_2345_0345
-                                   + pM[A13]*mDet4_2345_0245 - pM[A14]*mDet4_2345_0235 + pM[A15]*mDet4_2345_0234;
-  const Double_t mDet5_12345_12345 = pM[A11]*mDet4_2345_2345 - pM[A12]*mDet4_2345_1345
-                                   + pM[A13]*mDet4_2345_1245 - pM[A14]*mDet4_2345_1235 + pM[A15]*mDet4_2345_1234;
+  const Double_t mDet5_01234_01234 = pM[SA00]*mDet4_1234_1234 - pM[SA01]*mDet4_1234_0234
+                                   + pM[SA02]*mDet4_1234_0134 - pM[SA03]*mDet4_1234_0124 + pM[SA04]*mDet4_1234_0123;
+  const Double_t mDet5_01235_01234 = pM[SA00]*mDet4_1235_1234 - pM[SA01]*mDet4_1235_0234
+                                   + pM[SA02]*mDet4_1235_0134 - pM[SA03]*mDet4_1235_0124 + pM[SA04]*mDet4_1235_0123;
+  const Double_t mDet5_01235_01235 = pM[SA00]*mDet4_1235_1235 - pM[SA01]*mDet4_1235_0235
+                                   + pM[SA02]*mDet4_1235_0135 - pM[SA03]*mDet4_1235_0125 + pM[SA05]*mDet4_1235_0123;
+  const Double_t mDet5_01245_01234 = pM[SA00]*mDet4_1245_1234 - pM[SA01]*mDet4_1245_0234
+                                   + pM[SA02]*mDet4_1245_0134 - pM[SA03]*mDet4_1245_0124 + pM[SA04]*mDet4_1245_0123;
+  const Double_t mDet5_01245_01235 = pM[SA00]*mDet4_1245_1235 - pM[SA01]*mDet4_1245_0235
+                                   + pM[SA02]*mDet4_1245_0135 - pM[SA03]*mDet4_1245_0125 + pM[SA05]*mDet4_1245_0123;
+  const Double_t mDet5_01245_01245 = pM[SA00]*mDet4_1245_1245 - pM[SA01]*mDet4_1245_0245
+                                   + pM[SA02]*mDet4_1245_0145 - pM[SA04]*mDet4_1245_0125 + pM[SA05]*mDet4_1245_0124;
+  const Double_t mDet5_01345_01234 = pM[SA00]*mDet4_1345_1234 - pM[SA01]*mDet4_1345_0234
+                                   + pM[SA02]*mDet4_1345_0134 - pM[SA03]*mDet4_1345_0124 + pM[SA04]*mDet4_1345_0123;
+  const Double_t mDet5_01345_01235 = pM[SA00]*mDet4_1345_1235 - pM[SA01]*mDet4_1345_0235
+                                   + pM[SA02]*mDet4_1345_0135 - pM[SA03]*mDet4_1345_0125 + pM[SA05]*mDet4_1345_0123;
+  const Double_t mDet5_01345_01245 = pM[SA00]*mDet4_1345_1245 - pM[SA01]*mDet4_1345_0245
+                                   + pM[SA02]*mDet4_1345_0145 - pM[SA04]*mDet4_1345_0125 + pM[SA05]*mDet4_1345_0124;
+  const Double_t mDet5_01345_01345 = pM[SA00]*mDet4_1345_1345 - pM[SA01]*mDet4_1345_0345
+                                   + pM[SA03]*mDet4_1345_0145 - pM[SA04]*mDet4_1345_0135 + pM[SA05]*mDet4_1345_0134;
+  const Double_t mDet5_02345_01234 = pM[SA00]*mDet4_2345_1234 - pM[SA01]*mDet4_2345_0234
+                                   + pM[SA02]*mDet4_2345_0134 - pM[SA03]*mDet4_2345_0124 + pM[SA04]*mDet4_2345_0123;
+  const Double_t mDet5_02345_01235 = pM[SA00]*mDet4_2345_1235 - pM[SA01]*mDet4_2345_0235
+                                   + pM[SA02]*mDet4_2345_0135 - pM[SA03]*mDet4_2345_0125 + pM[SA05]*mDet4_2345_0123;
+  const Double_t mDet5_02345_01245 = pM[SA00]*mDet4_2345_1245 - pM[SA01]*mDet4_2345_0245
+                                   + pM[SA02]*mDet4_2345_0145 - pM[SA04]*mDet4_2345_0125 + pM[SA05]*mDet4_2345_0124;
+  const Double_t mDet5_02345_01345 = pM[SA00]*mDet4_2345_1345 - pM[SA01]*mDet4_2345_0345
+                                   + pM[SA03]*mDet4_2345_0145 - pM[SA04]*mDet4_2345_0135 + pM[SA05]*mDet4_2345_0134;
+  const Double_t mDet5_02345_02345 = pM[SA00]*mDet4_2345_2345 - pM[SA02]*mDet4_2345_0345
+                                   + pM[SA03]*mDet4_2345_0245 - pM[SA04]*mDet4_2345_0235 + pM[SA05]*mDet4_2345_0234;
+  const Double_t mDet5_12345_01234 = pM[SA10]*mDet4_2345_1234 - pM[SA11]*mDet4_2345_0234
+                                   + pM[SA12]*mDet4_2345_0134 - pM[SA13]*mDet4_2345_0124 + pM[SA14]*mDet4_2345_0123;
+  const Double_t mDet5_12345_01235 = pM[SA10]*mDet4_2345_1235 - pM[SA11]*mDet4_2345_0235
+                                   + pM[SA12]*mDet4_2345_0135 - pM[SA13]*mDet4_2345_0125 + pM[SA15]*mDet4_2345_0123;
+  const Double_t mDet5_12345_01245 = pM[SA10]*mDet4_2345_1245 - pM[SA11]*mDet4_2345_0245
+                                   + pM[SA12]*mDet4_2345_0145 - pM[SA14]*mDet4_2345_0125 + pM[SA15]*mDet4_2345_0124;
+  const Double_t mDet5_12345_01345 = pM[SA10]*mDet4_2345_1345 - pM[SA11]*mDet4_2345_0345
+                                   + pM[SA13]*mDet4_2345_0145 - pM[SA14]*mDet4_2345_0135 + pM[SA15]*mDet4_2345_0134;
+  const Double_t mDet5_12345_02345 = pM[SA10]*mDet4_2345_2345 - pM[SA12]*mDet4_2345_0345
+                                   + pM[SA13]*mDet4_2345_0245 - pM[SA14]*mDet4_2345_0235 + pM[SA15]*mDet4_2345_0234;
+  const Double_t mDet5_12345_12345 = pM[SA11]*mDet4_2345_2345 - pM[SA12]*mDet4_2345_1345
+                                   + pM[SA13]*mDet4_2345_1245 - pM[SA14]*mDet4_2345_1235 + pM[SA15]*mDet4_2345_1234;
 
   // Find the determinant 
 
-  const Double_t det = pM[A00]*mDet5_12345_12345 - pM[A01]*mDet5_12345_02345 + pM[A02]*mDet5_12345_01345
-                     - pM[A03]*mDet5_12345_01245 + pM[A04]*mDet5_12345_01235 - pM[A05]*mDet5_12345_01234;
+  const Double_t det = pM[SA00]*mDet5_12345_12345 - pM[SA01]*mDet5_12345_02345 + pM[SA02]*mDet5_12345_01345
+                     - pM[SA03]*mDet5_12345_01245 + pM[SA04]*mDet5_12345_01235 - pM[SA05]*mDet5_12345_01234;
 
   if (determ)
     *determ = det;
@@ -757,32 +757,32 @@ Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
   const Double_t oneOverDet = 1.0/det;
   const Double_t mn1OverDet = - oneOverDet;
 
-  pM[A00] =  mDet5_12345_12345*oneOverDet;
-  pM[A01] =  mDet5_12345_02345*mn1OverDet;
-  pM[A02] =  mDet5_12345_01345*oneOverDet;
-  pM[A03] =  mDet5_12345_01245*mn1OverDet;
-  pM[A04] =  mDet5_12345_01235*oneOverDet;
-  pM[A05] =  mDet5_12345_01234*mn1OverDet;
+  pM[SA00] =  mDet5_12345_12345*oneOverDet;
+  pM[SA01] =  mDet5_12345_02345*mn1OverDet;
+  pM[SA02] =  mDet5_12345_01345*oneOverDet;
+  pM[SA03] =  mDet5_12345_01245*mn1OverDet;
+  pM[SA04] =  mDet5_12345_01235*oneOverDet;
+  pM[SA05] =  mDet5_12345_01234*mn1OverDet;
 
-  pM[A11] =  mDet5_02345_02345*oneOverDet;
-  pM[A12] =  mDet5_02345_01345*mn1OverDet;
-  pM[A13] =  mDet5_02345_01245*oneOverDet;
-  pM[A14] =  mDet5_02345_01235*mn1OverDet;
-  pM[A15] =  mDet5_02345_01234*oneOverDet;
+  pM[SA11] =  mDet5_02345_02345*oneOverDet;
+  pM[SA12] =  mDet5_02345_01345*mn1OverDet;
+  pM[SA13] =  mDet5_02345_01245*oneOverDet;
+  pM[SA14] =  mDet5_02345_01235*mn1OverDet;
+  pM[SA15] =  mDet5_02345_01234*oneOverDet;
 
-  pM[A22] =  mDet5_01345_01345*oneOverDet;
-  pM[A23] =  mDet5_01345_01245*mn1OverDet;
-  pM[A24] =  mDet5_01345_01235*oneOverDet;
-  pM[A25] =  mDet5_01345_01234*mn1OverDet;
+  pM[SA22] =  mDet5_01345_01345*oneOverDet;
+  pM[SA23] =  mDet5_01345_01245*mn1OverDet;
+  pM[SA24] =  mDet5_01345_01235*oneOverDet;
+  pM[SA25] =  mDet5_01345_01234*mn1OverDet;
 
-  pM[A33] =  mDet5_01245_01245*oneOverDet;
-  pM[A34] =  mDet5_01245_01235*mn1OverDet;
-  pM[A35] =  mDet5_01245_01234*oneOverDet;
+  pM[SA33] =  mDet5_01245_01245*oneOverDet;
+  pM[SA34] =  mDet5_01245_01235*mn1OverDet;
+  pM[SA35] =  mDet5_01245_01234*oneOverDet;
 
-  pM[A44] =  mDet5_01235_01235*oneOverDet;
-  pM[A45] =  mDet5_01235_01234*mn1OverDet;
+  pM[SA44] =  mDet5_01235_01235*oneOverDet;
+  pM[SA45] =  mDet5_01235_01234*mn1OverDet;
 
-  pM[A55] =  mDet5_01234_01234*oneOverDet;
+  pM[SA55] =  mDet5_01234_01234*oneOverDet;
 
   for (Int_t irow = 0; irow < 6; irow++) {
     const Int_t rowOff1 = irow*6; 

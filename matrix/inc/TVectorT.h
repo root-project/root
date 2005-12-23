@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.39 2005/06/03 12:30:22 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.1 2005/12/22 09:13:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -230,7 +230,6 @@ template<class Element> TVectorT<Element> &ElementMult  (      TVectorT      <El
 template<class Element> TVectorT<Element> &ElementMult  (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source, const TVectorT<Element> &select);
 template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source);
 template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source, const TVectorT<Element> &select);
-template<class Element> Bool_t             AreCompatible(const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2,      Int_t              verbose=0);
 template<class Element1,class Element2>
                         Bool_t             AreCompatible(const TVectorT      <Element1> &source1,const TVectorT      <Element2> &source2,      Int_t              verbose=0);
 template<class Element> void               Compare      (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);

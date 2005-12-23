@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.30 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.1 2005/12/22 09:19:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -388,8 +388,6 @@ protected:
         Int_t                  fNrowsSub;  //
         Int_t                  fNcolsSub;  //
 
-  enum {kWorkMax = 100};
-
 public:
   TMatrixTSub_const() { fRowOff = fColOff = fNrowsSub = fNcolsSub = 0; fMatrix = 0; }
   TMatrixTSub_const(const TMatrixT   <Element> &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
@@ -415,6 +413,9 @@ public:
 template<class Element> class TMatrixTSub : public TMatrixTSub_const<Element> {
 
 public:
+
+  enum {kWorkMax = 100};
+
   TMatrixTSub() {}
   TMatrixTSub(TMatrixT   <Element> &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TMatrixTSub(TMatrixTSym<Element> &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);

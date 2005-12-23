@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.20 2005/04/22 15:32:38 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.21 2005/12/22 08:41:31 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -162,6 +162,7 @@
 #pragma link C++ function ElementMult         (      TVectorF       &,const TVectorF &,const TVectorF       &);
 #pragma link C++ function ElementDiv          (      TVectorF       &,const TVectorF &);
 #pragma link C++ function ElementDiv          (      TVectorF       &,const TVectorF &,const TVectorF       &);
+#pragma link C++ function AreCompatible       (const TVectorF       &,const TVectorF &,      Int_t);
 #pragma link C++ function AreCompatible       (const TVectorF       &,const TVectorD &,      Int_t);
 #pragma link C++ function Compare             (const TVectorF       &,const TVectorF &);
 #pragma link C++ function VerifyVectorValue   (const TVectorF       &,      Float_t   ,      Int_t,          Float_t);
@@ -289,6 +290,7 @@
 #pragma link C++ function ElementDiv          (      TVectorD       &,const TVectorD &);
 #pragma link C++ function ElementDiv          (      TVectorD       &,const TVectorD &,const TVectorD       &);
 #pragma link C++ function AreCompatible       (const TVectorD       &,const TVectorD &,      Int_t);
+#pragma link C++ function AreCompatible       (const TVectorD       &,const TVectorF &,      Int_t);
 #pragma link C++ function Compare             (const TVectorD       &,const TVectorD &);
 #pragma link C++ function VerifyVectorValue   (const TVectorD       &,      Float_t   ,      Int_t,          Float_t);
 #pragma link C++ function VerifyVectorIdentity(const TVectorD       &,const TVectorD &,      Int_t,          Float_t);

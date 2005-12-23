@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.23 2005/03/28 20:38:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -93,7 +93,7 @@ template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Element> &prototype)
 {
   // Create a matrix applying a specific operation to the prototype.
-  // Example: TMatrixTSym<Element> a(10,12); ...; TMatrixTSym<Element> b(TMatrixTBase::kTransposed, a);
+  // Example: TMatrixTSym<Element> a(10,12); ...; TMatrixTSym<Element> b(TMatrixT::kTransposed, a);
   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
   Assert(this != &prototype);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.56 2005/06/03 12:30:22 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.1 2005/12/22 09:35:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1839,54 +1839,6 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
 }
 
 //______________________________________________________________________________
-template<class Element> 
-Bool_t AreCompatible(const TVectorT<Element> &v1,const TVectorT<Element> &v2,Int_t verbose)
-{
-  if (!v1.IsValid()) {
-    if (verbose)
-      ::Error("AreCompatible", "vector 1 not initialized");
-    return kFALSE;
-  }
-  if (!v2.IsValid()) {
-    if (verbose)
-      ::Error("AreCompatible", "vector 2 not initialized");
-    return kFALSE;
-  }
-
-  if (v1.GetNrows() != v2.GetNrows() || v1.GetLwb() != v2.GetLwb()) {
-    if (verbose)
-      ::Error("AreCompatible", "vectors 1 and 2 not compatible");
-    return kFALSE;
-  }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-template<class Element> 
-Bool_t AreCompatible(const TVectorT<Element> &v1,const TVectorF &v2,Int_t verbose)
-{
-  if (!v1.IsValid()) {
-    if (verbose)
-      ::Error("AreCompatible", "vector 1 not initialized");
-    return kFALSE;
-  }
-  if (!v2.IsValid()) {
-    if (verbose)
-      ::Error("AreCompatible", "vector 2 not initialized");
-    return kFALSE;
-  }
-
-  if (v1.GetNrows() != v2.GetNrows() || v1.GetLwb() != v2.GetLwb()) {
-    if (verbose)
-      ::Error("AreCompatible", "vectors 1 and 2 not compatible");
-    return kFALSE;
-  }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
 template<class Element1,class Element2>
 Bool_t AreCompatible(const TVectorT<Element1> &v1,const TVectorT<Element2> &v2,Int_t verbose)
 {
@@ -2102,6 +2054,8 @@ template TVectorF &ElementMult         <Float_t>(      TVectorF       &target, c
 template TVectorF &ElementMult         <Float_t>(      TVectorF       &target, const TVectorF &source, const TVectorF &select);
 template TVectorF &ElementDiv          <Float_t>(      TVectorF       &target, const TVectorF &source);
 template TVectorF &ElementDiv          <Float_t>(      TVectorF       &target, const TVectorF &source, const TVectorF &select);
+template Bool_t    AreCompatible       <Float_t,Float_t>
+                                                (const TVectorF       &source1,const TVectorF &source2,      Int_t     verbose);
 template Bool_t    AreCompatible       <Float_t,Double_t>
                                                 (const TVectorF       &source1,const TVectorD &source2,      Int_t     verbose);
 template void      Compare             <Float_t>(const TVectorF       &source1,const TVectorF &source2);
@@ -2149,7 +2103,8 @@ template TVectorD &ElementMult         <Double_t>(      TVectorD       &target, 
 template TVectorD &ElementMult         <Double_t>(      TVectorD       &target, const TVectorD &source, const TVectorD &select);
 template TVectorD &ElementDiv          <Double_t>(      TVectorD       &target, const TVectorD &source);
 template TVectorD &ElementDiv          <Double_t>(      TVectorD       &target, const TVectorD &source, const TVectorD &select);
-template Bool_t    AreCompatible       <Double_t>(const TVectorD       &source1,const TVectorD &source2,      Int_t     verbose);
+template Bool_t    AreCompatible<Double_t,Double_t>
+                                                 (const TVectorD       &source1,const TVectorD &source2,      Int_t     verbose);
 template Bool_t    AreCompatible<Double_t,Float_t>
                                                  (const TVectorD       &source1,const TVectorF &source2,      Int_t     verbose);
 template void      Compare             <Double_t>(const TVectorD       &source1,const TVectorD &source2);

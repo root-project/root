@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.21 2005/09/02 11:04:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.1 2005/12/22 09:19:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -220,7 +220,6 @@ template<class Element> Element TMatrixTBase<Element>::SetTol(Element newTol)
 
 template<class Element> Bool_t  operator==   (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
 template<class Element> Element E2Norm       (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
-template<class Element> Bool_t  AreCompatible(const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2,Int_t verbose=0);
 template<class Element1,class Element2>
                         Bool_t  AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element2> &m2,Int_t verbose=0);
 template<class Element> void    Compare      (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.80 2005/04/05 12:47:11 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.3 2005/12/22 13:57:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -101,7 +101,7 @@ template<class Element>
 TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &prototype)
 {
   // Create a matrix applying a specific operation to the prototype.
-  // Example: TMatrixT<Element> a(10,12); ...; TMatrixT<Element> b(TMatrixTBase::kTransposed, a);
+  // Example: TMatrixT<Element> a(10,12); ...; TMatrixT<Element> b(TMatrixT::kTransposed, a);
   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
   Assert(this != &prototype);
@@ -154,7 +154,7 @@ template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT<Element> &b)
 {
   // Create a matrix applying a specific operation to two prototypes.
-  // Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixTBase::kMult, b);
+  // Example: TMatrixT<Element> a(10,12), b(12,5); ...; TMatrixT<Element> c(a, TMatrixT::kMult, b);
   // Supported operations are: kMult (a*b), kTransposeMult (a'*b), kInvMult (a^(-1)*b)
 
   this->Invalidate();
@@ -1936,10 +1936,10 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source
     sp = source.GetMatrixArray();
 
   // One row of the old_target matrix
-  Element work[this->kWorkMax];
+  Element work[kWorkMax];
   Bool_t isAllocated = kFALSE;
   Element *trp = work;
-  if (this->fNcols > this->kWorkMax) {
+  if (this->fNcols > kWorkMax) {
     isAllocated = kTRUE;
     trp = new Element[this->fNcols];
   }
@@ -1998,10 +1998,10 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
     sp = source.GetMatrixArray();
 
   // One row of the old_target matrix
-  Element work[this->kWorkMax];
+  Element work[kWorkMax];
   Bool_t isAllocated = kFALSE;
   Element *trp = work;
-  if (this->fNcols > this->kWorkMax) {
+  if (this->fNcols > kWorkMax) {
     isAllocated = kTRUE;
     trp = new Element[this->fNcols];
   }

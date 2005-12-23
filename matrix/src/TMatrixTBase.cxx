@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.17 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1012,31 +1012,6 @@ Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 }
 
 //______________________________________________________________________________
-template<class Element>
-Bool_t AreCompatible(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,Int_t verbose)
-{
-  if (!m1.IsValid()) {
-    if (verbose)
-      ::Error("AreCompatible", "matrix 1 invalid");
-    return kFALSE;
-  }
-  if (!m2.IsValid()) {
-    if (verbose)
-      ::Error("AreCompatible", "matrix 2 invalid");
-    return kFALSE;
-  }
-
-  if (m1.GetNrows()  != m2.GetNrows()  || m1.GetNcols()  != m2.GetNcols() ||
-      m1.GetRowLwb() != m2.GetRowLwb() || m1.GetColLwb() != m2.GetColLwb()) {
-    if (verbose)
-      ::Error("AreCompatible", "matrices 1 and 2 not compatible");
-    return kFALSE;
-  }
-
-  return kTRUE;
-}
-
-//______________________________________________________________________________
 template<class Element1,class Element2>
 Bool_t AreCompatible(const TMatrixTBase<Element1> &m1,const TMatrixTBase<Element2> &m2,Int_t verbose)
 {
@@ -1223,7 +1198,8 @@ template class TMatrixTBase<Float_t>;
 
 template Bool_t   operator==          <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
 template Float_t  E2Norm              <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
-template Bool_t   AreCompatible       <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2,Int_t verbose);
+template Bool_t   AreCompatible<Float_t,Float_t>
+                                               (const TMatrixFBase &m1,const TMatrixFBase &m2,Int_t verbose);
 template Bool_t   AreCompatible<Float_t,Double_t>
                                                (const TMatrixFBase &m1,const TMatrixDBase &m2,Int_t verbose);
 template void     Compare             <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
@@ -1235,10 +1211,11 @@ template class TMatrixTBase<Double_t>;
 
 template Bool_t   operator==          <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
 template Double_t E2Norm              <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
-template Bool_t   AreCompatible       <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose);
-template void     Compare             <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
+template Bool_t   AreCompatible<Double_t,Double_t>
+                                               (const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose);
 template Bool_t   AreCompatible<Double_t,Float_t>
                                                (const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose);
+template void     Compare             <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
 template Bool_t   VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val,Int_t verbose,Double_t maxDevAllow);
 template Bool_t   VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2,
                                                  Int_t verbose,Double_t maxDevAllow);
