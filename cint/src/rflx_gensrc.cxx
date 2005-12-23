@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.4 2005/12/13 16:30:19 brun Exp $
+//$Id: rflx_gensrc.cxx,v 1.5 2005/12/16 11:34:12 brun Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -405,12 +405,15 @@ void rflx_gensrc::gen_classdictdefs(G__ClassInfo & ci)
       }
    }
    if (!hasConstructor) {
-      m_cd << ind() <<
-          "static void * constructor_auto(void* mem, const std::vector<void*>&, void*) { ";
-      if (ci.Property() & G__BIT_ISABSTRACT)
+      if (ci.Property() & G__BIT_ISABSTRACT) {
+         m_cd << ind() <<
+          "static void * constructor_auto(void*, const std::vector<void*>&, void*) { ";
          m_cd << " return 0; }" << std::endl;
-      else 
+      } else {
+         m_cd << ind() <<
+          "static void * constructor_auto(void* mem, const std::vector<void*>&, void*) { ";
          m_cd << "return ::new(mem) ::" << fclname << "(); }" << std::endl;
+      }
    }
    --ind;
    m_cd << ind() << "};" << std::endl << std::endl;
@@ -824,10 +827,31 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
             isConstructor = true;
 
          if (isConstructor) {
-            s << ind() << "void* " << cldname << "::" << "constructor_" <<
-                ++cNum <<
-                "(void* mem, const std::vector<void*>& arg, void*) {" <<
-                std::endl;
+            if (nArgs > 0) {
+               if (ci.Property() & G__BIT_ISABSTRACT) {
+                  s << ind() << "void* " << cldname << "::" << "constructor_" <<
+                   ++cNum <<
+                   "(void*, const std::vector<void*>&, void*) {" <<
+                   std::endl;
+               } else {
+                  s << ind() << "void* " << cldname << "::" << "constructor_" <<
+                   ++cNum <<
+                   "(void* mem, const std::vector<void*>& arg, void*) {" <<
+                   std::endl;
+               }
+            } else {
+               if (ci.Property() & G__BIT_ISABSTRACT) {
+                  s << ind() << "void* " << cldname << "::" << "constructor_" <<
+                   ++cNum <<
+                   "(void*, const std::vector<void*>& , void*) {" <<
+                   std::endl;
+               } else {
+                  s << ind() << "void* " << cldname << "::" << "constructor_" <<
+                   ++cNum <<
+                   "(void* mem, const std::vector<void*>& , void*) {" <<
+                   std::endl;
+               }
+            }
             ++ind;
             if (ci.Property() & G__BIT_ISABSTRACT) {
                s << "  return 0; // pure virtual" << std::endl
@@ -835,10 +859,17 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
                continue;
             }
          } else {
-            s << ind() << "void* " << cldname << "::" << "method_" <<
-                ++mNum <<
-                "(void* o, const std::vector<void*>& arg, void*) {" <<
-                std::endl;
+            if (nArgs > 0) {
+               s << ind() << "void* " << cldname << "::" << "method_" <<
+                   ++mNum <<
+                   "(void* o, const std::vector<void*>& arg, void*) {" <<
+                   std::endl;
+            } else {
+               s << ind() << "void* " << cldname << "::" << "method_" <<
+                   ++mNum <<
+                   "(void* o, const std::vector<void*>& , void*) {" <<
+                   std::endl;
+            }
             ++ind;
          }
 
@@ -961,10 +992,17 @@ void rflx_gensrc::gen_freefundicts()
          // stub function defintions
          int nDefaultArgs = mi.NDefaultArg();
          int nArgs = mi.NArg();
-         stub_defn << ind() << "void* " << cldname << "::" <<
+         if (nArgs > 0) {
+            stub_defn << ind() << "void* " << cldname << "::" <<
              "freefunction_" << mNum <<
              "(void*, const std::vector<void*>& arg, void*) {" << std::
              endl;
+         } else {
+            stub_defn << ind() << "void* " << cldname << "::" <<
+             "freefunction_" << mNum <<
+             "(void*, const std::vector<void*>& , void*) {" << std::
+             endl;
+         }
          ++ind;
 
          if (nDefaultArgs) {
