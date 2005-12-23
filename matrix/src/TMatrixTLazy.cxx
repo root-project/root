@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.5 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -25,11 +25,13 @@
 #include "TMatrixTSym.h"
 #include "TMatrixTLazy.h"
 
+#ifndef R__ALPHA
 templateClassImp(TMatrixTLazy)
 templateClassImp(TMatrixTSymLazy)
 templateClassImp(THaarMatrixT)
 templateClassImp(THilbertMatrixT)
 templateClassImp(THilbertMatrixTSym)
+#endif
 
 //______________________________________________________________________________
 template<class Element>

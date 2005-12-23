@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.1 2005/12/22 09:35:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.2 2005/12/23 07:20:11 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -36,7 +36,9 @@
 
 #include "TVectorT.h"
 
+#ifndef R__ALPHA
 templateClassImp(TVectorT)
+#endif
 
 //______________________________________________________________________________
 template<class Element> 

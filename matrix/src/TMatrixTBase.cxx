@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.2 2005/12/23 07:20:10 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -203,7 +203,9 @@
 #include "TMatrixTBase.h"
 #include "TVectorT.h"
 
+#ifndef R__ALPHA
 templateClassImp(TMatrixTBase)
+#endif
 
 //______________________________________________________________________________
 template<class Element>

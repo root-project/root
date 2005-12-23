@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.19 2005/09/02 11:04:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -72,7 +72,9 @@
 #include "TMatrixTSparse.h"
 #include "TMatrixT.h"
 
+#ifndef R__ALPHA
 templateClassImp(TMatrixTSparse)
+#endif
 
 //______________________________________________________________________________
 template<class Element>

@@ -99,8 +99,9 @@ void  testInv_T(const M & a,  double & time, M& result){
   test::Timer t(time,"inv ");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = a; 
-      result.InvertFast();  
+      //result = a; 
+      //result.InvertFast(); 
+      result = TMatrixD(TMatrixD::kInverted,a);
     }
 }
 
