@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.2 2003/04/14 13:10:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.3 2003/04/14 14:13:19 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************
@@ -11,6 +11,17 @@
 
 #ifndef ROOT_Riostream
 #define ROOT_Riostream
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Riostream                                                            //
+//                                                                      //
+// This headers is only supposed to be used in implementation files.    //
+// Never in headers, since it has "using namespace std".                //
+// In headers use the companion Riosfwd.h.                              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_RConfig
 #include "RConfig.h"
