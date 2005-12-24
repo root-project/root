@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.30 2005/08/16 12:57:57 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.31 2005/12/02 16:17:47 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,6 +16,7 @@
 
 #pragma extra_include "vector";
 #pragma extra_include "string";
+#pragma extra_include "iostream";
 #include <vector>
 
 #pragma link C++ class vector<string>;
