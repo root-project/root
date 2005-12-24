@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.cxx,v 1.1 2004/04/22 06:56:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TComplex.cxx,v 1.2 2004/04/22 14:29:09 rdm Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TComplex.h"
+#include "Riostream.h"
+
 
 ClassImp(TComplex)
 
@@ -28,4 +30,18 @@ TComplex::TComplex(Double_t re, Double_t im, Bool_t polar) : fRe(re), fIm(im)
       fRe=re*TMath::Cos(im);
       fIm=re*TMath::Sin(im);
    }
+}
+
+//______________________________________________________________________________
+ostream& operator<<(ostream& out, const TComplex& c)
+{
+   out << "(" << c.fRe << "," << c.fIm << "i)";
+   return out;
+}
+
+//______________________________________________________________________________
+istream& operator>>(istream& in, TComplex& c)
+{
+   in >> c.fRe >> c.fIm;
+   return in;
 }

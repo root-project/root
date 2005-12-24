@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.4 2004/04/23 08:53:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.5 2005/11/21 11:17:18 rdm Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************
@@ -18,8 +18,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <Riostream.h>
-#include <TMath.h>
+#include "Riosfwd.h"
+//#include "Riostream.h"
+#include "TMath.h"
+
 
 class TComplex {
 
@@ -176,10 +178,8 @@ public:
      {return Max(lb,Min(c,ub));}
 
    // I/O
-   friend ostream& operator<<(ostream& out, const TComplex& c) {
-      out << "(" << c.fRe << "," << c.fIm << "i)"; return out; }
-   friend istream& operator>>(istream& in, TComplex& c) {
-      in >> c.fRe >> c.fIm; return in;}
+   friend ostream& operator<<(ostream& out, const TComplex& c);
+   friend istream& operator>>(istream& in, TComplex& c);
 
    ClassDef(TComplex,1)  //Complex Class
 };
