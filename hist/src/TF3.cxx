@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.22 2005/08/03 17:40:34 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.23 2005/11/21 09:47:20 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -274,7 +274,7 @@ void TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
    Int_t fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
    if (fitResult!=0){
       //migrad might have not converged
-      Warning("GetMinimumXY", "Abnormal termination of minimization");
+      Warning("GetMinimumXYZ", "Abnormal termination of minimization");
    }
    Double_t xtemp = minuit->GetParameter(0);
    Double_t ytemp = minuit->GetParameter(1);
@@ -287,7 +287,7 @@ void TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
       fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
       if (fitResult!=0){
          //migrad might have not converged
-         Warning("GetMinimumXY", "Abnormal termination of minimization");
+         Warning("GetMinimumXYZ", "Abnormal termination of minimization");
       }
    }
    x = minuit->GetParameter(0);
