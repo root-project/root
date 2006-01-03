@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.61 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.62 2005/11/21 11:17:18 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1057,10 +1057,10 @@ void TStyle::SetOptFit(Int_t mode)
 // The type of information about fit parameters printed in the histogram
 // statistics box can be selected via the parameter mode.
 //  The parameter mode can be = pcev  (default = 0111)
-//    v = 1;  print name/values of parameters
-//    e = 1;  print errors (if e=1, v must be 1)
-//    c = 1;  print Chisquare/Number of degress of freedom
 //    p = 1;  print Probability
+//    c = 1;  print Chisquare/Number of degress of freedom
+//    e = 1;  print errors (if e=1, v must be 1)
+//    v = 1;  print name/values of parameters
 //  Example: gStyle->SetOptFit(1011);
 //           print fit probability, parameter names/values and errors.
 //    When "v"=1 is specified, only the non-fixed parameters are shown.
@@ -1084,20 +1084,20 @@ void TStyle::SetOptStat(Int_t mode)
 {
    // The type of information printed in the histogram statistics box
    //  can be selected via the parameter mode.
-   //  The parameter mode can be = iourmen  (default = 0001111)
-   //    n = 1;  name of histogram is printed
-   //    e = 1;  number of entries printed
-   //    m = 1;  mean value printed
-   //    m = 2;  mean and mean error values printed
-   //    r = 1;  rms printed
-   //    r = 2;  rms and rms error printed
-   //    u = 1;  number of underflows printed
-   //    o = 1;  number of overflows printed
-   //    i = 1;  integral of bins printed
-   //    s = 1;  skewness printed
-   //    s = 2;  skewness and skewness error printed
+   //  The parameter mode can be = ksiourmen  (default = 000001111)
    //    k = 1;  kurtosis printed
    //    k = 2;  kurtosis and kurtosis error printed
+   //    s = 1;  skewness printed
+   //    s = 2;  skewness and skewness error printed
+   //    i = 1;  integral of bins printed
+   //    o = 1;  number of overflows printed
+   //    u = 1;  number of underflows printed
+   //    r = 1;  rms printed
+   //    r = 2;  rms and rms error printed
+   //    m = 1;  mean value printed
+   //    m = 2;  mean and mean error values printed
+   //    e = 1;  number of entries printed
+   //    n = 1;  name of histogram is printed
    //  Example: gStyle->SetOptStat(11);
    //           print only name of histogram and number of entries.
    //           gStyle->SetOptStat(1101);  displays the name of histogram, mean value and RMS.
@@ -1125,20 +1125,20 @@ void TStyle::SetOptStat(Int_t mode)
 //______________________________________________________________________________
 void TStyle::SetOptStat(Option_t *stat)
 {
-   //  The parameter mode can be = IOURMEN
-   //    n :  name of histogram is printed
-   //    e :  number of entries printed
-   //    m :  mean value printed
-   //    M :  mean value mean error values printed
-   //    r :  rms printed
-   //    R :  rms and rms error printed
-   //    u :  number of underflows printed
-   //    o :  number of overflows printed
-   //    i :  integral of bins printed
-   //    s :  skewness printed
-   //    S :  skewness and skewness error printed
+   //  The parameter mode can be any combination of kKsSiourRmMen
    //    k :  kurtosis printed
    //    K :  kurtosis and kurtosis error printed
+   //    s :  skewness printed
+   //    S :  skewness and skewness error printed
+   //    i :  integral of bins printed
+   //    o :  number of overflows printed
+   //    u :  number of underflows printed
+   //    r :  rms printed
+   //    R :  rms and rms error printed
+   //    m :  mean value printed
+   //    M :  mean value mean error values printed
+   //    e :  number of entries printed
+   //    n :  name of histogram is printed
    //  Example: gStyle->SetOptStat("ne");
    //           print only name of histogram and number of entries.
    //  gStyle->SetOptStat("n") print only the name of the histogram
