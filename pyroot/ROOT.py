@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.33 2005/11/24 17:08:36 rdm Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.34 2005/12/07 06:16:16 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 12/06/05
+# Last: 01/02/06
 
 """PyROOT user module.
 
@@ -60,7 +60,7 @@ except:
    pass
 
 ## remove DISPLAY variable in batch mode as not confuse early ROOT calls
-if '-b' in sys.argv and os.environ.has_key( 'DISPLAY' ):
+if hasattr(sys,'argv') and '-b' in sys.argv and os.environ.has_key( 'DISPLAY' ):
     del os.environ[ 'DISPLAY' ]       
 
 ## load PyROOT C++ extension module, special case for linux and Sun

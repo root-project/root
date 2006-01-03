@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.h,v 1.4 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.h,v 1.5 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen   May 2004
 
 #ifndef ROOT_TPyReturn
@@ -41,7 +41,7 @@ public:
 
    operator ULong_t() const;
    operator UInt_t() const { return (UInt_t)operator ULong_t(); }
-   operator UShort_t() const { return (UShort_t)operator UShort_t(); }
+   operator UShort_t() const { return (UShort_t)operator ULong_t(); }
 
    operator Double_t() const;
    operator Float_t() const { return (Float_t)operator Double_t(); }

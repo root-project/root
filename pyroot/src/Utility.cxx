@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.24 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.25 2005/11/24 19:49:57 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -17,6 +17,7 @@
 
 // Standard
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <algorithm>
 
@@ -266,15 +267,19 @@ void PyROOT::Utility::ErrMsgCallback( char* msg ) {
    if ( strstr( msg, "error recovered" ) )
       return;
 
-// ignore FILE/LINE messages (picked up directly when needed)
+// ignore CINT-style FILE/LINE messages
    if ( strstr( msg, "FILE:" ) )
       return;
 
 // get file name and line number
-   char* errFile = strstr( G__get_ifile()->name, "./" );
-   if ( ! errFile )
-      errFile = G__get_ifile()->name;
+   char* errFile = G__stripfilename( G__get_ifile()->name );
    int errLine = G__get_ifile()->line_number;
+
+// ignore ROOT-style FILE/LINE messages
+   char buf[256];
+   snprintf( buf, 256, "%s:%d:", errFile, errLine );
+   if ( strstr( msg, buf ) )
+      return;
 
 // strip newline, if any
    int len = strlen( msg );
@@ -317,8 +322,10 @@ void PyROOT::Utility::ErrMsgCallback( char* msg ) {
       PyErr_WarnExplicit( NULL, p+9, errFile, errLine, (char*)"CINT", NULL );
       return;                                // NOTE: return after warning is set
    } else if ( ( p = strstr( msg, "Note:" ) ) ) {
-      fprintf( stdout, "Note: (file \"%s\", line %d) %s)\n", errFile, errLine, p+6 );
+      fprintf( stdout, "Note: (file \"%s\", line %d) %s\n", errFile, errLine, p+6 );
       return;                                // NOTE: return after printing note
-   } else
-      PyErr_Format( PyExc_RuntimeError, format, errFile, errLine, msg );
+   }
+
+// still here? Just print it on the screen as that's the safes thing to do
+   fprintf( stdout, "Message: (file \"%s\", line %d) %s\n", errFile, errLine, msg );
 }
