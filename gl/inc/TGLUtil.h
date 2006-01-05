@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.19 2005/12/05 17:34:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.20 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -28,10 +28,13 @@
 // TODO: Split these into own h/cxx files - too long now!
 
 // TODO: Where should these enums live?
+// Move into draw flags class
 enum  ELODPresets {
-   kLow = 20,
-   kMed = 50,
-   kHigh = 100
+   //kLODSkip        = -1,  // Make short_t then can use negs for special cases  
+   kLODLow         = 20,
+   kLODMed         = 50,
+   kLODHigh        = 100,
+   kLODUnsupported = 200 // Make neg
 };
 
 enum EPosition

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.11 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.12 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -98,10 +98,11 @@ public:
    // Associated logical
    const TGLLogicalShape & GetLogical() const { return fLogicalShape; }
 
-   virtual void Draw(UInt_t LOD) const;
-   virtual void DrawWireFrame(UInt_t lod) const;
-   virtual void DrawOutline(UInt_t lod) const;
-   void         InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
+   virtual Bool_t SupportsLOD() const;
+   virtual void   Draw(UInt_t LOD) const;
+   virtual void   DrawWireFrame(UInt_t lod) const;
+   virtual void   DrawOutline(UInt_t lod) const;
+   void           InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
    // Modification and manipulation
    // Selected treated as temporary modification
@@ -130,6 +131,13 @@ public:
 
    ClassDef(TGLPhysicalShape,0) // a physical (placed, global frame) drawable object
 };
+
+//______________________________________________________________________________
+inline Bool_t TGLPhysicalShape::SupportsLOD() const
+{
+   // We support LOD if our logical shape does
+   return fLogicalShape.SupportsLOD();
+}
 
 //______________________________________________________________________________
 inline TGLVector3 TGLPhysicalShape::GetScale() const

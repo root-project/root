@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.48 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.49 2005/11/29 09:25:51 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -537,9 +537,6 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, TObject *r)
    // Default ctor
    fRadius = buffer.fRadiusOuter;
 
-   // TGLSphere is only current shape which can take advantage of LOD and hence
-   // makes sense for DL caching to be enabled for
-   SetDLCache(kTRUE);
    // TODO:
    // Support hollow & cut spheres
    // buffer.fRadiusInner;

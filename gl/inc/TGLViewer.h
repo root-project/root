@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.19 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.20 2005/12/12 15:28:32 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -260,7 +260,7 @@ public:
    // Draw and selection - unpleasant as we need to send via cross thread
    // gVirtualGL objects to ensure GL context is correct. To be removed when
    // TGLManager is
-   void RequestDraw(UInt_t redrawLOD = kMed); // Cross thread draw request
+   void RequestDraw(UInt_t redrawLOD = kLODMed); // Cross thread draw request
    void DoDraw();
    void RequestSelect(UInt_t x, UInt_t y); // Cross thread select request
    Bool_t DoSelect(const TGLRect & rect); // Window coords origin top left
@@ -292,7 +292,7 @@ class TGLRedrawTimer : public TTimer
          fRedrawLOD = redrawLOD;
          TTimer::Start(milliSec, kTRUE);
       }
-      Bool_t Notify() { TurnOff(); fViewer.RequestDraw(kHigh); return kTRUE; }
+      Bool_t Notify() { TurnOff(); fViewer.RequestDraw(kLODHigh); return kTRUE; }
 };
 
 #endif // ROOT_TGLViewer

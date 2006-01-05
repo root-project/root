@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.7 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.8 2005/12/01 11:04:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -31,7 +31,8 @@
 // See TGLDrawable::Draw() for use.                                     //
 // NOTE: Purging of individual TGLDrawables not currently implemented:  //
 //       Purge(const TGLDrawable & drawable)                            //    
-//       Purge(const TGLDrawable & drawable, UInt_t LOD)                // //////////////////////////////////////////////////////////////////////////
+//       Purge(const TGLDrawable & drawable, UInt_t LOD)                // 
+//////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLDisplayListCache)
 

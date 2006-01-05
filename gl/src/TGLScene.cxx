@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.27 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.28 2005/12/12 15:28:32 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -58,7 +58,7 @@ ClassImp(TGLScene)
 TGLScene::TGLScene() :
    fLock(kUnlocked), fDrawList(1000), 
    fDrawListValid(kFALSE), fBoundingBox(), fBoundingBoxValid(kFALSE), 
-   fLastDrawLOD(kHigh), fSelectedPhysical(0)
+   fLastDrawLOD(kLODHigh), fSelectedPhysical(0)
 {
    // Construct scene object
 }
@@ -559,7 +559,10 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD,
          }
 
          // Get the shape draw quality
-         UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, LOD);
+         UInt_t shapeLOD = kLODUnsupported;
+         if (drawShape->SupportsLOD()) {
+            shapeLOD = CalcPhysicalLOD(*drawShape, camera, LOD);
+         }
 
          //Draw, DrawWireFrame, DrawOutline
          (drawShape->*drawPtr)(shapeLOD);
@@ -946,7 +949,7 @@ Bool_t TGLScene::Select(const TGLCamera & camera, Int_t style, const TGLClip * c
    glPushName(0);
 
    // Draw out scene at best quality with clipping, no timelimit
-   Draw(camera, style, kHigh, 0.0, clip);
+   Draw(camera, style, kLODHigh, 0.0, clip);
 
    // Retrieve the hit count and return to render
    Int_t hits = glRenderMode(GL_RENDER);

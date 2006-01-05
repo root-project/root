@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.27 2005/06/13 10:20:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.28 2005/11/24 12:29:12 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -68,9 +68,10 @@ protected:
 public:
    TGLFaceSet(const TBuffer3D &buff, TObject *realObj);
    void SetFromMesh(const RootCsg::BaseMesh *m);
-   //void Stretch(Double_t xs, Double_t ys, Double_t zs);
-   void DrawWireFrame(UInt_t) const;
-   void DrawOutline(UInt_t) const;
+
+   Bool_t SupportsLOD() const { return kFALSE; }
+   void   DrawWireFrame(UInt_t) const;
+   void   DrawOutline(UInt_t) const;
 
 private:
    void GLDrawPolys()const;
@@ -92,6 +93,8 @@ protected:
 public:
    TGLPolyMarker(const TBuffer3D &buff, TObject *realObject);
 
+   Bool_t SupportsLOD() const { return kFALSE; }
+
 private:
    void DrawStars()const;
 
@@ -106,6 +109,7 @@ protected:
 public:
    TGLPolyLine(const TBuffer3D &buff, TObject *realObject);
 
+   Bool_t SupportsLOD() const { return kFALSE; }
    ClassDef(TGLPolyLine,0) // a polyline logical shape
 };
 
@@ -120,6 +124,7 @@ protected:
 public:
    TGLSphere(const TBuffer3DSphere &buffer, TObject *realObject);
 
+   Bool_t SupportsLOD() const { return kTRUE; }
    ClassDef(TGLSphere,0) // a spherical logical shape
 };
 
@@ -136,9 +141,10 @@ public:
    TGLCylinder(const TBuffer3DTube &buff, TObject *realObject);
    ~TGLCylinder();
 
+   Bool_t SupportsLOD() const { return kFALSE; }
+
 private:
    void CreateParts(const TBuffer3DTube & buffer);
-
    ClassDef(TGLCylinder,0) // a cylinderical logical shape
 };
 

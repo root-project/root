@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.30 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.31 2005/12/12 15:28:32 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -91,7 +91,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fAction(kNone), fStartPos(0,0), fLastPos(0,0), fActiveButtonID(0),
    fDrawStyle(kFill),
    fRedrawTimer(0),
-   fNextSceneLOD(kHigh),
+   fNextSceneLOD(kLODHigh),
    fLightState(kLightMask), // All on
    fAxesType(kAxesNone),
    fReferenceOn(kFALSE),
@@ -295,7 +295,7 @@ Bool_t TGLViewer::RebuildScene()
 
    // Need to invalidate/redraw via timer as under Win32 we are already inside the 
    // GUI(DoRedraw) thread - direct invalidation will be cleared when leaving
-   fRedrawTimer->RequestDraw(20, kMed);
+   fRedrawTimer->RequestDraw(20, kLODMed);
 
    return kTRUE;
 }
@@ -988,7 +988,7 @@ void TGLViewer::DoDraw()
    if (!fScene.BoundingBox().IsEmpty()) {
       // Setup total scene draw time 
       // Unlimted for high quality draws, 100 msec otherwise
-      Double_t sceneDrawTime = fNextSceneLOD == kHigh ? 0.0 : 100.0;
+      Double_t sceneDrawTime = fNextSceneLOD == kLODHigh ? 0.0 : 100.0;
 
       // Setup lighting
       SetupLights();
@@ -1037,9 +1037,7 @@ void TGLViewer::DoDraw()
 
    if (gDebug>2) {
       Info("TGLViewer::DoDraw()", "Took %f msec", timer.End());
-      if (gDebug>3) {
-         TGLDisplayListCache::Instance().Dump();
-      }
+      TGLDisplayListCache::Instance().Dump();
    }
 
    // Release draw lock on scene
@@ -1050,7 +1048,7 @@ void TGLViewer::DoDraw()
    // Debug mode have forced rebuilds only
    if (!fDebugMode) {
       // Final draw pass
-      if (fNextSceneLOD == kHigh) {
+      if (fNextSceneLOD == kLODHigh) {
          RebuildScene();
       } else {
          // Final draw pass required
@@ -1058,12 +1056,12 @@ void TGLViewer::DoDraw()
       }
    } else {
       // Final draw pass required?
-      redrawReq = fNextSceneLOD != kHigh;
+      redrawReq = fNextSceneLOD != kLODHigh;
    }
 
    // Request final pass high quality redraw via timer
    if (redrawReq) {
-      fRedrawTimer->RequestDraw(100, kHigh);
+      fRedrawTimer->RequestDraw(100, kLODHigh);
    }
 }
 
@@ -1163,7 +1161,7 @@ Bool_t TGLViewer::DoSelect(const TGLRect & rect)
    fScene.ReleaseLock(TGLScene::kSelectLock);
 
    if (changed) {
-      RequestDraw(kHigh);
+      RequestDraw(kLODHigh);
 
       // Inform external client selection has been modified
       SelectionChanged();
@@ -1211,7 +1209,7 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
    fCurrentCamera->SetViewport(fViewport);
    
    // Request redraw via timer as window resize can result in stream of calls
-   fRedrawTimer->RequestDraw(20, kMed);
+   fRedrawTimer->RequestDraw(20, kLODMed);
    if (gDebug>2) {
       Info("TGLViewer::SetViewport", "updated - corner %d,%d dimensions %d,%d", x, y, width, height);          
    }
@@ -1272,7 +1270,7 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
    fCurrentCamera->SetViewport(fViewport);
 
    // And viewer is redrawn
-   RequestDraw(kHigh);
+   RequestDraw(kLODHigh);
 }
 
 //______________________________________________________________________________
@@ -1296,21 +1294,21 @@ void TGLViewer::SetOrthoCamera(ECameraType camera, Double_t left, Double_t right
       case(kCameraOrthoXOY): {
          fOrthoXOYCamera.Configure(left, right, top, bottom);
          if (fCurrentCamera == &fOrthoXOYCamera) {
-            RequestDraw(kHigh);
+            RequestDraw(kLODHigh);
          }
          break;
       }
       case(kCameraOrthoXOZ): {
          fOrthoXOZCamera.Configure(left, right, top, bottom);
          if (fCurrentCamera == &fOrthoXOZCamera) {
-            RequestDraw(kHigh);
+            RequestDraw(kLODHigh);
          }
          break;
       }
       case(kCameraOrthoZOY): {
          fOrthoZOYCamera.Configure(left, right, top, bottom);
          if (fCurrentCamera == &fOrthoZOYCamera) {
-            RequestDraw(kHigh);
+            RequestDraw(kLODHigh);
          }
          break;
       }
@@ -1341,21 +1339,21 @@ void TGLViewer::SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t 
       case(kCameraPerspXOZ): {
          fPerspectiveCameraXOZ.Configure(fov, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fPerspectiveCameraXOZ) {
-            RequestDraw(kHigh);
+            RequestDraw(kLODHigh);
          }
          break;
       }
       case(kCameraPerspYOZ): {
          fPerspectiveCameraYOZ.Configure(fov, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fPerspectiveCameraYOZ) {
-            RequestDraw(kHigh);
+            RequestDraw(kLODHigh);
          }
          break;
       }
       case(kCameraPerspXOY): {
          fPerspectiveCameraXOY.Configure(fov, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fPerspectiveCameraXOY) {
-            RequestDraw(kHigh);
+            RequestDraw(kLODHigh);
          }
          break;
       }
@@ -2045,7 +2043,7 @@ Bool_t TGLViewer::HandleExpose(Event_t *)
       return kFALSE;
    }
 
-   RequestDraw(kHigh);
+   RequestDraw(kLODHigh);
    return kTRUE;
 }
 
