@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.h,v 1.6 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.h,v 1.7 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMEMORYREGULATOR_H
@@ -16,7 +16,7 @@ namespace PyROOT {
 /** Communicate object destruction across ROOT/CINT/PyROOT/
       @author  WLAV
       @date    11/23/2004
-      @version 2.0
+      @version 2.1
  */
 
    class ObjectProxy;
@@ -24,6 +24,7 @@ namespace PyROOT {
    class TMemoryRegulator : public TObject {
    public:
       TMemoryRegulator();
+      ~TMemoryRegulator();
 
    // callback for ROOT/CINT
       virtual void RecursiveRemove( TObject* object );
@@ -39,7 +40,7 @@ namespace PyROOT {
 
    private:
       typedef std::map< TObject*, PyObject* > ObjectMap_t;
-      static ObjectMap_t fgObjectTable;
+      static ObjectMap_t* fgObjectTable;
    };
 
 } // namespace PyROOT

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.10 2005/08/31 21:30:34 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.11 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -11,12 +11,13 @@
 #include "TClass.h"
 
 // Standard
+#include <assert.h>
 #include <string.h>
 #include <Riostream.h>
 
 
-//- static data -----------------------------------------------------------------
-PyROOT::TMemoryRegulator::ObjectMap_t PyROOT::TMemoryRegulator::fgObjectTable;
+//- static data --------------------------------------------------------------
+PyROOT::TMemoryRegulator::ObjectMap_t* PyROOT::TMemoryRegulator::fgObjectTable = 0;
 
 
 namespace {
@@ -91,23 +92,33 @@ namespace {
 } // unnamed namespace
 
 
-//- constructor -----------------------------------------------------------------
+//- ctor/dtor ----------------------------------------------------------------
 PyROOT::TMemoryRegulator::TMemoryRegulator()
 {
    static InitPyROOT_NoneType_t initPyROOT_NoneType;
+
+   assert( fgObjectTable == 0 );
+   fgObjectTable = new ObjectMap_t;
+}
+
+//____________________________________________________________________________
+PyROOT::TMemoryRegulator::~TMemoryRegulator()
+{
+   delete fgObjectTable;
+   fgObjectTable = 0;
 }
 
 
-//- public members --------------------------------------------------------------
+//- public members -----------------------------------------------------------
 void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 {
-   if ( ! object || fgObjectTable.size() == 0 )   // table can be deleted before libCore is done
+   if ( ! object || ! fgObjectTable )   // table can be deleted before libCore is done
       return;
 
 // see whether we're tracking this object
-   ObjectMap_t::iterator ppo = fgObjectTable.find( object );
+   ObjectMap_t::iterator ppo = fgObjectTable->find( object );
 
-   if ( ppo != fgObjectTable.end() ) {
+   if ( ppo != fgObjectTable->end() ) {
    // get the tracked object
       ObjectProxy* pyobj = (ObjectProxy*)PyWeakref_GetObject( ppo->second );
       if ( ! pyobj )
@@ -151,7 +162,7 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
       }
 
    // erase the object from tracking
-      fgObjectTable.erase( ppo );
+      fgObjectTable->erase( ppo );
    }
 }
 
@@ -161,10 +172,10 @@ void PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* obje
    if ( ! ( pyobj && object ) )
       return;
 
-   ObjectMap_t::iterator ppo = fgObjectTable.find( object );
-   if ( ppo == fgObjectTable.end() ) {
+   ObjectMap_t::iterator ppo = fgObjectTable->find( object );
+   if ( ppo == fgObjectTable->end() ) {
       object->SetBit( kMustCleanup );
-      fgObjectTable[ object ] = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
+      (*fgObjectTable)[ object ] = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
    }
 }
 
@@ -174,8 +185,8 @@ PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object )
    if ( ! object )
       return 0;
 
-   ObjectMap_t::iterator ppo = fgObjectTable.find( object );
-   if ( ppo != fgObjectTable.end() ) {
+   ObjectMap_t::iterator ppo = fgObjectTable->find( object );
+   if ( ppo != fgObjectTable->end() ) {
       PyObject* pyobj = PyWeakref_GetObject( ppo->second );
       Py_XINCREF( pyobj );
       return pyobj;
@@ -198,24 +209,24 @@ PyObject* PyROOT::TMemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* py
 
       if ( object != 0 ) {
       // erase if tracked
-         ObjectMap_t::iterator ppo = fgObjectTable.find( object );
-         if ( ppo != fgObjectTable.end() ) {
+         ObjectMap_t::iterator ppo = fgObjectTable->find( object );
+         if ( ppo != fgObjectTable->end() ) {
          // cleanup weak reference, and table entry
             Py_DECREF( ppo->second );
-            fgObjectTable.erase( ppo );
+            fgObjectTable->erase( ppo );
          }
       }
    } else {
-      ObjectMap_t::iterator ppo = fgObjectTable.begin();
-      for ( ; ppo != fgObjectTable.end(); ++ppo ) {
+      ObjectMap_t::iterator ppo = fgObjectTable->begin();
+      for ( ; ppo != fgObjectTable->end(); ++ppo ) {
          if ( ppo->second == pyref )
             break;
       }
 
-      if ( ppo != fgObjectTable.end() ) {
+      if ( ppo != fgObjectTable->end() ) {
       // cleanup weak reference, and table entry
          Py_DECREF( ppo->second );
-         fgObjectTable.erase( ppo );
+         fgObjectTable->erase( ppo );
       }
    }
 

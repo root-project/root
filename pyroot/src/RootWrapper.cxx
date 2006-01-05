@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.38 2005/10/27 20:02:00 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.39 2005/11/17 06:26:35 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -100,13 +100,14 @@ void PyROOT::InitRoot()
 // setup interpreter locks to allow for threading in ROOT
    PyEval_InitThreads();
 
+// memory management
+   static TMemoryRegulator m;
+   gROOT->GetListOfCleanups()->Add( &m );
+
 // bind ROOT globals that are needed in ROOT.py
    AddToScope( "gROOT", gROOT, gROOT->IsA() );
    AddToScope( "gSystem", gSystem, gSystem->IsA() );
    AddToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
-
-// memory management
-   gROOT->GetListOfCleanups()->Add( new TMemoryRegulator );
 }
 
 //____________________________________________________________________________

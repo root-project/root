@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.25 2005/11/24 19:49:57 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.26 2006/01/03 08:50:19 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -317,15 +317,11 @@ void PyROOT::Utility::ErrMsgCallback( char* msg ) {
       PyErr_Format( PyExc_MemoryError, format, errFile, errLine, p+16 );
    else if ( ( p = strstr( msg, "Internal Error:" ) ) )
       PyErr_Format( PyExc_SystemError, format, errFile, errLine, p+16 );
-   else if ( ( p = strstr( msg, "Warning:" ) ) ) {
-   // either printout or raise exception, depending on user settings
+   else if ( ( p = strstr( msg, "Warning:" ) ) )
+// either printout or raise exception, depending on user settings
       PyErr_WarnExplicit( NULL, p+9, errFile, errLine, (char*)"CINT", NULL );
-      return;                                // NOTE: return after warning is set
-   } else if ( ( p = strstr( msg, "Note:" ) ) ) {
+   else if ( ( p = strstr( msg, "Note:" ) ) )
       fprintf( stdout, "Note: (file \"%s\", line %d) %s\n", errFile, errLine, p+6 );
-      return;                                // NOTE: return after printing note
-   }
-
-// still here? Just print it on the screen as that's the safes thing to do
-   fprintf( stdout, "Message: (file \"%s\", line %d) %s\n", errFile, errLine, msg );
+   else   // unknown: printing it to screen is the safest action
+      fprintf( stdout, "Message: (file \"%s\", line %d) %s\n", errFile, errLine, msg );
 }
