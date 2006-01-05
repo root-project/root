@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.9 2005/09/02 11:04:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.1 2005/12/22 09:19:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -44,8 +44,8 @@ protected:
   Int_t   *fColIndex;  //[fNelems]    column index
   Element *fElements;  //[fNelems]
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
-                        Int_t init = 0,Int_t nr_nonzeros = 0);
+  void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
+                Int_t init = 0,Int_t nr_nonzeros = 0);
 
   // Elementary constructors
   void AMultB (const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=1) {

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.1 2005/12/22 09:13:49 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.2 2005/12/23 07:20:10 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -43,12 +43,12 @@ protected:
   Element  fDataStack[TMatrixTBase<Element>::kSizeMax]; //! data container
   Element *fElements;                                   //[fNelems] elements themselves
 
-          Element *New_m   (Int_t size);
-          void     Delete_m(Int_t size,Element*&);
-          Int_t    Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
-                             Int_t newSize,Int_t oldSize);
-  virtual void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                             Int_t nr_nonzeros = -1);
+  Element *New_m   (Int_t size);
+  void     Delete_m(Int_t size,Element*&);
+  Int_t    Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
+                     Int_t newSize,Int_t oldSize);
+  void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                    Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AMultB (const TMatrixT   <Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);

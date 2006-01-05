@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.1 2005/12/22 09:19:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.2 2005/12/23 07:20:10 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -113,9 +113,6 @@ protected:
   static  void DoubleLexSort (Int_t n,Int_t *first,Int_t *second,Element *data);
   static  void IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,
                               Int_t *second,Int_t swapSecond,Int_t *index);
-
-  virtual void Allocate      (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,
-                              Int_t col_lwb = 0,Int_t init = 0,Int_t nr_nonzero = -1) = 0;
 
 public:
   enum EMatrixStatusBits {
