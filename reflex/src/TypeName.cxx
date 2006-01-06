@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -77,7 +77,8 @@ void ROOT::Reflex::TypeName::SetTypeId( const std::type_info & ti ) const {
 ROOT::Reflex::Type
 ROOT::Reflex::TypeName::ByName( const std::string & key ) {
 //-------------------------------------------------------------------------------
-   Name2Type_t::iterator it = sTypes().find(key.c_str());
+   size_t pos =  key.substr(0,2) == "::" ?  2 : 0;
+   Name2Type_t::iterator it = sTypes().find(key.substr(pos).c_str());
    if( it != sTypes().end() ) return Type( it->second );
    else                       return Type();
 }

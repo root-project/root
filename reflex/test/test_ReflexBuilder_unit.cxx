@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.2 2005/12/12 09:14:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -226,6 +226,9 @@ void ReflexBuilderUnitTest::classbuilder()
   Type t = Type::ByName("a::foo");  
   CPPUNIT_ASSERT(t);
   CPPUNIT_ASSERT(t.IsClass());
+  CPPUNIT_ASSERT_EQUAL( t.Id(), Type::ByName("::a::foo").Id());
+  CPPUNIT_ASSERT_EQUAL( t.Id(), TypeBuilder("::a::foo").Id());
+  CPPUNIT_ASSERT_EQUAL( t.Id(), Type::ByTypeInfo(typeid(a::foo)).Id());
   CPPUNIT_ASSERT_EQUAL(size_t(21),t.FunctionMemberSize());
   CPPUNIT_ASSERT_EQUAL(size_t(13),t.DataMemberSize());
   for (size_t i = 0; i < t.FunctionMemberSize(); i++ ) {

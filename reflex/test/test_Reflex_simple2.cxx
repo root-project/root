@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.3 2005/11/30 13:22:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.4 2005/12/09 07:09:57 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -189,7 +189,7 @@ void ReflexSimple2Test::loadLibrary() {
   //Reflex::accessArtificialMembers() = true;
   void* libInstance = 0;  
 #if defined (_WIN32)
-  libInstance = LoadLibrary("test_Class2DictRflx.dll");
+  libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
 #else
   libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
 #endif

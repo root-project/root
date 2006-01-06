@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.2 2005/12/09 07:09:57 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -55,7 +55,7 @@ public:
 void ReflexSimple1Test::loadLibrary() {
  void * libInstance = 0;
  #if defined (_WIN32)
-   libInstance = LoadLibrary("test_ReflexRflx.dll");
+   libInstance = LoadLibrary("libtest_ReflexRflx.dll");
  #else
    libInstance = dlopen("libtest_ReflexRflx.so", RTLD_LAZY);
  #endif
@@ -73,7 +73,7 @@ void ReflexSimple1Test::testSizeT() {
   std::string size_t_T = "m";
 #endif
 #elif defined(_WIN32)
-  std::string size_t_T = "size_t";
+  std::string size_t_T = "unsigned int";
 #endif
   CPPUNIT_ASSERT_EQUAL(size_t_T,std::string(t.TypeInfo().name()));
   CPPUNIT_ASSERT_EQUAL(size_t_T,std::string(t.ToType().TypeInfo().name()));

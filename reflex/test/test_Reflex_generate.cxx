@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_generate.cxx,v 1.2 2005/12/09 07:09:57 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #include "Reflex/Reflex.h"
@@ -50,14 +50,16 @@ void generate_class( const Type& cl, const string& indent = "" ) {
   //...data members
   for ( size_t d = 0; d < cl.DataMemberSize(); d++ ) {
     Member dm = cl.DataMemberAt(d);
+    if ( dm.IsArtificial() ) continue;
     generate_visibility( dm, indent, curr_vis);
-    out << indent + "  " << dm.TypeOf().Name(SCOPED) << " " << dm.Name() <<";" ;
+    out << indent + "  " << dm.TypeOf().Name(SCOPED|QUALIFIED) << " " << dm.Name() <<";" ;
     generate_comment( dm );
     out << endl;
   }
   //...methods
   for ( size_t f = 0; f < cl.FunctionMemberSize(); f++ ) {
     Member fm = cl.FunctionMemberAt(f);
+    if ( fm.IsArtificial() ) continue;
     generate_visibility( fm, indent, curr_vis);
     Type ft = fm.TypeOf();
     out << indent + "  ";
@@ -68,7 +70,7 @@ void generate_class( const Type& cl, const string& indent = "" ) {
       out << "void";
     } else {
       for ( size_t p = 0 ; p < ft.FunctionParameterSize(); p++ ) {
-        out << ft.FunctionParameterAt(p).Name(SCOPED);
+        out << ft.FunctionParameterAt(p).Name(SCOPED|QUALIFIED);
         if ( fm.FunctionParameterNameAt(p) != "" ) out << " " << fm.FunctionParameterNameAt(p);
         if ( fm.FunctionParameterDefaultAt(p) != "" ) out << " = " << fm.FunctionParameterDefaultAt(p);
         if ( p != ft.FunctionParameterSize()-1 ) out << ", ";
@@ -104,7 +106,7 @@ int main() {
 
   void* libInstance = 0;  
 #ifdef _WIN32
-  libInstance = LoadLibrary("test_Class2DictRflx.dll");
+  libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
 #else
   libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
 #endif

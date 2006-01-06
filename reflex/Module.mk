@@ -49,6 +49,10 @@ GNRFLX_L2 = "python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
 GENRFLXRC = bin/genreflex-rootcint.bat
 GRFLXRC_L1 = "@echo off"
 GRFLXRC_L2 = "python %~d0%~p0\..\lib\python\genreflex\genreflex-rootcint.py %*"
+# test suite
+CPPUNITI   = $(shell cygpath -w "$(CPPUNIT)/include")
+CPPUNITLL  = $(shell cygpath -w "$(CPPUNIT)/lib/cppunit.lib")
+REFLEXLL   = lib/libReflex.lib
 else
 GENREFLEX = bin/genreflex
 GNRFLX_L1 = "\#!/bin/csh -f"
@@ -56,14 +60,13 @@ GNRFLX_L2 = 'python $$0:h/../lib/python/genreflex/genreflex.py $$*'
 GENRFLXRC = bin/genreflex-rootcint
 GRFLXRC_L1 = "\#!/bin/csh -f"
 GRFLXRC_L2 = 'python $$0:h/../lib/python/genreflex/genreflex-rootcint.py $$*'
+# test suite
+CPPUNITI   = $(CPPUNIT)/include
+CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
+REFLEXLL   = -Llib -lReflex -ldl
 endif
 
-# test suite
-CPPUNITI   = -I$(CPPUNIT)/include
-CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
-REFLEXLL   = -Llib -lReflex
-
-RFLX_GENREFLEXX = ../../bin/genreflex
+GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py 
 
 RFLX_TESTD      = $(REFLEXDIR)/test
 RFLX_TESTLIBD1  = $(RFLX_TESTD)/testDict1
@@ -152,7 +155,7 @@ distclean::     distclean-reflex
 # test suite
 
 check-reflex: $(REFLEXLIB) $(RFLX_TESTLIB) $(RFLX_UNITTESTX)
-		@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
+		@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s -f $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
 		$(RFLX_TESTD)/test_Reflex_generate
 		$(RFLX_TESTD)/test_Reflex_simple1
 		$(RFLX_TESTD)/test_Reflex_simple2
@@ -166,14 +169,14 @@ lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
 
 $(RFLX_TESTLIBS1) :
-		cd $(RFLX_TESTD); $(RFLX_GENREFLEXX) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
+		cd $(RFLX_TESTD); $(GENREFLEX_CMD) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
 
 $(RFLX_TESTLIBS2) :
-		cd $(RFLX_TESTD); $(RFLX_GENREFLEXX) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
+		cd $(RFLX_TESTD); $(GENREFLEX_CMD) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
 
 $(RFLX_UNITTESTO) : %.o : %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI) -Ireflex -c $< -o $@
+		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI:%=-I%) -Ireflex -c $< -o $@
 
 $(RFLX_UNITTESTX) : % : %.o
-		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL) -ldl
+		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL)
 
