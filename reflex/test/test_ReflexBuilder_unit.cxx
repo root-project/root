@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.4 2006/01/06 09:01:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -83,6 +83,11 @@ public:
 // offsetof test
 //==============================================================================================
 
+// this would be a work around for offset calculation with templated classes with more than one 
+// template parameter, but it's not needed for the time being as we are using shadow
+// classes which are not templated (thx Axel Naumann)
+#define OffsetOf_m(c1,mem) ((size_t)(&(c1 64)->mem)-64)
+
 struct OffsetOf1 { int fI; };
 template < class T > struct OffsetOf2 { int fI; };
 template < class T1, class T2 > struct OffsetOf3 { int fI; };
@@ -91,9 +96,10 @@ template < class T1, class T2, class T3, class T4, class T5 > struct OffsetOf6 {
 void ReflexBuilderUnitTest::offset() {
 
   CPPUNIT_ASSERT(OffsetOf(OffsetOf1, fI));
-  CPPUNIT_ASSERT(OffsetOf(OffsetOf2<int>, fI));
-  CPPUNIT_ASSERT(OffsetOf2(OffsetOf3<int, int>, fI));
-  CPPUNIT_ASSERT(OffsetOf5(OffsetOf6<int, int, int, int, int>, fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf1*), fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf2<int>*), fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf3<int, int>*), fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf6<int, int, int, int, int>*), fI));
 }
 
 //==============================================================================================

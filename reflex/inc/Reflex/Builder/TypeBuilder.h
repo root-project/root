@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.5 2005/11/30 13:22:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.6 2005/12/12 09:14:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -20,38 +20,8 @@
 
 #if defined(__ICC)
 #define OffsetOf(c1,mem) (int(&(((c1*)0)->mem)))
-#define OffsetOf2(c1,c2,mem) (int(&(((c1,c2*)0)->mem)))
-#define OffsetOf3(c1,c2,c3,mem) (int(&(((c1,c2,c3*)0)->mem)))
-#define OffsetOf4(c1,c2,c3,c4,mem) (int(&(((c1,c2,c3,c4*)0)->mem)))
-#define OffsetOf5(c1,c2,c3,c4,c5,mem) (int(&(((c1,c2,c3,c4,c5*)0)->mem)))
-#define OffsetOf6(c1,c2,c3,c4,c5,c6,mem) (int(&(((c1,c2,c3,c4,c5,c6*)0)->mem)))
-#define OffsetOf7(c1,c2,c3,c4,c5,c6,c7,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7*)0)->mem)))
-#define OffsetOf8(c1,c2,c3,c4,c5,c6,c7,c8,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8*)0)->mem)))
-#define OffsetOf9(c1,c2,c3,c4,c5,c6,c7,c8,c9,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9*)0)->mem)))
-#define OffsetOf10(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10*)0)->mem)))
-#define OffsetOf11(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11*)0)->mem)))
-#define OffsetOf12(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12*)0)->mem)))
-#define OffsetOf13(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13*)0)->mem)))
-#define OffsetOf14(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14*)0)->mem)))
-#define OffsetOf15(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15*)0)->mem)))
-#define OffsetOf16(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16*)0)->mem)))
 #else
 #define OffsetOf(c1,mem) ((size_t)(&((c1*)64)->mem)-64)
-#define OffsetOf2(c1,c2,mem) ((size_t)(&((c1,c2*)64)->mem)-64)
-#define OffsetOf3(c1,c2,c3,mem) ((size_t)(&((c1,c2,c3*)64)->mem)-64)
-#define OffsetOf4(c1,c2,c3,c4,mem) ((size_t)(&((c1,c2,c3,c4*)64)->mem)-64)
-#define OffsetOf5(c1,c2,c3,c4,c5,mem) ((size_t)(&((c1,c2,c3,c4,c5*)64)->mem)-64)
-#define OffsetOf6(c1,c2,c3,c4,c5,c6,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6*)64)->mem)-64)
-#define OffsetOf7(c1,c2,c3,c4,c5,c6,c7,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7*)64)->mem)-64)
-#define OffsetOf8(c1,c2,c3,c4,c5,c6,c7,c8,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8*)64)->mem)-64)
-#define OffsetOf9(c1,c2,c3,c4,c5,c6,c7,c8,c9,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9*)64)->mem)-64)
-#define OffsetOf10(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10*)64)->mem)-64)
-#define OffsetOf11(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11*)64)->mem)-64)
-#define OffsetOf12(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12*)64)->mem)-64)
-#define OffsetOf13(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13*)64)->mem)-64)
-#define OffsetOf14(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14*)64)->mem)-64)
-#define OffsetOf15(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15*)64)->mem)-64)
-#define OffsetOf16(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16*)64)->mem)-64)
 #endif
 
 namespace ROOT{ 
