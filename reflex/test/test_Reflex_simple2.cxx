@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.5 2006/01/06 08:34:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.6 2006/01/06 09:01:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -155,6 +155,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE( ReflexSimple2Test );
   CPPUNIT_TEST( loadLibrary );
+  CPPUNIT_TEST( testTemplateClass );
   CPPUNIT_TEST( testIterators );
   CPPUNIT_TEST( fooBarZot );
   CPPUNIT_TEST( testBaseClasses );
@@ -169,6 +170,7 @@ public:
   void setUp() {}
 
   void loadLibrary();
+  void testTemplateClass();
   void testIterators();
   void fooBarZot();
   void testBaseClasses();
@@ -192,6 +194,16 @@ void ReflexSimple2Test::loadLibrary() {
   libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
 #endif
   CPPUNIT_ASSERT(libInstance);
+}
+
+void ReflexSimple2Test::testTemplateClass() {
+  Type t = Type::ByName("TT::Outer<TT::A<unsigned long> >");
+  CPPUNIT_ASSERT(t);
+  int numFuns = 0;
+  for (Member_Iterator mi = t.FunctionMember_Begin(); mi != t.FunctionMember_End(); ++mi) {
+    if ( ! (*mi).IsArtificial()) ++numFuns;
+  }
+  CPPUNIT_ASSERT_EQUAL(1,numFuns);
 }
 
 void ReflexSimple2Test::testIterators() {

@@ -134,6 +134,7 @@ class selClass :
     return self.selmethod(clname, method), self.excmethod(clname,method)
 #----------------------------------------------------------------------------------
   def selmethod(self, clname, method ) :
+    clname = clname.replace(' ','')
     for c in self.sel_classes :
       for m in c['methods'] :
         if ('name' in m and m['name'] == method ) or ('pattern' in m and matchpattern(method, m['pattern'])) :
@@ -143,6 +144,7 @@ class selClass :
     return None
 #----------------------------------------------------------------------------------
   def excmethod(self, clname, method ) :
+    clname = clname.replace(' ','')
     for c in self.exc_classes :
       for m in c['methods'] :
         if ('name' in m and m['name'] == method ) or ('pattern' in m and matchpattern(method, m['pattern'])) :

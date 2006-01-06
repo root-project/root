@@ -17,4 +17,13 @@
     <field name="data" comment="[this is an emulated comment]" />
   </class> 
   <class pattern="zot::*"/>
+
+  <class name="TT::Outer<TT::A<unsigned long> >"/>
+
+  <exclusion>
+    <class name="TT::Outer<TT::A<unsigned long> >">
+      <method name="unwantedFunction"/>
+    </class>
+  </exclusion>
+
 </lcgdict>

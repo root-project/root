@@ -18,6 +18,7 @@
 
 #include "Functions.h"
 #include "MemberPointer.h"
+#include "TemplatedClasses.h"
 
 #include "ClassSelections.h"
 
