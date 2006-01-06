@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for Linux with glibc and Intel icc v8 compiler
+# Makefile of ROOT for Linux with glibc and Intel icc >= v8 compiler
 
 PLATFORM      = linux
 
