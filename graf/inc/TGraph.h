@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.49 2005/11/16 17:38:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.50 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -87,6 +87,9 @@ public:
 
    virtual void      Apply(TF1 *f);
    virtual void      Browse(TBrowser *b);
+   static Bool_t     CompareX(const TGraph* gr, Int_t left, Int_t right);
+   static Bool_t     CompareY(const TGraph* gr, Int_t left, Int_t right);
+   static Bool_t     CompareRadius(const TGraph* gr, Int_t left, Int_t right);
    void              ComputeLogs(Int_t npoints, Int_t opt);
    virtual void      ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
    virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
@@ -160,10 +163,6 @@ public:
    virtual void      UseCurrentStyle();
    void              Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y,
                           Int_t maxiterations);
-
-   static Bool_t     CompareX(const TGraph* gr, Int_t left, Int_t right);
-   static Bool_t     CompareY(const TGraph* gr, Int_t left, Int_t right);
-   static Bool_t     CompareRadius(const TGraph* gr, Int_t left, Int_t right);
 
    ClassDef(TGraph,4)  //Graph graphics class
 };
