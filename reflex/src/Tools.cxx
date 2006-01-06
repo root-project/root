@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -21,8 +21,8 @@
 #endif
 
 //-------------------------------------------------------------------------------
-std::string splitScopedName( const std::string & Name, 
-                             bool returnScope ) {
+static std::string splitScopedName( const std::string & Name, 
+                                    bool returnScope ) {
 //-------------------------------------------------------------------------------
    size_t pos = ROOT::Reflex::Tools::GetBasePosition( Name ); 
    if ( pos != 0 ) {

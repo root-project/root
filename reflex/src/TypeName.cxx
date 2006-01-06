@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.5 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -24,7 +24,7 @@ typedef std::vector< ROOT::Reflex::Type > TypeVec_t;
 
 
 //-------------------------------------------------------------------------------
-Name2Type_t & sTypes() {
+static Name2Type_t & sTypes() {
 //-------------------------------------------------------------------------------
    static Name2Type_t m;
    return m;
@@ -32,7 +32,7 @@ Name2Type_t & sTypes() {
 
 
 //-------------------------------------------------------------------------------
-TypeId2Type_t & sTypeInfos() {
+static TypeId2Type_t & sTypeInfos() {
 //-------------------------------------------------------------------------------
    static TypeId2Type_t m;
    return m;
@@ -40,7 +40,7 @@ TypeId2Type_t & sTypeInfos() {
 
 
 //-------------------------------------------------------------------------------
-TypeVec_t & sTypeVec() {
+static TypeVec_t & sTypeVec() {
 //-------------------------------------------------------------------------------
    static TypeVec_t m;
    return m;

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.5 2005/11/24 13:29:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.6 2006/01/06 09:01:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -25,7 +25,7 @@ typedef __gnu_cxx::hash_map < const char *, ROOT::Reflex::ScopeName * > Name2Sco
 typedef std::vector< ROOT::Reflex::Scope > ScopeVec_t;
 
 //-------------------------------------------------------------------------------
-Name2Scope_t & sScopes() {
+static Name2Scope_t & sScopes() {
 //-------------------------------------------------------------------------------
    static Name2Scope_t m;
    return m;
@@ -33,7 +33,7 @@ Name2Scope_t & sScopes() {
 
 
 //-------------------------------------------------------------------------------
-ScopeVec_t & sScopeVec() {
+static ScopeVec_t & sScopeVec() {
 //-------------------------------------------------------------------------------
    static ScopeVec_t m;
    return m;
