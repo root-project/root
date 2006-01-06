@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.68 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.69 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -356,6 +356,7 @@ public:
    Int_t                  GetSafeLevel() const;
    Double_t               GetSafeDistance() const      {return fSafety;}
    Double_t               GetStep() const              {return fStep;}
+   void                   InspectState() const;
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
    Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
    Bool_t                 IsMatrixTransform() const    {return fMatrixTransform;}

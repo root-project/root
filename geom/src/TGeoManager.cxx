@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.134 2005/11/21 13:52:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.135 2005/11/28 11:04:05 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1548,7 +1548,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
          if (!fCache) BuildCache(dummy,nodeid);
       }
 //      BuildIdArray();
-      Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
+      Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
       Info("CloseGeometry","----------------modeler ready----------------");
       return;
    }
@@ -2941,6 +2941,8 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
 // propagate current point along current direction with fStep=STEPMAX. Otherwise
 // propagate with fStep=SNEXT (distance to boundary) and locate/return the next 
 // node.
+   static Int_t icount = 0;
+   icount++;
    Int_t iact = 3;
    Int_t nextindex;
    Bool_t is_assembly;
@@ -3128,6 +3130,7 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
          Int_t nmany = fNmany;
          Bool_t ovlp = kFALSE;
          Bool_t nextovlp = kFALSE;
+         Bool_t offset = kFALSE;
          TGeoNode *current = fCurrentNode;
          TGeoNode *mother, *mup;
          TGeoHMatrix *matrix;
@@ -3135,9 +3138,19 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
             mother = GetMother(up);
             mup = mother;
             imother = up+1;
-            while (mup->IsOffset()) mup = GetMother(imother++);
+            offset = kFALSE;
+            while (mup->IsOffset()) {
+               mup = GetMother(imother++);
+               offset = kTRUE;
+            }   
             nextovlp = mup->IsOverlapping();
-            if (ovlp) nmany--;
+            if (offset) {
+               mother = mup;
+               if (nextovlp) nmany -= imother-up-1;
+               up = imother-1;
+            } else {    
+               if (ovlp) nmany--;
+            }
             if (ovlp || nextovlp) {
                matrix = GetMotherMatrix(up);
                matrix->MasterToLocal(fPoint,dpt);
@@ -3398,6 +3411,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          Int_t nmany = fNmany;
          Bool_t ovlp = kFALSE;
          Bool_t nextovlp = kFALSE;
+         Bool_t offset = kFALSE;
          TGeoNode *current = fCurrentNode;
          TGeoNode *mother, *mup;
          TGeoHMatrix *matrix;
@@ -3405,9 +3419,19 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             mother = GetMother(up);
             mup = mother;
             imother = up+1;
-            while (mup->IsOffset()) mup = GetMother(imother++);
+            offset = kFALSE;
+            while (mup->IsOffset()) {
+               mup = GetMother(imother++);
+               offset = kTRUE;
+            }   
             nextovlp = mup->IsOverlapping();
-            if (ovlp) nmany--;
+            if (offset) {
+               mother = mup;
+               if (nextovlp) nmany -= imother-up-1;
+               up = imother-1;
+            } else {    
+               if (ovlp) nmany--;
+            }   
             if (ovlp || nextovlp) {
                matrix = GetMotherMatrix(up);
                matrix->MasterToLocal(fPoint,dpt);
@@ -3903,6 +3927,25 @@ TGeoNode *TGeoManager::InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx
    SetCurrentDirection(nx,ny,nz);
    return FindNode();
 }
+
+//_____________________________________________________________________________
+void TGeoManager::InspectState() const
+{
+// Inspects path and all flags for the current state.
+   Info("InspectState","Current path is: %s",GetPath());
+   Int_t level;
+   TGeoNode *node;
+   Bool_t is_offset, is_overlapping;
+   for (level=0; level<fLevel+1; level++) {
+      node = GetMother(fLevel-level);
+      if (!node) continue;
+      is_offset = node->IsOffset();
+      is_overlapping = node->IsOverlapping();
+      Info("InspectState","level %i: %s  div=%i  many=%i",level,node->GetName(),is_offset,is_overlapping);
+   }
+   Info("InspectState","on_bound=%i   entering=%i", fIsOnBoundary, fIsEntering);
+}      
+
 //_____________________________________________________________________________
 const char *TGeoManager::GetPath() const
 {
@@ -3983,12 +4026,11 @@ TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
 Int_t TGeoManager::GetUID(const char *volname) const
 {
 // Retreive unique id for a volume name. Return -1 if name not found.
-   TIter next(fUniqueVolumes);
-   TGeoVolume *vol;
-   while ((vol=(TGeoVolume*)next())) {
-      if (!strcmp(vol->GetName(), volname)) return vol->GetNumber();
-   }
-   return -1;
+   TGeoManager *geom = (TGeoManager*)this;
+   TGeoVolume *vol = geom->FindVolumeFast(volname, kFALSE);
+   if (!vol) vol = geom->FindVolumeFast(volname, kTRUE);
+   if (!vol) return -1;
+   return vol->GetNumber();
 }
 
 //_____________________________________________________________________________
