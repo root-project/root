@@ -25,6 +25,7 @@ options="                    \
    enable_afs                \
    enable_alien              \
    enable_asimage            \
+   enable_astiff             \
    enable_builtin_afterimage \
    enable_builtin_freetype   \
    enable_builtin_pcre       \
@@ -729,6 +730,7 @@ enable/disable options, prefix with either --enable- or --disable-
   afs                AFS support, requires AFS libs and objects
   alien              AliEn support, requires libgliteUI from ALICE
   asimage            Image processing support, requires libAfterImage
+  astiff             Include tiff support in image processing
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
   builtin-freetype   Built included libfreetype, or use system libfreetype
   builtin-pcre       Built included libpcre, or use system libpcre
@@ -1901,9 +1903,13 @@ if test ! "x$enable_asimage" = "xno" ; then
           /usr/local/include /usr/include /usr/local/include/libpng \
           /opt/include
        aspngincdir=$found_dir
-       check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
-          /usr/local/include /usr/include /opt/include
-       astiffincdir=$found_dir
+       if test ! "x$enable_astiff" = "xno" ; then
+           check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
+               /usr/local/include /usr/include /opt/include
+           astiffincdir=$found_dir
+       else
+           astiffincdir="--with-tiff=no"
+       fi
        check_header "gif_lib.h" "" $ASIMAGE $ASIMAGE/include \
           /usr/local/include /usr/include /opt/include
        asgifincdir=$found_dir
@@ -1916,7 +1922,12 @@ if test ! "x$enable_asimage" = "xno" ; then
        # add libpng which needs libz
        # don't look for libungif since we use the one built-in in libAfterImage
        #for k in libjpeg libtiff libungif libz libpng ; do
-       for k in libjpeg libtiff libz libpng ; do
+       if test ! "x$enable_astiff" = "xno" ; then
+           aslibs="libjpeg libtiff libz libpng"
+       else
+           aslibs="libjpeg libz libpng"
+       fi
+       for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
              $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib
            if test "x$k" = "xlibz" ; then
