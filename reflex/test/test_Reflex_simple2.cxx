@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.4 2005/12/09 07:09:57 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.5 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -24,29 +24,27 @@ void generate_class_decl( const Type & cl,
 
   // ... base class declarations
   if ( cl.BaseSize()) {
-    for (size_t b = 0; b < cl.BaseSize(); ++b) 
-      generate_class_decl(cl.BaseAt(b).ToType(), indent);
+    for ( Base_Iterator b = cl.Base_Begin(); b != cl.Base_End(); ++b) 
+      generate_class_decl((*b).ToType(), indent);
   }
 
   cout << indent << "class " << cl.Name();
 
   // ... bases
-  if (cl.BaseSize() != 0 ) {
+  if ( cl.BaseSize()) {
 
     cout << " : " ;
 
-    for ( size_t b = 0; b < cl.BaseSize(); b++ ) {
+    for ( Base_Iterator b = cl.Base_Begin(); b != cl.Base_End(); ++b ) {
 
-      Base ba = cl.BaseAt(b);
+      if ( (*b).IsVirtual() )   cout << "virtual ";
+      if ( (*b).IsPublic() )    cout << "public ";
+      if ( (*b).IsProtected() ) cout << "protected ";
+      if ( (*b).IsPrivate() )   cout << "private ";
 
-      if ( ba.IsVirtual() )   cout << "virtual ";
-      if ( ba.IsPublic() )    cout << "public ";
-      if ( ba.IsProtected() ) cout << "protected ";
-      if ( ba.IsPrivate() )   cout << "private ";
+      cout << (*b).ToType().Name(SCOPED);
 
-      cout << ba.ToType().Name(SCOPED);
-
-      if ( b != cl.BaseSize()-1 ) cout << ", ";
+      if ( b != cl.Base_End()-1 ) cout << ", ";
     }
   }
 
@@ -55,67 +53,67 @@ void generate_class_decl( const Type & cl,
   Visibility vis = Private;
 
   // ... function members
-  for ( size_t f = 0; f < cl.FunctionMemberSize(); f++ ) {
+  for ( Member_Iterator f = cl.FunctionMember_Begin(); f != cl.FunctionMember_End(); ++f ) {
 
-    Member fm = cl.FunctionMemberAt(f);
+    if ( ! (*f).IsArtificial()) {
 
-    if ( fm.IsPublic() && vis != Public ) {
-      cout << indent << "public:" << endl;  
-      vis = Public;
-    }
-    else if ( fm.IsProtected() && vis != Protected ) {
-      cout << indent << "protected:" << endl;  
-      vis = Protected;
-    }
-    else if ( fm.IsPrivate()   && vis != Private ) {
-      cout << indent << "private:" << endl;  
-      vis = Private;
-    }
-
-    Type ft = fm.TypeOf();
-
-    cout << indent + "  ";
-
-    if ( ! fm.IsConstructor() && !fm.IsDestructor() ) 
-      cout << ft.ReturnType().Name(SCOPED) << " ";
-
-    if (  fm.IsOperator() ) cout << "operator ";
-    cout << fm.Name() << " (";
-
-    if ( ft.FunctionParameterSize() ) {
-      for ( size_t p = 0 ; p < ft.FunctionParameterSize(); p++ ) {
-        cout << ft.FunctionParameterAt(p).Name(SCOPED|QUALIFIED);
-
-        if ( fm.FunctionParameterNameAt(p).length() ) 
-          cout << " " << fm.FunctionParameterNameAt(p);
-
-        if ( fm.FunctionParameterDefaultAt(p).length() ) 
-          cout << " = " << fm.FunctionParameterDefaultAt(p);
-
-        if ( p != ft.FunctionParameterSize()-1 ) cout << ", ";
+      if ( (*f).IsPublic() && vis != Public ) {
+        cout << indent << "public:" << endl;  
+        vis = Public;
       }
+      else if ( (*f).IsProtected() && vis != Protected ) {
+        cout << indent << "protected:" << endl;  
+        vis = Protected;
+      }
+      else if ( (*f).IsPrivate()   && vis != Private ) {
+        cout << indent << "private:" << endl;  
+        vis = Private;
+      }
+
+      Type ft = (*f).TypeOf();
+
+      cout << indent + "  ";
+
+      if ( ! (*f).IsConstructor() && !(*f).IsDestructor() ) 
+        cout << ft.ReturnType().Name(SCOPED) << " ";
+
+      if (  (*f).IsOperator() ) cout << "operator ";
+      cout << (*f).Name() << " (";
+
+      if ( ft.FunctionParameterSize() ) {
+        for ( size_t p = 0 ; p < ft.FunctionParameterSize(); p++ ) {
+          cout << ft.FunctionParameterAt(p).Name(SCOPED|QUALIFIED);
+
+          if ( (*f).FunctionParameterNameAt(p).length() ) 
+            cout << " " << (*f).FunctionParameterNameAt(p);
+
+          if ( (*f).FunctionParameterDefaultAt(p).length() ) 
+            cout << " = " << (*f).FunctionParameterDefaultAt(p);
+
+          if ( p != ft.FunctionParameterSize()-1 ) cout << ", ";
+        }
+      }
+      cout << ");" << endl;
     }
-    cout << ");" << endl;
   }
 
   // ... data members
-  for ( size_t d = 0; d < cl.DataMemberSize(); d++ ) {
-    Member dm = cl.DataMemberAt(d);
+  for ( Member_Iterator d = cl.DataMember_Begin(); d != cl.DataMember_End(); ++d ) {
 
-    if ( dm.IsPublic() && vis != Public ) {
+    if ( (*d).IsPublic() && vis != Public ) {
       cout << indent << "public:" << endl;  
       vis = Public; 
     }
-    else if ( dm.IsProtected() && vis != Protected ) {
+    else if ( (*d).IsProtected() && vis != Protected ) {
       cout << indent << "protected:" << endl;  
       vis = Protected; 
     }
-    else if ( dm.IsPrivate()   && vis != Private ) {
+    else if ( (*d).IsPrivate()   && vis != Private ) {
       cout << indent << "private:" << endl;  
       vis = Private;
     }
-    cout << indent + "  " << dm.TypeOf().Name(SCOPED) 
-         << " " << dm.Name() << ";"  << endl;
+    cout << indent + "  " << (*d).TypeOf().Name(SCOPED) 
+         << " " << (*d).Name() << ";"  << endl;
   }
   cout << indent << "};" << endl;
 }

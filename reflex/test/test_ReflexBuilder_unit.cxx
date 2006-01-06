@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.2 2005/12/12 09:14:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -224,10 +224,12 @@ void ReflexBuilderUnitTest::classbuilder()
     //fixme//.AddFunctionMember<float (* (float(*)(int)) )(int)>("g3", 0, 0, 0, PRIVATE );
 
   Type t = Type::ByName("a::foo");  
+  Scope s = Scope::ByName("a");
   CPPUNIT_ASSERT(t);
   CPPUNIT_ASSERT(t.IsClass());
   CPPUNIT_ASSERT_EQUAL( t.Id(), Type::ByName("::a::foo").Id());
   CPPUNIT_ASSERT_EQUAL( t.Id(), TypeBuilder("::a::foo").Id());
+  CPPUNIT_ASSERT_EQUAL( s.Id(), Scope::ByName("::a").Id());
   CPPUNIT_ASSERT_EQUAL( t.Id(), Type::ByTypeInfo(typeid(a::foo)).Id());
   CPPUNIT_ASSERT_EQUAL(size_t(21),t.FunctionMemberSize());
   CPPUNIT_ASSERT_EQUAL(size_t(13),t.DataMemberSize());

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.5 2005/11/24 13:29:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -65,7 +65,8 @@ ROOT::Reflex::ScopeName::~ScopeName() {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
-   Name2Scope_t::iterator it = sScopes().find(name.c_str());
+   size_t pos =  name.substr(0,2) == "::" ?  2 : 0;
+   Name2Scope_t::iterator it = sScopes().find(name.substr(pos).c_str());
    if (it != sScopes().end() ) return Scope( it->second );
    else                        return Scope();
 }
