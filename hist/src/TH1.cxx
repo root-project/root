@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.265 2005/12/04 11:10:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.266 2005/12/07 07:36:13 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -786,7 +786,7 @@ void TH1::Add(const TH1 *h1, Double_t c1)
    h1->GetStats(s2);
    for (i=0;i<kNstat;i++) {
       if (i == 1) s1[i] += c1*c1*s2[i];
-      else        s1[i] += c1*s2[i];
+      else        s1[i] += TMath::Abs(c1)*s2[i];
    }
    PutStats(s1);
 
@@ -875,7 +875,7 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    h2->GetStats(s2);
    for (i=0;i<kNstat;i++) {
       if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
-      else        s3[i] = c1*s1[i]    + c2*s2[i];
+      else        s3[i] = TMath::Abs(c1)*s1[i] + TMath::Abs(c2)*s2[i];
    }
    PutStats(s3);
 
