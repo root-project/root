@@ -243,7 +243,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) {
           } else if(obj->IsA()->InheritsFrom( "TTree" )) {
              if (!noTrees) {
                 globChain->ls();
-                globChain->Merge(target->GetFile(),0,"keep fast");
+                //globChain->Merge(target->GetFile(),0,"keep fast");
+                globChain->Merge(target->GetFile(),0,"keep");
                 delete globChain;
              }
           } else {
