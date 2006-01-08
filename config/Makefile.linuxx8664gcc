@@ -44,7 +44,6 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = g77
 F77FLAGS      = -fPIC
-F77LIBS       = -L$(shell dirname `g77 -print-file-name=libg2c.so`) -lg2c -lnsl
+F77LIBS       = $(shell $(F77) -print-file-name=libg2c.so) -lnsl
 
 # Extras
-

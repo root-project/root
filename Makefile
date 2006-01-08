@@ -280,12 +280,14 @@ endif
 
 ifeq ($(GCC_MAJOR),3)
 ifneq ($(GCC_MINOR),0)
-F77LDFLAGS   += -lfrtbegin
+LIBFRTBEGIN  := $(shell $(F77) -print-file-name=libfrtbegin.a)
+F77LIBS      += $(LIBFRTBEGIN)
 endif
 endif
 ifeq ($(GCC_MAJOR),4)
 ifeq ($(F77),g77)
-F77LDFLAGS   += -lfrtbegin
+LIBFRTBEGIN  := $(shell $(F77) -print-file-name=libfrtbegin.a)
+F77LIBS      += $(LIBFRTBEGIN)
 endif
 endif
 
