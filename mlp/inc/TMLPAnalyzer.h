@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.4 2004/12/17 22:34:01 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.5 2005/02/03 07:29:32 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -64,6 +64,6 @@ public:
    void GatherInformations();
    TTree* GetIOTree() const { return fIOTree;}
 
-   ClassDef(TMLPAnalyzer, 0)
+   ClassDef(TMLPAnalyzer, 0) // A simple analysis class for MLP
 };
 

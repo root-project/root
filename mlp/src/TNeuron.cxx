@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.13 2004/12/16 21:20:47 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.14 2005/07/18 12:02:02 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -53,10 +53,12 @@ TNeuron::TNeuron(TNeuron::NeuronType type /*= kSigmoid*/,
    // Usual constructor
    fpre.SetOwner(false);
    fpost.SetOwner(false);
+   flayer.SetOwner(false);
    fWeight = 0.;
    fNorm[0] = 1.;
    fNorm[1] = 0.;
    fType = type;
+   fNewInput = true;
    fNewValue = true;
    fNewDeriv = true;
    fNewDeDw = true;
@@ -827,6 +829,8 @@ void TNeuron::AddPre(TSynapse * pre)
    // This method is used by the TSynapse while
    // connecting two neurons.
    fpre.AddLast(pre);
+   if (fpre.GetEntriesFast() == fpre.GetSize())
+      fpre.Expand(2 * fpre.GetSize());
 }
 
 //______________________________________________________________________________
@@ -836,8 +840,21 @@ void TNeuron::AddPost(TSynapse * post)
    // This method is used by the TSynapse while
    // connecting two neurons.
    fpost.AddLast(post);
+   if (fpost.GetEntriesFast() == fpost.GetSize())
+      fpost.Expand(2 * fpost.GetSize());
 }
 
+//______________________________________________________________________________
+void TNeuron::AddInLayer(TNeuron * near)
+{
+   // Tells a neuron which neurons form its layer (including itself).
+   // This is needed for self-normalizing functions, like Softmax.
+   flayer.AddLast(near);
+   if (flayer.GetEntriesFast() == flayer.GetSize())
+      flayer.Expand(2 * flayer.GetSize());
+}
+
+//______________________________________________________________________________
 TNeuron::NeuronType TNeuron::GetType() const
 {
    // Returns the neuron type.
@@ -892,6 +909,25 @@ Double_t TNeuron::GetBranch() const
 }
 
 //______________________________________________________________________________
+Double_t TNeuron::GetInput() const
+{
+   if (!fNewInput) {
+      return fInput;
+   }
+   ((TNeuron*)this)->fNewInput = false;
+   Double_t input = 0.0;
+   Int_t nEntries = fpre.GetEntriesFast();
+   if (nEntries) {
+      input = fWeight;
+      for (Int_t i = 0; i < nEntries; i++) {
+         TSynapse *preSynapse = (TSynapse*)fpre.UncheckedAt(i);
+         input += preSynapse->GetValue();
+      }
+   }
+   return (((TNeuron*)this)->fInput = input);
+}
+
+//______________________________________________________________________________
 Double_t TNeuron::GetValue() const
 {
    // Computes the output using the appropriate function and all
@@ -906,37 +942,49 @@ Double_t TNeuron::GetValue() const
       Double_t branch = GetBranch();
       return (((TNeuron*)this)->fValue = (branch - fNorm[1]) / fNorm[0]);
    } else {
-      Double_t input = fWeight;
-      for (Int_t i=0;i<nentries;i++) {
-         TSynapse *preSynapse = (TSynapse*)fpre.UncheckedAt(i);
-         input += preSynapse->GetValue();
-      }
+      Double_t input = GetInput();
       Double_t value = 0;
       switch (fType) {
       case TNeuron::kOff: {
-          value = 0;
-          break;
-        }
+         value = 0;
+         break;
+      }
       case TNeuron::kLinear: {
-          value = input;
-          break;
-        }
+         value = input;
+         break;
+      }
       case TNeuron::kSigmoid: {
-          value =  Sigmoid(input);
-          break;
-        }
+         value =  Sigmoid(input);
+         break;
+      }
       case TNeuron::kTanh: {
-          value = TMath::TanH(input);
-          break;
-        }
+         value = TMath::TanH(input);
+         break;
+      }
       case TNeuron::kGauss: {
-          value = TMath::Exp(-input * input);
-          break;
-        }
+         value = TMath::Exp(-input * input);
+         break;
+      }
+      case TNeuron::kSoftmax: {
+         Double_t normalization = 0.0;
+         for (Int_t i = 0; i < flayer.GetEntriesFast(); i++) {
+            // this is not very efficient, as the same normalization
+            // is calculated once per neuron instead of just once
+            normalization += TMath::Exp(((TNeuron*) flayer.UncheckedAt(i))->GetInput());
+         }
+         if (normalization > 0.0) {
+            // exp(a_k) / sum_k'[ exp(a_k') ]
+            value = TMath::Exp(input) / normalization;
+         } else {
+            // all neurons have output = 0 ?
+            value = 1.0 / flayer.GetEntriesFast();
+         }
+         break;
+      }
       case TNeuron::kExternal: {
-          value = fExtF->Eval(input);
-          break;
-        }
+         value = fExtF->Eval(input);
+         break;
+      }
       }
       return (((TNeuron*)this)->fValue = value);
    }
@@ -978,6 +1026,13 @@ Double_t TNeuron::GetDerivative() const
        derivative = (-2) * input * TMath::Exp(-input * input);
        break;
      }
+   case TNeuron::kSoftmax: {
+       // actually this is not the derivative, as the Softmax function needs
+       // exp(activation) of all the neurons in the layer for the normalization.
+       // it will be smartly taken care of in GetDeDw()
+       derivative = GetValue();
+       break;
+     }
    case TNeuron::kExternal: {
        derivative = fExtD->Eval(input);
        break;
@@ -997,20 +1052,52 @@ Double_t TNeuron::GetError() const
 }
 
 //______________________________________________________________________________
+Double_t TNeuron::GetTarget() const
+{
+   // Computes the normalized target pattern for output neurons.
+   // Returns 0 for other neurons.
+   if (!fpost.GetEntriesFast())
+      return ((GetBranch() - fNorm[1]) / fNorm[0]);
+   return 0;
+}
+
+//______________________________________________________________________________
 Double_t TNeuron::GetDeDw() const
 {
    // Computes the derivative of the error wrt the neuron weight.
    if (!fNewDeDw)
       return fDeDw;
    ((TNeuron*)this)->fNewDeDw = false;
-   ((TNeuron*)this)->fDeDw = GetError();
-   Int_t nentries = fpost.GetEntriesFast();
-   for (Int_t i=0;i<nentries;i++) {
-      TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
-      ((TNeuron*)this)->fDeDw +=
-          (postSynapse->GetWeight() * postSynapse->GetPost()->GetDeDw());
-   }
-   ((TNeuron*)this)->fDeDw *= GetDerivative();
+   // Output units DeDw is just the error for these cases:
+   //  - linear output,  with sum-of-squares error
+   //  - sigmoid output, with binary cross-entropy
+   //  - softmax output, with 1-of-c cross entropy
+   Int_t nEntries = fpost.GetEntriesFast();
+   if (nEntries == 0) {
+     // output neuron
+     ((TNeuron*)this)->fDeDw = GetError();
+   } else {
+     // hidden nuron
+     ((TNeuron*)this)->fDeDw = 0.0;
+     if (fType != TNeuron::kSoftmax) {
+        // non-softmax
+        for (Int_t i = 0; i < nEntries; i++) {
+           TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
+           ((TNeuron*)this)->fDeDw += 
+              postSynapse->GetWeight() * 
+              postSynapse->GetPost()->GetDeDw();
+        }
+     } else {
+        // softmax derivative can be taken care of correcting the forward weight
+        for (Int_t i = 0; i < nEntries; i++) {
+           TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
+           ((TNeuron*)this)->fDeDw += 
+              (postSynapse->GetWeight() - postSynapse->GetPost()->GetInput()) * 
+              postSynapse->GetPost()->GetDeDw();
+        }
+     }
+     ((TNeuron*)this)->fDeDw *= GetDerivative();
+   } 
    return fDeDw;
 }
 
@@ -1047,6 +1134,7 @@ void TNeuron::SetNewEvent() const
 {
    // Inform the neuron that inputs of the network have changed,
    // so that the buffered values have to be recomputed.
+   ((TNeuron*)this)->fNewInput = true;
    ((TNeuron*)this)->fNewValue = true;
    ((TNeuron*)this)->fNewDeriv = true;
    ((TNeuron*)this)->fNewDeDw = true;

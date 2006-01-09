@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.8 2004/10/12 07:30:03 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.9 2005/07/18 12:02:02 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -134,6 +134,9 @@ class TMultiLayerPerceptron : public TObject {
    bool GetBFGSH(TMatrixD&, TMatrixD &, TMatrixD&);
    void BFGSDir(TMatrixD&, Double_t*);
    Double_t DerivDir(Double_t*);
+   Double_t GetCrossEntropyBinary() const;
+   Double_t GetCrossEntropy() const;
+   Double_t GetSumSquareError() const;
 
  private:
    void ExpandStructure();
@@ -153,6 +156,7 @@ class TMultiLayerPerceptron : public TObject {
    TString fStructure;             // String containing the network structure
    TString fWeight;                // String containing the event weight
    TNeuron::NeuronType fType;      // Type of hidden neurons
+   TNeuron::NeuronType fOutType;   // Type of output neurons 
    TString fextF;                  // String containing the function name
    TString fextD;                  // String containing the derivative name
    TEventList *fTraining;          //! EventList defining the events in the training dataset
@@ -169,7 +173,7 @@ class TMultiLayerPerceptron : public TObject {
    Int_t fReset;                   //! number of epochs between two resets of the search direction to the steepest descent - Default=50
    Bool_t fTrainingOwner;          //! internal flag whether one has to delete fTraining or not
    Bool_t fTestOwner;              //! internal flag whether one has to delete fTest or not
-   ClassDef(TMultiLayerPerceptron, 3)	// a Neural Network
+   ClassDef(TMultiLayerPerceptron, 4)	// a Neural Network
 };
 
 #endif

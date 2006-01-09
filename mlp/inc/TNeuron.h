@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.7 2004/12/16 21:20:47 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.8 2005/07/18 12:02:02 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -49,7 +49,7 @@ class TNeuron : public TNamed {
    friend class TSynapse;
 
  public:
-   enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss, kExternal };
+   enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss, kSoftmax, kExternal };
 
    TNeuron(NeuronType type = kSigmoid, 
            const char* name = "", const char* title = "", 
@@ -57,10 +57,13 @@ class TNeuron : public TNamed {
    virtual ~ TNeuron() {}
    inline TSynapse* GetPre(Int_t n) const { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) const { return (TSynapse*) fpost.At(n); }
+   inline TNeuron* GetInLayer(Int_t n) const { return (TNeuron*) flayer.At(n); }
    TTreeFormula* UseBranch(TTree*, const char*);
+   Double_t GetInput() const;
    Double_t GetValue() const;
    Double_t GetDerivative() const;
    Double_t GetError() const;
+   Double_t GetTarget() const;
    Double_t GetDeDw() const;
    Double_t GetBranch() const;
    NeuronType GetType() const;
@@ -72,6 +75,7 @@ class TNeuron : public TNamed {
    void SetDEDw(Double_t in);
    inline Double_t GetDEDw() const { return fDEDw; }
    void ForceExternalValue(Double_t value);
+   void AddInLayer(TNeuron*);
 
  protected:
    Double_t Sigmoid(Double_t x) const;
@@ -82,6 +86,7 @@ class TNeuron : public TNamed {
  private:
    TObjArray fpre;        // pointers to the previous level in a network
    TObjArray fpost;       // pointers to the next level in a network
+   TObjArray flayer;      // pointers to the current level in a network (neurons, not synapses)
    Double_t fWeight;      // weight used for computation
    Double_t fNorm[2];     // normalisation to mean=0, RMS=1.
    NeuronType fType;      // neuron type
@@ -91,6 +96,8 @@ class TNeuron : public TNamed {
    //should be mutable when supported by all compilers
    TTreeFormula* fFormula;//! formula to be used for inputs and outputs
    Int_t fIndex;          //! index in the formula
+   Bool_t fNewInput;      //! do we need to compute fInput again ?
+   Double_t fInput;;      //! buffer containing the last neuron input
    Bool_t fNewValue;      //! do we need to compute fValue again ?
    Double_t fValue;       //! buffer containing the last neuron output
    Bool_t fNewDeriv;      //! do we need to compute fDerivative again ?
@@ -99,7 +106,7 @@ class TNeuron : public TNamed {
    Double_t fDeDw;        //! buffer containing the last derivative of the error
    Double_t fDEDw;        //! buffer containing the sum over all examples of DeDw
 
-   ClassDef(TNeuron, 3)   // Neuron for MultiLayerPerceptrons
+   ClassDef(TNeuron, 4)   // Neuron for MultiLayerPerceptrons
 };
 
 #endif

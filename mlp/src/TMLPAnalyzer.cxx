@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.13 2005/08/30 11:04:43 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.14 2005/09/04 10:22:34 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -40,7 +40,9 @@
 ClassImp(TMLPAnalyzer)
 
 //______________________________________________________________________________
-TMLPAnalyzer::~TMLPAnalyzer() { 
+TMLPAnalyzer::~TMLPAnalyzer() 
+{
+   // Destructor 
    delete fAnalysisTree;
    delete fIOTree;
 }
@@ -71,23 +73,23 @@ Int_t TMLPAnalyzer::GetNeurons(Int_t layer)
       return output.CountChar(',')+1;
    }
    else {
-     Int_t cnt=1;
-     TString fStructure = fNetwork->GetStructure();
-     TString hidden = TString(fStructure(fStructure.First(':') + 1,
-                              fStructure.Last(':') - fStructure.First(':') - 1));
-     Int_t beg = 0;
-     Int_t end = hidden.Index(":", beg + 1);
-     Int_t num = 0;
-     while (end != -1) {
-       num = atoi(TString(hidden(beg, end - beg)).Data());
-       cnt++;
-       beg = end + 1;
-       end = hidden.Index(":", beg + 1);
-       if(layer==cnt) return num;
-     }
-     num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
-     cnt++;
-     if(layer==cnt) return num;
+      Int_t cnt=1;
+      TString fStructure = fNetwork->GetStructure();
+      TString hidden = TString(fStructure(fStructure.First(':') + 1,
+                               fStructure.Last(':') - fStructure.First(':') - 1));
+      Int_t beg = 0;
+      Int_t end = hidden.Index(":", beg + 1);
+      Int_t num = 0;
+      while (end != -1) {
+         num = atoi(TString(hidden(beg, end - beg)).Data());
+         cnt++;
+         beg = end + 1;
+         end = hidden.Index(":", beg + 1);
+         if(layer==cnt) return num;
+      }
+      num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
+      cnt++;
+      if(layer==cnt) return num;
    }
    return -1;
 }
@@ -107,7 +109,7 @@ TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
    while (end != -1) {
       brName = TString(input(beg, end - beg));
       if (brName[0]=='@')
-        brName = brName(1,brName.Length()-1);
+         brName = brName(1,brName.Length()-1);
       beg = end + 1;
       end = input.Index(",", beg + 1);
       if(cnt==idx) return brName;
@@ -120,13 +122,17 @@ TString TMLPAnalyzer::GetNeuronFormula(Int_t idx)
 }
 
 //______________________________________________________________________________
-const char* TMLPAnalyzer::GetInputNeuronTitle(Int_t in) {
+const char* TMLPAnalyzer::GetInputNeuronTitle(Int_t in) 
+{
+   // Returns the name of any neuron from the input layer
    TNeuron* neuron=(TNeuron*)fNetwork->fFirstLayer[in];
    return neuron ? neuron->GetName() : "NO SUCH NEURON";
 }
 
 //______________________________________________________________________________
-const char* TMLPAnalyzer::GetOutputNeuronTitle(Int_t out) {
+const char* TMLPAnalyzer::GetOutputNeuronTitle(Int_t out) 
+{
+   // Returns the name of any neuron from the output layer
    TNeuron* neuron=(TNeuron*)fNetwork->fLastLayer[out];
    return neuron ? neuron->GetName() : "NO SUCH NEURON";
 }
