@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.124 2005/12/10 16:51:57 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.125 2005/12/15 10:34:06 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -99,6 +99,24 @@ Hist.Binning.3D.y:           20
 Hist.Binning.3D.z:           20
 Hist.Binning.3D.Profx:      100
 Hist.Binning.3D.Profy:      100
+
+# Default statistics parameters names.
+Hist.Stats.Entries    Entries
+Hist.Stats.Mean       Mean
+Hist.Stats.MeanX      Mean x
+Hist.Stats.MeanY      Mean y
+Hist.Stats.RMS        RMS
+Hist.Stats.RMSX       RMS x
+Hist.Stats.RMSY       RMS y
+Hist.Stats.Underflow  Underflow
+Hist.Stats.Overflow   Overflow
+Hist.Stats.Integral   Integral
+Hist.Stats.Skewness   Skewness
+Hist.Stats.SkewnessX  Skewness x
+Hist.Stats.SkewnessY  Skewness y
+Hist.Stats.Kurtosis   Kurtosis
+Hist.Stats.KurtosisX  Kurtosis x
+Hist.Stats.KurtosisY  Kurtosis y
 
 # THtml specific settings (for more see doc of THtml class).
 Unix.*.Root.Html.SourceDir:  .:src:include

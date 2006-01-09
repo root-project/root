@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.237 2005/12/07 17:19:49 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.238 2005/12/19 14:08:29 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -45,6 +45,8 @@
 #include "TPaletteAxis.h"
 #include "TCrown.h"
 #include "TVirtualUtilPad.h"
+#include "TEnv.h"
+
 
 //______________________________________________________________________________
 //   The histogram painter class
@@ -70,6 +72,23 @@ const Double_t kHMAX = 1.05;
 const Int_t kMAXCONTOUR  = 104;
 const UInt_t kCannotRotate = BIT(11);
 
+static TString gStringEntries;
+static TString gStringMean;
+static TString gStringMeanX;
+static TString gStringMeanY;
+static TString gStringRMS;
+static TString gStringRMSX;
+static TString gStringRMSY;
+static TString gStringUnderflow;
+static TString gStringOverflow;
+static TString gStringIntegral;
+static TString gStringSkewness;
+static TString gStringSkewnessX;
+static TString gStringSkewnessY;
+static TString gStringKurtosis;
+static TString gStringKurtosisX;
+static TString gStringKurtosisY;
+
 ClassImp(THistPainter)
 
 //______________________________________________________________________________
@@ -88,6 +107,22 @@ THistPainter::THistPainter()
    fStack = 0;
    fLego  = 0;
    fGraphPainter = 0;
+   gStringEntries   = gEnv->GetValue("Hist.Stats.Entries",   "Entries");
+   gStringMean      = gEnv->GetValue("Hist.Stats.Mean",      "Mean");
+   gStringMeanX     = gEnv->GetValue("Hist.Stats.MeanX",     "Mean x");
+   gStringMeanY     = gEnv->GetValue("Hist.Stats.MeanY",     "Mean y");
+   gStringRMS       = gEnv->GetValue("Hist.Stats.RMS",       "RMS");
+   gStringRMSX      = gEnv->GetValue("Hist.Stats.RMSX",      "RMS x");
+   gStringRMSY      = gEnv->GetValue("Hist.Stats.RMSY",      "RMS y");
+   gStringUnderflow = gEnv->GetValue("Hist.Stats.Underflow", "Underflow");
+   gStringOverflow  = gEnv->GetValue("Hist.Stats.Overflow",  "Overflow");
+   gStringIntegral  = gEnv->GetValue("Hist.Stats.Integral",  "Integral");
+   gStringSkewness  = gEnv->GetValue("Hist.Stats.Skewness",  "Skewness");
+   gStringSkewnessX = gEnv->GetValue("Hist.Stats.SkewnessX", "Skewness x");
+   gStringSkewnessY = gEnv->GetValue("Hist.Stats.SkewnessY", "Skewness y");
+   gStringKurtosis  = gEnv->GetValue("Hist.Stats.Kurtosis",  "Kurtosis");
+   gStringKurtosisX = gEnv->GetValue("Hist.Stats.KurtosisX", "Kurtosis x");
+   gStringKurtosisY = gEnv->GetValue("Hist.Stats.KurtosisY", "Kurtosis y");
 }
 
 //______________________________________________________________________________
@@ -4597,27 +4632,27 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(fH->GetName());
    if (print_entries) {
-      if (fH->GetEntries() < 1e7) sprintf(t,"Entries = %-7d",Int_t(fH->GetEntries()));
-      else                        sprintf(t,"Entries = %14.7g",Float_t(fH->GetEntries()));
+      if (fH->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(fH->GetEntries()));
+      else                        sprintf(t,"%s = %14.7g",gStringEntries.Data(),Float_t(fH->GetEntries()));
       stats->AddText(t);
    }
    char textstats[50];
    if (print_mean) {
       if (print_mean == 1) {
-         sprintf(textstats,"Mean  = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s  = %s%s",gStringMean.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetMean(1));
       } else {
-         sprintf(textstats,"Mean  = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s  = %s%s #pm %s%s",gStringMean.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetMean(1),fH->GetMeanError(1));
       }
       stats->AddText(t);
       if (fH->InheritsFrom("TProfile")) {
          if (print_mean == 1) {
-            sprintf(textstats,"Mean y = %s%s","%",stats->GetStatFormat());
+            sprintf(textstats,"%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
             sprintf(t,textstats,fH->GetMean(2));
          } else {
-            sprintf(textstats,"Mean y = %s%s #pm %s%s","%",stats->GetStatFormat()
+            sprintf(textstats,"%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
                                                       ,"%",stats->GetStatFormat());
             sprintf(t,textstats,fH->GetMean(2),fH->GetMeanError(2));
          }
@@ -4626,20 +4661,20 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    if (print_rms) {
       if (print_rms == 1) {
-         sprintf(textstats,"RMS   = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s   = %s%s",gStringRMS.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetRMS(1));
       } else {
-         sprintf(textstats,"RMS   = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s   = %s%s #pm %s%s",gStringRMS.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetRMS(1),fH->GetRMSError(1));
       }
       stats->AddText(t);
       if(fH->InheritsFrom("TProfile")) {
          if (print_rms == 1) {
-            sprintf(textstats,"RMS y = %s%s","%",stats->GetStatFormat());
+            sprintf(textstats,"%s = %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat());
             sprintf(t,textstats,fH->GetRMS(2));
          } else {
-            sprintf(textstats,"RMS y = %s%s #pm %s%s","%",stats->GetStatFormat()
+            sprintf(textstats,"%s = %s%s #pm %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat()
                                                      ,"%",stats->GetStatFormat());
             sprintf(t,textstats,fH->GetRMS(2),fH->GetRMSError(2));
          }
@@ -4647,26 +4682,26 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       }
    }
    if (print_under) {
-      sprintf(textstats,"Underflow = %s%s","%",stats->GetStatFormat());
+      sprintf(textstats,"%s = %s%s",gStringUnderflow.Data(),"%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(0));
       stats->AddText(t);
    }
    if (print_over) {
-      sprintf(textstats,"Overflow  = %s%s","%",stats->GetStatFormat());
+      sprintf(textstats,"%s  = %s%s",gStringOverflow.Data(),"%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(fXaxis->GetNbins()+1));
       stats->AddText(t);
    }
    if (print_integral) {
-      sprintf(textstats,"Integral = %s%s","%",stats->GetStatFormat());
+      sprintf(textstats,"%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
       sprintf(t,textstats,fH->Integral());
       stats->AddText(t);
    }
    if (print_skew) {
       if (print_skew == 1) {
-         sprintf(textstats,"Skewness = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringSkewness.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetSkewness(1));
       } else {
-         sprintf(textstats,"Skewness = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringSkewness.Data(),"%",stats->GetStatFormat()
                                                      ,"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetSkewness(1),fH->GetSkewness(11));
       }
@@ -4674,10 +4709,10 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    if (print_kurt) {
       if (print_kurt == 1) {
-         sprintf(textstats,"Kurtosis = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringKurtosis.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetKurtosis(1));
       } else {
-         sprintf(textstats,"Kurtosis = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringKurtosis.Data(),"%",stats->GetStatFormat()
                                                      ,"%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetKurtosis(1),fH->GetKurtosis(11));
       }
@@ -4817,25 +4852,25 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(h2->GetName());
    if (print_entries) {
-      if (h2->GetEntries() < 1e7) sprintf(t,"Entries = %-7d",Int_t(h2->GetEntries()));
-      else                        sprintf(t,"Entries = %14.7g",Float_t(h2->GetEntries()));
+      if (h2->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(h2->GetEntries()));
+      else                        sprintf(t,"%s = %14.7g",gStringEntries.Data(),Float_t(h2->GetEntries()));
       stats->AddText(t);
    }
    char textstats[50];
    if (print_mean) {
       if (print_mean == 1) {
-         sprintf(textstats,"Mean x = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetMean(1));
          stats->AddText(t);
-         sprintf(textstats,"Mean y = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetMean(2));
          stats->AddText(t);
       } else {
-         sprintf(textstats,"Mean x = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringMeanX.Data(),"%",stats->GetStatFormat()
                                                    ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetMean(1),h2->GetMeanError(1));
          stats->AddText(t);
-         sprintf(textstats,"Mean y = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat()
                                                    ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetMean(2),h2->GetMeanError(2));
          stats->AddText(t);
@@ -4843,41 +4878,41 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    if (print_rms) {
       if (print_rms == 1) {
-         sprintf(textstats,"RMS x = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringRMSX.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetRMS(1));
          stats->AddText(t);
-         sprintf(textstats,"RMS y = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetRMS(2));
          stats->AddText(t);
       } else {
-         sprintf(textstats,"RMS x = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringRMSX.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetRMS(1),h2->GetRMSError(1));
          stats->AddText(t);
-         sprintf(textstats,"RMS y = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetRMS(2),h2->GetRMSError(2));
          stats->AddText(t);
       }
    }
    if (print_integral) {
-      sprintf(t,"Integral  = %6.4g",h2->Integral());
+      sprintf(t,"%s  = %6.4g",gStringIntegral.Data(),h2->Integral());
       stats->AddText(t);
    }
    if (print_skew) {
       if (print_skew == 1) {
-         sprintf(textstats,"Skewness x = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetSkewness(1));
          stats->AddText(t);
-         sprintf(textstats,"Skewness y = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetSkewness(2));
          stats->AddText(t);
       } else {
-         sprintf(textstats,"Skewness x = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringSkewnessX.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetSkewness(1),h2->GetSkewness(11));
          stats->AddText(t);
-         sprintf(textstats,"Skewness y = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringSkewnessY.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetSkewness(2),h2->GetSkewness(12));
          stats->AddText(t);
@@ -4885,18 +4920,18 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    if (print_kurt) {
       if (print_kurt == 1) {
-         sprintf(textstats,"Kurtosis x = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetKurtosis(1));
          stats->AddText(t);
-         sprintf(textstats,"Kurtosis y = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"%s = %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetKurtosis(2));
          stats->AddText(t);
       } else {
-         sprintf(textstats,"Kurtosis x = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringKurtosisX.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetKurtosis(1),h2->GetKurtosis(11));
          stats->AddText(t);
-         sprintf(textstats,"Kurtosis y = %s%s #pm %s%s","%",stats->GetStatFormat()
+         sprintf(textstats,"%s = %s%s #pm %s%s",gStringKurtosisY.Data(),"%",stats->GetStatFormat()
                                                        ,"%",stats->GetStatFormat());
          sprintf(t,textstats,h2->GetKurtosis(2),h2->GetKurtosis(12));
          stats->AddText(t);
