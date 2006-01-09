@@ -4,7 +4,8 @@
 
 PLATFORM      = linux
 
-DEBUGFLAGS    = -g
+#DEBUGFLAGS    = -g
+DEBUGFLAGS    = -gstabs
 OPTFLAGS      = -O2
 # Optional compiler options for gcc >= 3.4.0
 #OPTFLAGS      = -O3 -march=opteron
@@ -44,6 +45,6 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = g77
 F77FLAGS      = -fPIC
-F77LIBS       = $(shell $(F77) -print-file-name=libg2c.so) -lnsl
+F77LIBS       = $(shell $(F77) -print-file-name=libg2c.a) -lnsl
 
 # Extras
