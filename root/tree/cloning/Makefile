@@ -4,7 +4,7 @@
 CLEAN_TARGETS += *.log hsimple1.root hsimple2.root event1.root event2.root merge.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += mergeWithDir treeCloneTest
+TEST_TARGETS += mergeWithDir treeCloneTest treeCloneTest2
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -31,6 +31,9 @@ treeCloneTest.log: hsimple1.root event1.root runEvent.C
 
 treeCloneTest: treeCloneTest.log treeCloneTest.good 
 	$(CMDECHO) diff -ub treeCloneTest.good treeCloneTest.log
+
+treeCloneTest2: treeCloneTest2.log 
+	$(TestDiff)
 
 testWithFailure:
 ifeq ($(FAIL),)
