@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.1 2005/11/16 20:17:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.2 2005/11/29 06:01:20 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TBasket.h"
 #include "TBranch.h"
 #include "TBranchClones.h"
+#include "TBranchElement.h"
 #include "TBranchRef.h"
 #include "TError.h"
 #include "TProcessID.h"
@@ -123,6 +124,11 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
       TBranchClones *fromclones = (TBranchClones*)from;
       TBranchClones *toclones = (TBranchClones*)to;
       numBaskets += CollectBranches(fromclones->fBranchCount,toclones->fBranchCount);
+   }
+   if (from->InheritsFrom(TBranchElement::Class())) {
+      TBranchElement *fromelem = (TBranchElement*)from;
+      TBranchElement *toelem   = (TBranchElement*)to;
+      if (fromelem->fMaximum > toelem->fMaximum) toelem->fMaximum = fromelem->fMaximum;
    }
 
    fFromBranches.AddLast(from);

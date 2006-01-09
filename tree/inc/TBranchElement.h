@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.43 2005/10/13 10:26:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.44 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -63,6 +63,9 @@ protected:
    Int_t                    fParentOffset;  //!Parent branch offset
    Int_t                   *fBranchOffset;  //!Sub-Branch offsets with respect to current transient class
    Bool_t                  *fBranchTypes;   //!Sub-Branch types (TBranchElement or not)
+
+   friend class TTreeCloner;
+
 private:
    
    void                     InitializeOffsets();
