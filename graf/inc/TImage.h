@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.11 2005/06/22 21:15:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.12 2005/11/01 16:42:26 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -146,6 +146,8 @@ public:
    virtual Bool_t IsGray() const { return kFALSE; }
    virtual void Mirror(Bool_t /*vert*/ = kTRUE) {}
    virtual void Scale(UInt_t /*width*/, UInt_t /*height*/) {}
+   virtual void Slice(UInt_t /*xStart*/, UInt_t /*xEnd*/, UInt_t /*yStart*/,  UInt_t /*yEnd*/,
+                      UInt_t /*toWidth*/, UInt_t /*toHeight*/) {}
    virtual void Tile(UInt_t /*width*/, UInt_t /*height*/) {}
    virtual void Crop(Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*width*/ = 0, UInt_t /*height*/ = 0) {}
    virtual void Pad(const char * /*color*/ = "#FFFFFFFF", UInt_t /*left*/ = 0, 

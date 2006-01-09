@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.47 2005/09/04 15:41:19 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.48 2005/11/18 14:27:38 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -1460,6 +1460,43 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
    ASImage *img = scale_asimage(fgVisual, fImage, toWidth, toHeight,
                                 ASA_ASImage, GetImageCompression(),
                                 GetImageQuality());
+   DestroyImage();
+   fImage = img;
+   UnZoom();
+   fZoomUpdate = kZoomOps;
+}
+
+//______________________________________________________________________________
+void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
+                     UInt_t toWidth, UInt_t toHeight)
+{
+   // Yet another method of enlarging images where corners remain unchanged, 
+   // but middle part gets tiled.
+
+   if (!IsValid()) {
+      Warning("Scale", "Image not initiated");
+      return;
+   }
+
+   if (!InitVisual()) {
+      Warning("Scale", "Visual not initiated");
+      return;
+   }
+
+   if (toWidth < 1)
+       toWidth = 1;
+   if (toHeight < 1 )
+      toHeight = 1;
+   if (toWidth > 30000)
+      toWidth = 30000;
+   if (toHeight > 30000)
+      toHeight = 30000;
+
+   ASImage *img = slice_asimage(fgVisual, fImage, xStart, xEnd,
+                                yStart, yEnd, toWidth, toHeight, 
+                                ASA_ASImage, GetImageCompression(),
+                                GetImageQuality());
+
    DestroyImage();
    fImage = img;
    UnZoom();

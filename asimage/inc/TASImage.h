@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.17 2005/10/06 10:12:11 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.18 2005/10/07 13:00:30 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -129,6 +129,8 @@ public:
    void  Flip(Int_t flip = 180);                                        //*MENU*
    void  Mirror(Bool_t vert = kTRUE);                                   //*MENU*
    void  Scale(UInt_t width, UInt_t height);                            //*MENU*
+   void  Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart, UInt_t yEnd,
+               UInt_t toWidth, UInt_t toHeight);                        //*MENU*
    void  Tile(UInt_t width, UInt_t height);                             //*MENU*
    void  Crop(Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0); //*MENU*
    void  Pad(const char *color = "#00FFFFFF", UInt_t left = 0,
