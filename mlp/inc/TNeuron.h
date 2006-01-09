@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.8 2005/07/18 12:02:02 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.9 2006/01/09 15:47:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -97,7 +97,7 @@ class TNeuron : public TNamed {
    TTreeFormula* fFormula;//! formula to be used for inputs and outputs
    Int_t fIndex;          //! index in the formula
    Bool_t fNewInput;      //! do we need to compute fInput again ?
-   Double_t fInput;;      //! buffer containing the last neuron input
+   Double_t fInput;       //! buffer containing the last neuron input
    Bool_t fNewValue;      //! do we need to compute fValue again ?
    Double_t fValue;       //! buffer containing the last neuron output
    Bool_t fNewDeriv;      //! do we need to compute fDerivative again ?
