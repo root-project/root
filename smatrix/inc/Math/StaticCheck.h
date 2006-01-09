@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: StaticCheck.h,v 1.1 2005/12/05 16:36:51 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: StaticCheck.h,v 1.2 2005/12/10 21:40:25 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 
