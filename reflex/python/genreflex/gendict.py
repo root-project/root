@@ -38,7 +38,7 @@ class genDictionary(object) :
     self.comments           = opts.get('comments', False)
     self.no_membertypedefs  = opts.get('no_membertypedefs', False)
     self.generated_shadow_classes = []
-    self.selectionname      = 'ROOT::Reflex::Select'
+    self.selectionname      = 'ROOT::Reflex::Selection'
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}

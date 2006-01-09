@@ -1,5 +1,4 @@
 <lcgdict>
-  <class pattern="Bla*"/>
   <class pattern="Class*"/>
   <class pattern="Bla::*"/>
   <function name="function1"/>
@@ -25,5 +24,7 @@
       <method name="unwantedFunction"/>
     </class>
   </exclusion>
+
+  <class pattern="Bla*"/>
 
 </lcgdict>

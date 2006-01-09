@@ -30,6 +30,7 @@ class selClass :
   def parse(self):
     p = xml.parsers.expat.ParserCreate()
     p.StartElementHandler = self.start_element
+    p.EndElementHandler = self.end_element
     f = open(self.file)
     # Replace any occurence of <>& in the attribute values by the xml parameter
     rxml, nxml = f.read(), ''
@@ -82,7 +83,11 @@ class selClass :
     elif name in ('exclusion',) :
       self.classes   = self.exc_classes
       self.functions = self.exc_functions
-        
+#----------------------------------------------------------------------------------
+  def end_element(self, name):
+    if name in ('exclusion') :
+      self.classes   = self.sel_classes
+      self.functions = self.sel_functions
 #----------------------------------------------------------------------------------
   def matchclass(self, clname, fname ) :
     clname = clname.replace(' ','')
