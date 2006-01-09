@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.10 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.11 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TFrame.h"
+#include "TStyle.h"
 
 ClassImp(TFrame)
 
@@ -136,4 +137,28 @@ void TFrame::SavePrimitive(ofstream &, Option_t *)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
+}
+
+//______________________________________________________________________________
+void TFrame::UseCurrentStyle()
+{
+   // Replace current frame attributes by current style.
+
+   if (gStyle->IsReading()) {
+      SetFillColor(gStyle->GetFrameFillColor());
+      SetLineColor(gStyle->GetFrameLineColor());
+      SetFillStyle(gStyle->GetFrameFillStyle());
+      SetLineStyle(gStyle->GetFrameLineStyle());
+      SetLineWidth(gStyle->GetFrameLineWidth());
+      SetBorderSize(gStyle->GetFrameBorderSize());
+      SetBorderMode(gStyle->GetFrameBorderMode());
+   } else {
+      gStyle->SetFrameFillColor(GetFillColor());
+      gStyle->SetFrameLineColor(GetLineColor());
+      gStyle->SetFrameFillStyle(GetFillStyle());
+      gStyle->SetFrameLineStyle(GetLineStyle());
+      gStyle->SetFrameLineWidth(GetLineWidth());
+      gStyle->SetFrameBorderSize(GetBorderSize());
+      gStyle->SetFrameBorderMode(GetBorderMode());
+   }
 }

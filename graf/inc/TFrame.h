@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.3 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.4 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -40,6 +40,7 @@ public:
    virtual void  Paint(Option_t *option="");
    virtual void  Pop();
    virtual void  SavePrimitive(ofstream &out, Option_t *option);
+   virtual void  UseCurrentStyle();  // *MENU*
 
    ClassDef(TFrame,1)  //Pad graphics frame
 };

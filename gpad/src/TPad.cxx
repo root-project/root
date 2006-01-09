@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.216 2005/12/12 14:56:29 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.217 2005/12/20 06:07:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2636,6 +2636,7 @@ void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t y
       glist->AddFirst(frame);
       fFrame->SetBit(kMustCleanup);
    }
+   if (gROOT->GetForceStyle()) frame->UseCurrentStyle();
    frame->Paint();
 }
 
@@ -5270,25 +5271,7 @@ void TPad::UseCurrentStyle()
          gStyle->SetTitleBorderSize(title->GetBorderSize());
       }
    }
-   if (fFrame) {
-      if (gStyle->IsReading()) {
-         fFrame->SetFillColor(gStyle->GetFrameFillColor());
-         fFrame->SetFillStyle(gStyle->GetFrameFillStyle());
-         fFrame->SetLineColor(gStyle->GetFrameLineColor());
-         fFrame->SetLineStyle(gStyle->GetFrameLineStyle());
-         fFrame->SetLineWidth(gStyle->GetFrameLineWidth());
-         fFrame->SetBorderSize(gStyle->GetFrameBorderSize());
-         fFrame->SetBorderMode(gStyle->GetFrameBorderMode());
-      } else {
-         gStyle->SetFrameFillColor(fFrame->GetFillColor());
-         gStyle->SetFrameFillStyle(fFrame->GetFillStyle());
-         gStyle->SetFrameLineColor(fFrame->GetLineColor());
-         gStyle->SetFrameLineStyle(fFrame->GetLineStyle());
-         gStyle->SetFrameLineWidth(fFrame->GetLineWidth());
-         gStyle->SetFrameBorderSize(fFrame->GetBorderSize());
-         gStyle->SetFrameBorderMode(fFrame->GetBorderMode());
-      }
-   }
+   if (fFrame) fFrame->UseCurrentStyle();
 
    if (gStyle->IsReading()) Modified();
 }
