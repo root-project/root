@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.6 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.7 2005/11/16 20:17:59 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -41,7 +41,7 @@ protected:
    TString          fClassName;       //name of the class of the objets in the ClonesArray
    TBranch          *fBranchCount;    //Branch with clones count
 
-    friend class TTreeCloner;
+   friend class TTreeCloner;
    
 public:
    TBranchClones();
