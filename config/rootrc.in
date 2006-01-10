@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.125 2005/12/15 10:34:06 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.126 2006/01/09 10:35:12 couet Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -84,8 +84,9 @@ Canvas.PrintDirectory       .
 # Printer settings.
 #WinNT.*.Print.Command:      AcroRd32.exe
 #Unix.*.Print.Command:       a2ps -P%p --landscape --columns=2 --margin=30 -rf8.0 %f
-#Print.Printer:              32-rb205-hp
+#Print.Printer:              32-rb20-hp
 #Print.Directory:            .
+#Print.FileType:             pdf
 
 # Default histogram binnings for TTree::Draw().
 Hist.Binning.1D.x:          100
