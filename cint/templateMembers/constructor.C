@@ -3,7 +3,10 @@ using namespace std;
 
 struct C { };
 
+class TRootIOCtor;
 const char* nameof(C*) { return "C"; }
+const char* nameof(TRootIOCtor*) { return "TRootIOCtor"; }
+const char* nameof(TRootIOCtor**) { return "TRootIOCtor*"; }
 
 struct A {
   A() { };
