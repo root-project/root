@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.62 2005/11/30 17:10:13 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.63 2005/12/19 12:44:22 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -664,10 +664,11 @@ void TPostScript::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    // Draw top&left part of the box
    if (mode == -1) SetColor(dark);
    else            SetColor(light);
+   Int_t bordPS = 4*border;
    xps[0] = XtoPS(xl);          yps[0] = YtoPS(yl);
-   xps[1] = xps[0] + border;    yps[1] = yps[0] + border;
-   xps[2] = xps[1];             yps[2] = YtoPS(yt) - border;
-   xps[3] = XtoPS(xt) - border; yps[3] = yps[2];
+   xps[1] = xps[0] + bordPS;    yps[1] = yps[0] + bordPS;
+   xps[2] = xps[1];             yps[2] = YtoPS(yt) - bordPS;
+   xps[3] = XtoPS(xt) - bordPS; yps[3] = yps[2];
    xps[4] = XtoPS(xt);          yps[4] = YtoPS(yt);
    xps[5] = xps[0];             yps[5] = yps[4];
    xps[6] = xps[0];             yps[6] = yps[0];
@@ -715,9 +716,9 @@ void TPostScript::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    if (mode == -1) SetColor(light);
    else            SetColor(dark);
    xps[0] = XtoPS(xl);          yps[0] = YtoPS(yl);
-   xps[1] = xps[0] + border;    yps[1] = yps[0] + border;
-   xps[2] = XtoPS(xt) - border; yps[2] = yps[1];
-   xps[3] = xps[2];             yps[3] = YtoPS(yt) - border;
+   xps[1] = xps[0] + bordPS;    yps[1] = yps[0] + bordPS;
+   xps[2] = XtoPS(xt) - bordPS; yps[2] = yps[1];
+   xps[3] = xps[2];             yps[3] = YtoPS(yt) - bordPS;
    xps[4] = XtoPS(xt);          yps[4] = YtoPS(yt);
    xps[5] = xps[4];             yps[5] = yps[0];
    xps[6] = xps[0];             yps[6] = yps[0];
