@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.36 2005/02/12 09:52:25 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.37 2005/09/24 11:57:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -30,10 +30,10 @@
  #include "Windows4Root.h"
  #include <commctrl.h>
 #else
- typedef ULong_t HANDLE;
- typedef ULong_t WIN32_FIND_DATA;
- typedef ULong_t HIMAGELIST;
- typedef ULong_t HICON;
+ typedef void* HANDLE;
+ struct WIN32_FIND_DATA;
+ typedef void* HIMAGELIST;
+ typedef void* HICON;
  typedef UChar_t BOOL;
  struct FILE;
 #endif
