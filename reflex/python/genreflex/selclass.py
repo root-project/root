@@ -85,7 +85,7 @@ class selClass :
       self.functions = self.exc_functions
 #----------------------------------------------------------------------------------
   def end_element(self, name):
-    if name in ('exclusion') :
+    if name in ('exclusion',) :
       self.classes   = self.sel_classes
       self.functions = self.sel_functions
 #----------------------------------------------------------------------------------
