@@ -115,7 +115,11 @@ ifeq ($(HAS_PYTHON),yes)
    ifeq ($(findstring $(ROOTSYS)/lib, $(PYTHONPATH)),)
       # The PYTHONPATH does not have ROOTSYS/lib in it yet
       # let's add it
-      export PYTHONPATH := $(ROOTSYS)/lib:$(PYTHONPATH)
+      ifeq ($(PLATFORM),win32)
+         export PYTHONPATH := $(shell cygpath -w $(ROOTSYS)/bin);$(PYTHONPATH);$(ROOTSYS)/lib
+       else
+         export PYTHONPATH := $(ROOTSYS)/lib:$(PYTHONPATH)
+       endif
    endif
 endif
 

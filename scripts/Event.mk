@@ -54,10 +54,10 @@ ifeq ($(PLATFORM),macosx)
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
-		$(CMDECHO) bindexplib $* $^ > $*.def
-		$(CMDECHO) lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+		$(CMDECHO) bindexplib $* $(EVENTO) > $*.def
+		$(CMDECHO) lib -nologo -MACHINE:IX86 $(EVENTO) -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
-		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
+		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
