@@ -18,7 +18,7 @@ DATAFILES = Event.new.split0.root Event.new.split1.root \
 REFFILE=dt_reference.root
 
 $(REFFILE) : Event.new.split9.root copiedEvent$(ExeSuf)
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
+	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@ > $@.create.log 2>&1
 	$(CMDECHO) root.exe -q -b -l 'ctrans.C("Event.new.split9.root")' > event.new.split9.root.clone.log 2>&1 && touch $@
 
 #dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root
@@ -80,7 +80,7 @@ MERGEFILES=$(MDATAFILES:%=merged/%)
 
 $(EVENTDIRS): %/copiedEvent$(ExeSuf): copiedEvent$(ExeSuf)
 	$(CMDECHO) mkdir -p $*
-	$(CMDECHO) cp copiedEvent$(ExeSuf) libEvent.* $*
+	$(CMDECHO) cp copiedEvent$(ExeSuf)* libEvent.* $*
 
 one/libEvent.$(DllSuf): one/copiedEvent$(ExeSuf)
 two/libEvent.$(DllSuf): two/copiedEvent$(ExeSuf)
