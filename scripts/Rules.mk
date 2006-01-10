@@ -256,6 +256,9 @@ utils:  $(UTILS_LIBS) $(ROOTMAP)
 copiedEvent$(ExeSuf): $(EVENTDIR)/$(SUCCESS_FILE)
 	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h .
 	$(CMDECHO) cp $(EVENTDIR)/Event$(ExeSuf) ./copiedEvent$(ExeSuf)
+ifeq ($(PLATFORM),win32)
+	$(CMDECHO) if [ -e $(EVENTDIR)/Event$(ExeSuf).manifest ] ; then cp $(EVENTDIR)/Event$(ExeSuf).manifest ./copiedEvent$(ExeSuf).manifest ; fi
+endif
 
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1
