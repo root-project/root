@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.113 2005/11/29 19:02:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.114 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -77,13 +77,22 @@ ClassImp(TF1)
 //
 //  Case B1 (inline expression using standard C++ functions/operators)
 //  ------------------------------------------------------------------
-//   TF1 *f1 = new TF1("f1","[0]*x*sin([1]*x)",-3,3);
+//  Example B1a
+//  -----------
+//   TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
 //    This creates a function of variable x with 2 parameters.
 //    The parameters must be initialized via:
-//      f1->SetParameter(0,value_first_parameter);
-//      f1->SetParameter(1,value_second_parameter);
+//      fa->SetParameter(0,value_first_parameter);
+//      fa->SetParameter(1,value_second_parameter);
 //    Parameters may be given a name:
-//      f1->SetParName(0,"Constant");
+//      fa->SetParName(0,"Constant");
+//
+//  Example B1b
+//  -----------
+//   TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
+//     gaus(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)
+//        and (0) means start numbering parameters at 0
+//     expo(3) is a substitute for exp([3]+[4])*x)
 //
 //  Case B2 (inline expression using TMath functions with parameters)
 //  --------------------------------------------------------------------
