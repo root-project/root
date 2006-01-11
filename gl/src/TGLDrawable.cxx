@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.8 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.9 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -74,6 +74,10 @@ Bool_t TGLDrawable::SetDLCache(Bool_t DLCache)
    }
 
    fDLCache = DLCache;
+
+   // Purge out any existing DL cache entries
+   // Note: This does nothing at present as per drawable purging is not implemented
+   // in TGLDisplayListCache.
    if (!fDLCache) {
       TGLDisplayListCache::Instance().Purge(*this);
    }

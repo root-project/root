@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.20 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.21 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -30,11 +30,11 @@
 // TODO: Where should these enums live?
 // Move into draw flags class
 enum  ELODPresets {
-   //kLODSkip        = -1,  // Make short_t then can use negs for special cases  
+   kLODPixel       = 0, // Projected size pixel or less
    kLODLow         = 20,
    kLODMed         = 50,
    kLODHigh        = 100,
-   kLODUnsupported = 200 // Make neg
+   kLODUnsupported = 200, // Make neg
 };
 
 enum EPosition
@@ -90,10 +90,11 @@ public:
    void Set(const TGLVertex3 & other);
    void Shift(TGLVector3 & shift);
    void Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta);
-   Double_t & operator [] (Int_t index);
+   void Negate();
 
    // Accessors
-   const Double_t& operator [] (Int_t index) const;
+         Double_t & operator [] (Int_t index);
+   const Double_t & operator [] (Int_t index) const;
    Double_t   X() const { return fVals[0]; }
    Double_t & X()       { return fVals[0]; }
    Double_t   Y() const { return fVals[1]; }
@@ -108,6 +109,14 @@ public:
 
    ClassDef(TGLVertex3,0) // GL 3 component vertex helper/wrapper class
 };
+
+//______________________________________________________________________________
+inline void TGLVertex3::Negate()
+{
+   fVals[0] = -fVals[0];
+   fVals[1] = -fVals[1];
+   fVals[2] = -fVals[2];
+}
 
 //______________________________________________________________________________
 inline Bool_t TGLVertex3::operator == (const TGLVertex3 & rhs) const

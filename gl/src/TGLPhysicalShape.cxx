@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.14 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.15 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -88,6 +88,7 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    //    rgba           - basic four component (RGBA) diffuse color 
    
    fLogicalShape.AddRef();
+
    // Temporary hack - invert the 3x3 part of martix as TGeo sends this
    // in opp layout to shear/translation parts. Speak to Andrei about best place
    // to fix - probably when filling TBuffer3D - should always be OGL convention?
@@ -101,7 +102,6 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
 //______________________________________________________________________________
 TGLPhysicalShape::~TGLPhysicalShape()
 {
-   // Destroy logical shape
    fLogicalShape.SubRef();
 }
 
@@ -202,7 +202,15 @@ void TGLPhysicalShape::DirectDraw(UInt_t LOD) const
    if (fInvertedWind) {
       glFrontFace(GL_CW);
    }
-   fLogicalShape.Draw(LOD);
+   // If LOD is pixel or less can draw pixel(point) directly, skipping
+   // any logical call, caching etc
+   if (LOD == kLODPixel) {
+      glBegin(GL_POINTS);
+      glVertex3d(0.0, 0.0, 0.0);
+      glEnd();
+   } else {
+      fLogicalShape.Draw(LOD);
+   }
    if (fInvertedWind) {
       glFrontFace(GL_CCW);
    }

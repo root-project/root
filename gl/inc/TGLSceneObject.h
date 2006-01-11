@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.28 2005/11/24 12:29:12 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.29 2006/01/05 15:11:27 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -25,6 +25,9 @@
 #endif
 #ifndef ROOT_TGLLogicalShape
 #include "TGLLogicalShape.h"
+#endif
+#ifndef ROOT_TGLUtil
+#include "TGLUtil.h"
 #endif
 
 class TBuffer3D;
@@ -132,7 +135,12 @@ class TGLMesh;
 
 class TGLCylinder : public TGLSceneObject {
 private:
-   std::vector<TGLMesh *> fParts;
+   Double_t fR1, fR2, fR3, fR4;
+   Double_t fDz;
+   Double_t fPhi1, fPhi2;
+
+   TGLVector3 fLowPlaneNorm, fHighPlaneNorm;
+   Bool_t fSegMesh;
 
 protected:
    void DirectDraw(UInt_t LOD) const;  
@@ -141,10 +149,9 @@ public:
    TGLCylinder(const TBuffer3DTube &buff, TObject *realObject);
    ~TGLCylinder();
 
-   Bool_t SupportsLOD() const { return kFALSE; }
+   Bool_t SupportsLOD() const { return kTRUE; }
 
 private:
-   void CreateParts(const TBuffer3DTube & buffer);
    ClassDef(TGLCylinder,0) // a cylinderical logical shape
 };
 

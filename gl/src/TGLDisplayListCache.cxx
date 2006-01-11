@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.8 2005/12/01 11:04:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.9 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -125,7 +125,9 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, UInt_t LOD
    }
 
    // Cache full?
+   // TODO: Start to loop or recycle in another fashion?
    if (fDLNextFree > fDLBase + fSize) {
+      Warning("TGLDisplayListCache::OpenCapture", "cache is full");
       return kFALSE;
    }
 
@@ -140,10 +142,9 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, UInt_t LOD
       Info("TGLDisplayListCache::OpenCapture", "for drawable %d LOD %d", &drawable, LOD);
    }
 
-   // TODO: Overflow of list cache - start to loop or recycle in another fashion?
    CacheID_t cacheID = MakeCacheID(drawable, LOD);
    fCacheDLMap.insert(CacheDLMap_t::value_type(cacheID,fDLNextFree));
-   assert( Find(cacheID) == fDLNextFree );
+   //assert( Find(cacheID) == fDLNextFree );
 
    glNewList(fDLNextFree,GL_COMPILE);
    TGLUtil::CheckError();

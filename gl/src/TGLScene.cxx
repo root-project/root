@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.28 2005/12/12 15:28:32 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.29 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -66,14 +66,15 @@ TGLScene::TGLScene() :
 //______________________________________________________________________________
 TGLScene::~TGLScene()
 {
+   // Purge out the DL cache - when per drawable DL purging implemented
+   // this no longer really required. However should be faster....
+   TGLDisplayListCache::Instance().Purge();
+
    // Destroy scene object
    TakeLock(kModifyLock);
    DestroyPhysicals(kTRUE); // including modified
    DestroyLogicals();
    ReleaseLock(kModifyLock);
-
-   // Purge out the DL cache - when per drawable done no longer required
-   TGLDisplayListCache::Instance().Purge();
 }
 
 //TODO: Inline
@@ -895,6 +896,11 @@ UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamer
    
    // Find diagonal pixel size of projected drawable BB, using camera
    Double_t diagonal = static_cast<Double_t>(camera.ViewportRect(shape.BoundingBox()).Diagonal());
+
+   // Pixel or less?
+   if (diagonal <= 1.0) {
+      return kLODPixel;
+   }
 
    // TODO: Get real screen size - assuming 2000 pixel screen at present
    // Calculate a non-linear sizing hint for this shape. Needs more experimenting with...
