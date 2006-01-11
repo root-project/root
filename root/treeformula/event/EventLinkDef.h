@@ -14,6 +14,9 @@
 #pragma ifdef G__INTEL_COMPILER
 #pragma link C++ typedef vector<EventHeader>::iterator;
 #pragma link C++ typedef vector<Track*>::iterator;
+#pragma else G__WIN32
+// Intentionally empty because of vc8 (we do not compile the dictionary in
+// this dictionary with the 'right' switches.
 #pragma else
 #pragma link C++ class vector<EventHeader>::iterator-;
 #pragma link C++ class vector<Track*>::iterator-;
