@@ -12,10 +12,10 @@ $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf):
 	(cd $(ROOTTEST_HOME)/root/io/event; $(MAKE) Event$(ExeSuf))
 
 libEvent.$(DllSuf): $(ROOTTEST_HOME)/root/io/event/libEvent.$(DllSuf)
-	$(CMDECHO) cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf) $(ROOTTEST_HOME)/root/io/event/libEvent.* $(ROOTTEST_HOME)/root/io/event/Event.h .
+	$(CMDECHO) cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf) $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)*manifest $(ROOTTEST_HOME)/root/io/event/libEvent.* $(ROOTTEST_HOME)/root/io/event/Event.h .
 
 Event$(ExeSuf): $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)
-	$(CMDECHO)cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf) $(ROOTTEST_HOME)/root/io/event/libEvent.* $(ROOTTEST_HOME)/root/io/event/Event.h .
+	$(CMDECHO)cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)  $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)*manifest $(ROOTTEST_HOME)/root/io/event/libEvent.* $(ROOTTEST_HOME)/root/io/event/Event.h .
 
 Event.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO) ./Event 20 1 9 1 > createfile.out

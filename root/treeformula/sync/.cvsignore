@@ -1,4 +1,4 @@
-*.out *.dylib
+*manifest *.out *.dylib
 Event
 Event.root
 Event.h
