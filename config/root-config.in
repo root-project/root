@@ -416,7 +416,7 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype] [--config] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -670,7 +670,9 @@ while test $# -gt 0; do
       echo "  --noldflags           Do not print linker flags"
       echo "  --config              Print arguments used for ./configure"
       echo "  --has-<feature>       Test if <feature> is compiled in"
+      echo "  --dicttype            Print dictionary generator being used"
       echo "  --version             Print the ROOT version"
+      echo "  --help                Print this message"
       exit 0
       ;;
     *)
