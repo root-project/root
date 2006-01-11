@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.11 2005/10/22 00:39:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.12 2005/11/16 20:04:47 pcanal Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -63,10 +63,8 @@ public:
    class TReference {
       friend class TBits;
 
-#ifndef __CINT__
       TBits  &fBits; //!
       UInt_t  fPos;  //!
-#endif
 
       TReference(); // left undefined
 
