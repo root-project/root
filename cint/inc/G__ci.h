@@ -25,10 +25,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      6001005
-#define G__CINTVERSIONSTR_V6  "6.1.5, November 30 2005"
-#define G__CINTVERSION_V5      50160005
-#define G__CINTVERSIONSTR_V5  "5.16.5, November 30 2005"
+#define G__CINTVERSION_V6      6001006
+#define G__CINTVERSIONSTR_V6  "6.1.6, January 9, 2006"
+#define G__CINTVERSION_V5      50160006
+#define G__CINTVERSIONSTR_V5  "5.16.6, January 9, 2006"
 
 #define G__ALWAYS
 /* #define G__NEVER */

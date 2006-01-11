@@ -114,7 +114,7 @@ static void G__copysourcetotmp(char *prepname,G__input_file *pifile, int fentry)
 {
   if(G__copyflag && 0==prepname[0]) {
     FILE *fpout;
-    fpout = fopen(G__tmpnam(0),"w");
+    fpout = fopen(G__tmpnam(0),"w+b");
     if(!fpout) {
       G__genericerror("Internal error: can not open tmpfile.");
       return;

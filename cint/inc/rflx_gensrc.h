@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.h,v 1.3 2005/11/21 07:18:51 roiser Exp $
+//$Id: rflx_gensrc.h,v 1.5 2006/01/09 15:00:52 axel Exp $
 
 #ifndef RFLX_GENSRC_H
 #define RFLX_GENSRC_H 1
@@ -22,14 +22,6 @@ class rflx_gensrc {
 
   rflx_gensrc(const std::string & dictfile,
 	      const std::string & sourcefile) : 
-    m_hd(""),
-    m_sh(""),
-    m_td(""),
-    m_cd(""),
-    m_cds(""),
-    m_ff(""),
-    m_fv(""),
-    m_di(""),
     m_typeNum(0),
     m_typeVec(TypeVec()),
     m_typeMap(TypeMap()),
@@ -37,8 +29,8 @@ class rflx_gensrc {
     m_sourcefile(sourcefile),
     m_classNames(ClassVec()),
     m_shadowClassNames(ClassVec()),
+    m_shadowMaker(m_sh, "ROOT::Reflex"),
     m_split(false),
-    m_shadow(true),
     ind(indentation()) {} 
 
   void gen_header();
@@ -47,8 +39,6 @@ class rflx_gensrc {
   void gen_freefundicts();
   void gen_freevardicts();
   void gen_dictinstances();
-  void gen_shadowclasses_header();
-  void gen_shadowclasses_trailer();
   void gen_decl(char type, int num = 0, const std::string & clname = "", const std::string & fclname = "");
   void gen_parTypesNames(std::string & retParTypes, std::string & parNames, G__MethodInfo & mi);
   void gen_classdictdefs(G__ClassInfo & ci);
@@ -56,14 +46,14 @@ class rflx_gensrc {
   void gen_datamemberdefs(G__ClassInfo & ci);
   void gen_functionmemberdefs(G__ClassInfo & ci);
   void gen_classdictdecls(std::ostringstream & s, G__ClassInfo & ci);
-  void gen_shadowclass(G__ClassInfo & ci);
+  std::string gen_type(G__ClassInfo & tn);
   std::string gen_type(G__TypeInfo & tn);
   int gen_stubfuncdecl_header(std::ostringstream & s, G__MethodInfo & fm, const std::string & objcaststr, int argNum = -1);
   void gen_stubfuncdecl_params(std::ostringstream & s, G__MethodInfo & fm, int argNum = -1);
   void gen_stubfuncdecl_trailer(std::ostringstream & s, G__MethodInfo & fm, int argNum = -1);
   void gen_typedefdicts();
   void gen_file();
-  
+
  private:
 
   struct indentation {
@@ -96,9 +86,9 @@ class rflx_gensrc {
   std::string  m_sourcefile;
   ClassVec     m_classNames;
   ClassVec     m_shadowClassNames;
+  G__ShadowMaker m_shadowMaker;
 
   bool         m_split;
-  bool         m_shadow;
 
   indentation  ind;
 

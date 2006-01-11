@@ -110,6 +110,20 @@ char *G__valuemonitor(G__value buf,char *temp)
           else
             G__setiparseobject(&buf,temp);
         } else
+#if defined(G__WIN32)
+          if (buf.type=='n' && buf.obj.ll<0) 
+            sprintf(temp,"(%s)(%I64d)" 
+                    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                    ,0,0)
+                    ,buf.obj.ll);
+          else if (buf.type=='m' || buf.type=='n') 
+            sprintf(temp,"(%s)%I64u" 
+                    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                                    ,0,0)
+                    ,buf.obj.ull);
+        
+          else 
+#else
           if (buf.type=='n' && buf.obj.ll<0) 
             sprintf(temp,"(%s)(%lld)" 
                     ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
@@ -122,7 +136,8 @@ char *G__valuemonitor(G__value buf,char *temp)
                     ,buf.obj.ull);
         
           else 
-        if(buf.obj.i<0)
+#endif
+             if(buf.obj.i<0)
           sprintf(temp,"(%s)(%ld)" 
                   ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
                                   ,buf.obj.reftype.reftype,0)
@@ -266,6 +281,17 @@ char *G__valuemonitor(G__value buf,char *temp)
       sprintf(temp,"(int*)0x%lx",buf.obj.i);
     }
     break;
+#if defined(G__WIN32)
+  case 'n':
+    if(buf.obj.ll<0)
+      sprintf(temp,"(long long)(%I64d)",buf.obj.ll);
+    else 
+      sprintf(temp,"(long long)%I64d",buf.obj.ll);
+    break;
+  case 'm':
+    sprintf(temp,"(unsigned long long)%I64u",buf.obj.ull);
+    break;
+#else
   case 'n':
     if(buf.obj.ll<0)
       sprintf(temp,"(long long)(%lld)",buf.obj.ll);
@@ -275,6 +301,7 @@ char *G__valuemonitor(G__value buf,char *temp)
   case 'm':
     sprintf(temp,"(unsigned long long)%llu",buf.obj.ull);
     break;
+#endif
   case 'q':
     if(buf.obj.ld<0)
       sprintf(temp,"(long double)(%Lg)",buf.obj.ld);

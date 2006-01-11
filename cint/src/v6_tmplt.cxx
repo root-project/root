@@ -232,7 +232,13 @@ int G__settemplatealias(char *tagnamein,char *tagname,int tagnum
    *   ^ => p */
   while(charlist->next) {
     if(defpara->default_parameter) {
-      *(p-1)='>'; *p=0;
+	  char oldp = *(p-1);
+	  if (oldp == '<') // all template args have defaults
+	    *(p-1) = 0;
+	  else {
+		*(p-1) = '>'; 
+		*p = 0;
+	  }
       if(0!=strcmp(tagnamein,tagname) && -1==G__defined_typename(tagname)) {
         int typenum=G__newtype.alltype++;
         G__newtype.type[typenum]='u';
@@ -245,6 +251,7 @@ int G__settemplatealias(char *tagnamein,char *tagname,int tagnum
         G__newtype.nindex[typenum] = 0;
         G__newtype.index[typenum] = (int*)NULL;
         G__newtype.iscpplink[typenum] = G__NOLINK;
+        G__newtype.comment[typenum].filenum = -1;
         if(encscope) {
           G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
         }
@@ -252,6 +259,7 @@ int G__settemplatealias(char *tagnamein,char *tagname,int tagnum
           G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
         }
       }
+      *(p-1)=oldp;
     }
     strcpy(p,charlist->string);
     p+=strlen(charlist->string);
@@ -2093,6 +2101,7 @@ int G__instantiate_templateclass(char *tagnamein)
       G__newtype.nindex[typenum] = 0;
       G__newtype.index[typenum] = (int*)NULL;
       G__newtype.iscpplink[typenum] = G__NOLINK;
+      G__newtype.comment[typenum].filenum = -1;
     }
     G__cattemplatearg(tagname,&call_para);
     tagnum = G__defined_tagname(tagname,1);

@@ -5460,6 +5460,7 @@ G__value G__allocvariable( /* G__value expression, */
   if(G__def_struct_member && G__PARAREFERENCE==G__reftype) {
     if(G__NOLINK==G__globalcomp
        && -1!=G__def_tagnum && 'n'!=G__struct.type[G__def_tagnum]
+       && G__def_tagnum==G__tagdefining
        ) {
       G__genericerror("Limitation: Reference member not supported. Please use pointer");
       return(result);

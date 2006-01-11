@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.5 2005/12/16 11:34:12 brun Exp $
+//$Id: rflx_gensrc.cxx,v 1.10 2006/01/10 19:32:38 axel Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <list>
 
 // Meaning of long Property() bits
 // 
@@ -34,15 +35,11 @@
 void rflx_gensrc::gen_file()
 {
 
-   gen_shadowclasses_header();
-
    gen_header();
 
    gen_classdicts();
 
    gen_dictinstances();
-
-   gen_shadowclasses_trailer();
 
    gen_freefundicts();
 
@@ -54,35 +51,17 @@ void rflx_gensrc::gen_file()
 
    std::ofstream s(m_dictfile.c_str());
    s << m_hd.str()
-       << m_td.str()
-//       << m_sh.str() fixme!
-       << m_cd.str()
-       << m_ff.str()
-       << m_fv.str()
-       << m_di.str();
+     << m_td.str();
+
+   m_shadowMaker.WriteAllShadowClasses();
+   s << m_sh.str()
+     << m_cd.str()
+     << m_ff.str()
+     << m_fv.str()
+     << m_di.str();
    s.close();
 
 }
-
-
-void rflx_gensrc::gen_shadowclasses_header()
-{
-   m_sh << "//" << std::endl
-       << "// ---------- Shadow classes ----------" << std::endl
-       << "//" << std::endl
-       << "namespace ROOT {" << std::endl
-       << "  namespace Reflex {" << std::endl
-       << "    namespace Shadow {" << std::endl;
-}
-
-
-void rflx_gensrc::gen_shadowclasses_trailer()
-{
-   m_sh << "    } // namespace Shadow" << std::endl
-       << "  } // namespace Reflex" << std::endl
-       << "} // namespace ROOT" << std::endl << std::endl;
-}
-
 
 // ______________________________________________________________________________
 /* Every type which appears in the dictionary will be generated as a 'stub'. Once
@@ -142,6 +121,38 @@ std::string rflx_gensrc::gen_type(G__TypeInfo & tn)
 
 
 // ______________________________________________________________________________
+/* Every type which appears in the dictionary will be generated as a 'stub'. Once
+* the type (e.g. class) gets fully defined, the dictionary information will be 
+* added to this stub information. Otherwise what is generated here will be the 
+* only information available. 'Stubs' are generated for every type appearing in
+* the dictionary source code (e.g. function parameter/return types, data members, ...) 
+*/
+std::string rflx_gensrc::gen_type(G__ClassInfo & tn)
+{
+   // Q: volatile supported?
+   // reference, pointer, const, volatile, type, typedef
+
+   //std::string tName = rflx_tools::decorate_stl_type(tn.Name());
+   std::string tName = tn.Name();
+   std::ostringstream tvNumS("");
+   tvNumS << m_typeNum;
+   std::string tvNumStr = "type_" + tvNumS.str();
+
+   TypeMap::const_iterator mIt = m_typeMap.find(tName);
+   if (mIt != m_typeMap.end())
+      return m_typeMap[tName];
+   else
+      m_typeMap[tName] = tvNumStr;
+   ++m_typeNum;
+
+   m_typeVec.push_back("Type " + tvNumStr + " = TypeBuilder(\"" +
+                       tName + "\");");
+
+   return tvNumStr;
+}
+
+
+// ______________________________________________________________________________
 /* This function generates the (mostly) static information which will appear in 
 * the header of the dictionary source code.
 */
@@ -194,62 +205,6 @@ void rflx_gensrc::gen_typedicts()
    m_td << "}" << std::endl << std::endl;
 }
 
-
-// ______________________________________________________________________________
-/* Generates a shadow class and shadow classes for all bases if necessary 
-*/
-void rflx_gensrc::gen_shadowclass(G__ClassInfo & ci)
-{
-   ind.set(6);
-   std::string bases = "";
-   G__BaseClassInfo bc(ci);
-   while (bc.Next()) {
-      std::string fbclname = rflx_tools::escape_class_name(bc.Fullname());
-
-      if (std::
-          find(m_shadowClassNames.begin(), m_shadowClassNames.end(),
-               fbclname) == m_shadowClassNames.end())
-         gen_shadowclass(bc);
-
-      if (bases.length())
-         bases += ", ";
-      long bcProp = bc.Property();
-      if (bcProp & (1 << 21))
-         bases += "virtual ";
-      if (bcProp & (1 << 9))
-         bases += "public ";
-      else if (bcProp & (1 << 10))
-         bases += "protected ";
-      else if (bcProp & (1 << 11))
-         bases += "private ";
-      bases += fbclname;
-   }
-
-   std::string fclname = rflx_tools::escape_class_name(ci.Fullname());
-   if (std::
-       find(m_shadowClassNames.begin(), m_shadowClassNames.end(),
-            fclname) == m_shadowClassNames.end()) {
-      m_shadowClassNames.push_back(fclname);
-      m_sh << ind() << "struct " << fclname;
-      if (bases.length())
-         m_sh << " : " << bases;
-      m_sh << " {" << std::endl;
-      ++ind;
-      G__DataMemberInfo dm(ci);
-      while (dm.Next()) {
-         std::string dmName = dm.Name();
-         if (dmName != "G__virtualinfo"
-             && !(dm.Property() & (G__BIT_ISSTATIC | G__BIT_ISENUM))) // enum: fixme!
-            m_sh << ind() << dm.Type()->Name() << " " << dm.
-                Name() << ";" << std::endl;
-      }
-      --ind;
-      m_sh << ind() << "};" << std::endl << std::endl;
-   }
-   ind.set(0);
-}
-
-
 // ______________________________________________________________________________
 /* Loops over all classes defined and generates dictionary information for it which
 * is put on a stream
@@ -263,18 +218,17 @@ void rflx_gensrc::gen_classdicts()
 
       char type = G__struct.type[ci.Tagnum()];
       // if pragma link C++ class is set and the type is "class/struct"
-      if (G__struct.globalcomp[ci.Tagnum()] && (type == 'c' || type == 's')
+      if (ci.Linkage() == G__CPPLINK && (type == 'c' || type == 's')
           && ci.IsLoaded()) {
 
          //m_classNames.push_back(rflx_tools::decorate_stl_type(ci.Fullname()));
-         m_classNames.push_back(ci.Fullname());
+         std::string fclname=ci.Fullname();
+         if (!strncmp(fclname.c_str(),"pair",4))
+            fclname.insert(0,"std::");
 
-         // generate shadow classes
-         if (m_shadow)
-            gen_shadowclass(ci);
+         m_classNames.push_back(fclname);
 
-         G__TypeInfo cit(ci.Name());
-         gen_type(cit);
+         gen_type(ci);
          gen_classdictdefs(ci);
          if (m_split)
             gen_classdictdecls(m_cds, ci);
@@ -300,7 +254,7 @@ void rflx_gensrc::gen_typedefdicts()
          // G__type2string(td.Type(),td.Tagnum(),td.Typenum(),td.Reftype(),td.Isconst())
 
          std::string tName = "";
-         if (td.Tagnum() != -1)
+         if (td.Tagnum() != -1 && td.Linkage() == G__CPPLINK)
             tName = G__struct.name[td.Tagnum()];
 
          if (tName.length()) {
@@ -369,6 +323,10 @@ void rflx_gensrc::gen_classdictdefs(G__ClassInfo & ci)
    std::string clname = ci.Name();
    //std::string fclname = rflx_tools::decorate_stl_type(ci.Fullname());
    std::string fclname = ci.Fullname();
+
+   if (!strncmp(fclname.c_str(),"pair",4))
+      fclname.insert(0,"std::");
+
    std::string cldname =
        "__" + rflx_tools::escape_class_name(fclname) + "_dict";
    ind.clear();
@@ -415,12 +373,16 @@ void rflx_gensrc::gen_classdictdefs(G__ClassInfo & ci)
          m_cd << "return ::new(mem) ::" << fclname << "(); }" << std::endl;
       }
    }
+   // generate method __getBasesTable returning base classes
+   m_cd << ind() << "static void* " << cldname 
+      << "::method_getBaseTable( void*, const std::vector<void*>&, void*);" << std::endl;
    --ind;
+
    m_cd << ind() << "};" << std::endl << std::endl;
    m_cd << ind() << cldname << "::" << cldname << "() {" << std::endl;
    ++ind;
-   m_cd << ind() << "ClassBuilderT< ::" << fclname << " >(\"" << fclname <<
-       "\", " << cl_modifiers << ")";
+   m_cd << ind() << "ClassBuilder(\"" << fclname << "\", typeid(" << fclname 
+      << "), sizeof(" << fclname <<"), " << cl_modifiers << ")"; 
 
    gen_baseclassdefs(ci);
    gen_datamemberdefs(ci);
@@ -441,7 +403,7 @@ void rflx_gensrc::gen_baseclassdefs(G__ClassInfo & ci)
    G__BaseClassInfo bc(ci);
    while (bc.Next()) {
       G__TypeInfo bct(bc.Name());
-      gen_type(bct);
+      std::string dict_typealias=gen_type(bct);
       std::string bc_modifiers = "";
       long bcProp = bc.Property();
       if (bcProp & (1 << 9))
@@ -453,8 +415,9 @@ void rflx_gensrc::gen_baseclassdefs(G__ClassInfo & ci)
       if (bcProp & (1 << 21))
          bc_modifiers += " | VIRTUAL";
       m_cd << std::endl
-          << ind() << ".AddBase<" << bc.
-          Name() << " >(" << bc_modifiers << ")";
+           << ind() << ".AddBase(" << dict_typealias << ", BaseOffset< " 
+           << ci.Fullname() << ", " << bc.Fullname() << " >::Get(), " << bc_modifiers << ")";
+
    }
 }
 
@@ -467,7 +430,7 @@ void rflx_gensrc::gen_datamemberdefs(G__ClassInfo & ci)
    G__DataMemberInfo dm(ci);
    while (dm.Next()) {
       if (strcmp("G__virtualinfo", dm.Name()) != 0
-          && !(dm.Property() & G__BIT_ISENUM)) { // enum: fixme!
+          && !(dm.Property() & G__BIT_ISSTATIC)) {
          std::string dm_modifiers = "";
          long dmProp = dm.Property();
          if (dmProp & (1 << 9))
@@ -488,13 +451,21 @@ void rflx_gensrc::gen_datamemberdefs(G__ClassInfo & ci)
             if (var->statictype[index] != -1) dm_modifiers += " | STATIC";
           */
          //std::string fclname = rflx_tools::decorate_stl_type(ci.Fullname());
-         std::string fclname = ci.Fullname();
+
+         // don't mangle nested types
+         G__ClassInfo ciUpper=ci;
+         int level=0;
+         while (ciUpper.EnclosingClass().IsValid() 
+            && (ciUpper.EnclosingClass().Property() & G__BIT_ISCLASS)) {
+            ciUpper=ciUpper.EnclosingClass();
+            ++level;
+         }
+
+         std::string fclname;
+         m_shadowMaker.GetFullShadowName(ci, fclname);
+
          size_t pos = 0;
          int i = 0;
-         if (m_shadow)
-            fclname =
-                "ROOT::Reflex::Shadow::" +
-                rflx_tools::escape_class_name(fclname);
          while ((pos = fclname.find(",", pos + 1)) != std::string::npos)
             ++i;
          std::string offnum = "";
@@ -504,12 +475,13 @@ void rflx_gensrc::gen_datamemberdefs(G__ClassInfo & ci)
             offnum = s.str();
          }
          m_cd << std::endl
-             << ind() << ".AddDataMember(" << gen_type(*dm.
-                                                       Type()) << ", \"" <<
-             dm.Name()
-//             << "\", OffsetOf" << offnum << "(::" << fclname << ", " << dm.
-//             Name() << "), " << dm_modifiers << ")";
-             << "\", 0, " << dm_modifiers << ")"; // fixme!
+              << ind() << ".AddDataMember(" << gen_type(*dm.Type()) << ", \"" << dm.Name() << "\", ";
+         // no (real) shadow means no offsets
+         if (m_shadowMaker.NeedShadowCached(ci.Tagnum())!=1) 
+            m_cd << "0, ";
+         else
+            m_cd << "OffsetOf" << offnum << "(" << fclname << ", " << dm.Name() << "), ";
+         m_cd << dm_modifiers << ")";
       }
    }
 }
@@ -649,7 +621,7 @@ void rflx_gensrc::gen_functionmemberdefs(G__ClassInfo & ci)
       } else {
          std::
              cerr << "makecint: could not find type information for type "
-             << clname;
+             << clname << std::endl;
       }
 
       m_cd << std::endl
@@ -657,6 +629,11 @@ void rflx_gensrc::gen_functionmemberdefs(G__ClassInfo & ci)
           cltypestr << "), \"" << clname <<
           "\", constructor_auto, 0, \"\", PUBLIC | CONSTRUCTOR)";
    }
+
+   // Add method __getBasesTable returning base classes
+   m_cd << std::endl << ind() 
+        << ".AddFunctionMember<void*(void)>(\"__getBasesTable\", "
+        << "method_getBaseTable, 0, 0, PUBLIC | ARTIFICIAL)";
 }
 
 
@@ -745,7 +722,8 @@ void rflx_gensrc::gen_stubfuncdecl_params(std::ostringstream & s,
          s << ma.Type()->Name();
       else if (! ma.Type()->Fullname() &&
          !strcmp(ma.Type()->TrueName(),"void*") && 
-         strcmp(ma.Type()->Name(),"void*"))
+         strcmp(ma.Type()->Name(),"void*")
+         || !strcmp(ma.Type()->TrueName(),"G__p2memfunc"))
          // func ptr with typedef
          s << ma.Type()->Name() << pStr;
       else
@@ -805,6 +783,9 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
    std::string clname = ci.Name();
    //std::string fclname = rflx_tools::decorate_stl_type(ci.Fullname());
    std::string fclname = ci.Fullname();
+   if (!strncmp(fclname.c_str(),"pair",4))
+      fclname.insert(0,"std::");
+
    std::string cldname =
        "__" + rflx_tools::escape_class_name(fclname) + "_dict";
    s << ind() << "//" << std::endl;
@@ -938,6 +919,75 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
          s << "}" << std::endl << std::endl;
       }
    }
+
+   // generate method __getBasesTable returning base classes
+   s << ind() << "void* " << cldname 
+      << "::method_getBaseTable( void*, const std::vector<void*>&, void*)" << std::endl
+      << ind() << "{" << std::endl;
+   ++ind;
+   s << ind() << "static std::vector<std::pair<ROOT::Reflex::Base, int> > s_bases;" << std::endl;
+
+   int iBase=0;
+   std::list<int> baseTags;
+   std::list<std::pair<G__ClassInfo,int /*access*/> > baseClassesToSearch;
+   baseClassesToSearch.push_back(std::make_pair(ci, G__BIT_ISPUBLIC));
+   while (baseClassesToSearch.size()) {
+      G__BaseClassInfo ciBase(baseClassesToSearch.front().first);
+      int accessBase=baseClassesToSearch.front().second;
+      while (ciBase.Next()) {
+         if (  (ciBase.Property() & G__BIT_ISVIRTUALBASE) &&
+              !(ciBase.Property() & G__BIT_ISDIRECTINHERIT)) {
+            // CINT duplicates the remote virtual base class in the list scanned
+            // by G__BaseClassInfo, we need to skip them.
+            continue;
+         }
+         if (std::find(baseTags.begin(), baseTags.end(), ciBase.Tagnum())!=baseTags.end())
+            continue; // already dealt with
+
+         baseTags.push_back(ciBase.Tagnum());
+         G__ClassInfo ciBaseClass(ciBase);
+         int myAccess=ciBase.Property() & 
+            (G__BIT_ISVIRTUALBASE | G__BIT_ISPRIVATE | G__BIT_ISPROTECTED | G__BIT_ISPUBLIC);
+         if (myAccess & G__BIT_ISPROTECTED && accessBase & G__BIT_ISPRIVATE)
+            myAccess=myAccess & !G__BIT_ISPROTECTED | G__BIT_ISPRIVATE;
+         else if (myAccess & G__BIT_ISPUBLIC)
+            if (accessBase & G__BIT_ISPRIVATE) 
+               myAccess=myAccess & !G__BIT_ISPUBLIC | G__BIT_ISPRIVATE;
+            else if (accessBase & G__BIT_ISPROTECTED) 
+               myAccess=myAccess & !G__BIT_ISPUBLIC | G__BIT_ISPROTECTED;
+
+         baseClassesToSearch.push_back(std::make_pair(ciBaseClass, myAccess));
+
+         std::string access;
+         if (myAccess & G__BIT_ISVIRTUALBASE)
+            access = "VIRTUAL|";
+         if (myAccess & G__BIT_ISPRIVATE)
+            access += "PRIVATE";
+         else if (myAccess & G__BIT_ISPROTECTED)
+            access += "PROTECTED";
+         else if (myAccess & G__BIT_ISPUBLIC)
+            access += "PUBLIC";
+
+         std::string basetype_name=ciBase.Fullname();
+
+         if (!iBase) {
+            s << ind() << "if ( !s_bases.size() ) {" << std::endl;
+            ++ind;
+         }
+
+         s << ind() << "s_bases.push_back(std::make_pair(ROOT::Reflex::Base( ROOT::Reflex::GetType< " 
+            << basetype_name << " >(), ROOT::Reflex::BaseOffset< " << fclname << "," << basetype_name 
+            << " >::Get()," << access << "), " << iBase++ << "));" << std::endl;
+      }
+      baseClassesToSearch.erase(baseClassesToSearch.begin());
+  }
+
+  --ind;
+  if (iBase) s << ind() << "}" << std::endl;
+
+  s << ind() << "return &s_bases;" << std::endl;
+  --ind;
+  s << ind() << "}" << std::endl << std::endl;
 }
 
 
@@ -962,7 +1012,7 @@ void rflx_gensrc::gen_freefundicts()
       G__ClassInfo cl(mi.ifunc()->tagnum);
 
       if ((fmname.length()) && (ifunc->globalcomp[mi.Index()])
-          && (!(cl.Property() & G__BIT_ISCLASS))) {
+          && cl.Linkage() == G__CPPLINK && (!(cl.Property() & G__BIT_ISCLASS))) {
 
          // stub function declarations
          ++ind;

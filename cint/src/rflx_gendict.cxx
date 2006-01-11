@@ -1,4 +1,4 @@
-//$Id: rflx_gendict.cxx,v 1.2 2005/12/08 15:45:24 axel Exp $
+//$Id: rflx_gendict.cxx,v 1.3 2005/12/16 15:54:27 pcanal Exp $
 
 #include "rflx_gendict.h"
 #include "rflx_gensrc.h"
