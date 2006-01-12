@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.6 2005/11/17 14:43:17 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.7 2005/11/29 09:25:51 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -75,6 +75,7 @@ public:
    //deletes context or pixmap and context
    void     DeletePaintDevice(Int_t deviceInd);
    void     ExtractViewport(Int_t pixId, Int_t *viewport);
+   void PrintViewer(TVirtualViewer3D *vv){vv->PrintObjects();}
 
    void     DrawViewer(TVirtualViewer3D *v);
    TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);

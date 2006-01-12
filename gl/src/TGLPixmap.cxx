@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.10 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.11 2005/12/01 11:04:04 brun Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -21,6 +21,8 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "TVirtualPS.h"
+#include "gl2ps.h"
 #include "TVirtualGL.h"
 #include "TVirtualPad.h"
 #include "TError.h"
@@ -157,6 +159,7 @@ static GLUtriangulatorObj *getTesselator()
    return singleton.fTess;
 }
 
+
 //______________________________________________________________________________
 GLSelection::GLSelection()
 {
@@ -164,11 +167,13 @@ GLSelection::GLSelection()
    fBBox[3] = fBBox[4] = fBBox[5] = 0.;
 }
 
+
 //______________________________________________________________________________
 GLSelection::GLSelection(const Double_t *bbox)
 {
    for (Int_t i= 0; i < 6; ++i) fBBox[i] = bbox[i];
 }
+
 
 //______________________________________________________________________________
 GLSelection::GLSelection(Double_t xmin, Double_t xmax, Double_t ymin,
@@ -179,11 +184,13 @@ GLSelection::GLSelection(Double_t xmin, Double_t xmax, Double_t ymin,
    fBBox[4] = zmin, fBBox[5] = zmax;
 }
 
+
 //______________________________________________________________________________
 void GLSelection::SetBBox(const Double_t *newBBox)
 {
    for (Int_t i= 0; i < 6; ++i) fBBox[i] = newBBox[i];
 }
+
 
 //______________________________________________________________________________
 void GLSelection::SetBBox(Double_t xmin, Double_t xmax, Double_t ymin,
@@ -193,6 +200,7 @@ void GLSelection::SetBBox(Double_t xmin, Double_t xmax, Double_t ymin,
    fBBox[2] = ymin, fBBox[3] = ymax;
    fBBox[4] = zmin, fBBox[5] = zmax;
 }
+
 
 //______________________________________________________________________________
 GLSceneObject::GLSceneObject(const TBuffer3D &buffer, const Float_t *color,
@@ -209,6 +217,7 @@ GLSceneObject::GLSceneObject(const TBuffer3D &buffer, const Float_t *color,
    SetBBox(buffer);
 }
 
+
 //______________________________________________________________________________
 GLSceneObject::GLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
                                const Float_t *color, UInt_t glName, TObject *obj) :
@@ -224,6 +233,7 @@ GLSceneObject::GLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
    SetBBox(buffer);
 }
 
+
 //______________________________________________________________________________
 GLSceneObject::GLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *obj)
    : fColor(), fIsSelected(kFALSE), fGLName(glName), fNextT(0), fRealObject(obj)
@@ -232,11 +242,13 @@ GLSceneObject::GLSceneObject(UInt_t glName, const Float_t *color, Short_t trans,
    fColor[3] = 1.f - trans / 100.f;
 }
 
+
 //______________________________________________________________________________
 Bool_t GLSceneObject::IsTransparent()const
 {
    return fColor[3] < 1.f;
 }
+
 
 //______________________________________________________________________________
 void GLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
@@ -269,6 +281,7 @@ void GLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
    }
 }
 
+
 //______________________________________________________________________________
 void GLSceneObject::SetBBox(const TBuffer3D & buffer)
 {
@@ -287,6 +300,7 @@ void GLSceneObject::SetBBox(const TBuffer3D & buffer)
 
    fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
 }
+
 
 //______________________________________________________________________________
 void GLSceneObject::SetBBox()
@@ -310,6 +324,7 @@ void GLSceneObject::SetBBox()
       fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
    }
 }
+
 
 //______________________________________________________________________________
 GLFaceSet::GLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glname, TObject *realobj)
@@ -379,6 +394,7 @@ GLFaceSet::GLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glname
    CalculateNormals();
 }
 
+
 //______________________________________________________________________________
 void GLFaceSet::GLDraw()const
 {
@@ -415,6 +431,7 @@ void GLFaceSet::GLDraw()const
    glPolygonMode(GL_FRONT, GL_FILL);
 }
 
+
 //______________________________________________________________________________
 void GLFaceSet::GLDrawPolys()const
 {
@@ -447,6 +464,7 @@ void GLFaceSet::GLDrawPolys()const
    }
 }
 
+
 //______________________________________________________________________________
 Int_t GLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
 {
@@ -478,6 +496,7 @@ Int_t GLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
    return retVal;
 }
 
+
 //______________________________________________________________________________
 Bool_t GLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
 {
@@ -486,6 +505,7 @@ Bool_t GLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
    Double_t dz = TMath::Abs(p1[2] - p2[2]);
    return dx < 1e-10 && dy < 1e-10 && dz < 1e-10;
 }
+
 
 //______________________________________________________________________________
 void GLFaceSet::CalculateNormals()
@@ -669,6 +689,7 @@ private:
    void Init();
 };
 
+
 //______________________________________________________________________________
 TGLRender::TGLRender()
 {
@@ -682,10 +703,12 @@ TGLRender::TGLRender()
    fSelectedObj = 0;
 }
 
+
 //______________________________________________________________________________
 TGLRender::~TGLRender()
 {
 }
+
 
 //______________________________________________________________________________
 void TGLRender::Traverse()
@@ -715,6 +738,7 @@ void TGLRender::Traverse()
    }
 }
 
+
 //______________________________________________________________________________
 void TGLRender::SetActive(UInt_t ncam)
 {
@@ -722,11 +746,13 @@ void TGLRender::SetActive(UInt_t ncam)
    fAllActive = kFALSE;
 }
 
+
 //______________________________________________________________________________
 void TGLRender::AddNewObject(GLSceneObject *newobject)
 {
    fGLObjects.AddLast(newobject);
 }
+
 
 //______________________________________________________________________________
 void TGLRender::RemoveAllObjects()
@@ -736,11 +762,13 @@ void TGLRender::RemoveAllObjects()
    assert(fGLObjects.GetEntriesFast() == 0);
 }
 
+
 //______________________________________________________________________________
 void TGLRender::AddNewCamera(GLCamera *newcamera)
 {
    fGLCameras.AddLast(newcamera);
 }
+
 
 //______________________________________________________________________________
 GLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
@@ -797,6 +825,7 @@ GLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    return fSelectedObj;
 }
 
+
 //______________________________________________________________________________
 void TGLRender::Init()
 {
@@ -809,6 +838,7 @@ void TGLRender::Init()
    glCullFace(GL_BACK);
    glClearDepth(1.);
 }
+
 
 //______________________________________________________________________________
 void TGLRender::DrawScene()
@@ -831,7 +861,6 @@ void TGLRender::DrawScene()
 }
 
 
-////////////////////////////////////////////////////////////
 //______________________________________________________________________________
 TGLPixmap::TGLPixmap(TVirtualPad *pad)
                : fCamera(), fViewVolume(), fZoom(),
@@ -852,6 +881,7 @@ TGLPixmap::TGLPixmap(TVirtualPad *pad)
    fArcBall.SetBounds(fActiveViewport[2], fActiveViewport[3]);
 }
 
+
 //______________________________________________________________________________
 void TGLPixmap::CreateViewer()
 {
@@ -859,11 +889,13 @@ void TGLPixmap::CreateViewer()
    fRender = new TGLRender;
 }
 
+
 //______________________________________________________________________________
 TGLPixmap::~TGLPixmap()
 {
    delete fRender;
 }
+
 
 //______________________________________________________________________________
 void TGLPixmap::MakeCurrent()const
@@ -871,10 +903,12 @@ void TGLPixmap::MakeCurrent()const
    gGLManager->MakeCurrent(fGLDevice);
 }
 
+
 //______________________________________________________________________________
 void TGLPixmap::SwapBuffers()const
 {
 }
+
 
 //______________________________________________________________________________
 void TGLPixmap::DrawObjects()const
@@ -915,6 +949,7 @@ void TGLPixmap::DrawObjects()const
    gGLManager->Flush(fGLDevice);
 }
 
+
 //______________________________________________________________________________
 void TGLPixmap::UpdateRange(const GLSelection *box)
 {
@@ -945,8 +980,122 @@ void TGLPixmap::UpdateRange(const GLSelection *box)
 
 
 //______________________________________________________________________________
+void TGLPixmap::PrintObjects()
+{
+   // Print objects in a PS file. This function use gl2ps. The gl2ps output
+   // is embeded within the TPostScript one.
+
+   MakeCurrent();
+   const_cast<TGLPixmap *>(this)->CalculateViewports();
+
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+
+   Float_t pos1[] = {0., fRad + fYc, -fRad - fZc, 1.f};
+   Float_t pos2[] = {fRad + fXc, 0.f, -fRad - fZc, 1.f};
+   Float_t pos3[] = {0.f, -fRad - fYc, -fRad - fZc, 1.f};
+   Float_t pos4[] = {-fRad - fXc, 0.f, -fRad - fZc, 1.f};
+   Float_t pos5[] = {0.f, 0.f, 0.f, 1.f};
+
+   Float_t whiteCol[] = {.7f, .7f, .7f, 1.f};
+   glLightfv(GL_LIGHT4, GL_POSITION, pos1);
+   glLightfv(GL_LIGHT4, GL_DIFFUSE, whiteCol);
+   glLightfv(GL_LIGHT1, GL_POSITION, pos2);
+   glLightfv(GL_LIGHT1, GL_DIFFUSE, whiteCol);
+   glLightfv(GL_LIGHT2, GL_POSITION, pos3);
+   glLightfv(GL_LIGHT2, GL_DIFFUSE, whiteCol);
+   glLightfv(GL_LIGHT3, GL_POSITION, pos4);
+   glLightfv(GL_LIGHT3, GL_DIFFUSE, whiteCol);
+   glLightfv(GL_LIGHT0, GL_POSITION, pos5);
+   glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteCol);
+
+   glEnable(GL_LIGHT4);
+   glEnable(GL_LIGHT1);
+   glEnable(GL_LIGHT2);
+   glEnable(GL_LIGHT3);
+   glEnable(GL_LIGHT0);
+
+   // Tanslate and scale the PS generated by gl2ps
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("% Start gl2ps EPS@");
+   gVirtualPS->PrintStr("newpath gsave save@");
+   Double_t xx[2], yy[2];
+   xx[0] = gPad->GetUxmin();
+   yy[0] = gPad->GetUymin();
+   xx[1] = gPad->GetUxmax();
+   yy[1] = gPad->GetUymax();
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" add exch");
+   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" add exch translate");
+   gVirtualPS->PrintStr("@");
+   GLint vp[4];
+   glGetIntegerv(GL_VIEWPORT,vp);
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->PrintStr(" exch");
+   xx[0] = xx[1];
+   yy[0] = yy[1];
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->PrintStr(" 4 1 roll exch sub 3 1 roll sub");
+   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" sub exch");
+   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" sub exch");
+   gVirtualPS->WriteInteger((Int_t)(vp[3]));
+   gVirtualPS->WriteInteger((Int_t)(vp[2]));
+   gVirtualPS->PrintStr(" 4 1 roll div 3 1 roll exch div exch scale@");
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("countdictstack@");
+   gVirtualPS->PrintStr("mark@");
+   gVirtualPS->PrintStr("/showpage {} def@");
+
+   // Close the gVirtualPS output stream
+   ofstream *fs = (ofstream*)gVirtualPS->GetStream();
+   fs->close();
+
+   // Generate GL view
+   FILE *output = fopen (gVirtualPS->GetName(), "a");
+   Int_t gl2psFormat;
+   Int_t gl2psSort;
+   gl2psFormat = GL2PS_EPS;
+   gl2psSort = GL2PS_BSP_SORT;
+   Int_t buffsize = 0, state = GL2PS_OVERFLOW;
+
+   while (state == GL2PS_OVERFLOW) {
+      buffsize += 1024*1024;
+      gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+                      gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
+                      | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
+                      | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL 
+                      | 0,
+                      GL_RGBA, 0, NULL,0, 0, 0,
+                      buffsize, output, NULL);
+      fRender->Traverse();
+      state = gl2psEndPage();
+   }
+
+   fclose (output);
+
+   // Restore the gVirtualPS output stream
+   fs = new ofstream(gVirtualPS->GetName(),ios::app);
+   gVirtualPS->SetStream(fs);
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("cleartomark@");
+   gVirtualPS->PrintStr("countdictstack exch sub { end } repeat@");
+   gVirtualPS->PrintStr("restore grestore@");
+   gVirtualPS->PrintStr("% End gl2ps EPS@");
+
+   glFlush();
+}
+
+
+//______________________________________________________________________________
 TObject *TGLPixmap::SelectObject(Int_t x, Int_t y)
 {
+   // Select Object
+
    MakeCurrent();
    CalculateViewvolumes();
 
@@ -962,8 +1111,12 @@ TObject *TGLPixmap::SelectObject(Int_t x, Int_t y)
    return 0;
 }
 
+
+//______________________________________________________________________________
 Int_t TGLPixmap::DistancetoPrimitive(Int_t x, Int_t y)
 {
+   // Compute the disatance to the primitive
+
    TObject *selection = gGLManager->Select(this, x, y);
    if(selection) gPad->SetSelected(selection);
    else gPad->SetSelected(this);
@@ -971,11 +1124,13 @@ Int_t TGLPixmap::DistancetoPrimitive(Int_t x, Int_t y)
    return 0;
 }
 
+
 //______________________________________________________________________________
 void TGLPixmap::CalculateViewports()
 {
    gGLManager->ExtractViewport(fGLDevice, fActiveViewport);
 }
+
 
 //______________________________________________________________________________
 void TGLPixmap::CalculateViewvolumes()
@@ -1003,6 +1158,7 @@ void TGLPixmap::CalculateViewvolumes()
    }
 }
 
+
 //______________________________________________________________________________
 void TGLPixmap::CreateCameras()
 {
@@ -1015,6 +1171,7 @@ void TGLPixmap::CreateCameras()
 
    fRender->AddNewCamera(fCamera);
 }
+
 
 //______________________________________________________________________________
 Bool_t TGLPixmap::PreferLocalFrame() const
@@ -1030,6 +1187,7 @@ void TGLPixmap::BeginScene()
    fNbShapes = 0;
    fBuildingScene = kTRUE;
 }
+
 
 //______________________________________________________________________________
 void TGLPixmap::EndScene()

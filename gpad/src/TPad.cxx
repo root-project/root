@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.217 2005/12/20 06:07:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.218 2006/01/09 08:34:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2474,6 +2474,12 @@ void TPad::Paint(Option_t * /*option*/)
       fViewer3D->EndScene();
    }
 
+   // Generate the PS output using gl2ps 
+   if (GetGLDevice()!=-1 && gVirtualPS) {
+      gPad = this;
+      gGLManager->PrintViewer(GetViewer3D());
+      gPad = padsav;
+   }
 }
 
 
@@ -5485,7 +5491,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
       }
       
       if (strstr(type, "ogle"))
-         fEmbeddedGL = kTRUE;
+         fEmbeddedGL = kTRUE, fCopyGLDevice = kTRUE;
       else
          createdExternal = kTRUE;
 
@@ -5543,7 +5549,6 @@ Int_t TPad::GetGLDevice()
       px += borderSize, py += borderSize;
 
       fGLDevice = gGLManager->OpenGLPixmap(fCanvas->GetCanvasID(), px, py, w, h);
-      fCopyGLDevice = kTRUE;
    }
 
    return fGLDevice;

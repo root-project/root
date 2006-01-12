@@ -68,6 +68,8 @@ public:
 
    virtual TObject *SelectObject(Int_t, Int_t){return 0;}
    virtual void   DrawViewer(){}
+    
+   virtual void PrintObjects(){}
    
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
    

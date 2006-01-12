@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.h,v 1.2 2005/08/18 12:06:36 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.h,v 1.3 2005/11/23 14:48:02 couet Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
 /////////////////////////////////////////
    void ZoomIn();// *MENU*
    void ZoomOut();// *MENU*
+   void PrintObjects();// *MENU*
 
    void ExecuteEvent(Int_t type, Int_t px, Int_t py);
    void DrawViewer();

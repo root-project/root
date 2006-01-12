@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.5 2005/08/18 11:12:59 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.6 2005/11/17 14:43:17 couet Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -23,6 +23,9 @@
 
 #ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
+#endif
+#ifndef ROOT_TVirtualViewer3D
+#include "TVirtualViewer3D.h"
 #endif
 
 
@@ -65,6 +68,7 @@ public:
 	void ExtractViewport(Int_t deviceInd, Int_t *viewport);
    void DrawViewer(TVirtualViewer3D *v);
    TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);
+   void PrintViewer(TVirtualViewer3D *vv){vv->PrintObjects();}
    
    void PaintSingleObject(TVirtualGLPainter *obj);
 private:

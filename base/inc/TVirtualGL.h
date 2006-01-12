@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.22 2005/10/03 15:19:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.23 2005/11/17 14:43:17 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -222,6 +222,8 @@ public:
    virtual void     DrawViewer(TVirtualViewer3D *vv) = 0;
    virtual TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y) = 0;
    virtual void     PaintSingleObject(TVirtualGLPainter *) = 0;
+
+   virtual void PrintViewer(TVirtualViewer3D *vv) = 0;
 
    static TGLManager *&Instance();
 
