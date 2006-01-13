@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.30 2005/09/04 10:22:34 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.31 2006/01/09 15:47:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -717,6 +717,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    // - "graph" (evoluting graphical training curves)
    // - "update=X" (step for the text/graph output update)
    // - "+" will skip the randomisation and start from the previous values.
+   // - "current" (draw in the current canvas)
    // All combinations are available.
 
    Int_t i;
@@ -724,6 +725,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    opt.ToLower();
    // Decode options and prepare training.
    Int_t verbosity = 0;
+   Bool_t newCanvas = true;
    if (opt.Contains("text"))
       verbosity += 1;
    if (opt.Contains("graph"))
@@ -734,7 +736,9 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       TString out = opt(reg);
       displayStepping = atoi(out.Data() + 7);
    }
-   TCanvas *canvas = NULL;
+   if (opt.Contains("current"))
+      newCanvas = false;
+   TVirtualPad *canvas = NULL;
    TMultiGraph *residual_plot = NULL;
    TGraph *train_residual_plot = NULL;
    TGraph *test_residual_plot = NULL;
@@ -749,7 +753,12 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       cout << "Training the Neural Network" << endl;
    if (verbosity / 2) {
       residual_plot = new TMultiGraph;
-      canvas = new TCanvas("NNtraining", "Neural Net training");
+      if(newCanvas)
+         canvas = new TCanvas("NNtraining", "Neural Net training");
+      else {
+         canvas = gPad;
+         if(!canvas) canvas = new TCanvas("NNtraining", "Neural Net training");
+      }
       train_residual_plot = new TGraph(nEpoch);
       test_residual_plot  = new TGraph(nEpoch);
       canvas->SetLeftMargin(0.14);
@@ -2230,6 +2239,7 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
       buffer[idx] = synapse->GetWeight() - origin[idx];
       idx++;
    }
+   delete[]origin;
    return false;
 }
 

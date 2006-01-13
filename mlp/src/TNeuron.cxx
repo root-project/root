@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.14 2005/07/18 12:02:02 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.15 2006/01/09 15:47:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -891,6 +891,7 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
    input->Draw(Form("%s>>tmpb",(const char*)f),"","goff");
    fNorm[0] = tmp.GetRMS();
+   if(fNorm[0]<1e-15) fNorm[0]=1.;
    fNorm[1] = tmp.GetMean();
    // Check the dimensionality 
    if(fFormula->GetNdata()>1 && fIndex==0)
