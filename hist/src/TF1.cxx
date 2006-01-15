@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.114 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.115 2006/01/11 13:33:24 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2259,7 +2259,7 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 //______________________________________________________________________________
 Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params)
 {
-    // Gauss-Legendre integral, see CalcIntegralSamplingPoints
+    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
     if (!g) return 0;
     return IntegralFast(g->GetN(), g->GetX(), g->GetY(), a, b, params);
 }
@@ -2268,7 +2268,7 @@ Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *pa
 //______________________________________________________________________________
 Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params)
 {
-    // Gauss-Legendre integral, see CalcIntegralSamplingPoints
+    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
     if (num<=0 || x == 0 || w == 0)
         return 0;
 
