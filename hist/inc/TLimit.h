@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.6 2005/11/03 20:52:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.7 2005/11/29 06:16:16 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -33,7 +33,11 @@ class TH1;
 //____________________________________________________________________
 
 class TLimit {
- public:
+ protected:
+   static bool Fluctuate(TLimitDataSource * input, TLimitDataSource * output, bool init,TRandom *, bool stat=false);
+   inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t d) { return d * TMath::Log(1 + (s / b)); }
+
+public:
    TLimit() {}
    virtual ~TLimit() {}
    static TConfidenceLevel *ComputeLimit(TLimitDataSource * data,
@@ -63,9 +67,6 @@ class TLimit {
                                          bool stat = false,
                                          TRandom * generator = NULL,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
- protected:
-   static bool Fluctuate(TLimitDataSource * input, TLimitDataSource * output, bool init,TRandom *, bool stat=false);
-   inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t d) { return d * TMath::Log(1 + (s / b)); }
  private:
    static TArrayD *fgTable;              // a log table... just to speed up calculation
    static TOrdCollection *fgSystNames;   // Collection of systematics names
