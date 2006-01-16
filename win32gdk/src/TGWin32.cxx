@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.102 2005/11/23 14:48:02 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.103 2005/11/24 17:08:36 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6604,7 +6604,7 @@ void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
    root_x = currPt.x;
    root_y = currPt.y;
 
-   ::ClientToScreen(window, &currPt);
+   ::ScreenToClient(window, &currPt);
    win_x = currPt.x;
    win_y = currPt.y;
 
