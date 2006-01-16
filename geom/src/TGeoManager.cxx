@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.135 2005/11/28 11:04:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.136 2006/01/06 10:32:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -477,6 +477,7 @@ TGeoManager::TGeoManager()
       fOverlaps = 0;
       fNNodes = 0;
       fLevel = 0;
+      fNmany = 0;
       fMaxVisNodes = 10000;
    
       memset(fLastPoint, 0, kN3);
@@ -589,6 +590,7 @@ void TGeoManager::Init()
    fOverlaps = new TObjArray(256);
    fNNodes = 0;
    fLevel = 0;
+   fNmany = 0;
    fMaxVisNodes = 10000;
    
    memset(fLastPoint, 0, kN3);
