@@ -84,6 +84,7 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnless( calling.retByPointer().magic() == 1234567890 , 'fail return by pointer')
     self.failUnless( calling.retByReference().magic() == 1234567890 , 'fail return by reference')
     self.failUnless( calling.retByRefPointer().magic() == 1234567890 , 'fail return by reference pointer')
+    self.failUnless( calling.retByVoidPointer(), 'fail return by void pointer')
 
 
   def test04UnknownTypes(self) :

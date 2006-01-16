@@ -36,6 +36,8 @@
 
   <function pattern="by*"/>
 
+  <class pattern="std::list<*>"/>
+  <class name="N::WithPrivateTypes"/>
   <enum name="E2"/>
   <enum name="A::E1"/>
 

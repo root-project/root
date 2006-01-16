@@ -41,17 +41,23 @@ ALLLIBS      += $(CINTEXLIB)
 INCLUDEFILES += $(CINTEXDEP)
 
 # test suite
-REFLEXLL = -Llib -lReflex
+ifeq ($(PLATFORM),win32)
+REFLEXLL = lib/libReflex.lib
+CINTEXLL = lib/libCintex.lib
+SHEXT    = .bat
+else
+REFLEXLL = -Llib -lReflex -ldl
 CINTEXLL = -Llib -lCintex
+endif
 
-GENREFLEXX = ../../../bin/genreflex
+GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py 
 
 CINTEXTESTD    = $(CINTEXDIR)/test
-CINTEXTESTLIBD = $(CINTEXTESTD)/dict
-CINTEXTESTLIBH = $(CINTEXTESTLIBD)/CintexTest.h
-CINTEXTESTLIBS = $(subst .h,_rflx.cpp,$(CINTEXTESTLIBH))
-CINTEXTESTLIBO = $(subst .cpp,.o,$(CINTEXTESTLIBS))
-CINTEXTESTLIB  = $(subst $(CINTEXTESTLIBD)/,lib/test_,$(subst _rflx.o,Rflx.$(SOEXT),$(CINTEXTESTLIBO)))
+CINTEXTESTDICTD = $(CINTEXTESTD)/dict
+CINTEXTESTDICTH = $(CINTEXTESTDICTD)/CintexTest.h
+CINTEXTESTDICTS = $(subst .h,_rflx.cpp,$(CINTEXTESTDICTH))
+CINTEXTESTDICTO = $(subst .cpp,.o,$(CINTEXTESTDICTS))
+CINTEXTESTDICT  = $(subst $(CINTEXTESTDICTD)/,lib/test_,$(subst _rflx.o,Rflx.$(SOEXT),$(CINTEXTESTDICTO)))
 
 ##### local rules #####
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
@@ -81,7 +87,7 @@ clean-cintex: clean-check-cintex
 		@rm -f $(CINTEXO)
 
 clean-check-cintex:
-		@rm -f $(TESTLIBS) $(TESTLIBO)
+		@rm -f $(CINTEXTESTDICTS) $(CINTEXTESTDICTO)
 
 clean::         clean-cintex
 
@@ -94,17 +100,17 @@ distclean::     distclean-cintex
 
 #### test suite ####
 
-check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTLIB) 
-		export ROOTSYS=`pwd`; bin/root -b -q cintex/test/test_Cintex.C
-		export ROOTSYS=`pwd`; bin/root -b -q cintex/test/test_Persistency.C
+check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT) 
+		@echo "Running all Cintex tests"
+		@cintex/test/test_all$(SHEXT)  $(PYTHONINCDIR)
 
-lib/test_%Rflx.$(SOEXT) : $(CINTEXTESTLIBD)/%_rflx.o
+$(CINTEXTESTDICT): $(CINTEXTESTDICTO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
 
-%_rflx.o: %_rflx.cpp
+$(CINTEXTESTDICTO): $(CINTEXTESTDICTS)
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
 
-$(CINTEXTESTLIBS) : $(CINTEXTESTLIBH) $(CINTEXTESTLIBD)/selection.xml
-		cd $(CINTEXTESTLIBD); $(GENREFLEXX) CintexTest.h -s selection.xml --quiet --comments
+$(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
+		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --quiet --comments
 
 

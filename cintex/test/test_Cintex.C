@@ -319,6 +319,7 @@ bool test_Variables() {
 
 void test_Cintex()
 {
+  //gDebug = 4;
   gSystem->Load("libReflex");
   gSystem->Load("libCintex");
   Cintex::Enable();

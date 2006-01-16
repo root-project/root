@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTUtils.cxx,v 1.5 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -138,7 +138,7 @@ namespace ROOT { namespace Cintex {
     else if ( nam == "float" )
       return CintTypeDesc('f', "-");
     else if ( t.IsEnum() )
-      return CintTypeDesc('l', "-");
+      return CintTypeDesc('i', "-");
     else if ( t.IsFunction() )
       return CintTypeDesc('y', "-");
     else if ( !t.IsFundamental() ) 
@@ -185,7 +185,7 @@ namespace ROOT { namespace Cintex {
       std::string sub = nam.substr(0,8); 
       bool stl = nam.substr(0,17)=="std::basic_string" ||
         sub=="std::str" || sub=="std::vec" || sub=="std::lis" ||
-        sub=="std::Set" || sub=="std::deq" || sub=="std::map" ||
+        sub=="std::set" || sub=="std::deq" || sub=="std::map" ||
         sub=="std::mul" || sub=="stdext::" || sub=="__gnu_cx";
       return stl;
     }
@@ -333,6 +333,7 @@ namespace ROOT { namespace Cintex {
     result->type = t;
     switch( t ) {
       case 'y': G__setnull(result); break;
+      case 'Y': Converter<long>::toCint          (result, obj); break;
       case 'g': Converter<bool>::toCint          (result, obj); break;
       case 'G': Converter<int>::toCint           (result, obj); break;
       case 'c': Converter<char>::toCint          (result, obj); break;

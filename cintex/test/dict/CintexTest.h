@@ -138,6 +138,7 @@ public:
   MyClass* retByPointer() { return &m_object; }
   MyClass& retByReference() { return m_object; }
   MyClass*& retByRefPointer() { return m_ptr; }
+  void* retByVoidPointer() { return &m_object; }
   UnknownType* retUnkownTypePointer() { return (UnknownType*)0x12345678; }
   UnknownType& retUnkownTypeReference() { return *(UnknownType*)0x12345678; }
   std::string retStrByValue() { return std::string("value");}
@@ -401,6 +402,7 @@ struct Data {
   long long ll;
   unsigned long long ull;
   int     len;
+  double  arra[10];
   double* array; //[len]
   long   transient1; //Set transient by the selection file with transient keyword
   long   transient2; //! Set transient by the comment
@@ -635,3 +637,54 @@ class ExceptionGenerator {
     ~ExceptionGenerator() {}
     void doThrow( bool b ) {if (b) throw std::logic_error("My Exception in method"); }
 };
+
+#include <list>
+struct __ins {
+ std::list<ExceptionGenerator*> a;
+};
+
+namespace N {
+
+  class WithProtectedTypes {
+    protected:
+    class ProtectedInner { int i; };
+  };
+  
+  class WithPrivateTypes : public WithProtectedTypes {
+    class Inner { int i; };
+    class InnerWithInner {
+      public:
+      class PInner {};
+      private:
+      class Inner { int i;};
+      Inner* i;
+    };
+    typedef Inner Inner_t;
+    struct Inner_s { int i; };
+    union  Inner_u { int i; float f; };
+    enum   Inner_e { one, two };
+    template <class T> class InnterT {int y;};
+
+    Inner   i1;
+    Inner*  i1p;
+    Inner** i1pp;
+    Inner_t   it1;
+    Inner_t*  it1p;
+    Inner_t** it1pp;
+    std::vector<Inner> vi1;  
+    std::vector<Inner*> vi1p;  
+    std::vector<const Inner*> vci1p;
+    std::vector<WithPrivateTypes*> vt;  
+    std::vector<InnerWithInner*> vv;
+    InnerWithInner::PInner ii;
+    ProtectedInner  iii;
+    ProtectedInner* iiip;
+    Inner_s  s1;
+    Inner_s* s1p;
+    Inner_u  u1;
+    Inner_u* u1p;
+    Inner_e  e1;
+    Inner_e* e1p;
+    std::vector<InnterT<Inner*> *> vvvv;
+  };
+}

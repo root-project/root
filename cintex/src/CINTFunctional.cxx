@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.8 2005/12/12 23:17:32 pcanal Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.9 2005/12/15 10:13:18 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -121,6 +121,7 @@ void StubContext::ProcessResult(G__value* result, void* obj) {
   result->type = t;
   switch( t ) {
     case 'y': G__setnull(result); break;
+    case 'Y': Converter<long>::toCint          (result, obj); break;
     case 'g': Converter<bool>::toCint          (result, obj); break;
     case 'G': Converter<int>::toCint           (result, obj); break;
     case 'c': Converter<char>::toCint          (result, obj); break;
