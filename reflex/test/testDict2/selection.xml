@@ -1,4 +1,5 @@
 <lcgdict>
+  <class pattern="classVec*"/>
   <class pattern="Class*"/>
   <class pattern="Bla::*"/>
   <function name="function1"/>

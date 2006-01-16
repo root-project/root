@@ -592,10 +592,10 @@ class genDictionary(object) :
     for child in childs : values += child['name'] + '=' + child['init'] +';'
     values = values[:-1]
     if self.isUnnamedType(name) :
-      s += '  .AddEnum("%s", "%s", &typeid(UnnamedEnum))' % (name[name.rfind('::')+3:], values) 
+      s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnnamedEnum))' % (name[name.rfind('::')+3:], values) 
     else :
       if attrs.get('access') in ('protected','private'):
-        s += '  .AddEnum("%s", "%s")' % (name, values)        
+        s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnknownType))' % (name, values)        
       else:
         s += '  .AddEnum("%s", "%s", &typeid(%s))' % (name, values, name)
     return s 
