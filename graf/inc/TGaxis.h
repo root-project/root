@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.18 2004/06/17 15:33:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.19 2005/11/15 15:13:59 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -122,6 +122,8 @@ public:
    virtual void        SetTitle(const char *title=""); // *MENU*
    void                SetTitleOffset(Float_t titleoffset=1) {fTitleOffset = titleoffset;} // *MENU*
    void                SetTitleSize(Float_t titlesize) {fTitleSize = titlesize;} // *MENU*
+   void                SetTitleFont(Int_t titlefont) {SetTextFont(titlefont);} // *MENU*
+   void                SetTitleColor(Int_t titlecolor) {SetTextColor(titlecolor);} // *MENU*
    void                SetWmin(Double_t wmin) {fWmin = wmin;}
    void                SetWmax(Double_t wmax) {fWmax = wmax;}
 
