@@ -1114,7 +1114,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genOperatorMethodDef( self, attrs, args ) :
     if attrs['name'][0].isalpha() : name = 'operator '+ attrs['name']
-    else                          : name = 'operator' + attrs['name'] 
+    else                          : name = 'operator' + attrs['name']
     if name[-1] == '>' and name.find('<') != -1 : name = name[:name.find('<')]
     return self.genMCODef( 'operator', name, attrs, args )    
 #----------------------------------------------------------------------------------
@@ -1273,7 +1273,7 @@ class genDictionary(object) :
     for m in self.methods :
       if m['context'] == cid and m['id'] not in members :
         # replace the mame by the complete templated name. Use the demangle module for that
-        if 'mangled' in m :
+        if 'mangled' in m and m['name'].isalpha() :
           mm = m['mangled'][2:]
           dname = gccdemangler.demangle_name(mm)
           dret  = gccdemangler.demangle_type(mm[dname[0]:])
