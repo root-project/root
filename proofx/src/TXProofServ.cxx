@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:$:$Id:$
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -79,6 +79,8 @@
 #include "TXSocketHandler.h"
 #include "TXUnixSocket.h"
 #include "compiledata.h"
+#include "TProofResourcesStatic.h"
+#include "TProofNodeInfo.h"
 
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
@@ -633,52 +635,17 @@ void TXProofServ::Setup()
       TString conffile = fConfFile;
       conffile.Remove(0, 1 + conffile.Index(":"));
       // parse config file to find working directory
-      TString fconf;
-      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), conffile.Data());
-      PDB(kGlobal,2) Info("Setup", "checking PROOF config file %s", fconf.Data());
-      if (gSystem->AccessPathName(fconf, kReadPermission)) {
-         fconf.Form("%s/proof/etc/%s", fConfDir.Data(), conffile.Data());
-         PDB(kGlobal,2) Info("Setup", "checking PROOF config file %s", fconf.Data());
-         if (gSystem->AccessPathName(fconf, kReadPermission)) {
-            fconf = "";
+      TProofResourcesStatic resources(fConfDir, conffile);
+      if (resources.IsValid()) {
+         if (resources.GetMaster()) {
+            TString tmpWorkDir = resources.GetMaster()->GetWorkDir(); 
+            if (tmpWorkDir != "")
+               fWorkDir = tmpWorkDir;
          }
-      }
-
-      if (!fconf.IsNull()) {
-         if (FILE *pconf = fopen(fconf, "r")) {
-            // read the config file looking at node lines
-            char line[1024];
-            TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-            // check for valid master line
-            while (fgets(line, sizeof(line), pconf)) {
-               char word[12][128];
-               if (line[0] == '#') continue;   // skip comment lines
-               Int_t nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
-                   word[0], word[1],
-                   word[2], word[3], word[4], word[5], word[6],
-                   word[7], word[8], word[9], word[10], word[11]);
-
-               // see if master may run on this node, accept both old "node"
-               // and new "master" lines
-               if (nword >= 2 &&
-                   (!strcmp(word[0], "node") || !strcmp(word[0], "master"))) {
-                  TInetAddress a = gSystem->GetHostByName(TUrl(word[1]).GetHost());
-                  if (!host.CompareTo(a.GetHostName()) ||
-                      !strcmp(word[1], "localhost")) {
-                     for (Int_t i = 2; i < nword; i++) {
-
-                        if (!strncmp(word[i], "workdir=", 8))
-                           fWorkDir = word[i]+8;
-
-                     }
-                  }
-               }
-            }
-            fclose(pconf);
-         } else {
-            Error("Setup", "could not open config file %s", fconf.Data());
-            gSystem->Exit(1);
-         }
+      } else {
+         Error("Setup", "reading config file %s",
+                        resources.GetFileName().Data());
+         gSystem->Exit(1);
       }
    }
 

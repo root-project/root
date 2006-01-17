@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.111 2005/12/09 01:12:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.112 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2216,18 +2216,18 @@ void TProofServ::Setup()
       conffile.Remove(0, 1 + conffile.Index(":"));
 
       // parse config file to find working directory
-      TProofResourcesStatic *resources = new TProofResourcesStatic();
-      if (resources->IsValid()) {
-         TString tmpWorkDir = resources->GetWorkDir(fConfDir, conffile); 
-         if (tmpWorkDir != "") fWorkDir = tmpWorkDir;
+      TProofResourcesStatic resources(fConfDir, conffile);
+      if (resources.IsValid()) {
+         if (resources.GetMaster()) {
+            TString tmpWorkDir = resources.GetMaster()->GetWorkDir(); 
+            if (tmpWorkDir != "")
+               fWorkDir = tmpWorkDir;
+         }
       } else {
-         Error("Setup", "could not read work dir from config file %s", conffile.Data());
+         Error("Setup", "reading config file %s",
+                        resources.GetFileName().Data());
          gSystem->Exit(1);
       }
-
-      // Cleanup
-      delete resources;
-      resources = 0;
    }
 
    // goto to the main PROOF working directory

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.2 2005/12/09 01:22:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.3 2005/12/09 14:56:47 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -27,8 +27,6 @@
 #include "Riostream.h"
 #include "TProofResourcesStatic.h"
 #include "TSystem.h"
-#include "TProofServ.h"
-#include "TProof.h"
 #include "TInetAddress.h"
 #include "TProofNodeInfo.h"
 #include "TProofDebug.h"
@@ -51,8 +49,8 @@ TProofResourcesStatic::TProofResourcesStatic()
 }
 
 //______________________________________________________________________________
-TProofResourcesStatic::TProofResourcesStatic(const TString &confDir,
-                                             const TString &fileName)
+TProofResourcesStatic::TProofResourcesStatic(const char *confDir,
+                                             const char *fileName)
 {
    // Using this ctor will retrieve all information in the config file
    // and store it in fMaster, fSubmasterList and fWorkerList,
@@ -130,29 +128,39 @@ TList *TProofResourcesStatic::GetWorkers(void)
 }
 
 //______________________________________________________________________________
-Bool_t TProofResourcesStatic::ReadConfigFile(const TString &confDir,
-                                             const TString &fileName)
+Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
+                                             const char *fileName)
 {
    // Read the PROOF config file and fill the master and worker list.
 
    Bool_t status = kTRUE;
 
-   PDB(kGlobal,1)
-      Info("ReadConfigFile", "using PROOF config file: %s", fileName.Data());
-
-   // Add a proper path to the file name
-   fFileName.Form("%s/.%s", gSystem->Getenv("HOME"), fileName.Data());
-   PDB(kGlobal,2)
-      Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
-   if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-      fFileName.Form("%s/proof/etc/%s", confDir.Data(), fileName.Data());
+   // Use file specified by the cluster administrator, if any
+   const char *cf = gSystem->Getenv("ROOTPROOFCONF");
+   if (cf && !(gSystem->AccessPathName(cf, kReadPermission))) {
+      fFileName = cf;
+   } else {
+      if (cf)
+         PDB(kGlobal,1)
+            Info("ReadConfigFile", "file %s cannot be read:"
+                 " check existence and/or permissions", (cf ? cf : ""));
+      // Use user defined file or default
+      // Add a proper path to the file name
+      fFileName.Form("%s/.%s", gSystem->Getenv("HOME"), fileName);
       PDB(kGlobal,2)
          Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
       if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-         Error("ReadConfigFile", "no PROOF config file found");
-         return kFALSE;
+         fFileName.Form("%s/proof/etc/%s", confDir, fileName);
+         PDB(kGlobal,2)
+            Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
+         if (gSystem->AccessPathName(fFileName, kReadPermission)) {
+            Error("ReadConfigFile", "no PROOF config file found");
+            return kFALSE;
+         }
       }
    }
+   PDB(kGlobal,1)
+      Info("ReadConfigFile", "using PROOF config file: %s", fFileName.Data());
 
    // Open the config file
    fstream infile(fFileName.Data(), std::ios::in);
@@ -206,7 +214,6 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const TString &confDir,
                case kNodeType: {
                   if (keyword == "master" || keyword == "node") {
                      nodeinfo = fMaster;
-                     nodeinfo->fWorkDir = kPROOF_WorkDir;
                      isMaster = kTRUE;     // will be reset
                      fFoundMaster = kTRUE; // will not be reset
                   }
@@ -288,15 +295,8 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const TString &confDir,
          TString node = TUrl(fMaster->fNodeName).GetHost();
          TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
          TInetAddress inetaddr = gSystem->GetHostByName(node);
-         if ( !(!host.CompareTo(inetaddr.GetHostName()) || (node == "localhost")) ) {
+         if (host.CompareTo(inetaddr.GetHostName()) && (node != "localhost")) {
             Error("ReadConfigFile","No appropriate master found in config file");
-            status = kFALSE;
-         }
-
-         // Check the master work directory
-         if (strcmp(gSystem->ExpandPathName(fMaster->GetWorkDir().Data()),
-                    gProofServ->GetWorkDir())) {
-            Error("ReadConfigFile","Bad work directory: %s", fMaster->GetWorkDir().Data());
             status = kFALSE;
          }
       }
@@ -309,123 +309,6 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const TString &confDir,
    return status;
 }
 
-//______________________________________________________________________________
-TString TProofResourcesStatic::GetWorkDir(const TString &confDir,
-                                          const TString &fileName)
-{
-   // Read the working directory from the PROOF config file.
-   // This method is used by TProofServ::Setup() rather than the full
-   // interpretation of the config file as is done in ReadConfigFile().
-   // If the workdir option is not specified in the config file,
-   // GetWorkDir() will return an empty string.
-
-   TString workDir;
-   Bool_t status = kTRUE;
-
-   PDB(kGlobal,1)
-      Info("GetWorkDir", "using PROOF config file: %s", fileName.Data());
-
-   // Add a proper path to the file name
-   fFileName.Form("%s/.%s", gSystem->Getenv("HOME"), fileName.Data());
-   PDB(kGlobal,2)
-      Info("GetWorkDir", "checking PROOF config file %s", fFileName.Data());
-   if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-      fFileName.Form("%s/proof/etc/%s", confDir.Data(), fileName.Data());
-      PDB(kGlobal,2)
-         Info("GetWorkDir", "checking PROOF config file %s", fFileName.Data());
-      if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-         Error("GetWorkDir", "no PROOF config file found");
-         fValid = kFALSE;
-         return kFALSE;
-      }
-   }
-
-   // Open the config file
-   fstream infile(fFileName.Data(), std::ios::in);
-   if (infile.is_open()) {
-      TProofNodeInfo *nodeinfo = 0;
-      TString line = "";
-      TString keyword = "";
-
-      // Read the entire file into the allLines object
-      TString allLines = "";
-      allLines.ReadString(infile);
-      TObjArray *lines = allLines.Tokenize("\n");
-      Int_t numberOfLines = lines->GetEntries();
-
-      // Process one line at the time
-      for (Int_t j = 0; j < numberOfLines; j++) {
-         line = ((TObjString *)lines->At(j))->GetString();
-         line = line.Strip(TString::kBoth);
-
-         // Unless this line was empty or a comment, interpret the line
-         if ( !((line(0,1) == "#") || (line == "")) ) {
-
-            // Extract all words in the current line
-            TObjArray *tokens = line.Tokenize(" ");
-            Int_t n = tokens->GetEntries();
-            TString option;
-            TString value;
-            for (Int_t i = 0; i < n; i++) {
-
-               // Extrace one word from the current line
-               keyword = ((TObjString *)tokens->At(i))->GetString();
-
-               // Interpret this keyword
-               switch (GetInfoType(keyword)) {
-               case kNodeType: {
-                  if (keyword == "master" || keyword == "node") {
-                     nodeinfo = fMaster;
-                     fFoundMaster = kTRUE;
-                  }
-                  break;
-               }
-               case kOption: {
-                  // On what position is the '=' sign?
-                  const Ssiz_t equalPosition =
-                     keyword.Index("=", 1, 0, TString::kExact);
-
-                  // Extract the option and its value
-                  TString tmp = keyword;
-                  option = tmp(0, equalPosition);
-
-                  if ((option == "workdir") &&
-                      (nodeinfo->fNodeType == TProofNodeInfo::GetNodeType("master"))) {
-                     nodeinfo->fWorkDir = tmp(equalPosition + 1, tmp.Length());
-                  }
-
-                  break;
-               }
-               default:
-                  break;
-               } // end switch
-
-            } // end if
-
-         } // else
-
-      } // while (! infile.eof() )
-
-      // Did the config file contain appropriate master information?
-      if (fFoundMaster) {
-         // Set the work directory
-         workDir = fMaster->GetWorkDir();
-      } else {
-         Error("ReadConfigFile","No master found in config file");
-         fValid = kFALSE;
-         status = kFALSE;
-      }
-   } // end if (infile.is_open())
-   else {
-      // Error: could not open file
-      status = kFALSE;
-      fValid = kFALSE;
-   }
-
-   infile.close();
-
-   return (status ? workDir : "");
-}
 
 //______________________________________________________________________________
 void TProofResourcesStatic::SetOption(TProofNodeInfo *nodeinfo,

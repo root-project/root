@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.h,v 1.1 2005/12/09 01:12:16 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -51,7 +51,7 @@ private:
    TString         fFileName;         // Config file name
 
    void             InitResources();
-   Bool_t           ReadConfigFile(const TString &confDir, const TString &fileName);
+   Bool_t           ReadConfigFile(const char *confDir, const char *fileName);
 
    static EInfoType GetInfoType(const TString &word);
    static void      SetOption(TProofNodeInfo *nodeinfo, const TString &option,
@@ -60,14 +60,13 @@ private:
 
 public:
    TProofResourcesStatic();
-   TProofResourcesStatic(const TString &confDir, const TString &fileName);
+   TProofResourcesStatic(const char *confDir, const char *fileName);
    virtual ~TProofResourcesStatic();
 
    TProofNodeInfo *GetMaster();
    TList          *GetSubmasters();
    TList          *GetWorkers();
    TString         GetFileName() const { return fFileName; }
-   TString         GetWorkDir(const TString &confDir, const TString &fileName);
 
    ClassDef(TProofResourcesStatic,0) // Class to handle PROOF static config
 };
