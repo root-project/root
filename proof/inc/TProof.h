@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.72 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -529,6 +529,9 @@ public:
    void           Detach(Option_t *opt = "");
 
    void           SetAlias(const char *alias="");
+
+   static TVirtualProof *Open(const char *cluster = 0, const char *conffile = 0,
+                              const char *confdir = 0, Int_t loglevel = 0);
 
    ClassDef(TProof,0)  //PROOF control class
 };

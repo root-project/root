@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.129 2005/12/12 12:54:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.130 2005/12/12 16:42:14 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -224,7 +224,7 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    if (IsProofd() || IsMaster())
       gROOT->GetListOfProofs()->Add(this);
 
-   // Still needed by the packetizers: needs to be changed 
+   // Still needed by the packetizers: needs to be changed
    gProof = this;
 }
 
@@ -375,7 +375,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fMaxDrawQueries = 1;
    fSeqNum = 0;
 
-   // Remote ID of the session 
+   // Remote ID of the session
    fSessionID = -1;
 
    // Part of active query
@@ -4423,4 +4423,14 @@ void TProof::SetAlias(const char *alias)
    }
 
    return;
+}
+
+//_____________________________________________________________________________
+TVirtualProof *TProof::Open(const char *cluster, const char *conffile,
+                            const char *confdir, Int_t loglevel)
+{
+   // Start a PROOF session on a specific cluster. Wrapper around
+   // TVirtualProof::Open().
+
+   return TVirtualProof::Open(cluster, conffile, confdir, loglevel);
 }

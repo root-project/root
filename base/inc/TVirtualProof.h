@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.23 2005/11/14 21:36:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.24 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -194,6 +194,9 @@ public:
 
    virtual TVirtualProofMgr *GetManager() { return fManager; }
    virtual void        SetManager(TVirtualProofMgr *mgr) { fManager = mgr; }
+
+   static TVirtualProof *Open(const char *cluster = 0, const char *conffile = 0,
+                              const char *confdir = 0, Int_t loglevel = 0);
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };
