@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.h,v 1.2 2005/03/14 20:02:41 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLNode.h,v 1.1 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/4/2005
 
 /*************************************************************************
@@ -37,13 +37,16 @@
 class TList;
 struct _xmlNode;
 
-
-
-
 class TXMLNode : public TObject {
 
 private:
-   _xmlNode *fXMLNode;     // libxml node
+   _xmlNode *fXMLNode;        // libxml node
+
+   TXMLNode *fParent;         // Parent node
+   TXMLNode *fChildren;       // Children node
+   TXMLNode *fNextNode;       // Next sibling node
+   TXMLNode *fPreviousNode;   // Previous sibling node
+   TList    *fAttrList;       // List of Attributes
 
 public:
    // This enum is based on libxml tree Enum xmlElementType
@@ -54,18 +57,19 @@ public:
       kXMLCommentNode = 8
    };
 
-   TXMLNode(_xmlNode *node);
+   TXMLNode(_xmlNode *node, TXMLNode* parent=0, TXMLNode* previous=0);
+
    virtual ~TXMLNode();
 
    EXMLElementType GetNodeType() const;
    const char *GetNodeName() const;
-   TXMLNode   *GetChildren() const;
+   TXMLNode   *GetChildren();
    TXMLNode   *GetParent() const;
-   TXMLNode   *GetNextNode() const;
+   TXMLNode   *GetNextNode();
    TXMLNode   *GetPreviousNode() const;
    const char *GetContent() const;
    const char *GetText() const;
-   TList      *GetAttributes() const;
+   TList      *GetAttributes();
 
    Bool_t      HasChildren() const;
    Bool_t      HasNextNode() const;

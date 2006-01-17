@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.h,v 1.2 2005/03/14 20:02:41 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLDocument.h,v 1.1 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/4/2005
 
 /*************************************************************************
@@ -34,16 +34,17 @@ struct _xmlDoc;
 class TXMLNode;
 
 
-class TXMLDocument:public TObject {
+class TXMLDocument : public TObject {
 
 private:
-   _xmlDoc *fXMLDoc;           // libxml xml doc
+   _xmlDoc  *fXMLDoc;           // libxml xml doc
+   TXMLNode *fRootNode;         // the root node 
 
 public:
    TXMLDocument(_xmlDoc *doc);
    virtual ~TXMLDocument();
 
-   TXMLNode *GetRootNode() const;
+   TXMLNode   *GetRootNode() const;
 
    const char *Version() const;
    const char *Encoding() const;

@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.4 2005/05/08 13:55:19 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TDOMParser.h,v 1.1 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/4/2005
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
 
    virtual TXMLDocument *GetXMLDocument() const;
 
-   ClassDef(TDOMParser, 0);
+   ClassDef(TDOMParser, 0); // DOM Parser
 };
 
 #endif

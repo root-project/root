@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.h,v 1.2 2005/03/14 20:02:41 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLNode.cxx,v 1.1 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/4/2005
 
 /*************************************************************************
@@ -31,7 +31,9 @@
 ClassImp(TXMLNode);
 
 //______________________________________________________________________________
-TXMLNode::TXMLNode(xmlNode *node) : fXMLNode(node)
+TXMLNode::TXMLNode(xmlNode *node, TXMLNode *parent, TXMLNode *previous) :
+   fXMLNode(node), fParent(parent), fChildren(0), fNextNode(0),
+   fPreviousNode(previous), fAttrList(0)
 {
    // TXMLNode constructor.
 }
@@ -39,12 +41,15 @@ TXMLNode::TXMLNode(xmlNode *node) : fXMLNode(node)
 //______________________________________________________________________________
 TXMLNode::~TXMLNode()
 {
-   // Destructor. It releases the xml node.
+   // Destructor. It deletes the node's child, next sibling and the
+   // attribute list.
 
-   if (fXMLNode) {
-      // deleted when TXMLDocument is deleted
-      // xmlFreeNode(fXMLNode);
-   }
+   delete fChildren;
+   delete fNextNode;
+   if (fAttrList)
+      fAttrList->Delete();
+   delete fAttrList;
+
 }
 
 //______________________________________________________________________________
@@ -64,12 +69,17 @@ const char *TXMLNode::GetNodeName() const
 }
 
 //______________________________________________________________________________
-TXMLNode *TXMLNode::GetChildren() const
+TXMLNode *TXMLNode::GetChildren()
 {
    // Returns the node's child if any, returns 0 if no child.
 
-   if (fXMLNode->children)
-      return new TXMLNode(fXMLNode->children);
+   if (fChildren)
+      return fChildren;
+
+   if (fXMLNode->children){
+      fChildren = new TXMLNode(fXMLNode->children, this);
+      return fChildren;
+   }
    return 0;
 }
 
@@ -78,9 +88,7 @@ TXMLNode *TXMLNode::GetParent() const
 {
    // Returns the node's parent if any, returns 0 if no parent.
 
-   if (fXMLNode->parent)
-      return new TXMLNode(fXMLNode->parent);
-   return 0;
+   return fParent;
 }
 
 //______________________________________________________________________________
@@ -94,32 +102,40 @@ const char *TXMLNode::GetContent() const
 }
 
 //______________________________________________________________________________
-TList *TXMLNode::GetAttributes() const
+TList *TXMLNode::GetAttributes()
 {
    // Returns a list of node's attribute if any,
    // returns 0 if no attribute.
 
+   if (fAttrList)
+      return fAttrList;
+
    if (!HasAttributes())
       return 0;
 
-   TList *attrList = new TList();
+   fAttrList = new TList();
    xmlAttr *attr_node = fXMLNode->properties;
    for (; attr_node; attr_node = attr_node->next) {
-      attrList->Add(new TXMLAttr((const char *) attr_node->name,
-                                 (const char *) attr_node->children->content));
+      fAttrList->Add(new TXMLAttr((const char *) attr_node->name,
+				  (const char *) attr_node->children->content));
    }
 
-   return attrList;
+   return fAttrList;
 }
 
 //______________________________________________________________________________
-TXMLNode *TXMLNode::GetNextNode() const
+TXMLNode *TXMLNode::GetNextNode()
 {
    // Returns the next sibling XMLNode in the DOM tree, if any
-   // return 0 if no previous node.
+   // return 0 if no next node.
 
-   if (fXMLNode->next)
-      return new TXMLNode(fXMLNode->next);
+   if (fNextNode)
+      return fNextNode;
+
+   if (fXMLNode->next) {
+      fNextNode = new TXMLNode(fXMLNode->next, fParent, this);
+      return fNextNode;
+   }
    return 0;
 }
 
@@ -129,9 +145,7 @@ TXMLNode *TXMLNode::GetPreviousNode() const
    // Returns the previous sibling XMLNode in the DOM tree, if any
    // return 0 if no previous node
 
-   if (fXMLNode->prev)
-      return new TXMLNode(fXMLNode->prev);
-   return 0;
+   return fPreviousNode;
 }
 
 //______________________________________________________________________________

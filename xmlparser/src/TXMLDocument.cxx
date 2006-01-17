@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.h,v 1.2 2005/03/14 20:02:41 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLDocument.cxx,v 1.1 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/4/2005
 
 /*************************************************************************
@@ -29,6 +29,12 @@ ClassImp(TXMLDocument);
 TXMLDocument::TXMLDocument(_xmlDoc *doc) : fXMLDoc(doc)
 {
    // TXMLDocument constructor.
+
+   if (fXMLDoc) {
+      fRootNode = new TXMLNode(xmlDocGetRootElement(fXMLDoc));
+   } else {
+      fRootNode = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -38,6 +44,7 @@ TXMLDocument::~TXMLDocument()
    // Free the global variables that may
    // have been allocated by the parser.
 
+   delete fRootNode;
    xmlFreeDoc(fXMLDoc);
    xmlCleanupParser();
 }
@@ -47,7 +54,7 @@ TXMLNode *TXMLDocument::GetRootNode() const
 {
    // Returns the root element node.
 
-   return new TXMLNode(xmlDocGetRootElement(fXMLDoc));
+   return fRootNode;
 }
 
 //______________________________________________________________________________

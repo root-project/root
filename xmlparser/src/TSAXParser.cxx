@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.3 2005/03/15 10:09:34 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.4 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -150,7 +150,7 @@ void TSAXParser::OnCharacters(const char *characters)
    // Emit a signal for OnCharacters, where characters are the characters
    // outside of tags.
 
-  Emit("OnCharacters(const char *)", characters);
+   Emit("OnCharacters(const char *)", characters);
 }
 
 //______________________________________________________________________________

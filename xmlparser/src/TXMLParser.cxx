@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.cxx,v 1.1 2005/03/14 15:33:43 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.cxx,v 1.2 2005/05/11 13:19:50 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -73,9 +73,8 @@ void TXMLParser::ReleaseUnderlying()
 
    if (fContext) {
       fContext->_private = 0;
-
-      xmlFreeParserCtxt(fContext);
-      fContext = 0;
+      xmlFreeParserCtxt(fContext);      
+      fContext = 0;      
    }
 }
 

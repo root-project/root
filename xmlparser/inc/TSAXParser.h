@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.3 2005/04/06 13:09:07 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.4 2005/05/08 13:55:19 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
 
    virtual void            ConnectToHandler(const char *handlerName, void *handler);
 
-   ClassDef(TSAXParser,0);
+   ClassDef(TSAXParser,0); // SAX Parser
 };
 
 #endif
