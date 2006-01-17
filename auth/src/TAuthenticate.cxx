@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.7 2005/10/14 10:58:38 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.8 2005/11/21 11:17:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -4094,7 +4094,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
+Int_t TAuthenticate::ReadRootAuthrc()
 {
    // Read authentication directives from $ROOTAUTHRC, $HOME/.rootauthrc or
    // <Root_etc_dir>/system.rootauthrc and create related THostAuth objects.
@@ -4430,173 +4430,7 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
    if (gDebug > 2)
       TAuthenticate::Show("P");
 
-   // If Proof Master scan also <proof.conf> alike files
-   if (proofconf)
-      TAuthenticate::ReadProofConf(proofconf);
-
    return authinfo->GetSize();
-}
-
-
-//______________________________________________________________________________
-void TAuthenticate::ReadProofConf(const char *conffile)
-{
-   // Collect information needed for authentication to slaves from
-   // $HOME/.proof.conf or <Root_Dir>/proof/etc/proof.conf
-   // Update or create THostAuth objects accordingly
-   // Add them to the proofauthinfo list.
-
-   if (gDebug > 2)
-      ::Info("ReadProofConf", "Enter ... (%s)", conffile);
-
-   // Get pointer to lists with authentication info
-   TList *authinfo = GetAuthInfo();
-
-   // Check authentication methods applicability
-   Int_t i = 0;
-   Bool_t authAvailable[kMAXSEC] = {0};
-   TString authDet[kMAXSEC];
-   for (; i < kMAXSEC; i++){
-      authAvailable[i] = kFALSE;
-      if (i == 0 && fgUser != "" && fgPasswd != "") {
-         authAvailable[i] = kTRUE;
-         authDet[i] = TString(Form("pt:0 ru:1 us:%s", fgUser.Data()));
-      } else {
-         authAvailable[i] = CheckProofAuth(i,authDet[i]);
-      }
-      if (gDebug > 2)
-         ::Info("ReadProofConf","meth:%d avail:%d det:%s",
-                i,authAvailable[i],authDet[i].Data());
-   }
-
-   // Check configuration file
-   Bool_t haveconf = kTRUE;
-   char fconf[256];
-   sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
-   if (gDebug > 2)
-      ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
-   if (gSystem->AccessPathName(fconf, kReadPermission)) {
-      if (gSystem->Getenv("ROOTCONFDIR"))
-         sprintf(fconf, "%s/proof/etc/%s",
-                 gSystem->Getenv("ROOTCONFDIR"), conffile);
-      if (gDebug > 2)
-         ::Info("ReadProofConf", "checking PROOF config file %s", fconf);
-      if (gSystem->AccessPathName(fconf, kReadPermission)) {
-         if (gDebug > 1)
-            ::Info("ReadProofConf", "no PROOF config file found");
-         haveconf = kFALSE;
-      }
-   } else {
-      if (gDebug > 2)
-         ::Info("ReadProofConf", "using PROOF config file: %s", fconf);
-   }
-
-   // Scan config file for authentication directives
-   if (haveconf) {
-
-      FILE *pconf;
-      if ((pconf = fopen(fconf, "r"))) {
-
-         // read the config file
-         char line[256];
-         while (fgets(line, sizeof(line), pconf)) {
-
-            // Skip comment lines
-            if (line[0] == '#')
-               continue;
-
-            // Skip lines not containing slave info
-            if (!strstr(line,"slave"))
-               continue;
-
-            // Get rid of end of line '\n', if there ...
-            if (line[strlen(line) - 1] == '\n')
-               line[strlen(line) - 1] = '\0';
-
-            // Now scan
-            char *tmp = new char[strlen(line)+1];
-            strcpy(tmp,line);
-            char *nxt = strtok(tmp," ");
-
-            // First should "slave"
-            if (strncmp(nxt,"slave",5))
-               continue;
-
-            // Save slave host name
-            TString slaveHost((const char *)strtok(0," "));
-
-            Int_t nm = 0, me[kMAXSEC] = {0};
-            TString det[kMAXSEC];
-            char *mth = strtok(0," ");
-            while (mth) {
-
-               // {port,perf,image} entries all have a '='
-               if (strncmp(mth,"=",1)) {
-
-                  Int_t met = -1;
-                  if (strlen(mth) > 1) {
-                     // Method passed as string: translate it to number
-                     met = GetAuthMethodIdx(mth);
-                     if (met == -1 && gDebug > 2)
-                        ::Info("ReadProofConf",
-                               "unrecognized method (%s): ", mth);
-                  } else {
-                     met = atoi(mth);
-                  }
-                  if (met > -1 && met < kMAXSEC) {
-                     if (authAvailable[met]) {
-                        det[nm] = authDet[met];
-                        me[nm++] = met;
-                     }
-                  }
-               }
-               // Get next
-               mth = strtok(0," ");
-            }
-            if (mth) delete [] mth;
-
-            // Check if a HostAuth object for this (host,user) pair already exists
-            TString slaveSrv(Form("%s:%d",slaveHost.Data(),TSocket::kPROOFD));
-            THostAuth *ha = TAuthenticate::GetHostAuth(slaveSrv,fgUser);
-
-            if (!ha || !strcmp(ha->GetHost(),"default")) {
-               if (ha) {
-                  // Got a default entry: create a new one from a copy
-                  THostAuth *han = new THostAuth(*ha);
-                  ha = han;
-                  ha->SetHost(slaveHost);
-                  ha->SetServer(TSocket::kPROOFD);
-                  ha->SetUser(fgUser);
-                  // Reset list of established sec context;
-                  TList *nl = new TList;
-                  ha->SetEstablished(nl);
-               } else
-                  // Create new one and add it to the list
-                  ha = new THostAuth(slaveHost,TSocket::kPROOFD,fgUser);
-
-               // Add UidGid if not already there
-               Int_t kLocalRfio = TAuthenticate::kRfio;
-               if (!ha->HasMethod(kLocalRfio))
-                  ha->AddMethod(kLocalRfio,authDet[kLocalRfio]);
-
-               // Add this ThostAuth to lists
-               authinfo->Add(ha);
-            }
-
-            // Reorder accordingly to new directives
-            Int_t i = nm;
-            for(; i > 0; i--)
-               ha->AddFirst(me[i-1],det[i-1]);
-
-            if (tmp) delete [] tmp;
-
-         } // fgets
-
-      } // fopen
-
-      // close file
-      fclose(pconf);
-   }
 }
 
 //______________________________________________________________________________
@@ -5233,7 +5067,7 @@ static Int_t SendHostAuth(TSocket *s)
 }
 
 //______________________________________________________________________________
-static Int_t RecvHostAuth(TSocket *s, Option_t *opt, const char *proofconf)
+static Int_t RecvHostAuth(TSocket *s, Option_t *opt)
 {
    // Receive from client/master directives for authentications, create
    // related THostAuth and add them to the TAuthenticate::ProofAuthInfo
@@ -5249,10 +5083,7 @@ static Int_t RecvHostAuth(TSocket *s, Option_t *opt, const char *proofconf)
    Bool_t master = !strncasecmp(opt,"M",1) ? kTRUE : kFALSE;
 
    // First read directives from <rootauthrc>, <proofconf> and alike files
-   if (master)
-      TAuthenticate::ReadRootAuthrc(proofconf);
-   else
-      TAuthenticate::ReadRootAuthrc();
+   TAuthenticate::ReadRootAuthrc();
 
    // Receive buffer
    Int_t kind;
@@ -5563,13 +5394,9 @@ Int_t OldProofServAuthSetup(TSocket *sock, Bool_t master, Int_t protocol,
 
    // Read user or system authentication directives and
    // receive auth info transmitted from the client
-   Int_t hostauthret;
-   if (master)
-      hostauthret = RecvHostAuth(sock, "M", conf);
-   else
-      hostauthret = RecvHostAuth(sock, "S", 0);
+   Int_t harc = master ? RecvHostAuth(sock, "M") : RecvHostAuth(sock, "S");
 
-   if (hostauthret < 0) {
+   if (harc < 0) {
       Error("OldProofServAuthSetup", "failed to receive HostAuth info");
       return -1;
    }

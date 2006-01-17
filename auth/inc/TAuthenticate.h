@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.h,v 1.1 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.h,v 1.2 2005/10/14 10:58:38 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -195,8 +195,7 @@ public:
    static void        MergeHostAuthList(TList *Std, TList *New, Option_t *Opt = "");
    static char       *PromptPasswd(const char *prompt = "Password: ");
    static char       *PromptUser(const char *remote);
-   static void        ReadProofConf(const char *proofconf);
-   static Int_t       ReadRootAuthrc(const char *proofconf = 0);
+   static Int_t       ReadRootAuthrc();
    static void        RemoveHostAuth(THostAuth *ha, Option_t *opt = "");
    static Int_t       SecureRecv(TSocket *Socket, Int_t dec,
                                  Int_t KeyType, char **Out);
