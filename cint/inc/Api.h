@@ -204,7 +204,7 @@ public:
 private:
    G__ShadowMaker(const G__ShadowMaker&); // intentionally not implemented
    G__ShadowMaker& operator =(const G__ShadowMaker&); // intentionally not implemented
-   void G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::string &fullname);
+   void GetFullShadowNameRecurse(G__ClassInfo &cl, std::string &fullname);
 
    std::ostream& fOut; // where to write to
    std::string fNSPrefix; // shadow classes are in this namespace's namespace "Shadow"
