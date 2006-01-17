@@ -537,7 +537,10 @@ class genDictionary(object) :
         for b in bases :
           if b.get('virtual','') == '1' : acc = 'virtual ' + b['access']
           else                          : acc = b['access']
-          c += indent + '%s %s' % ( acc , self.genTypeName(b['type'],colon=True) )
+	  bname = self.genTypeName(b['type'],colon=True)
+	  if self.xref[b['type']]['attrs'].get('access') in ('private','protected'):
+            bname = string.translate(str(bname),self.transtable)
+          c += indent + '%s %s' % ( acc , bname )
           if b is not bases[-1] : c += ', ' 
         c += indent + ' {\n' + indent +'  public:\n'
       c += indent + '  %s();\n' % (clt)
