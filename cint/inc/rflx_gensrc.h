@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.h,v 1.5 2006/01/09 15:00:52 axel Exp $
+//$Id: rflx_gensrc.h,v 1.3 2006/01/11 07:18:12 pcanal Exp $
 
 #ifndef RFLX_GENSRC_H
 #define RFLX_GENSRC_H 1
@@ -52,6 +52,7 @@ class rflx_gensrc {
   void gen_stubfuncdecl_params(std::ostringstream & s, G__MethodInfo & fm, int argNum = -1);
   void gen_stubfuncdecl_trailer(std::ostringstream & s, G__MethodInfo & fm, int argNum = -1);
   void gen_typedefdicts();
+  void gen_enumdicts();
   void gen_file();
 
  private:

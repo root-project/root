@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.10 2006/01/10 19:32:38 axel Exp $
+//$Id: rflx_gensrc.cxx,v 1.7 2006/01/11 07:18:12 pcanal Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -47,6 +47,8 @@ void rflx_gensrc::gen_file()
 
    gen_typedefdicts();
 
+   gen_enumdicts();
+
    gen_typedicts();
 
    std::ofstream s(m_dictfile.c_str());
@@ -88,14 +90,6 @@ std::string rflx_gensrc::gen_type(G__TypeInfo & tn)
       m_typeMap[tName] = tvNumStr;
    ++m_typeNum;
 
-   G__TypedefInfo tdi(tn.Typenum());
-   if (tdi.IsValid()) {
-   }
-
-   if (tn.Property() & G__BIT_ISTYPEDEF) {
-      //  m_typeVec.push_back("Type " + tvNumStr + " = TypedefTypeBuilder(\"" + tName + "\", TypeDistiller< " + tName + " >::Get());");
-   }
-
    if (tn.Isconst()) {
       if (tName.rfind("const"))
          tName = tName.substr(0, tName.length() - 5);
@@ -112,6 +106,16 @@ std::string rflx_gensrc::gen_type(G__TypeInfo & tn)
       G__TypeInfo ti(tName.substr(0, tName.rfind("*")).c_str());
       m_typeVec.push_back("Type " + tvNumStr + " = PointerBuilder(" +
                           gen_type(ti) + ");");
+   } else if (tn.Property() & G__BIT_ISTYPEDEF && tn.Type() != 'u') {
+      G__TypedefInfo tdi(tn.Typenum());
+      if (!tdi.IsValid())
+         m_typeVec.push_back("Type " + tvNumStr + " = TypeBuilder(\"" +
+                             tName + "\");");
+      else {
+         G__TypeInfo clOrig(tdi.TrueName());
+         m_typeVec.push_back("Type " + tvNumStr + " = TypedefTypeBuilder(\"" + tName 
+            + "\", " + gen_type(clOrig) + ");");
+      }
    } else {
       m_typeVec.push_back("Type " + tvNumStr + " = TypeBuilder(\"" +
                           tName + "\");");
@@ -253,10 +257,7 @@ void rflx_gensrc::gen_typedefdicts()
 
          // G__type2string(td.Type(),td.Tagnum(),td.Typenum(),td.Reftype(),td.Isconst())
 
-         std::string tName = "";
-         if (td.Tagnum() != -1 && td.Linkage() == G__CPPLINK)
-            tName = G__struct.name[td.Tagnum()];
-
+         std::string tName = td.TrueName();
          if (tName.length()) {
             std::string tdName = td.Name();
             if (m_typeMap.find(tdName) == m_typeMap.end()) {
@@ -273,6 +274,66 @@ void rflx_gensrc::gen_typedefdicts()
          }
       }
    }
+}
+
+
+
+// ______________________________________________________________________________
+/*
+*
+*/
+void rflx_gensrc::gen_enumdicts()
+{
+   ind.clear();
+   std::string cldname =
+       "__reflex__enums__dict__" +
+       rflx_tools::escape_class_name(m_sourcefile);
+   m_fv << ind() << "//" << std::endl;
+   m_fv << ind() <<
+       "// ---------- Dictionary for enums ----------" << std::
+       endl;
+   m_fv << ind() << "//" << std::endl;
+   m_fv << ind() << "class " << cldname << " {" << std::endl;
+   m_fv << ind() << "public:" << std::endl;
+   ++ind;
+   m_fv << ind() << cldname << "();" << std::endl;
+   --ind;
+   m_fv << ind() << "};" << std::endl << std::endl;
+   m_fv << ind() << cldname << "::" << cldname << "() {" << std::endl;
+   ++ind;
+
+   G__ClassInfo en;
+   while (en.Next()) {
+      if (!(en.Property() & G__BIT_ISENUM) 
+         || en.Linkage() != G__CPPLINK 
+         || en.Name()[0] == '$')  continue;
+
+      std::string fqiParent;
+      G__ClassInfo parent = en.EnclosingClass();
+      while (parent.IsValid()) {
+         fqiParent.insert(0,"::");
+         fqiParent.insert(0,parent.Name());
+         parent = parent.EnclosingClass();
+      }
+      m_fv << ind() << "EnumBuilder(\"" << fqiParent << en.Name() 
+           << "\", typeid(" << fqiParent << en.Name() << "))";
+
+      G__ClassInfo enc=en.EnclosingClass();
+      G__DataMemberInfo dmEnc(enc);
+      G__DataMemberInfo dmGlob;
+      G__DataMemberInfo *dm = &dmGlob;
+      if (enc.IsValid()) dm = &dmEnc;
+      while (dm->Next())
+         if (dm->Type() && dm->Type()->Tagnum() == en.Tagnum() 
+            && (dm->Property() & (G__BIT_ISENUM | G__BIT_ISSTATIC | G__BIT_ISCONSTANT))) {
+            G__TypeInfo* type=dm->Type();
+            m_fv << std::endl << ind() << ".AddItem(\"" << dm->Name() << "\" , "
+               << fqiParent << dm->Name() << ")";
+         }
+      m_fv << ";" << std::endl;
+   }
+   --ind;
+   m_fv << ind() << "};" << std::endl << std::endl;
 }
 
 
@@ -402,10 +463,17 @@ void rflx_gensrc::gen_baseclassdefs(G__ClassInfo & ci)
    // Q: more bits set in Property(), what do they mean? e.g. 0, 17
    G__BaseClassInfo bc(ci);
    while (bc.Next()) {
+      long bcProp = bc.Property();
+      if (  (bcProp & G__BIT_ISVIRTUALBASE) &&
+           !(bcProp & G__BIT_ISDIRECTINHERIT)) {
+         // CINT duplicates the remote virtual base class in the list scanned
+         // by G__BaseClassInfo, we need to skip them.
+         continue;
+      }
+
       G__TypeInfo bct(bc.Name());
       std::string dict_typealias=gen_type(bct);
-      std::string bc_modifiers = "";
-      long bcProp = bc.Property();
+      std::string bc_modifiers;
       if (bcProp & (1 << 9))
          bc_modifiers += "PUBLIC";
       else if (bcProp & (1 << 10))
@@ -431,7 +499,7 @@ void rflx_gensrc::gen_datamemberdefs(G__ClassInfo & ci)
    while (dm.Next()) {
       if (strcmp("G__virtualinfo", dm.Name()) != 0
           && !(dm.Property() & G__BIT_ISSTATIC)) {
-         std::string dm_modifiers = "";
+         std::string dm_modifiers;
          long dmProp = dm.Property();
          if (dmProp & (1 << 9))
             dm_modifiers += "PUBLIC";
@@ -707,10 +775,23 @@ void rflx_gensrc::gen_stubfuncdecl_params(std::ostringstream & s,
       // from second line on
       if (maNum)
          s << "," << std::endl << ind();
-      std::string pStr = "";
-      std::string cvStr = "";
-      // arg type IS NOT a pointer
-      if (!(ma.Property() & G__BIT_ISPOINTER))
+      std::string pStr;
+      std::string cvStr;
+      std::string arrStr;
+      const char* posArr=0;
+      if (ma.Name() && (posArr = strchr(ma.Name(),'['))) {
+         // first array dim is "*"
+         arrStr = "*";
+         posArr = strchr(posArr+1, '[');
+         if (posArr) {
+            // multi-dim array, format as (*)[2nd][3rd][..]
+            arrStr="(*)";
+            arrStr+=posArr;
+         }
+         posArr="a"; // for pStr
+      }
+      // arg type IS NOT a pointer nor an array
+      if (!(ma.Property() & G__BIT_ISPOINTER) && !posArr) 
          pStr = "*";
       if ((ma.Property() & G__BIT_ISREFERENCE))
          pStr = "*";
@@ -719,15 +800,16 @@ void rflx_gensrc::gen_stubfuncdecl_params(std::ostringstream & s,
       s << pStr << "(" << cvStr;
       if (ma.Type()->Name() && strstr(ma.Type()->Name(),"(*)"))
          // func ptr
-         s << ma.Type()->Name();
+         s << ma.Type()->Name() << arrStr;
       else if (! ma.Type()->Fullname() &&
-         !strcmp(ma.Type()->TrueName(),"void*") && 
+         strstr(ma.Type()->TrueName(),"void*") && 
          strcmp(ma.Type()->Name(),"void*")
          || !strcmp(ma.Type()->TrueName(),"G__p2memfunc"))
+      //else if (ma.Type()->Type()=='a')
          // func ptr with typedef
-         s << ma.Type()->Name() << pStr;
+         s << rflx_tools::stub_type_name(ma.Type()->Name()) << arrStr << pStr;
       else
-         s << rflx_tools::stub_type_name(ma.Type()->TrueName()) << pStr;
+         s << rflx_tools::stub_type_name(ma.Type()->TrueName()) << arrStr << pStr;
       s << ")arg[" << maNum << "]";
       ++maNum;
    }
@@ -840,17 +922,15 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
                continue;
             }
          } else {
-            if (nArgs > 0) {
-               s << ind() << "void* " << cldname << "::" << "method_" <<
-                   ++mNum <<
-                   "(void* o, const std::vector<void*>& arg, void*) {" <<
+            s << ind() << "void* " << cldname << "::method_" <<
+               ++mNum << "(void*";
+            if (!(fm.Property() & G__BIT_ISSTATIC)) s << " o";
+            if (nArgs > 0) 
+               s << ", const std::vector<void*>& arg, void*) {" <<
                    std::endl;
-            } else {
-               s << ind() << "void* " << cldname << "::" << "method_" <<
-                   ++mNum <<
-                   "(void* o, const std::vector<void*>& , void*) {" <<
+            else
+               s << ", const std::vector<void*>& , void*) {" <<
                    std::endl;
-            }
             ++ind;
          }
 
@@ -870,6 +950,8 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
                   moffset += 21 + fclname.length() + ind.get();
                } else {
                   std::string objcaststr = "((::" + fclname + "*)o)->";
+                  if (fm.Property() & G__BIT_ISSTATIC)
+                     objcaststr = fclname + "::";
                   moffset = gen_stubfuncdecl_header(s, fm, objcaststr, j);
                }
                // handle function parameters
@@ -897,6 +979,8 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
                moffset += 21 + fclname.length() + ind.get();
             } else {
                std::string objcaststr = "((::" + fclname + "*)o)->";
+               if (fm.Property() & G__BIT_ISSTATIC)
+                  objcaststr = fclname + "::";
                moffset = gen_stubfuncdecl_header(s, fm, objcaststr);
             }
             // handle function parameters
@@ -1009,11 +1093,9 @@ void rflx_gensrc::gen_freefundicts()
 
       std::string fmname = mi.Name();
       G__ifunc_table *ifunc = (G__ifunc_table *) mi.Handle();
-      G__ClassInfo cl(mi.ifunc()->tagnum);
 
-      if ((fmname.length()) && (ifunc->globalcomp[mi.Index()])
-          && cl.Linkage() == G__CPPLINK && (!(cl.Property() & G__BIT_ISCLASS))) {
-
+      if ((fmname.length()) 
+         && ifunc->globalcomp[mi.Index()] == G__CPPLINK) {
          // stub function declarations
          ++ind;
          stub_decl << ind() << "static void * freefunction_" << mNum <<
@@ -1157,17 +1239,62 @@ void rflx_gensrc::gen_freevardicts()
    m_fv << ind() << "};" << std::endl << std::endl;
    m_fv << ind() << cldname << "::" << cldname << "() {" << std::endl;
    ++ind;
+   G__DataMemberInfo var;
+   std::list<G__DataMemberInfo> cppMacros;
+
+   while (var.Next()) {
+      if (var.MemberOf() && var.MemberOf()->IsValid())
+         continue;
+
+      G__var_array* varArr = (G__var_array*)var.Handle();
+      if (varArr->globalcomp[var.Index()] != G__CPPLINK) continue;
+
+      if (var.Type() && strchr("pT", var.Type()->Type())) {
+         // CPP macro
+         cppMacros.push_back(var);
+         continue;
+      }
+
+      long dmProp = var.Property();
+      if (dmProp & (G__BIT_ISENUM | G__BIT_ISSTATIC | G__BIT_ISCONSTANT) && var.Type()) {
+         // enum const
+         gen_type(*var.Type());
+         continue;
+      }
+
+      std::string modifiers;
+      if (dmProp & G__BIT_ISSTATIC)
+         modifiers += "STATIC";
+
+      if (!modifiers.empty()) modifiers.insert(0, ", ");
+      m_fv << ind() << "VariableBuilder( \"" << var.Name() << "\", "
+           << gen_type(*var.Type()) << ", (size_t)&" << var.Name() << modifiers << " );" << std::endl;
+   }
+
+   // setup CPP macros
+   if (cppMacros.size()) {
+      m_fv << ind() << "Scope cppMacroEnum = Scope::ByName(\"$CPP_MACROS\");" << std::endl
+         << ind() << "Type typeCPPMacro = Type::ByName(\"$CPPMACRO\");" << std::endl
+         << ind() << "if (!cppMacroEnum || !cppMacroEnum.IsEnum()) {" << std::endl
+         << ind() << "  typedef void CPP_MACRO_DUMMY_TYPE;" << std::endl 
+         << ind() << "  EnumBuilder(\"$CPP_MACROS\", typeid(CPP_MACRO_DUMMY_TYPE));" << std::endl
+         << ind() << "  cppMacroEnum = Type::ByName(\"$CPP_MACROS\");" << std::endl
+         << ind() << "  typeCPPMacro = TypeBuilder(\"$CPPMACRO\");" << std::endl
+         << ind() << "}" << std::endl;
+      for (std::list<G__DataMemberInfo>::iterator iCPP=cppMacros.begin();
+         iCPP!=cppMacros.end(); ++iCPP) {
+            m_fv << ind() << "cppMacroEnum.AddDataMember(\"" << iCPP->Name()
+               << "\", typeCPPMacro, (size_t)\"";
+            G__var_array* va = (G__var_array*)iCPP->Handle();
+            long index=iCPP->Index();
+            if (va->type[index] == 'p') m_fv << *(int*)va->p[index];
+            else m_fv << *(const char**)va->p[index];
+            m_fv << "\", ARTIFICIAL);" << std::endl;
+      }
+   }
+
    --ind;
    m_fv << ind() << "}" << std::endl << std::endl;
-
-   m_fv << ind() << "//" << std::endl;
-   m_fv << ind() <<
-       "// ---------- Stub functions for free variables ----------" <<
-       std::endl;
-   m_fv << ind() << "//" << std::endl;
-
-   m_fv << ind() << std::endl;
-
 }
 
 // ______________________________________________________________________________
@@ -1190,10 +1317,12 @@ void rflx_gensrc::gen_dictinstances()
    m_di << "#if defined (CINTEX_DEBUG)" << std::endl;
    m_di << ind() << "ROOT::Cintex::Cintex::SetDebug(1);" << std::endl;
    m_di << "#endif" << std::endl;
-   m_di << ind() << "__reflex__free__functions__dict__" << rflx_tools::
-       escape_class_name(m_sourcefile) << "();" << std::endl;
-   m_di << ind() << "__reflex__free__variables__dict__" << rflx_tools::
-       escape_class_name(m_sourcefile) << "();" << std::endl;
+   m_di << ind() << "__reflex__free__functions__dict__" 
+        << rflx_tools::escape_class_name(m_sourcefile) << "();" << std::endl;
+   m_di << ind() << "__reflex__free__variables__dict__" 
+        << rflx_tools::escape_class_name(m_sourcefile) << "();" << std::endl;
+   m_di << ind() << "__reflex__enums__dict__" 
+        << rflx_tools::escape_class_name(m_sourcefile) << "();" << std::endl;
    for (std::vector < std::string >::const_iterator it =
         m_classNames.begin(); it != m_classNames.end(); ++it) {
       m_di << ind() << "__" << rflx_tools::

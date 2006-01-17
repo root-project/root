@@ -1,4 +1,4 @@
-//$Id: Shadow.cxx,v 1.7 2006/01/10 23:39:37 axel Exp $
+//$Id: Shadow.cxx,v 1.1 2006/01/11 07:19:18 pcanal Exp $
 
 #include "Api.h"
 #include <ostream>
@@ -490,9 +490,10 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
 
             std::string typenameOriginal;
             if (tdContained.Fullname()) {
-               typenameOriginal=tdContained.Fullname();
+               typenameOriginal=tdContained.TrueName();
                // don't generate dummy typedefs for template default params
-               if (typedefedTypename.find('<')!=std::string::npos)
+               if (!typedefedTypename.empty()
+                   && typedefedTypename[typedefedTypename.length()-1]=='>')
                  continue;
                // Cint doesn't put the FQI as the template arg's type,
                // so they end up in the shadow namespace, as in
@@ -511,18 +512,30 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                         typenameOriginal.c_str());
                      break;
                   }
+                  std::string::size_type posRef=std::string::npos;
+                  while ((posRef = arg.find_first_of(" *&"))!=std::string::npos)
+                     arg.erase(posRef, 1);
                   // if the type is not defined (i.e. it's fundamental)
                   // and if we don't have a real shadoew for it, use the
                   // global scope's type.
                   int tagname = G__defined_tagname(arg.c_str(), 1);
-                  if (tagname != -1) // FIXME! && fCacheNeedShadow[tagname] != 1)
-                     // need space before "::" to prevent "<:"
-                     typenameOriginal.insert(posTemplArg+1, " ::");
-
+                  if (tagname != -1) {
+                     G__ClassInfo ciArg(tagname);
+                     if (fCacheNeedShadow[tagname] != 1 
+                        && ((ciArg.Property() & G__BIT_ISCLASS)
+                        || (ciArg.Property() & G__BIT_ISSTRUCT))) {
+                        // replace "pair" by "std::pair"
+                        if (arg.find("pair<")==0)
+                           arg.insert(0, "std::");
+                        // we don't have a (full) shadow for this guy
+                        // need space before "::" to prevent "<:"
+                        typenameOriginal.insert(posTemplArg+1, " ::");
+                     }
+                  }
                   posTemplArg = typenameOriginal.find_first_of("<,", posTemplArg+1);
                }
 
-               if (IsSTLCont(tdContained.Fullname())) 
+               if (IsSTLCont(tdContained.Fullname()) || IsStdPair(tdContained)) 
                   nsprefixOriginal="::std::";
             }
 
@@ -558,7 +571,6 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
          // Write data members
          G__DataMemberInfo d(cl);
          while (d.Next()) {
-
             // fprintf(stderr,"%s %s %ld\n",d.Type()->Name(),d.Name(),d.Property());
 
             if ((d.Type()->Property() & G__BIT_ISCONSTANT) 
@@ -586,33 +598,41 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   if (!strcmp(d.Type()->Name(),"time_t"))
                      type_name = "time_t";
                   // for p2memfunc, take original type instead of Cint's para-type
-                  if (type_name == "G__p2memfunc")
-                     type_name = d.Type()->Name();
+                  if (d.Type()->Type()=='a' && d.Type()->Name())
+                     if (d.Type()->TrueName() 
+                        && !strcmp(d.Type()->TrueName(),"G__p2memfunc")) {
+                        fOut << indent << "         " 
+                             << "void (" << cl.Name() << "::*" << d.Name() << ")()";
+                        type_name="";
+                     }
+                     else
+                        type_name = d.Type()->Name();
+                  if (!type_name.empty()) {
+                     // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
+                     const char* ulonglong_s = "unsigned long long";
+                     const char* longlong_s  = ulonglong_s+9;
+                     const unsigned int ulonglong_len = 18;
+                     const unsigned int longlong_len  = 9;
 
-                  // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
-                  const char* ulonglong_s = "unsigned long long";
-                  const char* longlong_s  = ulonglong_s+9;
-                  const unsigned int ulonglong_len = 18;
-                  const unsigned int longlong_len  = 9;
+                     int pos = 0;
+                     while( (pos = type_name.find(ulonglong_s,pos) ) >=0 ) {
+                        type_name.replace(pos, ulonglong_len, "G__uint64");
+                     }
+                     pos = 0;
+                     while( (pos = type_name.find(longlong_s,pos) ) >=0 ) {
+                        type_name.replace(pos, longlong_len, "G__int64");
+                     }         
 
-                  int pos = 0;
-                  while( (pos = type_name.find(ulonglong_s,pos) ) >=0 ) {
-                     type_name.replace(pos, ulonglong_len, "G__uint64");
+                     if (type_name[type_name.length()-1]=='&') {
+                        type_name[type_name.length()-1]='*';
+                     }
+                     // if type is contained in cl, remove sope (so it points to nested shadow)
+                     if (!strncmp(type_name.c_str(), fullname.c_str(), fullname.length()) 
+                        && type_name[fullname.length()]==':')
+                        type_name.erase(0, fullname.length()+2);
+
+                     fOut << indent << "         " << type_name << " " << d.Name();
                   }
-                  pos = 0;
-                  while( (pos = type_name.find(longlong_s,pos) ) >=0 ) {
-                     type_name.replace(pos, longlong_len, "G__int64");
-                  }         
-
-                  if (type_name[type_name.length()-1]=='&') {
-                     type_name[type_name.length()-1]='*';
-                  }
-                  // if type is contained in cl, remove sope (so it points to nested shadow)
-                  if (!strncmp(type_name.c_str(), fullname.c_str(), fullname.length()) 
-                     && type_name[fullname.length()]==':')
-                     type_name.erase(0, fullname.length()+2);
-
-                  fOut << indent << "         " << type_name << " " << d.Name();
                }
             }
 
