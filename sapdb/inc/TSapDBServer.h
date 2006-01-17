@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:$:$Id:$
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBServer.h,v 1.1 2001/08/24 16:41:19 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -19,6 +19,12 @@
 #if !defined(__CINT__)
 #include <sys/time.h>
 #include <WINDOWS.H>
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 #include <sql.h>
 #include <sqlext.h>
 #else
