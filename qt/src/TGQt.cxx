@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.25 2005/08/17 20:08:37 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.26 2005/12/11 10:51:39 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -628,7 +628,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.111 2005/12/09 04:29:43 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.26 2005/12/11 10:51:39 rdm Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1532,20 +1532,18 @@ Int_t  TGQt::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/, Int_t &/*x*/, Int_t 
    // deprecated
    return 0;
 }
-#ifdef __APPLE__
 //______________________________________________________________________________
   class requestString : public QDialog {
   public:
     QString   fText;
     QLineEdit fEdit;
-    requestString(const char *text="") : QDialog(0,0,TRUE,Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop), fText(text),fEdit(this)
+    requestString(const char *text="") : QDialog(0,0,TRUE,Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop | Qt::WType_Popup), fText(text),fEdit(this)
     {
        setBackgroundMode(Qt::NoBackground);
        connect(&fEdit,SIGNAL( returnPressed () ), this, SLOT( accept() ));
     }
     ~requestString(){;}
   };
-#endif
 //______________________________________________________________________________
 Int_t  TGQt::RequestString(int x, int y, char *text)
 {
@@ -1564,19 +1562,6 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
 //*-*    1     -  input was Ok
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-#ifndef  __APPLE__
-  class requestString : public QDialog {
-  public:
-    QString   fText;
-    QLineEdit fEdit;
-    requestString(const char *text="") : QDialog(0,0,TRUE,Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop), fText(text),fEdit(this)
-    {
-       setBackgroundMode(Qt::NoBackground);
-       connect(&fEdit,SIGNAL( returnPressed () ), this, SLOT( accept() ));
-    }
-    ~requestString(){;}
-  };
-#endif
   int  res = QDialog::Rejected;
   if (fSelectedWindow->devType() == QInternal::Widget ) {
      TQtWidget *w = (TQtWidget *)fSelectedWindow;
