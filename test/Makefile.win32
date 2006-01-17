@@ -92,13 +92,17 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
+STRESSSPO     = stress.$(ObjSuf)
+STRESSSPS     = stress.$(SrcSuf)
+STRESSSP      = stress$(ExeSuf)
+
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
-                $(HELLOO) $(ACLOCKO) $(STRESSO) $(EVENTSO) $(TCOLLBMO)
+                $(HELLOO) $(ACLOCKO) $(STRESSO) $(STRESSSPO) $(EVENTSO) $(TCOLLBMO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS)
+                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(STRESSP)
 
 all:            $(PROGRAMS)
 

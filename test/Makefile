@@ -101,6 +101,10 @@ STRESSGEOMO   = stressgeom.$(ObjSuf)
 STRESSGEOMS   = stressgeom.$(SrcSuf)
 STRESSGEOM    = stressgeom$(ExeSuf)
 
+STRESSSPO     = stressSpectrum.$(ObjSuf)
+STRESSSPS     = stressSpectrum.$(SrcSuf)
+STRESSSP      = stressSpectrum$(ExeSuf)
+
 TBENCHO       = TBench.$(ObjSuf) TBenchDict.$(ObjSuf)
 TBENCHS       = TBench.$(SrcSuf) TBenchDict.$(SrcSuf)
 TBENCHSO      = TBench.$(DllSuf)
@@ -124,14 +128,14 @@ THREADS       = threads$(ExeSuf)
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO)  $(TESTBITSO) \
+                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO)  $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
                 $(STRESSGEOM) $(STRESSL) $(TESTBITS) $(CTORTURE) $(QPRANDOM) \
-                $(THREADS) $(STRESSVEC)
+                $(THREADS) $(STRESSSP) $(STRESSVEC)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -220,6 +224,10 @@ $(VLAZY):       $(VLAZYO)
 		@echo "$@ done"
 
 $(STRESSL):     $(STRESSLO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(STRESSSP):    $(STRESSSPO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
