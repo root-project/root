@@ -125,7 +125,6 @@ void stressSpectrum(Int_t ntimes=100) {
    TH1F *hgood  = new TH1F("hgood", "% good peaks",100,0,100);
    TH1F *hghost = new TH1F("hghost","% ghost peaks",100,0,100);
    Int_t nfound,ngood,nghost;
-   Double_t norm;
    for (Int_t i=0;i<ntimes;i++) {
       findPeaks(pmin,pmax,nfound,ngood,nghost);
       hpeaks->Fill(npeaks);
