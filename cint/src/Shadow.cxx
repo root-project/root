@@ -1,4 +1,4 @@
-//$Id: Shadow.cxx,v 1.1 2006/01/11 07:19:18 pcanal Exp $
+//$Id: Shadow.cxx,v 1.2 2006/01/17 12:12:04 brun Exp $
 
 #include "Api.h"
 #include <ostream>
@@ -506,8 +506,11 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                while (posTemplArg != std::string::npos) {
                   std::string arg = typenameOriginal.substr(posTemplArg+1);
                   size_t posArgEnd = arg.find_first_of("<,>");
-                  if (posArgEnd != std::string::npos) arg.erase(posArgEnd);
-                  else { 
+                  char endChar=0;
+                  if (posArgEnd != std::string::npos) {
+                     endChar = arg[posArgEnd];
+                     arg.erase(posArgEnd);
+                  } else { 
                      printf("WARNING: error extracting template aruments for %s!", 
                         typenameOriginal.c_str());
                      break;
@@ -521,12 +524,12 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   int tagname = G__defined_tagname(arg.c_str(), 1);
                   if (tagname != -1) {
                      G__ClassInfo ciArg(tagname);
-                     if (fCacheNeedShadow[tagname] != 1 
-                        && ((ciArg.Property() & G__BIT_ISCLASS)
-                        || (ciArg.Property() & G__BIT_ISSTRUCT))) {
+                     if (endChar == '<' 
+                         || fCacheNeedShadow[tagname] != 1 
+                         && ((ciArg.Property() & G__BIT_ISCLASS)
+                             || (ciArg.Property() & G__BIT_ISSTRUCT))) {
                         // replace "pair" by "std::pair"
-                        if (arg.find("pair<")==0)
-                           arg.insert(0, "std::");
+                        if (arg == "pair") arg.insert(0, "std::");
                         // we don't have a (full) shadow for this guy
                         // need space before "::" to prevent "<:"
                         typenameOriginal.insert(posTemplArg+1, " ::");
