@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.19 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.20 2005/10/04 16:13:21 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -288,6 +288,7 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
 {
    fTreeName = dset->GetObjName();
    fTree = 0;
+   fTreeCache = 0;
 }
 
 //______________________________________________________________________________
@@ -300,9 +301,10 @@ TEventIterTree::~TEventIterTree()
 void TEventIterTree::ReleaseAllTrees() {
    // release all acquired trees.
    for (std::list<TTree*>::iterator i = fAcquiredTrees.begin(); i != fAcquiredTrees.end(); ++i) {
-      fTreeCache.Release(*i);
+      fTreeCache->Release(*i);
    }
    fAcquiredTrees.clear();
+   SafeDelete(fTreeCache);
 }
 
 //______________________________________________________________________________
@@ -311,8 +313,11 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    // Create a Tree for the main TDSetElement and for all the friends.
    // Returns the main tree or 0 in case of an error.
 
-   TTree* main = fTreeCache.Acquire(elem->GetFileName(),
-                                  elem->GetDirectory(), elem->GetObjName());
+   if (!fTreeCache)
+      fTreeCache = new TTreeCache;
+
+   TTree* main = fTreeCache->Acquire(elem->GetFileName(),
+                                     elem->GetDirectory(), elem->GetObjName());
    if (!main)
       return 0;
    fAcquiredTrees.push_front(main);
@@ -320,8 +325,9 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    TDSetElement::FriendsList_t* friends = elem->GetListOfFriends();
    for (TDSetElement::FriendsList_t::iterator i = friends->begin();
                 i != friends->end(); ++i) {
-      TTree* friendTree = fTreeCache.Acquire(i->first->GetFileName(),
-                                  i->first->GetDirectory(), i->first->GetObjName());
+      TTree* friendTree = fTreeCache->Acquire(i->first->GetFileName(),
+                                              i->first->GetDirectory(),
+                                              i->first->GetObjName());
       if (friendTree) {
          fAcquiredTrees.push_front(friendTree);
          main->AddFriend(friendTree, i->second);

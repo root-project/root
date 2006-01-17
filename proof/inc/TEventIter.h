@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.11 2005/09/27 13:11:08 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.12 2005/10/04 16:13:21 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -330,9 +330,9 @@ public:
    };
 
 private:
-   TString  fTreeName;  // name of the tree object to iterate over
-   TTree   *fTree;      // tree we are iterating over
-   TTreeCache fTreeCache;   // tree cache
+   TString     fTreeName;    // name of the tree object to iterate over
+   TTree      *fTree;        // tree we are iterating over
+   TTreeCache *fTreeCache;   // tree cache
    std::list<TTree*> fAcquiredTrees;   // a list of acquired trees.
 
    TTree* GetTrees(TDSetElement *elem);
