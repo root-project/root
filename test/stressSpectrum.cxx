@@ -11,7 +11,8 @@
 // To run in batch, do
 //   stressSpectrum        : run 100 experiments with graphics (default)
 //   stressSpectrum 1000   : run 1000 experiments with graphics
-//   stressSpectrum -b 100 : run 100 experiments in batch mode
+//   stressSpectrum -b 200 : run 200 experiments in batch mode
+//   stressSpectrum -b     : run 100 experiments in batch mode
 //
 // To run interactively, do
 // root -b
@@ -34,20 +35,22 @@
 //****************************************************************************
 //*  Starting  stress S P E C T R U M                                        *
 //****************************************************************************
-//Peak1 ; found = 64.31/ 68.94, good = 67.26/ 67.11, ghost = 6.79/ 8.56,--- OK
+//Peak1 : found = 62.52/ 68.94, good = 66.64/ 67.11, ghost = 6.52/ 8.56,--- OK
+//Peak2 : found =173/300, good =173, ghost =7,----------------------------- OK
 //****************************************************************************
-//stressSpectrum: Real Time =  19.37 seconds Cpu Time =  19.37 seconds
+//stressSpectrum: Real Time =  19.86 seconds Cpu Time =  19.04 seconds
 //****************************************************************************
-//*  ROOTMARKS = 413.1   *  Root5.09/01   20051216/1229//Peak1 ; found = 34.22/ 68.94, good = 69.20/ 67.11, ghost =10.60/ 8.56,--- OK
+//*  ROOTMARKS = 810.9   *  Root5.09/01   20051216/1229
 //****************************************************************************
 
 #include "TApplication.h"
 #include "TBenchmark.h"
 #include "TCanvas.h"
-#include "TH1.h"
-#include "TF1.h"
+#include "TH2.h"
+#include "TF2.h"
 #include "TRandom.h"
 #include "TSpectrum.h"
+#include "TSpectrum2.h"
 #include "TStyle.h"
 #include "Riostream.h"
    
@@ -59,6 +62,18 @@ Double_t fpeaks(Double_t *x, Double_t *par) {
       Double_t mean  = par[3*p+3];
       Double_t sigma = par[3*p+4];
       result += norm*TMath::Gaus(x[0],mean,sigma);
+   }
+   return result;
+}
+Double_t fpeaks2(Double_t *x, Double_t *par) {
+   Double_t result = 0.1;
+   for (Int_t p=0;p<npeaks;p++) {
+      Double_t norm   = par[5*p+0];
+      Double_t mean1  = par[5*p+1];
+      Double_t sigma1 = par[5*p+2];
+      Double_t mean2  = par[5*p+3];
+      Double_t sigma2 = par[5*p+4];
+      result += norm*TMath::Gaus(x[0],mean1,sigma1)*TMath::Gaus(x[1],mean2,sigma2);
    }
    return result;
 }
@@ -106,15 +121,8 @@ void findPeaks(Int_t pmin, Int_t pmax, Int_t &nfound, Int_t &ngood, Int_t &nghos
    delete h;
    delete s;
 }
-#ifndef __CINT__
-void stressSpectrum(Int_t ntimes) {
-#else
-void stressSpectrum(Int_t ntimes=100) {
-#endif
-   cout << "****************************************************************************" <<endl;
-   cout << "*  Starting  stress S P E C T R U M                                        *" <<endl;
-   cout << "****************************************************************************" <<endl;
-   gBenchmark->Start("stressSpectrum");
+
+void stress1(Int_t ntimes) {
    Int_t pmin = 5;
    Int_t pmax = 55;
    TCanvas *c1 = new TCanvas("c1","Spectrum results",10,10,800,800);
@@ -151,21 +159,105 @@ void stressSpectrum(Int_t ntimes=100) {
    Double_t p1ref = 68.94; //ref numbers obtained with ntimes=1000
    Double_t p2ref = 67.11;
    Double_t p3ref =  8.56;
-   Double_t reftime100 = 10.0; //pcbrun compiled
       
    //printf("p1=%g+-%g, p2=%g+-%g, p3=%g+-%g\n",p1,ep1,p2,ep2,p3,ep3);
 
-   gBenchmark->Stop ("stressSpectrum");
-   Double_t ct = gBenchmark->GetCpuTime("stressSpectrum");
-   const Double_t rootmarks = 800*reftime100*ntimes/(100*ct);
    char sok[20];
    if (TMath::Abs(p1ref-p1) < 2*ep1 && TMath::Abs(p2ref-p2) < 2*ep2  && TMath::Abs(p3ref-p3) < 2*ep3 ) {
       sprintf(sok,"OK");
    } else {
       sprintf(sok,"failed");
    }
-   printf("Peak1 ; found =%6.2f/%6.2f, good =%6.2f/%6.2f, ghost =%5.2f/%5.2f,--- %s\n",
+   printf("Peak1 : found =%6.2f/%6.2f, good =%6.2f/%6.2f, ghost =%5.2f/%5.2f,--- %s\n",
           p1,p1ref,p2,p2ref,p3,p3ref,sok);
+}
+void stress2(Int_t np2) {
+   npeaks = np2;
+   TRandom r;
+   Int_t nbinsx = 200;
+   Int_t nbinsy = 200;
+   Double_t xmin   = 0;
+   Double_t xmax   = (Double_t)nbinsx;
+   Double_t ymin   = 0;
+   Double_t ymax   = (Double_t)nbinsy;
+   Double_t dx = (xmax-xmin)/nbinsx;
+   Double_t dy = (ymax-ymin)/nbinsy;
+   TH2F *h2 = new TH2F("h2","test",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+   h2->SetStats(0);
+   //generate n peaks at random
+   Double_t par[3000];
+   Int_t p;
+   for (p=0;p<npeaks;p++) {
+      par[5*p+0] = r.Uniform(0.2,1);
+      par[5*p+1] = r.Uniform(xmin,xmax);
+      par[5*p+2] = r.Uniform(dx,5*dx);
+      par[5*p+3] = r.Uniform(ymin,ymax);
+      par[5*p+4] = r.Uniform(dy,5*dy);
+   }
+   TF2 *f2 = new TF2("f2",fpeaks2,xmin,xmax,ymin,ymax,5*npeaks);
+   f2->SetNpx(100);
+   f2->SetNpy(100);
+   f2->SetParameters(par);
+   h2->FillRandom("f2",500000);
+   //now the real stuff
+   TSpectrum2 *s = new TSpectrum2(2*npeaks);
+   Int_t nfound = s->Search(h2,2,"goff");
+   
+   //searching good and ghost peaks (approximation)
+   Int_t pf,ngood = 0;
+   Float_t *xpeaks = s->GetPositionX();
+   Float_t *ypeaks = s->GetPositionY();
+   for (p=0;p<npeaks;p++) {
+      for (Int_t pf=0;pf<nfound;pf++) {
+         Double_t diffx = TMath::Abs(xpeaks[pf] - par[5*p+1]);
+         Double_t diffy = TMath::Abs(ypeaks[pf] - par[5*p+3]);
+         if (diffx < 2*dx && diffy < 2*dy) ngood++;
+      }
+   }
+   if (ngood > nfound) ngood = nfound;
+   //Search ghost peaks (approximation)
+   Int_t nghost = 0;
+   for (pf=0;pf<nfound;pf++) {
+      Int_t nf=0;
+      for (Int_t p=0;p<npeaks;p++) {
+         Double_t diffx = TMath::Abs(xpeaks[pf] - par[5*p+1]);
+         Double_t diffy = TMath::Abs(ypeaks[pf] - par[5*p+3]);
+         if (diffx < 2*dx && diffy < 2*dy) nf++;
+      }
+      if (nf == 0) nghost++;
+   }
+   
+   delete s;
+   delete f2;
+   delete h2;
+   Int_t nfoundRef = 173;
+   Int_t ngoodRef  = 173;
+   Int_t nghostRef = 7;
+   char sok[20];
+   if (nfound == nfoundRef && ngood == ngoodRef && nghost == nghostRef) {
+      sprintf(sok,"OK");
+   } else {
+      sprintf(sok,"failed");
+   }
+   printf("Peak2 : found =%d/%d, good =%d, ghost =%d,----------------------------- %s\n",
+          nfound,npeaks,ngood,nghost,sok);
+}
+   
+#ifndef __CINT__
+void stressSpectrum(Int_t ntimes) {
+#else
+void stressSpectrum(Int_t ntimes=100) {
+#endif
+   cout << "****************************************************************************" <<endl;
+   cout << "*  Starting  stress S P E C T R U M                                        *" <<endl;
+   cout << "****************************************************************************" <<endl;
+   gBenchmark->Start("stressSpectrum");
+   stress1(ntimes);
+   stress2(300);
+   gBenchmark->Stop ("stressSpectrum");
+   Double_t reftime100 = 19.04; //pcbrun compiled
+   Double_t ct = gBenchmark->GetCpuTime("stressSpectrum");
+   const Double_t rootmarks = 800*reftime100*ntimes/(100*ct);
    printf("****************************************************************************\n");
 
    gBenchmark->Print("stressSpectrum");
@@ -174,6 +266,7 @@ void stressSpectrum(Int_t ntimes=100) {
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("****************************************************************************\n");
 }
+   
 #ifndef __CINT__
 
 int main(int argc, char **argv)
