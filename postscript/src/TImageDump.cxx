@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.12 2005/10/03 10:06:34 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.13 2005/11/10 11:11:46 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -142,6 +142,7 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    if (!gPad || !fImage || (bordersize < 1)) {
       return;
    }
+
    TColor *col;
    TColor *lo = gROOT->GetColor(dark);
    TColor *hi = gROOT->GetColor(light);
@@ -160,6 +161,11 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
       fImage->DrawBox(pxl, pyl, pxt, pyt-1, 
                       gROOT->GetColor(fLineColor)->AsHexString());
       return;
+   }
+
+   if (!fImage->IsValid()) {
+      fImage->DrawBox(pxl, pyl, pxt, pyt,    // force image creation and resizing
+                      gROOT->GetColor(light)->AsHexString(), 1, TVirtualX::kFilled);
    }
 
    TPoint frame[6];
