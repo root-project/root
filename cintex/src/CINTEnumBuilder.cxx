@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.5 2005/12/12 09:12:27 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -37,14 +37,17 @@ namespace ROOT { namespace Cintex {
 
       Scope scope = e.DeclaringScope();
       CINTScopeBuilder::Setup( scope );
+      bool isCPPMacroEnum = name == "$CPP_MACROS";
 
-      G__linked_taginfo taginfo;
-      taginfo.tagnum  = -1;
-      taginfo.tagtype = 'e';
-      taginfo.tagname = name.c_str();
-      G__get_linked_tagnum(&taginfo);
-      tagnum = taginfo.tagnum;
-      ::G__tagtable_setup( tagnum, sizeof(int), -1, 0,(char*)NULL, NULL, NULL);
+      if (!isCPPMacroEnum) {
+         G__linked_taginfo taginfo;
+         taginfo.tagnum  = -1;
+         taginfo.tagtype = 'e';
+         taginfo.tagname = name.c_str();
+         G__get_linked_tagnum(&taginfo);
+         tagnum = taginfo.tagnum;
+         ::G__tagtable_setup( tagnum, sizeof(int), -1, 0,(char*)NULL, NULL, NULL);
+      }
 
       //--- setup enum values -------
       int isstatic;
@@ -62,11 +65,16 @@ namespace ROOT { namespace Cintex {
       }
       for ( size_t i = 0; i < e.DataMemberSize(); i++ ) {
         stringstream s;
-        s << e.DataMemberAt(i).Name() << "=" << (int)e.DataMemberAt(i).Offset();
+        s << e.DataMemberAt(i).Name();
+        if ( isCPPMacroEnum ) s << "=" << (const char*)e.DataMemberAt(i).Offset();
+        else                  s << (int)e.DataMemberAt(i).Offset();
         
         string item = s.str();
         if ( Cintex::Debug() ) cout << "  item " << i << " " << item  <<endl;
-        ::G__memvar_setup((void*)G__PVOID, 'i', 0, 1, tagnum, -1, isstatic, 1, item.c_str(), 0, (char*)NULL);
+        if ( isCPPMacroEnum )
+          ::G__memvar_setup((void*)G__PVOID, 'p', 0, 0, -1, -1, -1, 1, item.c_str(), 1, (char*)NULL);
+        else
+          ::G__memvar_setup((void*)G__PVOID, 'i', 0, 1, tagnum, -1, isstatic, 1, item.c_str(), 0, (char*)NULL);
       }
       if ( scope.IsTopScope() ) {
         ::G__resetglobalenv();
