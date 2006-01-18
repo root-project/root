@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.20 2005/11/21 11:25:37 rdm Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.21 2005/12/21 08:09:41 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,11 +87,11 @@ TPythia6*  TPythia6::fgInstance = 0;
 # ifdef PYTHIA6_DOUBLE_UNDERSCORE
 #  define tpythia6_open_fortran_file tpythia6_open_fortran_file__
 #  define tpythia6_close_fortran_file tpythia6_close_fortran_file__
-#  define pythia6_common_address pythia6_common_block_address__
+#  define pythia6_common_address pythia6_common_address__
 # elif PYTHIA6_SINGLE_UNDERSCORE
 #  define tpythia6_open_fortran_file tpythia6_open_fortran_file_
 #  define tpythia6_close_fortran_file tpythia6_close_fortran_file_
-#  define pythia6_common_address pythia6_common_block_address_
+#  define pythia6_common_address pythia6_common_address
 # else
 #  define pythia6_common_address pythia6_common_address 
 #  define tpythia6_open_fortran_file tpythia6_open_fortran_file_
