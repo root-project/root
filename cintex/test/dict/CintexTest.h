@@ -123,9 +123,11 @@ int MyClass::s_instances = 0;
 
 struct Abstract {
   virtual double vf() = 0;
+  virtual ~Abstract() {}
 };
 struct Concrete : public Abstract {
   virtual double vf() { return 666.666; }
+  virtual ~Concrete() {}
 };
 
 typedef int (*FuncPtr)(int);
@@ -190,6 +192,7 @@ int MyClass::doSomething(const std::string& something) {
 
 class Base1 {
 public:
+  virtual ~Base1() {}
   int base1;
   virtual int v_getBase() {return base1; }
   virtual int v_get1() { return base1; }
@@ -197,6 +200,7 @@ public:
 };
 class Base2 {
 public:
+  virtual ~Base2() {}
   int base2;
   virtual int v_getBase() { return base2; }
   virtual int v_get2() { return base2; }
@@ -204,6 +208,7 @@ public:
 };
 class Derived : public Base1, public Base2 {
  public:
+  virtual ~Derived() {}
   int a;
   double f;
   virtual int v_getBase() { return a; }
@@ -225,6 +230,7 @@ private:
 
 class Virtual {
 public:
+  virtual ~Virtual() {}
   virtual double vf() = 0;
 };
 
@@ -537,12 +543,15 @@ class SpecialConstructor {
 
 //------GaudiPython Interfaces problem
 struct Ibase {
+  virtual ~Ibase() {}
   virtual void f() = 0;
 };
 struct Iderived : virtual public Ibase {
+  virtual ~Iderived() {}
   virtual void g() = 0;
 };
 struct Rfoo : public Iderived {
+  virtual ~Rfoo() {}
   virtual void f() {}
   virtual void g() {}
 };
@@ -570,12 +579,14 @@ private:
 class Pbase {
 public:
   Pbase() {}
+  virtual ~Pbase() {}
   virtual int get() { return 0; }
 };
 
-class P : public Pbase {
+class PP : public Pbase {
 public:
-  P(int i) : m_i(i) {}
+  PP(int i) : m_i(i) {}
+  virtual ~PP() {}
   virtual int get() { return m_i; }
 private:
   int m_i;

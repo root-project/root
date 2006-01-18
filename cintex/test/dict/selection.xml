@@ -28,7 +28,7 @@
 
   <class name="SimpleProperty<std::string,Verifier<std::string> >"/>
   <class name="Pbase"/>
-  <class name="P"/>
+  <class name="PP"/>
   <class name="std::vector<const Pbase*>"/>
   
   <class name="Obj"/>
