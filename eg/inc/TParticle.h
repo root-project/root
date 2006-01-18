@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name: v4-03-02 $:$Id: TParticle.h,v 1.10 2004/12/16 08:07:40 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.11 2005/03/03 11:37:40 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -137,7 +137,7 @@ public:
   Double_t         Phi   () const { return TMath::Pi()+TMath::ATan2(-fPy,-fPx); }  // note that Phi() returns an angle between 0 and 2pi
   Double_t         Theta () const { return (fPz==0)?TMath::PiOver2():TMath::ACos(fPz/P()); }
 
-                                // setters
+              // setters
 
   void           SetFirstMother  (int code)                                               { fMother[0]   = code ; }
   void           SetMother  (int i, int code)                                             { fMother[i]   = code ; }
@@ -146,6 +146,7 @@ public:
   void           SetDaughter(int i, int code)                                             { fDaughter[i] = code ; }
   void           SetLastDaughter(int code)                                                { fDaughter[1] = code ; }
   void           SetCalcMass(Double_t mass)                                               { fCalcMass=mass;}
+  void           SetPdgCode(Int_t pdg);
   void           SetPolarisation(Double_t polx, Double_t poly, Double_t polz);
   void           SetPolarisation(const TVector3& v)                                       {SetPolarisation(v.X(), v.Y(), v.Z());}
   void           SetStatusCode(int status)                                                {fStatusCode = status;}
@@ -155,7 +156,7 @@ public:
   void           SetProductionVertex(Double_t vx, Double_t vy, Double_t vz, Double_t t)   {fVx=vx; fVy=vy; fVz=vz; fVt=t;}
   void           SetProductionVertex(const TLorentzVector& v)                             {SetProductionVertex(v.X(),v.Y(),v.Z(),v.T());}
 
-                                // ****** overloaded functions of TObject
+             // ****** overloaded functions of TObject
 
   virtual void      Paint(Option_t *option = "");
   virtual void      Print(Option_t *option = "") const;

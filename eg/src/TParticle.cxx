@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.9 2003/05/30 19:41:01 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.10 2003/09/01 09:39:39 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -220,6 +220,25 @@ void TParticle::Print(Option_t *) const
    Printf("TParticle: %-13s  p: %8f %8f %8f Vertex: %8e %8e %8e %5d %5d",
           GetName(),Px(),Py(),Pz(),Vx(),Vy(),Vz(),
           fMother[0],fMother[1]);
+}
+
+//______________________________________________________________________________
+void TParticle::SetPdgCode(Int_t pdg)
+{
+   //change the PDG code for this particle
+   //Get a new pointer to a TParticlePDG from TDatabasePDG
+   //Recompute the mass
+   
+  fPdgCode = pdg;
+  fParticlePDG = TDatabasePDG::Instance()->GetParticle(pdg);
+  if (fParticlePDG) {
+     fCalcMass    = fParticlePDG->Mass();
+  } else {
+     Warning("SetPdg","PDG code %d unknown from TDatabasePDG",pdg);
+     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
+     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
+     else         fCalcMass = -TMath::Sqrt(-a2);
+  }
 }
 
 //______________________________________________________________________________
