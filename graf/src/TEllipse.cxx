@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.20 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.21 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 const Double_t kPI = 3.14159265358979323846;
 
 ClassImp(TEllipse)
+
 
 //______________________________________________________________________________
 //  Ellipse class.
@@ -44,6 +45,7 @@ ClassImp(TEllipse)
 //End_Html
 //
 
+
 //______________________________________________________________________________
 TEllipse::TEllipse(): TObject(), TAttLine(), TAttFill()
 {
@@ -57,6 +59,7 @@ TEllipse::TEllipse(): TObject(), TAttLine(), TAttFill()
    fPhimax = 360;
    fTheta  = 0;
 }
+
 
 //______________________________________________________________________________
 TEllipse::TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta)
@@ -74,12 +77,14 @@ TEllipse::TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phi
    if (r2 <= 0) fR2 = fR1;
 }
 
+
 //______________________________________________________________________________
 TEllipse::~TEllipse()
 {
    // Ellipse default destructor.
 
 }
+
 
 //______________________________________________________________________________
 TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse)
@@ -88,6 +93,7 @@ TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse
 
    ((TEllipse&)ellipse).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TEllipse::Copy(TObject &obj) const
@@ -105,6 +111,7 @@ void TEllipse::Copy(TObject &obj) const
    ((TEllipse&)obj).fPhimax = fPhimax;
    ((TEllipse&)obj).fTheta  = fTheta;
 }
+
 
 //______________________________________________________________________________
 Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
@@ -144,6 +151,7 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
+
 //______________________________________________________________________________
 void TEllipse::Draw(Option_t *option)
 {
@@ -152,6 +160,7 @@ void TEllipse::Draw(Option_t *option)
    AppendPad(option);
 
 }
+
 
 //______________________________________________________________________________
 void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta,Option_t *option)
@@ -165,6 +174,7 @@ void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Doub
    newellipse->AppendPad(option);
    if (TestBit(kNoEdges)) newellipse->SetBit(kNoEdges);
 }
+
 
 //______________________________________________________________________________
 void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
@@ -422,6 +432,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 void TEllipse::ls(Option_t *) const
 {
@@ -431,6 +442,7 @@ void TEllipse::ls(Option_t *) const
    printf("%s:  X1= %f Y1=%f R1=%f R2=%f\n",GetName(),fX1,fY1,fR1,fR2);
 }
 
+
 //______________________________________________________________________________
 void TEllipse::Paint(Option_t *option)
 {
@@ -439,8 +451,11 @@ void TEllipse::Paint(Option_t *option)
    PaintEllipse(fX1,fY1,fR1,fR2,fPhimin,fPhimax,fTheta,option);
 }
 
+
 //______________________________________________________________________________
-void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phimin,Double_t phimax, Double_t theta,Option_t *option)
+void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
+                            Double_t phimin, Double_t phimax, Double_t theta,
+                            Option_t *option)
 {
    // Draw this ellipse with new coordinates.
 
@@ -450,7 +465,7 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
    TAttFill::Modify();  //Change fill attributes only if necessary
 
    //set number of points approximatively proportional to the ellipse circumference
-   Double_t circ = kPI*(fR1+fR2)*(phimax-phimin)/360;
+   Double_t circ = kPI*(r1+r2)*(phimax-phimin)/360;
    Int_t n = (Int_t)(np*circ/((gPad->GetX2()-gPad->GetX1())+(gPad->GetY2()-gPad->GetY1())));
    if (n < 8) n= 8;
    if (n > np) n = np;
@@ -460,10 +475,10 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
    Double_t st   = TMath::Sin(kPI*theta/180);
    for (Int_t i=0;i<=n;i++) {
       angle = phimin*kPI/180 + Double_t(i)*dphi;
-      dx    = fR1*TMath::Cos(angle);
-      dy    = fR2*TMath::Sin(angle);
-      x[i]  = gPad->XtoPad(fX1 + dx*ct - dy*st);
-      y[i]  = gPad->YtoPad(fY1 + dx*st + dy*ct);
+      dx    = r1*TMath::Cos(angle);
+      dy    = r2*TMath::Sin(angle);
+      x[i]  = gPad->XtoPad(x1 + dx*ct - dy*st);
+      y[i]  = gPad->YtoPad(y1 + dx*st + dy*ct);
    }
    TString opt = option;
    opt.ToLower();
@@ -471,8 +486,8 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
       if (GetFillColor()) gPad->PaintFillArea(n,x,y);
       if (GetLineStyle()) gPad->PaintPolyLine(n+1,x,y);
    } else {
-      x[n+1] = gPad->XtoPad(fX1);
-      y[n+1] = gPad->YtoPad(fY1);
+      x[n+1] = gPad->XtoPad(x1);
+      y[n+1] = gPad->YtoPad(y1);
       x[n+2] = x[0];
       y[n+2] = y[0];
       if (GetFillColor()) gPad->PaintFillArea(n+2,x,y);
@@ -496,6 +511,7 @@ void TEllipse::Print(Option_t *) const
    printf("\n");
 }
 
+
 //______________________________________________________________________________
 void TEllipse::SavePrimitive(ofstream &out, Option_t *)
 {
@@ -518,6 +534,7 @@ void TEllipse::SavePrimitive(ofstream &out, Option_t *)
    out<<"   ellipse->Draw();"<<endl;
 }
 
+
 //______________________________________________________________________________
 Bool_t TEllipse::GetNoEdges() const
 {
@@ -525,6 +542,7 @@ Bool_t TEllipse::GetNoEdges() const
 
    return TestBit(kNoEdges) ? kTRUE : kFALSE;
 }
+
 
 //______________________________________________________________________________
 void TEllipse::SetNoEdges(Bool_t noEdges)
@@ -536,6 +554,7 @@ void TEllipse::SetNoEdges(Bool_t noEdges)
    if (noEdges) SetBit(kNoEdges);
    else         ResetBit(kNoEdges);
 }
+
 
 //______________________________________________________________________________
 void TEllipse::Streamer(TBuffer &R__b)
