@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.8 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.9 2006/01/17 14:12:48 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -130,7 +130,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    R__LOCKGUARD2(gAuthenticateMutex);
 
    // In PROOF decode the buffer sent by the client, if any
-   if (strstr(gROOT->GetApplication()->Argv(0),"proof"))
+   if (gROOT->IsProofServ())
       ProofAuthSetup();
 
    // Use the ID of the starting thread as unique identifier
