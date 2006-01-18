@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.48 2005/11/18 14:27:38 couet Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.49 2006/01/09 09:03:35 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -2044,11 +2044,14 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    TString fn = font_name;
    fn.Strip();
+   char *tmpstr = 0;
 
    if (fn.EndsWith(".ttf") || fn.EndsWith(".TTF")) {
-      fn = gSystem->ExpandPathName(fn.Data());
+      tmpstr = gSystem->ExpandPathName(fn.Data());
+      fn = tmpstr;
       ttfont = kTRUE;
    }
+   delete tmpstr;
 
    if (color) {
       parse_argb_color(color, &text_color);
@@ -3453,6 +3456,10 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
    Int_t h = TMath::Abs(y2 - y1);
 
    ARGB32 color;
+
+   if (!fImage) {
+      fImage = create_asimage(w ? x+w : x+20, h ? y+h : y+20, 0);
+   }
 
    if (x1 == x2) {
       parse_argb_color(col, &color);
