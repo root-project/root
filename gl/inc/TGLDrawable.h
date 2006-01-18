@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.8 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.9 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -57,14 +57,21 @@ protected:
    virtual void DirectDraw(UInt_t LOD) const = 0; // Actual draw method (non DL cached)
 
 public:
+   enum ELODAxes  { kLODAxesNone = 0,  // Implies draw/DL caching done at kLODUnsupported
+                    kLODAxesX    = 1 << 0,
+                    kLODAxesY    = 1 << 1,
+                    kLODAxesZ    = 1 << 2,
+                    kLODAxesAll  = kLODAxesX | kLODAxesY | kLODAxesZ
+                  };
+
    TGLDrawable(ULong_t ID, bool DLCache);
    virtual ~TGLDrawable();
 
          ULong_t          ID()          const { return fID; }
    const TGLBoundingBox & BoundingBox() const { return fBoundingBox; }
 
-   virtual Bool_t SupportsLOD() const = 0;
-   virtual void   Draw(UInt_t LOD) const;
+   virtual ELODAxes SupportedLODAxes() const = 0;
+   virtual void     Draw(UInt_t LOD) const;
 
    virtual void DrawWireFrame(UInt_t lod) const
    {

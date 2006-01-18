@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.12 2005/12/05 17:34:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.13 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -291,12 +291,13 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
 
    if (fCacheDirty) {
       UpdateCache();
-   }
-   // Tracing
-   if (gDebug>3) {
-      Info("TGLPerspectiveCamera::Apply", "FOV %f Dolly %f fVRot %f fHRot", fFOV, fDolly, fVRotate, fHRotate);
-      Info("TGLPerspectiveCamera::Apply", "fTruck (%f,%f,%f)", fTruck[0], fTruck[1], fTruck[2]);
-      Info("TGLPerspectiveCamera::Apply", "Near %f Far %f", nearClipDist, farClipDist);
+
+      // Tracing - only show if camera changed
+      if (gDebug>3) {
+         Info("TGLPerspectiveCamera::Apply", "FOV %f Dolly %f fVRot %f fHRot", fFOV, fDolly, fVRotate, fHRotate);
+         Info("TGLPerspectiveCamera::Apply", "fTruck (%f,%f,%f)", fTruck[0], fTruck[1], fTruck[2]);
+         Info("TGLPerspectiveCamera::Apply", "Near %f Far %f", nearClipDist, farClipDist);
+      }
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.12 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.13 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -69,7 +69,7 @@ public:
                   };
 private:
    // Fields
-   const TGLLogicalShape & fLogicalShape; //! the associate logical shape
+   const TGLLogicalShape & fLogicalShape; //! the associated logical shape
    TGLMatrix               fTransform;    //! transform (placement) of physical instance
    Float_t                 fColor[17];    //! GL color array
    Bool_t                  fSelected;     //! selected state
@@ -98,11 +98,11 @@ public:
    // Associated logical
    const TGLLogicalShape & GetLogical() const { return fLogicalShape; }
 
-   virtual Bool_t SupportsLOD() const;
-   virtual void   Draw(UInt_t LOD) const;
-   virtual void   DrawWireFrame(UInt_t lod) const;
-   virtual void   DrawOutline(UInt_t lod) const;
-   void           InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
+   virtual ELODAxes SupportedLODAxes() const;
+   virtual void     Draw(UInt_t LOD) const;
+   virtual void     DrawWireFrame(UInt_t lod) const;
+   virtual void     DrawOutline(UInt_t lod) const;
+   void             InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
    // Modification and manipulation
    // Selected treated as temporary modification
@@ -133,10 +133,10 @@ public:
 };
 
 //______________________________________________________________________________
-inline Bool_t TGLPhysicalShape::SupportsLOD() const
+inline TGLPhysicalShape::ELODAxes TGLPhysicalShape::SupportedLODAxes() const
 {
-   // We support LOD if our logical shape does
-   return fLogicalShape.SupportsLOD();
+   // Defined by our logical shape
+   return fLogicalShape.SupportedLODAxes();
 }
 
 //______________________________________________________________________________

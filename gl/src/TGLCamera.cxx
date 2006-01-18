@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.23 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.24 2005/11/29 14:04:00 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -295,33 +295,60 @@ EOverlap TGLCamera::ViewportOverlap(const TGLBoundingBox & box) const
 }
 
 //______________________________________________________________________________
-TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box) const
+TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box, 
+                                const TGLBoundingBox::EFace face) const
 {
-   // Calculate bounding rectangle of box projection onto viewport.
-   // Note rectangle is NOT clipped by viewport limits - so can result in rect
-   // with corners outside viewport - negative etc
-   // Note TGLRect provides int (pixel based) values - not subpxiel accurate
-   // Camera must have valid frustum cache - call Apply() after last modifcation, before using
+   // Calculate viewport rectangle which just contains projection of single 'face'
+   // of world frame bounding box 'box' onto the viewport. Note use other version 
+   // of ViewportRect() if you want whole 'box' contained
+   return ViewportRect(box, &face);
+}
+
+//______________________________________________________________________________
+TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box, 
+                                const TGLBoundingBox::EFace * face) const
+{
+   // Calculate viewport rectangle which just contains projection of world frame
+   // bounding box 'box' onto the viewport. If face is null the rect contains
+   // the whole bounding box (8 vertices/6 faces). If face is non-null it indicates
+   // a box face, and the rect contains the single face (4 vertices). Note use
+   // other version of ViewportRect() if you wish to just pass a static EFace enum 
+   // member (e.g. kFaceLowX)
+   //
+   // Note:
+   //       i)   Rectangle is NOT clipped by viewport limits - so can result
+   //            in rect with corners outside viewport - negative etc
+   //       ii)  TGLRect provides int (pixel based) values - not subpxiel accurate
+   //       iii) Camera must have valid frustum cache - call Apply() after last 
+   //            modifcation, before calling
    if (fCacheDirty) {
       Error("TGLCamera::ViewportSize()", "cache dirty - must call Apply()");
    }
 
    // TODO: Maybe TGLRect should be converted to Double_t so subpixel accurate
-   // Would give better LOD calculations at small sizes - only using?
+   // Would give better LOD calculations at small sizes
    
    // May often result in a rect bigger then the viewport
    // as gluProject does not clip.
    Double_t winX, winY, winZ;
    TGLRect  screenRect;
 
-   // Find the projection of the 8 vertexs of the bounding box onto screen
-   // and the enclosing rect round these.
-   for (Int_t i = 0; i < 8; i++)
-   {
-      const TGLVertex3 & vertex = box[i];
+   //TODO: Convert TGLRect so this not required
+   Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
 
-      //TODO: Convert TGLRect so this not required
-      Int_t viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
+   // TGLBoundingBox::Vertices() & TGLBoundingBox::FaceVertices() return
+   // const & vectors so this *should* all be effficient...
+   UInt_t vertexCount;
+   if (face) {
+      vertexCount = box.FaceVertices(*face).size();
+   } else {
+      vertexCount = box.Vertices().size();
+   }
+
+   for (UInt_t i = 0; i < vertexCount; i++)
+   {
+      const TGLVertex3 & vertex = face ? box.Vertices().at(box.FaceVertices(*face).at(i)) :
+                                         box.Vertices().at(i);        
 
       gluProject(vertex.X(), vertex.Y(), vertex.Z(), fModVM.CArr(), fProjM.CArr(), viewport, &winX, &winY, &winZ);
 

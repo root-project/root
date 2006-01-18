@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.20 2005/12/01 11:04:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.21 2005/12/05 17:34:45 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -213,41 +213,6 @@ TGLRect::TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height) :
 TGLRect::~TGLRect()
 {
    // Destroy rect object
-}
-
-//______________________________________________________________________________
-void TGLRect::Expand(Int_t x, Int_t y)
-{
-   // Expand the rect to encompass point (x,y)
-   Int_t delX = x - fX;
-   Int_t delY = y - fY;
-
-   if (delX>static_cast<Int_t>(fWidth)) {
-      fWidth = delX;
-   }
-   if (delY>static_cast<Int_t>(fHeight)) {
-      fHeight = delY;
-   }
-
-   if (delX<0) {
-      fX = x;
-      fWidth += -delX;
-   }
-   if (delY<0) {
-      fY = y;
-      fHeight += -delY;
-   }
-}
-
-//______________________________________________________________________________
-Double_t TGLRect::Aspect() const
-{
-   // Return aspect ratio (width/height)
-   if (fHeight == 0) {
-      return 0.0;
-   } else {
-      return static_cast<Double_t>(fWidth) / static_cast<Double_t>(fHeight);
-   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.16 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.17 2005/12/01 11:04:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -29,35 +29,40 @@
 ClassImp(TGLBoundingBox)
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox()
+TGLBoundingBox::TGLBoundingBox() :
+   fVertex(8)
 {
    // Construct an empty bounding box
    SetEmpty();
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLVertex3 vertex[8])
+TGLBoundingBox::TGLBoundingBox(const TGLVertex3 vertex[8]) :
+   fVertex(8)
 {
    // Construct a bounding box from provided 8 vertices
    Set(vertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const Double_t vertex[8][3])
+TGLBoundingBox::TGLBoundingBox(const Double_t vertex[8][3]) :
+   fVertex(8)
 {
    // Construct a bounding box from provided 8 vertices
    Set(vertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
+TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex) :
+   fVertex(8)
 {
    // Construct an global axis ALIGNED bounding box from provided low/high vertex pair
    SetAligned(lowVertex, highVertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other)
+TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other) :
+   fVertex(8)
 {
    // Construct a bounding box as copy of existing one
    Set(other);
@@ -299,6 +304,58 @@ void TGLBoundingBox::Transform(const TGLMatrix & matrix)
 
    // Could change cached volume/axes
    UpdateCache();
+}
+
+//______________________________________________________________________________
+const std::vector<UInt_t> & TGLBoundingBox::FaceVertices(EFace face) const
+{
+   //    y
+   //    |
+   //    |
+   //    |________x
+   //   /  3-------2
+   //  /  /|      /| 
+   // z  7-------6 | 
+   //    | 0-----|-1 
+   //    |/      |/ 
+   //    4-------5 
+   //
+   static Bool_t init = kFALSE;
+   static std::vector<UInt_t> faceIndexes[kFaceCount];
+   if (!init) {
+      // Low X - 7403
+      faceIndexes[kFaceLowX].push_back(7); 
+      faceIndexes[kFaceLowX].push_back(4); 
+      faceIndexes[kFaceLowX].push_back(0); 
+      faceIndexes[kFaceLowX].push_back(3);
+      // High X - 2156
+      faceIndexes[kFaceHighX].push_back(2); 
+      faceIndexes[kFaceHighX].push_back(1); 
+      faceIndexes[kFaceHighX].push_back(5); 
+      faceIndexes[kFaceHighX].push_back(6); 
+      // Low Y - 5104
+      faceIndexes[kFaceLowY].push_back(5); 
+      faceIndexes[kFaceLowY].push_back(1); 
+      faceIndexes[kFaceLowY].push_back(0); 
+      faceIndexes[kFaceLowY].push_back(4); 
+      // High Y - 2673
+      faceIndexes[kFaceHighY].push_back(2); 
+      faceIndexes[kFaceHighY].push_back(6); 
+      faceIndexes[kFaceHighY].push_back(7); 
+      faceIndexes[kFaceHighY].push_back(3); 
+      // Low Z - 3012
+      faceIndexes[kFaceLowZ].push_back(3); 
+      faceIndexes[kFaceLowZ].push_back(0); 
+      faceIndexes[kFaceLowZ].push_back(1); 
+      faceIndexes[kFaceLowZ].push_back(2); 
+      // High Z - 6547
+      faceIndexes[kFaceHighZ].push_back(6); 
+      faceIndexes[kFaceHighZ].push_back(5); 
+      faceIndexes[kFaceHighZ].push_back(4); 
+      faceIndexes[kFaceHighZ].push_back(7); 
+      init= kTRUE;
+   }
+   return faceIndexes[face];
 }
 
 //______________________________________________________________________________

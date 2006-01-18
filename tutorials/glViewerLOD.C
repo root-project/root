@@ -39,7 +39,7 @@ void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE, Bool_t reqSph
       // Random dimensions
       Double_t rMin = gRandom->Rndm() * sizeBase;
       Double_t rMax = rMin + gRandom->Rndm() * sizeBase * 2.0;
-      Double_t dz = pow(gRandom->Rndm(),0.5) * sizeBase * 5.0;
+      Double_t dz = pow(gRandom->Rndm(),2.0) * sizeBase * 15.0;
       Double_t phi1 = gRandom->Rndm() * 90.0;
       Double_t phi2 = phi1 + gRandom->Rndm() * 270.0;
 

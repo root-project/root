@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.21 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.22 2006/01/11 13:44:39 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -34,7 +34,7 @@ enum  ELODPresets {
    kLODLow         = 20,
    kLODMed         = 50,
    kLODHigh        = 100,
-   kLODUnsupported = 200, // Make neg
+   kLODUnsupported = 200, // Used to draw/DL cache drawables with LODSupport() of TGLDrawable::kLODAxesNone
 };
 
 enum EPosition
@@ -431,8 +431,8 @@ public:
    Int_t    Top()     const { return fY; }
    Int_t    Bottom()  const { return fY + fHeight; }
 
-   UInt_t Diagonal() const { return static_cast<UInt_t>(sqrt(static_cast<Double_t>(fWidth*fWidth + fHeight*fHeight))); }
-   UInt_t Longest() const { return fWidth > fHeight ? fWidth:fHeight; }
+   UInt_t Diagonal() const;
+   UInt_t Longest() const;
 
    Double_t Aspect() const;
    EOverlap Overlap(const TGLRect & other) const;
@@ -461,6 +461,53 @@ inline void TGLRect::Offset(Int_t dX, Int_t dY)
 {
    fX += dX;
    fY += dY;
+}
+
+//______________________________________________________________________________
+inline void TGLRect::Expand(Int_t x, Int_t y)
+{
+   // Expand the rect to encompass point (x,y)
+   Int_t delX = x - fX;
+   Int_t delY = y - fY;
+
+   if (delX>static_cast<Int_t>(fWidth)) {
+      fWidth = delX;
+   }
+   if (delY>static_cast<Int_t>(fHeight)) {
+      fHeight = delY;
+   }
+
+   if (delX<0) {
+      fX = x;
+      fWidth += -delX;
+   }
+   if (delY<0) {
+      fY = y;
+      fHeight += -delY;
+   }
+}
+
+//______________________________________________________________________________
+inline UInt_t TGLRect::Diagonal() const 
+{ 
+   return static_cast<UInt_t>(sqrt(static_cast<Double_t>(fWidth*fWidth + fHeight*fHeight))); 
+}
+
+//______________________________________________________________________________
+inline UInt_t TGLRect::Longest() const 
+{ 
+   return fWidth > fHeight ? fWidth:fHeight; 
+}
+
+//______________________________________________________________________________
+inline Double_t TGLRect::Aspect() const
+{
+   // Return aspect ratio (width/height)
+   if (fHeight == 0) {
+      return 0.0;
+   } else {
+      return static_cast<Double_t>(fWidth) / static_cast<Double_t>(fHeight);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////

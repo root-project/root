@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.9 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.10 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -55,10 +55,10 @@ private:
    // For axis aligned 2 verticies would suffice.
    // Rest could be calculated on demand - however speed more important
    // than memory considerations
-   TGLVertex3 fVertex[8];  //! the 8 bounding box vertices
-   Double_t   fVolume;     //! box volume - cached for speed
-   TGLVector3 fAxes[3];    //! box axes in global frame - cached for speed
-   TGLVector3 fAxesNorm[3];//! normalised box axes in global frame - cached for speed
+   std::vector<TGLVertex3> fVertex;     //! the 8 bounding box vertices
+   Double_t                      fVolume;     //! box volume - cached for speed
+   TGLVector3                    fAxes[3];    //! box axes in global frame - cached for speed
+   TGLVector3                    fAxesNorm[3];//! normalised box axes in global frame - cached for speed
 
    // Methods
    void     UpdateCache();
@@ -91,7 +91,7 @@ public:
    void Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor);
    void Translate(const TGLVector3 & offset);
 
-   // Corner vertex accessors
+   // Single vertex accessors
    const TGLVertex3 & operator [] (UInt_t index) const;
    const TGLVertex3 & Vertex(UInt_t index) const;
    Double_t XMin() const { return Min(0); }
@@ -100,6 +100,11 @@ public:
    Double_t YMax() const { return Max(1); }
    Double_t ZMin() const { return Min(2); }
    Double_t ZMax() const { return Max(2); }
+
+   // Multiple vertices accessors
+   const std::vector<TGLVertex3> & Vertices() const;           // All 8 box vertices
+   enum EFace { kFaceLowX, kFaceHighX, kFaceLowY, kFaceHighY, kFaceLowZ, kFaceHighZ, kFaceCount };
+   const std::vector<UInt_t> & FaceVertices(EFace face) const; // 4 box face vertices
 
    // Other properties
    TGLVertex3   Center() const;
@@ -144,6 +149,12 @@ inline const TGLVertex3 & TGLBoundingBox::operator [] (UInt_t index) const
 inline const TGLVertex3 & TGLBoundingBox::Vertex(UInt_t index) const
 {
    return fVertex[index];
+}
+
+//______________________________________________________________________________
+inline const std::vector<TGLVertex3> & TGLBoundingBox::Vertices() const
+{
+   return fVertex;
 }
 
 //______________________________________________________________________________

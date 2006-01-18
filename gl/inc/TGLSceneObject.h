@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.29 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.30 2006/01/11 13:44:39 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
    TGLFaceSet(const TBuffer3D &buff, TObject *realObj);
    void SetFromMesh(const RootCsg::BaseMesh *m);
 
-   Bool_t SupportsLOD() const { return kFALSE; }
+   virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
    void   DrawWireFrame(UInt_t) const;
    void   DrawOutline(UInt_t) const;
 
@@ -96,7 +96,7 @@ protected:
 public:
    TGLPolyMarker(const TBuffer3D &buff, TObject *realObject);
 
-   Bool_t SupportsLOD() const { return kFALSE; }
+   virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
 
 private:
    void DrawStars()const;
@@ -112,7 +112,7 @@ protected:
 public:
    TGLPolyLine(const TBuffer3D &buff, TObject *realObject);
 
-   Bool_t SupportsLOD() const { return kFALSE; }
+   virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
    ClassDef(TGLPolyLine,0) // a polyline logical shape
 };
 
@@ -127,7 +127,7 @@ protected:
 public:
    TGLSphere(const TBuffer3DSphere &buffer, TObject *realObject);
 
-   Bool_t SupportsLOD() const { return kTRUE; }
+   virtual ELODAxes SupportedLODAxes() const { return kLODAxesAll; }
    ClassDef(TGLSphere,0) // a spherical logical shape
 };
 
@@ -149,7 +149,9 @@ public:
    TGLCylinder(const TBuffer3DTube &buff, TObject *realObject);
    ~TGLCylinder();
 
-   Bool_t SupportsLOD() const { return kTRUE; }
+   // Cylinders support LOD (tesselation quality) adjustment along
+   // X/Y axes (round the cylinder radius), but not along length (Z)
+   virtual ELODAxes SupportedLODAxes() const { return ELODAxes(kLODAxesX | kLODAxesY); }
 
 private:
    ClassDef(TGLCylinder,0) // a cylinderical logical shape

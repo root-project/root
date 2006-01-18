@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.15 2005/11/16 16:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.16 2005/11/18 20:26:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -123,7 +123,8 @@ public:
    // Viewport is GL coorinate system - origin bottom/left
    EOverlap   FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
    EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
-   TGLRect    ViewportRect   (const TGLBoundingBox & box) const; // projected rect of box on viewport
+   TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace face) const;
+   TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace * face = 0) const;
    TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex) const;
    TGLVector3 WorldDeltaToViewport(const TGLVertex3 & worldRef, const TGLVector3 & worldDelta) const;
    TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex) const;
@@ -135,9 +136,9 @@ public:
 
    // Window to GL viewport conversion - invert Y
    void WindowToViewport(Int_t & /* x */, Int_t & y) const { y = fViewport.Height() - y; }
-   void WindowToViewport(TPoint & point)       const { point.SetY(fViewport.Height() - point.GetY()); }
-   void WindowToViewport(TGLRect & rect)       const { rect.Y() = fViewport.Height() - rect.Y(); }
-   void WindowToViewport(TGLVertex3 & vertex)  const { vertex.Y() = fViewport.Height() - vertex.Y(); }
+   void WindowToViewport(TPoint & point)             const { point.SetY(fViewport.Height() - point.GetY()); }
+   void WindowToViewport(TGLRect & rect)             const { rect.Y() = fViewport.Height() - rect.Y(); }
+   void WindowToViewport(TGLVertex3 & vertex)        const { vertex.Y() = fViewport.Height() - vertex.Y(); }
 
    // Cameras expanded-frustum interest box
    Bool_t OfInterest(const TGLBoundingBox & box) const;

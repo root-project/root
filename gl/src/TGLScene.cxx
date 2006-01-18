@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.29 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.30 2006/01/11 13:44:39 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -309,7 +309,7 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 
 //______________________________________________________________________________
 //TODO: Merge style and LOD into general draw style flag
-void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t LOD, 
+void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD, 
                     Double_t timeout, const TGLClip * clip)
 {
    // Draw out scene into current GL context, using passed arguments:
@@ -374,7 +374,7 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t LOD,
 
    // If no clip object
    if (!clip) {
-      DrawPass(camera, style, LOD, timeout);
+      DrawPass(camera, style, sceneLOD, timeout);
    } else {
       // Get the clip plane set from the clipping object
       std::vector<TGLPlane> planeSet;
@@ -415,7 +415,7 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t LOD,
          }
 
           // Draw scene once with full time slot, passing all the planes
-          DrawPass(camera, style, LOD, timeout, &planeSet);
+          DrawPass(camera, style, sceneLOD, timeout, &planeSet);
       }
       // Clip away scene inside of the clip object
       else {
@@ -428,7 +428,7 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t LOD,
             activePlanes.push_back(planeSet[planeInd]);
             glClipPlane(GL_CLIP_PLANE0+planeInd, activePlanes[planeInd].CArr());
             glEnable(GL_CLIP_PLANE0+planeInd);
-            DrawPass(camera, style, LOD, timeout/maxPlanes, &activePlanes);
+            DrawPass(camera, style, sceneLOD, timeout/maxPlanes, &activePlanes);
          }
       }
       // Ensure all clip planes turned off again
@@ -444,7 +444,7 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t LOD,
 
    // Record this so that any Select() draw can be redone at same quality and ensure
    // accuracy of picking
-   fLastDrawLOD = LOD;
+   fLastDrawLOD = sceneLOD;
 
    // TODO: Should record if full scene can be drawn at 100% in a target time (set on scene)
    // Then timeout should not be passed - just bool if termination is permitted - which may
@@ -456,7 +456,7 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t LOD,
 }
 
 //______________________________________________________________________________
-void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD, 
+void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t sceneLOD, 
                         Double_t timeout, const std::vector<TGLPlane> * clipPlanes)
 {
    // Perform a internal draw pass - multiple passes are required for some
@@ -478,7 +478,9 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD,
    
    // Set stopwatch running
    TGLStopwatch stopwatch;
-   stopwatch.Start();
+   if (timeout > 0.0) {
+      stopwatch.Start();
+   }
 
    // Setup draw style function pointer
    void (TGLPhysicalShape::*drawPtr)(UInt_t)const = &TGLPhysicalShape::Draw;
@@ -498,9 +500,11 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD,
    transDrawList.reserve(fDrawList.size() / 10); // assume less 10% of total
    transDrawList.clear();
 
-   // Opaque only objects drawn in first loop
+   // Opaque only objects drawn in first loop - transparent ones
+   // which require drawing added to list during this
    // TODO: Sort front -> back for better performance
    glDepthMask(GL_TRUE);
+
    // If the scene bounding box is inside the camera frustum then
    // no need to check individual shapes - everything is visible
    Bool_t useFrustumCheck = (camera.FrustumOverlap(BoundingBox()) != kInside);
@@ -517,8 +521,8 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD,
          continue;
       }
 
-      // Selected physical should always be drawn once only if visible, 
-      // regardless of timeout object drop outs
+      // Selected physical should always be drawn (and only once) if visible, 
+      // regardless of time limited draws
       if (drawShape == fSelectedPhysical) {
          doSelected = kFALSE;
       }
@@ -553,25 +557,23 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD,
       // Draw?
       if (drawNeeded)
       {
-         // Collect transparent shapes and draw after opaque
+         // Defer transparent shape drawing to after opaque
          if (drawShape->IsTransparent()) {
             transDrawList.push_back(drawShape);
             continue;
          }
 
          // Get the shape draw quality
-         UInt_t shapeLOD = kLODUnsupported;
-         if (drawShape->SupportsLOD()) {
-            shapeLOD = CalcPhysicalLOD(*drawShape, camera, LOD);
-         }
+         UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, sceneLOD);
 
-         //Draw, DrawWireFrame, DrawOutline
+         // Draw, DrawWireFrame, DrawOutline
          (drawShape->*drawPtr)(shapeLOD);
          UpdateDrawStats(*drawShape);
       }
 
       // Terminate the draw if over opaque fraction timeout
-      if (timeout > 0.0) {
+      // Only test every 50 objects as this is somewhat costly
+      if (timeout > 0.0 && (fDrawStats.fOpaque % 50) == 0) {
          Double_t opaqueTimeFraction = 1.0;
          if (fDrawStats.fOpaque > 0) {
             opaqueTimeFraction = (transDrawList.size() + fDrawStats.fOpaque) / fDrawStats.fOpaque; 
@@ -586,7 +588,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD,
    if (doSelected) {
       // Draw now if non-transparent
       if (!fSelectedPhysical->IsTransparent()) {
-         UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, LOD);
+         UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
          (fSelectedPhysical->*drawPtr)(shapeLOD);
          UpdateDrawStats(*fSelectedPhysical);
       } else {
@@ -605,7 +607,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD,
    for (drawIt = transDrawList.begin(); drawIt != transDrawList.end(); drawIt++) {
       drawShape = *drawIt;
 
-      UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, LOD);
+      UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, sceneLOD);
 
       //Draw, DrawWireFrame, DrawOutline
       (drawShape->*drawPtr)(shapeLOD);
@@ -887,33 +889,78 @@ void TGLScene::DrawNumber(Double_t num, const TGLVertex3 & center) const
 }
 
 //______________________________________________________________________________
-UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamera & camera,
+UInt_t TGLScene::CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamera & camera,
                                  UInt_t sceneLOD) const
 {
-   // Calculate a quality (level of detail) for passed 'shape', suitible for use
-   // under projection defined by 'camera'. Factor in global 'sceneLOD', returning 
-   // UInt 0..100
-   
-   // Find diagonal pixel size of projected drawable BB, using camera
-   Double_t diagonal = static_cast<Double_t>(camera.ViewportRect(shape.BoundingBox()).Diagonal());
+   // Calculate a tesselation quality (level of detail) for 'shape', suitible for use
+   // under projection defined by 'camera', taking account of which local axes of
+   // the shape support LOD adjustment. Factor in global 'sceneLOD', returning 
+   // UInt 0 (kLODPixel - lowest quality) to 100 (kLODHigh - highest quality) or 
+   // special case kLODUnsupported if shape does not support LOD at all
+  
+   std::vector <Double_t> boxViewportDiags;
+   TGLDrawable::ELODAxes LODAxes = shape.SupportedLODAxes();
+   const TGLBoundingBox & box = shape.BoundingBox();
 
+   if (shape.SupportedLODAxes() == TGLDrawable::kLODAxesNone) {
+      // Shape doesn't support LOD along any axes return special unsupported LOD draw/cache flag
+      return kLODUnsupported;
+   } else if (LODAxes == TGLDrawable::kLODAxesAll) {
+      // Shape supports LOD along all axes - basis LOD hint on diagonal of viewport 
+      // projection rect round whole bounding box
+      boxViewportDiags.push_back(camera.ViewportRect(box).Diagonal());
+   } else if (LODAxes == (TGLDrawable::kLODAxesY | TGLDrawable::kLODAxesZ)) {
+      // Shape supports LOD along Y/Z axes (not X). LOD hint based on longest
+      // diagonal (largest rect) of either of the X axis end faces
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowX).Diagonal());
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighX).Diagonal());
+   } else if (LODAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesZ)) {
+      // Shape supports LOD along X/Z axes (not Y). See above for Y/Z
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowY).Diagonal());
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighY).Diagonal());
+   } else if (LODAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesY)) {
+      // Shape supports LOD along X/Y axes (not Z). See above for Y/Z
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowZ).Diagonal());
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighZ).Diagonal());
+   }
+   else {
+      // Don't bother to implement LOD calc for shapes supporting LOD along single 
+      // axis only. Not needed at present + unlikely case - but could be done based 
+      // on longest of projection of 4 edges of BBox along LOD axis. However this would 
+      // probably be more costly than just using whole BB projection (as for all axes)
+      Error("TGLScene::CalcPhysicalLOD", "LOD calculation for single axis not implemented presently");
+      return kLODMed;
+   }
+
+   // Find largest of the projected diagonals
+   Double_t largestDiagonal = 0.0;
+   for (UInt_t i = 0; i < boxViewportDiags.size(); i++) {
+      if (boxViewportDiags[i] > largestDiagonal) {
+         largestDiagonal = boxViewportDiags[i];
+      }
+   }
+   
    // Pixel or less?
-   if (diagonal <= 1.0) {
+   if (largestDiagonal <= 1.0) {
       return kLODPixel;
    }
 
    // TODO: Get real screen size - assuming 2000 pixel screen at present
-   // Calculate a non-linear sizing hint for this shape. Needs more experimenting with...
-   UInt_t sizeLOD = static_cast<UInt_t>(pow(diagonal,0.4) * 100.0 / pow(2000.0,0.4));
+   // Calculate a non-linear sizing hint for this shape based on diagonal. 
+   // Needs more experimenting with...
+   UInt_t sizeLOD = static_cast<UInt_t>(pow(largestDiagonal,0.4) * 100.0 / pow(2000.0,0.4));
 
    // Factor in scene quality
    UInt_t shapeLOD = (sceneLOD * sizeLOD) / 100;
 
+   // Round LOD above 10 to nearest 10
    if (shapeLOD > 10) {
-      Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.3) / 10;
+      Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.5) / 10;
       shapeLOD = static_cast<UInt_t>(quant)*10;
-   } else {
-      Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.3) / 3;
+   } 
+   // Round LOD below 10 to nearest 2
+   else {
+      Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.5) / 2;
       shapeLOD = static_cast<UInt_t>(quant)*3;
    }
 
@@ -1229,8 +1276,8 @@ void TGLScene::DumpDrawStats()
 
    // Draw counts
    if (gDebug>2) {
-      Info("TGLScene::DumpDrawStats()", "Drew %i, %i Opaque %i Transparent", fDrawStats.fOpaque + fDrawStats.fTrans,
-         fDrawStats.fOpaque, fDrawStats.fTrans);
+      Info("TGLScene::DumpDrawStats()", "Drew %i (Opaque %i Transparent %i) at %i scene LOD", fDrawStats.fOpaque + fDrawStats.fTrans,
+         fDrawStats.fOpaque, fDrawStats.fTrans, fLastDrawLOD);
    }
 
    // By shape type counts
