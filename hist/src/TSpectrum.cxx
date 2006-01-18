@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.32 2005/11/25 14:10:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.33 2006/01/17 16:47:02 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -139,6 +139,17 @@ const char *TSpectrum::Background(const TH1 * h, int numberIterations,
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
         , h->GetName(), numberIterations, option);
    return 0;
+}
+
+//______________________________________________________________________________
+void TSpectrum::Print(Option_t *) const
+{
+   // Print the array of positions
+
+   printf("\nNumber of positions = %d\n",fNPeaks);
+   for (Int_t i=0;i<fNPeaks;i++) {
+      printf(" x[%d] = %g, y[%d] = %g\n",i,fPositionX[i],i,fPositionY[i]);
+   }
 }
 
 

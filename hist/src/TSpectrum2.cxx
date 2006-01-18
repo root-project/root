@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.7 2003/07/11 09:42:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.9 2006/01/17 16:47:02 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -148,6 +148,18 @@ const char *TSpectrum2::Background(const TH1 * h, int number_of_iterations,
    return 0;
 }
 
+//______________________________________________________________________________
+void TSpectrum2::Print(Option_t *) const
+{
+   // Print the array of positions
+
+   printf("\nNumber of positions = %d\n",fNPeaks);
+   for (Int_t i=0;i<fNPeaks;i++) {
+      printf(" x[%d] = %g, y[%d] = %g\n",i,fPositionX[i],i,fPositionY[i]);
+   }
+}
+
+
 
 //______________________________________________________________________________
 Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
@@ -180,52 +192,58 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
    if (hin == 0)
       return 0;
    Int_t dimension = hin->GetDimension();
-   if (dimension > 2) {
-      Error("Search", "Only implemented for 1-d and 2-d histograms");
+   if (dimension != 2) {
+      Error("Search", "Must be a 2-d histogram");
       return 0;
    }
-   if (dimension == 2) {
-      Int_t sizex = hin->GetXaxis()->GetNbins();
-      Int_t sizey = hin->GetYaxis()->GetNbins();
-      Int_t i, j, binx,biny, npeaks;
-      Float_t ** source = new float *[sizex];
-      Float_t ** dest   = new float *[sizex];
-      for (i = 0; i < sizex; i++) {
-         source[i] = new float[sizey];
-         dest[i]   = new float[sizey];
-         for (j = 0; j < sizey; j++) {
-            source[i][j] = (Float_t) hin->GetBinContent(i + 1, j + 1);
-         }
-      }
-      npeaks = SearchHighRes(source, dest, sizex, sizey, sigma, 100*threshold, kTRUE, 3, kTRUE, 10);
 
-      //The logic in the loop should be improved to use the fact
-      //that fPositionX,Y give a precise position inside a bin.
-      //The current algorithm takes the center of the bin only.
-      for (i = 0; i < npeaks; i++) {
-         binx = 1 + Int_t(fPositionX[i] + 0.5);
-         biny = 1 + Int_t(fPositionY[i] + 0.5);
-         fPositionX[i] = hin->GetXaxis()->GetBinCenter(binx);
-         fPositionY[i] = hin->GetYaxis()->GetBinCenter(biny);
+   Int_t sizex = hin->GetXaxis()->GetNbins();
+   Int_t sizey = hin->GetYaxis()->GetNbins();
+   Int_t i, j, binx,biny, npeaks;
+   Float_t ** source = new float *[sizex];
+   Float_t ** dest   = new float *[sizex];
+   for (i = 0; i < sizex; i++) {
+      source[i] = new float[sizey];
+      dest[i]   = new float[sizey];
+      for (j = 0; j < sizey; j++) {
+         source[i][j] = (Float_t) hin->GetBinContent(i + 1, j + 1);
       }
-      for (i = 0; i < sizex; i++) {
-         delete [] source[i];
-         delete [] dest[i];
-      }
-      delete [] source;
-      delete [] dest;
-      
-      if (strstr(option, "goff"))
-         return npeaks;
-      TPolyMarker * pm = new TPolyMarker(npeaks, fPositionX, fPositionY);
-      hin->GetListOfFunctions()->Add(pm);
-      pm->SetMarkerStyle(23);
-      pm->SetMarkerColor(kRed);
-      pm->SetMarkerSize(1.3);
-      ((TH1*)hin)->Draw(option);
-      return npeaks;
    }
-   return 0;
+   //npeaks = SearchHighRes(source, dest, sizex, sizey, sigma, 100*threshold, kTRUE, 3, kTRUE, 10);
+   //the smoothing option is used for 1-d but not for 2-d histograms
+   npeaks = SearchHighRes(source, dest, sizex, sizey, sigma, 100*threshold, kTRUE, 3, kFALSE, 3);
+
+   //The logic in the loop should be improved to use the fact
+   //that fPositionX,Y give a precise position inside a bin.
+   //The current algorithm takes the center of the bin only.
+   for (i = 0; i < npeaks; i++) {
+      binx = 1 + Int_t(fPositionX[i] + 0.5);
+      biny = 1 + Int_t(fPositionY[i] + 0.5);
+      fPositionX[i] = hin->GetXaxis()->GetBinCenter(binx);
+      fPositionY[i] = hin->GetYaxis()->GetBinCenter(biny);
+   }
+   for (i = 0; i < sizex; i++) {
+      delete [] source[i];
+      delete [] dest[i];
+   }
+   delete [] source;
+   delete [] dest;
+      
+   if (strstr(option, "goff"))
+      return npeaks;
+   if (!npeaks) return 0;
+   TPolyMarker * pm = (TPolyMarker*)hin->GetListOfFunctions()->FindObject("TPolyMarker");
+   if (pm) {
+      hin->GetListOfFunctions()->Remove(pm);
+      delete pm;
+   }
+   pm = new TPolyMarker(npeaks, fPositionX, fPositionY);
+   hin->GetListOfFunctions()->Add(pm);
+   pm->SetMarkerStyle(23);
+   pm->SetMarkerColor(kRed);
+   pm->SetMarkerSize(1.3);
+   ((TH1*)hin)->Draw(option);
+   return npeaks;
 }
 
 

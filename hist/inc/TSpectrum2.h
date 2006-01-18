@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.h,v 1.3 2003/07/11 09:42:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.h,v 1.5 2006/01/17 16:47:02 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /*************************************************************************
@@ -41,7 +41,8 @@ public:
    Int_t         GetNPeaks() const {return fNPeaks;}
    Float_t      *GetPositionX() const {return fPositionX;}
    Float_t      *GetPositionY() const {return fPositionY;}
-   virtual Int_t Search(const TH1 *hist, Double_t sigma, Option_t *option="goff", Double_t threshold=0.05);
+   virtual void  Print(Option_t *option="") const;
+   virtual Int_t Search(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
    void          SetResolution(Float_t resolution=1);
 
    //new functions January 2006
