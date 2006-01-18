@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.13 2005/09/05 10:02:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.14 2006/01/17 16:47:02 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
        kBackSmoothing9 =9,
        kBackSmoothing11 =11,
        kBackSmoothing13 =13,
-       kBackSmoothing15 =15,
+       kBackSmoothing15 =15
    };
 
    TSpectrum();
