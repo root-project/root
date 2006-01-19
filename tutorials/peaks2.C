@@ -64,10 +64,9 @@ void findPeak2() {
    TCanvas *c1 = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("c1");
    if (!c1) c1 = new TCanvas("c1","c1",10,10,1000,700);
    h2->FillRandom("f2",500000);
-   //now the real stuff
-   printf("starting Search\n");
+   
+   //now the real stuff: Finding the peaks
    Int_t nfound = s->Search(h2,2,"col");
-   printf("Finished Search\n");
    
    //searching good and ghost peaks (approximation)
    Int_t pf,ngood = 0;
