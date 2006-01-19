@@ -386,7 +386,9 @@ int G__class_autoloading(int tagnum)
 {
   char* libname;
   if(tagnum<0 || !G__enable_autoloading) return(0);
-  if(G__CLASS_AUTOLOAD==G__struct.type[tagnum]) {
+  /* also autoload classes that were only forward declared */
+  if(G__CLASS_AUTOLOAD==G__struct.type[tagnum] ||
+     (G__struct.filenum[tagnum]==-1 && G__struct.size[tagnum]==0)) {
     libname = G__struct.libname[tagnum];
     /* G__struct.type[tagnum]=0; */
     if(G__p_class_autoloading) {
