@@ -6393,7 +6393,6 @@ int G__usermemfunc_setup(char *funcname,int hash,int (*funcp)(),int type,
                      );
 }
 
-
 /**************************************************************************
 * G__tag_memfunc_setup()
 *

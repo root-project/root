@@ -1,4 +1,4 @@
-//$Id: Shadow.cxx,v 1.2 2006/01/17 12:12:04 brun Exp $
+//$Id: Shadow.cxx,v 1.9 2006/01/17 13:36:38 axel Exp $
 
 #include "Api.h"
 #include <ostream>

@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.7 2006/01/11 07:18:12 pcanal Exp $
+//$Id: rflx_gensrc.cxx,v 1.16 2006/01/19 18:07:15 axel Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -77,8 +77,14 @@ std::string rflx_gensrc::gen_type(G__TypeInfo & tn)
    // Q: volatile supported?
    // reference, pointer, const, volatile, type, typedef
 
-   //std::string tName = rflx_tools::decorate_stl_type(tn.Name());
    std::string tName = tn.Name();
+   if (tName == "(unknown)") {
+      // try class
+      G__ClassInfo ci(tn.Tagnum());
+      if (ci.IsValid()) 
+         return gen_type(ci);
+   }
+
    std::ostringstream tvNumS("");
    tvNumS << m_typeNum;
    std::string tvNumStr = "type_" + tvNumS.str();
@@ -90,19 +96,7 @@ std::string rflx_gensrc::gen_type(G__TypeInfo & tn)
       m_typeMap[tName] = tvNumStr;
    ++m_typeNum;
 
-   if (tn.Isconst()) {
-      if (tName.rfind("const"))
-         tName = tName.substr(0, tName.length() - 5);
-      else
-         tName = tName.substr(6);
-      G__TypeInfo ti(tName.c_str());
-      m_typeVec.push_back("Type " + tvNumStr + " = ConstBuilder(" +
-                          gen_type(ti) + ");");
-   } else if (tn.Reftype()) {
-      G__TypeInfo ti(tName.substr(0, tName.rfind("&")).c_str());
-      m_typeVec.push_back("Type " + tvNumStr + " = ReferenceBuilder(" +
-                          gen_type(ti) + ");");
-   } else if (tn.Name()[strlen(tn.Name()) - 1] == '*') {
+   if (tn.Name()[strlen(tn.Name()) - 1] == '*') {
       G__TypeInfo ti(tName.substr(0, tName.rfind("*")).c_str());
       m_typeVec.push_back("Type " + tvNumStr + " = PointerBuilder(" +
                           gen_type(ti) + ");");
@@ -116,6 +110,23 @@ std::string rflx_gensrc::gen_type(G__TypeInfo & tn)
          m_typeVec.push_back("Type " + tvNumStr + " = TypedefTypeBuilder(\"" + tName 
             + "\", " + gen_type(clOrig) + ");");
       }
+   } else if (tn.Reftype()) {
+      G__TypeInfo ti(tName.substr(0, tName.rfind("&")).c_str());
+      m_typeVec.push_back("Type " + tvNumStr + " = ReferenceBuilder(" +
+                          gen_type(ti) + ");");
+   } else if (tn.Isconst()&G__CONSTVAR) {
+      std::string::size_type posConst=tName.rfind("const");
+      if (posConst != std::string::npos) {
+         if (posConst)
+            tName = tName.substr(0, tName.length() - 5);
+         else
+            tName = tName.substr(6);
+         G__TypeInfo ti(tName.c_str());
+         m_typeVec.push_back("Type " + tvNumStr + " = ConstBuilder(" +
+                             gen_type(ti) + ");");
+      } else 
+         m_typeVec.push_back("Type " + tvNumStr + " = TypeBuilder(\"" +
+                             tName + "\");");
    } else {
       m_typeVec.push_back("Type " + tvNumStr + " = TypeBuilder(\"" +
                           tName + "\");");
@@ -137,7 +148,7 @@ std::string rflx_gensrc::gen_type(G__ClassInfo & tn)
    // reference, pointer, const, volatile, type, typedef
 
    //std::string tName = rflx_tools::decorate_stl_type(tn.Name());
-   std::string tName = tn.Name();
+   std::string tName = tn.Fullname();
    std::ostringstream tvNumS("");
    tvNumS << m_typeNum;
    std::string tvNumStr = "type_" + tvNumS.str();
@@ -482,9 +493,10 @@ void rflx_gensrc::gen_baseclassdefs(G__ClassInfo & ci)
          bc_modifiers += "PRIVATE";
       if (bcProp & (1 << 21))
          bc_modifiers += " | VIRTUAL";
+      std::string bcName(bc.Fullname()); // Fullname uses static buf, cannot call on ci and bc
       m_cd << std::endl
            << ind() << ".AddBase(" << dict_typealias << ", BaseOffset< " 
-           << ci.Fullname() << ", " << bc.Fullname() << " >::Get(), " << bc_modifiers << ")";
+           << ci.Fullname() << ", " << bcName << " >::Get(), " << bc_modifiers << ")";
 
    }
 }
@@ -550,6 +562,21 @@ void rflx_gensrc::gen_datamemberdefs(G__ClassInfo & ci)
          else
             m_cd << "OffsetOf" << offnum << "(" << fclname << ", " << dm.Name() << "), ";
          m_cd << dm_modifiers << ")";
+         // comment
+         char buf[16*1024]; buf[0] = 0;
+         G__var_array* va = (G__var_array*)dm.Handle();
+         G__getcomment(buf,&va->comment[dm.Index()],va->tagnum);
+         if (buf[0]) {
+            std::string comment(buf);
+            std::string::size_type posRepl = 0;
+            // replace '"' with '\"' and '\' with '\\'
+            while (std::string::npos != (posRepl = comment.find_first_of("\\\"", posRepl))) {
+               comment.insert(posRepl, "\\");
+               posRepl+=2; // skip inserted '\' and found '"'
+            }
+            m_cd << std::endl
+                 << ind() << ".AddProperty(\"comment\",\"" << comment << "\")";
+         }
       }
    }
 }
@@ -675,21 +702,21 @@ void rflx_gensrc::gen_functionmemberdefs(G__ClassInfo & ci)
    if (!hasConstructor) {
 
       // this is a huge overhead in order to find the proper type for the pointer to class
-      std::string pclname = clname + "*";
-      std::string cltypestr = "";
-      if (m_typeMap.find(pclname) != m_typeMap.end())
-         cltypestr = m_typeMap[pclname];
-      else if (m_typeMap.find(clname) != m_typeMap.end()) {
+      std::string fullclname = ci.Fullname();
+      std::string cltypestr;
+      if (m_typeMap.find(fullclname + "*") != m_typeMap.end())
+         cltypestr = m_typeMap[fullclname + "*"];
+      else if (m_typeMap.find(fullclname) != m_typeMap.end()) {
          std::ostringstream tvNumS("");
          tvNumS << m_typeNum;
          cltypestr = "type_" + tvNumS.str();
          ++m_typeNum;
          m_typeVec.push_back("Type " + cltypestr + " = PointerBuilder(" +
-                             m_typeMap[clname] + ");");
+                             m_typeMap[fullclname] + ");");
       } else {
          std::
              cerr << "makecint: could not find type information for type "
-             << clname << std::endl;
+             << fullclname << std::endl;
       }
 
       m_cd << std::endl
@@ -949,7 +976,9 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
                   s << ind() << "return ::new(mem) ::" << fclname << "(";
                   moffset += 21 + fclname.length() + ind.get();
                } else {
-                  std::string objcaststr = "((::" + fclname + "*)o)->";
+                  std::string constStr;
+                  if  (fm.Type()->Isconst()&G__CONSTFUNC) constStr = "const ";
+                  std::string objcaststr = "((" + constStr + "::" + fclname + "*)o)->";
                   if (fm.Property() & G__BIT_ISSTATIC)
                      objcaststr = fclname + "::";
                   moffset = gen_stubfuncdecl_header(s, fm, objcaststr, j);
@@ -978,7 +1007,9 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
                s << ind() << "return ::new(mem) ::" << fclname << "(";
                moffset += 21 + fclname.length() + ind.get();
             } else {
-               std::string objcaststr = "((::" + fclname + "*)o)->";
+               std::string constStr;
+               if  (fm.Type()->Isconst()&G__CONSTFUNC) constStr = "const ";
+               std::string objcaststr = "((" + constStr + "::" + fclname + "*)o)->";
                if (fm.Property() & G__BIT_ISSTATIC)
                   objcaststr = fclname + "::";
                moffset = gen_stubfuncdecl_header(s, fm, objcaststr);
@@ -1321,13 +1352,14 @@ void rflx_gensrc::gen_dictinstances()
         << rflx_tools::escape_class_name(m_sourcefile) << "();" << std::endl;
    m_di << ind() << "__reflex__free__variables__dict__" 
         << rflx_tools::escape_class_name(m_sourcefile) << "();" << std::endl;
-   m_di << ind() << "__reflex__enums__dict__" 
-        << rflx_tools::escape_class_name(m_sourcefile) << "();" << std::endl;
    for (std::vector < std::string >::const_iterator it =
         m_classNames.begin(); it != m_classNames.end(); ++it) {
       m_di << ind() << "__" << rflx_tools::
           escape_class_name(*it) << "_dict();" << std::endl;
    }
+   // enums at the end!
+   m_di << ind() << "__reflex__enums__dict__" 
+        << rflx_tools::escape_class_name(m_sourcefile) << "();" << std::endl;
    --ind;
    m_di << ind() << "}" << std::endl;
    --ind;
