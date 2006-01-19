@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.188 2005/10/28 19:35:59 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.189 2005/11/11 23:21:43 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1866,7 +1866,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
          }
          if (!leaf) {
             // Check for an alias.
-            if (left[strlen(left)-1]=='.') left[strlen(left)-1]=0;
+            if (strlen(left) && left[strlen(left)-1]=='.') left[strlen(left)-1]=0;
             const char *aliasValue = fTree->GetAlias(left);
             if (aliasValue && strcspn(aliasValue,"+*/-%&!=<>|")==strlen(aliasValue)) {
                // First check whether we are using this alias recursively (this would
@@ -2719,8 +2719,10 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
          // We do not know exactly where the leaf of the TClonesArray is
          // in the hierachy but we still need to get the correct class
          // holder.
-         if (branchcur==((TBranchElement*)branchcur)->GetMother()
-             || !leafcur || (!leafcur->IsOnTerminalBranch()) ) {
+         if (branchcur==((TBranchElement*)branchcur)->GetMother()) {
+            // Top level branch
+            clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
+         } else if (!leafcur || (!leafcur->IsOnTerminalBranch()) ) {
             TBranchElement *branchEl = (TBranchElement *)branch;
             TStreamerElement* element = (TStreamerElement*)
                branchEl->GetInfo()->GetElems()[branchEl->GetID()];
