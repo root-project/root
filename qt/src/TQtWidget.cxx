@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.60 2005/12/09 03:43:45 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.67 2006/01/17 20:34:50 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -14,6 +14,16 @@
 // "double-buffere widget
 
 #include <qapplication.h>
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <QFocusEvent>
+#include <QPaintEvent>
+#include <QKeyEvent>
+#include <QShowEvent>
+#include <QResizeEvent>
+#include <QMouseEvent>
+#include <QCustomEvent>
+#endif /* QT_VERSION */
 #include "TQtWidget.h"
 #include "TQtTimer.h"
 #include "TQtLock.h"
@@ -48,7 +58,7 @@ ClassImp(TQtWidget)
 //           This widget can be used as a Qt "custom widget" 
 //         to build a custom GUI interfaces with  Qt Designer
 //
-// class emits Qt signals and has a Qt public slots
+// The class emits the Qt signals and has Qt public slots
 //
 //  Public slots:  (Qt)
 //
@@ -66,11 +76,27 @@ ClassImp(TQtWidget)
 //    CanvasPainted();  // Signal the TCanvas has been painted onto the screen
 //    Saved(bool ok);   // Signal the TCanvas has been saved into the file
 //    RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c);
-//                     // Signal the Qt mouse/keyboard event has been process by ROOT
-// 
+//                      // Signal the Qt mouse/keyboard event has been process by ROOT
+//                      // This "signal" is emitted by the enabled mouse events only.
+//                      // See: EnableSignalEvents
+//                      // ---  DisableSignalEvents
+//
+//  public methods:
+//    The methods below define whether the TQtWidget object emits "RootEventProcessed" Qt signals
+//     (By default no  RootEventProcessed Qt signal is emitted )
+//     void EnableSignalEvents (UInt_t f)
+//     void DisableSignalEvents(UInt_t f),
+//         where f is a bitwise OR of the mouse event flags:
+//                  kMousePressEvent       // TCanvas processed QEvent mousePressEvent
+//                  kMouseMoveEvent        // TCanvas processed QEvent mouseMoveEvent
+//                  kMouseReleaseEvent     // TCanvas processed QEvent mouseReleaseEvent
+//                  kMouseDoubleClickEvent // TCanvas processed QEvent mouseDoubleClickEvent
+//                  kKeyPressEvent         // TCanvas processed QEvent keyPressEvent
+//                  kEnterEvent            // TCanvas processed QEvent enterEvent
+//                  kLeaveEvent            // TCanvas processed QEvent leaveEvent
 //
 //  For example to create the custom responce to the mouse crossing TCanvas
-//  connect the RootEventProsecced signal witrh your qt slot:
+//  connect the RootEventProsecced signal with your qt slot:
 //
 // connect(tQtWidget,SIGNAL(RootEventProcessed(TObject *, unsigned int, TCanvas *))
 //          ,this,SLOT(CanvasEvent(TObject *, unsigned int, TCanvas *)));
@@ -117,12 +143,17 @@ TCanvas  *TQtWidget::Canvas()
 };
 
 //_____________________________________________________________________________
-TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):QWidget(parent,name,f)
+TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedded):QWidget(parent,name,f)
           ,fBits(0),fCanvas(0),fPixmapID(this),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 {
+#if QT_VERSION < 0x40000
   setFocusPolicy(QWidget::WheelFocus);
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
+#else /* QT_VERSION */
+  setFocusPolicy(Qt::WheelFocus);
+  setWindowFlags(windowFlags () | Qt::WNoAutoErase | Qt:: WResizeNoErase );
+#endif /* QT_VERSION */
   setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
     if (!gApplication) InitRint();
@@ -130,7 +161,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     TGQt::RegisterWid(this);
     fCanvas = new TCanvas(name, 4, 4, TGQt::RegisterWid(this));
-    // fprintf(stderr,"TQtWidget::TQtWidget fEditable %d\n", fCanvas->IsEditable());
+    // fprintf(stderr,"TQtWidget::TQtWidget %p fEditable %d\n", fCanvas, fCanvas->IsEditable());
     gROOT->SetBatch(batch);
   }
   fSizeHint = QWidget::sizeHint();
@@ -188,14 +219,34 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
    static int localArgc   =0;
    if (!gApplication) {
        localArgc = argc ? *argc : qApp->argc();
-       TRint *rint = new TRint(appClassName, &localArgc, argv ? argv : qApp->argv(),options,numOptions,kFALSE);
-       // To mimic what TRint::Run(kTRUE) does.
-       const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
-       if (prompt)
+       // check the Gui.backend and Factory
+      TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));
+      guiBackend.ToLower();
+      // Enforce Qt-base Gui.Backend and Gui.Factory from within ROOT-based Qt-application
+      if (!guiBackend.BeginsWith("qt",TString::kIgnoreCase)) {
+         gEnv->SetValue("Gui.Backend", "qt");
+      }
+      TString guiFactory(gEnv->GetValue("Gui.Factory", "native"));
+      guiFactory.ToLower();
+      if (!guiFactory.BeginsWith("qt",TString::kIgnoreCase )){
+         // Check for the extention
+         char *extLib = gSystem->DynamicPathName("libQtGui",kTRUE);
+         if (extLib) {
+            gEnv->SetValue("Gui.Factory", "qtgui");
+        } else {
+            gEnv->SetValue("Gui.Factory", "qt");
+         }
+         delete [] extLib;
+      }
+
+      TRint *rint = new TRint(appClassName, &localArgc, argv ? argv : qApp->argv(),options,numOptions,kFALSE);
+      // To mimic what TRint::Run(kTRUE) does.
+      const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
+      if (prompt)
             Getlinem(kInit, rint->GetPrompt());
-        TQtTimer::Create()->start(0,TRUE);
-    }
-    return gApplication;
+      TQtTimer::Create()->start(0,TRUE);
+   }
+   return gApplication;
 }
 //_____________________________________________________________________________
 void TQtWidget::adjustSize()
@@ -227,7 +278,9 @@ void TQtWidget::cd(int subpadnumber)
  // [slot] to make this embedded canvas / pad the current one
   TQtLock lock;
   TCanvas *c = fCanvas;
-  if (c) c->cd(subpadnumber);
+  if (c) {
+     c->cd(subpadnumber);
+  }
 }
 //______________________________________________________________________________
 void TQtWidget::Disconnect()
@@ -301,7 +354,6 @@ void TQtWidget::focusInEvent ( QFocusEvent *e )
    if (!fWrapper && e->gotFocus()) {
       setMouseTracking(TRUE);
    }
-   if ( autoMask() ) updateMask();
 }
 //_____________________________________________________________________________
 void TQtWidget::focusOutEvent ( QFocusEvent *e )
@@ -312,7 +364,6 @@ void TQtWidget::focusOutEvent ( QFocusEvent *e )
    if (!fWrapper && e->lostFocus()) {
       setMouseTracking(FALSE);
    }
-   if ( autoMask() ) updateMask();
 }
 
 //_____________________________________________________________________________
@@ -352,7 +403,7 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    EEventType rootButton = kMouseMotion;
    TCanvas *c = Canvas();
    if (c || !fWrapper){
-      if (e->state() & LeftButton) { rootButton = kButton1Motion; }
+      if (e->state() & Qt::LeftButton) { rootButton = kButton1Motion; }
       c->HandleInput(rootButton, e->x(), e->y());
       e->accept();  EmitSignal(kMouseMoveEvent); return;
    } else {
@@ -482,8 +533,6 @@ void TQtWidget::resizeEvent(QResizeEvent *e)
 #endif
 
    }
-   if ( autoMask() )
-      updateMask();
 }
 //____________________________________________________________________________
 void TQtWidget::SetSaveFormat(const char *format)
