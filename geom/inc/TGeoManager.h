@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.69 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.70 2006/01/06 10:32:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -365,6 +365,7 @@ public:
    Bool_t                 IsSameLocation() const {return fIsSameLocation;}
    Bool_t                 IsSamePoint(Double_t x, Double_t y, Double_t z) const;
    Bool_t                 IsStartSafe() const {return fStartSafe;}
+   void                   SetCheckingOverlaps(Bool_t flag=kTRUE) {fSearchOverlaps = flag;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
    void                   SetMatrixTransform(Bool_t on=kTRUE) {fMatrixTransform = on;}
    void                   SetMatrixReflection(Bool_t flag=kTRUE) {fMatrixReflection = flag;}

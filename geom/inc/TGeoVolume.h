@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.43 2005/11/28 12:55:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.44 2005/12/19 10:46:58 rdm Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -75,6 +75,8 @@ protected :
    Int_t              fNtotal;         // total number of physical nodes
 public:
    enum EGeoVolumeTypes {
+      kVolumeReplicated =  BIT(14),
+      kVolumeSelected =    BIT(15),
       kVolumeDiv     =     BIT(16),
       kVolumeOverlap =     BIT(17),
       kVolumeImportNodes = BIT(18),
@@ -82,8 +84,7 @@ public:
       kVoxelsXYZ     =     BIT(20),
       kVoxelsCyl     =     BIT(21),
       kVolumeClone   =     BIT(22),
-      kVolumeAdded   =     BIT(23),
-      kVolumeReplicated =  BIT(24)
+      kVolumeAdded   =     BIT(23)
    };
    // constructors
    TGeoVolume();
@@ -126,6 +127,7 @@ public:
 
    Bool_t          IsAdded()     const {return TObject::TestBit(kVolumeAdded);}
    Bool_t          IsReplicated() const {return TObject::TestBit(kVolumeReplicated);}
+   Bool_t          IsSelected() const  {return TObject::TestBit(kVolumeSelected);}
    Bool_t          IsCylVoxels() const {return TObject::TestBit(kVoxelsCyl);}
    Bool_t          IsXYZVoxels() const {return TObject::TestBit(kVoxelsXYZ);}
    Bool_t          IsTopVolume() const;
@@ -174,6 +176,7 @@ public:
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
    void            SaveAs(const char *filename); // *MENU*
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
+   void            SelectVolume(Bool_t clear = kFALSE);
    void            SetAsTopVolume(); // *TOGGLE* *GETTER=IsTopVolume
    void            SetAdded()      {TObject::SetBit(kVolumeAdded);}
    void            SetReplicated() {TObject::SetBit(kVolumeReplicated);}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.136 2006/01/06 10:32:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.137 2006/01/16 11:03:33 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -4705,15 +4705,14 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
    SortOverlaps();
    Int_t novlps = fOverlaps->GetEntriesFast();
    TNamed *obj;
-   char *name;
-   char num[10];
+   char name[15];
+   char num[15];
    Int_t ndigits=1;
    Int_t i,j, result=novlps;
    while ((result /= 10)) ndigits++;
    for (i=0; i<novlps; i++) {
       obj = (TNamed*)fOverlaps->At(i);
       result = i;
-      name = new char[10];
       name[0] = 'o';
       name[1] = 'v';
       for (j=0; j<ndigits; j++) name[j+2]='0';
@@ -4721,7 +4720,6 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
       sprintf(num,"%i", i);
       memcpy(name+2+ndigits-strlen(num), num, strlen(num));
       obj->SetName(name);
-      delete [] name;
    }
    fSearchOverlaps = kFALSE;
    Info("CheckOverlaps","number of illegal overlaps/extrusions : %d", novlps);

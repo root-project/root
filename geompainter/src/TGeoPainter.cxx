@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.73 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.74 2005/11/29 18:58:10 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -819,8 +819,10 @@ void TGeoPainter::Paint(Option_t *option)
 {
 // Paint current geometry according to option.
    if (!fGeoManager) return;
-
-   if (strlen(option) || !fIsRaytracing) {
+   Bool_t is_padviewer = kTRUE;
+   if (gPad) is_padviewer = (!strcmp(gPad->GetViewer3D()->ClassName(),"TViewer3DPad"))?kTRUE:kFALSE;
+   
+   if (!fIsRaytracing || !is_padviewer) {
       if (fVisOption==kGeoVisOnly) {
          fGeoManager->GetCurrentNode()->Paint(option);
          return;
@@ -853,7 +855,7 @@ void TGeoPainter::Paint(Option_t *option)
       fVisLock = kTRUE;
    } 
    // Check if we have to raytrace (only in pad)  
-   if (!strlen(option) && fIsRaytracing) Raytrace();
+   if (fIsRaytracing && is_padviewer) Raytrace();
 }
 
 //______________________________________________________________________________

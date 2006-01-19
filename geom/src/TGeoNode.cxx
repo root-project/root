@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.27 2005/11/21 09:31:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.28 2005/11/28 12:55:35 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -127,6 +127,60 @@ void TGeoNode::Browse(TBrowser *b)
       b->Add(GetDaughter(i));
 }
 
+//_____________________________________________________________________________
+void TGeoNode::CheckOverlaps(Double_t ovlp)
+{
+// Check overlaps bigger than OVLP hierarchically, starting with this node.
+   static Int_t icall = 0;
+   Int_t i, nd;
+   Bool_t clear;
+   TGeoNode *daughter;
+   TGeoManager *geom = fVolume->GetGeoManager();
+   if (icall == 0) {
+      geom->ClearOverlaps();
+      geom->SetCheckingOverlaps(kTRUE);
+      Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", fVolume->GetName(),ovlp);
+   }
+   icall++;
+   if (!fVolume->IsSelected()) {
+      // this branch was not checked -> check it
+      fVolume->SelectVolume(clear=kFALSE);
+      fVolume->CheckOverlaps(ovlp);
+      nd = GetNdaughters();
+      for (i=0; i<nd; i++) {
+         daughter = fVolume->GetNode(i);
+         daughter->CheckOverlaps(ovlp);
+      }
+   }
+   icall--;
+   if (icall == 0) {
+      // reset the selection for volumes
+      fVolume->SelectVolume(clear=kTRUE);
+      geom->SortOverlaps();
+      TObjArray *overlaps = geom->GetListOfOverlaps();
+      Int_t novlps = overlaps->GetEntriesFast();     
+      TNamed *obj;
+      char name[15];
+      char num[15];
+      Int_t ndigits=1;
+      Int_t j, result=novlps;
+      while ((result /= 10)) ndigits++;
+      for (i=0; i<novlps; i++) {
+         obj = (TNamed*)overlaps->At(i);
+         result = i;
+         name[0] = 'o';
+         name[1] = 'v';
+         for (j=0; j<ndigits; j++) name[j+2]='0';
+         name[ndigits+2] = 0;
+         sprintf(num,"%i", i);
+         memcpy(name+2+ndigits-strlen(num), num, strlen(num));
+         obj->SetName(name);
+      }   
+      Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
+      geom->SetCheckingOverlaps(kFALSE);
+   }   
+}      
+      
 //_____________________________________________________________________________
 Bool_t TGeoNode::IsOnScreen() const
 {

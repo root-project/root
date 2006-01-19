@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.69 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.70 2005/11/21 09:31:47 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -337,6 +337,7 @@
 #include "TBrowser.h"
 #include "TStyle.h"
 #include "TH2F.h"
+#include "TPad.h"
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
@@ -466,7 +467,7 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
    fGeoManager->SetNsegments(80);
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->ClearOverlaps();
-      printf("=== Checking overlaps vor volume %s ===\n", GetName());
+      Info("CheckOverlaps", "=== Checking overlaps vor volume %s ===\n", GetName());
    }   
    painter->CheckOverlaps(this, ovlp, option);
    
@@ -475,15 +476,14 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
       TObjArray *overlaps = fGeoManager->GetListOfOverlaps();
       Int_t novlps = overlaps->GetEntriesFast();
       TNamed *obj;
-      char *name;
-      char num[10];
+      char name[15];
+      char num[15];
       Int_t ndigits=1;
       Int_t i,j, result=novlps;
       while ((result /= 10)) ndigits++;
       for (i=0; i<novlps; i++) {
          obj = (TNamed*)overlaps->At(i);
          result = i;
-         name = new char[10];
          name[0] = 'o';
          name[1] = 'v';
          for (j=0; j<ndigits; j++) name[j+2]='0';
@@ -491,9 +491,8 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
          sprintf(num,"%i", i);
          memcpy(name+2+ndigits-strlen(num), num, strlen(num));
          obj->SetName(name);
-         delete [] name;
       }   
-      printf("   number of illegal overlaps/extrusions : %d\n", novlps);
+      Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
    }   
 }
 
@@ -981,12 +980,17 @@ void TGeoVolume::Raytrace(Bool_t flag)
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    Bool_t drawn = (painter->GetDrawnVolume()==this)?kTRUE:kFALSE;
+   Bool_t force_update = (gPad==0)?kTRUE:kFALSE;
    
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) {
       fGeoManager->SetTopVolume(this);
       painter->SetRaytracing(kFALSE);
       painter->Draw();
+      if (force_update) {
+         gPad->Modified();
+         gPad->Update();
+      }   
       painter->SetRaytracing(flag);
       painter->ModifiedPad();
       return;
@@ -1528,6 +1532,30 @@ void TGeoVolume::FindOverlaps() const
       fVoxels->FindOverlaps(inode);
    }
 }
+
+//_____________________________________________________________________________
+void TGeoVolume::SelectVolume(Bool_t clear)
+{
+// Select this volume as matching an arbitrary criteria. The volume is added to
+// a static list and the flag TGeoVolume::kVolumeSelected is set. All flags need
+// to be reset at the end by calling the method with CLEAR=true. This will also clear 
+// the list.
+   static TObjArray array(256);
+   static Int_t len = 0;
+   Int_t i;
+   TObject *vol;
+   if (clear) {
+      for (i=0; i<len; i++) {
+         vol = array.At(i);
+         vol->ResetBit(TGeoVolume::kVolumeSelected);
+      }
+      array.Clear();
+      len = 0;
+      return;
+   }
+   SetBit(TGeoVolume::kVolumeSelected);
+   array.AddAtAndExpand(this, len++);
+}      
 
 //_____________________________________________________________________________
 void TGeoVolume::SetVisibility(Bool_t vis)
