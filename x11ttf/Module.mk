@@ -45,7 +45,7 @@ $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(X1
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(X11TTFH) $(X11TTFL)
+		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
 
 $(X11TTFDO):    $(X11TTFDS) $(FREETYPEDEP)
 		$(CXX) $(NOOPT) $(FREETYPEINC) $(CXXFLAGS) -I. -o $@ -c $<

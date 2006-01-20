@@ -70,7 +70,7 @@ $(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 
 $(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GQTH1) $(GQTL)
+		$(ROOTCINTTMP) -f $@ -c $(QTINCDIR:%=-I%) $(GQTH1) $(GQTL)
 
 $(GQTDO):       $(GQTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
