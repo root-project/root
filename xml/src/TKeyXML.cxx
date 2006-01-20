@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.3 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.4 2005/11/22 20:42:37 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -82,7 +82,16 @@ TKeyXML::TKeyXML(TXMLFile* file, XMLNodePointer_t keynode) :
    // Creates TKeyXML and takes ownership over xml node, from which object can be restored
 
    SetName(fXML->GetAttr(keynode, xmlio::Name));
+   
+   if (fXML->HasAttr(keynode, xmlio::Title))
+      SetTitle(fXML->GetAttr(keynode, xmlio::Title));
+
    fCycle = fXML->GetIntAttr(keynode, xmlio::Cycle);
+      
+   if (fXML->HasAttr(keynode, xmlio::CreateTm)) {
+      TDatime tm(fXML->GetAttr(keynode, xmlio::CreateTm)); 
+      fDatime = tm;
+   }
 
    XMLNodePointer_t objnode = fXML->GetChild(keynode);
    fXML->SkipEmpty(objnode);
@@ -138,11 +147,21 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
 
    fKeyNode = fXML->NewChild(0, 0, xmlio::Xmlkey, 0);
    fXML->NewAttr(fKeyNode, 0, xmlio::Name, GetName());
-
+   
    fXML->NewIntAttr(fKeyNode, xmlio::Cycle, fCycle);
-
+   
+   if (fFile->GetIOVersion()>1) {
+      if (strlen(GetTitle())>0)
+         fXML->NewAttr(fKeyNode, 0, xmlio::Title, GetTitle());
+      fDatime.Set();
+      fXML->NewAttr(fKeyNode, 0, xmlio::CreateTm, fDatime.AsSQLString());
+   }
+   
    TBufferXML buffer(TBuffer::kWrite, fFile);
-   XMLNodePointer_t node = buffer.XmlWrite(obj, cl);
+   if (fFile->GetIOVersion()==1)
+      buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
+   
+   XMLNodePointer_t node = buffer.XmlWriteAny(obj, cl);
 
    if (node!=0)
       fXML->AddChild(fKeyNode, node);
@@ -185,9 +204,22 @@ TObject* TKeyXML::ReadObj()
 
    if (fKeyNode==0) return 0;
    TBufferXML buffer(TBuffer::kRead, fFile);
+   if (fFile->GetIOVersion()==1)
+      buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
    buffer.XmlReadBlock(BlockNode());
-   TObject* obj = buffer.XmlRead(ObjNode());
-   return obj;
+   TClass* cl = 0;
+   void* obj = buffer.XmlReadAny(ObjNode(), &cl);
+   
+   if ((cl==0) || (obj==0)) return 0;
+   
+   Int_t delta = cl->GetBaseClassOffset(TObject::Class());
+   
+   if (delta<0) {
+      cl->Destructor(obj);
+      return 0;
+   }
+       
+   return (TObject*) ( ( (char*)obj ) + delta );
 }
 
 //______________________________________________________________________________
@@ -197,6 +229,8 @@ void* TKeyXML::ReadObjectAny(const TClass* /*cl*/)
 
    if (fKeyNode==0) return 0;
    TBufferXML buffer(TBuffer::kRead, fFile);
+   if (fFile->GetIOVersion()==1)
+      buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
    buffer.XmlReadBlock(BlockNode());
    void* obj = buffer.XmlReadAny(ObjNode(), 0);
    return obj;

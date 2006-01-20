@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.6 2005/11/22 20:42:37 pcanal Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.7 2005/12/02 23:23:36 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassTable.h"
+#include "TDataType.h"
 #include "TExMap.h"
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
@@ -41,6 +42,19 @@
 extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
 
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+
+#ifdef R__VISUAL_CPLUSPLUS
+#define FLong64    "%I64d"
+#define FULong64   "%I64u"
+#else
+#ifdef R__B64
+#define FLong64    "%ld"
+#define FULong64   "%lu"
+#else
+#define FLong64    "%lld"
+#define FULong64   "%llu"
+#endif
+#endif
 
 ClassImp(TBufferXML);
 
@@ -71,7 +85,10 @@ TBufferXML::TBufferXML(TBuffer::EMode mode) :
    // Creates buffer object to serailize/deserialize data to/from xml.
    // Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
+   fBufSize = 1000000000;
+
    SetParent(0);
+   SetBit(kCannotHandleMemberWiseStreaming);
 }
 
 //______________________________________________________________________________
@@ -99,6 +116,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile* file) :
    fBufSize = 1000000000;
 
    SetParent(file);
+   SetBit(kCannotHandleMemberWiseStreaming);
    if (XmlFile()) {
       SetXML(XmlFile()->XML());
       SetCompressionLevel(XmlFile()->GetCompressionLevel());
@@ -125,19 +143,87 @@ TXMLFile* TBufferXML::XmlFile()
 }
 
 //______________________________________________________________________________
-XMLNodePointer_t TBufferXML::XmlWrite(const TObject* obj)
+TString TBufferXML::ConvertToXML(TObject* obj, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
-   // Convert object, derived from TObject class to xml structures
-   // Return pointer on top xml element
-
-   if (obj==0)
-      return XmlWrite(0,0);
-   else
-      return XmlWrite(obj, obj->IsA());
+   // converts object, inherited from TObject class, to XML string
+   // fmt contains configuration of XML layout. See TXMLSetup class for detatils
+   
+   return ConvertToXML(obj, obj ? obj->IsA() : 0, GenericLayout, UseNamespaces);
 }
 
 //______________________________________________________________________________
-XMLNodePointer_t TBufferXML::XmlWrite(const void* obj, const TClass* cl)
+TString TBufferXML::ConvertToXML(void* obj, TClass* cl, Bool_t GenericLayout, Bool_t UseNamespaces)
+{
+   // converts any type of object to XML string
+   // fmt contains configuration of XML layout. See TXMLSetup class for detatils
+   
+   TXMLEngine xml;
+   
+   TBufferXML buf(TBuffer::kWrite);
+   buf.SetXML(&xml);
+   
+   buf.SetXmlLayout(GenericLayout ? TXMLSetup::kGeneralized : TXMLSetup::kSpecialized);
+   buf.SetUseNamespaces(UseNamespaces);
+   
+   XMLNodePointer_t xmlnode = buf.XmlWriteAny(obj, cl);
+   
+   TString res;
+   
+   xml.SaveSingleNode(xmlnode, &res);
+   
+   xml.FreeNode(xmlnode);
+   
+   return res;
+}
+
+//______________________________________________________________________________
+TObject* TBufferXML::ConvertFromXML(const char* str, Bool_t GenericLayout, Bool_t UseNamespaces)
+{
+   // Read object from XML, produced by ConvertToXML() method. 
+   // If object does not inherit from TObject class, return 0.
+   // GenericLayout and UseNamespaces should be the same as in ConvertToXML()
+    
+   TClass* cl = 0;
+   void* obj = ConvertFromXMLAny(str, &cl, GenericLayout, UseNamespaces); 
+   
+   if ((cl==0) || (obj==0)) return 0;
+   
+   Int_t delta = cl->GetBaseClassOffset(TObject::Class());
+   
+   if (delta<0) {
+      cl->Destructor(obj);
+      return 0;
+   }
+       
+   return (TObject*) ( ( (char*)obj ) + delta );
+}
+
+//______________________________________________________________________________
+void* TBufferXML::ConvertFromXMLAny(const char* str, TClass** cl, Bool_t GenericLayout, Bool_t UseNamespaces)
+{
+   // Read object of any class from XML, produced by ConvertToXML() method. 
+   // If cl!=0, return actual class of object.
+   // GenericLayout and UseNamespaces should be the same as in ConvertToXML()
+    
+   TXMLEngine xml;
+   TBufferXML buf(TBuffer::kRead);
+
+   buf.SetXML(&xml);
+   
+   buf.SetXmlLayout(GenericLayout ? TXMLSetup::kGeneralized : TXMLSetup::kSpecialized);
+   buf.SetUseNamespaces(UseNamespaces);
+   
+   XMLNodePointer_t xmlnode = xml.ReadSingleNode(str);
+   
+   void* obj = buf.XmlReadAny(xmlnode, cl);
+   
+   xml.FreeNode(xmlnode);
+   
+   return obj;
+}
+
+//______________________________________________________________________________
+XMLNodePointer_t TBufferXML::XmlWriteAny(const void* obj, const TClass* cl)
 {
    // Convert object of any class to xml structures
    // Return pointer on top xml element
@@ -149,25 +235,6 @@ XMLNodePointer_t TBufferXML::XmlWrite(const void* obj, const TClass* cl)
    XMLNodePointer_t res = XmlWriteObject(obj, cl);
 
    return res;
-}
-
-//______________________________________________________________________________
-TObject* TBufferXML::XmlRead(XMLNodePointer_t node)
-{
-   // Recreate object from xml structure.
-   // Return pointer to read object.
-   // If object class is not inherited from TObject,
-   // object is deleted and function return 0
-
-   TClass* cl = 0;
-   void* obj = XmlReadAny(node, &cl);
-
-   if ((cl!=0) && !cl->InheritsFrom(TObject::Class())) {
-      cl->Destructor(obj);
-      obj = 0;
-   }
-
-   return (TObject*) obj;
 }
 
 //______________________________________________________________________________
@@ -198,7 +265,7 @@ void TBufferXML::WriteObject(const TObject *obj)
 {
    // Convert object into xml structures.
    // !!! Should be used only by TBufferXML itself.
-   // Use XmlWrite() functions to convert your object to xml
+   // Use ConvertToXML() methods to convert your object to xml
    // Redefined here to avoid gcc 3.x warning
 
    TBuffer::WriteObject(obj);
@@ -217,7 +284,17 @@ class TXMLStackObj : public TObject {
          fElem(0),
          fElemNumber(0),
          fCompressedClassNode(kFALSE),
-         fClassNs(0) {}
+         fClassNs(0),
+         fIsStreamerInfo(kFALSE),
+         fIsElemOwner(kFALSE)
+          {}
+         
+      virtual ~TXMLStackObj()
+      {
+         if (fIsElemOwner) delete fElem;
+      }
+      
+      Bool_t IsStreamerInfo() const { return fIsStreamerInfo; }
 
       XMLNodePointer_t  fNode;
       TStreamerInfo*    fInfo;
@@ -225,6 +302,8 @@ class TXMLStackObj : public TObject {
       Int_t             fElemNumber;
       Bool_t            fCompressedClassNode;
       XMLNsPointer_t    fClassNs;
+      Bool_t            fIsStreamerInfo;
+      Bool_t            fIsElemOwner;
 };
 
 //______________________________________________________________________________
@@ -596,15 +675,17 @@ Bool_t TBufferXML::VerifyItemNode(const char* name, const char* errinfo)
 }
 
 //______________________________________________________________________________
-void TBufferXML::CreateElemNode(const TStreamerElement* elem, Int_t number)
+void TBufferXML::CreateElemNode(const TStreamerElement* elem)
 {
    // create xml node correspondent to TStreamerElement object
 
    XMLNodePointer_t elemnode = 0;
 
+   const char* elemxmlname = XmlGetElementName(elem);
+
    if (GetXmlLayout()==kGeneralized) {
       elemnode = fXML->NewChild(StackNode(), 0, xmlio::Member, 0);
-      fXML->NewAttr(elemnode, 0, xmlio::Name, XmlGetElementName(elem));
+      fXML->NewAttr(elemnode, 0, xmlio::Name, elemxmlname);
    } else {
       // take namesapce for element only if it is not a base class or class name
       XMLNsPointer_t ns = Stack()->fClassNs;
@@ -614,31 +695,31 @@ void TBufferXML::CreateElemNode(const TStreamerElement* elem, Int_t number)
            || ((elem->GetType()==TStreamerInfo::kTString) && !strcmp(elem->GetName(), TString::Class()->GetName())))
          ns = 0;
 
-      elemnode = fXML->NewChild(StackNode(), ns, XmlGetElementName(elem), 0);
+      elemnode = fXML->NewChild(StackNode(), ns, elemxmlname, 0);
    }
 
    TXMLStackObj* curr = PushStack(elemnode);
    curr->fElem = (TStreamerElement*)elem;
-   curr->fElemNumber = number;
 }
 
 //______________________________________________________________________________
-Bool_t TBufferXML::VerifyElemNode(const TStreamerElement* elem, Int_t number)
+Bool_t TBufferXML::VerifyElemNode(const TStreamerElement* elem)
 {
    // Checks, if stack node correspond to TStreamerElement object
 
+   const char* elemxmlname = XmlGetElementName(elem);
+
    if (GetXmlLayout()==kGeneralized) {
       if (!VerifyStackNode(xmlio::Member)) return kFALSE;
-      if (!VerifyStackAttr(xmlio::Name, XmlGetElementName(elem))) return kFALSE;
+      if (!VerifyStackAttr(xmlio::Name, elemxmlname)) return kFALSE;
    } else {
-      if (!VerifyStackNode(XmlGetElementName(elem))) return kFALSE;
+      if (!VerifyStackNode(elemxmlname)) return kFALSE;
    }
 
    PerformPreProcessing(elem, StackNode());
 
    TXMLStackObj* curr = PushStack(StackNode()); // set pointer to first data inside element
    curr->fElem = (TStreamerElement*)elem;
-   curr->fElemNumber = number;
    return kTRUE;
 }
 
@@ -735,17 +816,27 @@ void TBufferXML::IncrementLevel(TStreamerInfo* info)
    // This call indicates, that TStreamerInfo functions starts streaming
    // object data of correspondent class
 
-   if (info==0) return;
+   WorkWithClass(info);
+}
 
+//______________________________________________________________________________
+void  TBufferXML::WorkWithClass(TStreamerInfo* sinfo, const TClass* cl)
+{
+   // Prepares buffer to stream data of specified class 
+   
    fCanUseCompact = kFALSE;
    fExpectedChain = kFALSE;
 
-   TString clname = XmlConvertClassName(info->GetClass()->GetName());
+   if (sinfo!=0) cl = sinfo->GetClass();
+   
+   if (cl==0) return;
+
+   TString clname = XmlConvertClassName(cl->GetName());
 
    if (gDebug>2) Info("IncrementLevel","Class: %s", clname.Data());
 
-   Bool_t compressClassNode = fExpectedBaseClass==info->GetClass();
-   fExpectedBaseClass= 0;
+   Bool_t compressClassNode = fExpectedBaseClass==cl;
+   fExpectedBaseClass = 0;
 
    TXMLStackObj* stack = Stack();
 
@@ -769,7 +860,7 @@ void TBufferXML::IncrementLevel(TStreamerInfo* info)
       }
 
       if (IsUseNamespaces() && (GetXmlLayout()!=kGeneralized))
-         stack->fClassNs = fXML->NewNS(classnode, XmlClassNameSpaceRef(info->GetClass()), clname);
+         stack->fClassNs = fXML->NewNS(classnode, XmlClassNameSpaceRef(cl), clname);
 
    } else {
       if (!compressClassNode) {
@@ -783,7 +874,8 @@ void TBufferXML::IncrementLevel(TStreamerInfo* info)
    }
 
    stack->fCompressedClassNode = compressClassNode;
-   stack->fInfo = info;
+   stack->fInfo = sinfo;
+   stack->fIsStreamerInfo = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -794,23 +886,22 @@ void TBufferXML::DecrementLevel(TStreamerInfo* info)
 
    CheckVersionBuf();
 
-   if (info==0) return;
-
    fCanUseCompact = kFALSE;
    fExpectedChain = kFALSE;
 
    if (gDebug>2)
-      Info("DecrementLevel","Class: %s", info->GetClass()->GetName());
+      Info("DecrementLevel","Class: %s", (info ? info->GetClass()->GetName() : "custom"));
 
    TXMLStackObj* stack = Stack();
 
-   if (stack->fInfo==0) {
+   if (!stack->IsStreamerInfo()) {
       PerformPostProcessing();
       stack = PopStack();  // remove stack of last element
    }
 
    if (stack->fCompressedClassNode) {
       stack->fInfo = 0;
+      stack->fIsStreamerInfo = kFALSE;
       stack->fCompressedClassNode = kFALSE;
    } else {
       PopStack();                       // back from data of stack info
@@ -825,6 +916,12 @@ void TBufferXML::SetStreamerElementNumber(Int_t number)
    // and add/verify next element of xml structure
    // This calls allows separate data, correspondent to one class member, from another
 
+   WorkWithElement(0, number);
+}
+
+//______________________________________________________________________________
+void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
+{
    CheckVersionBuf();
 
    fExpectedChain = kFALSE;
@@ -837,7 +934,7 @@ void TBufferXML::SetStreamerElementNumber(Int_t number)
       return;
    }
 
-   if (stack->fInfo==0) {  // this is not a first element
+   if (!stack->IsStreamerInfo()) {  // this is not a first element
       PerformPostProcessing();
       PopStack();           // go level back
       if (IsReading()) ShiftStack("startelem");   // shift to next element, only for reading
@@ -848,14 +945,23 @@ void TBufferXML::SetStreamerElementNumber(Int_t number)
       Error("SetStreamerElementNumber", "Lost of stack");
       return;
    }
+   
+   Int_t comp_type = 0;
 
-   TStreamerInfo* info = stack->fInfo;
-   if (info==0) {
-      Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
-      return;
-   }
+   if ((number>=0) && (elem==0)) {
 
-   TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
+      TStreamerInfo* info = stack->fInfo;
+      if (!stack->IsStreamerInfo()) {
+         Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
+         return;
+      }
+   
+      comp_type = info->GetTypes()[number];
+
+      elem = info->GetStreamerElementReal(number, 0);
+   } else 
+      comp_type = elem->GetType();
+      
 
    if (elem==0) {
       Error("SetStreamerElementNumber", "streamer info returns elem = 0");
@@ -864,24 +970,23 @@ void TBufferXML::SetStreamerElementNumber(Int_t number)
 
    if (gDebug>4) Info("SetStreamerElementNumber", "    Next element %s", elem->GetName());
 
-   Int_t comp_type = info->GetTypes()[number];
-
    Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);
+
+   fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
+
+   if (fExpectedChain && (gDebug>3))
+      Info("SetStreamerElementNumber",
+           "    Expects chain for elem %s number %d",
+            elem->GetName(), number);
 
    fCanUseCompact = isBasicType && ((elem->GetType()==comp_type) ||
                                     (elem->GetType()==comp_type-TStreamerInfo::kConv) ||
                                     (elem->GetType()==comp_type-TStreamerInfo::kSkip));
 
-   fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
 
    if ((elem->GetType()==TStreamerInfo::kBase) ||
        ((elem->GetType()==TStreamerInfo::kTNamed) && !strcmp(elem->GetName(), TNamed::Class()->GetName())))
       fExpectedBaseClass = elem->GetClassPointer();
-
-   if (fExpectedChain && (gDebug>3))
-      Info("SetStreamerElementNumber",
-           "    Expects chain for class %s in elem %s number %d",
-            info->GetName(), elem->GetName(), number);
 
    if (fExpectedBaseClass && (gDebug>3))
       Info("SetStreamerElementNumber",
@@ -889,10 +994,130 @@ void TBufferXML::SetStreamerElementNumber(Int_t number)
                fExpectedBaseClass->GetName());
 
    if (IsWriting()) {
-      CreateElemNode(elem, number);
+      CreateElemNode(elem);
    } else {
-      if (!VerifyElemNode(elem, number)) return;
+      if (!VerifyElemNode(elem)) return;
    }
+   
+   stack = Stack();
+   stack->fElemNumber = number;
+   stack->fIsElemOwner = (number<0);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ClassBegin(const TClass* cl, Version_t version)
+{
+   WorkWithClass(0, cl);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ClassEnd(const TClass* cl)
+{
+   DecrementLevel(0);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsize1, Int_t arrsize2)
+{
+   if (typeName==0) typeName = name;
+   
+   if ((name==0) || (strlen(name)==0)) {
+      Error("ClassMember","Invalid member name");
+      fErrorFlag = 1;
+      return;
+   }
+   
+   TString tname = typeName;
+
+   Int_t typ_id = -1;
+   
+   if (typ_id<0) {
+      TDataType *dt = gROOT->GetType(typeName);
+      if (dt!=0)
+         if ((dt->GetType()>0) && (dt->GetType()<20))
+            typ_id = dt->GetType();
+   }
+   
+   if (typ_id<0) 
+      if (strcmp(name, typeName)==0) {
+         TClass* cl = gROOT->GetClass(tname.Data());
+         if (cl!=0) typ_id = TStreamerInfo::kBase;
+      }
+   
+   if (typ_id<0) {
+      Bool_t isptr = kFALSE;
+      if (tname[tname.Length()-1]=='*') {
+         tname.Resize(tname.Length()-1);
+         isptr = kTRUE;
+      }
+      TClass* cl = gROOT->GetClass(tname.Data());
+      if (cl==0) {
+         Error("ClassMember","Invalid class specifier %s", typeName);
+         fErrorFlag = 1;
+         return;
+      }
+      
+      if (cl->IsTObject())
+        typ_id = isptr ? TStreamerInfo::kObjectp : TStreamerInfo::kObject;
+      else
+        typ_id = isptr ? TStreamerInfo::kAnyp : TStreamerInfo::kAny;
+        
+      if ((cl==TString::Class()) && !isptr)
+         typ_id = TStreamerInfo::kTString;
+   }
+   
+   TStreamerElement* elem = 0;
+   
+   if (typ_id==TStreamerInfo::kBase) {
+      TClass* cl = gROOT->GetClass(tname.Data());
+      if (cl!=0) {
+         TStreamerBase* b = new TStreamerBase(tname.Data(), "title", 0);
+         b->SetBaseVersion(cl->GetClassVersion());
+         elem = b;
+      }
+   } else 
+   
+   if ((typ_id>0) && (typ_id<20)) {
+      elem = new TStreamerBasicType(name, "title", 0, typ_id, typeName);
+   } else
+   
+   if ((typ_id==TStreamerInfo::kObject) ||
+       (typ_id==TStreamerInfo::kTObject) ||
+       (typ_id==TStreamerInfo::kTNamed)) {
+      elem = new TStreamerObject(name, "title", 0, tname.Data());  
+   } else
+   
+   if (typ_id==TStreamerInfo::kObjectp) {
+      elem = new TStreamerObjectPointer(name, "title", 0, tname.Data());
+   } else
+   
+   if (typ_id==TStreamerInfo::kAny) {
+      elem = new TStreamerObjectAny(name, "title", 0, tname.Data());
+   } else
+
+   if (typ_id==TStreamerInfo::kAnyp) {
+      elem = new TStreamerObjectAnyPointer(name, "title", 0, tname.Data());
+   } else
+   
+   if (typ_id==TStreamerInfo::kTString) {
+      elem = new TStreamerString(name, "title", 0);
+   }
+   
+   if (elem==0) {
+      Error("ClassMember","Invalid combination name = %s type = %s", name, typeName);
+      fErrorFlag = 1;
+      return;
+   }
+  
+   if (arrsize1>0) {
+      elem->SetArrayDim(arrsize2>0 ? 2 : 1);
+      elem->SetMaxIndex(0, arrsize1);
+      if (arrsize2>0)
+        elem->SetMaxIndex(1, arrsize2);
+   }
+
+   // we indicate that there is no streamerinfo 
+   WorkWithElement(elem, -1);
 }
 
 //______________________________________________________________________________
@@ -2342,7 +2567,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
    // converts Long64_t to string and add xml node to buffer
 
    char buf[50];
-   sprintf(buf,"%lld", value);
+   sprintf(buf, FLong64, value);
    return XmlWriteValue(buf, xmlio::Long64);
 }
 
@@ -2420,7 +2645,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong64_t value)
    // converts ULong64_t to string and add xml node to buffer
 
    char buf[50];
-   sprintf(buf,"%llu", value);
+   sprintf(buf, FULong64, value);
    return XmlWriteValue(buf, xmlio::ULong64);
 }
 
@@ -2500,7 +2725,7 @@ void TBufferXML::XmlReadBasic(Long64_t& value)
 
    const char* res = XmlReadValue(xmlio::Long64);
    if (res)
-      sscanf(res,"%lld", &value);
+      sscanf(res, FLong64, &value);
    else
       value = 0;
 }
@@ -2598,7 +2823,7 @@ void TBufferXML::XmlReadBasic(ULong64_t& value)
 
    const char* res = XmlReadValue(xmlio::ULong64);
    if (res)
-      sscanf(res,"%llu", &value);
+      sscanf(res, FULong64, &value);
    else
       value = 0;
 }

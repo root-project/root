@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.15 2005/11/22 20:42:37 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.16 2005/12/08 15:50:48 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -161,6 +161,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    fCache      = 0;
    fProcessIDs = 0;
    fNProcessIDs= 0;
+   fIOVersion  = TXMLFile::Class_Version();
 
    fOption = option;
    fOption.ToUpper();
@@ -493,6 +494,25 @@ void TXMLFile::SaveToFile()
 
    fXML->FreeAttr(fRootNode, xmlio::Ref);
    fXML->NewAttr(fRootNode, 0, xmlio::Ref, xmlio::Null);
+   
+   if (GetIOVersion()>1) {
+   
+      fXML->FreeAttr(fRootNode, xmlio::CreateTm);
+      fXML->NewAttr(fRootNode, 0, xmlio::CreateTm, fDatimeC.AsSQLString());
+   
+      fXML->FreeAttr(fRootNode, xmlio::ModifyTm);
+      fXML->NewAttr(fRootNode, 0, xmlio::ModifyTm, fDatimeM.AsSQLString());
+   
+      fXML->FreeAttr(fRootNode, xmlio::ObjectUUID);
+      fXML->NewAttr(fRootNode, 0, xmlio::ObjectUUID, fUUID.AsString());
+      
+      fXML->FreeAttr(fRootNode, xmlio::Title);
+      if (strlen(GetTitle())>0)
+         fXML->NewAttr(fRootNode, 0, xmlio::Title, GetTitle());
+
+      fXML->FreeAttr(fRootNode, xmlio::IOVersion);
+      fXML->NewIntAttr(fRootNode, xmlio::IOVersion, GetIOVersion());
+   }
 
    TString fname, dtdname;
    ProduceFileNames(fRealName, fname, dtdname);
@@ -540,6 +560,29 @@ Bool_t TXMLFile::ReadFromFile()
    }
 
    ReadSetupFromStr(fXML->GetAttr(fRootNode, xmlio::Setup));
+   
+   if (fXML->HasAttr(fRootNode, xmlio::CreateTm)) {
+      TDatime tm(fXML->GetAttr(fRootNode, xmlio::CreateTm)); 
+      fDatimeC = tm;
+   }
+
+   if (fXML->HasAttr(fRootNode, xmlio::ModifyTm)) {
+      TDatime tm(fXML->GetAttr(fRootNode, xmlio::ModifyTm)); 
+      fDatimeM = tm;
+   }
+
+   if (fXML->HasAttr(fRootNode, xmlio::ObjectUUID)) {
+      TUUID id(fXML->GetAttr(fRootNode, xmlio::ObjectUUID));
+      fUUID = id;
+   }
+   
+   if (fXML->HasAttr(fRootNode, xmlio::Title)) 
+      SetTitle(fXML->GetAttr(fRootNode, xmlio::Title));
+      
+   if (fXML->HasAttr(fRootNode, xmlio::IOVersion)) 
+      fIOVersion = fXML->GetIntAttr(fRootNode, xmlio::IOVersion);
+   else
+      fIOVersion = 1;   
 
    fStreamerInfoNode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(fStreamerInfoNode);

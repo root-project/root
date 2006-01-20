@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.7 2005/09/06 09:34:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.8 2005/11/20 05:07:41 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -23,6 +23,7 @@ namespace xmlio {
    extern const char* Root;
    extern const char* Setup;
    extern const char* ClassVersion;
+   extern const char* IOVersion;
    extern const char* OnlyVersion;
    extern const char* Ptr;
    extern const char* Ref;
@@ -40,6 +41,10 @@ namespace xmlio {
    extern const char* Member;
    extern const char* Item;
    extern const char* Name;
+   extern const char* Title;
+   extern const char* CreateTm;
+   extern const char* ModifyTm;
+   extern const char* ObjectUUID;
    extern const char* Type;
    extern const char* Value;
    extern const char* v;
@@ -95,7 +100,6 @@ class TXMLSetup {
       const char*    XmlConvertClassName(const char* name);
       const char*    XmlClassNameSpaceRef(const TClass* cl);
       const char*    XmlGetElementName(const TStreamerElement* el);
-
       
       Int_t          GetNextRefCounter() { return fRefCounter++; }
       
@@ -112,7 +116,6 @@ class TXMLSetup {
 
       Int_t          AtoI(const char* sbuf, Int_t def = 0, const char* errinfo = 0);
 
-
       EXMLLayout     fXmlLayout;
       Bool_t         fStoreStreamerInfos;
       Bool_t         fUseDtd;
@@ -128,4 +131,3 @@ class TXMLSetup {
 };
 
 #endif
-

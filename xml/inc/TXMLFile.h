@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.10 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.11 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -67,6 +67,7 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual Long64_t  GetSeekInfo() const {return 0; }
       virtual Long64_t  GetSize() const { return 0; }
       virtual TList*    GetStreamerInfoList();
+      Int_t             GetIOVersion() const { return fIOVersion; }          
 
       virtual Bool_t    IsOpen() const;
 
@@ -122,7 +123,9 @@ class TXMLFile : public TFile, public TXMLSetup {
       
       TXMLEngine*       fXML;                  //! object for interface with xml library
       
-   ClassDef(TXMLFile,1)  //ROOT file in XML format
+      Int_t             fIOVersion;            //! indicates format of ROOT xml file
+      
+   ClassDef(TXMLFile, 2)  //ROOT file in XML format
 };
 
 

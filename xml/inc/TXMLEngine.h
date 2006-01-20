@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.8 2005/09/06 09:34:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.h,v 1.9 2005/11/20 05:07:41 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -23,6 +23,7 @@ typedef void* XMLDocPointer_t;
 
 class TXMLInputStream;
 class TXMLOutputStream;
+class TString;
 
 class TXMLEngine : public TObject {
    public:
@@ -60,6 +61,8 @@ class TXMLEngine : public TObject {
       XMLNodePointer_t  DocGetRootElement(XMLDocPointer_t xmldoc);
       XMLDocPointer_t   ParseFile(const char* filename);
       Bool_t            ValidateDocument(XMLDocPointer_t, Bool_t = kFALSE) { return kFALSE; } // obsolete
+      void              SaveSingleNode(XMLNodePointer_t xmlnode, TString* res, Int_t layout = 1);
+      XMLNodePointer_t  ReadSingleNode(const char* src);
    protected:
       char*             Makestr(const char* str);   
       char*             Makenstr(const char* start, int len);
@@ -71,8 +74,9 @@ class TXMLEngine : public TObject {
       void              OutputValue(Char_t* value, TXMLOutputStream* out);
       void              SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t layout, Int_t level);
       XMLNodePointer_t  ReadNode(XMLNodePointer_t xmlparent, TXMLInputStream* inp, Int_t& resvalue);
+      void              DisplayError(Int_t error, Int_t linenumber);
   
-   ClassDef(TXMLEngine,1);   // XML parser, user by TXMLFile to read/write xml files
+   ClassDef(TXMLEngine,1);   // ROOT XML I/O parser, user by TXMLFile to read/write xml files
 };
 
 #endif

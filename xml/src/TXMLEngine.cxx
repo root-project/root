@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.15 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.16 2005/11/22 20:42:37 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -11,15 +11,18 @@
 
 //________________________________________________________________________
 //
-//  This class is used to write and read xml files.
-//  It makes simplified parsing of xml files, but does not required
-//  any external libraries like libxml2 or other
+//  TXMLEngine class is used to write and read ROOT XML files - TXMLFile.
+//  It does not conform to complete xml standard and cannot be used
+//  as parser for arbitrary XML files. For such cases TXMLParser should
+//  be used. This class was introduced to exclude dependency from
+//  external libraries (like libxml2) and improve speed / memory consumption.
 //
 //________________________________________________________________________
 
 #include "TXMLEngine.h"
 
 #include "Riostream.h"
+#include "TString.h"
 
 ClassImp(TXMLEngine);
 
@@ -46,87 +49,132 @@ struct SXmlDoc_t {
 };
 
 class TXMLOutputStream {
-   protected:
+protected:
 
-      std::ostream  *fOut;
-      char          *fBuf;
-      char          *fCurrent;
-      char          *fMaxAddr;
-      char          *fLimitAddr;
+   std::ostream  *fOut;
+   TString       *fOutStr;
+   char          *fBuf;
+   char          *fCurrent;
+   char          *fMaxAddr;
+   char          *fLimitAddr;
 
-   public:
-      TXMLOutputStream(const char* filename, Int_t bufsize = 20000)
-      {
-         fOut = new std::ofstream(filename);
-         fBuf = (char*) malloc(bufsize);
-         fCurrent = fBuf;
-         fMaxAddr = fBuf + bufsize;
-         fLimitAddr = fBuf + int(bufsize*0.75);
-      }
+public:
+   TXMLOutputStream(const char* filename, Int_t bufsize = 20000)
+   {
+      fOut = new std::ofstream(filename);
+      fOutStr = 0;
+      Init(bufsize);
+   }
 
-      virtual ~TXMLOutputStream()
-      {
-         if (fCurrent!=fBuf) OutputCurrent();
-         delete fOut;
-      }
+   TXMLOutputStream(TString* outstr, Int_t bufsize = 20000)
+   {
+      fOut = 0;
+      fOutStr = outstr;
+      Init(bufsize);
+   }
+   
+   void Init(Int_t bufsize)
+   {
+      fBuf = (char*) malloc(bufsize);
+      fCurrent = fBuf;
+      fMaxAddr = fBuf + bufsize;
+      fLimitAddr = fBuf + int(bufsize*0.75);
+   }
 
-      void OutputCurrent()
-      {
-         if (fCurrent!=fBuf)
-            fOut->write(fBuf, fCurrent-fBuf);
-         fCurrent = fBuf;
-      }
+   virtual ~TXMLOutputStream()
+   {
+      if (fCurrent!=fBuf) OutputCurrent();
+      delete fOut;
+   }
 
-      void Write(const char* str)
-      {
-         int len = strlen(str);
-         if (fCurrent+len>=fMaxAddr) {
+   void OutputCurrent()
+   {
+      if (fCurrent!=fBuf) 
+        if (fOut!=0)
+           fOut->write(fBuf, fCurrent-fBuf);
+        else
+        if (fOutStr!=0) 
+           fOutStr->Append(fBuf, fCurrent-fBuf);
+      fCurrent = fBuf;
+   }
+   
+   void OutputChar(char symb) 
+   {
+      if (fOut!=0) fOut->put(symb); else
+      if (fOutStr!=0) fOutStr->Append(symb);
+   }
+
+   void Write(const char* str)
+   {
+      int len = strlen(str);
+      if (fCurrent+len>=fMaxAddr) {
+         OutputCurrent();
+         fOut->write(str,len);
+      } else {
+         while (*str)
+           *fCurrent++ = *str++;
+         if (fCurrent>fLimitAddr)
             OutputCurrent();
-            fOut->write(str,len);
-         } else {
-            while (*str)
-              *fCurrent++ = *str++;
-            if (fCurrent>fLimitAddr)
-               OutputCurrent();
-         }
       }
+   }
 
-      void Put(char symb, Int_t cnt=1)
-      {
-         if (fCurrent+cnt>=fMaxAddr)
+   void Put(char symb, Int_t cnt=1)
+   {
+      if (fCurrent+cnt>=fMaxAddr)
+         OutputCurrent();
+      if (fCurrent+cnt>=fMaxAddr)
+         for(int n=0;n<cnt;n++)
+            OutputChar(symb);
+      else {
+         for(int n=0;n<cnt;n++)
+            *fCurrent++ = symb;
+         if (fCurrent>fLimitAddr)
             OutputCurrent();
-         if (fCurrent+cnt>=fMaxAddr)
-            for(int n=0;n<cnt;n++)
-               fOut->put(symb);
-         else {
-            for(int n=0;n<cnt;n++)
-               *fCurrent++ = symb;
-            if (fCurrent>fLimitAddr)
-               OutputCurrent();
-         }
       }
+   }
 };
 
 class TXMLInputStream {
-   protected:
-      std::istream  *fInp;
-      char          *fBuf;
-      Int_t          fBufSize;
-      Int_t          fBufLength;
+protected:
 
-      char          *fMaxAddr;
-      char          *fLimitAddr;
+   std::istream  *fInp;
+   const char    *fInpStr;
+   Int_t          fInpStrLen;    
+   
+   char          *fBuf;
+   Int_t          fBufSize;
+   Int_t          fBufLength;
 
-      Int_t          fTotalPos;
-      Int_t          fCurrentLine;
-   public:
+   char          *fMaxAddr;
+   char          *fLimitAddr;
 
-      char           *fCurrent;
+   Int_t          fTotalPos;
+   Int_t          fCurrentLine;
+   
+public:
+
+   char           *fCurrent;
 
    TXMLInputStream(const char* filename, Int_t ibufsize)
    {
       fInp = new std::ifstream(filename);
+      fInpStr = 0;
+      fInpStrLen = 0;
+   
+      Init(ibufsize);
+   }
 
+   TXMLInputStream(const char* str)
+   {
+      fInp = 0;
+      fInpStr = str;
+      fInpStrLen = str==0 ? 0 : strlen(str);
+   
+      Init(20000);
+   }
+   
+   void Init(Int_t ibufsize)
+   {
       fBufSize = ibufsize;
       fBuf = (char*) malloc(fBufSize);
       fBufLength = 0;
@@ -149,13 +197,22 @@ class TXMLInputStream {
       free(fBuf);
    }
 
-   Bool_t EndOfFile() { return fInp->eof(); }
+   Bool_t EndOfFile() { return (fInp!=0) ? fInp->eof() : (fInpStrLen<=0); }
 
    int DoRead(char* buf, int maxsize)
    {
       if (EndOfFile()) return 0;
-      fInp->get(buf,maxsize-1,0);
-      return strlen(buf);
+      if (fInp!=0) {
+         fInp->get(buf,maxsize-1,0);
+         maxsize = strlen(buf);
+      } else {
+         if (maxsize>fInpStrLen) maxsize = fInpStrLen;
+         strncpy(buf, fInpStr, maxsize);
+         fInpStr+=maxsize;
+         fInpStrLen-=maxsize;
+         *(buf+maxsize) = 0;
+      }
+      return maxsize;
    }
 
    Bool_t ExpandStream()
@@ -729,18 +786,7 @@ XMLDocPointer_t TXMLEngine::ParseFile(const char* filename)
    XMLNodePointer_t mainnode = ReadNode(0, &inp, resvalue);
 
    if (resvalue<=0) {
-      switch(resvalue) {
-         case -9: Error("ParseFile", "Multiple name space definitions not allowed, line %d", inp.CurrentLine()); break;
-         case -8: Error("ParseFile", "Invalid namespace specification, line %d", inp.CurrentLine()); break;
-         case -7: Error("ParseFile", "Invalid attribute value, line %d", inp.CurrentLine()); break;
-         case -6: Error("ParseFile", "Invalid identifier for node attribute, line %d", inp.CurrentLine()); break;
-         case -5: Error("ParseFile", "Missmatch between open and close nodes, line %d", inp.CurrentLine()); break;
-         case -4: Error("ParseFile", "Unexpected close node, line %d", inp.CurrentLine()); break;
-         case -3: Error("ParseFile", "Valid identifier for close node is missing, line %d", inp.CurrentLine()); break;
-         case -2: Error("ParseFile", "No multiple content entries allowed, line %d", inp.CurrentLine()); break;
-         case -1: Error("ParseFile", "Unexpected end of xml file"); break;
-         default: Error("ParseFile", "XML syntax error at line %d", inp.CurrentLine()); break;
-      }
+      DisplayError(resvalue, inp.CurrentLine());
       FreeNode(mainnode);
       return 0;
    }
@@ -749,6 +795,44 @@ XMLDocPointer_t TXMLEngine::ParseFile(const char* filename)
    XMLDocPointer_t xmldoc = NewDoc();
    DocSetRootElement(xmldoc, mainnode);
    return xmldoc;
+}
+
+//______________________________________________________________________________
+void TXMLEngine::SaveSingleNode(XMLNodePointer_t xmlnode, TString* res, Int_t layout)
+{
+   // convert single xml node (and its child node) to string 
+   // if layout<=0, no any spaces or newlines will be placed between
+   // xmlnodes. Xml file will have minimum size, but nonreadable structure
+   // if (layout>0) each node will be started from new line,
+   // and number of spaces will correspond to structure depth.
+   
+   if ((res==0) || (xmlnode==0)) return; 
+   
+   TXMLOutputStream out(res, 10000);
+
+   SaveNode(xmlnode, &out, layout, 0);
+}
+
+//______________________________________________________________________________
+XMLNodePointer_t TXMLEngine::ReadSingleNode(const char* src)
+{
+   // read snigle xml node from provided string
+    
+   if (src==0) return 0;
+   
+   TXMLInputStream inp(src);
+
+   Int_t resvalue;
+
+   XMLNodePointer_t xmlnode = ReadNode(0, &inp, resvalue);
+
+   if (resvalue<=0) {
+      DisplayError(resvalue, inp.CurrentLine());
+      FreeNode(xmlnode);
+      return 0;
+   }
+   
+   return xmlnode; 
 }
 
 //______________________________________________________________________________
@@ -1126,3 +1210,23 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
    return 0;
 }
+
+//______________________________________________________________________________
+void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
+{
+   // Dsiplays error, occured during parsing of xml file
+   switch(error) {
+      case -9: Error("ParseFile", "Multiple name space definitions not allowed, line %d", linenumber); break;
+      case -8: Error("ParseFile", "Invalid namespace specification, line %d", linenumber); break;
+      case -7: Error("ParseFile", "Invalid attribute value, line %d", linenumber); break;
+      case -6: Error("ParseFile", "Invalid identifier for node attribute, line %d", linenumber); break;
+      case -5: Error("ParseFile", "Missmatch between open and close nodes, line %d", linenumber); break;
+      case -4: Error("ParseFile", "Unexpected close node, line %d", linenumber); break;
+      case -3: Error("ParseFile", "Valid identifier for close node is missing, line %d", linenumber); break;
+      case -2: Error("ParseFile", "No multiple content entries allowed, line %d", linenumber); break;
+      case -1: Error("ParseFile", "Unexpected end of xml file"); break;
+      default: Error("ParseFile", "XML syntax error at line %d", linenumber); break;
+   }
+   
+}
+

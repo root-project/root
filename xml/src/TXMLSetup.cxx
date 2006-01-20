@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.8 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.9 2005/11/24 16:57:23 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -46,6 +46,7 @@ namespace xmlio {
    const char* Root        = "root";
    const char* Setup       = "setup";
    const char* ClassVersion= "version";
+   const char* IOVersion   = "version";
    const char* OnlyVersion = "Version";
    const char* Ptr         = "ptr";
    const char* Ref         = "ref";
@@ -63,6 +64,10 @@ namespace xmlio {
    const char* Member      = "Member";
    const char* Item        = "Item";
    const char* Name        = "name";
+   const char* Title       = "title";
+   const char* CreateTm    = "created";
+   const char* ModifyTm    = "modified";
+   const char* ObjectUUID  = "uuid";
    const char* Type        = "type";
    const char* Value       = "value";
    const char* v           = "v";
