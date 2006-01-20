@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.9 2006/01/17 16:47:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.10 2006/01/18 15:38:54 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2273,9 +2273,10 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    i = (int)(4 * sigma + 0.5);
    i = 4 * i;
    double **working_space = new double *[ssizex + i];
-   for (j = 0; j < ssizex + i; j++)
-      working_space[j] = new double[16 * (ssizey + i)];
-   
+   for (j = 0; j < ssizex + i; j++) {
+      Double_t *wsk = working_space[j] = new double[16 * (ssizey + i)];
+      for (Int_t k=0;k<16 * (ssizey + i);k++) wsk[k] = 0;
+   }   
    for(j = 0; j < ssizey_ext; j++){
       for(i = 0; i < ssizex_ext; i++){
          if(i < shift){

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.33 2006/01/17 16:47:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.34 2006/01/18 15:38:54 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -107,7 +107,7 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum",
 void TSpectrum::SetAverageWindow(Int_t w)
 {
   // static function: Set average window of searched peaks
-  // see TSpectrum::Search1HighRes
+  // see TSpectrum::SearchHighRes
    
    fgAverageWindow = w;
 }
@@ -116,7 +116,7 @@ void TSpectrum::SetAverageWindow(Int_t w)
 void TSpectrum::SetDeconIterations(Int_t n)
 {
   // static function: Set max number of decon iterations in deconvolution operation
-  // see TSpectrum::Search1HighRes
+  // see TSpectrum::SearchHighRes
    
    fgIterations = n;
 }
@@ -4400,8 +4400,8 @@ identification are</span></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:18.0pt'><a
 href="http://root.cern.ch/root/html/ListOtransTypes.html#Int_t">Int_t</a> <a
-name="TSpectrum:Search1HighRes"></a><a
-href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Search1HighRes">SearchHighRes</a>(<a
+name="TSpectrum:SearchHighRes"></a><a
+href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:SearchHighRes">SearchHighRes</a>(<a
 href="http://root.cern.ch/root/html/ListOtransTypes.html#float">float</a> *source,<a
 href="http://root.cern.ch/root/html/ListOtransTypes.html#float">float</a> *destVector, <a
 href="http://root.cern.ch/root/html/ListOtransTypes.html#int">int</a> ssize, <a
@@ -4504,31 +4504,31 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    float maxch;
    float nom, nip, nim, sp, sm, plocha = 0;
    if (sigma < 1) {
-      Error("Search1HighRes", "Invalid sigma, must be greater than or equal to 1");
+      Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
    }
            
    if(threshold<=0 || threshold>=100){
-      Error("Search1HighRes", "Invalid threshold, must be positive and less than 100");
+      Error("SearchHighRes", "Invalid threshold, must be positive and less than 100");
       return 0;
    }
    
    j = (int) (5.0 * sigma + 0.5);
    if (j >= PEAK_WINDOW / 2) {
-      Error("Search1HighRes", "Too large sigma");
+      Error("SearchHighRes", "Too large sigma");
       return 0;
    }
    
    if (fMarkov == true) {
       if (averWindow <= 0) {
-         Error("Search1HighRes", "Averanging window must be positive");
+         Error("SearchHighRes", "Averanging window must be positive");
          return 0;
       }
    }
          
    if(backgroundRemove == true){
       if(ssize < 2 * numberIterations + 1){   
-         Error("Search1HighRes", "Too large clipping window");
+         Error("SearchHighRes", "Too large clipping window");
          return 0;
       }
    }
@@ -4536,7 +4536,8 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    i = (int)(7 * sigma + 0.5);
    i = 2 * i;
    double *working_space = new double [7 * (ssize + i)];    
-   for(i = 0; i < size_ext; i++){
+   for (j=0;j<7 * (ssize + i);j++) working_space[j] = 0;
+      for(i = 0; i < size_ext; i++){
       if(i < shift)
          working_space[i + size_ext] = source[0];
          
@@ -4848,7 +4849,7 @@ method</span></b></p>
 <p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><a
-href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Search1HighRes"
+href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:SearchHighRes"
 target="_parent">SearchHighRes</a> function provides users with the possibility
 to vary the input parameters and with the access to the output deconvolved data
 in the destination spectrum. Based on the output data one can tune the
@@ -4925,11 +4926,11 @@ TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
 <p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) source[i]=h-&gt;GetBinContent(i
 + 1);   </p>
 
-<p class=MsoNormal>   TCanvas *Search1 =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Search1&quot;);</p>
+<p class=MsoNormal>   TCanvas *Search =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Search&quot;);</p>
 
-<p class=MsoNormal>   if (!Search1) Search1 = new
-TCanvas(&quot;Search1&quot;,&quot;Search1&quot;,10,10,1000,700);</p>
+<p class=MsoNormal>   if (!Search) Search = new
+TCanvas(&quot;Search&quot;,&quot;Search&quot;,10,10,1000,700);</p>
 
 <p class=MsoNormal>   h-&gt;SetMaximum(4000);      </p>
 
@@ -5248,11 +5249,11 @@ TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
 <p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
 source[i]=h-&gt;GetBinContent(i + 1);   </p>
 
-<p class=MsoNormal>   TCanvas *Search1 =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Search1&quot;);</p>
+<p class=MsoNormal>   TCanvas *Search =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Search&quot;);</p>
 
-<p class=MsoNormal>   if (!Search1) Search1 = new
-TCanvas(&quot;Search1&quot;,&quot;Search1&quot;,10,10,1000,700);</p>
+<p class=MsoNormal>   if (!Search) Search = new
+TCanvas(&quot;Search&quot;,&quot;Search&quot;,10,10,1000,700);</p>
 
 <p class=MsoNormal>   h-&gt;SetMaximum(1300);         </p>
 
