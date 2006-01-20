@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.10 2006/01/16 17:13:06 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.11 2006/01/20 17:21:18 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -208,7 +208,7 @@ int Constructor_stub_with_context(StubContext* context,
   if ( !context->fInitialized ) context->Initialize();
   context->ProcessParam(libp);
   
-  void* obj;
+  void* obj=0;
 
   // Catch here everything since going through the adaptor in the data section
   // does not transmit the exception 
