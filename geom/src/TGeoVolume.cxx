@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.70 2005/11/21 09:31:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.71 2006/01/19 11:23:08 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -982,8 +982,7 @@ void TGeoVolume::Raytrace(Bool_t flag)
    Bool_t drawn = (painter->GetDrawnVolume()==this)?kTRUE:kFALSE;
    Bool_t force_update = (gPad==0)?kTRUE:kFALSE;
    
-   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
-   if (old_vol!=this) {
+   if (!drawn) {
       fGeoManager->SetTopVolume(this);
       painter->SetRaytracing(kFALSE);
       painter->Draw();
