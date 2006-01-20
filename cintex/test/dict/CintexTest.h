@@ -583,10 +583,10 @@ public:
   virtual int get() { return 0; }
 };
 
-class PP : public Pbase {
+class PPbase : public Pbase {
 public:
-  PP(int i) : m_i(i) {}
-  virtual ~PP() {}
+  PPbase(int i) : m_i(i) {}
+  virtual ~PPbase() {}
   virtual int get() { return m_i; }
 private:
   int m_i;
@@ -646,7 +646,8 @@ class ExceptionGenerator {
   public:
     ExceptionGenerator( bool b ) { if (b) throw std::logic_error("My Exception in constructor"); }
     ~ExceptionGenerator() {}
-    void doThrow( bool b ) {if (b) throw std::logic_error("My Exception in method"); }
+    A::B::C::MyClass doThrow( bool b ) {if (b) throw std::logic_error("My Exception in method"); return A::B::C::MyClass(); }
+    A::B::C::MyClass doThrowUnknown( bool b ) {if (b) throw std::string("hello");  return A::B::C::MyClass();}
 };
 
 #include <list>

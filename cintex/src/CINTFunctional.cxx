@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.9 2005/12/15 10:13:18 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.10 2006/01/16 17:13:06 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -189,9 +189,11 @@ int Method_stub_with_context(StubContext* context,
     string errtxt(e.what());
     errtxt += " (C++ exception)";
     G__genericerror(errtxt.c_str());
+    context->ProcessResult(result, 0);
   } 
   catch (...) {
     G__genericerror("Unknown C++ exception");
+    context->ProcessResult(result, 0);
   }
   return(1);
 }
@@ -206,12 +208,13 @@ int Constructor_stub_with_context(StubContext* context,
   if ( !context->fInitialized ) context->Initialize();
   context->ProcessParam(libp);
   
+  void* obj;
+
   // Catch here everything since going through the adaptor in the data section
   // does not transmit the exception 
   try {
     long nary = G__getaryconstruct();
     size_t size = context->fClass.SizeOf();
-    void* obj;
     if ( nary ) {
       if( context->fNewdelfuncs ) {
         obj = context->fNewdelfuncs->NewArray(nary);
@@ -227,20 +230,24 @@ int Constructor_stub_with_context(StubContext* context,
       obj = ::operator new( size );
       (*context->fStub)(obj, context->fParam, 0);
     }
-    
-    result->obj.i = (long)obj;
-    result->ref = (long)obj;
-    result->type = 'u';
-    result->tagnum = context->fClass_tag;
   }
   catch ( std::exception& e ) {
     string errtxt(e.what());
     errtxt += " (C++ exception)";
     G__genericerror(errtxt.c_str());
+    ::operator delete (obj);
+    obj = 0; 
   } 
   catch (...) {
     G__genericerror("Unknown C++ exception");
+    ::operator delete (obj);
+    obj = 0; 
   }
+     
+  result->obj.i = (long)obj;
+  result->ref = (long)obj;
+  result->type = 'u';
+  result->tagnum = context->fClass_tag;
   return(1);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.5 2005/12/12 09:12:27 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.6 2006/01/18 08:00:26 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -65,8 +65,8 @@ namespace ROOT { namespace Cintex {
       }
       for ( size_t i = 0; i < e.DataMemberSize(); i++ ) {
         stringstream s;
-        s << e.DataMemberAt(i).Name();
-        if ( isCPPMacroEnum ) s << "=" << (const char*)e.DataMemberAt(i).Offset();
+        s << e.DataMemberAt(i).Name() << "=";
+        if ( isCPPMacroEnum ) s << (const char*)e.DataMemberAt(i).Offset();
         else                  s << (int)e.DataMemberAt(i).Offset();
         
         string item = s.str();

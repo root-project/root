@@ -28,8 +28,9 @@
 
   <class name="SimpleProperty<std::string,Verifier<std::string> >"/>
   <class name="Pbase"/>
-  <class name="PP"/>
+  <class name="PPbase"/>
   <class name="std::vector<const Pbase*>"/>
+  <class name="std::vector<int>"/>
   
   <class name="Obj"/>
   <class name="ExceptionGenerator"/>
