@@ -99,6 +99,7 @@ Spy::Spy()
 {
    // Create a main frame
    fMain = new TGMainFrame(gClient->GetRoot(), 100, 100);
+   fMain->SetCleanup(kDeepCleanup);
 
    // Create an embedded canvas and add to the main frame, centered in x and y
    // and with 30 pixel margins all around

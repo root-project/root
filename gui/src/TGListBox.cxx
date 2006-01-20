@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.48 2005/11/08 19:30:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.49 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -818,6 +818,10 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
          }
       }
    }
+   if (event->fType == kButtonRelease) {
+      fScrolling = kFALSE;
+      gSystem->RemoveTimer(fScrollTimer);
+   }
    if (fChangeStatus || (last != fLastActive)) fClient->NeedRedraw(this);
    return kTRUE;
 }
@@ -835,13 +839,10 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
    if ((now-was) < 50) return kFALSE;
    was = now;
 
-   if (!fListBox->GetParent()->InheritsFrom("TGComboBoxPopup")) {
-      return kFALSE;
-   }
-
    TGLBEntry *f;
    TGFrameElement *el;
    TGPosition pos = GetPagePosition();
+   TGDimension dim = GetPageDimension();
    Int_t x = pos.fX + event->fX;
    Int_t y = pos.fY + event->fY;
    Bool_t activate = kFALSE;
@@ -849,7 +850,14 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 
    if (fMultiSelect) {
 
-      if (fChangeStatus >= 0) {
+      if ((event->fY < 10) || (event->fY > Int_t(dim.fHeight) - 10)) {
+         if (!fScrolling) {
+            fScrollTimer->Reset();
+            gSystem->AddTimer(fScrollTimer);
+         }
+         fScrolling = kTRUE;
+      }
+      else if (fChangeStatus >= 0) {
          TIter next(fList);
          while ((el = (TGFrameElement *) next())) {
             f = (TGLBEntry *) el->fFrame;
@@ -871,7 +879,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             }
          }
       }
-   } else {
+   } else if (fListBox->GetParent()->InheritsFrom("TGComboBoxPopup")) {
       TIter next(fList);
       while ((el = (TGFrameElement *) next())) {
          f = (TGLBEntry *) el->fFrame;
@@ -892,8 +900,61 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          if (last != fLastActive) fClient->NeedRedraw(this);
       }
    }
-
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLBContainer::OnAutoScroll()
+{
+   // Autoscroll while close to & beyond  The Wall
+
+   TGFrameElement* el = 0;
+   TGLBEntry *f = 0;
+   Int_t yf0, yff;
+   Bool_t changed = kFALSE;
+
+   TGDimension dim = GetPageDimension();
+   TGPosition pos = GetPagePosition();
+
+   Window_t  dum1, dum2;
+   Event_t   ev;
+   ev.fType  = kButtonPress;
+   Int_t     x, y;
+
+   // Where's the cursor?
+   gVirtualX->QueryPointer(fId,dum1,dum2,ev.fXRoot,ev.fYRoot,x,y,ev.fState);
+   TGVScrollBar *vb = GetVScrollbar();
+   if (y > 0 && y < 10) {
+      // scroll 1 line up
+      Int_t newpos = vb->GetPosition() - 1;
+      if (newpos < 0) newpos = 0;
+      vb->SetPosition(newpos);
+      changed = kTRUE;
+   }
+   else if (y > (Int_t)dim.fHeight - 10 && y < (Int_t)dim.fHeight) {
+      // scroll 1 line down
+      Int_t newpos = vb->GetPosition() + 1;
+      vb->SetPosition(newpos);
+      changed = kTRUE;
+   }
+   if (changed && fChangeStatus >= 0) {
+      pos = GetPagePosition();
+      TIter next(fList);
+      while ((el = (TGFrameElement *) next())) {
+         f = (TGLBEntry *) el->fFrame;
+         yf0 = f->GetY();
+         yff = yf0 + f->GetHeight();
+         if ((y + pos.fY > yf0) && (y + pos.fY < yff)) {
+            if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
+               f->Toggle();
+               fClient->NeedRedraw(this);
+               SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
+                           f->EntryId(), 0);
+            }
+            break;
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -981,7 +1042,8 @@ void TGListBox::InitListBox()
 
    fVScrollbar->AddInput(kButtonPressMask | kButtonReleaseMask | 
                          kPointerMotionMask);
-   fLbc->AddInput(kButtonPressMask | kButtonReleaseMask );
+   fLbc->RemoveInput(kPointerMotionMask);
+   fLbc->AddInput(kButtonPressMask | kButtonReleaseMask | kButtonMotionMask);
 }
 
 //______________________________________________________________________________

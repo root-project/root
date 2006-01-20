@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.25 2005/11/08 17:06:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.26 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -221,6 +221,8 @@ protected:
    Bool_t          fMultiSelect;   // true if multi selection is switched on
    Int_t           fChangeStatus;  // defines the changes (select or unselect) while the mouse
                                    // moves over a multi selectable list box
+
+   virtual void OnAutoScroll();
 
 public:
    TGLBContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
