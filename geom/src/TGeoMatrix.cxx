@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.46 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.47 2005/11/21 09:31:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -474,9 +474,9 @@ void TGeoMatrix::Print(Option_t *) const
    const Double_t *tr  = GetTranslation();
    printf("matrix %s - tr=%d  rot=%d  refl=%d\n", GetName(),(Int_t)IsTranslation(),
           (Int_t)IsRotation(), (Int_t)IsReflection());
-   printf("%10.6f%12.6f%12.6f    Tx = %g\n", rot[0], rot[1], rot[2], tr[0]); 
-   printf("%10.6f%12.6f%12.6f    Ty = %g\n", rot[3], rot[4], rot[5], tr[1]); 
-   printf("%10.6f%12.6f%12.6f    Tz = %g\n", rot[6], rot[7], rot[8], tr[2]); 
+   printf("%10.6f%12.6f%12.6f    Tx = %10.6f\n", rot[0], rot[1], rot[2], tr[0]); 
+   printf("%10.6f%12.6f%12.6f    Ty = %10.6f\n", rot[3], rot[4], rot[5], tr[1]); 
+   printf("%10.6f%12.6f%12.6f    Tz = %10.6f\n", rot[6], rot[7], rot[8], tr[2]); 
 }
 
 //_____________________________________________________________________________
@@ -1420,9 +1420,9 @@ TGeoMatrix& TGeoCombiTrans::Inverse() const
    Double_t tr[3];
    Double_t newrot[9];
    const Double_t *rot = GetRotationMatrix();
-   tr[0] = -fTranslation[0];
-   tr[1] = -fTranslation[1];
-   tr[2] = -fTranslation[2];
+   tr[0] = -fTranslation[0]*rot[0] - fTranslation[1]*rot[3] - fTranslation[2]*rot[6];
+   tr[1] = -fTranslation[0]*rot[1] - fTranslation[1]*rot[4] - fTranslation[2]*rot[7];
+   tr[2] = -fTranslation[0]*rot[2] - fTranslation[1]*rot[5] - fTranslation[2]*rot[8];
    h.SetTranslation(tr);
    newrot[0] = rot[0];
    newrot[1] = rot[3];
@@ -1909,9 +1909,9 @@ TGeoMatrix& TGeoHMatrix::Inverse() const
    h = *this;
    if (IsTranslation()) {
       Double_t tr[3];
-      tr[0] = -fTranslation[0];
-      tr[1] = -fTranslation[1];
-      tr[2] = -fTranslation[2];
+      tr[0] = -fTranslation[0]*fRotationMatrix[0] - fTranslation[1]*fRotationMatrix[3] - fTranslation[2]*fRotationMatrix[6];
+      tr[1] = -fTranslation[0]*fRotationMatrix[1] - fTranslation[1]*fRotationMatrix[4] - fTranslation[2]*fRotationMatrix[7];
+      tr[2] = -fTranslation[0]*fRotationMatrix[2] - fTranslation[1]*fRotationMatrix[5] - fTranslation[2]*fRotationMatrix[8];
       h.SetTranslation(tr);
    }
    if (IsRotation()) {
