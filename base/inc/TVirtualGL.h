@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.23 2005/11/17 14:43:17 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.24 2006/01/12 16:56:08 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -42,11 +42,9 @@
 #endif
 
 class TVirtualViewer3D;
-class TGLSceneObject;
 class TPoints3DABC;
 class TGLViewer;
 class TGLRect;
-class TGLWindow;
 
 class TVirtualGLImp {
 
@@ -173,7 +171,7 @@ public:
 R__EXTERN TVirtualGL *(*gPtr2VirtualGL)();
 #endif
 
-//This class (and its descendants) in future will replace (?) 
+//This class (and its descendants) in future will replace (?)
 //TVirtualGL/TGLKernel/TGWin32GL/TGX11GL
 
 
@@ -181,7 +179,7 @@ class TVirtualGLPainter {
 public:
    virtual ~TVirtualGLPainter(){}
    virtual void Paint() = 0;
-   
+
    ClassDef(TVirtualGLPainter, 0)
 };
 
@@ -216,7 +214,7 @@ public:
    virtual void     DeletePaintDevice(Int_t devInd) = 0;
    //viewport extracted only for pixmap
    virtual void     ExtractViewport(Int_t devInd, Int_t *vp) = 0;
-   
+
    //functions to switch between threads in win32
    //used by viewer
    virtual void     DrawViewer(TVirtualViewer3D *vv) = 0;
@@ -228,7 +226,7 @@ public:
    static TGLManager *&Instance();
 
 private:
-   //compiler can't generate implicit copy ctor 
+   //compiler can't generate implicit copy ctor
    //for descendants
    TGLManager(const TGLManager &);
    TGLManager &operator = (const TGLManager &);
