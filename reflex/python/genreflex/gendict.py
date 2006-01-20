@@ -630,8 +630,8 @@ class genDictionary(object) :
       if attrs['name'] != '::' : s += attrs['name']
     elif elem == 'PointerType' :
       t = self.genTypeName(attrs['type'],enum, const, colon)
-      if   t[-1] == ')' : s += t.replace('::*)','::**)').replace('::)','::*)').replace('(*)', '(**)').replace('()','(*)')
-      elif t[-1] == ']' : s += t[:t.find('[')] + '(*)' + t[t.find('['):]
+      if   t[-1] == ')' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t.replace('::*)','::**)').replace('::)','::*)').replace('(*)', '(**)').replace('()','(*)')
+      elif t[-1] == ']' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t[:t.find('[')] + '(*)' + t[t.find('['):]
       else              : s += t + '*'   
     elif elem == 'ReferenceType' :
       s += self.genTypeName(attrs['type'],enum, const, colon)+'&'
@@ -649,6 +649,8 @@ class genDictionary(object) :
         s += ')'
       else :
         s += 'void)'
+      if (attrs.get('const') == '1') : s += ' const'
+      if (attrs.get('volatile') == '1') : s += ' volatile'
     elif elem == 'ArrayType' :
       arr = '[%s]' % str(int(attrs['max'])+1)
       typ = self.genTypeName(attrs['type'], enum, const, colon)
@@ -1339,7 +1341,7 @@ def getTemplateArgs( cl ) :
   for s in string.split(cl[cl.find('<')+1:cl.rfind('>')],',') :
     if   cnt == 0 : args.append(s)
     else          : args[-1] += ','+ s
-    cnt += s.count('<')-s.count('>')
+    cnt += s.count('<')+s.count('(')-s.count('>')-s.count(')')
   if args[-1][-1] == ' ' : args[-1] = args[-1][:-1]
   return args
 #---------------------------------------------------------------------------------------
