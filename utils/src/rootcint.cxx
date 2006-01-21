@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.230 2005/12/16 11:34:13 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.231 2006/01/11 07:33:34 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -853,12 +853,12 @@ bool NeedShadowClass(G__ClassInfo& cl)
    // a proper shadow class, and the use has no change of
    // vetoring a shadow, as we need it for ShowMembers :-/
    if (cl.HasMethod("ShowMembers")) 
-      return dict_type != kDictTypeCint || cl.IsTmplt();
+      return dict_type == kDictTypeReflex || cl.IsTmplt();
 
    // no streamer, no shadow
    if (cl.RootFlag() == G__NOSTREAMER) return false;
 
-   if (dict_type!=kDictTypeCint) return true;
+   if (dict_type == kDictTypeReflex) return true;
 
    return ((cl.RootFlag() & G__USEBYTECOUNT));
 }
@@ -4327,7 +4327,7 @@ int main(int argc, char **argv)
 #endif
          }
       }
-      printf("Calling %s\n", gccxml_rootcint_call.c_str());
+      //printf("Calling %s\n", gccxml_rootcint_call.c_str());
       int rc=system(gccxml_rootcint_call.c_str());
       if (rc) {
          CleanupOnExit(rc);
@@ -4426,7 +4426,13 @@ int main(int argc, char **argv)
       fpld = fopen(autold, "r");
    } else {
       // Open file specified on command line
-      fpld = fopen(Which(argv[il]), "r");
+      const char* filename=Which(argv[il]);
+      if (!filename) {
+         Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
+         CleanupOnExit(1);
+         return 1;
+      }
+      fpld = fopen(filename, "r");
    }
    if (!fpld) {
       Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
