@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.270 2005/11/16 20:29:14 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.271 2005/11/29 06:01:20 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1428,7 +1428,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       return 0;
    }
    if (cl->GetCollectionProxy()==0 && cl->GetClassInfo()->RootFlag() & 1 )  hasCustomStreamer = kTRUE;
-   if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
+   if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer && cl->InheritsFrom(TObject::Class()))) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
       return branch;
