@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.171 2005/12/13 10:12:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.172 2006/01/17 09:55:38 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1715,7 +1715,7 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *conffile,
                             const char *confdir, Int_t loglevel)
 {
    // Start a PROOF session on a specific cluster. The actual work is done
-   // in TVirtualProof::Open(). The use of this methid is deprecated and
+   // in TVirtualProof::Open(). The use of this method is deprecated and
    // provided only for backward compatibility. Users should use either
    // TProof::Open or TVirtualProof::Open() instead.
 
