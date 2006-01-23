@@ -5,7 +5,7 @@
 PLATFORM      = win32
 
 DEBUGFLAGS    = -Z7
-OPTFLAGS      = -O2 -Z7
+OPTFLAGS      = -O2 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 LDOPT         = -debug
