@@ -187,5 +187,5 @@ distclean-mathmore: clean-mathmore
 distclean::     distclean-mathmore
 
 ##### extra rules ######
-$(MATHMOREO): %.o: %.cxx
+$(MATHMOREO): %.o: %.cxx $(GSLLIBA)
 	$(CXX) $(OPT) $(CXXFLAGS) $(GSLDIRI) -o $@ -c $<
