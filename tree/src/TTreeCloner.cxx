@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.2 2005/11/29 06:01:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.3 2006/01/09 18:28:22 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -228,9 +228,9 @@ void TTreeCloner::CopyMemoryBaskets()
 {
    // Transfer the basket from the input file to the output file
 
-   TBasket *basket = new TBasket();
+   TBasket *basket = 0;
    for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
-     TBranch *from = (TBranch*)fFromBranches.UncheckedAt( i );
+      TBranch *from = (TBranch*)fFromBranches.UncheckedAt( i );
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( i );
 
       basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : 0;

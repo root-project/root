@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.34 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.35 2005/11/16 20:19:08 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -118,7 +118,7 @@ Long64_t TBasket::CopyTo(TFile *to)
    fBufferRef->SetBufferOffset(0);
    fHeaderOnly = kTRUE;
    Streamer(*fBufferRef);
-   fHeaderOnly = kTRUE;
+   fHeaderOnly = kFALSE;
    Int_t nBytes = WriteFile(0);
 
    return nBytes>0 ? nBytes : -1;
@@ -398,7 +398,7 @@ void TBasket::Streamer(TBuffer &b)
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBuffer(TBuffer::kRead,fBufferSize);
-         fBufferRef->SetParent(gDirectory->GetFile());
+         fBufferRef->SetParent(b.GetParent()); // gDirectory->GetFile());
          char *buf  = fBufferRef->Buffer();
          if (v > 1) b.ReadFastArray(buf,fLast);
          else       b.ReadArray(buf);
