@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.10 2004/07/08 14:40:28 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: WidgetMessageTypes.h,v 1.11 2004/09/01 14:35:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -60,6 +60,7 @@ enum EWidgetMessageTypes {
       kSL_TRACK           = 2,
       kSL_PRESS           = 3,
       kSL_RELEASE         = 4,
+      kSL_POINTER         = 5,
    kC_LISTTREE         = 8,
    kC_TEXTVIEW         = 9,
       kTXT_ISMARKED       = 1,
