@@ -28,14 +28,17 @@
 
   <class name="SimpleProperty<std::string,Verifier<std::string> >"/>
   <class name="Pbase"/>
-  <class name="P"/>
+  <class name="PPbase"/>
   <class name="std::vector<const Pbase*>"/>
+  <class name="std::vector<int>"/>
   
   <class name="Obj"/>
   <class name="ExceptionGenerator"/>
 
   <function pattern="by*"/>
 
+  <class pattern="std::list<*>"/>
+  <class name="N::WithPrivateTypes"/>
   <enum name="E2"/>
   <enum name="A::E1"/>
 

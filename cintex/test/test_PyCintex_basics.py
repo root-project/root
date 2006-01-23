@@ -84,6 +84,7 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnless( calling.retByPointer().magic() == 1234567890 , 'fail return by pointer')
     self.failUnless( calling.retByReference().magic() == 1234567890 , 'fail return by reference')
     self.failUnless( calling.retByRefPointer().magic() == 1234567890 , 'fail return by reference pointer')
+    self.failUnless( calling.retByVoidPointer(), 'fail return by void pointer')
 
 
   def test04UnknownTypes(self) :
@@ -365,7 +366,7 @@ class BasicsTestCase(unittest.TestCase):
   def test22VectorPointers(self) :
     v = self.gbl.std.vector('const Pbase*')()
     self.failUnless(v)
-    coll = [ self.gbl.P(i) for i in range(10) ]
+    coll = [ self.gbl.PPbase(i) for i in range(10) ]
     for p in coll : v.push_back(p)
     self.failUnlessEqual(len(v),10)
     p = v.at(1)

@@ -123,9 +123,11 @@ int MyClass::s_instances = 0;
 
 struct Abstract {
   virtual double vf() = 0;
+  virtual ~Abstract() {}
 };
 struct Concrete : public Abstract {
   virtual double vf() { return 666.666; }
+  virtual ~Concrete() {}
 };
 
 typedef int (*FuncPtr)(int);
@@ -138,6 +140,7 @@ public:
   MyClass* retByPointer() { return &m_object; }
   MyClass& retByReference() { return m_object; }
   MyClass*& retByRefPointer() { return m_ptr; }
+  void* retByVoidPointer() { return &m_object; }
   UnknownType* retUnkownTypePointer() { return (UnknownType*)0x12345678; }
   UnknownType& retUnkownTypeReference() { return *(UnknownType*)0x12345678; }
   std::string retStrByValue() { return std::string("value");}
@@ -189,6 +192,7 @@ int MyClass::doSomething(const std::string& something) {
 
 class Base1 {
 public:
+  virtual ~Base1() {}
   int base1;
   virtual int v_getBase() {return base1; }
   virtual int v_get1() { return base1; }
@@ -196,6 +200,7 @@ public:
 };
 class Base2 {
 public:
+  virtual ~Base2() {}
   int base2;
   virtual int v_getBase() { return base2; }
   virtual int v_get2() { return base2; }
@@ -203,6 +208,7 @@ public:
 };
 class Derived : public Base1, public Base2 {
  public:
+  virtual ~Derived() {}
   int a;
   double f;
   virtual int v_getBase() { return a; }
@@ -224,6 +230,7 @@ private:
 
 class Virtual {
 public:
+  virtual ~Virtual() {}
   virtual double vf() = 0;
 };
 
@@ -401,6 +408,7 @@ struct Data {
   long long ll;
   unsigned long long ull;
   int     len;
+  double  arra[10];
   double* array; //[len]
   long   transient1; //Set transient by the selection file with transient keyword
   long   transient2; //! Set transient by the comment
@@ -535,12 +543,15 @@ class SpecialConstructor {
 
 //------GaudiPython Interfaces problem
 struct Ibase {
+  virtual ~Ibase() {}
   virtual void f() = 0;
 };
 struct Iderived : virtual public Ibase {
+  virtual ~Iderived() {}
   virtual void g() = 0;
 };
 struct Rfoo : public Iderived {
+  virtual ~Rfoo() {}
   virtual void f() {}
   virtual void g() {}
 };
@@ -568,12 +579,14 @@ private:
 class Pbase {
 public:
   Pbase() {}
+  virtual ~Pbase() {}
   virtual int get() { return 0; }
 };
 
-class P : public Pbase {
+class PPbase : public Pbase {
 public:
-  P(int i) : m_i(i) {}
+  PPbase(int i) : m_i(i) {}
+  virtual ~PPbase() {}
   virtual int get() { return m_i; }
 private:
   int m_i;
@@ -633,5 +646,57 @@ class ExceptionGenerator {
   public:
     ExceptionGenerator( bool b ) { if (b) throw std::logic_error("My Exception in constructor"); }
     ~ExceptionGenerator() {}
-    void doThrow( bool b ) {if (b) throw std::logic_error("My Exception in method"); }
+    A::B::C::MyClass doThrow( bool b ) {if (b) throw std::logic_error("My Exception in method"); return A::B::C::MyClass(); }
+    A::B::C::MyClass doThrowUnknown( bool b ) {if (b) throw std::string("hello");  return A::B::C::MyClass();}
 };
+
+#include <list>
+struct __ins {
+ std::list<ExceptionGenerator*> a;
+};
+
+namespace N {
+
+  class WithProtectedTypes {
+    protected:
+    class ProtectedInner { int i; };
+  };
+  
+  class WithPrivateTypes : public WithProtectedTypes {
+    class Inner { int i; };
+    class InnerWithInner {
+      public:
+      class PInner {};
+      private:
+      class Inner { int i;};
+      Inner* i;
+    };
+    typedef Inner Inner_t;
+    struct Inner_s { int i; };
+    union  Inner_u { int i; float f; };
+    enum   Inner_e { one, two };
+    template <class T> class InnterT {int y;};
+
+    Inner   i1;
+    Inner*  i1p;
+    Inner** i1pp;
+    Inner_t   it1;
+    Inner_t*  it1p;
+    Inner_t** it1pp;
+    std::vector<Inner> vi1;  
+    std::vector<Inner*> vi1p;  
+    std::vector<const Inner*> vci1p;
+    std::vector<WithPrivateTypes*> vt;  
+    std::vector<InnerWithInner*> vv;
+    InnerWithInner::PInner ii;
+    ProtectedInner  iii;
+    ProtectedInner* iiip;
+    Inner_s  s1;
+    Inner_s* s1p;
+    Inner_u  u1;
+    Inner_u* u1p;
+    Inner_e  e1;
+    Inner_e* e1p;
+    std::vector<InnterT<Inner*> *> vvvv;
+  };
+}
