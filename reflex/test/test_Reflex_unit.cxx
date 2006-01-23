@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -446,8 +446,10 @@ void ReflexUnitTest::class_type() {
     Class _bar = Class("bar", sizeof(bar), typeid(bar));
     CPPUNIT_ASSERT(Type::ByName("foo"));
     CPPUNIT_ASSERT(_foo.ThisType() == Type::ByName("foo"));
+    CPPUNIT_ASSERT(_foo.ThisType() == Type::ByName("::foo"));
     CPPUNIT_ASSERT(_foo.ThisType() == Type::ByTypeInfo(typeid(foo)));
     CPPUNIT_ASSERT(_bar.ThisType() == Type::ByName("bar"));
+    CPPUNIT_ASSERT(_bar.ThisType() == Type::ByName("::bar"));
     CPPUNIT_ASSERT(_bar.ThisType() == Type::ByTypeInfo(typeid(bar)));
   }
   CPPUNIT_ASSERT(!Type::ByName("foo"));

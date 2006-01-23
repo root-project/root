@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.5 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -84,6 +84,9 @@ namespace ROOT {
          virtual Object Invoke( const std::vector < void * > & paramList = 
                                 std::vector<void*>()) const;
 
+
+         /** check whether artificial is Set for the data MemberAt */
+         bool IsArtificial() const;
 
          /** check whether auto is Set for the data MemberAt */
          bool IsAuto() const;
@@ -377,6 +380,12 @@ ROOT::Reflex::MemberBase::Invoke( const std::vector < void * > & /* paramList */
    return Object();
 }
 
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::MemberBase::IsArtificial() const {
+//-------------------------------------------------------------------------------
+   return 0 != (fModifiers & ARTIFICIAL);
+}
 
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::MemberBase::IsAuto() const {

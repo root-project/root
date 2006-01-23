@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.3 2005/11/11 07:18:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.5 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -130,6 +130,12 @@ namespace ROOT {
          Object Invoke( const std::vector < void * > & paramList = 
                         std::vector<void*>()) const;
 
+
+         /** 
+          * IsArtificial checks whether artificial is set for the data member 
+          * @return true if artificial modifier is set for this member
+          */
+         bool IsArtificial() const;
 
          /** 
           * IsAuto checks whether auto is set for the data member 
@@ -484,6 +490,13 @@ inline ROOT::Reflex::Type ROOT::Reflex::Member::DeclaringType() const {
    return Type();
 }
 
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Member::IsArtificial() const {
+//-------------------------------------------------------------------------------
+   if ( *this ) return fMemberBase->IsArtificial();
+   return false;
+}
 
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Member::IsAuto() const {

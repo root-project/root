@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.1 2005/11/14 15:08:01 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.5 2006/01/06 10:26:24 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -83,6 +83,11 @@ public:
 // offsetof test
 //==============================================================================================
 
+// this would be a work around for offset calculation with templated classes with more than one 
+// template parameter, but it's not needed for the time being as we are using shadow
+// classes which are not templated (thx Axel Naumann)
+#define OffsetOf_m(c1,mem) ((size_t)(&(c1 64)->mem)-64)
+
 struct OffsetOf1 { int fI; };
 template < class T > struct OffsetOf2 { int fI; };
 template < class T1, class T2 > struct OffsetOf3 { int fI; };
@@ -91,9 +96,10 @@ template < class T1, class T2, class T3, class T4, class T5 > struct OffsetOf6 {
 void ReflexBuilderUnitTest::offset() {
 
   CPPUNIT_ASSERT(OffsetOf(OffsetOf1, fI));
-  CPPUNIT_ASSERT(OffsetOf(OffsetOf2<int>, fI));
-  CPPUNIT_ASSERT(OffsetOf2(OffsetOf3<int, int>, fI));
-  CPPUNIT_ASSERT(OffsetOf5(OffsetOf6<int, int, int, int, int>, fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf1*), fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf2<int>*), fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf3<int, int>*), fI));
+  CPPUNIT_ASSERT(OffsetOf_m((OffsetOf6<int, int, int, int, int>*), fI));
 }
 
 //==============================================================================================
@@ -224,8 +230,13 @@ void ReflexBuilderUnitTest::classbuilder()
     //fixme//.AddFunctionMember<float (* (float(*)(int)) )(int)>("g3", 0, 0, 0, PRIVATE );
 
   Type t = Type::ByName("a::foo");  
+  Scope s = Scope::ByName("a");
   CPPUNIT_ASSERT(t);
   CPPUNIT_ASSERT(t.IsClass());
+  CPPUNIT_ASSERT_EQUAL( t.Id(), Type::ByName("::a::foo").Id());
+  CPPUNIT_ASSERT_EQUAL( t.Id(), TypeBuilder("::a::foo").Id());
+  CPPUNIT_ASSERT_EQUAL( s.Id(), Scope::ByName("::a").Id());
+  CPPUNIT_ASSERT_EQUAL( t.Id(), Type::ByTypeInfo(typeid(a::foo)).Id());
   CPPUNIT_ASSERT_EQUAL(size_t(21),t.FunctionMemberSize());
   CPPUNIT_ASSERT_EQUAL(size_t(13),t.DataMemberSize());
   for (size_t i = 0; i < t.FunctionMemberSize(); i++ ) {

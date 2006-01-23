@@ -30,40 +30,43 @@ ALLLIBS      += $(REFLEXLIB)
 INCLUDEFILES += $(REFLEXDEP)
 
 # genreflex
-GRFLXSD := $(REFLEXDIR)/python/genreflex
-GRFLXDD := lib/python/genreflex
+RFLX_GRFLXSD := $(REFLEXDIR)/python/genreflex
+RFLX_GRFLXDD := lib/python/genreflex
 
-GCCXMLPATHPY := $(GRFLXDD)/gccxmlpath.py
+RFLX_GCCXMLPATHPY := $(RFLX_GRFLXDD)/gccxmlpath.py
 
-GRFLXS   := $(wildcard $(GRFLXSD)/*.py)
-GRFLXPY  := $(patsubst $(GRFLXSD)/%.py,$(GRFLXDD)/%.py,$(GRFLXS))
-GRFLXPY  += $(GCCXMLPATHPY)
+RFLX_GRFLXS   := $(wildcard $(RFLX_GRFLXSD)/*.py)
+RFLX_GRFLXPY  := $(patsubst $(RFLX_GRFLXSD)/%.py,$(RFLX_GRFLXDD)/%.py,$(RFLX_GRFLXS))
+RFLX_GRFLXPY  += $(RFLX_GCCXMLPATHPY)
 ifneq ($(BUILDPYTHON),no)
-GRFLXPYC := $(subst .py,.pyc,$(GRFLXPY))
+RFLX_GRFLXPYC := $(subst .py,.pyc,$(RFLX_GRFLXPY))
 endif
 
 ifeq ($(PLATFORM),win32)
-GENREFLEX = bin/genreflex.bat
-GNRFLX_L1 = "@echo off"
-GNRFLX_L2 = "python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
-GENRFLXRC = bin/genreflex-rootcint.bat
-GRFLXRC_L1 = "@echo off"
-GRFLXRC_L2 = "python %~d0%~p0\..\lib\python\genreflex\genreflex-rootcint.py %*"
+RFLX_GENREFLEX = bin/genreflex.bat
+RFLX_GNRFLX_L1 = "@echo off"
+RFLX_GNRFLX_L2 = "python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
+RFLX_GENRFLXRC = bin/genreflex-rootcint.bat
+RFLX_GRFLXRC_L1 = "@echo off"
+RFLX_GRFLXRC_L2 = "python %~d0%~p0\..\lib\python\genreflex\genreflex-rootcint.py %*"
+# test suite
+RFLX_CPPUNITI   = $(shell cygpath -w "$(CPPUNIT)/include")
+RFLX_CPPUNITLL  = $(shell cygpath -w "$(CPPUNIT)/lib/cppunit.lib")
+RFLX_REFLEXLL   = lib/libReflex.lib
 else
-GENREFLEX = bin/genreflex
-GNRFLX_L1 = "\#!/bin/csh -f"
-GNRFLX_L2 = 'python $$0:h/../lib/python/genreflex/genreflex.py $$*'
-GENRFLXRC = bin/genreflex-rootcint
-GRFLXRC_L1 = "\#!/bin/csh -f"
-GRFLXRC_L2 = 'python $$0:h/../lib/python/genreflex/genreflex-rootcint.py $$*'
+RFLX_GENREFLEX = bin/genreflex
+RFLX_GNRFLX_L1 = "\#!/bin/csh -f"
+RFLX_GNRFLX_L2 = 'python $$0:h/../lib/python/genreflex/genreflex.py $$*'
+RFLX_GENRFLXRC = bin/genreflex-rootcint
+RFLX_GRFLXRC_L1 = "\#!/bin/csh -f"
+RFLX_GRFLXRC_L2 = 'python $$0:h/../lib/python/genreflex/genreflex-rootcint.py $$*'
+# test suite
+RFLX_CPPUNITI   = $(CPPUNIT)/include
+RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
+RFLX_REFLEXLL   = -Llib -lReflex -ldl
 endif
 
-# test suite
-CPPUNITI   = -I$(CPPUNIT)/include
-CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
-REFLEXLL   = -Llib -lReflex
-
-RFLX_GENREFLEXX = ../../bin/genreflex
+RFLX_GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py 
 
 RFLX_TESTD      = $(REFLEXDIR)/test
 RFLX_TESTLIBD1  = $(RFLX_TESTD)/testDict1
@@ -89,36 +92,36 @@ include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 		fi)
 		cp $< $@
 
-.PRECIOUS: $(GRFLXPY)
+.PRECIOUS: $(RFLX_GRFLXPY)
 
-$(GCCXMLPATHPY):
+$(RFLX_GCCXMLPATHPY):
 		@(if [ ! -d "lib/python/genreflex" ]; then \
 		  mkdir -p lib/python/genreflex; fi )
-		@echo "gccxmlpath = '$(GCCXML)'" > $(GCCXMLPATHPY);
+		@echo "gccxmlpath = '$(GCCXML)'" > $(RFLX_GCCXMLPATHPY);
 
-$(GRFLXDD)/%.py: $(GRFLXSD)/%.py $(GCCXMLPATHPY)
+$(RFLX_GRFLXDD)/%.py: $(RFLX_GRFLXSD)/%.py $(RFLX_GCCXMLPATHPY)
 		@(if [ ! -d "lib/python/genreflex" ]; then \
 		  mkdir -p lib/python/genreflex; fi )
 		cp $< $@
 
-$(GRFLXDD)/%.pyc: $(GRFLXDD)/%.py
+$(RFLX_GRFLXDD)/%.pyc: $(RFLX_GRFLXDD)/%.py
 		@python -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(GENREFLEX): $(GRFLXPYC)
-		@echo $(GNRFLX_L1) > $(GENREFLEX)
-		@echo $(GNRFLX_L2) >> $(GENREFLEX)
+$(RFLX_GENREFLEX): $(RFLX_GRFLXPYC)
+		@echo $(RFLX_GNRFLX_L1) > $(RFLX_GENREFLEX)
+		@echo $(RFLX_GNRFLX_L2) >> $(RFLX_GENREFLEX)
 ifneq ($(PLATFORM),win32)
-		@chmod a+x $(GENREFLEX)
+		@chmod a+x $(RFLX_GENREFLEX)
 endif
 
-$(GENRFLXRC) : $(GRFLXPYC)
-		@echo $(GRFLXRC_L1) > $(GENRFLXRC)
-		@echo $(GRFLXRC_L2) >> $(GENRFLXRC)
+$(RFLX_GENRFLXRC) : $(RFLX_GRFLXPYC)
+		@echo $(RFLX_GRFLXRC_L1) > $(RFLX_GENRFLXRC)
+		@echo $(RFLX_GRFLXRC_L2) >> $(RFLX_GENRFLXRC)
 ifneq ($(PLATFORM),win32)
-		@chmod a+x $(GENRFLXRC)
+		@chmod a+x $(RFLX_GENRFLXRC)
 endif
 
-$(REFLEXLIB): $(GENREFLEX) $(GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIBS)
+$(REFLEXLIB): $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
@@ -152,7 +155,7 @@ distclean::     distclean-reflex
 # test suite
 
 check-reflex: $(REFLEXLIB) $(RFLX_TESTLIB) $(RFLX_UNITTESTX)
-		@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
+		@if [ ! -e lib/libcppunit.$(SOEXT) ]; then ln -s -f $(CPPUNIT)/lib/libcppunit.$(SOEXT) lib/libcppunit.$(SOEXT); fi
 		$(RFLX_TESTD)/test_Reflex_generate
 		$(RFLX_TESTD)/test_Reflex_simple1
 		$(RFLX_TESTD)/test_Reflex_simple2
@@ -160,20 +163,20 @@ check-reflex: $(REFLEXLIB) $(RFLX_TESTLIB) $(RFLX_UNITTESTX)
 		$(RFLX_TESTD)/test_ReflexBuilder_unit
 
 lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(RFLX_REFLEXLL)
 
 %_rflx.o : %_rflx.cpp
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
 
 $(RFLX_TESTLIBS1) :
-		cd $(RFLX_TESTD); $(RFLX_GENREFLEXX) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
+		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
 
 $(RFLX_TESTLIBS2) :
-		cd $(RFLX_TESTD); $(RFLX_GENREFLEXX) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
+		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
 
-$(RFLX_UNITTESTO) : %.o : %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(CPPUNITI) -Ireflex -c $< -o $@
+$(RFLX_UNITTESTO) : $(RFLX_TESTD)/test_Reflex%.o : $(RFLX_TESTD)/test_Reflex%.cxx
+		$(CXX) $(OPT) $(CXXFLAGS) $(RFLX_CPPUNITI:%=-I%) -Ireflex -c $< -o $@
 
-$(RFLX_UNITTESTX) : % : %.o
-		$(LD) $(LDFLAGS) -o $@ $< $(CPPUNITLL) $(REFLEXLL) -ldl
+$(RFLX_UNITTESTX) : $(RFLX_TESTD)/test_Reflex% : $(RFLX_TESTD)/test_Reflex%.o
+		$(LD) $(LDFLAGS) -o $@ $< $(RFLX_CPPUNITLL) $(RFLX_REFLEXLL)
 

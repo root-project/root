@@ -81,4 +81,13 @@ namespace zot {
 
 } // namespace zot
 
+template < int i > class classVec {
+ private:
+  double arr[i];
+};
+
+namespace {
+  classVec<5> tttt;
+}
+
 #endif // DICT2_CLASSA_H

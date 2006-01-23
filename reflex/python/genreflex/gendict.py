@@ -38,7 +38,7 @@ class genDictionary(object) :
     self.comments           = opts.get('comments', False)
     self.no_membertypedefs  = opts.get('no_membertypedefs', False)
     self.generated_shadow_classes = []
-    self.selectionname      = 'ROOT::Reflex::Select'
+    self.selectionname      = 'ROOT::Reflex::Selection'
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
@@ -537,7 +537,10 @@ class genDictionary(object) :
         for b in bases :
           if b.get('virtual','') == '1' : acc = 'virtual ' + b['access']
           else                          : acc = b['access']
-          c += indent + '%s %s' % ( acc , self.genTypeName(b['type'],colon=True) )
+	  bname = self.genTypeName(b['type'],colon=True)
+	  if self.xref[b['type']]['attrs'].get('access') in ('private','protected'):
+            bname = string.translate(str(bname),self.transtable)
+          c += indent + '%s %s' % ( acc , bname )
           if b is not bases[-1] : c += ', ' 
         c += indent + ' {\n' + indent +'  public:\n'
       c += indent + '  %s();\n' % (clt)
@@ -592,10 +595,10 @@ class genDictionary(object) :
     for child in childs : values += child['name'] + '=' + child['init'] +';'
     values = values[:-1]
     if self.isUnnamedType(name) :
-      s += '  .AddEnum("%s", "%s", &typeid(UnnamedEnum))' % (name[name.rfind('::')+3:], values) 
+      s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnnamedEnum))' % (name[name.rfind('::')+3:], values) 
     else :
       if attrs.get('access') in ('protected','private'):
-        s += '  .AddEnum("%s", "%s")' % (name, values)        
+        s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnknownType))' % (name, values)        
       else:
         s += '  .AddEnum("%s", "%s", &typeid(%s))' % (name, values, name)
     return s 
@@ -627,8 +630,8 @@ class genDictionary(object) :
       if attrs['name'] != '::' : s += attrs['name']
     elif elem == 'PointerType' :
       t = self.genTypeName(attrs['type'],enum, const, colon)
-      if   t[-1] == ')' : s += t.replace('::*)','::**)').replace('::)','::*)').replace('(*)', '(**)').replace('()','(*)')
-      elif t[-1] == ']' : s += t[:t.find('[')] + '(*)' + t[t.find('['):]
+      if   t[-1] == ')' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t.replace('::*)','::**)').replace('::)','::*)').replace('(*)', '(**)').replace('()','(*)')
+      elif t[-1] == ']' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t[:t.find('[')] + '(*)' + t[t.find('['):]
       else              : s += t + '*'   
     elif elem == 'ReferenceType' :
       s += self.genTypeName(attrs['type'],enum, const, colon)+'&'
@@ -646,6 +649,8 @@ class genDictionary(object) :
         s += ')'
       else :
         s += 'void)'
+      if (attrs.get('const') == '1') : s += ' const'
+      if (attrs.get('volatile') == '1') : s += ' volatile'
     elif elem == 'ArrayType' :
       arr = '[%s]' % str(int(attrs['max'])+1)
       typ = self.genTypeName(attrs['type'], enum, const, colon)
@@ -1114,7 +1119,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genOperatorMethodDef( self, attrs, args ) :
     if attrs['name'][0].isalpha() : name = 'operator '+ attrs['name']
-    else                          : name = 'operator' + attrs['name'] 
+    else                          : name = 'operator' + attrs['name']
     if name[-1] == '>' and name.find('<') != -1 : name = name[:name.find('<')]
     return self.genMCODef( 'operator', name, attrs, args )    
 #----------------------------------------------------------------------------------
@@ -1273,7 +1278,7 @@ class genDictionary(object) :
     for m in self.methods :
       if m['context'] == cid and m['id'] not in members :
         # replace the mame by the complete templated name. Use the demangle module for that
-        if 'mangled' in m :
+        if 'mangled' in m and m['name'].isalpha() :
           mm = m['mangled'][2:]
           dname = gccdemangler.demangle_name(mm)
           dret  = gccdemangler.demangle_type(mm[dname[0]:])
@@ -1336,7 +1341,7 @@ def getTemplateArgs( cl ) :
   for s in string.split(cl[cl.find('<')+1:cl.rfind('>')],',') :
     if   cnt == 0 : args.append(s)
     else          : args[-1] += ','+ s
-    cnt += s.count('<')-s.count('>')
+    cnt += s.count('<')+s.count('(')-s.count('>')-s.count(')')
   if args[-1][-1] == ' ' : args[-1] = args[-1][:-1]
   return args
 #---------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.3 2005/11/30 13:22:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.7 2006/01/06 15:09:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -24,29 +24,27 @@ void generate_class_decl( const Type & cl,
 
   // ... base class declarations
   if ( cl.BaseSize()) {
-    for (size_t b = 0; b < cl.BaseSize(); ++b) 
-      generate_class_decl(cl.BaseAt(b).ToType(), indent);
+    for ( Base_Iterator b = cl.Base_Begin(); b != cl.Base_End(); ++b) 
+      generate_class_decl((*b).ToType(), indent);
   }
 
   cout << indent << "class " << cl.Name();
 
   // ... bases
-  if (cl.BaseSize() != 0 ) {
+  if ( cl.BaseSize()) {
 
     cout << " : " ;
 
-    for ( size_t b = 0; b < cl.BaseSize(); b++ ) {
+    for ( Base_Iterator b = cl.Base_Begin(); b != cl.Base_End(); ++b ) {
 
-      Base ba = cl.BaseAt(b);
+      if ( (*b).IsVirtual() )   cout << "virtual ";
+      if ( (*b).IsPublic() )    cout << "public ";
+      if ( (*b).IsProtected() ) cout << "protected ";
+      if ( (*b).IsPrivate() )   cout << "private ";
 
-      if ( ba.IsVirtual() )   cout << "virtual ";
-      if ( ba.IsPublic() )    cout << "public ";
-      if ( ba.IsProtected() ) cout << "protected ";
-      if ( ba.IsPrivate() )   cout << "private ";
+      cout << (*b).ToType().Name(SCOPED);
 
-      cout << ba.ToType().Name(SCOPED);
-
-      if ( b != cl.BaseSize()-1 ) cout << ", ";
+      if ( b != cl.Base_End()-1 ) cout << ", ";
     }
   }
 
@@ -55,67 +53,67 @@ void generate_class_decl( const Type & cl,
   Visibility vis = Private;
 
   // ... function members
-  for ( size_t f = 0; f < cl.FunctionMemberSize(); f++ ) {
+  for ( Member_Iterator f = cl.FunctionMember_Begin(); f != cl.FunctionMember_End(); ++f ) {
 
-    Member fm = cl.FunctionMemberAt(f);
+    if ( ! (*f).IsArtificial()) {
 
-    if ( fm.IsPublic() && vis != Public ) {
-      cout << indent << "public:" << endl;  
-      vis = Public;
-    }
-    else if ( fm.IsProtected() && vis != Protected ) {
-      cout << indent << "protected:" << endl;  
-      vis = Protected;
-    }
-    else if ( fm.IsPrivate()   && vis != Private ) {
-      cout << indent << "private:" << endl;  
-      vis = Private;
-    }
-
-    Type ft = fm.TypeOf();
-
-    cout << indent + "  ";
-
-    if ( ! fm.IsConstructor() && !fm.IsDestructor() ) 
-      cout << ft.ReturnType().Name(SCOPED) << " ";
-
-    if (  fm.IsOperator() ) cout << "operator ";
-    cout << fm.Name() << " (";
-
-    if ( ft.FunctionParameterSize() ) {
-      for ( size_t p = 0 ; p < ft.FunctionParameterSize(); p++ ) {
-        cout << ft.FunctionParameterAt(p).Name(SCOPED|QUALIFIED);
-
-        if ( fm.FunctionParameterNameAt(p).length() ) 
-          cout << " " << fm.FunctionParameterNameAt(p);
-
-        if ( fm.FunctionParameterDefaultAt(p).length() ) 
-          cout << " = " << fm.FunctionParameterDefaultAt(p);
-
-        if ( p != ft.FunctionParameterSize()-1 ) cout << ", ";
+      if ( (*f).IsPublic() && vis != Public ) {
+        cout << indent << "public:" << endl;  
+        vis = Public;
       }
+      else if ( (*f).IsProtected() && vis != Protected ) {
+        cout << indent << "protected:" << endl;  
+        vis = Protected;
+      }
+      else if ( (*f).IsPrivate()   && vis != Private ) {
+        cout << indent << "private:" << endl;  
+        vis = Private;
+      }
+
+      Type ft = (*f).TypeOf();
+
+      cout << indent + "  ";
+
+      if ( ! (*f).IsConstructor() && !(*f).IsDestructor() ) 
+        cout << ft.ReturnType().Name(SCOPED) << " ";
+
+      if (  (*f).IsOperator() ) cout << "operator ";
+      cout << (*f).Name() << " (";
+
+      if ( ft.FunctionParameterSize() ) {
+        for ( size_t p = 0 ; p < ft.FunctionParameterSize(); p++ ) {
+          cout << ft.FunctionParameterAt(p).Name(SCOPED|QUALIFIED);
+
+          if ( (*f).FunctionParameterNameAt(p).length() ) 
+            cout << " " << (*f).FunctionParameterNameAt(p);
+
+          if ( (*f).FunctionParameterDefaultAt(p).length() ) 
+            cout << " = " << (*f).FunctionParameterDefaultAt(p);
+
+          if ( p != ft.FunctionParameterSize()-1 ) cout << ", ";
+        }
+      }
+      cout << ");" << endl;
     }
-    cout << ");" << endl;
   }
 
   // ... data members
-  for ( size_t d = 0; d < cl.DataMemberSize(); d++ ) {
-    Member dm = cl.DataMemberAt(d);
+  for ( Member_Iterator d = cl.DataMember_Begin(); d != cl.DataMember_End(); ++d ) {
 
-    if ( dm.IsPublic() && vis != Public ) {
+    if ( (*d).IsPublic() && vis != Public ) {
       cout << indent << "public:" << endl;  
       vis = Public; 
     }
-    else if ( dm.IsProtected() && vis != Protected ) {
+    else if ( (*d).IsProtected() && vis != Protected ) {
       cout << indent << "protected:" << endl;  
       vis = Protected; 
     }
-    else if ( dm.IsPrivate()   && vis != Private ) {
+    else if ( (*d).IsPrivate()   && vis != Private ) {
       cout << indent << "private:" << endl;  
       vis = Private;
     }
-    cout << indent + "  " << dm.TypeOf().Name(SCOPED) 
-         << " " << dm.Name() << ";"  << endl;
+    cout << indent + "  " << (*d).TypeOf().Name(SCOPED) 
+         << " " << (*d).Name() << ";"  << endl;
   }
   cout << indent << "};" << endl;
 }
@@ -157,6 +155,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE( ReflexSimple2Test );
   CPPUNIT_TEST( loadLibrary );
+  CPPUNIT_TEST( testTemplateClass );
   CPPUNIT_TEST( testIterators );
   CPPUNIT_TEST( fooBarZot );
   CPPUNIT_TEST( testBaseClasses );
@@ -171,6 +170,7 @@ public:
   void setUp() {}
 
   void loadLibrary();
+  void testTemplateClass();
   void testIterators();
   void fooBarZot();
   void testBaseClasses();
@@ -189,11 +189,21 @@ void ReflexSimple2Test::loadLibrary() {
   //Reflex::accessArtificialMembers() = true;
   void* libInstance = 0;  
 #if defined (_WIN32)
-  libInstance = LoadLibrary("test_Class2DictRflx.dll");
+  libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
 #else
   libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
 #endif
   CPPUNIT_ASSERT(libInstance);
+}
+
+void ReflexSimple2Test::testTemplateClass() {
+  Type t = Type::ByName("TT::Outer<TT::A<unsigned long> >");
+  CPPUNIT_ASSERT(t);
+  int numFuns = 0;
+  for (Member_Iterator mi = t.FunctionMember_Begin(); mi != t.FunctionMember_End(); ++mi) {
+    if ( ! (*mi).IsArtificial()) ++numFuns;
+  }
+  CPPUNIT_ASSERT_EQUAL(1,numFuns);
 }
 
 void ReflexSimple2Test::testIterators() {

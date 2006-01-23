@@ -1,5 +1,5 @@
 <lcgdict>
-  <class pattern="Bla*"/>
+  <class pattern="classVec*"/>
   <class pattern="Class*"/>
   <class pattern="Bla::*"/>
   <function name="function1"/>
@@ -17,4 +17,15 @@
     <field name="data" comment="[this is an emulated comment]" />
   </class> 
   <class pattern="zot::*"/>
+
+  <class name="TT::Outer<TT::A<unsigned long> >"/>
+
+  <exclusion>
+    <class name="TT::Outer<TT::A<unsigned long> >">
+      <method name="unwantedFunction"/>
+    </class>
+  </exclusion>
+
+  <class pattern="Bla*"/>
+
 </lcgdict>
