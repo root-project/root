@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.17 2004/08/18 10:55:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.18 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -166,6 +166,7 @@ void TPave::Copy(TObject &obj) const
    ((TPave&)obj).fInit        = fInit;
    ((TPave&)obj).fOption      = fOption;
    ((TPave&)obj).fName        = fName;
+   ((TPave&)obj).fCornerRadius= fCornerRadius;
 }
 
 

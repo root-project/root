@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.5 2004/06/08 10:26:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.6 2005/11/11 17:31:48 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -58,8 +58,8 @@ public:
    virtual void  DrawPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                           Int_t bordersize=4 ,Option_t *option="br");
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Int_t       GetBorderSize() { return fBorderSize;}
-   Double_t    GetCornerRadius() {return fCornerRadius;}
+   Int_t       GetBorderSize() const { return fBorderSize;}
+   Double_t    GetCornerRadius() const {return fCornerRadius;}
    Option_t   *GetName() const {return fName.Data();}
    Option_t   *GetOption() const {return fOption.Data();}
    Double_t    GetX1NDC() const {return fX1NDC;}
