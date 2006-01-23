@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.22 2005/09/07 15:57:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.23 2005/11/11 09:24:24 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -498,7 +498,7 @@ Int_t TEnv::GetValue(const char *name, Int_t dflt)
 //______________________________________________________________________________
 Double_t TEnv::GetValue(const char *name, Double_t dflt)
 {
-   // Returns the dobule value for a resource. If the resource is not found
+   // Returns the double value for a resource. If the resource is not found
    // return the dflt value.
 
    const char *cp = TEnv::Getvalue(name);
@@ -670,6 +670,7 @@ void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
 {
    // Set the value of a resource or create a new resource.
 
+   if (!fTable) return;
    const char *nam = name;
    Bool_t append = kFALSE;
    if (name[0] == '+') {

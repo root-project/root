@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.8 2005/06/10 22:28:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.9 2005/11/21 11:17:18 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -97,8 +97,6 @@ private:
    EEnvLevel   fLevel;
    Bool_t      fModified;
 
-   TEnvRec() { }
-
    TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l);
    Int_t    Compare(const TObject *obj) const;
    void     ChangeValue(const char *v, const char *t, EEnvLevel l,
@@ -106,11 +104,14 @@ private:
    TString  ExpandValue(const char *v);
 
 public:
+   TEnvRec() {fName="",fType="",fValue="",fLevel=kEnvAll;fModified = kTRUE;}
    const char *GetName() const { return fName; }
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }
    EEnvLevel   GetLevel() const { return fLevel; }
    ULong_t     Hash() const { return fName.Hash(); }
+   
+   ClassDef(TEnvRec,1)  //Individual TEnv records.
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -135,6 +136,7 @@ public:
    Bool_t              Defined(const char *name)
                                     { return Getvalue(name) != 0; }
 
+   virtual const char *GetRcName() const {return fRcName.Data();}
    virtual Int_t       GetValue(const char *name, Int_t dflt);
    virtual Double_t    GetValue(const char *name, Double_t dflt);
    virtual const char *GetValue(const char *name, const char *dflt);
@@ -153,7 +155,7 @@ public:
    virtual void        Print(Option_t *option="") const;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
 
-   ClassDef(TEnv,0)  //Handle ROOT configuration resources
+   ClassDef(TEnv,1)  //Handle ROOT configuration resources
 };
 
 R__EXTERN TEnv *gEnv;
