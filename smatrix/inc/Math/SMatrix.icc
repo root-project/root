@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.9 2005/12/12 11:35:10 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.10 2005/12/12 14:59:24 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -407,7 +407,7 @@ bool SMatrix<T,D1,D2>::operator<(const Expr<A,T,D1,D2>& rhs) const {
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Sinvert() {
   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  return Dsinv<T,D1,D1>(fArray);
+  return Dsinv<T,D1,D2>(fArray);
 }
 
 template <class T, unsigned int D1, unsigned int D2>
@@ -425,7 +425,7 @@ inline SMatrix<T,D1,D2> SMatrix<T,D1,D2>::Sinverse() const {
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Sdet(T& det) {
   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  return Dsfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
+  return Dsfact<SMatrix<T,D1,D2>, D1, D1>(*this,det);
 }
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Sdet2(T& det) const {
@@ -456,7 +456,7 @@ inline SMatrix<T,D1,D2> SMatrix<T,D1,D2>::Inverse() const {
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Det(T& det) {
   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  return Dfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
+  return Dfact<SMatrix<T,D1,D2>, D1, D1>(*this,det);
 }
 template <class T, unsigned int D1, unsigned int D2>
 inline bool SMatrix<T,D1,D2>::Det2(T& det) const {
