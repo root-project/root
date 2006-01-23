@@ -1,8 +1,10 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef_StatFunc.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef_StatFunc.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
 // PDF-s
+#ifdef __CINT__
+
 
 #pragma link C++ function ROOT::Math::chisquared_prob( double , double, double);
 #pragma link C++ function ROOT::Math::chisquared_quant( double , double, double);
@@ -36,3 +38,5 @@
 #pragma link C++ function ROOT::Math::tdistribution_quant_inv(double,double);
 #pragma link C++ function ROOT::Math::uniform_prob_inv(double,double,double);
 #pragma link C++ function ROOT::Math::uniform_quant_inv(double,double,double);
+
+#endif

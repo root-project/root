@@ -1,6 +1,7 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef_SpecFunc.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef_SpecFunc.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
+#ifdef __CINT__
 
 
 #pragma link C++ function ROOT::Math::assoc_laguerre(unsigned,unsigned,double);
@@ -22,3 +23,5 @@
 #pragma link C++ function ROOT::Math::riemann_zeta(double);
 #pragma link C++ function ROOT::Math::sph_bessel(unsigned,double);
 #pragma link C++ function ROOT::Math::sph_neumann(unsigned,double);
+
+#endif
