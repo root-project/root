@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.87 2005/12/02 22:38:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.88 2005/12/22 19:04:48 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -73,14 +73,14 @@ TBuffer::TBuffer(EMode mode) :
    // TBuffer::kWrite. By default the I/O buffer has a size of
    // TBuffer::kInitialSize (1024) bytes.
 
-   fBufSize  = kInitialSize;
-   fMode     = mode;
-   fVersion  = 0;
-   fMapCount = 0;
-   fMapSize  = fgMapSize;
-   fMap      = 0;
-   fClassMap = 0;
-   fParent   = 0;
+   fBufSize      = kInitialSize;
+   fMode         = mode;
+   fVersion      = 0;
+   fMapCount     = 0;
+   fMapSize      = fgMapSize;
+   fMap          = 0;
+   fClassMap     = 0;
+   fParent       = 0;
    fDisplacement = 0;
 
    SetBit(kIsOwner);
