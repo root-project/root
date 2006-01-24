@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.146 2005/11/18 17:45:00 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.147 2005/11/29 05:38:35 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -229,10 +229,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    SetName(fname1);
    SetTitle(ftitle);
 
-   TDirectory::Build();
+   TDirectory::Build(this, 0);
 
    fD          = -1;
-   fFile       = this;
    fFree       = 0;
    fVersion    = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits      = 4;
@@ -464,7 +463,7 @@ void TFile::Init(Bool_t create)
 //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
       Int_t nbytes = namelen + TDirectory::Sizeof();
-      TKey *key    = new TKey(fName,fTitle,IsA(),nbytes);
+      TKey *key    = new TKey(fName, fTitle, IsA(), nbytes, this);
       fNbytesName  = key->GetKeylen() + namelen;
       fSeekDir     = key->GetSeekKey();
       fSeekFree    = 0;
@@ -968,12 +967,12 @@ TList *TFile::GetStreamerInfoList()
    if (fSeekInfo) {
       TDirectory::TContext ctx(gDirectory,this); // gFile and gDirectory used in ReadObj
 
-      TKey *key = new TKey();
+      TKey *key = new TKey(this);
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
       Seek(fSeekInfo);
       ReadBuffer(buf,fNbytesInfo);
-      key->ReadBuffer(buf);
+      key->ReadKeyBuffer(buf);
       list = (TList*)key->ReadObj();
       if (list) list->SetOwner();
       delete [] buffer;
@@ -1239,10 +1238,10 @@ void TFile::ReadFree()
 //  as a single data record
 //
 
-   TKey *headerfree = new TKey(fSeekFree,fNbytesFree);
+   TKey *headerfree = new TKey(fSeekFree, fNbytesFree, this);
    headerfree->ReadFile();
    char *buffer = headerfree->GetBuffer();
-   headerfree->ReadBuffer(buffer);
+   headerfree->ReadKeyBuffer(buffer);
    buffer = headerfree->GetBuffer();
    while (1) {
       TFree *afree = new TFree();
@@ -1327,8 +1326,8 @@ Int_t TFile::Recover()
       classname[nwhc] = '\0';
       TDatime::GetDateTime(datime, date, time);
       if (seekpdir == fSeekDir && strcmp(classname,"TFile") && strcmp(classname,"TBasket")) {
-         key = new TKey();
-         key->ReadBuffer(bufread);
+         key = new TKey(this);
+         key->ReadKeyBuffer(bufread);
          if (!strcmp(key->GetName(),"StreamerInfo")) {
             fSeekInfo = seekkey;
             SafeDelete(fInfoCache);
@@ -1695,7 +1694,7 @@ void TFile::WriteFree()
       nbytes += afree->Sizeof();
    }
    if (!nbytes) return;
-   TKey *key    = new TKey(fName,fTitle,IsA(),nbytes);
+   TKey *key    = new TKey(fName,fTitle,IsA(),nbytes,this);
    if (key->GetSeekKey() == 0) {
       delete key;
       return;
@@ -1848,12 +1847,12 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    // loop on all TStreamerInfo
    TList *list = 0;
    if (fSeekInfo) {
-      TKey *key = new TKey();
+      TKey *key = new TKey(this);
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
       Seek(fSeekInfo);
       ReadBuffer(buf,fNbytesInfo);
-      key->ReadBuffer(buf);
+      key->ReadKeyBuffer(buf);
       list = (TList*)key->ReadObj();
       delete [] buffer;
       delete key;
@@ -2069,7 +2068,7 @@ void TFile::WriteStreamerInfo()
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
    //Create new key
-   TKey key(&list,"StreamerInfo",GetBestBuffer());
+   TKey key(&list,"StreamerInfo",GetBestBuffer(), this);
    fKeys->Remove(&key);
    fSeekInfo   = key.GetSeekKey();
    fNbytesInfo = key.GetNbytes();
