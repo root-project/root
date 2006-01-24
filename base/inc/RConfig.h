@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.84 2005/06/22 17:04:45 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.85 2005/07/29 08:44:36 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -254,7 +254,7 @@
 #   endif
 #endif
 
-#if defined(__MACH__) && defined(__i386__)
+#if defined(__MACH__) && defined(__i386__) && !defined(__APPLE__)
 #   define R__HURD
 #   define f2cFortran   /* cfortran.h does not know HURD - sigh */
 #   define R__UNIX
@@ -292,7 +292,7 @@
 #   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #endif
 
-#if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
+#if defined(__APPLE__)       /* MacOS X support, initially following FreeBSD */
 #   include <AvailabilityMacros.h>
 #   define R__MACOSX
 #   define R__UNIX

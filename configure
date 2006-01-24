@@ -614,7 +614,7 @@ guess_architecture () {
         openbsd*:*:*)          arch=openbsd         ;;
         lynx:*:*)              arch=lynxos          ;;
         darwin:power*:*)       arch=macosx          ;;
-        darwin:x86*:*)         arch=macosx          ;;
+        darwin:*86*:*)         arch=macosx          ;;
         irix*:sgi*:*)          arch=sgicc           ;;
         sunos:sun*:6*)         arch=solarisCC5      ;;
         sunos:sun*:5*)         arch=solarisCC5      ;;
