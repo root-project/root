@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.21 2005/12/21 08:09:41 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.22 2006/01/18 20:44:18 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,6 +68,7 @@
 TPythia6*  TPythia6::fgInstance = 0;
 
 #ifndef WIN32
+# define pydiff pydiff_
 # define pyevnt pyevnt_
 # define pyinit pyinit_
 # define pychge pychge_
@@ -99,6 +100,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # endif
 # define type_of_call
 #else
+# define pydiff PYDIFF
 # define pyevnt PYEVNT
 # define pyinit PYINIT
 # define pychge PYCHGE
@@ -125,6 +127,7 @@ extern "C" void type_of_call pyevnt();
 extern "C" void type_of_call pystat(int *key);
 extern "C" void type_of_call pylist(int *key);
 extern "C" void type_of_call pyedit(int *medit);
+extern "C" void type_of_call pydiff();
 extern "C" void type_of_call pyexec();
 extern "C" void type_of_call pyhepc(int *mconv);
 extern "C" void type_of_call pylist(int *flag);
@@ -500,6 +503,10 @@ int TPythia6::Pycomp(int kf) {
 void TPythia6::Pyedit(int medit) {
   pyedit(&medit);
   ImportParticles();
+}
+
+void TPythia6::Pydiff() {
+  pydiff();
 }
 
 void TPythia6::Pyevnt() {
