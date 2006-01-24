@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.1 2005/09/23 12:53:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.2 2005/11/24 17:08:34 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -62,7 +62,7 @@ private:
 
 public:
    TFileInfo(const char *url=0, Long64_t size=-1, const char *uuid=0,
-             const char* md5=0, Long64_t entries=-1, Long64_t first=-1,
+             const char *md5=0, Long64_t entries=-1, Long64_t first=-1,
              Long64_t last=-1, TObject *meta=0);
 
    virtual ~TFileInfo();

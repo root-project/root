@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.3 2005/10/16 20:27:01 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.4 2005/11/16 20:04:11 pcanal Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -27,21 +27,25 @@ ClassImp(TFileInfo)
 TFileInfo::TFileInfo(const char *url , Long64_t size, const char *uuid,
    const char *md5, Long64_t entries, Long64_t first, Long64_t last,
    TObject *meta) : fCurrentUrl(0), fUrlList(0), fSize(size), fUUID(0),
-   fMD5(new TMD5((const UChar_t*) md5)),
-   fEntries(entries), fFirst(first), fLast(last), fMetaDataObject(meta)
+   fMD5(0), fEntries(entries), fFirst(first), fLast(last), fMetaDataObject(meta)
 {
    // Constructor.
-   if (uuid) {
+
+   if (uuid)
       fUUID = new TUUID(uuid);
-   } else {
-      fUUID = new TUUID();
-   }
+   else
+      fUUID = new TUUID;
+
+   if (md5)
+      fMD5 = new TMD5((const UChar_t*)md5);
+   else
+      fMD5 = new TMD5;
 
    // Set's the name from the UUID.
    SetName(fUUID->AsString());
    SetTitle("TFileInfo");
 
-   fCurrentUrl=0;
+   fCurrentUrl = 0;
    if (url) {
       fUrlList = new TList();
       fUrlList->SetOwner();
@@ -54,6 +58,7 @@ TFileInfo::TFileInfo(const char *url , Long64_t size, const char *uuid,
 TFileInfo::~TFileInfo()
 {
    // Destructor.
+
    SafeDelete(fMetaDataObject);
    SafeDelete(fUUID);
    SafeDelete(fMD5);
@@ -68,7 +73,7 @@ TUrl *TFileInfo::NextUrl()
    // the seconde the 2nd element aso.
 
    if (fCurrentUrl && (fCurrentUrl == fUrlList->First())) {
-      TUrl* returl = GetCurrentUrl();
+      TUrl *returl = GetCurrentUrl();
       fCurrentUrl = (TUrl*)fUrlList->After((TObject*)fCurrentUrl);
       return returl;
    }
@@ -82,8 +87,9 @@ TUrl *TFileInfo::NextUrl()
 TUrl *TFileInfo::FindByUrl(const char *url)
 {
    // Find an element from a URL.
+
    TIter nextUrl(fUrlList);
-   TUrl* urlelement;
+   TUrl *urlelement;
 
    while  ( (urlelement = (TUrl*) nextUrl() ) ) {
       if ( TString(urlelement->GetUrl()) == TString(url) ) {
@@ -101,7 +107,7 @@ Bool_t TFileInfo::AddUrl(const char *url)
       return kFALSE;
    }
 
-   TUrl* newurl = new TUrl(url);
+   TUrl *newurl = new TUrl(url);
    // We set the current Url to the first url added
    if (fUrlList->GetSize() == 0) {
       fCurrentUrl = newurl;
@@ -112,10 +118,10 @@ Bool_t TFileInfo::AddUrl(const char *url)
 }
 
 //______________________________________________________________________________
-Bool_t TFileInfo::RemoveUrl(const char* url)
+Bool_t TFileInfo::RemoveUrl(const char *url)
 {
    // Remove an URL.
-   TUrl* lurl;
+   TUrl *lurl;
    if ((lurl=(TUrl*)FindByUrl(url))) {
       fUrlList->Remove((TObject*) lurl);
       return kTRUE;
@@ -124,14 +130,14 @@ Bool_t TFileInfo::RemoveUrl(const char* url)
 }
 
 //______________________________________________________________________________
-void TFileInfo::AddMetaDataObject(TObject* obj)
+void TFileInfo::AddMetaDataObject(TObject *obj)
 {
    // Add's a meta data object to the file info object
 
    if (obj) {
       if (fMetaDataObject)
          delete fMetaDataObject;
-         fMetaDataObject = obj;
+      fMetaDataObject = obj;
    }
 }
 
@@ -150,6 +156,7 @@ void TFileInfo::RemoveMetaDataObject()
 void TFileInfo::Print(Option_t * /* option */) const
 {
    // Print information about this object.
+
    cout << "UUID: " << GetUUID()->AsString() << " Size: " << GetSize() << " MD5: " << GetMD5()->AsString() << endl;
    TIter next(fUrlList);
    TObject* obj;
