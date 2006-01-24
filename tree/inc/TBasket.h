@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.14 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.15 2005/11/16 20:18:36 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -50,6 +50,7 @@ protected:
 public:
    
    TBasket();
+   TBasket(TDirectory *motherDir);
    TBasket(const char *name, const char *title, TBranch *branch);
    virtual ~TBasket();
    
@@ -72,8 +73,8 @@ public:
         Int_t      LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
         Long64_t   CopyTo(TFile *to);
 
-           void    SetBranch(TBranch *branch) {fBranch = branch;}
-           void    SetNevBufSize(Int_t n) {fNevBufSize=n;}
+           void    SetBranch(TBranch *branch) { fBranch = branch; }
+           void    SetNevBufSize(Int_t n) { fNevBufSize=n; }
    virtual void    SetReadMode();
    virtual void    SetWriteMode();
    inline  void    Update(Int_t newlast) { Update(newlast,newlast); }; 

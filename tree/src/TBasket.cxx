@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.36 2006/01/23 19:38:34 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.37 2006/01/23 19:41:03 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,7 +32,7 @@ ClassImp(TBasket)
 //
 
 //_______________________________________________________________________
-TBasket::TBasket()
+TBasket::TBasket() 
 {
    // Default contructor.
 
@@ -49,7 +49,23 @@ TBasket::TBasket()
 }
 
 //_______________________________________________________________________
-TBasket::TBasket(const char *name, const char *title, TBranch *branch)
+TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
+{
+   fDisplacement  = 0;
+   fEntryOffset   = 0;
+   fBufferRef     = 0;
+   fBuffer        = 0;
+   fHeaderOnly    = kFALSE;
+   fBufferSize    = 0;
+   fNevBufSize    = 0;
+   fNevBuf        = 0;
+   fLast          = 0;
+   fBranch        = 0;
+}
+
+//_______________________________________________________________________
+TBasket::TBasket(const char *name, const char *title, TBranch *branch) : 
+  TKey(branch->GetDirectory())
 {
    // Basket normal constructor.
 
@@ -70,6 +86,7 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    }
    fHeaderOnly  = kTRUE;
    fLast        = 0; // RDK: Must initialize before calling Streamer()
+   
    Streamer(*fBufferRef);
    fKeylen      = fBufferRef->Length();
    fObjlen      = fBufferSize - fKeylen;
@@ -110,16 +127,18 @@ Long64_t TBasket::CopyTo(TFile *to)
 {
    // Copy the basket of this branch onto the file to.
 
-   TDirectory::TContext c(gDirectory,to);
+//   Global variables no longer required by key store   
+//   TDirectory::TContext c(gDirectory,to);
+
    fBufferRef->SetWriteMode();
    Int_t nout = fNbytes - fKeylen;
    fBuffer = fBufferRef->Buffer();
-   Create(nout);
+   Create(nout, to);
    fBufferRef->SetBufferOffset(0);
    fHeaderOnly = kTRUE;
    Streamer(*fBufferRef);
    fHeaderOnly = kFALSE;
-   Int_t nBytes = WriteFile(0);
+   Int_t nBytes = WriteFile(0, to);
 
    return nBytes>0 ? nBytes : -1;
 }
@@ -246,10 +265,13 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 
    fBufferRef = new TBuffer(TBuffer::kRead, len);
    fBufferRef->SetParent(file);
+   
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
    file->ReadBuffer(buffer,len);
+
    Streamer(*fBufferRef);
+
    Bool_t oldCase = fObjlen==fNbytes-fKeylen 
         && GetBranch()->GetCompressionLevel()!=0
         && file->GetVersion()<=30401;
@@ -328,6 +350,7 @@ AfterBuffer:
       // array.
       fBufferRef->ReadArray(fDisplacement);
    }
+
    return badread;
 }
 
@@ -521,12 +544,15 @@ Int_t TBasket::WriteBuffer()
       cursav->cd(); 
       return -1;
    }
-
+   
+   fMotherDir = fBranch->GetDirectory();
+   
    if (fBufferRef->TestBit(TBuffer::kNotDecompressed)) {
       // Read the basket information that was saved inside the buffer.
       Bool_t writing = fBufferRef->IsWriting();
       fBufferRef->SetReadMode();
       fBufferRef->SetBufferOffset(0);
+
       Streamer(*fBufferRef);
       if (writing) fBufferRef->SetWriteMode();
       Int_t nout = fNbytes - fKeylen;
@@ -536,6 +562,7 @@ Int_t TBasket::WriteBuffer()
       Create(nout);
       fBufferRef->SetBufferOffset(0);
       fHeaderOnly = kTRUE;
+
       Streamer(*fBufferRef);         //write key itself again
       int nBytes = WriteFile(0);
       fHeaderOnly = kFALSE;
@@ -580,6 +607,7 @@ Int_t TBasket::WriteBuffer()
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
+
             Streamer(*fBufferRef);         //write key itself again
             //Warning("WriteBuffer","Found pathological case where buffer cannot be compressed. Result is OK. fNbytes=%d, fObjLen=%d, fKeylen=%d",fNbytes,fObjlen,fKeylen);
             goto WriteFile;
@@ -592,6 +620,7 @@ Int_t TBasket::WriteBuffer()
       nout = noutot;
       Create(noutot);
       fBufferRef->SetBufferOffset(0);
+
       Streamer(*fBufferRef);         //write key itself again
       memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
       delete fBufferRef; fBufferRef = 0;
@@ -599,6 +628,7 @@ Int_t TBasket::WriteBuffer()
       fBuffer = fBufferRef->Buffer();
       Create(fObjlen);
       fBufferRef->SetBufferOffset(0);
+
       Streamer(*fBufferRef);         //write key itself again
       nout = fObjlen;
    }
@@ -609,3 +639,4 @@ WriteFile:
    cursav->cd();
    return nBytes>0 ? fKeylen+nout : -1;
 }
+

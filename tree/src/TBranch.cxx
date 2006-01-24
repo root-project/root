@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.95 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.96 2005/11/16 20:20:01 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -732,7 +732,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
      // create/decode basket parameters from buffer
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
-   basket = new TBasket();
+   basket = new TBasket(file);
    if (fSkipZip) basket->SetBit(TBuffer::kNotDecompressed);
    basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
@@ -1101,7 +1101,7 @@ Int_t TBranch::LoadBaskets()
    for (Int_t i=0;i<nbaskets;i++) {
       basket = (TBasket*)fBaskets.UncheckedAt(i);
       if (basket) continue;
-      basket = new TBasket();
+      basket = new TBasket(file);
       basket->SetBranch(this);
       if (fBasketBytes[i] == 0) {
          fBasketBytes[i] = basket->ReadBasketBytes(fBasketSeek[i],file);
