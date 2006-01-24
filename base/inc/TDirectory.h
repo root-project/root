@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.30 2005/09/30 08:52:23 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.31 2005/11/18 17:44:16 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -58,12 +58,14 @@ protected:
    TList      *fList;            //Pointer to objects list in memory
    TList      *fKeys;            //Pointer to keys list in memory
    TUUID       fUUID;            //Unique identifier
+   TString     fPathBuffer;      //!Buffer for GetPath() function 
 
           Bool_t cd1(const char *path);
    static Bool_t Cd1(const char *path);
    
    virtual TKey* CreateKey(const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey* CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize);
+          void   FillFullPath(TString& buf) const;
 
 private:
    TDirectory(const TDirectory &directory);  //Directories cannot be copied
@@ -106,13 +108,13 @@ public:
    };
 
    TDirectory();
-   TDirectory(const char *name, const char *title, Option_t *option="");
+   TDirectory(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);
    virtual ~TDirectory();
    virtual void        Append(TObject *obj);
            void        Add(TObject *obj) { Append(obj); }
            Int_t       AppendKey(TKey *key);
    virtual void        Browse(TBrowser *b);
-           void        Build();
+           void        Build(TFile* motherFile = 0, TDirectory* motherDir = 0);
    virtual void        Clear(Option_t *option="");
    virtual void        Close(Option_t *option="");
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
@@ -136,18 +138,20 @@ public:
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
    virtual void       *GetObjectUnchecked(const char *namecycle);
    virtual Int_t       GetBufferSize() const;
-   const TDatime      &GetCreationDate() const {return fDatimeC;}
-   virtual TFile      *GetFile() const {return fFile;}
+   const TDatime      &GetCreationDate() const { return fDatimeC; }
+   virtual TFile      *GetFile() const { return fFile; }
    virtual TKey       *GetKey(const char *name, Short_t cycle=9999) const;
    virtual TList      *GetList() const { return fList; }
    virtual TList      *GetListOfKeys() const { return fKeys; }
-   const TDatime      &GetModificationDate() const {return fDatimeM;}
+   const TDatime      &GetModificationDate() const { return fDatimeM; }
    TObject            *GetMother() const { return fMother; }
-   virtual Int_t       GetNbytesKeys() const {return fNbytesKeys;}
-   virtual Int_t       GetNkeys() const {return fKeys->GetSize();}
+   TDirectory         *GetMotherDir() const { return fMother==0 ? 0 : dynamic_cast<TDirectory*>(fMother); }
+   virtual Int_t       GetNbytesKeys() const { return fNbytesKeys; }
+   virtual Int_t       GetNkeys() const { return fKeys->GetSize(); }
    virtual Long64_t    GetSeekDir() const { return fSeekDir; }
    virtual Long64_t    GetSeekParent() const { return fSeekParent; }
    virtual Long64_t    GetSeekKeys() const { return fSeekKeys; }
+   virtual const char *GetPathStatic() const;
    virtual const char *GetPath() const;
    TUUID               GetUUID() const {return fUUID;}
    Bool_t              IsFolder() const { return kTRUE; }
