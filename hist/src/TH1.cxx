@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.265 2005/12/04 11:10:21 brun Exp $
+// @(#)root/hist:$Name: v5-08-00-patches $:$Id: TH1.cxx,v 1.266 2005/12/07 07:36:13 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2445,7 +2445,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
                cache[2] = fXaxis.GetBinCenter(binx);
             }
             if (!f1->IsInside(&cache[2])) continue;
-            if (fitOption.Integral) cache[5] = fXaxis.GetBinWidth(binx);
             Int_t bin = GetBin(binx,biny,binz);
             cache[0] = GetBinContent(bin);
             if (fitOption.W1) cache[1] = 1;
