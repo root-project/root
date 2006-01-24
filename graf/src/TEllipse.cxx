@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.21 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.22 2006/01/18 10:16:58 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -490,7 +490,7 @@ void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
       y[n+1] = gPad->YtoPad(y1);
       x[n+2] = x[0];
       y[n+2] = y[0];
-      if (GetFillColor()) gPad->PaintFillArea(n+2,x,y);
+      if (GetFillStyle()) gPad->PaintFillArea(n+2,x,y);
       if (GetLineStyle()) {
          if (TestBit(kNoEdges) || opt.Contains("only")) gPad->PaintPolyLine(n+1,x,y);
          else                                           gPad->PaintPolyLine(n+3,x,y);
