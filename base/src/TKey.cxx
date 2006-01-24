@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.49 2005/11/16 20:01:55 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.50 2005/11/21 11:17:18 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -75,83 +75,73 @@ UInt_t keyAbsNumber = 0;
 ClassImp(TKey)
 
 //______________________________________________________________________________
-TKey::TKey() : TNamed(), fDatime((UInt_t)0), fPidOffset(0)
+TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 {
    // TKey default constructor.
 
-   fVersion    = TKey::Class_Version();
-   fSeekKey    = 0;
-   fNbytes     = 0;
-   fBuffer     = 0;
+   Build(0, "", 0);
+   
    fKeylen     = Sizeof();
-   fObjlen     = 0;
-   fBufferRef  = 0;
-   fCycle      = 0;
-   fSeekPdir   = 0;
+
    keyAbsNumber++; SetUniqueID(keyAbsNumber);
 }
 
 //______________________________________________________________________________
-TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed(), fPidOffset(0)
+TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
+{
+   // TKey default constructor.
+
+   Build(motherDir, "", 0);
+   
+   fKeylen     = Sizeof();
+
+   keyAbsNumber++; SetUniqueID(keyAbsNumber);
+}
+
+//______________________________________________________________________________
+TKey::TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir) : TNamed()
 {
    // Create a TKey object to read keys.
    // Constructor called by TDirectory::ReadKeys and by TFile::TFile.
    // A TKey object is created to read the keys structure itself.
 
-   fVersion    = TKey::Class_Version();
-   if (pointer > TFile::kStartBigFile) fVersion += 1000;
+   Build(motherDir, "", pointer);
+   
    fSeekKey    = pointer;
    fNbytes     = nbytes;
    fBuffer     = new char[nbytes];
-   fKeylen     = 0;
-   fObjlen     = 0;
-   fBufferRef  = 0;
-   fCycle      = 0;
-   fSeekPdir   = 0;
    keyAbsNumber++; SetUniqueID(keyAbsNumber);
 }
 
 //______________________________________________________________________________
-TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes)
-      : TNamed(name,title), fPidOffset(0)
+TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir)
+      : TNamed(name,title)
 {
    // Create a TKey object with the specified name, title for the given class.
 
-   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
-   fVersion    = TKey::Class_Version();
-   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
-   fClassName  = cl->GetName();
-   fNbytes     = 0;
-   fBuffer     = 0;
+   Build(motherDir, cl->GetName(), -1);
+   
    fKeylen     = Sizeof();
    fObjlen     = nbytes;
-   fBufferRef  = 0;
-   fCycle      = 0;
    Create(nbytes);
 }
 
 //______________________________________________________________________________
-TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes)
-      : TNamed(name,title), fPidOffset(0)
+TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir)
+      : TNamed(name,title)
 {
    // Create a TKey object with the specified name, title for the given class.
 
-   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
-   fVersion    = TKey::Class_Version();
-   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
-   fClassName  = cl->GetName();
-   fNbytes     = 0;
-   fBuffer     = 0;
+   Build(motherDir, cl->GetName(), -1);
+   
    fKeylen     = Sizeof();
    fObjlen     = nbytes;
-   fBufferRef  = 0;
-   fCycle      = 0;
    Create(nbytes);
 }
 
 //______________________________________________________________________________
-TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
-     : TNamed(name, obj->GetTitle()), fPidOffset(0)
+TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir)
+     : TNamed(name, obj->GetTitle())
 {
    // Create a TKey object for a TObject* and fill output buffer
 
@@ -164,21 +154,13 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
               "\tadd a default constructor before attempting to read it.",
               obj->ClassName());
    }
-   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
-   Int_t lbuf, nout, noutot, bufmax, nzip;
-   fClassName = obj->ClassName();
-   fNbytes    = 0;
-   fBuffer    = 0;
-   fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
-   fBufferRef->SetParent(gFile);
-   fCycle     = gDirectory->AppendKey(this);
-   fObjlen    = 0;
-   fKeylen    = 0;
-   fSeekKey   = 0;
-   fSeekPdir  = 0;
 
-   fVersion = TKey::Class_Version();
-   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
+   Build(motherDir, obj->ClassName(), -1);
+
+   Int_t lbuf, nout, noutot, bufmax, nzip;
+   fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
+   fBufferRef->SetParent(GetFile());
+   fCycle     = fMotherDir->AppendKey(this);
 
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
@@ -187,7 +169,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
-   Int_t cxlevel = gFile->GetCompressionLevel();
+   Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    if (cxlevel && fObjlen > 256) {
       if (cxlevel == 2) cxlevel--;
       Int_t nbuffers = fObjlen/kMAXBUF;
@@ -227,8 +209,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize)
 }
 
 //______________________________________________________________________________
-TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
-     : TNamed(name, "object title"), fPidOffset(0)
+TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir)
+     : TNamed(name, "object title")
 {
    // Create a TKey object for any object obj of class cl d and fill
    // output buffer.
@@ -242,7 +224,6 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
               "\tadd a default constructor before attempting to read it.",
               cl->GetName());
    }
-   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
 
    TClass *clActual = cl->GetActualClass(obj);
    const void* actualStart;
@@ -257,31 +238,23 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
       actualStart = obj;
    }
 
-   Int_t lbuf, nout, noutot, bufmax, nzip;
-   fClassName = clActual->GetName();
-   fNbytes    = 0;
-   fBuffer    = 0;
-   fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
-   fBufferRef->SetParent(gFile);
-   fCycle     = gDirectory->AppendKey(this);
-   fObjlen    = 0;
-   fKeylen    = 0;
-   fSeekKey   = 0;
-   fSeekPdir  = 0;
+   Build(motherDir, clActual->GetName(), -1);
 
-   fVersion = TKey::Class_Version();
-   if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
+   fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
+   fBufferRef->SetParent(GetFile());
+   fCycle     = fMotherDir->AppendKey(this);
 
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
 
+   Int_t lbuf, nout, noutot, bufmax, nzip;
 
    fBufferRef->MapObject(actualStart,clActual);         //register obj in map in case of self reference
    clActual->Streamer((void*)actualStart, *fBufferRef); //write object
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
-   Int_t cxlevel = gFile->GetCompressionLevel();
+   Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    if (cxlevel && fObjlen > 256) {
       if (cxlevel == 2) cxlevel--;
       Int_t nbuffers = fObjlen/kMAXBUF;
@@ -321,6 +294,35 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize)
 }
 
 //______________________________________________________________________________
+void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
+{
+   // method used in all TKey constructor to initialize basic data fields
+   // filepos is used to calculate correct version number of key
+   // if filepos==-1, end of file position is used 
+   
+   fMotherDir = motherDir;
+   
+   fPidOffset  = 0;
+   fNbytes     = 0;
+   fBuffer     = 0;
+   fKeylen     = 0;
+   fObjlen     = 0;
+   fBufferRef  = 0;
+   fCycle      = 0;
+   fSeekPdir   = 0;
+   fSeekKey    = 0;
+
+   fClassName = classname;
+
+   fVersion = TKey::Class_Version();
+   
+   if ((filepos==-1) && GetFile()) filepos = GetFile()->GetEND();
+   if (filepos > TFile::kStartBigFile) fVersion += 1000;
+
+   if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
+}
+
+//______________________________________________________________________________
 void TKey::Browse(TBrowser *b)
 {
    // Read object from disk and call its Browse() method.
@@ -330,11 +332,11 @@ void TKey::Browse(TBrowser *b)
    // since it might contain new objects not yet saved.
 
    // check that key points to the current dir
-   if (fSeekPdir != gDirectory->GetSeekDir()) {
-      Error("Browse"," Key: %s is not in the current directory: %s",GetName(),gDirectory->GetName());
+   if (fSeekPdir != fMotherDir->GetSeekDir()) {
+      Error("Browse"," Key: %s is not in the current directory: %s",GetName(),fMotherDir->GetName());
       return;
    }
-   TObject *obj = gDirectory->GetList()->FindObject(GetName());
+   TObject *obj = fMotherDir->GetList()->FindObject(GetName());
    if (obj && !obj->IsFolder()) {
       if (obj->InheritsFrom(TCollection::Class()))
          obj->Delete();   // delete also collection elements
@@ -352,16 +354,26 @@ void TKey::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TKey::Create(Int_t nbytes)
+void TKey::Create(Int_t nbytes, TFile* externFile)
 {
-   // Create a TKey object.
-
+   // Create a TKey object of specified size
+   // if externFile!=0, key will be allocated in specified file,
+   // otherwise file of mother directory will be used
+   
+   keyAbsNumber++; SetUniqueID(keyAbsNumber);
+   
+   TFile *f = externFile;
+   if (!f) f = GetFile();
+   if (!f) {
+      Error("Create","Cannot create key without file");
+      return;   
+   }
+   
+   Int_t nsize      = nbytes + fKeylen;
+   TList *lfree     = f->GetListOfFree();
+   TFree *f1        = (TFree*)lfree->First();
 //*-*-------------------find free segment
 //*-*                    =================
-   keyAbsNumber++; SetUniqueID(keyAbsNumber);
-   Int_t nsize      = nbytes + fKeylen;
-   TList *lfree = gFile->GetListOfFree();
-   TFree *f1        = (TFree*)lfree->First();
    TFree *bestfree  = f1->GetBestFree(lfree,nsize);
    if (bestfree == 0) {
       Error("Create","Cannot allocate %d bytes for ID = %s Title = %s",
@@ -371,8 +383,8 @@ void TKey::Create(Int_t nbytes)
    fDatime.Set();
    fSeekKey  = bestfree->GetFirst();
 //*-*----------------- Case Add at the end of the file
-   if (fSeekKey == gFile->GetEND()) {
-      gFile->SetEND(fSeekKey+nsize);
+   if (fSeekKey == f->GetEND()) {
+      f->SetEND(fSeekKey+nsize);
       bestfree->SetFirst(fSeekKey+nsize);
       fLeft   = -1;
       if (!fBuffer) fBuffer = new char[nsize];
@@ -399,7 +411,7 @@ void TKey::Create(Int_t nbytes)
       bestfree->SetFirst(fSeekKey+nsize);
    }
 
-   fSeekPdir = gDirectory->GetSeekDir();
+   fSeekPdir = externFile ? externFile->GetSeekDir() : fMotherDir->GetSeekDir();
 }
 
 //______________________________________________________________________________
@@ -423,8 +435,8 @@ void TKey::Delete(Option_t *option)
    if (option && option[0] == 'v') printf("Deleting key: %s at address %lld, nbytes = %d\n",GetName(),fSeekKey,fNbytes);
    Long64_t first = fSeekKey;
    Long64_t last  = fSeekKey + fNbytes -1;
-   gFile->MakeFree(first, last);  // release space used by this key
-   gDirectory->GetListOfKeys()->Remove(this);
+   if (GetFile()) GetFile()->MakeFree(first, last);  // release space used by this key
+   fMotherDir->GetListOfKeys()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -447,6 +459,14 @@ Short_t TKey::GetCycle() const
    // Return cycle number associated to this key.
 
    return ((fCycle >0) ? fCycle : -fCycle);
+}
+
+//______________________________________________________________________________
+TFile *TKey::GetFile() const
+{
+   // Returns file to which key belong
+
+   return fMotherDir!=0 ? fMotherDir->GetFile() : gFile; 
 }
 
 //______________________________________________________________________________
@@ -610,8 +630,8 @@ TObject *TKey::ReadObj()
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
    }
-   if (!gFile) return 0;
-   fBufferRef->SetParent(gFile);
+   if (GetFile()==0) return 0;
+   fBufferRef->SetParent(GetFile());
    fBufferRef->SetPidOffset(fPidOffset);
 
    if (fObjlen > fNbytes-fKeylen) {
@@ -684,7 +704,8 @@ TObject *TKey::ReadObj()
       TDirectory *dir = dynamic_cast<TDirectory*>(tobj);
       dir->SetName(GetName());
       dir->SetTitle(GetTitle());
-      gDirectory->Append(dir);
+      dir->SetMother(fMotherDir);
+      fMotherDir->Append(dir);
    }
 CLEAR:
    delete fBufferRef;
@@ -727,8 +748,8 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
    }
-   if (!gFile) return 0;
-   fBufferRef->SetParent(gFile);
+   if (GetFile()==0) return 0;
+   fBufferRef->SetParent(GetFile());
    fBufferRef->SetPidOffset(fPidOffset);
 
    if (fObjlen > fNbytes-fKeylen) {
@@ -821,10 +842,10 @@ Int_t TKey::Read(TObject *obj)
    // Before invoking this function, obj has been created via the
    // default constructor.
 
-   if (!obj) return 0;
+   if (!obj || (GetFile()==0)) return 0;
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-   fBufferRef->SetParent(gFile);
+   fBufferRef->SetParent(GetFile());
    fBufferRef->SetPidOffset(fPidOffset);
 
    if (fVersion > 1)
@@ -871,6 +892,20 @@ Int_t TKey::Read(TObject *obj)
 void TKey::ReadBuffer(char *&buffer)
 {
    // Decode input buffer.
+   // In some situation will add key to gDirectory ???
+
+   ReadKeyBuffer(buffer); 
+
+   if (!gROOT->ReadingObject()) {
+      Info("ReadBuffer","Interesting !!!!"); 
+      if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);
+   }
+}
+
+//______________________________________________________________________________
+void TKey::ReadKeyBuffer(char *&buffer)
+{
+   // Decode input buffer.
 
    frombuf(buffer, &fNbytes);
    Version_t version;
@@ -902,9 +937,11 @@ void TKey::ReadBuffer(char *&buffer)
    fClassName.ReadBuffer(buffer);
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
-   if (!gROOT->ReadingObject()) {
-      if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);
-   }
+
+//   if (!gROOT->ReadingObject()) {
+//      if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);
+//   }
+
 }
 
 //______________________________________________________________________________
@@ -912,16 +949,19 @@ void TKey::ReadFile()
 {
    // Read the key structure from the file
 
+   TFile* f = GetFile();
+   if (f==0) return;
+
    Int_t nsize = fNbytes;
-   gFile->Seek(fSeekKey);
+   f->Seek(fSeekKey);
 #if 0
    for (Int_t i = 0; i < nsize; i += kMAXFILEBUFFER) {
       int nb = kMAXFILEBUFFER;
       if (i+nb > nsize) nb = nsize - i;
-      gFile->ReadBuffer(fBuffer+i,nb);
+      f->ReadBuffer(fBuffer+i,nb);
    }
 #else
-   gFile->ReadBuffer(fBuffer,nsize);
+   f->ReadBuffer(fBuffer,nsize);
 #endif
    if (gDebug) {
       cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
@@ -1025,11 +1065,14 @@ void TKey::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-Int_t TKey::WriteFile(Int_t cycle)
+Int_t TKey::WriteFile(Int_t cycle, TFile* f)
 {
    // Write the encoded object supported by this key.
    // The function returns the number of bytes committed to the file.
    // If a write error occurs, the number of bytes returned is -1.
+
+   if (!f) f = GetFile();
+   if (!f) return -1;
 
    Int_t nsize  = fNbytes;
    char *buffer = fBuffer;
@@ -1040,19 +1083,19 @@ Int_t TKey::WriteFile(Int_t cycle)
    }
 
    if (fLeft > 0) nsize += sizeof(Int_t);
-   gFile->Seek(fSeekKey);
+   f->Seek(fSeekKey);
 #if 0
    for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
       Int_t nb = kMAXFILEBUFFER;
       if (i+nb > nsize) nb = nsize - i;
-      gFile->WriteBuffer(buffer,nb);
+      f->WriteBuffer(buffer,nb);
       buffer += nb;
    }
 #else
-   Bool_t result = gFile->WriteBuffer(buffer,nsize);
+   Bool_t result = f->WriteBuffer(buffer,nsize);
 #endif
-   //gFile->Flush(); Flushing takes too much time.
-   //                Let user flush the file when he wants.
+   //f->Flush(); Flushing takes too much time.
+   //            Let user flush the file when he wants.
    if (gDebug) {
       cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
            <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<endl;

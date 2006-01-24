@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.14 2005/05/15 05:53:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.15 2005/11/16 19:58:07 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 
 class TClass;
 class TBrowser;
+class TDirectory;
+class TFile;
 
 class TKey : public TNamed {
 
@@ -50,17 +52,20 @@ protected:
    char       *fBuffer;      //Object buffer
    TBuffer    *fBufferRef;   //Pointer to the TBuffer object
    UShort_t    fPidOffset;   //! Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir 
+   TDirectory *fMotherDir;   //! pointer to mother directory
    
    virtual Int_t    Read(const char *name) { return TObject::Read(name); }
-   virtual void     Create(Int_t nbytes);
+   virtual void     Create(Int_t nbytes, TFile* f = 0);
+           void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
    
  public:
    TKey();
-   TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes);
-   TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes);
-   TKey(const TObject *obj, const char *name, Int_t bufsize);
-   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize);
-   TKey(Long64_t pointer, Int_t nbytes);
+   TKey(TDirectory* motherDir);
+   TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir = 0);
+   TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir = 0);
+   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir = 0);
+   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir = 0);
+   TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = 0);
    virtual ~TKey();
    
    virtual void        Browse(TBrowser *b);
@@ -74,8 +79,10 @@ protected:
            TBuffer    *GetBufferRef() const {return fBufferRef;}
            Short_t     GetCycle() const ;
    const   TDatime    &GetDatime() const   {return fDatime;}
+           TFile      *GetFile() const;
            Short_t     GetKeep() const;
            Int_t       GetKeylen() const   {return fKeylen;}
+           TDirectory* GetMotherDir() const { return fMotherDir; }
            Int_t       GetNbytes() const   {return fNbytes;}
            Int_t       GetObjlen() const   {return fObjlen;}
            Int_t       GetVersion() const  {return fVersion;}
@@ -91,11 +98,13 @@ protected:
    virtual TObject    *ReadObj();
    virtual void       *ReadObjectAny(const TClass *expectedClass);
    virtual void        ReadBuffer(char *&buffer);
+           void        ReadKeyBuffer(char *&buffer);
    virtual void        ReadFile();
    virtual void        SetBuffer() { fBuffer = new char[fNbytes];}
    virtual void        SetParent(const TObject *parent);
+           void        SetMotherDir(TDirectory* dir) { fMotherDir = dir; }
    virtual Int_t       Sizeof() const;
-   virtual Int_t       WriteFile(Int_t cycle=1);
+   virtual Int_t       WriteFile(Int_t cycle=1, TFile* f = 0);
    
    ClassDef(TKey,4); //Header description of a logical record on file.
 };
