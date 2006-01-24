@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.267 2006/01/07 17:17:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.268 2006/01/09 15:17:17 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1056,7 +1056,7 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
 
   Double_t chi2 = 0;
   Int_t ndf = 0;
-  
+
   TString opt = option;
   opt.ToUpper();
 
@@ -1106,11 +1106,11 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
   //  A good description of the Chi2test can be seen at:
   //     http://www.itl.nist.gov/div898/handbook/eda/section3/eda35f.htm
   //  See also TH1::KolmogorovTest (including NOTE2)
-  
+
   Int_t i, i_start, i_end;
   chi2 = 0;
   ndf = 0;
-  
+
   TString opt = option;
   opt.ToUpper();
 
@@ -1171,7 +1171,7 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
         --ndf; //no data means one less degree of freedom
      } else {
 
-        temp  = bin1-bin2;        
+        temp  = bin1-bin2;
         err1=this->GetBinError(i);
         err2=h->GetBinError(i);
         if (err1 == 0 && err2 == 0){
@@ -2401,7 +2401,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    } else {
       f1->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
    }
-   
+
    // Initialize the fitter cache
    hFitter->SetXfirst(hxfirst); hFitter->SetXlast(hxlast);
    hFitter->SetYfirst(hyfirst); hFitter->SetYlast(hylast);
@@ -2456,7 +2456,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
       }
    }
    hFitter->SetCache(np,psize);
-   
+
    if (linear){
       hFitter->ExecuteCommand("FitHist", 0, 0);
    } else {
@@ -2752,7 +2752,7 @@ TVirtualHistPainter *TH1::GetPainter()
       if (gStyle->GetCanvasPreferGL()) {
       //try to create TGLHistPainter
          TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TGLHistPainter");
-         
+
          if (handler && handler->LoadPlugin() != -1)
             fPainter = reinterpret_cast<TVirtualHistPainter *>(handler->ExecPlugin(1, this));
       }
@@ -3331,7 +3331,7 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
    //        if (lastx < firstx then firstx is set to the number of bins
    //        ie if firstx=0 and lastx=0 (default) the search is on all bins.
    // NOTE2: if maxdiff=0 (default), the first bin with content=c is returned.
-   
+
    if (fDimension > 1) {
       binx = 0;
       Error("GetBinWithContent","function is only valid for 1-D histograms");
@@ -4308,13 +4308,13 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 
    // Save old bin contents into a new array
    Double_t entries = fEntries;
-   Double_t *oldBins = new Double_t[nbins];
+   Double_t *oldBins = new Double_t[nbins+2];
    Int_t bin, i;
-   for (bin=0;bin<nbins;bin++) oldBins[bin] = GetBinContent(bin+1);
+   for (bin=0;bin<nbins+2;bin++) oldBins[bin] = GetBinContent(bin);
    Double_t *oldErrors = 0;
    if (fSumw2.fN != 0) {
-      oldErrors = new Double_t[nbins];
-      for (bin=0;bin<nbins;bin++) oldErrors[bin] = GetBinError(bin+1);
+      oldErrors = new Double_t[nbins+2];
+      for (bin=0;bin<nbins+2;bin++) oldErrors[bin] = GetBinError(bin);
    }
 
    // create a clone of the old histogram if newname is specified
@@ -4365,22 +4365,23 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
         fXaxis.SetTitleFont(titleFont);
 
    // copy merged bin contents (ignore under/overflows)
-   Int_t oldbin = 0;
+   Int_t oldbin = 1;
    Double_t binContent, binError;
-   for (bin = 0;bin<=newbins;bin++) {
+   for (bin = 1;bin<=newbins;bin++) {
       binContent = 0;
       binError   = 0;
       for (i=0;i<ngroup;i++) {
-         if (oldbin+i >= nbins) break;
+         if (oldbin+i > nbins) break;
          binContent += oldBins[oldbin+i];
          if (oldErrors) binError += oldErrors[oldbin+i]*oldErrors[oldbin+i];
       }
-      hnew->SetBinContent(bin+1,binContent);
-      if (oldErrors) hnew->SetBinError(bin+1,TMath::Sqrt(binError));
+      hnew->SetBinContent(bin,binContent);
+      if (oldErrors) hnew->SetBinError(bin,TMath::Sqrt(binError));
       oldbin += ngroup;
    }
+   hnew->SetBinContent(0,oldBins[0]);
+   hnew->SetBinContent(newbins+1,oldBins[nbins+1]);
    hnew->SetEntries(entries); //was modified by SetBinContent
-
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;
    return hnew;
@@ -5325,7 +5326,7 @@ Double_t TH1::GetRMS(Int_t axis) const
    rms2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
    if (axis<10)
       return TMath::Sqrt(rms2);
-   else 
+   else
       return TMath::Sqrt(rms2/(2*stats[0]));
 }
 
@@ -5348,9 +5349,9 @@ Double_t TH1::GetRMSError(Int_t axis) const
 //______________________________________________________________________________
 Double_t TH1::GetSkewness(Int_t axis) const
 {
-   //For axis = 1, 2 or 3 returns skewness of the histogram along x, y or z axis. 
+   //For axis = 1, 2 or 3 returns skewness of the histogram along x, y or z axis.
    //For axis = 11, 12 or 13 returns the approximate standard error of skewness
-   //of the histogram along x, y or z axis 
+   //of the histogram along x, y or z axis
    //Note, that since third and fourth moment are not calculated
    //at the fill time, skewness and its standard error are computed bin by bin
 
@@ -5390,13 +5391,13 @@ Double_t TH1::GetSkewness(Int_t axis) const
 //______________________________________________________________________________
 Double_t TH1::GetKurtosis(Int_t axis) const
 {
-   //For axis =1, 2 or 3 returns kurtosis of the histogram along x, y or z axis. 
+   //For axis =1, 2 or 3 returns kurtosis of the histogram along x, y or z axis.
    //Kurtosis(gaussian(0, 1)) = 0.
-   //For axis =11, 12 or 13 returns the approximate standard error of kurtosis 
-   //of the histogram along x, y or z axis 
+   //For axis =11, 12 or 13 returns the approximate standard error of kurtosis
+   //of the histogram along x, y or z axis
    //Note, that since third and fourth moment are not calculated
    //at the fill time, kurtosis and its standard error are computed bin by bin
-   
+
    const TAxis *ax;
    if (axis==1 || axis==11) ax = &fXaxis;
    else if (axis==2 || axis==12) ax = &fYaxis;
@@ -5574,7 +5575,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 //
 //  NOTE1
 //  A good description of the Kolmogorov test can be seen at:
-//    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm 
+//    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
 //
 //  NOTE2
 //  see also alternative function TH1::Chi2Test
@@ -5599,7 +5600,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 //  physical effect (for example the experimental resolution) then the binning
 //  cannot have an important effect. Therefore, we believe that for all
 //  practical purposes, the probability value PROB is calculated correctly
-//  provided the user is aware that:  
+//  provided the user is aware that:
 //     1. The value of PROB should not be expected to have exactly the correct
 //  distribution for binned data.
 //     2. The user is responsible for seeing to it that the bin widths are
