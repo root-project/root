@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.76 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.77 2005/11/18 17:44:16 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -69,7 +69,7 @@ TDirectory::TDirectory() : TNamed(), fMother(0)
 }
 
 //______________________________________________________________________________
-TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
+TDirectory::TDirectory(const char *name, const char *title, Option_t *classname, TDirectory* initMotherDir)
            : TNamed(name, title), fMother(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-* Create a new Directory *-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -85,7 +85,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
 //  Note that the directory name cannot contain slashes.
 //
    if (strchr(name,'/')) {
-      ::Error("TDirectory::TDirectory","directory name cannot contain a slash", name);
+      ::Error("TDirectory::TDirectory","directory name (%s) cannot contain a slash", name);
       gDirectory = 0;
       return;
    }
@@ -95,12 +95,15 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
       return;
    }
 
-   Build();
-   if (gDirectory == 0) return;
-   if (gFile == 0) return;
-   if (!gFile->IsWritable()) return; //*-* in case of a directory in memory
-   if (gDirectory->GetKey(name)) {
-      Error("TDirectory","An object with name %s exists already",name);
+   Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
+   
+   TDirectory* motherdir = GetMotherDir();
+   TFile* f = GetFile();
+   
+   if ((motherdir==0) || (f==0)) return;
+   if (!f->IsWritable()) return; //*-* in case of a directory in memory
+   if (motherdir->GetKey(name)) {
+      Error("TDirectory","An object with name %s exists already", name);
       return;
    }
    TClass *cl = IsA();
@@ -112,15 +115,15 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
    }
    fBufferSize  = 0;
    fWritable    = kTRUE;
-   fSeekParent  = gFile->GetSeekDir();
+   fSeekParent  = f->GetSeekDir();
    Int_t nbytes = TDirectory::Sizeof();
-   TKey *key    = new TKey(fName,fTitle,cl,nbytes);
+   TKey *key    = new TKey(fName,fTitle,cl,nbytes,motherdir);
    fNbytesName  = key->GetKeylen();
    fSeekDir     = key->GetSeekKey();
    if (fSeekDir == 0) return;
    char *buffer = key->GetBuffer();
    TDirectory::FillBuffer(buffer);
-   Int_t cycle = gDirectory->AppendKey(key);
+   Int_t cycle = motherdir->AppendKey(key);
    key->WriteFile(cycle);
    fModified = kFALSE;
    R__LOCKGUARD2(gROOTMutex);
@@ -164,11 +167,11 @@ TDirectory::~TDirectory()
       }
    }
 
-   if (fMother && fMother->InheritsFrom(TDirectory::Class())) {
-      TDirectory *mom = (TDirectory*)fMother;
-      if (!mom->TestBit(TDirectory::kCloseDirectory))
-         mom->GetList()->Remove(this);
-   }
+   TDirectory *mom = GetMotherDir();
+
+   if (mom!=0)
+     if (!mom->TestBit(TDirectory::kCloseDirectory))
+        mom->GetList()->Remove(this);
 
    if (gDebug)
       Info("~TDirectory", "dtor called for %s", GetName());
@@ -196,6 +199,8 @@ Int_t TDirectory::AppendKey(TKey *key)
 //*-*          =======================================================
 
    fModified = kTRUE;
+
+   key->SetMotherDir(this);
 
    // This is a fast hash lookup in case the key does not already exist
    TKey *oldkey = (TKey*)fKeys->FindObject(key->GetName());
@@ -264,7 +269,7 @@ void TDirectory::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TDirectory::Build()
+void TDirectory::Build(TFile* motherFile, TDirectory* motherDir)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Initialise directory to defaults*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
@@ -273,7 +278,7 @@ void TDirectory::Build()
    // don't add it here to the directory since its name is not yet known.
    // It will be added to the directory in TKey::ReadObj().
 
-   if (gDirectory && strlen(GetName()) != 0) gDirectory->Append(this);
+   if (motherDir && strlen(GetName()) != 0) motherDir->Append(this);
 
    fModified   = kTRUE;
    fWritable   = kFALSE;
@@ -285,8 +290,8 @@ void TDirectory::Build()
    fSeekKeys   = 0;
    fList       = new THashList(100,50);
    fKeys       = new THashList(100,50);
-   fMother     = gDirectory;
-   fFile       = gFile;
+   fMother     = motherDir;
+   fFile       = motherFile ? motherFile : gFile;
    SetBit(kCanDelete);
 }
 
@@ -294,14 +299,14 @@ void TDirectory::Build()
 TKey* TDirectory::CreateKey(const TObject* obj, const char* name, Int_t bufsize)
 {
    // Creates key for object and converts data to buffer.
-   return new TKey(obj, name, bufsize);
+   return new TKey(obj, name, bufsize, this);
 }
 
 //____________________________________________________________________________________
 TKey* TDirectory::CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize)
 {
    // Creates key for object and converts data to buffer.
-   return new TKey(obj, cl, name, bufsize);
+   return new TKey(obj, cl, name, bufsize, this);
 }
 
 //______________________________________________________________________________
@@ -360,8 +365,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    char *slash = (char*)strchr(path,'/');
    if (!slash) {                     // we are at the lowest level
       if (!strcmp(path, "..")) {
-         if (fMother && fMother->InheritsFrom(TDirectory::Class()))
-            result = ((TDirectory*)fMother);
+         result = GetMotherDir();
          delete [] path; return result;
       }
       obj = Get(path);
@@ -384,9 +388,9 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    *slash = 0;
    //Get object with path from current directory/file
    if (!strcmp(subdir, "..")) {
-      if (fMother && fMother->InheritsFrom(TDirectory::Class())) {
-         result = ((TDirectory*)fMother)->GetDirectory(slash+1,printError,funcname);
-      }
+      TDirectory* mom = GetMotherDir(); 
+      if (mom) 
+         result = mom->GetDirectory(slash+1,printError,funcname);
       delete [] path; return result;
    }
    obj = Get(subdir);
@@ -431,7 +435,7 @@ Bool_t TDirectory::cd1(const char *apath)
    if (apath) nch = strlen(apath);
    if (!nch) {
       gDirectory = this;
-      gFile      = fFile;
+      gFile      = GetFile();
       return kTRUE;
    }
 
@@ -500,7 +504,7 @@ void TDirectory::Close(Option_t *)
    cd();
 
    if (cursav == this)
-      cursav = (TDirectory*) fMother;
+      cursav = GetMotherDir();
 
    // Save the directory key list and header
    //SaveSelf();
@@ -620,11 +624,12 @@ void TDirectory::Delete(const char *namecycle)
                fModified = kTRUE;
             }
          }
-         if (fModified) {
+         TFile* f = GetFile();
+         if (fModified && (f!=0)) {
             WriteKeys();            //*-* Write new keys structure
             WriteDirHeader();       //*-* Write new directory header
-            gFile->WriteFree();     //*-* Write new free segments list
-            gFile->WriteHeader();   //*-* Write new file header
+            f->WriteFree();     //*-* Write new free segments list
+            f->WriteHeader();   //*-* Write new file header
          }
       }
    }
@@ -696,21 +701,23 @@ TKey *TDirectory::FindKeyAny(const char *keyname) const
    TIter next(GetListOfKeys());
    TKey *key;
    while ((key = (TKey *) next())) {
-      if (!strcmp(name, key->GetName())) {
-         if (cycle == 9999)             return key;
-         if (cycle >= key->GetCycle())  return key;
-      }
+      if (!strcmp(name, key->GetName())) 
+         if ((cycle == 9999) || (cycle >= key->GetCycle()))  {
+            ((TDirectory*)this)->cd(); // may be we should not make cd ???
+            return key;
+         }
    }
    //try with subdirectories
    next.Reset();
    while ((key = (TKey *) next())) {
       if (!strcmp(key->GetClassName(),"TDirectory")) {
-         ((TDirectory*)this)->cd(key->GetName());
-         TKey *k = gDirectory->FindKeyAny(keyname);
+         TDirectory* subdir = 
+           ((TDirectory*)this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
+         TKey *k = (subdir!=0) ? subdir->FindKeyAny(keyname) : 0;
          if (k) return k;
       }
    }
-   dirsav->cd();
+   if (dirsav) dirsav->cd();
    return 0;
 }
 
@@ -762,12 +769,13 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
    next.Reset();
    while ((key = (TKey *) next())) {
       if (!strcmp(key->GetClassName(),"TDirectory")) {
-         ((TDirectory*)this)->cd(key->GetName());
-         TKey *k = gDirectory->FindKeyAny(aname);
-         if (k) {dirsav->cd(); return k->ReadObj();}
+         TDirectory* subdir = 
+           ((TDirectory*)this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
+         TKey *k = subdir==0 ? 0 : subdir->FindKeyAny(aname);
+         if (k) { if (dirsav) dirsav->cd(); return k->ReadObj();}
       }
    }
-   dirsav->cd();
+   if (dirsav) dirsav->cd();
    return 0;
 }
 
@@ -1005,7 +1013,7 @@ TKey *TDirectory::GetKey(const char *name, Short_t cycle) const
 }
 
 //______________________________________________________________________________
-const char *TDirectory::GetPath() const
+const char *TDirectory::GetPathStatic() const
 {
    // Returns the full path of the directory. E.g. file:/dir1/dir2.
    // The returned path will be re-used by the next call to GetPath().
@@ -1043,6 +1051,38 @@ const char *TDirectory::GetPath() const
 }
 
 //______________________________________________________________________________
+const char *TDirectory::GetPath() const
+{
+   // Returns the full path of the directory. E.g. file:/dir1/dir2.
+   // The returned path will be re-used by the next call to GetPath().
+   
+   // 
+   TString* buf = &(const_cast<TDirectory*>(this)->fPathBuffer);
+   
+   FillFullPath(*buf);
+   if (GetMotherDir()==0) // case of file
+      buf->Append("/"); 
+      
+   return buf->Data();
+}
+
+//______________________________________________________________________________
+void TDirectory::FillFullPath(TString& buf) const
+{
+   // recursive method to fill full path for directory
+    
+   TDirectory* mom = GetMotherDir();
+   if (mom!=0) {
+      mom->FillFullPath(buf);
+      buf += "/";
+      buf += GetName();
+   } else {
+      buf = GetName();
+      buf +=":";
+   }
+}
+
+//______________________________________________________________________________
 TDirectory *TDirectory::mkdir(const char *name, const char *title)
 {
    // Create a sub-directory and return a pointer to the created directory.
@@ -1053,7 +1093,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
    if (!name || !title || !strlen(name)) return 0;
    if (!strlen(title)) title = name;
    if (strchr(name,'/')) {
-      ::Error("TDirectory::mkdir","directory name cannot contain a slash", name);
+      ::Error("TDirectory::mkdir","directory name (%s) cannot contain a slash", name);
       return 0;
    }
    if (GetKey(name)) {
@@ -1063,7 +1103,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
 
    TDirectory::TContext ctxt(this); 
 
-   TDirectory *newdir = new TDirectory(name, title);
+   TDirectory *newdir = new TDirectory(name, title, "", this);
 
    return newdir;
 }
@@ -1168,11 +1208,12 @@ void TDirectory::Purge(Short_t)
          if (strcmp(key->GetName(), keyprev->GetName()) == 0) key->Delete();
       }
    }
-   if (fModified) {
+   TFile* f = GetFile();
+   if (fModified && (f!=0)) {
       WriteKeys();                   // Write new keys structure
       WriteDirHeader();              // Write new directory header
-      gFile->WriteFree();            // Write new free segments list
-      gFile->WriteHeader();          // Write new file header
+      f->WriteFree();                // Write new free segments list
+      f->WriteHeader();              // Write new file header
    }
 }
 
@@ -1196,11 +1237,10 @@ void TDirectory::ReadAll(Option_t *)
    TKey *key;
    TIter next(GetListOfKeys());
    while ((key = (TKey *) next())) {
-      TNamed *thing = (TNamed*)gDirectory->GetList()->FindObject(key->GetName());
+      TObject *thing = GetList()->FindObject(key->GetName());
       if (thing) { delete thing; }
       key->ReadObj();
    }
-
 }
 
 //______________________________________________________________________________
@@ -1260,23 +1300,16 @@ Int_t TDirectory::ReadKeys()
    Int_t nkeys = 0;
    Long64_t fsize = fFile->GetSize();
    if ( fSeekKeys >  0) {
-      TKey *headerkey    = new TKey(fSeekKeys,fNbytesKeys);
+      TKey *headerkey    = new TKey(fSeekKeys, fNbytesKeys, this);
       headerkey->ReadFile();
       buffer = headerkey->GetBuffer();
-      headerkey->ReadBuffer(buffer);
-      if (fKeys->FindObject(headerkey)) {
-         // In some error cases headerkey->ReadBuffer will erroneously insert the
-         // header key in the list.  To prevent further crashes (due to the deletion
-         // below) we remove it explicit and warn of potential problems.
-         Error("ReadKeys","Abnormal case while reading the header key.  The %s (%s) is probably corrupted.",IsA()->GetName(),GetName());
+      headerkey->ReadKeyBuffer(buffer);
 
-         fKeys->Remove(headerkey);
-      }
       TKey *key;
       frombuf(buffer, &nkeys);
       for (Int_t i = 0; i < nkeys; i++) {
-         key = new TKey();
-         key->ReadBuffer(buffer);
+         key = new TKey(this);
+         key->ReadKeyBuffer(buffer);
          if (key->GetSeekKey() < 64 || key->GetSeekKey() > fsize) {
             Error("ReadKeys","reading illegal key, exiting after %d keys",i);
             fKeys->Remove(key);
@@ -1422,7 +1455,7 @@ void TDirectory::Streamer(TBuffer &b)
 //*-*              =========================================
    Version_t v,version;
    if (b.IsReading()) {
-      Build();
+      Build((TFile*)b.GetParent(), 0);
       if (fFile && fFile->IsWritable()) fWritable = kTRUE;
       b >> version;
       fDatimeC.Streamer(b);
@@ -1566,7 +1599,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    TString opt = option;
    opt.ToLower();
 
-   TKey *key, *oldkey=0;
+   TKey *key=0, *oldkey=0;
    Int_t bsize = GetBufferSize();
 
    const char *oname;
@@ -1591,14 +1624,14 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    if (opt.Contains("overwrite")) {
       //One must use GetKey. FindObject would return the lowest cycle of the key!
       //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)gDirectory->GetKey(oname);
+      key = GetKey(oname);
       if (key) {
          key->Delete();
          delete key;
       }
    }
    if (opt.Contains("writedelete")) {
-      oldkey = (TKey*)gDirectory->GetKey(oname);
+      oldkey = GetKey(oname);
    }
    key = CreateKey(obj, oname, bsize);
    if (newName) delete [] newName;
@@ -1700,14 +1733,14 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    if (opt.Contains("overwrite")) {
       //One must use GetKey. FindObject would return the lowest cycle of the key!
       //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)gDirectory->GetKey(oname);
+      key = GetKey(oname);
       if (key) {
          key->Delete();
          delete key;
       }
    }
    if (opt.Contains("writedelete")) {
-      oldkey = (TKey*)gDirectory->GetKey(oname);
+      oldkey = GetKey(oname);
    }
    key = CreateKey(obj, cl, oname, bsize);
    if (newName) delete [] newName;
@@ -1734,16 +1767,19 @@ void TDirectory::WriteDirHeader()
 {
 //*-*-*-*-*-*-*-*-*-*-*Overwrite the Directory header record*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
+   TFile* f = GetFile();
+   if (f==0) return;
+   
    Int_t nbytes  = TDirectory::Sizeof();  //Warning ! TFile has a Sizeof()
    char * header = new char[nbytes];
    char * buffer = header;
    fDatimeM.Set();
    TDirectory::FillBuffer(buffer);
-   Long64_t pointer= fSeekDir + fNbytesName; // do not overwrite the name/title part
+   Long64_t pointer = fSeekDir + fNbytesName; // do not overwrite the name/title part
    fModified     = kFALSE;
-   gFile->Seek(pointer);
-   gFile->WriteBuffer(header, nbytes);
-   gFile->Flush();
+   f->Seek(pointer);
+   f->WriteBuffer(header, nbytes);
+   f->Flush();
    delete [] header;
 }
 
@@ -1755,20 +1791,24 @@ void TDirectory::WriteKeys()
 //  The linked list of keys (fKeys) is written as a single data record
 //
 
+
+   TFile* f = GetFile();
+   if (f==0) return;
+
 //*-* Delete the old keys structure if it exists
    if (fSeekKeys != 0) {
-      gFile->MakeFree(fSeekKeys, fSeekKeys + fNbytesKeys -1);
+      f->MakeFree(fSeekKeys, fSeekKeys + fNbytesKeys -1);
    }
 //*-* Write new keys record
    TIter next(fKeys);
    TKey *key;
    Int_t nkeys  = fKeys->GetSize();
    Int_t nbytes = sizeof nkeys;          //*-* Compute size of all keys
-   if (gFile && gFile->GetEND() > TFile::kStartBigFile) nbytes += 8;
+   if (f->GetEND() > TFile::kStartBigFile) nbytes += 8;
    while ((key = (TKey*)next())) {
       nbytes += key->Sizeof();
    }
-   TKey *headerkey  = new TKey(fName,fTitle,IsA(),nbytes);
+   TKey *headerkey  = new TKey(fName,fTitle,IsA(),nbytes,this);
    if (headerkey->GetSeekKey() == 0) {
       delete headerkey;
       return;
