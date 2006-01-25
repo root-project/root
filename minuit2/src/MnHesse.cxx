@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cpp,v 1.17.2.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -105,7 +105,7 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
 	fs2 = mfcn(x);
 	x(i) = xtf;
 	sag = 0.5*(fs1+fs2-2.*amin);
-	if(sag > prec.Eps2()) goto L30; // break;
+	if(fabs(sag) > prec.Eps2()) goto L30; // break;
 	if(trafo.Parameter(i).HasLimits()) {
 	  if(d > 0.5) goto L26;
 	  d *= 10.;

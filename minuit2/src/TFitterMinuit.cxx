@@ -235,9 +235,15 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
       return -10;
     }
     MnMinos minos( *fMinuitFCN, min);
+    fMinosErrors.clear();
     for(unsigned int i = 0; i < State().VariableParameters(); i++) {
       MinosError me = minos.Minos(State().ExtOfInt(i));
       fMinosErrors.push_back(me);
+    }
+    if (fDebug >= 3) {
+      for(std::vector<MinosError>::const_iterator ime = fMinosErrors.begin();
+	  ime != fMinosErrors.end(); ime++) 
+	std::cout<<*ime<<std::endl;
     }
     return 0;
   } 
@@ -289,6 +295,17 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
 //     not yet available
 //     fGradient = true;
     return -1;
+  } 
+  // CALL FCN
+  else if (strncmp(command,"CALL FCN",8) == 0 || strncmp(command,"call fcn",8)  == 0) {
+//     call fcn function 
+    if (nargs < 1 || fFCN == 0) return -1;
+    const std::vector<double> & params = State().Params();
+    std::cout << State() << std::endl;
+    int npar = params.size();
+    double fval = 0; 
+    (*fFCN)(npar, 0, fval, const_cast<double *>(&params.front()),int(args[0]) ) ;
+    return 0; 
   } 
   else {
     // other commands passed 
@@ -543,13 +560,16 @@ void TFitterMinuit::SetFitMethod(const char *name) {
 Int_t TFitterMinuit::SetParameter(Int_t,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) {
 #ifdef DEBUG
    std::cout<<"SetParameter";
-   std::cout<<" i= "<<parname<<" value = " << value << " verr= "<<verr<<std::endl;
+   std::cout << parname<<" value = " << value << " verr= "<<verr<<std::endl;
 #endif
    if(vlow < vhigh) { 
     State().Add(parname, value, verr, vlow, vhigh);
    }
   else
     State().Add(parname, value, verr);
+
+  // treat constant parameter as fixed 
+   if (verr == 0)  State().Fix(parname);
   return 0;
 }
 

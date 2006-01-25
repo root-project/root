@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.2 2005/11/05 15:17:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.3 2005/11/29 14:43:31 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -45,11 +45,12 @@ std::vector<double> TFcnAdapter::Gradient(const std::vector<double>& par) const 
 }
 
 // forward interface
-double TFcnAdapter::operator()(int npar, double* params) const {
+double TFcnAdapter::operator()(int npar, double* params,int iflag) const {
 //   std::cout<<"TFcnAdapter::operator()(int npar,"<<std::endl;
 //   assert(npar == int(theNPar));
   assert(fFCN != 0);
   double fs = 0.;
-  (*fFCN)(npar, 0, fs, params, 4);
+  (*fFCN)(npar, 0, fs, params, iflag);
   return fs;
 }
+
