@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.2 2005/09/06 09:34:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.3 2005/11/20 05:07:41 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -44,16 +44,16 @@ class TKeyXML : public TKey {
       //virtual void      ls(Option_t* ="") const;
       //virtual void      Print(Option_t* ="") const {}
 
-      virtual Int_t     Read(TObject*) { return 0; }
+      virtual Int_t     Read(TObject* tobj);
       virtual TObject  *ReadObj();
-      virtual void     *ReadObjectAny(const TClass *cl);
+      virtual void     *ReadObjectAny(const TClass *expectedClass);
       
       virtual void      ReadBuffer(char *&) {}
       virtual void      ReadFile() {}
       virtual void      SetBuffer() { fBuffer = 0; }
       virtual void      SetParent(const TObject* ) { }
       virtual Int_t     Sizeof() const { return 0; }
-      virtual Int_t     WriteFile(Int_t =1) { return 0; }
+      virtual Int_t     WriteFile(Int_t =1, TFile* = 0) { return 0; }
 
       // TKeyXML specific methods
 
@@ -66,6 +66,8 @@ class TKeyXML : public TKey {
       void              StoreObject(const void* obj, const TClass* cl);
       XMLNodePointer_t  ObjNode();
       XMLNodePointer_t  BlockNode();
+      
+      void*             XmlReadAny(void* obj, const TClass* expectedClass);
       
       TXMLFile*         fFile;     //!
       TXMLEngine*       fXML;      //!

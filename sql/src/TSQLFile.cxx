@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.4 2005/11/28 23:22:31 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.5 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -963,38 +963,6 @@ TList* TSQLFile::GetStreamerInfoList()
    // Hopefully, problem will be solved soon
 
    return new TList;
-
-   if (gDebug>1)
-      Info("GetStreamerInfoList","Start reading of streamer infos");
-
-   Int_t objid = -1;
-
-   TString sqlcmd;
-   const char* quote = SQLIdentifierQuote();
-
-   sqlcmd.Form("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s=%d",
-               quote, SQLObjectIdColumn(), quote,
-               quote, sqlio::KeysTable, quote,
-               quote, SQLKeyIdColumn(), quote, sqlio::Ids_StreamerInfos);
-   TSQLResult* res = SQLQuery(sqlcmd.Data(), 1);
-   TSQLRow* row = (res==0) ? 0 : res->Next();
-   if (row!=0) objid = atoi((*row)[0]);
-   delete res;
-   delete row;
-
-   if (objid<=0) return 0;
-
-   TBufferSQL2 buffer(TBuffer::kRead, this);
-
-   buffer.SetIgnoreVerification();
-
-   TObject* obj = buffer.SqlRead(objid);
-
-   TList* list = dynamic_cast<TList*> (obj);
-   if (list==0) delete obj;
-   else list->Print("*");
-
-   return list;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.4 2005/12/01 16:30:43 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.5 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include "TKeySQL.h"
 
+#include "TROOT.h"
 #include "TClass.h"
 #include "TBrowser.h"
 #include "Riostream.h"
@@ -209,34 +210,69 @@ zombie:
 }
 
 //______________________________________________________________________________
+Int_t TKeySQL::Read(TObject* tobj)
+{
+   // To read an object from the file.
+   // The object associated to this key is read from the file into memory.
+   // Before invoking this function, obj has been created via the
+   // default constructor.
+
+   if (tobj==0) return 0; 
+    
+   void* res = SqlReadAny(tobj, 0);
+   
+   return res==0 ? 0 : 1;
+}
+
+//______________________________________________________________________________
 TObject* TKeySQL::ReadObj()
 {
 // Read object derived from TObject class
 // If it is not TObject or in case of error, return 0
 
-   if (gDebug>0)
-      cout << "TKeySQL::ReadObj fKeyId = " << fKeyId << endl;
-
-   if ((fKeyId<=0) || (fFile==0)) return 0;
-
-   TBufferSQL2 buffer(TBuffer::kRead, fFile);
-
-   TObject* obj = buffer.SqlRead(fObjId);
-
-   return obj;
+   TObject* tobj = (TObject*) SqlReadAny(0, TObject::Class());
+   
+   if ((tobj!=0) && gROOT->GetForceStyle()) tobj->UseCurrentStyle();
+       
+   return tobj;
 }
 
 //______________________________________________________________________________
-void* TKeySQL::ReadObjectAny(const TClass* /*cl*/)
+void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
 {
 // read object of any type from SQL database
 
+   return SqlReadAny(0, expectedClass);
+}
+
+//______________________________________________________________________________
+void* TKeySQL::SqlReadAny(void* obj, const TClass* expectedClass)
+{
    if ((fKeyId<=0) || (fFile==0)) return 0;
 
    TBufferSQL2 buffer(TBuffer::kRead, fFile);
+   
+   TClass* cl = 0;
 
-   void* obj = buffer.SqlReadAny(fObjId, 0);
-
-   return obj;
+   void* res = buffer.SqlReadAny(fObjId, obj, &cl);
+   
+   if ((cl==0) || (res==0)) return 0;
+   
+   Int_t delta = 0;
+   
+   if (expectedClass!=0) {
+      delta = cl->GetBaseClassOffset(expectedClass);
+      if (delta<0) {
+         if (obj==0) cl->Destructor(res);
+         return 0;
+      }
+      if (cl->GetClassInfo() && !expectedClass->GetClassInfo()) {
+         //we cannot mix a compiled class with an emulated class in the inheritance
+         Warning("XmlReadAny",
+                 "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
+                 cl->GetName(),expectedClass->GetName());
+      }
+   }
+   
+   return ((char*)res) + delta;
 }
-

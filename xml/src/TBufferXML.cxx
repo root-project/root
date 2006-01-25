@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.7 2005/12/02 23:23:36 pcanal Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.8 2006/01/20 01:12:13 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -215,7 +215,7 @@ void* TBufferXML::ConvertFromXMLAny(const char* str, TClass** cl, Bool_t Generic
    
    XMLNodePointer_t xmlnode = xml.ReadSingleNode(str);
    
-   void* obj = buf.XmlReadAny(xmlnode, cl);
+   void* obj = buf.XmlReadAny(xmlnode, 0, cl);
    
    xml.FreeNode(xmlnode);
    
@@ -238,7 +238,7 @@ XMLNodePointer_t TBufferXML::XmlWriteAny(const void* obj, const TClass* cl)
 }
 
 //______________________________________________________________________________
-void* TBufferXML::XmlReadAny(XMLNodePointer_t node, TClass** cl)
+void* TBufferXML::XmlReadAny(XMLNodePointer_t node, void* obj, TClass** cl)
 {
    // Recreate object from xml structure.
    // Return pointer to read object.
@@ -253,11 +253,11 @@ void* TBufferXML::XmlReadAny(XMLNodePointer_t node, TClass** cl)
 
    PushStack(node, kTRUE);
 
-   void* obj = XmlReadObject(0, cl);
+   void* res = XmlReadObject(obj, cl);
 
    PopStack();
 
-   return obj;
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1005,13 +1005,13 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
 }
 
 //______________________________________________________________________________
-void TBufferXML::ClassBegin(const TClass* cl, Version_t version)
+void TBufferXML::ClassBegin(const TClass* cl, Version_t)
 {
    WorkWithClass(0, cl);
 }
 
 //______________________________________________________________________________
-void TBufferXML::ClassEnd(const TClass* cl)
+void TBufferXML::ClassEnd(const TClass*)
 {
    DecrementLevel(0);
 }

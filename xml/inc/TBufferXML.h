@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.3 2005/12/02 23:23:36 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.4 2006/01/20 01:12:13 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -218,7 +218,7 @@ protected:
    XMLNodePointer_t XmlWriteAny(const void* obj, const TClass* cl);
 
    void             XmlReadBlock(XMLNodePointer_t node);
-   void*            XmlReadAny(XMLNodePointer_t node, TClass** cl);
+   void*            XmlReadAny(XMLNodePointer_t node, void* obj, TClass** cl);
 
    TXMLStackObj*    PushStack(XMLNodePointer_t current, Bool_t simple = kFALSE);
    TXMLStackObj*    PopStack();

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.4 2005/11/22 20:42:37 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.5 2006/01/20 01:12:13 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TBufferXML.h"
 #include "TXMLFile.h"
 #include "TClass.h"
+#include "TROOT.h"
 #include "TBrowser.h"
 
 ClassImp(TKeyXML);
@@ -197,41 +198,73 @@ XMLNodePointer_t TKeyXML::BlockNode()
 }
 
 //______________________________________________________________________________
+Int_t TKeyXML::Read(TObject* tobj)
+{
+   // To read an object from the file.
+   // The object associated to this key is read from the file into memory.
+   // Before invoking this function, obj has been created via the
+   // default constructor.
+
+   if (tobj==0) return 0; 
+    
+   void* res = XmlReadAny(tobj, 0);
+   
+   return res==0 ? 0 : 1;
+}
+
+//______________________________________________________________________________
 TObject* TKeyXML::ReadObj()
 {
    // read object derived from TObject class, from key
    // if it is not TObject or in case of error, return 0
 
-   if (fKeyNode==0) return 0;
-   TBufferXML buffer(TBuffer::kRead, fFile);
-   if (fFile->GetIOVersion()==1)
-      buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
-   buffer.XmlReadBlock(BlockNode());
-   TClass* cl = 0;
-   void* obj = buffer.XmlReadAny(ObjNode(), &cl);
+   TObject* tobj = (TObject*) XmlReadAny(0, TObject::Class());
    
-   if ((cl==0) || (obj==0)) return 0;
-   
-   Int_t delta = cl->GetBaseClassOffset(TObject::Class());
-   
-   if (delta<0) {
-      cl->Destructor(obj);
-      return 0;
-   }
+   if ((tobj!=0) && gROOT->GetForceStyle()) tobj->UseCurrentStyle();
        
-   return (TObject*) ( ( (char*)obj ) + delta );
+   return tobj;
 }
 
 //______________________________________________________________________________
-void* TKeyXML::ReadObjectAny(const TClass* /*cl*/)
+void* TKeyXML::ReadObjectAny(const TClass *expectedClass)
 {
    // read object of any type
+   
+   return XmlReadAny(0, expectedClass);
+}
+
+//______________________________________________________________________________
+void* TKeyXML::XmlReadAny(void* obj, const TClass* expectedClass)
+{
+   // read object from key and cast to expected class
 
    if (fKeyNode==0) return 0;
+   
    TBufferXML buffer(TBuffer::kRead, fFile);
    if (fFile->GetIOVersion()==1)
       buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
    buffer.XmlReadBlock(BlockNode());
-   void* obj = buffer.XmlReadAny(ObjNode(), 0);
-   return obj;
+
+   TClass* cl = 0;
+   void* res = buffer.XmlReadAny(ObjNode(), obj, &cl);
+   
+   if ((cl==0) || (res==0)) return 0;
+   
+   Int_t delta = 0;
+   
+   if (expectedClass!=0) {
+      delta = cl->GetBaseClassOffset(expectedClass);
+      if (delta<0) {
+         if (obj==0) cl->Destructor(res);
+         return 0;
+      }
+      if (cl->GetClassInfo() && !expectedClass->GetClassInfo()) {
+         //we cannot mix a compiled class with an emulated class in the inheritance
+         Warning("XmlReadAny",
+                 "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
+                 cl->GetName(),expectedClass->GetName());
+      }
+   }
+   
+   return ((char*)res) + delta;
 }

@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.5 2005/12/02 23:23:36 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.6 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 
@@ -132,8 +132,7 @@ class TBufferSQL2 : public TBuffer {
       TSQLStructure*   SqlWrite(const TObject* obj, Int_t objid);
       TSQLStructure*   SqlWrite(const void* obj, const TClass* cl, Int_t objid);
 
-      TObject*         SqlRead(Int_t objid);
-      void*            SqlReadAny(Int_t objid, TClass** cl);
+      void*            SqlReadAny(Int_t objid, void* obj, TClass** cl);
 
       // suppress class writing/reading
 

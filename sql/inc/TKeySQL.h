@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.h,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.h,v 1.3 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -34,6 +34,7 @@ protected:
 
    virtual Int_t     Read(const char *name) { return TKey::Read(name); }
    void              StoreObject(const void* obj, const TClass* cl);
+   void*             SqlReadAny(void* obj, const TClass* expectedClass);
   
    TSQLFile*         fFile;     //!  pointer on SQL file
    Int_t             fKeyId;    //!  key identifier in KeysTables
@@ -61,16 +62,16 @@ public:
    virtual Long64_t  GetSeekPdir() const { return 1;}
    virtual void      Keep() {}
 
-   virtual Int_t     Read(TObject*) { return 0; }
+   virtual Int_t     Read(TObject* obj);
    virtual TObject  *ReadObj();
-   virtual void     *ReadObjectAny(const TClass *cl);
+   virtual void     *ReadObjectAny(const TClass *expectedClass);
   
    virtual void      ReadBuffer(char *&) {}
    virtual void      ReadFile() {}
    virtual void      SetBuffer() { fBuffer = 0; }
    virtual void      SetParent(const TObject* ) { }
    virtual Int_t     Sizeof() const { return 0; }
-   virtual Int_t     WriteFile(Int_t =1) { return 0; }
+   virtual Int_t     WriteFile(Int_t =1, TFile* = 0) { return 0; }
 
    ClassDef(TKeySQL,1) // a special TKey for SQL data base
 };

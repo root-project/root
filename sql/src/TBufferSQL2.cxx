@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.6 2005/12/02 23:23:36 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.7 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -155,26 +155,7 @@ TSQLStructure* TBufferSQL2::SqlWrite(const void* obj, const TClass* cl, Int_t ob
 }
 
 //______________________________________________________________________________
-TObject* TBufferSQL2::SqlRead(Int_t objid)
-{
-   // Recreate object from sql structure.
-   // Return pointer to read object.
-   // If object class is not inherited from TObject,
-   // object is deleted and function return 0
-
-   TClass* cl = 0;
-   void* obj = SqlReadAny(objid, &cl);
-
-   if ((cl!=0) && !cl->InheritsFrom(TObject::Class())) {
-      cl->Destructor(obj);
-      obj = 0;
-   }
-
-   return (TObject*) obj;
-}
-
-//______________________________________________________________________________
-void* TBufferSQL2::SqlReadAny(Int_t objid, TClass** cl)
+void* TBufferSQL2::SqlReadAny(Int_t objid, void* obj, TClass** cl)
 {
    // Recreate object from sql structure.
    // Return pointer to read object.
@@ -188,7 +169,7 @@ void* TBufferSQL2::SqlReadAny(Int_t objid, TClass** cl)
 
    fReadVersionBuffer = -1;
 
-   return SqlReadObjectDirect(0, cl, objid);
+   return SqlReadObjectDirect(obj, cl, objid);
 }
 
 //______________________________________________________________________________
