@@ -63,7 +63,7 @@ CRYPTLIBS     = -lcrypt
 
 # Fortran:
 F77           = ifort
-F77FLAGS      =
+F77FLAGS      = -fPIC
 # check for libg2c and libfrtbegin
 LIBG2C       := $(shell g77 -print-file-name=libg2c.a)
 LIBFRTBEGIN  := $(shell g77 -print-file-name=libfrtbegin.a)
