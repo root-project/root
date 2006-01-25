@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.83 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.84 2005/12/04 11:10:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1560,18 +1560,18 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 
    // Save old bin contents into a new array
    Double_t entries = fEntries;
-   Double_t *oldBins = new Double_t[nxbins*nybins];
-   for (xbin = 0; xbin < nxbins; xbin++) {
-      for (ybin = 0; ybin < nybins; ybin++) {
-         oldBins[xbin*nybins+ybin] = GetBinContent(xbin+1, ybin+1);
+   Double_t *oldBins = new Double_t[(nxbins+2)*(nybins+2)];
+   for (xbin = 0; xbin < nxbins+2; xbin++) {
+      for (ybin = 0; ybin < nybins+2; ybin++) {
+         oldBins[xbin*(nybins+2)+ybin] = GetBinContent(xbin, ybin);
       }
    }
    Double_t *oldErrors = 0;
    if (fSumw2.fN != 0) {
-      oldErrors = new Double_t[nxbins*nybins];
-      for (xbin = 0; xbin < nxbins; xbin++) {
-         for (ybin = 0; ybin < nybins; ybin++) {
-            oldErrors[xbin*nybins+ybin] = GetBinError(xbin+1, ybin+1);
+      oldErrors = new Double_t[(nxbins+2)*(nybins+2)];
+      for (xbin = 0; xbin < nxbins+2; xbin++) {
+         for (ybin = 0; ybin < nybins+2; ybin++) {
+            oldErrors[xbin*(nybins+2)+ybin] = GetBinError(xbin, ybin);
          }
       }
    }
@@ -1634,25 +1634,58 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       }
 
       Double_t binContent, binError;
-      Int_t oldxbin = 0;
-      for (xbin = 0; xbin <= newxbins; xbin++) {
-         Int_t oldybin = 0;
-         for (ybin = 0; ybin <= newybins; ybin++) {
+      Int_t oldxbin = 1;
+      for (xbin = 1; xbin <= newxbins; xbin++) {
+         Int_t oldybin = 1;
+         for (ybin = 1; ybin <= newybins; ybin++) {
             binContent = 0;
             binError   = 0;
             for (i = 0; i < nxgroup; i++) {
-               if (oldxbin+i >= nxbins) break;
+               if (oldxbin+i > nxbins) break;
                for (j =0; j < nygroup; j++) {
-                  if (oldybin+j >= nybins) break;
-                  binContent += oldBins[oldybin+j + (oldxbin+i)*nybins];
-                  if (oldErrors) binError += oldErrors[oldybin+ j + (oldxbin+i)*nybins]*oldErrors[oldybin + j + (oldxbin+i)*nybins];
+                  if (oldybin+j > nybins) break;
+                  binContent += oldBins[oldybin+j + (oldxbin+i)*(nybins+2)];
+                  if (oldErrors) binError += oldErrors[oldybin+ j + (oldxbin+i)*(nybins+2)]*oldErrors[oldybin + j + (oldxbin+i)*(nybins+2)];
                }
             }
-            hnew->SetBinContent(xbin+1,ybin+1, binContent);
-            if (oldErrors) hnew->SetBinError(xbin+1,ybin+1,TMath::Sqrt(binError));
+            hnew->SetBinContent(xbin,ybin, binContent);
+            if (oldErrors) hnew->SetBinError(xbin,ybin,TMath::Sqrt(binError));
             oldybin += nygroup;
          }
          oldxbin += nxgroup;
+      }
+
+      // Recompute correct underflows and overflows.
+      hnew->SetBinContent(newxbins+1,newybins+1,oldBins[(nxbins+1)*(nybins+2)+(nybins+1)]);
+      hnew->SetBinContent(0,0,oldBins[0]);
+      hnew->SetBinContent(0,newybins+1,oldBins[nybins+1]);
+      hnew->SetBinContent(newxbins+1,0,oldBins[(nxbins+1)*(nybins+2)]);
+
+      Double_t binContent0, binContent2;
+      oldxbin = 1;
+      for (xbin = 1; xbin<=newxbins; xbin++) {
+         binContent0 = binContent2 = 0;
+         for (i=0; i<nxgroup; i++) {
+            if (oldxbin+i > nxbins) break;
+            binContent0 += oldBins[(oldxbin+i)*(nybins+2)];
+            binContent2 += oldBins[(oldxbin+i)*(nybins+2)+(nybins+1)];
+         }
+         hnew->SetBinContent(xbin,0,binContent0);
+         hnew->SetBinContent(xbin,newybins+1,binContent2);
+         oldxbin += nxgroup;
+      }
+
+      Int_t oldybin = 1;
+      for (ybin = 1; ybin<=newybins; ybin++) {
+         binContent0 = binContent2 = 0;
+         for (i=0; i<nygroup; i++) {
+            if (oldybin+i > nybins) break;
+            binContent0 += oldBins[(oldybin+i)];
+            binContent2 += oldBins[(nxbins+1)*(nybins+2)+(oldybin+i)];
+         }
+         hnew->SetBinContent(0,ybin,binContent0);
+         hnew->SetBinContent(newxbins+1,ybin,binContent2);
+         oldybin += nygroup;
       }
    }
 
