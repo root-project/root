@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.23 2005/10/21 13:01:57 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.24 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -421,7 +421,9 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
             // check if propagated point is in right shape        
             fRightMat->MasterToLocal(master, local);
             inside2 = fRight->Contains(local);
-            if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
+            if (!inside2) return snxt;
+            d2 = fRight->DistFromInside(local, rdir, 3);
+            if (d2 < TGeoShape::Tolerance()) return snxt;
          } else {
             snxt += d2;
             node->SetSelected(2);
@@ -431,7 +433,9 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
             // check if propagated point is in left shape        
             fLeftMat->MasterToLocal(master, local);
             inside1 = fLeft->Contains(local);
-            if (inside1) d1 = fLeft->DistFromInside(local, ldir, 3);
+            if (!inside1) return snxt;
+            d1 = fLeft->DistFromInside(local, ldir, 3);
+            if (d1 < TGeoShape::Tolerance()) return snxt;
          }
       } 
       if (inside1) {
@@ -443,7 +447,9 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
          // check if propagated point is in right shape        
          fRightMat->MasterToLocal(master, local);
          inside2 = fRight->Contains(local);
-         if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
+         if (!inside2) return snxt;
+         d2 = fRight->DistFromInside(local, rdir, 3);
+         if (d2 < TGeoShape::Tolerance()) return snxt;
       }   
       if (inside2) {
          snxt += d2;
@@ -454,7 +460,9 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
          // check if propagated point is in left shape        
          fLeftMat->MasterToLocal(master, local);
          inside1 = fLeft->Contains(local);
-         if (inside1) d1 = fLeft->DistFromInside(local, ldir, 3);
+         if (!inside1) return snxt;
+         d1 = fLeft->DistFromInside(local, ldir, 3);
+         if (d1 < TGeoShape::Tolerance()) return snxt;
       }
    }      
    return snxt;
