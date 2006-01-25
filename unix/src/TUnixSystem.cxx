@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.144 2005/11/02 14:34:15 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.145 2005/11/15 22:22:15 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3360,7 +3360,7 @@ void *TUnixSystem::UnixOpendir(const char *dir)
    return (void*) opendir(edir);
 }
 
-#if defined(_POSIX_SOURCE)
+#if defined(_POSIX_SOURCE) || defined(__CYGWIN__)
 // Posix does not require that the d_ino field be present, and some
 // systems do not provide it.
 #   define REAL_DIR_ENTRY(dp) 1
