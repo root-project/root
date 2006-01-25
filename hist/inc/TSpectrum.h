@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.15 2006/01/18 07:21:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.16 2006/01/18 15:38:54 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -64,7 +64,8 @@ public:
    const char         *Deconvolution(float *source, const float *response,Int_t ssize, Int_t numberIterations,Int_t numberRepetitions, Double_t boost );    
    const char         *DeconvolutionRL(float *source, const float *response,Int_t ssize, Int_t numberIterations,Int_t numberRepetitions, Double_t boost );    
    const char         *Unfolding(float *source,const float **respMatrix,Int_t ssizex, Int_t ssizey,Int_t numberIterations,Int_t numberRepetitions, Double_t boost);    
-   Int_t               SearchHighRes(float *source,float *destVector, Int_t ssize,float sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool fMarkov, Int_t averWindow);   
+   Int_t               SearchHighRes(float *source,float *destVector, Int_t ssize,float sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool markov, Int_t averWindow);   
+   Int_t               Search1HighRes(float *source,float *destVector, Int_t ssize,float sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool markov, Int_t averWindow);   
 
    ClassDef(TSpectrum,3)  //Peak Finder, background estimator, Deconvolution
 };

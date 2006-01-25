@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.34 2006/01/18 15:38:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.35 2006/01/20 14:35:40 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -4328,7 +4328,7 @@ d-&gt;SetAxisRange(0,nbinsy);     </p>
 Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
                                      float sigma, double threshold,
                                      bool backgroundRemove,int deconIterations,
-                                     bool fMarkov, int averWindow)
+                                     bool markov, int averWindow)
 {
 /////////////////////////////////////////////////////////////////////////////
 //        ONE-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION            
@@ -4349,7 +4349,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
 //      backgroundRemove-logical variable, set if the removal of          
 //                background before deconvolution is desired               
 //      deconIterations-number of iterations in deconvolution operation   
-//      fMarkov-logical variable, if it is true, first the source spectrum 
+//      markov-logical variable, if it is true, first the source spectrum 
 //             is replaced by new spectrum calculated using Markov         
 //             chains method.                                              
 //        averWindow-averanging window of searched peaks, for details     
@@ -4409,7 +4409,7 @@ href="http://root.cern.ch/root/html/ListOtransTypes.html#float">float</a> sigma,
 href="http://root.cern.ch/root/html/ListOtransTypes.html#double">double</a> threshold,
 <a href="http://root.cern.ch/root/html/ListOtransTypes.html#bool">bool</a> backgroundRemove,<a
 href="http://root.cern.ch/root/html/ListOtransTypes.html#int">int</a> deconIterations,
-<a href="http://root.cern.ch/root/html/ListOtransTypes.html#bool">bool</a> fMarkov,
+<a href="http://root.cern.ch/root/html/ListOtransTypes.html#bool">bool</a> markov,
 <a href="http://root.cern.ch/root/html/ListOtransTypes.html#int">int</a> averWindow)
   </span></b></p>
 
@@ -4458,7 +4458,7 @@ style='font-size:14.0pt'>deconIterations</span></b>-number of iterations in
 deconvolution operation</p>
 
 <p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b><span
-style='font-size:14.0pt'>fMarkov</span></b>-logical variable, if it is true,
+style='font-size:14.0pt'>markov</span></b>-logical variable, if it is true,
 first the source spectrum is replaced by new spectrum calculated using Markov
 chains method </p>
 
@@ -4519,7 +4519,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       return 0;
    }
    
-   if (fMarkov == true) {
+   if (markov == true) {
       if (averWindow <= 0) {
          Error("SearchHighRes", "Averanging window must be positive");
          return 0;
@@ -4576,7 +4576,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       working_space[i + 6*size_ext] = working_space[i + size_ext];
    }
   
-   if(fMarkov == true){
+   if(markov == true){
       for(j = 0; j < size_ext; j++)
          working_space[2 * size_ext + j] = working_space[size_ext + j];
       xmin = 0,xmax = size_ext - 1;
@@ -4838,6 +4838,21 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       Warning("SearchHighRes", "Peak buffer full");   
    return fNPeaks;
 }
+
+//_____________________________________________________________________________
+
+Int_t TSpectrum::Search1HighRes(float *source,float *destVector, int ssize,
+                                     float sigma, double threshold,
+                                     bool backgroundRemove,int deconIterations,
+                                     bool markov, int averWindow)
+{
+//  Old name of SearcHighRes introduced for back compatibility
+// This function will be removed after the June 2006 release
+   
+   return SearchHighRes(source,destVector,ssize,sigma,threshold,backgroundRemove,
+                        deconIterations,markov,averWindow);
+}
+
 
 //Begin_Html <!--
 /* -->
