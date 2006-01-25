@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.1 2005/12/22 09:13:49 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.2 2005/12/23 07:20:10 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -235,8 +235,8 @@ template<class Element1,class Element2>
 template<class Element> void               Compare      (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
 template<class Element> Bool_t             VerifyVectorValue
                                                         (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose=1,
-                                                         Element maxDevAllow=DBL_EPSILON);
+                                                         Element maxDevAllow=std::numeric_limits<Element>::epsilon());
 template<class Element> Bool_t             VerifyVectorIdentity
                                                         (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2,            Int_t              verbose=1,
-                                                         Element maxDevAllow=DBL_EPSILON);
+                                                         Element maxDevAllow=std::numeric_limits<Element>::epsilon());
 #endif

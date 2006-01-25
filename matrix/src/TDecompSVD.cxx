@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.22 2005/02/15 16:17:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.24 2005/12/23 16:58:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -296,12 +296,14 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
       bmx = TMath::Max(TMath::Abs(sDiag(i))+TMath::Abs(oDiag(i)),bmx);
   }
 
+  const Double_t eps = std::numeric_limits<double>::epsilon();
+
   const Int_t niterm = 10*nCol_v;
   for (Int_t k = nCol_v-1; k >= 0; k--) {
     loop:
       if (k != 0) {
         // since sDiag(k) == 0 perform Givens transform with result oDiag[k] = 0
-        if (TMath::Abs(sDiag(k)) < DBL_EPSILON*bmx)
+        if (TMath::Abs(sDiag(k)) < eps*bmx)
           Diag_1(v,sDiag,oDiag,k);
 
         // find l (1 <= l <=k) so that either oDiag(l) = 0 or sDiag(l-1) = 0.
@@ -317,11 +319,11 @@ Bool_t TDecompSVD::Diagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD 
             elzero = 0;
             break;
           }
-          else if (TMath::Abs(oDiag(l)) < DBL_EPSILON*bmx) {
+          else if (TMath::Abs(oDiag(l)) < eps*bmx) {
             elzero = 1;
             break;
           }
-          else if (TMath::Abs(sDiag(l-1)) < DBL_EPSILON*bmx)
+          else if (TMath::Abs(sDiag(l-1)) < eps*bmx)
             elzero = 0;
         }
         if (l > 0 && !elzero)

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.2 2005/12/23 19:55:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -249,7 +249,7 @@ void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb
   this->fNrowIndex = this->fNrows+1;
   this->fNelems    = nr_nonzeros;
   this->fIsOwner   = kTRUE;
-  this->fTol       = DBL_EPSILON;
+  this->fTol       = std::numeric_limits<Element>::epsilon();
   
   fRowIndex = new Int_t[this->fNrowIndex];
   if (init)
@@ -1590,7 +1590,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use(Int_t row_lwb,Int_t row_up
   this->fNrowIndex = this->fNrows+1;
   this->fNelems    = nr_nonzeros;
   this->fIsOwner   = kFALSE;
-  this->fTol       = DBL_EPSILON;
+  this->fTol       = std::numeric_limits<Element>::epsilon();
   
   fElements  = pData;
   fRowIndex  = pRowIndex;

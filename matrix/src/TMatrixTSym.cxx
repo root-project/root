@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.2 2005/12/23 07:20:10 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.3 2005/12/23 19:55:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -128,7 +128,7 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Elemen
       *this = prototype;
       // Since the user can not control the tolerance of this newly created matrix
       // we put it to the smallest possible number 
-      const Element oldTol = this->SetTol(DBL_MIN);
+      const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
       this->Invert();
       this->SetTol(oldTol);
       break;
@@ -289,7 +289,7 @@ void TMatrixTSym<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,In
   this->fColLwb  = col_lwb;
   this->fNelems  = this->fNrows*this->fNcols;
   this->fIsOwner = kTRUE;
-  this->fTol     = DBL_EPSILON;
+  this->fTol     = std::numeric_limits<Element>::epsilon();
 
   if (this->fNelems > 0) {
     fElements = New_m(this->fNelems);

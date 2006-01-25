@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.2 2005/12/23 07:20:10 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.3 2006/01/05 08:26:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -65,7 +65,8 @@
 //                                                                      //
 //======================================================================//
 
-#include <limits.h>
+#include <limits>
+
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
@@ -225,8 +226,8 @@ template<class Element> void    Compare      (const TMatrixTBase<Element>  &m1,c
 // They print some detail info if the validation condition fails
 
 template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val,
-                                                    Int_t verbose=1,Element maxDevAllow=DBL_EPSILON);
+                                                    Int_t verbose=1,Element maxDevAllow=std::numeric_limits<Element>::epsilon());
 template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,
-                                                    Int_t verbose=1,Element maxDevAllow=DBL_EPSILON);
+                                                    Int_t verbose=1,Element maxDevAllow=std::numeric_limits<Element>::epsilon());
 
 #endif

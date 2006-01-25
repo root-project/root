@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.13 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.14 2005/12/22 08:41:31 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-//#include <limits>
+#include <limits>
 
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"

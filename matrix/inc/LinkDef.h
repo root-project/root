@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.21 2005/12/22 08:41:31 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.22 2005/12/23 07:20:10 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -392,5 +392,10 @@
 #pragma link C++ function ElementMult  (      TMatrixDSparse &,const TMatrixDSparse &);
 #pragma link C++ function ElementDiv   (      TMatrixDSparse &,const TMatrixDSparse &);
 #pragma link C++ function AreCompatible(const TMatrixDSparse &,const TMatrixDSparse &,Int_t);
+
+#pragma link C++ function NormalEqn (const TMatrixD &,const TVectorD &                 );
+#pragma link C++ function NormalEqn (const TMatrixD &,const TVectorD &,const TVectorD &);
+#pragma link C++ function NormalEqn (const TMatrixD &,const TMatrixD &                 );
+#pragma link C++ function NormalEqn (const TMatrixD &,const TMatrixD &,const TVectorD &);
 
 #endif
