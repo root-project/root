@@ -2,9 +2,10 @@
 // Author: Rene Brun
 #include "TH1.h"
 #include "TF1.h"
+Bool_t reject;
 Double_t fline(Double_t *x, Double_t *par)
 {
-    if (x[0] > 2.5 && x[0] < 3.5) {
+    if (reject && x[0] > 2.5 && x[0] < 3.5) {
       TF1::RejectPoint();
       return 0;
    }
@@ -18,9 +19,19 @@ void fitExclude() {
    // create an histogram and fill it according to the source function
    TH1F *h = new TH1F("h","background + signal",100,0,5);
    h->FillRandom("f1",2000);
-   TF1 *fline = new TF1("fline",fline,0,5,2);
-   fline->SetParameters(2,-1);      
+   TF1 *fl = new TF1("fl",fline,0,5,2);
+   fl->SetParameters(2,-1);      
    //we want to fit only the linear background excluding the signal area
-   h->Fit("fline","l");
+   reject = kTRUE;
+   h->Fit(fl,"0");
+   reject = kFALSE;
+   //store 2 separate functions for visualization
+   TF1 *fleft = new TF1("fleft",fline,0,2.5,2);
+   fleft->SetParameters(fl->GetParameters());
+   h->GetListOfFunctions()->Add(fleft);
+   TF1 *fright = new TF1("fright",fline,3.5,5,2);
+   fright->SetParameters(fl->GetParameters());
+   h->GetListOfFunctions()->Add(fright);
+   h->Draw();
 }
    
