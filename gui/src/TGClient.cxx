@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.45 2005/08/23 17:00:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.46 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -332,7 +332,7 @@ Bool_t TGClient::GetColorByName(const char *name, Pixel_t &pixel) const
    // set to the color's pixel value, kFALSE otherwise.
 
    ColorStruct_t      color;
-   WindowAttributes_t attributes;
+   WindowAttributes_t attributes = WindowAttributes_t();
    Bool_t             status = kTRUE;
 
    gVirtualX->GetWindowAttributes(fRoot->GetId(), attributes);
@@ -387,7 +387,7 @@ Pixel_t TGClient::GetHilite(Pixel_t base_color) const
    // Return pixel value of hilite color based on base_color.
 
    ColorStruct_t      color, white_p;
-   WindowAttributes_t attributes;
+   WindowAttributes_t attributes = WindowAttributes_t();
 
    gVirtualX->GetWindowAttributes(fRoot->GetId(), attributes);
 
@@ -418,7 +418,7 @@ Pixel_t TGClient::GetShadow(Pixel_t base_color) const
    // Shadow is 60% of base_color intensity.
 
    ColorStruct_t      color;
-   WindowAttributes_t attributes;
+   WindowAttributes_t attributes = WindowAttributes_t();
 
    gVirtualX->GetWindowAttributes(fRoot->GetId(), attributes);
 

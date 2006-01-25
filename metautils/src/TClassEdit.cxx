@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.17 2005/10/17 14:17:35 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.18 2005/11/11 23:23:26 pcanal Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -347,7 +347,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
 //      {for (int i=0;i<narg;i++) fprintf(stderr,"calling ShortType %d for %s with %d %s \n",
 //                                        mode,typeDesc,i,arglist[i].c_str());
 //      }
-   if (arglist[narg-1][0]=='*') {
+   if (arglist[narg-1].empty() == false && arglist[narg-1][0]=='*') {
       if ((mode&1)==0) tailLoc = narg-1;
       narg--;
    }
@@ -664,6 +664,9 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
 #ifndef R__SSTREAM
    // Deprecated case
    answ << ends;
+   std::string ret = answ.str();
+   answ.freeze(false);
+   return ret;
 #endif
    return answ.str();
 
