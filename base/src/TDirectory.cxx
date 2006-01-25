@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.77 2005/11/18 17:44:16 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.78 2006/01/24 21:28:54 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -84,6 +84,8 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname,
 //
 //  Note that the directory name cannot contain slashes.
 //
+   if (initMotherDir==0) initMotherDir = gDirectory;
+
    if (strchr(name,'/')) {
       ::Error("TDirectory::TDirectory","directory name (%s) cannot contain a slash", name);
       gDirectory = 0;
