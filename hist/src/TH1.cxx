@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.268 2006/01/09 15:17:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.269 2006/01/24 22:02:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2929,7 +2929,9 @@ void H1InitGaus()
    }
    if (allcha == 0) return;
    mean = sumx/allcha;
-   rms  = TMath::Sqrt(sumx2/allcha - mean*mean);
+   rms  = sumx2/allcha - mean*mean;
+   if (rms > 0) rms  = TMath::Sqrt(rms);
+   else         rms  = 0;
    if (rms == 0) rms = binwidx*(hxlast-hxfirst+1)/4;
    //if the distribution is really gaussian, the best approximation
    //is binwidx*allcha/(sqrtpi*rms)
