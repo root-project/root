@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.176 2005/11/24 08:55:13 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.177 2005/12/10 00:23:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -192,9 +192,11 @@ TGraph::TGraph(const TVector &vx, const TVector &vy)
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
-   for (Int_t i=0; i < fNpoints; i++) {
-      fX[i] = vx(i);
-      fY[i] = vy(i);
+   Int_t ivxlow  = vx.GetLwb();
+   Int_t ivylow  = vy.GetLwb();
+   for (Int_t i=0;i<fNpoints;i++) {
+      fX[i]  = vx(i+ivxlow);
+      fY[i]  = vy(i+ivylow);
    }
 }
 
@@ -210,9 +212,11 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!CtorAllocate()) return;
-   for (Int_t i=0; i<fNpoints; i++) {
-      fX[i] = vx(i);
-      fY[i] = vy(i);
+   Int_t ivxlow  = vx.GetLwb();
+   Int_t ivylow  = vy.GetLwb();
+   for (Int_t i=0;i<fNpoints;i++) {
+      fX[i]  = vx(i+ivxlow);
+      fY[i]  = vy(i+ivylow);
    }
 }
 

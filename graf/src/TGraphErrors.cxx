@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.53 2005/11/10 14:50:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.54 2005/11/18 16:55:07 couet Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -137,11 +137,15 @@ TGraphErrors::TGraphErrors(const TVector  &vx, const TVector  &vy, const TVector
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
-   for (Int_t i=0; i < fNpoints; i++) {
-      fX[i]  = vx(i);
-      fY[i]  = vy(i);
-      fEX[i] = vex(i);
-      fEY[i] = vey(i);
+   Int_t ivxlow  = vx.GetLwb();
+   Int_t ivylow  = vy.GetLwb();
+   Int_t ivexlow = vex.GetLwb();
+   Int_t iveylow = vey.GetLwb();
+      for (Int_t i=0;i<fNpoints;i++) {
+      fX[i]   = vx(i+ivxlow);
+      fY[i]   = vy(i+ivylow);
+      fEX[i]  = vex(i+ivexlow);
+      fEY[i]  = vey(i+iveylow);
    }
 }
 
@@ -159,11 +163,15 @@ TGraphErrors::TGraphErrors(const TVectorD  &vx, const TVectorD  &vy, const TVect
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
-   for (Int_t i=0; i < fNpoints; i++) {
-      fX[i]  = vx(i);
-      fY[i]  = vy(i);
-      fEX[i] = vex(i);
-      fEY[i] = vey(i);
+   Int_t ivxlow  = vx.GetLwb();
+   Int_t ivylow  = vy.GetLwb();
+   Int_t ivexlow = vex.GetLwb();
+   Int_t iveylow = vey.GetLwb();
+      for (Int_t i=0;i<fNpoints;i++) {
+      fX[i]   = vx(i+ivxlow);
+      fY[i]   = vy(i+ivylow);
+      fEX[i]  = vex(i+ivexlow);
+      fEY[i]  = vey(i+iveylow);
    }
 }
    

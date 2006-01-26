@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.269 2006/01/24 22:02:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.270 2006/01/25 15:11:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -7159,8 +7159,9 @@ TH1F::TH1F(const TVectorF &v)
 
    TArrayF::Set(fNcells);
    fDimension = 1;
-   for (Int_t i=0;i<v.GetNrows();i++) {
-      SetBinContent(i+1,v(i));
+   Int_t ivlow  = v.GetLwb();
+   for (Int_t i=0;i<fNcells-2;i++) {
+      SetBinContent(i+1,v(i+ivlow));
    }
    TArrayF::Set(fNcells);
 }
@@ -7361,8 +7362,9 @@ TH1D::TH1D(const TVectorD &v)
 
    TArrayD::Set(fNcells);
    fDimension = 1;
-   for (Int_t i=0;i<v.GetNrows();i++) {
-      SetBinContent(i+1,v(i));
+   Int_t ivlow  = v.GetLwb();
+   for (Int_t i=0;i<fNcells-2;i++) {
+      SetBinContent(i+1,v(i+ivlow));
    }
    TArrayD::Set(fNcells);
 }

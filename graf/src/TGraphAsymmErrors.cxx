@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.52 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.53 2005/11/16 17:38:38 couet Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -167,13 +167,19 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, con
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
-   for (Int_t i=0; i < fNpoints; i++) {
-      fX[i]      = vx(i);
-      fY[i]      = vy(i);
-      fEXlow[i]  = vexl(i);
-      fEYlow[i]  = veyl(i);
-      fEXhigh[i] = vexh(i);
-      fEYhigh[i] = veyh(i);
+   Int_t ivxlow  = vx.GetLwb();
+   Int_t ivylow  = vy.GetLwb();
+   Int_t ivexllow = vexl.GetLwb();
+   Int_t ivexhlow = vexh.GetLwb();
+   Int_t iveyllow = veyl.GetLwb();
+   Int_t iveyhlow = veyh.GetLwb();
+      for (Int_t i=0;i<fNpoints;i++) {
+      fX[i]      = vx(i+ivxlow);
+      fY[i]      = vy(i+ivylow);
+      fEXlow[i]  = vexl(i+ivexllow);
+      fEYlow[i]  = veyl(i+iveyllow);
+      fEXhigh[i] = vexh(i+ivexhlow);
+      fEYhigh[i] = veyh(i+iveyhlow);
    }
 }
 
@@ -191,13 +197,19 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, con
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
-   for (Int_t i=0; i < fNpoints; i++) {
-      fX[i]      = vx(i);
-      fY[i]      = vy(i);
-      fEXlow[i]  = vexl(i);
-      fEYlow[i]  = veyl(i);
-      fEXhigh[i] = vexh(i);
-      fEYhigh[i] = veyh(i);
+   Int_t ivxlow  = vx.GetLwb();
+   Int_t ivylow  = vy.GetLwb();
+   Int_t ivexllow = vexl.GetLwb();
+   Int_t ivexhlow = vexh.GetLwb();
+   Int_t iveyllow = veyl.GetLwb();
+   Int_t iveyhlow = veyh.GetLwb();
+      for (Int_t i=0;i<fNpoints;i++) {
+      fX[i]      = vx(i+ivxlow);
+      fY[i]      = vy(i+ivylow);
+      fEXlow[i]  = vexl(i+ivexllow);
+      fEYlow[i]  = veyl(i+iveyllow);
+      fEXhigh[i] = vexh(i+ivexhlow);
+      fEYhigh[i] = veyh(i+iveyhlow);
    }
 }
 
