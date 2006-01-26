@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.32 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.33 2006/01/26 11:59:42 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -948,10 +948,8 @@ void TGLViewer::DoDraw()
       SetupLights();
 
       // Draw the scene
-      fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD, sceneDrawTime);
-
-      // Draw guides (unclipped)
-      fScene.DrawGuides(*fCurrentCamera, fAxesType, fReferenceOn ? &fReferencePos:0);
+      fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD, sceneDrawTime, // Main options
+                  fAxesType, fReferenceOn ? &fReferencePos:0);               // Guides options
 
       // Debug mode - draw some extra details
       if (fDebugMode) {

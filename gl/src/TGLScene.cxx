@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.31 2006/01/18 16:57:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.32 2006/01/26 11:59:42 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -325,7 +325,8 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 //______________________________________________________________________________
 //TODO: Merge style and LOD into general draw style flag
 void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD, 
-                    Double_t timeout, Bool_t forSelect)
+                               Double_t timeout, Int_t axesType, const TGLVertex3 * reference,
+                               Bool_t forSelect)
 {
    // Draw out scene into current GL context, using passed arguments:
    // 
@@ -458,6 +459,10 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD,
    glEnable(GL_LIGHTING);
    glEnable(GL_CULL_FACE);
    glPolygonMode(GL_FRONT, GL_FILL);
+
+   // Draw guides - must be done before manipulator / selected object
+   // bounding box as we clear the depth buffer
+   DrawGuides(camera, axesType, reference);
 
    // If select draw clip and manips are not drawn (pickable)
    if (!forSelect) {
@@ -1021,8 +1026,8 @@ Bool_t TGLScene::Select(const TGLCamera & camera, Int_t style)
    glInitNames();
    glPushName(0);
 
-   // Draw out scene at best quality, no timelimit
-   Draw(camera, style, kLODHigh, 0.0, kTRUE); // Select draw
+   // Draw out scene at best quality, no timelimit, no axes/reference 
+   Draw(camera, style, kLODHigh, 0.0, TGLViewer::kAxesNone, 0, kTRUE); // Select draw
 
    // Retrieve the hit count and return to render
    Int_t hits = glRenderMode(GL_RENDER);
