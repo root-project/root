@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.52 2005/11/11 15:29:46 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.53 2005/11/23 14:48:02 couet Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1849,6 +1849,8 @@ void TGX11::ResizeWindow(int wid)
 
    XGetGeometry(fDisplay, win, &root,
                 &xval, &yval, &wval, &hval, &border, &depth);
+   if (wval >= 65500) wval = 1;
+   if (hval >= 65500) hval = 1;
 
    // don't do anything when size did not change
    if (gTws->fWidth == wval && gTws->fHeight == hval) return;
