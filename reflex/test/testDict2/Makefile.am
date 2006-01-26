@@ -24,13 +24,13 @@ EXTRA_DIST =          \
   InheritanceTree.txt \
   selection.xml 
 
-check_LTLIBRARIES = libtest_Reflex2Rflx.la
+check_LTLIBRARIES = libtest_Class2DictRflx.la
 
-libtest_Reflex2Rflx_la_SOURCES = Class2Dict_rflx.cpp
+libtest_Class2DictRflx_la_SOURCES = Class2Dict_rflx.cpp
 
-libtest_Reflex2Rflx_la_LDFLAGS = -rpath /tmp/ -module
+libtest_Class2DictRflx_la_LDFLAGS = -rpath /tmp/ -module
 
-libtest_Reflex2Rflx_la_LIBADD = $(top_srcdir)/src/libReflex.la
+libtest_Class2DictRflx_la_LIBADD = $(top_srcdir)/src/libReflex.la
 
 MOSTLYCLEANFILES = Class2Dict_rflx.cpp
 

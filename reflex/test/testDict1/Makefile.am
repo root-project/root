@@ -5,13 +5,13 @@ INCLUDES = -I$(top_srcdir)/inc
 
 EXTRA_DIST = selection.xml
 
-check_LTLIBRARIES = libtest_Reflex1Rflx.la
+check_LTLIBRARIES = libtest_ReflexRflx.la
 
-libtest_Reflex1Rflx_la_SOURCES = Reflex_rflx.cpp
+libtest_ReflexRflx_la_SOURCES = Reflex_rflx.cpp
 
-libtest_Reflex1Rflx_la_LDFLAGS = -rpath /tmp/ -module
+libtest_ReflexRflx_la_LDFLAGS = -rpath /tmp/ -module
 
-libtest_Reflex1Rflx_la_LIBADD = $(top_srcdir)/src/libReflex.la
+libtest_ReflexRflx_la_LIBADD = $(top_srcdir)/src/libReflex.la
 
 MOSTLYCLEANFILES = Reflex_rflx.cpp
 
