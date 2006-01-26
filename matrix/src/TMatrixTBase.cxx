@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.2 2005/12/23 07:20:10 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.3 2005/12/23 19:55:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1107,6 +1107,9 @@ Bool_t VerifyMatrixValue(const TMatrixTBase<Element> &m,Element val,Int_t verbos
   Int_t   jmax      = 0;
   Element maxDevObs = 0;
 
+  if (TMath::Abs(maxDevAllow) <= 0.0)
+    maxDevAllow = std::numeric_limits<Element>::epsilon();
+
   for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
     for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++) {
       const Element dev = TMath::Abs(m(i,j)-val);
@@ -1148,6 +1151,9 @@ Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<E
   Int_t   imax      = 0;
   Int_t   jmax      = 0;
   Element maxDevObs = 0;
+
+  if (TMath::Abs(maxDevAllow) <= 0.0)
+    maxDevAllow = std::numeric_limits<Element>::epsilon();
 
   for (Int_t i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++) {
     for (Int_t j = m1.GetColLwb(); j <= m1.GetColUpb(); j++) {

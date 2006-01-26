@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.2 2005/12/23 07:20:10 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.3 2006/01/25 18:49:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -50,11 +50,11 @@ protected:
 
   void     Allocate(Int_t nrows,Int_t row_lwb = 0,Int_t init = 0);
 
-public:
-
   enum EVectorStatusBits {
-    kStatus = BIT(14) // set if matrix object is valid
+    kStatus = BIT(14) // set if vector object is valid
   };
+
+public:
 
   TVectorT() { fIsOwner = kTRUE; fElements = 0; fNrows = 0; fRowLwb = 0; }
   explicit TVectorT(Int_t n);
@@ -235,8 +235,8 @@ template<class Element1,class Element2>
 template<class Element> void               Compare      (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
 template<class Element> Bool_t             VerifyVectorValue
                                                         (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose=1,
-                                                         Element maxDevAllow=std::numeric_limits<Element>::epsilon());
+                                                         Element maxDevAllow=0.0);
 template<class Element> Bool_t             VerifyVectorIdentity
                                                         (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2,            Int_t              verbose=1,
-                                                         Element maxDevAllow=std::numeric_limits<Element>::epsilon());
+                                                         Element maxDevAllow=0.0);
 #endif

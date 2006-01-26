@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.4 2006/01/25 18:49:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.5 2006/01/26 15:16:11 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -227,8 +227,8 @@ template<class Element> void    Compare      (const TMatrixTBase<Element>  &m1,c
 // They print some detail info if the validation condition fails
 
 template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val,
-                                                    Int_t verbose=1,Element maxDevAllow=std::numeric_limits<Element>::epsilon());
+                                                    Int_t verbose=1,Element maxDevAllow=0.0);
 template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,
-                                                    Int_t verbose=1,Element maxDevAllow=std::numeric_limits<Element>::epsilon());
+                                                    Int_t verbose=1,Element maxDevAllow=0.0);
 
 #endif

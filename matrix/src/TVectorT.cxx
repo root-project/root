@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.2 2005/12/23 07:20:11 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.3 2005/12/23 19:55:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1924,8 +1924,11 @@ Bool_t VerifyVectorValue(const TVectorT<Element> &v,Element val,
 {
   // Validate that all elements of vector have value val within maxDevAllow .
 
-  Int_t    imax      = 0;
+  Int_t   imax      = 0;
   Element maxDevObs = 0;
+
+  if (TMath::Abs(maxDevAllow) <= 0.0)
+    maxDevAllow = std::numeric_limits<Element>::epsilon();
 
   for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++) {
     const Element dev = TMath::Abs(v(i)-val);
@@ -1956,11 +1959,14 @@ Bool_t VerifyVectorIdentity(const TVectorT<Element> &v1,const TVectorT<Element> 
 {
   // Verify that elements of the two vectors are equal within maxDevAllow .
 
-  Int_t    imax      = 0;
+  Int_t   imax      = 0;
   Element maxDevObs = 0;
 
   if (!AreCompatible(v1,v2))
     return kFALSE;
+
+  if (TMath::Abs(maxDevAllow) <= 0.0)
+    maxDevAllow = std::numeric_limits<Element>::epsilon();
 
   for (Int_t i = v1.GetLwb(); i <= v1.GetUpb(); i++) {
     const Element dev = TMath::Abs(v1(i)-v2(i));
