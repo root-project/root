@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.3 2006/01/05 08:26:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.4 2006/01/25 18:49:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -106,19 +106,20 @@ protected:
   Element  fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                  //  fTol is used in matrix decomposition (like in inversion)
 
-  enum {kSizeMax = 25};           // size data container on stack, see New_m(),Delete_m()
-  enum {kWorkMax = 100};          // size of work array's in several routines
-
-  Bool_t   fIsOwner;              //!default kTRUE, when Use array kFALSE
+  Bool_t   fIsOwner;             //!default kTRUE, when Use array kFALSE
 
   static  void DoubleLexSort (Int_t n,Int_t *first,Int_t *second,Element *data);
   static  void IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,
                               Int_t *second,Int_t swapSecond,Int_t *index);
 
-public:
+  enum {kSizeMax = 25};          // size data container on stack, see New_m(),Delete_m()
+  enum {kWorkMax = 100};         // size of work array's in several routines
+
   enum EMatrixStatusBits {
     kStatus = BIT(14) // set if matrix object is valid
   };
+
+public:
 
   TMatrixTBase() { fIsOwner = kTRUE; 
                    fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }

@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.22 2005/12/23 07:20:10 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.23 2006/01/25 18:49:03 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -292,8 +292,8 @@
 #pragma link C++ function AreCompatible       (const TVectorD       &,const TVectorD &,      Int_t);
 #pragma link C++ function AreCompatible       (const TVectorD       &,const TVectorF &,      Int_t);
 #pragma link C++ function Compare             (const TVectorD       &,const TVectorD &);
-#pragma link C++ function VerifyVectorValue   (const TVectorD       &,      Float_t   ,      Int_t,          Float_t);
-#pragma link C++ function VerifyVectorIdentity(const TVectorD       &,const TVectorD &,      Int_t,          Float_t);
+#pragma link C++ function VerifyVectorValue   (const TVectorD       &,      Double_t  ,      Int_t,          Double_t);
+#pragma link C++ function VerifyVectorIdentity(const TVectorD       &,const TVectorD &,      Int_t,          Double_t);
 
 //TMatrixTBase<Double_t>
 #pragma link C++ function operator==          (const TMatrixDBase   &,const TMatrixDBase &);
@@ -304,7 +304,7 @@
 #pragma link C++ function VerifyMatrixValue   (const TMatrixDBase   &,      Double_t      ,Int_t,Double_t);
 #pragma link C++ function VerifyMatrixIdentity(const TMatrixDBase   &,const TMatrixDBase &,Int_t,Double_t);
 
-//TMatrixT<Float_t>
+//TMatrixT<Double_t>
 #pragma link C++ function operator+  (const TMatrixD    &,const TMatrixD    &);
 #pragma link C++ function operator+  (const TMatrixD    &,const TMatrixDSym &);
 #pragma link C++ function operator+  (const TMatrixDSym &,const TMatrixD    &);
