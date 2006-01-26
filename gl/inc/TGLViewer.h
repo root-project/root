@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.20 2005/12/12 15:28:32 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.21 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -45,13 +45,6 @@ class TGLFaceSet;
 class TGLRedrawTimer;
 class TGLWindow; // Remove - TGLManager
 class TContextMenu;
-class TGLClip;
-class TGLClipPlane;
-class TGLClipBox;
-class TGLManip;
-class TGLTransManip;
-class TGLScaleManip;
-class TGLRotateManip;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -98,7 +91,6 @@ public:
    // seperated into viewer/scene/physical/logical sections
    // modify TGLDrawable to cache on shape subset
    enum EDrawStyle { kFill, kOutline, kWireFrame };
-   enum EClipType  { kClipNone, kClipPlane, kClipBox };
    enum EAxesType  { kAxesNone, kAxesEdge, kAxesOrigin };
 
 private:
@@ -139,10 +131,11 @@ private:
    UInt_t                  fCSLevel;
    std::vector<CSPart_t>   fCSTokens;
 
-   // Interaction - push most into TGLCamera
-   enum EAction         { kNone, kRotate, kTruck, kDolly, kDrag };
-   EAction              fAction;
-   TPoint               fStartPos;
+   // Current camera ineraction - no kZoom as zoom is either key or mouse wheel
+   // action so instantaneous
+   // TODO: Move all this into TGLCamera? Would need to process TEvents itself
+   enum ECameraAction   { kCameraNone, kCameraRotate, kCameraTruck, kCameraDolly };
+   ECameraAction        fAction;
    TPoint               fLastPos;
    UInt_t               fActiveButtonID;
 
@@ -161,18 +154,6 @@ private:
    TGLVertex3     fReferencePos;   //! reference position
    Bool_t         fInitGL;         //! has GL been initialised?
 
-   // Clipping
-   TGLClipPlane   * fClipPlane;
-   TGLClipBox     * fClipBox;
-   TGLClip        * fCurrentClip;  //! the current clipping shape
-   Bool_t           fClipEdit;
-
-   // Object manipulators - physical + clipping shapes
-   TGLTransManip  * fTransManip;    //! translation manipulator
-   TGLScaleManip  * fScaleManip;    //! scaling manipulator
-   TGLRotateManip * fRotateManip;   //! rotation manipulator 
-   TGLManip       * fCurrentManip;  //! current manipulator
-    
    // Debug tracing (for scene rebuilds)
    Bool_t         fDebugMode;             //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
    UInt_t         fAcceptedPhysicals;     //! number of physicals accepted in last rebuild
@@ -183,11 +164,11 @@ private:
    // Methods
    ///////////////////////////////////////////////////////////////////////
    // Drawing - can tidy up/remove lots when TGLManager added
+   void InitGL();
    void PreDraw();
    void PostDraw();
-   void InitGL();
-   void MakeCurrent()  const;
-   void SwapBuffers()  const;
+   void MakeCurrent() const;
+   void SwapBuffers() const;
 
    // Scene management - to TGLScene or helper object?
    Bool_t             RebuildScene();
@@ -205,16 +186,17 @@ private:
    // Lights
    void        SetupLights();
 
-   // Clipping
-   void SetupClips();
-   void ClearClips();
-
    // Non-copyable class
    TGLViewer(const TGLViewer &);
    TGLViewer & operator=(const TGLViewer &);
 
 protected:
    TGLWindow * fGLWindow;    //! remove - replace with TGLManager
+
+   // Overloadable 
+   virtual void PostSceneBuildSetup();
+   virtual void SelectionChanged(); // *SIGNAL*
+   virtual void ClipChanged();      // *SIGNAL*
 
 public:
    TGLViewer(TVirtualPad * pad, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -234,38 +216,32 @@ public:
    virtual void   AddCompositeOp(UInt_t operation);
 
    // External GUI component interface
-   void  SetDrawStyle(EDrawStyle drawStyle);
-   void  SetCurrentCamera(ECameraType camera);
-   void  SetOrthoCamera(ECameraType camera, Double_t left, Double_t right, Double_t top, Double_t bottom);
-   void  SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly, 
-                              Double_t center[3], Double_t hRotate, Double_t vRotate);
-   void  ToggleLight(ELight light);
-   void  SetLight(ELight light, Bool_t on);
-   void  GetGuideState(EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const;
-   void  SetGuideState(EAxesType axesType, Bool_t referenceOn, const Double_t referencePos[3]);
-   void  GetClipState(EClipType type, Double_t data[6]) const;
-   void  SetClipState(EClipType type, const Double_t data[6]);
-   EClipType GetCurrentClip() const;
-   void  SetCurrentClip(EClipType type, Bool_t edit);
-   void  SetSelectedColor(const Float_t rgba[17]);
-   void  SetColorOnSelectedFamily(const Float_t rgba[17]);
-   void  SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
+   void SetDrawStyle(EDrawStyle drawStyle);
+   void SetCurrentCamera(ECameraType camera);
+   void SetOrthoCamera(ECameraType camera, Double_t left, Double_t right, Double_t top, Double_t bottom);
+   void SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly, 
+                             Double_t center[3], Double_t hRotate, Double_t vRotate);
+   void ToggleLight(ELight light);
+   void SetLight(ELight light, Bool_t on);
+   void GetGuideState(EAxesType & axesType, Bool_t & referenceOn, Double_t referencePos[3]) const;
+   void SetGuideState(EAxesType axesType, Bool_t referenceOn, const Double_t referencePos[3]);
+   void GetClipState(EClipType type, Double_t data[6]) const;
+   void SetClipState(EClipType type, const Double_t data[6]);
+   void GetCurrentClip(EClipType & type, Bool_t & edit) const;
+   void SetCurrentClip(EClipType type, Bool_t edit);
+   void SetSelectedColor(const Float_t rgba[17]);
+   void SetColorOnSelectedFamily(const Float_t rgba[17]);
+   void SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
    const TGLPhysicalShape * GetSelected() const { return fScene.GetSelected(); }
    
-   // Overloadable 
-   virtual void PostSceneBuildSetup();
-   virtual void SelectionChanged(); // *SIGNAL*
-   virtual void ClipChanged();      // *SIGNAL*
-
-   // Draw and selection - unpleasant as we need to send via cross thread
-   // gVirtualGL objects to ensure GL context is correct. To be removed when
-   // TGLManager is
+   // Draw and selection
+   // Request methods post cross thread request via TVirtualGL / TGLKernel
+   // to ensure correct thread and hence valid GL context under Win32.
+   // Can be removed when TGLManager is used
    void RequestDraw(UInt_t redrawLOD = kLODMed); // Cross thread draw request
    void DoDraw();
    void RequestSelect(UInt_t x, UInt_t y); // Cross thread select request
    Bool_t DoSelect(const TGLRect & rect); // Window coords origin top left
-   void RequestSelectManip(const TGLRect & rect); // Cross thread manipulator select request
-   void DoSelectManip(const TGLRect & rect);
 
    // Interaction - events to ExecuteEvent are passed on to these
    Bool_t HandleEvent(Event_t *ev);
@@ -278,6 +254,32 @@ public:
 
    ClassDef(TGLViewer,0) // GL viewer generic base class
 };
+
+//______________________________________________________________________________
+inline void TGLViewer::GetClipState(EClipType type, Double_t data[6]) const
+{
+   fScene.GetClipState(type, data);
+}
+
+//______________________________________________________________________________
+inline void TGLViewer::SetClipState(EClipType type, const Double_t data[6])
+{
+   fScene.SetClipState(type, data);
+   RequestDraw();
+}
+
+//______________________________________________________________________________
+inline void TGLViewer::GetCurrentClip(EClipType & type, Bool_t & edit) const
+{
+   fScene.GetCurrentClip(type, edit);
+}
+
+//______________________________________________________________________________
+inline void TGLViewer::SetCurrentClip(EClipType type, Bool_t edit)
+{
+   fScene.SetCurrentClip(type, edit);
+   RequestDraw();
+}
 
 // TODO: Find a better place/way to do this
 class TGLRedrawTimer : public TTimer

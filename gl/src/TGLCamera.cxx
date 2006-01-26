@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.24 2005/11/29 14:04:00 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.25 2006/01/18 16:57:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -40,9 +40,9 @@ const Double_t TGLCamera::fgInterestBoxExpansion = 1.3;
 
 //______________________________________________________________________________
 TGLCamera::TGLCamera() :
-   fViewport(0,0,100,100),
-   fProjM(),  fModVM(), fClipM(),
-   fCacheDirty(kTRUE),
+   fCacheDirty(kTRUE), 
+	fProjM(),  fModVM(), fClipM(),
+	fViewport(0,0,100,100),
    fLargestSeen(0.0)
 {
    // Default base camera constructor
@@ -66,7 +66,7 @@ void TGLCamera::SetViewport(const TGLRect & viewport)
 }
 
 //______________________________________________________________________________
-void TGLCamera::UpdateCache()
+void TGLCamera::UpdateCache() const
 {
    // Update internally cached frustum values
    assert(fCacheDirty);

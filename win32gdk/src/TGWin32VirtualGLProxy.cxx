@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.15 2005/11/17 14:43:17 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.16 2006/01/12 16:56:08 couet Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -117,7 +117,7 @@ VOID_METHOD_ARG5(VirtualGL, DrawFaceSet, const Double_t *, pnts, const Int_t *, 
 VOID_METHOD_ARG1(VirtualGL, DrawSphere, const Float_t *, color, 1)
 VOID_METHOD_ARG1(VirtualGL, DrawViewer, TGLViewer *, viewer, 1)
 RETURN_METHOD_ARG2(VirtualGL, Bool_t, SelectViewer, TGLViewer *, viewer, const TGLRect *, rect)
-VOID_METHOD_ARG2(VirtualGL, SelectViewerManip, TGLViewer *, viewer, const TGLRect *, rect, 1)
+RETURN_METHOD_ARG4(VirtualGL, Bool_t, SelectManip, TGLManip *, manip, const TGLCamera *, camera, const TGLRect *, rect, const TGLBoundingBox *, sceneBox)
 VOID_METHOD_ARG3(VirtualGL, CaptureViewer, TGLViewer *, viewer, Int_t, format, const char *, filePath, 1)
 
 static TGLManager *gManager = 0;

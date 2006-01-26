@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.21 2005/10/03 15:19:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.22 2005/11/24 12:29:12 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -139,7 +139,7 @@ public:
    void DrawSphere(const Float_t *rgba);
    void DrawViewer(TGLViewer *viewer);
    Bool_t SelectViewer(TGLViewer *viewer, const TGLRect * rect);
-   void  SelectViewerManip(TGLViewer *viewer, const TGLRect * rect);
+   Bool_t SelectManip(TGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox);
    void CaptureViewer(TGLViewer *viewer, Int_t format, const char * filePath = 0);
 
 private:

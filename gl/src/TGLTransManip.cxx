@@ -27,15 +27,14 @@
 ClassImp(TGLTransManip)
 
 //______________________________________________________________________________
-TGLTransManip::TGLTransManip(TGLViewer & viewer) : TGLManip(viewer)
+TGLTransManip::TGLTransManip()
 {
-   // Construct translation manipulator, attached to supplied TGLViewer 
-   // 'viewer', not bound to any physical shape.
+   // Construct translation manipulator not bound to any physical shape.
 }
 
 //______________________________________________________________________________
-TGLTransManip::TGLTransManip(TGLViewer & viewer, TGLPhysicalShape * shape) : 
-   TGLManip(viewer, shape) 
+TGLTransManip::TGLTransManip(TGLPhysicalShape * shape) : 
+   TGLManip(shape) 
 {
    // Construct translation manipulator, attached to supplied TGLViewer 
    // 'viewer', bound to TGLPhysicalShape 'shape'.
@@ -57,20 +56,14 @@ void TGLTransManip::Draw(const TGLCamera & camera) const
       return;
    }
 
+   // Get draw scales
    const TGLBoundingBox & box = fShape->BoundingBox();
-   Double_t widgetScale = CalcDrawScale(box, camera);
+   Double_t baseScale;
+   TGLVector3 axisScale[3];
+   CalcDrawScale(box, camera, baseScale, axisScale);
 
    // Get permitted manipulations on shape
    TGLPhysicalShape::EManip manip = fShape->GetManip();
-
-   TGLVector3 translateAxes[3];
-   for (UInt_t i = 0; i<3; i++) {
-      if (box.IsEmpty()) {
-         translateAxes[i] = box.Axis(i, kTRUE)*widgetScale*-10.0;
-      } else {
-         translateAxes[i] = box.Axis(i, kFALSE)*-0.51;
-      }
-   }
 
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -81,40 +74,40 @@ void TGLTransManip::Draw(const TGLCamera & camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kTranslateX) {
       glPushName(1);
-      TGLUtil::DrawLine(box.Center(), translateAxes[0], TGLUtil::kLineHeadArrow, 
-                        widgetScale, fSelectedWidget == 1 ? fgYellow : fgRed);
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadArrow, 
+                        baseScale, fSelectedWidget == 1 ? fgYellow : fgRed);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), translateAxes[0], TGLUtil::kLineHeadArrow, 
-                        widgetScale, fgGrey);
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadArrow, 
+                        baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kTranslateY) {
       glPushName(2);
-      TGLUtil::DrawLine(box.Center(), translateAxes[1], TGLUtil::kLineHeadArrow, 
-                        widgetScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadArrow, 
+                        baseScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), translateAxes[1], TGLUtil::kLineHeadArrow, 
-                        widgetScale, fgGrey);
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadArrow, 
+                        baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kTranslateZ) {
       glPushName(3);
-      TGLUtil::DrawLine(box.Center(), translateAxes[2], TGLUtil::kLineHeadArrow, 
-                        widgetScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadArrow, 
+                        baseScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), translateAxes[2], TGLUtil::kLineHeadArrow, 
-                        widgetScale, fgGrey);
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadArrow, 
+                        baseScale, fgGrey);
    }
    // Draw white center sphere
-   TGLUtil::DrawSphere(box.Center(), widgetScale/2.0, fgWhite);
+   TGLUtil::DrawSphere(box.Center(), baseScale/2.0, fgWhite);
 
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);
 }
 
 //______________________________________________________________________________
-Bool_t TGLTransManip::HandleMotion(const Event_t * event, const TGLCamera & camera)
+Bool_t TGLTransManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
 {
    // Handle mouse motion over manipulator - if active (selected widget) translate 
    // physical along selected widget (axis) of the manipulator, so it tracks mouse 
@@ -122,8 +115,8 @@ Bool_t TGLTransManip::HandleMotion(const Event_t * event, const TGLCamera & came
    if (fActive) {
       // Find mouse delta projected into world at attached object center
       TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 
-                                                     event->fX - fLastMouse.GetX(),
-                                                     -event->fY + fLastMouse.GetY()); // Y inverted
+                                                     event.fX - fLastMouse.GetX(),
+                                                     -event.fY + fLastMouse.GetY()); // Y inverted
       
       // Now project this delta onto the current widget (axis) to give
       // a constrained shift along this
@@ -132,12 +125,12 @@ Bool_t TGLTransManip::HandleMotion(const Event_t * event, const TGLCamera & came
       TGLVector3 constrainedShift = widgetAxis * Dot(shift, widgetAxis);
       fShape->Translate(constrainedShift);
 
-      fLastMouse.SetX(event->fX);
-      fLastMouse.SetY(event->fY);
+      fLastMouse.SetX(event.fX);
+      fLastMouse.SetY(event.fY);
 
       return kTRUE;
    } else {
-      return TGLManip::HandleMotion(event, camera);
+      return TGLManip::HandleMotion(event, camera, sceneBox);
    }
 }
 

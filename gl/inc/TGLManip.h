@@ -26,6 +26,7 @@ class TGLPhysicalShape;
 class TGLVertex3;
 class TGLVector3;
 class TGLCamera;
+class TGLRect;
 class TGLBoundingBox;
 class TGLViewer;
 
@@ -48,7 +49,6 @@ class TGLManip
 protected:
    // Nasty - this only needs to be here to make a external cross-thread select call 
    // on us - gVirutalGL issues
-   TGLViewer        & fViewer; 
    TGLPhysicalShape * fShape;
    UInt_t             fSelectedWidget;
    Bool_t             fActive;
@@ -64,20 +64,21 @@ protected:
    static Float_t     fgWhite[4];
    static Float_t     fgGrey[4];
 
-   Double_t CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const;
+   void CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera, 
+                      Double_t & base, TGLVector3 axis[3]) const;
 
 public:
-   TGLManip(TGLViewer & viewer);
-   TGLManip(TGLViewer & viewer, TGLPhysicalShape * shape);
+   TGLManip();
+   TGLManip(TGLPhysicalShape * shape);
    virtual ~TGLManip();
    
    void               Attach(TGLPhysicalShape * shape) { fShape = shape; }
    TGLPhysicalShape * GetAttached() const { return fShape; }
 
    virtual void   Draw(const TGLCamera & camera) const = 0; 
-   virtual void   Select(const TGLCamera & camera);
-   virtual Bool_t HandleButton(const Event_t * event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t * event, const TGLCamera & camera);
+   virtual Bool_t Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox);
+   virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
 
    ClassDef(TGLManip,0) // abstract base GL manipulator widget
 };

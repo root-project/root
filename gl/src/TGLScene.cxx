@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.30 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.31 2006/01/18 16:57:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -22,7 +22,8 @@
 #include "TError.h"
 #include "TString.h"
 #include "TClass.h" // For non-TObject reflection
-#include "TGLViewer.h" // Remove once shared enums moved to a better place
+#include "TGLViewer.h" // Only here for some draw style enums - remove these
+                       // moved to proper class
 
 #include <algorithm>
 
@@ -58,9 +59,14 @@ ClassImp(TGLScene)
 TGLScene::TGLScene() :
    fLock(kUnlocked), fDrawList(1000), 
    fDrawListValid(kFALSE), fBoundingBox(), fBoundingBoxValid(kFALSE), 
-   fLastDrawLOD(kLODHigh), fSelectedPhysical(0)
+   fLastDrawLOD(kLODHigh), fSelectedPhysical(0),
+   fClipPlane(0), fClipBox(0), fCurrentClip(0),
+   fTransManip(), fScaleManip(), fRotateManip()
 {
    // Construct scene object
+
+   // Default manip is translation manipulator
+   fCurrentManip = &fTransManip;
 }
 
 //______________________________________________________________________________
@@ -70,7 +76,10 @@ TGLScene::~TGLScene()
    // this no longer really required. However should be faster....
    TGLDisplayListCache::Instance().Purge();
 
-   // Destroy scene object
+   // Delete clip objects
+   ClearClips();
+
+   // Destroy scene objects
    TakeLock(kModifyLock);
    DestroyPhysicals(kTRUE); // including modified
    DestroyLogicals();
@@ -216,6 +225,9 @@ Bool_t TGLScene::DestroyPhysical(ULong_t ID)
    if (physicalIt != fPhysicalShapes.end()) {
       TGLPhysicalShape * physical = physicalIt->second;
       if (fSelectedPhysical == physical) {
+         if (fCurrentManip->GetAttached() == fSelectedPhysical) {
+            fCurrentManip->Attach(0);			
+         }
          fSelectedPhysical = 0;
       }
       fPhysicalShapes.erase(physicalIt);
@@ -271,6 +283,9 @@ UInt_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera * camera)
 
                // Ensure if selected object this is cleared
                if (fSelectedPhysical == physical) {
+                  if (fCurrentManip->GetAttached() == fSelectedPhysical) {
+                     fCurrentManip->Attach(0);			
+                  }
                   fSelectedPhysical = 0;
                }
                // Finally destroy actual object
@@ -310,25 +325,27 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 //______________________________________________________________________________
 //TODO: Merge style and LOD into general draw style flag
 void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD, 
-                    Double_t timeout, const TGLClip * clip)
+                    Double_t timeout, Bool_t forSelect)
 {
    // Draw out scene into current GL context, using passed arguments:
    // 
-   // 'camera' - used for for object culling
+   // 'camera' - used for for object culling, manip scalling
    // 'style'  - draw style kFill (filled polygons) kOutline (polygons + outlines)
    //            kWireFrame
    // 'LOD'    - base scene level of detail (quality), value 0 (low) to 100 (high)
    //            combined with projection size LOD to produce overall draw LOD
    //            for each physical shape
    // 'timeout'- timeout for scene draw (in milliseconds) - if 0.0 unlimited
-   // 'clip'   - optional clip object - if non-null used to clip away draw shapes
-   //
+   // 'forSelect' - is draw for select? If kTRUE clip and manip objects (which
+   //            cannot be selected) are not drawn
    
-   // NOTE: We are passed const camera for visability culling etc - we DO NOT take
-   // responsibility for calling non-const camera.Apply() to setup up suitible
-   // projection / modelview matricies - assume the calling viewer has already
-   // done this. We also assume the current GL context has been setup, buffer 
-   // swapping will be done after etc.
+   // NOTE: We assume the following (set by calling TGLViewer)
+   //
+   // Suitible projection / modelview matricies - camera.Apply() called
+   // In correct thread, with valid GL context current
+   // Buffer swapping will be done after draw
+   //
+   // The camera is still passed for visibility culling, manip scaling etc
    if (fLock != kDrawLock && fLock != kSelectLock) {
       Error("TGLScene::Draw", "expected Draw or Select Lock");
    }
@@ -373,12 +390,12 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD,
    }
 
    // If no clip object
-   if (!clip) {
+   if (!fCurrentClip) {
       DrawPass(camera, style, sceneLOD, timeout);
    } else {
       // Get the clip plane set from the clipping object
       std::vector<TGLPlane> planeSet;
-      clip->PlaneSet(planeSet);
+      fCurrentClip->PlaneSet(planeSet);
 
       // Strip any planes that outside the scene bounding box - no effect
       for (std::vector<TGLPlane>::iterator it = planeSet.begin();
@@ -406,7 +423,7 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD,
       // GL_CLIP_PLANEi = CL_CLIP_PLANE0 + i
 
       // Clip away scene outside of the clip object
-      if (clip->Mode() == TGLClip::kOutside) {
+      if (fCurrentClip->Mode() == TGLClip::kOutside) {
          // Load all negated clip planes (up to max) at once
          for (UInt_t i=0; i<maxPlanes; i++) {
             planeSet[i].Negate();
@@ -441,6 +458,37 @@ void TGLScene::Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD,
    glEnable(GL_LIGHTING);
    glEnable(GL_CULL_FACE);
    glPolygonMode(GL_FRONT, GL_FILL);
+
+   // If select draw clip and manips are not drawn (pickable)
+   if (!forSelect) {
+      // Draw the clip shape (unclipped!) if it is being manipulated
+      if (fCurrentClip && fCurrentManip->GetAttached() == fCurrentClip) {
+         fCurrentClip->Draw(CalcPhysicalLOD(*fCurrentClip, camera, sceneLOD));
+      }
+   
+      // Draw the current manipulator - we want it depth buffer clipped against itself
+      // but not the rest of the scene (so it appears over them)
+      glClear(GL_DEPTH_BUFFER_BIT);
+      fCurrentManip->Draw(camera);
+
+      // Draw selected object bounding box
+      if (fSelectedPhysical) {
+         if (style == TGLViewer::kFill || style == TGLViewer::kWireFrame) {
+            // White for wireframe and fill style,
+            glColor3d(1.0, 1.0, 1.0);
+         } else {
+            // Red for outlines
+            glColor3d(1.0, 0.0, 0.0);
+         }
+         if (style == TGLViewer::kFill || style == TGLViewer::kOutline) {
+            glDisable(GL_LIGHTING);
+         }
+         fSelectedPhysical->BoundingBox().Draw();
+         if (style == TGLViewer::kFill || style == TGLViewer::kOutline) {
+            glEnable(GL_LIGHTING);
+         }
+      }
+   }
 
    // Record this so that any Select() draw can be redone at same quality and ensure
    // accuracy of picking
@@ -618,35 +666,8 @@ void TGLScene::DrawPass(const TGLCamera & camera, Int_t style, UInt_t sceneLOD,
    glDepthMask(GL_TRUE);
    glDisable(GL_BLEND);
 
-   // Finally: Draw selected object bounding box
-   if (fSelectedPhysical) {
-
-      //BBOX is white for wireframe mode and fill,
-      //red for outlines
-      switch (style) {
-      case TGLViewer::kFill:
-      case TGLViewer::kWireFrame :
-         glColor3d(1., 1., 1.);
-
-         break;
-      case TGLViewer::kOutline:
-         glColor3d(1., 0., 0.);
-         
-         break;
-      }
-
-      if (style == TGLViewer::kFill || style == TGLViewer::kOutline) {
-         glDisable(GL_LIGHTING);
-      }
-      glDisable(GL_DEPTH_TEST);
-
-      fSelectedPhysical->BoundingBox().Draw();
-
-      if (style == TGLViewer::kFill || style == TGLViewer::kOutline) {
-         glEnable(GL_LIGHTING);
-      }
-      glEnable(GL_DEPTH_TEST);
-   }
+   // Selected bounding box no longer drawn - selection is indicated by 
+   // attached manipulator
 }
 
 //______________________________________________________________________________
@@ -972,14 +993,13 @@ UInt_t TGLScene::CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamera
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::Select(const TGLCamera & camera, Int_t style, const TGLClip * clip)
+Bool_t TGLScene::Select(const TGLCamera & camera, Int_t style)
 {
    // Perform select draw using arguments:
    //
    // 'camera' - used for for object culling
    // 'style'  - draw style kFill (filled polygons) kOutline (polygons + outlines)
    //            kWireFrame
-   // 'clip'   - optional clip object - if non-null used to clip away draw shapes
    //
    // Arguments are passed on to Draw(), with unlimted time
    //
@@ -1001,8 +1021,8 @@ Bool_t TGLScene::Select(const TGLCamera & camera, Int_t style, const TGLClip * c
    glInitNames();
    glPushName(0);
 
-   // Draw out scene at best quality with clipping, no timelimit
-   Draw(camera, style, kLODHigh, 0.0, clip);
+   // Draw out scene at best quality, no timelimit
+   Draw(camera, style, kLODHigh, 0.0, kTRUE); // Select draw
 
    // Retrieve the hit count and return to render
    Int_t hits = glRenderMode(GL_RENDER);
@@ -1053,12 +1073,24 @@ Bool_t TGLScene::Select(const TGLCamera & camera, Int_t style, const TGLClip * c
          }
          fSelectedPhysical = selected;
          fSelectedPhysical->Select(kTRUE);
+
          changed = kTRUE;
       }
+
+      // Attach current manipulator to the selected physical
+      // Always do this as manip can be swapped to clip object
+      fCurrentManip->Attach(fSelectedPhysical);
+
    } else { // 0 hits
       if (fSelectedPhysical) {
          fSelectedPhysical->Select(kFALSE);
          fSelectedPhysical = 0;
+         changed = kTRUE;
+      }
+      // If no selection, manip is bound to nothing - this happens even if
+      // it previous was attached to a clip object
+      if (fCurrentManip->GetAttached()) {
+         fCurrentManip->Attach(0);
          changed = kTRUE;
       }
    }
@@ -1122,21 +1154,6 @@ Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t color[17])
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::ShiftSelected(const TGLVector3 & shift)
-{
-   // Shift selected physical shape by vector 'shift'
-   if (fSelectedPhysical) {
-      fSelectedPhysical->Translate(shift);
-      fBoundingBoxValid = kFALSE;
-      return kTRUE;
-   }
-   else {
-      assert(kFALSE);
-      return kFALSE;
-   }
-}
-
-//______________________________________________________________________________
 Bool_t TGLScene::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale)
 {
    // Update geometry of the selected physical. 'trans' and 'scale' specify the
@@ -1150,6 +1167,194 @@ Bool_t TGLScene::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & sc
    } else {
       assert(kFALSE);
       return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::SetupClips() 
+{
+   // Setup clipping objects for current scene bounding box
+   
+   // Clear out any previous clips
+   ClearClips();
+
+   fClipPlane = new TGLClipPlane(TGLVector3(0.0,-1.0,0.0), 
+                                 BoundingBox().Center(), 
+                                 BoundingBox().Extents().Mag()*5.0);
+
+   TGLVector3 halfLengths = BoundingBox().Extents() * 0.2501;
+   TGLVertex3 center = BoundingBox().Center() + halfLengths;
+   fClipBox = new TGLClipBox(halfLengths, center);
+}
+
+//______________________________________________________________________________
+void TGLScene::ClearClips()
+{
+   // Clear out exising clipping objects
+   if (fCurrentManip->GetAttached() == fCurrentClip) {
+      fCurrentManip->Attach(0);
+   }
+   fCurrentClip = 0;
+
+   delete fClipPlane;
+   delete fClipBox;
+}
+
+//______________________________________________________________________________
+void TGLScene::GetClipState(EClipType type, Double_t data[6]) const
+{
+   // Get state of clip object 'type' into data vector:
+   //
+   // 'type' requested        'data' contents returned
+   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
+   if (type == kClipPlane) {
+      TGLPlaneSet_t planes;
+      fClipPlane->PlaneSet(planes);
+      data[0] = planes[0].A();
+      data[1] = planes[0].B();
+      data[2] = planes[0].C();
+      data[3] = planes[0].D();
+   } else if (type == kClipBox) {
+      const TGLBoundingBox & box = fClipBox->BoundingBox();
+      TGLVector3 ext = box.Extents();
+      data[0] = box.Center().X();
+      data[1] = box.Center().Y();
+      data[2] = box.Center().Z();
+      data[3] = box.Extents().X();
+      data[4] = box.Extents().Y();
+      data[5] = box.Extents().Z();
+   } else {
+      Error("TGLScene::GetClipState", "invalid clip type");
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::SetClipState(EClipType type, const Double_t data[6])
+{
+   // Set state of clip object 'type' into data vector:
+   //
+   // 'type' specified        'data' contents interpretation
+   // kClipNone               ignored
+   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
+   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
+   switch (type) {
+      case(kClipNone): {
+         break;
+      }
+      case(kClipPlane): {
+         TGLPlane newPlane(data[0], data[1], data[2], data[3]);
+         fClipPlane->Set(newPlane);
+         break;
+      }
+      case(kClipBox): {
+         //TODO: Pull these inside TGLPhysicalShape
+         // Update clip box center
+         const TGLBoundingBox & currentBox = fClipBox->BoundingBox();
+         TGLVector3 shift(data[0] - currentBox.Center().X(),
+                          data[1] - currentBox.Center().Y(),
+                          data[2] - currentBox.Center().Z());
+         fClipBox->Translate(shift);
+         // Update clip box extents
+
+         TGLVector3 currentScale = fClipBox->GetScale();
+         TGLVector3 newScale(data[3] / currentBox.Extents().X() * currentScale.X(),
+                             data[4] / currentBox.Extents().Y() * currentScale.Y(),
+                             data[5] / currentBox.Extents().Z() * currentScale.Z());
+
+         fClipBox->Scale(newScale);
+         break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::GetCurrentClip(EClipType & type, Bool_t & edit) const
+{
+   // Get current type active in viewer - returns one of kClipNone
+   // kClipPlane or kClipBox
+   if (fCurrentClip == 0) {
+      type = kClipNone;
+      edit = kFALSE;
+   } else if (fCurrentClip == fClipPlane) {
+      type = kClipPlane;
+      edit = (fCurrentManip->GetAttached() == fCurrentClip);
+   } else if (fCurrentClip == fClipBox) {
+      type = kClipBox;
+      edit = (fCurrentManip->GetAttached() == fCurrentClip);
+   } else {
+      Error("TGLScene::GetCurrentClip" , "Unknown clip type");
+      type = kClipNone;
+      edit = kFALSE;
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::SetCurrentClip(EClipType type, Bool_t edit)
+{
+   // Set current clip active in viewer - 'type' is one of kClipNone
+   // kClipPlane or kClipBox. 'edit' indicates if clip object should
+   // been shown/edited directly in viewer (current manipulator attached to it)
+   // kTRUE if so (ignored for kClipNone), kFALSE otherwise
+
+   // If edit being turned off and current manip is attached to
+   // current clip detach it
+   if (!edit && fCurrentManip->GetAttached() == fCurrentClip) {
+      fCurrentManip->Attach(0);
+   }
+
+   switch (type) {
+      case(kClipNone): {
+         fCurrentClip = 0;
+         break;
+      }
+      case(kClipPlane): {
+         fCurrentClip = fClipPlane;
+         break;
+      }
+      case(kClipBox): {
+         fCurrentClip = fClipBox;
+         break;
+      }
+      default: {
+         Error("TGLScene::SetCurrentClip" , "Unknown clip type");
+         break;
+      }
+   }
+    
+   // If editing clip, it is attached to manipulator
+   if (edit) {
+      fCurrentManip->Attach(fCurrentClip);
+
+      // The clip object becomes out effective selection from users
+      // perspective so clear the internal
+      fSelectedPhysical = 0;
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::SetCurrentManip(EManipType type)
+{
+   switch (type) {
+      case kManipTrans: {
+         fTransManip.Attach(fCurrentManip->GetAttached());
+         fCurrentManip = &fTransManip;
+         break;
+      }
+      case kManipScale: {
+         fScaleManip.Attach(fCurrentManip->GetAttached());
+         fCurrentManip = &fScaleManip;
+         break;
+      }
+      case kManipRotate: {
+         fRotateManip.Attach(fCurrentManip->GetAttached());
+         fCurrentManip = &fRotateManip;
+         break;
+      }
+      default: {
+         Error("TGLScene::SetCurrentManip", "invalid manipulator type");
+         break;
+      }
    }
 }
 

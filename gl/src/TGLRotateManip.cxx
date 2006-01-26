@@ -30,29 +30,26 @@
 ClassImp(TGLRotateManip)
 
 //______________________________________________________________________________
-TGLRotateManip::TGLRotateManip(TGLViewer & viewer) : 
-   TGLManip(viewer),
+TGLRotateManip::TGLRotateManip() : 
    fShallowRing(kFALSE), fShallowFront(kTRUE),
    fActiveRingPlane(TGLVector3(1.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0)),
    fActiveRingCenter(TGLVertex3(0.0, 0.0, 0.0)),
    fRingLine(TGLVertex3(0.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0)),
    fRingLineOld(TGLVertex3(0.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0))
 {
-   // Construct rotation manipulator, attached to supplied TGLViewer 
-   // 'viewer', not bound to any physical shape.
+   // Construct rotation manipulator not bound to any physical shape.
 }
 
 //______________________________________________________________________________
-TGLRotateManip::TGLRotateManip(TGLViewer & viewer, TGLPhysicalShape * shape) : 
-   TGLManip(viewer, shape),
+TGLRotateManip::TGLRotateManip(TGLPhysicalShape * shape) : 
+   TGLManip(shape),
    fShallowRing(kFALSE), fShallowFront(kTRUE),
    fActiveRingPlane(TGLVector3(1.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0)),
    fActiveRingCenter(TGLVertex3(0.0, 0.0, 0.0)),
    fRingLine(TGLVertex3(0.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0)),
    fRingLineOld(TGLVertex3(0.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0))
 {
-   // Construct rotation manipulator, attached to supplied TGLViewer 
-   // 'viewer', bound to TGLPhysicalShape 'shape'.
+   // Construct rotation manipulator bound to TGLPhysicalShape 'shape'.
 }
 
 //______________________________________________________________________________
@@ -72,9 +69,12 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
       return;
    }
 
+   // Get draw scales
    const TGLBoundingBox & box = fShape->BoundingBox();
-   Double_t widgetScale = CalcDrawScale(box, camera);
-   Double_t ringRadius = widgetScale*10.0;
+   Double_t baseScale;
+   TGLVector3 axisScale[3];
+   CalcDrawScale(box, camera, baseScale, axisScale);
+   Double_t ringRadius = baseScale*10.0;
 
    // Get permitted manipulations on shape
    TGLPhysicalShape::EManip manip = fShape->GetManip();
@@ -127,14 +127,14 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
          eyeOnRing = fActiveRingPlane.NearestOn(eyeOnRing);
          TGLVector3 arrowDir = Cross(fActiveRingPlane.Norm(), eyeOnRing - fActiveRingCenter);
          arrowDir.Normalise();
-         TGLUtil::DrawLine(eyeOnRing, arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, widgetScale, fgYellow);
-         TGLUtil::DrawLine(eyeOnRing, -arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, widgetScale, fgYellow);
+         TGLUtil::DrawLine(eyeOnRing, arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, baseScale, fgYellow);
+         TGLUtil::DrawLine(eyeOnRing, -arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, baseScale, fgYellow);
       } else {
          TGLVector3 activeVector = fRingLine.Vector();
          activeVector.Normalise();
          activeVector *= ringRadius;
          TGLUtil::DrawLine(fRingLine.Start(), activeVector, 
-                           TGLUtil::kLineHeadNone, widgetScale, fgYellow);
+                           TGLUtil::kLineHeadNone, baseScale, fgYellow);
       }
    }
 
@@ -143,7 +143,7 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
 }
 
 //______________________________________________________________________________
-Bool_t TGLRotateManip::HandleButton(const Event_t * event, const TGLCamera & camera)
+Bool_t TGLRotateManip::HandleButton(const Event_t & event, const TGLCamera & camera)
 {
    // Handle mouse button event over manipulator - returns kTRUE if redraw required 
    // kFALSE otherwise.
@@ -188,13 +188,13 @@ Bool_t TGLRotateManip::HandleButton(const Event_t * event, const TGLCamera & cam
 }
 
 //______________________________________________________________________________
-Bool_t TGLRotateManip::HandleMotion(const Event_t * event, const TGLCamera & camera)
+Bool_t TGLRotateManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
 {
    // Handle mouse motion over manipulator - if active (selected widget) rotate 
    // physical around selected ring widget plane normal. Returns kTRUE if redraw 
    // required kFALSE otherwise.
    if (fActive) {
-      TPoint newMouse(event->fX, event->fY);
+      TPoint newMouse(event.fX, event.fY);
 
       // Calculate singed angle delta between old and new ring position using
       Double_t angle = CalculateAngleDelta(newMouse, camera);
@@ -202,7 +202,7 @@ Bool_t TGLRotateManip::HandleMotion(const Event_t * event, const TGLCamera & cam
       fLastMouse = newMouse;
       return kTRUE;
    } else {
-      return TGLManip::HandleMotion(event, camera);
+      return TGLManip::HandleMotion(event, camera, sceneBox);
    }
 }
 

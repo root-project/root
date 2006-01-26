@@ -27,18 +27,16 @@
 ClassImp(TGLScaleManip)
 
 //______________________________________________________________________________
-TGLScaleManip::TGLScaleManip(TGLViewer & viewer) : TGLManip(viewer)
+TGLScaleManip::TGLScaleManip()
 {
-   // Construct scale manipulator, attached to supplied TGLViewer 
-   // 'viewer', not bound to any physical shape.
+   // Construct scale manipulator not bound to any physical shape.
 }
 
 //______________________________________________________________________________
-TGLScaleManip::TGLScaleManip(TGLViewer & viewer, TGLPhysicalShape * shape) : 
-   TGLManip(viewer, shape) 
+TGLScaleManip::TGLScaleManip(TGLPhysicalShape * shape) : 
+   TGLManip(shape) 
 {
-   // Construct scale manipulator, attached to supplied TGLViewer 
-   // 'viewer', bound to TGLPhysicalShape 'shape'.
+   // Construct scale manipulator bound to TGLPhysicalShape 'shape'.
 }
 
 //______________________________________________________________________________
@@ -57,20 +55,14 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
       return;
    }
 
+   // Get draw scales
    const TGLBoundingBox & box = fShape->BoundingBox();
-   Double_t widgetScale = CalcDrawScale(box, camera);
+   Double_t baseScale;
+   TGLVector3 axisScale[3];
+   CalcDrawScale(box, camera, baseScale, axisScale);
 
    // Get permitted manipulations on shape
    TGLPhysicalShape::EManip manip = fShape->GetManip();
-
-   TGLVector3 scaleAxes[3];
-   for (UInt_t i = 0; i<3; i++) {
-      if (box.IsEmpty()) {
-         scaleAxes[i] = box.Axis(i, kTRUE)*widgetScale*-10.0;
-      } else {
-         scaleAxes[i] = box.Axis(i, kFALSE)*-0.51;
-      }
-   }
 
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -81,44 +73,44 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kScaleX) {
       glPushName(1);
-      TGLUtil::DrawLine(box.Center(), scaleAxes[0], TGLUtil::kLineHeadBox, 
-                        widgetScale, fSelectedWidget == 1 ? fgYellow : fgRed);
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox, 
+                        baseScale, fSelectedWidget == 1 ? fgYellow : fgRed);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), scaleAxes[0], TGLUtil::kLineHeadBox, 
-                        widgetScale, fgGrey);
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox, 
+                        baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleY) {
       glPushName(2);
-      TGLUtil::DrawLine(box.Center(), scaleAxes[1], TGLUtil::kLineHeadBox, 
-                        widgetScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox, 
+                        baseScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), scaleAxes[1], TGLUtil::kLineHeadBox, 
-                        widgetScale, fgGrey);
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox, 
+                        baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleZ) {
       glPushName(3);
-      TGLUtil::DrawLine(box.Center(), scaleAxes[2], TGLUtil::kLineHeadBox, 
-                        widgetScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox, 
+                        baseScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), scaleAxes[2], TGLUtil::kLineHeadBox, 
-                        widgetScale, fgGrey);
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox, 
+                        baseScale, fgGrey);
    }
    // Draw white center sphere
-   TGLUtil::DrawSphere(box.Center(), widgetScale/2.0, fgWhite);
+   TGLUtil::DrawSphere(box.Center(), baseScale/2.0, fgWhite);
 
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);
 }
  
 //______________________________________________________________________________
-Bool_t TGLScaleManip::HandleButton(const Event_t * event, const TGLCamera & camera)
+Bool_t TGLScaleManip::HandleButton(const Event_t & event, const TGLCamera & camera)
 {
    // Handle mouse button event over manipulator - returns kTRUE if redraw required 
    // kFALSE otherwise.
-   if (event->fType == kButtonPress && fSelectedWidget != 0) {
+   if (event.fType == kButtonPress && fSelectedWidget != 0) {
       fStartScale = fShape->GetScale();
    }
 
@@ -126,7 +118,7 @@ Bool_t TGLScaleManip::HandleButton(const Event_t * event, const TGLCamera & came
 }
 
 //______________________________________________________________________________
-Bool_t TGLScaleManip::HandleMotion(const Event_t * event, const TGLCamera & camera)
+Bool_t TGLScaleManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
 {
    // Handle mouse motion over manipulator - if active (selected widget) scale 
    // physical along selected widget (axis) of the manipulator, so it tracks mouse 
@@ -134,8 +126,8 @@ Bool_t TGLScaleManip::HandleMotion(const Event_t * event, const TGLCamera & came
    if (fActive) {
       // Find mouse delta projected into world at attached object center
       TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 
-                                                     event->fX - fFirstMouse.GetX(),
-                                                     -event->fY + fFirstMouse.GetY()); // Y inverted
+                                                     event.fX - fFirstMouse.GetX(),
+                                                     -event.fY + fFirstMouse.GetY()); // Y inverted
 
       UInt_t axisIndex = fSelectedWidget - 1; // Ugg sort out axis / widget id mapping
       TGLVector3 widgetAxis = fShape->BoundingBox().Axis(axisIndex, kTRUE);
@@ -149,12 +141,12 @@ Bool_t TGLScaleManip::HandleMotion(const Event_t * event, const TGLCamera & came
       LimitScale(newScale[axisIndex]);
       fShape->Scale(newScale);
 
-      fLastMouse.SetX(event->fX);
-      fLastMouse.SetY(event->fY);
+      fLastMouse.SetX(event.fX);
+      fLastMouse.SetY(event.fY);
 
       return kTRUE;
    } else {
-      return TGLManip::HandleMotion(event, camera);
+      return TGLManip::HandleMotion(event, camera, sceneBox);
    }
 }
 

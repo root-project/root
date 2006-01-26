@@ -165,7 +165,7 @@ ClassImp(TGLClipPlane)
 const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 
 //______________________________________________________________________________
-TGLClipPlane::TGLClipPlane(const TGLPlane &  plane, const TGLVertex3 & center, Double_t extents) : 
+TGLClipPlane::TGLClipPlane(const TGLVector3 & norm, const TGLVertex3 & center, Double_t extents) : 
    TGLClip(*CreateLogicalFace(extents, extents), TGLMatrix(center), fgColor)
 {
    // Construct a clip plane object, based on supplied 'plane', with initial manipulation
@@ -179,6 +179,8 @@ TGLClipPlane::TGLClipPlane(const TGLPlane &  plane, const TGLVertex3 & center, D
    // defines the width/depth of this - should be several times scene extents.
    //
    SetManip(EManip(kTranslateAll | kRotateX | kRotateY));
+
+   TGLPlane plane(norm, center);
    Set(plane);
 }
 

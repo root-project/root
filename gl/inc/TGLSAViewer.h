@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.8 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.9 2005/12/05 17:34:44 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -95,6 +95,12 @@ private:
    TGLSAViewer(const TGLSAViewer &);
    TGLSAViewer & operator = (const TGLSAViewer &);
 
+protected:
+   // Overloadable 
+   virtual void PostSceneBuildSetup();
+   virtual void SelectionChanged(); // *SIGNAL*
+   virtual void ClipChanged();      // *SIGNAL*
+
 public:
    TGLSAViewer(TVirtualPad * pad);
    ~TGLSAViewer();
@@ -105,12 +111,6 @@ public:
    // GUI events - editors, frame etc
    void   ProcessGUIEvent(Int_t id);
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
-
-   // TGLViewer overloads
-   virtual void PostSceneBuildSetup();
-   virtual void SelectionChanged();
-   virtual void ClipChanged();
-   
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };

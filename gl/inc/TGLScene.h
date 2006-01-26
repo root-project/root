@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.18 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.19 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -19,6 +19,15 @@
 #ifndef ROOT_TError
 #include "TError.h"
 #endif
+#ifndef ROOT_TGLTransManip
+#include "TGLTransManip.h"
+#endif
+#ifndef ROOT_TGLScaleManip
+#include "TGLScaleManip.h"
+#endif
+#ifndef ROOT_TGLRotateManip
+#include "TGLRotateManip.h"
+#endif
 
 #include <map>
 #include <vector>
@@ -29,6 +38,8 @@ class TGLDrawable;
 class TGLLogicalShape;
 class TGLPhysicalShape;
 class TGLClip;
+class TGLClipPlane;
+class TGLClipBox;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -94,8 +105,19 @@ private:
    UInt_t                 fLastDrawLOD;      //! last LOD for the scene draw
 
    // Selection
-   TGLPhysicalShape *     fSelectedPhysical; //! current selected physical shape
+   TGLPhysicalShape     * fSelectedPhysical; //! current selected physical shape
 
+   // Clipping
+   TGLClipPlane         * fClipPlane;
+   TGLClipBox           * fClipBox;
+   TGLClip              * fCurrentClip;  //! the current clipping shape
+
+   // Object manipulators - physical + clipping shapes
+   TGLTransManip          fTransManip;    //! translation manipulator
+   TGLScaleManip          fScaleManip;    //! scaling manipulator
+   TGLRotateManip         fRotateManip;   //! rotation manipulator 
+   TGLManip             * fCurrentManip;  //! current manipulator
+    
    // Draw stats
    struct DrawStats_t {
       UInt_t fOpaque;
@@ -135,10 +157,10 @@ public:
    // Drawing/Selection
    const TGLBoundingBox & BoundingBox() const; 
    void                   Draw(const TGLCamera & camera, Int_t style, UInt_t LOD, 
-                               Double_t timeout, const TGLClip * clip);
+                               Double_t timeout, Bool_t forSelect = kFALSE);
    void                   DrawGuides(const TGLCamera & camera, Int_t axesType, 
                                      const TGLVertex3 * reference) const;
-   Bool_t                 Select(const TGLCamera & camera, Int_t style, const TGLClip * clip);
+   Bool_t                 Select(const TGLCamera & camera, Int_t style);
 
    // Logical Shape Management
    void                    AdoptLogical(TGLLogicalShape & shape);
@@ -157,9 +179,22 @@ public:
    const TGLPhysicalShape * GetSelected() const { return fSelectedPhysical; }
    Bool_t                   SetSelectedColor(const Float_t rgba[17]);
    Bool_t                   SetColorOnSelectedFamily(const Float_t rgba[17]);
-   Bool_t                   ShiftSelected(const TGLVector3 & shift);
    Bool_t                   SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
 
+   // Clipping
+   void  SetupClips();
+   void  ClearClips();
+   void  GetClipState(EClipType type, Double_t data[6]) const;
+   void  SetClipState(EClipType type, const Double_t data[6]);
+   void  GetCurrentClip(EClipType & type, Bool_t & edit) const;
+   void  SetCurrentClip(EClipType type, Bool_t edit);
+
+   // Manipulators
+   void       SetCurrentManip(EManipType type);
+
+   // Interaction - passed on to manipulator
+   Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
+   Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera);
 
    // Locking
    Bool_t TakeLock(ELock lock) const;
@@ -175,6 +210,24 @@ public:
 
    ClassDef(TGLScene,0) // a GL scene - collection of physical and logical shapes
 };
+
+//______________________________________________________________________________
+inline Bool_t TGLScene::HandleButton(const Event_t & event, const TGLCamera & camera)
+{
+   return fCurrentManip->HandleButton(event, camera);
+}
+
+//______________________________________________________________________________
+inline Bool_t TGLScene::HandleMotion(const Event_t & event, const TGLCamera & camera)
+{
+   if (fCurrentManip->HandleMotion(event, camera, BoundingBox())) {
+      // If manip processed event it *may* have modified the selected physical
+      // geometry and so invalidated the scene bounding box
+      fBoundingBoxValid = kFALSE;
+      return kTRUE;
+   }
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 inline Bool_t TGLScene::TakeLock(ELock lock) const

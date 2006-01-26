@@ -16,6 +16,9 @@
 #include "TGLPhysicalShape.h"
 #include "TGLIncludes.h"
 
+// Remove - replace with TGLManager
+#include "TVirtualGL.h"
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TGLManip                                                             //
@@ -40,22 +43,18 @@ Float_t TGLManip::fgWhite[4]  = {1.0, 1.0, 1.0, 1.0 };
 Float_t TGLManip::fgGrey[4]   = {0.5, 0.5, 0.5, 0.4 };
 
 //______________________________________________________________________________
-TGLManip::TGLManip(TGLViewer & viewer) : 
-   fViewer(viewer), fShape(0), 
+TGLManip::TGLManip() : 
+   fShape(0), 
    fSelectedWidget(0), fActive(kFALSE),
    fFirstMouse(0, 0), 
    fLastMouse(0, 0)
 {
    // Construct a manipulator object, bound to supplied viewer, and no physical shape
-   
-   // TODO: The requirement to attach to viewer is needed for cross thread selection
-   // callback under Windows - when the design of TGLKernel / TGLManager is finally
-   // resolved this can probably be removed.
 }
 
 //______________________________________________________________________________
-TGLManip::TGLManip(TGLViewer & viewer, TGLPhysicalShape * shape) : 
-   fViewer(viewer), fShape(shape), 
+TGLManip::TGLManip(TGLPhysicalShape * shape) : 
+   fShape(shape), 
    fSelectedWidget(0), fActive(kFALSE),
    fFirstMouse(0, 0), 
    fLastMouse(0, 0)
@@ -74,8 +73,14 @@ TGLManip::~TGLManip()
 }
 
 //______________________________________________________________________________
-void TGLManip::Select(const TGLCamera & camera) 
+Bool_t TGLManip::Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox) 
 {
+   UInt_t oldSelection = fSelectedWidget;
+
+   TGLRect viewportRect = rect;
+   camera.WindowToViewport(viewportRect);
+   camera.Apply(sceneBox, &viewportRect);
+
    // Perform selection (hit testing) to find selected widget (component)
    // of the manipulator - stored in fSelectedWidget
    static UInt_t selectBuffer[4*4];
@@ -87,7 +92,7 @@ void TGLManip::Select(const TGLCamera & camera)
    TGLUtil::CheckError();
    if (hits < 0) {
       Error("TGLManip::Select", "selection buffer overflow");
-      return;
+      return kFALSE;
    }
 
    if (hits > 0) {
@@ -106,27 +111,28 @@ void TGLManip::Select(const TGLCamera & camera)
    } else {
       fSelectedWidget = 0;
    }
+   return (fSelectedWidget != oldSelection);
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::HandleButton(const Event_t * event, const TGLCamera & /*camera*/)
+Bool_t TGLManip::HandleButton(const Event_t & event, const TGLCamera & /*camera*/)
 {
    // Handle a mouse button event - return kTRUE if processed, kFALSE otherwise
    
    // Only interested in Left mouse button actions
-   if (event->fCode != kButton1) {
+   if (event.fCode != kButton1) {
       return kFALSE;
    }
 
    // Mouse down on selected widget?
-   if (event->fType == kButtonPress && fSelectedWidget != 0) {
-      fFirstMouse.SetX(event->fX);
-      fFirstMouse.SetY(event->fY);
-      fLastMouse.SetX(event->fX);
-      fLastMouse.SetY(event->fY);
+   if (event.fType == kButtonPress && fSelectedWidget != 0) {
+      fFirstMouse.SetX(event.fX);
+      fFirstMouse.SetY(event.fY);
+      fLastMouse.SetX(event.fX);
+      fLastMouse.SetY(event.fY);
       fActive = kTRUE;
       return kTRUE;
-   } else if (event->fType == kButtonRelease && fActive) {
+   } else if (event.fType == kButtonRelease && fActive) {
       fActive = kFALSE;
       return kTRUE;
    } else {
@@ -135,34 +141,47 @@ Bool_t TGLManip::HandleButton(const Event_t * event, const TGLCamera & /*camera*
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::HandleMotion(const Event_t * event, const TGLCamera & /*camera*/)
+Bool_t TGLManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
 {
    // Handle a mouse button event - return kTRUE if widget selection change
    // kFALSE otherwise
    
-   TGLRect selectRect(event->fX, event->fY, 3, 3);
-   // Need to do this cross thread under Windows for gVirtualGL context - very ugly...
-   // TODO: When the design of TGLKernel / TGLManager is finally resolved this can probably 
-   // be removed.
-   UInt_t oldSelection = fSelectedWidget;
-   fViewer.RequestSelectManip(selectRect);
-   return (fSelectedWidget != oldSelection);
+   TGLRect selectRect(event.fX, event.fY, 3, 3);
+
+   // TODO: Again very ugly cross thread gVirtual GL call requires passing viewer
+   // 
+   return gVirtualGL->SelectManip(this, &camera, &selectRect, &sceneBox);
 }
 
 //______________________________________________________________________________
-Double_t TGLManip::CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera) const
+void TGLManip::CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera,  
+                             Double_t & base, TGLVector3 axis[3]) const
 {
-   // Calculates a scale factor (in world units) for drawing manipulators with 
+   // Calculates base and axis scale factor (in world units) for drawing manipulators with 
    // reasonable size range in current camera.
+
+   // Calculate a base scale 
+   base = box.Extents().Mag() / 100.0;
+
+   // Clamp this base scale to a viewport pixel range
+   // Allow some variation so zooming is noticable
    TGLVector3 pixelInWorld = camera.ViewportDeltaToWorld(box.Center(), 1, 1);
    Double_t pixelScale = pixelInWorld.Mag();
-   Double_t scale = box.Extents().Mag() / 100.0;
-   
-   // Allow some variation so zooming is noticable
-   if (scale < pixelScale * 3.0) {
-      scale = pixelScale * 3.0;
-   } else if (scale > pixelScale * 5.0) {
-      scale = pixelScale * 5.0;
+   if (base < pixelScale * 3.0) {
+      base = pixelScale * 3.0;
+   } else if (base > pixelScale * 6.0) {
+      base = pixelScale * 6.0;
    }
-   return scale;
+
+   // Calculate some axis scales
+   for (UInt_t i = 0; i<3; i++) {
+      if (box.IsEmpty()) {
+         axis[i] = box.Axis(i, kTRUE)*base*-10.0;
+      } else {
+         axis[i] = box.Axis(i, kFALSE)*-0.51;
+         if (axis[i].Mag() < base*10.0) {
+            axis[i] *= base*10.0/axis[i].Mag();
+        }
+      }
+   }
 }

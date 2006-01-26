@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.16 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.17 2005/12/11 20:15:30 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -21,8 +21,9 @@
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
+// For enums - TODO: move somewhere better
 #ifndef ROOT_TGLViewer
-#include "TGLViewer.h" // For viewer enums - to be reconsidered
+#include "TGLViewer.h"
 #endif
 
 class TGLStandalone;
@@ -182,7 +183,7 @@ private:
    TGCompositeFrame    *fBoxPropFrame;
    TGNumberEntry       *fBoxProp[6];
    TGCheckButton       *fEdit;
-   TGLViewer::EClipType fCurrentClip; // Nasty - need to move
+   EClipType fCurrentClip; // Nasty - need to move
                                       // all common enums out somewhere else
 
 public:
@@ -195,10 +196,10 @@ public:
    void UpdateViewer();
 
    // External viewer interface
-   void GetState(TGLViewer::EClipType type, Double_t data[6]) const;
-   void SetState(TGLViewer::EClipType type, const Double_t data[6]);
-   void GetCurrent(TGLViewer::EClipType & type, Bool_t & edit) const;
-   void SetCurrent(TGLViewer::EClipType type);
+   void GetState(EClipType type, Double_t data[6]) const;
+   void SetState(EClipType type, const Double_t data[6]);
+   void GetCurrent(EClipType & type, Bool_t & edit) const;
+   void SetCurrent(EClipType type, Bool_t edit);
 
    void HideParts();
 

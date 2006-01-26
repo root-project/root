@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.13 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.14 2005/12/11 20:15:30 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -487,12 +487,16 @@ void TGLSAViewer::SelectionChanged()
 void TGLSAViewer::ClipChanged()
 {
    // Update GUI components for embedded viewer clipping change
+   EClipType type;
+   Bool_t edit;
+   GetCurrentClip(type, edit);   
+   fClipEditor->SetCurrent(type, edit);
 
-   EClipType type = GetCurrentClip();
-   Double_t data[6];
-   GetClipState(type, data);
-   fClipEditor->SetState(type, data);
-   fClipEditor->SetCurrent(type);
+   if (type != kClipNone) {
+      Double_t data[6];
+      GetClipState(type, data);
+      fClipEditor->SetState(type, data);
+   }
 }
 
 //______________________________________________________________________________
@@ -512,7 +516,7 @@ void TGLSAViewer::PostSceneBuildSetup()
    fClipEditor->SetState(kClipPlane, data);
    GetClipState(kClipBox, data);
    fClipEditor->SetState(kClipBox, data);
-   fClipEditor->SetCurrent(kClipNone);
+   fClipEditor->SetCurrent(kClipNone, kFALSE);
 
    // Guides
    EAxesType axesType;

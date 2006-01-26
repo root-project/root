@@ -61,7 +61,7 @@ private:
    static const float fgColor[4];
 
 public:
-   TGLClipPlane(const TGLPlane &  plane, const TGLVertex3 & center, Double_t extents);
+   TGLClipPlane(const TGLVector3 & norm, const TGLVertex3 & center, Double_t extents);
    virtual ~TGLClipPlane();
 
    void Set(const TGLPlane & plane);

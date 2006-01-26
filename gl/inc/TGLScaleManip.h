@@ -37,13 +37,13 @@ private:
    void LimitScale(Double_t & factor) const;
 
 public:
-   TGLScaleManip(TGLViewer & viewer);
-   TGLScaleManip(TGLViewer & viewer, TGLPhysicalShape * shape);
+   TGLScaleManip();
+   TGLScaleManip(TGLPhysicalShape * shape);
    virtual ~TGLScaleManip();
    
    virtual void   Draw(const TGLCamera & camera) const; 
-   virtual Bool_t HandleButton(const Event_t * event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t * event, const TGLCamera & camera);
+   virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
 
    ClassDef(TGLScaleManip,0) // GL scaling manipulator widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.7 2005/12/05 17:34:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.8 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -62,7 +62,7 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
-   virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0);
+   virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) const;
 
    // External scripting control
    void Configure(Double_t fov, Double_t dolly, Double_t center[3], 

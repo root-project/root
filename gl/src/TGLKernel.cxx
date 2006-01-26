@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.39 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.40 2005/12/06 15:27:48 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TColor.h"
 #include "TPoints3DABC.h"
 #include "TGLViewer.h"
+#include "TGLManip.h"
 #include "TGLOutput.h"
 #include "TGLRenderArea.h"
 #include "TSystem.h"
@@ -1471,9 +1472,9 @@ Bool_t TGLKernel::SelectViewer(TGLViewer *viewer, const TGLRect * rect)
 }
 
 //______________________________________________________________________________
-void TGLKernel::SelectViewerManip(TGLViewer *viewer, const TGLRect * rect)
+Bool_t TGLKernel::SelectManip(TGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
 {
-   viewer->DoSelectManip(*rect);
+   return manip->Select(*camera, *rect, *sceneBox);
 }
 
 //______________________________________________________________________________

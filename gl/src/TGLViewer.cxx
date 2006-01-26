@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.31 2005/12/12 15:28:32 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.32 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,11 +18,6 @@
 #include "TGLPhysicalShape.h"
 #include "TGLStopwatch.h"
 #include "TGLSceneObject.h" // For TGLFaceSet
-#include "TGLClip.h"
-#include "TGLTransManip.h"
-#include "TGLScaleManip.h"
-#include "TGLRotateManip.h"
-
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
@@ -88,7 +83,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fInternalPIDs(kFALSE), 
    fNextInternalPID(1), // 0 reserved
    fComposite(0), fCSLevel(0),
-   fAction(kNone), fStartPos(0,0), fLastPos(0,0), fActiveButtonID(0),
+   fAction(kCameraNone), fLastPos(0,0), fActiveButtonID(0),
    fDrawStyle(kFill),
    fRedrawTimer(0),
    fNextSceneLOD(kLODHigh),
@@ -97,7 +92,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fReferenceOn(kFALSE),
    fReferencePos(0.0, 0.0, 0.0),
    fInitGL(kFALSE),
-   fClipPlane(0), fClipBox(0), fCurrentClip(0), fClipEdit(kFALSE),
    fDebugMode(kFALSE),
    fAcceptedPhysicals(0), 
    fRejectedPhysicals(0),
@@ -110,13 +104,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    //    'width', 'height' - initial width/height
    // Create timer
    fRedrawTimer = new TGLRedrawTimer(*this);
-
-   // Create manipulators - not bound to any shape
-   fTransManip = new TGLTransManip(*this, 0);
-   fScaleManip = new TGLScaleManip(*this, 0);
-   fRotateManip = new TGLRotateManip(*this, 0);
-   fCurrentManip = fTransManip;
-
    SetViewport(x, y, width, height);
 }
 
@@ -126,13 +113,6 @@ TGLViewer::~TGLViewer()
    // Destroy viewer object
    delete fContextMenu;
    delete fRedrawTimer;
-   delete fTransManip;
-   delete fScaleManip;
-   delete fRotateManip;
-
-   // Delete clip objects
-   ClearClips();
-
    fPad->ReleaseViewer3D();   
 }
 
@@ -777,8 +757,9 @@ void TGLViewer::InitGL()
 void TGLViewer::PostSceneBuildSetup()
 {
    // Perform post scene (re)build setup
+   
    SetupCameras();
-   SetupClips();
+   fScene.SetupClips();
 
    // Set default reference to scene center
    fReferencePos.Set(fScene.BoundingBox().Center());
@@ -901,33 +882,6 @@ void TGLViewer::SetupLights()
 }
 
 //______________________________________________________________________________
-void TGLViewer::SetupClips() 
-{
-   // Setup clipping objects for current scene bounding box
-   
-   // Clear out any previous clips
-   ClearClips();
-
-   const TGLBoundingBox & sceneBox = fScene.BoundingBox();
-   fClipPlane = new TGLClipPlane(TGLPlane(0.0, -1.0, 0.0, 0.0), 
-                                 sceneBox.Center(), 
-                                 sceneBox.Extents().Mag()*5.0);
-
-   TGLVector3 halfLengths = sceneBox.Extents() * 0.2501;
-   TGLVertex3 center = sceneBox.Center() + halfLengths;
-   fClipBox = new TGLClipBox(halfLengths, center);
-}
-
-//______________________________________________________________________________
-void TGLViewer::ClearClips()
-{
-   // Clear out exising clipping objects
-   delete fClipPlane;
-   delete fClipBox;
-   fCurrentClip = 0;
-}
-
-//______________________________________________________________________________
 void TGLViewer::RequestDraw(UInt_t LOD)
 {
    // Post request for redraw of viewer at level of detail 'LOD'
@@ -993,20 +947,11 @@ void TGLViewer::DoDraw()
       // Setup lighting
       SetupLights();
 
-      // Draw the scene with clip object
-      fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD, sceneDrawTime, fCurrentClip);
+      // Draw the scene
+      fScene.Draw(*fCurrentCamera, fDrawStyle, fNextSceneLOD, sceneDrawTime);
 
       // Draw guides (unclipped)
       fScene.DrawGuides(*fCurrentCamera, fAxesType, fReferenceOn ? &fReferencePos:0);
-
-      // Draw edited clip object - TODO remove - the clip object should become 
-      // the select object and will get drawn that way.
-      if (fCurrentClip && fClipEdit) {
-         fCurrentClip->Draw(fNextSceneLOD);
-      }
-
-      // Draw current manipulator - move to scene - only if selection?
-      fCurrentManip->Draw(*fCurrentCamera);
 
       // Debug mode - draw some extra details
       if (fDebugMode) {
@@ -1069,12 +1014,13 @@ void TGLViewer::DoDraw()
 void TGLViewer::PreDraw()
 {
    // Perform GL work which must be done before each draw of scene
-   MakeCurrent();
 
    // Initialise GL if not done
    if (!fInitGL) {
       InitGL();
    }
+
+   MakeCurrent();
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1098,13 +1044,17 @@ void TGLViewer::MakeCurrent() const
 {
    // Make GL context current
    fGLWindow->MakeCurrent();
-   TGLUtil::CheckError();
+
+   // Don't call TGLUtil::CheckError() as we do not
+   // have to be in GL thread here - GL window will call 
+   // via gVirtualGL. Again re-enable once TGLManager replaces
+   // TGLUtil::CheckError();
 }
 
 //______________________________________________________________________________
 void TGLViewer::SwapBuffers() const
 {
-   // SWap GL buffers
+   // Swap GL buffers
    if (fScene.CurrentLock() != TGLScene::kDrawLock && 
       fScene.CurrentLock() != TGLScene::kSelectLock) {
       Error("TGLViewer::SwapBuffers", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));   
@@ -1154,8 +1104,8 @@ Bool_t TGLViewer::DoSelect(const TGLRect & rect)
 
    // Ask scene to do selection - this will result in a draw pass
    // Note we do not call DoDraw() here as there is lighting setup which 
-   // will distrurb the camera picking rect - and are not needed for selection
-   Bool_t changed = fScene.Select(*fCurrentCamera, fDrawStyle, fCurrentClip);
+   // will disturb the camera picking rect - and are not needed for selection
+   Bool_t changed = fScene.Select(*fCurrentCamera, fDrawStyle);
 
    // Release select lock on scene before invalidation
    fScene.ReleaseLock(TGLScene::kSelectLock);
@@ -1165,29 +1115,13 @@ Bool_t TGLViewer::DoSelect(const TGLRect & rect)
 
       // Inform external client selection has been modified
       SelectionChanged();
+
+      // Selection change can potentially turn off current clip as editing (manipulated)
+      // ojbect - so broadcast this change as well
+      ClipChanged();
    }
 
    return changed;
-}
-
-//______________________________________________________________________________
-void TGLViewer::RequestSelectManip(const TGLRect & rect)
-{
-   // Post request for select draw of current manipulator , picking objects round 
-   // the WINDOW area described by 'rect'
-   gVirtualGL->SelectViewerManip(this, &rect); 
-}
-
-//______________________________________________________________________________
-void TGLViewer::DoSelectManip(const TGLRect & rect)
-{
-   // Perform GL selection, picking objects overlapping WINDOW
-   // area described by 'rect'
-   MakeCurrent();
-   TGLRect glRect(rect);
-   fCurrentCamera->WindowToViewport(glRect);
-   fCurrentCamera->Apply(fScene.BoundingBox(), &glRect);
-   fCurrentManip->Select(*fCurrentCamera);   
 }
 
 //______________________________________________________________________________
@@ -1422,128 +1356,6 @@ void TGLViewer::SetGuideState(EAxesType axesType, Bool_t referenceOn, const Doub
 }
 
 //______________________________________________________________________________
-void TGLViewer::GetClipState(EClipType type, Double_t data[6]) const
-{
-   // Get state of clip object 'type' into data vector:
-   //
-   // 'type' requested        'data' contents returned
-   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
-   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
-   if (type == kClipPlane) {
-      TGLPlaneSet_t planes;
-      fClipPlane->PlaneSet(planes);
-      data[0] = planes[0].A();
-      data[1] = planes[0].B();
-      data[2] = planes[0].C();
-      data[3] = planes[0].D();
-   } else if (type == kClipBox) {
-      const TGLBoundingBox & box = fClipBox->BoundingBox();
-      TGLVector3 ext = box.Extents();
-      data[0] = box.Center().X();
-      data[1] = box.Center().Y();
-      data[2] = box.Center().Z();
-      data[3] = box.Extents().X();
-      data[4] = box.Extents().Y();
-      data[5] = box.Extents().Z();
-   } else {
-      Error("TGLViewer::GetClipState", "invalid clip type");
-   }
-}
-
-//______________________________________________________________________________
-void TGLViewer::SetClipState(EClipType type, const Double_t data[6])
-{
-   // Set state of clip object 'type' into data vector:
-   //
-   // 'type' specified        'data' contents interpretation
-   // kClipNone               ignored
-   // kClipPlane              4 components - A,B,C,D - of plane eq : Ax+By+CZ+D = 0
-   // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
-   fCurrentManip->Attach(0);
-
-   switch (type) {
-      case(kClipNone): {
-         break;
-      }
-      case(kClipPlane): {
-         TGLPlane newPlane(data[0], data[1], data[2], data[3]);
-         fClipPlane->Set(newPlane);
-         break;
-      }
-      case(kClipBox): {
-         //TODO: Pull these inside TGLPhysicalShape
-         // Update clip box center
-         const TGLBoundingBox & currentBox = fClipBox->BoundingBox();
-         TGLVector3 shift(data[0] - currentBox.Center().X(),
-                          data[1] - currentBox.Center().Y(),
-                          data[2] - currentBox.Center().Z());
-         fClipBox->Translate(shift);
-         // Update clip box extents
-
-         TGLVector3 currentScale = fClipBox->GetScale();
-         TGLVector3 newScale(data[3] / currentBox.Extents().X() * currentScale.X(),
-                             data[4] / currentBox.Extents().Y() * currentScale.Y(),
-                             data[5] / currentBox.Extents().Z() * currentScale.Z());
-
-         fClipBox->Scale(newScale);
-         break;
-      }
-   }
-}
-
-//______________________________________________________________________________
-TGLViewer::EClipType TGLViewer::GetCurrentClip() const
-{
-   // Get current type active in viewer - returns one of kClipNone
-   // kClipPlane or kClipBox
-   if (fCurrentClip == 0) {
-      return TGLViewer::kClipNone;
-   } else if (fCurrentClip == fClipPlane) {
-      return TGLViewer::kClipPlane;
-   } else if (fCurrentClip == fClipBox) {
-      return TGLViewer::kClipBox;
-   } else {
-      Error("TGLViewer::GetCurrentClip" , "Unknown clip type");
-      return TGLViewer::kClipNone;
-   }
-}
-
-//______________________________________________________________________________
-void TGLViewer::SetCurrentClip(EClipType type, Bool_t edit)
-{
-   // Set current clip active in viewer - 'type' is one of kClipNone
-   // kClipPlane or kClipBox. 'edit' indicates if clip object should
-   // been shown/edited directly in viewer (current manipulator attached to it)
-   // kTRUE if so (ignored for kClipNone), kFALSE otherwise
-   fCurrentManip->Attach(0);
-   switch (type) {
-      case(kClipNone): {
-         fCurrentClip = 0;
-         break;
-      }
-      case(kClipPlane): {
-         fCurrentClip = fClipPlane;
-         break;
-      }
-      case(kClipBox): {
-         fCurrentClip = fClipBox;
-         break;
-      }
-      default: {
-         Error("TGLViewer::SetCurrentClip" , "Unknown clip type");
-         break;
-      }
-   }
-    
-   fClipEdit = edit;
-   if (fClipEdit) {
-      fCurrentManip->Attach(fCurrentClip);
-   }
-
-   RequestDraw();
-}
-
-//______________________________________________________________________________
 void TGLViewer::SetSelectedColor(const Float_t color[17])
 {
    // Set full color attributes on current selected physical shape: 
@@ -1705,17 +1517,17 @@ Bool_t TGLViewer::HandleEvent(Event_t *event)
       if (fAction != kNone) {
          Error("TGLViewer::HandleEvent", "active action at focus in");
       }
-      fAction = kNone;
+      fAction = kCameraNone;
    }
    if (event->fType == kFocusOut) {
-      fAction = kNone;
+      fAction = kCameraNone;
    }
 
    return kTRUE;
 }
 
 //______________________________________________________________________________
-Bool_t TGLViewer::HandleButton(Event_t *event)
+Bool_t TGLViewer::HandleButton(Event_t * event)
 {
    // Handle mouse button 'event'
    if (fScene.IsLocked()) {
@@ -1725,10 +1537,9 @@ Bool_t TGLViewer::HandleButton(Event_t *event)
       return kFALSE;
    }
 
-   // If no current action give current manipulator first chance to process
+   // If no current camera action give to scene to pass on to manipulator
    if (fAction == kNone) {
-      if (fCurrentManip->HandleButton(event, *fCurrentCamera)) {
-         ClipChanged(); // Clip may have changed
+      if (fScene.HandleButton(*event, *fCurrentCamera)) {
          RequestDraw();
          return kTRUE;
       }
@@ -1749,10 +1560,6 @@ Bool_t TGLViewer::HandleButton(Event_t *event)
       // Record active button for release
       fActiveButtonID = event->fCode;
 
-      // Record mouse start
-      fStartPos.fX = fLastPos.fX = event->fX;
-      fStartPos.fY = fLastPos.fY = event->fY;
-      
       switch(event->fCode) {
          // LEFT mouse button
          case(kButton1): {
@@ -1761,24 +1568,15 @@ Bool_t TGLViewer::HandleButton(Event_t *event)
 
                // TODO: If no selection start a box select
             } else {
-               fAction = kRotate;
+               fAction = kCameraRotate;
                grabPointer = kTRUE;
             }
             break;
          }
          // MID mouse button
          case(kButton2): {
-            if (event->fState & kKeyShiftMask) {
-               RequestSelect(event->fX, event->fY);
-               // Start object drag
-               if (fScene.GetSelected()) {
-                  fAction = kDrag;
-                  grabPointer = kTRUE;
-               }
-            } else {
-               fAction = kTruck;
-               grabPointer = kTRUE;
-            }
+            fAction = kCameraTruck;
+            grabPointer = kTRUE;
             break;
          }
          // RIGHT mouse button
@@ -1794,7 +1592,7 @@ Bool_t TGLViewer::HandleButton(Event_t *event)
                   selected->InvokeContextMenu(*fContextMenu, event->fX, event->fY);
                }
             } else {
-               fAction = kDolly;
+               fAction = kCameraDolly;
                grabPointer = kTRUE;
             }
             break;
@@ -1824,7 +1622,7 @@ Bool_t TGLViewer::HandleButton(Event_t *event)
             break;
          }
       }
-      fAction = kNone;
+      fAction = kCameraNone;
    }
 
    return kTRUE;
@@ -1845,8 +1643,6 @@ Bool_t TGLViewer::HandleDoubleClick(Event_t *event)
    // click (unless mouse wheel)
    if (event->fCode != kButton4 && event->fCode != kButton5) {
       CurrentCamera().Reset();
-      fStartPos.fX = fLastPos.fX = event->fX;
-      fStartPos.fY = fLastPos.fY = event->fY;
       RequestDraw();
    }
    return kTRUE;
@@ -1917,26 +1713,17 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
       break;
    case kKey_V:
    case kKey_v:
-      // Install translation manipulator
-      // Pass attached shape of manipulator across, then swap the manip
-      fTransManip->Attach(fCurrentManip->GetAttached());
-      fCurrentManip = fTransManip;
+      fScene.SetCurrentManip(kManipTrans);
       redraw = kTRUE;
       break;
    case kKey_X:
    case kKey_x:
-      // Install scale manipulator
-      // Pass attached shape of manipulator across, then swap the manip
-      fScaleManip->Attach(fCurrentManip->GetAttached());
-      fCurrentManip = fScaleManip;
+      fScene.SetCurrentManip(kManipScale);
       redraw = kTRUE;
       break;
    case kKey_C:
    case kKey_c:
-      // Install rotation manipulator
-      // Pass attached shape of manipulator across, then swap the manip
-      fRotateManip->Attach(fCurrentManip->GetAttached());
-      fCurrentManip = fRotateManip;
+      fScene.SetCurrentManip(kManipRotate);
       redraw = kTRUE;
       break;
    case kKey_Up:
@@ -1974,7 +1761,7 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGLViewer::HandleMotion(Event_t *event)
+Bool_t TGLViewer::HandleMotion(Event_t * event)
 {
    // Handle mouse motion 'event'
    if (fScene.IsLocked()) {
@@ -1987,45 +1774,35 @@ Bool_t TGLViewer::HandleMotion(Event_t *event)
    if (!event) {
       return kFALSE;
    }
-   
-   // Give current manipulator first chance to process
-   if (fCurrentManip->HandleMotion(event, *fCurrentCamera)) {
-      RequestDraw();
-      return kTRUE;
-   }
 
-   Bool_t redraw = kFALSE;
+   Bool_t processed = kFALSE;
    
+   // Camera interface requires GL coords - Y inverted
    Int_t xDelta = event->fX - fLastPos.fX;
    Int_t yDelta = event->fY - fLastPos.fY;
    
-   // Camera interface requires GL coords - Y inverted
-   if (fAction == kRotate) {
-      redraw = CurrentCamera().Rotate(xDelta, -yDelta);
-   } else if (fAction == kTruck) {
-      redraw = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY, xDelta, -yDelta);
-   } else if (fAction == kDolly) {
-      redraw = CurrentCamera().Dolly(xDelta, event->fState & kKeyControlMask, 
-                                                 event->fState & kKeyShiftMask);
-   } else if (fAction == kDrag) {
-      const TGLPhysicalShape * selected = fScene.GetSelected();
-      if (selected) {
-         TGLVector3 shift = CurrentCamera().ViewportDeltaToWorld(selected->BoundingBox().Center(), 
-                                                                 xDelta, -yDelta);
+   // If no current camera action give to scene to pass on to manipulator
+   if (fAction == kNone) {
+      MakeCurrent();
+      processed = fScene.HandleMotion(*event, *fCurrentCamera);
 
-         // Don't modify selected directly as scene needs to invalidate bounding box
-         // hence will only give us a const handle on selected
-         redraw = fScene.ShiftSelected(shift);
-
-         // Inform external client selection has been modified
+      if (processed) {
          SelectionChanged();
+         ClipChanged();
       }
+   } else if (fAction == kCameraRotate) {
+      processed = CurrentCamera().Rotate(xDelta, -yDelta);
+   } else if (fAction == kCameraTruck) {
+      processed = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY, xDelta, -yDelta);
+   } else if (fAction == kCameraDolly) {
+      processed = CurrentCamera().Dolly(xDelta, event->fState & kKeyControlMask, 
+                                             event->fState & kKeyShiftMask);
    }
 
    fLastPos.fX = event->fX;
    fLastPos.fY = event->fY;
    
-   if (redraw) {
+   if (processed) {
       RequestDraw();
    }
    

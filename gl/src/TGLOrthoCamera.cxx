@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.11 2005/12/01 11:04:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.12 2005/12/09 18:09:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -206,7 +206,7 @@ Bool_t TGLOrthoCamera::Rotate(Int_t /*xDelta*/, Int_t /*yDelta*/)
 }
 
 //______________________________________________________________________________
-void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickRect)
+void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickRect) const
 {
    // Apply the camera to the current GL context, setting the viewport, projection
    // and modelview matricies. After this verticies etc can be directly entered

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.13 2005/11/17 14:43:17 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.14 2006/01/12 16:56:08 couet Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -123,7 +123,7 @@ public:
    void DrawSphere(const Float_t *color);
    virtual void   DrawViewer(TGLViewer * viewer);
    virtual Bool_t SelectViewer(TGLViewer * viewer, const TGLRect * rect);
-   virtual void   SelectViewerManip(TGLViewer *viewer, const TGLRect * rect);
+   virtual Bool_t SelectManip(TGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox);
    virtual void   CaptureViewer(TGLViewer * viewer, Int_t format, const char * filePath);
 
    static TVirtualGL *ProxyObject();

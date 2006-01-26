@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.16 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.17 2006/01/18 16:57:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -78,13 +78,15 @@ private:
 
 protected:
    // Fields
-   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //! frustum planes (cached)
+
+   // Internal cached matrices and frustum planes
+   mutable Bool_t    fCacheDirty;                      //! cached items dirty?
+   mutable TGLMatrix fProjM;                           //! projection matrix        (cached)
+   mutable TGLMatrix fModVM;                           //! modelView matrix         (cached)
+   mutable TGLMatrix fClipM;                           //! object space clip matrix (cached)
+   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //! frustum planes           (cached)
 
    TGLRect   fViewport;    //! viewport (GL coords - origin bottom left)
-   TGLMatrix fProjM;       //! projection matrix        (cached)
-   TGLMatrix fModVM;       //! modelView matrix         (cached)
-   TGLMatrix fClipM;       //! object space clip matrix (cached)
-   Bool_t    fCacheDirty;  //! cached items dirty?
 
    TGLBoundingBox   fInterestBox;          //! the interest box - created in UpdateInterest()
    mutable Double_t fLargestSeen;          //! largest box volume seen in OfInterest() - used when 
@@ -94,7 +96,9 @@ protected:
    Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
                                 Int_t screenShift, Int_t screenShiftRange, 
                                 Bool_t mod1, Bool_t mod2) const;
-   void       UpdateCache();
+
+   // Internal cache update - const as the actual camera configuration is unaffected
+   void       UpdateCache() const;
 
 public:
    TGLCamera();
@@ -111,7 +115,7 @@ public:
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2) = 0;
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta) = 0;
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
-   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) = 0;
+   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const = 0;
 
    // Current orientation and frustum
          TGLVertex3 EyePoint() const;

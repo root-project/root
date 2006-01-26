@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.24 2006/01/12 16:56:08 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.25 2006/01/20 10:34:44 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -44,6 +44,9 @@
 class TVirtualViewer3D;
 class TPoints3DABC;
 class TGLViewer;
+class TGLCamera;
+class TGLManip;
+class TGLBoundingBox;
 class TGLRect;
 
 class TVirtualGLImp {
@@ -158,7 +161,7 @@ public:
    virtual void DrawSphere(const Float_t *rgba) = 0;
    virtual void DrawViewer(TGLViewer *viewer) = 0;
    virtual Bool_t SelectViewer(TGLViewer *viewer, const TGLRect * rect) = 0;
-   virtual void SelectViewerManip(TGLViewer *viewer, const TGLRect * rect) = 0;
+   virtual Bool_t SelectManip(TGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox) = 0;
    virtual void CaptureViewer(TGLViewer *viewer, Int_t format, const char * filePath = 0) = 0;
 
    static TVirtualGL *&Instance();

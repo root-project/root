@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.22 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.23 2006/01/18 16:57:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -25,10 +25,11 @@
 #include <vector>
 #include <assert.h>
 
-// TODO: Split these into own h/cxx files - too long now!
+// TODO:Find a better place for these enums - TGLEnum.h?
+// Whole GL viewer should be moved into own namespace
+// probably
 
-// TODO: Where should these enums live?
-// Move into draw flags class
+// TODO: Move LOD into draw flags class
 enum  ELODPresets {
    kLODPixel       = 0, // Projected size pixel or less
    kLODLow         = 20,
@@ -49,6 +50,22 @@ enum EOverlap
    kPartial,
    kOutside
 };
+
+enum EClipType  
+{ 
+   kClipNone = 0, 
+   kClipPlane, 
+   kClipBox 
+};
+
+enum EManipType
+{
+   kManipTrans = 0,
+   kManipScale,
+   kManipRotate
+};
+
+// TODO: Split these into own h/cxx files - too long now!
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.24 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.25 2005/12/11 20:15:30 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -258,6 +258,7 @@ void TGLColorEditor::Disable()
    fApplyButton->SetState(kButtonDisabled);
    fIsActive = kFALSE;
    fIsLight = kFALSE;
+   DrawSphere();
 }
 
 //______________________________________________________________________________
@@ -392,12 +393,14 @@ void TGLColorEditor::DrawSphere()const
    // Draw local sphere reflecting current color options
    MakeCurrent();
    gVirtualGL->ClearGL(0);
-   gVirtualGL->ViewportGL(0, 0, fMatView->GetWidth(), fMatView->GetHeight());
-   gVirtualGL->NewMVGL();
-   Float_t ligPos[] = {0.f, 0.f, 0.f, 1.f};
-   gVirtualGL->GLLight(kLIGHT0, kPOSITION, ligPos);
-   gVirtualGL->TranslateGL(0., 0., -3.);
-   gVirtualGL->DrawSphere(fRGBA);
+   if (fIsActive) {
+      gVirtualGL->ViewportGL(0, 0, fMatView->GetWidth(), fMatView->GetHeight());
+      gVirtualGL->NewMVGL();
+      Float_t ligPos[] = {0.f, 0.f, 0.f, 1.f};
+      gVirtualGL->GLLight(kLIGHT0, kPOSITION, ligPos);
+      gVirtualGL->TranslateGL(0., 0., -3.);
+      gVirtualGL->DrawSphere(fRGBA);
+   }
    SwapBuffers();
 }
 
@@ -595,7 +598,7 @@ ClassImp(TGLClipEditor)
 //______________________________________________________________________________
 TGLClipEditor::TGLClipEditor(const TGWindow *parent, TGLSAViewer *v) : 
    TGCompositeFrame(parent, 100, 100, kVerticalFrame),
-                    fViewer(v), fCurrentClip(TGLViewer::kClipNone)
+                    fViewer(v), fCurrentClip(kClipNone)
 {
    // Construct clip editor GUI component, parented by window 'parent',
    // bound to viewer 'v'
@@ -697,22 +700,14 @@ void TGLClipEditor::ClipValueChanged(Long_t)
 void TGLClipEditor::ClipTypeChanged(Int_t id)
 { 
    // Clip type radio button changed - update viewer
-   switch(id) { // Radio button ids run from 1
-      case(1): {
-         SetCurrent(TGLViewer::kClipNone);
-         fEdit->SetState(kButtonDisabled);
-         break;
-      }
-      case(2): {
-         SetCurrent(TGLViewer::kClipPlane);
+   if (id == 1) {
+      SetCurrent(kClipNone, kFALSE);
+      fEdit->SetState(kButtonDisabled);
+   } else {
+      if (fEdit->GetState() == kButtonDisabled) {
          fEdit->SetState(kButtonUp);
-         break;
       }
-      case(3): {
-         SetCurrent(TGLViewer::kClipBox);
-         fEdit->SetState(kButtonUp);
-         break;
-      }
+      SetCurrent(id == 2 ? kClipPlane : kClipBox, fEdit->IsDown());
    }
 
    // Internal GUI change - need to update the viewer
@@ -728,17 +723,17 @@ void TGLClipEditor::UpdateViewer()
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::GetState(TGLViewer::EClipType type, Double_t data[6]) const
+void TGLClipEditor::GetState(EClipType type, Double_t data[6]) const
 {
    // Fetch GUI state for clip if 'type' into 'data' vector
    UInt_t i;
-   if (type == TGLViewer::kClipNone) {
+   if (type == kClipNone) {
       // Nothing to do
-   } else if (type == TGLViewer::kClipPlane) {
+   } else if (type == kClipPlane) {
       for (i=0; i<4; i++) {
          data[i] = fPlaneProp[i]->GetNumber();
       }
-   } else if (type == TGLViewer::kClipBox) {
+   } else if (type == kClipBox) {
       for (i=0; i<6; i++) {
          data[i] = fBoxProp[i]->GetNumber();
       }
@@ -748,17 +743,17 @@ void TGLClipEditor::GetState(TGLViewer::EClipType type, Double_t data[6]) const
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::SetState(TGLViewer::EClipType type, const Double_t data[6])
+void TGLClipEditor::SetState(EClipType type, const Double_t data[6])
 {
    // Set GUI state for clip 'type from 'data' vector
    UInt_t i;
-   if (type == TGLViewer::kClipNone) {
+   if (type == kClipNone) {
       // Nothing to do
-   } else if (type == TGLViewer::kClipPlane) {
+   } else if (type == kClipPlane) {
       for (i=0; i<4; i++) {
          fPlaneProp[i]->SetNumber(data[i]);
       }
-   } else if (type == TGLViewer::kClipBox) {
+   } else if (type == kClipBox) {
       for (i=0; i<6; i++) {
          fBoxProp[i]->SetNumber(data[i]);
       }
@@ -769,7 +764,7 @@ void TGLClipEditor::SetState(TGLViewer::EClipType type, const Double_t data[6])
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::GetCurrent(TGLViewer::EClipType & type, Bool_t & edit) const
+void TGLClipEditor::GetCurrent(EClipType & type, Bool_t & edit) const
 {
    // Get current (active) GUI clip type into 'type', and in viewer edit
    // state into 'edit'
@@ -778,24 +773,24 @@ void TGLClipEditor::GetCurrent(TGLViewer::EClipType & type, Bool_t & edit) const
 }
 
 //______________________________________________________________________________
-void TGLClipEditor::SetCurrent(TGLViewer::EClipType type)
+void TGLClipEditor::SetCurrent(EClipType type, Bool_t edit)
 {
    // Set current (active) GUI clip type from 'type'
    fCurrentClip = type;
    switch(fCurrentClip) {
-      case(TGLViewer::kClipNone): {
+      case(kClipNone): {
          fTypeButtons->SetButton(1);
          HideFrame(fPlanePropFrame);
          HideFrame(fBoxPropFrame);
          break;
       }
-      case(TGLViewer::kClipPlane): {
+      case(kClipPlane): {
          fTypeButtons->SetButton(2);
          ShowFrame(fPlanePropFrame);
          HideFrame(fBoxPropFrame);
          break;
       }
-      case(TGLViewer::kClipBox): {
+      case(kClipBox): {
          fTypeButtons->SetButton(3);
          HideFrame(fPlanePropFrame);
          ShowFrame(fBoxPropFrame);
@@ -806,6 +801,7 @@ void TGLClipEditor::SetCurrent(TGLViewer::EClipType type)
          break;
       }
    }
+   fEdit->SetDown(edit);
 }
 
 //////////////////////////////////////////////////////////////////////////

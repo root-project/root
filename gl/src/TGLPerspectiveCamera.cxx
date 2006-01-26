@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.13 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.14 2006/01/18 16:57:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -190,7 +190,7 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xDelta, Int_t yDelta)
 }
 
 //______________________________________________________________________________
-void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect)
+void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect) const
 {
    // Apply the camera to the current GL context, setting the viewport, projection
    // and modelview matricies. After this verticies etc can be directly entered

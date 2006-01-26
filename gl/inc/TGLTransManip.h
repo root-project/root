@@ -31,12 +31,12 @@ class TGLTransManip : public TGLManip
 private:
 
 public:
-   TGLTransManip(TGLViewer & viewer);
-   TGLTransManip(TGLViewer & viewer, TGLPhysicalShape * shape);
+   TGLTransManip();
+   TGLTransManip(TGLPhysicalShape * shape);
    virtual ~TGLTransManip();
    
    virtual void   Draw(const TGLCamera & camera) const; 
-   virtual Bool_t HandleMotion(const Event_t * event, const TGLCamera & camera);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
 
    ClassDef(TGLTransManip,0) // GL translation manipulator widget
 };

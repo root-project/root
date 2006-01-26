@@ -49,13 +49,13 @@ private:
    TGLLine3 CalculateRingLine(const TPoint & mouse, const TGLCamera & camera) const;
 
 public:
-   TGLRotateManip(TGLViewer & viewer);
-   TGLRotateManip(TGLViewer & viewer, TGLPhysicalShape * shape);
+   TGLRotateManip();
+   TGLRotateManip(TGLPhysicalShape * shape);
    virtual ~TGLRotateManip();
    
    virtual void   Draw(const TGLCamera & camera) const; 
-   virtual Bool_t HandleButton(const Event_t * event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t * event, const TGLCamera & camera);
+   virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
+   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
 
    ClassDef(TGLRotateManip,0) // GL rotation manipulator widget
 };
