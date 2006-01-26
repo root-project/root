@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.52 2005/09/19 16:06:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.53 2005/11/18 16:55:07 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1521,6 +1521,9 @@ void TLatex::Paint(Option_t *)
 void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
    // Main drawing function
+   //
+   // Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
+   //          the TLatex data members.
 
    TAttText::Modify();  //Change text attributes only if necessary
 
