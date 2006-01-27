@@ -126,6 +126,10 @@ elif [ $PLATFORM = "macosx" ]; then
    fi
    echo $cmd
    $cmd
+   linkstat=$?
+   if [ $linkstat -ne 0 ]; then
+      exit $linkstat
+   fi
    if [ "x`echo $SOFLAGS | grep -- '-g'`" != "x" ]; then
       opt=-g
    else
