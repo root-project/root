@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.4 2005/11/11 07:18:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.5 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -92,6 +92,9 @@ namespace ROOT {
           */
          class Placeholder {
          public: 
+
+            /** Constructor */
+            Placeholder() {}
         
             /** Destructor */
             virtual ~Placeholder() {}
@@ -149,6 +152,9 @@ namespace ROOT {
       class bad_any_cast : public std::bad_cast {
       public:
       
+         /** Constructor */
+         bad_any_cast() {}
+
          /** Query */
          virtual const char * What() const throw() {
             return "bad_any_cast: failed conversion using any_cast";

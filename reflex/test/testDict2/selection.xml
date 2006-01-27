@@ -27,5 +27,8 @@
   </exclusion>
 
   <class pattern="Bla*"/>
-
+  <class name="TT::TemplatedMemberTypes"/>
+  <class name="std::string"/>
+  <class name="std::map<std::string,double>"/>
+ 
 </lcgdict>

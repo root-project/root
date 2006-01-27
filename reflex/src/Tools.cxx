@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.5 2006/01/06 09:18:31 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -102,7 +102,9 @@ size_t ROOT::Reflex::Tools::GetBasePosition( const std::string & name ) {
    // remove the template part of the name <...>
    int bc = 0;
    int i = 0;
-   for ( i = name.size()-1; i >= 0; --i) {
+   unsigned int lp = name.rfind(">");
+   if (lp == std::string::npos) lp = name.size()-1;
+   for ( i = lp; i >= 0; --i) {
       switch (name[i]) {
       case '>' : bc++; break;
       case '<' : bc--; break;

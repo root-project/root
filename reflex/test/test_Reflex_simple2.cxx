@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.6 2006/01/06 09:01:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.7 2006/01/06 15:09:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -156,6 +156,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE( ReflexSimple2Test );
   CPPUNIT_TEST( loadLibrary );
   CPPUNIT_TEST( testTemplateClass );
+  CPPUNIT_TEST( testTemplatedMemberTypes );
   CPPUNIT_TEST( testIterators );
   CPPUNIT_TEST( fooBarZot );
   CPPUNIT_TEST( testBaseClasses );
@@ -171,6 +172,7 @@ public:
 
   void loadLibrary();
   void testTemplateClass();
+  void testTemplatedMemberTypes();
   void testIterators();
   void fooBarZot();
   void testBaseClasses();
@@ -204,6 +206,84 @@ void ReflexSimple2Test::testTemplateClass() {
     if ( ! (*mi).IsArtificial()) ++numFuns;
   }
   CPPUNIT_ASSERT_EQUAL(1,numFuns);
+}
+
+
+void ReflexSimple2Test::testTemplatedMemberTypes() {
+  Type t = Type::ByName("TT::TemplatedMemberTypes");
+  CPPUNIT_ASSERT(t);
+
+  Member m;
+  Type tt;
+
+  m = t.MemberByName("m0");
+  CPPUNIT_ASSERT(m);
+  tt = m.TypeOf();
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT_EQUAL(std::string("std"),tt.DeclaringScope().Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(tt.Name(SCOPED|QUALIFIED)));
+
+  m = t.MemberByName("m1");
+  CPPUNIT_ASSERT(m);
+  tt = m.TypeOf();
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(tt.Name(SCOPED|QUALIFIED)));
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsPointer());
+  tt = tt.ToType();
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("std"),tt.DeclaringScope().Name(SCOPED));
+
+  // FIXME: references are not yet supported
+  m = t.MemberByName("m2");
+  CPPUNIT_ASSERT(!m);
+  /*
+  tt = m.TypeOf();
+  CPPUNIT_ASSERT_EQUAL("std", Tools::GetScopeName(tt.Name(SCOPED|QUALIFIED)));
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsPointer());
+  tt = tt.ToType();
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsTypedef());
+  CPPUNIT_ASSERT(tt.IsClass());
+  CPPUNIT_ASSERT_EQUAL(std::string("std"),tt.DeclaringScope().Name(SCOPED));
+  */
+
+  m = t.MemberByName("m3");
+  CPPUNIT_ASSERT(m);
+  tt = m.TypeOf();
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(tt.Name(SCOPED|QUALIFIED)));
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsArray());
+  CPPUNIT_ASSERT_EQUAL(5, int(tt.ArrayLength()));
+  tt = tt.ToType();
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("std"),tt.DeclaringScope().Name(SCOPED));
+
+  m = t.MemberByName("m4");
+  CPPUNIT_ASSERT(m);
+  tt = m.TypeOf();
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(tt.Name(SCOPED|QUALIFIED)));
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsPointer());
+  tt = tt.ToType();
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsTemplateInstance());
+  CPPUNIT_ASSERT_EQUAL(std::string("std"),tt.DeclaringScope().Name(SCOPED));
+
+  m = t.MemberByName("m5");
+  CPPUNIT_ASSERT(m);
+  tt = m.TypeOf();
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(tt.Name(SCOPED|QUALIFIED)));
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsArray());
+  CPPUNIT_ASSERT_EQUAL(5, int(tt.ArrayLength()));
+  tt = tt.ToType();
+  CPPUNIT_ASSERT(tt);
+  CPPUNIT_ASSERT(tt.IsClass());
+  CPPUNIT_ASSERT_EQUAL(std::string("std"),tt.DeclaringScope().Name(SCOPED));
+
 }
 
 void ReflexSimple2Test::testIterators() {
