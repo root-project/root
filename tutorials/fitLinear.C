@@ -60,6 +60,7 @@ void fitLinear()
    gre4->Fit("1 ++ exp(-x)");
    //Access the fit results:
    TF1 *f4 = gre4->GetFunction("1 ++ exp(-x)");
+   f4->SetName("f4");
    f4->SetLineColor(kRed);
    f4->SetLineWidth(1);
 
