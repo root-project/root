@@ -44,3 +44,10 @@ scopeDict.cxx: scopeProblem.C
 	$(CMDECHO) rootcint -f scopeDict.cxx -c scopeProblem.C linkdef.h
 
 scopeTest: scopeDict.cxx
+
+operatorNeg: operatorNeg.log
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+else
+	$(TestDiff)
+endif
