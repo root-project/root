@@ -5,7 +5,7 @@
 #
 
 # general 
-AC_INIT(reflex, 5.08.00.1, http://cern.ch/seal-reflex, Reflex)
+AC_INIT(reflex, 5.08.00.2, http://cern.ch/seal-reflex, Reflex)
 AC_PREREQ(2.57) # Minimum version of autoconf which is required
 AC_COPYRIGHT(This package is part of the CERN/LCG project)
 AC_CONFIG_SRCDIR([src/Class.cxx]) # A unique file in the src dir
