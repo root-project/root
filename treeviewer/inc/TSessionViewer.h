@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -300,7 +300,7 @@ public:
    virtual ~TSessionFrame();
 
    void     Build(TSessionViewer *gui);
-   void     CheckAutoEnPack(Bool_t checked = kTRUE) { 
+   void     CheckAutoEnPack(Bool_t checked = kTRUE) {
             fChkEnable->SetState(checked ? kButtonDown : kButtonUp); }
    Int_t    GetLogLevel() const { return fLogLevel->GetIntNumber(); }
    void     SetLogLevel(Int_t log) { fLogLevel->SetIntNumber(log); }
