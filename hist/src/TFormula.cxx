@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.111 2005/12/12 14:39:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.112 2005/12/15 08:46:46 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -253,6 +253,10 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fNstring= 0;
    fNames  = 0;
    fNval   = 0;
+   fPredefined    = 0;
+   fOperOffset    = 0;
+   fExprOptimized = 0;  
+   fOperOptimized = 0;
 
    ((TFormula&)formula).TFormula::Copy(*this);
 }
