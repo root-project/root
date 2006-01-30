@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.6 2005/12/02 08:56:21 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.7 2005/12/12 09:12:26 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -66,6 +66,13 @@ namespace ROOT { namespace Cintex {
     }
     else   {
       G__ClassInfo info(fTaginfo->tagnum);
+      // if the scope is a class and was used before it might happen that
+      // it was assumed to be a namespace, reset to class if this was the case
+      if (!(info.Property() & (G__BIT_ISSTRUCT | G__BIT_ISCLASS))) {
+        // update from 'n' or 'a'
+        G__search_tagname(fTaginfo->tagname, cl.IsClass() ? 'c' : 's'); 
+        Setup_tagtable();
+      }
       if ( !info.IsLoaded() )  {
         Setup_tagtable();
       }
