@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.60 2005/01/19 18:30:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.61 2005/11/16 20:09:16 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -21,14 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFile
-#include "TFile.h"
-#endif
-#ifndef ROOT_TClonesArray
-#include "TClonesArray.h"
-#endif
-#ifndef ROOT_TROOT
-#include "TROOT.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
@@ -37,7 +31,9 @@
 #define R__BROKEN_FUNCTION_TEMPLATES
 #endif
 
+class TFile;
 class TClass;
+class TClonesArray;
 class TDataMember;
 class TMemberStreamer;
 class TStreamerElement;
@@ -58,10 +54,7 @@ public:
       TMemberStreamer *fStreamer;
       TCompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
       ~TCompInfo() {};
-      void Update(const TClass *oldcl, TClass *newcl) {
-         if (fClass==oldcl) fClass=newcl;
-         else if (fClass==0) fClass =gROOT->GetClass(fClassName);
-      }
+      void Update(const TClass *oldcl, TClass *newcl);
    };
 
 private:

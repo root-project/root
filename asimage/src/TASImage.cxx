@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.49 2006/01/09 09:03:35 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.50 2006/01/18 10:25:13 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -75,6 +75,7 @@
 #include "Riostream.h"
 #include "THashTable.h"
 #include "TPluginManager.h"
+#include "TFile.h"
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
@@ -1470,7 +1471,7 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
 void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
                      UInt_t toWidth, UInt_t toHeight)
 {
-   // Yet another method of enlarging images where corners remain unchanged, 
+   // Yet another method of enlarging images where corners remain unchanged,
    // but middle part gets tiled.
 
    if (!IsValid()) {
@@ -1493,7 +1494,7 @@ void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
       toHeight = 30000;
 
    ASImage *img = slice_asimage(fgVisual, fImage, xStart, xEnd,
-                                yStart, yEnd, toWidth, toHeight, 
+                                yStart, yEnd, toWidth, toHeight,
                                 ASA_ASImage, GetImageCompression(),
                                 GetImageQuality());
 
@@ -5219,7 +5220,7 @@ void TASImage::Streamer(TBuffer &b)
       if (version == 0) { //dumb prototype for scheema evolution
          return;
       }
-      
+
       if ( version == 1 ) {
          TObject * parent = b.GetParent();
          if ( parent->IsA() == TFile::Class() ) {
@@ -5248,7 +5249,7 @@ void TASImage::Streamer(TBuffer &b)
             }
          }
       }
-      
+
       TNamed::Streamer(b);
       b >> image_type;
 

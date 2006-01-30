@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.3 2006/01/09 18:28:22 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.4 2006/01/23 19:38:34 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -26,12 +26,13 @@
 #include "TProcessID.h"
 #include "TTree.h"
 #include "TTreeCloner.h"
+#include "TFile.h"
 
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fFromTree(from),
    fToTree(to),
    fMethod(method),
-   fFromBranches( from ? from->GetListOfLeaves()->GetEntries()+1 : 0), 
+   fFromBranches( from ? from->GetListOfLeaves()->GetEntries()+1 : 0),
    fToBranches( to ? from->GetListOfLeaves()->GetEntries()+1 : 0),
    fMaxBaskets(CollectBranches()),
    fBasketBranchNum(new UInt_t[fMaxBaskets]),
@@ -40,7 +41,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fBasketIndex(new Int_t[fMaxBaskets]),
    fCloneMethod(TTreeCloner::kDefault)
 {
-   // Constructor.  This object would transfer the data from 
+   // Constructor.  This object would transfer the data from
    // 'from' to 'to' using the method indicated in method.
 
    TString opt(method);
@@ -51,7 +52,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
       fCloneMethod = TTreeCloner::kSortBasketsByOffset;
    }
 }
- 
+
 Bool_t TTreeCloner::Exec()
 {
    // Execute the cloning.
@@ -67,7 +68,7 @@ Bool_t TTreeCloner::Exec()
    return kTRUE;
 }
 
-TTreeCloner::~TTreeCloner() 
+TTreeCloner::~TTreeCloner()
 {
    // TTreeCloner destructor
 
@@ -77,7 +78,7 @@ TTreeCloner::~TTreeCloner()
    delete [] fBasketIndex;
 }
 
-void TTreeCloner::CloseOutWriteBaskets() 
+void TTreeCloner::CloseOutWriteBaskets()
 {
    // Before we can start adding new basket, we need to flush to
    // disk the partially filled baskets (the WriteBasket)
@@ -99,7 +100,7 @@ void TTreeCloner::CloseOutWriteBaskets()
                }
                to->WriteBasket(basket);
                basket = to->GetBasket(to->GetWriteBasket()); // WriteBasket create an empty basket
-            } 
+            }
             if (basket) {
                basket->DropBuffers();
                to->GetListOfBaskets()->RemoveAt(to->GetWriteBasket());
@@ -114,7 +115,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
 {
    // Fill the array of branches, adding the branch 'from' and 'to',
    // and matching the sub-branches of the 'from' and 'to' branches.
-   // Returns the total number of baskets in all the from branch and 
+   // Returns the total number of baskets in all the from branch and
    // it sub-branches.
 
    // Since this is called from the constructor, this can not be a virtual function
@@ -155,7 +156,7 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
          fnb,nb);
       return kFALSE;
    }
-  
+
    UInt_t numBasket = 0;
    for (Int_t i=0;i<nb;i++)  {
       numBasket += CollectBranches((TBranch*)from->UncheckedAt(i),(TBranch*)to->UncheckedAt(i));
@@ -164,14 +165,14 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
 }
 
 
-UInt_t TTreeCloner::CollectBranches() 
+UInt_t TTreeCloner::CollectBranches()
 {
    // Fill the array of branches, matching the branches of the 'from' and 'to' TTrees
    // Returns the total number of baskets in all the branches.
 
    // Since this is called from the constructor, this can not be a virtual function
 
-   UInt_t numBasket = CollectBranches(fFromTree->GetListOfBranches(), 
+   UInt_t numBasket = CollectBranches(fFromTree->GetListOfBranches(),
                                       fToTree->GetListOfBranches());
 
    if (fFromTree->GetBranchRef()) {
@@ -180,13 +181,13 @@ UInt_t TTreeCloner::CollectBranches()
    return numBasket;
 }
 
-void TTreeCloner::CollectBaskets() 
+void TTreeCloner::CollectBaskets()
 {
    // Collect the information about the on-file basket that need
    // to be copied.
 
    UInt_t len = fFromBranches.GetEntries();
-   
+
    for(UInt_t i=0,bi=0; i<len; ++i) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt(i);
       for(Int_t b=0; b<from->GetWriteBasket(); ++b,++bi) {
@@ -212,7 +213,7 @@ void TTreeCloner::CopyStreamerInfos()
       TStreamerInfo *curInfo = 0;
       TClass *cl = gROOT->GetClass(oldInfo->GetName());
 
-      // Insure that the TStreamerInfo is loaded 
+      // Insure that the TStreamerInfo is loaded
       curInfo = cl->GetStreamerInfo(oldInfo->GetClassVersion());
       if (oldInfo->GetClassVersion()==1) {
          // We may have a Foreign class let's look using the
@@ -224,7 +225,7 @@ void TTreeCloner::CopyStreamerInfos()
    delete l;
 }
 
-void TTreeCloner::CopyMemoryBaskets() 
+void TTreeCloner::CopyMemoryBaskets()
 {
    // Transfer the basket from the input file to the output file
 
@@ -269,10 +270,10 @@ void TTreeCloner::CopyProcessIds()
    }
 }
 
-void TTreeCloner::SortBaskets() 
+void TTreeCloner::SortBaskets()
 {
    // Sort the basket according to the user request.
-   
+
    // Currently this sort __has to__ preserve the order
    // of basket for each individual branch.
 
@@ -287,7 +288,7 @@ void TTreeCloner::SortBaskets()
    }
 }
 
-void TTreeCloner::WriteBaskets() 
+void TTreeCloner::WriteBaskets()
 {
    // Transfer the basket from the input file to the output file
 

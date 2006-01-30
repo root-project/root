@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.70 2006/01/06 10:32:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.71 2006/01/19 11:23:08 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -31,9 +31,10 @@ class TGeoMaterial;
 class TGeoMedium;
 class TGeoShape;
 class TVirtualGeoPainter;
+class THashList;
 
 /*************************************************************************
- * TGeoManager - class description 
+ * TGeoManager - class description
  *
  *************************************************************************/
 
@@ -203,7 +204,7 @@ public:
    void                   SetExplodedView(Int_t iopt=0); // *MENU*
    void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.);
    void                   SetNsegments(Int_t nseg); // *MENU*
-   void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
+   void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU*
    void                   SetPaintVolume(TGeoVolume *vol) {fPaintVolume = vol;}
    void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
@@ -235,30 +236,30 @@ public:
    Double_t               Weight(TGeoVolume *vol=0, Double_t precision=0.01, Option_t *option="va"); // *MENU*
 
    //--- GEANT3-like geometry creation
-   TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, 
-                                         Double_t start, Double_t step, Int_t numed=0, Option_t *option=""); 
-   void                   Matrix(Int_t index, Double_t theta1, Double_t phi1, 
-                                       Double_t theta2, Double_t phi2, 
-                                       Double_t theta3, Double_t phi3); 
+   TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv,
+                                         Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
+   void                   Matrix(Int_t index, Double_t theta1, Double_t phi1,
+                                       Double_t theta2, Double_t phi2,
+                                       Double_t theta3, Double_t phi3);
    TGeoMaterial          *Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid, Double_t radlen=0, Double_t intlen=0);
    TGeoMaterial          *Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens,
                                         Int_t nelem, Float_t *wmat, Int_t uid);
    TGeoMaterial          *Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens,
                                         Int_t nelem, Double_t *wmat, Int_t uid);
    TGeoMedium            *Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol,
-                                       Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
+                                       Int_t ifield, Double_t fieldm, Double_t tmaxfd,
                                        Double_t stemax, Double_t deemax, Double_t epsil,
-                                       Double_t stmin); 
-   void                   Node(const char *name, Int_t nr, const char *mother, 
-                                     Double_t x, Double_t y, Double_t z, Int_t irot, 
-                                     Bool_t isOnly, Float_t *upar, Int_t npar=0); 
-   void                   Node(const char *name, Int_t nr, const char *mother, 
-                                     Double_t x, Double_t y, Double_t z, Int_t irot, 
-                                     Bool_t isOnly, Double_t *upar, Int_t npar=0); 
-   TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed, 
-                                       Float_t *upar, Int_t npar=0); 
-   TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed, 
-                                       Double_t *upar, Int_t npar=0); 
+                                       Double_t stmin);
+   void                   Node(const char *name, Int_t nr, const char *mother,
+                                     Double_t x, Double_t y, Double_t z, Int_t irot,
+                                     Bool_t isOnly, Float_t *upar, Int_t npar=0);
+   void                   Node(const char *name, Int_t nr, const char *mother,
+                                     Double_t x, Double_t y, Double_t z, Int_t irot,
+                                     Bool_t isOnly, Double_t *upar, Int_t npar=0);
+   TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed,
+                                       Float_t *upar, Int_t npar=0);
+   TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed,
+                                       Double_t *upar, Int_t npar=0);
    void                   SetVolumeAttribute(const char *name, const char *att, Int_t val);
    //--- geometry building
    void                   BuildDefaultMaterials();
@@ -282,7 +283,7 @@ public:
                                       Double_t a, Double_t b, Double_t dz);
    TGeoVolume            *MakeGtra(const char *name, const TGeoMedium *medium,
                                    Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
-                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                    Double_t tl2, Double_t alpha2);
    TGeoVolume            *MakePara(const char *name, const TGeoMedium *medium,
                                      Double_t dx, Double_t dy, Double_t dz,
@@ -303,7 +304,7 @@ public:
                                     Double_t rmin, Double_t rmax, Double_t phi1=0, Double_t dphi=360);
    TGeoVolume            *MakeTrap(const char *name, const TGeoMedium *medium,
                                    Double_t dz, Double_t theta, Double_t phi, Double_t h1,
-                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                    Double_t tl2, Double_t alpha2);
    TGeoVolume            *MakeTrd1(const char *name, const TGeoMedium *medium,
                                       Double_t dx1, Double_t dx2, Double_t dy, Double_t dz);
@@ -324,7 +325,7 @@ public:
    TGeoVolumeAssembly    *MakeVolumeAssembly(const char *name);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);
    void                   SetTopVolume(TGeoVolume *vol);
-   
+
    //--- geometry queries
    TGeoNode              *CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipnode);
    TGeoNode              *FindNextBoundary(Double_t stepmax=TGeoShape::Big(),const char *path="");
@@ -375,13 +376,13 @@ public:
    Bool_t                 IsExiting() const            {return fIsExiting;}
    Bool_t                 IsStepEntering() const       {return fIsStepEntering;}
    Bool_t                 IsStepExiting() const        {return fIsStepExiting;}
-   Bool_t                 IsOutside() const            {return fIsOutside;} 
+   Bool_t                 IsOutside() const            {return fIsOutside;}
    Bool_t                 IsOnBoundary() const         {return fIsOnBoundary;}
    Bool_t                 IsNullStep() const           {return fIsNullStep;}
    Bool_t                 IsActivityEnabled() const    {return fActivity;}
    void                   SetOutside(Bool_t flag=kTRUE) {fIsOutside = flag;}
    void                   UpdateCurrentPosition(Double_t *nextpoint);
-   
+
 
    //--- cleaning
    void                   CleanGarbage();
@@ -391,20 +392,20 @@ public:
    void                   ResetUserData();
 
 
-   //--- utilities 
+   //--- utilities
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
    Int_t                 *GetIntBuffer(Int_t length);
    Double_t              *GetDblBuffer(Int_t length);
-   void                   SetAllIndex();   
-   
+   void                   SetAllIndex();
+
    //--- I/O
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");
    static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
-   
+
    //--- list getters
    TObjArray             *GetListOfNodes()              {return fNodes;}
    TObjArray             *GetListOfPhysicalNodes()      {return fPhysicalNodes;}
@@ -413,9 +414,9 @@ public:
    TList                 *GetListOfMaterials() const    {return fMaterials;}
    TList                 *GetListOfMedia() const        {return fMedia;}
    TObjArray             *GetListOfVolumes() const      {return fVolumes;}
-   TObjArray             *GetListOfGVolumes() const     {return fGVolumes;} 
+   TObjArray             *GetListOfGVolumes() const     {return fGVolumes;}
    TObjArray             *GetListOfShapes() const       {return fShapes;}
-   TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;} 
+   TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;}
    TObjArray             *GetListOfTracks() const       {return fTracks;}
    TGeoElementTable      *GetElementTable() const       {return fElementTable;}
 
@@ -445,17 +446,17 @@ public:
    TGeoNode              *GetTopNode() const       {return fTopNode;}
    TGeoPhysicalNode      *GetPhysicalNode(Int_t i) const {return (TGeoPhysicalNode*)fPhysicalNodes->UncheckedAt(i);}
    void                   SetCurrentPoint(Double_t *point) {memcpy(fPoint,point,3*sizeof(Double_t));}
-   void                   SetCurrentPoint(Double_t x, Double_t y, Double_t z) { 
+   void                   SetCurrentPoint(Double_t x, Double_t y, Double_t z) {
                                     fPoint[0]=x; fPoint[1]=y; fPoint[2]=z;}
-   void                   SetLastPoint(Double_t x, Double_t y, Double_t z) { 
+   void                   SetLastPoint(Double_t x, Double_t y, Double_t z) {
                                     fLastPoint[0]=x; fLastPoint[1]=y; fLastPoint[2]=z;}
    void                   SetCurrentDirection(Double_t *dir) {memcpy(fDirection,dir,3*sizeof(Double_t));}
-   void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) { 
+   void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) {
                                     fDirection[0]=nx; fDirection[1]=ny; fDirection[2]=nz;}
 //   void                   SetNormalChecked(Double_t norm) {fNormalChecked=norm;}
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
-   
-   //--- point/vector reference frame conversion   
+
+   //--- point/vector reference frame conversion
    void                   LocalToMaster(const Double_t *local, Double_t *master) const {fCache->LocalToMaster(local, master);}
    void                   LocalToMasterVect(const Double_t *local, Double_t *master) const {fCache->LocalToMasterVect(local, master);}
    void                   LocalToMasterBomb(const Double_t *local, Double_t *master) const {fCache->LocalToMasterBomb(local, master);}
@@ -479,7 +480,7 @@ public:
    Int_t                  GetUID(const char *volname) const;
    Int_t                  GetNNodes() {if (!fNNodes) CountNodes(); return fNNodes;}
    TGeoNodeCache         *GetCache() const         {return fCache;}
-   void                   SetCache(const TGeoNodeCache *cache) {fCache = (TGeoNodeCache*)cache;}   
+   void                   SetCache(const TGeoNodeCache *cache) {fCache = (TGeoNodeCache*)cache;}
    void                   SetAnimateTracks(Bool_t flag=kTRUE) {fIsGeomReading=flag;}
    virtual ULong_t        SizeOf(const TGeoNode *node, Option_t *option); // size of the geometry in memory
    void                   SelectTrackingMedia();

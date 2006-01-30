@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.78 2006/01/24 21:28:54 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.79 2006/01/25 13:41:24 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "Riostream.h"
 #include "Strlen.h"
 #include "TDirectory.h"
+#include "TFile.h"
 #include "TMapFile.h"
 #include "TClassTable.h"
 #include "TInterpreter.h"
@@ -98,10 +99,10 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname,
    }
 
    Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
-   
+
    TDirectory* motherdir = GetMotherDir();
    TFile* f = GetFile();
-   
+
    if ((motherdir==0) || (f==0)) return;
    if (!f->IsWritable()) return; //*-* in case of a directory in memory
    if (motherdir->GetKey(name)) {
@@ -313,16 +314,16 @@ TKey* TDirectory::CreateKey(const void* obj, const TClass* cl, const char* name,
 
 //______________________________________________________________________________
 TDirectory *TDirectory::GetDirectory(const char *apath,
-                                     Bool_t printError, const char *funcname) 
+                                     Bool_t printError, const char *funcname)
 {
    // Find a directory using apath.
-   // It apath is null or empty, returns "this" directory. 
+   // It apath is null or empty, returns "this" directory.
    // Otherwie use apath to find a directory.
    // The absolute path syntax is:
    //    file.root:/dir1/dir2
    // where file.root is the file and /dir1/dir2 the desired subdirectory
    // in the file. Relative syntax is relative to "this" directory. E.g:
-   // ../aa. 
+   // ../aa.
    // Returns 0 in case path does not exist.
    // If printError is true, use Error with 'funcname' to issue an error message.
 
@@ -390,8 +391,8 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    *slash = 0;
    //Get object with path from current directory/file
    if (!strcmp(subdir, "..")) {
-      TDirectory* mom = GetMotherDir(); 
-      if (mom) 
+      TDirectory* mom = GetMotherDir();
+      if (mom)
          result = mom->GetDirectory(slash+1,printError,funcname);
       delete [] path; return result;
    }
@@ -703,7 +704,7 @@ TKey *TDirectory::FindKeyAny(const char *keyname) const
    TIter next(GetListOfKeys());
    TKey *key;
    while ((key = (TKey *) next())) {
-      if (!strcmp(name, key->GetName())) 
+      if (!strcmp(name, key->GetName()))
          if ((cycle == 9999) || (cycle >= key->GetCycle()))  {
             ((TDirectory*)this)->cd(); // may be we should not make cd ???
             return key;
@@ -713,7 +714,7 @@ TKey *TDirectory::FindKeyAny(const char *keyname) const
    next.Reset();
    while ((key = (TKey *) next())) {
       if (!strcmp(key->GetClassName(),"TDirectory")) {
-         TDirectory* subdir = 
+         TDirectory* subdir =
            ((TDirectory*)this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
          TKey *k = (subdir!=0) ? subdir->FindKeyAny(keyname) : 0;
          if (k) return k;
@@ -771,7 +772,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
    next.Reset();
    while ((key = (TKey *) next())) {
       if (!strcmp(key->GetClassName(),"TDirectory")) {
-         TDirectory* subdir = 
+         TDirectory* subdir =
            ((TDirectory*)this)->GetDirectory(key->GetName(), kTRUE, "FindKeyAny");
          TKey *k = subdir==0 ? 0 : subdir->FindKeyAny(aname);
          if (k) { if (dirsav) dirsav->cd(); return k->ReadObj();}
@@ -938,7 +939,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
          name[i] = '/';
          if (dirToSearch) {
             return dirToSearch->GetObjectChecked(namobj, expectedClass);
-         } else { 
+         } else {
             return 0;
          }
       }
@@ -1057,14 +1058,14 @@ const char *TDirectory::GetPath() const
 {
    // Returns the full path of the directory. E.g. file:/dir1/dir2.
    // The returned path will be re-used by the next call to GetPath().
-   
-   // 
+
+   //
    TString* buf = &(const_cast<TDirectory*>(this)->fPathBuffer);
-   
+
    FillFullPath(*buf);
    if (GetMotherDir()==0) // case of file
-      buf->Append("/"); 
-      
+      buf->Append("/");
+
    return buf->Data();
 }
 
@@ -1072,7 +1073,7 @@ const char *TDirectory::GetPath() const
 void TDirectory::FillFullPath(TString& buf) const
 {
    // recursive method to fill full path for directory
-    
+
    TDirectory* mom = GetMotherDir();
    if (mom!=0) {
       mom->FillFullPath(buf);
@@ -1103,7 +1104,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
       return 0;
    }
 
-   TDirectory::TContext ctxt(this); 
+   TDirectory::TContext ctxt(this);
 
    TDirectory *newdir = new TDirectory(name, title, "", this);
 
@@ -1771,7 +1772,7 @@ void TDirectory::WriteDirHeader()
 //*-*                  =====================================
    TFile* f = GetFile();
    if (f==0) return;
-   
+
    Int_t nbytes  = TDirectory::Sizeof();  //Warning ! TFile has a Sizeof()
    char * header = new char[nbytes];
    char * buffer = header;

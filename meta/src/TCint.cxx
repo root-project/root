@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.114 2005/12/11 06:15:07 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.115 2006/01/07 03:48:19 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TString.h"
-#include "TList.h"
+#include "THashList.h"
 #include "TOrdCollection.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
@@ -136,7 +136,7 @@ TCint::~TCint()
       G__close_inputfiles();
    }
 
-   delete fMapfile;   
+   delete fMapfile;
 }
 
 //______________________________________________________________________________
@@ -890,7 +890,7 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
       }
       listpar = complete.Data();
    }
-   
+
    Execute(obj, cl, (char *)method->GetName(), (char *)listpar, error);
 }
 
@@ -1002,10 +1002,10 @@ Int_t TCint::LoadLibraryMap()
                         // std is not declared but is also ignored by CINT!
                         break;
                      } else {
-                        // Only declared the namespace do not specify any library because 
+                        // Only declared the namespace do not specify any library because
                         // the namespace might be spread over several libraries and we do not
                         // know (yet?) which one the user will need!
-                        G__set_class_autoloading_table((char*)base.Data(), ""); 
+                        G__set_class_autoloading_table((char*)base.Data(), "");
                      }
                      ++k;
                   }

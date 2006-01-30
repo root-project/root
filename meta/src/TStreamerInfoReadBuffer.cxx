@@ -1,4 +1,16 @@
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.229 2005/11/16 20:09:59 pcanal Exp $
+// Author: Rene Brun   12/10/2000
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TBuffer.h"
+#include "TFile.h"
 #include "TClass.h"
 #include "TClonesArray.h"
 #include "TError.h"
@@ -127,7 +139,7 @@ Int_t TStreamerInfo__ReadBufferSkipImp(TStreamerInfo* thisVar,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset, ULong_t *fMethod,Int_t *fLength,
                                        TStreamerInfo::TCompInfo * fComp,
-                                       Version_t &fOldVersion) 
+                                       Version_t &fOldVersion)
 {
    // Skip an element.
 #else
@@ -137,14 +149,14 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
                                     Int_t eoffset)
 {
    // Skip an element.
-   TStreamerInfo* thisVar = this;  
+   TStreamerInfo* thisVar = this;
 #endif
    //  Skip elements in a TClonesArray
-   
+
    TClass* cle = fComp[i].fClass;
 
    Int_t imethod = fMethod[i]+eoffset;
-   
+
    switch (kase) {
 
       // skip basic types
@@ -201,7 +213,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
          DOLOOP {
             Int_t nch; b >> nch;
             if (nch>0) {
-               char* readbuf = new char[nch];  
+               char* readbuf = new char[nch];
                b.ReadFastArray(readbuf,nch);
                delete[] readbuf;
             }
@@ -213,7 +225,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kObjectP: {
          DOLOOP{
             for (Int_t j=0;j<fLength[i];j++) {
-               b.SkipObjectAny(); 
+               b.SkipObjectAny();
             }
          }
          break;
@@ -230,14 +242,14 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
 
       // skip Class *  derived from TObject with comment field  //->
       // skip Class    derived from TObject
-      case TStreamerInfo::kSkip + TStreamerInfo::kObjectp: 
+      case TStreamerInfo::kSkip + TStreamerInfo::kObjectp:
       case TStreamerInfo::kSkip + TStreamerInfo::kObject:  {
          if (cle == TRef::Class()) {
             TRef refjunk;
             DOLOOP{ refjunk.Streamer(b);}
          } else {
             DOLOOP{
-               b.SkipObjectAny();  
+               b.SkipObjectAny();
             }
          }
          break;
@@ -269,7 +281,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       // skip Class *  not derived from TObject with comment field  //->
       case TStreamerInfo::kSkip + TStreamerInfo::kAnyp: {
          DOLOOP {
-            b.SkipObjectAny();  
+            b.SkipObjectAny();
          }
          break;
       }
@@ -278,7 +290,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kAnyP: {
          DOLOOP {
             for (Int_t j=0;j<fLength[i];j++) {
-               b.SkipObjectAny();  
+               b.SkipObjectAny();
             }
          }
          break;
@@ -287,7 +299,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       // skip Any Class not derived from TObject
       case TStreamerInfo::kSkip + TStreamerInfo::kAny:    {
          DOLOOP {
-            b.SkipObjectAny();  
+            b.SkipObjectAny();
          }
          break;
       }
@@ -297,21 +309,21 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:
       case TStreamerInfo::kSkip + TStreamerInfo::kSTL:     {
          if (fOldVersion<3) return 0;
-         b.SkipObjectAny(); 
+         b.SkipObjectAny();
          break;
       }
 
       // skip Base Class
       case TStreamerInfo::kSkip + TStreamerInfo::kBase:    {
          DOLOOP {
-            b.SkipObjectAny();  
+            b.SkipObjectAny();
          }
          break;
       }
 
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamLoop:
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamer: {
-         DOLOOP { 
+         DOLOOP {
             b.SkipObjectAny();
             }
          break;
@@ -777,7 +789,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         uid = obj->GetUniqueID() | 0xff000000;
                      } else {
                         uid = ( obj->GetUniqueID() & 0xffffff) + (gpid<<24);
-                     } 
+                     }
                      obj->SetUniqueID(uid);
                      pid->PutObjectWithID(obj);
                   }
@@ -1174,8 +1186,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          } // case
          continue;
 
-
-
          default: {
             int ans = -1;
             if (kase >= TStreamerInfo::kConv)
@@ -1189,7 +1199,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          if (aElement)
             Error("ReadBuffer","The element %s::%s type %d (%s) is not supported yet\n",
                   thisVar->GetName(),aElement->GetFullName(),kase,aElement->GetTypeName());
-         else 
+         else
             Error("ReadBuffer","The TStreamerElement for %s %d is missing!\n",
                   thisVar->GetName(),i);
 

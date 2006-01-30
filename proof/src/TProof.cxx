@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.130 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.131 2006/01/17 09:55:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include "TUrl.h"
 #include "TFTP.h"
 #include "TROOT.h"
+#include "TFile.h"
 #include "TH1.h"
 #include "TProofPlayer.h"
 #include "TQueryResult.h"
