@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.41 2005/09/27 15:06:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.42 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1483,7 +1483,10 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 //   The projection is always of the type TH2D.
 //
 //   if option "E" is specified, the errors are computed. (default)
-//
+//   if option "B" is specified, the content of bin of the returned histogram
+//      will be equal to the GetBinEntries(bin) of the profile,
+//   if option "C=E" the bin contents of the projection are set to the
+//       bin errors of the profile
 //
 
   TString opt = option;
@@ -1500,19 +1503,26 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
   }
   TH2D *h1 = new TH2D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
   Bool_t computeErrors = kFALSE;
-  if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
+  Bool_t cequalErrors  = kFALSE;
+  Bool_t binEntries    = kFALSE;
+  if (opt.Contains("b")) binEntries = kTRUE;
+  if (opt.Contains("e")) computeErrors = kTRUE;
+  if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
+  if (computeErrors) h1->Sumw2();
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
-  Int_t bin, binx, biny;
+  Int_t bin,binx, biny;
   Double_t cont,err;
   for (binx =0;binx<=nx+1;binx++) {
      for (biny =0;biny<=ny+1;biny++) {
-        bin   = biny*(fXaxis.GetNbins()+2) + binx;
-        cont  = GetBinContent(bin);
-        err   = GetBinError(bin);
-        if (cont)          h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), cont);
-        if (computeErrors) h1->SetBinError(bin,err);
+        bin = GetBin(binx,biny);
+        if (binEntries)    cont = GetBinEntries(bin);
+        else               cont = GetBinContent(binx,biny);
+        err   = GetBinError(binx,biny);
+        if (cequalErrors)  h1->SetBinContent(binx,biny, err);
+        else               h1->SetBinContent(binx,biny, cont);
+        if (computeErrors) h1->SetBinError(binx,biny,err);
      }
   }
   h1->SetEntries(fEntries);
