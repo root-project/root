@@ -211,14 +211,14 @@ void TSessionServerFrame::Build(TSessionViewer *gui)
    SetCleanup(kDeepCleanup);
 
    fViewer = gui;
-   fFrmNewServer = new TGGroupFrame(this, "New Server");
+   fFrmNewServer = new TGGroupFrame(this, "New Session");
    fFrmNewServer->SetCleanup(kDeepCleanup);
 
    AddFrame(fFrmNewServer, new TGLayoutHints(kLHintsExpandX, 2, 2, 2, 2));
 
    fFrmNewServer->SetLayoutManager(new TGMatrixLayout(fFrmNewServer, 0, 2, 8));
 
-   fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Connection Name:"),
+   fFrmNewServer->AddFrame(new TGLabel(fFrmNewServer, "Session Name:"),
                            new TGLayoutHints(kLHintsLeft, 3, 3, 3, 3));
    fFrmNewServer->AddFrame(fTxtName = new TGTextEntry(fFrmNewServer,
                            (const char *)0, 1), new TGLayoutHints());

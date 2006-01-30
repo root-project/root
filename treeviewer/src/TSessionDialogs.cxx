@@ -135,7 +135,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    fCancelButton->Associate(this);
    fOkButton->SetEnabled(kFALSE);
 
-   SetWindowName("Chains Selection Dialog");
+   SetWindowName("Chain Selection Dialog");
    MapSubwindows();
    Layout();
    Resize(GetDefaultSize());
