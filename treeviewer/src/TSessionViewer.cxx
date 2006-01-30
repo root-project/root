@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -610,8 +610,8 @@ void TSessionServerFrame::OnBtnAddClicked()
       desc = dynamic_cast<TSessionDescription*>(obj);
    if (desc) {
       new TGMsgBox(fClient->GetRoot(), fViewer, "Adding Session",
-          Form("The session \"%s\" already exists ! Overwrite ?", 
-          fTxtName->GetText()), kMBIconQuestion, kMBYes | kMBNo | 
+          Form("The session \"%s\" already exists ! Overwrite ?",
+          fTxtName->GetText()), kMBIconQuestion, kMBYes | kMBNo |
           kMBCancel, &retval);
       if (retval != kMBOk)
          return;

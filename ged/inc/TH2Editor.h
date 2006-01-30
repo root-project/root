@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h $
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -60,9 +60,9 @@ protected:
    TGTextEntry         *fTitle;           // histogram title input field
    TGComboBox          *fTypeCombo;       // histogram type combo box
    TGComboBox          *fCoordsCombo;     // Coordinate System combo box
-   TGComboBox          *fContCombo;       // Contour selecting combo box 
+   TGComboBox          *fContCombo;       // Contour selecting combo box
    TGLabel             *fColContLbl;      // No. of Contours Label 1
-   TGLabel             *fColContLbl1;     // No. of Contours Label 2   
+   TGLabel             *fColContLbl1;     // No. of Contours Label 2
    Int_t                fTitlePrec;       // font precision level
    TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
    TGRadioButton       *fDim;             // 2D-Plot RadioButton
@@ -71,59 +71,59 @@ protected:
    TGCompositeFrame    *f4;               // Frame that contains Histogram Coord-ComboBox
    TGCompositeFrame    *f5;               // Frame that contains Histogram Contour-ComboBox
    TGCompositeFrame    *f6;               // Frame that contains the 2D CheckBox DrawOptions
-   TGCompositeFrame    *f9;               // Frame that contains the 3D CheckBox DrawOptions   
+   TGCompositeFrame    *f9;               // Frame that contains the 3D CheckBox DrawOptions
    TGCompositeFrame    *f12;              // Frame that contains the Bar-Title
    TGCompositeFrame    *f13;              // Frame that contains the Bar Width/Offset NumberEntries
    TGCompositeFrame    *f16;              // Frame that contains the ColorLevel NumberEnrtry
-   TGCompositeFrame    *f19;              // Frame that contains the ColorLevel NumberEnrtry   
+   TGCompositeFrame    *f19;              // Frame that contains the ColorLevel NumberEnrtry
    TGCompositeFrame    *f38;              // Frame that contains the Frame Fill widgets
    TGCheckButton       *fAddError;        // CheckBox connected to error bars
    TGCheckButton       *fAddPalette;      // CheckBox connected to Z option (2D)
-   TGCheckButton       *fAddPalette1;     // CheckBox connected to Z option (3D) 
-   TGCheckButton       *fAddArr;          // CheckBox connected to Arr-Option 
+   TGCheckButton       *fAddPalette1;     // CheckBox connected to Z option (3D)
+   TGCheckButton       *fAddArr;          // CheckBox connected to Arr-Option
    TGCheckButton       *fAddBox;          // CheckBox connected to Box-Option
    TGCheckButton       *fAddScat;         // CheckBox connected to Scat-Option
-   TGCheckButton       *fAddCol;          // CheckBox connected to Col-Option  
+   TGCheckButton       *fAddCol;          // CheckBox connected to Col-Option
    TGCheckButton       *fAddFB;           // Draw front box (or not)
    TGCheckButton       *fAddBB;           // Draw back box (or not)
    TGCheckButton       *fAddText;         // Draw bin contents as text
    TGNumberEntry       *fContLevels;      // Set number of contour levels
-   TGNumberEntry       *fContLevels1;     // Set number of contour levels   
+   TGNumberEntry       *fContLevels1;     // Set number of contour levels
    TGNumberEntry       *fBarWidth;        // Set bar width of histogram
    TGNumberEntry       *fBarOffset;       // Set bar offset of histogram
    TGCompositeFrame    *fBinXCont;        // Contains the rebin widgets for case 1
-   TGHSlider           *fBinXSlider;      // Slider to set rebinning x integer value 
+   TGHSlider           *fBinXSlider;      // Slider to set rebinning x integer value
    TGNumberEntryField  *fBinXNumberEntry; // Label which shows the rebinned bin number
-   TGHSlider           *fBinYSlider;      // Slider to set rebinning y integer value 
+   TGHSlider           *fBinYSlider;      // Slider to set rebinning y integer value
    TGNumberEntryField  *fBinYNumberEntry; // Label which shows the rebinned bin number
    TGTextButton        *fApply;           // Apply-Button to accept the rebinned histogram
    TGTextButton        *fCancel;          // Cancel-Button to reprobate the rebinned histogram
-   TGCompositeFrame    *fBinXCont1;       // Contains the X Rebin Widgets for case 2 
-   TGHSlider           *fBinXSlider1;     // Slider to set x rebinning integer value 
+   TGCompositeFrame    *fBinXCont1;       // Contains the X Rebin Widgets for case 2
+   TGHSlider           *fBinXSlider1;     // Slider to set x rebinning integer value
    TGNumberEntryField  *fBinXNumberEntry1;// Label which shows the rebinned x bin number
    TGNumberEntryField  *fXOffsetNumberEntry; // Shows the offset to the x origin of the histogram
    TGHSlider           *fXBinOffsetSld;   // Add an x-offset to the origin of the histogram
 
-   TGCompositeFrame    *fBinYCont1;       // Contains the Y Rebin Widgets for case 2 
-   TGHSlider           *fBinYSlider1;     // Slider to set y rebinning integer value 
+   TGCompositeFrame    *fBinYCont1;       // Contains the Y Rebin Widgets for case 2
+   TGHSlider           *fBinYSlider1;     // Slider to set y rebinning integer value
    TGNumberEntryField  *fBinYNumberEntry1;// Label which shows the rebinned y bin number
    TGNumberEntryField  *fYOffsetNumberEntry; // Shows the offset to the y origin of the histogram
    TGHSlider           *fYBinOffsetSld;   // Add an y-offset to the origin of the histogram
    TGDoubleHSlider     *fSliderX;         // Slider to set x-axis range
    TGNumberEntryField  *fSldXMin;         // Contains the minimum value of the x-Axis
-   TGNumberEntryField  *fSldXMax;         // Contains the maximum value of the x-Axis  
-   TGDoubleHSlider     *fSliderY;         // Slider to set y-axis range   
+   TGNumberEntryField  *fSldXMax;         // Contains the maximum value of the x-Axis
+   TGDoubleHSlider     *fSliderY;         // Slider to set y-axis range
    TGNumberEntryField  *fSldYMin;         // Contains the minimum value of the y-Axis
-   TGNumberEntryField  *fSldYMax;         // Contains the maximum value of the y-Axis  
+   TGNumberEntryField  *fSldYMax;         // Contains the maximum value of the y-Axis
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGColorSelect       *fFrameColor;      // Select the Frame Color
    TGedPatternSelect   *fFramePattern;    // Select the Frame Pattern Style
    TGLabel             *fNameLabel2;      // selected object name on the Binning tab
-   
+
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistContComboBox(TGFrame* parent, Int_t id);
-   
+
    virtual void ConnectSignals2Slots();
 
 private:
@@ -137,27 +137,27 @@ private:
              fPy1old,
              fPx2old,
              fPy2old;
-   Float_t   fP1oldx[3], 
-             fP2oldx[3], 
-             fP3oldx[3], 
-             fP4oldx[3], 
-             fP5oldx[3], 
-             fP6oldx[3], 
-             fP7oldx[3], 
+   Float_t   fP1oldx[3],
+             fP2oldx[3],
+             fP3oldx[3],
+             fP4oldx[3],
+             fP5oldx[3],
+             fP6oldx[3],
+             fP7oldx[3],
              fP8oldx[3];
-   Float_t   fP1oldy[3], 
-             fP2oldy[3], 
-             fP3oldy[3], 
-             fP4oldy[3], 
-             fP5oldy[3], 
-             fP6oldy[3], 
-             fP7oldy[3], 
+   Float_t   fP1oldy[3],
+             fP2oldy[3],
+             fP3oldy[3],
+             fP4oldy[3],
+             fP5oldy[3],
+             fP6oldy[3],
+             fP7oldy[3],
              fP8oldy[3];
    TH2      *fBinHist;         // Cloned histogram for rebin
    Double_t  fOldXOffset;      // saves the old x offset of the histogram
    Double_t  fOldYOffset;      // saves the old y offset of the histogram
-   
-   
+
+
 public:
    TH2Editor(const TGWindow *p, Int_t id,
                Int_t width = 140, Int_t height = 30,
@@ -174,41 +174,41 @@ public:
    virtual void DoAddBox(Bool_t on);
    virtual void DoAddCol(Bool_t on);
    virtual void DoAddScat(Bool_t on);
-   virtual void DoAddText(Bool_t on); 
+   virtual void DoAddText(Bool_t on);
    virtual void DoAddError(Bool_t on);
    virtual void DoAddPalette(Bool_t on);
    virtual void DoAddFB();
    virtual void DoAddBB();
    virtual void DoContLevel();
-   virtual void DoContLevel1();   
+   virtual void DoContLevel1();
    virtual void DoBarWidth();
    virtual void DoBarOffset();
    virtual void DoBinPressed();
-   virtual void DoBinMoved();      
+   virtual void DoBinMoved();
    virtual void DoBinReleased();
-   virtual void DoBinLabel();  
+   virtual void DoBinLabel();
    virtual void DoApply();
-   virtual void DoCancel();       
+   virtual void DoCancel();
    virtual void DoBinReleased1();
-   virtual void DoBinMoved1();   
-   virtual void DoBinLabel1();  
+   virtual void DoBinMoved1();
+   virtual void DoBinLabel1();
    virtual void DoOffsetMoved();
    virtual void DoOffsetReleased();
    virtual void DoOffsetPressed();
    virtual void DoBinOffset();
    virtual void DoSliderXMoved();
    virtual void DoSliderXPressed();
-   virtual void DoSliderXReleased();      
-   virtual void DoXAxisRange();   
+   virtual void DoSliderXReleased();
+   virtual void DoXAxisRange();
    virtual void DoSliderYMoved();
    virtual void DoSliderYPressed();
-   virtual void DoSliderYReleased();      
-   virtual void DoYAxisRange();   
+   virtual void DoSliderYReleased();
+   virtual void DoYAxisRange();
    virtual void DoFillColor(Pixel_t);
-   virtual void DoFillPattern(Style_t);  
+   virtual void DoFillPattern(Style_t);
    Int_t* Dividers(Int_t n);
    ClassDef(TH2Editor,0)  // TH2 editor
 };
 
-#endif     
+#endif
 

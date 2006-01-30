@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -43,7 +43,7 @@ protected:
 
    virtual void   ConnectSignals2Slots();
    TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);
-   
+
 public:
    TCurlyArcEditor(const TGWindow *p, Int_t id,
                 Int_t width = 140, Int_t height = 30,

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx
+// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -20,17 +20,17 @@ TGLLogicalShape * CreateLogicalBox(TGLVector3 halfLengths)
 {
    // Helper function to construct a TGLLogicalShape box based on
    // supplied half lengths
-   
+
    //    y
    //    |
    //    |
    //    |________x
    //   /  3-------2
-   //  /  /|      /| 
-   // z  7-------6 | 
-   //    | 0-----|-1 
-   //    |/      |/ 
-   //    4-------5 
+   //  /  /|      /|
+   // z  7-------6 |
+   //    | 0-----|-1
+   //    |/      |/
+   //    4-------5
    //
    // Construct box of points / segments / polys
 
@@ -58,7 +58,7 @@ TGLLogicalShape * CreateLogicalBox(TGLVector3 halfLengths)
    buff.fSegs[27] = 1   ; buff.fSegs[28] = 1   ; buff.fSegs[29] = 5   ; // 9
    buff.fSegs[30] = 1   ; buff.fSegs[31] = 2   ; buff.fSegs[32] = 6   ; // 10
    buff.fSegs[33] = 1   ; buff.fSegs[34] = 3   ; buff.fSegs[35] = 7   ; // 11
-   
+
    buff.fPols[ 0] = 1   ; buff.fPols[ 1] = 4   ;  buff.fPols[ 2] = 0  ; // 0
    buff.fPols[ 3] = 9   ; buff.fPols[ 4] = 4   ;  buff.fPols[ 5] = 8  ;
    buff.fPols[ 6] = 1   ; buff.fPols[ 7] = 4   ;  buff.fPols[ 8] = 1  ; // 1
@@ -78,9 +78,9 @@ TGLLogicalShape * CreateLogicalBox(TGLVector3 halfLengths)
 
 TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
 {
-   // Helper function to construct a TGLLogicalShape face (retangle) 
+   // Helper function to construct a TGLLogicalShape face (retangle)
    // based on supplied width/depth
-   
+
    TBuffer3D buff(TBuffer3DTypes::kGeneric, 4, 3*4, 4, 3*4, 1, 6);
 
    buff.fPnts[ 0] = -width; buff.fPnts[ 1] = -depth; buff.fPnts[ 2] = 0.0; // 0
@@ -92,7 +92,7 @@ TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
    buff.fSegs[ 3] = 1   ; buff.fSegs[ 4] = 1   ; buff.fSegs[ 5] = 2   ; // 1
    buff.fSegs[ 6] = 1   ; buff.fSegs[ 7] = 2   ; buff.fSegs[ 8] = 3   ; // 2
    buff.fSegs[ 9] = 1   ; buff.fSegs[10] = 3   ; buff.fSegs[11] = 0   ; // 3
-   
+
    buff.fPols[ 0] = 1   ; buff.fPols[ 1] = 4   ;  buff.fPols[ 2] = 0  ; // 0
    buff.fPols[ 3] = 1   ; buff.fPols[ 4] = 2   ;  buff.fPols[ 5] = 3  ;
 
@@ -113,7 +113,7 @@ TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
 ClassImp(TGLClip)
 
 //______________________________________________________________________________
-TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]) : 
+TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]) :
    TGLPhysicalShape(0, logical, transform, kTRUE, color),
    fMode(kInside)
 {
@@ -122,7 +122,7 @@ TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, c
    //
    // Takes 'ownership' of logical and it will be destroyed when this is.
 
-   // Take strong reference - destroy logical when ref released in 
+   // Take strong reference - destroy logical when ref released in
    // TGLPhysical::~TGLPhysical()
    logical.StrongRef(kTRUE);
 }
@@ -165,11 +165,11 @@ ClassImp(TGLClipPlane)
 const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 
 //______________________________________________________________________________
-TGLClipPlane::TGLClipPlane(const TGLVector3 & norm, const TGLVertex3 & center, Double_t extents) : 
+TGLClipPlane::TGLClipPlane(const TGLVector3 & norm, const TGLVertex3 & center, Double_t extents) :
    TGLClip(*CreateLogicalFace(extents, extents), TGLMatrix(center), fgColor)
 {
    // Construct a clip plane object, based on supplied 'plane', with initial manipulation
-   // pivot at 'center', with drawn extents (in local x/y axes) of 'extents' 
+   // pivot at 'center', with drawn extents (in local x/y axes) of 'extents'
    //
    // Plane can have center pivot translated in all directions, and rotated round
    // center in X/Y axes , the in-plane axes. It cannot be scaled
@@ -196,7 +196,7 @@ void TGLClipPlane::Set(const TGLPlane & plane)
    // Update clip plane object to follow passed 'plane' equation. Center pivot
    // is shifted to nearest point on new plane.
    TGLVertex3 oldCenter = BoundingBox().Center();
-   TGLVertex3 newCenter = plane.NearestOn(oldCenter); 
+   TGLVertex3 newCenter = plane.NearestOn(oldCenter);
    SetTransform(TGLMatrix(newCenter, plane.Norm()));
 }
 
@@ -227,7 +227,7 @@ const float TGLClipBox::fgColor[4] = { 1.0, 0.6, 0.2, 0.3 };
 TGLClipBox::TGLClipBox(const TGLVector3 & halfLengths, const TGLVertex3 & center) :
    TGLClip(*CreateLogicalBox(halfLengths), TGLMatrix(center), fgColor)
 {
-   // Construct an (initially) axis aligned clip pbox object, extents 'halfLengths', 
+   // Construct an (initially) axis aligned clip pbox object, extents 'halfLengths',
    // centered on 'center' vertex.
    // Box can be translated, rotated and scaled in all (xyz) local axes.
 }
@@ -238,8 +238,8 @@ TGLClipBox::~TGLClipBox()
 }
 
 //______________________________________________________________________________
-void TGLClipBox::PlaneSet(TGLPlaneSet_t & set) const 
-{ 
+void TGLClipBox::PlaneSet(TGLPlaneSet_t & set) const
+{
    // Return set of 6 planes describing faces of the box
-   BoundingBox().PlaneSet(set); 
+   BoundingBox().PlaneSet(set);
 }

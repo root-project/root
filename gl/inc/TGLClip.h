@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.h
+// @(#)root/gl:$Name:  $:$Id: TGLClip.h $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -38,11 +38,11 @@ public:
 
    EMode Mode() const         { return fMode; }
    void  SetMode(EMode mode)  { fMode = mode; }
- 
+
    virtual void Draw(UInt_t LOD) const;
    virtual void PlaneSet(TGLPlaneSet_t & set) const = 0;
 
-   ClassDef(TGLClip,0); // abstract clipping object   
+   ClassDef(TGLClip,0); // abstract clipping object
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -80,17 +80,17 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLClipBox : public TGLClip 
+class TGLClipBox : public TGLClip
 {
 private:
    static const float fgColor[4];
 
-public:   
+public:
    TGLClipBox(const TGLVector3 & halfLengths, const TGLVertex3 & center);
-   virtual ~TGLClipBox();   
+   virtual ~TGLClipBox();
 
    virtual void PlaneSet(TGLPlaneSet_t & set) const;
-   
+
    ClassDef(TGLClipBox,0); // clipping box
 };
 

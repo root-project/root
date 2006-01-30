@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h $
 // Author: Ilka  Antcheva 20/10/04
 
 /*************************************************************************
@@ -46,7 +46,7 @@ protected:
    virtual void   ConnectSignals2Slots();
    TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);
    Int_t          GetShapeEntry(Option_t *opt);
-   
+
 public:
    TArrowEditor(const TGWindow *p, Int_t id,
                 Int_t width = 140, Int_t height = 30,

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h $
 // Author: Carsten Hof 28/07/04
 
 /*************************************************************************
@@ -8,9 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
-#ifndef ROOT_TGraphEditor      
-#define ROOT_TGraphEditor 
+
+#ifndef ROOT_TGraphEditor
+#define ROOT_TGraphEditor
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -49,7 +49,7 @@ protected:
    TGRadioButton                *fShape1;       // set simple poly-line between every graph point
    TGRadioButton                *fShape2;       // set graph draw mode to bar chart
    TGRadioButton                *fShape3;       // set graph draw mode to fill area
-   TGCheckButton                *fMarkerOnOff;  // set Marker visible/unvisible   
+   TGCheckButton                *fMarkerOnOff;  // set Marker visible/unvisible
    virtual void ConnectSignals2Slots();
 
 public:
@@ -60,11 +60,11 @@ public:
    virtual ~TGraphEditor();
    virtual void SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
 
-   // slots related to graph attributes 
+   // slots related to graph attributes
    virtual void DoShape(Int_t s);
    virtual void DoMarkerOnOff(Bool_t on);
    virtual void DoTitle(const char *text);
- 
+
    ClassDef(TGraphEditor,0)        // graph editor
 };
 #endif

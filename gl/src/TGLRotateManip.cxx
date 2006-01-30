@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx
+// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx $
 // Author:  Richard Maunder  04/10/2005
 
 /*************************************************************************
@@ -21,16 +21,16 @@
 // TGLRotateManip                                                       //
 //                                                                      //
 // Rotate manipulator - attaches to physical shape and draws local axes //
-// widgets - rings drawn from attached physical center, in plane defined// 
+// widgets - rings drawn from attached physical center, in plane defined//
 // by axis. User can mouse over (turns yellow) and L click/drag to      //
-// rotate attached physical round the ring center.                      // 
+// rotate attached physical round the ring center.                      //
 // Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLRotateManip)
 
 //______________________________________________________________________________
-TGLRotateManip::TGLRotateManip() : 
+TGLRotateManip::TGLRotateManip() :
    fShallowRing(kFALSE), fShallowFront(kTRUE),
    fActiveRingPlane(TGLVector3(1.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0)),
    fActiveRingCenter(TGLVertex3(0.0, 0.0, 0.0)),
@@ -41,7 +41,7 @@ TGLRotateManip::TGLRotateManip() :
 }
 
 //______________________________________________________________________________
-TGLRotateManip::TGLRotateManip(TGLPhysicalShape * shape) : 
+TGLRotateManip::TGLRotateManip(TGLPhysicalShape * shape) :
    TGLManip(shape),
    fShallowRing(kFALSE), fShallowFront(kTRUE),
    fActiveRingPlane(TGLVector3(1.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0)),
@@ -53,17 +53,17 @@ TGLRotateManip::TGLRotateManip(TGLPhysicalShape * shape) :
 }
 
 //______________________________________________________________________________
-TGLRotateManip::~TGLRotateManip() 
+TGLRotateManip::~TGLRotateManip()
 {
    // Destory the rotation manipulator
 }
-   
+
 //______________________________________________________________________________
 void TGLRotateManip::Draw(const TGLCamera & camera) const
 {
    // Draw rotate manipulator - axis rings drawn from attached physical center,
-   // in plane defined by axis as normal, in red(X), green(Y) and blue(Z), with 
-   // white center sphere. If selected widget (mouse over) this is drawn in active 
+   // in plane defined by axis as normal, in red(X), green(Y) and blue(Z), with
+   // white center sphere. If selected widget (mouse over) this is drawn in active
    // colour (yellow).
    if (!fShape) {
       return;
@@ -88,7 +88,7 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kRotateX) {
       glPushName(1);
-      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), ringRadius*1.004, 
+      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), ringRadius*1.004,
                         fSelectedWidget == 1 ? fgYellow : fgRed);
       glPopName();
    } else {
@@ -96,7 +96,7 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
    }
    if (manip & TGLPhysicalShape::kRotateY) {
       glPushName(2);
-      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), ringRadius*1.002, 
+      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), ringRadius*1.002,
                         fSelectedWidget == 2 ? fgYellow : fgGreen);
       glPopName();
    } else {
@@ -104,7 +104,7 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
    }
    if (manip & TGLPhysicalShape::kRotateZ) {
       glPushName(3);
-      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), ringRadius, 
+      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), ringRadius,
                         fSelectedWidget == 3 ? fgYellow : fgBlue);
       glPopName();
    } else {
@@ -113,8 +113,8 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
    // Draw white center sphere
    TGLUtil::DrawSphere(box.Center(), ringRadius/20.0, fgWhite);
 
-   // Indicate we are in ring follow (non-shallow) mode 
-   // by drawing line from center to dragged ring point 
+   // Indicate we are in ring follow (non-shallow) mode
+   // by drawing line from center to dragged ring point
    if (fActive) {
       if (fShallowRing) {
          TGLVertex3 eyeOnRing;
@@ -133,7 +133,7 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
          TGLVector3 activeVector = fRingLine.Vector();
          activeVector.Normalise();
          activeVector *= ringRadius;
-         TGLUtil::DrawLine(fRingLine.Start(), activeVector, 
+         TGLUtil::DrawLine(fRingLine.Start(), activeVector,
                            TGLUtil::kLineHeadNone, baseScale, fgYellow);
       }
    }
@@ -145,7 +145,7 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
 //______________________________________________________________________________
 Bool_t TGLRotateManip::HandleButton(const Event_t & event, const TGLCamera & camera)
 {
-   // Handle mouse button event over manipulator - returns kTRUE if redraw required 
+   // Handle mouse button event over manipulator - returns kTRUE if redraw required
    // kFALSE otherwise.
    Bool_t captured = TGLManip::HandleButton(event, camera);
 
@@ -159,17 +159,17 @@ Bool_t TGLRotateManip::HandleButton(const Event_t & event, const TGLCamera & cam
       fActiveRingCenter.Set(fShape->BoundingBox().Center());
 
       fRingLineOld = fRingLine = CalculateRingLine(fLastMouse, camera);
-      
+
       // Is plane at shallow angle to eye line if angle between normal of plane and
       // eye line is ~90 deg (PI/4)
       Double_t planeEyeAngle = Angle(fActiveRingPlane.Norm(), camera.EyeDirection()) - TMath::ASin(1.0);
       Double_t shallowDelta = 0.15;
-      if ((planeEyeAngle > -shallowDelta) && (planeEyeAngle < shallowDelta)) {  
+      if ((planeEyeAngle > -shallowDelta) && (planeEyeAngle < shallowDelta)) {
          fShallowRing = kTRUE;
 
          // Work out ring follow direction - if clicked on back or front of ring.
          // If plane/eye angle very shallow force to front
-			
+
 			/* DISABLED - Force onto front always */
 			fShallowFront = kTRUE;
 			/*
@@ -190,8 +190,8 @@ Bool_t TGLRotateManip::HandleButton(const Event_t & event, const TGLCamera & cam
 //______________________________________________________________________________
 Bool_t TGLRotateManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
 {
-   // Handle mouse motion over manipulator - if active (selected widget) rotate 
-   // physical around selected ring widget plane normal. Returns kTRUE if redraw 
+   // Handle mouse motion over manipulator - if active (selected widget) rotate
+   // physical around selected ring widget plane normal. Returns kTRUE if redraw
    // required kFALSE otherwise.
    if (fActive) {
       TPoint newMouse(event.fX, event.fY);
@@ -211,7 +211,7 @@ Double_t TGLRotateManip::CalculateAngleDelta(const TPoint & mouse, const TGLCame
 {
    // Calculate angle delta for rotation based on new mouse position
    if (fShallowRing) {
-      std::pair<Bool_t, TGLLine3> nearLineIntersection = Intersection(fActiveRingPlane, 
+      std::pair<Bool_t, TGLLine3> nearLineIntersection = Intersection(fActiveRingPlane,
                                                                       camera.FrustumPlane(TGLCamera::kNear));
       if (!nearLineIntersection.first) {
          Error("TGLRotateManip::CalculateAngleDelta", "active ring plane parallel to near clip?");
@@ -251,7 +251,7 @@ TGLLine3 TGLRotateManip::CalculateRingLine(const TPoint & mouse, const TGLCamera
 
    // Find rotation line from ring center to this intersection on plane
    std::pair<Bool_t, TGLVertex3> ringPlaneInter =  Intersection(fActiveRingPlane, viewportProjection, kTRUE);
-   
+
    // If intersection fails then ring is parallel to eye line - in this case
    // force line to run from center back towards viewer (opposite eye line)
    if (!ringPlaneInter.first) {

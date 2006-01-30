@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h
+// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -33,7 +33,7 @@ private:
 public:
    TGLQuadric();
    virtual ~TGLQuadric(); // ClassDef introduces virtuals
-   
+
    GLUquadric * Get();
 
    ClassDef(TGLQuadric,0) // GL quadric object

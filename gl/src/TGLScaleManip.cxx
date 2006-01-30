@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.cxx
+// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.cxx $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 //                                                                      //
 // Scale manipulator - attaches to physical shape and draws local axes  //
 // widgets with box heads. User can mouse over (turns yellow) and L     //
-// click/drag to scale along this axis.                                 // 
+// click/drag to scale along this axis.                                 //
 // Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
 //////////////////////////////////////////////////////////////////////////
 
@@ -33,14 +33,14 @@ TGLScaleManip::TGLScaleManip()
 }
 
 //______________________________________________________________________________
-TGLScaleManip::TGLScaleManip(TGLPhysicalShape * shape) : 
-   TGLManip(shape) 
+TGLScaleManip::TGLScaleManip(TGLPhysicalShape * shape) :
+   TGLManip(shape)
 {
    // Construct scale manipulator bound to TGLPhysicalShape 'shape'.
 }
 
 //______________________________________________________________________________
-TGLScaleManip::~TGLScaleManip() 
+TGLScaleManip::~TGLScaleManip()
 {
    // Destory the scale manipulator
 }
@@ -48,8 +48,8 @@ TGLScaleManip::~TGLScaleManip()
 //______________________________________________________________________________
 void TGLScaleManip::Draw(const TGLCamera & camera) const
 {
-   // Draw scale manipulator - tubes with box heads, in local axes of 
-   // attached shape, in red(X), green(Y) and blue(Z), with white center sphere. 
+   // Draw scale manipulator - tubes with box heads, in local axes of
+   // attached shape, in red(X), green(Y) and blue(Z), with white center sphere.
    // If selected widget (mouse over) this is drawn in active colour (yellow).
    if (!fShape) {
       return;
@@ -73,29 +73,29 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kScaleX) {
       glPushName(1);
-      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox, 
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox,
                         baseScale, fSelectedWidget == 1 ? fgYellow : fgRed);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox, 
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox,
                         baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleY) {
       glPushName(2);
-      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox, 
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox,
                         baseScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox, 
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox,
                         baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleZ) {
       glPushName(3);
-      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox, 
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox,
                         baseScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox, 
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox,
                         baseScale, fgGrey);
    }
    // Draw white center sphere
@@ -104,11 +104,11 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);
 }
- 
+
 //______________________________________________________________________________
 Bool_t TGLScaleManip::HandleButton(const Event_t & event, const TGLCamera & camera)
 {
-   // Handle mouse button event over manipulator - returns kTRUE if redraw required 
+   // Handle mouse button event over manipulator - returns kTRUE if redraw required
    // kFALSE otherwise.
    if (event.fType == kButtonPress && fSelectedWidget != 0) {
       fStartScale = fShape->GetScale();
@@ -120,12 +120,12 @@ Bool_t TGLScaleManip::HandleButton(const Event_t & event, const TGLCamera & came
 //______________________________________________________________________________
 Bool_t TGLScaleManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
 {
-   // Handle mouse motion over manipulator - if active (selected widget) scale 
-   // physical along selected widget (axis) of the manipulator, so it tracks mouse 
+   // Handle mouse motion over manipulator - if active (selected widget) scale
+   // physical along selected widget (axis) of the manipulator, so it tracks mouse
    // action. Returns kTRUE if redraw required kFALSE otherwise.
    if (fActive) {
       // Find mouse delta projected into world at attached object center
-      TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 
+      TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(),
                                                      event.fX - fFirstMouse.GetX(),
                                                      -event.fY + fFirstMouse.GetY()); // Y inverted
 

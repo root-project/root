@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -48,7 +48,7 @@ protected:
    TGCompositeFrame     *fEndXFrame;
    TGCompositeFrame     *fEndYFrame;
    virtual void   ConnectSignals2Slots();
-   
+
 public:
    TCurlyLineEditor(const TGWindow *p, Int_t id,
                 Int_t width = 140, Int_t height = 30,

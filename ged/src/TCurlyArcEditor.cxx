@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    // Constructor of CurlyArc GUI.
 
    fCurlyArc = 0;
-   
+
    MakeTitle("Curly Arc");
 
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
@@ -57,9 +57,9 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGLabel *fRadiusLabel = new TGLabel(f3, "Radius:");
    f3->AddFrame(fRadiusLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fRadiusEntry = new TGNumberEntry(f3, 0.02, 7, kCRLA_RAD, 
+   fRadiusEntry = new TGNumberEntry(f3, 0.02, 7, kCRLA_RAD,
                                     TGNumberFormat::kNESRealThree,
-                                    TGNumberFormat::kNEANonNegative, 
+                                    TGNumberFormat::kNEANonNegative,
                                     TGNumberFormat::kNELNoLimits);
    fRadiusEntry->GetNumberEntry()->SetToolTipText("Set radius of arc.");
    f3->AddFrame(fRadiusEntry, new TGLayoutHints(kLHintsLeft, 18, 1, 1, 1));
@@ -69,7 +69,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGLabel *fPhiminLabel = new TGLabel(f4, "Phimin:");
    f4->AddFrame(fPhiminLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fPhiminEntry = new TGNumberEntry(f4, 0, 7, kCRLA_FMIN, 
+   fPhiminEntry = new TGNumberEntry(f4, 0, 7, kCRLA_FMIN,
                                     TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative,
                                     TGNumberFormat::kNELLimitMinMax, 0, 360);
@@ -81,7 +81,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGLabel *fPhimaxLabel = new TGLabel(f5, "Phimax:");
    f5->AddFrame(fPhimaxLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fPhimaxEntry = new TGNumberEntry(f5, 0, 7, kCRLA_FMAX, 
+   fPhimaxEntry = new TGNumberEntry(f5, 0, 7, kCRLA_FMAX,
                                     TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative,
                                     TGNumberFormat::kNELLimitMinMax, 0, 360);
@@ -95,7 +95,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    f6->AddFrame(fCenterXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
    fCenterXEntry = new TGNumberEntry(f6, 0.0, 7, kCRLA_CX,
                                      TGNumberFormat::kNESRealThree,
-                                     TGNumberFormat::kNEANonNegative, 
+                                     TGNumberFormat::kNEANonNegative,
                                      TGNumberFormat::kNELNoLimits);
    fCenterXEntry->GetNumberEntry()->SetToolTipText("Set center X coordinate.");
    f6->AddFrame(fCenterXEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 1));
@@ -107,7 +107,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    f7->AddFrame(fCenterYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 48, 0, 1, 1));
    fCenterYEntry = new TGNumberEntry(f7, 0.0, 7, kCRLA_CY,
                                      TGNumberFormat::kNESRealThree,
-                                     TGNumberFormat::kNEANonNegative, 
+                                     TGNumberFormat::kNEANonNegative,
                                      TGNumberFormat::kNELNoLimits);
    fCenterYEntry->GetNumberEntry()->SetToolTipText("Set center Y coordinate.");
    f7->AddFrame(fCenterYEntry, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
@@ -126,7 +126,7 @@ TCurlyArcEditor::~TCurlyArcEditor()
 
    TGFrameElement *el;
    TIter next(GetList());
-   
+
    while ((el = (TGFrameElement *)next())) {
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
@@ -167,7 +167,7 @@ void TCurlyArcEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-   
+
    fCurlyArc = (TCurlyArc *)fModel;
 
    Double_t val = fCurlyArc->GetRadius();

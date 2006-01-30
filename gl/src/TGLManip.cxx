@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx
+// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -43,37 +43,37 @@ Float_t TGLManip::fgWhite[4]  = {1.0, 1.0, 1.0, 1.0 };
 Float_t TGLManip::fgGrey[4]   = {0.5, 0.5, 0.5, 0.4 };
 
 //______________________________________________________________________________
-TGLManip::TGLManip() : 
-   fShape(0), 
+TGLManip::TGLManip() :
+   fShape(0),
    fSelectedWidget(0), fActive(kFALSE),
-   fFirstMouse(0, 0), 
+   fFirstMouse(0, 0),
    fLastMouse(0, 0)
 {
    // Construct a manipulator object, bound to supplied viewer, and no physical shape
 }
 
 //______________________________________________________________________________
-TGLManip::TGLManip(TGLPhysicalShape * shape) : 
-   fShape(shape), 
+TGLManip::TGLManip(TGLPhysicalShape * shape) :
+   fShape(shape),
    fSelectedWidget(0), fActive(kFALSE),
-   fFirstMouse(0, 0), 
+   fFirstMouse(0, 0),
    fLastMouse(0, 0)
 {
    // Construct a manipulator object, bound to supplied viewer, and physical shape
-   
+
    // TODO: The requirement to attach to viewer is needed for cross thread selection
    // callback under Windows - when the design of TGLKernel / TGLManager is finally
    // resolved this can probably be removed.
 }
 
 //______________________________________________________________________________
-TGLManip::~TGLManip() 
+TGLManip::~TGLManip()
 {
    // Destroy manipulator object
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox) 
+Bool_t TGLManip::Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox)
 {
    UInt_t oldSelection = fSelectedWidget;
 
@@ -118,7 +118,7 @@ Bool_t TGLManip::Select(const TGLCamera & camera, const TGLRect & rect, const TG
 Bool_t TGLManip::HandleButton(const Event_t & event, const TGLCamera & /*camera*/)
 {
    // Handle a mouse button event - return kTRUE if processed, kFALSE otherwise
-   
+
    // Only interested in Left mouse button actions
    if (event.fCode != kButton1) {
       return kFALSE;
@@ -145,22 +145,22 @@ Bool_t TGLManip::HandleMotion(const Event_t & event, const TGLCamera & camera, c
 {
    // Handle a mouse button event - return kTRUE if widget selection change
    // kFALSE otherwise
-   
+
    TGLRect selectRect(event.fX, event.fY, 3, 3);
 
    // TODO: Again very ugly cross thread gVirtual GL call requires passing viewer
-   // 
+   //
    return gVirtualGL->SelectManip(this, &camera, &selectRect, &sceneBox);
 }
 
 //______________________________________________________________________________
-void TGLManip::CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera,  
+void TGLManip::CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera,
                              Double_t & base, TGLVector3 axis[3]) const
 {
-   // Calculates base and axis scale factor (in world units) for drawing manipulators with 
+   // Calculates base and axis scale factor (in world units) for drawing manipulators with
    // reasonable size range in current camera.
 
-   // Calculate a base scale 
+   // Calculate a base scale
    base = box.Extents().Mag() / 100.0;
 
    // Clamp this base scale to a viewport pixel range

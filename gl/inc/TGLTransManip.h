@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLTransManip.h
+// @(#)root/gl:$Name:  $:$Id: TGLTransManip.h $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 //                                                                      //
 // Translation manipulator - attaches to physical shape and draws local //
 // axes widgets with arrow heads. User can mouse over (turns yellow) and//
-// L click/drag to translate along this axis.                           // 
+// L click/drag to translate along this axis.                           //
 // Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
 //////////////////////////////////////////////////////////////////////////
 
@@ -34,8 +34,8 @@ public:
    TGLTransManip();
    TGLTransManip(TGLPhysicalShape * shape);
    virtual ~TGLTransManip();
-   
-   virtual void   Draw(const TGLCamera & camera) const; 
+
+   virtual void   Draw(const TGLCamera & camera) const;
    virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);
 
    ClassDef(TGLTransManip,0) // GL translation manipulator widget

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLTransManip.cxx
+// @(#)root/gl:$Name:  $:$Id: TGLTransManip.cxx $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 //                                                                      //
 // Translation manipulator - attaches to physical shape and draws local //
 // axes widgets with arrow heads. User can mouse over (turns yellow) and//
-// L click/drag to translate along this axis.                           // 
+// L click/drag to translate along this axis.                           //
 // Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
 //////////////////////////////////////////////////////////////////////////
 
@@ -33,24 +33,24 @@ TGLTransManip::TGLTransManip()
 }
 
 //______________________________________________________________________________
-TGLTransManip::TGLTransManip(TGLPhysicalShape * shape) : 
-   TGLManip(shape) 
+TGLTransManip::TGLTransManip(TGLPhysicalShape * shape) :
+   TGLManip(shape)
 {
-   // Construct translation manipulator, attached to supplied TGLViewer 
+   // Construct translation manipulator, attached to supplied TGLViewer
    // 'viewer', bound to TGLPhysicalShape 'shape'.
 }
 
 //______________________________________________________________________________
-TGLTransManip::~TGLTransManip() 
+TGLTransManip::~TGLTransManip()
 {
    // Destory the translation manipulator
 }
-   
+
 //______________________________________________________________________________
 void TGLTransManip::Draw(const TGLCamera & camera) const
 {
-   // Draw translation manipulator - tubes with arrow heads, in local axes of 
-   // attached shape, in red(X), green(Y) and blue(Z), with white center sphere. 
+   // Draw translation manipulator - tubes with arrow heads, in local axes of
+   // attached shape, in red(X), green(Y) and blue(Z), with white center sphere.
    // If selected widget (mouse over) this is drawn in active colour (yellow).
    if (!fShape) {
       return;
@@ -74,29 +74,29 @@ void TGLTransManip::Draw(const TGLCamera & camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kTranslateX) {
       glPushName(1);
-      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadArrow, 
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadArrow,
                         baseScale, fSelectedWidget == 1 ? fgYellow : fgRed);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadArrow, 
+      TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadArrow,
                         baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kTranslateY) {
       glPushName(2);
-      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadArrow, 
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadArrow,
                         baseScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadArrow, 
+      TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadArrow,
                         baseScale, fgGrey);
    }
    if (manip & TGLPhysicalShape::kTranslateZ) {
       glPushName(3);
-      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadArrow, 
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadArrow,
                         baseScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
       glPopName();
    } else {
-      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadArrow, 
+      TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadArrow,
                         baseScale, fgGrey);
    }
    // Draw white center sphere
@@ -109,15 +109,15 @@ void TGLTransManip::Draw(const TGLCamera & camera) const
 //______________________________________________________________________________
 Bool_t TGLTransManip::HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox)
 {
-   // Handle mouse motion over manipulator - if active (selected widget) translate 
-   // physical along selected widget (axis) of the manipulator, so it tracks mouse 
+   // Handle mouse motion over manipulator - if active (selected widget) translate
+   // physical along selected widget (axis) of the manipulator, so it tracks mouse
    // action. Returns kTRUE if redraw required kFALSE otherwise.
    if (fActive) {
       // Find mouse delta projected into world at attached object center
-      TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(), 
+      TGLVector3 shift = camera.ViewportDeltaToWorld(fShape->BoundingBox().Center(),
                                                      event.fX - fLastMouse.GetX(),
                                                      -event.fY + fLastMouse.GetY()); // Y inverted
-      
+
       // Now project this delta onto the current widget (axis) to give
       // a constrained shift along this
       UInt_t axisIndex = fSelectedWidget - 1; // Ugg sort out axis / widget id mapping

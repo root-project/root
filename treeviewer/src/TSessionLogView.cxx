@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionLogView.cxx
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionLogView.cxx $
 // Author: Bertrand Bellenot, Gerri Ganis 15/09/2005
 
 /*************************************************************************

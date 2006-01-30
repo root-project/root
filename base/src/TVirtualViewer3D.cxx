@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -268,11 +268,11 @@ TVirtualViewer3D* TVirtualViewer3D::Viewer3D(TVirtualPad *pad, Option_t *type)
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualViewer3D", type))) {
       if (h->LoadPlugin() == -1) return 0;
-      
+
       if (!pad) {
-         viewer = (TVirtualViewer3D *) h->ExecPlugin(1, gPad); 
+         viewer = (TVirtualViewer3D *) h->ExecPlugin(1, gPad);
       } else {
-         viewer = (TVirtualViewer3D *) h->ExecPlugin(1, pad); 
+         viewer = (TVirtualViewer3D *) h->ExecPlugin(1, pad);
       }
    }
    return viewer;

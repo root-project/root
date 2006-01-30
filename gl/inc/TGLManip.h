@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -47,7 +47,7 @@ class TGLViewer;
 class TGLManip
 {
 protected:
-   // Nasty - this only needs to be here to make a external cross-thread select call 
+   // Nasty - this only needs to be here to make a external cross-thread select call
    // on us - gVirutalGL issues
    TGLPhysicalShape * fShape;
    UInt_t             fSelectedWidget;
@@ -64,18 +64,18 @@ protected:
    static Float_t     fgWhite[4];
    static Float_t     fgGrey[4];
 
-   void CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera, 
+   void CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera,
                       Double_t & base, TGLVector3 axis[3]) const;
 
 public:
    TGLManip();
    TGLManip(TGLPhysicalShape * shape);
    virtual ~TGLManip();
-   
+
    void               Attach(TGLPhysicalShape * shape) { fShape = shape; }
    TGLPhysicalShape * GetAttached() const { return fShape; }
 
-   virtual void   Draw(const TGLCamera & camera) const = 0; 
+   virtual void   Draw(const TGLCamera & camera) const = 0;
    virtual Bool_t Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox);
    virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
    virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera, const TGLBoundingBox & sceneBox);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -45,10 +45,10 @@ public:
    virtual ~TVirtualViewer3D() {};
 
    // Viewers must always handle master (absolute) positions - and
-   // buffer producers must be able to supply them. Some viewers may 
+   // buffer producers must be able to supply them. Some viewers may
    // prefer local frame & translation - and producers can optionally
    // supply them
-   virtual Bool_t PreferLocalFrame() const = 0;  
+   virtual Bool_t PreferLocalFrame() const = 0;
 
    // Addition/removal of objects must occur between Begin/EndUpdate calls
    virtual void   BeginScene() = 0;
@@ -56,23 +56,23 @@ public:
    virtual void   EndScene() = 0;
 
    // Simple object addition - buffer represents a unique single positioned object
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;               
+   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
 
-   // Complex object addition - for adding physical objects which have common logical 
-   // shapes. In this case buffer describes template shape (aside from kCore). 
+   // Complex object addition - for adding physical objects which have common logical
+   // shapes. In this case buffer describes template shape (aside from kCore).
    virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
-   
+
    virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
    virtual void   CloseComposite() = 0;
    virtual void   AddCompositeOp(UInt_t operation) = 0;
 
    virtual TObject *SelectObject(Int_t, Int_t){return 0;}
    virtual void   DrawViewer(){}
-    
+
    virtual void PrintObjects(){}
-   
+
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
-   
+
    ClassDef(TVirtualViewer3D,0) // Abstract interface to 3D viewers
 };
 
