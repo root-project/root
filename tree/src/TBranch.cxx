@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.96 2005/11/16 20:20:01 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.97 2006/01/24 21:32:46 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -227,7 +227,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
             leaf = new TLeafD(leafname,leaftype);
          }
          if (!leaf) {
-            Error("TLeaf","Illegal data type");
+            Error("TLeaf","Illegal data type for %s/%s",*leaftype,name,leaflist);
             MakeZombie();
             return;
          }
