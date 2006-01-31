@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.84 2005/12/04 11:10:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.85 2006/01/25 12:52:49 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1057,8 +1057,9 @@ void TH2::GetRandom2(Double_t &x, Double_t &y)
    Int_t ibin = TMath::BinarySearch(nbins,fIntegral,r1);
    Int_t biny = ibin/nbinsx;
    Int_t binx = ibin - nbinsx*biny;
-   x = fXaxis.GetBinLowEdge(binx+1)
-      +fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
+   x = fXaxis.GetBinLowEdge(binx+1);
+   if (r1 > fIntegral[ibin]) x +=
+       fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
    y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*gRandom->Rndm();
 }
 

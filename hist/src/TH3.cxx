@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.70 2005/12/04 11:10:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.71 2005/12/07 07:36:13 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -912,8 +912,9 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
    Int_t binz = ibin/nxy;
    Int_t biny = (ibin - nxy*binz)/nbinsx;
    Int_t binx = ibin - nbinsx*(biny + nbinsy*binz);
-   x = fXaxis.GetBinLowEdge(binx+1)
-      +fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
+   x = fXaxis.GetBinLowEdge(binx+1);
+   if (r1 > fIntegral[ibin]) x +=
+       fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
    y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*gRandom->Rndm();
    z = fZaxis.GetBinLowEdge(binz+1) + fZaxis.GetBinWidth(binz+1)*gRandom->Rndm();
 }

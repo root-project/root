@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.270 2006/01/25 15:11:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.271 2006/01/26 07:55:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3266,8 +3266,10 @@ Double_t TH1::GetRandom() const
    }
    Double_t r1 = gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbinsx,fIntegral,r1);
-   return GetBinLowEdge(ibin+1)
-      +GetBinWidth(ibin+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
+   Double_t x = GetBinLowEdge(ibin+1);
+   if (r1 > fIntegral[ibin]) x +=
+       GetBinWidth(ibin+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
+   return x;
 }
 
 //______________________________________________________________________________
