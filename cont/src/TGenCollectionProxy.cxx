@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.22 2005/09/03 00:45:34 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.23 2005/11/16 20:07:50 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -340,7 +340,6 @@ void TGenCollectionProxy::Value::DeleteItem(void* ptr)
       }
       else if ( fType ) {
          fType->Destructor(ptr);
-         ::operator delete(ptr);
       }
       else {
          ::operator delete(ptr);
