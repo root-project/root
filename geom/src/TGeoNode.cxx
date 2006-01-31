@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.28 2005/11/28 12:55:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.29 2006/01/19 11:23:08 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -180,7 +180,40 @@ void TGeoNode::CheckOverlaps(Double_t ovlp)
       geom->SetCheckingOverlaps(kFALSE);
    }   
 }      
+
+//_____________________________________________________________________________
+Int_t TGeoNode::DistancetoPrimitive(Int_t px, Int_t py)
+{
+// compute the closest distance of approach from point px,py to this node
+   Int_t dist = 9999;
+   if (!fVolume) return dist;
+   if (gGeoManager != fVolume->GetGeoManager()) gGeoManager = fVolume->GetGeoManager();
+   TVirtualGeoPainter *painter = gGeoManager->GetPainter();
+   if (!painter) return dist;
+   dist = painter->DistanceToPrimitiveVol(fVolume, px, py);
+   return dist;
+}
       
+//_____________________________________________________________________________
+void TGeoNode::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+// Execute mouse actions on this volume.
+   if (!fVolume) return;
+   TVirtualGeoPainter *painter = fVolume->GetGeoManager()->GetPainter();
+   if (!painter) return;
+   painter->ExecuteVolumeEvent(fVolume, event, px, py);
+}
+
+//_____________________________________________________________________________
+char *TGeoNode::GetObjectInfo(Int_t px, Int_t py) const
+{
+// Get node info for the browser.
+   if (!fVolume) return 0;
+   TVirtualGeoPainter *painter = fVolume->GetGeoManager()->GetPainter();
+   if (!painter) return 0;
+   return painter->GetVolumeInfo(fVolume, px, py);
+}
+
 //_____________________________________________________________________________
 Bool_t TGeoNode::IsOnScreen() const
 {

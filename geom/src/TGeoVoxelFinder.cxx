@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.28 2005/11/21 13:52:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.29 2005/11/28 12:55:35 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -118,6 +118,7 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    fNcandidates  = 0;
    fCurrentVoxel = 0;
    fBits1    = 0;
+   SetNeedRebuild();
 }
 //-----------------------------------------------------------------------------
 TGeoVoxelFinder::~TGeoVoxelFinder()

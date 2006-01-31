@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.18 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.19 2006/01/19 11:23:08 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -75,9 +75,11 @@ public:
    virtual void      cd() const {;}
    void              CheckOverlaps(Double_t ovlp=0.1); // *MENU*
    void              CheckShapes();
+   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
    void              Draw(Option_t *option="");
    void              DrawOnly(Option_t *option="");
    void              DrawOverlaps();
+   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
    void              FillIdArray(Int_t &ifree, Int_t &nodeid, Int_t *array) const;
    Int_t             FindNode(const TGeoNode *node, Int_t level);
    virtual Int_t     GetByteCount() const {return 44;}
@@ -94,6 +96,7 @@ public:
    Int_t             GetNumber() const {return fNumber;}
    Int_t            *GetOverlaps(Int_t &novlp) const {novlp=fNovlp; return fOverlaps;}
    TGeoVolume       *GetVolume() const                   {return fVolume;}
+   virtual char     *GetObjectInfo(Int_t px, Int_t py) const;
    virtual Int_t     GetOptimalVoxels() const {return 0;}
    void              InspectNode() const; // *MENU*
    virtual Bool_t    IsFolder() const {return kTRUE;}

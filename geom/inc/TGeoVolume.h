@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.44 2005/12/19 10:46:58 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.45 2006/01/19 11:23:08 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -73,6 +73,7 @@ protected :
    TString            fOption;         //! option - if any
    Int_t              fNumber;         //  volume serial number in the list of volumes
    Int_t              fNtotal;         // total number of physical nodes
+
 public:
    enum EGeoVolumeTypes {
       kVolumeReplicated =  BIT(14),
@@ -100,7 +101,8 @@ public:
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
    void            CleanAll();
-   TGeoVolume     *CloneVolume() const;
+   virtual TGeoVolume *CloneVolume() const;
+   void            CloneNodesAndConnect(TGeoVolume *newmother) const;
    void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const;
    void            CheckOverlaps(Double_t ovlp=0.1, Option_t *option="") const; // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000, Int_t option=0);
@@ -174,6 +176,7 @@ public:
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
+   void            RemoveNode(TGeoNode *node);
    void            SaveAs(const char *filename); // *MENU*
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
    void            SelectVolume(Bool_t clear = kFALSE);
@@ -272,12 +275,14 @@ public:
 
    virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option=""); 
    virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option);
+   virtual TGeoVolume *CloneVolume() const;
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    virtual void    DrawOnly(Option_t *) {;} 
    virtual Int_t   GetCurrentNodeIndex() const {return fCurrent;}
    virtual Int_t   GetNextNodeIndex() const {return fNext;}
    virtual Bool_t  IsAssembly() const {return kTRUE;}
    virtual Bool_t  IsVisible() const {return kFALSE;}
+   static TGeoVolumeAssembly *MakeAssemblyFromVolume(TGeoVolume *vol);
    void            SetCurrentNodeIndex(Int_t index) {fCurrent = index;}
    void            SetNextNodeIndex(Int_t index) {fNext = index;}
 

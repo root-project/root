@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.137 2006/01/16 11:03:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.138 2006/01/19 11:23:08 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -510,6 +510,7 @@ TGeoManager::TGeoManager()
       fActivity = kFALSE;
       fIsEntering = kFALSE;
       fIsExiting = kFALSE;
+      fIsNodeSelectable = kFALSE;
       fIsStepEntering = kFALSE;
       fIsStepExiting = kFALSE;
       fIsOutside = kFALSE;
@@ -625,6 +626,7 @@ void TGeoManager::Init()
    fIsExiting = kFALSE;
    fIsStepEntering = kFALSE;
    fIsStepExiting = kFALSE;
+   fIsNodeSelectable = kFALSE;
    fIsOutside = kFALSE;
    fIsOnBoundary = kFALSE;
    fIsSameLocation = kTRUE;
@@ -888,6 +890,68 @@ void TGeoManager::RegisterMatrix(const TGeoMatrix *matrix)
    fMatrices->AddAtAndExpand(mat, nmat);
 }
 
+//_____________________________________________________________________________
+Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew) 
+{
+// Replaces all occurences of VORIG with VNEW in the geometry tree. The volume VORIG
+// is not replaced from the list of volumes, but all node referencing it will reference
+// VNEW instead. Returns number of occurences changed.
+   Int_t nref = 0;
+   if (!vorig || !vnew) return nref;
+   TGeoMedium *morig = vorig->GetMedium();
+   Bool_t checkmed = kFALSE;
+   if (morig) checkmed = kTRUE;
+   TGeoMedium *mnew = vnew->GetMedium();
+   // Try to limit the damage produced by incorrect usage.
+   if (!mnew && !vnew->IsAssembly()) {
+      Error("ReplaceVolume","Replacement volume %s has no medium and it is not an assembly",
+             vnew->GetName());              
+      return nref;       
+   }          
+   if (mnew && checkmed) {
+      if (mnew->GetId() != morig->GetId())
+         Warning("ReplaceVolume","Replacement volume %s has different medium than original volume %s",
+                 vnew->GetName(), vorig->GetName());
+      checkmed = kFALSE;
+   }
+   
+   // Medium checking now performed only if replacement is an assembly and old volume a real one.
+   // Check result is dependent on positioning.
+   Int_t nvol = fVolumes->GetEntriesFast();
+   Int_t i,j,nd;
+   Int_t ierr = 0;
+   TGeoVolume *vol;
+   TGeoNode *node;
+   TGeoVoxelFinder *voxels;
+   for (i=0; i<nvol; i++) {
+      vol = (TGeoVolume*)fVolumes->At(i);
+      if (!vol) continue;
+      if (vol==vorig || vol==vnew) continue;
+      nd = vol->GetNdaughters();
+      for (j=0; j<nd; j++) {
+         node = vol->GetNode(j);
+         if (node->GetVolume() == vorig) {
+            if (checkmed) {
+               mnew = node->GetMotherVolume()->GetMedium();
+               if (mnew && mnew->GetId()!=morig->GetId()) ierr++;
+            }
+            nref++;
+            node->SetVolume(vnew);
+            voxels = node->GetMotherVolume()->GetVoxels();
+            if (voxels) voxels->SetNeedRebuild();
+         } else {
+            if (node->GetMotherVolume() == vorig) {
+               nref++;
+               node->SetMotherVolume(vnew);
+            }
+         }      
+      }
+   }
+   if (ierr) Warning("ReplaceVolume", "Volumes should not be replaced with assemblies if they are positioned in containers having a different medium ID.\n %i occurences for assembly replacing volume %s", 
+                     ierr, vorig->GetName());
+   return nref;
+}         
+         
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)

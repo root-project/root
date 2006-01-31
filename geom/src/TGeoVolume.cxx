@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.71 2006/01/19 11:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.72 2006/01/20 13:00:40 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -405,8 +405,8 @@ TGeoVolume::~TGeoVolume()
       }   
       delete fNodes;
    }
-   if (fFinder && !TObject::TestBit(kVolumeImportNodes) ) delete fFinder;
-   if (fVoxels && !TObject::TestBit(kVolumeClone)) delete fVoxels;
+   if (fFinder && !TObject::TestBit(kVolumeImportNodes | kVolumeClone) ) delete fFinder;
+   if (fVoxels) delete fVoxels;
 }
 
 //_____________________________________________________________________________
@@ -1264,11 +1264,9 @@ void TGeoVolume::GrabFocus()
 TGeoVolume *TGeoVolume::CloneVolume() const
 {
 // Clone this volume.
-   char *name = new char[strlen(GetName())+1];
-   sprintf(name, "%s", GetName());
    // build a volume with same name, shape and medium
-   TGeoVolume *vol = new TGeoVolume(name, fShape, fMedium);
-   delete [] name;
+   printf("cloning volume: %s\n", GetName());
+   TGeoVolume *vol = new TGeoVolume(GetName(), fShape, fMedium);
    Int_t i;
    // copy volume attributes
    vol->SetLineColor(GetLineColor());
@@ -1280,6 +1278,8 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    Int_t nbits = 8*sizeof(UInt_t);
    for (i=0; i<nbits; i++) 
       vol->SetAttBit(1<<i, TGeoAtt::TestAttBit(1<<i));
+   for (i=14; i<24; i++)
+      vol->SetBit(1<<i, TestBit(1<<i));   
    
    // copy field
    vol->SetField(fField);
@@ -1288,16 +1288,42 @@ TGeoVolume *TGeoVolume::CloneVolume() const
       vol->SetBit(1<<i, TObject::TestBit(1<<i));
    vol->SetBit(kVolumeClone);   
    // copy nodes
-   vol->MakeCopyNodes(this);
+//   CloneNodesAndConnect(vol);
+   vol->MakeCopyNodes(this);   
    // if volume is divided, copy finder
    vol->SetFinder(fFinder);
    // copy voxels
-   vol->SetVoxelFinder(fVoxels);
+   TGeoVoxelFinder *voxels = 0;
+   if (fVoxels) {
+      voxels = new TGeoVoxelFinder(vol);
+      vol->SetVoxelFinder(voxels);
+   }   
    // copy option, uid
    vol->SetOption(fOption);
    vol->SetNumber(fNumber);
    vol->SetNtotal(fNtotal);
    return vol;
+}
+
+//_____________________________________________________________________________
+void TGeoVolume::CloneNodesAndConnect(TGeoVolume *newmother) const
+{
+// Clone the array of nodes.
+   if (!fNodes) return;
+   TGeoNode *node;
+   Int_t nd = fNodes->GetEntriesFast();
+   if (!nd) return;
+   // create new list of nodes
+   TObjArray *list = new TObjArray(nd);
+   // attach it to new volume
+   newmother->SetNodes(list);
+//   ((TObject*)newmother)->SetBit(kVolumeImportNodes);
+   for (Int_t i=0; i<nd; i++) {
+      //create copies of nodes and add them to list
+      node = GetNode(i)->MakeCopyNode();
+      node->SetMotherVolume(newmother);
+      list->Add(node);
+   }
 }
 
 //_____________________________________________________________________________
@@ -1320,13 +1346,8 @@ void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
 TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
 {
     // make a copy of this volume
-//    printf("   Making a copy of %s\n", GetName());
-   char *name = new char[strlen(GetName())+1];
-   sprintf(name, "%s", GetName());
    // build a volume with same name, shape and medium
-   TGeoVolume *vol = new TGeoVolume(name, newshape, fMedium);
-   delete [] name;
-   Int_t i=0;
+   TGeoVolume *vol = new TGeoVolume(GetName(), newshape, fMedium);
    // copy volume attributes
    vol->SetVisibility(IsVisible());
    vol->SetLineColor(GetLineColor());
@@ -1341,21 +1362,9 @@ TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
 //       Error("MakeCopyVolume", "volume %s divided", GetName());
       vol->SetFinder(fFinder);
    }   
-   if (!fNodes) return vol;
-   TGeoNode *node;
-   Int_t nd = fNodes->GetEntriesFast();
-   if (!nd) return vol;
-   // create new list of nodes
-   TObjArray *list = new TObjArray();
-   // attach it to new volume
-   vol->SetNodes(list);
-   ((TObject*)vol)->SetBit(kVolumeImportNodes);
-   for (i=0; i<nd; i++) {
-      //create copies of nodes and add them to list
-      node = GetNode(i)->MakeCopyNode();
-      node->SetMotherVolume(vol);
-      list->Add(node);
-   }
+   CloneNodesAndConnect(vol);
+//   ((TObject*)vol)->SetBit(kVolumeImportNodes);
+   ((TObject*)vol)->SetBit(kVolumeClone);
    return vol;       
 }    
 
@@ -1531,6 +1540,17 @@ void TGeoVolume::FindOverlaps() const
       fVoxels->FindOverlaps(inode);
    }
 }
+
+//_____________________________________________________________________________
+void TGeoVolume::RemoveNode(TGeoNode *node) 
+{
+// Remove an existing daughter.
+   if (!fNodes || !fNodes->GetEntriesFast()) return;
+   if (!fNodes->Remove(node)) return;
+   fNodes->Compress();
+   if (fVoxels) fVoxels->SetNeedRebuild();
+   if (IsAssembly()) fShape->ComputeBBox();
+}   
 
 //_____________________________________________________________________________
 void TGeoVolume::SelectVolume(Bool_t clear)
@@ -1753,11 +1773,9 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
    TGeoVolume *cell;
    if (fDivision) {
       div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
-//      div->MakeCopyNodes(fDivision);
       for (Int_t i=0; i<div->GetNvolumes(); i++) {
          cell = div->GetVolume(i);
          fDivision->AddVolume(cell);
-//         cell->MakeCopyNodes(fDivision);
       }
    }      
    if (fNodes)
@@ -1882,11 +1900,9 @@ TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
    if (fDivision) {
       TGeoVolume *cell;
       TGeoVolumeMulti *div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
-//      div->MakeCopyNodes(fDivision);
       for (Int_t i=0; i<div->GetNvolumes(); i++) {
          cell = div->GetVolume(i);
          fDivision->AddVolume(cell);
-//         cell->MakeCopyNodes(fDivision);
       }
    }      
                  
@@ -2022,10 +2038,86 @@ void TGeoVolumeAssembly::AddNodeOverlap(const TGeoVolume *, Int_t, TGeoMatrix *,
 }   
 
 //_____________________________________________________________________________
+TGeoVolume *TGeoVolumeAssembly::CloneVolume() const
+{
+// Clone this volume.
+   // build a volume with same name, shape and medium
+   TGeoVolume *vol = new TGeoVolumeAssembly(GetName());
+   Int_t i;
+   // copy other attributes
+   Int_t nbits = 8*sizeof(UInt_t);
+   for (i=0; i<nbits; i++) 
+      vol->SetAttBit(1<<i, TGeoAtt::TestAttBit(1<<i));
+   for (i=14; i<24; i++)
+      vol->SetBit(1<<i, TestBit(1<<i));   
+   
+   // copy field
+   vol->SetField(fField);
+   // Set bits
+   for (i=0; i<nbits; i++) 
+      vol->SetBit(1<<i, TObject::TestBit(1<<i));
+   vol->SetBit(kVolumeClone);   
+   // make copy nodes
+   vol->MakeCopyNodes(this);
+//   CloneNodesAndConnect(vol);
+   vol->GetShape()->ComputeBBox();
+   // copy voxels
+   TGeoVoxelFinder *voxels = 0;
+   if (fVoxels) {
+      voxels = new TGeoVoxelFinder(vol);
+      vol->SetVoxelFinder(voxels);
+   }   
+   // copy option, uid
+   vol->SetOption(fOption);
+   vol->SetNumber(fNumber);
+   vol->SetNtotal(fNtotal);
+   return vol;
+}
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoVolumeAssembly::Divide(const char *, Int_t, Int_t, Double_t, Double_t, Int_t, Option_t *)
 {
 // Division makes no sense for assemblies.
    Error("Divide","Assemblies cannot be divided");
    return 0;
 }
+
+//_____________________________________________________________________________
+TGeoVolumeAssembly *TGeoVolumeAssembly::MakeAssemblyFromVolume(TGeoVolume *volorig)
+{
+// Make a clone of volume VOL but which is an assembly.
+   if (volorig->IsAssembly() || volorig->IsVolumeMulti()) return 0;
+   Int_t nd = volorig->GetNdaughters();
+   if (!nd) return 0;
+   TGeoVolumeAssembly *vol = new TGeoVolumeAssembly(volorig->GetName());
+   Int_t i;
+   // copy other attributes
+   Int_t nbits = 8*sizeof(UInt_t);
+   for (i=0; i<nbits; i++) 
+      vol->SetAttBit(1<<i, volorig->TestAttBit(1<<i));
+   for (i=14; i<24; i++)
+      vol->SetBit(1<<i, volorig->TestBit(1<<i));   
+   
+   // copy field
+   vol->SetField(volorig->GetField());
+   // Set bits
+   for (i=0; i<nbits; i++) 
+      vol->SetBit(1<<i, volorig->TestBit(1<<i));
+   vol->SetBit(kVolumeClone);   
+   // make copy nodes
+   vol->MakeCopyNodes(volorig);
+//   volorig->CloneNodesAndConnect(vol);
+   vol->GetShape()->ComputeBBox();
+   // copy voxels
+   TGeoVoxelFinder *voxels = 0;
+   if (volorig->GetVoxels()) {
+      voxels = new TGeoVoxelFinder(vol);
+      vol->SetVoxelFinder(voxels);
+   }   
+   // copy option, uid
+   vol->SetOption(volorig->GetOption());
+   vol->SetNumber(volorig->GetNumber());
+   vol->SetNtotal(volorig->GetNtotal());
+   return vol;
+}   
 

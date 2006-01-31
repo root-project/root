@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.74 2005/11/29 18:58:10 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.75 2006/01/19 11:23:08 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -340,7 +340,8 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          if (vis && (level<=fVisLevel)) { 
             dist = vol->GetShape()->DistancetoPrimitive(px,py);
             if (dist<maxdist) {
-               gPad->SetSelected(vol);
+               if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetCurrentNode());
+               else gPad->SetSelected(vol);
                fCheckedNode = current;
                box = (TGeoBBox*)vol->GetShape();
                fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
@@ -367,7 +368,8 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          if (vis && last) {
             dist = vol->GetShape()->DistancetoPrimitive(px, py);
             if (dist<maxdist) {
-               gPad->SetSelected(vol);
+               if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetCurrentNode());
+               else gPad->SetSelected(vol);
                fCheckedNode = current;
                box = (TGeoBBox*)vol->GetShape();
                fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
@@ -389,7 +391,8 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
       case kGeoVisOnly:
          dist = vol->GetShape()->DistancetoPrimitive(px, py);
          if (dist<maxdist) {
-            gPad->SetSelected(vol);
+            if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetTopNode());
+            else gPad->SetSelected(vol);
             fCheckedNode = current;
             box = (TGeoBBox*)vol->GetShape();
             fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
@@ -405,7 +408,8 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             if (fGeoManager->GetCurrentVolume()->IsVisible()) {
                dist = fGeoManager->GetCurrentVolume()->GetShape()->DistancetoPrimitive(px, py);
                if (dist<maxdist) {
-                  gPad->SetSelected(fGeoManager->GetCurrentVolume());
+                  if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetCurrentNode());
+                  else gPad->SetSelected(fGeoManager->GetCurrentVolume());
                   fCheckedNode = current;
                   box = (TGeoBBox*)fGeoManager->GetCurrentVolume()->GetShape();
                   fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
@@ -689,19 +693,27 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px
    case kMouseEnter:
       width = volume->GetLineWidth();
       color = volume->GetLineColor();
+      break;
+   
+   case kMouseLeave:
+      volume->SetLineWidth(width);
+      volume->SetLineColor(color);
+      break;
+
+   case kButton1Down:
       volume->SetLineWidth(3);
       volume->SetLineColor(2);
       gPad->Modified();
       gPad->Update();
       break;
    
-   case kMouseLeave:
+   case kButton1Up:
       volume->SetLineWidth(width);
       volume->SetLineColor(color);
       gPad->Modified();
       gPad->Update();
       break;
-   
+      
    case kButton1Double:
       gPad->SetCursor(kWatch);
       GrabFocus();

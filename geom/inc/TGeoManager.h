@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.71 2006/01/19 11:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.72 2006/01/30 09:01:11 rdm Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -89,6 +89,7 @@ private :
    Bool_t                fMatrixTransform;  //! flag for using GL matrix
    Bool_t                fMatrixReflection; //! flag for GL reflections
    Bool_t                fActivity;         //! switch ON/OFF volume activity (default OFF - all volumes active))
+   Bool_t                fIsNodeSelectable; //! flag that nodes are the selected objects in pad rather than volumes
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
 
@@ -196,6 +197,7 @@ public:
    Int_t                  GetVisOption() const;
    Bool_t                 IsInPhiRange() const;
    Bool_t                 IsDrawingExtra() const {return fDrawExtra;}
+   Bool_t                 IsNodeSelectable() const {return fIsNodeSelectable;}
    Bool_t                 IsVisLeaves() const {return (fVisOption==1)?kTRUE:kFALSE;}
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
@@ -209,6 +211,7 @@ public:
    void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
    void                   SetDrawExtraPaths(Bool_t flag=kTRUE) {fDrawExtra=flag;}
+   void                   SetNodeSelectable(Bool_t flag=kTRUE) {fIsNodeSelectable=flag;}
    void                   SetVisDensity(Double_t dens=0.01); // *MENU*
    void                   SetVisLevel(Int_t level=3);   // *MENU*
    void                   SetVisOption(Int_t option=0);
@@ -395,6 +398,7 @@ public:
    //--- utilities
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
+   Int_t                  ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
    Int_t                 *GetIntBuffer(Int_t length);
