@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.271 2006/01/26 07:55:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.272 2006/01/31 12:13:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3564,6 +3564,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
       return;
    }
 
+   Double_t entries = fEntries;
    Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
    Int_t *a = new Int_t[n+2];
    Int_t i,j,k;
@@ -3729,6 +3730,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          }
       }
    }
+   fEntries = entries;
    delete labold;
    if (a)      delete [] a;
    if (cont)   delete [] cont;
