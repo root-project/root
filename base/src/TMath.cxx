@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.109 2005/11/18 20:30:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.110 2005/11/21 11:17:18 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1267,77 +1267,72 @@ Double_t TMath::Voigt(Double_t xx, Double_t sigma, Double_t lg, Int_t r)
 }
 
 //______________________________________________________________________________
-void TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
+Bool_t TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c) 
 {
-   // Computes the roots of a cubic polynomial
-   // coef: Coefficients
-   // a,b,c: references to the roots
-   // Author: Jan Conrad
+  // Calculates roots of polynomial of 3rd order a*x^3 + b*x^2 + c*x + d, where
+  // a == coef[3], b == coef[2], c == coef[1], d == coef[0]
+  //coef[3] must be different from 0
+  // If the boolean returned by the method is false:
+  //    ==> there are 3 real roots a,b,c
+  // If the boolean returned by the method is true:
+  //    ==> there is one real root a and 2 complex conjugates roots (b+i*c,b-i*c)
+  // Author: Francois-Xavier Gentit
 
-   Double_t pi= TMath::Pi();
-   Int_t threeroots = 0;
-
-   Double_t phi,q,r,s,t,p,d,r1,x,temp;
-
-   a = 0.0;
-   b = 0.0;
-   c = 0.0;
-
-   if (coef[3] == 0) return;
-   r = coef[2]/coef[3];
-   s = coef[1]/coef[3];
-   t = coef[0]/coef[3];
-   p = (3 * s - r*r)/3;
-   q = (2 * r*r*r)/27 - (r * s)/3 + t;
-   d = (p/3)*(p/3)*(p/3) + (q/2)*(q/2);
-   r1 = q/TMath::Abs(q) * TMath::Sqrt(TMath::Abs(p)/3);
-   if (p==0) {
-      q = 8.0;
-      a = TMath::Power(q,1./3.);
-      goto done;
-   }
-
-   if ( p < 0) {
-      if (d <= 0) {
-         threeroots=1;
-         phi = TMath::ACos(q/2/(r1*r1*r1));
-         a   = TMath::Cos(phi/3);
-         b   = TMath::Cos(phi/3 + (2 * pi)/3);
-         c   = TMath::Cos(phi/3 + (4 * pi)/3);
-      }  else {
-         x   = q/2/(r1*r1*r1);
-         phi = TMath::Log(x+TMath::Sqrt(x*x-1));
-         b   = TMath::CosH(phi/3);
-      }
-   } else {
-      x   = q/2/(r1*r1*r1);
-      phi = TMath::Log(x+TMath::Sqrt(x*x+1));
-      b   = TMath::SinH(phi/3);
-   }
-
-   a = (-2*r1)*a-r/3;
-   b = (-2*r1)*b-r/3;
-   c = (-2*r1)*c-r/3;
-
-done:
-
-   if (threeroots == 1) {
-      if (a > b){
-         temp=a;
-         a=b;
-         b=temp;
-      }
-      if (b > c) {
-         temp=b;
-         b=c;
-         c=temp;
-      }
-      if (a > b) {
-         temp=a;
-         a=b;
-         b=temp;
-      }
-   }
+  Bool_t complex = kFALSE;
+  Double_t r,s,t,p,q,d,ps3,ps33,qs2,u,v,tmp,lnu,lnv,su,sv,y1,y2,y3;
+  a    = 0;
+  b    = 0;
+  c    = 0;
+  if (coef[3] == 0) return complex;
+  r    = coef[2]/coef[3];
+  s    = coef[1]/coef[3];
+  t    = coef[0]/coef[3];
+  p    = s - (r*r)/3;
+  ps3  = p/3;
+  q    = (2*r*r*r)/27.0 - (r*s)/3 + t;
+  qs2  = q/2;
+  ps33 = ps3*ps3*ps3;
+  d    = ps33 + qs2*qs2;
+  if (d>=0) {
+     complex = kTRUE;
+     d   = TMath::Sqrt(d);
+     u   = -qs2 + d;
+     v   = -qs2 - d;
+     tmp = 1./3.;
+     lnu = TMath::Log(TMath::Abs(u));
+     lnv = TMath::Log(TMath::Abs(v));
+     su  = TMath::Sign(1.,u);
+     sv  = TMath::Sign(1.,v);
+     u   = su*TMath::Exp(tmp*lnu);
+     v   = sv*TMath::Exp(tmp*lnv);
+     y1  = u + v;
+     y2  = -y1/2;
+     y3  = ((u-v)*TMath::Sqrt(3.))/2;
+     tmp = r/3;
+     a   = y1 - tmp;
+     b   = y2 - tmp;
+     c   = y3;
+  } else {
+     Double_t phi,cphi,phis3,c1,c2,c3,pis3;
+     ps3   = -ps3;
+     ps33  = -ps33;
+     cphi  = -qs2/TMath::Sqrt(ps33);
+     phi   = TMath::ACos(cphi);
+     phis3 = phi/3;
+     pis3  = TMath::Pi()/3;
+     c1    = TMath::Cos(phis3);
+     c2    = TMath::Cos(pis3 + phis3);
+     c3    = TMath::Cos(pis3 - phis3);
+     tmp   = TMath::Sqrt(ps3);
+     y1    = 2*tmp*c1;
+     y2    = -2*tmp*c2;
+     y3    = -2*tmp*c3;
+     tmp = r/3;
+     a   = y1 - tmp;
+     b   = y2 - tmp;
+     c   = y3 - tmp;
+  }
+  return complex;
 }
 
 //______________________________________________________________________________

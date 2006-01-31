@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.64 2005/08/15 08:42:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.65 2005/11/18 20:30:04 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -318,7 +318,7 @@ namespace TMath {
    inline Double_t  NormCross(const Double_t v1[3],const Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
           Float_t  *Normal2Plane(const Float_t v1[3],const Float_t v2[3],const Float_t v3[3], Float_t normal[3]);     // Calculate a normal vector of a plane
           Double_t *Normal2Plane(const Double_t v1[3],const Double_t v2[3],const Double_t v3[3], Double_t normal[3]); // Calculate a normal vector of a plane
-          void      RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
+          Bool_t    RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
 
           Double_t  BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
           Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
