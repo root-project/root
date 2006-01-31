@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.4 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.5 2005/11/11 22:16:04 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -404,7 +404,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
       if(type.CompareTo("varchar",TString::kIgnoreCase)==0 || type.CompareTo("char",TString::kIgnoreCase)==0 ){
          char siz[6];
          sprintf(siz,"[%d]",prec);
-         decl.Append( leafName+siz+"/C" );
+         decl.Append( leafName+siz+"/C:" );
       }
       else if(type.CompareTo("int",TString::kIgnoreCase)==0){
          decl.Append( leafName+"/I:" );
