@@ -1,4 +1,4 @@
-//$Id: rflx_gensrc.cxx,v 1.16 2006/01/19 18:07:15 axel Exp $
+//$Id: rflx_gensrc.cxx,v 1.9 2006/01/19 22:22:15 pcanal Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -337,7 +337,6 @@ void rflx_gensrc::gen_enumdicts()
       while (dm->Next())
          if (dm->Type() && dm->Type()->Tagnum() == en.Tagnum() 
             && (dm->Property() & (G__BIT_ISENUM | G__BIT_ISSTATIC | G__BIT_ISCONSTANT))) {
-            G__TypeInfo* type=dm->Type();
             m_fv << std::endl << ind() << ".AddItem(\"" << dm->Name() << "\" , "
                << fqiParent << dm->Name() << ")";
          }
@@ -1044,11 +1043,12 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
 
    int iBase=0;
    std::list<int> baseTags;
-   std::list<std::pair<G__ClassInfo,int /*access*/> > baseClassesToSearch;
-   baseClassesToSearch.push_back(std::make_pair(ci, G__BIT_ISPUBLIC));
+   std::list<std::pair<G__ClassInfo,std::pair<int /*access*/, int /*inhlevel*/> > > baseClassesToSearch;
+   baseClassesToSearch.push_back(std::make_pair(ci, std::make_pair(G__BIT_ISPUBLIC,0)));
    while (baseClassesToSearch.size()) {
       G__BaseClassInfo ciBase(baseClassesToSearch.front().first);
-      int accessBase=baseClassesToSearch.front().second;
+      int accessBase=baseClassesToSearch.front().second.first;
+      int inhlevel = baseClassesToSearch.front().second.second;
       while (ciBase.Next()) {
          if (  (ciBase.Property() & G__BIT_ISVIRTUALBASE) &&
               !(ciBase.Property() & G__BIT_ISDIRECTINHERIT)) {
@@ -1071,7 +1071,7 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
             else if (accessBase & G__BIT_ISPROTECTED) 
                myAccess=myAccess & !G__BIT_ISPUBLIC | G__BIT_ISPROTECTED;
 
-         baseClassesToSearch.push_back(std::make_pair(ciBaseClass, myAccess));
+         baseClassesToSearch.push_back(std::make_pair(ciBaseClass, std::make_pair(myAccess,inhlevel+1)));
 
          std::string access;
          if (myAccess & G__BIT_ISVIRTUALBASE)
@@ -1088,11 +1088,12 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
          if (!iBase) {
             s << ind() << "if ( !s_bases.size() ) {" << std::endl;
             ++ind;
+            iBase++;
          }
 
          s << ind() << "s_bases.push_back(std::make_pair(ROOT::Reflex::Base( ROOT::Reflex::GetType< " 
             << basetype_name << " >(), ROOT::Reflex::BaseOffset< " << fclname << "," << basetype_name 
-            << " >::Get()," << access << "), " << iBase++ << "));" << std::endl;
+            << " >::Get()," << access << "), " << inhlevel << "));" << std::endl;
       }
       baseClassesToSearch.erase(baseClassesToSearch.begin());
   }
