@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.9 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.10 2006/01/23 21:50:26 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -91,11 +91,11 @@ friend class  TReadEnvParser;
 friend class  TWriteEnvParser;
 
 private:
-   TString     fName;
-   TString     fType;
-   TString     fValue;
-   EEnvLevel   fLevel;
-   Bool_t      fModified;
+   TString     fName;       // env rec key name
+   TString     fType;       // env rec type
+   TString     fValue;      // env rec value
+   EEnvLevel   fLevel;      // env rec level
+   Bool_t      fModified;   // if env rec has been modified
 
    TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l);
    Int_t    Compare(const TObject *obj) const;
@@ -104,14 +104,14 @@ private:
    TString  ExpandValue(const char *v);
 
 public:
-   TEnvRec() {fName="",fType="",fValue="",fLevel=kEnvAll;fModified = kTRUE;}
+   TEnvRec() { fLevel = kEnvAll; fModified = kTRUE; }
    const char *GetName() const { return fName; }
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }
    EEnvLevel   GetLevel() const { return fLevel; }
    ULong_t     Hash() const { return fName.Hash(); }
-   
-   ClassDef(TEnvRec,1)  //Individual TEnv records.
+
+   ClassDef(TEnvRec,1)  // Individual TEnv records
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -123,8 +123,8 @@ public:
 class TEnv : public TObject {
 
 private:
-   THashList        *fTable;
-   TString           fRcName;
+   THashList        *fTable;     // hash table containing env records
+   TString           fRcName;    //
 
    const char       *Getvalue(const char *name);
 
@@ -136,7 +136,7 @@ public:
    Bool_t              Defined(const char *name)
                                     { return Getvalue(name) != 0; }
 
-   virtual const char *GetRcName() const {return fRcName.Data();}
+   virtual const char *GetRcName() const { return fRcName; }
    virtual Int_t       GetValue(const char *name, Int_t dflt);
    virtual Double_t    GetValue(const char *name, Double_t dflt);
    virtual const char *GetValue(const char *name, const char *dflt);
@@ -150,12 +150,13 @@ public:
 
    virtual TEnvRec    *Lookup(const char *n);
    virtual void        ReadFile(const char *fname, EEnvLevel level);
+   virtual void        WriteFile(const char *fname, EEnvLevel level = kEnvAll);
    virtual void        Save();
    virtual void        SaveLevel(EEnvLevel level);
    virtual void        Print(Option_t *option="") const;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
 
-   ClassDef(TEnv,1)  //Handle ROOT configuration resources
+   ClassDef(TEnv,1)  // Handle ROOT configuration resources
 };
 
 R__EXTERN TEnv *gEnv;

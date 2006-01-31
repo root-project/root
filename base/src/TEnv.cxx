@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.23 2005/11/11 09:24:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.24 2006/01/23 21:50:26 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -366,7 +366,7 @@ TEnv::TEnv(const char *name)
    // $ROOTSYS/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
    // ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
    // read additional user defined resource files by creating addtional TEnv
-   // object.
+   // objects.
 
    if (!name || !strlen(name))
       fTable = 0;
@@ -374,16 +374,16 @@ TEnv::TEnv(const char *name)
       fTable  = new THashList(1000);
       fRcName = name;
 
-      char sname[128] = "system";
-      strcat(sname, name);
+      TString sname = "system";
+      sname += name;
 #ifdef ROOTETCDIR
       char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
 #else
-      char etc[1024];
+      TString etc = gRootDir;
 #ifdef WIN32
-      sprintf(etc, "%s\\etc", gRootDir);
+      etc += "\\etc";
 #else
-      sprintf(etc, "%s/etc", gRootDir);
+      etc += "/etc";
 #endif
       char *s = gSystem->ConcatFileName(etc, sname);
       if (gSystem->AccessPathName(s)) {
@@ -531,16 +531,6 @@ TEnvRec *TEnv::Lookup(const char *name)
    // Return 0 in case name is not in the resoucre table.
 
    return (TEnvRec*) fTable->FindObject(name);
-#if 0
-   TIter next(fTable);
-   TEnvRec *er;
-
-   while ((er = (TEnvRec*) next()))
-      if (er->fName == name)
-            return er;
-
-   return 0;
-#endif
 }
 
 //______________________________________________________________________________
@@ -548,7 +538,7 @@ void TEnv::Print(Option_t *opt) const
 {
    // Print all resources or the global, user or local resources separately.
 
-   if (strlen(opt) == 0) {
+   if (!opt || !strlen(opt)) {
       PrintEnv();
       return;
    }
@@ -590,6 +580,30 @@ void TEnv::ReadFile(const char *fname, EEnvLevel level)
 }
 
 //______________________________________________________________________________
+void TEnv::WriteFile(const char *fname, EEnvLevel level)
+{
+   // Write resourse records to file fname for a certain level. Use
+   // level kEnvAll to write all resources.
+
+   if (!fname || !strlen(fname)) {
+      Error("WriteFile", "no file name specified");
+      return;
+   }
+
+   FILE *ofp;
+
+   if ((ofp = fopen(fname, "w"))) {
+      TIter next(fTable);
+      TEnvRec *er;
+      while ((er = (TEnvRec*) next()))
+         if (er->fLevel == level || level == kEnvAll)
+            fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
+                    er->fValue.Data());
+   } else
+      Error("WriteFile", "cannot open %s for writing", fname);
+}
+
+//______________________________________________________________________________
 void TEnv::Save()
 {
    // Write the resource files for each level. The new files have the same
@@ -609,17 +623,24 @@ void TEnv::SaveLevel(EEnvLevel level)
    FILE     *ifp, *ofp;
 
    if (level == kEnvGlobal) {
+
+      TString sname = "system";
+      sname += fRcName;
 #ifdef ROOTETCDIR
-      char sname[128] = "system";
-      strcat(sname, fRcName.Data());
       char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
 #else
-      char *s = gSystem->ConcatFileName(gRootDir, fRcName.Data());
+      TString etc = gRootDir;
+#ifdef WIN32
+      etc += "\\etc";
+#else
+      etc += "/etc";
+#endif
+      char *s = gSystem->ConcatFileName(etc, sname);
 #endif
       rootrcdir = s;
       delete [] s;
    } else if (level == kEnvUser) {
-      char *s = gSystem->ConcatFileName(gSystem->HomeDirectory(), fRcName.Data());
+      char *s = gSystem->ConcatFileName(gSystem->HomeDirectory(), fRcName);
       rootrcdir = s;
       delete [] s;
    } else if (level == kEnvLocal)
@@ -661,7 +682,8 @@ void TEnv::SaveLevel(EEnvLevel level)
          return;
       }
       fclose(ofp);
-   }
+   } else
+      Error("SaveLevel", "cannot write to file %s", rootrcdir.Data());
 }
 
 //______________________________________________________________________________
