@@ -376,6 +376,7 @@ class BasicsTestCase(unittest.TestCase):
     g = self.gbl.ExceptionGenerator(False)  # should not throw exception
     g.doThrow(False)                        # should not thoow exception
     self.assertRaises(RuntimeError, g.doThrow, True)
+    self.assertRaises(RuntimeError, g.intThrow, True)
     self.assertRaises(TypeError, self.gbl.ExceptionGenerator, True)
 
 

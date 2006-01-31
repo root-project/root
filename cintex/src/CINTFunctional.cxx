@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.11 2006/01/20 17:21:18 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.12 2006/01/20 17:39:53 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -189,11 +189,11 @@ int Method_stub_with_context(StubContext* context,
     string errtxt(e.what());
     errtxt += " (C++ exception)";
     G__genericerror(errtxt.c_str());
-    context->ProcessResult(result, 0);
+    G__setnull(result);
   } 
   catch (...) {
     G__genericerror("Unknown C++ exception");
-    context->ProcessResult(result, 0);
+    G__setnull(result);
   }
   return(1);
 }

@@ -648,6 +648,7 @@ class ExceptionGenerator {
     ~ExceptionGenerator() {}
     A::B::C::MyClass doThrow( bool b ) {if (b) throw std::logic_error("My Exception in method"); return A::B::C::MyClass(); }
     A::B::C::MyClass doThrowUnknown( bool b ) {if (b) throw std::string("hello");  return A::B::C::MyClass();}
+    int intThrow( bool b ) {if (b) throw std::logic_error("Another exception in method"); return 999; }
 };
 
 #include <list>
