@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.62 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.63 2006/01/03 09:33:51 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -297,6 +297,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fHistLineStyle  = fHistLineStyle;
    ((TStyle&)obj).fHistLineWidth  = fHistLineWidth;
    ((TStyle&)obj).fHistMinimumZero= fHistMinimumZero;
+   ((TStyle&)obj).fHistTopMargin  = fHistTopMargin;
    ((TStyle&)obj).fBarWidth       = fBarWidth;
    ((TStyle&)obj).fBarOffset      = fBarOffset;
    ((TStyle&)obj).fDrawBorder     = fDrawBorder;
@@ -414,6 +415,7 @@ void TStyle::Reset(Option_t *opt)
    fHistLineStyle  = 1;
    fHistLineWidth  = 1;
    fHistMinimumZero= kFALSE;
+   fHistTopMargin  = 0.05;
    fFrameLineColor = 1;
    fFrameFillColor = 0;
    fFrameFillStyle = 1001;

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.239 2006/01/09 10:35:12 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.240 2006/01/17 14:59:12 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -68,7 +68,6 @@ Hparam_t  Hparam;
 
 const Int_t kNMAX = 2000;
 
-const Double_t kHMAX = 1.05;
 const Int_t kMAXCONTOUR  = 104;
 const UInt_t kCannotRotate = BIT(11);
 
@@ -2216,7 +2215,7 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    if (dz <= 0) return;
    if (fH->GetMinimumStored() == -1111) {
-      Double_t yMARGIN = 0.05;
+      Double_t yMARGIN = gStyle->GetHistTopMargin();
       if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
@@ -3466,7 +3465,7 @@ Int_t THistPainter::PaintInit()
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) return 1;
 
    static const char *where = "PaintInit";
-   Double_t yMARGIN = 0.05;
+   Double_t yMARGIN = gStyle->GetHistTopMargin();
    Int_t maximum = 0;
    Int_t minimum = 0;
    if (fH->GetMaximumStored() != -1111) maximum = 1;
@@ -3661,7 +3660,7 @@ Int_t THistPainter::PaintInitH()
    //    for a rotated pad
 
    static const char *where = "PaintInitH";
-   Double_t yMARGIN = 0.05;
+   Double_t yMARGIN = gStyle->GetHistTopMargin();
    Int_t maximum = 0;
    Int_t minimum = 0;
    if (fH->GetMaximumStored() != -1111) maximum = 1;
@@ -3996,7 +3995,7 @@ void THistPainter::PaintLego(Option_t *)
       zmax += 0.5*deltaz;
    }
    Double_t z1c = zmin;
-   Double_t z2c = zmin + (zmax-zmin)*kHMAX;
+   Double_t z2c = zmin + (zmax-zmin)*(1+gStyle->GetHistTopMargin());
 
    //     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
@@ -4425,7 +4424,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
       }
    }
    if (fH->GetMinimumStored() == -1111) {
-      Double_t yMARGIN = 0.05;
+      Double_t yMARGIN = gStyle->GetHistTopMargin();
       if (gStyle->GetHistMinimumZero()) {
          if (zmin >= 0) zmin = 0;
          else           zmin -= yMARGIN*(zmax-zmin);
@@ -5037,8 +5036,7 @@ void THistPainter::PaintSurface(Option_t *)
       zmax += 0.5*deltaz;
    }
    Double_t z1c = zmin;
-   Double_t z2c = zmin + (zmax-zmin)*kHMAX;
-
+   Double_t z2c = zmin + (zmax-zmin)*(1+gStyle->GetHistTopMargin());
    //     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
    fYbuf[0] =  1;
@@ -5857,7 +5855,7 @@ Int_t THistPainter::TableInit()
    static const char *where = "TableInit";
 
    Int_t first, last;
-   Double_t yMARGIN= 0.05;
+   Double_t yMARGIN= gStyle->GetHistTopMargin();
    Double_t zmin, zmax;
    Int_t maximum = 0;
    Int_t minimum = 0;

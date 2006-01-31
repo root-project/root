@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.29 2005/09/08 14:22:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.30 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -96,6 +96,7 @@ private:
    Style_t       fHistLineStyle;     //histogram line style
    Width_t       fHistLineWidth;     //histogram line width
    Bool_t        fHistMinimumZero;   //true if default minimum is 0, false if minimum is automatic
+   Double_t      fHistTopMargin;     //margin between histogram's top and pad's top
    Bool_t        fCanvasPreferGL;    //if true, rendering in canvas is with GL
    Color_t       fCanvasColor;       //canvas color
    Width_t       fCanvasBorderSize;  //canvas border size
@@ -232,6 +233,7 @@ public:
    Style_t          GetHistLineStyle()   const {return fHistLineStyle;}
    Width_t          GetHistLineWidth()   const {return fHistLineWidth;}
    Bool_t           GetHistMinimumZero() const {return fHistMinimumZero;}
+   Double_t         GetHistTopMargin()   const {return fHistTopMargin;}
    Float_t          GetLegoInnerR() const {return fLegoInnerR;}
    Int_t            GetNumberContours() const {return fNumberContours;}
    Int_t            GetOptDate() const {return fOptDate;}
@@ -361,6 +363,7 @@ public:
    void             SetHistLineStyle(Style_t styl=0)  {fHistLineStyle = styl;}
    void             SetHistLineWidth(Width_t width=1) {fHistLineWidth = width;}
    void             SetHistMinimumZero(Bool_t zero=kTRUE);
+   void             SetHistTopMargin(Double_t hmax=0.05) {fHistTopMargin = hmax;}
    void             SetPaintTextFormat(const char *format="g") {fPaintTextFormat = format;}
    void             SetPaperSize(EPaperSize size);
    void             SetPaperSize(Float_t xsize=20, Float_t ysize=26);

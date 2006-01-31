@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.38 2005/10/06 13:45:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.39 2005/12/09 09:45:05 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TList.h"
+#include "TStyle.h"
 #include "Riostream.h"
 #include "TBrowser.h"
 
@@ -668,7 +669,7 @@ void THStack::Paint(Option_t *option)
       if (nostack && fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
       else {
          if (gPad->GetLogy())           fHistogram->SetMaximum(themax*(1+0.2*TMath::Log10(themax/themin)));
-         else                           fHistogram->SetMaximum(1.1*themax);
+         else                           fHistogram->SetMaximum((1+gStyle->GetHistTopMargin())*themax);
       }
       if (nostack && fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
       else {
