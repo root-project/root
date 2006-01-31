@@ -2,6 +2,7 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include <iostream>
+#include "TFile.h"
 
 static int s_smartRefCount = 0;
 

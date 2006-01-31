@@ -5,6 +5,7 @@
 //WLAV: changed "BetaMiniUser/JansEvent.hh" -> "JansEvent.h"
 #include "JansEvent.h"
 #include "TMath.h"
+#include "TFile.h"
 
 ClassImp(CandidateParameters);
 ClassImp(CandParametersMC);
