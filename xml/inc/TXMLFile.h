@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.11 2005/11/28 23:22:31 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.12 2006/01/20 01:12:13 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -52,6 +52,8 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual ~TXMLFile();
 
       virtual void      Close(Option_t *option=""); // *MENU*
+      virtual TKey*     CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
+      virtual TKey*     CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize);
       virtual void      DrawMap(const char* ="*",Option_t* ="") {} 
       virtual void      FillBuffer(char* &) {}
       virtual void      Flush() {}
@@ -104,9 +106,6 @@ class TXMLFile : public TFile, public TXMLSetup {
 
    protected:
       // functions to store streamer infos
-      
-      virtual TKey*     CreateKey(const TObject* obj, const char* name, Int_t bufsize);
-      virtual TKey*     CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize);
       
       void              StoreStreamerElement(XMLNodePointer_t node, TStreamerElement* elem);
       void              ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info);

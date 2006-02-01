@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLStructure.cxx,v 1.6 2005/12/01 16:30:43 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLStructure.cxx,v 1.7 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TSQLStructure.h"
 
 #include "Riostream.h"
+#include "TMap.h"
 #include "TClass.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -33,12 +34,14 @@
 #include "TSQLFile.h"
 #include "TSQLClassInfo.h"
 #include "TSQLObjectData.h"
+#include "TBufferSQL2.h"
 
 namespace sqlio {
    const Int_t Ids_NullPtr       = 0; // used to identify NULL pointer in tables
    const Int_t Ids_RootDir       = 0; // dir:id, used for keys stored in root directory.
-   const Int_t Ids_StreamerInfos = 0; // keyid used to store StreamerInfos in ROOT directory
-   const Int_t Ids_FirstKey      = 1; // first key id, which is used in KeysTable (beside streamer info or something else)
+   const Int_t Ids_TSQLFile      = 0; // keyid for TSQLFile entry in keys list
+   const Int_t Ids_StreamerInfos = 1; // keyid used to store StreamerInfos in ROOT directory
+   const Int_t Ids_FirstKey      =10; // first key id, which is used in KeysTable (beside streamer info or something else)
    const Int_t Ids_FirstObject   = 1; // first object id, allowed in object tables
 
    const char* ObjectRef     = "ObjectRef";
@@ -86,9 +89,14 @@ namespace sqlio {
 
    // colummns in Keys table
    const char* KT_Name      = "Name";
+   const char* KT_Title     = "Title";
    const char* KT_Datetime  = "Datime";
    const char* KT_Cycle     = "Cycle";
    const char* KT_Class     = "Class";
+   
+   const char* DT_Create    = "CreateDatime";
+   const char* DT_Modified  = "ModifiedDatime";
+   const char* DT_UUID      = "UUID";
 
    // colummns in Objects table
    const char* OT_Class     = "Class";
@@ -117,6 +125,28 @@ namespace sqlio {
 };
 
 //________________________________________________________________________
+
+#ifdef R__VISUAL_CPLUSPLUS
+#define FLong64    "%I64d"
+#define FULong64   "%I64u"
+#else
+#ifdef R__B64
+#define FLong64    "%ld"
+#define FULong64   "%lu"
+#else
+#define FLong64    "%lld"
+#define FULong64   "%llu"
+#endif
+#endif
+
+Long64_t sqlio::atol64(const char* value)
+{
+   if ((value==0) || (*value==0)) return 0;
+   Long64_t res = 0;
+   sscanf(value, FLong64, &res);
+   return res;
+}
+
 
 ClassImp(TSQLColumnData)
 
@@ -147,7 +177,7 @@ TSQLColumnData::TSQLColumnData(const char* name,
 }
 
 //________________________________________________________________________
-TSQLColumnData::TSQLColumnData(const char* name, Int_t value) :
+TSQLColumnData::TSQLColumnData(const char* name, Long64_t value) :
    TObject(),
    fName(name),
    fType("INT"),
@@ -156,7 +186,7 @@ TSQLColumnData::TSQLColumnData(const char* name, Int_t value) :
 {
    // constructs TSQLColumnData object for integer column
 
-   fValue.Form("%d",value);
+   fValue.Form("%lld",value);
 }
 
 //________________________________________________________________________
@@ -191,6 +221,10 @@ TSQLStructure::~TSQLStructure()
    if (GetType()==kSqlObjectData) {
       TSQLObjectData* objdata = (TSQLObjectData*) fPointer;
       delete objdata;
+   } else
+   if (GetType()==kSqlCustomElement) {
+      TStreamerElement* elem = (TStreamerElement*) fPointer;
+      delete elem;
    }
 }
 
@@ -211,22 +245,22 @@ TSQLStructure* TSQLStructure::GetChild(Int_t n) const
 }
 
 //________________________________________________________________________
-void TSQLStructure::SetObjectRef(Int_t refid, const TClass* cl)
+void TSQLStructure::SetObjectRef(Long64_t refid, const TClass* cl)
 {
    // set structure type as kSqlObject
 
    fType = kSqlObject;
-   fValue.Form("%d",refid);
+   fValue.Form("%lld",refid);
    fPointer = cl;
 }
 
 //________________________________________________________________________
-void TSQLStructure::SetObjectPointer(Int_t ptrid)
+void TSQLStructure::SetObjectPointer(Long64_t ptrid)
 {
    // set structure type as kSqlPointer
 
    fType = kSqlPointer;
-   fValue.Form("%d",ptrid);
+   fValue.Form("%lld",ptrid);
 }
 
 //________________________________________________________________________
@@ -266,6 +300,21 @@ void TSQLStructure::SetStreamerElement(const TStreamerElement* elem, Int_t numbe
    fType = kSqlElement;
    fPointer = elem;
    fArrayIndex = number;
+}
+
+//________________________________________________________________________
+void TSQLStructure::SetCustomClass(const TClass* cl, Version_t version)
+{
+   fType = kSqlCustomClass;
+   fPointer = (void*) cl;
+   fArrayIndex = version;
+}
+
+//________________________________________________________________________
+void TSQLStructure::SetCustomElement(TStreamerElement* elem)
+{
+   fType = kSqlCustomElement;
+   fPointer = elem;
 }
 
 //________________________________________________________________________
@@ -344,7 +393,7 @@ TStreamerElement* TSQLStructure::GetElement() const
 {
    // return TStremerElement* if type is kSqlElement
 
-   return (fType==kSqlElement) ? (TStreamerElement*) fPointer : 0;
+   return (fType==kSqlElement) || (fType==kSqlCustomElement) ? (TStreamerElement*) fPointer : 0;
 }
 
 //________________________________________________________________________
@@ -362,6 +411,35 @@ const char* TSQLStructure::GetValueType() const
 
    return (fType==kSqlValue) ? (const char*) fPointer : 0;
 }
+
+//________________________________________________________________________
+TClass* TSQLStructure::GetCustomClass() const
+{
+   return (fType==kSqlCustomClass) ? (TClass*) fPointer : 0;
+}
+
+//________________________________________________________________________
+Version_t TSQLStructure::GetCustomClassVersion() const
+{
+   return (fType==kSqlCustomClass) ? fArrayIndex : 0;
+}
+
+//________________________________________________________________________
+Bool_t TSQLStructure::GetClassInfo(TClass* &cl, Version_t &version)
+{
+   if (GetType()==kSqlStreamerInfo) {
+      TStreamerInfo* info = GetStreamerInfo();
+      if (info==0) return kFALSE;
+      cl = info->GetClass();
+      version = info->GetClassVersion();
+   } else 
+   if (GetType()==kSqlCustomClass) {
+      cl = GetCustomClass();
+      version = GetCustomClassVersion();
+   } else 
+      return kFALSE;
+   return kTRUE;
+}   
 
 //________________________________________________________________________
 const char* TSQLStructure::GetValue() const
@@ -405,7 +483,7 @@ void TSQLStructure::AddValue(const char* value, const char* tname)
 }
 
 //________________________________________________________________________
-Int_t TSQLStructure::DefineObjectId()
+Long64_t TSQLStructure::DefineObjectId(Bool_t recursive)
 {
    // defines current object id, to which this structure belong
    // make life complicated, because some objects do not get id
@@ -413,54 +491,20 @@ Int_t TSQLStructure::DefineObjectId()
 
    TSQLStructure* curr = this;
    while (curr!=0) {
-      // workaround to store object id in element structure
-      if ((curr->GetType()==kSqlElement) ||
+      if ((curr->GetType()==kSqlObject) || 
+         // workaround to store object id in element structure
+          (curr->GetType()==kSqlElement) ||
+          (curr->GetType()==kSqlCustomElement) ||
+          (curr->GetType()==kSqlCustomClass) ||
           (curr->GetType()==kSqlStreamerInfo)) {
          const char* value = curr->GetValue();
-         if ((value!=0) && (strlen(value)>0)) return atoi(value);
+         if ((value!=0) && (strlen(value)>0)) 
+            return sqlio::atol64(value);
       }
 
-      if (curr->GetType()==kSqlObject)
-         return atoi(curr->GetValue());
-      curr = curr->GetParent();
+      curr = recursive ? curr->GetParent() : 0;
    }
    return -1;
-}
-
-//________________________________________________________________________
-Bool_t TSQLStructure::IsClonesArray()
-{
-   // defines if this structure below node, which correspondes to
-   // clones array. Used to force convertion of all data into raw format
-
-   // disable any special handling of TClonesArray
-   
-   return kFALSE;
-
-   TSQLStructure* curr = this;
-   while (curr!=0) {
-      if (curr->GetType()==kSqlObject)
-         return curr->GetObjectClass()==TClonesArray::Class();
-
-      // workaround for nested TClonesArray
-      if ((curr->GetType()==kSqlElement) ||
-          (curr->GetType()==kSqlStreamerInfo)) {
-         const char* value = curr->GetValue();
-         // check that element has object id and one can analyse it class
-         if ((value!=0) && (strlen(value)>0)) {
-            TStreamerInfo* info = GetStreamerInfo();
-            if (info!=0)
-               return info->GetClass()==TClonesArray::Class();
-            TStreamerElement* elem = GetElement();
-            if (elem!=0)
-               return elem->GetClassPointer()==TClonesArray::Class();
-            return kFALSE;
-         }
-      }
-
-      curr = curr->GetParent();
-   }
-   return kFALSE;
 }
 
 //________________________________________________________________________
@@ -523,6 +567,7 @@ void TSQLStructure::PrintLevel(Int_t level) const
       cout << "Class: " << info->GetName();
       break;
    }
+   case kSqlCustomElement:
    case kSqlElement: {
       const TStreamerElement* elem = (const TStreamerElement*) fPointer;
       cout << "Member: " << elem->GetName();
@@ -537,6 +582,11 @@ void TSQLStructure::PrintLevel(Int_t level) const
    case kSqlArray: {
       cout << "Array ";
       if (fValue.Length()>0) cout << "  sz = " << fValue;
+      break;
+   }
+   case kSqlCustomClass: {
+      TClass* cl = (TClass*) fPointer;
+      cout << "CustomClass: " << cl->GetName() << "  ver = " << fValue;
       break;
    }
    default:
@@ -618,6 +668,37 @@ const char* TSQLStructure::GetSimpleTypeName(Int_t typ)
    return 0;
 }
 
+// ======================================================================
+
+class TSqlCmdsBuffer : public TObject {
+  
+public:
+   TSqlCmdsBuffer(TSQLClassInfo* info = 0) : 
+      TObject(),
+      fInfo(info)
+   {
+   }
+   
+   virtual ~TSqlCmdsBuffer() 
+   {
+      fNormCmds.Delete(); 
+      fBlobCmds.Delete(); 
+   }
+   
+   void AddValues(Bool_t isnorm, const char* values)
+   {
+      TObjString* str = new TObjString(values);
+      if (isnorm) fNormCmds.Add(str);
+             else fBlobCmds.Add(str);
+   }
+       
+   TSQLClassInfo* fInfo;
+   TObjArray fNormCmds;
+   TObjArray fBlobCmds;
+};
+
+
+
 //________________________________________________________________________
 class TSqlRegistry : public TObject {
 
@@ -629,28 +710,38 @@ public:
       fLastObjId(-1),
       fCmds(0),
       fFirstObjId(0),
-      fRegCmds(),
-      fCurrentObjId(),
+      fCurrentObjId(0),
       fCurrentObjClass(0),
-      fLastLongStrId(0)
+      fLastLongStrId(0),
+      fPool(),
+      fLongStrValues(),
+      fRegValues()
    {
    }
 
    TSQLFile*  f;
-   Int_t      fKeyId;
-   Int_t      fLastObjId;
+   Long64_t   fKeyId;
+   Long64_t   fLastObjId;
    TObjArray* fCmds;
-   Int_t      fFirstObjId;
-   TObjArray  fRegCmds;
+   Long64_t   fFirstObjId;
 
-   TString    fCurrentObjId;
+   Long64_t   fCurrentObjId;
    TClass*    fCurrentObjClass;
 
    Int_t      fLastLongStrId;
+   
+   TMap       fPool;
+   TObjArray  fLongStrValues;
+   TObjArray  fRegValues;
 
-   virtual ~TSqlRegistry() {}
+   virtual ~TSqlRegistry() 
+   { 
+      fPool.DeleteValues(); 
+      fLongStrValues.Delete();
+      fRegValues.Delete();
+   }
 
-   Int_t GetNextObjId() { return ++fLastObjId; }
+   Long64_t GetNextObjId() { return ++fLastObjId; }
 
    void AddSqlCmd(const char* query)
    {
@@ -658,25 +749,85 @@ public:
       if (fCmds==0) fCmds = new TObjArray;
       fCmds->Add(new TObjString(query));
    }
-
-   void AddBrackets(TString& s, const char* quote)
+   
+   TSqlCmdsBuffer* GetCmdsBuffer(TSQLClassInfo* sqlinfo) 
    {
-      // add brackets to the string value
-      if (strcmp(quote,"\"")==0) s.ReplaceAll("\"","\\\"");
-      else  s.ReplaceAll("'","''");
-      s.Prepend(quote);
-      s.Append(quote);
+      if (sqlinfo==0) return 0;
+      TSqlCmdsBuffer* buf = (TSqlCmdsBuffer*) fPool.GetValue(sqlinfo);
+      if (buf==0) {
+         buf = new TSqlCmdsBuffer(sqlinfo);
+         fPool.Add(sqlinfo, buf);
+      }
+      return buf;
+   }
+   
+   void ConvertSqlValues(TObjArray& values, const char* tablename)
+   {
+   // this function transforms array of values for one table
+   // to SQL command. For MySQL one INSERT querie can
+   // contain data for more than one row
+
+      if ((values.GetLast()<0) || (tablename==0)) return;
+
+      Bool_t canbelong = f->IsMySQL();
+
+      Int_t maxsize = 50000;
+      TString sqlcmd(maxsize), value, onecmd, cmdmask;
+
+      const char* quote = f->SQLIdentifierQuote();
+
+      TIter iter(&values);
+      TObject* cmd = 0;
+      while ((cmd = iter())!=0) {
+
+         if (sqlcmd.Length()==0)
+            sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s)",
+                        quote, tablename, quote, cmd->GetName());
+         else {
+            sqlcmd+=", (";
+            sqlcmd += cmd->GetName();
+            sqlcmd+=")";
+         }
+
+         if (!canbelong || (sqlcmd.Length()>maxsize*0.9)) {
+            AddSqlCmd(sqlcmd.Data());
+            sqlcmd = "";
+         }
+      }
+
+      if (sqlcmd.Length()>0) AddSqlCmd(sqlcmd.Data());
+   }
+   
+   void ConvertPoolValues()
+   {
+      TSQLClassInfo* sqlinfo = 0;
+      TIter iter(&fPool);
+      while ((sqlinfo = (TSQLClassInfo*) iter())!=0) {
+         TSqlCmdsBuffer* buf = (TSqlCmdsBuffer*) fPool.GetValue(sqlinfo);
+         if (buf==0) continue;
+         ConvertSqlValues(buf->fNormCmds, sqlinfo->GetClassTableName());
+         ConvertSqlValues(buf->fBlobCmds, sqlinfo->GetRawTableName());
+      }
+       
+      ConvertSqlValues(fLongStrValues, sqlio::StringsTable);
+      ConvertSqlValues(fRegValues, sqlio::ObjectsTable);
    }
 
-   void AddRegCmd(const char* cmd, Int_t objid)
-   {
-      // add special command to register object in objects table
 
-      Int_t indx = objid-fFirstObjId;
-      if (indx<0)
-         Error("AddRegCmd","Soemthing wrong");
-      else
-         fRegCmds.AddAtAndExpand(new TObjString(cmd), indx);
+   void AddRegCmd(Long64_t objid, TClass* cl)
+   {
+      Long64_t indx = objid-fFirstObjId;
+      if (indx<0) {
+         Error("AddRegCmd","Something wrong with objid = %lld", objid);
+         return;
+      }
+      const char* valuequote = f->SQLValueQuote();
+      TString cmd;
+      cmd.Form("%lld, %lld, %s%s%s, %d",
+                fKeyId, objid,
+                valuequote, cl->GetName(), valuequote,
+                cl->GetClassVersion());
+      fRegValues.AddAtAndExpand(new TObjString(cmd), indx);
    }
 
    Int_t AddLongString(const char* strvalue)
@@ -688,136 +839,76 @@ public:
       Int_t strid = ++fLastLongStrId;
       TString value = strvalue;
       const char* valuequote = f->SQLValueQuote();
-      const char* quote = f->SQLIdentifierQuote();
-      AddBrackets(value, valuequote);
+      TSQLStructure::AddStrBrackets(value, valuequote);
 
       TString cmd;
-      cmd.Form("INSERT INTO %s%s%s VALUES (%s, %d, %s)",
-               quote, sqlio::StringsTable, quote,
-               fCurrentObjId.Data(), strid, value.Data());
-      AddSqlCmd(cmd.Data());
+      cmd.Form("%lld, %d, %s", fCurrentObjId, strid, value.Data());
+
+      fLongStrValues.Add(new TObjString(cmd));
+
       return strid;
    }
-
-   void ConvertRawOracle(TObjArray* blobs, TSQLClassInfo* sqlinfo, Int_t& rawid)
-   {
-      // special code for Oracle, which does not allow multiple INSERT syntax
-      // therefore eachline in raw table should be inseretd with
-      // separate INSERT command
-
-      TString sqlcmd, value;
-      TIter iter(blobs);
-      TNamed* cmd = 0;
-      const char* valuequote = f->SQLValueQuote();
-      const char* quote = f->SQLIdentifierQuote();
-      while ((cmd = (TNamed*)iter())!=0) {
-         value = cmd->GetTitle();
-         AddBrackets(value, valuequote);
-
-         sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s, %d, %s%s%s, %s)",
-                     quote, sqlinfo->GetRawTableName(), quote,
-                     fCurrentObjId.Data(),
-                     rawid++,
-                     valuequote, cmd->GetName(), valuequote,
-                     value.Data());
-         AddSqlCmd(sqlcmd.Data());
-      }
-   }
-
+   
    void ConvertBlobs(TObjArray* blobs, TSQLClassInfo* sqlinfo, Int_t& rawid)
    {
-      // this function transforms blob pairs (field, value) to SQL command
-      // one command includes more than one row to improve speed
-
-      if (f->IsOracle()) {
-         ConvertRawOracle(blobs, sqlinfo, rawid);
-         return;
-      }
-
-      Int_t maxsize = 50000;
-      TString sqlcmd(maxsize), value, onecmd, cmdmask;
+      TSqlCmdsBuffer* buf = GetCmdsBuffer(sqlinfo);
+      if (buf==0) return; 
+       
+      TString value, onecmd, cmdmask;
 
       const char* valuequote = f->SQLValueQuote();
-      const char* quote = f->SQLIdentifierQuote();
 
-      cmdmask.Form("(%s, %s, %s%s%s, %s)", fCurrentObjId.Data(), "%d", valuequote, "%s", valuequote, "%s");
+      cmdmask.Form("%lld, %s, %s%s%s, %s", fCurrentObjId, "%d", valuequote, "%s", valuequote, "%s");
 
       TIter iter(blobs);
       TNamed* cmd = 0;
       while ((cmd = (TNamed*)iter())!=0) {
          value = cmd->GetTitle();
-         AddBrackets(value, valuequote);
+         TSQLStructure::AddStrBrackets(value, valuequote);
          onecmd.Form(cmdmask.Data(), rawid++, cmd->GetName(), value.Data());
-
-         if (sqlcmd.Length()==0)
-            sqlcmd.Form("INSERT INTO %s%s%s VALUES %s",
-                        quote, sqlinfo->GetRawTableName(), quote,
-                        onecmd.Data());
-         else {
-            sqlcmd+=", ";
-            sqlcmd += onecmd;
-         }
-
-         if (sqlcmd.Length()>maxsize*0.9) {
-            AddSqlCmd(sqlcmd.Data());
-            sqlcmd = "";
-         }
+         buf->AddValues(kFALSE, onecmd.Data());
       }
-
-      if (sqlcmd.Length()>0) AddSqlCmd(sqlcmd.Data());
    }
-
-   void InsertToNormalTable(TObjArray* columns, const char* tablename)
+   
+   void InsertToNormalTable(TObjArray* columns, TSQLClassInfo* sqlinfo)
    {
       // produce SQL query to insert object data into normal table
 
-      TString names, values;
-
       TIter iter(columns);
       TSQLColumnData* col;
-      const char* quote = f->SQLIdentifierQuote();
       const char* valuequote = f->SQLValueQuote();
 
-      Bool_t forcequote = f->IsOracle();
+      TString values;
+      
+      Bool_t first = kTRUE;
 
       while ((col=(TSQLColumnData*)iter())!=0) {
-         if (names.Length()>0) names+=", ";
-         const char* colname = col->GetName();
-         if (forcequote || (strpbrk(colname,"[:.]<>")!=0)) {
-            names+=quote;
-            names+=colname;
-            names+=quote;
-         } else names+=colname;
-
-         if (values.Length()>0) values+=", ";
+         if (first) first = kFALSE; 
+               else values+=", "; 
          if (col->IsNumeric())
             values+=col->GetValue();
          else {
             TString value = col->GetValue();
-            AddBrackets(value, valuequote);
+            TSQLStructure::AddStrBrackets(value, valuequote);
             values += value;
          }
       }
+     
+      TSqlCmdsBuffer* buf = GetCmdsBuffer(sqlinfo);
+      if (buf!=0) buf->AddValues(kTRUE, values.Data());
 
-      TString cmd;
-      cmd.Form("INSERT INTO %s%s%s (%s) VALUES(%s)",
-               quote, tablename, quote,
-               names.Data(), values.Data());
-      AddSqlCmd(cmd.Data());
    }
 };
 
 //________________________________________________________________________
-Int_t TSQLStructure::FindMaxRef()
+Long64_t TSQLStructure::FindMaxObjectId()
 {
    // define maximum reference id, used for objects
 
-   Int_t max = 0;
-   if ((GetType()==kSqlPointer) || (GetType()==kSqlObject))
-      max = atoi(fValue.Data());
+   Long64_t max = DefineObjectId(kFALSE);
 
    for (Int_t n=0;n<NumChilds();n++) {
-      Int_t zn = GetChild(n)->FindMaxRef();
+      Long64_t zn = GetChild(n)->FindMaxObjectId();
       if (zn>max) max = zn;
    }
 
@@ -825,7 +916,7 @@ Int_t TSQLStructure::FindMaxRef()
 }
 
 //________________________________________________________________________
-Bool_t TSQLStructure::ConvertToTables(TSQLFile* file, Int_t keyid, TObjArray* cmds)
+Bool_t TSQLStructure::ConvertToTables(TSQLFile* file, Long64_t keyid, TObjArray* cmds)
 {
    // Convert structure to sql statements
    // This function is called immidiately after TBufferSQL2 produces
@@ -839,13 +930,15 @@ Bool_t TSQLStructure::ConvertToTables(TSQLFile* file, Int_t keyid, TObjArray* cm
    reg.fCmds = cmds;
    reg.f = file;
    reg.fKeyId = keyid;
-   reg.fFirstObjId = atoi(GetValue()); // this is id of main object to be stored
+   // this is id of main object to be stored
+   reg.fFirstObjId = DefineObjectId(kFALSE); 
    // this is maximum objectid which is now in use
-   reg.fLastObjId = FindMaxRef();
+   reg.fLastObjId = FindMaxObjectId();
 
-   Bool_t res = StoreObject(&reg, GetValue(), GetObjectClass());
+   Bool_t res = StoreObject(&reg, reg.fFirstObjId, GetObjectClass());
 
-   cmds->AddAll(&(reg.fRegCmds));
+   // convert values from pool to SQL commands
+   reg.ConvertPoolValues();
 
    return res;
 }
@@ -863,7 +956,7 @@ void TSQLStructure::PerformConversion(TSqlRegistry* reg, TObjArray* blobs, const
    switch (fType) {
    case kSqlObject: {
 
-      if (!StoreObject(reg, GetValue(), GetObjectClass())) break;
+      if (!StoreObject(reg, DefineObjectId(kFALSE), GetObjectClass())) break;
 
       AddCmd(blobs, sqlio::ObjectRef, GetValue(), topname, ns);
 
@@ -895,15 +988,16 @@ void TSQLStructure::PerformConversion(TSqlRegistry* reg, TObjArray* blobs, const
             child->PerformConversion(reg, blobs, info->GetName(), useblob);
          }
       } else {
-         Int_t objid = reg->GetNextObjId();
+         Long64_t objid = reg->GetNextObjId();
          TString sobjid;
-         sobjid.Form("%d",objid);
-         if (!StoreObject(reg, sobjid.Data(), info->GetClass(), kTRUE)) return;
+         sobjid.Form("%lld",objid);
+         if (!StoreObject(reg, objid, info->GetClass(), kTRUE)) return;
          AddCmd(blobs, sqlio::ObjectInst, sobjid.Data(), topname, ns);
       }
       break;
    }
 
+   case kSqlCustomElement:
    case kSqlElement: {
       const TStreamerElement* elem = (const TStreamerElement*) fPointer;
 
@@ -934,7 +1028,7 @@ void TSQLStructure::PerformConversion(TSqlRegistry* reg, TObjArray* blobs, const
          Int_t size = strlen(value);
          if (size > reg->f->SQLSmallTextTypeLimit()) {
             Int_t strid = reg->AddLongString(value);
-            buf = reg->f->CodeLongString(atoi(reg->fCurrentObjId.Data()), strid);
+            buf = reg->f->CodeLongString(reg->fCurrentObjId, strid);
             value = buf.Data();
          }
       }
@@ -957,13 +1051,13 @@ void TSQLStructure::PerformConversion(TSqlRegistry* reg, TObjArray* blobs, const
 }
 
 //________________________________________________________________________
-Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* cl, Bool_t registerobj)
+Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl, Bool_t registerobj)
 {
    // convert object data to sql statements
    // if normal (columnwise) representation is not possible,
    // complete object will be converted to raw format
 
-   if (cl==0) return kFALSE;
+   if ((cl==0) || (objid<0)) return kFALSE;
 
    if (gDebug>1) {
       cout << "Store object " << objid <<" cl = " << cl->GetName() << endl;
@@ -973,7 +1067,7 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* 
 
    TSQLClassInfo* sqlinfo = 0;
 
-   TString oldid = reg->fCurrentObjId;
+   Long64_t oldid = reg->fCurrentObjId;
    TClass* oldcl = reg->fCurrentObjClass;
 
    reg->fCurrentObjId = objid;
@@ -983,22 +1077,19 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* 
 
    Bool_t res = kTRUE;
 
-   Bool_t isclonesarray = kFALSE; //(cl==TClonesArray::Class());
-
    if (cl==TObject::Class())
       normstore = StoreTObject(reg);
    else
    if (cl==TString::Class())
       normstore = StoreTString(reg);
    else
-      if (!isclonesarray)
-         if (GetType()==kSqlStreamerInfo)
-            // this is a case when array of objects are stored in blob and each object
-            // has normal streamer. Then it will be stored in normal form and only one tag
-            // will be kept to remind about
-            normstore = StoreClassInNormalForm(reg);
-         else
-            normstore = StoreObjectInNormalForm(reg);
+     if (GetType()==kSqlStreamerInfo)
+        // this is a case when array of objects are stored in blob and each object
+        // has normal streamer. Then it will be stored in normal form and only one tag
+        // will be kept to remind about
+        normstore = StoreClassInNormalForm(reg);
+     else
+        normstore = StoreObjectInNormalForm(reg);
 
    if (gDebug>2)
       cout << "Store object " << objid << " of class " << cl->GetName() << "  normal = " << normstore << " sqltype = " << GetType() << endl;
@@ -1010,7 +1101,7 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* 
       // when TClonesArray, all data will be stored in raw format
       for(Int_t n=0;n<NumChilds();n++) {
          TSQLStructure* child = GetChild(n);
-         child->PerformConversion(reg, &objblobs, 0 /*cl->GetName()*/, isclonesarray);
+         child->PerformConversion(reg, &objblobs, 0 /*cl->GetName()*/);
       }
 
       if (objblobs.GetLast()<0)
@@ -1025,11 +1116,8 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, const char* objid, TClass* 
       objblobs.Delete();
    }
 
-   if (registerobj) {
-      Int_t objidint = atoi(objid);
-      TString regcmd = reg->f->SetObjectDataCmd(reg->fKeyId, objidint, cl);
-      reg->AddRegCmd(regcmd.Data(), objidint);
-   }
+   if (registerobj) 
+      reg->AddRegCmd(objid, cl);
 
    reg->fCurrentObjId = oldid;
    reg->fCurrentObjClass = oldcl;
@@ -1048,7 +1136,7 @@ Bool_t TSQLStructure::StoreObjectInNormalForm(TSqlRegistry* reg)
    TSQLStructure* s_ver = GetChild(0);
 
    TSQLStructure* s_info = GetChild(1);
-
+   
    if (!CheckNormalClassPair(s_ver, s_info)) return kFALSE;
 
    return s_info->StoreClassInNormalForm(reg);
@@ -1060,10 +1148,10 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
    // produces data for complete class table
    // where not possible, raw data for some elements are created
 
-   TStreamerInfo* info = GetStreamerInfo();
-   if (info==0) return kFALSE;
-   TClass* cl = info->GetClass();
-   Int_t version = info->GetClassVersion();
+   TClass* cl = 0;
+   Version_t version = 0;
+   if (!GetClassInfo(cl, version)) return kFALSE;
+   if (cl==0) return kFALSE;   
 
    TSQLClassInfo* sqlinfo = reg->f->RequestSQLClassInfo(cl->GetName(), version);
 
@@ -1073,7 +1161,7 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
    Int_t currrawid = 0;
 
    // add first column with object id
-   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->fCurrentObjId, kTRUE));
+   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->fCurrentObjId));
 
    for(Int_t n=0;n<=fChilds.GetLast();n++) {
       TSQLStructure* child = (TSQLStructure*) fChilds.At(n);
@@ -1102,7 +1190,7 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
 
       if (doblobs)
          child->PerformConversion(reg, &blobs, elem->GetName(), kFALSE);
-
+         
       Int_t blobid = -1;
       if (blobs.GetLast()>=0) {
          blobid = currrawid; // column will contain first raw id
@@ -1120,7 +1208,7 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
 
    reg->f->SyncSQLClassInfo(sqlinfo, &columns, needblob);
 
-   reg->InsertToNormalTable(&columns, sqlinfo->GetClassTableName());
+   reg->InsertToNormalTable(&columns, sqlinfo);
 
    columns.Delete();
 
@@ -1178,7 +1266,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
          columns->Add(new TSQLColumnData(colname.Data(), stype, value, kFALSE));
       else {
          Int_t strid = reg->AddLongString(value);
-         TString buf = reg->f->CodeLongString(atoi(reg->fCurrentObjId.Data()), strid);
+         TString buf = reg->f->CodeLongString(reg->fCurrentObjId, strid);
          columns->Add(new TSQLColumnData(colname.Data(), stype, buf.Data(), kFALSE));
       }
 
@@ -1186,10 +1274,10 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
    }
 
    if (columntyp==kColParent) {
-      TString objid = reg->fCurrentObjId; // DefineObjectIdStr();
+      Long64_t objid = reg->fCurrentObjId; 
       TClass* basecl = elem->GetClassPointer();
       Int_t resversion = basecl->GetClassVersion();
-      if (!StoreObject(reg, objid.Data(), basecl, kFALSE))
+      if (!StoreObject(reg, objid, basecl, kFALSE))
          resversion = -1;
       columns->Add(new TSQLColumnData(colname.Data(), resversion));
       return kTRUE;
@@ -1197,27 +1285,26 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
    
    if (columntyp==kColObject) {
       
-      TString sobjid;
-      Int_t objid = 0;
+      Long64_t objid = -1;
        
       if (NumChilds()==1) {
          TSQLStructure* child = GetChild(0);
          
          if (child->GetType()==kSqlObject) {
-            if (!child->StoreObject(reg, child->GetValue(), child->GetObjectClass())) return kFALSE;
-            sobjid = child->GetValue(); 
+            objid = child->DefineObjectId(kFALSE); 
+            if (!child->StoreObject(reg, objid, child->GetObjectClass())) return kFALSE;
          } else
-         if (child->GetType()==kSqlPointer)
-            sobjid = child->GetValue(); 
+         if (child->GetType()==kSqlPointer) {
+            TString sobjid = child->GetValue(); 
+            if (sobjid.Length()>0)
+              objid = sqlio::atol64(sobjid.Data());
+         }
       }
        
-      if (sobjid.Length()>0) {
-         objid = sobjid.Atoi(); 
-      } else {
+      if (objid<0) {
          //cout << "!!!! Not standard " << elem->GetName() << " class = " << elem->GetClassPointer()->GetName() << endl; 
          objid = reg->GetNextObjId();
-         sobjid.Form("%d",objid);
-         if (!StoreObject(reg, sobjid.Data(), elem->GetClassPointer()))
+         if (!StoreObject(reg, objid, elem->GetClassPointer()))
             objid = -1;  // this is a case, when no data was stored for this object
       }
 
@@ -1236,16 +1323,20 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
       if ((child->GetType()!=kSqlPointer) && (child->GetType()!=kSqlObject)) return kFALSE;
 
       Bool_t normal = kTRUE;
+      
+      Long64_t objid = -1;
 
-      if (child->GetType()==kSqlObject)
-         normal = child->StoreObject(reg, child->GetValue(), child->GetObjectClass());
+      if (child->GetType()==kSqlObject) {
+         objid = child->DefineObjectId(kFALSE); 
+         normal = child->StoreObject(reg, objid, child->GetObjectClass());
+      }
 
       if (!normal) {
          Error("kColNormObject","child->StoreObject fails");
          return kFALSE;
       }
 
-      columns->Add(new TSQLColumnData(colname.Data(), "INT", child->GetValue(), kTRUE));
+      columns->Add(new TSQLColumnData(colname.Data(), objid));
       return kTRUE;
    }
 
@@ -1258,14 +1349,18 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
              (child->GetType()!=kSqlObject)) return kFALSE;
          Bool_t normal = kTRUE;
          
-         if (child->GetType()==kSqlObject)
-            normal = child->StoreObject(reg, child->GetValue(), child->GetObjectClass());
+         Long64_t objid = -1;
+         
+         if (child->GetType()==kSqlObject) {
+            objid = child->DefineObjectId(kFALSE); 
+            normal = child->StoreObject(reg, objid, child->GetObjectClass());
+         }
 
          if (!normal) return kFALSE;
          
          colname = DefineElementColumnName(elem, reg->f, index);
 
-         columns->Add(new TSQLColumnData(colname.Data(), "INT", child->GetValue(), kTRUE));
+         columns->Add(new TSQLColumnData(colname.Data(), objid));
       }
       return kTRUE;
    }
@@ -1276,13 +1371,16 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
       if ((child->GetType()!=kSqlPointer) && (child->GetType()!=kSqlObject)) return kFALSE;
 
       Bool_t normal = kTRUE;
+      Long64_t objid = -1;
 
-      if (child->GetType()==kSqlObject)
-         normal = child->StoreObject(reg, child->GetValue(), child->GetObjectClass());
+      if (child->GetType()==kSqlObject) {
+         objid = child->DefineObjectId(kFALSE);  
+         normal = child->StoreObject(reg, objid, child->GetObjectClass());
+      }
 
       if (!normal) return kFALSE;
 
-      columns->Add(new TSQLColumnData(colname.Data(), "INT", child->GetValue(), kTRUE));
+      columns->Add(new TSQLColumnData(colname.Data(), objid));
       return kTRUE;
    }
 
@@ -1367,14 +1465,15 @@ Bool_t TSQLStructure::TryConvertObjectArray(TSqlRegistry* reg, TObjArray* blobs)
    while (indx<NumChilds()-1) {
       indx++; //TSQLStructure* s_ver = GetChild(indx++);
       TSQLStructure* s_info = GetChild(indx++);
-      TStreamerInfo* info = s_info->GetStreamerInfo();
-      Int_t objid = reg->GetNextObjId();
-      TString sobjid;
-      sobjid.Form("%d",objid);
-      if (!s_info->StoreObject(reg, sobjid.Data(), info->GetClass())) {
+      TClass* cl = 0;
+      Version_t version = 0;
+      if (!s_info->GetClassInfo(cl, version)) return kFALSE;
+      Long64_t objid = reg->GetNextObjId();
+      if (!s_info->StoreObject(reg, objid, cl)) 
          objid = -1;  // this is a case, when no data was stored for this object
-         sobjid = "-1";
-      }
+      
+      TString sobjid;
+      sobjid.Form("%lld", objid);
 
       AddCmd(blobs, sqlio::ObjectRef_Arr, sobjid.Data(), elem->GetName(), ns);
    }
@@ -1388,12 +1487,16 @@ Bool_t TSQLStructure::CheckNormalClassPair(TSQLStructure* s_ver, TSQLStructure* 
    // check if pair of two element corresponds
    // to start of object, stored in normal form
 
-   if ((s_ver==0) || (s_info==0) || (s_ver->GetType()!=kSqlVersion) ||
-       (s_info->GetType()!=kSqlStreamerInfo)) return kFALSE;
+   if ((s_ver==0) || (s_info==0) || (s_ver->GetType()!=kSqlVersion)) return kFALSE;
 
-   TClass* cl = s_ver->GetVersionClass();
-   TStreamerInfo* info = s_info->GetStreamerInfo();
-   if ((cl==0) || (cl!=info->GetClass()) || (cl->GetClassVersion()!=info->GetClassVersion())) return kFALSE;
+   TClass* ver_cl = s_ver->GetVersionClass();
+
+   TClass* info_cl = 0;
+   Version_t info_ver = 0;
+   if (!s_info->GetClassInfo(info_cl, info_ver)) return kFALSE;
+
+   if ((ver_cl==0) || (info_cl==0) || (ver_cl!=info_cl) || 
+       (ver_cl->GetClassVersion()!=info_ver)) return kFALSE;
 
    return kTRUE;
 }
@@ -1429,7 +1532,7 @@ Bool_t TSQLStructure::StoreTObject(TSqlRegistry* reg)
 
    const char* uinttype = reg->f->SQLCompatibleType(TStreamerInfo::kUInt);
 
-   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->fCurrentObjId, kTRUE));
+   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->fCurrentObjId));
 
    columns.Add(new TSQLColumnData(sqlio::TObjectUniqueId, uinttype, str_id->GetValue(), kTRUE));
    columns.Add(new TSQLColumnData(sqlio::TObjectBits, uinttype, str_bits->GetValue(), kTRUE));
@@ -1437,7 +1540,7 @@ Bool_t TSQLStructure::StoreTObject(TSqlRegistry* reg)
 
    reg->f->SyncSQLClassInfo(sqlinfo, &columns, kFALSE);
 
-   reg->InsertToNormalTable(&columns, sqlinfo->GetClassTableName());
+   reg->InsertToNormalTable(&columns, sqlinfo);
 
    columns.Delete();
 
@@ -1458,11 +1561,11 @@ Bool_t TSQLStructure::StoreTString(TSqlRegistry* reg)
 
    TObjArray columns;
 
-   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->f->SQLIntType(), reg->fCurrentObjId, kTRUE));
+   columns.Add(new TSQLColumnData(reg->f->SQLObjectIdColumn(), reg->fCurrentObjId));
    columns.Add(new TSQLColumnData(sqlio::TStringValue, reg->f->SQLBigTextType(), value, kFALSE));
 
    reg->f->SyncSQLClassInfo(sqlinfo, &columns, kFALSE);
-   reg->InsertToNormalTable(&columns, sqlinfo->GetClassTableName());
+   reg->InsertToNormalTable(&columns, sqlinfo);
    columns.Delete();
    return kTRUE;
 }
@@ -1516,6 +1619,8 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
    if (elem==0) return kColUnknown;
 
    Int_t typ = elem->GetType();
+   
+   if (typ == TStreamerInfo::kMissing) return kColRawData;
 
    if ((typ>0) && (typ<20) &&
        (typ!=TStreamerInfo::kCharStar)) return kColSimple;
@@ -1571,7 +1676,6 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
        (typ==TStreamerInfo::kObjectP + TStreamerInfo::kOffsetL)) 
       if (elem->GetStreamer()!=0) return kColNormObject; 
                              else return kColNormObjectArray;
-
 
    if ((typ==TStreamerInfo::kObject) ||
        (typ==TStreamerInfo::kAny) ||
@@ -1685,12 +1789,9 @@ TString TSQLStructure::DefineElementColumnName(TStreamerElement* elem, TSQLFile*
 }
 
 //________________________________________________________________________
-Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
+Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data)
 {
    // find column in TSQLObjectData object, which correspond to current element
-
-   // for TClonesArray do nothing, just exit
-   if (IsClonesArray()) return kColClonesArray;
 
    TStreamerElement* elem = GetElement();
    if ((elem==0) || (data==0)) return kColUnknown;
@@ -1708,6 +1809,10 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
    
    TString colname = DefineElementColumnName(elem, f);
 
+   if (gDebug>4)
+     cout << "         colname = " << colname << " in " << 
+            data->GetInfo()->GetClassTableName() << endl;
+
    switch (coltype) {
    case kColSimple: {
       located = data->LocateColumn(colname.Data());
@@ -1723,16 +1828,16 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       located = data->LocateColumn(colname.Data());
       if (located==kColUnknown) return kColUnknown;
 
-      Int_t objid = DefineObjectId();
+      Long64_t objid = DefineObjectId(kTRUE);
       const char* clname = elemname;
-      Int_t version = atoi(data->GetValue());
+      Version_t version = atoi(data->GetValue());
 
       // this is a case, when parent store nothing in the database
       if (version<0) break;
 
       // special treatment for TObject
       if (strcmp(clname,TObject::Class()->GetName())==0) {
-         UnpackTObject(f, data, objid, version);
+         UnpackTObject(f, buf, data, objid, version);
          break;
       }
 
@@ -1743,7 +1848,7 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       if (sqlinfo->IsClassTableExist()) {
          data->AddUnpackInt(sqlio::Version, version);
       } else {
-         TSQLObjectData* objdata = f->GetObjectClassData(objid, sqlinfo);
+         TSQLObjectData* objdata = buf->SqlObjectData(objid, sqlinfo);
          if ((objdata==0) || !objdata->PrepareForRawData()) return kColUnknown;
          AddObjectData(objdata);
       }
@@ -1765,7 +1870,7 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       const char* strobjid = data->GetValue();
       if (strobjid==0) return kColUnknown;
 
-      Int_t objid = atoi(strobjid);
+      Long64_t objid = sqlio::atol64(strobjid);
 
       // when nothing was stored, nothing need to be read. skip
       if (objid<0) break;
@@ -1773,11 +1878,11 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       TString clname;
       Version_t version;
 
-      if (!f->GetObjectData(objid, clname, version)) return kColUnknown;
+      if (!buf->SqlObjectInfo(objid, clname, version)) return kColUnknown;
 
       // special treatment for TObject
       if (clname==TObject::Class()->GetName()) {
-         UnpackTObject(f, data, objid, version);
+         UnpackTObject(f, buf, data, objid, version);
          break;
       }
 
@@ -1787,7 +1892,7 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       if (sqlinfo->IsClassTableExist()) {
          data->AddUnpackInt(sqlio::Version, version);
       } else {
-         TSQLObjectData* objdata = f->GetObjectClassData(objid, sqlinfo);
+         TSQLObjectData* objdata = buf->SqlObjectData(objid, sqlinfo);
          if ((objdata==0) || !objdata->PrepareForRawData()) return kColUnknown;
          AddObjectData(objdata);
       }
@@ -1826,8 +1931,8 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
       if (located==kColUnknown) return located;
       const char* value = data->GetValue();
 
-      Int_t objid = DefineObjectId();
-      Int_t strid = f->IsLongStringCode(value, objid);
+      Long64_t objid = DefineObjectId(kTRUE);
+      Int_t strid = f->IsLongStringCode(objid, value);
 
       TString buf;
 
@@ -1865,14 +1970,14 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TSQLObjectData* data)
 }
 
 //________________________________________________________________________
-Bool_t TSQLStructure::UnpackTObject(TSQLFile* f, TSQLObjectData* data, Int_t objid, Int_t clversion)
+Bool_t TSQLStructure::UnpackTObject(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data, Long64_t objid, Int_t clversion)
 {
    // Unpack TObject data in form, understodable by custom TObject streamer
 
    TSQLClassInfo* sqlinfo = f->RequestSQLClassInfo(TObject::Class()->GetName(), clversion);
    if (sqlinfo==0) return kFALSE;
 
-   TSQLObjectData* tobjdata = f->GetObjectClassData(objid, sqlinfo);
+   TSQLObjectData* tobjdata = buf->SqlObjectData(objid, sqlinfo);
    if (tobjdata==0) return kFALSE;
 
    data->AddUnpackInt(sqlio::Version, clversion);
@@ -1896,14 +2001,14 @@ Bool_t TSQLStructure::UnpackTObject(TSQLFile* f, TSQLObjectData* data, Int_t obj
 }
 
 //________________________________________________________________________
-Bool_t TSQLStructure::UnpackTString(TSQLFile* f, TSQLObjectData* data, Int_t objid, Int_t clversion)
+Bool_t TSQLStructure::UnpackTString(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data, Long64_t objid, Int_t clversion)
 {
    // Unpack TString data in form, understodable by custom TString streamer
 
    TSQLClassInfo* sqlinfo = f->RequestSQLClassInfo(TString::Class()->GetName(), clversion);
    if (sqlinfo==0) return kFALSE;
 
-   TSQLObjectData* tstringdata = f->GetObjectClassData(objid, sqlinfo);
+   TSQLObjectData* tstringdata = buf->SqlObjectData(objid, sqlinfo);
    if (tstringdata==0) return kFALSE;
 
    tstringdata->LocateColumn(sqlio::TStringValue);
@@ -1923,4 +2028,14 @@ Bool_t TSQLStructure::UnpackTString(TSQLFile* f, TSQLObjectData* data, Int_t obj
    delete tstringdata;
 
    return kTRUE;
+}
+
+//________________________________________________________________________
+void TSQLStructure::AddStrBrackets(TString &s, const char* quote)
+{
+   // adds quotes arround string value and replaces some special symbols
+   if (strcmp(quote,"\"")==0) s.ReplaceAll("\"","\\\"");
+                        else  s.ReplaceAll("'","''");
+   s.Prepend(quote);
+   s.Append(quote);
 }

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.16 2005/12/08 15:50:48 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.17 2006/01/20 01:12:13 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -140,8 +140,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    gDirectory = 0;
    SetName(filename);
    SetTitle(title);
-   TDirectory::Build();
-   fFile = this;
+   TDirectory::Build(this, 0);
 
    fD          = -1;
    fFile       = this;
@@ -432,19 +431,19 @@ Int_t TXMLFile::ReOpen(Option_t* mode)
 }
 
 //______________________________________________________________________________
-TKey* TXMLFile::CreateKey(const TObject* obj, const char* name, Int_t)
+TKey* TXMLFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t)
 {
    // create XML key, which will store object in xml structures
 
-   return new TKeyXML(this, obj, name);
+   return new TKeyXML(mother, obj, name);
 }
 
 //______________________________________________________________________________
-TKey* TXMLFile::CreateKey(const void* obj, const TClass* cl, const char* name, Int_t)
+TKey* TXMLFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t)
 {
    // create XML key, which will store object in xml structures
 
-   return new TKeyXML(this, obj, cl, name);
+   return new TKeyXML(mother, obj, cl, name);
 }
 
 //______________________________________________________________________________

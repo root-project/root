@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.2 2005/11/22 20:42:36 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.3 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -27,14 +27,43 @@
 #include "TSQLRow.h"
 #include "TSQLResult.h"
 #include "TSQLClassInfo.h"
+#include "TSQLStructure.h"
+
+ClassImp(TSQLObjectInfo)
+
+//________________________________________________________________________
+TSQLObjectInfo::TSQLObjectInfo() :
+   TObject(),
+   fObjId(0),
+   fClassName(),
+   fVersion(0)
+{
+}
+
+//________________________________________________________________________
+TSQLObjectInfo::TSQLObjectInfo(Long64_t objid, const char* classname, Version_t version) :
+   TObject(),
+   fObjId(objid),
+   fClassName(classname),
+   fVersion(version)
+{
+}
+
+//________________________________________________________________________
+TSQLObjectInfo::~TSQLObjectInfo()
+{
+}
+
+
 
 ClassImp(TSQLObjectData)
 
 //________________________________________________________________________
-   TSQLObjectData::TSQLObjectData() :
+TSQLObjectData::TSQLObjectData() :
       TObject(),
       fInfo(0),
       fObjId(0),
+      fOwner(kFALSE),
       fClassData(0),
       fBlobData(0),
       fLocatedColumn(-1),
@@ -52,16 +81,18 @@ ClassImp(TSQLObjectData)
 
 //______________________________________________________________________________
 TSQLObjectData::TSQLObjectData(TSQLClassInfo* sqlinfo,
-                               Int_t          objid,
+                               Long64_t       objid,
                                TSQLResult*    classdata,
+                               TSQLRow*       classrow,
                                TSQLResult*    blobdata) :
    TObject(),
    fInfo(sqlinfo),
    fObjId(objid),
+   fOwner(kFALSE),
    fClassData(classdata),
    fBlobData(blobdata),
    fLocatedColumn(-1),
-   fClassRow(0),
+   fClassRow(classrow),
    fBlobRow(0),
    fLocatedField(0),
    fLocatedValue(0),
@@ -72,11 +103,13 @@ TSQLObjectData::TSQLObjectData(TSQLClassInfo* sqlinfo,
 {
    // normal contrsuctor,
 
-   if (fClassData!=0)
+   // take ownership if no special row from data pool is provided
+   if ((fClassData!=0) && (fClassRow==0)) {
+      fOwner = kTRUE;
       fClassRow = fClassData->Next();
+   }
    if (fBlobData!=0)
       fBlobRow = fBlobData->Next();
-
 }
 
 //______________________________________________________________________________
@@ -84,9 +117,9 @@ TSQLObjectData::~TSQLObjectData()
 {
    // destructor of TSQLObjectData object
 
+   if ((fClassData!=0) && fOwner) delete fClassData;
    if (fClassRow!=0) delete fClassRow;
    if (fBlobRow!=0) delete fBlobRow;
-   if (fClassData!=0) delete fClassData;
    if (fBlobData!=0) delete fBlobData;
    if (fUnpack!=0) { fUnpack->Delete(); delete fUnpack; }
 }
@@ -281,3 +314,73 @@ Bool_t TSQLObjectData::PrepareForRawData()
    return kTRUE;
 }
 
+//===================================================================================
+
+ClassImp(TSQLObjectDataPool);
+
+//______________________________________________________________________________
+TSQLObjectDataPool::TSQLObjectDataPool() :
+   TObject(),
+   fInfo(0),
+   fClassData(0),
+   fIsMoreRows(kTRUE),
+   fRowsPool(0)
+{
+}
+
+//______________________________________________________________________________
+TSQLObjectDataPool::TSQLObjectDataPool(TSQLClassInfo* info, TSQLResult* data) :
+   TObject(),
+   fInfo(info),
+   fClassData(data),
+   fIsMoreRows(kTRUE),
+   fRowsPool(0)
+{
+}
+
+//______________________________________________________________________________
+TSQLObjectDataPool::~TSQLObjectDataPool()
+{
+   if (fClassData!=0) delete fClassData;
+   if (fRowsPool!=0) {
+      fRowsPool->Delete();
+      delete fRowsPool;
+   }
+}
+
+//______________________________________________________________________________
+TSQLRow* TSQLObjectDataPool::GetObjectRow(Long64_t objid)
+{
+   if (fClassData==0) return 0;
+   
+   Long64_t rowid;
+         
+   if (fRowsPool!=0) {
+      TObjLink* link = fRowsPool->FirstLink();
+      while (link!=0) {
+         TSQLRow* row = (TSQLRow*) link->GetObject();
+         rowid = sqlio::atol64(row->GetField(0));
+         if (rowid==objid) {
+            fRowsPool->Remove(link);   
+            return row;
+         }
+         
+         link = link->Next();   
+      }
+   }
+   
+   while (fIsMoreRows) {
+      TSQLRow* row = fClassData->Next();
+      if (row==0) 
+         fIsMoreRows = kFALSE; 
+      else {
+         rowid = sqlio::atol64(row->GetField(0));
+         if (rowid==objid) return row;
+         if (fRowsPool==0) fRowsPool = new TList();
+         fRowsPool->Add(row);
+      }
+   }
+   
+   return 0;
+}
+  

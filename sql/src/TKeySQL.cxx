@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.5 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.6 2006/01/25 16:00:11 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBrowser.h"
+#include "TDirectory.h"
 #include "Riostream.h"
 
 #include "TSQLResult.h"
@@ -34,16 +35,15 @@ ClassImp(TKeySQL);
 //______________________________________________________________________________
 TKeySQL::TKeySQL() :
    TKey(),
-   fFile(0),
-   fKeyId(-1)
+   fKeyId(-1),
+   fObjId(-1)
 {
    // default constructor
 }
 
 //______________________________________________________________________________
-TKeySQL::TKeySQL(TSQLFile* file, const TObject* obj, const char* name) :
-    TKey(),
-    fFile(file),
+TKeySQL::TKeySQL(TDirectory* mother, const TObject* obj, const char* name, const char* title) :
+    TKey(mother),
     fKeyId(-1),
     fObjId(-1)
 {
@@ -52,14 +52,15 @@ TKeySQL::TKeySQL(TSQLFile* file, const TObject* obj, const char* name) :
    if (name) SetName(name); else
       if (obj!=0) {SetName(obj->GetName());  fClassName=obj->ClassName();}
       else SetName("Noname");
+      
+   if (title) SetTitle(title);
 
-   StoreObject((void*)obj, obj ? obj->IsA() : 0);
+   StoreKeyObject((void*)obj, obj ? obj->IsA() : 0);
 }
 
 //______________________________________________________________________________
-TKeySQL::TKeySQL(TSQLFile* file, const void* obj, const TClass* cl, const char* name) :
-    TKey(),
-    fFile(file),
+TKeySQL::TKeySQL(TDirectory* mother, const void* obj, const TClass* cl, const char* name, const char* title) :
+    TKey(mother),
     fKeyId(-1),
     fObjId(-1)
 {
@@ -68,21 +69,23 @@ TKeySQL::TKeySQL(TSQLFile* file, const void* obj, const TClass* cl, const char* 
    if (name && *name) SetName(name);
    else SetName(cl ? cl->GetName() : "Noname");
 
-   StoreObject(obj, cl);
+   if (title) SetTitle(title);
+
+   StoreKeyObject(obj, cl);
 }
 
 //______________________________________________________________________________
-TKeySQL::TKeySQL(TSQLFile* file, Int_t keyid, Int_t dirid, Int_t objid, const char* name,
+TKeySQL::TKeySQL(TDirectory* mother, Long64_t keyid, Long64_t objid, 
+                 const char* name, const char* title,
                  const char* keydatetime, Int_t cycle, const char* classname) :
-    TKey(),
-    fFile(file),
+    TKey(mother),
     fKeyId(keyid),
-    fDirId(dirid),
     fObjId(objid)
 {
    // Create TKeySQL object, which correponds to single entry in keys table
 
    SetName(name);
+   if (title) SetTitle(title);
    TDatime dt(keydatetime);
    fDatime = dt;
    fCycle = cycle;
@@ -96,25 +99,36 @@ TKeySQL::~TKeySQL()
 }
 
 //______________________________________________________________________________
-void TKeySQL::Browse(TBrowser *b)
+Bool_t TKeySQL::IsKeyModified(const char* keyname, const char* keytitle, const char* keydatime, Int_t cycle, const char* classname)
 {
-// Browse object corresponding to this key
+// Compares keydata with provided and return kTRUE if key was modified
+// Used in TFile::StreamKeysForDirectory() method to verify data for that keys
+// should be updated
+  
+  Int_t len1 = (GetName()==0) ? 0 : strlen(GetName());
+  Int_t len2 = (keyname==0) ? 0 : strlen(keyname);
+  if (len1!=len2) return kTRUE;
+  if ((len1>0) && (strcmp(GetName(), keyname)!=0)) return kTRUE;
+  
+  len1 = (GetTitle()==0) ? 0 : strlen(GetTitle());
+  len2 = (keytitle==0) ? 0 : strlen(keytitle);
+  if (len1!=len2) return kTRUE;
+  if ((len1>0) && (strcmp(GetTitle(), keytitle)!=0)) return kTRUE;
 
-   TObject *obj = gDirectory->GetList()->FindObject(GetName());
-   if (obj && !obj->IsFolder()) {
-      if (obj->InheritsFrom(TCollection::Class()))
-         obj->Delete();   // delete also collection elements
-      delete obj;
-      obj = 0;
-   }
+  const char* tm = GetDatime().AsSQLString();
+  len1 = (tm==0) ? 0 : strlen(tm);
+  len2 = (keydatime==0) ? 0 : strlen(keydatime);
+  if (len1!=len2) return kTRUE;
+  if ((len1>0) && (strcmp(tm, keydatime)!=0)) return kTRUE;
+  
+  if (cycle!=GetCycle()) return kTRUE;
 
-   if (!obj)
-      obj = ReadObj();
-
-   if (b && obj) {
-      obj->Browse(b);
-      b->SetRefreshFlag(kTRUE);
-   }
+  len1 = (GetClassName()==0) ? 0 : strlen(GetClassName());
+  len2 = (classname==0) ? 0 : strlen(classname);
+  if (len1!=len2) return kTRUE;
+  if ((len1>0) && (strcmp(GetClassName(), classname)!=0)) return kTRUE;
+      
+  return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -123,88 +137,47 @@ void TKeySQL::Delete(Option_t * /*option*/)
 // Removes key from current directory
 // Note: TKeySQL object is not deleted. You still have to call "delete key"
 
-   if (fFile!=0)
-      fFile->DeleteKeyFromDB(GetDBKeyId());
+   TSQLFile* f = (TSQLFile*) GetFile(); 
 
-   gDirectory->GetListOfKeys()->Remove(this);
+   if (f!=0)
+      f->DeleteKeyFromDB(GetDBKeyId());
+
+   fMotherDir->GetListOfKeys()->Remove(this);
 }
 
 //______________________________________________________________________________
-void TKeySQL::StoreObject(const void* obj, const TClass* cl)
+Long64_t TKeySQL::GetDBDirId() const
 {
-//  convert object to sql statements and store them in DB
+   // return sql id of parent directory
+   return GetMotherDir() ? GetMotherDir()->GetSeekDir() : 0;
+}
 
-   TObjArray cmds;
-   Bool_t needcommit = kFALSE;
+//______________________________________________________________________________
+void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
+{
+   TSQLFile* f = (TSQLFile*) GetFile(); 
+    
+   fCycle = GetMotherDir()->AppendKey(this);
 
-   fCycle = fFile->AppendKey(this);
+   fKeyId = f->DefineNextKeyId();
 
-   fKeyId = fFile->DefineNextKeyId();
-
-   fObjId = fFile->VerifyObjectTable();
-   if (fObjId<=0) fObjId = 1;
-   else fObjId++;
-
-   TBufferSQL2 buffer(TBuffer::kWrite, fFile);
-
-   TSQLStructure* s = buffer.SqlWrite(obj, cl, fObjId);
-
-   if ((buffer.GetErrorFlag()>0) || (s==0)) {
-      Error("StoreObject","Cannot convert object data to TSQLStructure");
-      goto zombie;
-   }
+   fObjId = f->StoreObjectInTables(fKeyId, obj, cl);
 
    if (cl) fClassName = cl->GetName();
    
-   if (fFile->GetUseTransactions()==TSQLFile::kTransactionsAuto) {
-      fFile->SQLStartTransaction();
-      needcommit = kTRUE;
-   }
-
-   // here tables may be already created, therefore 
-   // it should be protected by transactions operations
-   if (!s->ConvertToTables(fFile, fKeyId, &cmds)) {
-      Error("StoreObject","Cannot convert to SQL statements");
-      goto zombie;
+   if (GetDBObjId()>=0) { 
+      fDatime.Set();
+      if (!f->WriteKeyData(this)) {
+         // cannot add entry to keys table                          
+         Error("StoreObject","Cannot write data to key tables");
+         // delete everything relevant for that key
+         f->DeleteKeyFromDB(GetDBKeyId());
+         fObjId = -1;
+      }
    }
    
-   if (!fFile->SQLApplyCommands(&cmds)) {
-      Error("StoreObject","Cannot correctly store object data in database");
-      goto zombie; 
-   }
-
-   // commit here, while objects data is already stored 
-   if (needcommit) {
-      fFile->SQLCommit();
-      needcommit = kFALSE;
-   }
-
-   cmds.Delete();
-
-   fDatime.Set();
-   
-   if (!fFile->WriteKeyData(GetDBKeyId(),
-                            sqlio::Ids_RootDir, // later parent directory id should be
-                            GetDBObjId(),
-                            GetName(),
-                            GetDatime().AsSQLString(),
-                            GetCycle(),
-                            GetClassName())) {
-      // cannot add entry to keys table                          
-      Error("StoreObject","Cannot write data to key tables");
-      // delete everything relevant for that key
-      fFile->DeleteKeyFromDB(GetDBKeyId());
-      goto zombie;                           
-   }
-
-   return;
-   
-zombie:
-   if (needcommit)
-      fFile->SQLRollback();
-
-   cmds.Delete();
-   gDirectory->GetListOfKeys()->Remove(this);
+   if (GetDBObjId()<0)
+      GetMotherDir()->GetListOfKeys()->Remove(this);
    // fix me !!! One should delete object by other means
    // delete this;
 }
@@ -219,7 +192,7 @@ Int_t TKeySQL::Read(TObject* tobj)
 
    if (tobj==0) return 0; 
     
-   void* res = SqlReadAny(tobj, 0);
+   void* res = ReadKeyObject(tobj, 0);
    
    return res==0 ? 0 : 1;
 }
@@ -230,9 +203,20 @@ TObject* TKeySQL::ReadObj()
 // Read object derived from TObject class
 // If it is not TObject or in case of error, return 0
 
-   TObject* tobj = (TObject*) SqlReadAny(0, TObject::Class());
+   TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
    
-   if ((tobj!=0) && gROOT->GetForceStyle()) tobj->UseCurrentStyle();
+   if (tobj!=0) {
+      if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
+      if (tobj->IsA() == TDirectory::Class()) {
+         TDirectory *dir = (TDirectory*) tobj;
+         dir->SetName(GetName());
+         dir->SetTitle(GetTitle());
+         //dir->SetSeekDir(GetDBKeyId());
+         dir->ReadKeys();
+         dir->SetMother(fMotherDir);
+         fMotherDir->Append(dir);
+      }
+   }
        
    return tobj;
 }
@@ -242,19 +226,22 @@ void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
 {
 // read object of any type from SQL database
 
-   return SqlReadAny(0, expectedClass);
+   return ReadKeyObject(0, expectedClass);
 }
 
 //______________________________________________________________________________
-void* TKeySQL::SqlReadAny(void* obj, const TClass* expectedClass)
+void* TKeySQL::ReadKeyObject(void* obj, const TClass* expectedClass)
 {
-   if ((fKeyId<=0) || (fFile==0)) return 0;
 
-   TBufferSQL2 buffer(TBuffer::kRead, fFile);
+   TSQLFile* f = (TSQLFile*) GetFile(); 
+
+   if ((GetDBKeyId()<=0) || (f==0)) return obj;
+
+   TBufferSQL2 buffer(TBuffer::kRead, f);
    
    TClass* cl = 0;
 
-   void* res = buffer.SqlReadAny(fObjId, obj, &cl);
+   void* res = buffer.SqlReadAny(GetDBKeyId(), GetDBObjId(), &cl, obj);
    
    if ((cl==0) || (res==0)) return 0;
    

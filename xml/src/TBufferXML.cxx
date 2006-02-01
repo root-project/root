@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.8 2006/01/20 01:12:13 pcanal Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.9 2006/01/25 16:00:11 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -89,6 +89,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode) :
 
    SetParent(0);
    SetBit(kCannotHandleMemberWiseStreaming);
+   SetBit(kTextBasedStreaming);
 }
 
 //______________________________________________________________________________
@@ -117,6 +118,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile* file) :
 
    SetParent(file);
    SetBit(kCannotHandleMemberWiseStreaming);
+   SetBit(kTextBasedStreaming);
    if (XmlFile()) {
       SetXML(XmlFile()->XML());
       SetCompressionLevel(XmlFile()->GetCompressionLevel());
@@ -1031,6 +1033,9 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
 
    Int_t typ_id = -1;
    
+   if (strcmp(typeName,"raw:data")==0) 
+      typ_id = TStreamerInfo::kMissing;
+   
    if (typ_id<0) {
       TDataType *dt = gROOT->GetType(typeName);
       if (dt!=0)
@@ -1068,6 +1073,11 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
    
    TStreamerElement* elem = 0;
    
+   if (typ_id == TStreamerInfo::kMissing) {
+      elem = new TStreamerElement(name,"title",0, typ_id, "raw:data");
+   } else
+   
+
    if (typ_id==TStreamerInfo::kBase) {
       TClass* cl = gROOT->GetClass(tname.Data());
       if (cl!=0) {

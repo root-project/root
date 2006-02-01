@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.h,v 1.3 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.h,v 1.4 2006/01/25 16:00:11 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -33,33 +33,33 @@ protected:
    TKeySQL();
 
    virtual Int_t     Read(const char *name) { return TKey::Read(name); }
-   void              StoreObject(const void* obj, const TClass* cl);
-   void*             SqlReadAny(void* obj, const TClass* expectedClass);
+   void              StoreKeyObject(const void* obj, const TClass* cl);
+   void*             ReadKeyObject(void* obj, const TClass* expectedClass);
   
-   TSQLFile*         fFile;     //!  pointer on SQL file
-   Int_t             fKeyId;    //!  key identifier in KeysTables
-   Int_t             fDirId;    //!  parent directory identifier
-   Int_t             fObjId;    //!  stored object identifer
+   Long64_t          fKeyId;    //!  key identifier in KeysTables
+   Long64_t          fObjId;    //!  stored object identifer
 
 public:
-   TKeySQL(TSQLFile* file, const TObject* obj, const char* name);
-   TKeySQL(TSQLFile* file, const void* obj, const TClass* cl, const char* name);
-   TKeySQL(TSQLFile* file, Int_t keyid, Int_t dirid, Int_t objid, const char* name, 
+   TKeySQL(TDirectory* mother, const TObject* obj, const char* name, const char* title = 0);
+   TKeySQL(TDirectory* mother, const void* obj, const TClass* cl, const char* name, const char* title = 0);
+   TKeySQL(TDirectory* mother, Long64_t keyid, Long64_t objid, 
+           const char* name, const char* title,
            const char* keydatetime, Int_t cycle, const char* classname);
    virtual ~TKeySQL();
+
+   Bool_t            IsKeyModified(const char* keyname, const char* keytitle, const char* keydatime, Int_t cycle, const char* classname);
   
-   Int_t             GetDBKeyId() const { return fKeyId; }
-   Int_t             GetDBDirId() const { return fDirId; }
-   Int_t             GetDBObjId() const { return fObjId; }
+   Long64_t          GetDBKeyId() const { return fKeyId; }
+   Long64_t          GetDBObjId() const { return fObjId; }
+   Long64_t          GetDBDirId() const;
 
    // redefined TKey Methods
-   virtual void      Browse(TBrowser *b);
    virtual void      Delete(Option_t *option="");
    virtual void      DeleteBuffer() {}
    virtual void      FillBuffer(char *&) {}
    virtual char     *GetBuffer() const { return 0; }
-   virtual Long64_t  GetSeekKey() const  { return 1; }
-   virtual Long64_t  GetSeekPdir() const { return 1;}
+   virtual Long64_t  GetSeekKey() const  { return GetDBObjId() > 0 ? GetDBObjId() : 0; }
+   virtual Long64_t  GetSeekPdir() const { return GetDBDirId() > 0 ? GetDBDirId() : 0; }
    virtual void      Keep() {}
 
    virtual Int_t     Read(TObject* obj);
@@ -69,8 +69,6 @@ public:
    virtual void      ReadBuffer(char *&) {}
    virtual void      ReadFile() {}
    virtual void      SetBuffer() { fBuffer = 0; }
-   virtual void      SetParent(const TObject* ) { }
-   virtual Int_t     Sizeof() const { return 0; }
    virtual Int_t     WriteFile(Int_t =1, TFile* = 0) { return 0; }
 
    ClassDef(TKeySQL,1) // a special TKey for SQL data base

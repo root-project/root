@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.3 2005/11/20 05:07:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.4 2006/01/25 16:00:11 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -26,19 +26,18 @@ class TKeyXML : public TKey {
       TKeyXML();
     
    public:
-      TKeyXML(TXMLFile* file, const TObject* obj, const char* name = 0);
-      TKeyXML(TXMLFile* file, const void* obj, const TClass* cl, const char* name);
-      TKeyXML(TXMLFile* file, XMLNodePointer_t keynode);
+      TKeyXML(TDirectory* mother, const TObject* obj, const char* name = 0);
+      TKeyXML(TDirectory* mother, const void* obj, const TClass* cl, const char* name);
+      TKeyXML(TDirectory* mother, XMLNodePointer_t keynode);
       virtual ~TKeyXML();
 
       // redefined TKey Methods
-      virtual void      Browse(TBrowser *b);
       virtual void      Delete(Option_t *option="");
       virtual void      DeleteBuffer() {}
       virtual void      FillBuffer(char *&) {}
       virtual char     *GetBuffer() const { return 0; }
-      virtual Long64_t  GetSeekKey() const  { return 1; }
-      virtual Long64_t  GetSeekPdir() const { return 1;}
+      virtual Long64_t  GetSeekKey() const  { return fKeyNode ? 1024 : 0;}
+      virtual Long64_t  GetSeekPdir() const { return fKeyNode ? 1024 : 0;}
       //virtual ULong_t   Hash() const { return 0; }
       virtual void      Keep() {}
       //virtual void      ls(Option_t* ="") const;
@@ -51,26 +50,19 @@ class TKeyXML : public TKey {
       virtual void      ReadBuffer(char *&) {}
       virtual void      ReadFile() {}
       virtual void      SetBuffer() { fBuffer = 0; }
-      virtual void      SetParent(const TObject* ) { }
-      virtual Int_t     Sizeof() const { return 0; }
       virtual Int_t     WriteFile(Int_t =1, TFile* = 0) { return 0; }
 
       // TKeyXML specific methods
 
       XMLNodePointer_t  KeyNode() const { return fKeyNode; }
-      void              SetXML(TXMLEngine* xml) { fXML = xml; }
-
 
    protected:
       virtual Int_t     Read(const char *name) { return TKey::Read(name); }
       void              StoreObject(const void* obj, const TClass* cl);
-      XMLNodePointer_t  ObjNode();
-      XMLNodePointer_t  BlockNode();
+      TXMLEngine*       XMLEngine();
       
       void*             XmlReadAny(void* obj, const TClass* expectedClass);
       
-      TXMLFile*         fFile;     //!
-      TXMLEngine*       fXML;      //!
       XMLNodePointer_t  fKeyNode;  //!
 
    ClassDef(TKeyXML,1) // a special TKey for XML files      

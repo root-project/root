@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.7 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.8 2006/01/25 16:00:11 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -24,8 +24,10 @@
 
 #include "TObjArray.h"
 #include "TROOT.h"
+#include "TDataType.h"
 #include "TClass.h"
 #include "TClassTable.h"
+#include "TMap.h"
 #include "TExMap.h"
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
@@ -44,14 +46,30 @@
 #include "TSQLFile.h"
 #include "TSQLClassInfo.h"
 
+#ifdef R__VISUAL_CPLUSPLUS
+#define FLong64    "%I64d"
+#define FULong64   "%I64u"
+#else
+#ifdef R__B64
+#define FLong64    "%ld"
+#define FULong64   "%lu"
+#else
+#define FLong64    "%lld"
+#define FULong64   "%llu"
+#endif
+#endif
+
 ClassImp(TBufferSQL2);
 
 //______________________________________________________________________________
 TBufferSQL2::TBufferSQL2() :
    TBuffer(),
-   fSQL(0)
+   fSQL(0),
+   fStructure(0),
+   fObjMap(0),
+   fPoolsMap(0)
 {
-   // Default constructor
+   // Default constructor, should not be used
 }
 
 //______________________________________________________________________________
@@ -61,19 +79,21 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode) :
    fStructure(0),
    fStk(0),
    fObjMap(0),
-   fIdArray(0),
    fErrorFlag(0),
    fExpectedChain(kFALSE),
    fCompressLevel(0),
    fReadVersionBuffer(-1),
    fObjIdCounter(1),
-   fIgnoreVerification(kFALSE)
+   fIgnoreVerification(kFALSE),
+   fObjectsInfos(0),
+   fPoolsMap(0)
 {
    // Creates buffer object to serailize/deserialize data to/from sql.
    // Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
    SetParent(0);
    SetBit(kCannotHandleMemberWiseStreaming);
+   SetBit(kTextBasedStreaming);
 }
 
 //______________________________________________________________________________
@@ -83,12 +103,13 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile* file) :
    fStructure(0),
    fStk(0),
    fObjMap(0),
-   fIdArray(0),
    fErrorFlag(0),
    fExpectedChain(kFALSE),
    fCompressLevel(0),
    fReadVersionBuffer(-1),
-   fObjIdCounter(1)
+   fObjIdCounter(1),
+   fObjectsInfos(0),
+   fPoolsMap(0)
 {
    // Creates buffer object to serailize/deserialize data to/from sql.
    // This constructor should be used, if data from buffer supposed to be stored in file.
@@ -98,6 +119,7 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile* file) :
 
    // for TClonesArray recognize if this is special case
    SetBit(kCannotHandleMemberWiseStreaming);
+   SetBit(kTextBasedStreaming);
 
    SetParent(file);
    fSQL = file;
@@ -110,27 +132,25 @@ TBufferSQL2::~TBufferSQL2()
 {
    // destroy sql buffer
    if (fObjMap) delete fObjMap;
-   if (fIdArray) delete fIdArray;
 
    if (fStructure!=0) {
       delete fStructure;
       fStructure = 0;
    }
+   
+   if (fObjectsInfos!=0) {
+      fObjectsInfos->Delete();
+      delete fObjectsInfos;   
+   }
+   
+   if (fPoolsMap!=0) {
+      fPoolsMap->DeleteValues();
+      delete fPoolsMap;   
+   }
 }
 
 //______________________________________________________________________________
-TSQLStructure* TBufferSQL2::SqlWrite(const TObject* obj, Int_t objid)
-{
-   // Convert object, derived from TObject class to sql structures
-   // Return pointer on created TSQLStructure
-   // TSQLStructure object will be owned by TBufferSQL2
-
-   if (obj==0) return SqlWrite(0,0, objid);
-   else return SqlWrite(obj, obj->IsA(), objid);
-}
-
-//______________________________________________________________________________
-TSQLStructure* TBufferSQL2::SqlWrite(const void* obj, const TClass* cl, Int_t objid)
+TSQLStructure* TBufferSQL2::SqlWriteAny(const void* obj, const TClass* cl, Long64_t objid)
 {
    // Convert object of any class to sql structures
    // Return pointer on created TSQLStructure
@@ -140,6 +160,7 @@ TSQLStructure* TBufferSQL2::SqlWrite(const void* obj, const TClass* cl, Int_t ob
 
    fStructure = 0;
 
+   fFirstObjId = objid;   
    fObjIdCounter = objid;
 
    SqlWriteObject(obj, cl);
@@ -155,7 +176,7 @@ TSQLStructure* TBufferSQL2::SqlWrite(const void* obj, const TClass* cl, Int_t ob
 }
 
 //______________________________________________________________________________
-void* TBufferSQL2::SqlReadAny(Int_t objid, void* obj, TClass** cl)
+void* TBufferSQL2::SqlReadAny(Long64_t keyid, Long64_t objid, TClass** cl, void* obj)
 {
    // Recreate object from sql structure.
    // Return pointer to read object.
@@ -164,12 +185,102 @@ void* TBufferSQL2::SqlReadAny(Int_t objid, void* obj, TClass** cl)
    if (cl) *cl = 0;
    if (fSQL==0) return 0;
 
-   fCurrentData=0;
+   fCurrentData = 0;
    fErrorFlag = 0;
 
    fReadVersionBuffer = -1;
+   
+   fObjectsInfos = fSQL->SQLObjectsInfo(keyid);
+//   fObjectsInfos = 0;
+   fFirstObjId = objid;
+   fLastObjId = objid;
+   if (fObjectsInfos!=0) {
+      TSQLObjectInfo* objinfo = (TSQLObjectInfo*) fObjectsInfos->Last();
+      if (objinfo!=0) fLastObjId = objinfo->GetObjId();
+   }
 
    return SqlReadObjectDirect(obj, cl, objid);
+}
+
+//______________________________________________________________________________
+Bool_t TBufferSQL2::SqlObjectInfo(Long64_t objid, TString& clname, Version_t& version)
+{
+// Returns object info like classname and version
+// Should be taken from buffer, which is produced in the begginnig
+
+   if ((objid<0) || (fObjectsInfos==0)) return kFALSE;
+
+ //  if (fObjectsInfos==0) return fSQL->SQLObjectInfo(objid, clname, version);
+   
+   // suppose that objects info are sorted out
+   
+   Long64_t shift = objid - fFirstObjId;
+   
+   TSQLObjectInfo* info = 0;
+   if ((shift>=0) && (shift<=fObjectsInfos->GetLast())) {
+      info = (TSQLObjectInfo*) fObjectsInfos->At(shift);
+      if (info->GetObjId()!=objid) info = 0;
+   }
+    
+   if (info==0) {
+      // I hope, i will never get inside it 
+      Info("SqlObjectInfo", "Standard not works %lld", objid); 
+      for (Int_t n=0;n<=fObjectsInfos->GetLast();n++) {
+         info = (TSQLObjectInfo*) fObjectsInfos->At(n);
+         if (info->GetObjId()==objid) break;
+         info = 0;
+      }
+   }
+    
+   if (info==0) return kFALSE;
+   
+   clname = info->GetObjClassName();
+   version = info->GetObjVersion();
+   return kTRUE;
+}
+
+
+//______________________________________________________________________________
+TSQLObjectData* TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo* sqlinfo)
+{
+   if (!sqlinfo->IsClassTableExist()) 
+      return fSQL->GetObjectClassData(objid, sqlinfo); 
+   
+   TSQLObjectDataPool* pool = 0;
+   
+   if (fPoolsMap!=0)
+     pool = (TSQLObjectDataPool*) fPoolsMap->GetValue(sqlinfo);
+   
+   if ((pool==0) && (fLastObjId>=fFirstObjId)) {
+      if (gDebug>4) Info("SqlObjectData","Before request to %s",sqlinfo->GetClassTableName());
+      TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
+      if (gDebug>4) Info("SqlObjectData","After request res = %x",alldata);
+      if (alldata==0) {
+         Error("SqlObjectData","Cannot get data from table %s",sqlinfo->GetClassTableName());
+         return 0;
+      }
+
+      if (fPoolsMap==0) fPoolsMap = new TMap();
+      pool = new TSQLObjectDataPool(sqlinfo, alldata);
+      fPoolsMap->Add(sqlinfo, pool);
+   }
+
+   if (pool==0) return 0;
+
+   if (pool->GetSqlInfo()!=sqlinfo) {
+      Error("SqlObjectData","Missmatch in pools map !!! CANNOT BE !!!");
+      return 0;
+   }
+
+   TSQLResult *classdata = pool->GetClassData();
+   
+   TSQLRow* row = pool->GetObjectRow(objid);
+   if (row==0) {
+      Error("SqlObjectData","Can not find row for objid = %lld in table %s", objid, sqlinfo->GetClassTableName());
+      return 0;
+   }
+   TSQLResult *blobdata = fSQL->GetBlobClassData(objid, sqlinfo);
+   return new TSQLObjectData(sqlinfo, objid, classdata, row, blobdata);
 }
 
 //______________________________________________________________________________
@@ -184,42 +295,6 @@ void TBufferSQL2::WriteObject(const TObject *obj)
 }
 
 //______________________________________________________________________________
-Bool_t TBufferSQL2::ProcessPointer(const void* ptr, Int_t& objid)
-{
-   // Return SqlObjectId_Null, if ptr is null or
-   // id of object which was already stored in buffer
-
-   if (ptr==0) {
-      objid = 0;
-   } else {
-      if (fObjMap==0) return kFALSE;
-      ULong_t hash = TMath::Hash(&ptr, sizeof(void*));
-      Long_t storedobjid = fObjMap->GetValue(hash, (Long_t) ptr);
-      if (storedobjid==0) return kFALSE;
-
-      objid = storedobjid;
-   }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TBufferSQL2::RegisterPointer(const void* ptr, Int_t objid)
-{
-   // Register pair of object id, in object map
-   // Object id is used to indentify object in tables
-
-   if ((ptr==0) || (objid==sqlio::Ids_NullPtr)) return;
-
-   ULong_t hash = TMath::Hash(&ptr, sizeof(void*));
-
-   if (fObjMap==0) fObjMap = new TExMap();
-
-   if (fObjMap->GetValue(hash, (Long_t) ptr)==0)
-      fObjMap->Add(hash, (Long_t) ptr, (Long_t) objid);
-}
-
-//______________________________________________________________________________
 Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStreamer *streamer, Int_t streamer_index)
 {
    // Write object to buffer
@@ -231,11 +306,21 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
 
    PushStack();
 
-   Int_t objid = 0;
+   Long64_t objid = -1;
 
    if (cl==0) obj = 0;
-
-   if (ProcessPointer(obj, objid)) {
+   
+   if (obj==0) 
+      objid = 0;
+   else 
+   if (fObjMap!=0) {
+      ULong_t hash = TMath::Hash(&obj, sizeof(void*));
+      Long_t value = fObjMap->GetValue(hash, (Long_t) obj);
+      if (value>0)
+        objid = fFirstObjId + value - 1;
+   }
+   
+   if (objid>=0) {
       Stack()->SetObjectPointer(objid);
       PopStack();
       return objid;
@@ -244,7 +329,11 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
    objid = fObjIdCounter++;
 
    Stack()->SetObjectRef(objid, cl);
-   RegisterPointer(obj, objid);
+   
+   ULong_t hash = TMath::Hash(&obj, sizeof(void*));
+   if (fObjMap==0) fObjMap = new TExMap();
+   if (fObjMap->GetValue(hash, (Long_t) obj)==0)
+      fObjMap->Add(hash, (Long_t) obj, (Long_t) objid - fFirstObjId + 1);
 
    if (streamer!=0)
       (*streamer)(*this, (void*) obj, streamer_index);
@@ -279,21 +368,30 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
       fErrorFlag = 1;
       return obj;
    }
+   
+   Long64_t objid = -1;
+   sscanf(refid, FLong64, &objid);
 
    if (!fCurrentData->IsBlobData() ||
        fCurrentData->VerifyDataType(sqlio::ObjectPtr,kFALSE))
-      if (strcmp(refid,"0")==0) {
+      if (objid==0) {
          obj = 0;
          findptr = kTRUE;
       } else
-         if ((fIdArray!=0) && (fObjMap!=0)) {
-            TNamed* identry = (TNamed*) fIdArray->FindObject(refid);
-            if (identry!=0) {
-               obj = (void*) fObjMap->GetValue((Long_t) fIdArray->IndexOf(identry));
-               if (cl) *cl = gROOT->GetClass(identry->GetTitle());
-               findptr = kTRUE;
-            }
+      if (objid==-1) {
+         findptr = kTRUE; 
+      } else 
+      if ((fObjMap!=0) && (objid>=fFirstObjId)) {
+         void* obj1 = (void*) fObjMap->GetValue((Long_t) objid - fFirstObjId);
+         if (obj1!=0) {
+            obj = obj1;
+            findptr = kTRUE;
+            TString clname;
+            Version_t version;
+            if ((cl!=0) && SqlObjectInfo(objid, clname, version))
+              *cl = gROOT->GetClass(clname);
          }
+      }
 
    if ((gDebug>3) && findptr)
       cout << "    Found pointer " << (obj ? obj : 0)
@@ -311,18 +409,16 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
          return obj;
       }
 
-   Int_t objid = atoi(refid);
-
    fCurrentData->ShiftToNextValue();
 
-   if (gDebug>2)
+   if ((gDebug>2) || (objid<0))
       cout << "Found object reference " << objid << endl;
 
    return SqlReadObjectDirect(obj, cl, objid, streamer, streamer_index);
 }
 
 //______________________________________________________________________________
-void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid, TMemberStreamer *streamer, Int_t streamer_index)
+void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, TMemberStreamer *streamer, Int_t streamer_index)
 {
    // Read object data.
    // Class name and version are taken from special objects table.
@@ -330,7 +426,10 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid, TMem
    TString clname;
    Version_t version;
 
-   if (!fSQL->GetObjectData(objid, clname, version)) return obj;
+   if (!SqlObjectInfo(objid, clname, version)) return obj;
+
+   if (gDebug>2) 
+      Info("SqlReadObjectDirect","objid = %lld clname = %s ver = %d",objid, clname.Data(), version);
 
    TSQLClassInfo* sqlinfo = fSQL->RequestSQLClassInfo(clname.Data(), version);
 
@@ -342,19 +441,9 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid, TMem
 
    if (obj==0) obj = objClass->New();
 
-   TString strid;
-   strid.Form("%d", objid);
-
-   if (fIdArray==0) {
-      fIdArray = new TObjArray;
-      fIdArray->SetOwner(kTRUE);
-   }
-   TNamed* nid = new TNamed(strid.Data(), objClass->GetName());
-   fIdArray->Add(nid);
-
    if (fObjMap==0) fObjMap = new TExMap();
 
-   fObjMap->Add((Long_t) fIdArray->IndexOf(nid), (Long_t) obj);
+   fObjMap->Add((Long_t) objid - fFirstObjId, (Long_t) obj);
 
    PushStack()->SetObjectRef(objid, objClass);
 
@@ -366,10 +455,10 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid, TMem
 
          TSQLObjectData* objdata = new TSQLObjectData;
          if (objClass==TObject::Class())
-            TSQLStructure::UnpackTObject(fSQL, objdata, objid, version);
+            TSQLStructure::UnpackTObject(fSQL, this, objdata, objid, version);
          else
             if (objClass==TString::Class())
-               TSQLStructure::UnpackTString(fSQL, objdata, objid, version);
+               TSQLStructure::UnpackTString(fSQL, this, objdata, objid, version);
 
          Stack()->AddObjectData(objdata);
          fCurrentData = objdata;
@@ -378,7 +467,7 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Int_t objid, TMem
          // then streamer functions of TStreamerInfo class
          fReadVersionBuffer = version;
    } else {
-      TSQLObjectData* objdata = fSQL->GetObjectClassData(objid, sqlinfo);
+      TSQLObjectData* objdata = SqlObjectData(objid, sqlinfo);
       if ((objdata==0) || !objdata->PrepareForRawData()) {
          Error("SqlReadObjectDirect","No found raw data for obj %d in class %s version %d table", objid, clname.Data(), version);
          fErrorFlag = 1;
@@ -419,54 +508,10 @@ void  TBufferSQL2::IncrementLevel(TStreamerInfo* info)
 
    PushStack()->SetStreamerInfo(info);
 
-   fExpectedChain = kFALSE;
-
    if (gDebug>2)
-      cout << " IncrementLevel " << info->GetClass()->GetName() << endl;
-
-   if (IsReading()) {
-      Int_t objid = 0;
-
-      Bool_t isclonesarray = Stack()->IsClonesArray();
-
-      if (isclonesarray) {
-         // nothing to do, data will be read from raw data as before
-         return;
-      }
-
-      if ((fCurrentData!=0) && fCurrentData->IsBlobData() &&
-          fCurrentData->VerifyDataType(sqlio::ObjectInst, kFALSE)) {
-         objid = atoi(fCurrentData->GetValue());
-         fCurrentData->ShiftToNextValue();
-         TString sobjid;
-         sobjid.Form("%d",objid);
-         Stack()->ChangeValueOnly(sobjid.Data());
-      } else
-         objid = Stack()->DefineObjectId();
-      if (objid<0) {
-         Error("IncrementLevel","cannot define object id");
-         fErrorFlag = 1;
-         return;
-      }
-
-      TSQLClassInfo* sqlinfo = fSQL->RequestSQLClassInfo(info->GetName(), info->GetClassVersion());
-      if (info==0) {
-         Error("IncrementLevel","Can not find table for class %s version %d",info->GetName(), info->GetClassVersion());
-         fErrorFlag = 1;
-         return;
-      }
-
-      TSQLObjectData* objdata = fSQL->GetObjectClassData(objid, sqlinfo);
-      if (objdata==0) {
-         Error("IncrementLevel","Request error for data of object %d for class %s version %d", objid, info->GetName(), info->GetClassVersion());
-         fErrorFlag = 1;
-         return;
-      }
-
-      Stack()->AddObjectData(objdata);
-
-      fCurrentData = objdata;
-   }
+      cout << " IncrementLevel " << info->GetName() << endl;
+      
+   WorkWithClass(info->GetName(), info->GetClassVersion());
 }
 
 //______________________________________________________________________________
@@ -512,14 +557,261 @@ void TBufferSQL2::SetStreamerElementNumber(Int_t number)
    fExpectedChain = ((elem_type>0) && (elem_type<20)) &&
       (comp_type - elem_type == TStreamerInfo::kOffsetL);
 
-
    WorkWithElement(elem, number);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::ClassBegin(const TClass* cl, Version_t classversion)
+{
+   // This method inform buffer data of which class now 
+   // will be streamed. When reading, classversion should be specified
+   // as was read by TBuffer::ReadVersion() call
+   // 
+   // ClassBegin(), ClassEnd() & ClassMemeber() should be used in
+   // custom class streamers to specify which kind of data are 
+   // now streamed to/from buffer. That information is used to correctly
+   // convert class data to/from "normal" sql tables with meaningfull names
+   // and correct datatypes. Without that functions data from custom streamer
+   // will be saved as "raw" data in special _streamer_ table one value after another
+   // Such MUST be used when object is written with standard ROOT streaming
+   // procedure, but should be read back in custom streamer. 
+   // For example, custom streamer of TNamed class may look like:
+
+// void TNamed::Streamer(TBuffer &b)   
+//   UInt_t R__s, R__c;
+//   if (b.IsReading()) {
+//      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+//      b.ClassBegin(TNamed::Class(), R__v);
+//      b.ClassMember("TObject");
+//      TObject::Streamer(b);
+//      b.ClassMember("fName","TString");
+//      fName.Streamer(b);
+//      b.ClassMember("fTitle","TString");
+//      fTitle.Streamer(b);
+//      b.ClassEnd(TNamed::Class());
+//      b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+//   } else {
+//      TNamed::Class()->WriteBuffer(b,this);
+//   }
+    
+   if (classversion<0) classversion = cl->GetClassVersion();
+   
+   PushStack()->SetCustomClass(cl, classversion);
+
+   if (gDebug>2) Info("ClassBegin", cl->GetName());
+   
+   WorkWithClass(cl->GetName(), classversion);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::ClassEnd(const TClass* cl)
+{
+   // Method indicates end of streaming of classdata in custom streamer.
+   // See ClassBegin() method for more details. 
+    
+   TSQLStructure* curr = Stack();
+   if (curr->GetType()==TSQLStructure::kSqlCustomElement) PopStack(); // for element
+   PopStack();  // for streamerinfo
+
+   // restore value of object data
+   fCurrentData = Stack()->GetObjectData(kTRUE);
+
+   fExpectedChain = kFALSE;
+
+   if (gDebug>2) Info("ClassEnd",cl->GetName());
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrsize1, Int_t arrsize2)
+{
+   // Method indicates name and typename of class memeber, 
+   // which should be now streamed in custom streamer
+   // Following combinations are supported:
+   // 1. name = "ClassName", typeName = 0 or typename==ClassName
+   //    This is a case, when data of parent class "ClassName" should be streamed.
+   //    For instance, if class directly inherited from TObject, custom
+   //    streamer should include following code:
+   //    b.ClassMember("TObject");
+   //    TObject::Streamer(b);
+   // 2. Basic data type
+   //      b.ClassMember("fInt","Int_t");
+   //      b >> fInt;
+   // 3. Array of basic data types
+   //      b.ClassMember("fArr","Int_t", 5);
+   //      b.ReadFastArray(fArr, 5);
+   // 4. Object as data member
+   //      b.ClassMemeber("fName","TString");
+   //      fName.Streamer(b);
+   // 5. Pointer on object as datamember
+   //      b.ClassMemeber("fObj","TObject*");
+   //      b.StreamObject(b); 
+   // arrsize1 and arrsize2 arguments (when specified) indicate first and
+   // second dimension of array. Can be used for array of basic types.
+   // For more details see ClassBegin() method description.
+    
+   if (typeName==0) typeName = name;
+   
+   if ((name==0) || (strlen(name)==0)) {
+      Error("ClassMember","Invalid member name");
+      fErrorFlag = 1;
+      return;
+   }
+   
+   TString tname = typeName;
+
+   Int_t typ_id = -1;
+   
+   if (strcmp(typeName,"raw:data")==0) 
+      typ_id = TStreamerInfo::kMissing;
+   
+   if (typ_id<0) {
+      TDataType *dt = gROOT->GetType(typeName);
+      if (dt!=0)
+         if ((dt->GetType()>0) && (dt->GetType()<20))
+            typ_id = dt->GetType();
+   }
+   
+   if (typ_id<0) 
+      if (strcmp(name, typeName)==0) {
+         TClass* cl = gROOT->GetClass(tname.Data());
+         if (cl!=0) typ_id = TStreamerInfo::kBase;
+      }
+   
+   if (typ_id<0) {
+      Bool_t isptr = kFALSE;
+      if (tname[tname.Length()-1]=='*') {
+         tname.Resize(tname.Length()-1);
+         isptr = kTRUE;
+      }
+      TClass* cl = gROOT->GetClass(tname.Data());
+      if (cl==0) {
+         Error("ClassMember","Invalid class specifier %s", typeName);
+         fErrorFlag = 1;
+         return;
+      }
+      
+      if (cl->IsTObject())
+        typ_id = isptr ? TStreamerInfo::kObjectp : TStreamerInfo::kObject;
+      else
+        typ_id = isptr ? TStreamerInfo::kAnyp : TStreamerInfo::kAny;
+        
+      if ((cl==TString::Class()) && !isptr)
+         typ_id = TStreamerInfo::kTString;
+   }
+   
+   TStreamerElement* elem = 0;
+   
+   if (typ_id == TStreamerInfo::kMissing) {
+      elem = new TStreamerElement(name,"title",0, typ_id, "raw:data");
+   } else
+   
+   if (typ_id==TStreamerInfo::kBase) {
+      TClass* cl = gROOT->GetClass(tname.Data());
+      if (cl!=0) {
+         TStreamerBase* b = new TStreamerBase(tname.Data(), "title", 0);
+         b->SetBaseVersion(cl->GetClassVersion());
+         elem = b;
+      }
+   } else 
+   
+   if ((typ_id>0) && (typ_id<20)) {
+      elem = new TStreamerBasicType(name, "title", 0, typ_id, typeName);
+   } else
+   
+   if ((typ_id==TStreamerInfo::kObject) ||
+       (typ_id==TStreamerInfo::kTObject) ||
+       (typ_id==TStreamerInfo::kTNamed)) {
+      elem = new TStreamerObject(name, "title", 0, tname.Data());  
+   } else
+   
+   if (typ_id==TStreamerInfo::kObjectp) {
+      elem = new TStreamerObjectPointer(name, "title", 0, tname.Data());
+   } else
+   
+   if (typ_id==TStreamerInfo::kAny) {
+      elem = new TStreamerObjectAny(name, "title", 0, tname.Data());
+   } else
+
+   if (typ_id==TStreamerInfo::kAnyp) {
+      elem = new TStreamerObjectAnyPointer(name, "title", 0, tname.Data());
+   } else
+   
+   if (typ_id==TStreamerInfo::kTString) {
+      elem = new TStreamerString(name, "title", 0);
+   }
+   
+   if (elem==0) {
+      Error("ClassMember","Invalid combination name = %s type = %s", name, typeName);
+      fErrorFlag = 1;
+      return;
+   }
+  
+   if (arrsize1>0) {
+      elem->SetArrayDim(arrsize2>0 ? 2 : 1);
+      elem->SetMaxIndex(0, arrsize1);
+      if (arrsize2>0)
+        elem->SetMaxIndex(1, arrsize2);
+   }
+
+   // return stack to CustomClass node
+   if (Stack()->GetType()==TSQLStructure::kSqlCustomElement) PopStack();
+     
+   fExpectedChain = kFALSE;  
+     
+   // we indicate that there is no streamerinfo 
+   WorkWithElement(elem, -1);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::WorkWithClass(const char* classname, Version_t classversion)
+{
+   // This function is a part of IncrementLevel method.
+   // Also used in StartClass method
+
+   fExpectedChain = kFALSE;
+
+   if (IsReading()) {
+      Long64_t objid = 0;
+
+      if ((fCurrentData!=0) && fCurrentData->IsBlobData() &&
+          fCurrentData->VerifyDataType(sqlio::ObjectInst, kFALSE)) {
+         objid = atoi(fCurrentData->GetValue());
+         fCurrentData->ShiftToNextValue();
+         TString sobjid;
+         sobjid.Form("%lld",objid);
+         Stack()->ChangeValueOnly(sobjid.Data());
+      } else
+         objid = Stack()->DefineObjectId(kTRUE);
+      if (objid<0) {
+         Error("WorkWithClass","cannot define object id");
+         fErrorFlag = 1;
+         return;
+      }
+
+      TSQLClassInfo* sqlinfo = fSQL->RequestSQLClassInfo(classname, classversion);
+      if (sqlinfo==0) {
+         Error("WorkWithClass","Can not find table for class %s version %d", classname, classversion);
+         fErrorFlag = 1;
+         return;
+      }
+
+      TSQLObjectData* objdata = SqlObjectData(objid, sqlinfo);
+      if (objdata==0) {
+         Error("WorkWithClass","Request error for data of object %lld for class %s version %d", objid, classname, classversion);
+         fErrorFlag = 1;
+         return;
+      }
+
+      Stack()->AddObjectData(objdata);
+
+      fCurrentData = objdata;
+   }
 }
 
 //______________________________________________________________________________
 void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t number)
 {
-   // This function is a part of SetStreamerElementNumber function.
+   // This function is a part of SetStreamerElementNumber method.
    // It is introduced for reading of data for specified data memeber of class.
    // Used also in ReadFastArray methods to resolve problem of compressed data,
    // when several data memebers of the same basic type streamed with single ...FastArray call
@@ -527,7 +819,10 @@ void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t number)
    if (gDebug>2)
       cout << " TBufferSQL2::WorkWithElement " << elem->GetName() << endl;
 
-   PushStack()->SetStreamerElement(elem, number);
+   if (number>=0)
+      PushStack()->SetStreamerElement(elem, number);
+   else 
+      PushStack()->SetCustomElement(elem);
 
    if (IsReading()) {
 
@@ -539,7 +834,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t number)
 
       fCurrentData = Stack()->GetObjectData(kTRUE);
 
-      Int_t located = Stack()->LocateElementColumn(fSQL, fCurrentData);
+      Int_t located = Stack()->LocateElementColumn(fSQL, this, fCurrentData);
 
       if (located==TSQLStructure::kColUnknown) {
          Error("WorkWithElement","Cannot locate correct column in the table");
@@ -595,7 +890,7 @@ void TBufferSQL2::SetByteCount(UInt_t, Bool_t)
 Version_t TBufferSQL2::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *)
 {
    // read version value from buffer
-   // actually version is normally defined by table name before
+   // actually version is normally defined by table name
    // and kept in intermediate variable fReadVersionBuffer
 
    Version_t res = 0;
@@ -609,17 +904,17 @@ Version_t TBufferSQL2::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *)
       if (gDebug>3)
          cout << "TBufferSQL2::ReadVersion from buffer = " << res << endl;
    } else
-      if ((fCurrentData!=0) && fCurrentData->IsBlobData() &&
-          fCurrentData->VerifyDataType(sqlio::Version)) {
-         TString value = fCurrentData->GetValue();
-         res = value.Atoi();
-         if (gDebug>3)
-            cout << "TBufferSQL2::ReadVersion from blob " << fCurrentData->GetBlobName1() << " = " << res << endl;
-         fCurrentData->ShiftToNextValue();
-      } else {
-         Error("ReadVersion", "No correspondent tags to read version");
-         fErrorFlag = 1;
-      }
+   if ((fCurrentData!=0) && fCurrentData->IsBlobData() &&
+       fCurrentData->VerifyDataType(sqlio::Version)) {
+      TString value = fCurrentData->GetValue();
+      res = value.Atoi();
+      if (gDebug>3)
+         cout << "TBufferSQL2::ReadVersion from blob " << fCurrentData->GetBlobName1() << " = " << res << endl;
+      fCurrentData->ShiftToNextValue();
+   } else {
+      Error("ReadVersion", "No correspondent tags to read version");
+      fErrorFlag = 1;
+   }
 
    return res;
 }
@@ -1994,7 +2289,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(ULong64_t value)
    // converts ULong64_t to string and creates correspondent sql structure
 
    char buf[50];
-   sprintf(buf,"%llu", value);
+   sprintf(buf, FULong64, value);
    return SqlWriteValue(buf, sqlio::ULong64);
 }
 
@@ -2066,7 +2361,7 @@ void TBufferSQL2::SqlReadBasic(Long64_t& value)
 
    const char* res = SqlReadValue(sqlio::Long64);
    if (res)
-      sscanf(res,"%lld", &value);
+      sscanf(res, FLong64, &value);
    else
       value = 0;
 }
@@ -2164,7 +2459,7 @@ void TBufferSQL2::SqlReadBasic(ULong64_t& value)
 
    const char* res = SqlReadValue(sqlio::ULong64);
    if (res)
-      sscanf(res,"%llu", &value);
+      sscanf(res, FULong64, &value);
    else
       value = 0;
 }
@@ -2205,9 +2500,9 @@ const char* TBufferSQL2::SqlReadCharStarValue()
    const char* res = SqlReadValue(sqlio::CharStar);
    if ((res==0) || (fSQL==0)) return 0;
 
-   Int_t objid = Stack()->DefineObjectId();
+   Long64_t objid = Stack()->DefineObjectId(kTRUE);
 
-   Int_t strid = fSQL->IsLongStringCode(res, objid);
+   Int_t strid = fSQL->IsLongStringCode(objid, res);
    if (strid<=0) return res;
 
    fSQL->GetLongString(objid, strid, fReadBuffer);

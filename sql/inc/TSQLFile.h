@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.5 2005/11/29 05:29:15 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.6 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -72,27 +72,25 @@ protected:
    Bool_t            IsWriteAccess();
    Bool_t            IsReadAccess();
   
-   // create key for provided objects
-   virtual TKey*     CreateKey(const TObject* obj, const char* name, Int_t bufsize);
-   virtual TKey*     CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize);
-  
    // generic sql functions
    TSQLResult*       SQLQuery(const char* cmd, Int_t flag = 0, Bool_t* res = 0);
    Bool_t            SQLApplyCommands(TObjArray* cmds);
    TObjArray*        SQLTablesList(const char* searchtable = 0);
    Bool_t            SQLTestTable(const char* tablename);
    TObjArray*        SQLTableColumns(const char* tablename);
-   Int_t             SQLMaximumValue(const char* tablename, const char* columnname);
+   Long64_t          SQLMaximumValue(const char* tablename, const char* columnname);
    void              SQLDeleteAllTables();
    Bool_t            SQLStartTransaction();
    Bool_t            SQLCommit();
    Bool_t            SQLRollback();
 
    // operation with keys structures in database
-   void              DeleteKeyFromDB(Int_t keyid);
-   Bool_t            WriteKeyData(Int_t keyid, Int_t dirid, Int_t objid, const char* name, const char* datime, Int_t cycle, const char* clname);
-   Int_t             DefineNextKeyId();
-   Bool_t            ReadKeysForDirectory(TDirectory* dir, Int_t dir_id);
+   void              DeleteKeyFromDB(Long64_t keyid);
+   Bool_t            WriteKeyData(TKeySQL* key);
+   Bool_t            UpdateKeyData(TKeySQL* key);
+   TKeySQL*          FindSQLKey(TDirectory* dir, Long64_t keyid);
+   Long64_t          DefineNextKeyId();
+   Int_t             StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_t specialkeyid = -1, TKeySQL** specialkey = 0);
 
    // handling SQL class info structures
    TSQLClassInfo*    FindSQLClassInfo(const char* clname, Int_t version);
@@ -102,17 +100,22 @@ protected:
    Bool_t            ProduceClassSelectQuery(TStreamerInfo* info, TSQLClassInfo* sqlinfo, TString& columns, TString& tables, Int_t& tablecnt);
 
    // operations with long string table
-   TString           CodeLongString(Int_t objid, Int_t strid);
-   Int_t             IsLongStringCode(const char* value, Int_t objid);
+   TString           CodeLongString(Long64_t objid, Int_t strid);
+   Int_t             IsLongStringCode(Long64_t objid, const char* value);
    Bool_t            VerifyLongStringTable();
-   Bool_t            GetLongString(Int_t objid, Int_t strid, TString& value);
+   Bool_t            GetLongString(Long64_t objid, Int_t strid, TString& value);
 
    // operation with object tables in database
-   Int_t             VerifyObjectTable();
-   TString           SetObjectDataCmd(Int_t keyid, Int_t objid, TClass* cl);
-   Bool_t            GetObjectData(Int_t objid, TString& clname, Version_t &version); 
-   TSQLObjectData*   GetObjectClassData(Int_t objid, TSQLClassInfo* sqlinfo);
-   void              DeleteObjectFromTables(Int_t objid);
+   Long64_t          VerifyObjectTable();
+   Bool_t            SQLObjectInfo(Long64_t objid, TString& clname, Version_t &version);
+   TObjArray*        SQLObjectsInfo(Long64_t keyid);
+   TSQLResult*       GetNormalClassData(Long64_t objid, TSQLClassInfo* sqlinfo);
+   TSQLResult*       GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid, TSQLClassInfo* sqlinfo);
+   TSQLResult*       GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo);
+   TSQLObjectData*   GetObjectClassData(Long64_t objid, TSQLClassInfo* sqlinfo);
+   Long64_t          StoreObjectInTables(Long64_t keyid, const void* obj, const TClass* cl);
+   Bool_t            WriteSpecialObject(Long64_t keyid, TObject* obj, const char* name, const char* title);
+   TObject*          ReadSpecialObject(Long64_t keyid, TObject* obj = 0);
   
    // sql specific types
    const char*       SQLCompatibleType(Int_t typ) const;
@@ -143,6 +146,7 @@ protected:
    Int_t             fUseTransactions; //! use transaction statements for writing data into the tables
    Int_t             fUseIndexes;      //! use indexes for tables: 0 - off, 1 - only for basic tables, 2  + normal class tables, 3 - all tables
    Int_t             fModifyCounter;   //! indicates how many changes was done with database tables
+   Int_t             fQuerisCounter;   //! how many query was applied
   
    const char**      fBasicTypes;      //! pointer on list of basic types specific for currently connected SQL server
    const char**      fOtherTypes;      //! pointer on list of other SQL types like TEXT or blob
@@ -186,6 +190,7 @@ public:
    Int_t             GetUseTransactions() const { return fUseTransactions; }
    void              SetUseIndexes(Int_t use_type = kIndexesBasic);
    Int_t             GetUseIndexes() const { return fUseIndexes; }
+   Int_t             GetQuerisCounter() const { return fQuerisCounter; }
 
    TString           MakeSelectQuery(TClass* cl);
    Bool_t            StartTransaction();
@@ -197,6 +202,8 @@ public:
    void              StopLogFile();                    // *MENU*
 
    virtual void      Close(Option_t *option="");       // *MENU*
+   virtual TKey*     CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
+   virtual TKey*     CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize);
    virtual void      DrawMap(const char* ="*",Option_t* ="") {} 
    virtual void      FillBuffer(char* &) {}
    virtual void      Flush() {}
@@ -237,7 +244,7 @@ public:
    virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) { return 0; }
    virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) const { return 0; }
    virtual void      WriteFree() {}
-   virtual void      WriteHeader() {}
+   virtual void      WriteHeader();
    virtual void      WriteStreamerInfo();
   
    ClassDef(TSQLFile,1)   // ROOT TFile interface to SQL database

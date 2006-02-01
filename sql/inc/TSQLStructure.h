@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLStructure.h,v 1.5 2005/12/01 16:30:43 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLStructure.h,v 1.6 2005/12/07 14:59:57 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -39,6 +39,7 @@ class TStreamerElement;
 class TSQLFile;
 class TSqlRegistry;
 class TSQLObjectData;
+class TBufferSQL2;
 
 class TSQLColumnData : public TObject {
     
@@ -54,7 +55,7 @@ public:
                   const char* value, 
                   Bool_t numeric);
 
-   TSQLColumnData(const char* name, Int_t value);
+   TSQLColumnData(const char* name, Long64_t value);
    virtual ~TSQLColumnData();
   
    virtual const char* GetName() const { return fName.Data(); }
@@ -72,9 +73,9 @@ protected:
 
    Bool_t           CheckNormalClassPair(TSQLStructure* vers, TSQLStructure* info);
 
-   Int_t            FindMaxRef();
+   Long64_t         FindMaxObjectId();
    void             PerformConversion(TSqlRegistry* reg, TObjArray* blobs, const char* topname, Bool_t useblob = kFALSE);
-   Bool_t           StoreObject(TSqlRegistry* reg, const char* objid, TClass* cl, Bool_t registerobj = kTRUE);
+   Bool_t           StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl, Bool_t registerobj = kTRUE);
    Bool_t           StoreObjectInNormalForm(TSqlRegistry* reg);
    Bool_t           StoreClassInNormalForm(TSqlRegistry* reg);
    Bool_t           StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* columns);
@@ -107,12 +108,14 @@ public:
    Int_t            GetType() const { return fType; }
    
    // this part requried for writing to SQL tables
-   void             SetObjectRef(Int_t refid, const TClass* cl);
-   void             SetObjectPointer(Int_t ptrid);
+   void             SetObjectRef(Long64_t refid, const TClass* cl);
+   void             SetObjectPointer(Long64_t ptrid);
    void             SetVersion(const TClass* cl, Int_t version = -100);
    void             SetClassStreamer(const TClass* cl);
    void             SetStreamerInfo(const TStreamerInfo* info);
    void             SetStreamerElement(const TStreamerElement* elem, Int_t number);
+   void             SetCustomClass(const TClass* cl, Version_t version);
+   void             SetCustomElement(TStreamerElement* elem);
    void             SetValue(const char* value, const char* tname = 0);
    void             SetArrayIndex(Int_t indx, Int_t cnt=1);
    void             SetArray(Int_t sz = -1);
@@ -123,6 +126,9 @@ public:
    TStreamerInfo*   GetStreamerInfo() const;
    TStreamerElement* GetElement() const;
    Int_t            GetElementNumber() const;
+   TClass*          GetCustomClass() const;
+   Version_t        GetCustomClassVersion() const;
+   Bool_t           GetClassInfo(TClass* &cl, Version_t &version);
    const char*      GetValueType() const;
    const char*      GetValue() const;
    Int_t            GetArrayIndex() const { return fArrayIndex; }
@@ -135,8 +141,7 @@ public:
 
    // this is part specially for reading of sql tables
   
-   Int_t            DefineObjectId();
-   Bool_t           IsClonesArray();
+   Long64_t         DefineObjectId(Bool_t recursive = kTRUE);
   
    void             SetObjectData(TSQLObjectData* objdata);
    void             AddObjectData(TSQLObjectData* objdata);
@@ -145,17 +150,18 @@ public:
    virtual void     Print(Option_t* option = "") const;
    void             PrintLevel(Int_t level) const;
   
-   Bool_t           ConvertToTables(TSQLFile* f, Int_t keyid, TObjArray* cmds);
+   Bool_t           ConvertToTables(TSQLFile* f, Long64_t keyid, TObjArray* cmds);
   
-   Int_t            LocateElementColumn(TSQLFile* f, TSQLObjectData* data);
+   Int_t            LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data);
 
-   static Bool_t    UnpackTObject(TSQLFile* f, TSQLObjectData* data, Int_t objid, Int_t clversion);
-   static Bool_t    UnpackTString(TSQLFile* f, TSQLObjectData* data, Int_t objid, Int_t clversion);
+   static Bool_t    UnpackTObject(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data, Long64_t objid, Int_t clversion);
+   static Bool_t    UnpackTString(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data, Long64_t objid, Int_t clversion);
    static Bool_t    IsNumericType(Int_t typ);
    static const char* GetSimpleTypeName(Int_t typ);
    static TString   MakeArrayIndex(TStreamerElement* elem, Int_t n);
    static Int_t     DefineElementColumnType(TStreamerElement* elem, TSQLFile* f);
    static TString   DefineElementColumnName(TStreamerElement* elem, TSQLFile* f, Int_t indx = 0);
+   static void      AddStrBrackets(TString &s, const char* quote);
   
    enum ESQLTypes {
      kSqlObject       = 10001,
@@ -166,7 +172,9 @@ public:
      kSqlElement      = 10006,
      kSqlValue        = 10007,
      kSqlArray        = 10008,
-     kSqlObjectData   = 10009
+     kSqlObjectData   = 10009,
+     kSqlCustomClass  = 10010,
+     kSqlCustomElement= 10011
    };
    
    enum ESQLColumns {
@@ -180,8 +188,7 @@ public:
      kColNormObjectArray = 7,
      kColObjectPtr    = 8,
      kColTString      = 9,
-     kColClonesArray  = 10,
-     kColRawData      = 11
+     kColRawData      = 10
    };   
   
    ClassDef(TSQLStructure, 1); // Table/structure description used internally by YBufferSQL.
@@ -190,8 +197,12 @@ public:
 // text constants, used in SQL I/O
 
 namespace sqlio {
+    
+   extern Long64_t atol64(const char* value);
+    
    extern const Int_t Ids_NullPtr;
    extern const Int_t Ids_RootDir;
+   extern const Int_t Ids_TSQLFile;
    extern const Int_t Ids_StreamerInfos;
    extern const Int_t Ids_FirstKey;
    extern const Int_t Ids_FirstObject;
@@ -234,9 +245,14 @@ namespace sqlio {
    extern const char* KeysTable;
    extern const char* KeysTableIndex;
    extern const char* KT_Name;
+   extern const char* KT_Title;
    extern const char* KT_Datetime;
    extern const char* KT_Cycle;
    extern const char* KT_Class;
+
+   extern const char* DT_Create;
+   extern const char* DT_Modified;
+   extern const char* DT_UUID;
     
    extern const char* ObjectsTable;
    extern const char* ObjectsTableIndex;
