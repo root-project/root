@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.72 2006/01/20 13:00:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.73 2006/01/31 14:02:36 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1265,7 +1265,6 @@ TGeoVolume *TGeoVolume::CloneVolume() const
 {
 // Clone this volume.
    // build a volume with same name, shape and medium
-   printf("cloning volume: %s\n", GetName());
    TGeoVolume *vol = new TGeoVolume(GetName(), fShape, fMedium);
    Int_t i;
    // copy volume attributes
