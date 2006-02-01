@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.177 2005/12/10 00:23:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.178 2006/01/26 07:55:46 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1291,7 +1291,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          delete TVirtualFitter::GetFitter();
          isSet = kFALSE;
       }
-      if (!isSet) {
+      if (!isSet && cl) {
          TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {

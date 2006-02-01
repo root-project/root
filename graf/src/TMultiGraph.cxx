@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.25 2005/09/05 07:25:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.26 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -469,7 +469,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
          delete TVirtualFitter::GetFitter();
          isSet=kFALSE;
       }
-      if (!isSet) {
+      if (!isSet && cl) {
          TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
