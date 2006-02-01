@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.29 2005/11/28 12:55:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.30 2006/01/31 14:02:36 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -292,12 +292,6 @@ Double_t TGeoVoxelFinder::Efficiency()
 void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 {
 // create the list of nodes for which the bboxes overlap with inode's bbox
-   if (NeedRebuild()) {
-      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
-      vox->Voxelize();
-      fVolume->FindOverlaps();
-      vox->SetNeedRebuild(kFALSE);
-   }   
    if (!fBoxes) return;
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
    Double_t xmin1, xmax1, ymin1, ymax1, zmin1, zmax1;
