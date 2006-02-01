@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.4 2005/04/25 17:21:11 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -50,17 +50,17 @@ void TOracleResult::initResultSet(Statement *stmt)
       try {
          fStmt = stmt;
          if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
-            fResultType = 1;
-            fResult    = stmt->getResultSet();
+            fResultType  = 1;
+            fResult      = stmt->getResultSet();
             GetMetaDataInfo();
             fUpdateCount = 0;
             //printf("type:%d columnsize:%d \n", fResultType, fFieldCount);
          } else if (stmt->status() == Statement::UPDATE_COUNT_AVAILABLE) {
-            fResultType = 0;
-            fResult    = 0;
-            fRowCount  = 0;
-            fFieldInfo = 0;
-            fFieldCount= 0;
+            fResultType  = 0;
+            fResult      = 0;
+            fRowCount    = 0;
+            fFieldInfo   = 0;
+            fFieldCount  = 0;
             fUpdateCount = stmt->getUpdateCount();
          } else {
             fResultType = -1;
@@ -83,24 +83,25 @@ TOracleResult::TOracleResult(Statement *stmt, int row_count)
 {
    initResultSet(stmt);
    // override fRowCount set by initResultSet()
-   fRowCount = (row_count==-1)?0:row_count;
+   fRowCount = (row_count==-1) ? 0 : row_count;
 }
 
 //______________________________________________________________________________
-//This construction func is only used to get table metainfo
 TOracleResult::TOracleResult(Connection *conn, const char *tableName)
 {
+   // This construction func is only used to get table metainfo.
+
    if (!tableName || !conn) {
       Error("TOracleResult", "construction: empty input parameter");
       fResultType = -1;
    } else {
       MetaData connMD = conn->getMetaData(tableName, MetaData::PTYPE_TABLE);
-      fFieldInfo = new vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
-      fFieldCount = fFieldInfo->size();
-      fRowCount = 0;
-      fResult = 0;
+      fFieldInfo   = new vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
+      fFieldCount  = fFieldInfo->size();
+      fRowCount    = 0;
+      fResult      = 0;
       fUpdateCount = 0;
-      fResultType = 1;
+      fResultType  = 1;
    }
 }
 
