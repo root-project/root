@@ -61,7 +61,14 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = ../inc/Reflex/ ../inc/Reflex/Builder
+ INPUT                  = "../inc/Reflex/Base.h" \
+                       "../inc/Reflex/Member.h" \
+                       "../inc/Reflex/MemberTemplate.h" \
+                       "../inc/Reflex/Object.h" \
+                       "../inc/Reflex/PropertyList.h" \
+                       "../inc/Reflex/Scope.h" \
+                       "../inc/Reflex/Type.h" \
+                       "../inc/Reflex/TypeTemplate.h" 
 FILE_PATTERNS          = *.h
 RECURSIVE              = NO
 EXCLUDE                = 

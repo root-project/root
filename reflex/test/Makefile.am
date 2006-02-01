@@ -13,18 +13,18 @@ check_PROGRAMS = test_Reflex_generate test_Reflex_simple1 test_Reflex_simple2 te
 
 test_Reflex_generate_SOURCES = test_Reflex_generate.cxx
 test_Reflex_generate_LDFLAGS = -export-dynamic 
-test_Reflex_generate_LDADD = $(LIBLTDL) "-dlopen" $(top_srcdir)/test/testDict2/libtest_Reflex2Rflx.la $(top_srcdir)/src/libReflex.la
-test_Reflex_generate_DEPENDENCIES = $(LIBLTDL) $(top_srcdir)/test/testDict2/libtest_Reflex2Rflx.la $(top_srcdir)/src/libReflex.la
+test_Reflex_generate_LDADD = $(LIBLTDL) "-dlopen" $(top_srcdir)/test/testDict2/libtest_Class2DictRflx.la $(top_srcdir)/src/libReflex.la
+test_Reflex_generate_DEPENDENCIES = $(LIBLTDL) $(top_srcdir)/test/testDict2/libtest_Class2DictRflx.la $(top_srcdir)/src/libReflex.la
 
 test_Reflex_simple1_SOURCES = test_Reflex_simple1.cxx
 test_Reflex_simple1_LDFLAGS = -export-dynamic
-test_Reflex_simple1_LDADD = $(LIBLTDL) "-dlopen" $(top_srcdir)/test/testDict1/libtest_Reflex1Rflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
-test_Reflex_simple1_DEPENDENCIES = $(LIBLTDL) $(top_srcdir)/test/testDict1/libtest_Reflex1Rflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
+test_Reflex_simple1_LDADD = $(LIBLTDL) "-dlopen" $(top_srcdir)/test/testDict1/libtest_ReflexRflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
+test_Reflex_simple1_DEPENDENCIES = $(LIBLTDL) $(top_srcdir)/test/testDict1/libtest_ReflexRflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
 
 test_Reflex_simple2_SOURCES = test_Reflex_simple2.cxx
 test_Reflex_simple2_LDFLAGS = -export-dynamic
-test_Reflex_simple2_LDADD = $(LIBLTDL) "-dlopen" $(top_srcdir)/test/testDict2/libtest_Reflex2Rflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
-test_Reflex_simple2_DEPENDENCIES = $(LIBLTDL) $(top_srcdir)/test/testDict2/libtest_Reflex2Rflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
+test_Reflex_simple2_LDADD = $(LIBLTDL) "-dlopen" $(top_srcdir)/test/testDict2/libtest_Class2DictRflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
+test_Reflex_simple2_DEPENDENCIES = $(LIBLTDL) $(top_srcdir)/test/testDict2/libtest_Class2DictRflx.la $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
 
 test_Reflex_unit_SOURCES = test_Reflex_unit.cxx
 test_Reflex_unit_LDADD = $(top_srcdir)/src/libReflex.la $(CPPUNITROOT)/lib/libcppunit.la
