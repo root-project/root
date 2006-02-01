@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.40 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.41 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -103,6 +103,8 @@ public:
    virtual ~TFile();
    virtual void        Close(Option_t *option=""); // *MENU*
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+   virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
+   virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize);
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        DrawMap(const char *keys="*",Option_t *option=""); // *MENU*

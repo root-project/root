@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.31 2005/11/18 17:44:16 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.32 2006/01/24 21:27:30 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -63,8 +63,6 @@ protected:
           Bool_t cd1(const char *path);
    static Bool_t Cd1(const char *path);
    
-   virtual TKey* CreateKey(const TObject* obj, const char* name, Int_t bufsize);
-   virtual TKey* CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize);
           void   FillFullPath(TString& buf) const;
 
 private:
@@ -169,9 +167,9 @@ public:
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
    virtual void        SetBufferSize(Int_t bufsize);
-   void                SetWritable(Bool_t writable=kTRUE);
    void                SetModified() {fModified = kTRUE;}
    void                SetMother(const TObject *mother) {fMother = (TObject*)mother;}
+   void                SetWritable(Bool_t writable=kTRUE);
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const ;

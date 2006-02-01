@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.147 2005/11/29 05:38:35 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.148 2006/01/24 21:31:17 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -718,6 +718,20 @@ void TFile::Close(Option_t *option)
    gROOT->GetListOfFiles()->Remove(this);
 
    TCollection::EmptyGarbageCollection();
+}
+
+//____________________________________________________________________________________
+TKey* TFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize)
+{
+   // Creates key for object and converts data to buffer.
+   return new TKey(obj, name, bufsize, mother);
+}
+
+//____________________________________________________________________________________
+TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize)
+{
+   // Creates key for object and converts data to buffer.
+   return new TKey(obj, cl, name, bufsize, mother);
 }
 
 //______________________________________________________________________________

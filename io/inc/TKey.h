@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.15 2005/11/16 19:58:07 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.16 2006/01/24 21:30:17 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -77,7 +77,7 @@ protected:
    virtual const char *GetTitle() const;
    virtual char       *GetBuffer() const {return fBuffer+fKeylen;}
            TBuffer    *GetBufferRef() const {return fBufferRef;}
-           Short_t     GetCycle() const ;
+           Short_t     GetCycle() const;
    const   TDatime    &GetDatime() const   {return fDatime;}
            TFile      *GetFile() const;
            Short_t     GetKeep() const;

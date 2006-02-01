@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.50 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.51 2006/01/24 21:30:17 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -331,11 +331,8 @@ void TKey::Browse(TBrowser *b)
    // folder in which case we don't want to re-read the folder object
    // since it might contain new objects not yet saved.
 
-   // check that key points to the current dir
-   if (fSeekPdir != fMotherDir->GetSeekDir()) {
-      Error("Browse"," Key: %s is not in the current directory: %s",GetName(),fMotherDir->GetName());
-      return;
-   }
+   if (fMotherDir==0) return;
+
    TObject *obj = fMotherDir->GetList()->FindObject(GetName());
    if (obj && !obj->IsFolder()) {
       if (obj->InheritsFrom(TCollection::Class()))
@@ -896,8 +893,7 @@ void TKey::ReadBuffer(char *&buffer)
 
    ReadKeyBuffer(buffer); 
 
-   if (!gROOT->ReadingObject()) {
-      Info("ReadBuffer","Interesting !!!!"); 
+   if (!gROOT->ReadingObject() && gDirectory) {
       if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);
    }
 }
@@ -937,11 +933,6 @@ void TKey::ReadKeyBuffer(char *&buffer)
    fClassName.ReadBuffer(buffer);
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
-
-//   if (!gROOT->ReadingObject()) {
-//      if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);
-//   }
-
 }
 
 //______________________________________________________________________________
@@ -996,7 +987,6 @@ Int_t TKey::Sizeof() const
    nbytes      += fTitle.Sizeof();
    return nbytes;
 }
-
 
 //_______________________________________________________________________
 void TKey::Streamer(TBuffer &b)

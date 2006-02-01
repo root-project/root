@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.79 2006/01/25 13:41:24 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.80 2006/01/30 09:01:11 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -296,20 +296,6 @@ void TDirectory::Build(TFile* motherFile, TDirectory* motherDir)
    fMother     = motherDir;
    fFile       = motherFile ? motherFile : gFile;
    SetBit(kCanDelete);
-}
-
-//____________________________________________________________________________________
-TKey* TDirectory::CreateKey(const TObject* obj, const char* name, Int_t bufsize)
-{
-   // Creates key for object and converts data to buffer.
-   return new TKey(obj, name, bufsize, this);
-}
-
-//____________________________________________________________________________________
-TKey* TDirectory::CreateKey(const void* obj, const TClass* cl, const char* name, Int_t bufsize)
-{
-   // Creates key for object and converts data to buffer.
-   return new TKey(obj, cl, name, bufsize, this);
 }
 
 //______________________________________________________________________________
@@ -1588,6 +1574,8 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    //  It returns 0 if the object cannot be written.
 
    TDirectory::TContext ctxt(this);
+   
+   if (fFile==0) return 0;
 
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
@@ -1636,7 +1624,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    if (opt.Contains("writedelete")) {
       oldkey = GetKey(oname);
    }
-   key = CreateKey(obj, oname, bsize);
+   key = fFile->CreateKey(this, obj, oname, bsize);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {
@@ -1698,11 +1686,13 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    // see TDirectory::WriteObject for comments
 
    TDirectory::TContext ctxt(this);
+   
+   if (fFile==0) return 0;
 
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
          // Do not print the error if the file already had a SysError.
-         Error("WriteObject","Directory %s is not writable", fFile->GetName());
+         Error("WriteObject","File %s is not writable", fFile->GetName());
       }
       return 0;
    }
@@ -1745,7 +1735,7 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    if (opt.Contains("writedelete")) {
       oldkey = GetKey(oname);
    }
-   key = CreateKey(obj, cl, oname, bsize);
+   key = fFile->CreateKey(this, obj, cl, oname, bsize);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {
