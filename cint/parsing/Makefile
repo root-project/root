@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) scopeDict.cxx
 
 #Set the list of target to make while testing
-TEST_TARGETS += operatorLessThanTemplate testTable scopeTest
+TEST_TARGETS += lessThan operatorLessThanTemplate testTable scopeTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -42,6 +42,9 @@ operatorLessThanTemplate:  operatorLessThanTemplate.log
 
 scopeDict.cxx: scopeProblem.C
 	$(CMDECHO) rootcint -f scopeDict.cxx -c scopeProblem.C linkdef.h
+
+lessThan: lessThan.log
+	$(TestDiff)
 
 scopeTest: scopeDict.cxx
 
