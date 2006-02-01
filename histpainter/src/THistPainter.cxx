@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.240 2006/01/17 14:59:12 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.241 2006/01/31 10:22:26 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -891,7 +891,9 @@ void THistPainter::Paint(Option_t *option)
    //    "AXIG"   : Draw only grid (if the grid is requested)
    //    "HIST"   : When an histogram has errors it is visualized by default with
    //               error bars. To visualize it without errors use the option HIST
-   //               together with the required option (eg "hist same c")
+   //               together with the required option (eg "hist same c").
+   //               The "HIST" option can also be used to plot only the histogram
+   //               and not the associated function(s).
    //    "SAME"   : Superimpose on previous picture in the same pad
    //    "CYL"    : Use Cylindrical coordinates. The X coordinate is mapped on
    //               the angle and the Y coordinate on the cylinder length. 
