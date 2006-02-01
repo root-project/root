@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.271 2005/11/29 06:01:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.272 2006/01/22 05:21:46 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3104,8 +3104,8 @@ Long64_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 // Return entry number corresponding to major and minor number
 // Note that this function returns only the entry number, not the data
 // To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
-// the BuildIndex function has created a table of Double_t* of sorted values
-// corresponding to val = major + minor*1e-9;
+// the BuildIndex function has created a table of Long64_t* of sorted values
+// corresponding to val = major<<31 + minor;
 // The function performs binary search in this sorted table.
 // If it finds a pair that maches val, it returns directly the
 // index in the table.
@@ -3127,8 +3127,8 @@ Long64_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 // Return entry number corresponding to major and minor number
 // Note that this function returns only the entry number, not the data
 // To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
-// the BuildIndex function has created a table of Double_t* of sorted values
-// corresponding to val = major + minor*1e-9;
+// the BuildIndex function has created a table of Long64_t* of sorted values
+// corresponding to val = major<<31 + minor;
 // The function performs binary search in this sorted table.
 // If it finds a pair that maches val, it returns directly the
 // index in the table, otherwise it returns -1.
