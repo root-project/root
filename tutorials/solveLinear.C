@@ -105,7 +105,8 @@ void solveLinear(Double_t eps = 1.e-12)
 
   cout << " - 4. solve with pseudo inverse, calculated brute force" << endl;
 
-  const TMatrixD pseudo2 = TMatrixDSym(TMatrixDSym::kAtA,Aw).Invert()*Aw.T();
+  TMatrixDSym AtA(TMatrixDSym::kAtA,Aw);
+  const TMatrixD pseudo2 = AtA.Invert() * Aw.T();
   TVectorD c_pseudo2 = yw;
   c_pseudo2 *= pseudo2;
 
