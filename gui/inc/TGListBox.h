@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.26 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.27 2006/01/20 08:52:26 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -144,7 +144,7 @@ protected:
    UInt_t      fLineWidth;       // line width
    Style_t     fLineStyle;       // line style
    UInt_t      fLineLength;      // line lenght
-   TGGC        *fLineGC;         // line graphics context
+   TGGC       *fLineGC;          // line graphics context
 
    virtual void DoRedraw();
 
@@ -236,15 +236,16 @@ public:
    virtual void RemoveEntry(Int_t id);
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID);
 
-   virtual void   Associate(const TGWindow *w) { fMsgWindow = w; }
-   virtual void   SetListBox(TGListBox *lb) { fListBox = lb; }
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Int_t  GetSelected() const;
-   virtual Bool_t GetSelection(Int_t id);
-   virtual Int_t  GetPos(Int_t id);
-   virtual TGLBEntry *GetSelectedEntry() const { return fLastActive; }
-   virtual void   GetSelectedEntries(TList *selected);
+   virtual void       Associate(const TGWindow *w) { fMsgWindow = w; }
+   virtual void       SetListBox(TGListBox *lb) { fListBox = lb; }
+   TGListBox         *GetListBox() const { return fListBox; }
+   virtual Bool_t     HandleButton(Event_t *event);
+   virtual Bool_t     HandleMotion(Event_t *event);
+   virtual Int_t      GetSelected() const;
+   virtual Bool_t     GetSelection(Int_t id);
+   virtual Int_t      GetPos(Int_t id);
+   TGLBEntry         *GetSelectedEntry() const { return fLastActive; }
+   virtual void       GetSelectedEntries(TList *selected);
    virtual TGLBEntry *Select(Int_t id, Bool_t sel);
    virtual TGLBEntry *Select(Int_t id);
 
