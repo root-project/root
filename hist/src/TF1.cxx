@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.116 2006/01/15 22:02:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.117 2006/01/27 17:07:10 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -92,7 +92,7 @@ ClassImp(TF1)
 //   TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
 //     gaus(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)
 //        and (0) means start numbering parameters at 0
-//     expo(3) is a substitute for exp([3]+[4])*x)
+//     expo(3) is a substitute for exp([3]+[4]*x)
 //
 //  Case B2 (inline expression using TMath functions with parameters)
 //  --------------------------------------------------------------------

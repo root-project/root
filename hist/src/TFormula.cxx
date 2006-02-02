@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.112 2005/12/15 08:46:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.113 2006/01/30 23:09:15 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@ ClassImp(TFormula)
 //*-*        and (0) means start numbering parameters at 0
 //*-*     gausn(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
 //*-*        and (0) means start numbering parameters at 0
-//*-*     expo(3) is a substitute for exp([3]+[4])*x)
+//*-*     expo(3) is a substitute for exp([3]+[4]*x)
 //*-*     pol3(5) is a substitute for par[5]+par[6]*x+par[7]*x**2+par[8]*x**3
 //*-*         (here Pol3 stands for Polynomial of degree 3)
 //*-*
