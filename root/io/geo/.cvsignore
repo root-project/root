@@ -12,3 +12,4 @@ lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root
 unpack.lastaleph.root aleph_all.C alice_itsv.C ams.root atlas_sctt.C brahms.C brahms.root brahms_all.C btev.root cdf.root cdf_all.C cdf_svxc.C cms_calo.C d0.C d0.root d0_all.C e907.C e907.root e907_all.C gem.root phenix.root phobos.C phobos.root phobos_all.C star.root star_all.C star_svtt.C tesla.C tesla.root tesla_all.C
 aleph.root
 unpack.last
+babar_all.C babar_emca.C babar_ssvd.C lhcb_mag.C

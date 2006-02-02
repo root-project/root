@@ -24,11 +24,15 @@ Info in <TGeoManager::CloseGeometry>: ----------------modeler ready-------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume T3F1
+Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume T3F2
+Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume T3F3
 Info in <TGeoManager::CloseGeometry>: 2649 nodes/ 278 volume UID's in brahms.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is C0WA. Master volume is C0WA
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume BP01
 Info in <TGeoManager::CloseGeometry>: 295310 nodes/ 1988 volume UID's in btev.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
@@ -59,17 +63,7 @@ Info in <TGeoManager::CloseGeometry>: ----------------modeler ready-------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is World. Master volume is World
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 18491756 nodes/ 709 volume UID's in VGM Root geometry
-Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is World. Master volume is World
-Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 18488018 nodes/ 640 volume UID's in VGM Root geometry
-Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
-Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 6130066 nodes/ 181 volume UID's in phenix.C
+Info in <TGeoManager::CloseGeometry>: 18491756 nodes/ 709 volume UID's in default geometry
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is OUTS. Master volume is OUTS
@@ -82,14 +76,10 @@ Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 15370 nodes/ 565 volume UID's in tesla.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 157692 nodes/ 567 volume UID's in star.C
+Info in <TGeoManager::CloseGeometry>: 68776 nodes/ 2316 volume UID's in star.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info: TGeoManager::Import : Reading geometry from file
---- node ID tracking disabled
-Info: TGeoManager::Import : Reading geometry from file
---- node ID tracking disabled
 Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
 Info: TGeoManager::Import : Reading geometry from file

@@ -12,8 +12,8 @@
   TGeoManager::Import("gem.root"); 
   if (0) TGeoManager::Import("hades.root");
   TGeoManager::Import("lhcbfull.root");
-  TGeoManager::Import("lhcbnobool.root");
-  TGeoManager::Import("phenix.root"); 
+  if (0) TGeoManager::Import("lhcbnobool.root");
+  if (0) TGeoManager::Import("phenix.root"); 
   TGeoManager::Import("phobos.root"); 
   TGeoManager::Import("tesla.root");
   p=TGeoManager::Import("star.root");

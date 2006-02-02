@@ -15,7 +15,7 @@ aleph_all.C alice_itsv.C atlas_sctt.C brahms.C brahms_all.C \
 cdf_all.C cdf_svxc.C cms_calo.C d0.C d0_all.C e907.C e907_all.C \
 phobos.C phobos_all.C star_all.C star_svtt.C tesla.C tesla_all.C \
 lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root \
-aleph.root  brahms.root  cdf.root  e907.root  phenix.root  star.root \
+aleph.root  brahms.root  cdf.root  e907.root  star.root \
 ams.root    btev.root    d0.root   gem.root   phobos.root  tesla.root \
 
 # Set the list of target to make while testing.  By default, mytest is the
@@ -83,7 +83,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 #ams.C, brahms.C, btev.C, d0.C, e907.C, gem.C, phenix.C, phobos.C, tesla.C
 
 rootfiles: ams.root aleph.root  brahms.root  btev.root cdf.root d0.root  \
-	e907.root gem.root phenix.root phobos.root star.root tesla.root
+	e907.root gem.root phobos.root star.root tesla.root
 
 alice_all.C : unpack.last
 alice_itsd.C : unpack.last
@@ -138,7 +138,7 @@ unpack.last: geometries.tar.gz
 	    touch $(FILES_IN_TAR) && \
             ($(MAKE) rootfiles)
 
-readGeo.log: unpack.last ams.root brahms.root btev.root d0.root e907.root gem.root phenix.root phobos.root tesla.root
+readGeo.log: unpack.last ams.root brahms.root btev.root d0.root e907.root gem.root phobos.root tesla.root
 
 readGeo: readGeo.log
 	$(TestDiff)
