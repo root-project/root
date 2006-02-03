@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.103 2005/11/24 17:08:36 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.104 2006/01/16 11:56:11 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -7058,3 +7058,87 @@ Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h, Int_t prevInd)
       return prevInd;
    }
 }
+
+//______________________________________________________________________________
+Int_t TGWin32::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
+{
+   // Register a window created by Qt as a ROOT window (like InitWindow()).
+
+   Int_t wid;
+   // Select next free window number
+
+ again:
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
+      if (!fWindows[wid].open) {
+         fWindows[wid].open = 1;
+         fWindows[wid].double_buffer = 0;
+         gCws = &fWindows[wid];
+         break;
+      }
+   }
+
+   if (wid == fMaxNumberOfWindows) {
+      int newsize = fMaxNumberOfWindows + 10;
+      fWindows =
+          (XWindow_t *) TStorage::ReAlloc(fWindows,
+                                          newsize * sizeof(XWindow_t),
+                                          fMaxNumberOfWindows *
+                                          sizeof(XWindow_t));
+
+      for (int i = fMaxNumberOfWindows; i < newsize; i++) {
+         fWindows[i].open = 0;
+      }
+
+      fMaxNumberOfWindows = newsize;
+      goto again;
+   }
+
+   gCws->window = gdk_window_foreign_new((guint32)qwid);
+
+   gCws->drawing       = gCws->window;
+   gCws->buffer        = 0;
+   gCws->double_buffer = 0;
+   gCws->ispixmap      = 0;
+   gCws->clip          = 0;
+   gCws->width         = w;
+   gCws->height        = h;
+   gCws->new_colors    = 0;
+
+   return wid;
+}
+
+//______________________________________________________________________________
+void TGWin32::RemoveWindow(ULong_t qwid)
+{
+   // Remove a window created by Qt (like CloseWindow1()).
+
+   int wid;
+
+   SelectWindow((int)qwid);
+
+   if (gCws->buffer) {
+      gdk_pixmap_unref(gCws->buffer);
+   }
+   if (gCws->new_colors) {
+      gdk_colormap_free_colors((GdkColormap *) fColormap,
+                               (GdkColor *)gCws->new_colors, gCws->ncolors);
+
+      delete [] gCws->new_colors;
+      gCws->new_colors = 0;
+   }
+
+   GdiFlush();
+   gCws->open = 0;
+
+   if (!fWindows) return;
+
+   // make first window in list the current window
+   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
+      if (fWindows[wid].open) {
+         gCws = &fWindows[wid];
+         return;
+      }
+   }
+   gCws = 0;
+}
+

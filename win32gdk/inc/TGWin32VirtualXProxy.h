@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.11 2005/05/18 16:58:42 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.12 2005/06/21 17:09:26 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -261,6 +261,8 @@ public:
    void         DeleteImage(Drawable_t img);
    unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
    Pixmap_t     CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
+   Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
+   void         RemoveWindow(ULong_t qwid);
 
    Int_t        EventsPending() {  return fgRealObject->EventsPending(); }
    void         NextEvent(Event_t & event) { fgRealObject->NextEvent(event); }

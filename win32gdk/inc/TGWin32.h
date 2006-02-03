@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.28 2005/06/21 17:09:26 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.29 2005/08/17 09:10:44 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -376,6 +376,8 @@ public:
                          UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
    unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
+   void         RemoveWindow(ULong_t qwid);
 
    Bool_t       IsCmdThread() const;
 

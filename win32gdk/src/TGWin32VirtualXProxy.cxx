@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.8 2004/08/09 15:35:52 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.9 2005/06/21 17:09:26 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -235,6 +235,8 @@ RETURN_METHOD_ARG3(VirtualX,Pixmap_t,CreatePixmap,Drawable_t,wid,UInt_t,w,UInt_t
 RETURN_METHOD_ARG1(VirtualX,ULong_t,GetPixel,Color_t,cindex)
 RETURN_METHOD_ARG5(VirtualX,unsigned char*,GetColorBits,Drawable_t,wid,Int_t,x,Int_t,y,UInt_t,width,UInt_t,height)
 RETURN_METHOD_ARG3(VirtualX,Pixmap_t,CreatePixmapFromData,unsigned char*,bits,UInt_t,width,UInt_t,height)
+RETURN_METHOD_ARG3(VirtualX,Int_t,AddWindow,ULong_t,qwid,UInt_t,w,UInt_t,h)
+VOID_METHOD_ARG1(VirtualX,RemoveWindow,ULong_t,qwid,1)
 
 //VOID_METHOD_ARG1(VirtualX,CreateOpenGLContext,Int_t,wid,1)
 //VOID_METHOD_ARG1(VirtualX,DeleteOpenGLContext,Int_t,wid,1)

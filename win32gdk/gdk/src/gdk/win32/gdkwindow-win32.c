@@ -744,7 +744,12 @@ void gdk_window_move(GdkWindow * window, gint x, gint y)
       private = (GdkWindowPrivate *) window;
       GetClientRect(GDK_DRAWABLE_XID(window), &rect);
 
-      if (GDK_DRAWABLE_TYPE(window) != GDK_WINDOW_CHILD) {
+      if (GDK_DRAWABLE_TYPE(window) == GDK_WINDOW_FOREIGN) {
+         private->x = x;
+         private->y = y;
+         return;
+      }
+      else if (GDK_DRAWABLE_TYPE(window) != GDK_WINDOW_CHILD) {
          POINT ptTL, ptBR;
          DWORD dwStyle;
          DWORD dwExStyle;
@@ -799,7 +804,12 @@ void gdk_window_resize(GdkWindow * window, gint width, gint height)
       GDK_NOTE(MISC, g_print("gdk_window_resize: %#x %dx%d\n",
                              GDK_DRAWABLE_XID(window), width, height));
 
-      if (private->drawable.window_type != GDK_WINDOW_CHILD) {
+      if (private->drawable.window_type == GDK_WINDOW_FOREIGN) {
+         private->drawable.width = width;
+         private->drawable.height = height;
+         return;
+      }
+      else if (private->drawable.window_type != GDK_WINDOW_CHILD) {
          POINT pt;
          RECT rect;
          DWORD dwStyle;
@@ -872,6 +882,13 @@ gdk_window_move_resize(GdkWindow * window,
          private->y = y;
          private->drawable.width = width;
          private->drawable.height = height;
+      }
+      if (private->drawable.window_type == GDK_WINDOW_FOREIGN) {
+         private->x = x;
+         private->y = y;
+         private->drawable.width = width;
+         private->drawable.height = height;
+         return;
       }
       GDK_NOTE(MISC, g_print("...MoveWindow(%#x,%dx%d@+%d+%d)\n",
                              GDK_DRAWABLE_XID(window),
@@ -952,6 +969,7 @@ void gdk_window_clear(GdkWindow * window)
 {
    g_return_if_fail(window != NULL);
    g_return_if_fail(GDK_IS_WINDOW(window));
+   if (GDK_DRAWABLE_TYPE(window) == GDK_WINDOW_FOREIGN) return;
 
    if (!GDK_DRAWABLE_DESTROYED(window))
       gdk_window_clear_area(window, 0, 0, 0, 0);
@@ -964,6 +982,7 @@ gdk_window_clear_area(GdkWindow * window,
 {
    gboolean threaded_gdk = FALSE;
 
+   if (GDK_DRAWABLE_TYPE(window) == GDK_WINDOW_FOREIGN) return;
    g_return_if_fail(window != NULL);
    g_return_if_fail(GDK_IS_WINDOW(window));
 
@@ -1012,6 +1031,7 @@ gdk_window_clear_area_e(GdkWindow * window,
 {
    g_return_if_fail(window != NULL);
    g_return_if_fail(GDK_IS_WINDOW(window));
+   if (GDK_DRAWABLE_TYPE(window) == GDK_WINDOW_FOREIGN) return;
 
    if (!GDK_DRAWABLE_DESTROYED(window)) {
       RECT rect;
