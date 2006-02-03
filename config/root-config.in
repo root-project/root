@@ -298,6 +298,14 @@ macosx)
       auxlibs="-lm -ldl"
    fi
    ;;
+macosxicc)
+   # MacOS X with Intel icc compiler
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
+   auxcflags=
+   auxlibs="-lm -ldl"
+   ;;
 macosx64)
    # MacOS X with gcc (GNU cc v4.x) in 64 bit mode
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`

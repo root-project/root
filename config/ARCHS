@@ -31,6 +31,7 @@ linuxx8664gcc        for AMD Opteron and Intel EM64T Linux gcc 3.x and glibc
 linuxx8664icc        for AMD Opteron and Intel EM64T Linux gcc 3.x and glibc
 lynxos               for LynxOS with gcc
 macosx               for MacOS X with gcc
+macosxicc            for MacOS X with Intel icc compilers (MacTel only)
 macosx64             for MacOS X with gcc 4.0 64 bit mode
 macosxxlc            for MacOS X with IBM xl compilers
 mklinux              for MkLinux gcc and glibc

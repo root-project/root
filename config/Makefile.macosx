@@ -28,14 +28,15 @@ CXXFLAGS      = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
 CFLAGS        = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
-                -fsigned-char -fno-common \
-                -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-                -DG__UNIX -DG__SHAREDLIB \
-                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
-CINTCFLAGS    = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS)
+                -DG__STD_EXCEPTION
+CINTCFLAGS    = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
+                -DG__STD_EXCEPTION
 COMPILER      = gnu
 
 # OS version

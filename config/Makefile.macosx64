@@ -23,14 +23,15 @@ CXXFLAGS      = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
 CFLAGS        = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
-                -fsigned-char -fno-common \
-                -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-		-DG__UNIX -DG__SHAREDLIB \
-                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
-CINTCFLAGS    = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
+                -DG__STD_EXCEPTION
+CINTCFLAGS    = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
+                -DG__STD_EXCEPTION
 COMPILER      = gnu
 
 # OS version
@@ -48,6 +49,15 @@ SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 FORCELINK     = no
 NEEDFINK      = no
+else
+ifeq ($(MACOSX_MINOR),3)
+MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.3
+SOFLAGS       = $(OPT) -dynamiclib -single_module \
+                -undefined dynamic_lookup -install_name $(LIBDIR)/
+else
+SOFLAGS       = $(OPT) -dynamiclib -single_module \
+                -undefined suppress -install_name $(LIBDIR)/
+endif
 endif
 SOEXT         = dylib
 
@@ -61,8 +71,8 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 ifeq ($(MACOSX_MINOR),4)
 ifeq (g95,$(findstring g95,$(ROOTBUILD)))
 F77           = g95
-F77LIBS       = -L$(FINK_DIR)/lib/gcc-lib/powerpc-apple-darwin8/4.0.0 -lf95 \
-                -L$(FINK_DIR)/lib -lg2c
+F77LIBS       = -L`$(F77) -print-search-dirs | awk '/^install:/{print $$2}'` \
+                -lf95 -L$(FINK_DIR)/lib -lg2c
 else
 F77           = gfortran
 F77LIBS       = -L$(FINK_DIR)/lib/gcc4/lib -lgfortran -lgfortranbegin \
