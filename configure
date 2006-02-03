@@ -728,7 +728,7 @@ the ROOTSYS environment variable.
 
 enable/disable options, prefix with either --enable- or --disable-
   afs                AFS support, requires AFS libs and objects
-  alien              AliEn support, requires libgliteUI from ALICE
+  alien              AliEn support, requires libgapiUI from ALICE
   asimage            Image processing support, requires libAfterImage
   astiff             Include tiff support in image processing
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
@@ -778,8 +778,8 @@ enable/disable options, prefix with either --enable- or --disable-
 with options, prefix with --with-, enables corresponding support
 
   afs                AFS support, location of AFS distribution
-  alien-incdir       AliEn support, location of gliteUI.h
-  alien-libdir       AliEn support, location of libgliteUI
+  alien-incdir       AliEn support, location of gapiUI.h
+  alien-libdir       AliEn support, location of libapiUI
   cern-libdir        HBOOK converter, location of CERNLIB libraries
   chirp-incdir       Chirp support, location of chirp_client.h
   chirp-libdir       Chirp support, location of libchirp_client
@@ -1845,12 +1845,12 @@ fi
 # Check for libgliteUI
 #
 if test ! "x$enable_alien" = "xno" ; then
-    check_header "gliteUI.h" "$alienincdir" $ALIEN $ALIEN/include \
+    check_header "gapiUI.h" "$alienincdir" $ALIEN $ALIEN/include \
 	/opt/alien/api/include /usr/local/alien/api/include /usr/include \
 	/usr/local/include
     alienincdir=$found_dir
 
-    check_library "libgliteUI" "$enable_shared" "$alienlibdir" \
+    check_library "libgapiUI" "$enable_shared" "$alienlibdir" \
 	$ALIEN $ALIEN/lib /opt/alien/api/lib /usr/local/alien/api/lib /usr/lib \
         /usr/local/lib
     alienlib=$found_lib

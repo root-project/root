@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.14 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.15 2005/10/04 10:34:04 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -23,12 +23,11 @@
 // export alien_API_HOST=<host>                                         //
 // export alien_API_PORT=<port>                                         //
 // export alien_API_USER=<user>                                         //
-// => these are automatically set via the gShell or alien_VO command    //
 //                                                                      //
 //                                                                      //
 // some examples:                                                       //
 // -------------------------------------------------------------------- //
-// connect in an initialized gShell environemnt (see above)             //
+// connect in an initialized API environemnt (see above)                //
 // > TGrid::Connect("alien://");                                        //
 // -> this is not thread safe                                           //
 // connect using an already established shell token:                    //
@@ -41,7 +40,7 @@
 //                                                                      //
 // -------------------------------------------------------------------- //
 // get the working directory                                            //
-// > printf("Working Directory is %d",gGrid->Pwd());                    //
+// > printf("Working Directory is %s\n",gGrid->Pwd());                  //
 //                                                                      //
 //                                                                      //
 // -------------------------------------------------------------------- //
@@ -73,7 +72,7 @@
 #include "TAlienResult.h"
 #include "TAlienJob.h"
 
-#include "gliteUI.h"
+#include "gapiUI.h"
 
 using namespace std;
 
@@ -127,10 +126,10 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    Bool_t fstoken = kFALSE;
 
    if (options && (options[0] == 't')) {
-       fGc = GliteUI::MakeGliteUI(kTRUE);
+       fGc = GapiUI::MakeGapiUI(kTRUE);
        fstoken = kTRUE;
    } else {
-       fGc = GliteUI::MakeGliteUI(kFALSE);
+       fGc = GapiUI::MakeGapiUI(kFALSE);
    }
 
    if (!fGc) {
@@ -161,8 +160,8 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
          Command("motd");
          Stdout();
       }
-      // export this UI to all POSIX functions like glite_dir_xxx glite_job_xxx
-      fGc->SetGliteUI(fGc);
+      // export this UI to all POSIX functions like gapi_dir_xxx gapi_job_xxx
+      fGc->SetGapiUI(fGc);
    }
 }
 

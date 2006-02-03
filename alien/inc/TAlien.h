@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.10 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.11 2005/09/23 13:04:53 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -19,15 +19,6 @@
 //                                                                      //
 // Class defining interface to TAlien GRID services.                    //
 //                                                                      //
-// To start a local API Grid service, use                               //
-//   - TGrid::Connect("alien://localhost");                             //
-//   - TGrid::Connect("alien://");                                      //
-//                                                                      //
-// To force to connect to a running API Service, use                    //
-//   - TGrid::Connect("alien://<apihosturl>/?direct");                  //
-//                                                                      //
-// To get a remote API Service from the API factory service, use        //
-//   - TGrid::Connect("alien://<apifactoryurl>");                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +42,7 @@
 #include "TMap.h"
 #endif
 
-class GliteUI;
+class GapiUI;
 class TGridJob;
 
 
@@ -63,9 +54,9 @@ public:
 private:
    // Stream content types.
    // The streams are originally defined in the CODEC.h of
-   // the external gliteUI library.
+   // the external gapiUI library.
 
-   GliteUI   *fGc;    // the GliteUI object implementing the communication layer
+   GapiUI    *fGc;    // the GapiUI object implementing the communication layer
    TString    fPwd;   // working directory
 
    TGridResult         *Command(const char *command, bool interactive = kFALSE,

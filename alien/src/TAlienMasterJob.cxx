@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.cxx,v 1.2 2005/08/12 15:46:40 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   27/10/2004
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 #include "TAlienMasterJobStatus.h"
 #include "TAlienJob.h"
 #include "TObjString.h"
-#include "glite_job_operations.h"
+#include "gapi_job_operations.h"
 #include "Riostream.h"
 #include "TGridResult.h"
 #include "TAlien.h"
@@ -53,7 +53,7 @@ TGridJobStatus *TAlienMasterJob::GetJobStatus() const
    TString jobID;
    jobID += (static_cast<ULong_t>(fJobID));
 
-   GLITE_JOBARRAY* gjobarray = glite_queryjobs("-", "%", "-", "-", jobID.Data(),
+   GAPI_JOBARRAY* gjobarray = gapi_queryjobs("-", "%", "-", "-", jobID.Data(),
                                                "-", "-", "-", "-");
 
    if (!gjobarray)
@@ -69,15 +69,15 @@ TGridJobStatus *TAlienMasterJob::GetJobStatus() const
    TAlienJob masterJob(fJobID);
    status->fMasterJob = dynamic_cast<TAlienJobStatus*>(masterJob.GetJobStatus());
 
-   std::vector<GLITE_JOB>::const_iterator jobIter = gjobarray->begin();
+   std::vector<GAPI_JOB>::const_iterator jobIter = gjobarray->begin();
    for (; jobIter != gjobarray->end(); ++jobIter) {
 
-      GLITE_JOB gjob = *jobIter;
+      GAPI_JOB gjob = *jobIter;
       TAlienJobStatus* jobStatus = new TAlienJobStatus();
       TObjString* jobID = 0;
 
-      std::map<std::string, std::string>::const_iterator iter = gjob.glite_jobmap.begin();
-      for (; iter != gjob.glite_jobmap.end(); ++iter) {
+      std::map<std::string, std::string>::const_iterator iter = gjob.gapi_jobmap.begin();
+      for (; iter != gjob.gapi_jobmap.end(); ++iter) {
          jobStatus->fStatus.Add(new TObjString(iter->first.c_str()), new TObjString(iter->second.c_str()));
          if (strcmp(iter->first.c_str(), "queueId") == 0)
             jobID = new TObjString(iter->second.c_str());

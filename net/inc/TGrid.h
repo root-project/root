@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.14 2005/08/12 15:46:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.15 2005/09/23 13:04:53 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -71,7 +71,7 @@ public:
 
    virtual TGridResult *Command(const char * /*command*/,
                                 Bool_t /*interactive*/ = kFALSE,
-                                UInt_t /*stream*/ = kFALSE)
+                                UInt_t /*stream*/ = 2)
       { MayNotUse("Command"); return 0; }
 
    virtual TGridResult *Query(const char * /*path*/, const char * /*pattern*/,

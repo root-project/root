@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.3 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.4 2005/12/09 16:24:34 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -184,10 +184,11 @@ const char *TAlienCollection::GetTURL(const char* filename) const
    // Get a file's transport URL (TURL). Returns 0 in case of error.
 
    if (fCurrent) {
-      TObjString *obj = (TObjString*)fCurrent->GetValue(filename);
+      TMap *obj = (TMap*)fCurrent->GetValue(filename);
       if (obj) {
-         if (strlen(obj->GetName()))
-            return (obj->GetName());
+	if (obj->GetValue("turl")) {
+	  return ( ((TObjString*)obj->GetValue("turl"))->GetName());
+	}
       }
    }
    Error("GetTURL","cannot get TURL of file %s",filename);

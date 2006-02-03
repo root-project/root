@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJob.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJob.cxx,v 1.2 2005/08/12 15:46:40 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include "TAlienJob.h"
 #include "TAlienJobStatus.h"
 #include "TObjString.h"
-#include "glite_job_operations.h"
+#include "gapi_job_operations.h"
 
 ClassImp(TAlienJob)
 
@@ -36,7 +36,7 @@ TGridJobStatus *TAlienJob::GetJobStatus() const
    TString jobID;
    jobID += (static_cast<ULong_t>(fJobID));
 
-   GLITE_JOBARRAY *gjobarray = glite_queryjobs("-", "%", "-", "-", "-", "-",
+   GAPI_JOBARRAY *gjobarray = gapi_queryjobs("-", "%", "-", "-", "-", "-",
                                                jobID.Data(), "-", "-");
 
    if (!gjobarray)
@@ -49,9 +49,9 @@ TGridJobStatus *TAlienJob::GetJobStatus() const
 
    TAlienJobStatus *status = new TAlienJobStatus();
 
-   GLITE_JOB gjob = gjobarray->at(0);
-   std::map<std::string, std::string>::const_iterator iter = gjob.glite_jobmap.begin();
-   for (; iter != gjob.glite_jobmap.end(); ++iter) {
+   GAPI_JOB gjob = gjobarray->at(0);
+   std::map<std::string, std::string>::const_iterator iter = gjob.gapi_jobmap.begin();
+   for (; iter != gjob.gapi_jobmap.end(); ++iter) {
       status->fStatus.Add(new TObjString(iter->first.c_str()), new TObjString(iter->second.c_str()));
    }
 
