@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.110 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.111 2006/01/31 17:08:29 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -619,6 +619,7 @@ Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma, Bool_t norm)
    Double_t u, ue, us, den;
    if (v < -5.5) {
       u   = TMath::Exp(v+1.0);
+      if (u < 1e-10) return 0.0;
       ue  = TMath::Exp(-1/u);
       us  = TMath::Sqrt(u);
       den = 0.3989422803*(ue/us)*(1+(a1[0]+(a1[1]+a1[2]*u)*u)*u);
@@ -1267,7 +1268,7 @@ Double_t TMath::Voigt(Double_t xx, Double_t sigma, Double_t lg, Int_t r)
 }
 
 //______________________________________________________________________________
-Bool_t TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c) 
+Bool_t TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
 {
   // Calculates roots of polynomial of 3rd order a*x^3 + b*x^2 + c*x + d, where
   // a == coef[3], b == coef[2], c == coef[1], d == coef[0]
