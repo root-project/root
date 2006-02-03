@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.46 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.47 2005/11/21 09:31:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -877,10 +877,14 @@ void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
 void TGeoArb8::SetDimensions(Double_t *param)
 {
 // Set all arb8 params in one step.
+// param[0] = dz
+// param[1] = x0
+// param[2] = y0
+// ...
    fDz      = param[0];
    for (Int_t i=0; i<8; i++) {
-      fXY[i][0] = param[2*i];
-      fXY[i][1] = param[2*i+1];
+      fXY[i][0] = param[2*i+1];
+      fXY[i][1] = param[2*i+2];
    }
    ComputeTwist();
    ComputeBBox();

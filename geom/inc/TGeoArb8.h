@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.18 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.19 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -95,6 +95,7 @@ public:
    void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
    virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);
    virtual void          SetDimensions(Double_t *param);
+   void                  SetDz(Double_t dz) {fDz = dz;}
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
    virtual void          Sizeof3D() const;
