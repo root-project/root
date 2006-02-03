@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.229 2005/11/16 20:09:59 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.230 2006/01/30 09:01:12 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2284,6 +2284,8 @@ void TStreamerInfo::Update(const TClass *oldcl, TClass *newcl)
 //______________________________________________________________________________
 void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
 {
+   // Update the TClass pointer cached in this object.
+
    if (fClass == oldcl)
       fClass = newcl;
    else if (fClass == 0)

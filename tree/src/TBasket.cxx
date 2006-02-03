@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.37 2006/01/23 19:41:03 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.38 2006/01/24 21:32:46 pcanal Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -51,6 +51,8 @@ TBasket::TBasket()
 //_______________________________________________________________________
 TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
 {
+   // Simple Constructor.
+
    fDisplacement  = 0;
    fEntryOffset   = 0;
    fBufferRef     = 0;
@@ -65,7 +67,7 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
 
 //_______________________________________________________________________
 TBasket::TBasket(const char *name, const char *title, TBranch *branch) : 
-  TKey(branch->GetDirectory())
+   TKey(branch->GetDirectory())
 {
    // Basket normal constructor.
 

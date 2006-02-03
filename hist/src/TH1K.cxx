@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.6 2003/08/11 08:27:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.7 2005/12/04 10:51:27 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -118,11 +118,11 @@ Double_t TH1K::GetBinContent(Int_t bin) const
    if (!nkmax) {nkmax = 3; ffmin = GetBinWidth(bin);}
    if (nkmax >= fNIn) nkmax = fNIn-1;
    for (nk = 1; nk <= nkmax || ff <= ffmin; nk++) {
-     fl = (jl>=0  ) ? TMath::Abs(fArray[jl]-x) : 1.e+20;
-     fr = (jr<fNIn) ? TMath::Abs(fArray[jr]-x) : 1.e+20;
-     if (jl<0 && jr>=fNIn) break;
-     if (fl < fr) { ff = fl; jl--;}
-     else         { ff = fr; jr++;}
+      fl = (jl>=0  ) ? TMath::Abs(fArray[jl]-x) : 1.e+20;
+      fr = (jr<fNIn) ? TMath::Abs(fArray[jr]-x) : 1.e+20;
+      if (jl<0 && jr>=fNIn) break;
+      if (fl < fr) { ff = fl; jl--;}
+      else         { ff = fr; jr++;}
    }
    ((TH1K*)this)->fKCur = nk - 1;
    return fNIn * 0.5*fKCur/((float)(fNIn+1))*GetBinWidth(bin)/ff;
@@ -139,9 +139,9 @@ Double_t TH1K::GetBinError(Int_t bin) const
 //______________________________________________________________________________
 void   TH1K::Reset(Option_t *option)
 {
-  fNIn   =0;
-  fReady = 0;
-  TH1::Reset(option);
+   fNIn   =0;
+   fReady = 0;
+   TH1::Reset(option);
 }
 
 //______________________________________________________________________________
@@ -163,8 +163,8 @@ void TH1K::SavePrimitive(ofstream &out, Option_t *option)
                  <<","<<GetXaxis()->GetXmin()
                  <<","<<GetXaxis()->GetXmax()
                  <<","<<fKOrd;
+   out <<");"<<endl;
 
-              out<<");"<<endl;
    if (fDirectory == 0) {
       out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
    }
@@ -204,16 +204,16 @@ void TH1K::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 static int TH1K_fcompare(const void *f1,const void *f2)
 {
-  if (*((float*)f1) < *((float*)f2)) return -1;
-  if (*((float*)f1) > *((float*)f2)) return  1;
-  return 0;
+   if (*((float*)f1) < *((float*)f2)) return -1;
+   if (*((float*)f1) > *((float*)f2)) return  1;
+   return 0;
 }
 
 //______________________________________________________________________________
 void TH1K::Sort()
 {
-  if (fNIn<2) return;
-  qsort(GetArray(),fNIn,sizeof(Float_t),&TH1K_fcompare);
+   if (fNIn<2) return;
+   qsort(GetArray(),fNIn,sizeof(Float_t),&TH1K_fcompare);
 }
 
 

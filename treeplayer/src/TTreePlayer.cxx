@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.204 2005/11/14 15:17:34 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.205 2005/11/24 23:30:06 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1980,9 +1980,11 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       return 3;
    }
    char *treefile = new char[1000];
-   if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile())
-                strcpy(treefile,fTree->GetDirectory()->GetFile()->GetName());
-   else         strcpy(treefile,"Memory Directory");
+   if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile()) {
+      strcpy(treefile,fTree->GetDirectory()->GetFile()->GetName());
+   } else {
+      strcpy(treefile,"Memory Directory");
+   }
    // In the case of a chain, the GetDirectory information usually does
    // pertain to the Chain itself but to the currently loaded tree.
    // So we can not rely on it.

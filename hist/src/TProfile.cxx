@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.71 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.72 2006/01/30 08:00:59 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -396,9 +396,9 @@ Int_t TProfile::BufferEmpty(Int_t action)
    }
    if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin()) {
       //find min, max of entries in buffer
-     Double_t xmin = fBuffer[2];
-     Double_t xmax = xmin;
-     for (Int_t i=1;i<nbentries;i++) {
+      Double_t xmin = fBuffer[2];
+      Double_t xmax = xmin;
+      for (Int_t i=1;i<nbentries;i++) {
          Double_t x = fBuffer[3*i+2];
          if (x < xmin) xmin = x;
          if (x > xmax) xmax = x;
@@ -988,12 +988,12 @@ void TProfile::GetStats(Double_t *stats) const
    } else {
       if (fTsumwy == 0 && fTsumwy2 == 0) {
          //this case may happen when processing TProfiles with version <=3
-        TProfile *p = (TProfile*)this; // chheting with const
-        for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
-           p->fTsumwy  += fArray[binx];
-           p->fTsumwy2 += fSumw2.fArray[binx];
-        }
-     }
+         TProfile *p = (TProfile*)this; // chheting with const
+         for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+            p->fTsumwy  += fArray[binx];
+            p->fTsumwy2 += fSumw2.fArray[binx];
+         }
+      }
       stats[0] = fTsumw;
       stats[1] = fTsumw2;
       stats[2] = fTsumwx;
@@ -1102,7 +1102,7 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax*/)
       fXaxis.ResetBit(TAxis::kLabelsDown);
       fXaxis.ResetBit(TAxis::kLabelsUp);
    }
-    if (opt.Contains("v")) {
+   if (opt.Contains("v")) {
       fXaxis.SetBit(TAxis::kLabelsVert);
       fXaxis.ResetBit(TAxis::kLabelsHori);
       fXaxis.ResetBit(TAxis::kLabelsDown);
@@ -1422,45 +1422,45 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 //   if option "C=E" the bin contents of the projection are set to the
 //       bin errors of the profile
 
-  TString opt = option;
-  opt.ToLower();
-  Int_t nx = fXaxis.GetNbins();
+   TString opt = option;
+   opt.ToLower();
+   Int_t nx = fXaxis.GetNbins();
 
 // Create the projection histogram
-  char *pname = (char*)name;
-  if (strcmp(name,"_px") == 0) {
-     Int_t nch = strlen(GetName()) + 4;
-     pname = new char[nch];
-     sprintf(pname,"%s%s",GetName(),name);
-  }
-  TH1D *h1;
-  const TArrayD *bins = fXaxis.GetXbins();
-  if (bins->fN == 0) {
-     h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
-  } else {
-     h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
-  }
-  Bool_t computeErrors = kFALSE;
-  Bool_t cequalErrors  = kFALSE;
-  Bool_t binEntries    = kFALSE;
-  if (opt.Contains("b")) binEntries = kTRUE;
-  if (opt.Contains("e")) computeErrors = kTRUE;
-  if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
-  if (computeErrors) h1->Sumw2();
-  if (pname != name)  delete [] pname;
+   char *pname = (char*)name;
+   if (strcmp(name,"_px") == 0) {
+      Int_t nch = strlen(GetName()) + 4;
+      pname = new char[nch];
+      sprintf(pname,"%s%s",GetName(),name);
+   }
+   TH1D *h1;
+   const TArrayD *bins = fXaxis.GetXbins();
+   if (bins->fN == 0) {
+      h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+   } else {
+      h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
+   }
+   Bool_t computeErrors = kFALSE;
+   Bool_t cequalErrors  = kFALSE;
+   Bool_t binEntries    = kFALSE;
+   if (opt.Contains("b")) binEntries = kTRUE;
+   if (opt.Contains("e")) computeErrors = kTRUE;
+   if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
+   if (computeErrors) h1->Sumw2();
+   if (pname != name)  delete [] pname;
 
-// Fill the projected histogram
-  Double_t cont,err;
-  for (Int_t binx =0;binx<=nx+1;binx++) {
-     if (binEntries)    cont = GetBinEntries(binx);
-     else               cont = GetBinContent(binx);
-     err = GetBinError(binx);
-     if (cequalErrors)  h1->SetBinContent(binx, err);
-     else               h1->SetBinContent(binx, cont);
-     if (computeErrors) h1->SetBinError(binx,err);
-  }
-  h1->SetEntries(fEntries);
-  return h1;
+   // Fill the projected histogram
+   Double_t cont,err;
+   for (Int_t binx =0;binx<=nx+1;binx++) {
+      if (binEntries)    cont = GetBinEntries(binx);
+      else               cont = GetBinContent(binx);
+      err = GetBinError(binx);
+      if (cequalErrors)  h1->SetBinContent(binx, err);
+      else               h1->SetBinContent(binx, cont);
+      if (computeErrors) h1->SetBinError(binx,err);
+   }
+   h1->SetEntries(fEntries);
+   return h1;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.1 2005/11/16 20:17:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.2 2005/11/29 06:01:20 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
    void   SortBaskets();
    void   WriteBaskets();
 
-   ClassDef(TTreeCloner,0); 
+   ClassDef(TTreeCloner,0); // helper used for the fast cloning of TTrees.
 };
 
 #endif

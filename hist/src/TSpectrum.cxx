@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.35 2006/01/20 14:35:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.36 2006/01/25 08:21:06 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -56,7 +56,8 @@ Int_t TSpectrum::fgIterations    = 3;
 Int_t TSpectrum::fgAverageWindow = 3;
 
 #define PEAK_WINDOW 1024
-    ClassImp(TSpectrum)  
+ClassImp(TSpectrum)  
+
 //______________________________________________________________________________
 TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder") 
 {
@@ -94,7 +95,7 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum",
 
 
 //______________________________________________________________________________
-    TSpectrum::~TSpectrum() 
+TSpectrum::~TSpectrum() 
 {
    delete [] fPosition;
    delete [] fPositionX;
@@ -245,9 +246,10 @@ void TSpectrum::SetResolution(Float_t resolution)
 //              between peaks. Higher values allow higher resolution
 //              (smaller distance between peaks.
 //              May be set later through SetResolution.
-  if (resolution > 1)
+
+   if (resolution > 1)
       fResolution = resolution;   
-  else
+   else
       fResolution = 1;
 }
 
@@ -506,625 +508,625 @@ NIM 214 (1983), 431-434. </span></p>
       working_space[i + ssize] = spectrum[i];      
    }
    bw=(smoothWindow-1)/2;      
-    if (direction == kBackIncreasingWindow)
-       i = 1;
-    else if(direction == kBackDecreasingWindow)
-       i = numberIterations;    
+   if (direction == kBackIncreasingWindow)
+      i = 1;
+   else if(direction == kBackDecreasingWindow)
+      i = numberIterations;    
    if (filterOrder == kBackOrder2) {
-         do{   
+      do{   
          for (j = i; j < ssize - i; j++) {
-              if (smoothing == kFALSE){
+            if (smoothing == kFALSE){
                a = working_space[ssize + j];
                b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
                if (b < a)
                   a = b;
                working_space[j] = a;
             }
-                
+
             else if (smoothing == kTRUE){
                a = working_space[ssize + j];                                   
-                av = 0;
-                 men = 0;
-                  for (w = j - bw; w <= j + bw; w++){
-                      if ( w >= 0 && w < ssize){
-                        av += working_space[ssize + w];
-                       men +=1;
-                     }
-                   }
-                av = av / men;
-                 b = 0;
-                  men = 0;
-                  for (w = j - i - bw; w <= j - i + bw; w++){
-                     if ( w >= 0 && w < ssize){
-                        b += working_space[ssize + w];
-                        men +=1;
-                     }
-                   }           
-                 b = b / men;
-                 c = 0;
-                  men = 0;
-                  for (w = j + i - bw; w <= j + i + bw; w++){
-                      if ( w >= 0 && w < ssize){
-                       c += working_space[ssize + w];
-                       men +=1;
-                     }
-                   }           
-                 c = c / men;                   
-                   b = (b + c) / 2;
-                  if (b < a)
-                     av = b;
-                working_space[j]=av;                  
+               av = 0;
+               men = 0;
+               for (w = j - bw; w <= j + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     av += working_space[ssize + w];
+                     men +=1;
+                  }
+               }
+               av = av / men;
+               b = 0;
+               men = 0;
+               for (w = j - i - bw; w <= j - i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     b += working_space[ssize + w];
+                     men +=1;
+                  }
+               }           
+               b = b / men;
+               c = 0;
+               men = 0;
+               for (w = j + i - bw; w <= j + i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     c += working_space[ssize + w];
+                     men +=1;
+                  }
+               }           
+               c = c / men;                   
+               b = (b + c) / 2;
+               if (b < a)
+                  av = b;
+               working_space[j]=av;                  
             }
          }
          for (j = i; j < ssize - i; j++)
-             working_space[ssize + j] = working_space[j];
-             if (direction == kBackIncreasingWindow)
-                  i+=1;
-             else if(direction == kBackDecreasingWindow)
-                  i-=1;
+            working_space[ssize + j] = working_space[j];
+         if (direction == kBackIncreasingWindow)
+            i+=1;
+         else if(direction == kBackDecreasingWindow)
+            i-=1;
       }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
-    }
-      
-    else if (filterOrder == kBackOrder4) {
-       do{
-          for (j = i; j < ssize - i; j++) {
-             if (smoothing == kFALSE){               
-                a = working_space[ssize + j];
-                b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
-                c = 0;
-                ai = i / 2;
-                c -= working_space[ssize + j - (int) (2 * ai)] / 6;
-                c += 4 * working_space[ssize + j - (int) ai] / 6;
-                c += 4 * working_space[ssize + j + (int) ai] / 6;
-                c -= working_space[ssize + j + (int) (2 * ai)] / 6;
-                if (b < c)
-                   b = c;
-                if (b < a)
-                   a = b;
-                working_space[j] = a;
-             }
-              
-             else if (smoothing == kTRUE){
-                a = working_space[ssize + j];                                   
-                 av = 0;
-                  men = 0;
-                   for (w = j - bw; w <= j + bw; w++){
-                      if ( w >= 0 && w < ssize){
-                         av += working_space[ssize + w];
-                        men +=1;
-                      }
-                    }
-                 av = av / men;
-                  b = 0;
-                   men = 0;
-                   for (w = j - i - bw; w <= j - i + bw; w++){
-                       if ( w >= 0 && w < ssize){
-                          b += working_space[ssize + w];
-                          men +=1;
-                       }
-                   }                     
-                  b = b / men;
-                  c = 0;
-                    men = 0;
-                   for (w = j + i - bw; w <= j + i + bw; w++){
-                       if ( w >= 0 && w < ssize){
-                          c += working_space[ssize + w];
-                          men +=1;
-                      }
-                    }                     
-                  c = c / men;                   
-                     b = (b + c) / 2;
-                ai = i / 2;
-                b4 = 0, men = 0;
-                  for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         b4 += working_space[ssize + w];                             
-                         men +=1;                             
-                      }
-                 }
-                    b4 = b4 / men;
-                c4 = 0, men = 0;
-                  for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         c4 += working_space[ssize + w];                             
-                         men +=1;                                                          
-                      }
-                 }
-                   c4 = c4 / men;
-                d4 = 0, men = 0;
-                  for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         d4 += working_space[ssize + w];                             
-                        men +=1;                                                          
-                       }
-                 }                 
-                    d4 = d4 / men;
-                e4 = 0, men = 0;
-                  for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         e4 += working_space[ssize + w];                             
-                        men +=1;                             
-                        }
-                 }                 
-                   e4 = e4 / men;
-                b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
-                if (b < b4)
-                   b = b4;
-                   if (b < a)
-                       av = b;
-                  working_space[j]=av;                  
-             }              
-          } 
-          for (j = i; j < ssize - i; j++)
-              working_space[ssize + j] = working_space[j];
-              if (direction == kBackIncreasingWindow)
-                   i+=1;
-              else if(direction == kBackDecreasingWindow)
-                   i-=1;
-       }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
-    }
-      
-    else if (filterOrder == kBackOrder6) {
-       do{
-          for (j = i; j < ssize - i; j++) {              
-             if (smoothing == kFALSE){                              
-                a = working_space[ssize + j];
-                b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
-                c = 0;
-                ai = i / 2;
-                c -= working_space[ssize + j - (int) (2 * ai)] / 6;
-                c += 4 * working_space[ssize + j - (int) ai] / 6;
-                c += 4 * working_space[ssize + j + (int) ai] / 6;
-                c -= working_space[ssize + j + (int) (2 * ai)] / 6;
-                d = 0;
-                ai = i / 3;
-                d += working_space[ssize + j - (int) (3 * ai)] / 20;
-                d -= 6 * working_space[ssize + j - (int) (2 * ai)] / 20;
-                d += 15 * working_space[ssize + j - (int) ai] / 20;
-                d += 15 * working_space[ssize + j + (int) ai] / 20;
-                d -= 6 * working_space[ssize + j + (int) (2 * ai)] / 20;
-                d += working_space[ssize + j + (int) (3 * ai)] / 20;
-                if (b < d)
-                   b = d;
-                if (b < c)
-                   b = c;
-                if (b < a)
-                   a = b;
-                working_space[j] = a;
-             }
-              
-             else if (smoothing == kTRUE){
-                a = working_space[ssize + j];                                   
-                 av = 0;
-                  men = 0;
-                   for (w = j - bw; w <= j + bw; w++){
-                      if ( w >= 0 && w < ssize){
-                         av += working_space[ssize + w];
-                        men +=1;
-                      }
-                    }
-                 av = av / men;
-                  b = 0;
-                   men = 0;
-                   for (w = j - i - bw; w <= j - i + bw; w++){
-                       if ( w >= 0 && w < ssize){
-                        b += working_space[ssize + w];
-                        men +=1;
-                      }
-                    }                     
-                  b = b / men;
-                  c = 0;
-                    men = 0;
-                   for (w = j + i - bw; w <= j + i + bw; w++){
-                       if ( w >= 0 && w < ssize){
-                        c += working_space[ssize + w];
-                        men +=1;
-                      }
-                    }                     
-                  c = c / men;                   
-                     b = (b + c) / 2;
-                ai = i / 2;
-                b4 = 0, men = 0;
-                  for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         b4 += working_space[ssize + w];                             
-                        men +=1;                             
-                        }
-                 }
-                    b4 = b4 / men;
-                c4 = 0, men = 0;
-                  for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         c4 += working_space[ssize + w];                             
-                        men +=1;                                                          
-                       }
-                 }
-                   c4 = c4 / men;
-                d4 = 0, men = 0;
-                  for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         d4 += working_space[ssize + w];                             
-                        men +=1;                                                          
-                       }
-                 }                 
-                    d4 = d4 / men;
-                e4 = 0, men = 0;
-                  for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         e4 += working_space[ssize + w];                             
-                        men +=1;                             
-                        }
-                 }                 
-                   e4 = e4 / men;
-                b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
-                ai = i / 3;
-                b6 = 0, men = 0;
-                  for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         b6 += working_space[ssize + w];                             
-                        men +=1;
-                         }
-                 }
-                    b6 = b6 / men;
-                c6 = 0, men = 0;
-                  for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         c6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }
-                    c6 = c6 / men;
-                d6 = 0, men = 0;
-                  for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         d6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }
-                    d6 = d6 / men;
-                e6 = 0, men = 0;
-                  for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){                
-                      if (w >= 0 && w < ssize){
-                         e6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                
-                     }
-                    e6 = e6 / men;
-                f6 = 0, men = 0;
-                  for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         f6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                
-                    f6 = f6 / men;
-                g6 = 0, men = 0;
-                  for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         g6 += working_space[ssize + w];                             
-                        men +=1;
-                         }
-                 }                
-                    g6 = g6 / men;
-                b6 = (b6 - 6 * c6 + 15 * d6 + 15 * e6 - 6 * f6 + g6) / 20;
-                if (b < b6)
-                   b = b6;                               
-                if (b < b4)
-                   b = b4;
-                   if (b < a)
-                       av = b;
-                  working_space[j]=av;                  
-             }              
-          }
-          for (j = i; j < ssize - i; j++)
-             working_space[ssize + j] = working_space[j];
-              if (direction == kBackIncreasingWindow)
-                  i+=1;
-              else if(direction == kBackDecreasingWindow)
-                  i-=1;
-       }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
-    }
-      
-    else if (filterOrder == kBackOrder8) {
-       do{
-          for (j = i; j < ssize - i; j++) {
-             if (smoothing == kFALSE){               
-                a = working_space[ssize + j];
-                b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
-                c = 0;
-                ai = i / 2;
-                c -= working_space[ssize + j - (int) (2 * ai)] / 6;
-                c += 4 * working_space[ssize + j - (int) ai] / 6;
-                c += 4 * working_space[ssize + j + (int) ai] / 6;
-                c -= working_space[ssize + j + (int) (2 * ai)] / 6;
-                d = 0;
-                ai = i / 3;
-                d += working_space[ssize + j - (int) (3 * ai)] / 20;
-                d -= 6 * working_space[ssize + j - (int) (2 * ai)] / 20;
-                d += 15 * working_space[ssize + j - (int) ai] / 20;
-                d += 15 * working_space[ssize + j + (int) ai] / 20;
-                d -= 6 * working_space[ssize + j + (int) (2 * ai)] / 20;
-                d += working_space[ssize + j + (int) (3 * ai)] / 20;
-                e = 0;
-                ai = i / 4;
-                e -= working_space[ssize + j - (int) (4 * ai)] / 70;
-                e += 8 * working_space[ssize + j - (int) (3 * ai)] / 70;
-                e -= 28 * working_space[ssize + j - (int) (2 * ai)] / 70;
-                e += 56 * working_space[ssize + j - (int) ai] / 70;
-                e += 56 * working_space[ssize + j + (int) ai] / 70;
-                e -= 28 * working_space[ssize + j + (int) (2 * ai)] / 70;
-                e += 8 * working_space[ssize + j + (int) (3 * ai)] / 70;
-                e -= working_space[ssize + j + (int) (4 * ai)] / 70;
-                if (b < e)
-                   b = e;
-                if (b < d)
-                   b = d;
-                if (b < c)
-                   b = c;
-                if (b < a)
-                   a = b;
-                working_space[j] = a;
-             }
-              
-             else if (smoothing == kTRUE){
-                a = working_space[ssize + j];                                   
-                 av = 0;
-                  men = 0;
-                   for (w = j - bw; w <= j + bw; w++){
-                      if ( w >= 0 && w < ssize){
-                         av += working_space[ssize + w];
-                        men +=1;
-                      }
-                    }
-                 av = av / men;
-                  b = 0;
-                   men = 0;
-                   for (w = j - i - bw; w <= j - i + bw; w++){
-                       if ( w >= 0 && w < ssize){
-                        b += working_space[ssize + w];
-                        men +=1;
-                      }
-                    }                     
-                  b = b / men;
-                  c = 0;
-                    men = 0;
-                   for (w = j + i - bw; w <= j + i + bw; w++){
-                       if ( w >= 0 && w < ssize){
-                        c += working_space[ssize + w];
-                        men +=1;
-                      }
-                    }                     
-                  c = c / men;                   
-                     b = (b + c) / 2;
-                ai = i / 2;
-                b4 = 0, men = 0;
-                  for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         b4 += working_space[ssize + w];                             
-                        men +=1;                             
-                        }
-                 }
-                    b4 = b4 / men;
-                c4 = 0, men = 0;
-                  for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         c4 += working_space[ssize + w];                             
-                        men +=1;                                                          
-                       }
-                 }
-                   c4 = c4 / men;
-                d4 = 0, men = 0;
-                  for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         d4 += working_space[ssize + w];                             
-                        men +=1;                                                          
-                       }
-                 }                 
-                    d4 = d4 / men;
-                e4 = 0, men = 0;
-                  for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         e4 += working_space[ssize + w];                             
-                        men +=1;                             
-                        }
-                 }                 
-                   e4 = e4 / men;
-                b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
-                ai = i / 3;
-                b6 = 0, men = 0;
-                  for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         b6 += working_space[ssize + w];                             
-                        men +=1;
-                         }
-                 }
-                    b6 = b6 / men;
-                c6 = 0, men = 0;
-                  for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         c6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }
-                    c6 = c6 / men;
-                d6 = 0, men = 0;
-                  for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         d6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }
-                    d6 = d6 / men;
-                e6 = 0, men = 0;
-                  for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){                
-                      if (w >= 0 && w < ssize){
-                         e6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                
-                     }
-                    e6 = e6 / men;
-                f6 = 0, men = 0;
-                  for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         f6 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                
-                    f6 = f6 / men;
-                g6 = 0, men = 0;
-                  for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         g6 += working_space[ssize + w];                             
-                        men +=1;
-                         }
-                 }                
-                    g6 = g6 / men;
-                b6 = (b6 - 6 * c6 + 15 * d6 + 15 * e6 - 6 * f6 + g6) / 20;
-                ai = i / 4;
-                b8 = 0, men = 0;
-                  for (w = j - (int)(4 * ai) - bw; w <= j - (int)(4 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         b8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }
-                    b8 = b8 / men;
-                c8 = 0, men = 0;
-                  for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         c8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                
-                 c8 = c8 / men;
-                d8 = 0, men = 0;
-                  for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         d8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                
-                   d8 = d8 / men;
-                e8 = 0, men = 0;
-                  for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         e8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                
-                    e8 = e8 / men;
-                f8 = 0, men = 0;
-                  for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         f8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                                
-                    f8 = f8 / men;
-                g8 = 0, men = 0;
-                  for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         g8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                                
-                    g8 = g8 / men;
-                h8 = 0, men = 0;
-                  for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         h8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                
-                    h8 = h8 / men;
-                i8 = 0, men = 0;
-                  for (w = j + (int)(4 * ai) - bw; w <= j + (int)(4 * ai) + bw; w++){
-                      if (w >= 0 && w < ssize){
-                         i8 += working_space[ssize + w];                             
-                        men +=1;
-                         }                     
-                     }                
-                    i8 = i8 / men;
-                b8 = ( -b8 + 8 * c8 - 28 * d8 + 56 * e8 - 56 * f8 - 28 * g8 + 8 * h8 - i8)/70;
-                if (b < b8)
-                   b = b8;                                             
-                if (b < b6)
-                   b = b6;                               
-                if (b < b4)
-                   b = b4;
-                   if (b < a)
-                       av = b;
-                  working_space[j]=av;                  
-             }             
-          }
-          for (j = i; j < ssize - i; j++)
-             working_space[ssize + j] = working_space[j];
-              if (direction == kBackIncreasingWindow)
-                  i += 1;
-              else if(direction == kBackDecreasingWindow)
-                  i -= 1;
-       }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);               
-    }
-   
-    if (compton == kTRUE) {
-       for (i = 0, b2 = 0; i < ssize; i++){
-          b1 = b2;
-          a = working_space[i], b = spectrum[i];
-           j = i;
-          if (TMath::Abs(a - b) >= 1) {              
-                b1 = i - 1;
-                if (b1 < 0)
-                    b1 = 0;
-               yb1 = working_space[b1];
-               for (b2 = b1 + 1, c = 0, priz = 0; priz == 0 && b2 < ssize; b2++){
-                a = working_space[b2], b = spectrum[b2];                     
-                   c = c + b - yb1;
-                if (TMath::Abs(a - b) < 1) {                      
-                       priz = 1;
-                         yb2 = b;
-                    }
-               }
-             if (b2 == ssize)
-                b2 -= 1;
-             yb2 = working_space[b2];                  
-               if (yb1 <= yb2){
-                   for (j = b1, c = 0; j <= b2; j++){
-                   b = spectrum[j];                         
-                       c = c + b - yb1;
-                   }
-                   if (c > 1){
-                         c = (yb2 - yb1) / c;
-                        for (j = b1, d = 0; j <= b2 && j < ssize; j++){
-                      b = spectrum[j];                             
-                            d = d + b - yb1;
-                            a = c * d + yb1;
-                      working_space[ssize + j] = a;                              
-                        }
-                    }
-               }
-               
-               else{
-                   for (j = b2, c = 0; j >= b1; j--){
-                     b = spectrum[j];                        
-                          c = c + b - yb2;
-                   }
-                   if (c > 1){
-                         c = (yb1 - yb2) / c;
-                         for (j = b2, d = 0;j >= b1 && j >= 0; j--){
-                      b = spectrum[j];                          
-                             d = d + b - yb2;
-                            a = c * d + yb2;
-                      working_space[ssize + j] = a;                           
-                        }
-                   }
-               }
-               i=b2;
+   }
+
+   else if (filterOrder == kBackOrder4) {
+      do{
+         for (j = i; j < ssize - i; j++) {
+            if (smoothing == kFALSE){               
+               a = working_space[ssize + j];
+               b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
+               c = 0;
+               ai = i / 2;
+               c -= working_space[ssize + j - (int) (2 * ai)] / 6;
+               c += 4 * working_space[ssize + j - (int) ai] / 6;
+               c += 4 * working_space[ssize + j + (int) ai] / 6;
+               c -= working_space[ssize + j + (int) (2 * ai)] / 6;
+               if (b < c)
+                  b = c;
+               if (b < a)
+                  a = b;
+               working_space[j] = a;
             }
-       }       
-    }   
-   
-    for (j = 0; j < ssize; j++)
-       spectrum[j] = working_space[ssize + j];
+
+            else if (smoothing == kTRUE){
+               a = working_space[ssize + j];                                   
+               av = 0;
+               men = 0;
+               for (w = j - bw; w <= j + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     av += working_space[ssize + w];
+                     men +=1;
+                  }
+               }
+               av = av / men;
+               b = 0;
+               men = 0;
+               for (w = j - i - bw; w <= j - i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     b += working_space[ssize + w];
+                     men +=1;
+                  }
+               }                     
+               b = b / men;
+               c = 0;
+               men = 0;
+               for (w = j + i - bw; w <= j + i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     c += working_space[ssize + w];
+                     men +=1;
+                  }
+               }                     
+               c = c / men;                   
+               b = (b + c) / 2;
+               ai = i / 2;
+               b4 = 0, men = 0;
+               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     b4 += working_space[ssize + w];                             
+                     men +=1;                             
+                  }
+               }
+               b4 = b4 / men;
+               c4 = 0, men = 0;
+               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     c4 += working_space[ssize + w];                             
+                     men +=1;                                                          
+                  }
+               }
+               c4 = c4 / men;
+               d4 = 0, men = 0;
+               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     d4 += working_space[ssize + w];                             
+                     men +=1;                                                          
+                  }
+               }                 
+               d4 = d4 / men;
+               e4 = 0, men = 0;
+               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     e4 += working_space[ssize + w];                             
+                     men +=1;                             
+                  }
+               }                 
+               e4 = e4 / men;
+               b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
+               if (b < b4)
+                  b = b4;
+               if (b < a)
+                  av = b;
+               working_space[j]=av;                  
+            }              
+         } 
+         for (j = i; j < ssize - i; j++)
+            working_space[ssize + j] = working_space[j];
+         if (direction == kBackIncreasingWindow)
+            i+=1;
+         else if(direction == kBackDecreasingWindow)
+            i-=1;
+      }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
+   }
+
+   else if (filterOrder == kBackOrder6) {
+      do{
+         for (j = i; j < ssize - i; j++) {              
+            if (smoothing == kFALSE){                              
+               a = working_space[ssize + j];
+               b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
+               c = 0;
+               ai = i / 2;
+               c -= working_space[ssize + j - (int) (2 * ai)] / 6;
+               c += 4 * working_space[ssize + j - (int) ai] / 6;
+               c += 4 * working_space[ssize + j + (int) ai] / 6;
+               c -= working_space[ssize + j + (int) (2 * ai)] / 6;
+               d = 0;
+               ai = i / 3;
+               d += working_space[ssize + j - (int) (3 * ai)] / 20;
+               d -= 6 * working_space[ssize + j - (int) (2 * ai)] / 20;
+               d += 15 * working_space[ssize + j - (int) ai] / 20;
+               d += 15 * working_space[ssize + j + (int) ai] / 20;
+               d -= 6 * working_space[ssize + j + (int) (2 * ai)] / 20;
+               d += working_space[ssize + j + (int) (3 * ai)] / 20;
+               if (b < d)
+                  b = d;
+               if (b < c)
+                  b = c;
+               if (b < a)
+                  a = b;
+               working_space[j] = a;
+            }
+
+            else if (smoothing == kTRUE){
+               a = working_space[ssize + j];                                   
+               av = 0;
+               men = 0;
+               for (w = j - bw; w <= j + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     av += working_space[ssize + w];
+                     men +=1;
+                  }
+               }
+               av = av / men;
+               b = 0;
+               men = 0;
+               for (w = j - i - bw; w <= j - i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     b += working_space[ssize + w];
+                     men +=1;
+                  }
+               }                     
+               b = b / men;
+               c = 0;
+               men = 0;
+               for (w = j + i - bw; w <= j + i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     c += working_space[ssize + w];
+                     men +=1;
+                  }
+               }                     
+               c = c / men;                   
+               b = (b + c) / 2;
+               ai = i / 2;
+               b4 = 0, men = 0;
+               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     b4 += working_space[ssize + w];                             
+                     men +=1;                             
+                  }
+               }
+               b4 = b4 / men;
+               c4 = 0, men = 0;
+               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     c4 += working_space[ssize + w];                             
+                     men +=1;                                                          
+                  }
+               }
+               c4 = c4 / men;
+               d4 = 0, men = 0;
+               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     d4 += working_space[ssize + w];                             
+                     men +=1;                                                          
+                  }
+               }                 
+               d4 = d4 / men;
+               e4 = 0, men = 0;
+               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     e4 += working_space[ssize + w];                             
+                     men +=1;                             
+                  }
+               }                 
+               e4 = e4 / men;
+               b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
+               ai = i / 3;
+               b6 = 0, men = 0;
+               for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     b6 += working_space[ssize + w];                             
+                     men +=1;
+                  }
+               }
+               b6 = b6 / men;
+               c6 = 0, men = 0;
+               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     c6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }
+               c6 = c6 / men;
+               d6 = 0, men = 0;
+               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     d6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }
+               d6 = d6 / men;
+               e6 = 0, men = 0;
+               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){                
+                  if (w >= 0 && w < ssize){
+                     e6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                
+               }
+               e6 = e6 / men;
+               f6 = 0, men = 0;
+               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     f6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                
+               f6 = f6 / men;
+               g6 = 0, men = 0;
+               for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     g6 += working_space[ssize + w];                             
+                     men +=1;
+                  }
+               }                
+               g6 = g6 / men;
+               b6 = (b6 - 6 * c6 + 15 * d6 + 15 * e6 - 6 * f6 + g6) / 20;
+               if (b < b6)
+                  b = b6;                               
+               if (b < b4)
+                  b = b4;
+               if (b < a)
+                  av = b;
+               working_space[j]=av;                  
+            }              
+         }
+         for (j = i; j < ssize - i; j++)
+            working_space[ssize + j] = working_space[j];
+         if (direction == kBackIncreasingWindow)
+            i+=1;
+         else if(direction == kBackDecreasingWindow)
+            i-=1;
+      }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
+   }
+
+   else if (filterOrder == kBackOrder8) {
+      do{
+         for (j = i; j < ssize - i; j++) {
+            if (smoothing == kFALSE){               
+               a = working_space[ssize + j];
+               b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
+               c = 0;
+               ai = i / 2;
+               c -= working_space[ssize + j - (int) (2 * ai)] / 6;
+               c += 4 * working_space[ssize + j - (int) ai] / 6;
+               c += 4 * working_space[ssize + j + (int) ai] / 6;
+               c -= working_space[ssize + j + (int) (2 * ai)] / 6;
+               d = 0;
+               ai = i / 3;
+               d += working_space[ssize + j - (int) (3 * ai)] / 20;
+               d -= 6 * working_space[ssize + j - (int) (2 * ai)] / 20;
+               d += 15 * working_space[ssize + j - (int) ai] / 20;
+               d += 15 * working_space[ssize + j + (int) ai] / 20;
+               d -= 6 * working_space[ssize + j + (int) (2 * ai)] / 20;
+               d += working_space[ssize + j + (int) (3 * ai)] / 20;
+               e = 0;
+               ai = i / 4;
+               e -= working_space[ssize + j - (int) (4 * ai)] / 70;
+               e += 8 * working_space[ssize + j - (int) (3 * ai)] / 70;
+               e -= 28 * working_space[ssize + j - (int) (2 * ai)] / 70;
+               e += 56 * working_space[ssize + j - (int) ai] / 70;
+               e += 56 * working_space[ssize + j + (int) ai] / 70;
+               e -= 28 * working_space[ssize + j + (int) (2 * ai)] / 70;
+               e += 8 * working_space[ssize + j + (int) (3 * ai)] / 70;
+               e -= working_space[ssize + j + (int) (4 * ai)] / 70;
+               if (b < e)
+                  b = e;
+               if (b < d)
+                  b = d;
+               if (b < c)
+                  b = c;
+               if (b < a)
+                  a = b;
+               working_space[j] = a;
+            }
+
+            else if (smoothing == kTRUE){
+               a = working_space[ssize + j];                                   
+               av = 0;
+               men = 0;
+               for (w = j - bw; w <= j + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     av += working_space[ssize + w];
+                     men +=1;
+                  }
+               }
+               av = av / men;
+               b = 0;
+               men = 0;
+               for (w = j - i - bw; w <= j - i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     b += working_space[ssize + w];
+                     men +=1;
+                  }
+               }                     
+               b = b / men;
+               c = 0;
+               men = 0;
+               for (w = j + i - bw; w <= j + i + bw; w++){
+                  if ( w >= 0 && w < ssize){
+                     c += working_space[ssize + w];
+                     men +=1;
+                  }
+               }                     
+               c = c / men;                   
+               b = (b + c) / 2;
+               ai = i / 2;
+               b4 = 0, men = 0;
+               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     b4 += working_space[ssize + w];                             
+                     men +=1;                             
+                  }
+               }
+               b4 = b4 / men;
+               c4 = 0, men = 0;
+               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     c4 += working_space[ssize + w];                             
+                     men +=1;                                                          
+                  }
+               }
+               c4 = c4 / men;
+               d4 = 0, men = 0;
+               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     d4 += working_space[ssize + w];                             
+                     men +=1;                                                          
+                  }
+               }                 
+               d4 = d4 / men;
+               e4 = 0, men = 0;
+               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     e4 += working_space[ssize + w];                             
+                     men +=1;                             
+                  }
+               }                 
+               e4 = e4 / men;
+               b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
+               ai = i / 3;
+               b6 = 0, men = 0;
+               for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     b6 += working_space[ssize + w];                             
+                     men +=1;
+                  }
+               }
+               b6 = b6 / men;
+               c6 = 0, men = 0;
+               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     c6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }
+               c6 = c6 / men;
+               d6 = 0, men = 0;
+               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     d6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }
+               d6 = d6 / men;
+               e6 = 0, men = 0;
+               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){                
+                  if (w >= 0 && w < ssize){
+                     e6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                
+               }
+               e6 = e6 / men;
+               f6 = 0, men = 0;
+               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     f6 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                
+               f6 = f6 / men;
+               g6 = 0, men = 0;
+               for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     g6 += working_space[ssize + w];                             
+                     men +=1;
+                  }
+               }                
+               g6 = g6 / men;
+               b6 = (b6 - 6 * c6 + 15 * d6 + 15 * e6 - 6 * f6 + g6) / 20;
+               ai = i / 4;
+               b8 = 0, men = 0;
+               for (w = j - (int)(4 * ai) - bw; w <= j - (int)(4 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     b8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }
+               b8 = b8 / men;
+               c8 = 0, men = 0;
+               for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     c8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                
+               c8 = c8 / men;
+               d8 = 0, men = 0;
+               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     d8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                
+               d8 = d8 / men;
+               e8 = 0, men = 0;
+               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     e8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                
+               e8 = e8 / men;
+               f8 = 0, men = 0;
+               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     f8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                                
+               f8 = f8 / men;
+               g8 = 0, men = 0;
+               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     g8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                                
+               g8 = g8 / men;
+               h8 = 0, men = 0;
+               for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     h8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                
+               h8 = h8 / men;
+               i8 = 0, men = 0;
+               for (w = j + (int)(4 * ai) - bw; w <= j + (int)(4 * ai) + bw; w++){
+                  if (w >= 0 && w < ssize){
+                     i8 += working_space[ssize + w];                             
+                     men +=1;
+                  }                     
+               }                
+               i8 = i8 / men;
+               b8 = ( -b8 + 8 * c8 - 28 * d8 + 56 * e8 - 56 * f8 - 28 * g8 + 8 * h8 - i8)/70;
+               if (b < b8)
+                  b = b8;                                             
+               if (b < b6)
+                  b = b6;                               
+               if (b < b4)
+                  b = b4;
+               if (b < a)
+                  av = b;
+               working_space[j]=av;                  
+            }             
+         }
+         for (j = i; j < ssize - i; j++)
+            working_space[ssize + j] = working_space[j];
+         if (direction == kBackIncreasingWindow)
+            i += 1;
+         else if(direction == kBackDecreasingWindow)
+            i -= 1;
+      }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);               
+   }
+
+   if (compton == kTRUE) {
+      for (i = 0, b2 = 0; i < ssize; i++){
+         b1 = b2;
+         a = working_space[i], b = spectrum[i];
+         j = i;
+         if (TMath::Abs(a - b) >= 1) {              
+            b1 = i - 1;
+            if (b1 < 0)
+               b1 = 0;
+            yb1 = working_space[b1];
+            for (b2 = b1 + 1, c = 0, priz = 0; priz == 0 && b2 < ssize; b2++){
+               a = working_space[b2], b = spectrum[b2];                     
+               c = c + b - yb1;
+               if (TMath::Abs(a - b) < 1) {                      
+                  priz = 1;
+                  yb2 = b;
+               }
+            }
+            if (b2 == ssize)
+               b2 -= 1;
+            yb2 = working_space[b2];                  
+            if (yb1 <= yb2){
+               for (j = b1, c = 0; j <= b2; j++){
+                  b = spectrum[j];                         
+                  c = c + b - yb1;
+               }
+               if (c > 1){
+                  c = (yb2 - yb1) / c;
+                  for (j = b1, d = 0; j <= b2 && j < ssize; j++){
+                     b = spectrum[j];                             
+                     d = d + b - yb1;
+                     a = c * d + yb1;
+                     working_space[ssize + j] = a;                              
+                  }
+               }
+            }
+
+            else{
+               for (j = b2, c = 0; j >= b1; j--){
+                  b = spectrum[j];                        
+                  c = c + b - yb2;
+               }
+               if (c > 1){
+                  c = (yb1 - yb2) / c;
+                  for (j = b2, d = 0;j >= b1 && j >= 0; j--){
+                     b = spectrum[j];                          
+                     d = d + b - yb2;
+                     a = c * d + yb2;
+                     working_space[ssize + j] = a;                           
+                  }
+               }
+            }
+            i=b2;
+         }
+      }       
+   }   
+
+   for (j = 0; j < ssize; j++)
+      spectrum[j] = working_space[ssize + j];
    delete[]working_space;
    return 0;
 }
@@ -2102,9 +2104,8 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          b = a - nim;
          if(a + nim <= 0)
             a = 1;
-            
          else
-                   a = TMath::Sqrt(a + nim);            
+            a = TMath::Sqrt(a + nim);            
          b = b / a;
          b = TMath::Exp(b);                                                                                                      
          sm = sm + b;
@@ -2560,27 +2561,27 @@ Processing 13 (2003) 144. </span></p>
 // create matrix at*a and vector at*y
    for (i = 0; i < ssize; i++){
       lda = 0;
-       for (j = 0; j < ssize; j++){
-          ldb = working_space[j];
-           k = i + j;
-           if (k < ssize){
-               ldc = working_space[k];
-               lda = lda + ldb * ldc;
-           }
-       }
-       working_space[ssize + i] = lda;
-       lda = 0;
-       for (k = 0; k < ssize; k++){
-           l = k - i;
-           if (l >= 0){
-               ldb = working_space[l];
-               ldc = working_space[2 * ssize + k];
-               lda = lda + ldb * ldc;
-           }
-       }
-       working_space[3 * ssize + i]=lda;
-  }
-   
+      for (j = 0; j < ssize; j++){
+         ldb = working_space[j];
+         k = i + j;
+         if (k < ssize){
+            ldc = working_space[k];
+            lda = lda + ldb * ldc;
+         }
+      }
+      working_space[ssize + i] = lda;
+      lda = 0;
+      for (k = 0; k < ssize; k++){
+         l = k - i;
+         if (l >= 0){
+            ldb = working_space[l];
+            ldc = working_space[2 * ssize + k];
+            lda = lda + ldb * ldc;
+         }
+      }
+      working_space[3 * ssize + i]=lda;
+   }
+
 // move vector at*y
    for (i = 0; i < ssize; i++){
        working_space[2 * ssize + i] = working_space[3 * ssize + i];
@@ -2615,12 +2616,12 @@ Processing 13 (2003) 144. </span></p>
                
                   else
                      ldc = working_space[i];               
-                      lda = lda + ldb * ldc;
-                   }              
+                  lda = lda + ldb * ldc;
+               }              
                ldb = working_space[2 * ssize + i];
                if (lda != 0)
                   lda = ldb / lda;
-            
+
                else
                   lda = 0;
                ldb = working_space[i];
@@ -3478,42 +3479,42 @@ experimental data, NIM A 405 (1998) 139.</span></p>
             working_space[i] = TMath::Power(working_space[i], boost);
       }       
       for (lindex = 0; lindex < numberIterations; lindex++) {
-           for (i = 0; i <= ssize - lh_gold; i++){
+         for (i = 0; i <= ssize - lh_gold; i++){
             lda = 0;
-               if (working_space[i] > 0){//x[i]
+            if (working_space[i] > 0){//x[i]
                for (j = i; j < i + lh_gold; j++){
                   ldb = working_space[2 * ssize + j];//y[j]
                   if (j < ssize){
-                    if (ldb > 0){//y[j]
-                       kmax = j;
-                       if (kmax > lh_gold - 1)
-                          kmax = lh_gold - 1;
-                       kmin = j + lh_gold - ssize;
-                       if (kmin < 0)
-                          kmin = 0;
-                       ldc = 0;
-                       for (k = kmax; k >= kmin; k--){
-                          ldc += working_space[ssize + k] * working_space[j - k];//h[k]*x[j-k]
-                       }
-                       if (ldc > 0)
-                          ldb = ldb / ldc;
-                          
-                       else
-                          ldb = 0;
-                    }
-                    ldb = ldb * working_space[ssize + j - i];//y[j]*h[j-i]/suma(h[j][k]x[k])
-                 }
-                 lda += ldb;
-              }
-              lda = lda * working_space[i];
-           }
-           working_space[3 * ssize + i] = lda;
-        }
-        for (i = 0; i < ssize; i++)
+                     if (ldb > 0){//y[j]
+                        kmax = j;
+                        if (kmax > lh_gold - 1)
+                           kmax = lh_gold - 1;
+                        kmin = j + lh_gold - ssize;
+                        if (kmin < 0)
+                           kmin = 0;
+                        ldc = 0;
+                        for (k = kmax; k >= kmin; k--){
+                           ldc += working_space[ssize + k] * working_space[j - k];//h[k]*x[j-k]
+                        }
+                        if (ldc > 0)
+                           ldb = ldb / ldc;
+
+                        else
+                           ldb = 0;
+                     }
+                     ldb = ldb * working_space[ssize + j - i];//y[j]*h[j-i]/suma(h[j][k]x[k])
+                  }
+                  lda += ldb;
+               }
+               lda = lda * working_space[i];
+            }
+            working_space[3 * ssize + i] = lda;
+         }
+         for (i = 0; i < ssize; i++)
             working_space[i] = working_space[3 * ssize + i];
       }
    }
-   
+
 //shift resulting spectrum
    for (i = 0; i < ssize; i++) {
       lda = working_space[i];
@@ -4507,43 +4508,43 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
    }
-           
+
    if(threshold<=0 || threshold>=100){
       Error("SearchHighRes", "Invalid threshold, must be positive and less than 100");
       return 0;
    }
-   
+
    j = (int) (5.0 * sigma + 0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchHighRes", "Too large sigma");
       return 0;
    }
-   
+
    if (markov == true) {
       if (averWindow <= 0) {
          Error("SearchHighRes", "Averanging window must be positive");
          return 0;
       }
    }
-         
+
    if(backgroundRemove == true){
       if(ssize < 2 * numberIterations + 1){   
          Error("SearchHighRes", "Too large clipping window");
          return 0;
       }
    }
-   
+
    i = (int)(7 * sigma + 0.5);
    i = 2 * i;
    double *working_space = new double [7 * (ssize + i)];    
    for (j=0;j<7 * (ssize + i);j++) working_space[j] = 0;
-      for(i = 0; i < size_ext; i++){
+   for(i = 0; i < size_ext; i++){
       if(i < shift)
          working_space[i + size_ext] = source[0];
-         
+
       else if(i >= ssize + shift)
          working_space[i + size_ext] = source[ssize - 1];
-         
+
       else
          working_space[i + size_ext] = source[i - shift];
    }
@@ -4551,11 +4552,11 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       for(i = 1; i <= numberIterations; i++){
          for(j = i; j < size_ext - i; j++){
             a = working_space[size_ext + j];
-                   b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
+            b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
             if(b < a)
-                a = b;
-                   
-             working_space[j]=a;
+               a = b;
+
+            working_space[j]=a;
          }
          for(j = i; j < size_ext - i; j++)
             working_space[size_ext + j] = working_space[j];
@@ -4563,10 +4564,10 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       for(j = 0;j < size_ext; j++){
          if(j < shift)
             working_space[size_ext + j] = source[0] - working_space[size_ext + j];
-            
+
          else if(j >= ssize + shift)
             working_space[size_ext + j] = source[ssize - 1] - working_space[size_ext + j];
-            
+
          else{
             working_space[size_ext + j] = source[j - shift] - working_space[size_ext + j];
          }
@@ -4575,7 +4576,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    for(i = 0; i < size_ext; i++){
       working_space[i + 6*size_ext] = working_space[i + size_ext];
    }
-  
+
    if(markov == true){
       for(j = 0; j < size_ext; j++)
          working_space[2 * size_ext + j] = working_space[size_ext + j];
@@ -4590,7 +4591,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          delete [] working_space;
          return 0;
       }
-         
+
       nom = 1;
       working_space[xmin] = 1;
       for(i = xmin; i < xmax; i++){
@@ -4600,37 +4601,37 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          for(l = 1; l <= averWindow; l++){
             if((i + l) > xmax)
                a = working_space[2 * size_ext + xmax] / maxch;
-               
+
             else
                a = working_space[2 * size_ext + i + l] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a=1;
-               
+
             else
                a = TMath::Sqrt(a + nip);            
-               
+
             b = b / a;
             b = TMath::Exp(b);            
             sp = sp + b;
             if((i - l + 1) < xmin)
                a = working_space[2 * size_ext + xmin] / maxch;
-               
+
             else
                a = working_space[2 * size_ext + i - l + 1] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);                        
-                   sm = sm + b;
-                }
+            sm = sm + b;
+         }
          a = sp / sm;
          a = working_space[i + 1] = working_space[i] * a;
          nom = nom + a;
@@ -4673,7 +4674,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       lda = j;
       if(lda != 0)
          lh_gold = i + 1;
-         
+
       working_space[i] = lda;
       area = area + lda;
       if(lda > maximum){
@@ -4687,8 +4688,8 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 //create matrix at*a(vector b)
    i = lh_gold - 1;
    if(i > size_ext)
-     i = size_ext;
-     
+      i = size_ext;
+
    imin = -i,imax = i;
    for(i = imin; i <= imax; i++){
       lda = 0;
@@ -4698,7 +4699,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       jmax = lh_gold - 1 - i;
       if(jmax > (lh_gold - 1))
          jmax = lh_gold - 1;
-         
+
       for(j = jmin;j <= jmax; j++){
          ldb = working_space[j];
          ldc = working_space[i + j];
@@ -4718,7 +4719,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             ldc = working_space[2 * size_ext + k];
             lda = lda + ldb * ldc;
          }
-         
+
       }
       working_space[4 * size_ext + i - imin] = lda;
    }
@@ -4736,12 +4737,12 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             jmin = lh_gold - 1;
             if(jmin > i)
                jmin = i;
-               
+
             jmin = -jmin;
             jmax = lh_gold - 1;
             if(jmax > (size_ext - 1 - i))
                jmax=size_ext-1-i;
-               
+
             for(j = jmin; j <= jmax; j++){
                ldb = working_space[j + lh_gold - 1 + size_ext];
                ldc = working_space[i + j];
@@ -4750,10 +4751,10 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             ldb = working_space[2 * size_ext + i];
             if(lda != 0)
                lda = ldb / lda;
-                  
+
             else
                lda = 0;
-                  
+
             ldb = working_space[i];
             lda = lda * ldb;
             working_space[3 * size_ext + i] = lda;
@@ -4782,7 +4783,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    }
    lda=1;
    if(lda>threshold)
-       lda=threshold;
+      lda=threshold;
    lda=lda/100;
 //searching for peaks in deconvolved spectrum
    for(i = 1; i < size_ext - 1; i++){
@@ -4796,14 +4797,14 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                a = a / b;
                if(a < 0)
                   a = 0;
-                     
+
                if(a >= ssize)
                   a = ssize - 1;
                if(peak_index == 0){
-                 fPositionX[0] = a;
-                 peak_index = 1; 
+                  fPositionX[0] = a;
+                  peak_index = 1; 
                }
-               
+
                else{
                   for(j = 0, priz = 0; j < peak_index && priz == 0; j++){
                      if(working_space[6 * size_ext + shift + (int)a] > working_space[6 * size_ext + shift + (int)fPositionX[j]])   
@@ -4814,7 +4815,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
                         fPositionX[j] = a;   
                      }
                   }
-                  
+
                   else{
                      for(k = peak_index; k >= j; k--){
                         if(k < fMaxPeaks){                        

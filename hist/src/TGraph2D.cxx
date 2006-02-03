@@ -655,14 +655,14 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 
    npar = f2->GetNpar();
    if (npar <= 0) {
-     Error("Fit", "function %s has illegal number of parameters = %d", f2->GetName(), npar);
-     return 0;
+      Error("Fit", "function %s has illegal number of parameters = %d", f2->GetName(), npar);
+      return 0;
    }
 
    // Check that function has same dimension as graph
    if (f2->GetNdim() != 2) {
-     Error("Fit","function %s is not 2-D", f2->GetName());
-     return 0;
+      Error("Fit","function %s is not 2-D", f2->GetName());
+      return 0;
    }
    //}
    Double_t *arglist = new Double_t[100];

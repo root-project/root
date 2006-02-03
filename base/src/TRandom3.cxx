@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.6 2004/11/24 17:49:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.7 2005/06/21 10:45:42 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -77,42 +77,42 @@ Double_t TRandom3::Rndm(Int_t)
 //  Produces uniformly-distributed floating points in [0,1]
 //  Method: Mersenne Twistor
 
-    UInt_t y;
+   UInt_t y;
 
-    const Int_t  kM = 397;
-    const Int_t  kN = 624;
-    const UInt_t kTemperingMaskB =  0x9d2c5680;
-    const UInt_t kTemperingMaskC =  0xefc60000;
-    const UInt_t kUpperMask =       0x80000000;
-    const UInt_t kLowerMask =       0x7fffffff;
-    const UInt_t kMatrixA =         0x9908b0df;
+   const Int_t  kM = 397;
+   const Int_t  kN = 624;
+   const UInt_t kTemperingMaskB =  0x9d2c5680;
+   const UInt_t kTemperingMaskC =  0xefc60000;
+   const UInt_t kUpperMask =       0x80000000;
+   const UInt_t kLowerMask =       0x7fffffff;
+   const UInt_t kMatrixA =         0x9908b0df;
 
-    if (fCount624 >= kN) {
+   if (fCount624 >= kN) {
       register Int_t i;
 
       for (i=0; i < kN-kM; i++) {
-        y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
-        fMt[i] = fMt[i+kM] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+         y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
+         fMt[i] = fMt[i+kM] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
       }
 
       for (   ; i < kN-1    ; i++) {
-        y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
-        fMt[i] = fMt[i+kM-kN] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+         y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
+         fMt[i] = fMt[i+kM-kN] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
       }
 
       y = (fMt[kN-1] & kUpperMask) | (fMt[0] & kLowerMask);
       fMt[kN-1] = fMt[kM-1] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
       fCount624 = 0;
-    }
+   }
 
-    y = fMt[fCount624++];
-    y ^=  (y >> 11);
-    y ^= ((y << 7 ) & kTemperingMaskB );
-    y ^= ((y << 15) & kTemperingMaskC );
-    y ^=  (y >> 18);
+   y = fMt[fCount624++];
+   y ^=  (y >> 11);
+   y ^= ((y << 7 ) & kTemperingMaskB );
+   y ^= ((y << 15) & kTemperingMaskC );
+   y ^=  (y >> 18);
 
-    if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
-    return Rndm();
+   if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
+   return Rndm();
 }
 
 //______________________________________________________________________________

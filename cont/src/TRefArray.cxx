@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.21 2005/11/16 20:03:58 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.22 2005/11/28 10:28:56 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -214,14 +214,14 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
 
    if (!obj) return 0;
    if (Last()) {    // <---------- This is to take in account "empty" TRefArray's
-       Int_t i;
-       for (i = 0; i < fSize; i++)
-          if (!fUIDs[i]) {         // Add object at position i
-             fUIDs[i] = TProcessID::AssignID(obj);
-             fLast = TMath::Max(i, GetAbsLast());
-             Changed();
-             return i+fLowerBound;
-          }
+      Int_t i;
+      for (i = 0; i < fSize; i++)
+         if (!fUIDs[i]) {         // Add object at position i
+            fUIDs[i] = TProcessID::AssignID(obj);
+            fLast = TMath::Max(i, GetAbsLast());
+            Changed();
+            return i+fLowerBound;
+         }
    }
    AddLast(obj);
    return GetLast();
@@ -317,7 +317,7 @@ void TRefArray::Expand(Int_t newSize)
          memset(&fUIDs[fSize],0,(newSize-fSize)*sizeof(UInt_t));
       }
    } else {
-     fUIDs = 0;
+      fUIDs = 0;
    }
    if (temp) delete [] temp;
    fSize = newSize;
@@ -358,12 +358,12 @@ void TRefArray::Streamer(TBuffer &R__b)
       fPID = TProcessID::ReadProcessID(pidf,file);
       if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
       for (Int_t i = 0; i < nobjects; i++) {
-          R__b >> fUIDs[i];
-          if (fUIDs[i] != 0) fLast = i;
-          if (gDebug > 1) {
-             printf(" %d",fUIDs[i]);
-             if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
-          }
+         R__b >> fUIDs[i];
+         if (fUIDs[i] != 0) fLast = i;
+         if (gDebug > 1) {
+            printf(" %d",fUIDs[i]);
+            if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
+         }
       }
       Changed();
       R__b.CheckByteCount(R__s, R__c,TRefArray::IsA());
@@ -379,11 +379,11 @@ void TRefArray::Streamer(TBuffer &R__b)
       if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
 
       for (Int_t i = 0; i < nobjects; i++) {
-          R__b << fUIDs[i];
-          if (gDebug > 1) {
-             printf(" %d",fUIDs[i]);
-             if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
-          }
+         R__b << fUIDs[i];
+         if (gDebug > 1) {
+            printf(" %d",fUIDs[i]);
+            if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
+         }
       }
       R__b.SetByteCount(R__c, kTRUE);
    }
@@ -489,13 +489,13 @@ Int_t TRefArray::IndexOf(const TObject *obj) const
 
    Int_t i;
    if (obj) {
-     for (i = 0; i < fSize; i++)
-        if (fUIDs[i] && fPID->GetObjectWithID(fUIDs[i]) == obj)
-           return i+fLowerBound;
+      for (i = 0; i < fSize; i++)
+         if (fUIDs[i] && fPID->GetObjectWithID(fUIDs[i]) == obj)
+            return i+fLowerBound;
    } else {    // Look for the first empty slot
-     for (i = 0; i < fSize; i++)
-        if (!fUIDs[i])
-           return i+fLowerBound;
+      for (i = 0; i < fSize; i++)
+         if (!fUIDs[i])
+            return i+fLowerBound;
    }
 
    return fLowerBound-1;

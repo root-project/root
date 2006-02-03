@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.34 2005/09/29 09:15:53 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.35 2005/11/16 20:11:59 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -2399,74 +2399,74 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
       if (pclass)
       {
-          if (0) printf("Variable [%s] exists!\n", parentName.Data());
+         if (0) printf("Variable [%s] exists!\n", parentName.Data());
 
-          // If it's back in the first call of the function, return immediatly
-          if (iter == 0) return pclass;
+         // If it's back in the first call of the function, return immediatly
+         if (iter == 0) return pclass;
 
-          if (0) printf("Trying data member [%s] of class [%s] ...\n",
-                  memberName.Data(), pclass->GetName());
+         if (0) printf("Trying data member [%s] of class [%s] ...\n",
+            memberName.Data(), pclass->GetName());
 
-          // Check if it's a member
-          TDataMember *dmptr = 0; //pclass->GetDataMember(memberName.Data());
-          TList  *dlist = pclass->GetListOfDataMembers();
-          TIter   next(pclass->GetListOfAllPublicDataMembers());
-          while ((dmptr = (TDataMember *) next())) {
-             if (memberName == dmptr->GetName()) break;
-          }
-          delete dlist;
-          if (dmptr)
-          {
-              if (0) printf("It's a member!\n");
+         // Check if it's a member
+         TDataMember *dmptr = 0; //pclass->GetDataMember(memberName.Data());
+         TList  *dlist = pclass->GetListOfDataMembers();
+         TIter   next(pclass->GetListOfAllPublicDataMembers());
+         while ((dmptr = (TDataMember *) next())) {
+            if (memberName == dmptr->GetName()) break;
+         }
+         delete dlist;
+         if (dmptr)
+         {
+            if (0) printf("It's a member!\n");
 
-              TString returnName = dmptr->GetTypeName();
-//              if (returnName[returnName.Length()-1] == '*')
-//                  printf("It's a pointer!\n");
+            TString returnName = dmptr->GetTypeName();
+            //              if (returnName[returnName.Length()-1] == '*')
+            //                  printf("It's a pointer!\n");
 
-              TClass *mclass = new TClass(returnName.Data());
-              return mclass;
-          }
-
-
-          // Check if it's a proto: must have ()
-          // This might not be too safe to use   :(
-          char *parentesis_ptr = (char*)strrchr(memberName.Data(), '(');
-          if (parentesis_ptr) *parentesis_ptr = 0;
+            TClass *mclass = new TClass(returnName.Data());
+            return mclass;
+         }
 
 
-          if (0) printf("Trying method [%s] of class [%s] ...\n",
-                  memberName.Data(), pclass->GetName());
+         // Check if it's a proto: must have ()
+         // This might not be too safe to use   :(
+         char *parentesis_ptr = (char*)strrchr(memberName.Data(), '(');
+         if (parentesis_ptr) *parentesis_ptr = 0;
 
-          // Check if it's a method
-          TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data());
-          TList  *mlist = pclass->GetListOfAllPublicMethods();
-          next = mlist;
-          while ((mptr = (TMethod *) next())) {
-             if (strcmp(memberName.Data(),mptr->GetName())==0) break;
-          }
-          delete mlist;
 
-          if (mptr)
-          {
-              TString returnName = mptr->GetReturnTypeName();
+         if (0) printf("Trying method [%s] of class [%s] ...\n",
+            memberName.Data(), pclass->GetName());
 
-              if (0) printf("It's a method called [%s] with return type [%s]\n",
-                      memberName.Data(), returnName.Data());
+         // Check if it's a method
+         TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data());
+         TList  *mlist = pclass->GetListOfAllPublicMethods();
+         next = mlist;
+         while ((mptr = (TMethod *) next())) {
+            if (strcmp(memberName.Data(),mptr->GetName())==0) break;
+         }
+         delete mlist;
 
-              // This will handle the methods that returns a pointer to a class
-              if (returnName[returnName.Length()-1] == '*')
-              {
-                  returnName[returnName.Length()-1] = 0;
-                  fVarIsPointer = kTRUE;
-              }
-              else
-              {
-                  fVarIsPointer = kFALSE;
-              }
+         if (mptr)
+         {
+            TString returnName = mptr->GetReturnTypeName();
 
-              TClass *mclass = new TClass(returnName.Data());
-              return mclass;
-          }
+            if (0) printf("It's a method called [%s] with return type [%s]\n",
+               memberName.Data(), returnName.Data());
+
+            // This will handle the methods that returns a pointer to a class
+            if (returnName[returnName.Length()-1] == '*')
+            {
+               returnName[returnName.Length()-1] = 0;
+               fVarIsPointer = kTRUE;
+            }
+            else
+            {
+               fVarIsPointer = kFALSE;
+            }
+
+            TClass *mclass = new TClass(returnName.Data());
+            return mclass;
+         }
       }
    }
 
@@ -2478,7 +2478,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    // not found...
    if (!varName_exists) {
       cerr << endl << "variable " << dblquote(varName) << " not defined."
-          << endl;
+         << endl;
       return 0;                 //* RETURN *//
    }
 
@@ -2498,14 +2498,14 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    // frodo: I shouldn't have to do this, but for some reason now I have to
    //        otherwise the varptr->[TAB] won't work    :(
    if (className[className.Length()-1] == '*')
-       className[className.Length()-1] = 0;
+      className[className.Length()-1] = 0;
 
    if (className.Length() < 1) {
       // this will happen if "varName" is a fundamental type (as opposed to class type).
       // or a pointer to a pointer.
       // or a function pointer.
       cerr << endl << "problem determining class of " << dblquote(varName)
-          << endl;
+         << endl;
       return 0;                 //* RETURN *//
    }
 
@@ -2515,20 +2515,20 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    //
 
 
-//   Bool_t varIsPointer = className[className.Length() - 1] == '*';
+   //   Bool_t varIsPointer = className[className.Length() - 1] == '*';
 
    //printf("Context is %i, fContext is %i, pointer is %i\n", context, fContext, fVarIsPointer);
 
    if (fVarIsPointer &&
-       (context == kCXX_DirectMember || context == kCXX_DirectProto)) {
-      // user is using operator.() instead of operator->()
-      // ==>
-      //      1. we are in wrong context.
-      //      2. user is lazy
-      //      3. or maybe confused
+      (context == kCXX_DirectMember || context == kCXX_DirectProto)) {
+         // user is using operator.() instead of operator->()
+         // ==>
+         //      1. we are in wrong context.
+         //      2. user is lazy
+         //      3. or maybe confused
 
-      // 1. fix the context
-      switch (context) {
+         // 1. fix the context
+         switch (context) {
       case kCXX_DirectMember:
          context = kCXX_IndirectMember;
          break;
@@ -2538,28 +2538,28 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
       default:
          assert(0);
          break;
-      }
+         }
 
-      // 2. fix the operator.
-      int i;
-      for (i = *fpLoc; fBuf[i] != '.'; i -= 1) {
-      }
-      int loc = i;
-      for (i = strlen(fBuf); i >= loc; i -= 1) {
-         fBuf[i + 1] = fBuf[i];
-      }
-      fBuf[loc] = '-';
-      fBuf[loc + 1] = '>';
-      *fpLoc += 1;
+         // 2. fix the operator.
+         int i;
+         for (i = *fpLoc; fBuf[i] != '.'; i -= 1) {
+         }
+         int loc = i;
+         for (i = strlen(fBuf); i >= loc; i -= 1) {
+            fBuf[i + 1] = fBuf[i];
+         }
+         fBuf[loc] = '-';
+         fBuf[loc + 1] = '>';
+         *fpLoc += 1;
 
-      // 3. inform the user.
-      cerr << endl << dblquote(varName) <<
-          " is of pointer type. Use this operator: ->" << endl;
+         // 3. inform the user.
+         cerr << endl << dblquote(varName) <<
+            " is of pointer type. Use this operator: ->" << endl;
    }
 
    if (context == kCXX_IndirectMember || context == kCXX_IndirectProto) {
       if (fVarIsPointer) {
-// frodo: This part no longer makes sense...
+         // frodo: This part no longer makes sense...
          className.Chop();      // remove the '*'
 
          if (className[className.Length() - 1] == '*') {
@@ -2632,15 +2632,15 @@ int TTabCom::ParseReverse(const char *var_str, int start)
    // Returns the place in the string where to put the \0, starting the search
    // from "start"
    //
-    int end = 0;
-    if (start > (int)strlen(var_str)) start = strlen(var_str);
+   int end = 0;
+   if (start > (int)strlen(var_str)) start = strlen(var_str);
 
-    for (int i = start; i > 0; i--)
-    {
-        if (var_str[i] == '.') return i;
-        if (var_str[i] == '>' && i > 0 && var_str[i-1] == '-') return i-1;
-    }
+   for (int i = start; i > 0; i--)
+   {
+      if (var_str[i] == '.') return i;
+      if (var_str[i] == '>' && i > 0 && var_str[i-1] == '-') return i-1;
+   }
 
-    return end;
+   return end;
 }
 

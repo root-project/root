@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.80 2006/01/30 09:01:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.81 2006/02/01 18:54:51 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -172,9 +172,11 @@ TDirectory::~TDirectory()
 
    TDirectory *mom = GetMotherDir();
 
-   if (mom!=0)
-     if (!mom->TestBit(TDirectory::kCloseDirectory))
-        mom->GetList()->Remove(this);
+   if (mom!=0) {
+      if (!mom->TestBit(TDirectory::kCloseDirectory)) {
+         mom->GetList()->Remove(this);
+      }
+   }
 
    if (gDebug)
       Info("~TDirectory", "dtor called for %s", GetName());

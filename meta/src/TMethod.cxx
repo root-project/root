@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.6 2004/03/12 08:53:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.7 2005/11/16 20:10:45 pcanal Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -264,8 +264,8 @@ TDataMember *TMethod::FindDataMember()
       }
    }
 
-    //if nothing found - return null -pointer:
-    return 0;
+   //if nothing found - return null -pointer:
+   return 0;
 }
 
 //______________________________________________________________________________

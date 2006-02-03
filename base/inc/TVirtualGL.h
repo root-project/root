@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.25 2006/01/20 10:34:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.26 2006/01/26 11:59:41 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    virtual void     MakeCurrent(Window_t wind, ULong_t ctx) = 0;
    virtual void     SwapBuffers(Window_t wind) = 0;
 
-   ClassDef(TVirtualGLImp,0);
+   ClassDef(TVirtualGLImp,0);  // Interface for a GL concrete Implementation
 };
 
 
@@ -166,7 +166,7 @@ public:
 
    static TVirtualGL *&Instance();
 
-   ClassDef(TVirtualGL,0);
+   ClassDef(TVirtualGL,0);  // Interface for OpenGL 
 };
 
 #ifndef __CINT__
@@ -183,7 +183,7 @@ public:
    virtual ~TVirtualGLPainter(){}
    virtual void Paint() = 0;
 
-   ClassDef(TVirtualGLPainter, 0)
+   ClassDef(TVirtualGLPainter, 0); // Interface for OpenGL painter
 };
 
 class TGLManager : public TNamed {
@@ -234,7 +234,7 @@ private:
    TGLManager(const TGLManager &);
    TGLManager &operator = (const TGLManager &);
 
-   ClassDef(TGLManager, 0)
+   ClassDef(TGLManager, 0); // Interface the OpenGL manager.
 };
 
 #ifndef __CINT__

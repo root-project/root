@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.16 2005/11/03 20:52:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.17 2005/12/10 11:17:22 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -247,30 +247,30 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
    }
    // if the output is not given, create it from the input
    if (!output)
-	output = (TLimitDataSource*)(input->Clone());
+   output = (TLimitDataSource*)(input->Clone());
    // if there are no systematics, just returns the input as "fluctuated" output
    if ((fgSystNames->GetSize() <= 0)&&(!stat)) {
       return 0;
    }
    // if there are only stat, just fluctuate stats.
    if (fgSystNames->GetSize() <= 0) {
-     output->SetOwner();
-     for (Int_t channel = 0; channel <= input->GetSignal()->GetLast(); channel++) {
-        TH1 *newsignal = (TH1*)(output->GetSignal()->At(channel));
-        TH1 *oldsignal = (TH1*)(input->GetSignal()->At(channel));
-        if(stat)
-           for(int i=1; i<=newsignal->GetNbinsX(); i++) {
-              newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
-           }
-        newsignal->SetDirectory(0);
-        TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
-        TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
-        if(stat)
-           for(int i=1; i<=newbackground->GetNbinsX(); i++)
-              newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
-        newbackground->SetDirectory(0);
-     }
-        return 1;
+      output->SetOwner();
+      for (Int_t channel = 0; channel <= input->GetSignal()->GetLast(); channel++) {
+         TH1 *newsignal = (TH1*)(output->GetSignal()->At(channel));
+         TH1 *oldsignal = (TH1*)(input->GetSignal()->At(channel));
+         if(stat)
+            for(int i=1; i<=newsignal->GetNbinsX(); i++) {
+               newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
+            }
+            newsignal->SetDirectory(0);
+            TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
+            TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
+            if(stat)
+               for(int i=1; i<=newbackground->GetNbinsX(); i++)
+                  newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
+            newbackground->SetDirectory(0);
+      }
+      return 1;
    }
    // Find a choice for the random variation and
    // re-toss all random numbers if any background or signal

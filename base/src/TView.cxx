@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.29 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.30 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -691,9 +691,9 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kKeyPress :
-       fChanged = kTRUE;
-       MoveViewCommand(Char_t(px), py);
-       break;
+      fChanged = kTRUE;
+      MoveViewCommand(Char_t(px), py);
+      break;
    case kMouseMotion:
       gPad->SetCursor(kRotate);
       break;
@@ -722,7 +722,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
 
       // if outline isn't set, make it look like a cube
       if(!fOutline)
-          SetOutlineToCube();
+         SetOutlineToCube();
       break;
 
    case kButton1Motion:
@@ -802,8 +802,8 @@ void TView::FindNormal(Double_t x, Double_t  y, Double_t z, Double_t &zn)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    zn = x*(fTN[1] * fTN[6] - fTN[2] * fTN[5]) + y*(fTN[2] * fTN[4] -
-            fTN[0] * fTN[6]) + z*(fTN[0] * fTN[5] - fTN[1] * fTN[4]);
+   zn = x*(fTN[1] * fTN[6] - fTN[2] * fTN[5]) + y*(fTN[2] * fTN[4] -
+           fTN[0] * fTN[6]) + z*(fTN[0] * fTN[5] - fTN[1] * fTN[4]);
 }
 
 //______________________________________________________________________________
@@ -822,55 +822,55 @@ void TView::FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iphi1
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t iphi[2], i, k;
-    Double_t dphi;
-    Double_t x1, x2, z1, z2, phi1, phi2;
+   Int_t iphi[2], i, k;
+   Double_t dphi;
+   Double_t x1, x2, z1, z2, phi1, phi2;
 
-    /* Parameter adjustments */
-    --aphi;
+   /* Parameter adjustments */
+   --aphi;
 
-    if (aphi[kphi + 1] == aphi[1]) aphi[kphi + 1] += 360;
-    dphi = TMath::Abs(aphi[kphi + 1] - aphi[1]);
-    if (dphi != 360) {
-        aphi[kphi + 2] = (aphi[1] + aphi[kphi + 1]) / (float)2. + 180;
-        aphi[kphi + 3] = aphi[1] + 360;
-        kphi += 2;
-    }
+   if (aphi[kphi + 1] == aphi[1]) aphi[kphi + 1] += 360;
+   dphi = TMath::Abs(aphi[kphi + 1] - aphi[1]);
+   if (dphi != 360) {
+      aphi[kphi + 2] = (aphi[1] + aphi[kphi + 1]) / (float)2. + 180;
+      aphi[kphi + 3] = aphi[1] + 360;
+      kphi += 2;
+   }
 
-//*-*-       F I N D   C R I T I C A L   S E C T O R S
+   //*-*-       F I N D   C R I T I C A L   S E C T O R S
 
-    k = 0;
-    for (i = 1; i <= kphi; ++i) {
-        phi1 = kRad*aphi[i];
-        phi2 = kRad*aphi[i + 1];
-        x1 = fTN[0]*TMath::Cos(phi1) + fTN[1]*TMath::Sin(phi1);
-        x2 = fTN[0]*TMath::Cos(phi2) + fTN[1]*TMath::Sin(phi2);
-        if (x1 >= 0 && x2 > 0) continue;
-        if (x1 <= 0 && x2 < 0) continue;
-        ++k;
-        if (k == 3) break;
-        iphi[k - 1] = i;
-    }
-    if (k != 2) {
-       Error("FindPhiSectors", "something strange: num. of critical sector not equal 2");
-       iphi1 = 1;
-       iphi2 = 2;
-       return;
-    }
+   k = 0;
+   for (i = 1; i <= kphi; ++i) {
+      phi1 = kRad*aphi[i];
+      phi2 = kRad*aphi[i + 1];
+      x1 = fTN[0]*TMath::Cos(phi1) + fTN[1]*TMath::Sin(phi1);
+      x2 = fTN[0]*TMath::Cos(phi2) + fTN[1]*TMath::Sin(phi2);
+      if (x1 >= 0 && x2 > 0) continue;
+      if (x1 <= 0 && x2 < 0) continue;
+      ++k;
+      if (k == 3) break;
+      iphi[k - 1] = i;
+   }
+   if (k != 2) {
+      Error("FindPhiSectors", "something strange: num. of critical sector not equal 2");
+      iphi1 = 1;
+      iphi2 = 2;
+      return;
+   }
 
-//*-*-       F I N D   O R D E R   O F   C R I T I C A L   S E C T O R S
+   //*-*-       F I N D   O R D E R   O F   C R I T I C A L   S E C T O R S
 
-    phi1 = kRad*(aphi[iphi[0]] + aphi[iphi[0] + 1]) / (float)2.;
-    phi2 = kRad*(aphi[iphi[1]] + aphi[iphi[1] + 1]) / (float)2.;
-    z1 = fTN[8]*TMath::Cos(phi1) + fTN[9]*TMath::Sin(phi1);
-    z2 = fTN[8]*TMath::Cos(phi2) + fTN[9]*TMath::Sin(phi2);
-    if (z1 <= z2 && iopt == 1 || z1 > z2 && iopt == 2) {
-        iphi1 = iphi[0];
-        iphi2 = iphi[1];
-    } else {
-        iphi1 = iphi[1];
-        iphi2 = iphi[0];
-    }
+   phi1 = kRad*(aphi[iphi[0]] + aphi[iphi[0] + 1]) / (float)2.;
+   phi2 = kRad*(aphi[iphi[1]] + aphi[iphi[1] + 1]) / (float)2.;
+   z1 = fTN[8]*TMath::Cos(phi1) + fTN[9]*TMath::Sin(phi1);
+   z2 = fTN[8]*TMath::Cos(phi2) + fTN[9]*TMath::Sin(phi2);
+   if (z1 <= z2 && iopt == 1 || z1 > z2 && iopt == 2) {
+      iphi1 = iphi[0];
+      iphi2 = iphi[1];
+   } else {
+      iphi1 = iphi[1];
+      iphi2 = iphi[0];
+   }
 }
 
 //______________________________________________________________________________
@@ -890,57 +890,57 @@ void TView::FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *ath
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, k, ith[2];
-    Double_t z1, z2, cosphi, sinphi, tncons, th1, th2, dth;
+   Int_t i, k, ith[2];
+   Double_t z1, z2, cosphi, sinphi, tncons, th1, th2, dth;
 
-    /* Parameter adjustments */
-    --ath;
+   /* Parameter adjustments */
+   --ath;
 
-    /* Function Body */
-    dth = TMath::Abs(ath[kth + 1] - ath[1]);
-    if (dth != 360) {
-        ath[kth + 2] = 0.5*(ath[1] + ath[kth + 1]) + 180;
-        ath[kth + 3] = ath[1] + 360;
-        kth += 2;
-    }
+   /* Function Body */
+   dth = TMath::Abs(ath[kth + 1] - ath[1]);
+   if (dth != 360) {
+      ath[kth + 2] = 0.5*(ath[1] + ath[kth + 1]) + 180;
+      ath[kth + 3] = ath[1] + 360;
+      kth += 2;
+   }
 
-//*-*-       F I N D   C R I T I C A L   S E C T O R S
+   //*-*-       F I N D   C R I T I C A L   S E C T O R S
 
-    cosphi = TMath::Cos(phi*kRad);
-    sinphi = TMath::Sin(phi*kRad);
-    k = 0;
-    for (i = 1; i <= kth; ++i) {
-        th1 = kRad*ath[i];
-        th2 = kRad*ath[i + 1];
-        FindNormal(TMath::Cos(th1)*cosphi, TMath::Cos(th1)*sinphi, -TMath::Sin(th1), z1);
-        FindNormal(TMath::Cos(th2)*cosphi, TMath::Cos(th2)*sinphi, -TMath::Sin(th2), z2);
-        if (z1 >= 0 && z2 > 0) continue;
-        if (z1 <= 0 && z2 < 0) continue;
-        ++k;
-        if (k == 3) break;
-        ith[k - 1] = i;
-    }
-    if (k != 2) {
-       Error("FindThetaSectors", "Something strange: num. of critical sectors not equal 2");
-       ith1 = 1;
-       ith2 = 2;
-       return;
-    }
+   cosphi = TMath::Cos(phi*kRad);
+   sinphi = TMath::Sin(phi*kRad);
+   k = 0;
+   for (i = 1; i <= kth; ++i) {
+      th1 = kRad*ath[i];
+      th2 = kRad*ath[i + 1];
+      FindNormal(TMath::Cos(th1)*cosphi, TMath::Cos(th1)*sinphi, -TMath::Sin(th1), z1);
+      FindNormal(TMath::Cos(th2)*cosphi, TMath::Cos(th2)*sinphi, -TMath::Sin(th2), z2);
+      if (z1 >= 0 && z2 > 0) continue;
+      if (z1 <= 0 && z2 < 0) continue;
+      ++k;
+      if (k == 3) break;
+      ith[k - 1] = i;
+   }
+   if (k != 2) {
+      Error("FindThetaSectors", "Something strange: num. of critical sectors not equal 2");
+      ith1 = 1;
+      ith2 = 2;
+      return;
+   }
 
-//*-*-       F I N D   O R D E R   O F   C R I T I C A L   S E C T O R S
+   //*-*-       F I N D   O R D E R   O F   C R I T I C A L   S E C T O R S
 
-    tncons = fTN[8]*TMath::Cos(phi*kRad) + fTN[9]*TMath::Sin(phi*kRad);
-    th1    = kRad*(ath[ith[0]] + ath[ith[0] + 1]) / (float)2.;
-    th2    = kRad*(ath[ith[1]] + ath[ith[1] + 1]) / (float)2.;
-    z1     = tncons*TMath::Sin(th1) + fTN[10]*TMath::Cos(th1);
-    z2     = tncons*TMath::Sin(th2) + fTN[10]*TMath::Cos(th2);
-    if (z1 <= z2 && iopt == 1 || z1 > z2 && iopt == 2) {
-        ith1 = ith[0];
-        ith2 = ith[1];
-    } else {
-        ith1 = ith[1];
-        ith2 = ith[0];
-    }
+   tncons = fTN[8]*TMath::Cos(phi*kRad) + fTN[9]*TMath::Sin(phi*kRad);
+   th1    = kRad*(ath[ith[0]] + ath[ith[0] + 1]) / (float)2.;
+   th2    = kRad*(ath[ith[1]] + ath[ith[1] + 1]) / (float)2.;
+   z1     = tncons*TMath::Sin(th1) + fTN[10]*TMath::Cos(th1);
+   z2     = tncons*TMath::Sin(th2) + fTN[10]*TMath::Cos(th2);
+   if (z1 <= z2 && iopt == 1 || z1 > z2 && iopt == 2) {
+      ith1 = ith[0];
+      ith2 = ith[1];
+   } else {
+      ith1 = ith[1];
+      ith2 = ith[0];
+   }
 }
 
 
@@ -956,14 +956,14 @@ void TView::FindScope(Double_t *scale, Double_t *center, Int_t &irep)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    irep = 0;
-    Double_t sqrt3 = 0.5*TMath::Sqrt(3.0);
+   irep = 0;
+   Double_t sqrt3 = 0.5*TMath::Sqrt(3.0);
 
-    for (Int_t i = 0; i < 3; i++) {
-        if (fRmin[i] >= fRmax[i]) { irep = -1; return;}
-                scale[i]  = sqrt3*(fRmax[i] - fRmin[i]);
-                center[i] = 0.5*(fRmax[i] + fRmin[i]);
-    }
+   for (Int_t i = 0; i < 3; i++) {
+      if (fRmin[i] >= fRmax[i]) { irep = -1; return;}
+      scale[i]  = sqrt3*(fRmax[i] - fRmin[i]);
+      center[i] = 0.5*(fRmax[i] + fRmin[i]);
+   }
 }
 
 //______________________________________________________________________________
@@ -1057,7 +1057,7 @@ void TView::GetRange(Float_t *min, Float_t *max)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Get Range function-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                            ==================
 //*-*
-        for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
+   for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
 }
 
 
@@ -1067,7 +1067,7 @@ void TView::GetRange(Double_t *min, Double_t *max)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Get Range function-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                            ==================
 //*-*
-        for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
+   for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
 }
 
 //______________________________________________________________________________
@@ -1083,9 +1083,9 @@ void TView::GetWindow(Double_t &u0, Double_t &v0, Double_t &du, Double_t &dv) co
 //______________________________________________________________________________
 Bool_t TView::IsClippedNDC(Double_t *p) const
 {
-//*-*-*-*-*-*-*Check if point is clipped in perspective view-*-*-*-*-*-*-*-*
-//*-*          =============================================
-//*-*
+   //*-*-*-*-*-*-*Check if point is clipped in perspective view-*-*-*-*-*-*-*-*
+   //*-*          =============================================
+   //*-*
    if (TMath::Abs(p[0])>p[2]) return kTRUE;
    if (TMath::Abs(p[1])>p[2]) return kTRUE;
    return kFALSE;
@@ -1094,126 +1094,126 @@ Bool_t TView::IsClippedNDC(Double_t *p) const
 //______________________________________________________________________________
 void TView::NDCtoWC(const Float_t* pn, Float_t* pw)
 {
-//*-*-*-*-*-*-*Transfer point from normalized to world coordinates*-*-*-*-*
-//*-*          ===================================================        *
-//*-*                                                                     *
-//*-*    Input: PN(3) - point in world coordinate system                  *
-//*-*           PW(3) - point in normalized coordinate system             *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*-*-*-*-*Transfer point from normalized to world coordinates*-*-*-*-*
+   //*-*          ===================================================        *
+   //*-*                                                                     *
+   //*-*    Input: PN(3) - point in world coordinate system                  *
+   //*-*           PW(3) - point in normalized coordinate system             *
+   //*-*                                                                     *
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-  pw[0] = fTback[0]*pn[0] + fTback[1]*pn[1] + fTback[2]*pn[2]  + fTback[3];
-  pw[1] = fTback[4]*pn[0] + fTback[5]*pn[1] + fTback[6]*pn[2]  + fTback[7];
-  pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
+   pw[0] = fTback[0]*pn[0] + fTback[1]*pn[1] + fTback[2]*pn[2]  + fTback[3];
+   pw[1] = fTback[4]*pn[0] + fTback[5]*pn[1] + fTback[6]*pn[2]  + fTback[7];
+   pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
 }
 
 //______________________________________________________________________________
 void TView::NDCtoWC(const Double_t* pn, Double_t* pw)
 {
-//*-*-*-*-*-*-*Transfer point from normalized to world coordinates*-*-*-*-*
-//*-*          ===================================================        *
-//*-*                                                                     *
-//*-*    Input: PN(3) - point in world coordinate system                  *
-//*-*           PW(3) - point in normalized coordinate system             *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*-*-*-*-*Transfer point from normalized to world coordinates*-*-*-*-*
+   //*-*          ===================================================        *
+   //*-*                                                                     *
+   //*-*    Input: PN(3) - point in world coordinate system                  *
+   //*-*           PW(3) - point in normalized coordinate system             *
+   //*-*                                                                     *
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-  pw[0] = fTback[0]*pn[0] + fTback[1]*pn[1] + fTback[2]*pn[2]  + fTback[3];
-  pw[1] = fTback[4]*pn[0] + fTback[5]*pn[1] + fTback[6]*pn[2]  + fTback[7];
-  pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
+   pw[0] = fTback[0]*pn[0] + fTback[1]*pn[1] + fTback[2]*pn[2]  + fTback[3];
+   pw[1] = fTback[4]*pn[0] + fTback[5]*pn[1] + fTback[6]*pn[2]  + fTback[7];
+   pw[2] = fTback[8]*pn[0] + fTback[9]*pn[1] + fTback[10]*pn[2] + fTback[11];
 }
 
 //______________________________________________________________________________
 void TView::NormalWCtoNDC(const Float_t *pw, Float_t *pn)
 {
-//*-*-*Transfer vector of NORMAL from word to normalized coodinates-*-*-*-*
-//*-*  ============================================================
-//*-*
-//*-*    Input: PW(3) - vector of NORMAL in word coordinate system
-//*-*           PN(3) - vector of NORMAL in normalized coordinate system
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*Transfer vector of NORMAL from word to normalized coodinates-*-*-*-*
+   //*-*  ============================================================
+   //*-*
+   //*-*    Input: PW(3) - vector of NORMAL in word coordinate system
+   //*-*           PN(3) - vector of NORMAL in normalized coordinate system
+   //*-*
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t x, y, z, a1, a2, a3, b1, b2, b3, c1, c2, c3;
+   Double_t x, y, z, a1, a2, a3, b1, b2, b3, c1, c2, c3;
 
-    x = pw[0];
-    y = pw[1];
-    z = pw[2];
-    a1 = fTnorm[0];
-    a2 = fTnorm[1];
-    a3 = fTnorm[2];
-    b1 = fTnorm[4];
-    b2 = fTnorm[5];
-    b3 = fTnorm[6];
-    c1 = fTnorm[8];
-    c2 = fTnorm[9];
-    c3 = fTnorm[10];
-    pn[0] = x*(b2*c3 - b3*c2) + y*(b3*c1 - b1*c3) + z*(b1*c2 - b2*c1);
-    pn[1] = x*(c2*a3 - c3*a2) + y*(c3*a1 - c1*a3) + z*(c1*a2 - c2*a1);
-    pn[2] = x*(a2*b3 - a3*b2) + y*(a3*b1 - a1*b3) + z*(a1*b2 - a2*b1);
+   x = pw[0];
+   y = pw[1];
+   z = pw[2];
+   a1 = fTnorm[0];
+   a2 = fTnorm[1];
+   a3 = fTnorm[2];
+   b1 = fTnorm[4];
+   b2 = fTnorm[5];
+   b3 = fTnorm[6];
+   c1 = fTnorm[8];
+   c2 = fTnorm[9];
+   c3 = fTnorm[10];
+   pn[0] = x*(b2*c3 - b3*c2) + y*(b3*c1 - b1*c3) + z*(b1*c2 - b2*c1);
+   pn[1] = x*(c2*a3 - c3*a2) + y*(c3*a1 - c1*a3) + z*(c1*a2 - c2*a1);
+   pn[2] = x*(a2*b3 - a3*b2) + y*(a3*b1 - a1*b3) + z*(a1*b2 - a2*b1);
 }
 
 //______________________________________________________________________________
 void TView::NormalWCtoNDC(const Double_t *pw, Double_t *pn)
 {
-//*-*-*Transfer vector of NORMAL from word to normalized coodinates-*-*-*-*
-//*-*  ============================================================
-//*-*
-//*-*    Input: PW(3) - vector of NORMAL in word coordinate system
-//*-*           PN(3) - vector of NORMAL in normalized coordinate system
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*Transfer vector of NORMAL from word to normalized coodinates-*-*-*-*
+   //*-*  ============================================================
+   //*-*
+   //*-*    Input: PW(3) - vector of NORMAL in word coordinate system
+   //*-*           PN(3) - vector of NORMAL in normalized coordinate system
+   //*-*
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t x, y, z, a1, a2, a3, b1, b2, b3, c1, c2, c3;
+   Double_t x, y, z, a1, a2, a3, b1, b2, b3, c1, c2, c3;
 
-    x = pw[0];
-    y = pw[1];
-    z = pw[2];
-    a1 = fTnorm[0];
-    a2 = fTnorm[1];
-    a3 = fTnorm[2];
-    b1 = fTnorm[4];
-    b2 = fTnorm[5];
-    b3 = fTnorm[6];
-    c1 = fTnorm[8];
-    c2 = fTnorm[9];
-    c3 = fTnorm[10];
-    pn[0] = x*(b2*c3 - b3*c2) + y*(b3*c1 - b1*c3) + z*(b1*c2 - b2*c1);
-    pn[1] = x*(c2*a3 - c3*a2) + y*(c3*a1 - c1*a3) + z*(c1*a2 - c2*a1);
-    pn[2] = x*(a2*b3 - a3*b2) + y*(a3*b1 - a1*b3) + z*(a1*b2 - a2*b1);
+   x = pw[0];
+   y = pw[1];
+   z = pw[2];
+   a1 = fTnorm[0];
+   a2 = fTnorm[1];
+   a3 = fTnorm[2];
+   b1 = fTnorm[4];
+   b2 = fTnorm[5];
+   b3 = fTnorm[6];
+   c1 = fTnorm[8];
+   c2 = fTnorm[9];
+   c3 = fTnorm[10];
+   pn[0] = x*(b2*c3 - b3*c2) + y*(b3*c1 - b1*c3) + z*(b1*c2 - b2*c1);
+   pn[1] = x*(c2*a3 - c3*a2) + y*(c3*a1 - c1*a3) + z*(c1*a2 - c2*a1);
+   pn[2] = x*(a2*b3 - a3*b2) + y*(a3*b1 - a1*b3) + z*(a1*b2 - a2*b1);
 }
 
 //______________________________________________________________________________
 void TView::PadRange(Int_t rback)
 {
-//*-*-*-*-*Set the correct window size for lego and surface plots*-*-*-*-*
-//*-*      ======================================================
-//*-*
-//*-*  Set the correct window size for lego and surface plots.
-//*-*  And draw the background if necessary.
-//*-*
-//*-*    Input parameters:
-//*-*
-//*-*   RBACK : Background colour
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*-*-*Set the correct window size for lego and surface plots*-*-*-*-*
+   //*-*      ======================================================
+   //*-*
+   //*-*  Set the correct window size for lego and surface plots.
+   //*-*  And draw the background if necessary.
+   //*-*
+   //*-*    Input parameters:
+   //*-*
+   //*-*   RBACK : Background colour
+   //*-*
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, k;
-    Double_t x, y, z, r1, r2, r3, xx, yy, smax[2];
-    Double_t xgraf[6], ygraf[6];
+   Int_t i, k;
+   Double_t x, y, z, r1, r2, r3, xx, yy, smax[2];
+   Double_t xgraf[6], ygraf[6];
 
-    for (i = 1; i <= 2; ++i) {
-        smax[i - 1] = fTnorm[(i << 2) - 1];
-        for (k = 1; k <= 3; ++k) {
-            if (fTnorm[k + (i << 2) - 5] < 0) {
-                smax[i - 1] += fTnorm[k + (i << 2) - 5]*fRmin[k-1];
-            } else {
-                smax[i - 1] += fTnorm[k + (i << 2) - 5]*fRmax[k-1];
-            }
-        }
-    }
+   for (i = 1; i <= 2; ++i) {
+      smax[i - 1] = fTnorm[(i << 2) - 1];
+      for (k = 1; k <= 3; ++k) {
+         if (fTnorm[k + (i << 2) - 5] < 0) {
+            smax[i - 1] += fTnorm[k + (i << 2) - 5]*fRmin[k-1];
+         } else {
+            smax[i - 1] += fTnorm[k + (i << 2) - 5]*fRmax[k-1];
+         }
+      }
+   }
 
-//*-*- Compute x,y range
+   //*-*- Compute x,y range
    Double_t xmin = -smax[0];
    Double_t xmax = smax[0];
    Double_t ymin = -smax[1];
@@ -1226,59 +1226,59 @@ void TView::PadRange(Int_t rback)
    // Range() could change the size of the pad pixmap and therefore should
    // be called before the other paint routines
    gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                      ymin - dyr*gPad->GetBottomMargin(),
-                      xmax + dxr*gPad->GetRightMargin(),
-                      ymax + dyr*gPad->GetTopMargin());
+      ymin - dyr*gPad->GetBottomMargin(),
+      xmax + dxr*gPad->GetRightMargin(),
+      ymax + dyr*gPad->GetTopMargin());
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
 
-//*-*-             Draw the background if necessary
+   //*-*-             Draw the background if necessary
 
-    if (rback > 0) {
-        r1 = -1;
-        r2 = -1;
-        r3 = -1;
-        xgraf[0] = -smax[0];
-        xgraf[1] = -smax[0];
-        xgraf[2] = -smax[0];
-        xgraf[3] = -smax[0];
-        xgraf[4] =  smax[0];
-        xgraf[5] =  smax[0];
-        ygraf[0] = -smax[1];
-        ygraf[1] =  smax[1];
-        ygraf[2] = -smax[1];
-        ygraf[3] =  smax[1];
-        ygraf[5] =  smax[1];
-        ygraf[4] = -smax[1];
-        for (i = 1; i <= 8; ++i) {
-            x = 0.5*((1 - r1)*fRmin[0] + (r1 + 1)*fRmax[0]);
-            y = 0.5*((1 - r2)*fRmin[1] + (r2 + 1)*fRmax[1]);
-            z = 0.5*((1 - r3)*fRmin[2] + (r3 + 1)*fRmax[2]);
-            xx = fTnorm[0]*x + fTnorm[1]*y + fTnorm[2]*z + fTnorm[3];
-            yy = fTnorm[4]*x + fTnorm[5]*y + fTnorm[6]*z + fTnorm[7];
-            if (TMath::Abs(xx - xgraf[1]) <= 1e-4) {
-                if (ygraf[1] >= yy) ygraf[1] = yy;
-                if (ygraf[2] <= yy) ygraf[2] = yy;
-            }
-            if (TMath::Abs(xx - xgraf[5]) <= 1e-4) {
-                if (ygraf[5] >= yy) ygraf[5] = yy;
-                if (ygraf[4] <= yy) ygraf[4] = yy;
-            }
-            if (TMath::Abs(yy - ygraf[0]) <= 1e-4) xgraf[0] = xx;
-            if (TMath::Abs(yy - ygraf[3]) <= 1e-4) xgraf[3] = xx;
-            r1 = -r1;
-            if (i % 2 == 0) r2 = -r2;
-            if (i >= 4)     r3 = 1;
-        }
-        gPad->PaintFillArea(6, xgraf, ygraf);
-    }
+   if (rback > 0) {
+      r1 = -1;
+      r2 = -1;
+      r3 = -1;
+      xgraf[0] = -smax[0];
+      xgraf[1] = -smax[0];
+      xgraf[2] = -smax[0];
+      xgraf[3] = -smax[0];
+      xgraf[4] =  smax[0];
+      xgraf[5] =  smax[0];
+      ygraf[0] = -smax[1];
+      ygraf[1] =  smax[1];
+      ygraf[2] = -smax[1];
+      ygraf[3] =  smax[1];
+      ygraf[5] =  smax[1];
+      ygraf[4] = -smax[1];
+      for (i = 1; i <= 8; ++i) {
+         x = 0.5*((1 - r1)*fRmin[0] + (r1 + 1)*fRmax[0]);
+         y = 0.5*((1 - r2)*fRmin[1] + (r2 + 1)*fRmax[1]);
+         z = 0.5*((1 - r3)*fRmin[2] + (r3 + 1)*fRmax[2]);
+         xx = fTnorm[0]*x + fTnorm[1]*y + fTnorm[2]*z + fTnorm[3];
+         yy = fTnorm[4]*x + fTnorm[5]*y + fTnorm[6]*z + fTnorm[7];
+         if (TMath::Abs(xx - xgraf[1]) <= 1e-4) {
+            if (ygraf[1] >= yy) ygraf[1] = yy;
+            if (ygraf[2] <= yy) ygraf[2] = yy;
+         }
+         if (TMath::Abs(xx - xgraf[5]) <= 1e-4) {
+            if (ygraf[5] >= yy) ygraf[5] = yy;
+            if (ygraf[4] <= yy) ygraf[4] = yy;
+         }
+         if (TMath::Abs(yy - ygraf[0]) <= 1e-4) xgraf[0] = xx;
+         if (TMath::Abs(yy - ygraf[3]) <= 1e-4) xgraf[3] = xx;
+         r1 = -r1;
+         if (i % 2 == 0) r2 = -r2;
+         if (i >= 4)     r3 = 1;
+      }
+      gPad->PaintFillArea(6, xgraf, ygraf);
+   }
 }
 
 //______________________________________________________________________________
 void  TView::SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Store axis coordinates in the NDC system*-*-*-*
-//*-*                      ========================================
-//*-*
+   //*-*-*-*-*-*-*-*-*-*-*-*-*Store axis coordinates in the NDC system*-*-*-*
+   //*-*                      ========================================
+   //*-*
 
    for (Int_t i=0;i<3;i++) {
       fX1[i] = x1[i];
@@ -1293,7 +1293,7 @@ void  TView::SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *
 //______________________________________________________________________________
 void TView::SetDefaultWindow()
 {
-// Set default viewing window
+   // Set default viewing window
    if (!gPad) return;
    Double_t screen_factor = 1.;
    Double_t du, dv;
@@ -1312,29 +1312,29 @@ void TView::SetDefaultWindow()
 //______________________________________________________________________________
 void TView::SetOutlineToCube()
 {
-//*-*-*-*-*-*-*This is a function which creates default outline*-*-*-*-*-*
-//*-*          ================================================          *
-//*-*                                                                    *
-//*-*      x = fRmin[0]        X = fRmax[0]                              *
-//*-*      y = fRmin[1]        Y = fRmax[1]                              *
-//*-*      z = fRmin[2]        Z = fRmax[2]                              *
-//*-*                                                                    *
-//*-*                                                                    *
-//*-*            (x,Y,Z) +---------+ (X,Y,Z)                             *
-//*-*                   /         /|                                     *
-//*-*                  /         / |                                     *
-//*-*                 /         /  |                                     *
-//*-*        (x,y,Z) +---------+   |                                     *
-//*-*                |         |   + (X,Y,z)                             *
-//*-*                |         |  /                                      *
-//*-*                |         | /                                       *
-//*-*                |         |/                                        *
-//*-*                +---------+                                         *
-//*-*             (x,y,z)   (X,y,z)                                      *
-//*-*                                                                    *
-//*-*                                                                    *
-//*-*                                                                    *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**
+   //*-*-*-*-*-*-*This is a function which creates default outline*-*-*-*-*-*
+   //*-*          ================================================          *
+   //*-*                                                                    *
+   //*-*      x = fRmin[0]        X = fRmax[0]                              *
+   //*-*      y = fRmin[1]        Y = fRmax[1]                              *
+   //*-*      z = fRmin[2]        Z = fRmax[2]                              *
+   //*-*                                                                    *
+   //*-*                                                                    *
+   //*-*            (x,Y,Z) +---------+ (X,Y,Z)                             *
+   //*-*                   /         /|                                     *
+   //*-*                  /         / |                                     *
+   //*-*                 /         /  |                                     *
+   //*-*        (x,y,Z) +---------+   |                                     *
+   //*-*                |         |   + (X,Y,z)                             *
+   //*-*                |         |  /                                      *
+   //*-*                |         | /                                       *
+   //*-*                |         |/                                        *
+   //*-*                +---------+                                         *
+   //*-*             (x,y,z)   (X,y,z)                                      *
+   //*-*                                                                    *
+   //*-*                                                                    *
+   //*-*                                                                    *
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**
 
    if (!fOutline) {
       fDefaultOutline = kTRUE;
@@ -1366,69 +1366,69 @@ void TView::SetPerspective()
 //______________________________________________________________________________
 void TView::SetRange(const Double_t *min, const Double_t *max)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Set Range function-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                            ==================
-//*-*
-        Int_t irep;
-        for (Int_t i = 0; i < 3; fRmax[i] = max[i], fRmin[i] = min[i], i++);
-        if (IsPerspective()) SetDefaultWindow();
-        ResetView(fLongitude, fLatitude, fPsi, irep);
-        if(irep < 0)
-                Error("SetRange", "problem setting view");
-        if(fDefaultOutline) SetOutlineToCube();
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Set Range function-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*                            ==================
+   //*-*
+   Int_t irep;
+   for (Int_t i = 0; i < 3; fRmax[i] = max[i], fRmin[i] = min[i], i++);
+   if (IsPerspective()) SetDefaultWindow();
+   ResetView(fLongitude, fLatitude, fPsi, irep);
+   if(irep < 0)
+      Error("SetRange", "problem setting view");
+   if(fDefaultOutline) SetOutlineToCube();
 }
 
 
 //______________________________________________________________________________
 void TView::SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_t y1, Double_t z1, Int_t flag)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Set 3-D View range*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==================
-//*-*
-//*-* Input:  x0, y0, z0 are minimum coordinates
-//*-*         x1, y1, z1 are maximum coordinates
-//*-*
-//*-*         flag values are: 0 (set always) <- default
-//*-*                          1 (shrink view)
-//*-*                          2 (expand view)
-//*-*
+   //*-*-*-*-*-*-*-*-*-*-*-*Set 3-D View range*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*                    ==================
+   //*-*
+   //*-* Input:  x0, y0, z0 are minimum coordinates
+   //*-*         x1, y1, z1 are maximum coordinates
+   //*-*
+   //*-*         flag values are: 0 (set always) <- default
+   //*-*                          1 (shrink view)
+   //*-*                          2 (expand view)
+   //*-*
 
 
-    Double_t rmax[3], rmin[3];
+   Double_t rmax[3], rmin[3];
 
-    switch (flag) {
+   switch (flag) {
         case 2:                     // expand view
-            GetRange(rmin, rmax);
-            rmin[0] = x0 < rmin[0] ? x0 : rmin[0];
-            rmin[1] = y0 < rmin[1] ? y0 : rmin[1];
-            rmin[2] = z0 < rmin[2] ? z0 : rmin[2];
-            rmax[0] = x1 > rmax[0] ? x1 : rmax[0];
-            rmax[1] = y1 > rmax[1] ? y1 : rmax[1];
-            rmax[2] = z1 > rmax[2] ? z1 : rmax[2];
-            break;
+           GetRange(rmin, rmax);
+           rmin[0] = x0 < rmin[0] ? x0 : rmin[0];
+           rmin[1] = y0 < rmin[1] ? y0 : rmin[1];
+           rmin[2] = z0 < rmin[2] ? z0 : rmin[2];
+           rmax[0] = x1 > rmax[0] ? x1 : rmax[0];
+           rmax[1] = y1 > rmax[1] ? y1 : rmax[1];
+           rmax[2] = z1 > rmax[2] ? z1 : rmax[2];
+           break;
 
         case 1:                     // shrink view
-            GetRange(rmin, rmax);
-            rmin[0] = x0 > rmin[0] ? x0 : rmin[0];
-            rmin[1] = y0 > rmin[1] ? y0 : rmin[1];
-            rmin[2] = z0 > rmin[2] ? z0 : rmin[2];
-            rmax[0] = x1 < rmax[0] ? x1 : rmax[0];
-            rmax[1] = y1 < rmax[1] ? y1 : rmax[1];
-            rmax[2] = z1 < rmax[2] ? z1 : rmax[2];
-            break;
+           GetRange(rmin, rmax);
+           rmin[0] = x0 > rmin[0] ? x0 : rmin[0];
+           rmin[1] = y0 > rmin[1] ? y0 : rmin[1];
+           rmin[2] = z0 > rmin[2] ? z0 : rmin[2];
+           rmax[0] = x1 < rmax[0] ? x1 : rmax[0];
+           rmax[1] = y1 < rmax[1] ? y1 : rmax[1];
+           rmax[2] = z1 < rmax[2] ? z1 : rmax[2];
+           break;
 
         default:
-            rmin[0] = x0; rmax[0] = x1;
-            rmin[1] = y0; rmax[1] = y1;
-            rmin[2] = z0; rmax[2] = z1;
-    }
-    SetRange(rmin, rmax);
+           rmin[0] = x0; rmax[0] = x1;
+           rmin[1] = y0; rmax[1] = y1;
+           rmin[2] = z0; rmax[2] = z1;
+   }
+   SetRange(rmin, rmax);
 }
 
 //______________________________________________________________________________
 void TView::SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv)
 {
-// Set viewing window.
+   // Set viewing window.
    fUVcoord[0] = u0;
    fUVcoord[1] = v0;
    fUVcoord[2] = du;
@@ -1438,13 +1438,13 @@ void TView::SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv)
 //______________________________________________________________________________
 void TView::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
-    ResetView(longitude, latitude, psi, irep);
+   ResetView(longitude, latitude, psi, irep);
 }
 
 //______________________________________________________________________________
 void TView::ResizePad()
 {
-// Recompute window for perspective view
+   // Recompute window for perspective view
 
    if (!IsPerspective()) return;
    Double_t upix = fUpix;
@@ -1464,148 +1464,148 @@ void TView::ResizePad()
 //______________________________________________________________________________
 void TView::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
-//*-*-*-*-*-*-*-*-*Set view direction (in spherical coordinates)*-*-*-*-*-*
-//*-*              =============================================          *
-//*-*                                                                     *
-//*-*    Input  PHI     - longitude                                       *
-//*-*           THETA   - latitude (angle between +Z and view direction)  *
-//*-*           PSI     - rotation in screen plane                        *
-//*-*                                                                     *
-//*-*    Output: IREP   - reply (-1 if error in min-max)                  *
-//*-*                                                                     *
-//*-*    Errors: error in min-max scope                                   *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*-*-*-*-*-*-*Set view direction (in spherical coordinates)*-*-*-*-*-*
+   //*-*              =============================================          *
+   //*-*                                                                     *
+   //*-*    Input  PHI     - longitude                                       *
+   //*-*           THETA   - latitude (angle between +Z and view direction)  *
+   //*-*           PSI     - rotation in screen plane                        *
+   //*-*                                                                     *
+   //*-*    Output: IREP   - reply (-1 if error in min-max)                  *
+   //*-*                                                                     *
+   //*-*    Errors: error in min-max scope                                   *
+   //*-*                                                                     *
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t scale[3],  centre[3];
-    Double_t c1, c2, c3, s1, s2, s3;
+   Double_t scale[3],  centre[3];
+   Double_t c1, c2, c3, s1, s2, s3;
 
-//*-*-        F I N D   C E N T E R   O F   S C O P E   A N D
-//*-*-        S C A L E   F A C T O R S
+   //*-*-        F I N D   C E N T E R   O F   S C O P E   A N D
+   //*-*-        S C A L E   F A C T O R S
 
-    FindScope(scale, centre, irep);
-    if (irep < 0) {
-        Error("ResetView", "Error in min-max scope");
-        return;
-    }
+   FindScope(scale, centre, irep);
+   if (irep < 0) {
+      Error("ResetView", "Error in min-max scope");
+      return;
+   }
 
-//*-*-        S E T   T R A N S F O R M A T I O N   M A T R I C E S
+   //*-*-        S E T   T R A N S F O R M A T I O N   M A T R I C E S
 
 
-    fLongitude = longitude;
-    fPsi       = psi;
-    fLatitude  = latitude;
+   fLongitude = longitude;
+   fPsi       = psi;
+   fLatitude  = latitude;
 
-    if (IsPerspective()) {
-       DefinePerspectiveView();
-       return;
-    }
+   if (IsPerspective()) {
+      DefinePerspectiveView();
+      return;
+   }
 
-    c1 = TMath::Cos(longitude*kRad);
-    s1 = TMath::Sin(longitude*kRad);
-    c2 = TMath::Cos(latitude*kRad);
-    s2 = TMath::Sin(latitude*kRad);
-    c3 = TMath::Cos(psi*kRad);
-    s3 = TMath::Sin(psi*kRad);
-    DefineViewDirection(scale, centre, c1, s1, c2, s2, c3, s3, fTnorm, fTback);
-    c3 = 1;
-    s3 = 0;
-    DefineViewDirection(scale, centre, c1, s1, c2, s2, c3, s3, fTN, fTB);
+   c1 = TMath::Cos(longitude*kRad);
+   s1 = TMath::Sin(longitude*kRad);
+   c2 = TMath::Cos(latitude*kRad);
+   s2 = TMath::Sin(latitude*kRad);
+   c3 = TMath::Cos(psi*kRad);
+   s3 = TMath::Sin(psi*kRad);
+   DefineViewDirection(scale, centre, c1, s1, c2, s2, c3, s3, fTnorm, fTback);
+   c3 = 1;
+   s3 = 0;
+   DefineViewDirection(scale, centre, c1, s1, c2, s2, c3, s3, fTN, fTB);
 }
 
 
 //______________________________________________________________________________
 void TView::WCtoNDC(const Float_t *pw, Float_t *pn)
 {
-//*-*-*-*-*-*-*Transfer point from world to normalized coordinates*-*-*-*-*
-//*-*          ===================================================        *
-//*-*                                                                     *
-//*-*    Input: PW(3) - point in world coordinate system                  *
-//*-*           PN(3) - point in normalized coordinate system             *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*-*-*-*-*Transfer point from world to normalized coordinates*-*-*-*-*
+   //*-*          ===================================================        *
+   //*-*                                                                     *
+   //*-*    Input: PW(3) - point in world coordinate system                  *
+   //*-*           PN(3) - point in normalized coordinate system             *
+   //*-*                                                                     *
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    // perspective view
-    if (IsPerspective()) {
-       for (Int_t i=0; i<3; i++)
-          pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
-       if (pn[2]>0) {
-          pn[0] /= pn[2];
-          pn[1] /= pn[2];
-       } else {
-          pn[0] *= 1000.;
-          pn[1] *= 1000.;
-       }
-       return;
-    }
-    // parallel view
-    pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
-    pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
-    pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
+   // perspective view
+   if (IsPerspective()) {
+      for (Int_t i=0; i<3; i++)
+         pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
+      if (pn[2]>0) {
+         pn[0] /= pn[2];
+         pn[1] /= pn[2];
+      } else {
+         pn[0] *= 1000.;
+         pn[1] *= 1000.;
+      }
+      return;
+   }
+   // parallel view
+   pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
+   pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
+   pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
 }
 
 
 //______________________________________________________________________________
 void TView::WCtoNDC(const Double_t *pw, Double_t *pn)
 {
-//*-*-*-*-*-*-*Transfer point from world to normalized coordinates*-*-*-*-*
-//*-*          ===================================================        *
-//*-*                                                                     *
-//*-*    Input: PW(3) - point in world coordinate system                  *
-//*-*           PN(3) - point in normalized coordinate system             *
-//*-*                                                                     *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*-*-*-*-*Transfer point from world to normalized coordinates*-*-*-*-*
+   //*-*          ===================================================        *
+   //*-*                                                                     *
+   //*-*    Input: PW(3) - point in world coordinate system                  *
+   //*-*           PN(3) - point in normalized coordinate system             *
+   //*-*                                                                     *
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    // perspective view
-    if (IsPerspective()) {
-       for (Int_t i=0; i<3; i++)
-          pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
-       if (pn[2]>0) {
-          pn[0] /= pn[2];
-          pn[1] /= pn[2];
-       } else {
-          pn[0] *= 1000.;
-          pn[1] *= 1000.;
-       }
-       return;
-    }
-    // parallel view
-    pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
-    pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
-    pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
+   // perspective view
+   if (IsPerspective()) {
+      for (Int_t i=0; i<3; i++)
+         pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
+      if (pn[2]>0) {
+         pn[0] /= pn[2];
+         pn[1] /= pn[2];
+      } else {
+         pn[0] *= 1000.;
+         pn[1] *= 1000.;
+      }
+      return;
+   }
+   // parallel view
+   pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
+   pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
+   pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
 }
 
 //_______________________________________________________________________________________
 void TView::AdjustPad(TVirtualPad *pad)
 {
-  // Force the current pad to be updated
-  TVirtualPad *thisPad = pad;
-  if (!thisPad) thisPad = gPad;
-  if (thisPad) {
-    thisPad->Modified();
-    thisPad->Update();
-  }
+   // Force the current pad to be updated
+   TVirtualPad *thisPad = pad;
+   if (!thisPad) thisPad = gPad;
+   if (thisPad) {
+      thisPad->Modified();
+      thisPad->Update();
+   }
 }
 //_______________________________________________________________________________________
 void TView::RotateView(Double_t phi, Double_t theta, TVirtualPad *pad)
 {
-  // API to rotate view and adjust the pad provided it the current one.
+   // API to rotate view and adjust the pad provided it the current one.
 
-  Int_t iret;
-  Double_t p = phi;
-  Double_t t = theta;
-  SetView(p, t, 0, iret);
+   Int_t iret;
+   Double_t p = phi;
+   Double_t t = theta;
+   SetView(p, t, 0, iret);
 
-  // Adjust current pad too
+   // Adjust current pad too
 
-  TVirtualPad *thisPad = pad;
-  if (!thisPad) thisPad = gPad;
-  if (thisPad) {
+   TVirtualPad *thisPad = pad;
+   if (!thisPad) thisPad = gPad;
+   if (thisPad) {
       thisPad->SetPhi(-90-p);
       thisPad->SetTheta(90-t);
       thisPad->Modified();
       thisPad->Update();
-  }
+   }
 }
 
 //_______________________________________________________________________________________
@@ -1629,87 +1629,87 @@ void TView::TopView(TVirtualPad *pad)
 //_______________________________________________________________________________________
 void TView::ToggleRulers(TVirtualPad *pad)
 {
-  // Turn on /off 3D axis
+   // Turn on /off 3D axis
    TVirtualUtil3D *util = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
-  if (util) util->ToggleRulers(pad);
+   if (util) util->ToggleRulers(pad);
 }
 
 //_______________________________________________________________________________________
 void TView::ToggleZoom(TVirtualPad *pad)
 {
-  // Turn on /off the interactive option to
-  //  Zoom / Move / Change attributes of 3D axis correspond this view
+   // Turn on /off the interactive option to
+   //  Zoom / Move / Change attributes of 3D axis correspond this view
    TVirtualUtil3D *util = (TVirtualUtil3D*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtil3D");
-  if (util) util->ToggleZoom(pad);
+   if (util) util->ToggleZoom(pad);
 }
 
 //_______________________________________________________________________________________
- void TView::AdjustScales(TVirtualPad *pad)
+void TView::AdjustScales(TVirtualPad *pad)
 {
-  // Adjust all sides of view in respect of the biggest one
-  Double_t min[3],max[3];
-  GetRange(min,max);
-  int i;
-  Double_t maxSide = 0;
-  // Find the largest side
-  for (i=0;i<3; i++) maxSide = TMath::Max(maxSide,max[i]-min[i]);
-  //Adjust scales:
-  for (i=0;i<3; i++) max[i] += maxSide - (max[i]-min[i]);
-  SetRange(min,max);
+   // Adjust all sides of view in respect of the biggest one
+   Double_t min[3],max[3];
+   GetRange(min,max);
+   int i;
+   Double_t maxSide = 0;
+   // Find the largest side
+   for (i=0;i<3; i++) maxSide = TMath::Max(maxSide,max[i]-min[i]);
+   //Adjust scales:
+   for (i=0;i<3; i++) max[i] += maxSide - (max[i]-min[i]);
+   SetRange(min,max);
 
-  AdjustPad(pad);
+   AdjustPad(pad);
 }
 
 //_______________________________________________________________________________________
 void TView::Centered3DImages(TVirtualPad *pad)
 {
-  // Move view into the center of the scene
+   // Move view into the center of the scene
 
-  Double_t min[3],max[3];
-  GetRange(min,max);
-  int i;
-  for (i=0;i<3; i++) {
-     if (max[i] > 0) min[i] = -max[i];
-     else            max[i] = -min[i];
-  }
-  SetRange(min,max);
-  AdjustPad(pad);
+   Double_t min[3],max[3];
+   GetRange(min,max);
+   int i;
+   for (i=0;i<3; i++) {
+      if (max[i] > 0) min[i] = -max[i];
+      else            max[i] = -min[i];
+   }
+   SetRange(min,max);
+   AdjustPad(pad);
 }
 
 //_______________________________________________________________________________________
- void TView::UnzoomView(TVirtualPad *pad,Double_t unZoomFactor )
+void TView::UnzoomView(TVirtualPad *pad,Double_t unZoomFactor )
 {
-  // unZOOM this view
-  if (TMath::Abs(unZoomFactor) < 0.001) return;
-  ZoomView(pad,1./unZoomFactor);
+   // unZOOM this view
+   if (TMath::Abs(unZoomFactor) < 0.001) return;
+   ZoomView(pad,1./unZoomFactor);
 }
 
 //_______________________________________________________________________________________
 void TView::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
 {
-  // ZOOM this view
-  if (TMath::Abs(zoomFactor) < 0.001) return;
-  Double_t min[3],max[3];
-  GetRange(min,max);
-  int i;
-  for (i=0;i<3; i++) {
-    // Find center
-    Double_t c = (max[i]+min[i])/2;
-    // Find a new size
-    Double_t s = (max[i]-min[i])/(2*zoomFactor);
-    // Set a new size
-    max[i] = c + s;
-    min[i] = c - s;
-  }
-  SetRange(min,max);
-  AdjustPad(pad);
+   // ZOOM this view
+   if (TMath::Abs(zoomFactor) < 0.001) return;
+   Double_t min[3],max[3];
+   GetRange(min,max);
+   int i;
+   for (i=0;i<3; i++) {
+      // Find center
+      Double_t c = (max[i]+min[i])/2;
+      // Find a new size
+      Double_t s = (max[i]-min[i])/(2*zoomFactor);
+      // Set a new size
+      max[i] = c + s;
+      min[i] = c - s;
+   }
+   SetRange(min,max);
+   AdjustPad(pad);
 }
 //_______________________________________________________________________________________
 void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps,
                       Double_t dlong, Double_t dlat, Double_t dpsi)
 {
-// Move focus to a different box position and extent in nsteps. Perform rotation
-// with dlat,dlong,dpsi at each step.
+   // Move focus to a different box position and extent in nsteps. Perform rotation
+   // with dlat,dlong,dpsi at each step.
    if (!IsPerspective()) return;
    if (nsteps<1) return;
    Double_t fc = 1./Double_t(nsteps);
@@ -1728,9 +1728,9 @@ void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_
 
    Double_t dd = TMath::Sqrt(dox*dox+doy*doy+doz*doz);
    if (dd!=0) {;
-      dir[0] = dox/dd;
-      dir[1] = doy/dd;
-      dir[2] = doz/dd;
+   dir[0] = dox/dd;
+   dir[1] = doy/dd;
+   dir[2] = doz/dd;
    }
    dd *= fc;
    dox = fc*(dx-od[0]);
@@ -1762,26 +1762,26 @@ void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_
 //_______________________________________________________________________________________
 void TView::MoveViewCommand(Char_t option, Int_t count)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*          'a' //*-*  increase  scale factor (clip cube borders)
-//*-*          's' //*-*  decrease  scale factor (clip cube borders)
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*          'a' //*-*  increase  scale factor (clip cube borders)
+   //*-*          's' //*-*  decrease  scale factor (clip cube borders)
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    if (count <= 0) count = 1;
    switch (option) {
        case '+':
-            ZoomView();
-            break;
+          ZoomView();
+          break;
        case '-':
-            UnzoomView();
-            break;
+          UnzoomView();
+          break;
        case 's':
        case 'S':
-           UnzoomView();
-           break;
+          UnzoomView();
+          break;
        case 'a':
        case 'A':
-           ZoomView();
-           break;
+          ZoomView();
+          break;
        case 'l':
        case 'L':
        case 'h':
@@ -1790,49 +1790,49 @@ void TView::MoveViewCommand(Char_t option, Int_t count)
        case 'U':
        case 'i':
        case 'I':
-           MoveWindow(option);
-           break;
+          MoveWindow(option);
+          break;
        case 'j':
        case 'J':
-           ZoomIn();
-           break;
+          ZoomIn();
+          break;
        case 'k':
        case 'K':
-           ZoomOut();
-           break;
+          ZoomOut();
+          break;
        default:
-           break;
-  }
+          break;
+   }
 }
 
 //_______________________________________________________________________________________
 void TView::MoveWindow(Char_t option)
 {
-// Move view window :
-// l,L - left
-// h,H - right
-// u,U - down
-// i,I - up
+   // Move view window :
+   // l,L - left
+   // h,H - right
+   // u,U - down
+   // i,I - up
    if (!IsPerspective()) return;
    Double_t shiftu = 0.1*fUVcoord[2];
    Double_t shiftv = 0.1*fUVcoord[3];
    switch (option) {
        case 'l':
        case 'L':
-           fUVcoord[0] += shiftu;
-           break;
+          fUVcoord[0] += shiftu;
+          break;
        case 'h':
        case 'H':
-           fUVcoord[0] -= shiftu;
-           break;
+          fUVcoord[0] -= shiftu;
+          break;
        case 'u':
        case 'U':
-           fUVcoord[1] += shiftv;
-           break;
+          fUVcoord[1] += shiftv;
+          break;
        case 'i':
        case 'I':
-           fUVcoord[1] -= shiftv;
-           break;
+          fUVcoord[1] -= shiftv;
+          break;
        default:
           return;
    }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.68 2005/10/31 17:00:46 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.69 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -560,14 +560,14 @@ Double_t TAxis::GetBinCenter(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return center of bin*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ====================
-  Double_t binwidth;
-  if (!fXbins.fN || bin<1 || bin>fNbins) {
-     binwidth = (fXmax - fXmin) / Double_t(fNbins);
-     return fXmin + (bin-1) * binwidth + 0.5*binwidth;
-  } else {
-     binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
-     return fXbins.fArray[bin-1] + 0.5*binwidth;
-  }
+   Double_t binwidth;
+   if (!fXbins.fN || bin<1 || bin>fNbins) {
+      binwidth = (fXmax - fXmin) / Double_t(fNbins);
+      return fXmin + (bin-1) * binwidth + 0.5*binwidth;
+   } else {
+      binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
+      return fXbins.fArray[bin-1] + 0.5*binwidth;
+   }
 }
 
 //______________________________________________________________________________
@@ -576,9 +576,9 @@ Double_t TAxis::GetBinLowEdge(Int_t bin) const
 //*-*-*-*-*-*-*-*-*-*-*Return low edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
-  if (fXbins.fN && bin > 0 && bin <=fNbins) return fXbins.fArray[bin-1];
-  Double_t binwidth = (fXmax - fXmin) / Double_t(fNbins);
-  return fXmin + (bin-1) * binwidth;
+   if (fXbins.fN && bin > 0 && bin <=fNbins) return fXbins.fArray[bin-1];
+   Double_t binwidth = (fXmax - fXmin) / Double_t(fNbins);
+   return fXmin + (bin-1) * binwidth;
 }
 
 //______________________________________________________________________________
@@ -587,14 +587,14 @@ Double_t TAxis::GetBinUpEdge(Int_t bin) const
 //*-*-*-*-*-*-*-*-*-*-*Return up edge of bin-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
-  Double_t binwidth;
-  if (!fXbins.fN || bin<1 || bin>fNbins) {
-     binwidth = (fXmax - fXmin) / Double_t(fNbins);
-     return fXmin + bin*binwidth;
-  } else {
-     binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
-     return fXbins.fArray[bin-1] + binwidth;
-  }
+   Double_t binwidth;
+   if (!fXbins.fN || bin<1 || bin>fNbins) {
+      binwidth = (fXmax - fXmin) / Double_t(fNbins);
+      return fXmin + bin*binwidth;
+   } else {
+      binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
+      return fXbins.fArray[bin-1] + binwidth;
+   }
 }
 
 //______________________________________________________________________________
@@ -602,9 +602,9 @@ Double_t TAxis::GetBinWidth(Int_t bin) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return bin width-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================
-  if (bin <1 ) bin = 1;
-  if (bin >fNbins) bin = fNbins;
-  if (!fXbins.fN)  return (fXmax - fXmin) / Double_t(fNbins);
+   if (bin <1 ) bin = 1;
+   if (bin >fNbins) bin = fNbins;
+   if (!fXbins.fN)  return (fXmax - fXmin) / Double_t(fNbins);
    return fXbins.fArray[bin] - fXbins.fArray[bin-1];
 }
 
@@ -614,8 +614,8 @@ void TAxis::GetCenter(Double_t *center) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the center of all bins-*-*-*-*-*-*-*
 //*-*              ===========================================
-  Int_t bin;
-  for (bin=1; bin<=fNbins; bin++) *(center + bin-1) = GetBinCenter(bin);
+   Int_t bin;
+   for (bin=1; bin<=fNbins; bin++) *(center + bin-1) = GetBinCenter(bin);
 }
 
 //______________________________________________________________________________
@@ -623,8 +623,8 @@ void TAxis::GetLowEdge(Double_t *edge) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the lod edge of all bins-*-*-*-*-*-*-*
 //*-*              =============================================
-  Int_t bin;
-  for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
+   Int_t bin;
+   for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
 }
 
 //______________________________________________________________________________
@@ -886,12 +886,13 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
    // Check whether this bin already has a label.
    TIter next(fLabels);
    TObjString *obj;
-   while ((obj=(TObjString*)next()))
-     if ( obj->GetUniqueID()==(UInt_t)bin ) {
-       // It does. Overwrite it.
-       obj->SetString(label);
-       return;
-     }
+   while ((obj=(TObjString*)next())) {
+      if ( obj->GetUniqueID()==(UInt_t)bin ) {
+         // It does. Overwrite it.
+         obj->SetString(label);
+         return;
+      }
+   }
    // It doesn't. Add this new label.
    obj = new TObjString(label);
    fLabels->Add(obj);
@@ -1171,7 +1172,7 @@ void TAxis::UnZoom()
             hobj->SetMinimum();
             hobj->SetMaximum();
             hobj->ResetBit(TH1::kIsZoomed);
-	 }
+         }
          return;
       }
       if (strcmp(hobj->GetName(),"hframe") == 0 ) {

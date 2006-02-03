@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.3 2004/05/25 16:53:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.4 2005/04/29 20:34:51 brun Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -128,12 +128,12 @@ Double_t TF12::Eval(Double_t x, Double_t /*y*/, Double_t /*z*/, Double_t /*t*/) 
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-  if (!fF2) return 0;
-  if (fCase == 0) {
-     return fF2->Eval(x,fXY,0);
-  } else {
-     return fF2->Eval(fXY,x,0);
-  }
+   if (!fF2) return 0;
+   if (fCase == 0) {
+      return fF2->Eval(x,fXY,0);
+   } else {
+      return fF2->Eval(fXY,x,0);
+   }
 }
 
 //______________________________________________________________________________
@@ -144,17 +144,17 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
 // if params is non null, the array will be used instead of the internal TF2
 // parameters
    
-  if (!fF2) return 0;
-  Double_t xx[2];
-  if (fCase == 0) {
-     xx[0] = x[0];
-     xx[1] = fXY;
-  } else {
-     xx[0] = fXY;
-     xx[1] = x[0];
-  }
-  fF2->InitArgs(xx,params);
-  return fF2->EvalPar(xx,params);
+   if (!fF2) return 0;
+   Double_t xx[2];
+   if (fCase == 0) {
+      xx[0] = x[0];
+      xx[1] = fXY;
+   } else {
+      xx[0] = fXY;
+      xx[1] = x[0];
+   }
+   fF2->InitArgs(xx,params);
+   return fF2->EvalPar(xx,params);
 }
 
 

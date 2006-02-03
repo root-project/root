@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.121 2005/11/29 06:01:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.122 2005/11/29 10:43:54 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1276,10 +1276,7 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    if (fastClone) {
 
       // for each tree in the chain
-      for (Long64_t i=0;
-           i<nentries;
-           i += this->GetTree()->GetEntries()
-           )
+      for (Long64_t i=0; i<nentries; i += this->GetTree()->GetEntries() )
       {
          if (LoadTree(i) < 0) break;
          TTreeCloner t(GetTree(),hnew,option);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.29 2005/08/03 17:40:34 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.30 2005/11/21 09:47:20 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -301,11 +301,11 @@ Int_t TF2::GetContour(Double_t *levels)
 //*-*  The number of contour levels can be returned by getContourLevel
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-  Int_t nlevels = fContour.fN;
-  if (levels) {
-     for (Int_t level=0; level<nlevels; level++) levels[level] = GetContourLevel(level);
-  }
-  return nlevels;
+   Int_t nlevels = fContour.fN;
+   if (levels) {
+      for (Int_t level=0; level<nlevels; level++) levels[level] = GetContourLevel(level);
+   }
+   return nlevels;
 }
 
 //______________________________________________________________________________
@@ -707,14 +707,14 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 //______________________________________________________________________________
 void TF2::SavePrimitive(ofstream &out, Option_t *option)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TF2::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TF2 *";
+      out<<"   TF2 *";
    }
    if (!fMethodCall) {
       out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<endl;
@@ -780,48 +780,48 @@ void TF2::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TF2::SetContour(Int_t  nlevels, const Double_t *levels)
 {
-//*-*-*-*-*-*-*-*Set the number and values of contour levels*-*-*-*-*-*-*-*-*
-//*-*            ===========================================
-//
-//  By default the number of contour levels is set to 20.
-//
-//  if argument levels = 0 or missing, equidistant contours are computed
-//
+   //*-*-*-*-*-*-*-*Set the number and values of contour levels*-*-*-*-*-*-*-*-*
+   //*-*            ===========================================
+   //
+   //  By default the number of contour levels is set to 20.
+   //
+   //  if argument levels = 0 or missing, equidistant contours are computed
+   //
 
-  Int_t level;
-  if (nlevels <=0 ) {
-     fContour.Set(0);
-     return;
-  }
-  fContour.Set(nlevels);
+   Int_t level;
+   if (nlevels <=0 ) {
+      fContour.Set(0);
+      return;
+   }
+   fContour.Set(nlevels);
 
-//*-*-  Contour levels are specified
-  if (levels) {
-     for (level=0; level<nlevels; level++) fContour.fArray[level] = levels[level];
-  } else {
-     fContour.fArray[0] = -9999; // means not defined at this point
-  }
+   //*-*-  Contour levels are specified
+   if (levels) {
+      for (level=0; level<nlevels; level++) fContour.fArray[level] = levels[level];
+   } else {
+      fContour.fArray[0] = -9999; // means not defined at this point
+   }
 }
 
 
 //______________________________________________________________________________
 void TF2::SetContourLevel(Int_t level, Double_t value)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set value for one contour level*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
-  if (level <0 || level >= fContour.fN) return;
-  fContour.fArray[level] = value;
+   //*-*-*-*-*-*-*-*-*-*-*Set value for one contour level*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*                  ===============================
+   if (level <0 || level >= fContour.fN) return;
+   fContour.fArray[level] = value;
 }
 
 //______________________________________________________________________________
 void TF2::SetNpy(Int_t npy)
 {
-// Set the number of points used to draw the function
-//
-// The default number of points along x is 30 for 2-d/3-d functions.
-// You can increase this value to get a better resolution when drawing
-// pictures with sharp peaks or to get a better result when using TF2::GetRandom2   
-// the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
+   // Set the number of points used to draw the function
+   //
+   // The default number of points along x is 30 for 2-d/3-d functions.
+   // You can increase this value to get a better resolution when drawing
+   // pictures with sharp peaks or to get a better result when using TF2::GetRandom2   
+   // the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
 
    if (npy < 4) {
       Warning("SetNpy","Number of points must be >4 && < 10000, fNpy set to 4");

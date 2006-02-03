@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.272 2006/01/22 05:21:46 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.273 2006/02/01 05:51:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3387,14 +3387,14 @@ const char *TTree::GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) 
 //   index is an array with pointers to the start of name[i] in varexp
 //
 
-  Int_t i1,n;
-  static TString column;
-  if (colindex<0 ) return "";
-  i1 = index[colindex] + 1;
-  n  = index[colindex+1] - i1;
-  column = varexp(i1,n);
-//  return (const char*)Form((const char*)column);
-  return column.Data();
+   Int_t i1,n;
+   static TString column;
+   if (colindex<0 ) return "";
+   i1 = index[colindex] + 1;
+   n  = index[colindex+1] - i1;
+   column = varexp(i1,n);
+   //  return (const char*)Form((const char*)column);
+   return column.Data();
 }
 
 //______________________________________________________________________________
@@ -3510,18 +3510,18 @@ Long64_t TTree::LoadTree(Long64_t entry)
 //______________________________________________________________________________
 Int_t TTree::LoadBaskets(Long64_t maxmemory)
 {
-  // Read in memory all baskets from all branches up to the limit
-  // of maxmemory bytes.
-  // If maxmemory is non null and positive SetMaxVirtualSize is called
-  // with this value. Default for maxmemory is 2000000000 (2 Gigabytes).
-  // The function returns the total number of baskets read into memory
-  // if negative an error occured while loading the branches.
-  // This method may be called to force branch baskets in memory
-  // when random access to branch entries is required.
-  // If random access to only a few branches is required, you should
-  // call directly TBranch::LoadBaskets.
+   // Read in memory all baskets from all branches up to the limit
+   // of maxmemory bytes.
+   // If maxmemory is non null and positive SetMaxVirtualSize is called
+   // with this value. Default for maxmemory is 2000000000 (2 Gigabytes).
+   // The function returns the total number of baskets read into memory
+   // if negative an error occured while loading the branches.
+   // This method may be called to force branch baskets in memory
+   // when random access to branch entries is required.
+   // If random access to only a few branches is required, you should
+   // call directly TBranch::LoadBaskets.
 
-  if (maxmemory > 0) SetMaxVirtualSize(maxmemory);
+   if (maxmemory > 0) SetMaxVirtualSize(maxmemory);
 
    TIter next(GetListOfLeaves());
    TLeaf *leaf;
@@ -3918,78 +3918,78 @@ void TTree::Print(Option_t *option) const
    // through the friends tree, let return
    if (kPrint & fFriendLockStatus) return;
 
-  Int_t s = 0;
-  Int_t skey = 0;
-  if (fDirectory) {
-     TKey *key = fDirectory->GetKey(GetName());
-     if (key) {skey = key->GetKeylen(); s = key->GetNbytes();}
-  }
-  Long64_t total = skey;
-  if (fZipBytes > 0) total += fTotBytes;
-  TBuffer b(TBuffer::kWrite,10000);
-  TTree::Class()->WriteBuffer(b,(TTree*)this);
-  total += b.Length();
+   Int_t s = 0;
+   Int_t skey = 0;
+   if (fDirectory) {
+      TKey *key = fDirectory->GetKey(GetName());
+      if (key) {skey = key->GetKeylen(); s = key->GetNbytes();}
+   }
+   Long64_t total = skey;
+   if (fZipBytes > 0) total += fTotBytes;
+   TBuffer b(TBuffer::kWrite,10000);
+   TTree::Class()->WriteBuffer(b,(TTree*)this);
+   total += b.Length();
 
-  Long64_t file     = fZipBytes + s;
-  Float_t cx     = 1;
-  if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
-  Printf("******************************************************************************");
-  Printf("*Tree    :%-10s: %-54s *",GetName(),GetTitle());
-  Printf("*Entries : %8lld : Total = %15lld bytes  File  Size = %10lld *",fEntries,total,file);
-  Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
-  Printf("******************************************************************************");
+   Long64_t file     = fZipBytes + s;
+   Float_t cx     = 1;
+   if (fZipBytes) cx = (fTotBytes+0.00001)/fZipBytes;
+   Printf("******************************************************************************");
+   Printf("*Tree    :%-10s: %-54s *",GetName(),GetTitle());
+   Printf("*Entries : %8lld : Total = %15lld bytes  File  Size = %10lld *",fEntries,total,file);
+   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
+   Printf("******************************************************************************");
 
-  Int_t nl = const_cast<TTree*>(this)->GetListOfLeaves()->GetEntries();
-  Int_t l;
-  TBranch *br;
-  TLeaf *leaf;
-  if (strstr(option,"toponly")) {
-     Long64_t *count = new Long64_t[nl];
-     Int_t keep =0;
-     for (l=0;l<nl;l++) {
-        leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
-        br   = leaf->GetBranch();
-        if (strchr(br->GetName(),'.')) {
-           count[l] = -1;
-           count[keep] += br->GetZipBytes();
-        } else {
-           keep = l;
-           count[keep]  = br->GetZipBytes();
-        }
-     }
-     for (l=0;l<nl;l++) {
-        if (count[l] < 0) continue;
-        leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
-        br   = leaf->GetBranch();
-        printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
-     }
-     delete [] count;
-  } else {
-     TString reg = "*";
-     if (strlen(option) && strchr(option,'*')) reg = option;
-     TRegexp re(reg,kTRUE);
-     TIter next(const_cast<TTree*>(this)->GetListOfBranches());
-     TBranch::ResetCount();
-     while ((br= (TBranch*)next())) {
-        TString s = br->GetName();
-        s.ReplaceAll("/","_");
-        if (s.Index(re) == kNPOS) continue;
-        br->Print(option);
-     }
-  }
+   Int_t nl = const_cast<TTree*>(this)->GetListOfLeaves()->GetEntries();
+   Int_t l;
+   TBranch *br;
+   TLeaf *leaf;
+   if (strstr(option,"toponly")) {
+      Long64_t *count = new Long64_t[nl];
+      Int_t keep =0;
+      for (l=0;l<nl;l++) {
+         leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
+         br   = leaf->GetBranch();
+         if (strchr(br->GetName(),'.')) {
+            count[l] = -1;
+            count[keep] += br->GetZipBytes();
+         } else {
+            keep = l;
+            count[keep]  = br->GetZipBytes();
+         }
+      }
+      for (l=0;l<nl;l++) {
+         if (count[l] < 0) continue;
+         leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
+         br   = leaf->GetBranch();
+         printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
+      }
+      delete [] count;
+   } else {
+      TString reg = "*";
+      if (strlen(option) && strchr(option,'*')) reg = option;
+      TRegexp re(reg,kTRUE);
+      TIter next(const_cast<TTree*>(this)->GetListOfBranches());
+      TBranch::ResetCount();
+      while ((br= (TBranch*)next())) {
+         TString s = br->GetName();
+         s.ReplaceAll("/","_");
+         if (s.Index(re) == kNPOS) continue;
+         br->Print(option);
+      }
+   }
 
-  //print TRefTable (if one)
-  if (fBranchRef) fBranchRef->Print(option);
+   //print TRefTable (if one)
+   if (fBranchRef) fBranchRef->Print(option);
 
-  //print friends if option "all"
-  if (!fFriends || !strstr(option,"all")) return;
-  TIter nextf(fFriends);
-  TFriendLock lock(const_cast<TTree*>(this),kPrint);
-  TFriendElement *fr;
-  while ((fr = (TFriendElement*)nextf())) {
-     TTree * t = fr->GetTree();
-     if (t) t->Print(option);
-  }
+   //print friends if option "all"
+   if (!fFriends || !strstr(option,"all")) return;
+   TIter nextf(fFriends);
+   TFriendLock lock(const_cast<TTree*>(this),kPrint);
+   TFriendElement *fr;
+   while ((fr = (TFriendElement*)nextf())) {
+      TTree * t = fr->GetTree();
+      if (t) t->Print(option);
+   }
 }
 
 //______________________________________________________________________________
@@ -4199,21 +4199,21 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
    Long64_t nlines = 0;
    while(status > 0) {
 
-     if ( in.peek() != '#' ) {
-       //loop on branches and read the branch values into their buffer
-       for (Int_t i=0;i<nbranches;i++) {
-         branch = (TBranch*)fBranches.At(i);
-         TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
-         leaf->ReadValue(in);
-         status = in.good();
+      if ( in.peek() != '#' ) {
+         //loop on branches and read the branch values into their buffer
+         for (Int_t i=0;i<nbranches;i++) {
+            branch = (TBranch*)fBranches.At(i);
+            TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+            leaf->ReadValue(in);
+            status = in.good();
+            if (status <= 0) break;
+         }
          if (status <= 0) break;
-       }
-       if (status <= 0) break;
-      //we are now ready to fill the tree
-       Fill();
-       nlines++;
-     }
-     in.ignore(8192,'\n');
+         //we are now ready to fill the tree
+         Fill();
+         nlines++;
+      }
+      in.ignore(8192,'\n');
    }
 
    delete [] bdname;
@@ -4380,16 +4380,16 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 }
 
 //_______________________________________________________________________
- void TTree::SetBasketSize(const char *bname, Int_t buffsize)
+void TTree::SetBasketSize(const char *bname, Int_t buffsize)
 {
-//*-*-*-*-*-*-*-*-*Set branc(es) basket size*-*-*-*-*-*-*-*
-//*-*              =========================
-//
-//     bname is the name of a branch.
-//     if bname="*", apply to all branches.
-//     if bname="xxx*", apply to all branches with name starting with xxx
-//     see TRegexp for wildcarding options
-//     buffsize = branc basket size
+   //*-*-*-*-*-*-*-*-*Set branc(es) basket size*-*-*-*-*-*-*-*
+   //*-*              =========================
+   //
+   //     bname is the name of a branch.
+   //     if bname="*", apply to all branches.
+   //     if bname="xxx*", apply to all branches with name starting with xxx
+   //     see TRegexp for wildcarding options
+   //     buffsize = branc basket size
 
    TBranch *branch;
    TLeaf *leaf;
@@ -4412,13 +4412,13 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 }
 
 //_______________________________________________________________________
- void TTree::SetBranchAddress(const char *bname, void *add)
+void TTree::SetBranchAddress(const char *bname, void *add)
 {
-//*-*-*-*-*-*-*-*-*Set branch address*-*-*-*-*-*-*-*
-//*-*              ==================
-//
-//      If object is a TTree, this function is only an interface to TBranch::SetAddress
-//      Function overloaded by TChain.
+   //*-*-*-*-*-*-*-*-*Set branch address*-*-*-*-*-*-*-*
+   //*-*              ==================
+   //
+   //      If object is a TTree, this function is only an interface to TBranch::SetAddress
+   //      Function overloaded by TChain.
 
    TBranch *branch = GetBranch(bname);
    if (branch) {
@@ -4440,9 +4440,9 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 }
 
 //_______________________________________________________________________
- void TTree::SetBranchAddress(const char *bname, void *add,
-                              TClass *ptrClass, EDataType datatype,
-                              Bool_t ptr)
+void TTree::SetBranchAddress(const char *bname, void *add,
+                             TClass *ptrClass, EDataType datatype,
+                             Bool_t ptr)
 {
    //  Verify the validity of the type of add before calling SetBranchAddress.
 
@@ -4518,7 +4518,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
       if (strcmp(bname,"*")) { //Regexp gives wrong result for [] in name
-        if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
+         if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
       }
       nb++;
       if (status) branch->ResetBit(kDoNotProcess);
@@ -5022,10 +5022,10 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree * tree, Bool_t dir)
 //______________________________________________________________________________
 TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter) : TIterator(iter)
 {
-  // Copy constructor
+   // Copy constructor
 
-  fTree = iter.fTree;
-  fDirection = iter.fDirection;
+   fTree = iter.fTree;
+   fDirection = iter.fDirection;
 
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.23 2005/11/21 09:47:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.24 2005/12/31 07:59:36 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -572,9 +572,9 @@ void TF3::SavePrimitive(ofstream &out, Option_t *option)
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TF3::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TF3 *";
+      out<<"   TF3 *";
    }
    if (!fMethodCall) {
       out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<endl;

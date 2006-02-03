@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.42 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.43 2006/01/30 08:00:59 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -400,21 +400,21 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
    }
    if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
-     Double_t xmin = fBuffer[2];
-     Double_t xmax = xmin;
-     Double_t ymin = fBuffer[3];
-     Double_t ymax = ymin;
-     for (Int_t i=1;i<nbentries;i++) {
+      Double_t xmin = fBuffer[2];
+      Double_t xmax = xmin;
+      Double_t ymin = fBuffer[3];
+      Double_t ymax = ymin;
+      for (Int_t i=1;i<nbentries;i++) {
          Double_t x = fBuffer[4*i+2];
          if (x < xmin) xmin = x;
          if (x > xmax) xmax = x;
          Double_t y = fBuffer[4*i+3];
          if (y < ymin) ymin = y;
          if (y > ymax) ymax = y;
-     }
-     if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+      }
+      if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
-     } else {
+      } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
@@ -423,7 +423,7 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
          if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,"Y");
          fBuffer = buffer;
          fBufferSize = keep;
-     }
+      }
    }
 
    fBuffer = 0;
@@ -1143,7 +1143,7 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
       fXaxis.ResetBit(TAxis::kLabelsDown);
       fXaxis.ResetBit(TAxis::kLabelsUp);
    }
-    if (opt.Contains("v")) {
+   if (opt.Contains("v")) {
       fXaxis.SetBit(TAxis::kLabelsVert);
       fXaxis.ResetBit(TAxis::kLabelsHori);
       fXaxis.ResetBit(TAxis::kLabelsDown);
@@ -1489,44 +1489,44 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 //       bin errors of the profile
 //
 
-  TString opt = option;
-  opt.ToLower();
-  Int_t nx = fXaxis.GetNbins();
-  Int_t ny = fYaxis.GetNbins();
+   TString opt = option;
+   opt.ToLower();
+   Int_t nx = fXaxis.GetNbins();
+   Int_t ny = fYaxis.GetNbins();
 
-// Create the projection histogram
-  char *pname = (char*)name;
-  if (strcmp(name,"_px") == 0) {
-     Int_t nch = strlen(GetName()) + 4;
-     pname = new char[nch];
-     sprintf(pname,"%s%s",GetName(),name);
-  }
-  TH2D *h1 = new TH2D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
-  Bool_t computeErrors = kFALSE;
-  Bool_t cequalErrors  = kFALSE;
-  Bool_t binEntries    = kFALSE;
-  if (opt.Contains("b")) binEntries = kTRUE;
-  if (opt.Contains("e")) computeErrors = kTRUE;
-  if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
-  if (computeErrors) h1->Sumw2();
-  if (pname != name)  delete [] pname;
+   // Create the projection histogram
+   char *pname = (char*)name;
+   if (strcmp(name,"_px") == 0) {
+      Int_t nch = strlen(GetName()) + 4;
+      pname = new char[nch];
+      sprintf(pname,"%s%s",GetName(),name);
+   }
+   TH2D *h1 = new TH2D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+   Bool_t computeErrors = kFALSE;
+   Bool_t cequalErrors  = kFALSE;
+   Bool_t binEntries    = kFALSE;
+   if (opt.Contains("b")) binEntries = kTRUE;
+   if (opt.Contains("e")) computeErrors = kTRUE;
+   if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
+   if (computeErrors) h1->Sumw2();
+   if (pname != name)  delete [] pname;
 
-// Fill the projected histogram
-  Int_t bin,binx, biny;
-  Double_t cont,err;
-  for (binx =0;binx<=nx+1;binx++) {
-     for (biny =0;biny<=ny+1;biny++) {
-        bin = GetBin(binx,biny);
-        if (binEntries)    cont = GetBinEntries(bin);
-        else               cont = GetBinContent(binx,biny);
-        err   = GetBinError(binx,biny);
-        if (cequalErrors)  h1->SetBinContent(binx,biny, err);
-        else               h1->SetBinContent(binx,biny, cont);
-        if (computeErrors) h1->SetBinError(binx,biny,err);
-     }
-  }
-  h1->SetEntries(fEntries);
-  return h1;
+   // Fill the projected histogram
+   Int_t bin,binx, biny;
+   Double_t cont,err;
+   for (binx =0;binx<=nx+1;binx++) {
+      for (biny =0;biny<=ny+1;biny++) {
+         bin = GetBin(binx,biny);
+         if (binEntries)    cont = GetBinEntries(bin);
+         else               cont = GetBinContent(binx,biny);
+         err   = GetBinError(binx,biny);
+         if (cequalErrors)  h1->SetBinContent(binx,biny, err);
+         else               h1->SetBinContent(binx,biny, cont);
+         if (computeErrors) h1->SetBinError(binx,biny,err);
+      }
+   }
+   h1->SetEntries(fEntries);
+   return h1;
 }
 
 //______________________________________________________________________________

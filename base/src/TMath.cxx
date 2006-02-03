@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.111 2006/01/31 17:08:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.112 2006/02/03 14:56:12 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1270,70 +1270,70 @@ Double_t TMath::Voigt(Double_t xx, Double_t sigma, Double_t lg, Int_t r)
 //______________________________________________________________________________
 Bool_t TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
 {
-  // Calculates roots of polynomial of 3rd order a*x^3 + b*x^2 + c*x + d, where
-  // a == coef[3], b == coef[2], c == coef[1], d == coef[0]
-  //coef[3] must be different from 0
-  // If the boolean returned by the method is false:
-  //    ==> there are 3 real roots a,b,c
-  // If the boolean returned by the method is true:
-  //    ==> there is one real root a and 2 complex conjugates roots (b+i*c,b-i*c)
-  // Author: Francois-Xavier Gentit
+   // Calculates roots of polynomial of 3rd order a*x^3 + b*x^2 + c*x + d, where
+   // a == coef[3], b == coef[2], c == coef[1], d == coef[0]
+   //coef[3] must be different from 0
+   // If the boolean returned by the method is false:
+   //    ==> there are 3 real roots a,b,c
+   // If the boolean returned by the method is true:
+   //    ==> there is one real root a and 2 complex conjugates roots (b+i*c,b-i*c)
+   // Author: Francois-Xavier Gentit
 
-  Bool_t complex = kFALSE;
-  Double_t r,s,t,p,q,d,ps3,ps33,qs2,u,v,tmp,lnu,lnv,su,sv,y1,y2,y3;
-  a    = 0;
-  b    = 0;
-  c    = 0;
-  if (coef[3] == 0) return complex;
-  r    = coef[2]/coef[3];
-  s    = coef[1]/coef[3];
-  t    = coef[0]/coef[3];
-  p    = s - (r*r)/3;
-  ps3  = p/3;
-  q    = (2*r*r*r)/27.0 - (r*s)/3 + t;
-  qs2  = q/2;
-  ps33 = ps3*ps3*ps3;
-  d    = ps33 + qs2*qs2;
-  if (d>=0) {
-     complex = kTRUE;
-     d   = TMath::Sqrt(d);
-     u   = -qs2 + d;
-     v   = -qs2 - d;
-     tmp = 1./3.;
-     lnu = TMath::Log(TMath::Abs(u));
-     lnv = TMath::Log(TMath::Abs(v));
-     su  = TMath::Sign(1.,u);
-     sv  = TMath::Sign(1.,v);
-     u   = su*TMath::Exp(tmp*lnu);
-     v   = sv*TMath::Exp(tmp*lnv);
-     y1  = u + v;
-     y2  = -y1/2;
-     y3  = ((u-v)*TMath::Sqrt(3.))/2;
-     tmp = r/3;
-     a   = y1 - tmp;
-     b   = y2 - tmp;
-     c   = y3;
-  } else {
-     Double_t phi,cphi,phis3,c1,c2,c3,pis3;
-     ps3   = -ps3;
-     ps33  = -ps33;
-     cphi  = -qs2/TMath::Sqrt(ps33);
-     phi   = TMath::ACos(cphi);
-     phis3 = phi/3;
-     pis3  = TMath::Pi()/3;
-     c1    = TMath::Cos(phis3);
-     c2    = TMath::Cos(pis3 + phis3);
-     c3    = TMath::Cos(pis3 - phis3);
-     tmp   = TMath::Sqrt(ps3);
-     y1    = 2*tmp*c1;
-     y2    = -2*tmp*c2;
-     y3    = -2*tmp*c3;
-     tmp = r/3;
-     a   = y1 - tmp;
-     b   = y2 - tmp;
-     c   = y3 - tmp;
-  }
-  return complex;
+   Bool_t complex = kFALSE;
+   Double_t r,s,t,p,q,d,ps3,ps33,qs2,u,v,tmp,lnu,lnv,su,sv,y1,y2,y3;
+   a    = 0;
+   b    = 0;
+   c    = 0;
+   if (coef[3] == 0) return complex;
+   r    = coef[2]/coef[3];
+   s    = coef[1]/coef[3];
+   t    = coef[0]/coef[3];
+   p    = s - (r*r)/3;
+   ps3  = p/3;
+   q    = (2*r*r*r)/27.0 - (r*s)/3 + t;
+   qs2  = q/2;
+   ps33 = ps3*ps3*ps3;
+   d    = ps33 + qs2*qs2;
+   if (d>=0) {
+      complex = kTRUE;
+      d   = TMath::Sqrt(d);
+      u   = -qs2 + d;
+      v   = -qs2 - d;
+      tmp = 1./3.;
+      lnu = TMath::Log(TMath::Abs(u));
+      lnv = TMath::Log(TMath::Abs(v));
+      su  = TMath::Sign(1.,u);
+      sv  = TMath::Sign(1.,v);
+      u   = su*TMath::Exp(tmp*lnu);
+      v   = sv*TMath::Exp(tmp*lnv);
+      y1  = u + v;
+      y2  = -y1/2;
+      y3  = ((u-v)*TMath::Sqrt(3.))/2;
+      tmp = r/3;
+      a   = y1 - tmp;
+      b   = y2 - tmp;
+      c   = y3;
+   } else {
+      Double_t phi,cphi,phis3,c1,c2,c3,pis3;
+      ps3   = -ps3;
+      ps33  = -ps33;
+      cphi  = -qs2/TMath::Sqrt(ps33);
+      phi   = TMath::ACos(cphi);
+      phis3 = phi/3;
+      pis3  = TMath::Pi()/3;
+      c1    = TMath::Cos(phis3);
+      c2    = TMath::Cos(pis3 + phis3);
+      c3    = TMath::Cos(pis3 - phis3);
+      tmp   = TMath::Sqrt(ps3);
+      y1    = 2*tmp*c1;
+      y2    = -2*tmp*c2;
+      y3    = -2*tmp*c3;
+      tmp = r/3;
+      a   = y1 - tmp;
+      b   = y2 - tmp;
+      c   = y3 - tmp;
+   }
+   return complex;
 }
 
 //______________________________________________________________________________

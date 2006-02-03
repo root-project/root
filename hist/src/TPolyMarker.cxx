@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.15 2005/01/03 10:49:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.16 2005/05/18 12:31:09 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -267,9 +267,9 @@ void TPolyMarker::SavePrimitive(ofstream &out, Option_t *option)
    out<<"   "<<endl;
    out<<"   Double_t *dum = 0;"<<endl;
    if (gROOT->ClassSaved(TPolyMarker::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TPolyMarker *";
+      out<<"   TPolyMarker *";
    }
    out<<"pmarker = new TPolyMarker("<<fN<<",dum,dum,"<<quote<<fOption<<quote<<");"<<endl;
 
@@ -350,8 +350,8 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    for (Int_t i=0; i<fN;i++) {
-     if (x) fX[i] = (Double_t)x[i];
-     if (y) fY[i] = (Double_t)y[i];
+      if (x) fX[i] = (Double_t)x[i];
+      if (y) fY[i] = (Double_t)y[i];
    }
    fOption = option;
    fLastPoint = fN-1;
@@ -375,8 +375,8 @@ void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *opt
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    for (Int_t i=0; i<fN;i++) {
-     if (x) fX[i] = x[i];
-     if (y) fY[i] = y[i];
+      if (x) fX[i] = x[i];
+      if (y) fY[i] = y[i];
    }
    fOption = option;
    fLastPoint = fN-1;

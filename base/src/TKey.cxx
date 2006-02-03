@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.51 2006/01/24 21:30:17 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.52 2006/02/01 18:54:51 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -614,8 +614,8 @@ TObject *TKey::ReadObj()
 
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!cl) {
-       Error("ReadObj", "Unknown class %s", fClassName.Data());
-       return 0;
+      Error("ReadObj", "Unknown class %s", fClassName.Data());
+      return 0;
    }
    if (!cl->InheritsFrom(TObject::Class())) {
       // in principle user should call TKey::ReadObjectAny!
