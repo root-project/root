@@ -4620,6 +4620,7 @@ propagate(GdkWindow ** window,
    }
 
    while (TRUE) {
+      if (GDK_DRAWABLE_TYPE(*window) == GDK_WINDOW_FOREIGN) return FALSE;
       if ((*doesnt_want_it)
           (GDK_WINDOW_WIN32DATA(*window)->event_mask, xevent) ) {
          /* Owner doesn't want it, propagate to parent. */
