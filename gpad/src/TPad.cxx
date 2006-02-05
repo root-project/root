@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.218 2006/01/09 08:34:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.219 2006/01/12 16:56:08 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4794,6 +4794,7 @@ void TPad::SetLogx(Int_t value)
 
    fLogx = value;
    delete fView; fView=0;
+   Modified();
 }
 
 
@@ -4807,6 +4808,7 @@ void TPad::SetLogy(Int_t value)
 
    fLogy = value;
    delete fView; fView=0;
+   Modified();
 }
 
 
@@ -4817,6 +4819,7 @@ void TPad::SetLogz(Int_t value)
 
    fLogz = value;
    delete fView; fView=0;
+   Modified();
 }
 
 

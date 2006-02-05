@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.41 2005/11/17 14:43:17 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.42 2006/01/31 14:13:32 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -294,8 +294,8 @@ public:
    virtual void      ResetView3D(TPadView3D *view=0){fPadView3D=view;}
    virtual void      ResizePad(Option_t *option="");
    virtual void      SaveAs(const char *filename=""); // *MENU*
-   virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
-   virtual void      SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*
+   virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode; Modified();} // *MENU*
+   virtual void      SetBorderSize(Short_t bordersize) {fBorderSize = bordersize; Modified();} // *MENU*
    void              SetCanvas(TCanvas *c) { fCanvas = c; }
    virtual void      SetCanvasSize(UInt_t ww, UInt_t wh);
    virtual void      SetCrosshair(Int_t crhair=1); // *TOGGLE*
@@ -304,9 +304,9 @@ public:
    virtual void      SetDrawOption(Option_t *option="");
    virtual void      SetEditable(Bool_t mode=kTRUE); // *TOGGLE*
    virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
-   virtual void      SetGrid(Int_t valuex = 1, Int_t valuey = 1) {fGridx = valuex; fGridy = valuey;}
-   virtual void      SetGridx(Int_t value = 1) {fGridx = value;} // *TOGGLE*
-   virtual void      SetGridy(Int_t value = 1) {fGridy = value;} // *TOGGLE*
+   virtual void      SetGrid(Int_t valuex = 1, Int_t valuey = 1) {fGridx = valuex; fGridy = valuey; Modified();}
+   virtual void      SetGridx(Int_t value = 1) {fGridx = value; Modified();} // *TOGGLE*
+   virtual void      SetGridy(Int_t value = 1) {fGridy = value; Modified();} // *TOGGLE*
    virtual void      SetFillStyle(Style_t fstyle);
    virtual void      SetLogx(Int_t value = 1); // *TOGGLE*
    virtual void      SetLogy(Int_t value = 1); // *TOGGLE*
@@ -324,12 +324,12 @@ public:
    static  void      SetMaxPickDistance(Int_t maxPick=5);
    virtual void      SetName(const char *name) {fName = name;} // *MENU*
    virtual void      SetSelected(TObject *obj);
-   virtual void      SetTicks(Int_t valuex = 1, Int_t valuey = 1) {fTickx = valuex; fTicky = valuey;}
-   virtual void      SetTickx(Int_t value = 1) {fTickx = value;} // *TOGGLE*
-   virtual void      SetTicky(Int_t value = 1) {fTicky = value;} // *TOGGLE*
+   virtual void      SetTicks(Int_t valuex = 1, Int_t valuey = 1) {fTickx = valuex; fTicky = valuey; Modified();}
+   virtual void      SetTickx(Int_t value = 1) {fTickx = value; Modified();} // *TOGGLE*
+   virtual void      SetTicky(Int_t value = 1) {fTicky = value; Modified();} // *TOGGLE*
    virtual void      SetTitle(const char *title="") {fTitle = title;}
-   virtual void      SetTheta(Double_t theta=30) {fTheta = theta;}
-   virtual void      SetPhi(Double_t phi=30) {fPhi = phi;}
+   virtual void      SetTheta(Double_t theta=30) {fTheta = theta; Modified();}
+   virtual void      SetPhi(Double_t phi=30) {fPhi = phi; Modified();}
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
