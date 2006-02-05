@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.241 2006/01/31 10:22:26 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.242 2006/02/01 16:00:11 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -962,7 +962,7 @@ void THistPainter::Paint(Option_t *option)
    //    "FB"     : With LEGO or SURFACE, suppress the Front-Box
    //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
    //    "SCAT"   : Draw a scatter-plot (default)
-   //    "TEXT"   : Draw bin contents as text
+   //    "TEXT"   : Draw bin contents as text (format set via gStyle->SetPaintTextFormat)
    //    "TEXTnn" : Draw bin contents as text at angle nn (0 < nn < 90)
    //    "[cutg]" : Draw only the sub-range selected by the TCutG named "cutg"
    //
