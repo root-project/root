@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.5 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.6 2006/01/31 20:59:24 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include <Riostream.h>
 #include <vector>
+#include <map>
 
 #include "TString.h"
 #include "TROOT.h"
@@ -508,6 +509,7 @@ void TTreeSQL::CreateTable(const TString &table)
       }  // inner for loop
    } // outer for loop
    // retrieve table to initialize fResult
+   delete fResult;
    fResult = fServer->Query(fQuery.Data());
 }
 
@@ -520,6 +522,7 @@ void TTreeSQL::Init()
 
    GetEntries();
 
+   delete fResult;
    fResult = fServer->Query(fQuery.Data());
    if(!fResult) return;
 
@@ -582,6 +585,21 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
 
    Int_t nl = branch->GetNleaves();
    
+   vector<TString> names;
+
+   TSQLResult *rs = fServer->GetColumns(fDB,fTable);
+   if (rs==0) { delete columns; return 0; }
+   Int_t rows = rs->GetRowCount();
+
+   pair<TString,Int_t> value;
+
+   for (Int_t i=0;i<rows;++i) {
+      TSQLRow *row = rs->Next();
+      names.push_back( row->GetField(0) );
+      delete row;
+   }
+   delete rs;
+
    for(int j=0;j<nl;j++) {
      
       Int_t col = -1;
@@ -597,18 +615,12 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
       } else {
          str = leafName;
       }
-      
-      TSQLResult *rs = fServer->GetColumns(fDB,fTable);
-      if (rs==0) break;
-      Int_t rows = rs->GetRowCount();
       for (Int_t i=0;i<rows;++i) {
-         TSQLRow *row = rs->Next();
-         if (str==row->GetField(0)) {
+         if (str == names[i]) {
             col = i;
             break;
          }
       }
-      
       if(col>=0){
          columns->push_back(col);
       } else Error("GetColumnIndice","Error finding column %d %s",j,str.Data());
@@ -683,7 +695,10 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
 
    if(entry == fCurrentEntry) return entry;
 
+   fprintf(stderr,"PrepEntry with %s\n",fQuery.Data());
+
    if(entry < fCurrentEntry || fResult==0){
+      delete fResult;
       fResult = fServer->Query(fQuery.Data());
       fCurrentEntry = -1;
    }
@@ -691,8 +706,10 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
    Bool_t reset = false;
    while ( fCurrentEntry < entry ) {
       ++fCurrentEntry;
+      delete fRow;
       fRow = fResult->Next();
       if (fRow==0 && !reset) {
+         delete fResult;
          fResult = fServer->Query(fQuery.Data());
          fCurrentEntry = -1;
          reset = true;
