@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.90 2005/12/11 10:36:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.91 2006/01/10 09:24:59 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -524,7 +524,7 @@ void TRootCanvas::CreateCanvas(const char *name)
       }
 
       if (gGLManager) {
-         fCanvasID = gGLManager->InitGLWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId(), kTRUE);
+         fCanvasID = gGLManager->InitGLWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
          if (fCanvasID != -1)
             //Info("CreateCanvas", "InitGLWindow OK\n");
             fCanvas->SetSupportGL(kTRUE);
