@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.14 2006/01/12 16:56:08 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.15 2006/01/26 11:59:42 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -133,24 +133,23 @@ public:
 class TGWin32GLManagerProxy : public TGLManager, public TGWin32ProxyBase {
 public:
    TGWin32GLManagerProxy();
-   virtual Int_t    InitGLWindow(Window_t winID, Bool_t isOffScreen);
-   virtual Int_t    CreateGLContext(Int_t winInd);
-   virtual Int_t    OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
 
-   virtual void     ResizeGLPixmap(Int_t pix, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual void     SelectGLPixmap(Int_t pixInd);
-   virtual Int_t    GetVirtualXInd(Int_t pixID);
-   virtual void     MarkForDirectCopy(Int_t pixInd, Bool_t);
-   virtual Bool_t   MakeCurrent(Int_t deviceInd);
-   virtual void     Flush(Int_t deviceInd, Int_t, Int_t y);
-   virtual void     DeletePaintDevice(Int_t deviceInd);
-   virtual void     ExtractViewport(Int_t pixId, Int_t *vp);
-   virtual void     DrawViewer(TVirtualViewer3D *vv);
-   virtual TObject *Select(TVirtualViewer3D *vv, Int_t x, Int_t y);
-
-   void PrintViewer(TVirtualViewer3D *);
-   
-   virtual void     PaintSingleObject(TVirtualGLPainter *obj);
+   Int_t    InitGLWindow(Window_t winID);
+   Int_t    CreateGLContext(Int_t winInd);
+   Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void     SelectOffScreenDevice(Int_t devInd);
+   Int_t    GetVirtualXInd(Int_t devInd);
+   void     MarkForDirectCopy(Int_t devInd, Bool_t);
+   void     ExtractViewport(Int_t devInd, Int_t *vp);
+   void     ReadGLBuffer(Int_t devInd);
+   Bool_t   MakeCurrent(Int_t devInd);
+   void     Flush(Int_t ctxInd);
+   void     DeleteGLContext(Int_t devInd);
+   void     DrawViewer(TVirtualViewer3D *vv);
+   TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y);
+   void     PaintSingleObject(TVirtualGLPainter *);
+   void     PrintViewer(TVirtualViewer3D *vv);
 
    static TGLManager *ProxyObject();
    static TGLManager *RealObject();

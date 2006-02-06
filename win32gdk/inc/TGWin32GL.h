@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.6 2005/11/17 14:43:17 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.7 2006/01/12 16:56:08 couet Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -53,27 +53,50 @@ public:
 	TGWin32GLManager();
 	~TGWin32GLManager();
 
-	Int_t InitGLWindow(Window_t winId, Bool_t isOffScreen);
-	Int_t CreateGLContext(Int_t winInd);
-	Int_t OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt_t h);	
+   //All public functions are TGLManager's final-overriders
 
-	void ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
-	void SelectGLPixmap(Int_t pixInd);
-	Int_t GetVirtualXInd(Int_t pixInd);
-	void MarkForDirectCopy(Int_t pixInd, Bool_t isDirect);
+   //index returned can be used as a result of gVirtualX->InitWindow
+   Int_t    InitGLWindow(Window_t winID);
+   //winInd is the index, returned by InitGLWindow
+   Int_t    CreateGLContext(Int_t winInd);
 
-	Bool_t MakeCurrent(Int_t deviceInd);
-	void Flush(Int_t deviceInd, Int_t x, Int_t y);
-	void DeletePaintDevice(Int_t deviceInd);
-	void ExtractViewport(Int_t deviceInd, Int_t *viewport);
-   void DrawViewer(TVirtualViewer3D *v);
-   TObject *Select(TVirtualViewer3D *v, Int_t x, Int_t y);
-   void PrintViewer(TVirtualViewer3D *vv){vv->PrintObjects();}
-   
-   void PaintSingleObject(TVirtualGLPainter *obj);
+   //[            Off-screen rendering part
+   //create DIB section to read GL buffer into it, 
+   //ctxInd is the index, returned by CreateGLContext
+   Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   //analog of gVirtualX->SelectWindow(fPixmapID) => gVirtualGL->SelectOffScreenDevice(fPixmapID)
+   void     SelectOffScreenDevice(Int_t devInd);
+   //Index of DIB, valid for gVirtualX
+   Int_t    GetVirtualXInd(Int_t devInd);
+   //copy DIB into window directly/by pad
+   void     MarkForDirectCopy(Int_t devInd, Bool_t);
+   //Off-screen device holds sizes for glViewport
+   void     ExtractViewport(Int_t devInd, Int_t *vp);
+   //Read GL buffer into DIB
+   void     ReadGLBuffer(Int_t devInd);
+   //]            
+
+   //Make the gl context current
+   Bool_t   MakeCurrent(Int_t devInd);
+   //Swap buffers or "blits" DIB
+   void     Flush(Int_t ctxInd);
+   //Generic function for gl context and off-screen device deletion
+   void     DeleteGLContext(Int_t devInd);
+
+   //functions to switch between threads in win32
+   //used by viewer
+   void     DrawViewer(TVirtualViewer3D *vv);
+   TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y);
+   void     PaintSingleObject(TVirtualGLPainter *);
+   void     PrintViewer(TVirtualViewer3D *vv);
+
 private:
-	Bool_t CreateGLPixmap(Int_t wid, Int_t x, Int_t y, UInt_t w, 
-                         UInt_t h, Int_t prevInd = -1);
+   struct TGLContext;
+	Bool_t   CreateDIB(TGLContext &ctx)const;
+
+   TGWin32GLManager(const TGWin32GLManager &);
+   TGWin32GLManager &operator = (const TGWin32GLManager &);
 
 	ClassDef(TGWin32GLManager, 0)
 };

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.29 2005/08/17 09:10:44 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.30 2006/02/03 09:04:52 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -186,7 +186,7 @@ public:
    Window_t  GetWindowID(Int_t wid);
    Bool_t    HasTTFonts() const { return fHasTTFonts; }
    Int_t     InitWindow(ULong_t window);
-   Int_t     AddPixmap(ULong_t pix, UInt_t w, UInt_t h, Int_t prevInd);
+   Int_t     AddPixmap(ULong_t pix, UInt_t w, UInt_t h);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
    void      QueryPointer(Int_t &ix, Int_t &iy);

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.16 2006/01/12 16:56:08 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.17 2006/01/26 11:59:42 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -137,16 +137,17 @@ TGWin32GLManagerProxy::TGWin32GLManagerProxy()
 }
 
 RETURN_PROXY_OBJECT(GLManager)
-RETURN_METHOD_ARG2(GLManager, Int_t, InitGLWindow, Window_t, winID, Bool_t, isOffScreen)
+RETURN_METHOD_ARG1(GLManager, Int_t, InitGLWindow, Window_t, winID)
 RETURN_METHOD_ARG1(GLManager, Int_t, CreateGLContext, Int_t, winInd)
-RETURN_METHOD_ARG5(GLManager, Int_t, OpenGLPixmap, Int_t, winInd, Int_t, x, Int_t, y, UInt_t, w, UInt_t, h)
-VOID_METHOD_ARG5(GLManager, ResizeGLPixmap, Int_t, pixInd, Int_t, x, Int_t, y, UInt_t, w, UInt_t, h, 1)
-VOID_METHOD_ARG1(GLManager, SelectGLPixmap, Int_t, pixInd, 1)
+RETURN_METHOD_ARG5(GLManager, Bool_t, AttachOffScreenDevice, Int_t, winInd, Int_t, x, Int_t, y, UInt_t, w, UInt_t, h)
+RETURN_METHOD_ARG5(GLManager, Bool_t, ResizeOffScreenDevice, Int_t, pixInd, Int_t, x, Int_t, y, UInt_t, w, UInt_t, h)
+VOID_METHOD_ARG1(GLManager, SelectOffScreenDevice, Int_t, pixInd, 1)
 RETURN_METHOD_ARG1(GLManager, Int_t, GetVirtualXInd, Int_t, pixInd)
 VOID_METHOD_ARG2(GLManager, MarkForDirectCopy, Int_t, pixInd, Bool_t, direct, 1)
 RETURN_METHOD_ARG1(GLManager, Bool_t, MakeCurrent, Int_t, devInd)
-VOID_METHOD_ARG3(GLManager, Flush, Int_t, devInd, Int_t, x, Int_t, y, 1)
-VOID_METHOD_ARG1(GLManager, DeletePaintDevice, Int_t, devInd, 1)
+VOID_METHOD_ARG1(GLManager, Flush, Int_t, devInd, 1)
+VOID_METHOD_ARG1(GLManager, ReadGLBuffer, Int_t, devInd, 1)
+VOID_METHOD_ARG1(GLManager, DeleteGLContext, Int_t, devInd, 1)
 VOID_METHOD_ARG2(GLManager, ExtractViewport, Int_t, pixInd, Int_t *, vp, 1)
 VOID_METHOD_ARG1(GLManager, DrawViewer, TVirtualViewer3D *, vv, 1)
 VOID_METHOD_ARG1(GLManager, PrintViewer, TVirtualViewer3D *, vv, 1)

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.105 2006/02/03 09:04:52 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.106 2006/02/04 09:49:53 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -6993,72 +6993,45 @@ Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
 }
 
 //______________________________________________________________________________
-Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h, Int_t prevInd)
+Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h)
 {
    //register pixmap created by TGWin32GLManager
-   if (prevInd == -1) {
-      HBITMAP hBmp = reinterpret_cast<HBITMAP>(pix);
-      SIZE sz = SIZE();
+   HBITMAP hBmp = reinterpret_cast<HBITMAP>(pix);
+   SIZE sz = SIZE();
 
-      SetBitmapDimensionEx(hBmp, w, h, &sz);
+   SetBitmapDimensionEx(hBmp, w, h, &sz);
+   GdkPixmap *newPix = gdk_pixmap_foreign_new(reinterpret_cast<guint32>(hBmp));
 
-      GdkPixmap *newPix = gdk_pixmap_foreign_new(reinterpret_cast<guint32>(hBmp));
-      Int_t wid = 0;
+   Int_t wid = 0;
+   for(; wid < fMaxNumberOfWindows; ++wid)
+      if (!fWindows[wid].open)
+         break;
 
-      for(; wid < fMaxNumberOfWindows; ++wid)
-         if (!fWindows[wid].open)
-            break;
+   if (wid == fMaxNumberOfWindows) {
+      Int_t newSize = fMaxNumberOfWindows + 10;
 
-      if (wid == fMaxNumberOfWindows) {
-         Int_t newSize = fMaxNumberOfWindows + 10;
+      fWindows = (XWindow_t *)TStorage::ReAlloc(fWindows, newSize * sizeof(XWindow_t),
+                                                fMaxNumberOfWindows * sizeof(XWindow_t));
 
-         fWindows = (XWindow_t *) TStorage::ReAlloc(fWindows, newSize * sizeof(XWindow_t),
-                                                 fMaxNumberOfWindows * sizeof(XWindow_t));
-
-         for (Int_t i = fMaxNumberOfWindows; i < newSize; ++i)
-            fWindows[i].open = 0;
-      
-         fMaxNumberOfWindows = newSize;
-      }
-
-      fWindows[wid].open = 1;
-      gCws = fWindows + wid;
-      gCws->window = newPix;
-      gCws->drawing = gCws->window;
-      gCws->buffer = 0;
-      gCws->double_buffer = 0;
-      gCws->ispixmap = 1;
-      gCws->clip = 0;
-      gCws->width = w;
-      gCws->height = h;
-      gCws->new_colors = 0;
-
-      return wid;
-   } else if (!pix) {
-      //just set new sizes
-      fWindows[prevInd].width = w;
-      fWindows[prevInd].height = h;
-
-      return prevInd;
-   } else {
-      //set new pixmap and sizes
-      HBITMAP hBmp = reinterpret_cast<HBITMAP>(pix);
-      SIZE sz = SIZE();
-      //the same as in CreatePixmapFromData
-      SetBitmapDimensionEx(hBmp, w, h, &sz);
-      GdkPixmap *newPix = gdk_pixmap_foreign_new(reinterpret_cast<guint32>(hBmp));
-
-      //lets remove old pixmap first (gl context should be destroyed by gGLManager)
-      gdk_pixmap_unref(fWindows[prevInd].window);
-
-      gCws = fWindows + prevInd; //do I need this ?
-      gCws->width = w;
-      gCws->height = h;
-      gCws->window = newPix;
-      gCws->drawing = newPix;
-
-      return prevInd;
+      for (Int_t i = fMaxNumberOfWindows; i < newSize; ++i)
+         fWindows[i].open = 0;
+   
+      fMaxNumberOfWindows = newSize;
    }
+
+   fWindows[wid].open = 1;
+   gCws = fWindows + wid;
+   gCws->window = newPix;
+   gCws->drawing = gCws->window;
+   gCws->buffer = 0;
+   gCws->double_buffer = 0;
+   gCws->ispixmap = 1;
+   gCws->clip = 0;
+   gCws->width = w;
+   gCws->height = h;
+   gCws->new_colors = 0;
+
+   return wid;
 }
 
 //______________________________________________________________________________
