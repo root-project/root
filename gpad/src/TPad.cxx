@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.219 2006/01/12 16:56:08 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.220 2006/02/05 11:51:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -302,7 +302,7 @@ TPad::~TPad()
    delete fViewer3D;
 
    if (fGLDevice != -1)
-      gGLManager->DeletePaintDevice(fGLDevice);
+      gGLManager->DeleteGLContext(fGLDevice);
 }
 
 
@@ -4458,10 +4458,8 @@ void TPad::ResizePad(Option_t *option)
                XYtoAbsPixel(fX1, fY2, px, py);
                if (ww < 0) ww = 1;//not to get HUGE pixmap :)
                if (hh < 0) hh = 1;//not to get HUGE pixmap :)
-               gGLManager->ResizeGLPixmap(fGLDevice, px + borderSize, py + borderSize, ww, hh);
-               //after gl-pixmap was resized, we need to repaint not to get something interesting
-               if (fEmbeddedGL) gGLManager->DrawViewer(fViewer3D);
-               else Modified(kTRUE);
+               if (gGLManager->ResizeOffScreenDevice(fGLDevice, px + borderSize, py + borderSize, ww, hh))
+                  Modified(kTRUE);
             }
 
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
@@ -5477,7 +5475,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // External viewers need to be created via plugin manager via interface...
    if (!strstr(type,"pad")) {
       if (fGLDevice != -1) {
-         gGLManager->DeletePaintDevice(fGLDevice);
+         gGLManager->DeleteGLContext(fGLDevice);
          fCanvas->SetSelected(this);
          fGLDevice = -1;
          fCopyGLDevice = kFALSE;
@@ -5550,8 +5548,11 @@ Int_t TPad::GetGLDevice()
       Int_t px = 0, py = 0;
       XYtoAbsPixel(fX1, fY2, px, py);
       px += borderSize, py += borderSize;
-
-      fGLDevice = gGLManager->OpenGLPixmap(fCanvas->GetCanvasID(), px, py, w, h);
+      fGLDevice = gGLManager->CreateGLContext(fCanvas->GetCanvasID());
+      if (fGLDevice != -1 && !gGLManager->AttachOffScreenDevice(fGLDevice, px, py, w, h)) {
+         gGLManager->DeleteGLContext(fGLDevice);
+         fGLDevice = -1;
+      }
    }
 
    return fGLDevice;

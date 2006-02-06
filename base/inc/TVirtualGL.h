@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.26 2006/01/26 11:59:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.27 2006/02/03 21:55:38 pcanal Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -191,50 +191,48 @@ public:
    TGLManager();
 
    //index returned can be used as a result of gVirtualX->InitWindow
-   //isOffScreen important only for GLX, not for WGL
-   virtual Int_t    InitGLWindow(Window_t winID, Bool_t isOffScreen = kFALSE) = 0;
-   //virtual void     CloseGLWindow(Int_t winInd) = 0;
-   //double-buffered on-screen rendering
+   virtual Int_t    InitGLWindow(Window_t winID) = 0;
+   //winInd is the index, returned by InitGLWindow
    virtual Int_t    CreateGLContext(Int_t winInd) = 0;
-   //off-screen rendering into pixmap (DIB section)
-   //this pixmap cannot be used directly with gVirtualX
-   virtual Int_t    OpenGLPixmap(Int_t winInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
-   virtual void     ResizeGLPixmap(Int_t pixInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
 
-   //instead of gVirtualX->SelectWindow(fPixmapID) => gVirtualGL->SelectGLPixmap(fPixmapID)
-   //after that gVirtualX can draw into this pixmap
-   virtual void     SelectGLPixmap(Int_t pixInd) = 0;
-   //GLX pixmap or DIB can be used directly by TVirtualX,
-   //obtain correct index first
-   virtual Int_t    GetVirtualXInd(Int_t pixInd) = 0;
-   //copy pixmap into window directly, without gVirtualX (which copies into buffer first
-   // and requires gVirtualX->UpdateWindow)
-   virtual void     MarkForDirectCopy(Int_t pixInd, Bool_t) = 0;
-   //can be used with gl context and gl pixmaps
-   virtual Bool_t   MakeCurrent(Int_t devInd) = 0;
-   //can be used with gl context and gl pixmap and context
-   virtual void     Flush(Int_t devInd, Int_t x = 0, Int_t y = 0) = 0;
-   virtual void     DeletePaintDevice(Int_t devInd) = 0;
-   //viewport extracted only for pixmap
-   virtual void     ExtractViewport(Int_t devInd, Int_t *vp) = 0;
+   //[            Off-screen rendering part
+   //create DIB section/pixmap to read GL buffer into it, 
+   //ctxInd is the index, returned by CreateGLContext
+   virtual Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
+   virtual Bool_t   ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h) = 0;
+   //analog of gVirtualX->SelectWindow(fPixmapID) => gVirtualGL->SelectOffScreenDevice(fPixmapID)
+   virtual void     SelectOffScreenDevice(Int_t ctxInd) = 0;
+   //Index of DIB/pixmap, valid for gVirtualX
+   virtual Int_t    GetVirtualXInd(Int_t ctxInd) = 0;
+   //copy pixmap into window directly
+   virtual void     MarkForDirectCopy(Int_t ctxInd, Bool_t) = 0;
+   //Off-screen device holds sizes for glViewport
+   virtual void     ExtractViewport(Int_t ctxInd, Int_t *vp) = 0;
+   //Read GL buffer into off-screen device
+   virtual void     ReadGLBuffer(Int_t ctxInd) = 0;
+   //]            
+   
+   //Make the gl context current
+   virtual Bool_t   MakeCurrent(Int_t ctxInd) = 0;
+   //Swap buffers or copies DIB/pixmap (via BitBlt/XCopyArea)
+   virtual void     Flush(Int_t ctxInd) = 0;
+   //GL context and off-screen device deletion
+   virtual void     DeleteGLContext(Int_t ctxInd) = 0;
 
    //functions to switch between threads in win32
-   //used by viewer
    virtual void     DrawViewer(TVirtualViewer3D *vv) = 0;
    virtual TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y) = 0;
    virtual void     PaintSingleObject(TVirtualGLPainter *) = 0;
-
-   virtual void PrintViewer(TVirtualViewer3D *vv) = 0;
+   //EPS/PDF output
+   virtual void     PrintViewer(TVirtualViewer3D *vv) = 0;
 
    static TGLManager *&Instance();
 
 private:
-   //compiler can't generate implicit copy ctor
-   //for descendants
    TGLManager(const TGLManager &);
    TGLManager &operator = (const TGLManager &);
 
-   ClassDef(TGLManager, 0); // Interface the OpenGL manager.
+   ClassDef(TGLManager, 0)// Interface for OpenGL manager
 };
 
 #ifndef __CINT__

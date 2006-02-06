@@ -193,6 +193,7 @@ private:
    void           SetTF3Mesh();
 
    void           InitGL()const;
+   Bool_t         MakeCurrent()const;
 
    void           CalculateTransformation();
 

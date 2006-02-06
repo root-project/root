@@ -82,7 +82,7 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          return 1000; //TF2 will try to select something itself
       }
 
-      gGLManager->MakeCurrent(fGLDevice);
+      if (!MakeCurrent())return 1000;
 
       if (!Select(px, py))
          gPad->SetSelected(gPad);// To avoid TF2 selection
@@ -118,7 +118,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          return;
       }
 
-      gGLManager->MakeCurrent(fGLDevice);
+      if (!MakeCurrent())return;
 
       switch (event) {
       case kButton1Down :
@@ -126,22 +126,17 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fRotation.SetBounds(fViewport[2], fViewport[3]);
          fRotation.Click(TPoint(px, py));
          gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
-
          break;
       case kButton1Motion :
          fRotation.Drag(TPoint(px, py));
          gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
          gGLManager->PaintSingleObject(this);
-         gGLManager->Flush(fGLDevice);
-
          break;
       case kButton1Up:
          gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
-
          break;
       case kMouseMotion:
          gPad->SetCursor(kRotate);//Does not work for TF2 (?)
-
          break;
       case kKeyPress:
          if (fLastOption == kTF3 && (py == kKey_s || py == kKey_S)) {
@@ -270,10 +265,8 @@ void TGLHistPainter::Paint(Option_t *o)
       fGLDevice = gPad->GetGLDevice();
 
       if (fGLDevice != -1 && SetVertices()) {
-         gGLManager->SelectGLPixmap(fGLDevice);
-         gGLManager->MakeCurrent(fGLDevice);
+         if (!MakeCurrent()) return;
          gGLManager->PaintSingleObject(this);
-         gVirtualX->SelectWindow(gPad->GetPixmapID());
       } else if (fDefaultPainter)
          fDefaultPainter->Paint(o);
    }
@@ -283,17 +276,16 @@ void TGLHistPainter::Paint(Option_t *o)
 void TGLHistPainter::Paint()
 {
    //This function indirectly called via gGLManager->PaintSingleObject
-   gGLManager->SelectGLPixmap(fGLDevice);
    gPad->SetCopyGLDevice(kTRUE);
    //Calculate translation, frustum.
    CalculateTransformation();
    //Enable lighting etc.
    InitGL();
-   ClearBuffers();
    //Save material/light properties in a stack
    glPushAttrib(GL_LIGHTING_BIT);
    //glViewport, glOrtho, glMatrixMode etc.
    SetCamera();
+   ClearBuffers();
    //Main light
    const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
    glLightfv(GL_LIGHT0, GL_POSITION, pos);
@@ -312,7 +304,15 @@ void TGLHistPainter::Paint()
    glPopAttrib();
    //now, gl drawing is finished, axes are drawn by TVirtualX
    glFlush();
-   DrawAxes();   
+   //Put content of GL buffer into pixmap/DIB
+   gGLManager->ReadGLBuffer(fGLDevice);
+   //Select this pixmap/DIB
+   gGLManager->SelectOffScreenDevice(fGLDevice);
+   //Draw axes into pixmap/DIB
+   DrawAxes();
+   gVirtualX->SelectWindow(gPad->GetPixmapID());
+   //Flush pixmap during rotation
+   gGLManager->Flush(fGLDevice);
 }
 
 //______________________________________________________________________________
@@ -671,6 +671,12 @@ void TGLHistPainter::InitGL()const
       glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
    else
       glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+}
+
+//______________________________________________________________________________
+Bool_t TGLHistPainter::MakeCurrent()const
+{
+   return fGLDevice != -1 && gGLManager->MakeCurrent(fGLDevice);
 }
 
 namespace {
@@ -1333,7 +1339,7 @@ namespace {
 void TGLHistPainter::DrawAxes()const
 {
    //Using front point, find, where to draw axes and which labels to use for them
-   gVirtualX->SelectWindow(gGLManager->GetVirtualXInd(fGLDevice));
+   //gVirtualX->SelectWindow(gGLManager->GetVirtualXInd(fGLDevice));
    gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
 
    const Int_t left = gFramePoints[fFrontPoint][0];
@@ -1391,7 +1397,7 @@ void TGLHistPainter::DrawAxes()const
    }
 
    f2DPass = kFALSE;*/
-   gGLManager->SelectGLPixmap(fGLDevice);
+//FIXME   gGLManager->SelectGLPixmap(fGLDevice);
 }
 
 //______________________________________________________________________________

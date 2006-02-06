@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.11 2005/12/01 11:04:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.12 2006/01/12 16:56:08 couet Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -404,9 +404,6 @@ void GLFaceSet::GLDraw()const
    glMaterialfv(GL_FRONT, GL_SPECULAR, spec);
    glMaterialf(GL_FRONT, GL_SHININESS, 20);
 
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1.f, 1.f);
-
    if (IsTransparent()) {
       glEnable(GL_BLEND);
       glDepthMask(GL_FALSE);
@@ -421,14 +418,6 @@ void GLFaceSet::GLDraw()const
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
    }
-
-   glDisable(GL_POLYGON_OFFSET_FILL);
-   glDisable(GL_LIGHTING);
-   glColor3d(0., 0., 0.);
-   glPolygonMode(GL_FRONT, GL_LINE);
-   GLDrawPolys();
-   glEnable(GL_LIGHTING);
-   glPolygonMode(GL_FRONT, GL_FILL);
 }
 
 
@@ -719,7 +708,6 @@ void TGLRender::Traverse()
    }
 
    Int_t start = 0, end = fGLCameras.GetEntriesFast();
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    if (end == 0) {
       return;
@@ -733,7 +721,7 @@ void TGLRender::Traverse()
    for (; start < end; ++start) {
       GLCamera *currCam = (GLCamera *)fGLCameras.At(start);
       currCam->TurnOn();
-
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       DrawScene();
    }
 }
@@ -786,6 +774,7 @@ GLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    actCam->TurnOn(x, y);
 
    DrawScene();
+   //glFlush();
 
    Int_t hits = glRenderMode(GL_RENDER);
 
@@ -869,6 +858,8 @@ TGLPixmap::TGLPixmap(TVirtualPad *pad)
 {
    fGLDevice = pad->GetGLDevice();
 
+   if (fGLDevice == -1) return;
+
    fLightMask = 0x1b;
    fXc = fYc = fZc = fRad = 0.;
    fPressed = kFALSE;
@@ -896,24 +887,11 @@ TGLPixmap::~TGLPixmap()
    delete fRender;
 }
 
-
-//______________________________________________________________________________
-void TGLPixmap::MakeCurrent()const
-{
-   gGLManager->MakeCurrent(fGLDevice);
-}
-
-
-//______________________________________________________________________________
-void TGLPixmap::SwapBuffers()const
-{
-}
-
-
 //______________________________________________________________________________
 void TGLPixmap::DrawObjects()const
 {
-   MakeCurrent();
+   if (!MakeCurrent())return;
+
    const_cast<TGLPixmap *>(this)->CalculateViewports();
    //new MVGL!!!
    glMatrixMode(GL_MODELVIEW);
@@ -946,6 +924,7 @@ void TGLPixmap::DrawObjects()const
    fRender->Traverse();
 
    glFlush();
+   gGLManager->ReadGLBuffer(fGLDevice);
    gGLManager->Flush(fGLDevice);
 }
 
@@ -984,8 +963,8 @@ void TGLPixmap::PrintObjects()
 {
    // Print objects in a PS file. This function use gl2ps. The gl2ps output
    // is embeded within the TPostScript one.
+   if (!MakeCurrent())return;
 
-   MakeCurrent();
    const_cast<TGLPixmap *>(this)->CalculateViewports();
 
    glMatrixMode(GL_MODELVIEW);
@@ -1090,13 +1069,17 @@ void TGLPixmap::PrintObjects()
    glFlush();
 }
 
+//______________________________________________________________________________
+Bool_t TGLPixmap::MakeCurrent()const
+{
+   return fGLDevice != -1 && gGLManager->MakeCurrent(fGLDevice);
+}
 
 //______________________________________________________________________________
 TObject *TGLPixmap::SelectObject(Int_t x, Int_t y)
 {
    // Select Object
-
-   MakeCurrent();
+   if (!MakeCurrent())return 0;
    CalculateViewvolumes();
 
    Int_t tmpVal = fActiveViewport[1];
@@ -1295,16 +1278,15 @@ void TGLPixmap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TGLPixmap::DrawViewer()
 {
-   gGLManager->MakeCurrent(fGLDevice);
+   if (!MakeCurrent())return;
    fRender->Init();
 
    Color_t backColor = fPad->GetFillColor();
    Float_t rgb[] = {1.f, 1.f, 1.f};//white will be default
    TColor *c = gROOT->GetColor(backColor);
 
-   if (c && backColor > 1) {
+   if (c)
       c->GetRGB(rgb[0], rgb[1], rgb[2]);
-   }
 
    glClearColor(rgb[0], rgb[1], rgb[2], 1.f);
 

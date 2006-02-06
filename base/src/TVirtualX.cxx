@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.14 2005/06/21 17:09:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.15 2005/08/17 09:10:44 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -417,7 +417,7 @@ Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 }
 
 //______________________________________________________________________________
-Int_t TVirtualX::AddPixmap(ULong_t /*pixind*/, UInt_t /*w*/, UInt_t /*h*/, Int_t /*prevind*/)
+Int_t TVirtualX::AddPixmap(ULong_t /*pixind*/, UInt_t /*w*/, UInt_t /*h*/)
 {
    // Registers a pixmap created by TGLManager as a ROOT pixmap
    //

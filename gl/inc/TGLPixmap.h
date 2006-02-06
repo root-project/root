@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.h,v 1.3 2005/11/23 14:48:02 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.h,v 1.4 2006/01/12 16:56:08 couet Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -71,10 +71,10 @@ public:
    virtual void   EndScene();
    Int_t          AddObject(const TBuffer3D &buffer, Bool_t *addChild);
    Int_t          AddObject(UInt_t, const TBuffer3D &, Bool_t *) {return 0;}
-   virtual Bool_t   OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
-   TObject *SelectObject(Int_t x, Int_t y);
+   TObject       *SelectObject(Int_t x, Int_t y);
    Int_t          DistancetoPrimitive(Int_t px, Int_t py);
 
 /////////////////////////////////////////
@@ -87,12 +87,12 @@ public:
 private:
    void CreateViewer();
    void DrawObjects()const;
-   void MakeCurrent()const;
-   void SwapBuffers()const;
    void UpdateRange(const GLSelection *box);
    void CalculateViewports();
    void CalculateViewvolumes();
    void CreateCameras();
+
+   Bool_t MakeCurrent()const;
 
    //non-copyable class
    TGLPixmap(const TGLPixmap &);

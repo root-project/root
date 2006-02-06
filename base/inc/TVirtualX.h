@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.35 2005/08/17 09:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.36 2005/11/16 20:02:34 pcanal Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -112,7 +112,7 @@ public:
    virtual Bool_t    HasTTFonts() const;
    virtual Int_t     InitWindow(ULong_t window);
    virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   virtual Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind = -1);
+   virtual Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h);
    virtual void      RemoveWindow(ULong_t qwid);
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
