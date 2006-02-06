@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.53 2005/11/23 14:48:02 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.54 2006/01/26 16:21:25 couet Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 // by Olivier Couet (package X11INT).                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 #include "TROOT.h"
 #include "TColor.h"
 #include "TGX11.h"
@@ -3239,61 +3238,43 @@ Pixmap_t TGX11::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/,
 }
 
 //______________________________________________________________________________
-Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h, Int_t prevind)
+Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 {
    // Register pixmap created by gVirtualGL
    // w,h : Width and height of the pixmap.
+   //register new pixmap
+   Int_t wid = 0;
 
-   if (prevind == -1) {
-      //register new pixmap
-      Int_t wid = 0;
-
-      // Select next free window number
-      for (; wid < fMaxNumberOfWindows; ++wid) 
-         if (!fWindows[wid].fOpen)
-            break;
+   // Select next free window number
+   for (; wid < fMaxNumberOfWindows; ++wid) 
+      if (!fWindows[wid].fOpen)
+         break;
       
-      if (wid == fMaxNumberOfWindows) {
-         Int_t newsize = fMaxNumberOfWindows + 10;
-         fWindows = (XWindow_t*) TStorage::ReAlloc(
-            fWindows, newsize * sizeof(XWindow_t),
-            fMaxNumberOfWindows*sizeof(XWindow_t)
-            );
+   if (wid == fMaxNumberOfWindows) {
+      Int_t newsize = fMaxNumberOfWindows + 10;
+      fWindows = (XWindow_t*) TStorage::ReAlloc(
+                                                fWindows, newsize * sizeof(XWindow_t),
+                                                fMaxNumberOfWindows*sizeof(XWindow_t)
+                                               );
                                                   
-         for (Int_t i = fMaxNumberOfWindows; i < newsize; ++i)
-            fWindows[i].fOpen = 0;
+      for (Int_t i = fMaxNumberOfWindows; i < newsize; ++i)
+         fWindows[i].fOpen = 0;
          
-         fMaxNumberOfWindows = newsize;
-      }
-      
-      fWindows[wid].fOpen = 1;
-      gCws = fWindows + wid;
-      gCws->fWindow = pixid;
-      gCws->fDrawing = gCws->fWindow;
-      gCws->fBuffer = 0;
-      gCws->fDoubleBuffer = 0;
-      gCws->fIsPixmap = 1;
-      gCws->fClip = 0;
-      gCws->fWidth = w;
-      gCws->fHeight = h;
-      gCws->fNewColors = 0;
-      gCws->fShared = kFALSE;
-      
-      return wid;
-
-   } else if (pixid != 0) {
-   //replace drawing
-      gCws = fWindows + prevind; //do I really need this ???
-      gCws->fWindow = pixid;
-      gCws->fDrawing = gCws->fWindow;
-      gCws->fWidth = w;
-      gCws->fHeight = h;
-   } else {
-   //change sizes
-      fWindows[prevind].fWidth = w;
-      fWindows[prevind].fHeight = h;
+      fMaxNumberOfWindows = newsize;
    }
-   
-   return prevind;
+      
+   fWindows[wid].fOpen = 1;
+   gCws = fWindows + wid;
+   gCws->fWindow = pixid;
+   gCws->fDrawing = gCws->fWindow;
+   gCws->fBuffer = 0;
+   gCws->fDoubleBuffer = 0;
+   gCws->fIsPixmap = 1;
+   gCws->fClip = 0;
+   gCws->fWidth = w;
+   gCws->fHeight = h;
+   gCws->fNewColors = 0;
+   gCws->fShared = kFALSE;
+      
+   return wid;
 }
-
