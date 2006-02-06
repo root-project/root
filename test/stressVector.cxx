@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.3 2005/09/19 11:02:14 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.4 2005/12/08 15:54:03 moneta Exp $
 // Author: Lorenzo Moneta   06/2005 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -66,6 +66,8 @@
 using namespace ROOT::Math;
 
 
+
+
 class VectorTest { 
 
 private: 
@@ -97,6 +99,17 @@ public:
 	      << std::endl;
     std::cout.precision(pr);
   }
+
+    
+  int check(std::string name, double s1, double s2, double s3, double scale=1) {
+    double eps = 10*scale*std::numeric_limits<double>::epsilon();
+    if (  std::fabs(s1-s2) < eps*std::fabs(s1) && std::fabs(s1-s3)  < eps*std::fabs(s1) ) return 0; 
+    std::cout.precision(16);
+    std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
+    std::cout << "Test " << name << " failed !!\n\n"; 
+    return -1; 
+  }
+
 
   void genData() { 
     int n = nGen;
@@ -211,7 +224,7 @@ bool cutPtEtaAndMass(const V & v) {
  double pt = v.Pt();
  double mass = v.M();
  double eta = v.Eta();
- return ( pt > 5. && fabs(mass - 1.) < 0.2 && fabs(eta) < 3. );
+ return ( pt > 3. && fabs(mass - 1.) < 0.5 && fabs(eta) < 3. );
 }
 
 
@@ -338,6 +351,7 @@ int testAnalysis2( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
     return sum;
   }
 
+
   // test matrix vector multiplication
   template <class V, class M> 
   double testMatVec( std::vector<V *> & dataV, const M & mat, TStopwatch & tim, double& t,  std::string s) { 
@@ -349,6 +363,101 @@ int testAnalysis2( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
       V  & v1 = *(dataV[i]);
       V v2 = VectorUtil::Mult(mat, v1 ); 
       sum += v2.X() + v2.Y() + v2.Z();
+    }
+    tim.Stop();
+    print(tim,s);
+    t += tim.RealTime();
+    return sum;
+  }
+
+
+  // Boost using boost  classes 
+  template <class V, class B> 
+  double testBoost1( std::vector<V *> & dataV, const B & bv, TStopwatch & tim, double& t,  std::string s) { 
+    
+    unsigned int n = std::min(n2Loop, dataV.size() );
+    tim.Start();
+    double sum = 0;
+    for (unsigned int i = 0; i < n; ++i) { 
+      V  & v1 = *(dataV[i]);
+      Boost b(bv); 
+      V v2 = b(v1); 
+      sum += v2.X() + v2.Y() + v2.Z() + v2.T();
+    }
+    tim.Stop();
+    print(tim,s);
+    t += tim.RealTime();
+    return sum;
+  }
+
+
+  // Boost using vector util function
+  template <class V, class B> 
+  double testBoost2( std::vector<V *> & dataV, const B & bv, TStopwatch & tim, double& t,  std::string s) { 
+    
+    unsigned int n = std::min(n2Loop, dataV.size() );
+    tim.Start();
+    double sum = 0;
+    for (unsigned int i = 0; i < n; ++i) { 
+      V  & v1 = *(dataV[i]);
+      V v2 = VectorUtil::Boost(v1,bv); 
+      sum += v2.X() + v2.Y() + v2.Z() + v2.T();
+    }
+    tim.Stop();
+    print(tim,s);
+    t += tim.RealTime();
+    return sum;
+  }
+
+  // Boost using TLorentzVector
+  double testBoost_TL( std::vector<TLorentzVector *> & dataV, const TVector3 & bv, TStopwatch & tim, double& t,  std::string s) { 
+    
+    unsigned int n = std::min(n2Loop, dataV.size() );
+    tim.Start();
+    double sum = 0;
+    for (unsigned int i = 0; i < n; ++i) { 
+      TLorentzVector  v2 = *(dataV[i]);
+      v2.Boost(bv);  
+      sum += v2.X() + v2.Y() + v2.Z() + v2.T();
+    }
+    tim.Stop();
+    print(tim,s);
+    t += tim.RealTime();
+    return sum;
+  }
+
+
+
+  // Boost using boost  classes 
+  template <class V> 
+  double testBoostX1( std::vector<V *> & dataV, double beta, TStopwatch & tim, double& t,  std::string s) { 
+    
+    unsigned int n = std::min(n2Loop, dataV.size() );
+    tim.Start();
+    double sum = 0;
+    for (unsigned int i = 0; i < n; ++i) { 
+      V  & v1 = *(dataV[i]);
+      BoostX b(beta); 
+      V v2 = b(v1); 
+      sum += v2.X() + v2.Y() + v2.Z() + v2.T();
+    }
+    tim.Stop();
+    print(tim,s);
+    t += tim.RealTime();
+    return sum;
+  }
+
+  // Boost using vector util function
+  template <class V> 
+  double testBoostX2( std::vector<V *> & dataV, double beta, TStopwatch & tim, double& t,  std::string s) { 
+    
+    unsigned int n = std::min(n2Loop, dataV.size() );
+    tim.Start();
+    double sum = 0;
+    for (unsigned int i = 0; i < n; ++i) { 
+      V  & v1 = *(dataV[i]);
+      V v2 = VectorUtil::BoostX(v1,beta); 
+      sum += v2.X() + v2.Y() + v2.Z() + v2.T();
     }
     tim.Stop();
     print(tim,s);
@@ -407,69 +516,41 @@ int main(int argc,const char *argv[]) {
       a.testCreate2     (v3, t, t3,   "creationSet  PtEtaPhiEVector " ); 
 
 
-      double s1,s2,s3, eps;
+      double s1,s2,s3;
       s1=a.testAddition   (v1, t, t1, "Addition TLorentzVector      " );  
       s2=a.testAddition   (v2, t, t2, "Addition XYZTVector          "  ); 
-      s3=a.testAddition   (v3, t, t3, "Addition PtEtaPhiEVector     " ); 
-      
-      eps = 10*s1*std::numeric_limits<double>::epsilon();
-#ifdef DEBUG
-      std::cout.precision(16);
-      std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
-#else
-      assert( std::fabs(s1-s2) < eps &&  std::fabs(s1-s3)  < eps );
-#endif
+      s3=a.testAddition   (v3, t, t3, "Addition PtEtaPhiEVector     " );       
+      a.check("Addition",s1,s2,s3);
 
 
       s1=a.testScale   (v1, t, t1, "Scale of TLorentzVector      " );  
       s2=a.testScale   (v2, t, t2, "Scale of XYZTVector          "  ); 
       s3=a.testScale   (v3, t, t3, "Scale of PtEtaPhiEVector     " ); 
-      
-      eps = 10*s1*std::numeric_limits<double>::epsilon();
-#ifdef DEBUG
-      std::cout.precision(16);
-      std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
-#else
-      assert( std::fabs(s1-s2) < eps &&  std::fabs(s1-s3)  < eps );
-#endif
+      a.check("Scaling",s1,s2,s3);
 
       s1=a.testDeltaR   (v1, t, t1,      "DeltaR   TLorentzVector      " );  
       s2=a.testDeltaR   (v2, t, t2,      "DeltaR   XYZTVector          " ); 
       s3=a.testDeltaR   (v3, t, t3,      "DeltaR   PtEtaPhiEVector     " ); 
-
-      eps = 10*s1*std::numeric_limits<double>::epsilon();
-#ifdef DEBUG
-      std::cout.precision(16);
-      std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
-#else
-      //windows is bad here 
 #ifdef WIN32
-      eps *= 10;
+      //windows is bad here 
+      a.check("DeltaR",s1,s2,s3,10);      
+#else
+      a.check("DeltaR",s1,s2,s3);      
 #endif
-      assert( std::fabs(s1-s2) < eps &&  std::fabs(s1-s3)  < eps );
-#endif
+
 
       int n1, n2, n3; 
       n1 = a.testAnalysis (v1, t, t1, "Analysis1 TLorentzVector     " ); 
       n2 = a.testAnalysis (v2, t, t2, "Analysis1 XYZTVector         " ); 
       n3 = a.testAnalysis (v3, t, t3, "Analysis1 PtEtaPhiEVector    " ); 
+      a.check("Analysis1",n1,n2,n3);      
 
-#ifdef DEBUG
-      std::cout << "test Analysis1 - nsel= "  << n1 << "  " << n2 << "  " << n3 << std::endl;
-#else
-      assert(n1 == n2 && n1 == n3); 
-#endif
 
 
       n1 = a.testAnalysis2 (v1, t, t1, "Analysis2 TLorentzVector    " ); 
       n2 = a.testAnalysis2 (v2, t, t2, "Analysis2 XYZTVector        " ); 
       n3 = a.testAnalysis2 (v3, t, t3, "Analysis2 PtEtaPhiEVector   " ); 
-#ifdef DEBUG
-      std::cout << "test Analysis-2 - nsel=" << n1 << "  " << n2 << "  " << n3 << std::endl;
-#else
-      assert(n1 == n2 && n1 == n3); 
-#endif
-      //std::cout << n1 << " " << n2 << "  " << n2 << std::endl;
+      a.check("Analysis2",n1,n2,n3);      
 
 
       // test Rotations on Vectors 
@@ -501,13 +582,9 @@ int main(int argc,const char *argv[]) {
       s1=a.testRotation   (v1, lr1, t, t1,      "TRotation  TLorentzVector      " );  
       s2=a.testRotation   (v2, lr2, t, t2,      "Rotation3D XYZTVector          " ); 
       s3=a.testRotation   (v3, lr2, t, t3,      "Rotation3D PtEtaPhiEVector     " ); 
+      a.check("Rotation",s1,s2,s3,10);
 
-#ifdef DEBUG
-      std::cout.precision(16);
-      std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
-#else
-      assert( std::fabs(s1-s2) < eps &&  std::fabs(s1-s3)  < eps );
-#endif
+
       double s0 = s1;
       // test rotations using the matrix for multiplications
       double rotData[16];
@@ -522,13 +599,40 @@ int main(int argc,const char *argv[]) {
       s1=a.testMatVec    (v2, m1, t, t1,        "TMatrix * XYZTVector           " );  
       s2=a.testMatVec    (v2, m2, t, t2,        "SMatrix * XYZTVector           " ); 
       s3=a.testMatVec    (v3, m2, t, t3,        "SMatrix * PtEtaPhiEVector      " ); 
+      a.check("Matrix mult",s1,s2,s3,10);
 
-#ifdef DEBUG
-      std::cout.precision(16);
-      std::cout << s0 << "\t" << s1 << "\t" << s2 <<"\t" << s3 << "\n";
-#else
-      assert( std::fabs(s0-s2) < eps && std::fabs(s1-s2) < eps &&  std::fabs(s1-s3)  < eps );
-#endif
+
+      // test Boost
+      TVector3 tVec(bVec.X(), bVec.Y(), bVec.Z() );
+      s1 = a.testBoost_TL (v1, tVec, t, t1,     "Boost TLorentzVector           ");
+      s2 = a.testBoost1   (v2, bVec, t, t2,     "Boost XYZTVector               ");
+      s3 = a.testBoost1   (v3, bVec, t, t3,     "Boost PtEtaPhiEVector          ");
+      a.check("Boost1",s1,s2,s3,10);
+
+      // test Boost (2)
+      s0 = s1;
+      s1 = a.testBoost2  (v1, tVec, t, t1,      "Boost2 TLorentzVector          ");
+      s2 = a.testBoost2  (v2, bVec, t, t2,      "Boost2 XYZTVector              ");
+      s3 = a.testBoost2  (v3, bVec, t, t3,      "Boost2 PtEtaPhiEVector         ");
+      a.check("Boost1-2",s0,s1,s2);
+      a.check("Boost2",s1,s2,s3,10);
+
+      // test BoostX
+      double beta = 0.8;
+      s1 = a.testBoostX2   (v1, beta, t, t1,    "BoostX TLorentzVector          ");
+      s2 = a.testBoostX1   (v2, beta, t, t2,    "BoostX XYZTVector              ");
+      s3 = a.testBoostX1   (v3, beta, t, t3,    "BoostX PtEtaPhiEVector         ");
+      a.check("BoostX1",s1,s2,s3,10);
+
+      // test Boost (2)
+      s0 = s2;
+      s1 = a.testBoostX2  (v1, beta, t, t1,     "BoostX2 TLorentzVector         ");
+      s2 = a.testBoostX2  (v2, beta, t, t2,     "BoostX2 XYZTVector             ");
+      s3 = a.testBoostX2  (v3, beta, t, t3,     "BoostX2 PtEtaPhiEVector        ");
+      a.check("BoostX1-2",s0,s1,s2);
+      a.check("BoostX2",s1,s2,s3,10);
+     
+
 
       // clean all at the end
       a.clear(v1); 
