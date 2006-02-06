@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.4 2005/12/03 15:15:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.cxx,v 1.5 2005/12/06 17:17:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -33,11 +33,6 @@ namespace ROOT {
 
 // ========== Constructors and Assignment =====================
 
-
-// default constructor ( identity rodation and zero translation)
-Transform3D::Transform3D() {
-  SetIdentity();
-}
 
 
 // construct from two ref frames 

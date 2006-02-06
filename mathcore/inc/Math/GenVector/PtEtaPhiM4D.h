@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.3 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 21 2005
 //   Similar to PtEtaPhiMSystem by moneta
 // 
-// Last update: $Id: PtEtaPhiM4D.h,v 1.3 2005/12/06 17:17:48 moneta Exp $
+// Last update: $Id: PtEtaPhiM4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #define ROOT_Math_GenVector_PtEtaPhiM4D  1
@@ -58,7 +58,7 @@ public :
     Constructor  from pt, eta, phi, mass values
    */
   PtEtaPhiM4D(Scalar pt, Scalar eta, Scalar phi, Scalar mass) : 
-      			fPt(pt), fEta(eta), fPhi(phi), fM(mass) { }
+      			fPt(pt), fEta(eta), fPhi(phi), fM(mass) { Restrict(); }
 
   /**
     Generic constructor from any 4D coordinate system implementing 
@@ -66,7 +66,7 @@ public :
    */ 
   template <class CoordSystem > 
     explicit PtEtaPhiM4D(const CoordSystem & c) : 
-    fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fM(c.M())  { }
+    fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fM(c.M())  { Restrict(); }
 
   // no need for customized copy constructor and destructor 
 
@@ -74,7 +74,7 @@ public :
     Set internal data based on an array of 4 Scalar numbers
    */ 
   void SetCoordinates( const Scalar src[] ) 
-    { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fM=src[3]; }
+    { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fM=src[3]; Restrict(); }
 
   /**
     get internal data into an array of 4 Scalar numbers
@@ -86,7 +86,7 @@ public :
     Set internal data based on 4 Scalar numbers
    */ 
   void SetCoordinates(Scalar pt, Scalar eta, Scalar phi, Scalar mass) 
-    { fPt=pt; fEta = eta; fPhi = phi; fM = mass; }
+    { fPt=pt; fEta = eta; fPhi = phi; fM = mass; Restrict(); }
 
   /**
     get internal data into 4 Scalar numbers
@@ -192,6 +192,11 @@ public :
 
 private:
   inline static double pi() { return 3.14159265358979323; } 
+  inline void Restrict() {
+    if ( fPhi <= -pi() || fPhi > pi() ) 
+      fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+  return;
+  } 
 public:
 
   /**
@@ -222,6 +227,7 @@ public:
    */
   void SetPhi( Scalar  phi) { 
     fPhi = phi; 
+    Restrict();
   }
   /**
     set M value 

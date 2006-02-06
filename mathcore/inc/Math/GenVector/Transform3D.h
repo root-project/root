@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.8 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.9 2005/12/07 09:31:27 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -72,7 +72,10 @@ namespace ROOT {
     /** 
 	Default constructor (identy rotation) + zero translation
     */ 
-    Transform3D();
+    Transform3D()
+    {
+      SetIdentity();
+    }
     
     /**
        Construct given a pair of pointers or iterators defining the
@@ -175,8 +178,9 @@ namespace ROOT {
     //#endif
 
     /**
-       Construct transformation from one coordinate system defined by three points (orgin + two axis) to 
-       a new coordinate system defined by other three points (orgin + axis) 
+       Construct transformation from one coordinate system defined by three 
+       points (origin + two axis) to 
+       a new coordinate system defined by other three points (origin + axis) 
        @param fr0  point defining origin of original reference system 
        @param fr1  point defining first axis of original reference system 
        @param fr2  point defining second axis of original reference system 
@@ -185,8 +189,9 @@ namespace ROOT {
        @param to2  point defining second axis transformed reference system 
 
      */
-    Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPoint & fr2,  
-		const XYZPoint & to0, const XYZPoint & to1, const XYZPoint & to2 );  
+    Transform3D
+    (const XYZPoint & fr0, const XYZPoint & fr1, const XYZPoint & fr2,  
+     const XYZPoint & to0, const XYZPoint & to1, const XYZPoint & to2 );  
 
 
     // use compiler generated copy ctor, copy assignmet and dtor
@@ -214,7 +219,7 @@ namespace ROOT {
 
 
     /**
-       Assignment from a linear algebra matrix of size at least 3x4,
+       Construct from a linear algebra matrix of size at least 3x4,
        which must support operator()(i,j) to obtain elements (0,0) thru (2,3).
        The 3x3 sub-block is assumed to be the rotation part and the translations vector 
        are described by the 4-th column
@@ -319,14 +324,14 @@ namespace ROOT {
 
 
     /**
-       Transformation operation on Displacement Vectors in Cartesian coordinate 
-       For Displacement Vectors only the rotation applies - no translations
+       Transformation operation for Displacement Vectors in Cartesian coordinate 
+       For the Displacement Vectors only the rotation applies - no translations
     */
     XYZVector operator() (const XYZVector & v) const;
 
 
     /**
-       Transformation operation for  Position Vector in any  coordinate system 
+       Transformation operation for Position Vector in any coordinate system 
     */
     template<class CoordSystem > 
     PositionVector3D<CoordSystem> operator() (const PositionVector3D <CoordSystem> & p) const { 
@@ -335,7 +340,7 @@ namespace ROOT {
     }
 
     /**
-       Transformation operation for Displacement Vector in any  coordinate system 
+       Transformation operation for Displacement Vector in any coordinate system 
     */
     template<class CoordSystem > 
     DisplacementVector3D<CoordSystem> operator() (const DisplacementVector3D <CoordSystem> & v) const { 

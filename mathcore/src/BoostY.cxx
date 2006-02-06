@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostY.cxx,v 1.1 2005/11/24 14:45:50 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostY.cpp,v 1.4 2006/02/04 16:10:26 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -54,9 +54,9 @@ BoostY::BetaVector() const {
 
 void 
 BoostY::GetLorentzRotation (Scalar r[]) const {
-  r[LXX] = 0.0;  r[LXY] = 0.0;           r[LXZ] = 0.0;  r[LXT] = 0.0;  
+  r[LXX] = 1.0;  r[LXY] = 0.0;           r[LXZ] = 0.0;  r[LXT] = 0.0;  
   r[LYX] = 0.0;  r[LYY] = fGamma;        r[LYZ] = 0.0;  r[LYT] = fGamma*fBeta; 
-  r[LZX] = 0.0;  r[LZY] = 0.0;           r[LZZ] = 0.0;  r[LZT] = 0.0;  
+  r[LZX] = 0.0;  r[LZY] = 0.0;           r[LZZ] = 1.0;  r[LZT] = 0.0;  
   r[LTX] = 0.0;  r[LTY] = fGamma*fBeta;  r[LTZ] = 0.0;  r[LTT] = fGamma;  
 }
 
@@ -87,9 +87,9 @@ operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
   Scalar y = v.Py();
   Scalar t = v.E();
   return LorentzVector< PxPyPzE4D<double> > 
-    (  0.0
+    (  v.Px()
     , fGamma*y       + fGamma*fBeta*t
-    ,  0.0
+    ,  v.Pz()
     , fGamma*fBeta*y + fGamma*t );
 }
 

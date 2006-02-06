@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20 2005
 //   based on CylindricalEta4D by moneta
 // 
-// Last update: $Id: PtEtaPhiE4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: PtEtaPhiE4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiE4D 
 #define ROOT_Math_GenVector_PtEtaPhiE4D  1
@@ -59,7 +59,7 @@ public :
     Constructor  from pt, eta, phi, e values
    */
   PtEtaPhiE4D(Scalar pt, Scalar eta, Scalar phi, Scalar e) : 
-      			fPt(pt), fEta(eta), fPhi(phi), fE(e) { }
+      			fPt(pt), fEta(eta), fPhi(phi), fE(e) { Restrict(); }
 
   /**
     Generic constructor from any 4D coordinate system implementing 
@@ -75,7 +75,7 @@ public :
     Set internal data based on an array of 4 Scalar numbers
    */ 
   void SetCoordinates( const Scalar src[] ) 
-    { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fE=src[3]; }
+    { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fE=src[3]; Restrict(); }
 
   /**
     get internal data into an array of 4 Scalar numbers
@@ -87,7 +87,7 @@ public :
     Set internal data based on 4 Scalar numbers
    */ 
   void SetCoordinates(Scalar pt, Scalar eta, Scalar phi, Scalar e) 
-    { fPt=pt; fEta = eta; fPhi = phi; fE = e; }
+    { fPt=pt; fEta = eta; fPhi = phi; fE = e; Restrict(); }
 
   /**
     get internal data into 4 Scalar numbers
@@ -201,6 +201,11 @@ public :
 
 private:
   inline static double pi() { return 3.14159265358979323; } 
+  inline void Restrict() {
+    if ( fPhi <= -pi() || fPhi > pi() ) 
+      fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+  return;
+  } 
 public:
 
   /**
@@ -231,6 +236,7 @@ public:
    */
   void SetPhi( Scalar  phi) { 
     fPhi = phi; 
+    Restrict();
   }
   /**
     set E value 

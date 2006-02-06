@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.7 2005/12/09 14:47:30 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.4 2006/01/31 17:23:00 marafino Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.7 2005/12/09 14:47:30 moneta Exp $
+// Last update: $Id: LorentzVector.h,v 1.4 2006/01/31 17:23:00 marafino Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -348,7 +348,7 @@ namespace ROOT {
       }
 
       /**
-         Self subtraion of another Vector from this ( v-= q )
+         Self subtraction of another Vector from this ( v-= q )
          Enable the addition with any other LorentzVector
          \param  q  any LorentzVector implementing the x(), y() , z() and t()
                 member functions

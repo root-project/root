@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.3 2005/12/09 15:57:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Polar3D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:40:03 2005
 // Major revamp:  M. Fischler  at Wed Jun  8 2005
 // 
-// Last update: $Id: Polar3D.h,v 1.3 2005/12/09 15:57:48 moneta Exp $
+// Last update: $Id: Polar3D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Polar3D 
 #define ROOT_Math_GenVector_Polar3D  1
@@ -52,7 +52,7 @@ public :
   /**
      Construct from the polar coordinates:  r, theta and phi
    */
-  Polar3D(T r,T theta,T phi) : fR(r), fTheta(theta), fPhi(phi) {  }
+  Polar3D(T r,T theta,T phi) : fR(r), fTheta(theta), fPhi(phi) { Restrict(); }
 
   /**
      Construct from any Vector or coordinate system implementing 
@@ -60,7 +60,7 @@ public :
     */ 
   template <class CoordSystem > 
   explicit Polar3D( const CoordSystem & v ) : 
-    fR(v.R() ),  fTheta(v.Theta() ),  fPhi(v.Phi() )  {  } 
+    fR(v.R() ),  fTheta(v.Theta() ),  fPhi(v.Phi() )  { Restrict(); } 
 
   // no reason for a cusom destructor  ~Cartesian3D() {}
 
@@ -68,7 +68,7 @@ public :
      Set internal data based on an array of 3 Scalar numbers
    */ 
   void SetCoordinates( const Scalar src[] ) 
-  			{ fR=src[0]; fTheta=src[1]; fPhi=src[2]; }
+  			{ fR=src[0]; fTheta=src[1]; fPhi=src[2]; Restrict(); }
 
   /**
      get internal data into an array of 3 Scalar numbers
@@ -80,7 +80,7 @@ public :
      Set internal data based on 3 Scalar numbers
    */ 
   void SetCoordinates(Scalar r, Scalar  theta, Scalar  phi) 
-  					{ fR=r; fTheta=theta; fPhi=phi; }
+  					{ fR=r; fTheta=theta; fPhi=phi; Restrict(); }
 
   /**
      get internal data into 3 Scalar numbers
@@ -121,6 +121,7 @@ public :
     fR = r;  
     fTheta = theta;  
     fPhi = phi;   
+    Restrict();
   }
   
   /** 
@@ -142,10 +143,17 @@ public :
    */ 
   void SetPhi(const T & phi) { 
         fPhi = phi;      
+	Restrict();
   }
 
   private:
     inline static double pi()  { return 3.14159265358979323; } 
+    inline void Restrict() {
+      if ( fPhi <= -pi() || fPhi > pi() ) 
+        fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+    return;
+    } 
+
   public:   
 
   /** 

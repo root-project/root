@@ -28,11 +28,15 @@ ROTATIONOBJ     = rotationApplication.$(ObjSuf)
 ROTATIONSRC     = rotationApplication.$(SrcSuf)
 ROTATION        = rotationApplication$(ExeSuf)
 
+BOOSTOBJ     = testBoost.$(ObjSuf)
+BOOSTSRC     = testBoost.$(SrcSuf)
+BOOST        = testBoost$(ExeSuf)
 
-OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ)
+
+OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) 
 
 
-PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION)
+PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST)
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -50,6 +54,10 @@ $(COORDINATES4D):   $(COORDINATES4DOBJ)
 		    @echo "$@ done"
 
 $(ROTATION):        $(ROTATIONOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(BOOST):           $(BOOSTOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 

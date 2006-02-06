@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cylindrical3D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cylindrical3D.h,v 1.2 2006/02/02 20:15:39 marafino Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -56,7 +56,7 @@ public :
      Construct from rho eta and phi values
    */
   Cylindrical3D(Scalar rho, Scalar z, Scalar phi) :  
-    fRho(rho), fZ(z), fPhi(phi) {  }
+    fRho(rho), fZ(z), fPhi(phi) { Restrict(); }
 
   /**
      Construct from any Vector or coordinate system implementing 
@@ -64,7 +64,7 @@ public :
   */ 
   template <class CoordSystem > 
   explicit Cylindrical3D( const CoordSystem & v ) : 
-    fRho( v.Rho() ),  fZ( v.Z() ),  fPhi( v.Phi() ) { } 
+    fRho( v.Rho() ),  fZ( v.Z() ),  fPhi( v.Phi() ) { Restrict(); } 
 
   // no reason for a custom destructor  ~Cartesian3D() {}
 
@@ -72,7 +72,7 @@ public :
      Set internal data based on an array of 3 Scalar numbers ( rho, z , phi)
    */ 
   void SetCoordinates( const Scalar src[] ) 
-  			{ fRho=src[0]; fZ=src[1]; fPhi=src[2]; }
+  			{ fRho=src[0]; fZ=src[1]; fPhi=src[2]; Restrict(); }
 
   /**
      get internal data into an array of 3 Scalar numbers ( rho, z , phi)
@@ -84,7 +84,7 @@ public :
      Set internal data based on 3 Scalar numbers ( rho, z , phi)
    */ 
   void SetCoordinates(Scalar  rho, Scalar  z, Scalar  phi) 
-  			{ fRho=rho; fZ=z; fPhi=phi; }
+  			{ fRho=rho; fZ=z; fPhi=phi; Restrict(); }
 
   /**
      get internal data into 3 Scalar numbers ( rho, z , phi)
@@ -94,6 +94,11 @@ public :
 
   private:
     inline static double pi() { return 3.14159265358979323; } 
+    inline void Restrict() {
+      if ( fPhi <= -pi() || fPhi > pi() ) 
+        fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+    return;
+    } 
   public:
    
   // accessors
@@ -141,6 +146,7 @@ public :
     fRho = rho;  
     fZ   =   z;  
     fPhi = phi;   
+    Restrict();
   }
   
   /** 
@@ -162,6 +168,7 @@ public :
    */ 
   void SetPhi(T phi) { 
         fPhi = phi;      
+	Restrict();
   }
 
   /**

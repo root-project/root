@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.3 2005/12/05 08:40:34 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -27,6 +27,7 @@
 #define M_PI        3.14159265358979323846   /* pi */
 #endif
 
+#include "Math/GenVector/Boost.h"
 
 namespace ROOT { 
 
@@ -163,7 +164,7 @@ namespace ROOT {
 	  rotation along X axis for a generic vector by an Angle alpha 
 	  returning a new vector. 
 	  The only pre requisite on the Vector is that it has to implement the X() , Y() and Z() 
-	  operators and can be constructed from X,y,z
+	  and SetXYZ methods.
       */ 
       template <class Vector> 
       Vector RotateX(const Vector & v, double alpha) { 
@@ -171,14 +172,16 @@ namespace ROOT {
 	double cosa = cos(alpha);
 	double y2 = v.Y() * cosa - v.Z()*sina;
 	double z2 = v.Z() * cosa + v.Y() * sina; 
-	return Vector(v.X(), y2, z2);
+	Vector vrot; 
+	vrot.SetXYZ(v.X(), y2, z2);
+	return vrot; 
       }
 
       /** 
 	  rotation along Y axis for a generic vector by an Angle alpha 
 	  returning a new vector. 
 	  The only pre requisite on the Vector is that it has to implement the X() , Y() and Z() 
-	  operators and can be constructed from X,y,z
+	  and SetXYZ methods.
       */ 
       template <class Vector> 
       Vector RotateY(const Vector & v, double alpha) { 
@@ -186,14 +189,16 @@ namespace ROOT {
 	double cosa = cos(alpha);
 	double x2 = v.X() * cosa + v.Z() * sina; 
 	double z2 = v.Z() * cosa - v.X() * sina;
-	return Vector(x2, v.Y(), z2);
+	Vector vrot; 
+	vrot.SetXYZ(x2, v.Y(), z2);
+	return vrot; 
       }
 
       /** 
 	  rotation along Z axis for a generic vector by an Angle alpha 
 	  returning a new vector. 
 	  The only pre requisite on the Vector is that it has to implement the X() , Y() and Z() 
-	  operators and can be constructed from X,y,z
+	  and SetXYZ methods.
       */ 
       template <class Vector> 
       Vector RotateZ(const Vector & v, double alpha) { 
@@ -201,27 +206,131 @@ namespace ROOT {
 	double cosa = cos(alpha);
 	double x2 = v.X() * cosa - v.Y() * sina; 
 	double y2 = v.Y() * cosa - v.X() * sina;
-	return Vector(x2, y2, v.Z() );
+	Vector vrot; 
+	vrot.SetXYZ(x2, y2, v.Z());
+	return vrot; 
       }
       
 
       /**
 	 rotation on a generic vector using a generic rotation class.
 	 The only requirement on the vector is that implements the 
-	 X(), Y(), Z() methods and be constructed from X,y,z values
-	 The requirement on the rotation is that need to implement the 
+	 X(), Y(), Z() and SetXYZ methods.
+	 The requirement on the rotation matrix is that need to implement the 
 	 (i,j) operator returning the matrix element with R(0,0) = xx element
       */
-      template<class Vector, class Rotation> 
-      Vector Rotate(const Vector &v, const Rotation & rot) { 
+      template<class Vector, class RotationMatrix> 
+      Vector Rotate(const Vector &v, const RotationMatrix & rot) { 
 	register double xX = v.X();
 	register double yY = v.Y();
 	register double zZ = v.Z();
 	double x2 =  rot(0,0)*xX + rot(0,1)*yY + rot(0,2)*zZ;
 	double y2 =  rot(1,0)*xX + rot(1,1)*yY + rot(1,2)*zZ;
 	double z2 =  rot(2,0)*xX + rot(2,1)*yY + rot(2,2)*zZ;
-	return Vector(x2,y2,z2);
+	Vector vrot; 
+	vrot.SetXYZ(x2,y2,z2);
+	return vrot; 
       }
+
+      /** 
+	  Boost a generic Lorentz Vector class using a generic 3D Vector class describing the boost
+	  The only requirement on the vector is that implements the 
+	  X(), Y(), Z(), T() and SetXYZT methods.
+	  The requirement on the boost vector is that needs to implement the 
+	  X(), Y() , Z()  retorning the vector elements describing the boost
+	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  
+      */
+      template <class LVector, class BoostVector> 
+      LVector Boost(const LVector & v, const BoostVector & b) { 
+	register double bx = b.X();
+	register double by = b.Y();
+	register double bz = b.Z();
+	double b2 = bx*bx + by*by + bz*bz;
+	if (b2 >= 1) {
+	  GenVector_exception e ( 
+				 "Beta Vector supplied to set Boost represents speed >= c");
+	  Throw(e);
+	  return LVector();
+	}    
+	register double gamma = 1.0 / sqrt(1.0 - b2);
+	register double bp = bx*v.X() + by*v.Y() + bz*v.Z();
+	register double gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
+	double x2 = v.X() + gamma2*bp*bx + gamma*bx*v.T();
+	double y2 = v.Y() + gamma2*bp*by + gamma*by*v.T();
+	double z2 = v.Z() + gamma2*bp*bz + gamma*bz*v.T();
+	double t2 = gamma*(v.T() + bp);
+	LVector lv;
+	lv.SetXYZT(x2,y2,z2,t2);  
+	return lv;
+      }
+
+
+      /** 
+	  Boost a generic Lorentz Vector class along the X direction with a factor beta
+	  The only requirement on the vector is that implements the 
+	  X(), Y(), Z(), T()  and SetXYZT methods.
+	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  	  
+      */
+      template <class LVector> 
+      LVector BoostX(const LVector & v, double beta) { 
+	if (beta >= 1) {
+	  GenVector_exception e ( 
+				 "Beta Vector supplied to set Boost represents speed >= c");
+	  Throw(e);
+	  return LVector();
+	}    
+	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
+	double x2 = gamma * v.X() + gamma * beta * v.T();
+	double t2 = gamma * beta * v.X() + gamma * v.T(); 
+	LVector lv; 
+	lv.SetXYZT(x2,v.Y(),v.Z(),t2);
+	return lv; 
+      }
+
+      /** 
+	  Boost a generic Lorentz Vector class along the Y direction with a factor beta
+	  The only requirement on the vector is that implements the 
+	  X(), Y(), Z(), T()  methods and be constructed from x,y,z,t values
+	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  	  
+      */
+      template <class LVector> 
+      LVector BoostY(const LVector & v, double beta) { 
+	if (beta >= 1) {
+	  GenVector_exception e ( 
+				 "Beta Vector supplied to set Boost represents speed >= c");
+	  Throw(e);
+	  return LVector();
+	}    
+	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
+	double y2 = gamma * v.Y() + gamma * beta * v.T();
+	double t2 = gamma * beta * v.Y() + gamma * v.T(); 
+	LVector lv; 
+	lv.SetXYZT(v.X(),y2,v.Z(),t2);
+	return lv; 
+      }
+
+      /** 
+	  Boost a generic Lorentz Vector class along the Z direction with a factor beta
+	  The only requirement on the vector is that implements the 
+	  X(), Y(), Z(), T()  methods and be constructed from x,y,z,t values
+	  The beta of the boost must be <= 1 or a nul Lorentz Vector will be returned	  	  
+      */
+      template <class LVector> 
+      LVector BoostZ(const LVector & v, double beta) {
+	if (beta >= 1) {
+	  GenVector_exception e ( 
+				 "Beta Vector supplied to set Boost represents speed >= c");
+	  Throw(e);
+	  return LVector();
+	}    
+	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
+	double z2 = gamma * v.Z() + gamma * beta * v.T();
+	double t2 = gamma * beta * v.Z() + gamma * v.T(); 
+	LVector lv; 
+	lv.SetXYZT(v.X(),v.Y(),z2,t2);
+	return lv; 
+      }
+
 #endif      
 
 

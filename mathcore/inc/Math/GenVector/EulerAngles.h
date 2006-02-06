@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.4 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.4 2006/02/06 16:47:45 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -55,7 +55,7 @@ public:
   */
   EulerAngles( Scalar phi, Scalar theta, Scalar psi ) :
     fPhi(phi), fTheta(theta), fPsi(psi)
-  {}
+  {Rectify();}			// Added 27 Jan. 06   JMM
 
   /**
      Construct given a pair of pointers or iterators defining the
@@ -137,6 +137,7 @@ public:
     fPhi   = *begin++;
     fTheta = *begin++;
     fPsi   = *begin;
+    Rectify();			// Added 27 Jan. 06   JMM
   }
 
   /**
@@ -156,6 +157,7 @@ public:
    */
   void SetComponents(Scalar phi, Scalar theta, Scalar psi) {
     fPhi=phi; fTheta=theta; fPsi=psi; 
+    Rectify();			// Added 27 Jan. 06   JMM
   }
 
   /**
@@ -166,14 +168,29 @@ public:
   }
 
   /**
+      Set Phi Euler angle		// JMM 30 Jan. 2006
+  */
+  void SetPhi(const Scalar phi) { fPhi=phi; Rectify(); }
+
+  /**
       Return Phi Euler angle
   */
   Scalar Phi() const { return fPhi; }
 
   /**
+      Set Theta Euler angle		// JMM 30 Jan. 2006
+  */
+  void SetTheta(const Scalar theta) { fTheta=theta; Rectify(); }
+
+  /**
       Return Theta Euler angle
   */
   Scalar Theta() const { return fTheta; }
+
+  /**
+      Set Psi Euler angle		// JMM 30 Jan. 2006
+  */
+  void SetPsi(const Scalar psi) { fPsi=psi; Rectify(); }
 
   /**
       Return Psi Euler angle

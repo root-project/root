@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.4 2005/12/09 15:57:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,8 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:58:46 2005
 // Major revamp:  M. Fischler  at Fri Jun 10 2005
 // 
-// Last update: $Id: CylindricalEta3D.h,v 1.4 2005/12/09 15:57:48 moneta Exp $
+// Last update: $Id: CylindricalEta3D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
+
 // 
 #ifndef ROOT_Math_GenVector_CylindricalEta3D 
 #define ROOT_Math_GenVector_CylindricalEta3D  1
@@ -53,7 +54,7 @@ public :
      Construct from rho eta and phi values
    */
   CylindricalEta3D(Scalar rho, Scalar eta, Scalar phi) :  
-  				fRho(rho), fEta(eta), fPhi(phi) {  }
+  				fRho(rho), fEta(eta), fPhi(phi) { Restrict(); }
 
   /**
      Construct from any Vector or coordinate system implementing 
@@ -78,7 +79,7 @@ public :
      Set internal data based on an array of 3 Scalar numbers
    */ 
   void SetCoordinates( const Scalar src[] ) 
-  			{ fRho=src[0]; fEta=src[1]; fPhi=src[2]; }
+  			{ fRho=src[0]; fEta=src[1]; fPhi=src[2]; Restrict(); }
 
   /**
      get internal data into an array of 3 Scalar numbers
@@ -90,7 +91,7 @@ public :
      Set internal data based on 3 Scalar numbers
    */ 
   void SetCoordinates(Scalar  rho, Scalar  eta, Scalar  phi) 
-  			{ fRho=rho; fEta=eta; fPhi=phi; }
+  			{ fRho=rho; fEta=eta; fPhi=phi; Restrict(); }
 
   /**
      get internal data into 3 Scalar numbers
@@ -100,6 +101,11 @@ public :
 
   private:
     inline static double pi() { return 3.14159265358979323; } 
+    inline void Restrict() {
+      if ( fPhi <= -pi() || fPhi > pi() ) 
+        fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
+    return;
+    } 
   public:
    
   // accessors
@@ -132,6 +138,7 @@ public :
     fRho = rho;  
     fEta = eta;  
     fPhi = phi;   
+    Restrict();
   }
   
   /** 
@@ -153,6 +160,7 @@ public :
    */ 
   void SetPhi(T phi) { 
         fPhi = phi;      
+	Restrict();
   }
 
   /**

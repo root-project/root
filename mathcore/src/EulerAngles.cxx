@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.cpp,v 1.5 2006/01/31 17:23:00 marafino Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: EulerAngles.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: EulerAngles.cpp,v 1.5 2006/01/31 17:23:00 marafino Exp $
 //
 #include "Math/GenVector/EulerAngles.h"
 
@@ -54,7 +54,7 @@ EulerAngles::Rectify()
   }
 
   if ( fPsi <= -Pi()|| fPsi > Pi() ) {
-    fPsi = fPsi - std::floor( fPhi/(2*Pi()) +.5 ) * 2*Pi();
+    fPsi = fPsi - std::floor( fPsi/(2*Pi()) +.5 ) * 2*Pi();
   }
 
 } // Rectify()
