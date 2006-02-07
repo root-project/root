@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.6 2006/01/31 20:59:24 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.7 2006/02/06 21:26:29 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -694,8 +694,6 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
    fReadEntry = entry;
 
    if(entry == fCurrentEntry) return entry;
-
-   fprintf(stderr,"PrepEntry with %s\n",fQuery.Data());
 
    if(entry < fCurrentEntry || fResult==0){
       delete fResult;
