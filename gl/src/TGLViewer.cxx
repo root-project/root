@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.33 2006/01/26 11:59:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.34 2006/01/26 17:06:51 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -339,7 +339,7 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
 
    // If adding component to a current partial composite do this now
    if (fComposite) {
-      RootCsg::BaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
+      RootCsg::TBaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
       // Solaris CC can't create stl pair with enumerate type
       fCSTokens.push_back(std::make_pair(static_cast<UInt_t>(TBuffer3D::kCSNoOp), newMesh));
       return TBuffer3D::kNone;
@@ -530,7 +530,7 @@ void TGLViewer::CloseComposite()
       // TODO: Why is this member and here - only used in BuildComposite()
       fCSLevel = 0;
 
-      RootCsg::BaseMesh *resultMesh = BuildComposite();
+      RootCsg::TBaseMesh *resultMesh = BuildComposite();
       fComposite->SetFromMesh(resultMesh);
       delete resultMesh;
       for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
@@ -546,7 +546,7 @@ void TGLViewer::AddCompositeOp(UInt_t operation)
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
    // for description of viewer architecture
    
-   fCSTokens.push_back(std::make_pair(operation, (RootCsg::BaseMesh *)0));
+   fCSTokens.push_back(std::make_pair(operation, (RootCsg::TBaseMesh *)0));
 }
 
 //______________________________________________________________________________
@@ -703,7 +703,7 @@ TGLPhysicalShape * TGLViewer::CreateNewPhysical(UInt_t ID,
 }
 
 //______________________________________________________________________________
-RootCsg::BaseMesh *TGLViewer::BuildComposite()
+RootCsg::TBaseMesh *TGLViewer::BuildComposite()
 {
    // Build and return composite shape mesh
    const CSPart_t &currToken = fCSTokens[fCSLevel];
@@ -711,9 +711,9 @@ RootCsg::BaseMesh *TGLViewer::BuildComposite()
 
    if (opCode != TBuffer3D::kCSNoOp) {
       ++fCSLevel;
-      RootCsg::BaseMesh *left = BuildComposite();
-      RootCsg::BaseMesh *right = BuildComposite();
-      //RootCsg::BaseMesh *result = 0;
+      RootCsg::TBaseMesh *left = BuildComposite();
+      RootCsg::TBaseMesh *right = BuildComposite();
+      //RootCsg::TBaseMesh *result = 0;
       switch (opCode) {
       case TBuffer3D::kCSUnion:
          return RootCsg::BuildUnion(left, right);

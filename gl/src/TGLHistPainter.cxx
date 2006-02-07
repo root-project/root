@@ -566,11 +566,12 @@ void TGLHistPainter::SetMesh()
 namespace {
    void MarchCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
                   Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
-                  const TF3 *fun, std::vector<RootGL::TGLTriFace> &mesh);
+                  const TF3 *fun, std::vector<RootGL::TGLTriFace_t> &mesh);
 }
 //______________________________________________________________________________
 void TGLHistPainter::SetTF3Mesh()
 {
+   //Build mesh for TF3 surface
    fF3Mesh.clear();
 
    const Int_t nX = fHist->GetNbinsX();
@@ -676,6 +677,7 @@ void TGLHistPainter::InitGL()const
 //______________________________________________________________________________
 Bool_t TGLHistPainter::MakeCurrent()const
 {
+   //Check gl context and make it current
    return fGLDevice != -1 && gGLManager->MakeCurrent(fGLDevice);
 }
 
@@ -763,9 +765,9 @@ namespace {
    void DrawFlatFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
                      const TGLVector3 &norm);
    void DrawSmoothFace(const TGLVertex3 &v1, const TGLVertex3 &v2, const TGLVertex3 &v3,
-                       const TGLVector3 &norm1, const TGLVector3 &norm2, const 
-                       TGLVector3 &norm3);
-   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2, 
+                       const TGLVector3 &norm1, const TGLVector3 &norm2,
+                       const TGLVector3 &norm3);
+   void DrawFaceTextured(const TGLVertex3 &v1, const TGLVertex3 &v2,
                         const TGLVertex3 &v3, const TGLVector3 &norm1,
                         const TGLVector3 &norm2, const TGLVector3 &norm3,
                         Double_t zMin, Double_t zMax);
@@ -860,6 +862,7 @@ DrawTF3 based on a small, nice and neat implementation of marc. cubes by Cory Bl
 //______________________________________________________________________________
 void TGLHistPainter::DrawTF3()const
 {
+   //Draw TF3 surface
    if (fTF3Style > kDefault) {
       glDisable(GL_LIGHTING);//[0
    }
@@ -1534,6 +1537,7 @@ void TGLHistPainter::DrawZeroPlane()const
 //______________________________________________________________________________
 void TGLHistPainter::DrawProfile(Int_t plane)const
 {
+   //Draw "shadows" for lego/surf
    if (fLastOption == kTF3) return;
 
    //Draws profiles on back planes
@@ -1815,7 +1819,7 @@ void TGLHistPainter::ClearBuffers()const
 }
 
 namespace {
-   const UChar_t gDefTexture1[] = 
+   const UChar_t gDefTexture1[] =
            {
           //R    G    B    A
             128, 0,   255, 200,
@@ -1836,7 +1840,7 @@ namespace {
             255, 255, 185, 200
            };
 
-   const UChar_t gDefTexture2[] = 
+   const UChar_t gDefTexture2[] =
            {
           //R    G    B    A
             230, 0,   115, 255,
@@ -2086,7 +2090,7 @@ namespace {
    //MarchCube performs the Marching Cubes algorithm on a single cube
    void MarchCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
                   Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
-                  const TF3 *fun, std::vector<RootGL::TGLTriFace> &mesh)
+                  const TF3 *fun, std::vector<RootGL::TGLTriFace_t> &mesh)
    {
       Double_t afCubeValue[8] = {0.};
       TGLVector3 asEdgeVertex[12];
@@ -2133,8 +2137,8 @@ namespace {
          if(gTriangleConnectionTable[iFlagIndex][3 * iTriangle] < 0)
             break;
 
-         using RootGL::TGLTriFace;
-         TGLTriFace newTri;
+         using RootGL::TGLTriFace_t;
+         TGLTriFace_t newTri;
          
          for (Int_t iCorner = 2; iCorner >= 0; --iCorner) {
             Int_t iVertex = gTriangleConnectionTable[iFlagIndex][3*iTriangle+iCorner];

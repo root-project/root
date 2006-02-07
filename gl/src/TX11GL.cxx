@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.12 2005/11/29 09:25:51 couet Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.13 2006/02/06 16:15:13 couet Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -30,11 +30,13 @@ ClassImp(TX11GL)
 //______________________________________________________________________________
 TX11GL::TX11GL() : fDpy(0), fVisInfo(0)
 {
+   //
 }
 
 //______________________________________________________________________________
 Window_t TX11GL::CreateGLWindow(Window_t wind)
 {
+   //
    if(!fDpy)
       fDpy = (Display *)gVirtualX->GetDisplay();
 
@@ -88,31 +90,35 @@ Window_t TX11GL::CreateGLWindow(Window_t wind)
 //______________________________________________________________________________
 ULong_t TX11GL::CreateContext(Window_t)
 {
+   //
    return (ULong_t)glXCreateContext(fDpy, fVisInfo, None, GL_TRUE);
 }
 
 //______________________________________________________________________________
 void TX11GL::DeleteContext(ULong_t ctx)
 {
+   //
    glXDestroyContext(fDpy, (GLXContext)ctx);
 }
 
 //______________________________________________________________________________
 void TX11GL::MakeCurrent(Window_t wind, ULong_t ctx)
 {
+   //
    glXMakeCurrent(fDpy, (GLXDrawable)wind, (GLXContext)ctx);
 }
 
 //______________________________________________________________________________
 void TX11GL::SwapBuffers(Window_t wind)
 {
+   //
    glXSwapBuffers(fDpy, (GLXDrawable)wind);
 }
 
 //GL Manager's stuff
-struct TX11GLManager::TGLContext {
+struct TX11GLManager::TGLContext_t {
    //these are numbers returned by gVirtualX->AddWindow and gVirtualX->AddPixmap
-   TGLContext() : fWindowIndex(-1), fPixmapIndex(-1), fX11Pixmap(0), fW(0), 
+   TGLContext_t() : fWindowIndex(-1), fPixmapIndex(-1), fX11Pixmap(0), fW(0), 
                   fH(0), fX(0), fY(0), fGLXContext(0), fDirect(kFALSE),
                   fXImage(0), fNextFreeContext(0)
    {
@@ -134,12 +140,12 @@ struct TX11GLManager::TGLContext {
    XImage      *fXImage;
    std::vector<UChar_t> fBUBuffer;//gl buffer is read from bottom to top.
    //
-   TGLContext *fNextFreeContext;
+   TGLContext_t *fNextFreeContext;
 };
 
 namespace {
     
-   typedef std::deque<TX11GLManager::TGLContext> DeviceTable_t;
+   typedef std::deque<TX11GLManager::TGLContext_t> DeviceTable_t;
    typedef DeviceTable_t::size_type SizeType_t;
    typedef std::map<Int_t, XVisualInfo *> WinTable_t;
    
@@ -215,7 +221,7 @@ public:
    WinTable_t      fGLWindows;
    DeviceTable_t   fGLContexts;
    Display        *fDpy;
-   TGLContext     *fNextFreeContext;
+   TGLContext_t     *fNextFreeContext;
    
 private:
    TX11GLImpl(const TX11GLImpl &);
@@ -239,7 +245,7 @@ TX11GLManager::TX11GLImpl::~TX11GLImpl()
    //pixmaps and windows must be
    //closed through gVirtualX
    for (SizeType_t i = 0,  e = fGLContexts.size(); i < e; ++i) {
-      TGLContext &ctx = fGLContexts[i];
+      TGLContext_t &ctx = fGLContexts[i];
 
       if (ctx.fGLXContext) {
          ::Warning("TX11GLManager::~TX11GLManager", "opengl device with index %d was not destroyed", i);
@@ -326,7 +332,7 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
    }
 
    //register new context now
-   if (TGLContext *ctx = fPimpl->fNextFreeContext) {
+   if (TGLContext_t *ctx = fPimpl->fNextFreeContext) {
       Int_t ind = ctx->fWindowIndex;
       ctx->fWindowIndex = winInd;
       ctx->fGLXContext = glxCtx;
@@ -334,7 +340,7 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
       return ind;
    } else {
       TGLXCtxGuard glxCtxGuard(fPimpl->fDpy, glxCtx);
-      TGLContext newDev;
+      TGLContext_t newDev;
       newDev.fWindowIndex = winInd;
       newDev.fGLXContext = glxCtx;
    
@@ -349,7 +355,7 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 Bool_t TX11GLManager::MakeCurrent(Int_t ctxInd)
 {
    //Make gl context current
-   TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    return glXMakeCurrent(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fGLXContext);
 }
 
@@ -357,7 +363,7 @@ Bool_t TX11GLManager::MakeCurrent(Int_t ctxInd)
 void TX11GLManager::Flush(Int_t ctxInd)
 {
    //swaps buffers or copy pixmap
-   TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    Window winID = gVirtualX->GetWindowID(ctx.fWindowIndex);
    
    if (ctx.fPixmapIndex == -1)
@@ -377,7 +383,7 @@ void TX11GLManager::Flush(Int_t ctxInd)
 }
 
 //______________________________________________________________________________
-Bool_t TX11GLManager::CreateGLPixmap(TGLContext &ctx)
+Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
 {
    //Create new x11 pixmap and XImage
    Pixmap x11Pix = XCreatePixmap(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fW, 
@@ -422,8 +428,8 @@ Bool_t TX11GLManager::CreateGLPixmap(TGLContext &ctx)
 Bool_t TX11GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //Create pixmap and XImage for GL context ctxInd
-   TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
-   TGLContext newCtx;
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
+   TGLContext_t newCtx;
    newCtx.fWindowIndex = ctx.fWindowIndex;
    newCtx.fW = w, newCtx.fH = h, newCtx.fX = x, newCtx.fY = y;
    newCtx.fGLXContext = ctx.fGLXContext;
@@ -445,11 +451,11 @@ Bool_t TX11GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
 Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //Create new pixmap and XImage if needed
-   TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
    if (ctx.fPixmapIndex != -1)
       if (TMath::Abs(Int_t(w) - Int_t(ctx.fW)) > 1 || TMath::Abs(Int_t(h) - Int_t(ctx.fH)) > 1) {
-         TGLContext newCtx;
+         TGLContext_t newCtx;
          newCtx.fWindowIndex = ctx.fWindowIndex;
          newCtx.fW = w, newCtx.fH = h, newCtx.fX = x, newCtx.fY = y;
          newCtx.fGLXContext = ctx.fGLXContext;
@@ -497,7 +503,7 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
    //GL buffer is read info buffer, after that lines are reordered
    //into XImage, XImage copied into pixmap.
    //If someone knows better way, please, let me know :)
-   TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
    if (ctx.fPixmapIndex != -1 && ctx.fXImage) {
       //READ GL BUFFER
@@ -530,7 +536,7 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
 void TX11GLManager::DeleteGLContext(Int_t ctxInd)
 {
    //Deletes GLX context and frees pixmap and image (if any)
-   TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    //free gl context
    glXDestroyContext(fPimpl->fDpy, ctx.fGLXContext);
    ctx.fGLXContext = 0;
@@ -559,7 +565,7 @@ Int_t TX11GLManager::GetVirtualXInd(Int_t ctxInd)
 void TX11GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
 {
    //Returns current sizes of gl pixmap
-   TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    
    if (ctx.fPixmapIndex != -1) {
       viewport[0] = 0;
@@ -592,5 +598,6 @@ void TX11GLManager::PaintSingleObject(TVirtualGLPainter *p)
 
 void TX11GLManager::PrintViewer(TVirtualViewer3D *vv)
 {
+   //
    vv->PrintObjects();
 }

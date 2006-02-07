@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.8 2006/01/12 16:56:08 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.9 2006/02/06 16:15:13 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public:
    void     MakeCurrent(Window_t wind, ULong_t ctx);
    void     SwapBuffers(Window_t wind);
 
-   ClassDef(TX11GL, 0);
+   ClassDef(TX11GL, 0); //X11 implementation
 };
 
 class TX11GLManager : public TGLManager {
@@ -97,10 +97,10 @@ public:
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PrintViewer(TVirtualViewer3D *vv);
 
-   struct TGLContext;
+   struct TGLContext_t;
    
 private:
-   Bool_t CreateGLPixmap(TGLContext &);
+   Bool_t CreateGLPixmap(TGLContext_t &);
    
    //implicit copy-ctor/assignment generation
    // was already disabled by base class, but to be explicit ...

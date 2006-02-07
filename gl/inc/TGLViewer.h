@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.21 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.22 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -126,7 +126,7 @@ private:
    UInt_t            fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
 
    // Composite shape specific - to TGLScene or helper object?
-   typedef std::pair<UInt_t, RootCsg::BaseMesh *> CSPart_t;
+   typedef std::pair<UInt_t, RootCsg::TBaseMesh *> CSPart_t;
    mutable TGLFaceSet     *fComposite; //! Paritally created composite
    UInt_t                  fCSLevel;
    std::vector<CSPart_t>   fCSTokens;
@@ -176,7 +176,7 @@ private:
    TGLLogicalShape  * CreateNewLogical(const TBuffer3D & buffer) const;
    TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer, 
                                         const TGLLogicalShape & logical) const;
-   RootCsg::BaseMesh *BuildComposite();
+   RootCsg::TBaseMesh *BuildComposite();
 
    // Cameras
    void        SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);

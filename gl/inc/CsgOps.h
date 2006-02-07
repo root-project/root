@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.h,v 1.1 2005/04/01 13:53:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.h,v 1.2 2005/11/24 12:29:12 couet Exp $
 // Author:  Timur Pocheptsov  01/04/2005
    
 #ifndef ROOT_CsgOps
@@ -12,23 +12,23 @@ class TBuffer3D;
 
 namespace RootCsg {
 
-   // I need BaseMesh to have an opaque pointer
+   // I need TBaseMesh to have an opaque pointer
    // to hidden representation of resulting mesh.
 
-class BaseMesh {
+class TBaseMesh {
 public:
 
-   virtual ~BaseMesh(){}
+   virtual ~TBaseMesh(){}
    virtual UInt_t NumberOfPolys()const = 0;
    virtual UInt_t NumberOfVertices()const = 0;
    virtual UInt_t SizeOfPoly(UInt_t polyIndex)const = 0;
    virtual const Double_t *GetVertex(UInt_t vertNum)const = 0;
    virtual Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertNum)const = 0; };
 
-   BaseMesh *ConvertToMesh(const TBuffer3D &buff);
-   BaseMesh *BuildUnion(const BaseMesh *leftOperand, const BaseMesh *rightOperand);
-   BaseMesh *BuildIntersection(const BaseMesh *leftOperand, const BaseMesh *rightOperand);
-   BaseMesh *BuildDifference(const BaseMesh *leftOperand, const BaseMesh *rightOperand);
+   TBaseMesh *ConvertToMesh(const TBuffer3D &buff);
+   TBaseMesh *BuildUnion(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
+   TBaseMesh *BuildIntersection(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
+   TBaseMesh *BuildDifference(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 }
 
 #endif

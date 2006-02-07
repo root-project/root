@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.12 2006/01/12 16:56:08 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.cxx,v 1.13 2006/02/06 16:15:13 couet Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -163,6 +163,7 @@ static GLUtriangulatorObj *getTesselator()
 //______________________________________________________________________________
 GLSelection::GLSelection()
 {
+   //
    fBBox[0] = fBBox[1] = fBBox[2] =
    fBBox[3] = fBBox[4] = fBBox[5] = 0.;
 }
@@ -171,6 +172,7 @@ GLSelection::GLSelection()
 //______________________________________________________________________________
 GLSelection::GLSelection(const Double_t *bbox)
 {
+   //
    for (Int_t i= 0; i < 6; ++i) fBBox[i] = bbox[i];
 }
 
@@ -179,6 +181,7 @@ GLSelection::GLSelection(const Double_t *bbox)
 GLSelection::GLSelection(Double_t xmin, Double_t xmax, Double_t ymin,
                            Double_t ymax, Double_t zmin, Double_t zmax)
 {
+   //
    fBBox[0] = xmin, fBBox[1] = xmax;
    fBBox[2] = ymin, fBBox[3] = ymax;
    fBBox[4] = zmin, fBBox[5] = zmax;
@@ -188,6 +191,7 @@ GLSelection::GLSelection(Double_t xmin, Double_t xmax, Double_t ymin,
 //______________________________________________________________________________
 void GLSelection::SetBBox(const Double_t *newBBox)
 {
+   //
    for (Int_t i= 0; i < 6; ++i) fBBox[i] = newBBox[i];
 }
 
@@ -196,6 +200,7 @@ void GLSelection::SetBBox(const Double_t *newBBox)
 void GLSelection::SetBBox(Double_t xmin, Double_t xmax, Double_t ymin,
                           Double_t ymax, Double_t zmin, Double_t zmax)
 {
+   //
    fBBox[0] = xmin, fBBox[1] = xmax;
    fBBox[2] = ymin, fBBox[3] = ymax;
    fBBox[4] = zmin, fBBox[5] = zmax;
@@ -212,6 +217,7 @@ GLSceneObject::GLSceneObject(const TBuffer3D &buffer, const Float_t *color,
    fNextT(0),
    fRealObject(obj)
 {
+   //
    SetColor(color, kTRUE);
    fColor[3] = 1.f - buffer.fTransparency / 100.f;
    SetBBox(buffer);
@@ -228,6 +234,7 @@ GLSceneObject::GLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
    fNextT(0),
    fRealObject(obj)
 {
+   //
    SetColor(color, kTRUE);
    fColor[3] = 1.f - buffer.fTransparency / 100.f;
    SetBBox(buffer);
@@ -238,6 +245,7 @@ GLSceneObject::GLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
 GLSceneObject::GLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *obj)
    : fColor(), fIsSelected(kFALSE), fGLName(glName), fNextT(0), fRealObject(obj)
 {
+   //
    SetColor(color, kTRUE);
    fColor[3] = 1.f - trans / 100.f;
 }
@@ -246,6 +254,7 @@ GLSceneObject::GLSceneObject(UInt_t glName, const Float_t *color, Short_t trans,
 //______________________________________________________________________________
 Bool_t GLSceneObject::IsTransparent()const
 {
+   //
    return fColor[3] < 1.f;
 }
 
@@ -253,6 +262,7 @@ Bool_t GLSceneObject::IsTransparent()const
 //______________________________________________________________________________
 void GLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
 {
+   //
    if (!fromCtor) {
       for (Int_t i = 0; i < 17; ++i) fColor[i] = color[i];
    } else {
@@ -285,6 +295,7 @@ void GLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
 //______________________________________________________________________________
 void GLSceneObject::SetBBox(const TBuffer3D & buffer)
 {
+   //
    Double_t xmin = buffer.fPnts[0], xmax = xmin;
    Double_t ymin = buffer.fPnts[1], ymax = ymin;
    Double_t zmin = buffer.fPnts[2], zmax = zmin;
@@ -331,6 +342,7 @@ GLFaceSet::GLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glname
                :GLSceneObject(buff, color, glname, realobj),
                 fNormals(3 * buff.NbPols())
 {
+   //
    fNbPols = buff.NbPols();
 
    Int_t *segs = buff.fSegs;
@@ -398,6 +410,7 @@ GLFaceSet::GLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glname
 //______________________________________________________________________________
 void GLFaceSet::GLDraw()const
 {
+   //
    static float spec[] = {.4f, .4f, .4f, 1.f};
 
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
@@ -424,6 +437,7 @@ void GLFaceSet::GLDraw()const
 //______________________________________________________________________________
 void GLFaceSet::GLDrawPolys()const
 {
+   //
    GLUtriangulatorObj *tessObj = getTesselator();
    const Double_t *pnts = &fVertices[0];
    const Double_t *normals = &fNormals[0];
@@ -457,6 +471,7 @@ void GLFaceSet::GLDrawPolys()const
 //______________________________________________________________________________
 Int_t GLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
 {
+   //
    const Double_t * p1 = &fVertices[source[0] * 3];
    const Double_t * p2 = &fVertices[source[1] * 3];
    const Double_t * p3 = &fVertices[source[2] * 3];
@@ -489,6 +504,7 @@ Int_t GLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
 //______________________________________________________________________________
 Bool_t GLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
 {
+   //
    Double_t dx = TMath::Abs(p1[0] - p2[0]);
    Double_t dy = TMath::Abs(p1[1] - p2[1]);
    Double_t dz = TMath::Abs(p1[2] - p2[2]);
@@ -499,6 +515,7 @@ Bool_t GLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
 //______________________________________________________________________________
 void GLFaceSet::CalculateNormals()
 {
+   //
    Double_t *pnts = &fVertices[0];
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t polEnd = fPolyDesc[j] + j + 1;
@@ -589,10 +606,12 @@ GLCamera::GLCamera(const Double_t *vv, const Int_t *vp)
               :fViewVolume(vv), fViewPort(vp),
                fZoom(1.), fDrawFrame(kFALSE)
 {
+   //
 }
 
 GLTransformation::~GLTransformation()
 {
+   //
 }
 
 GLSimpleTransform::GLSimpleTransform(const Double_t *rm, Double_t s, const Double_t *x,
@@ -600,10 +619,12 @@ GLSimpleTransform::GLSimpleTransform(const Double_t *rm, Double_t s, const Doubl
                         :fRotMatrix(rm), fShift(s),
                          fX(x), fY(y), fZ(z)
 {
+   //
 }
 
 void GLSimpleTransform::Apply()const
 {
+   //
    glTranslated(0., 0., -fShift);
    glMultMatrixd(fRotMatrix);
    glRotated(-90., 1., 0., 0.);
@@ -615,10 +636,12 @@ GLPerspectiveCamera::GLPerspectiveCamera(const Double_t *vv, const Int_t *vp,
                          :GLCamera(vv, vp),
                           fTransformation(tr)
 {
+   //
 }
 
 void GLPerspectiveCamera::TurnOn()const
 {
+   //
    glViewport(fViewPort[0], fViewPort[1], fViewPort[2], fViewPort[3]);
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -634,6 +657,7 @@ void GLPerspectiveCamera::TurnOn()const
 
 void GLPerspectiveCamera::TurnOn(Int_t x, Int_t y)const
 {
+   //
    gluPickMatrix(x, fViewPort[3] - y, 1., 1., (Int_t *)fViewPort);
    Double_t frx = fViewVolume[0] * fZoom;
    Double_t fry = fViewVolume[1] * fZoom;
@@ -682,6 +706,7 @@ private:
 //______________________________________________________________________________
 TGLRender::TGLRender()
 {
+   //
    fGLObjects.SetOwner(kTRUE);
    fGLCameras.SetOwner(kTRUE);
 
@@ -696,12 +721,14 @@ TGLRender::TGLRender()
 //______________________________________________________________________________
 TGLRender::~TGLRender()
 {
+   //
 }
 
 
 //______________________________________________________________________________
 void TGLRender::Traverse()
 {
+   //
    if (!fGLInit) {
       fGLInit = kTRUE;
       Init();
@@ -730,6 +757,7 @@ void TGLRender::Traverse()
 //______________________________________________________________________________
 void TGLRender::SetActive(UInt_t ncam)
 {
+   //
    fActiveCam = ncam;
    fAllActive = kFALSE;
 }
@@ -738,6 +766,7 @@ void TGLRender::SetActive(UInt_t ncam)
 //______________________________________________________________________________
 void TGLRender::AddNewObject(GLSceneObject *newobject)
 {
+   //
    fGLObjects.AddLast(newobject);
 }
 
@@ -745,6 +774,7 @@ void TGLRender::AddNewObject(GLSceneObject *newobject)
 //______________________________________________________________________________
 void TGLRender::RemoveAllObjects()
 {
+   //
    fGLObjects.Delete();
    fSelectedObj = 0;
    assert(fGLObjects.GetEntriesFast() == 0);
@@ -754,6 +784,7 @@ void TGLRender::RemoveAllObjects()
 //______________________________________________________________________________
 void TGLRender::AddNewCamera(GLCamera *newcamera)
 {
+   //
    fGLCameras.AddLast(newcamera);
 }
 
@@ -761,6 +792,7 @@ void TGLRender::AddNewCamera(GLCamera *newcamera)
 //______________________________________________________________________________
 GLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
 {
+   //
    GLCamera *actCam = (GLCamera *)fGLCameras.At(cam);
    std::vector<UInt_t>selectBuff(fGLObjects.GetEntriesFast() * 4);
    std::vector<std::pair<UInt_t, Int_t> >objNames;
@@ -818,6 +850,7 @@ GLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
 //______________________________________________________________________________
 void TGLRender::Init()
 {
+   //
    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodelAmb);
@@ -832,7 +865,7 @@ void TGLRender::Init()
 //______________________________________________________________________________
 void TGLRender::DrawScene()
 {
-
+   //
    for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
       GLSceneObject *currObj = (GLSceneObject *)fGLObjects.At(i);
       if (currObj->IsTransparent()) {
@@ -856,6 +889,7 @@ TGLPixmap::TGLPixmap(TVirtualPad *pad)
                  fActiveViewport(), fArcBall(100, 100), fBuildingScene(kFALSE),
                  fPad(pad), fFirstScene(kTRUE)
 {
+   //
    fGLDevice = pad->GetGLDevice();
 
    if (fGLDevice == -1) return;
@@ -876,6 +910,7 @@ TGLPixmap::TGLPixmap(TVirtualPad *pad)
 //______________________________________________________________________________
 void TGLPixmap::CreateViewer()
 {
+   //
    fZoom[0] = fZoom[1] = fZoom[2] = fZoom[3] = 1.;
    fRender = new TGLRender;
 }
@@ -884,12 +919,14 @@ void TGLPixmap::CreateViewer()
 //______________________________________________________________________________
 TGLPixmap::~TGLPixmap()
 {
+   //
    delete fRender;
 }
 
 //______________________________________________________________________________
 void TGLPixmap::DrawObjects()const
 {
+   //
    if (!MakeCurrent())return;
 
    const_cast<TGLPixmap *>(this)->CalculateViewports();
@@ -932,6 +969,7 @@ void TGLPixmap::DrawObjects()const
 //______________________________________________________________________________
 void TGLPixmap::UpdateRange(const GLSelection *box)
 {
+   //
    const Double_t *x = box->GetRangeX();
    const Double_t *y = box->GetRangeY();
    const Double_t *z = box->GetRangeZ();
@@ -1072,6 +1110,7 @@ void TGLPixmap::PrintObjects()
 //______________________________________________________________________________
 Bool_t TGLPixmap::MakeCurrent()const
 {
+   //
    return fGLDevice != -1 && gGLManager->MakeCurrent(fGLDevice);
 }
 
@@ -1111,6 +1150,7 @@ Int_t TGLPixmap::DistancetoPrimitive(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGLPixmap::CalculateViewports()
 {
+   //
    gGLManager->ExtractViewport(fGLDevice, fActiveViewport);
 }
 
@@ -1118,6 +1158,7 @@ void TGLPixmap::CalculateViewports()
 //______________________________________________________________________________
 void TGLPixmap::CalculateViewvolumes()
 {
+   //
    CalculateViewports();
 
    if (fRender->GetSize()) {
@@ -1145,6 +1186,7 @@ void TGLPixmap::CalculateViewvolumes()
 //______________________________________________________________________________
 void TGLPixmap::CreateCameras()
 {
+   //
    if (!fRender->GetSize())
       return;
 
@@ -1175,6 +1217,7 @@ void TGLPixmap::BeginScene()
 //______________________________________________________________________________
 void TGLPixmap::EndScene()
 {
+   //
    CalculateViewvolumes();
 
    if (fFirstScene) {
@@ -1197,6 +1240,7 @@ void TGLPixmap::EndScene()
 
 Int_t TGLPixmap::AddObject(const TBuffer3D &buffer, Bool_t *addChildren)
 {
+   //
    if (addChildren) {
       *addChildren = kTRUE;
    }
@@ -1224,20 +1268,23 @@ Int_t TGLPixmap::AddObject(const TBuffer3D &buffer, Bool_t *addChildren)
 
 Bool_t TGLPixmap::OpenComposite(const TBuffer3D &, Bool_t *)
 {
+   //
    return kFALSE;
 }
 
 void TGLPixmap::CloseComposite()
 {
-
+   //
 }
 
 void TGLPixmap::AddCompositeOp(UInt_t)
 {
+   //
 }
 
 void TGLPixmap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
+   //
    py -= Int_t((1 - fPad->GetHNDC() - fPad->GetYlowNDC()) * fPad->GetWh());
    px -= Int_t(fPad->GetXlowNDC() * fPad->GetWw());
    switch(event) {
@@ -1278,6 +1325,7 @@ void TGLPixmap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TGLPixmap::DrawViewer()
 {
+   //
    if (!MakeCurrent())return;
    fRender->Init();
 
@@ -1295,12 +1343,14 @@ void TGLPixmap::DrawViewer()
 
 void TGLPixmap::ZoomIn()
 {
+   //
    fZoom[0] /= 2;
    fCamera->Zoom(fZoom[0]);
 }
 
 void TGLPixmap::ZoomOut()
 {
+   //
    fZoom[0] *= 2;
    fCamera->Zoom(fZoom[0]);
 }

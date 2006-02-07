@@ -53,7 +53,7 @@ namespace RootGL {
       }
    };
    
-   struct TGLTriFace {
+   struct TGLTriFace_t {
       TGLVertex3 fXYZ[3];
       TGLVector3 fNormals[3];
    };
@@ -135,7 +135,7 @@ private:
    RootGL::T2DArray<std::pair<TGLVector3, TGLVector3> > fFaceNormals;
    RootGL::T2DArray<TGLVector3> fAverageNormals;
 
-   std::vector<RootGL::TGLTriFace> fF3Mesh;
+   std::vector<RootGL::TGLTriFace_t> fF3Mesh;
 
    std::vector<Double_t> fZLevels;
 

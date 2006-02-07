@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.30 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.31 2006/01/18 16:57:58 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -70,7 +70,7 @@ protected:
    
 public:
    TGLFaceSet(const TBuffer3D &buff, TObject *realObj);
-   void SetFromMesh(const RootCsg::BaseMesh *m);
+   void SetFromMesh(const RootCsg::TBaseMesh *m);
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
    void   DrawWireFrame(UInt_t) const;

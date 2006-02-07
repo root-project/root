@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.50 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.51 2006/01/11 13:44:39 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -194,7 +194,7 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, TObject *realobj)
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::SetFromMesh(const RootCsg::BaseMesh *mesh)
+void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 {
    // Should only be done on an empty faceset object
    assert(fNbPols == 0);

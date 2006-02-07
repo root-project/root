@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPixmap.h,v 1.4 2006/01/12 16:56:08 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPixmap.h,v 1.5 2006/02/06 16:15:13 couet Exp $
 // Author: Timur Pocheptsov 18/08/2005
 
 /*************************************************************************
@@ -98,7 +98,7 @@ private:
    TGLPixmap(const TGLPixmap &);
    TGLPixmap & operator = (const TGLPixmap &);
 
-   ClassDef(TGLPixmap, 0)
+   ClassDef(TGLPixmap, 0); //Temporary gl pad viewer
 };
 
 #endif
