@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.232 2006/01/21 20:58:58 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.233 2006/02/03 15:48:16 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2080,8 +2080,11 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
      clsname.erase (0, nsname.size() + 2);
    }
 
-   if (!nsname.empty())
-     (*dictSrcOut) << "namespace " << nsname << " {" << std::endl;
+   int enclSpaceNesting = 0;
+   if (!nsname.empty()) {
+     G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
+     enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+   }
 
    (*dictSrcOut) << "//_______________________________________"
        << "_______________________________________" << std::endl;
@@ -2131,8 +2134,10 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
           << "}" << std::endl << std::endl;
    }
 
-   if (!nsname.empty())
+   while (enclSpaceNesting) {
      (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+     --enclSpaceNesting;
+   }
 }
 
 //______________________________________________________________________________
@@ -2535,8 +2540,11 @@ void WriteStreamer(G__ClassInfo &cl)
      clsname.erase (0, nsname.size() + 2);
    }
 
-   if (!nsname.empty())
-     (*dictSrcOut) << "namespace " << nsname << " {" << std::endl;
+   int enclSpaceNesting = 0;
+   if (!nsname.empty()) {
+     G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
+     enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+   }
 
    (*dictSrcOut) << "//_______________________________________"
        << "_______________________________________" << std::endl;
@@ -2871,8 +2879,10 @@ void WriteStreamer(G__ClassInfo &cl)
    (*dictSrcOut) << "   }" << std::endl
        << "}" << std::endl << std::endl;
 
-   if (!nsname.empty())
-     (*dictSrcOut) << "} // namespace " << nsname << std::endl << std::endl;
+   while (enclSpaceNesting) {
+     (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+     --enclSpaceNesting;
+   }
 }
 
 //______________________________________________________________________________
@@ -2898,8 +2908,11 @@ void WriteAutoStreamer(G__ClassInfo &cl)
      clsname.erase (0, nsname.size() + 2);
    }
 
-   if (!nsname.empty())
-     (*dictSrcOut) << "namespace " << nsname << " {" << std::endl;
+   int enclSpaceNesting = 0;
+   if (!nsname.empty()) {
+     G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
+     enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+   }
 
    (*dictSrcOut) << "//_______________________________________"
        << "_______________________________________" << std::endl;
@@ -2914,8 +2927,10 @@ void WriteAutoStreamer(G__ClassInfo &cl)
        << "   }" << std::endl
        << "}" << std::endl << std::endl;
 
-   if (!nsname.empty())
+   while (enclSpaceNesting) {
      (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+     --enclSpaceNesting;
+   }
 }
 
 //______________________________________________________________________________
@@ -3411,8 +3426,11 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
         clsname.erase (0, nsname.size() + 2);
       }
       int add_template_keyword = NeedTemplateKeyword(cl);
-      if (!nsname.empty())
-        (*dictSrcOut) << "namespace " << nsname << " {"  << std::endl;
+      int enclSpaceNesting = 0;
+      if (!nsname.empty()) {
+         G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
+         enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+      }
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp, char *R__parent)" 
           << std::endl << "{" << std::endl;
@@ -3426,9 +3444,11 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
       }
       (*dictSrcOut) << "}" << std::endl << std::endl;
 
-      if (!nsname.empty())
-        (*dictSrcOut) << "} // namespace "<< nsname << std::endl;
-   }
+      while (enclSpaceNesting) {
+         (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+         --enclSpaceNesting;
+      }
+  }
 }
 
 //______________________________________________________________________________
