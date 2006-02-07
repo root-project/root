@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleRow.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleRow.cxx,v 1.2 2005/04/25 17:21:11 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -126,8 +126,8 @@ int TOracleRow::GetRowData()
             switch (fDataType) {
                case 2: //NUMBER
                   if (fScale == 0 || fPrecision == 0) {
-                     int_val = fResult->getInt(i+1);
-                     sprintf(str_number, "%d", int_val);
+                     (*fFields)[i] = fResult->getString(i+1);
+                     break;
                   } else if (fPrecision != 0 && fScale == -127) {
                      double_val = fResult->getDouble(i+1);
                      sprintf(str_number, "%lf", double_val);

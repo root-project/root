@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.5 2005/04/25 17:21:11 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.6 2005/06/01 16:12:16 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -108,8 +108,11 @@ TSQLResult *TOracleServer::Query(const char *sql)
    }
 
    try {
-      if (!fStmt)
+      if (!fStmt) {
          fStmt = fConn->createStatement();
+         fStmt->setPrefetchRowCount(1000);
+         fStmt->setPrefetchMemorySize(1024*1024);
+      }
 
       // count the number of rows of the resultset of this select
       // NOTE: Oracle doesn't provide a way through OCI or OCCI to count
