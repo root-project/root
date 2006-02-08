@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.4 2005/10/25 22:11:58 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.5 2005/11/16 20:07:50 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -142,6 +142,7 @@ void TRefTable::FillBuffer(TBuffer &b)
 TObject *TRefTable::GetParent(Int_t uid) const
 {
    // Return object corresponding to uid.
+   uid = uid & 0xFFFFFF;
    if (uid < 0 || uid >= fN) return 0;
    Int_t pnumber = fParentIDs[uid]-1;
    Int_t nparents = fParents->GetEntriesFast();
