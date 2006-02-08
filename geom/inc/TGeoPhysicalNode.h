@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.4 2005/09/02 13:54:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.5 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -30,7 +30,10 @@
 
 // forward declarations
 class TGeoHMatrix;
+class TGeoMatrix;
 class TGeoVolume;
+class TGeoNode;
+class TGeoShape;
 
 /*************************************************************************
  * TGeoPhysicalNode - class representing an unique object associated with a
