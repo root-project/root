@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.29 2006/01/19 11:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.30 2006/01/31 14:02:36 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -671,3 +671,227 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
    return node;
 }
 
+/*************************************************************************
+ * TGeoIterator - a geometry iterator
+ *
+ *************************************************************************/
+
+////////////////////////////////////////////////////////////////////////////////
+// TGeoIterator
+//==============
+// A geometry iterator that sequentially follows all nodes of the geometrical
+// hierarchy of a volume. The iterator has to be initiated with a top volume 
+// pointer:
+//
+//    TGeoIterator next(myVolume);
+//
+// One can use the iterator as any other in ROOT:
+//
+//    TGeoNode *node;
+//    while ((node=next())) {
+//       ...
+//    }
+// 
+// The iterator can perform 2 types of iterations that can be selected via:
+//
+//    next.SetType(Int_t type);
+//
+// Here TYPE can be:
+//    0 (default) - 'first daughter next' behavior
+//    1           - iteration at the current level only
+//
+// Supposing the tree structure looks like:
+//
+// TOP ___ A_1 ___ A1_1 ___ A11_1
+//    |       |        |___ A12_1
+//    |      |_____A2_1 ___ A21_1
+//    |                |___ A21_2
+//    |___ B_1 ...
+//
+// The order of iteration for TYPE=0 is: A_1, A1_1, A11_1, A12_1, A2_1, A21_1,
+// A21_2, B_1, ...
+// The order of iteration for TYPE=1 is: A_1, B_1, ...
+// At any moment during iteration, TYPE can be changed. If the last iterated node
+// is for instance A1_1 and the iteration type was 0, one can do:
+//
+//    next.SetType(1);
+// The next iterated nodes will be the rest of A daughters: A2,A3,... The iterator
+// will return 0 after finishing all daughters of A.
+//
+// During iteration, the following can be retreived:
+// - Top volume where iteration started:    TGeoIterator::GetTopVolume()
+// - Node at level I in the current branch: TGeoIterator::GetNode(Int_t i)
+// - Iteration type:                        TGeoIterator::GetType()
+// - Global matrix of the current node with respect to the top volume:
+//                                          TGeoIterator::GetCurrentMatrix()
+//
+// The iterator can be reset by changing (or not) the top volume:
+//
+//    TGeoIterator::Reset(TGeoVolume *top);
+//
+// Example:
+//==========
+// We want to find out a volume named "MyVol" in the hierarchy of TOP volume.
+// 
+//    TIter next(TOP);
+//    TGeoNode *node;
+//    TString name("MyVol");
+//    while ((node=next())) 
+//       if (name == node->GetVolume()->GetName()) return node->GetVolume();
+//
+////////////////////////////////////////////////////////////////////////////////
+
+ClassImp(TGeoIterator)
+
+//_____________________________________________________________________________
+TGeoIterator::TGeoIterator(TGeoVolume *top)
+{
+// Geometry iterator for a branch starting with a TOP node.
+   fTop = top;
+   fLevel = 0;
+   fType = 0;
+   fArray = new Int_t[30];
+   fMatrix = new TGeoHMatrix();
+}   
+
+//_____________________________________________________________________________
+TGeoIterator::TGeoIterator(const TGeoIterator &iter)
+{
+// Copy ctor.
+   fTop = iter.GetTopVolume();
+   fLevel = iter.GetLevel();
+   fType = iter.GetType();
+   fArray = new Int_t[30+ 30*Int_t(fLevel/30)];
+   for (Int_t i=0; i<fLevel+1; i++) fArray[i] = iter.GetIndex(i);
+   fMatrix = new TGeoHMatrix(*iter.GetCurrentMatrix());
+}
+
+//_____________________________________________________________________________
+TGeoIterator::~TGeoIterator()
+{
+// Destructor.
+   if (fArray) delete [] fArray;
+   delete fMatrix;
+}   
+
+//_____________________________________________________________________________
+TGeoIterator &TGeoIterator::operator=(const TGeoIterator &iter)
+{
+// Assignment.
+   fTop = iter.GetTopVolume();
+   fLevel = iter.GetLevel();
+   fType = iter.GetType();
+   if (fArray) delete [] fArray;
+   fArray = new Int_t[30+ 30*Int_t(fLevel/30)];
+   for (Int_t i=0; i<fLevel+1; i++) fArray[i] = iter.GetIndex(i);
+   if (!fMatrix) fMatrix = new TGeoHMatrix();
+   *fMatrix = *iter.GetCurrentMatrix();
+   return *this;   
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoIterator::Next()
+{
+// Returns next node.
+   TGeoNode *mother = 0;
+   TGeoNode *next = 0;
+   Int_t i;
+   Int_t nd = fTop->GetNdaughters();
+   if (!nd) return 0;
+   if (!fLevel) {
+      fArray[++fLevel] = 0;
+      next = fTop->GetNode(0);
+      return next;
+   }   
+   next = fTop->GetNode(fArray[1]);
+   // Move to current node
+   for (i=2; i<fLevel+1; i++) {
+      mother = next;
+      next = mother->GetDaughter(fArray[i]);
+   }   
+   
+   switch (fType) {
+      case 0:  // default next daughter behavior
+         nd = next->GetNdaughters();
+         if (nd) {
+            // First daughter next
+            fLevel++;
+            if ((fLevel%30)==0) IncreaseArray();
+            fArray[fLevel] = 0;
+            return next->GetDaughter(0);
+         }
+         // cd up and pick next
+         while (next) {
+            next = GetNode(fLevel-1);
+            if (!next) {
+               nd = fTop->GetNdaughters();
+               if (fArray[fLevel]<nd-1) return fTop->GetNode(++fArray[fLevel]);
+               return 0;
+            } else {
+               nd = next->GetNdaughters();
+               if (fArray[fLevel]<nd-1) return next->GetDaughter(++fArray[fLevel]);
+            }   
+            fLevel--;
+         }   
+         break;
+      case 1:  // one level search
+         if (mother) nd = mother->GetNdaughters();
+         if (fArray[fLevel]<nd-1) {
+            if (!mother) return fTop->GetNode(++fArray[fLevel]);
+            else return mother->GetDaughter(++fArray[fLevel]);
+         }
+      default:
+         return 0;      
+   }
+   return 0;
+}
+   
+//_____________________________________________________________________________
+TGeoNode *TGeoIterator::operator()()
+{
+// Returns next node.
+   return Next();
+}   
+
+//_____________________________________________________________________________
+const TGeoMatrix *TGeoIterator::GetCurrentMatrix() const
+{
+// Returns global matrix for current node.
+   fMatrix->Clear();
+   if (!fLevel) return fMatrix;
+   TGeoNode *node = fTop->GetNode(fArray[1]);
+   fMatrix->Multiply(node->GetMatrix());
+   for (Int_t i=2; i<fLevel+1; i++) {
+      node = node->GetDaughter(fArray[i]);
+      fMatrix->Multiply(node->GetMatrix());
+   }
+   return fMatrix;   
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoIterator::GetNode(Int_t level) const
+{
+// Returns current node at a given level.
+   if (!level || level>fLevel) return 0;
+   TGeoNode *node = fTop->GetNode(fArray[1]);
+   for (Int_t i=2; i<level+1; i++) node = node->GetDaughter(fArray[i]);
+   return node;
+}
+
+//_____________________________________________________________________________
+void TGeoIterator::IncreaseArray() 
+{
+// Increase by 30 the size of the array.
+   Int_t *array = new Int_t[fLevel+30];
+   memcpy(array, fArray, fLevel*sizeof(Int_t));
+   delete [] fArray;
+   fArray = array;
+}   
+ 
+//_____________________________________________________________________________
+void TGeoIterator::Reset(TGeoVolume *top)
+{
+// Resets the iterator for volume TOP.
+   if (top) fTop = top;
+   fLevel = 0;
+}      

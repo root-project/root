@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.19 2006/01/19 11:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.20 2006/01/31 14:02:36 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -189,6 +189,45 @@ public:
    void              SetFinder(const TGeoPatternFinder *finder) {fFinder = (TGeoPatternFinder*)finder;}
 
    ClassDef(TGeoNodeOffset, 1)      // a geometry node with just an offset
+};
+
+/*************************************************************************
+ * TGeoIterator - iterator for the node tree
+ *
+ *************************************************************************/
+
+class TGeoIterator
+{
+private:
+   TGeoVolume       *fTop;                  // Top volume of the iterated branch
+   Int_t             fLevel;                // Current level in the tree
+   Int_t             fType;                 // Type of iteration
+   Int_t            *fArray;                // Array of node indices for the current path
+   TGeoHMatrix      *fMatrix;               // Current global matrix
+
+   void            IncreaseArray();
+protected:
+   TGeoIterator() : fTop(0), fLevel(0), fType(0), fArray(0), fMatrix(0) { }
+
+public:
+   TGeoIterator(TGeoVolume *top);
+   TGeoIterator(const TGeoIterator &iter);
+   virtual          ~TGeoIterator();
+   
+   TGeoIterator   &operator=(const TGeoIterator &iter);
+   TGeoNode       *operator()();
+   TGeoNode       *Next();
+
+   const TGeoMatrix *GetCurrentMatrix() const;
+   Int_t           GetIndex(Int_t i) const {return ((i<=fLevel)?fArray[i]:-1);}
+   Int_t           GetLevel() const {return fLevel;}
+   TGeoNode       *GetNode(Int_t level) const;
+   TGeoVolume     *GetTopVolume() const {return fTop;}
+   Int_t           GetType() const {return fType;}
+   void            Reset(TGeoVolume *top=0);
+   void            SetType(Int_t type) {fType = type;}
+   
+   ClassDef(TGeoIterator,0)  //Iterator for geometry.
 };
 
 #endif
