@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: test_Makefile.am,v 1.1 2005/12/07 18:22:27 moneta Exp $
+# @(#)root/mathcore:$Name:  $:$Id: test_Makefile.am,v 1.2 2006/02/08 16:52:38 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -16,7 +16,7 @@ INCLUDES = -I$(top_srcdir)/inc -I$(ROOTSYS)/include
 
 testKalman_SOURCES = testKalman.cxx matrix_util.h TestTimer.h
 
-testOperations_SOURCES = testKalman.cxx matrix_op.h 
+testOperations_SOURCES = testOperations.cxx matrix_op.h 
 
 testKalman_LDADD = -L$(ROOTSYS)/lib -lCore -lCint -lMatrix -ldl
 #-L$(CLHEPBASE)/lib -lCLHEP
