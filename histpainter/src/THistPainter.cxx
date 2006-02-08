@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.242 2006/02/01 16:00:11 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.243 2006/02/05 17:51:47 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -632,6 +632,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    }
 
    l = strstr(chopt,"TF3");
+   if (l) {
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+   }
+
+   l = strstr(chopt,"ISO");
    if (l) {
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
