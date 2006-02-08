@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.2 2005/11/30 16:00:41 rdm Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.3 2005/12/05 16:33:47 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -47,15 +47,72 @@
 
 #include <iomanip>
 
-
 namespace ROOT { 
 
   namespace Math { 
 
 
 
-template <class ExprType, class T, unsigned int D, unsigned int D2 = 0>
-class Expr {
+
+    //    template <class T, unsigned int D, unsigned int D2> class MatRepStd;
+
+    template <class ExprType, class T, unsigned int D >
+    class VecExpr {
+public:
+  typedef T  value_type;
+
+  ///
+  VecExpr(const ExprType& rhs) :
+    rhs_(rhs) {}
+
+  ///
+  ~VecExpr() {}
+
+  ///
+  inline T apply(unsigned int i) const {
+    return rhs_.apply(i);
+  }
+
+#ifdef OLD_IMPL
+  ///
+  static const unsigned int rows = D;
+  ///
+  ///static const unsigned int cols = D2;
+#else
+  // use enumerations
+  enum { 
+    ///
+    kRows = D, 
+  ///
+  ///  kCols = D2
+  };
+#endif
+
+  /// used by operator<<()
+  std::ostream& print(std::ostream& os) const {
+    os.setf(std::ios::right,std::ios::adjustfield);
+    unsigned int i=0;
+    os << "[ ";
+    for(; i<D-1; ++i) {
+      os << apply(i) << ", ";
+    }
+    os << apply(i);
+    os << " ]";
+    
+    return os;
+  }
+
+private:
+  ExprType rhs_; // cannot be a reference!
+};
+
+
+
+    template <class T, unsigned int D, unsigned int D2> class MatRepStd;
+
+    template <class ExprType, class T, unsigned int D, unsigned int D2 = 1,
+	      class R1=MatRepStd<T,D,D2> >
+    class Expr {
 public:
   typedef T  value_type;
 
@@ -89,24 +146,23 @@ public:
   /// used by operator<<()
   std::ostream& print(std::ostream& os) const {
     os.setf(std::ios::right,std::ios::adjustfield);
-
-    if(D2 == 0) {
+    if(D2 == 1 || D2 ==0 ) {
       unsigned int i=0;
       for(; i<D-1; ++i) {
-	os << apply(i) << ", ";
+        os << apply(i) << ", ";
       }
       os << apply(i);
     } else {
       os << "[ ";
       for (unsigned int i=0; i < D; ++i) {
-	unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
-	for (unsigned int j=0; j < d2; ++j) {
-	  os << std::setw(12) << apply(i*D2+j);
-	  if ((!((j+1)%12)) && (j < D2-1))
-	    os << std::endl << "         ...";
-	}
-	if (i != D - 1)
-	os << std::endl  << "  ";
+        unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
+        for (unsigned int j=0; j < D2; ++j) {
+          os << std::setw(12) << apply(i*D2+j);
+          if ((!((j+1)%12)) && (j < d2-1))
+            os << std::endl << "         ...";
+        }
+        if (i != D - 1)
+          os << std::endl  << "  ";
       }
       os << " ]";
     } // if D2==0
@@ -121,8 +177,13 @@ private:
 //==============================================================================
 // operator<<
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
-inline std::ostream& operator<<(std::ostream& os, const Expr<A,T,D1,D2>& rhs) {
+template <class A, class T, unsigned int D>
+inline std::ostream& operator<<(std::ostream& os, const VecExpr<A,T,D>& rhs) {
+  return rhs.print(os);
+}
+
+template <class A, class T, unsigned int D1, unsigned int D2, class R1>
+inline std::ostream& operator<<(std::ostream& os, const Expr<A,T,D1,D2,R1>& rhs) {
   return rhs.print(os);
 }
 

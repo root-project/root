@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.4 2005/12/12 14:59:24 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.5 2005/12/13 18:28:09 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -39,9 +39,9 @@
 
 #include <iosfwd>
 
-
 // expression engine
 #include "Math/Expression.h"
+
 
 
 
@@ -49,7 +49,9 @@ namespace ROOT {
 
   namespace Math { 
 
-    template <class A, class T, unsigned int D, unsigned int D2> class Expr;
+//     template <class T, unsigned int D, unsigned int D2> class MatRepStd;
+
+//     template <class A, class T, unsigned int D, unsigned int D2 = 1, class R = MatRepStd<T,D,D2> > class Expr;
 
 
 /** 
@@ -88,7 +90,7 @@ public:
   SVector();
   ///
   template <class A>
-  SVector(const Expr<A,T,D>& rhs);
+  SVector(const VecExpr<A,T,D>& rhs);
   ///
   SVector(const SVector<T,D>& rhs);
   /// $D1\le D$ required!
@@ -154,7 +156,7 @@ public:
   SVector<T,D>& operator=(const T& rhs);
   ///
   template <class A>
-  SVector<T,D>& operator=(const Expr<A,T,D>& rhs);
+  SVector<T,D>& operator=(const VecExpr<A,T,D>& rhs);
 
   /** @name --- Access functions --- */
   /// return dimension $D$
@@ -192,10 +194,10 @@ public:
   bool operator!=(const SVector<T,D>& rhs) const;
   /// element wise comparison
   template <class A>
-  bool operator==(const Expr<A,T,D>& rhs) const;
+  bool operator==(const VecExpr<A,T,D>& rhs) const;
   /// element wise comparison
   template <class A>
-  bool operator!=(const Expr<A,T,D>& rhs) const;
+  bool operator!=(const VecExpr<A,T,D>& rhs) const;
   
   /// element wise comparison
   bool operator>(const T& rhs) const;
@@ -207,10 +209,10 @@ public:
   bool operator<(const SVector<T,D>& rhs) const;
   /// element wise comparison
   template <class A>
-  bool operator>(const Expr<A,T,D>& rhs) const;
+  bool operator>(const VecExpr<A,T,D>& rhs) const;
   /// element wise comparison
   template <class A>
-  bool operator<(const Expr<A,T,D>& rhs) const;
+  bool operator<(const VecExpr<A,T,D>& rhs) const;
 
   /// read-only access
   const T& operator[](unsigned int i) const;
@@ -234,16 +236,16 @@ public:
 #ifndef __CINT__
   ///
   template <class A>
-  SVector<T,D>& operator+=(const Expr<A,T,D>& rhs);
+  SVector<T,D>& operator+=(const VecExpr<A,T,D>& rhs);
   ///
   template <class A>
-  SVector<T,D>& operator-=(const Expr<A,T,D>& rhs);
+  SVector<T,D>& operator-=(const VecExpr<A,T,D>& rhs);
   ///
   template <class A>
-  SVector<T,D>& operator*=(const Expr<A,T,D>& rhs);
+  SVector<T,D>& operator*=(const VecExpr<A,T,D>& rhs);
   ///
   template <class A>
-  SVector<T,D>& operator/=(const Expr<A,T,D>& rhs);
+  SVector<T,D>& operator/=(const VecExpr<A,T,D>& rhs);
 
 #endif
 
@@ -255,7 +257,7 @@ public:
   SVector<T,D>& Place_at(const SVector<T,D2>& rhs, unsigned int row);
   /// place a sub-vector starting at <row>
   template <class A, unsigned int D2>
-  SVector<T,D>& Place_at(const Expr<A,T,D2>& rhs, unsigned int row);
+  SVector<T,D>& Place_at(const VecExpr<A,T,D2>& rhs, unsigned int row);
 
   /**
      return a subvector of size N starting at the value row

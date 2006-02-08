@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.2 2005/11/29 13:47:17 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.3 2005/12/07 16:44:05 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dinv
@@ -31,6 +31,7 @@
 // ********************************************************************
 #include "Math/Dfactir.h"
 #include "Math/Dfinv.h"
+#include "Math/Dsinv.h"
 
 
  
@@ -57,8 +58,8 @@ template <unsigned int idim, unsigned int n = idim>
 class Inverter {
 public:
   ///
-  template <class Matrix>
-  static bool Dinv(Matrix& rhs) {
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs) {
 
 #ifdef XXX
       if (n < 1 || n > idim) {
@@ -66,21 +67,43 @@ public:
       }
 #endif
 
+
+
       /* Initialized data */
       static unsigned int work[n];
       for(unsigned int i=0; i<n; ++i) work[i] = 0;
 
-      static typename Matrix::value_type det = 0;
+      static typename MatrixRep::value_type det = 0;
 
       /* Function Body */
       
       /*  N.GT.3 CASES.  FACTORIZE MATRIX AND INVERT. */
-      if (Dfactir<Matrix,n,idim>(rhs,det,work) == false) {
+      if (Dfactir<MatrixRep,n,idim>(rhs,det,work) == false) {
 	std::cerr << "Dfactir failed!!" << std::endl;
 	return false;
       }
-      return Dfinv<Matrix,n,idim>(rhs,work);
+      return Dfinv<MatrixRep,n,idim>(rhs,work);
   } // Dinv
+
+
+  // symmetric function (copy in a general one) 
+  template <class T>
+  static bool Dinv(MatRepSym<T,idim> & rhs) {
+    // not very efficient but need to re-do Dsinv for new storage of 
+    // symmetric matrices
+    MatRepStd<T,idim>  tmp; 
+    for (unsigned int i = 0; i< idim*idim; ++i) 
+      tmp[i] = rhs[i];
+    if (! Inverter<idim>::Dinv(tmp) ) return false;
+    // recopy the data
+    for (unsigned int i = 0; i< idim*n; ++i) 
+      rhs[i] = tmp[i];
+
+    return true; 
+  }
+
+
+
 }; // class Inverter
 
 
@@ -96,8 +119,8 @@ template <>
 class Inverter<0> {
 public:
   ///
-  template <class Matrix>
-  inline static bool Dinv(Matrix& rhs) { return true; }
+  template <class MatrixRep>
+  inline static bool Dinv(MatrixRep& rhs) { return true; }
 };
     
 
@@ -113,14 +136,13 @@ template <>
 class Inverter<1> {
 public:
   ///
-  template <class Matrix>
-  static bool Dinv(Matrix& rhs) {
-    typename Matrix::value_type* a = rhs.Array();
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs) {
     
-    if (a[0] == 0.) {
+    if (rhs[0] == 0.) {
       return false;
     }
-    a[0] = 1. / a[0];
+    rhs[0] = 1. / rhs[0];
     return true;
   }
 };
@@ -134,27 +156,51 @@ public:
 //==============================================================================
 // Inverter<2>: Cramers rule
 //==============================================================================
+
 template <>
 class Inverter<2> {
 public:
   ///
-  template <class Matrix>
-  static bool Dinv(Matrix& rhs) {
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs) {
 
-    typename Matrix::value_type* a = rhs.Array();
-    typename Matrix::value_type det = a[0] * a[3] - a[2] * a[1];
+    typename MatrixRep::value_type det = rhs[0] * rhs[3] - rhs[2] * rhs[1];
     
     if (det == 0.) { return false; }
 
-    typename Matrix::value_type s = 1. / det;
-    typename Matrix::value_type c11 = s * a[3];
+    typename MatrixRep::value_type s = 1. / det;
+    typename MatrixRep::value_type c11 = s * rhs[3];
 
-    a[2] = -s * a[2];
-    a[1] = -s * a[1];
-    a[3] =  s * a[0];
-    a[0] = c11;
+
+    rhs[2] = -s * rhs[2];
+    rhs[1] = -s * rhs[1];
+    rhs[3] =  s * rhs[0];
+    rhs[0] = c11;
+
+
     return true;
   }
+
+  // specialization for the symmetric matrices
+  template <class T>
+  static bool Dinv(MatRepSym<T,2> & rep) {
+    
+    T * rhs = rep.Array(); 
+
+    T det = rhs[0] * rhs[2] - rhs[1] * rhs[1];
+
+    
+    if (det == 0.) { return false; }
+
+    T s = 1. / det;
+    T c11 = s * rhs[2];
+
+    rhs[1] = -s * rhs[1];
+    rhs[2] =  s * rhs[0];
+    rhs[0] = c11;
+    return true;
+  }
+
 };
 
 
@@ -171,76 +217,13 @@ template <>
 class Inverter<3> {
 public:
   ///
-  template <class Matrix>
-
-#ifdef OLD_IMPL
-  static bool Dinv(Matrix& rhs) {
-
-    typename Matrix::value_type* a = rhs.Array();
-
-    static typename Matrix::value_type t1, t2, t3, temp, s;
-    static typename Matrix::value_type c11, c12, c13, c21, c22, c23, c31, c32, c33, det;
-
-  
-    /*     COMPUTE COFACTORS. */
-    c11 = a[4] * a[8] - a[7] * a[5];
-    c12 = a[7] * a[2] - a[1] * a[8];
-    c13 = a[1] * a[5] - a[4] * a[2];
-    c21 = a[5] * a[6] - a[8] * a[3];
-    c22 = a[8] * a[0] - a[2] * a[6];
-    c23 = a[2] * a[3] - a[5] * a[0];
-    c31 = a[3] * a[7] - a[6] * a[4];
-    c32 = a[6] * a[1] - a[0] * a[7];
-    c33 = a[0] * a[4] - a[3] * a[1];
-
-    t1 = std::fabs(a[0]);
-    t2 = std::fabs(a[1]);
-    t3 = std::fabs(a[2]);
-    
-    /*     (SET TEMP=PIVOT AND DET=PIVOT*DET.) */
-    if(t1 < t2) {
-      if (t3 < t2) {
-	/*        (PIVOT IS A21) */
-	temp = a[1];
-	det = c13 * c32 - c12 * c33;
-      } else {
-	/*     (PIVOT IS A31) */
-	temp = a[2];
-	det = c23 * c12 - c22 * c13;
-      }
-    } else {
-      if(t3 < t1) {
-	/*     (PIVOT IS A11) */
-	temp = a[0];
-	det = c22 * c33 - c23 * c32;
-      } else {
-	/*     (PIVOT IS A31) */
-	temp = a[2];
-	det = c23 * c12 - c22 * c13;
-      }
-    }
-
-    if (det == 0.) {
-      return false;
-    }
-
-    /*     SET ELEMENTS OF INVERSE IN A. */
-    s = temp / det;
-    a[0] = s * c11;
-    a[3] = s * c21;
-    a[6] = s * c31;
-    a[1] = s * c12;
-    a[4] = s * c22;
-    a[7] = s * c32;
-    a[2] = s * c13;
-    a[5] = s * c23;
-    a[8] = s * c33;
-    return true;
-  }
-#else
   // use Cramer Rule
-  static bool Dinv(Matrix& rhs); 
-#endif
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs); 
+
+  template <class T>
+  static bool Dinv(MatRepSym<T,3> & rhs);
+
 };
 
 /** 
@@ -250,8 +233,12 @@ template <>
 class Inverter<4> {
 public:
   ///
-  template <class Matrix>
-  static bool Dinv(Matrix& rhs); 
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs); 
+
+  template <class T>
+  static bool Dinv(MatRepSym<T,4> & rhs);
+
 };
 
 /** 
@@ -261,8 +248,12 @@ template <>
 class Inverter<5> {
 public:
   ///
-  template <class Matrix>
-  static bool Dinv(Matrix& rhs); 
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs); 
+
+  template <class T>
+  static bool Dinv(MatRepSym<T,5> & rhs);
+
 };
 
 /** 
@@ -272,8 +263,12 @@ template <>
 class Inverter<6> {
 public:
   ///
-  template <class Matrix>
-  static bool Dinv(Matrix& rhs); 
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs); 
+
+  template <class T>
+  static bool Dinv(MatRepSym<T,6> & rhs);
+
 };
 
 
@@ -283,5 +278,6 @@ public:
           
 
 #include "CramerInversion.icc"
+#include "CramerInversionSym.icc"
 
 #endif  /* ROOT_Math_Dinv */

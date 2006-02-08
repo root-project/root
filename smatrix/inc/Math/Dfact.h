@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfact.hv 1.0 2005/11/24 12:00:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.1 2005/11/24 16:03:42 brun Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfact
@@ -42,8 +42,12 @@ namespace ROOT {
 
     @author T. Glebe
 */
-template <class Matrix, unsigned int n, unsigned int idim>
-bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
+template <unsigned int n, unsigned int idim = n>
+class Determinant { 
+public:
+ 
+template <class T> 
+static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
 
 #ifdef XXX
   if (idim < n || n <= 0) {
@@ -53,16 +57,17 @@ bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
 
 
   /* Initialized data */
-  //  const typename Matrix::value_type* A = rhs.Array();
-  typename Matrix::value_type* a = rhs.Array();
+  //  const typename MatrixRep::value_type* A = rhs.Array();
+  //typename MatrixRep::value_type* a = rhs.Array();
 
   /* Local variables */
   static unsigned int nxch, i, j, k, l;
-  static typename Matrix::value_type p, q, tf;
+  //static typename MatrixRep::value_type p, q, tf;
+  static T p, q, tf;
   
   /* Parameter adjustments */
-  a -= idim + 1;
-
+  //  a -= idim + 1;
+  static int arrayOffset = -1*(idim+1);
   /* Function Body */
   
   // fact.inc
@@ -74,11 +79,11 @@ bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
     const unsigned int jj = j + ji;
 
     k = j;
-    p = std::fabs(a[jj]);
+    p = std::fabs(rhs[jj + arrayOffset]);
 
     if (j != n) {
       for (i = j + 1; i <= n; ++i) {
-	q = std::fabs(a[i + ji]);
+	q = std::fabs(rhs[i + ji + arrayOffset]);
 	if (q > p) {
 	  k = i;
 	  p = q;
@@ -89,9 +94,9 @@ bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
 	  const unsigned int li = l*idim;
 	  const unsigned int jli = j + li;
 	  const unsigned int kli = k + li;
-	  tf = a[jli];
-	  a[jli] = a[kli];
-	  a[kli] = tf;
+	  tf = rhs[jli + arrayOffset];
+	  rhs[jli + arrayOffset] = rhs[kli + arrayOffset];
+	  rhs[kli + arrayOffset] = tf;
 	} // for l
 	++nxch;
       } // if k != j
@@ -102,7 +107,7 @@ bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
       return false;
     }
 
-    det *= a[jj];
+    det *= rhs[jj + arrayOffset];
 #ifdef XXX
     t = std::fabs(det);
     if (t < 1e-19 || t > 1e19) {
@@ -111,7 +116,7 @@ bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
     }
 #endif
 
-    a[jj] = 1. / a[jj];
+    rhs[jj + arrayOffset] = 1. / rhs[jj + arrayOffset];
     if (j == n) {
       continue;
     }
@@ -127,12 +132,12 @@ bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
       if (j != 1) {
 	for (i = 1; i <= jm1; ++i) {
 	  const unsigned int ii = i * idim;
-	  a[jki] -= a[i + ki] * a[j + ii];
-	  a[kji] -= a[i + jpi] * a[k + ii];
+	  rhs[jki + arrayOffset] -= rhs[i + ki + arrayOffset] * rhs[j + ii + arrayOffset];
+	  rhs[kji + arrayOffset] -= rhs[i + jpi + arrayOffset] * rhs[k + ii + arrayOffset];
 	} // for i
       }
-      a[jki] *= a[jj];
-      a[kji] -= a[jjpi] * a[k + ji];
+      rhs[jki + arrayOffset] *= rhs[jj + arrayOffset];
+      rhs[kji + arrayOffset] -= rhs[jjpi + arrayOffset] * rhs[k + ji + arrayOffset];
     } // for k
   } // for j
 
@@ -141,6 +146,26 @@ bool Dfact(Matrix& rhs, typename Matrix::value_type& det) {
   }
   return true;
 } // end of Dfact
+
+
+   // t.b.d re-implement methods for symmetric
+  // symmetric function (copy in a general  one) 
+  template <class T>
+  static bool Dfact(MatRepSym<T,n> & rhs, T & det) {
+    // not very efficient but need to re-do Dsinv for new storage of 
+    // symmetric matrices
+    MatRepStd<T,n> tmp; 
+    for (unsigned int i = 0; i< n*n; ++i) 
+      tmp[i] = rhs[i];
+    if (! Determinant<n>::Dfact(tmp,det) ) return false;
+//     // recopy the data
+//     for (int i = 0; i< idim*n; ++i) 
+//       rhs[i] = tmp[i];
+
+    return true; 
+  }
+
+};
 
 
   }  // namespace Math

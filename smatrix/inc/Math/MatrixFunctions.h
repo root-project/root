@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.2 2005/12/05 16:33:47 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.3 2005/12/07 15:27:00 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -30,7 +30,7 @@
 //
 // ********************************************************************
 
-
+#include "Math/BinaryOpPolicy.h"
 
 namespace ROOT { 
 
@@ -42,8 +42,8 @@ namespace ROOT {
 //==============================================================================
 // SMatrix * SVector
 //==============================================================================
-template <class T, unsigned int D1, unsigned int D2>
-SVector<T,D1> operator*(const SMatrix<T,D1,D2>& rhs, const SVector<T,D2>& lhs)
+template <class T, unsigned int D1, unsigned int D2, class R>
+SVector<T,D1> operator*(const SMatrix<T,D1,D2,R>& rhs, const SVector<T,D2>& lhs)
 {
   SVector<T,D1> tmp;
   for(unsigned int i=0; i<D1; ++i) {
@@ -158,89 +158,81 @@ protected:
 //==============================================================================
 // operator*: SMatrix * SVector
 //==============================================================================
-template <class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixRowOp<SMatrix<T,D1,D2>,SVector<T,D2>, D2>, T, D1>
- operator*(const SMatrix<T,D1,D2>& lhs, const SVector<T,D2>& rhs) {
-
-  typedef VectorMatrixRowOp<SMatrix<T,D1,D2>,SVector<T,D2>, D2> VMOp;
-  return Expr<VMOp, T, D1>(VMOp(lhs,rhs));
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixRowOp<SMatrix<T,D1,D2,R>,SVector<T,D2>, D2>, T, D1>
+ operator*(const SMatrix<T,D1,D2,R>& lhs, const SVector<T,D2>& rhs) {
+  typedef VectorMatrixRowOp<SMatrix<T,D1,D2,R>,SVector<T,D2>, D2> VMOp;
+  return VecExpr<VMOp, T, D1>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator*: SMatrix * Expr<A,T,D2>
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixRowOp<SMatrix<T,D1,D2>, Expr<A,T,D2>, D2>, T, D1>
- operator*(const SMatrix<T,D1,D2>& lhs, const Expr<A,T,D2>& rhs) {
-
-  typedef VectorMatrixRowOp<SMatrix<T,D1,D2>,Expr<A,T,D2>, D2> VMOp;
-  return Expr<VMOp, T, D1>(VMOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixRowOp<SMatrix<T,D1,D2,R>, VecExpr<A,T,D2>, D2>, T, D1>
+ operator*(const SMatrix<T,D1,D2,R>& lhs, const VecExpr<A,T,D2>& rhs) {
+  typedef VectorMatrixRowOp<SMatrix<T,D1,D2,R>,VecExpr<A,T,D2>, D2> VMOp;
+  return VecExpr<VMOp, T, D1>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator*: Expr<A,T,D1,D2> * SVector
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixRowOp<Expr<A,T,D1,D2>, SVector<T,D2>, D2>, T, D1>
- operator*(const Expr<A,T,D1,D2>& lhs, const SVector<T,D2>& rhs) {
-
-  typedef VectorMatrixRowOp<Expr<A,T,D1,D2>,SVector<T,D2>, D2> VMOp;
-  return Expr<VMOp, T, D1>(VMOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixRowOp<Expr<A,T,D1,D2,R>, SVector<T,D2>, D2>, T, D1>
+ operator*(const Expr<A,T,D1,D2,R>& lhs, const SVector<T,D2>& rhs) {
+  typedef VectorMatrixRowOp<Expr<A,T,D1,D2,R>,SVector<T,D2>, D2> VMOp;
+  return VecExpr<VMOp, T, D1>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
-// operator*: Expr<A,T,D1,D2> * Expr<B,T,D2>
+// operator*: Expr<A,T,D1,D2> * VecExpr<B,T,D2>
 //==============================================================================
-template <class A, class B, class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixRowOp<Expr<A,T,D1,D2>, Expr<B,T,D2>, D2>, T, D1>
- operator*(const Expr<A,T,D1,D2>& lhs, const Expr<B,T,D2>& rhs) {
-
-  typedef VectorMatrixRowOp<Expr<A,T,D1,D2>,Expr<B,T,D2>, D2> VMOp;
-  return Expr<VMOp, T, D1>(VMOp(lhs,rhs));
+template <class A, class B, class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixRowOp<Expr<A,T,D1,D2,R>, VecExpr<B,T,D2>, D2>, T, D1>
+ operator*(const Expr<A,T,D1,D2,R>& lhs, const VecExpr<B,T,D2>& rhs) {
+  typedef VectorMatrixRowOp<Expr<A,T,D1,D2,R>,VecExpr<B,T,D2>, D2> VMOp;
+  return VecExpr<VMOp, T, D1>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator*: SVector * SMatrix
 //==============================================================================
-template <class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixColOp<SVector<T,D1>, SMatrix<T,D1,D2>, D1>, T, D2>
- operator*(const SVector<T,D1>& lhs, const SMatrix<T,D1,D2>& rhs) {
-
-  typedef VectorMatrixColOp<SVector<T,D1>, SMatrix<T,D1,D2>, D1> VMOp;
-  return Expr<VMOp, T, D2>(VMOp(lhs,rhs));
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixColOp<SVector<T,D1>, SMatrix<T,D1,D2,R>, D1>, T, D2>
+ operator*(const SVector<T,D1>& lhs, const SMatrix<T,D1,D2,R>& rhs) {
+  typedef VectorMatrixColOp<SVector<T,D1>, SMatrix<T,D1,D2,R>, D1> VMOp;
+  return VecExpr<VMOp, T, D2>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator*: SVector * Expr<A,T,D1,D2>
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixColOp<SVector<T,D1>, Expr<A,T,D1,D2>, D1>, T, D2>
- operator*(const SVector<T,D1>& lhs, const Expr<A,T,D1,D2>& rhs) {
-
-  typedef VectorMatrixColOp<SVector<T,D1>, Expr<A,T,D1,D2>, D1> VMOp;
-  return Expr<VMOp, T, D2>(VMOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixColOp<SVector<T,D1>, Expr<A,T,D1,D2,R>, D1>, T, D2>
+ operator*(const SVector<T,D1>& lhs, const Expr<A,T,D1,D2,R>& rhs) {
+  typedef VectorMatrixColOp<SVector<T,D1>, Expr<A,T,D1,D2,R>, D1> VMOp;
+  return VecExpr<VMOp, T, D2>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
-// operator*: Expr<A,T,D1> * SMatrix
+// operator*: VecExpr<A,T,D1> * SMatrix
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixColOp<Expr<A,T,D1>, SMatrix<T,D1,D2>, D1>, T, D2>
- operator*(const Expr<A,T,D1>& lhs, const SMatrix<T,D1,D2>& rhs) {
-
-  typedef VectorMatrixColOp<Expr<A,T,D1>, SMatrix<T,D1,D2>, D1> VMOp;
-  return Expr<VMOp, T, D2>(VMOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixColOp<VecExpr<A,T,D1>, SMatrix<T,D1,D2,R>, D1>, T, D2>
+ operator*(const VecExpr<A,T,D1>& lhs, const SMatrix<T,D1,D2,R>& rhs) {
+  typedef VectorMatrixColOp<VecExpr<A,T,D1>, SMatrix<T,D1,D2,R>, D1> VMOp;
+  return VecExpr<VMOp, T, D2>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
-// operator*: Expr<A,T,D1> * Expr<B,T,D1,D2>
+// operator*: VecExpr<A,T,D1> * Expr<B,T,D1,D2>
 //==============================================================================
-template <class A, class B, class T, unsigned int D1, unsigned int D2>
-inline Expr<VectorMatrixColOp<Expr<A,T,D1>, Expr<B,T,D1,D2>, D1>, T, D2>
- operator*(const Expr<A,T,D1>& lhs, const Expr<B,T,D1,D2>& rhs) {
-
-  typedef VectorMatrixColOp<Expr<A,T,D1>, Expr<B,T,D1,D2>, D1> VMOp;
-  return Expr<VMOp, T, D2>(VMOp(lhs,rhs));
+template <class A, class B, class T, unsigned int D1, unsigned int D2, class R>
+inline VecExpr<VectorMatrixColOp<VecExpr<A,T,D1>, Expr<B,T,D1,D2,R>, D1>, T, D2>
+ operator*(const VecExpr<A,T,D1>& lhs, const Expr<B,T,D1,D2,R>& rhs) {
+  typedef VectorMatrixColOp<VecExpr<A,T,D1>, Expr<B,T,D1,D2,R>, D1> VMOp;
+  return VecExpr<VMOp, T, D2>(VMOp(lhs,rhs));
 }
 
 //==============================================================================
@@ -249,8 +241,9 @@ inline Expr<VectorMatrixColOp<Expr<A,T,D1>, Expr<B,T,D1,D2>, D1>, T, D2>
 template <unsigned int I>
 struct meta_matrix_dot {
   template <class MatrixA, class MatrixB>
-  static inline typename MatrixA::value_type f(const MatrixA& lhs, const MatrixB& rhs,
-					       const unsigned int offset) {
+  static inline typename MatrixA::value_type f(const MatrixA& lhs, 
+                                               const MatrixB& rhs,
+                                               const unsigned int offset) {
     return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols + I) *
            rhs.apply(MatrixB::kCols*I + offset%MatrixB::kCols) + 
            meta_matrix_dot<I-1>::f(lhs,rhs,offset);
@@ -264,8 +257,9 @@ struct meta_matrix_dot {
 template <>
 struct meta_matrix_dot<0> {
   template <class MatrixA, class MatrixB>
-  static inline typename MatrixA::value_type f(const MatrixA& lhs, const MatrixB& rhs,
-					       const unsigned int offset) {
+  static inline typename MatrixA::value_type f(const MatrixA& lhs, 
+                                               const MatrixB& rhs,
+                                               const unsigned int offset) {
     return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols) *
            rhs.apply(offset%MatrixB::kCols);
   }
@@ -298,45 +292,44 @@ protected:
 //==============================================================================
 // operator* (SMatrix * SMatrix, binary)
 //==============================================================================
-template <  class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<SMatrix<T,D1,D>, SMatrix<T,D,D2>,T,D>, T, D1, D2>
- operator*(const SMatrix<T,D1,D>& lhs, const SMatrix<T,D,D2>& rhs) {
-  typedef MatrixMulOp<SMatrix<T,D1,D>, SMatrix<T,D,D2>, T,D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+template <  class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<SMatrix<T,D1,D,R1>, SMatrix<T,D,D2,R2>,T,D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const SMatrix<T,D1,D,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<SMatrix<T,D1,D,R1>, SMatrix<T,D,D2,R2>, T,D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,
+    typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator* (SMatrix * Expr, binary)
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<SMatrix<T,D1,D>, Expr<A,T,D,D2>,T,D>, T, D1, D2>
- operator*(const SMatrix<T,D1,D>& lhs, const Expr<A,T,D,D2>& rhs) {
-  typedef MatrixMulOp<SMatrix<T,D1,D>, Expr<A,T,D,D2>,T,D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<SMatrix<T,D1,D,R1>, Expr<A,T,D,D2,R2>,T,D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const SMatrix<T,D1,D,R1>& lhs, const Expr<A,T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<SMatrix<T,D1,D,R1>, Expr<A,T,D,D2,R2>,T,D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,
+    typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator* (Expr * SMatrix, binary)
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<Expr<A,T,D1,D>, SMatrix<T,D,D2>,T,D>, T, D1, D2>
- operator*(const Expr<A,T,D1,D>& lhs, const SMatrix<T,D,D2>& rhs) {
-  typedef MatrixMulOp<Expr<A,T,D1,D>, SMatrix<T,D,D2>,T,D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<Expr<A,T,D1,D,R1>, SMatrix<T,D,D2,R2>,T,D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const Expr<A,T,D1,D,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<Expr<A,T,D1,D,R1>, SMatrix<T,D,D2,R2>,T,D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,
+    typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator* (Expr * Expr, binary)
 //==============================================================================
-template <class A, class B, class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<Expr<A,T,D1,D>, Expr<B,T,D,D2>,T,D>, T, D1, D2>
- operator*(const Expr<A,T,D1,D>& lhs, const Expr<B,T,D,D2>& rhs) {
-  typedef MatrixMulOp<Expr<A,T,D1,D>, Expr<B,T,D,D2>, T,D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+template <class A, class B, class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>,T,D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const Expr<A,T,D1,D,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>, T,D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 
 
@@ -368,45 +361,41 @@ protected:
 //==============================================================================
 // operator* (SMatrix * SMatrix, binary)
 //==============================================================================
-template <  class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<SMatrix<T,D1,D>, SMatrix<T,D,D2>, D>, T, D1, D2>
- operator*(const SMatrix<T,D1,D>& lhs, const SMatrix<T,D,D2>& rhs) {
-  typedef MatrixMulOp<SMatrix<T,D1,D>, SMatrix<T,D,D2>, D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+template <  class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<SMatrix<T,D1,D,R1>, SMatrix<T,D,D2,R2>, D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const SMatrix<T,D1,D,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<SMatrix<T,D1,D,R1>, SMatrix<T,D,D2,R2>, D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator* (SMatrix * Expr, binary)
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<SMatrix<T,D1,D>, Expr<A,T,D,D2>, D>, T, D1, D2>
- operator*(const SMatrix<T,D1,D>& lhs, const Expr<A,T,D,D2>& rhs) {
-  typedef MatrixMulOp<SMatrix<T,D1,D>, Expr<A,T,D,D2>, D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<SMatrix<T,D1,D,R1>, Expr<A,T,D,D2,R2>, D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const SMatrix<T,D1,D,R1>& lhs, const Expr<A,T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<SMatrix<T,D1,D,R1>, Expr<A,T,D,D2,R2>, D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 
 //==============================================================================
 // operator* (Expr * SMatrix, binary)
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<Expr<A,T,D1,D>, SMatrix<T,D,D2>, D>, T, D1, D2>
- operator*(const Expr<A,T,D1,D>& lhs, const SMatrix<T,D,D2>& rhs) {
-  typedef MatrixMulOp<Expr<A,T,D1,D>, SMatrix<T,D,D2>, D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+template <class A, class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<Expr<A,T,D1,D,R1>, SMatrix<T,D,D2,R2>, D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const Expr<A,T,D1,D,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<Expr<A,T,D1,D,R1>, SMatrix<T,D,D2,R2>, D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 
-//==============================================================================
+//=============================================================================
 // operator* (Expr * Expr, binary)
-//==============================================================================
-template <class A, class B, class T, unsigned int D1, unsigned int D, unsigned int D2>
-inline Expr<MatrixMulOp<Expr<A,T,D1,D>, Expr<B,T,D,D2>, D>, T, D1, D2>
- operator*(const Expr<A,T,D1,D>& lhs, const Expr<B,T,D,D2>& rhs) {
-  typedef MatrixMulOp<Expr<A,T,D1,D>, Expr<B,T,D,D2>, D> MatMulOp;
-
-  return Expr<MatMulOp,T,D1,D2>(MatMulOp(lhs,rhs));
+//=============================================================================
+template <class A, class B, class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+inline Expr<MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>, D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+ operator*(const Expr<A,T,D1,D,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
+  typedef MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>, D> MatMulOp;
+  return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
 #endif
 
@@ -436,86 +425,86 @@ protected:
 //==============================================================================
 // transpose
 //==============================================================================
-template <class T, unsigned int D1, unsigned int D2>
-inline Expr<TransposeOp<SMatrix<T,D1,D2>,T,D1,D2>, T, D2, D1>
- Transpose(const SMatrix<T,D1,D2>& rhs) {
-  typedef TransposeOp<SMatrix<T,D1,D2>,T,D1,D2> MatTrOp;
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline Expr<TransposeOp<SMatrix<T,D1,D2,R>,T,D1,D2>, T, D2, D1, R>
+ Transpose(const SMatrix<T,D1,D2, R>& rhs) {
+  typedef TransposeOp<SMatrix<T,D1,D2,R>,T,D1,D2> MatTrOp;
 
-  return Expr<MatTrOp, T, D2, D1>(MatTrOp(rhs));
+  return Expr<MatTrOp, T, D2, D1, R>(MatTrOp(rhs));
 }
 
 //==============================================================================
 // transpose
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
-inline Expr<TransposeOp<Expr<A,T,D1,D2>,T,D1,D2>, T, D2, D1>
- Transpose(const Expr<A,T,D1,D2>& rhs) {
-  typedef TransposeOp<Expr<A,T,D1,D2>,T,D1,D2> MatTrOp;
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline Expr<TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2>, T, D2, D1,R>
+ Transpose(const Expr<A,T,D1,D2,R>& rhs) {
+  typedef TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2> MatTrOp;
 
-  return Expr<MatTrOp, T, D2, D1>(MatTrOp(rhs));
+  return Expr<MatTrOp, T, D2, D1, R>(MatTrOp(rhs));
 }
 
 //==============================================================================
 // product: SMatrix/SVector calculate v^T * A * v
 //==============================================================================
-template <class T, unsigned int D>
-inline T Product(const SMatrix<T,D>& lhs, const SVector<T,D>& rhs) {
+template <class T, unsigned int D, class R>
+inline T Product(const SMatrix<T,D,D,R>& lhs, const SVector<T,D>& rhs) {
   return Dot(rhs, lhs * rhs);
 }
 
 //==============================================================================
 // product: SVector/SMatrix calculate v^T * A * v
 //==============================================================================
-template <class T, unsigned int D>
-inline T Product(const SVector<T,D>& lhs, const SMatrix<T,D>& rhs) {
+template <class T, unsigned int D, class R>
+inline T Product(const SVector<T,D>& lhs, const SMatrix<T,D,D,R>& rhs) {
   return Dot(lhs, rhs * lhs);
 }
 
 //==============================================================================
 // product: SMatrix/Expr calculate v^T * A * v
 //==============================================================================
-template <class A, class T, unsigned int D>
-inline T Product(const SMatrix<T,D>& lhs, const Expr<A,T,D>& rhs) {
+template <class A, class T, unsigned int D, class R>
+inline T Product(const SMatrix<T,D,D,R>& lhs, const VecExpr<A,T,D>& rhs) {
   return Dot(rhs, lhs * rhs);
 }
 
 //==============================================================================
 // product: Expr/SMatrix calculate v^T * A * v
 //==============================================================================
-template <class A, class T, unsigned int D>
-inline T Product(const Expr<A,T,D>& lhs, const SMatrix<T,D>& rhs) {
+template <class A, class T, unsigned int D, class R>
+inline T Product(const VecExpr<A,T,D>& lhs, const SMatrix<T,D,D,R>& rhs) {
   return Dot(lhs, rhs * lhs);
 }
 
 //==============================================================================
 // product: SVector/Expr calculate v^T * A * v
 //==============================================================================
-template <class A, class T, unsigned int D>
-inline T Product(const SVector<T,D>& lhs, const Expr<A,T,D,D>& rhs) {
+template <class A, class T, unsigned int D, class R>
+inline T Product(const SVector<T,D>& lhs, const Expr<A,T,D,D,R>& rhs) {
   return Dot(lhs, rhs * lhs);
 }
 
 //==============================================================================
 // product: Expr/SVector calculate v^T * A * v
 //==============================================================================
-template <class A, class T, unsigned int D>
-inline T Product(const Expr<A,T,D,D>& lhs, const SVector<T,D>& rhs) {
+template <class A, class T, unsigned int D, class R>
+inline T Product(const Expr<A,T,D,D,R>& lhs, const SVector<T,D>& rhs) {
   return Dot(rhs, lhs * rhs);
 }
 
 //==============================================================================
 // product: Expr/Expr calculate v^T * A * v
 //==============================================================================
-template <class A, class B, class T, unsigned int D>
-inline T Product(const Expr<A,T,D,D>& lhs, const Expr<B,T,D>& rhs) {
+template <class A, class B, class T, unsigned int D, class R>
+inline T Product(const Expr<A,T,D,D,R>& lhs, const VecExpr<B,T,D>& rhs) {
   return Dot(rhs, lhs * rhs);
 }
 
 //==============================================================================
 // product: Expr/Expr calculate v^T * A * v
 //==============================================================================
-template <class A, class B, class T, unsigned int D>
-inline T Product(const Expr<A,T,D>& lhs, const Expr<B,T,D,D>& rhs) {
+template <class A, class B, class T, unsigned int D, class R>
+inline T Product(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
   return Dot(lhs, rhs * lhs);
 }
 

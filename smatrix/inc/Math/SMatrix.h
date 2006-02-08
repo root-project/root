@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.9 2005/12/12 11:35:10 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.10 2005/12/13 18:28:09 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -45,7 +45,8 @@
 // expression engine
 
 #include "Math/Expression.h"
-
+//#include "Math/MatrixRepresentations.h"
+#include "Math/MatrixRepresentationsStatic.h"
 //doxygen tag
 /**
    @defgroup SMatrix Matrix and Vector classes
@@ -55,6 +56,7 @@
 namespace ROOT {
 
   namespace Math {
+
 
     template <class T, unsigned int D> class SVector;
 
@@ -73,7 +75,10 @@ namespace ROOT {
 //==============================================================================
 // SMatrix: column-wise storage
 //==============================================================================
-template <class T, unsigned int D1, unsigned int D2 = D1>
+template <class T, 
+          unsigned int D1, 
+          unsigned int D2 = D1, 
+          class R=MatRepStd<T, D1, D2> >
 class SMatrix {
 public:
   /** @name --- Typedefs --- */
@@ -93,10 +98,10 @@ public:
    */
   SMatrix();
   ///
-  SMatrix(const SMatrix<T,D1,D2>& rhs);
+  SMatrix(const SMatrix<T,D1,D2,R>& rhs);
   ///
-  template <class A>
-  SMatrix(const Expr<A,T,D1,D2>& rhs);
+  template <class A, class R2>
+  SMatrix(const Expr<A,T,D1,D2,R2>& rhs);
 
   // new constructs using STL iterator interface
   /**
@@ -132,7 +137,7 @@ public:
 
 
   /// assign from a scalar value
-  SMatrix<T,D1,D2>& operator=(const T& rhs);
+  SMatrix<T,D1,D2,R>& operator=(const T& rhs);
 #endif
 
   /**
@@ -147,8 +152,11 @@ public:
 #endif
 
   ///
-  template <class A>
-  SMatrix<T,D1,D2>& operator=(const Expr<A,T,D1,D2>& rhs);
+  template <class M>
+  SMatrix<T,D1,D2,R>& operator=(const M& rhs);
+  
+  template <class A, class R2>
+  SMatrix<T,D1,D2,R>& operator=(const Expr<A,T,D1,D2,R2>& rhs);
 
 
 #ifdef OLD_IMPL
@@ -197,30 +205,33 @@ public:
   /// element wise comparison
   bool operator!=(const T& rhs) const;
   /// element wise comparison
-  bool operator==(const SMatrix<T,D1,D2>& rhs) const;
+  template <class R2>
+  bool operator==(const SMatrix<T,D1,D2,R2>& rhs) const;
   /// element wise comparison
-  bool operator!=(const SMatrix<T,D1,D2>& rhs) const;
+  bool operator!=(const SMatrix<T,D1,D2,R>& rhs) const;
   /// element wise comparison
-  template <class A>
-  bool operator==(const Expr<A,T,D1,D2>& rhs) const;
+  template <class A, class R2>
+  bool operator==(const Expr<A,T,D1,D2,R2>& rhs) const;
   /// element wise comparison
-  template <class A>
-  bool operator!=(const Expr<A,T,D1,D2>& rhs) const;
+  template <class A, class R2>
+  bool operator!=(const Expr<A,T,D1,D2,R2>& rhs) const;
 
   /// element wise comparison
   bool operator>(const T& rhs) const;
   /// element wise comparison
   bool operator<(const T& rhs) const;
   /// element wise comparison
-  bool operator>(const SMatrix<T,D1,D2>& rhs) const;
+  template <class R2>
+  bool operator>(const SMatrix<T,D1,D2,R2>& rhs) const;
   /// element wise comparison
-  bool operator<(const SMatrix<T,D1,D2>& rhs) const;
+  template <class R2>
+  bool operator<(const SMatrix<T,D1,D2,R2>& rhs) const;
   /// element wise comparison
-  template <class A>
-  bool operator>(const Expr<A,T,D1,D2>& rhs) const;
+  template <class A, class R2>
+  bool operator>(const Expr<A,T,D1,D2,R2>& rhs) const;
   /// element wise comparison
-  template <class A>
-  bool operator<(const Expr<A,T,D1,D2>& rhs) const;
+  template <class A, class R2>
+  bool operator<(const Expr<A,T,D1,D2,R2>& rhs) const;
 
   /// read-only access
   const T& operator()(unsigned int i, unsigned int j) const;
@@ -228,36 +239,38 @@ public:
   T& operator()(unsigned int i, unsigned int j);
 
   ///
-  SMatrix<T,D1,D2>& operator+=(const SMatrix<T,D1,D2>& rhs);
+  template <class M>
+  SMatrix<T,D1,D2,R>&operator+=(const M& rhs);
 
-  SMatrix<T,D1,D2>& operator-=(const SMatrix<T,D1,D2>& rhs);
+  template <class M>
+  SMatrix<T,D1,D2,R>& operator-=(const M& rhs);
 
 #ifdef OLD_IMPL
   // this operations are not well defines 
   // in th eold impl they were implemented not as matrix - matrix multiplication, but as 
   //  m(i,j)*m(i,j) multiplication
-  SMatrix<T,D1,D2>& operator*=(const SMatrix<T,D1,D2>& rhs);
+  SMatrix<T,D1,D2,R>& operator*=(const SMatrix<T,D1,D2,R>& rhs);
 
-  SMatrix<T,D1,D2>& operator/=(const SMatrix<T,D1,D2>& rhs);
+  SMatrix<T,D1,D2,R>& operator/=(const SMatrix<T,D1,D2,R>& rhs);
 #endif
 
 #ifndef __CINT__
   ///
-  template <class A>
-  SMatrix<T,D1,D2>& operator+=(const Expr<A,T,D1,D2>& rhs);
+  template <class A, class R2>
+  SMatrix<T,D1,D2,R>& operator+=(const Expr<A,T,D1,D2,R2>& rhs);
   ///
   ///
-  template <class A>
-  SMatrix<T,D1,D2>& operator-=(const Expr<A,T,D1,D2>& rhs);
+  template <class A, class R2>
+  SMatrix<T,D1,D2,R>& operator-=(const Expr<A,T,D1,D2,R2>& rhs);
   ///
   ///
 #ifdef OLD_IMPL
-  template <class A>
-  SMatrix<T,D1,D2>& operator*=(const Expr<A,T,D1,D2>& rhs);
+  template <class A, class R2>
+  SMatrix<T,D1,D2,R>& operator*=(const Expr<A,T,D1,D2,R2>& rhs);
   ///
   ///
-  template <class A>
-  SMatrix<T,D1,D2>& operator/=(const Expr<A,T,D1,D2>& rhs);
+  template <class A, class R2>
+  SMatrix<T,D1,D2,R>& operator/=(const Expr<A,T,D1,D2,R2>& rhs);
 #endif
 
 #endif
@@ -275,7 +288,7 @@ public:
      This method  returns a new matrix. In case the inversion fails
      the current matrix is returned
   */
-  SMatrix<T,D1,D2>  Sinverse() const;
+  SMatrix<T,D1,D2,R>  Sinverse() const;
 
   /** determinant of symmetrc, pos. def. Matrix via Dsfact. \textbf{Note:} this
       will destroy the contents of the Matrix!
@@ -299,7 +312,7 @@ public:
      This method  returns a new matrix. In case the inversion fails
      the current matrix is returned
   */
-  SMatrix<T,D1,D2> Inverse() const;
+  SMatrix<T,D1,D2,R> Inverse() const;
 
   /**
       determinant of square Matrix via Dfact. \textbf{Note:} this will destroy
@@ -317,32 +330,32 @@ public:
 
   /// place a vector in a Matrix row
   template <unsigned int D>
-  SMatrix<T,D1,D2>& Place_in_row(const SVector<T,D>& rhs,
+  SMatrix<T,D1,D2,R>& Place_in_row(const SVector<T,D>& rhs,
 				 unsigned int row,
 				 unsigned int col);
-  /// place a vector expression in a Matrix row
+  /// place a vector expression in a Matrix row 
   template <class A, unsigned int D>
-  SMatrix<T,D1,D2>& Place_in_row(const Expr<A,T,D>& rhs,
+SMatrix<T,D1,D2,R>& Place_in_row(const VecExpr<A,T,D>& rhs,
 				 unsigned int row,
 				 unsigned int col);
   /// place a vector in a Matrix column
   template <unsigned int D>
-  SMatrix<T,D1,D2>& Place_in_col(const SVector<T,D>& rhs,
+SMatrix<T,D1,D2,R>& Place_in_col(const SVector<T,D>& rhs,
 				 unsigned int row,
 				 unsigned int col);
   /// place a vector expression in a Matrix column
   template <class A, unsigned int D>
-  SMatrix<T,D1,D2>& Place_in_col(const Expr<A,T,D>& rhs,
+SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
 				 unsigned int row,
 				 unsigned int col);
   /// place a matrix in this matrix
   template <unsigned int D3, unsigned int D4>
-  SMatrix<T,D1,D2>& Place_at(const SMatrix<T,D3,D4>& rhs,
+  SMatrix<T,D1,D2,R>& Place_at(const SMatrix<T,D3,D4>& rhs,
 			     unsigned int row,
 			     unsigned int col);
   /// place a matrix expression in this matrix
-  template <class A, unsigned int D3, unsigned int D4>
-  SMatrix<T,D1,D2>& Place_at(const Expr<A,T,D3,D4>& rhs,
+  template <class A, unsigned int D3, unsigned int D4, class R2>
+  SMatrix<T,D1,D2,R>& Place_at(const Expr<A,T,D3,D4,R2>& rhs,
 			     unsigned int row,
 			     unsigned int col);
 
@@ -414,8 +427,10 @@ public:
   /// Print: used by operator<<()
   std::ostream& Print(std::ostream& os) const;
 
-private:
-  T fArray[D1*D2];
+public:
+  //  T fArray[D1*D2];
+  R fRep;
+  
 }; // end of class SMatrix
 
 
@@ -423,8 +438,8 @@ private:
 //==============================================================================
 // operator<<
 //==============================================================================
-template <class T, unsigned int D1, unsigned int D2>
-inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1,D2>& rhs) {
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1,D2,R>& rhs) {
   return rhs.Print(os);
 }
 

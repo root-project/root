@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Functions.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Functions.h,v 1.2 2005/12/11 00:24:49 rdm Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Functions
@@ -147,7 +147,7 @@ inline T Dot(const SVector<T,D>& lhs, const SVector<T,D>& rhs) {
 // dot
 //==============================================================================
 template <class A, class T, unsigned int D>
-inline T Dot(const SVector<T,D>& lhs, const Expr<A,T,D>& rhs) {
+inline T Dot(const SVector<T,D>& lhs, const VecExpr<A,T,D>& rhs) {
   return meta_dot<D-1>::f(lhs,rhs, T());
 }
 
@@ -155,7 +155,7 @@ inline T Dot(const SVector<T,D>& lhs, const Expr<A,T,D>& rhs) {
 // dot
 //==============================================================================
 template <class A, class T, unsigned int D>
-inline T Dot(const Expr<A,T,D>& lhs, const SVector<T,D>& rhs) {
+inline T Dot(const VecExpr<A,T,D>& lhs, const SVector<T,D>& rhs) {
   return meta_dot<D-1>::f(lhs,rhs, T());
 }
 
@@ -164,7 +164,7 @@ inline T Dot(const Expr<A,T,D>& lhs, const SVector<T,D>& rhs) {
 // dot
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline T Dot(const Expr<A,T,D>& lhs, const Expr<B,T,D>& rhs) {
+inline T Dot(const VecExpr<A,T,D>& lhs, const VecExpr<B,T,D>& rhs) {
   return meta_dot<D-1>::f(rhs,lhs, T());
 }
 
@@ -210,7 +210,7 @@ inline T Mag2(const SVector<T,D>& rhs) {
 // mag2
 //==============================================================================
 template <class A, class T, unsigned int D>
-inline T Mag2(const Expr<A,T,D>& rhs) {
+inline T Mag2(const VecExpr<A,T,D>& rhs) {
   return meta_mag<D-1>::f(rhs, T());
 }
 
@@ -231,7 +231,7 @@ inline T Mag(const SVector<T,D>& rhs) {
 // mag
 //==============================================================================
 template <class A, class T, unsigned int D>
-inline T Mag(const Expr<A,T,D>& rhs) {
+inline T Mag(const VecExpr<A,T,D>& rhs) {
   return std::sqrt(Mag2(rhs));
 }
 
@@ -253,7 +253,7 @@ inline T Lmag2(const SVector<T,4>& rhs) {
 // Lmag2
 //==============================================================================
 template <class A, class T>
-inline T Lmag2(const Expr<A,T,4>& rhs) {
+inline T Lmag2(const VecExpr<A,T,4>& rhs) {
   return Square(rhs.apply(0))
     - Square(rhs.apply(1)) - Square(rhs.apply(2)) - Square(rhs.apply(3));
 }
@@ -276,7 +276,7 @@ inline T Lmag(const SVector<T,4>& rhs) {
 // Lmag
 //==============================================================================
 template <class A, class T>
-inline T Lmag(const Expr<A,T,4>& rhs) {
+inline T Lmag(const VecExpr<A,T,4>& rhs) {
   return std::sqrt(Lmag2(rhs));
 }
 
@@ -303,7 +303,7 @@ inline SVector<T,3> Cross(const SVector<T,3>& lhs, const SVector<T,3>& rhs) {
 // cross product
 //==============================================================================
 template <class A, class T>
-inline SVector<T,3> Cross(const Expr<A,T,3>& lhs, const SVector<T,3>& rhs) {
+inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const SVector<T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
 		      lhs.apply(2)*rhs.apply(1),
 		      lhs.apply(2)*rhs.apply(0) -
@@ -316,7 +316,7 @@ inline SVector<T,3> Cross(const Expr<A,T,3>& lhs, const SVector<T,3>& rhs) {
 // cross product
 //==============================================================================
 template <class T, class A>
-inline SVector<T,3> Cross(const SVector<T,3>& lhs, const Expr<A,T,3>& rhs) {
+inline SVector<T,3> Cross(const SVector<T,3>& lhs, const VecExpr<A,T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
 		      lhs.apply(2)*rhs.apply(1),
 		      lhs.apply(2)*rhs.apply(0) -
@@ -329,7 +329,7 @@ inline SVector<T,3> Cross(const SVector<T,3>& lhs, const Expr<A,T,3>& rhs) {
 // cross product
 //==============================================================================
 template <class A, class B, class T>
-inline SVector<T,3> Cross(const Expr<A,T,3>& lhs, const Expr<B,T,3>& rhs) {
+inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const VecExpr<B,T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
 		      lhs.apply(2)*rhs.apply(1),
 		      lhs.apply(2)*rhs.apply(0) -
@@ -356,7 +356,7 @@ inline SVector<T,D> Unit(const SVector<T,D>& rhs) {
 // unit: returns a unit vector
 //==============================================================================
 template <class A, class T, unsigned int D>
-inline SVector<T,D> Unit(const Expr<A,T,D>& rhs) {
+inline SVector<T,D> Unit(const VecExpr<A,T,D>& rhs) {
   return SVector<T,D>(rhs).Unit();
 }
 
@@ -365,20 +365,20 @@ inline SVector<T,D> Unit(const Expr<A,T,D>& rhs) {
 // unit: returns a unit vector (worse performance)
 //==============================================================================
 template <class T, unsigned int D>
-inline Expr<BinaryOp<DivOp<T>, SVector<T,D>, Constant<T>, T>, T, D>
+inline VecExpr<BinaryOp<DivOp<T>, SVector<T,D>, Constant<T>, T>, T, D>
  unit(const SVector<T,D>& lhs) {
   typedef BinaryOp<DivOp<T>, SVector<T,D>, Constant<T>, T> DivOpBinOp;
-  return Expr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,Constant<T>(mag(lhs))));
+  return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,Constant<T>(mag(lhs))));
 }
 
 //==============================================================================
 // unit: returns a unit vector (worse performance)
 //==============================================================================
 template <class A, class T, unsigned int D>
-inline Expr<BinaryOp<DivOp<T>, Expr<A,T,D>, Constant<T>, T>, T, D>
- unit(const Expr<A,T,D>& lhs) {
-  typedef BinaryOp<DivOp<T>, Expr<A,T,D>, Constant<T>, T> DivOpBinOp;
-  return Expr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,Constant<T>(mag(lhs))));
+inline VecExpr<BinaryOp<DivOp<T>, VecExpr<A,T,D>, Constant<T>, T>, T, D>
+ unit(const VecExpr<A,T,D>& lhs) {
+  typedef BinaryOp<DivOp<T>, VecExpr<A,T,D>, Constant<T>, T> DivOpBinOp;
+  return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,Constant<T>(mag(lhs))));
 }
 #endif
 
