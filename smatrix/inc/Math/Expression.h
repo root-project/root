@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.3 2005/12/05 16:33:47 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.4 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -81,10 +81,9 @@ public:
 #else
   // use enumerations
   enum { 
-    ///
-    kRows = D, 
-  ///
-  ///  kCols = D2
+
+    kRows = D 
+
   };
 #endif
 

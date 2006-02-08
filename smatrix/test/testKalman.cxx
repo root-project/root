@@ -267,7 +267,13 @@ int test_smatrix_sym_kalman() {
 	  tmp = Cp * Transpose(H);
 	  Rinv = V;  Rinv +=  H * tmp;
 	  // note that similarity op on symmetric matrices is not yet implemented
+#ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
 	  vtmp2 = Rinv.UpperBlock(); 
+#else
+	  // for solaris problem
+	  vtmp2 = Rinv.UpperBlock<NDIM1*(NDIM1+1)/2>(); 
+#endif
+
 	  MnSymMatrixNN RinvSym(vtmp2); 
 
 	  bool test = RinvSym.Invert();
