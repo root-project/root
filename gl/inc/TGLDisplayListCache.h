@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.6 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.7 2006/01/11 13:44:39 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include <map>
 
 class TGLDrawable;
+class TGLDrawFlags;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -42,8 +43,8 @@ class TGLDrawable;
 class TGLDisplayListCache 
 {
    private:
-   typedef std::pair<const TGLDrawable *, const UInt_t> CacheID_t;
-   typedef std::map<CacheID_t,UInt_t>                   CacheDLMap_t;
+   typedef std::pair<const TGLDrawable *, const Short_t> CacheID_t;
+   typedef std::map<CacheID_t,UInt_t>                    CacheDLMap_t;
 
    // Fields
    UInt_t         fSize;         //!
@@ -68,7 +69,7 @@ class TGLDisplayListCache
    //TODO These may not be required now singleton?
    void Init();
 
-   CacheID_t MakeCacheID(const TGLDrawable & drawable, UInt_t LOD) const;
+   CacheID_t MakeCacheID(const TGLDrawable & drawable, const TGLDrawFlags & flags) const;
    UInt_t    Find(CacheID_t cacheID) const;
 
 public:
@@ -82,12 +83,12 @@ public:
    void   Dump() const;
 
    // Cache entities (TLGDrawable) manipulators
-   Bool_t Draw(const TGLDrawable & drawable, UInt_t LOD) const;
-   Bool_t OpenCapture(const TGLDrawable & drawable, UInt_t LOD);
+   Bool_t Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags) const;
+   Bool_t OpenCapture(const TGLDrawable & drawable, const TGLDrawFlags & flags);
    Bool_t CloseCapture();
    Bool_t CaptureIsOpen() { return fCaptureOpen; }
-   void   Purge(const TGLDrawable & drawable);             // NOT IMPLEMENTED
-   void   Purge(const TGLDrawable & drawable, UInt_t LOD); // NOT IMPLEMENTED
+   void   Purge(const TGLDrawable & drawable);                             // NOT IMPLEMENTED
+   void   Purge(const TGLDrawable & drawable, const TGLDrawFlags & flags); // NOT IMPLEMENTED
 
    ClassDef(TGLDisplayListCache,0) // a cache of GL display lists (singleton)
 };

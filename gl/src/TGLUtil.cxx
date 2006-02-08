@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.21 2005/12/05 17:34:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.22 2006/01/18 16:57:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -17,6 +17,11 @@
 
 #include "TError.h"
 #include "TMath.h"
+
+Bool_t demoTakeAll = kFALSE;
+Bool_t demoFrustum = kTRUE;
+Bool_t demoLOD = kTRUE;
+Bool_t demoTrace = kFALSE;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

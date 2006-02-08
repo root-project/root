@@ -15,6 +15,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TContextMenu.h"
+#include "TGLDrawFlags.h"
 
 // For debug tracing
 #include "TClass.h" 
@@ -229,11 +230,11 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::DirectDraw(UInt_t LOD) const
+void TGLFaceSet::DirectDraw(const TGLDrawFlags & flags) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+      Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
    }
 
    GLUtriangulatorObj *tessObj = GetTesselator();
@@ -265,26 +266,7 @@ void TGLFaceSet::DirectDraw(UInt_t LOD) const
    }
 }
 
-//______________________________________________________________________________
-void TGLFaceSet::DrawWireFrame(UInt_t) const
-{
-   //
-   const Double_t *pnts = &fVertices[0];
-   const Int_t *pols = &fPolyDesc[0];
-
-
-   for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
-      Int_t npoints = pols[j++];
-
-      glBegin(GL_POLYGON);
-
-      for (Int_t k = 0; k < npoints; ++k, ++j)
-         glVertex3dv(pnts + pols[j] * 3);
-
-      glEnd();
-   }
-}
-
+/*
 //______________________________________________________________________________
 void TGLFaceSet::DrawOutline(UInt_t lod) const
 {
@@ -304,6 +286,7 @@ void TGLFaceSet::DrawOutline(UInt_t lod) const
    glPolygonMode(GL_FRONT, GL_FILL);
    glEnable(GL_LIGHTING);   
 }
+*/
 
 //______________________________________________________________________________
 Int_t TGLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
@@ -393,11 +376,11 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, TObject *r)
 }
 
 //______________________________________________________________________________
-void TGLPolyMarker::DirectDraw(UInt_t LOD) const
+void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLPolyMarker::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+      Info("TGLPolyMarker::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
    }
 
    const Double_t *vertices = &fVertices[0];
@@ -511,11 +494,11 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, TObject *r)
 }
 
 //______________________________________________________________________________
-void TGLPolyLine::DirectDraw(UInt_t LOD) const
+void TGLPolyLine::DirectDraw(const TGLDrawFlags & flags) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLPolyLine::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+      Info("TGLPolyLine::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
    }
 
    glBegin(GL_LINE_STRIP);
@@ -547,15 +530,15 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, TObject *r)
 }
 
 //______________________________________________________________________________
-void TGLSphere::DirectDraw(UInt_t LOD) const
+void TGLSphere::DirectDraw(const TGLDrawFlags & flags) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLSphere::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+      Info("TGLSphere::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
    }
 
    // 4 stack/slice min for gluSphere to work
-   UInt_t divisions = LOD;
+   UInt_t divisions = flags.LOD();
    if (divisions < 4) {
       divisions = 4;
    }
@@ -592,8 +575,9 @@ public:
 //one for inner and outer sides, two for top and bottom
 class TubeSegMesh : public TGLMesh {
 private:
-   TGLVertex3 fMesh[(kLODHigh + 1) * 8 + 8];
-   TGLVector3 fNorm[(kLODHigh + 1) * 8 + 8];
+   // Allocate space for highest quality (LOD) meshes
+   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 8 + 8];
+   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 8 + 8];
 
 public:
    TubeSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
@@ -607,8 +591,9 @@ public:
 //outer, inner, top, bottom
 class TubeMesh : public TGLMesh {
 private:
-   TGLVertex3 fMesh[(kLODHigh + 1) * 8];
-   TGLVector3 fNorm[(kLODHigh + 1) * 8];
+   // Allocate space for highest quality (LOD) meshes
+   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 8];
+   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 8];
 
 public:
    TubeMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
@@ -620,8 +605,9 @@ public:
 //One quad mesh and 2 triangle funs
 class TCylinderMesh : public TGLMesh {
 private:
-   TGLVertex3 fMesh[(kLODHigh + 1) * 4 + 2];
-   TGLVector3 fNorm[(kLODHigh + 1) * 4 + 2];
+   // Allocate space for highest quality (LOD) meshes
+   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 4 + 2];
+   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 4 + 2];
 
 public:
    TCylinderMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz,
@@ -633,8 +619,9 @@ public:
 //One quad mesh and 2 triangle fans
 class TCylinderSegMesh : public TGLMesh {
 private:
-   TGLVertex3 fMesh[(kLODHigh + 1) * 4 + 10];
-   TGLVector3 fNorm[(kLODHigh + 1) * 4 + 10];
+   // Allocate space for highest quality (LOD) meshes
+   TGLVertex3 fMesh[(TGLDrawFlags::kLODHigh + 1) * 4 + 10];
+   TGLVector3 fNorm[(TGLDrawFlags::kLODHigh + 1) * 4 + 10];
 
 public:
    TCylinderSegMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t dz, Double_t phi1, Double_t phi2,
@@ -1076,11 +1063,11 @@ TGLCylinder::~TGLCylinder()
 }
 
 //______________________________________________________________________________
-void TGLCylinder::DirectDraw(UInt_t LOD) const
+void TGLCylinder::DirectDraw(const TGLDrawFlags & flags) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLCylinder::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+      Info("TGLCylinder::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
    }
 
    // As we are now support display list caching we can create, draw and
@@ -1092,9 +1079,9 @@ void TGLCylinder::DirectDraw(UInt_t LOD) const
 
    // Create mesh parts
    if (!fSegMesh) {
-      meshParts.push_back(new TubeMesh(LOD, fR1, fR2, fR3, fR4, fDz, fLowPlaneNorm, fHighPlaneNorm));
+      meshParts.push_back(new TubeMesh(flags.LOD(), fR1, fR2, fR3, fR4, fDz, fLowPlaneNorm, fHighPlaneNorm));
    } else {
-      meshParts.push_back(new TubeSegMesh(LOD, fR1, fR2, fR3, fR4, fDz, fPhi1,
+      meshParts.push_back(new TubeSegMesh(flags.LOD(), fR1, fR2, fR3, fR4, fDz, fPhi1,
                                           fPhi2, fLowPlaneNorm, fHighPlaneNorm));
    }
 

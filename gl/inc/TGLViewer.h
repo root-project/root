@@ -24,6 +24,9 @@
 #ifndef ROOT_TGLOrthoCamera
 #include "TGLOrthoCamera.h"
 #endif
+#ifndef ROOT_TGLDrawFlags
+#include "TGLDrawFlags.h"
+#endif
 #ifndef ROOT_TTimer
 #include "TTimer.h"
 #endif
@@ -87,10 +90,6 @@ public:
                       kLightRight  = 0x00000010, 
                       kLightMask   = 0x0000001f }; 
 
-   // TODO: Put this into a proper draw style flag UInt_t
-   // seperated into viewer/scene/physical/logical sections
-   // modify TGLDrawable to cache on shape subset
-   enum EDrawStyle { kFill, kOutline, kWireFrame };
    enum EAxesType  { kAxesNone, kAxesEdge, kAxesOrigin };
 
 private:
@@ -140,9 +139,8 @@ private:
    UInt_t               fActiveButtonID;
 
    // Drawing
-   EDrawStyle           fDrawStyle;          //! current draw style (Fill/Outline/WireFrame)  
+   TGLDrawFlags         fDrawFlags;          //! next draw flags - passed to scene
    TGLRedrawTimer     * fRedrawTimer;        //!
-   UInt_t               fNextSceneLOD;       //!
 
    // Scene is created/owned internally.
    // In future it will be shaped between multiple viewers
@@ -216,7 +214,7 @@ public:
    virtual void   AddCompositeOp(UInt_t operation);
 
    // External GUI component interface
-   void SetDrawStyle(EDrawStyle drawStyle);
+   void SetDrawStyle(TGLDrawFlags::EStyle style);
    void SetCurrentCamera(ECameraType camera);
    void SetOrthoCamera(ECameraType camera, Double_t left, Double_t right, Double_t top, Double_t bottom);
    void SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly, 
@@ -238,7 +236,7 @@ public:
    // Request methods post cross thread request via TVirtualGL / TGLKernel
    // to ensure correct thread and hence valid GL context under Win32.
    // Can be removed when TGLManager is used
-   void RequestDraw(UInt_t redrawLOD = kLODMed); // Cross thread draw request
+   void RequestDraw(Short_t LOD = TGLDrawFlags::kLODMed); // Cross thread draw request
    void DoDraw();
    void RequestSelect(UInt_t x, UInt_t y); // Cross thread select request
    Bool_t DoSelect(const TGLRect & rect); // Window coords origin top left
@@ -286,15 +284,15 @@ class TGLRedrawTimer : public TTimer
 {
    private:
       TGLViewer & fViewer;
-      UInt_t      fRedrawLOD;
+      Short_t     fRedrawLOD;
    public:
-      TGLRedrawTimer(TGLViewer & viewer) : fViewer(viewer), fRedrawLOD(100) {};
+      TGLRedrawTimer(TGLViewer & viewer) : fViewer(viewer), fRedrawLOD(TGLDrawFlags::kLODHigh) {};
       ~TGLRedrawTimer() {};
-      void   RequestDraw(Int_t milliSec, UInt_t redrawLOD) {
+      void   RequestDraw(Int_t milliSec, Short_t redrawLOD) {
          fRedrawLOD = redrawLOD;
          TTimer::Start(milliSec, kTRUE);
       }
-      Bool_t Notify() { TurnOff(); fViewer.RequestDraw(kLODHigh); return kTRUE; }
+      Bool_t Notify() { TurnOff(); fViewer.RequestDraw(fRedrawLOD); return kTRUE; }
 };
 
 #endif // ROOT_TGLViewer

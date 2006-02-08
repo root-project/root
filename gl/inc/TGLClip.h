@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.h $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.h,v 1.5 2006/01/30 17:42:05 rdm Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
    EMode Mode() const         { return fMode; }
    void  SetMode(EMode mode)  { fMode = mode; }
 
-   virtual void Draw(UInt_t LOD) const;
+   virtual void Draw(const TGLDrawFlags & flags) const;
    virtual void PlaneSet(TGLPlaneSet_t & set) const = 0;
 
    ClassDef(TGLClip,0); // abstract clipping object

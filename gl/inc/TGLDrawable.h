@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.9 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.10 2006/01/18 16:57:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #ifndef ROOT_TGLBoundingBox
 #include "TGLBoundingBox.h"
 #endif
+
+class TGLDrawFlags;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -47,14 +49,14 @@ private:
 
 protected:
    // Fields
-   Bool_t            fDLCache;     //! potentially DL cached
+   Bool_t            fCached;      //! use display list cached
    TGLBoundingBox    fBoundingBox; //! the drawables bounding box
 
    // TODO: Split to AABB for logical, and OBB for physical - moved out of here
    // can keep requirement that all drawables support returning a base BB class.
 
    // Methods
-   virtual void DirectDraw(UInt_t LOD) const = 0; // Actual draw method (non DL cached)
+   virtual void DirectDraw(const TGLDrawFlags & flags) const = 0; // Actual draw method (non DL cached)
 
 public:
    enum ELODAxes  { kLODAxesNone = 0,  // Implies draw/DL caching done at kLODUnsupported
@@ -64,29 +66,19 @@ public:
                     kLODAxesAll  = kLODAxesX | kLODAxesY | kLODAxesZ
                   };
 
-   TGLDrawable(ULong_t ID, bool DLCache);
+   TGLDrawable(ULong_t ID, Bool_t cached);
    virtual ~TGLDrawable();
 
          ULong_t          ID()          const { return fID; }
    const TGLBoundingBox & BoundingBox() const { return fBoundingBox; }
 
    virtual ELODAxes SupportedLODAxes() const = 0;
-   virtual void     Draw(UInt_t LOD) const;
+   virtual void     Draw(const TGLDrawFlags & flags) const;
 
-   virtual void DrawWireFrame(UInt_t lod) const
-   {
-      DirectDraw(lod);
-   }
-   virtual void DrawOutline(UInt_t lod) const
-   {
-      DirectDraw(lod);   
-   }
-
-
-   // Caching
-   bool SetDLCache(bool DLCache);
-   virtual bool UseDLCache(UInt_t LOD) const;
-   virtual void Purge();
+   // Display List Caching
+           Bool_t SetCached(Bool_t cached);
+   virtual Bool_t ShouldCache(const TGLDrawFlags & flags) const;
+   virtual void   Purge();
 
    ClassDef(TGLDrawable,0) // abstract GL drawable object
 };

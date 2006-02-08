@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.6 2006/01/30 17:42:06 rdm Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TGLViewer;
 // TGLManip                                                             //
 //                                                                      //
 // Abstract base class for viewer manipulators, which allow direct in   //
-// viewer manipulation of a (TGlPhysicalShape) object - currently       //
+// viewer manipulation of a TGLPhysicalShape derv. object - currently   //
 // translation, scaling and rotation along/round objects local axes.    //
 // See derived classes for these implementations.                       //
 //                                                                      //

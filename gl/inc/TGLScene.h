@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.20 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.21 2006/01/26 17:06:51 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -18,6 +18,9 @@
 #endif
 #ifndef ROOT_TError
 #include "TError.h"
+#endif
+#ifndef ROOT_TGLDrawFlags
+#include "TGLDrawFlags.h"
 #endif
 #ifndef ROOT_TGLTransManip
 #include "TGLTransManip.h"
@@ -102,7 +105,7 @@ private:
 
    mutable TGLBoundingBox fBoundingBox;      //! bounding box for scene (axis aligned) - lazy update - use BoundingBox() to access
    mutable Bool_t         fBoundingBoxValid; //! bounding box valid?
-   UInt_t                 fLastDrawLOD;      //! last LOD for the scene draw
+//   UInt_t                 fLastDrawLOD;      //! last LOD for the scene draw
 
    // Selection
    TGLPhysicalShape     * fSelectedPhysical; //! current selected physical shape
@@ -120,6 +123,7 @@ private:
     
    // Draw stats
    struct DrawStats_t {
+      TGLDrawFlags fFlags;
       UInt_t fOpaque;
       UInt_t fTrans;
       std::map<std::string, UInt_t> fByShape;
@@ -132,19 +136,16 @@ private:
    static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const TGLPhysicalShape * shape2);
 
    // Internal draw passes - repeated calls for cliping
-   void  DrawPass(const TGLCamera & camera, Int_t style, UInt_t LOD, 
+   void  DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlags, 
                   Double_t timeout, const std::vector<TGLPlane> * clipPlanes = 0);
 
    void  DrawGuides(const TGLCamera & camera, Int_t axesType, const TGLVertex3 * reference) const;
 
    // Misc
    void   DrawNumber(Double_t num, const TGLVertex3 & center) const;
-   UInt_t CalcPhysicalLOD(const TGLPhysicalShape & shape,
-                          const TGLCamera & camera,
-                          UInt_t sceneLOD) const;
 
    // Draw stats
-   void ResetDrawStats();
+   void ResetDrawStats(const TGLDrawFlags & flags);
    void UpdateDrawStats(const TGLPhysicalShape & shape);
    void DumpDrawStats(); // Debug
 
@@ -158,10 +159,10 @@ public:
 
    // Drawing/Selection
    const TGLBoundingBox & BoundingBox() const; 
-   void                   Draw(const TGLCamera & camera, Int_t style, UInt_t sceneLOD, 
+   void                   Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags, 
                                Double_t timeout, Int_t axesType, const TGLVertex3 * reference,
                                Bool_t forSelect = kFALSE);
-   Bool_t                 Select(const TGLCamera & camera, Int_t style);
+   Bool_t                 Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlags);
 
    // Logical Shape Management
    void                    AdoptLogical(TGLLogicalShape & shape);

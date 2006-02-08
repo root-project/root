@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.9 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.10 2006/01/11 13:44:39 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -9,10 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TGLDisplayListCache.h"
+#include "TGLDrawFlags.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
+
+#include "Riostream.h"
 #include "TError.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -79,7 +81,7 @@ void TGLDisplayListCache::Init()
 }
 
 //______________________________________________________________________________
-Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, UInt_t LOD) const
+Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags) const
 {
    // Draw (call) the GL dislay list entry associated with the drawable / LOD
    // flag pair, and return kTRUE. If no list item associated, return KFALSE.
@@ -88,24 +90,24 @@ Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, UInt_t LOD) const
    }
 
    // TODO: Cache the lookup here ? As may have many calls of same draw/qual in a row
-   UInt_t drawList = Find(MakeCacheID(drawable, LOD));
+   UInt_t drawList = Find(MakeCacheID(drawable, flags));
 
    if (drawList == fgInvalidDLName) {
       if (gDebug>4) {
-         Info("TGLDisplayListCache::Draw", "no cache for drawable %d LOD %d", &drawable, LOD);
+         Info("TGLDisplayListCache::Draw", "no cache for drawable %d LOD %d", &drawable, flags.LOD());
       }
       return kFALSE;
    }
 
    if (gDebug>4) {
-      Info("TGLDisplayListCache::Draw", "drawable %d LOD %d", &drawable, LOD);
+      Info("TGLDisplayListCache::Draw", "drawable %d LOD %d", &drawable, flags.LOD());
    }
    glCallList(drawList);
    return kTRUE;
 }
 
 //______________________________________________________________________________
-Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, UInt_t LOD)
+Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, const TGLDrawFlags & flags)
 {
    // Open capture of GL draw commands into cache entry, associated with 
    // drawable / LOD pair. Capture is done in GL_COMPILE mode - so the cache 
@@ -139,10 +141,10 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, UInt_t LOD
    }
 
    if (gDebug>4) {
-      Info("TGLDisplayListCache::OpenCapture", "for drawable %d LOD %d", &drawable, LOD);
+      Info("TGLDisplayListCache::OpenCapture", "for drawable %d LOD %d", &drawable, flags.LOD());
    }
 
-   CacheID_t cacheID = MakeCacheID(drawable, LOD);
+   CacheID_t cacheID = MakeCacheID(drawable, flags);
    fCacheDLMap.insert(CacheDLMap_t::value_type(cacheID,fDLNextFree));
    //assert( Find(cacheID) == fDLNextFree );
 
@@ -201,7 +203,7 @@ void TGLDisplayListCache::Purge(const TGLDrawable & /* drawable */)
 }
 
 //______________________________________________________________________________
-void TGLDisplayListCache::Purge(const TGLDrawable & /* drawable */, UInt_t /* LOD */) 
+void TGLDisplayListCache::Purge(const TGLDrawable & /* drawable */, const TGLDrawFlags & /* flags */) 
 { 
    // Purge entry for a drawable/LOD from cache
    // NOTE: NOT IMPLEMENTED AT PRESENT!
@@ -216,10 +218,9 @@ void TGLDisplayListCache::Purge(const TGLDrawable & /* drawable */, UInt_t /* LO
 //______________________________________________________________________________
 UInt_t TGLDisplayListCache::Find(CacheID_t cacheID) const
 {
-   // Find GL display list block 'name' assocaited with the cacheID 
-   // cacheID is unqiuely generated from drawable/LOD pair - see 
+   // Return the GL display list block name associated with 'cacheID' 
+   // cacheID is generated from drawable/flags pair - see 
    // TGLDisplayListCache::MakeCacheID()
-   // Look at Effect STL on efficiency .
    CacheDLMap_t::const_iterator cacheDLMapIt;
    cacheDLMapIt = fCacheDLMap.find(cacheID);
 
@@ -233,12 +234,16 @@ UInt_t TGLDisplayListCache::Find(CacheID_t cacheID) const
 // TODO: Inline this
 //______________________________________________________________________________
 TGLDisplayListCache::CacheID_t TGLDisplayListCache::MakeCacheID(const TGLDrawable & drawable,
-                                                                const UInt_t LOD) const
+                                                                const TGLDrawFlags & flags) const
 {
-   // Create a CacheID_t from drawable/LOD pair provided. The CacheID_t returned 
-   // is actually a std::pair<const TGLDrawable *, const UInt_t>, and used as key
-   // in cache stl::map to map to GL display list 'name'
-   return CacheID_t(&drawable, LOD);
+   // Create a CacheID_t from drawable/flags pair provided. 
+
+   // NOTE: Display Lists CAN capture GL state changes as well as geometry, but will 
+   // not capture the current state set BEFORE the DL is opened.
+
+   // The CacheID_t returned is a std::pair<const TGLDrawable *, const UInt_t>, 
+   // and used as key into fCacheDLMap - see TGLDisplayListCache::Find()
+   return CacheID_t(&drawable, flags.LOD());
 }
 
 //______________________________________________________________________________

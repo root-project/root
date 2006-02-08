@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.25 2006/01/18 16:57:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.26 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -559,6 +559,9 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box) const
    } else {
       // We have a valid interest box
 
+      if (demoTakeAll) {
+         return kTRUE;
+      }
       // Objects are of interest if the have sufficient length or volume ratio c.f.
       // the current interest box, and they at least partially overlap it
       Double_t lengthRatio = box.Extents().Mag() / fInterestBox.Extents().Mag();

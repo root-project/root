@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.23 2006/01/18 16:57:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.24 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -25,19 +25,14 @@
 #include <vector>
 #include <assert.h>
 
+extern Bool_t demoTakeAll;
+extern Bool_t demoFrustum;
+extern Bool_t demoLOD;
+extern Bool_t demoTrace;
+
 // TODO:Find a better place for these enums - TGLEnum.h?
 // Whole GL viewer should be moved into own namespace
 // probably
-
-// TODO: Move LOD into draw flags class
-enum  ELODPresets {
-   kLODPixel       = 0, // Projected size pixel or less
-   kLODLow         = 20,
-   kLODMed         = 50,
-   kLODHigh        = 100,
-   kLODUnsupported = 200, // Used to draw/DL cache drawables with LODSupport() of TGLDrawable::kLODAxesNone
-};
-
 enum EPosition
 {
    kInFront = 0,

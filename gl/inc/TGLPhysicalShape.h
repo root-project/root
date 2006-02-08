@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.13 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.14 2006/01/18 16:57:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -23,6 +23,7 @@
 #include "TGLUtil.h" // For TGLMatrix
 #endif
 
+class TGLCamera;
 class TContextMenu;
 
 //////////////////////////////////////////////////////////////////////////
@@ -30,8 +31,8 @@ class TContextMenu;
 // TGLPhysicalShape                                                     //
 //                                                                      //
 // Concrete physical shape - a GL drawable. Physical shapes are the     //
-// objects the user can actually see, select, move in the viewer. It is //
-// a placement of the associated local frame TGLLogicaShape into the    //
+// objects the user can actually see, select, move in the viewer. They  //
+// placements of their associated local frame TGLLogicalShape into the  //
 // world frame. The draw process is:                                    //
 //                                                                      // 
 // Load attributes - material colors etc                                // 
@@ -41,9 +42,9 @@ class TContextMenu;
 //                                                                      //
 // The physical shape supports translation, scaling and rotation,       //
 // selection, color changes, and permitted modification flags etc.      //
-// A physical shape cannot modify or be bound to another (or no)        //
-// logical shape - hence const & handle. It can perform mutable         //
-// reference counting on the logical to enable purging.                 //
+// A physical shape is always bound to a single, fixed logical shape    //
+// - hence const & handle. It can perform mutable reference counting on //
+// the logical to enable purging.                                       //
 //                                                                      //
 // See base/src/TVirtualViewer3D for description of common external 3D  //
 // viewer architecture and how external viewer clients use it.          //
@@ -84,7 +85,7 @@ private:
 
 protected:
    // Methods
-   virtual void DirectDraw(UInt_t LOD) const;
+   virtual void DirectDraw(const TGLDrawFlags & flags) const;
 
 public:
    TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
@@ -95,39 +96,40 @@ public:
                     const Float_t rgba[4]);
    virtual ~TGLPhysicalShape();
 
-   // Associated logical
-   const TGLLogicalShape & GetLogical() const { return fLogicalShape; }
+   TGLDrawFlags CalcDrawFlags(const TGLCamera & camera, const TGLDrawFlags & sceneFlags) const;
 
+   // TGLDrawable overloads
    virtual ELODAxes SupportedLODAxes() const;
-   virtual void     Draw(UInt_t LOD) const;
-   virtual void     DrawWireFrame(UInt_t lod) const;
-   virtual void     DrawOutline(UInt_t lod) const;
+   virtual void     Draw(const TGLDrawFlags & flags) const;
+
+   const TGLLogicalShape & GetLogical() const { return fLogicalShape; }
    void             InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
    // Modification and manipulation
+   EManip           GetManip() const         { return fManip; }
+   void             SetManip(EManip manip)   { fManip = manip; }
    // Selected treated as temporary modification
-   EManip          GetManip() const         { return fManip; }
-   void            SetManip(EManip manip)   { fManip = manip; }
-   Bool_t          IsModified() const       { return fModified || IsSelected(); }
+   Bool_t           IsModified() const       { return fModified || IsSelected(); }
 
    // Selection
-   Bool_t          IsSelected() const       { return fSelected; }
-   void            Select(Bool_t select)    { fSelected = select; }
+   Bool_t           IsSelected() const       { return fSelected; }
+   void             Select(Bool_t select)    { fSelected = select; }
 
    // Color
-   const Float_t * Color() const                      { return fColor; }
-   Bool_t          IsTransparent() const              { return fColor[3] < 1.f; }
-   void            SetColor(const Float_t rgba[17]);
+   const Float_t  * Color() const                      { return fColor; }
+   Bool_t           IsTransparent() const              { return fColor[3] < 1.f; }
+   Bool_t           IsInvisible() const                { return fColor[3] == 0.f; }
+   void             SetColor(const Float_t rgba[17]);
 
    // Geometry
-   TGLVector3      GetScale() const;
-   TGLVertex3      GetTranslation() const;
+   TGLVector3       GetScale() const;
+   TGLVertex3       GetTranslation() const;
 
-   void            SetTransform(const TGLMatrix & transform);
-   void            SetTranslation(const TGLVertex3 & translation);
-   void            Translate(const TGLVector3 & vect);
-   void            Scale(const TGLVector3 & scale);
-   void            Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
+   void             SetTransform(const TGLMatrix & transform);
+   void             SetTranslation(const TGLVertex3 & translation);
+   void             Translate(const TGLVector3 & vect);
+   void             Scale(const TGLVector3 & scale);
+   void             Rotate(const TGLVertex3 & pivot, const TGLVector3 & axis, Double_t angle);
 
    ClassDef(TGLPhysicalShape,0) // a physical (placed, global frame) drawable object
 };
@@ -156,6 +158,10 @@ inline void TGLPhysicalShape::SetTransform(const TGLMatrix & transform)
 {
    fTransform = transform;
    UpdateBoundingBox();
+   fModified = kTRUE;
+
+   // Any DL cache would be invalidate by this - NOTE does not work currently
+   Purge();
 }
 
 //______________________________________________________________________________
@@ -163,6 +169,10 @@ inline void TGLPhysicalShape::SetTranslation(const TGLVertex3 & translation)
 { 
    fTransform.SetTranslation(translation);
    UpdateBoundingBox();
+   fModified = kTRUE;
+
+   // Any DL cache would be invalidate by this - NOTE does not work currently
+   Purge();
 }
 
 //______________________________________________________________________________
@@ -171,6 +181,9 @@ inline void TGLPhysicalShape::Translate(const TGLVector3 & vect)
    fTransform.Translate(vect);
    UpdateBoundingBox();
    fModified = kTRUE;
+
+   // Any DL cache would be invalidate by this - NOTE does not work currently
+   Purge();
 }
 
 //______________________________________________________________________________
@@ -183,6 +196,9 @@ inline void TGLPhysicalShape::Scale(const TGLVector3 & scale)
    Translate(-shift);
    UpdateBoundingBox();
    fModified = kTRUE;
+
+   // Any DL cache would be invalidate by this - NOTE does not work currently
+   Purge();
 }
 
 //______________________________________________________________________________
@@ -192,6 +208,9 @@ inline void TGLPhysicalShape::Rotate(const TGLVertex3 & pivot, const TGLVector3 
    fTransform.Rotate(pivot, axis, angle);
    UpdateBoundingBox();
    fModified = kTRUE;
+
+   // Any DL cache would be invalidate by this - NOTE does not work currently
+   Purge();
 }
 
 #endif // ROOT_TGLPhysicalShape

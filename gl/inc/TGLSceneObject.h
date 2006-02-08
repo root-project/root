@@ -66,15 +66,14 @@ private:
    UInt_t                fNbPols;
 
 protected:
-   void DirectDraw(UInt_t LOD) const;  
+   void DirectDraw(const TGLDrawFlags & flags) const;  
    
 public:
    TGLFaceSet(const TBuffer3D &buff, TObject *realObj);
+
    void SetFromMesh(const RootCsg::TBaseMesh *m);
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
-   void   DrawWireFrame(UInt_t) const;
-   void   DrawOutline(UInt_t) const;
 
 private:
    void GLDrawPolys()const;
@@ -91,7 +90,7 @@ private:
    UInt_t fStyle;
 
 protected:
-   void DirectDraw(UInt_t LOD) const;  
+   void DirectDraw(const TGLDrawFlags & flags) const;  
    
 public:
    TGLPolyMarker(const TBuffer3D &buff, TObject *realObject);
@@ -107,7 +106,7 @@ private:
 
 class TGLPolyLine : public TGLSceneObject {
 protected:
-   void DirectDraw(UInt_t LOD) const;  
+   void DirectDraw(const TGLDrawFlags & flags) const;  
    
 public:
    TGLPolyLine(const TBuffer3D &buff, TObject *realObject);
@@ -122,7 +121,7 @@ private:
    Double_t fRadius; // Sphere radius
 
 protected:
-   void DirectDraw(UInt_t LOD) const;  
+   void DirectDraw(const TGLDrawFlags & flags) const;  
 
 public:
    TGLSphere(const TBuffer3DSphere &buffer, TObject *realObject);
@@ -143,7 +142,7 @@ private:
    Bool_t fSegMesh;
 
 protected:
-   void DirectDraw(UInt_t LOD) const;  
+   void DirectDraw(const TGLDrawFlags & flags) const;  
 
 public:
    TGLCylinder(const TBuffer3DTube &buff, TObject *realObject);

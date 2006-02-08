@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.15 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.16 2006/01/11 13:44:39 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -11,6 +11,8 @@
 
 #include "TGLPhysicalShape.h"
 #include "TGLLogicalShape.h"
+#include "TGLCamera.h"
+#include "TGLDrawFlags.h"
 #include "TGLIncludes.h"
 
 // For debug tracing
@@ -47,7 +49,7 @@ ClassImp(TGLPhysicalShape)
 TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
                                    const TGLMatrix & transform, Bool_t invertedWind,
                                    const Float_t rgba[4]) :
-   TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
+   TGLDrawable(ID, kFALSE), // Physical shapes NOT DL cached - see Draw()
    fLogicalShape(logicalShape),
    fTransform(transform),
    fSelected(kFALSE),
@@ -72,7 +74,7 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
 TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
                                    const Double_t * transform, Bool_t invertedWind,
                                    const Float_t rgba[4]) :
-   TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
+   TGLDrawable(ID, kFALSE), // Physical shapes NOT DL cached - see Draw()
    fLogicalShape(logicalShape),
    fTransform(transform),
    fSelected(kFALSE),
@@ -154,36 +156,69 @@ void TGLPhysicalShape::SetColor(const Float_t color[17])
    for (UInt_t i = 0; i < 17; i++) {
       fColor[i] = color[i];
    }
+
+   // DL cache is NOT affected by this (hence no Purge()) as colors set in Draw() - 
+   // not DirectDraw(). See Draw() for reasons
+
    fModified = kTRUE;
 }
 
 //______________________________________________________________________________
-void TGLPhysicalShape::Draw(UInt_t LOD) const
+void TGLPhysicalShape::Draw(const TGLDrawFlags & flags) const
 {
    // Draw physical shape, using LOD flags, potential from display list cache
    
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+      Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
    }
 
-   // Setup current colors
-   // TODO: Can these be moved to DirectDraw - does DL capture draw attributes
-   // to investigate
-   // TODO: Sorting - Min. state swap for attributes
-   glColor4fv(fColor);
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
-   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
-   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+   // IMPORTANT: Per drawable DL cache purging does not work currently. 
+   // This means that DL caching cannot be enabled at TGLPhysicalShape level as
+   // modifications (scale/rotate etc) will not result in the cache being 
+   // purged. 
 
-   // Do base work with potential DL caching
-   TGLDrawable::Draw(LOD);
+   // Setup current colors
+   // NOTE: These *could* be done in DirectDraw(), and hence DL cached if/when enabled
+   // at this level. This *might* be faster.... 
+   // However this would mean the DL cache would need to create entries based on draw 
+   // style as well as LOD from 'flags' - resulting in DLs with different colors, but 
+   // identical geometry.
+   //
+   // TODO: Better solution - sorting of physicals - Min. state swap for attributes
+   // Or maybe set color in logical then override if modified in physical????
+   // as in normal cases physicals sharing same logical have same color.
+   
+   // Setup colors - avoid setting things not required
+   // for current draw flags
+   switch (flags.Style()) {
+      case TGLDrawFlags::kWireFrame: {
+         // Wireframe needs basic color only
+         glColor4fv(fColor);
+         break;
+      }
+      case TGLDrawFlags::kFill: 
+      case TGLDrawFlags::kOutline: {
+         // Fill needs material colors
+         // Outline needs material + a fixed (black) outline color
+         // This is set once at scene level
+         // TODO: Scene draws outline style in two passes - for second
+         // wireframe overlay one we don't need to set materials
+         // But don't know the pass here.....
+         glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
+         glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
+         glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
+         glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
+         glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+         break;
+      }
+   }
+
+   TGLDrawable::Draw(flags);
 }
 
 //______________________________________________________________________________
-void TGLPhysicalShape::DirectDraw(UInt_t LOD) const
+void TGLPhysicalShape::DirectDraw(const TGLDrawFlags & flags) const
 {
    // Draw physical shape, using LOD flags - can be captured into display list cache
    //
@@ -193,23 +228,23 @@ void TGLPhysicalShape::DirectDraw(UInt_t LOD) const
 
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLPhysicalShape::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+      Info("TGLPhysicalShape::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), flags.LOD());
    }
 
-   glPushMatrix();
    glLoadName(ID());
+   glPushMatrix();
    glMultMatrixd(fTransform.CArr());
    if (fInvertedWind) {
       glFrontFace(GL_CW);
    }
    // If LOD is pixel or less can draw pixel(point) directly, skipping
    // any logical call, caching etc
-   if (LOD == kLODPixel) {
+   if (flags.LOD() == TGLDrawFlags::kLODPixel) {
       glBegin(GL_POINTS);
       glVertex3d(0.0, 0.0, 0.0);
       glEnd();
    } else {
-      fLogicalShape.Draw(LOD);
+      fLogicalShape.Draw(flags);
    }
    if (fInvertedWind) {
       glFrontFace(GL_CCW);
@@ -218,48 +253,96 @@ void TGLPhysicalShape::DirectDraw(UInt_t LOD) const
 }
 
 //______________________________________________________________________________
-void TGLPhysicalShape::DrawWireFrame(UInt_t lod) const
+TGLDrawFlags TGLPhysicalShape::CalcDrawFlags(const TGLCamera & camera, const TGLDrawFlags & sceneFlags) const
 {
-   // Draw physical shape in wireframe style
-   glPushMatrix();
-   glLoadName(ID());
-   glMultMatrixd(fTransform.CArr());
-   
-   glColor4fv(fColor);
+   // Return draw flags for shape, suitible for use under projection defined by 'camera', 
+   // taking account of which local axes of the shape support LOD adjustment, and the 
+   // global 'sceneFlags' passed.
+   //
+   // sceneFlags.Style() - copied to shape draw style
+   // sceneFlags.LOD() - factored into projection LOD
+   //
+   // Returned LOD() component is UInt 0 (kLODPixel - lowest quality) to 
+   // 100 (kLODHigh - highest quality) or special case kLODUnsupported if shape 
+   // does not support LOD at all
+  
+   std::vector <Double_t> boxViewportDiags;
+   TGLDrawable::ELODAxes LODAxes = SupportedLODAxes();
+   const TGLBoundingBox & box = BoundingBox();
 
-   if (fInvertedWind) glFrontFace(GL_CW);
-   fLogicalShape.DrawWireFrame(lod);
-   if (fInvertedWind) glFrontFace(GL_CCW);
+   if (SupportedLODAxes() == TGLDrawable::kLODAxesNone) {
+      // Shape doesn't support LOD along any axes return special unsupported LOD draw/cache flag
+      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODUnsupported);
+   } 
    
-   glPopMatrix();
-}
-
-//______________________________________________________________________________
-void TGLPhysicalShape::DrawOutline(UInt_t LOD) const
-{
-   // Draw physical shape in outline style
-   
-   // Debug tracing
-   if (gDebug > 4) {
-      Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   if (!demoLOD) {
+      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODMed);
    }
 
-   glPushMatrix();
-   glLoadName(ID());
-   glMultMatrixd(fTransform.CArr());
-   
-   //TODO: Sorting - Min. state swap for attributes
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
-   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
-   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+   if (LODAxes == TGLDrawable::kLODAxesAll) {
+      // Shape supports LOD along all axes - basis LOD hint on diagonal of viewport 
+      // projection rect round whole bounding box
+      boxViewportDiags.push_back(camera.ViewportRect(box).Diagonal());
+   } else if (LODAxes == (TGLDrawable::kLODAxesY | TGLDrawable::kLODAxesZ)) {
+      // Shape supports LOD along Y/Z axes (not X). LOD hint based on longest
+      // diagonal (largest rect) of either of the X axis end faces
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowX).Diagonal());
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighX).Diagonal());
+   } else if (LODAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesZ)) {
+      // Shape supports LOD along X/Z axes (not Y). See above for Y/Z
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowY).Diagonal());
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighY).Diagonal());
+   } else if (LODAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesY)) {
+      // Shape supports LOD along X/Y axes (not Z). See above for Y/Z
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowZ).Diagonal());
+      boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighZ).Diagonal());
+   }
+   else {
+      // Don't bother to implement LOD calc for shapes supporting LOD along single 
+      // axis only. Not needed at present + unlikely case - but could be done based 
+      // on longest of projection of 4 edges of BBox along LOD axis. However this would 
+      // probably be more costly than just using whole BB projection (as for all axes)
+      Error("TGLScene::CalcPhysicalLOD", "LOD calculation for single axis not implemented presently");
+      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODMed);;
+   }
 
-   if (fInvertedWind) glFrontFace(GL_CW);
-   fLogicalShape.DrawOutline(LOD);
-   if (fInvertedWind) glFrontFace(GL_CCW);
+   // Find largest of the projected diagonals
+   Double_t largestDiagonal = 0.0;
+   for (UInt_t i = 0; i < boxViewportDiags.size(); i++) {
+      if (boxViewportDiags[i] > largestDiagonal) {
+         largestDiagonal = boxViewportDiags[i];
+      }
+   }
    
-   glPopMatrix();
+   // Pixel or less?
+   if (largestDiagonal <= 1.0) {
+      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODPixel);
+   }
+
+   // TODO: Get real screen size - assuming 2000 pixel screen at present
+   // Calculate a non-linear sizing hint for this shape based on diagonal. 
+   // Needs more experimenting with...
+   UInt_t sizeLOD = static_cast<UInt_t>(pow(largestDiagonal,0.4) * 100.0 / pow(2000.0,0.4));
+
+   // Factor in scene quality
+   UInt_t shapeLOD = (sceneFlags.LOD() * sizeLOD) / 100;
+
+   // Round LOD above 10 to nearest 10
+   if (shapeLOD > 10) {
+      Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.5) / 10;
+      shapeLOD = static_cast<UInt_t>(quant)*10;
+   } 
+   // Round LOD below 10 to nearest 2
+   else {
+      Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.5) / 2;
+      shapeLOD = static_cast<UInt_t>(quant)*3;
+   }
+
+   if (shapeLOD > 100) {
+      shapeLOD = 100;
+   }
+
+   return TGLDrawFlags(sceneFlags.Style(), shapeLOD);
 }
 
 //______________________________________________________________________________

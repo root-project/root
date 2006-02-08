@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx,v 1.5 2006/01/30 17:42:06 rdm Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -134,7 +134,7 @@ TGLClip::~TGLClip()
 }
 
 //______________________________________________________________________________
-void TGLClip::Draw(UInt_t LOD) const
+void TGLClip::Draw(const TGLDrawFlags & flags) const
 {
    // Draw out clipping object with blending and back + front filling.
    // Some clip objects are single face which we want to see both sides of.
@@ -143,7 +143,7 @@ void TGLClip::Draw(UInt_t LOD) const
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glDisable(GL_CULL_FACE);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   TGLPhysicalShape::Draw(LOD);
+   TGLPhysicalShape::Draw(flags);
    glPolygonMode(GL_FRONT, GL_FILL);
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);

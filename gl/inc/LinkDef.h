@@ -25,6 +25,7 @@
 
 #pragma link C++ class TGLBoundingBox;
 #pragma link C++ class TGLDrawable;
+#pragma link C++ class TGLDrawFlags;
 #pragma link C++ class TGLLogicalShape;
 #pragma link C++ class TGLPhysicalShape;
 #pragma link C++ class TGLClip;
