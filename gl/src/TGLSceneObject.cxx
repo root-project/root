@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.51 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.53 2006/02/08 10:49:26 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -265,28 +265,6 @@ void TGLFaceSet::DirectDraw(const TGLDrawFlags & flags) const
       }
    }
 }
-
-/*
-//______________________________________________________________________________
-void TGLFaceSet::DrawOutline(UInt_t lod) const
-{
-   //
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1.f, 1.f);
-
-   DirectDraw(lod);
-
-   glDisable(GL_POLYGON_OFFSET_FILL);
-   glDisable(GL_LIGHTING);
-   glPolygonMode(GL_FRONT, GL_LINE);
-   glColor3d(.1, .1, .1);
-
-   DirectDraw(lod);
-
-   glPolygonMode(GL_FRONT, GL_FILL);
-   glEnable(GL_LIGHTING);   
-}
-*/
 
 //______________________________________________________________________________
 Int_t TGLFaceSet::CheckPoints(const Int_t *source, Int_t *dest) const
