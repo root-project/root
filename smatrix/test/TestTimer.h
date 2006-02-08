@@ -1,7 +1,9 @@
+#ifndef TESTTIMER_H
+#define TESTTIMER_H
+
 // simple class to measure time 
 
 #include "TStopwatch.h"
-
 
 
 namespace ROOT { 
@@ -10,6 +12,9 @@ namespace ROOT {
 
     namespace test { 
 
+#ifdef REPORT_TIME
+      void reportTime( std::string s, double time); 
+#endif
 
       void printTime(TStopwatch & time, std::string s) { 
 	int pr = std::cout.precision(8);
@@ -18,6 +23,8 @@ namespace ROOT {
 		  << std::endl;
 	std::cout.precision(pr);
       }
+
+
 
       class Timer {
 
@@ -35,6 +42,10 @@ namespace ROOT {
 	~Timer() { 
 	  fWatch.Stop();
 	  printTime(fWatch,fName);
+#ifdef REPORT_TIME
+	  // report time
+	  reportTime(fName, fWatch.RealTime() );
+#endif
 	  if (fTime) *fTime += fWatch.RealTime();
 	}
 
@@ -50,3 +61,5 @@ namespace ROOT {
 
   }
 }
+
+#endif

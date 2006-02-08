@@ -36,9 +36,24 @@ int test1() {
   SMatrix<float,2,2> B;
   
   A.Place_in_row(y, 1, 1);
+  A.Place_in_col(x, 1, 0);
   A.Place_in_col(x + 2, 1, 0);
+  A.Place_in_row(y + 3, 1, 1);
+  
+
+#ifndef _WIN32
   A.Place_at(B , 2, 1);
+#else
+  //Windows need template parameters
+  A.Place_at<2,2>(B , 2, 1);
+#endif
   cout << "A: " << endl << A << endl;
+
+  SVector<float,3> z(x+2);
+  z.Place_at(y, 1);
+  z.Place_at(y+3, 1);
+  cout << "z: " << endl << z << endl;
+
   
 #ifdef TEST_STATIC_CHECK
   // create a vector of size 2 from 3 arguments
@@ -197,8 +212,15 @@ int test7() {
   // element wise multiplication with constant
   cout << "2 * y: " << endl << 2 * y << endl;
 
-  // a more complex expression
-  cout << "fabs(-z + 3*x): " << endl << fabs(-z + 3*x) << endl;
+  // a more complex expression (failure on Win32)
+#ifndef _WIN32
+  //cout << "fabs(-z + 3*x): " << endl << fabs(-z + 3*x) << endl;
+  cout << "fabs(3*x -z): " << endl << fabs(3*x -z) << endl;
+#else 
+  // doing directly gives internal compiler error on windows
+  SMatrix<float,2,3>  ztmp = 3*x - z; 
+  cout << " fabs(-z+3*x) " << endl << fabs(ztmp) << endl;
+#endif
 
   return 0;
 #endif
@@ -285,8 +307,10 @@ int test10() {
   std::cout << " v23 =  " << v23 << " \tv69 = " << v69 << std::endl;
   iret |= compare( Dot(v23,v69),(2*6+3*9) ); 
   
-  SMatrix<double,2,2> subA1 = A.Sub<2,2>( 1,0);
-  SMatrix<double,2,3> subA2 = A.Sub<2,3>( 0,0);
+   SMatrix<double,2,2> subA1 = A.Sub<2,2>( 1,0);
+   SMatrix<double,2,3> subA2 = A.Sub<2,3>( 0,0);
+   //  SMatrix<double,2,2> subA1 = A.Sub< SMatrix<double,2,2> > ( 1,0);
+   //SMatrix<double,2,3> subA2 = A.Sub< SMatrix<double,2,3> > ( 0,0);
   std::cout << " subA1 =  " << subA1 << " \nsubA2 = " << subA2 << std::endl;
   iret |= compare ( subA1(0,0), subA2(1,0)); 
   iret |= compare ( subA1(0,1), subA2(1,1)); 
@@ -346,7 +370,7 @@ int test11() {
   SMatrix<double,5,5> m1(vsym);
   SMatrix<double,2,5> m2(d2,d2+10);
   SMatrix<double,5,2> m3(d3,d3+10);
-  SMatrix<double,5,5> I; 
+  //SMatrix<double,5,5> I; 
 
   SMatrix<double,5,5> m32 = m3*m2;
 

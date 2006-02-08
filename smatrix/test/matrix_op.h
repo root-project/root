@@ -1,11 +1,15 @@
+#ifndef MATRIX_OP_H 
+#define MATRIX_OP_H
+
 #include "TestTimer.h"
 
 // define funcitons for matrix operations
 
 //#define DEBUG
-#ifndef NLOOP
-#define NLOOP 1000000
-#endif
+//#ifndef NLOOP
+//#define NLOOP 1000000
+//#endif
+using namespace ROOT::Math;
 
 
 // vector assignment
@@ -101,3 +105,196 @@ void testMM(const A & a, const B & b, const C & c, double & time, C & result) {
       result = a * b + c;  
     }
 }
+
+
+
+// specialized functions (depending on the package) 
+
+//smatrix
+template<class V> 
+double testDot_S(const V & v1, const V & v2, double & time) {  
+  test::Timer t(time,"dot ");
+  double result=0; 
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = Dot(v1,v2);  
+    }
+  return result; 
+}
+
+template<class M, class V> 
+double testInnerProd_S(const M & a, const V & v, double & time) {  
+  test::Timer t(time,"prod");
+  double result=0; 
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+#ifndef WIN32
+      result = Product(v,a);  
+#else 
+      // cannot instantiate on Windows (don't know why? )
+      V tmp = a*v; 
+      result = Dot(v,tmp);
+#endif
+    }
+  return result; 
+}
+
+//inversion
+template<class M> 
+void  testInv_S( const M & a,  double & time, M& result){ 
+  test::Timer t(time,"inv ");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = a.Inverse();  
+    }
+}
+
+
+// general matrix matrix op
+template<class A, class B, class C> 
+void testATBA_S(const A & a, const B & b, double & time, C & result) {  
+  test::Timer t(time,"At*M*A");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      //result = Transpose(a) * b * a;  
+      //result = a * b * Transpose(a);  
+      //result = a * b * a;  
+      result  = b * Transpose(a);
+      result = a * result; 
+    }
+}
+
+// for root
+
+
+template<class V> 
+double testDot_T(const V & v1, const V & v2, double & time) {  
+  test::Timer t(time,"dot ");
+  double result=0; 
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = v1*v2;
+    }
+  return result; 
+}
+
+template<class M, class V> 
+double testInnerProd_T(const M & a, const V & v, double & time) {  
+  test::Timer t(time,"prod");
+  double result=0; 
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      V tmp = a * v;
+      result = v * tmp;
+    }
+  return result; 
+}
+
+//inversion 
+template<class M> 
+void  testInv_T(const M & a,  double & time, M& result){ 
+  test::Timer t(time,"inv ");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = a; 
+      result.InvertFast(); 
+    }
+}
+
+template<class M> 
+void  testInv_T2(const M & a,  double & time, M& result){ 
+  test::Timer t(time,"inv2");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = a; 
+      result.InvertFast();  
+    }
+}
+
+
+
+// general matrix matrix op
+template<class A, class B, class C> 
+void testATBA_T(const A & a, const B & b, double & time, C & result) {  
+  test::Timer t(time,"At*M*A");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      A a2 = a; a2.T();
+      //result = a2 * b * a;  
+      result = a * b * a2;  
+    }
+}
+
+
+// general matrix matrix op
+template<class A, class B, class C> 
+void testATBA_T2(const A & a, const B & b, double & time, C & result) {  
+  test::Timer t(time,"At*M*A");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = b;
+      result = result.Similarity(a); 
+    }
+}
+ 
+// for clhep
+
+
+//smatrix
+template<class V> 
+double testDot_C(const V & v1, const V & v2, double & time) {  
+  test::Timer t(time,"dot ");
+  double result=0; 
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = dot(v1,v2);  
+    }
+  return result; 
+}
+
+template<class M, class V> 
+double testInnerProd_C(const M & a, const V & v, double & time) {  
+  test::Timer t(time,"prod");
+  double result=0; 
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      V tmp = a*v; 
+      result = dot(v,tmp);
+    }
+  return result; 
+}
+
+//inversion
+template<class M> 
+void  testInv_C( const M & a,  double & time, M& result){ 
+  test::Timer t(time,"inv ");
+  int ifail = 0; 
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = a.inverse(ifail);  
+    }
+}
+
+// general matrix matrix op
+template<class A, class B, class C> 
+void testATBA_C(const A & a, const B & b, double & time, C & result) {  
+  test::Timer t(time,"At*M*A");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      //result = a.T() * b * a;  
+      result = a * b * a.T();  
+    }
+}
+
+
+template<class A, class B, class C> 
+void testATBA_C2(const A & a, const B & b, double & time, C & result) {  
+  test::Timer t(time,"At*M*A");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result = b.similarity(a); 
+    }
+}
+
+
+#endif   
