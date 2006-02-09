@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.6 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.7 2005/11/16 20:07:50 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -40,9 +40,6 @@ TEmulatedMapProxy::TEmulatedMapProxy(const TEmulatedMapProxy& copy)
 TEmulatedMapProxy::TEmulatedMapProxy(const char* cl_name)
    : TEmulatedCollectionProxy(cl_name)
 {
-   // Build a Streamer for a collection whose type is described by 'collectionClass'.
-   fName = cl_name;
-   this->TEmulatedCollectionProxy::InitializeEx();
    if ( !(fSTL_type == TClassEdit::kMap || fSTL_type == TClassEdit::kMultiMap) )  {
       Fatal("TEmulatedMapProxy","Class %s is not a map-type!",fName.c_str());
    }
