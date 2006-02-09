@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -24,7 +24,7 @@ namespace ROOT {
     typedef void*(*FuncArg1Ptr)(void*);
     
     typedef void* (*NewFunc_t)( void* );
-    typedef void* (*NewArrFunc_t)( long size );
+    typedef void* (*NewArrFunc_t)( long size, void *arena );
     typedef void  (*DelFunc_t)( void* );
     typedef void  (*DelArrFunc_t)( void* );
     typedef void  (*DesFunc_t)( void* ); 

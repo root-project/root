@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.12 2006/01/20 17:39:53 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.13 2006/01/31 13:40:04 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -217,7 +217,7 @@ int Constructor_stub_with_context(StubContext* context,
     size_t size = context->fClass.SizeOf();
     if ( nary ) {
       if( context->fNewdelfuncs ) {
-        obj = context->fNewdelfuncs->NewArray(nary);
+        obj = context->fNewdelfuncs->NewArray(nary, 0);
       }
       else {
         obj = ::operator new( nary * size);
