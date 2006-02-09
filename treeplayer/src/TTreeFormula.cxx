@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.190 2006/01/19 20:00:14 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.191 2006/02/09 00:00:17 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -4064,17 +4064,21 @@ void TTreeFormula::UpdateFormulaLeaves()
             subform->UpdateFormulaLeaves();
             break;
          }
-         default:
-            break;
-      }
-      if (fCodes[k]==0) switch(fLookupType[k]) {
-         case kLengthFunc:
-         case kSum:
+         case kDefinedVariable: 
          {
-            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
-            Assert(subform);
-            subform->UpdateFormulaLeaves();
-            break;
+            Int_t code = GetActionParam(k);
+            if (fCodes[code]==0) switch(fLookupType[code]) {
+               case kLengthFunc:
+               case kSum:
+               {
+                  TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+                  Assert(subform);
+                  subform->UpdateFormulaLeaves();
+                  break;
+               }
+               default:
+                  break;
+            }
          }
          default:
             break;
