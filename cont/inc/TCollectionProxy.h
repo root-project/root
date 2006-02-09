@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.11 2005/09/03 00:45:34 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.12 2005/11/16 20:04:47 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -500,6 +500,12 @@ public:
    virtual ~TCollectionClassStreamer()                {                        }
    /// Streamer for I/O handling
    virtual void operator()(TBuffer &buff, void *pObj) { Streamer(buff,pObj,0); }
+
+   /// Virtual copy constructor.
+   virtual TClassStreamer *Generate() {
+      return new TCollectionClassStreamer(*this); 
+   }
+
 };
 
 #include "TMemberStreamer.h"
