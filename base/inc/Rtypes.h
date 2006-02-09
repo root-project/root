@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.55 2005/12/10 23:00:59 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.56 2005/12/12 23:17:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -158,7 +158,7 @@ namespace ROOT {
 
    class TGenericClassInfo;
    typedef void *(*NewFunc_t)(void *);
-   typedef void *(*NewArrFunc_t)(Long_t size);
+   typedef void *(*NewArrFunc_t)(Long_t size, void *arena);
    typedef void  (*DelFunc_t)(void *);
    typedef void  (*DelArrFunc_t)(void *);
    typedef void  (*DesFunc_t)(void *);
