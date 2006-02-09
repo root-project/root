@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.138 2006/01/19 11:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.139 2006/01/31 14:02:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -4806,7 +4806,7 @@ void TGeoManager::UpdateCurrentPosition(Double_t * /*nextpoint*/)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoManager::Weight(TGeoVolume *vol, Double_t precision, Option_t *option)
+Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
 {
 // Estimate weight of volume VOL with a precision SIGMA(W)/W better than PRECISION.
 // Option can be "v" - verbose (default)
@@ -4814,9 +4814,7 @@ Double_t TGeoManager::Weight(TGeoVolume *vol, Double_t precision, Option_t *opti
    TString opt(option);
    opt.ToLower();
    Double_t weight;
-   TGeoVolume *top = fTopVolume;
-   TGeoVolume *volume = vol;
-   if (!volume) volume = top;
+   TGeoVolume *volume = fTopVolume;
    if (opt.Contains("v")) {
       if (opt.Contains("a")) {
          Info("Weight", "Computing analytically weight of %s", volume->GetName());
@@ -4828,9 +4826,7 @@ Double_t TGeoManager::Weight(TGeoVolume *vol, Double_t precision, Option_t *opti
       printf("    event         weight         err\n");
       printf("========================================\n");
    }
-   if (volume != top) SetTopVolume(volume);
    weight = fPainter->Weight(precision, option);
-   if (volume != top) SetTopVolume(top);
    return weight;
 }
 

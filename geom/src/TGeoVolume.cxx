@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.73 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.74 2006/02/01 16:31:42 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1690,7 +1690,12 @@ Double_t TGeoVolume::Weight(Double_t precision, Option_t *option)
 {
 // Estimate the weight of a volume (in kg) with SIGMA(M)/M better than PRECISION.
 // Option can contain : v - verbose, a - analytical  (default)
-   return  fGeoManager->Weight(this, precision, option);
+   TGeoVolume *top = fGeoManager->GetTopVolume();
+   if (top != this) fGeoManager->SetTopVolume(this);
+   else top = 0;
+   Double_t weight =  fGeoManager->Weight(precision, option);
+   if (top) fGeoManager->SetTopVolume(top);
+   return weight;
 }   
 
 //_____________________________________________________________________________
