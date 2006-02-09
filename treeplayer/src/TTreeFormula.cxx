@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.189 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.190 2006/01/19 20:00:14 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -4407,7 +4407,8 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          } else if (hasBranchCount2) {
             TFormLeafInfo * info;
             info = (TFormLeafInfo *)fDataMembers.At(i);
-            if (fIndexes[i][info->GetVarDim()] >= info->GetSize(fIndexes[i][0])) {
+            if (fIndexes[i][0]<0 
+                || fIndexes[i][info->GetVarDim()] >= info->GetSize(fIndexes[i][0])) {
                // unreacheable element requested:
                fManager->fUsedSizes[0] = 0;
                fNdata[i] = 0;
