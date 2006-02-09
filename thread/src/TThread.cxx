@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.38 2005/06/23 20:51:14 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.39 2005/12/02 22:44:16 pcanal Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -254,6 +254,7 @@ void TThread::Constructor()
    Lock();
    SetComment("Constructor: MainMutex Locked");
    fTsd[0] = gPad;
+   fTsd[1] = 0;    // For TClass
 
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev = 0; fgMain = this;
