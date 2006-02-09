@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.61 2005/11/16 20:09:16 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.62 2006/01/30 09:01:11 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -164,7 +164,10 @@ public:
    Bool_t              IsOptimized() const {return fOptimized;}
    Int_t               IsRecovered() const {return TestBit(kRecovered);}
    void                ls(Option_t *option="") const;
-   Int_t               New(const char *p);
+   void               *New(void *obj = 0);
+   void               *NewArray(Long_t nElements, void* ary = 0);
+   void                Destructor(void* p, Bool_t dtorOnly = kFALSE);
+   void                DeleteArray(void* p, Bool_t dtorOnly = kFALSE);
    void                PrintValue(const char *name, char *pointer, Int_t i, Int_t len, Int_t lenmax=1000) const;
    void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
    void                PrintValueSTL(const char *name, TVirtualCollectionProxy *cont, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
