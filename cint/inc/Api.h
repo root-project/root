@@ -177,8 +177,10 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
 /*********************************************************************
 * Shadow class functions
 *********************************************************************/
+#ifndef __CINT__
 class G__ShadowMaker {
 public:
+   static bool NeedShadowClass(G__ClassInfo& cl);
    G__ShadowMaker(std::ostream& out, const char* nsprefix, 
       bool(*needShadowClass)(G__ClassInfo &cl)=G__ShadowMaker::NeedShadowClass,
       bool(*needTypedefShadow)(G__ClassInfo &cl)=0);
@@ -188,7 +190,6 @@ public:
    void WriteShadowClass(G__ClassInfo &cl, int level = 0);
    int WriteNamespaceHeader(G__ClassInfo &cl);
 
-   static bool NeedShadowClass(G__ClassInfo& cl);
    int NeedShadowCached(int tagnum) { return fCacheNeedShadow[tagnum]; }
    static bool IsSTLCont(const char *type);
    static bool IsStdPair(G__ClassInfo &cl);
@@ -210,8 +211,9 @@ private:
    std::string fNSPrefix; // shadow classes are in this namespace's namespace "Shadow"
    char fCacheNeedShadow[G__MAXSTRUCT]; // whether we need a shadow for a tagnum
    static bool fgVetoShadow; // whether WritaAllShadowClasses should write the shadow
-   bool(*fNeedTypedefShadow)(G__ClassInfo &cl); // func deciding whether the shadow is a tyepdef
+   bool (*fNeedTypedefShadow)(G__ClassInfo &cl); // func deciding whether the shadow is a tyepdef
 };
+#endif
 
 #ifdef __MAKECINT__
 #pragma link off class $G__value;

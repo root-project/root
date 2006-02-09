@@ -22,7 +22,6 @@
 #include "Api.h"
 #include "common.h"
 
-extern "C" void G__set_allocpos G__P((long l));
 extern "C" void G__exec_alloc_lock();
 extern "C" void G__exec_alloc_unlock();
 
@@ -822,7 +821,7 @@ void* G__ClassInfo::New()
     }
     else if(class_property&G__BIT_ISCCOMPILED) {
       // C precompiled class,struct
-      p = malloc(G__struct.size[tagnum]);
+      p = new char[G__struct.size[tagnum]];
     }
     else {
       // Interpreted class,struct
@@ -830,7 +829,7 @@ void* G__ClassInfo::New()
       long store_tagnum;
       char temp[G__ONELINE];
       int known=0;
-      p = malloc(G__struct.size[tagnum]);
+      p = new char[G__struct.size[tagnum]];
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
       G__tagnum = tagnum;
@@ -878,7 +877,7 @@ void* G__ClassInfo::New(int n)
     }
     else if(class_property&G__BIT_ISCCOMPILED) {
       // C precompiled class,struct
-      p = malloc(G__struct.size[tagnum]*n);
+      p = new char[G__struct.size[tagnum]*n];
     }
     else {
       // Interpreted class,struct
@@ -887,7 +886,7 @@ void* G__ClassInfo::New(int n)
       long store_tagnum;
       char temp[G__ONELINE];
       int known=0;
-      p = malloc(G__struct.size[tagnum]*n);
+      p = new char[G__struct.size[tagnum]*n];
       // Record that we have allocated an array, and how many
       // elements that array has, for use by the G__calldtor function.
       G__alloc_newarraylist((long) p, n);
@@ -896,7 +895,7 @@ void* G__ClassInfo::New(int n)
       G__tagnum = tagnum;
       G__store_struct_offset = (long)p;
       //// Do it this way for an array cookie implementation.
-      ////p = malloc((G__struct.size[tagnum]*n)+(2*sizeof(int)));
+      ////p = new char[(G__struct.size[tagnum]*n)+(2*sizeof(int))];
       ////int* pp = (int*) p;
       ////pp[0] = G__struct.size[tagnum];
       ////pp[1] = n;
@@ -938,11 +937,9 @@ void* G__ClassInfo::New(void *arena)
 	G__CurrentCall(G__DELETEFREE, this, tagnum);
 #ifdef G__ROOT
         G__exec_alloc_lock();
-        G__set_allocpos(G__getgvp());
 #endif
 	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
 #ifdef G__ROOT
-        G__set_allocpos(G__PVOID);
         G__exec_alloc_unlock();
 #endif
 	G__CurrentCall(G__NOP, 0, 0);

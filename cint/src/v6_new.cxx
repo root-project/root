@@ -27,10 +27,6 @@ extern void* G__new_interpreted_object G__P((int size));
 extern void G__delete_interpreted_object G__P((void* p));
 #endif
 
-long G__AllocPosition = G__PVOID;
-G__EXPORT long G__get_allocpos()       { return G__AllocPosition; }
-G__EXPORT void G__set_allocpos(long l) { G__AllocPosition = l; }
-
 static void G__lock_noop() {}
 void(*G__AllocMutexLock)()   = G__lock_noop;
 void(*G__AllocMutexUnLock)() = G__lock_noop;
@@ -299,7 +295,7 @@ G__value G__new_operator(char *expression)
 #ifdef G__ROOT
         pointer = (long)G__new_interpreted_object(size*pinc);
 #else
-        pointer = (long)malloc( (size_t)(size*pinc) );
+        pointer = (long) new char[(size_t)(size*pinc)];
 #endif
       }
     }
@@ -926,7 +922,7 @@ void G__delete_operator(char *expression,int isarray)
 #ifdef G__ROOT
     G__delete_interpreted_object((void*)buf.obj.i);
 #else
-    free((void *)buf.obj.i);
+    delete[] (char*) buf.obj.i;
 #endif
   }
 

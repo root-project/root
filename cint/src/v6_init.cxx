@@ -1904,19 +1904,7 @@ int G__init_globals()
   G__GetSpecialObject = G__getreserved;
 #endif
 
-#if defined(_MSC_VER) && (_MSC_VER<=1100)
-#define G__OLDIMPLEMENTATION1423
-#endif
-
-#if defined(G__ROOT) && !defined(G__EXPERIMENTAL1423)
-  G__is_operator_newdelete = G__MASK_OPERATOR_NEW |
-                             G__MASK_OPERATOR_DELETE |
-                             G__NOT_USING_2ARG_NEW ;
-#else
-  G__is_operator_newdelete = G__DUMMYARG_NEWDELETE 
-                          /* | G__DUMMYARG_NEWDELETE_STATIC */
-                             | G__NOT_USING_2ARG_NEW ;
-#endif
+  G__is_operator_newdelete = G__DUMMYARG_NEWDELETE | G__NOT_USING_2ARG_NEW;
 
   G__fpundeftype=(FILE*)NULL;
 

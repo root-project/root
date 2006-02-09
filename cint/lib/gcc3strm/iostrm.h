@@ -165,17 +165,30 @@ extern "C" {
   } mbstate_t;
 }
 
+#ifdef G__THIS_DOES_NOT_WORK_WITH_CYGWIN_GCC3
+class wstreampos { };
+#endif
+class streamoff { };
+
+
+typedef long long streampos ;
+typedef long long streamoff ;
+
+typedef long long    SZ_T;       
+typedef SZ_T         streamsize;
+
 template<typename _StateT>
 class fpos {
  public:
   fpos();
   fpos(const fpos&);
-  fpos(long);
-  operator long() const;
-  fpos operator+(long a);
-  fpos operator-(long a);
+  fpos(long long);
+  operator streamoff() const;
+  fpos operator+(streamoff a);
+  fpos operator-(streamoff a);
   bool operator==(const fpos& a);
   bool operator!=(const fpos& a);
+  //FIXME: operator+= and operator-= are missing
   //bool operator>(const fpos& a);
   //friend bool operator<(const fpos& a,const fpos& b);
   //friend bool operator>(const fpos& a,const fpos& b);
@@ -185,22 +198,10 @@ class fpos {
 
 typedef fpos<mbstate_t> 		streampos;
 
-#ifdef G__THIS_DOES_NOT_WORK_WITH_CYGWIN_GCC3
-class wstreampos { };
-#endif
-class streamoff { };
-
-
 /********************************************************************
 * macro G__MANIP_SUPPORT must be defined to enable true manipulator
 *********************************************************************/
 #define G__MANIP_SUPPORT
-
-typedef long streampos ;
-typedef long streamoff ;
-
-typedef long         SZ_T;       
-typedef SZ_T         streamsize;
 
 class ios_base {
   public:
@@ -648,7 +649,7 @@ ostream& operator<< ( ostream&, float );
 ostream& operator<< ( ostream&, double );
 //ostream& operator<< ( ostream&, long double );
 ostream& operator<< ( ostream&, bool );
-ostream& operator<< (ostream&,const streampos&);
+//ostream& operator<< (ostream&,const streampos&);
 
 istream& operator>> ( istream&, char& );
 istream& operator>> ( istream&, unsigned char& );

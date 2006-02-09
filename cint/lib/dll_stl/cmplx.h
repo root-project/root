@@ -1,5 +1,6 @@
 // lib/dll_stl/cmplx.h
 
+#include <cstdlib>
 #include <iostream>
 #include <complex>
 

@@ -433,11 +433,7 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
     G__ClassInfo *pcls=method.MemberOf();
     if(pcls && pcls->Name() && method.Name() && 
        strcmp(pcls->Name(),method.Name())==0) {
-#ifdef G__ROOT
-      G__store_struct_offset = (long)(new char[pcls->Size()]);
-#else
-      G__store_struct_offset = (long)malloc(pcls->Size());
-#endif
+       G__store_struct_offset = (long)(new char[pcls->Size()]);
     }
     int store_asm_exec=G__asm_exec;
     int store_asm_index=G__asm_index;

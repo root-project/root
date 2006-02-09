@@ -398,7 +398,7 @@ int G__class_autoloading(int tagnum)
       G__enable_autoloading = 1;
       return(res);
     }
-    else if(libname) {
+    else if(libname && libname[0]) {
       G__enable_autoloading = 0;
       if(G__LOADFILE_SUCCESS<=G__loadfile(libname)) {
         G__enable_autoloading = 1;

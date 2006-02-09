@@ -21,7 +21,6 @@
 
 #include "common.h"
 
-extern "C" void G__set_allocpos G__P((long l));
 extern "C" void G__exec_alloc_lock();
 extern "C" void G__exec_alloc_unlock();
 
@@ -1248,7 +1247,7 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
       G__ismain=G__MAINEXIST ;
     }
     /* following part is needed to detect inline new/delete in header */
-    if(G__CPPLINK==G__globalcomp) {
+    if(G__CPPLINK==G__globalcomp || R__CPPLINK==G__globalcomp) {
       if(strcmp(G__p_ifunc->funcname[func_now],"operator new")==0&&
          2==G__p_ifunc->para_nu[func_now] &&
          0==(G__is_operator_newdelete&G__MASK_OPERATOR_NEW))
@@ -1277,7 +1276,7 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
    * operator new(size_t,void*) , operator delete(void*) detection
    * This is only needed for Linux g++
    ****************************************************************/
-  if(G__CPPLINK==G__globalcomp) {
+  if(G__CPPLINK==G__globalcomp || R__CPPLINK==G__globalcomp) {
     if(strcmp(G__p_ifunc->funcname[func_now],"operator new")==0&&
        2==G__p_ifunc->para_nu[func_now] &&
        0==(G__is_operator_newdelete&G__MASK_OPERATOR_NEW))
@@ -1326,11 +1325,12 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
       /* operator= */
         G__struct.funcs[G__def_tagnum] |= G__HAS_ASSIGNMENTOPERATOR;
     }
-    else if(strcmp("operator new",G__p_ifunc->funcname[func_now])==0) {
-      if(1==G__p_ifunc->para_nu[func_now])
+    else if (!strcmp("operator new", G__p_ifunc->funcname[func_now])) {
+      if (G__p_ifunc->para_nu[func_now] == 1) {
         G__struct.funcs[G__def_tagnum] |= G__HAS_OPERATORNEW1ARG;
-      else
+      } else if (G__p_ifunc->para_nu[func_now] == 2) {
         G__struct.funcs[G__def_tagnum] |= G__HAS_OPERATORNEW2ARG;
+      }
     }
     else if(strcmp("operator delete",G__p_ifunc->funcname[func_now])==0) {
       G__struct.funcs[G__def_tagnum] |= G__HAS_OPERATORDELETE;
@@ -2006,10 +2006,10 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
         G__value *tmpx;
         struct G__ifunc_table *store_pifunc = G__p_ifunc;
         G__p_ifunc = &G__ifunc;
-        if(G__CPPLINK==G__globalcomp && G__decl && G__prerun)
+        if((G__CPPLINK==G__globalcomp || R__CPPLINK==G__globalcomp) && G__decl && G__prerun)
           G__noerr_defined = 1;
         *ifunc->para_default[func_now][iin] = G__getexpr(paraname);
-        if(G__CPPLINK==G__globalcomp && G__decl && G__prerun)
+        if((G__CPPLINK==G__globalcomp || R__CPPLINK==G__globalcomp) && G__decl && G__prerun)
           G__noerr_defined = 0;
         tmpx = ifunc->para_default[func_now][iin];
         if(reftype && (toupper (tmpx->type)!=toupper(type) ||
@@ -5153,7 +5153,6 @@ asm_ifunc_start:   /* loop compilation execution label */
        memfunc_flag==G__TRYCONSTRUCTOR  ||
        memfunc_flag==G__TRYIMPLICITCONSTRUCTOR) {
       G__exec_alloc_lock();
-      G__set_allocpos(G__getgvp());
 #ifdef G__ASM
       if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
@@ -5170,7 +5169,6 @@ asm_ifunc_start:   /* loop compilation execution label */
     if(memfunc_flag==G__CALLCONSTRUCTOR ||
        memfunc_flag==G__TRYCONSTRUCTOR  ||
        memfunc_flag==G__TRYIMPLICITCONSTRUCTOR) {
-      G__set_allocpos(G__PVOID);
       G__exec_alloc_unlock();
 #ifdef G__ASM
       if(G__asm_noverflow) {

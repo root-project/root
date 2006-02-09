@@ -144,7 +144,7 @@ void* G__TypeInfo::New() {
     size_t size;
     void *p;
     size = Size();
-    p = malloc(size);
+    p = new char[size];
     return(p);
   }
 }

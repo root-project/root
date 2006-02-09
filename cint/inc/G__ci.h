@@ -25,10 +25,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010007
-#define G__CINTVERSIONSTR_V6  "6.1.7, January 19, 2006"
+#define G__CINTVERSION_V6      60010008
+#define G__CINTVERSIONSTR_V6  "6.1.8, February 9, 2006"
 #define G__CINTVERSION_V5      50160007
-#define G__CINTVERSIONSTR_V5  "5.16.7, January 19, 2006"
+#define G__CINTVERSIONSTR_V5  "5.16.8, February 9, 2006"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -206,14 +206,6 @@
 /* 2001 masks G__ateval overloading resolution error. It turns out this is
  * not a good way, the feature is turned off */
 #define G__OLDIMPLEMENTATION2001
-
-/* New memory allocation scheme is turned on for ROOT by defining 
- * following macro. */
-#define G__EXPERIMENTAL1423
-
-/* New memory allocation scheme is turned off for pure Cint by defining 
- * following macro. Default on for pure Cint */
-/* #define G__OLDIMPLEMENTATION1423 */
 
 /* Define following macros if you want to store where global variables
  * and typedefs are defined in source files. Reason of not making this

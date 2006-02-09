@@ -10,7 +10,6 @@
 extern "C" void* G__new_interpreted_object G__P((int size));
 extern "C" void G__delete_interpreted_object G__P((void* p));
 #endif
-extern "C" void G__set_allocpos G__P((long l));
 extern "C" void G__exec_alloc_lock();
 extern "C" void G__exec_alloc_unlock();
 #ifdef __cplusplus
@@ -2483,7 +2482,6 @@ long localmem;
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ROOTOBJALLOCBEGIN",pc,sp);
 #endif
       G__exec_alloc_lock();
-      G__set_allocpos(G__globalvarpointer);
       ++pc;
 #ifdef G__ASM_DBG
       break;
@@ -2498,7 +2496,6 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: ROOTOBJALLOCEND",pc,sp);
 #endif
-      G__set_allocpos(G__PVOID);
       G__exec_alloc_unlock();
       ++pc;
 #ifdef G__ASM_DBG
