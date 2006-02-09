@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.183 2005/12/14 16:49:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.184 2005/12/22 18:59:35 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TBaseClass.h"
 #include "TBrowser.h"
 #include "TDataMember.h"
+#include "TExMap.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
@@ -57,6 +58,9 @@
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
 #include "TVirtualMutex.h"
+#include "Riostream.h"
+
+using namespace std;
 
 #ifndef WIN32
 extern Long_t G__globalvarpointer;
@@ -69,6 +73,7 @@ TVirtualMutex *gCINTMutex = 0;
 
 Int_t  TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
+std::map<void*, Version_t> TClass::fgObjectVersionRepository;
 
 class TDumpMembers : public TMemberInspector {
 
@@ -363,8 +368,8 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
             fBrowser->Add( obj, clm, bwname );
 
          } else {
+            TVirtualCollectionProxy::TPushPop env(proxy, obj);
             TClass *actualCl = 0;
-            proxy->PushProxy(obj);
 
             int sz = proxy->Size();
 
@@ -386,7 +391,6 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
                ts += buf;
                fBrowser->Add( p, actualCl, ts );
             }
-            proxy->PopProxy();
          }
       }
    }
@@ -1392,11 +1396,68 @@ TClass *TClass::GetBaseDataMember(const char *datamember)
    return 0;
 }
 
+namespace {
+   // A local Helper class used to keep 2 pointer (the collection proxy
+   // and the class streamer) in the thread local storage.
+
+   struct TClassLocalStorage {
+      TClassLocalStorage() : fCollectionProxy(0), fStreamer(0) {};
+
+      TVirtualCollectionProxy *fCollectionProxy;
+      TClassStreamer          *fStreamer;
+
+      static TClassLocalStorage *GetStorage(const TClass *cl) {
+         void **thread_ptr = (*gThreadTsd)(0,1);
+         if (thread_ptr) {
+            if (*thread_ptr==0) *thread_ptr = new TExMap();
+            TExMap *lmap = (TExMap*)(*thread_ptr);
+            ULong_t hash = TMath::Hash(&cl, sizeof(void*));
+            ULong_t local = 0;
+            UInt_t slot;
+            if ((local = (ULong_t)lmap->GetValue(hash, (Long_t)cl, slot)) != 0) {
+            } else {
+               local = (ULong_t) new TClassLocalStorage();
+               lmap->AddAt(slot, hash, (Long_t)cl, local);
+            }
+           return (TClassLocalStorage*)local;
+         }
+         return 0;
+      }
+   };
+}
 //______________________________________________________________________________
 TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
    // Return the proxy describinb the collection (if any).
+
+   if (gThreadTsd && fCollectionProxy) {
+      TClassLocalStorage *local = TClassLocalStorage::GetStorage(this); 
+      if (local == 0) return fCollectionProxy;
+      if (local->fCollectionProxy==0) local->fCollectionProxy = fCollectionProxy->Generate();
+      return local->fCollectionProxy;
+   }
    return fCollectionProxy;
+}
+
+//______________________________________________________________________________
+TClassStreamer *TClass::GetStreamer() const
+{
+   // Return the proxy describinb the collection (if any).
+   
+   if (gThreadTsd && fStreamer) {
+      TClassLocalStorage *local = TClassLocalStorage::GetStorage(this); 
+      if (local==0) return fStreamer;
+      if (local->fStreamer==0) {
+         local->fStreamer = fStreamer->Generate();
+         const type_info &orig = ( typeid(*fStreamer) );
+         const type_info &copy = ( typeid(*local->fStreamer) );
+         if (strcmp(orig.name(),copy.name())!=0) {
+            Warning("GetStreamer","For %s, the TClassStreamer passed does not properly implement the Generate method (%s vs %s\n",GetName(),orig.name(),copy.name());
+         }
+      }
+      return local->fStreamer;
+   }
+   return fStreamer;
 }
 
 //______________________________________________________________________________
@@ -2232,45 +2293,96 @@ void *TClass::New(ENewType defConstructor)
    //    MyClass(); // Or a constructor with all its arguments defaulted.
    //
 
+   void* p = 0;
+
    if (fNew) {
+      // We have the new operator wrapper function,
+      // so there is a dictionary and it was generated
+      // by rootcint, so there should be a default
+      // constructor we can call through the wrapper.
       fgCallingNew = defConstructor;
-      void *p = fNew(0);
+      p = fNew(0);
       fgCallingNew = kRealNew;
       if (!p) {
+         //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
-      return p;
-   }
-
-   if (!fClassInfo) {
-
-      if (fCollectionProxy) {
-         return fCollectionProxy->New();
+   } else if (fClassInfo) {
+      // We have the dictionary but do not have the
+      // constructor wrapper, so the dictionary was
+      // not generated by rootcint.  Let's try to
+      // create the object by having the interpreter
+      // call the new operator, hopefully the class
+      // library is loaded and there will be a default
+      // constructor we can call.
+      // [This is very unlikely to work, but who knows!]
+      fgCallingNew = defConstructor;
+      R__LOCKGUARD2(gCINTMutex);
+      p = GetClassInfo()->New();
+      fgCallingNew = kRealNew;
+      if (!p) {
+         //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
+         Error("New", "cannot create object of class %s", GetName());
       }
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->New();
+      fgCallingNew = kRealNew;
+      if (!p) {
+         //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
+         Error("New", "cannot create object of class %s", GetName());
+      }
+   } else if (!fClassInfo && !fCollectionProxy) {
+      // There is no dictionary at all and we do not have
+      // the services of a collection proxy available, so
+      // use the streamer info to approximate calling a
+      // constructor (basically we just make sure that the
+      // pointer data members are null, unless they are marked
+      // as preallocated with the "->" comment, in which case
+      // we default-construct an object to point at).
 
-      // We only have an emulated class. Use TStreamerInfo service.
+      // ???BUG???  ???WHY???
+      // Do not register any TObject's that we create
+      // as a result of creating this object.
+      //
+      // ???Is this because we may never actually deregister them???
+
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
-      TStreamerInfo *sinfo = GetStreamerInfo();
-      Int_t l = sinfo->GetSize() + 8;
-      char *pp = new char[l];
-      memset(pp, 0, l);
-      Long_t pp8 = (Long_t)pp;
-      pp = (char*)(pp8 - pp8%8 +8); //always align to 8 bytes address
-      sinfo->New(pp);
-      SetObjectStat(statsave);
-      return pp;
-   }
 
-   // We have the class library but did not have the constructor wrapper.
-   // Let's try one last time, using the interpreter.
-   // [This is very unlikely to work, but who knows!]
-   fgCallingNew = defConstructor;
-   R__LOCKGUARD2(gCINTMutex);
-   void *p = GetClassInfo()->New();
-   fgCallingNew = kRealNew;
-   if (!p) {
-      Error("New", "cannot create object of class %s", GetName());
+      TStreamerInfo* sinfo = GetStreamerInfo();
+      if (!sinfo) {
+         Error("New", "Cannot construct class %s version %d, no streamer info available!", GetName(), fClassVersion);
+         return 0;
+      }
+
+      fgCallingNew = defConstructor;
+      p = sinfo->New();
+      fgCallingNew = kRealNew;
+
+      // ???BUG???
+      // Allow TObject's to be registered again.
+      SetObjectStat(statsave);
+
+      // Register the object for special handling in the destructor.
+      if (p) {
+         //Warning("New", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         if (!tmp.second) {
+            //Warning("New", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            fgObjectVersionRepository.erase(tmp.first);
+            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            if (!tmp.second) {
+               Warning("New", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            }
+         }
+      }
+
+   } else {
+      Error("New", "This cannot happen!");
    }
 
    return p;
@@ -2283,37 +2395,280 @@ void *TClass::New(void *arena, ENewType defConstructor)
    // The class must have a default constructor. For meaning of
    // defConstructor, see TClass::IsCallingNew().
 
+   void* p = 0;
+
    if (fNew) {
+      // We have the new operator wrapper function,
+      // so there is a dictionary and it was generated
+      // by rootcint, so there should be a default
+      // constructor we can call through the wrapper.
       fgCallingNew = defConstructor;
-      void *p = fNew(arena);
+      p = fNew(arena);
       fgCallingNew = kRealNew;
-      if (!p) Error("New", "cannot create object of class %s", GetName());
-      return p;
-   }
+      if (!p) {
+         Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
+      }
+   } else if (fClassInfo) {
+      // We have the dictionary but do not have the
+      // constructor wrapper, so the dictionary was
+      // not generated by rootcint.  Let's try to
+      // create the object by having the interpreter
+      // call the new operator, hopefully the class
+      // library is loaded and there will be a default
+      // constructor we can call.
+      // [This is very unlikely to work, but who knows!]
+      fgCallingNew = defConstructor;
+      R__LOCKGUARD2(gCINTMutex);
+      p = GetClassInfo()->New(arena);
+      fgCallingNew = kRealNew;
+      if (!p) {
+         Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
+      }
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->New(arena);
+      fgCallingNew = kRealNew;
+   } else if (!fClassInfo && !fCollectionProxy) {
+      // There is no dictionary at all and we do not have
+      // the services of a collection proxy available, so
+      // use the streamer info to approximate calling a
+      // constructor (basically we just make sure that the
+      // pointer data members are null, unless they are marked
+      // as preallocated with the "->" comment, in which case
+      // we default-construct an object to point at).
 
-   if (!fClassInfo) {
+      // ???BUG???  ???WHY???
+      // Do not register any TObject's that we create
+      // as a result of creating this object.
+      Bool_t statsave = GetObjectStat();
+      SetObjectStat(kFALSE);
 
-      if (fCollectionProxy) {
-         return fCollectionProxy->New(arena);
+      TStreamerInfo* sinfo = GetStreamerInfo();
+      if (!sinfo) {
+         Error("New with placement", "Cannot construct class %s version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
+         return 0;
       }
 
-      // We only have an emulated class. Use TStreamerInfo service.
-      TStreamerInfo *sinfo = GetStreamerInfo();
-      Int_t l = sinfo->GetSize();
-      char *pp = (char*)arena;
-      memset(pp, 0, l);
-      sinfo->New(pp);
-      return arena;
+      fgCallingNew = defConstructor;
+      p = sinfo->New(arena);
+      fgCallingNew = kRealNew;
+
+      // ???BUG???
+      // Allow TObject's to be registered again.
+      SetObjectStat(statsave);
+
+      // Register the object for special handling in the destructor.
+      if (p) {
+         //Warning("New with placement", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         if (!tmp.second) {
+            //Warning("New with placement", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            fgObjectVersionRepository.erase(tmp.first);
+            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            if (!tmp.second) {
+               Warning("New with placement", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            }
+         }
+      }
+
+   } else {
+      Error("New with placement", "This cannot happen!");
    }
 
-   // We have the class library but did not have the constructor wrapper.
-   // Let's try one last time, using the interpreter.
-   // [This is very unlikely to work, but who knows!]
-   fgCallingNew = defConstructor;
-   R__LOCKGUARD2(gCINTMutex);
-   void *p = GetClassInfo()->New(arena);
-   fgCallingNew = kRealNew;
-   if (!p) Error("New with placement", "cannot create object of class %s", GetName());
+   return p;
+}
+
+//______________________________________________________________________________
+void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
+{
+   // Return a pointer to a newly allocated array of objects
+   // of this class.
+   // The class must have a default constructor. For meaning of
+   // defConstructor, see TClass::IsCallingNew().
+
+   void* p = 0;
+
+   if (fNewArray) {
+      // We have the new operator wrapper function,
+      // so there is a dictionary and it was generated
+      // by rootcint, so there should be a default
+      // constructor we can call through the wrapper.
+      fgCallingNew = defConstructor;
+      p = fNewArray(nElements, 0);
+      fgCallingNew = kRealNew;
+      if (!p) {
+         Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
+      }
+   } else if (fClassInfo) {
+      // We have the dictionary but do not have the
+      // constructor wrapper, so the dictionary was
+      // not generated by rootcint.  Let's try to
+      // create the object by having the interpreter
+      // call the new operator, hopefully the class
+      // library is loaded and there will be a default
+      // constructor we can call.
+      // [This is very unlikely to work, but who knows!]
+      fgCallingNew = defConstructor;
+      R__LOCKGUARD2(gCINTMutex);
+      p = GetClassInfo()->New(nElements);
+      fgCallingNew = kRealNew;
+      if (!p) {
+         Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
+      }
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->NewArray(nElements);
+      fgCallingNew = kRealNew;
+   } else if (!fClassInfo && !fCollectionProxy) {
+      // There is no dictionary at all and we do not have
+      // the services of a collection proxy available, so
+      // use the streamer info to approximate calling a
+      // constructor (basically we just make sure that the
+      // pointer data members are null, unless they are marked
+      // as preallocated with the "->" comment, in which case
+      // we default-construct an object to point at).
+
+      // ???BUG???  ???WHY???
+      // Do not register any TObject's that we create
+      // as a result of creating this object.
+      Bool_t statsave = GetObjectStat();
+      SetObjectStat(kFALSE);
+
+      TStreamerInfo* sinfo = GetStreamerInfo();
+      if (!sinfo) {
+         Error("NewArray", "Cannot construct class %s version %d, no streamer info available!", GetName(), fClassVersion);
+         return 0;
+      }
+
+      fgCallingNew = defConstructor;
+      p = sinfo->NewArray(nElements);
+      fgCallingNew = kRealNew;
+
+      // ???BUG???
+      // Allow TObject's to be registered again.
+      SetObjectStat(statsave);
+
+      // Register the object for special handling in the destructor.
+      if (p) {
+         //Warning("NewArray", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         if (!tmp.second) {
+            //Warning("NewArray", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            fgObjectVersionRepository.erase(tmp.first);
+            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            if (!tmp.second) {
+               Warning("NewArray", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            }
+         }
+      }
+
+   } else {
+      Error("NewArray", "This cannot happen!");
+   }
+
+   return p;
+}
+
+//______________________________________________________________________________
+void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
+{
+   // Return a pointer to a newly allocated object of this class.
+   // The class must have a default constructor. For meaning of
+   // defConstructor, see TClass::IsCallingNew().
+
+   void* p = 0;
+
+   if (fNewArray) {
+      // We have the new operator wrapper function,
+      // so there is a dictionary and it was generated
+      // by rootcint, so there should be a default
+      // constructor we can call through the wrapper.
+      fgCallingNew = defConstructor;
+      p = fNewArray(nElements, arena);
+      fgCallingNew = kRealNew;
+      if (!p) {
+         Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
+      }
+   } else if (fClassInfo) {
+      // We have the dictionary but do not have the constructor wrapper,
+      // so the dictionary was not generated by rootcint (it was made either
+      // by cint or by some external mechanism).  Let's try to create the
+      // object by having the interpreter call the new operator, either the
+      // class library is loaded and there is a default constructor we can
+      // call, or the class is interpreted and we will call the default
+      // constructor that way, or no default constructor is available and
+      // we fail.
+      fgCallingNew = defConstructor;
+      R__LOCKGUARD2(gCINTMutex);
+      p = GetClassInfo()->New(nElements, arena);
+      fgCallingNew = kRealNew;
+      if (!p) {
+         Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
+      }
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->NewArray(nElements, arena);
+      fgCallingNew = kRealNew;
+   } else if (!fClassInfo && !fCollectionProxy) {
+      // There is no dictionary at all and we do not have
+      // the services of a collection proxy available, so
+      // use the streamer info to approximate calling a
+      // constructor (basically we just make sure that the
+      // pointer data members are null, unless they are marked
+      // as preallocated with the "->" comment, in which case
+      // we default-construct an object to point at).
+
+      // ???BUG???  ???WHY???
+      // Do not register any TObject's that we create
+      // as a result of creating this object.
+      Bool_t statsave = GetObjectStat();
+      SetObjectStat(kFALSE);
+
+      TStreamerInfo* sinfo = GetStreamerInfo();
+      if (!sinfo) {
+         Error("NewArray with placement", "Cannot construct class %s version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
+         return 0;
+      }
+
+      fgCallingNew = defConstructor;
+      p = sinfo->NewArray(nElements, arena);
+      fgCallingNew = kRealNew;
+
+      // ???BUG???
+      // Allow TObject's to be registered again.
+      SetObjectStat(statsave);
+
+      if (fStreamerType & kEmulated) {
+         // We always register emulated objects, we need to always
+         // use the streamer info to destroy them.
+      }
+
+      // Register the object for special handling in the destructor.
+      if (p) {
+         //Warning("NewArray with placement", "Registering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+         std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         if (!tmp.second) {
+            //Warning("NewArray with placement", "Reregistering an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            fgObjectVersionRepository.erase(tmp.first);
+            tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            if (!tmp.second) {
+               Warning("NewArray with placement", "Failed to reregister an object of class %s version %d at address %0lx", GetName(), fClassVersion, p);
+            }
+         }
+      }
+
+   } else {
+      Error("NewArray with placement", "This cannot happen!");
+   }
 
    return p;
 }
@@ -2321,47 +2676,211 @@ void *TClass::New(void *arena, ENewType defConstructor)
 //______________________________________________________________________________
 void TClass::Destructor(void *obj, Bool_t dtorOnly)
 {
-   // Explicitely call destructor for object.
+   // Explicitly call destructor for object.
 
-   if (dtorOnly) {
-      if (fDestructor) {
-         fDestructor(obj);
-         return;
+   // Do nothing if passed a null pointer.
+   if (obj == 0) return;
+
+   void* p = obj;
+
+   if (dtorOnly && fDestructor) {
+      // We have the destructor wrapper, use it.
+      fDestructor(p);
+   } else if ((!dtorOnly) && fDelete) {
+      // We have the delete wrapper, use it.
+      fDelete(p);
+   } else if (fClassInfo) {
+      // We have the dictionary but do not have the
+      // destruct/delete wrapper, so the dictionary was
+      // not generated by rootcint (it could have been
+      // created by cint or by some external mechanism).
+      // Let's have the interpreter call the destructor,
+      // either the code will be in a loaded library,
+      // or it will be interpreted, otherwise we fail
+      // because there is no destructor code at all.
+      if (dtorOnly) {
+         fClassInfo->Destruct(p);
+      } else {
+         fClassInfo->Delete(p);
+      }
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fCollectionProxy->Destructor(p, dtorOnly);
+   } else if (!fClassInfo && !fCollectionProxy) {
+      // There is no dictionary at all and we do not have
+      // the services of a collection proxy available, so
+      // use the streamer info to approximate calling a
+      // constructor (basically we just make sure that the
+      // pointer data members are null, unless they are marked
+      // as preallocated with the "->" comment, in which case
+      // we default-construct an object to point at).
+
+      Bool_t inRepo = kTRUE;
+      Version_t objVer = -1;
+
+      // Was this object allocated through TClass?
+      std::map<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
+      if (iter == fgObjectVersionRepository.end()) {
+         // No, it wasn't, skip special version handling.
+         //Error("Destructor", "Attempt to delete unregistered object of class %s at address %p!", GetName(), p);
+         inRepo = kFALSE;
+      } else {
+         objVer = iter->second;
+      }
+
+      if (!inRepo || (objVer == fClassVersion)) {
+         // The object was allocated using code for the same class version
+         // as is loaded now.  We may proceed without worry.
+         TStreamerInfo* si = GetStreamerInfo();
+         if (si) {
+            si->Destructor(p, dtorOnly);
+         } else {
+            Error("Destructor1", "No streamer info available for class %s version %d at address %p, cannot destruct emulated object!", GetName(), fClassVersion, p);
+            Error("Destructor1", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
+            Int_t i = fStreamerInfo->LowerBound();
+            for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
+               Error("Destructor1", "fStreamerInfo->At(%d): %p", i, fStreamerInfo->At(i));
+               if (fStreamerInfo->At(i) != 0) {
+                  Error("Destructor1", "Doing Dump() ...");
+                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
+               }
+            }
+         }
+      } else {
+         // The loaded class version is not the same as the version of the code
+         // which was used to allocate this object.  The best we can do is use
+         // the TStreamerInfo to try to free up some of the allocated memory.
+         Error("Destructor2", "Loaded class version does not match version of object, objVer: %d; fClassVersion: %d", objVer, fClassVersion);
+         TStreamerInfo* si = (TStreamerInfo*) fStreamerInfo->At(objVer);
+         if (si) {
+            si->Destructor(p, dtorOnly);
+         } else {
+            Error("Destructor2", "No streamer info available for class %s version %d, cannot destruct object!", GetName(), objVer);
+            Error("Destructor2", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
+            Int_t i = fStreamerInfo->LowerBound();
+            for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
+               Error("Destructor2", "fStreamerInfo->At(%d): %p", i, fStreamerInfo->At(i));
+               if (fStreamerInfo->At(i) != 0) {
+                  // Do some debugging output.
+               }
+            }
+         }
+      }
+
+      // Deregister the object for special handling in the destructor.
+      if (inRepo && p) {
+         std::map<void*, Version_t>::iterator tmp = fgObjectVersionRepository.find(p);
+         if (tmp != fgObjectVersionRepository.end()) {
+            fgObjectVersionRepository.erase(tmp);
+         }
       }
    } else {
-      if (fDelete) {
-         fDelete(obj);
-         return;
+      Error("Destructor", "This cannot happen! (class %s)", GetName());
+   }
+}
+
+//______________________________________________________________________________
+void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
+{
+   // Explicitly call operator delete[] for an array.
+
+   // Do nothing if passed a null pointer.
+   if (ary == 0) return;
+
+   // Make a copy of the address.
+   void* p = ary;
+
+   if (fDeleteArray) {
+      if (dtorOnly) {
+         Error("DeleteArray", "Destructor only is not supported!");
+      } else {
+         // We have the array delete wrapper, use it.
+         fDeleteArray(ary);
       }
-   }
+   } else if (fClassInfo) {
+      // We have the dictionary but do not have the
+      // array delete wrapper, so the dictionary was
+      // not generated by rootcint.  Let's try to
+      // delete the array by having the interpreter
+      // call the array delete operator, hopefully
+      // the class library is loaded and there will be
+      // a destructor we can call.
+      R__LOCKGUARD2(gCINTMutex);
+      GetClassInfo()->DeleteArray(ary, dtorOnly);
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fCollectionProxy->DeleteArray(ary, dtorOnly);
+   } else if (!fClassInfo && !fCollectionProxy) {
+      // There is no dictionary at all and we do not have
+      // the services of a collection proxy available, so
+      // use the streamer info to approximate calling the
+      // array destructor (basically we just destruct the
+      // objects preallocated byt the "->" comment).
 
-   if (!fClassInfo) {
-      // this is a memory leak ... but oh well!
-      return;
+      Bool_t inRepo = kTRUE;
+      Version_t objVer = -1;
+   
+      // Was this array object allocated through TClass?
+      std::map<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
+      if (iter == fgObjectVersionRepository.end()) {
+         // No, it wasn't, we cannot know what to do.
+         //Error("DeleteArray", "Attempt to delete unregistered array object, element type %s, at address %p!", GetName(), p);
+         inRepo = kFALSE;
+      } else {
+         objVer = iter->second;
+      }
+   
+      if (!inRepo || (objVer == fClassVersion)) {
+         // The object was allocated using code for the same class version
+         // as is loaded now.  We may proceed without worry.
+         TStreamerInfo* si = GetStreamerInfo();
+         if (si) {
+            si->DeleteArray(ary, dtorOnly);
+         } else {
+            Error("DeleteArray", "No streamer info available for class %s version %d at address %p, cannot destruct object!", GetName(), objVer, ary);
+            Error("DeleteArray", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
+            Int_t i = fStreamerInfo->LowerBound();
+            for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
+               Error("DeleteArray", "fStreamerInfo->At(%d): %p", v, fStreamerInfo->At(i));
+               if (fStreamerInfo->At(i)) {
+                  // Print some debugging info.
+               }
+            }
+         }
+      } else {
+         // The loaded class version is not the same as the version of the code
+         // which was used to allocate this array.  The best we can do is use
+         // the TStreamerInfo to try to free up some of the allocated memory.
+         TStreamerInfo* si = (TStreamerInfo*) fStreamerInfo->At(objVer);
+         if (si) {
+            si->DeleteArray(ary, dtorOnly);
+         } else {
+            Error("DeleteArray", "No streamer info available for class %s version %d at address %p, cannot destruct object!", GetName(), objVer, ary);
+            Error("DeleteArray", "length of fStreamerInfo is %d", fStreamerInfo->GetSize());
+            Int_t i = fStreamerInfo->LowerBound();
+            for (Int_t v = 0; v < fStreamerInfo->GetSize(); ++v, ++i) {
+               Error("DeleteArray", "fStreamerInfo->At(%d): %p", v, fStreamerInfo->At(i));
+               if (fStreamerInfo->At(i)) {
+                  // Print some debugging info.
+               }
+            }
+         }
+      }
+   
+      // Deregister the object for special handling in the destructor.
+      if (inRepo && p) {
+         std::map<void*, Version_t>::iterator tmp = fgObjectVersionRepository.find(p);
+         if (tmp != fgObjectVersionRepository.end()) {
+            fgObjectVersionRepository.erase(tmp);
+         }
+      }
+   } else {
+      Error("DeleteArray", "This cannot happen! (class %s)", GetName());
    }
-
-   G__CallFunc func;
-   void *address;
-   Long_t offset;
-   TString dtor("~");
-   dtor += fClassInfo->Name(); // Use just the name (as opposed to the fully qualified name).
-   R__LOCKGUARD2(gCINTMutex);
-   func.SetFunc(fClassInfo->GetMethod(dtor, "", &offset));
-   address = (void*)((long)obj + offset);
-   if (dtorOnly) {
-#ifdef WIN32
-      Long_t saveglobalvar = G__getgvp();
-      G__setgvp((long)address);
-      func.Exec(address);
-      G__setgvp(saveglobalvar);
-#else
-      Long_t saveglobalvar = G__globalvarpointer;
-      G__globalvarpointer = (long)address;
-      func.Exec(address);
-      G__globalvarpointer = saveglobalvar;
-#endif
-   } else
-      func.Exec(address);
 }
 
 //______________________________________________________________________________
@@ -2384,7 +2903,7 @@ TClass *TClass::Load(TBuffer &b)
    char *s = new char[maxsize];
 
    Int_t pos = b.Length();
-   
+
    b.ReadString(s, maxsize);
    while (strlen(s)==maxsize) {
       // The classname is too large, try again with a large buffer.
@@ -2994,7 +3513,8 @@ void TClass::Streamer(void *object, TBuffer &b)
       case kExternal:
       case kExternal|kEmulated:
          //There is special streamer for the class
-         (*fStreamer)(b,object);
+         // (*fStreamer)(b,object);
+         (*GetStreamer())(b,object);
          return;
 
 
@@ -3087,8 +3607,6 @@ void TClass::AdoptStreamer(TClassStreamer *str)
    fStreamer = str;
    if (str) {
       fStreamerType = kExternal | ( fStreamerType&kEmulated );
-//       if (fStreamerType & kEmulated) fStreamerType = kExternal|kEmulated;
-//       else                           fStreamerType = kExternal;
    }
 }
 
