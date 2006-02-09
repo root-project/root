@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLDrawFlags.h,v 1.1 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  27/01/2006
 
 /*************************************************************************
@@ -50,12 +50,5 @@ public:
 
    ClassDef(TGLDrawFlags,0) // GL draw flags wrapper class
 };
-
-//______________________________________________________________________________
-/*inline TGLDrawFlags::Set(EStyle style, UInt_t LOD)
-{
-   fStyle = style;
-   fLOD = LOD;
-}*/
 
 #endif // ROOT_TGLDrawFlags

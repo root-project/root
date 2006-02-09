@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.33 2006/01/26 17:06:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.34 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -323,7 +323,6 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 }
 
 //______________________________________________________________________________
-//TODO: Merge style and LOD into general draw style flag
 void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags, 
                     Double_t timeout, Int_t axesType, const TGLVertex3 * reference,
                     Bool_t forSelect)
@@ -357,21 +356,33 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
       SortDrawList();
    }
 
+   // Setup GL light model and face culling depending on clip
+   if (fCurrentClip) {
+      // Clip object - two sided lighting, don't cull (BACK) faces
+      glDisable(GL_CULL_FACE);
+      glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+   } else {
+      // No clip - single side lighting sufficient, can cull (BACK) faces
+      glEnable(GL_CULL_FACE);
+      glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+   }        
+
    // Setup GL for current draw style - fill, wireframe, outline
-   // Any GL modifications need to be defered until drawing time - 
-   // to ensure we are in correct thread/context under Windows
    // TODO: Could detect change and only mod if changed for speed
    UInt_t reqFullDraws = 1; // Default single full draw for fill+wireframe
    switch (sceneFlags.Style()) {
       case (TGLDrawFlags::kFill): {
          glEnable(GL_LIGHTING);
-         glEnable(GL_CULL_FACE);
-         glPolygonMode(GL_FRONT, GL_FILL);
+         if (fCurrentClip) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+         } else {
+            glPolygonMode(GL_FRONT, GL_FILL);
+         }
          glClearColor(0.0, 0.0, 0.0, 1.0); // Black
          break;
       }
       case (TGLDrawFlags::kWireFrame): {
-         glDisable(GL_CULL_FACE);
+         //glDisable(GL_CULL_FACE);
          glDisable(GL_LIGHTING);
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
          glClearColor(0.0, 0.0, 0.0, 1.0); // Black
@@ -379,8 +390,11 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
       }
       case (TGLDrawFlags::kOutline): {
          glEnable(GL_LIGHTING);
-         glEnable(GL_CULL_FACE);
-         glPolygonMode(GL_FRONT, GL_FILL);
+         if (fCurrentClip) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+         } else {
+            glPolygonMode(GL_FRONT, GL_FILL);
+         }
          glClearColor(1.0, 1.0, 1.0, 1.0); // White
          // Outline needs two full draws
          reqFullDraws = 2;
@@ -400,18 +414,24 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(1.f, 1.f);
          } else {
-            // First pass - black outline
+            // Second pass - black outline
             glDisable(GL_POLYGON_OFFSET_FILL);
             glDisable(GL_LIGHTING);
-            glPolygonMode(GL_FRONT, GL_LINE);
             glColor3d(.1, .1, .1);
+            // Cull back faces and only outline on front - we
+            // are only showing back faces with clipping as a 
+            // better solution than completely invisible faces
+            glEnable(GL_CULL_FACE);
+            glPolygonMode(GL_FRONT, GL_LINE);
          }
       }
-      Double_t drawTimeout = timeout/reqFullDraws;
 
-      // If no clip object
+      // Assume each full draw takes same time - probably too crude....
+      Double_t fullDrawTimeout = timeout/reqFullDraws;
+
+      // If no clip object no plane sets to extract/pass
       if (!fCurrentClip) {
-         DrawPass(camera, sceneFlags, drawTimeout);
+         DrawPass(camera, sceneFlags, fullDrawTimeout);
       } else {
          // Get the clip plane set from the clipping object
          std::vector<TGLPlane> planeSet;
@@ -452,7 +472,7 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
             }
 
              // Draw scene once with full time slot, passing all the planes
-             DrawPass(camera, sceneFlags, drawTimeout, &planeSet);
+             DrawPass(camera, sceneFlags, fullDrawTimeout, &planeSet);
          }
          // Clip away scene inside of the clip object
          else {
@@ -465,7 +485,10 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
                activePlanes.push_back(planeSet[planeInd]);
                glClipPlane(GL_CLIP_PLANE0+planeInd, activePlanes[planeInd].CArr());
                glEnable(GL_CLIP_PLANE0+planeInd);
-               DrawPass(camera, sceneFlags, drawTimeout/maxPlanes, &activePlanes);
+
+               // Draw scene with active planes, allocating fraction of time
+               // for total planes.
+               DrawPass(camera, sceneFlags, fullDrawTimeout/maxPlanes, &activePlanes);
             }
          }
          // Ensure all clip planes turned off again
@@ -545,7 +568,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    
    // Set stopwatch running
    TGLStopwatch stopwatch;
-   if (timeout > 0.0) {
+   if (timeout > 0.0 || gDebug > 2) {
       stopwatch.Start();
    }
 
@@ -624,17 +647,14 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
 
          TGLDrawFlags flags = drawShape->CalcDrawFlags(camera, sceneFlags);
          drawShape->Draw(flags);
-         UpdateDrawStats(*drawShape);
+         UpdateDrawStats(*drawShape, flags);
       }
 
       // Terminate the draw if over opaque fraction timeout
-      // Only test every 50 objects as this is somewhat costly
-      if (timeout > 0.0 && (fDrawStats.fOpaque % 50) == 0) {
-         Double_t opaqueTimeFraction = 1.0;
-         if (fDrawStats.fOpaque > 0) {
-            opaqueTimeFraction = (transDrawList.size() + fDrawStats.fOpaque) / fDrawStats.fOpaque; 
-         }
-         if (stopwatch.Lap() * opaqueTimeFraction > timeout) {
+      // Only test every 30 objects as this is somewhat costly
+      if (timeout > 0.0 && fDrawStats.fOpaque > 0 && (fDrawStats.fOpaque % 30) == 0) {
+         Double_t opaqueTimeFraction = fDrawStats.fOpaque / (transDrawList.size() + fDrawStats.fOpaque);
+         if (stopwatch.Lap() > timeout / opaqueTimeFraction) {
             run = kFALSE;
          }   
       }
@@ -646,7 +666,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
       if (!fSelectedPhysical->IsTransparent()) {
          TGLDrawFlags flags = fSelectedPhysical->CalcDrawFlags(camera, sceneFlags);
          fSelectedPhysical->Draw(flags);
-         UpdateDrawStats(*fSelectedPhysical);
+         UpdateDrawStats(*fSelectedPhysical, flags);
       } else {
          // Add to transparent drawlist
          transDrawList.push_back(fSelectedPhysical);
@@ -664,12 +684,16 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
       drawShape = *drawIt;
          TGLDrawFlags flags = drawShape->CalcDrawFlags(camera, sceneFlags);
          drawShape->Draw(flags);
-         UpdateDrawStats(*drawShape);
+         UpdateDrawStats(*drawShape, flags);
    }
 
    // Reset these after transparent done
    glDepthMask(GL_TRUE);
    glDisable(GL_BLEND);
+
+   if (gDebug > 2) {
+      Info("TGLScene::DrawPass", "requested in %f msec, took %f msec", timeout, stopwatch.End());
+   }
 }
 
 //______________________________________________________________________________
@@ -1363,11 +1387,12 @@ void TGLScene::ResetDrawStats(const TGLDrawFlags & flags)
    fDrawStats.fFlags = flags;
    fDrawStats.fOpaque = 0;
    fDrawStats.fTrans = 0;
+   fDrawStats.fPixelLOD = 0;
    fDrawStats.fByShape.clear();
 }
 
 //______________________________________________________________________________
-void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape)
+void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape, const TGLDrawFlags & flags)
 {
    // Update draw stats, for newly drawn 'shape'
    
@@ -1376,6 +1401,10 @@ void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape)
       ++fDrawStats.fTrans;
    } else {
       ++fDrawStats.fOpaque;
+   }
+
+   if (flags.LOD() == TGLDrawFlags::kLODPixel) {
+      fDrawStats.fPixelLOD++;
    }
 
    // By type only needed for debug currently
@@ -1416,12 +1445,13 @@ void TGLScene::DumpDrawStats()
             break;
          }
       }
-      Info("TGLScene::DumpDrawStats()", "Drew scene (%s / %i LOD) - %i (Opaque %i Transparent %i) shapes", 
+      Info("TGLScene::DumpDrawStats()", "Drew scene (%s / %i LOD) - %i (Op %i Trans %i) %i pixel", 
          style.c_str(),
          fDrawStats.fFlags.LOD(),
          fDrawStats.fOpaque + fDrawStats.fTrans,
          fDrawStats.fOpaque, 
-         fDrawStats.fTrans);
+         fDrawStats.fTrans,
+         fDrawStats.fPixelLOD);
    }
 
    // By shape type counts

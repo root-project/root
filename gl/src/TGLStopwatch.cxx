@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.5 2005/10/03 15:19:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.6 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -61,6 +61,7 @@ void TGLStopwatch::Start()
 Double_t TGLStopwatch::Lap() const
 {
    // Return lap time since Start(), in milliseconds
+   FinishDrawing();
    Double_t elapsed = GetClock() - fStart - fgOverhead;
    return elapsed > 0.0 ? elapsed : 0.0;
 }
@@ -70,7 +71,6 @@ Double_t TGLStopwatch::Lap() const
 Double_t TGLStopwatch::End()
 {
    // End timing, return total time since Start(), in milliseconds
-   FinishDrawing();
    return Lap();
 }
 

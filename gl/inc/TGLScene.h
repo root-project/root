@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.21 2006/01/26 17:06:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.22 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -126,6 +126,7 @@ private:
       TGLDrawFlags fFlags;
       UInt_t fOpaque;
       UInt_t fTrans;
+      UInt_t fPixelLOD;
       std::map<std::string, UInt_t> fByShape;
    } fDrawStats;
 
@@ -146,7 +147,7 @@ private:
 
    // Draw stats
    void ResetDrawStats(const TGLDrawFlags & flags);
-   void UpdateDrawStats(const TGLPhysicalShape & shape);
+   void UpdateDrawStats(const TGLPhysicalShape & shape, const TGLDrawFlags & flags);
    void DumpDrawStats(); // Debug
 
    // Non-copyable class

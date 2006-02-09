@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.24 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.25 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -24,11 +24,6 @@
 
 #include <vector>
 #include <assert.h>
-
-extern Bool_t demoTakeAll;
-extern Bool_t demoFrustum;
-extern Bool_t demoLOD;
-extern Bool_t demoTrace;
 
 // TODO:Find a better place for these enums - TGLEnum.h?
 // Whole GL viewer should be moved into own namespace

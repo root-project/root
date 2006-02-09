@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.34 2006/01/26 17:06:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.36 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -743,6 +743,7 @@ void TGLViewer::InitGL()
    glCullFace(GL_BACK);
    glClearColor(0.0, 0.0, 0.0, 0.0);
    glClearDepth(1.0);
+   glMaterialf(GL_BACK, GL_SHININESS, 0.0);
 
    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};

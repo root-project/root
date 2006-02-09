@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.16 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.17 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -202,14 +202,20 @@ void TGLPhysicalShape::Draw(const TGLDrawFlags & flags) const
          // Fill needs material colors
          // Outline needs material + a fixed (black) outline color
          // This is set once at scene level
-         // TODO: Scene draws outline style in two passes - for second
-         // wireframe overlay one we don't need to set materials
-         // But don't know the pass here.....
-         glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
+         // Set back diffuse only for clipping where inner (back) faces\
+         // are shown. Don't set shinneness or specular as we want 
+         // back face to appear as 'flat' as possible as crude visual
+         // approximation to proper capped clipped solid
+         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, fColor);
          glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
          glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
          glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
          glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+         // TODO: Scene draws outline style in two passes - for second
+         // wireframe overlay one we don't need to set materials
+         // But don't know the pass here.....
+         // Also we only need to set back materials when clipping
+         // - this might cause extra cost without
          break;
       }
    }
@@ -275,10 +281,6 @@ TGLDrawFlags TGLPhysicalShape::CalcDrawFlags(const TGLCamera & camera, const TGL
       return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODUnsupported);
    } 
    
-   if (!demoLOD) {
-      return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODMed);
-   }
-
    if (LODAxes == TGLDrawable::kLODAxesAll) {
       // Shape supports LOD along all axes - basis LOD hint on diagonal of viewport 
       // projection rect round whole bounding box
