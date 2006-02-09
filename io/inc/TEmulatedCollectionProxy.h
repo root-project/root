@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.h,v 1.2 2005/02/25 17:06:34 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.h,v 1.3 2005/11/16 20:04:47 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -74,6 +74,18 @@ public:
    // Virtual in-place constructor
    virtual void* New(void* memory)   const {  return new(memory) Cont_t; }
 
+   // Virtual array constructor
+   virtual void* NewArray(Int_t nElements)   const             {  return new Cont_t[nElements];         }
+
+   // Virtual in-place constructor
+   virtual void* NewArray(Int_t nElements, void* memory)   const {  return new(memory) Cont_t[nElements]; }
+
+   // Virtual destructor
+   virtual void  Destructor(void* p, Bool_t dtorOnly = kFALSE);
+   
+   // Virtual array destructor
+   virtual void  DeleteArray(void* p, Bool_t dtorOnly = kFALSE);
+   
    // TVirtualCollectionProxy overload: Return the sizeof the collection object.
    virtual UInt_t Sizeof() const           {  return sizeof(Cont_t);     }
 

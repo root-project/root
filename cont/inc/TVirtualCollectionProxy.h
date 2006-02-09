@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.8 2004/11/05 14:32:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.9 2005/03/24 14:27:06 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -57,6 +57,23 @@ public:
    }
    virtual void     *New(void *arena) const {     // Execute the container constructor
      return fClass.GetClass()==0 ? 0 : fClass->New(arena);
+   }
+
+   virtual void     *NewArray(Int_t nElements) const {                // Return a new container object
+     return fClass.GetClass()==0 ? 0 : fClass->NewArray(nElements);
+   }
+   virtual void     *NewArray(Int_t nElements, void *arena) const {     // Execute the container constructor
+     return fClass.GetClass()==0 ? 0 : fClass->NewArray(nElements, arena);
+   }
+
+   virtual void      Destructor(void *p, Bool_t dtorOnly = kFALSE) { // Execute the container destructor
+     TClass* cl = fClass.GetClass();
+     if (cl) cl->Destructor(p, dtorOnly);
+   }
+
+   virtual void      DeleteArray(void *p, Bool_t dtorOnly = kFALSE) { // Execute the container array destructor
+     TClass* cl = fClass.GetClass();
+     if (cl) cl->DeleteArray(p, dtorOnly);
    }
 
    virtual UInt_t    Sizeof() const = 0; // Return the sizeof the collection object.
