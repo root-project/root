@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.20 2005/12/02 22:44:16 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.21 2005/12/03 08:01:11 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -321,10 +321,6 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    return vp;
 }
 
-extern long G__AllocPosition;
-extern "C" long G__get_allocpos();
-extern "C" void G__set_allocpos(long l);
-
 //______________________________________________________________________________
 void *TStorage::ObjectAlloc(size_t sz)
 {
@@ -336,23 +332,7 @@ void *TStorage::ObjectAlloc(size_t sz)
    // Needs to be protected by global mutex
    R__LOCKGUARD(gGlobalMutex);
 
-   ULong_t space;
-
-#ifndef NOCINT
-   // to handle new with placement called via CINT
-#ifndef WIN32
-   if (G__AllocPosition != G__PVOID) {
-      space = G__AllocPosition;
-      G__AllocPosition = G__PVOID;
-   } else
-#else
-   space = G__get_allocpos();
-   if ((long)space != G__PVOID) {
-      G__set_allocpos(G__PVOID);
-   } else
-#endif
-#endif
-   space = (ULong_t) ::operator new(sz);
+   ULong_t space = (ULong_t) ::operator new(sz);
    AddToHeap(space, space+sz);
    return (void*) space;
 }
