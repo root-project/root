@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.56 2005/10/10 11:31:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.57 2005/11/16 20:08:39 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -36,6 +36,8 @@
 #ifndef ROOT_TStreamerInfo
 #include "TStreamerInfo.h"
 #endif
+
+#include <map>
 
 class TBaseClass;
 class TBrowser;
@@ -130,6 +132,8 @@ private:
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID
+   static std::map<void*, Version_t> fgObjectVersionRepository; // Record what version of a class was used to construct an object
+
    // Internal status bits
    enum { kLoading = BIT(14) };
    // Internal streamer type.
@@ -205,7 +209,7 @@ public:
    TRealData         *GetRealData(const char *name) const;
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
-   TClassStreamer    *GetStreamer() const { return fStreamer; }
+   TClassStreamer    *GetStreamer() const; 
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
    TStreamerInfo     *GetStreamerInfo(Int_t version=0);
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
@@ -220,6 +224,8 @@ public:
    void               MakeCustomMenuList();
    void              *New(ENewType defConstructor = kClassNew);
    void              *New(void *arena, ENewType defConstructor = kClassNew);
+   void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew);
+   void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew);
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
@@ -244,6 +250,8 @@ public:
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
 
+   static std::map<void*, Version_t>& GetObjectVersionRepository() { return fgObjectVersionRepository; }
+
    // Function to retrieve the TClass object and dictionary function
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE);
@@ -259,6 +267,7 @@ public:
    // implement TObject like methods for non-TObject classes
 
    Int_t              Browse(void *obj, TBrowser *b) const;
+   void               DeleteArray(void *ary, Bool_t dtorOnly = kFALSE);
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
