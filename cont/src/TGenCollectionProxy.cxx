@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.23 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.24 2006/01/31 20:44:25 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -32,9 +32,9 @@
 #include "TROOT.h"
 #include "Api.h"
 #include "Riostream.h"
+#include "TVirtualMutex.h"
 
 #define MESSAGE(which,text)
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -500,15 +500,18 @@ void TGenCollectionProxy::CheckFunctions() const
 //______________________________________________________________________________
 TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
 {
+   R__LOCKGUARD2(gCollectionMutex);
+   if (fClass) return this;
+
    // Proxy initializer
-   fClass = gROOT->GetClass(fTypeinfo);
-   if ( fClass ) {
+   TClass *cl = gROOT->GetClass(fTypeinfo);
+   if ( cl ) {
       fEnv    = 0;
-      fName   = fClass->GetName();
+      fName   = cl->GetName();
       fPointers  = false;
       int nested = 0;
       std::vector<std::string> inside;
-      int num = TClassEdit::GetSplit(fClass->GetName(),inside,nested);
+      int num = TClassEdit::GetSplit(cl->GetName(),inside,nested);
       if ( num > 1 ) {
          std::string nam;
          if ( inside[0].find("stdext::hash_") != std::string::npos )
@@ -546,9 +549,10 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
             break;
          }
          fPointers = fPointers || (0 != (fVal->fCase&G__BIT_ISPOINTER));
+         fClass = cl;
          return this;
       }
-      Fatal("TGenCollectionProxy","Components of %s not analysed!",fClass->GetName());
+      Fatal("TGenCollectionProxy","Components of %s not analysed!",cl->GetName());
    }
    Fatal("TGenCollectionProxy","Collection class %s not found!",fTypeinfo.name());
    return 0;
