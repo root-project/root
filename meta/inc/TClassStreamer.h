@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassStreamer.h,Exp $
+// @(#)root/base:$Name:  $:$Id: TClassStreamer.h,v 1.1 2004/01/10 10:52:29 brun Exp $
 // Author: Victor Perev and Philippe Canal   08/05/02
 
 /*************************************************************************
@@ -30,6 +30,11 @@ protected:
 public:
    TClassStreamer(ClassStreamerFunc_t pointer) : fStreamer(pointer) {};
    TClassStreamer(const TClassStreamer &rhs) : fStreamer(rhs.fStreamer) {};
+
+   virtual TClassStreamer *Generate() {
+      // Virtual copy constructor.
+      return new TClassStreamer(*this); 
+   }
 
    virtual  ~TClassStreamer(){};   
    virtual void operator()(TBuffer &b, void *objp)
