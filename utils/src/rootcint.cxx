@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.233 2006/02/03 15:48:16 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.234 2006/02/07 18:52:37 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -912,6 +912,7 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
 
 bool HasCustomOperatorNew(G__ClassInfo& cl);
 bool HasCustomOperatorNewPlacement(G__ClassInfo& cl);
+bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl);
 bool HasDefaultConstructor(G__ClassInfo& cl,string *args=0);
 bool NeedConstructor(G__ClassInfo& cl);
 
@@ -991,6 +992,57 @@ bool HasCustomOperatorNewPlacement(G__ClassInfo& cl)
 
       if (clNew.IsBase(clPlacement)) {
          // the operator new hides the operator new with placement
+         custom = false;
+      } else {
+         custom = true;
+      }
+   }
+
+   return custom;
+}
+
+//______________________________________________________________________________
+bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl)
+{
+   // return true if we can find a custom operator new
+
+   // Look for a custom operator new[]
+   bool custom = false;
+   G__ClassInfo gcl;
+   long offset;
+   const char *name = "operator new[]";
+   const char *proto = "size_t";
+   const char *protoPlacement = "size_t,void*";
+
+   // first in the global namespace:
+   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
+   G__MethodInfo methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
+   if  (methodinfoPlacement.IsValid()) {
+      // We have a custom new[] placement in the global namespace
+      custom = true;
+   }
+
+   // in nesting space:
+   gcl = cl.EnclosingSpace();
+   methodinfo = gcl.GetMethod(name,proto,&offset);
+   methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
+   if  (methodinfoPlacement.IsValid()) {
+      custom = true;
+   }
+
+   // in class
+   methodinfo = cl.GetMethod(name,proto,&offset);
+   methodinfoPlacement = cl.GetMethod(name,protoPlacement,&offset);
+   if  (methodinfoPlacement.IsValid()) {
+      // We have a custom operator new[] with placement in the class
+      // hierarchy.  We still need to check that it has not been
+      // overloaded by a simple operator new.
+
+      G__ClassInfo clNew(methodinfo.ifunc()->tagnum);
+      G__ClassInfo clPlacement(methodinfoPlacement.ifunc()->tagnum);
+
+      if (clNew.IsBase(clPlacement)) {
+         // the operator new[] hides the operator new with placement
          custom = false;
       } else {
          custom = true;
@@ -1347,9 +1399,15 @@ void WriteAuxFunctions(G__ClassInfo &cl)
           << "   }" << std::endl;
 
       if (args.size()==0) {
-         (*dictSrcOut) << "   static void *newArray_" << mappedname << "(Long_t size) {"  << std::endl
-             << "      return new " << classname << "[size];" << std::endl
-             << "   }" << std::endl;
+         (*dictSrcOut) << "   static void *newArray_" << mappedname << "(Long_t nElements, void *p) {" << std::endl;
+         (*dictSrcOut) << "      return p ? ";
+         if (HasCustomOperatorNewArrayPlacement(cl)) {
+            (*dictSrcOut) << "new(p) " << classname << "[nElements] : ";
+         } else {
+            (*dictSrcOut) << "::new((::ROOT::TOperatorNewHelper*)p) " << classname << "[nElements] : ";
+         }
+         (*dictSrcOut) << "new " << classname << "[nElements];" << std::endl;
+         (*dictSrcOut) << "   }" << std::endl;
       }
    }
 
@@ -2171,7 +2229,7 @@ void WriteClassInit(G__ClassInfo &cl)
       (*dictSrcOut) << "   static void *new_" << mappedname << "(void *p = 0);" << std::endl;
       if (args.size()==0) 
          (*dictSrcOut) << "   static void *newArray_" << mappedname 
-                       << "(Long_t size);" << std::endl;
+                       << "(Long_t size, void *p);" << std::endl;
    }
    if (NeedDestructor(cl)) {
       (*dictSrcOut) << "   static void delete_" << mappedname << "(void *p);" << std::endl
@@ -2824,9 +2882,8 @@ void WriteStreamer(G__ClassInfo &cl)
                            //    if (strncmp(m.Title(),"->",2) != 0) fprintf(fp, "      delete %s;\n", GetNonConstMemberName(m).c_str());
                            // could be used to prevent a memory leak since the next statement could possibly create a new object.
                            // In the TStreamerInfo based I/O we made the previous statement conditional on TStreamerInfo::CanDelete
-                           // to allow the user to prevent some intempestive deletion.  So we should be offering this flexibility
-                           // here to and should not (technically) really on TStreamerInfo for it .... so for now we leave it
-                           // as is.
+                           // to allow the user to prevent some inadvisable deletions.  So we should be offering this flexibility
+                           // here to and should not (technically) rely on TStreamerInfo for it, so for now we leave it as is.
                            // Note that the leak should happen from here only if the object is stored in an unsplit object
                            // and either the user request an old branch or the streamer has been customized.
                            (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(m) << ";" << std::endl;
