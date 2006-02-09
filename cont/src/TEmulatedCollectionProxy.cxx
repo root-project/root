@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.17 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.18 2005/11/16 20:07:50 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -31,6 +31,8 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
+#include "TVirtualMutex.h" // For R__LOCKGUARD
+
 //
 // Utility function to allow the creation of a TClass for a std::pair without
 // a dictionary (See end of file for implementation
@@ -57,6 +59,9 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
 TEmulatedCollectionProxy::~TEmulatedCollectionProxy()
 {
    // Standard destructor
+   if ( fEnv && fEnv->object ) {
+      Clear();
+   }
 }
 
 TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const
@@ -67,15 +72,41 @@ TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const
    return new TEmulatedCollectionProxy(*this);
 }
 
+void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly)
+{
+   // Virtual destructor
+
+   if (!p) return;
+   TVirtualCollectionProxy::TPushPop env(this, p);
+   Clear();
+   if (!dtorOnly) {
+      delete (Cont_t*) p;
+   }
+}
+
+void TEmulatedCollectionProxy::DeleteArray(void* p, Bool_t dtorOnly)
+{
+   // Virtual array destructor
+
+   // Cannot implement this properly, we do not know
+   // how many elements are in the array.
+   Warning("DeleteArray", "Cannot properly delete emulated array of %s at %p, I don't know how many elements it has!", fClass->GetName(), p);
+   if (!dtorOnly) {
+      delete[] (Cont_t*) p;
+   }
+}
 
 TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
 {
+   R__LOCKGUARD2(gCollectionMutex);
+   if (fClass) return this;
+
    // Proxy initializer
 
-   fClass = gROOT->GetClass(fName.c_str());
+   TClass *cl = gROOT->GetClass(fName.c_str());
    fEnv = 0;
    fKey = 0;
-   if ( fClass )  {
+   if ( cl )  {
       int nested = 0;
       std::vector<std::string> inside;
       fPointers  = false;
@@ -124,9 +155,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
                break;
          }
          fPointers |= 0 != (fVal->fCase&G__BIT_ISPOINTER);
+         fClass = cl;
          return this;
       }
-      Fatal("TEmulatedCollectionProxy","Components of %s not analysed!",fClass->GetName());
+      Fatal("TEmulatedCollectionProxy","Components of %s not analysed!",cl->GetName());
    }
    Fatal("TEmulatedCollectionProxy","Collection class %s not found!",fTypeinfo.name());
    return 0;
@@ -181,20 +213,20 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                for( i=left; i<nCurr; ++i, addr += fValDiff )  {
                   StreamHelper* h = (StreamHelper*)addr;
                   void* ptr = h->ptr();
-                  fKey->fType->Destructor(ptr);
+                  //fKey->fType->Destructor(ptr);
                   h->set(0);
                }
             case G__BIT_ISPOINTER|R__BIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
-                  delete (std::string*)h->ptr();
+                  //delete (std::string*)h->ptr();
                   h->set(0);
                }
                break;
             case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
-                  delete (TString*)h->ptr();
+                  //delete (TString*)h->ptr();
                   h->set(0);
                }
                break;
@@ -223,21 +255,21 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   StreamHelper* h = (StreamHelper*)addr;
                   void* p = h->ptr();
                   if ( p )  {
-                     fVal->fType->Destructor(p);
+                     //fVal->fType->Destructor(p);
                   }
                   h->set(0);
                }
             case G__BIT_ISPOINTER|R__BIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
-                  delete (std::string*)h->ptr();
+                  //delete (std::string*)h->ptr();
                   h->set(0);
                }
                break;
             case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
-                  delete (TString*)h->ptr();
+                  //delete (TString*)h->ptr();
                   h->set(0);
                }
                break;
