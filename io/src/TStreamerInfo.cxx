@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.230 2006/01/30 09:01:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.231 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -80,7 +80,7 @@ TStreamerInfo::TStreamerInfo()
 
 //______________________________________________________________________________
 TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
-   : TNamed(cl->GetName(),info)
+: TNamed(cl->GetName(), info)
 {
    // Create a TStreamerInfo object.
 
@@ -104,7 +104,6 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fOldVersion = Class()->GetClassVersion();
 
    if (info) BuildUserInfo(info);
-
 }
 
 //______________________________________________________________________________
@@ -128,7 +127,7 @@ TStreamerInfo::~TStreamerInfo()
 //______________________________________________________________________________
 void TStreamerInfo::Build()
 {
-   // Build the I/O data structure for the current class version
+   // Build the I/O data structure for the current class version.
    // A list of TStreamerElement derived classes is built by scanning
    // one by one the list of data members of the analyzed class.
 
@@ -136,235 +135,224 @@ void TStreamerInfo::Build()
    fIsBuilt = kTRUE;
 
    if (fClass->GetCollectionProxy()) {
-      TStreamerElement *element = new TStreamerSTL("This","Used to call the proper TStreamerInfo case",0,fClass->GetName(),fClass->GetName(),0);
+      //FIXME: What about arrays of STL containers?
+      TStreamerElement* element = new TStreamerSTL("This", "Used to call the proper TStreamerInfo case", 0, fClass->GetName(), fClass->GetName(), 0);
       fElements->Add(element);
       Compile();
       return;
    }
 
+   //if (!strcmp(fClass->GetName(), "TVector3")) fClass->IgnoreTObjectStreamer();
    TStreamerElement::Class()->IgnoreTObjectStreamer();
-   //if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
 
    fClass->BuildRealData();
 
    fCheckSum = fClass->GetCheckSum();
-   Int_t i, ndim, offset;
-   TClass *clm;
-   TDataType *dt;
-   TDataMember *dm;
-   TBaseClass *base;
-   TStreamerElement *element;
+
+   //
+   // Iterate over base classes.
+   //
+
+   TBaseClass* base = 0;
    TIter nextb(fClass->GetListOfBases());
-   TMemberStreamer *streamer = 0;
+   while ((base = (TBaseClass*)nextb())) {
+      TStreamerElement* element = 0;
+      Int_t offset = base->GetDelta();
+      if (offset == kMissing) {
+         continue;
+      }
+      const char* bname  = base->GetName();
+      const char* btitle = base->GetTitle();
+      // this case appears with STL collections as base class.
+      if (!strcmp(bname, "string")) {
+	 element = new TStreamerSTLstring(bname, btitle, offset, bname, kFALSE);
+      } else if (base->IsSTLContainer()) {
+	 element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
+      } else {
+	 element = new TStreamerBase(bname, btitle, offset);
+	 TClass* clm = element->GetClassPointer();
+	 if (!clm) {
+	    Error("Build", "%s, unknown type: %s %s\n", GetName(), bname, btitle);
+	    delete element;
+	    element = 0;
+	 } else {
+	    clm->GetStreamerInfo();
+	    if ((clm == TObject::Class()) && fClass->CanIgnoreTObjectStreamer()) {
+	       SetBit(TClass::kIgnoreTObjectStreamer);
+	       element->SetType(-1);
+	    }
+	    if (!clm->IsLoaded()) {
+	       Warning("Build:", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
+	    }
+	 }
+      }
+      if (element) {
+	 fElements->Add(element);
+      }
+   } // end of base class loop
 
-   //iterate on list of base classes
-   while((base = (TBaseClass*)nextb())) {
-      element  = 0;
-      offset   = base->GetDelta();
-      if (offset == kMissing) continue;
-      streamer = 0; // base->GetStreamer();
-      do { //do block in while
-         const char* bname  = base->GetName();
-         const char* btitle = base->GetTitle();
-         // this case appears with STL collections as base class.
-         if (strcmp(bname,"string") == 0) {
-            element = new TStreamerSTLstring(bname,btitle,offset,bname,kFALSE);
-            continue;
-         }
-         if (base->IsSTLContainer()) {
-            element = new TStreamerSTL(bname,btitle,offset,bname,0,kFALSE);
-//             if (!streamer)  element->SetType(-1);
-            continue;
-         }
-         element = new TStreamerBase(bname,btitle,offset);
-         clm = element->GetClassPointer();
-         if (!clm) {
-            Error("Build","%s, unknown type: %s %s\n",GetName(),bname,btitle);
-            delete element;
-            element = 0;
-            continue;
-         }
-         clm->GetStreamerInfo();
-         if (clm == TObject::Class() && fClass->CanIgnoreTObjectStreamer()) {
-            SetBit(TClass::kIgnoreTObjectStreamer);
-            element->SetType(-1);
-         }
-         if (!clm->IsLoaded()) {
-            Warning("Build:","%s: base class %s has no streamer or dictionary it will not be saved",
-                     GetName(), clm->GetName());
-         }
-      } while(0); {
-         // continue block in while
+   //
+   // Iterate over data members.
+   //
 
-         if (!element) continue;
-         fElements->Add(element);
-//          element->SetStreamer(streamer);
-      }//end continue block
-   }//end base class loop
-
-
-   //iterate on list of data members
+   Int_t dsize;
+   TDataMember* dm = 0;
    TIter nextd(fClass->GetListOfDataMembers());
-
-   Int_t dsize,dtype;
-   while((dm=(TDataMember*)nextd()))  {
-      if (fClass->GetClassVersion() == 0) continue;
-      if (!dm->IsPersistent())            continue;
-      streamer = 0;
-      offset = GetDataMemberOffset(dm,streamer);
-      if (offset == kMissing)             continue;
-//       streamer = dm->GetStreamer();
-      element = 0;
-      dsize   = 0;
-
-      do { //do block in while
-         const char* dmName = dm->GetName();
-         const char* dmType = dm->GetTypeName();
-         const char* dmFull = dm->GetFullTypeName();
-         const char* dmTitle = dm->GetTitle();
-         Bool_t      dmIsPtr = dm->IsaPointer();
-
-         //look for a data member with a counter in the comment string [n]
-         TDataMember *dmref = 0;
-         if (dmIsPtr) {
-            const char *lbracket = ::strchr(dmTitle,'[');
-            const char *rbracket = ::strchr(dmTitle,']');
-            if (lbracket && rbracket) {
-               const char* index = dm->GetArrayIndex();
-               TRealData *refcount = (TRealData*)fClass->GetListOfRealData()->FindObject(index);
-               if (!refcount) {
-                  Error("Build","%s, discarding: %s %s, illegal %s\n",GetName(),dmFull,dmName,dmTitle);
+   while ((dm = (TDataMember*) nextd())) {
+      if (fClass->GetClassVersion() == 0) {
+         continue;
+      }
+      if (!dm->IsPersistent()) {
+         continue;
+      }
+      TMemberStreamer* streamer = 0;
+      Int_t offset = GetDataMemberOffset(dm, streamer);
+      if (offset == kMissing) {
+         continue;
+      }
+      TStreamerElement* element = 0;
+      dsize = 0;
+      const char* dmName = dm->GetName();
+      const char* dmTitle = dm->GetTitle();
+      const char* dmType = dm->GetTypeName();
+      const char* dmFull = dm->GetFullTypeName();
+      Bool_t dmIsPtr = dm->IsaPointer();
+      TDataMember* dmCounter = 0;
+      if (dmIsPtr) {
+	 //
+	 // look for a pointer data member with a counter
+	 // in the comment string, like so:
+	 //
+	 //      int n;
+	 //      double* MyArray; //[n]
+	 //
+	 const char* lbracket = ::strchr(dmTitle, '[');
+	 const char* rbracket = ::strchr(dmTitle, ']');
+	 if (lbracket && rbracket) {
+	    const char* counterName = dm->GetArrayIndex();
+	    TRealData* rdCounter = (TRealData*) fClass->GetListOfRealData()->FindObject(counterName);
+	    if (!rdCounter) {
+	       Error("Build", "%s, discarding: %s %s, illegal %s\n", GetName(), dmFull, dmName, dmTitle);
+               continue;
+	    }
+	    dmCounter = rdCounter->GetDataMember();
+	    TDataType* dtCounter = dmCounter->GetDataType();
+	    Bool_t isInteger = ((dtCounter->GetType() == 3) || (dtCounter->GetType() == 13));
+	    if (!dtCounter || !isInteger) {
+	       Error("Build", "%s, discarding: %s %s, illegal [%s] (must be Int_t)\n", GetName(), dmFull, dmName, counterName);
+               continue;
+	    }
+	    TStreamerBasicType* bt = TStreamerInfo::GetElementCounter(counterName, dmCounter->GetClass());
+	    if (!bt) {
+	       if (dmCounter->GetClass()->Property() & kIsAbstract) {
                   continue;
-               }
-               dmref = refcount->GetDataMember();
-               TDataType *reftype = dmref->GetDataType();
-               Bool_t isInteger = reftype->GetType() == 3 || reftype->GetType() == 13;
-               if (!reftype || !isInteger) {
-                  Error("Build","%s, discarding: %s %s, illegal [%s] (must be Int_t)\n",GetName(),dmFull,dmName,index);
+	       }
+	       Error("Build", "%s, discarding: %s %s, illegal [%s] must be placed before \n", GetName(), dmFull, dmName, counterName);
+               continue;
+	    }
+	 }
+      }
+      TDataType* dt = dm->GetDataType();
+      if (dt) {
+	 // found a basic type
+	 Int_t dtype = dt->GetType();
+	 dsize = dt->Size();
+	 if (!dmCounter && (strstr(dmFull, "char*") || strstr(dmFull, "Char_t*"))) {
+	    dtype = kCharStar;
+	    dsize = sizeof(char*);
+	 }
+	 if (dmIsPtr && (dtype != kCharStar)) {
+	    if (dmCounter) {
+	       // data member is pointer to an array of basic types
+	       element = new TStreamerBasicPointer(dmName, dmTitle, offset, dtype, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
+	    } else {
+	       if ((fName == "TString") || (fName == "TClass")) {
                   continue;
-               }
-               TStreamerBasicType *bt = TStreamerInfo::GetElementCounter(index,dmref->GetClass());
-               if (!bt) {
-                  if (dmref->GetClass()->Property() & kIsAbstract) continue;
-                  Error("Build","%s, discarding: %s %s, illegal [%s] must be placed before \n",GetName(),dmFull,dmName,index);
-                  continue;
-               }
-            }
+	       }
+	       Error("Build", "%s, discarding: %s %s, no [dimension]\n", GetName(), dmFull, dmName);
+               continue;
+	    }
+	 } else {
+	    // data member is a basic type
+	    if ((fClass == TObject::Class()) && !strcmp(dmName, "fBits")) {
+	       //printf("found fBits, changing dtype from %d to 15\n", dtype);
+	       dtype = kBits;
+	    }
+	    element = new TStreamerBasicType(dmName, dmTitle, offset, dtype, dmFull);
          }
-
-         dt=dm->GetDataType();
-
-         if (dt) {  // found a basic type
-            dtype = dt->GetType();
-            dsize = dt->Size();
-            if (!dmref && (strstr(dmFull,"char*") || strstr(dmFull,"Char_t*"))) {
-               dtype = kCharStar;
-               dsize = sizeof(char*);
-            }
-            if (dmIsPtr && dtype != kCharStar) {
-               if (dmref) {
-                  // data member is pointer to an array of basic types
-                  element = new TStreamerBasicPointer(dmName,dmTitle,offset,dtype,
-                                                      dm->GetArrayIndex(),
-                                                      dmref->GetClass()->GetName(),
-                                                      dmref->GetClass()->GetClassVersion(),
-                                                      dmFull);
-                  continue;
-               } else {
-                  if (fName == "TString" || fName == "TClass") continue;
-                  Error("Build","%s, discarding: %s %s, no [dimension]\n",GetName(),dmFull,dmName);
-                  continue;
-               }
-            }
-            // data member is a basic type
-            if (fClass == TObject::Class() && !strcmp(dmName,"fBits")) {
-               //printf("found fBits, changing dtype from %d to 15\n",dtype);
-               dtype = kBits;
-            }
-            element = new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
-            continue;
-
-         }  else {
-            // try STL container or string
-            static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-            if (strcmp(dmType,"string") == 0 || strcmp(dmType,full_string_name)==0 ) {
-               element = new TStreamerSTLstring(dmName,dmTitle,offset,dmFull,dmIsPtr);
-               continue;
-            }
-            if (dm->IsSTLContainer()) {
-               element = new TStreamerSTL(dmName,dmTitle,offset,dmFull,dm->GetTrueTypeName(),dmIsPtr);
-               continue;
-            }
-            clm = gROOT->GetClass(dmType);
-            if (!clm) {
-               Error("Build","%s, unknow type: %s %s\n",GetName(),dmFull,dmName);
-               continue;
-            }
-            // a pointer to a class
-            if ( dmIsPtr ) {
-               if(dmref) {
-                  element = new TStreamerLoop(dmName,
-                                              dmTitle,offset,
-                                              dm->GetArrayIndex(),
-                                              dmref->GetClass()->GetName(),
-                                              dmref->GetClass()->GetClassVersion(),
-                                              dmFull);
-                  continue;
-               } else {
-                  if (clm->InheritsFrom(TObject::Class())) {
-                     element = new TStreamerObjectPointer(dmName,dmTitle,offset,dmFull);
-                     continue;
-                  } else {
-                     element = new TStreamerObjectAnyPointer(dmName,dmTitle,offset,dmFull);
-                     if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-                        Error("Build:","%s: %s has no streamer or dictionary, data member %s will not be saved",
-                              GetName(), dmFull,dmName);
-                     }
-                     continue;
-                  }
-               }
-            }
-            // a class
-            if (clm->InheritsFrom(TObject::Class())) {
-               element = new TStreamerObject(dmName,dmTitle,offset,dmFull);
-               continue;
-            } else if(clm == TString::Class() && !dmIsPtr) {
-               element = new TStreamerString(dmName,dmTitle,offset);
-               continue;
-            } else {
-               element = new TStreamerObjectAny(dmName,dmTitle,offset,dmFull);
-               if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-                  Warning("Build:","%s: %s has no streamer or dictionary, data member \"%s\" will not be saved",
-                          GetName(), dmFull,dmName);
-               }
-               continue;
-            }
+      } else {
+	 // try STL container or string
+	 static const char* full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+	 if (!strcmp(dmType, "string") || !strcmp(dmType, full_string_name)) {
+	    element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
+	 } else if (dm->IsSTLContainer()) {
+	    element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+	 } else {
+	    TClass* clm = gROOT->GetClass(dmType);
+	    if (!clm) {
+	       Error("Build", "%s, unknown type: %s %s\n", GetName(), dmFull, dmName);
+	       continue;
+	    }
+	    if (dmIsPtr) {
+	       // a pointer to a class
+	       if (dmCounter) {
+		  element = new TStreamerLoop(dmName, dmTitle, offset, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
+	       } else {
+		  if (clm->InheritsFrom(TObject::Class())) {
+		     element = new TStreamerObjectPointer(dmName, dmTitle, offset, dmFull);
+		  } else {
+		     element = new TStreamerObjectAnyPointer(dmName, dmTitle, offset, dmFull);
+		     if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
+			Error("Build:", "%s: %s has no streamer or dictionary, data member %s will not be saved", GetName(), dmFull, dmName);
+		     }
+		  }
+	       }
+	    } else if (clm->InheritsFrom(TObject::Class())) {
+	       element = new TStreamerObject(dmName, dmTitle, offset, dmFull);
+	    } else if ((clm == TString::Class()) && !dmIsPtr) {
+	       element = new TStreamerString(dmName, dmTitle, offset);
+	    } else {
+	       element = new TStreamerObjectAny(dmName, dmTitle, offset, dmFull);
+	       if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
+		  Warning("Build:", "%s: %s has no streamer or dictionary, data member \"%s\" will not be saved", GetName(), dmFull, dmName);
+	       }
+	    }
          }
-      } while(0); {//continue block
+      }
+      if (!element) {
+	 // If we didn't make an element, there is nothing to do.
+	 continue;
+      }
+      Int_t ndim = dm->GetArrayDim();
+      if (!dsize) {
+	 dsize = dm->GetUnitSize();
+      }
+      for (Int_t i = 0; i < ndim; ++i) {
+	 element->SetMaxIndex(i, dm->GetMaxIndex(i));
+      }
+      element->SetArrayDim(ndim);
+      Int_t narr = element->GetArrayLength();
+      if (!narr) {
+	 narr = 1;
+      }
+      element->SetSize(dsize*narr);
+      element->SetStreamer(streamer);
+      if (!streamer) {
+	 Int_t k = element->GetType();
+	 if (k == kStreamer) {
+	    //if ((k == kSTL) || (k == kSTL + kOffsetL) || (k == kStreamer) || (k == kStreamLoop))
+	    element->SetType(-1);
+	 }
+      }
+      fElements->Add(element);
+   } // end of member loop
 
-         if(!element)  continue;
-         ndim = dm->GetArrayDim();
-         if (!dsize) dsize = dm->GetUnitSize();
-         for (i=0;i<ndim;i++) element->SetMaxIndex(i,dm->GetMaxIndex(i));
-         element->SetArrayDim(ndim);
-         int narr = element->GetArrayLength(); if (!narr) narr = 1;
-         element->SetSize(dsize*narr);
-         element->SetStreamer(streamer);
-         fElements->Add(element);
-         if (streamer) continue;
-         int k = element->GetType();
-//          if (k!=kSTL && k!=kSTL+kOffsetL && k!=kStreamer && k!=kStreamLoop) continue;
-         if (k!=kStreamer) continue;
-         element->SetType(-1);
-
-
-      }//end continue block
-   }//end member loop
+   //
+   // Make a more compact version.
+   //
 
    Compile();
-
 }
-
 
 //______________________________________________________________________________
 void TStreamerInfo::BuildCheck()
@@ -410,7 +398,7 @@ void TStreamerInfo::BuildCheck()
             if (!info) continue;
             if (fCheckSum == info->GetCheckSum()) {
                fClassVersion = i;
-               //printf("found class with checksum, version=%d\n",i);
+               //printf("found class with checksum, version=%d\n", i);
                break;
             } else {
                info = 0;
@@ -963,6 +951,7 @@ void TStreamerInfo::BuildOld()
 
    Compile();
 }
+
 //______________________________________________________________________________
 void TStreamerInfo::BuildUserInfo(const char * /*info*/)
 {
@@ -1196,7 +1185,6 @@ void TStreamerInfo::Compile()
    if (gDebug > 0) ls();
 }
 
-
 //______________________________________________________________________________
 void TStreamerInfo::ComputeSize()
 {
@@ -1256,7 +1244,6 @@ void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
       }
    }
 }
-
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
@@ -1738,6 +1725,7 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
    }
    return 0;
 }
+
 //______________________________________________________________________________
 Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const
 {
@@ -1762,7 +1750,6 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
    }
    return GetValueAux(atype,ladd,j,len);
 }
-
 
 //______________________________________________________________________________
 Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, int k, Int_t eoffset) const
@@ -1791,6 +1778,7 @@ Double_t TStreamerInfo::GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_
    char *ladd    = pointer + eoffset + fOffset[i];
    return GetValueAux(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
 }
+
 //______________________________________________________________________________
 void TStreamerInfo::ls(Option_t *option) const
 {
@@ -1805,79 +1793,259 @@ void TStreamerInfo::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::New(const char *p)
+void* TStreamerInfo::New(void *obj)
 {
-   //  emulated constructor for this class.
-   //  An emulated object is created at address p
+   // An emulated object is created at address obj, if obj is null we
+   // allocate memory for the object.
+
+   //???FIX ME: What about varying length array elements?
+
+   char* p = (char*) obj;
+
+   if (!p) {
+      // Allocate and initialize the memory block.
+      p = new char[fSize];
+      memset(p, 0, fSize);
+   }
 
    TIter next(fElements);
-   TStreamerElement *element;
-   while ((element = (TStreamerElement*)next())) {
-      Int_t etype = element->GetType();
-      if (element->GetOffset() == kMissing) continue;
-      //cle->GetStreamerInfo(); //necessary in case "->" is not specified
+   TStreamerElement* element = (TStreamerElement*) next();
+
+   for (; element; element = (TStreamerElement*) next()) {
+
+    // Skip elements which have not been allocated memory.
+    if (element->GetOffset() == kMissing) {
+       continue;
+    }
+
+    // Skip elements for which we do not have any class
+    // information.  FIXME: Document how this could happen.
+    TClass* cle = element->GetClassPointer();
+    if (!cle) {
+       continue;
+    }
+
+    char* eaddr = p + element->GetOffset();
+    Int_t etype = element->GetType();
+
+    //cle->GetStreamerInfo(); //necessary in case "->" is not specified
+
+    switch (etype) {
+
+       case kAnyP:
+       case kObjectP:
+       case kSTLp:
+       {
+	  // Initialize array of pointers with null pointers.
+	  char** r = (char**) eaddr;
+	  Int_t len = element->GetArrayLength();
+	  for (Int_t i = 0; i < len; ++i) {
+	     r[i] = 0;
+	  }
+       }
+       break;
+
+       case kObjectp:
+       case kAnyp:
+       {
+	  // If the option "->" is given in the data member comment field
+	  // it is assumed that the object exists before reading data in,
+	  // so we create an object.
+	  if (cle != TClonesArray::Class()) {
+	     void** r = (void**) eaddr;
+	     *r = cle->New();
+	  } else {
+	     // In the case of a TClonesArray, the class name of
+	     // the contained objects must be specified in the
+	     // data member comment in this format:
+	     //    TClonesArray* myVar; //->(className)
+	     const char* title = element->GetTitle();
+	     const char* bracket1 = strrchr(title, '(');
+	     const char* bracket2 = strrchr(title, ')');
+	     if (bracket1 && bracket2 && (bracket2 != (bracket1 + 1))) {
+		Int_t len = bracket2 - (bracket1 + 1);
+		char* clonesClass = new char[len+1];
+		clonesClass[0] = '\0';
+		strncat(clonesClass, bracket1 + 1, len);
+		void** r = (void**) eaddr;
+		*r = (void*) new TClonesArray(clonesClass);
+		delete[] clonesClass;
+	     } else {
+		//Warning("New", "No class name found for TClonesArray initializer in data member comment (expected \"//->(className)\"");
+		void** r = (void**) eaddr;
+		*r = (void*) new TClonesArray();
+	     }
+	  }
+       }
+       break;
+
+       case kBase:
+       case kObject:
+       case kAny:
+       case kTObject:
+       case kTString:
+       case kTNamed:
+       case kSTL:
+       {
+	  cle->New(eaddr);
+       }
+       break;
+
+       case kObject + kOffsetL:
+       case kAny + kOffsetL:
+       case kTObject + kOffsetL:
+       case kTString + kOffsetL:
+       case kTNamed + kOffsetL:
+       case kSTL + kOffsetL:
+       {
+	  Int_t size = cle->Size();
+	  char* r = eaddr;
+	  Int_t len = element->GetArrayLength();
+	  for (Int_t i = 0; i < len; ++i, r += size) {
+	     cle->New(r);
+	  }
+       }
+       break;
+
+    } // switch etype
+   } // for TIter next(fElements)
+
+   return p;
+}
+
+//______________________________________________________________________________
+void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
+{
+   // An array of emulated objects is created at address ary, if ary is null,
+   // we allocate memory for the array.
+
+   if (fClass == 0) {
+      Error("NewArray", "TClass pointer is null!");
+      return 0;
+   }
+
+   Int_t size = fClass->Size();
+
+   char* p = (char*) ary;
+
+   if (!p) {
+      Long_t len = nElements * size;
+      p = new char[len];
+      memset(p, 0, len);
+   }
+
+   // Store the array cookie
+   Long_t* r = (Long_t*) p;
+   r[0] = size;
+   r[1] = nElements;
+   char* dataBegin = (char*) &r[2];
+
+   // Do a placement new for each element.
+   p = dataBegin;
+   for (Long_t cnt = 0; cnt < nElements; ++cnt) {
+      New(p);
+      p += size;
+   } // for nElements
+
+   return dataBegin;
+}
+
+//______________________________________________________________________________
+void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
+{
+   //  emulated destructor for this class.
+   //  An emulated object is destroyed at address p
+
+   // Do nothing if passed a null pointer.
+   if (obj == 0) return;
+
+   //???FIX ME: What about varying length array elements?
+
+   char* p = (char*) obj;
+
+   TIter next(fElements);
+   TStreamerElement* ele = (TStreamerElement*) next();
+
+   for ( ; ele; ele = (TStreamerElement*) next()) {
+
+      if (ele->GetOffset() == kMissing) continue;
+      char* eaddr = p + ele->GetOffset();
+
+      TClass* cle = ele->GetClassPointer();
+      if (!cle) continue;
+
+      Int_t etype = ele->GetType();
+
       if (etype == kObjectp || etype == kAnyp) {
-         // if the option "->" is given in the data member comment field
-         // it is assumed that the object exist before reading data in.
-         // In this case an object must be created
-         if (strstr(element->GetTitle(),"->") == element->GetTitle()) {
-            char line[200];
-            char pname[100];
-            char clonesClass[40];
-            // in case of a TClonesArray, the class name of the contained objects
-            // must be specified
-            sprintf(clonesClass,"%s"," ");
-            if (element->GetClassPointer() == TClonesArray::Class()) {
-               char *bracket1 = (char*)strrchr(element->GetTitle(),'(');
-               char *bracket2 = (char*)strrchr(element->GetTitle(),')');
-               if (bracket1 && bracket2) {
-                  clonesClass[0] = '"';
-                  strncat(clonesClass,bracket1+1,bracket2-bracket1-1);
-                  strcat(clonesClass,"\"");
-               }
+         // Destroy the pre-allocated object.
+         void** r = (void**) eaddr;
+         cle->Destructor(*r);
+         *r = 0;
+      }
+
+      if (etype == kObjectP || etype == kAnyP || etype == kSTLp) {
+         // Destroy an array of pointers to objects.
+         Int_t len = ele->GetArrayLength();
+         void** r = (void**) eaddr;
+         for (Int_t j = len - 1; j >= 0; --j) {
+            if (r[j]) {
+               cle->Destructor(r[j]);
+               r[j] = 0;
             }
-            // object is created via the interpreter
-            sprintf(pname,"R__%s_%s",GetName(),element->GetName());
-            sprintf(line,"%s* %s = (%s*)0x%lx; *%s = new %s(%s);",
-                    element->GetTypeName(),pname,element->GetTypeName(),
-                    (Long_t)((char*)p + element->GetOffset()),pname,
-                    element->GetClassPointer()->GetName(),clonesClass);
-            gROOT->ProcessLine(line);
          }
       }
+
       if (etype == kObject || etype == kAny || etype == kBase ||
           etype == kTObject || etype == kTString || etype == kTNamed ||
-          etype == kSTL
-          ) {
-         TClass *cle = element->GetClassPointer();
-         if (!cle) continue;
-         cle->New((char*)p + element->GetOffset());
+          etype == kSTL) {
+         // A data member is destroyed, but not deleted.
+         cle->Destructor(eaddr, kTRUE);
       }
-      if (etype == kObject +kOffsetL || etype == kAny+kOffsetL ||
-          etype == kTObject+kOffsetL || etype == kTString+kOffsetL ||
-          etype == kTNamed +kOffsetL || etype == kSTL+kOffsetL) {
-         TClass *cle = element->GetClassPointer();
-         if (!cle) continue;
 
+      if (etype == kObject  + kOffsetL || etype == kAny     + kOffsetL ||
+          etype == kTObject + kOffsetL || etype == kTString + kOffsetL ||
+          etype == kTNamed  + kOffsetL || etype == kSTL     + kOffsetL) {
+         // For a data member which is an array of objects, we
+         // destroy the objects, but do not delete them.
+         Int_t len = ele->GetArrayLength();
          Int_t size = cle->Size();
-         char *start= (char*)p + element->GetOffset();
-         Int_t len = element->GetArrayLength();
+         char* r = eaddr + (size * (len - 1));
+         for (Int_t j = len - 1; j >= 0; --j, r -= size) {
+            cle->Destructor(r, kTRUE);
+         }
+      }
 
-         for (Int_t j=0;j<len;j++) {
-            cle->New(start);
-            start += size;
-         }
-      }
-      if (etype == kAnyP || etype == kObjectP || etype == kAnyPnoVT || etype == kSTLp) {
-         // Initialize to zero
-         void **where = (void**)((char*)p + element->GetOffset());
-         Int_t len = element->GetArrayLength();
-         for (Int_t j=0;j<len;j++) {
-            where[j] = 0;
-         }
-      }
+   } // iter over elements
+
+   if (!dtorOnly) {
+      delete[] p;
    }
-   return 0;
+}
+
+//______________________________________________________________________________
+void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
+{
+   // Destroy an array of emulated objects, with optional delete.
+
+   // Do nothing if passed a null pointer.
+   if (ary == 0) return;
+
+   //???FIX ME: What about varying length arrays?
+
+   Long_t* r = (Long_t*) ary;
+   Long_t arrayLen = r[-1];
+   Long_t size = r[-2];
+   char* memBegin = (char*) &r[-2];
+
+   char* p = ((char*) ary) + ((arrayLen - 1) * size);
+   for (Long_t cnt = 0; cnt < arrayLen; ++cnt, p -= size) {
+      // Destroy each element, but do not delete it.
+      Destructor(p, kTRUE);
+   } // for arrayItemSize
+
+   if (!dtorOnly) {
+      delete[] memBegin;
+   }
 }
 
 //______________________________________________________________________________
@@ -1891,7 +2059,6 @@ void TStreamerInfo::Optimize(Bool_t opt)
 
    fgOptimize = opt;
 }
-
 
 //______________________________________________________________________________
 void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t len, Int_t lenmax) const
@@ -1929,7 +2096,6 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
    printf("\n");
 }
 
-
 //______________________________________________________________________________
 void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax) const
 {
@@ -1953,7 +2119,6 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       if (k < nc-1) printf(", ");
    }
    printf("\n");
-
 }
 
 //______________________________________________________________________________
@@ -1979,7 +2144,6 @@ void TStreamerInfo::PrintValueSTL(const char *name, TVirtualCollectionProxy *con
       if (k < nc-1) printf(", ");
    }
    printf("\n");
-
 }
 
 //______________________________________________________________________________
@@ -2012,7 +2176,6 @@ Bool_t TStreamerInfo::SetStreamMemberWise(Bool_t enable)
    fgStreamMemberWise = enable;
    return prev;
 }
-
 
 //______________________________________________________________________________
 void TStreamerInfo::Streamer(TBuffer &R__b)
@@ -2056,15 +2219,13 @@ void TStreamerInfo::TagFile(TFile *file)
          cindex->fArray[fNumber] = 1;
       }
    }
-
 }
 
 //______________________________________________________________________________
 #ifdef DOLOOP
 #undef DOLOOP
 #endif
-#define DOLOOP for(k=0,pointer=arr[0]; k<narr; pointer=arr[++k])
-
+#define DOLOOP for (k = 0, pointer = arr[0]; k < narr; pointer = arr[++k])
 
 namespace {
    static void PrintCR(int j,Int_t aleng, UInt_t ltype)
@@ -2078,9 +2239,7 @@ namespace {
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
-                                  TStreamerElement * aElement, Int_t aleng,
-                                  Int_t *count)
+void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aElement, Int_t aleng, Int_t *count)
 {
    //  print value of element  in object at pointer, type atype, leng aleng or *count
    //  The function may be called in two ways:
