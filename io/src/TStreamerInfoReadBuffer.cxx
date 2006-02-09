@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.229 2005/11/16 20:09:59 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.39 2006/01/30 09:01:12 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -860,7 +860,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
 //                         contp[j] = 0;
 //                         if (sublen<=0) continue;
 //                         if (arraynew) {
-//                            contp[j] = (char*)arraynew(sublen);
+//                            contp[j] = (char*)arraynew(sublen, 0);
 //                            char *cont = contp[j];
 //                            for(int k=0;k<sublen;++k) {
 //                               cl->Streamer( cont, b );
@@ -1084,9 +1084,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          {
             TClass *cl = fComp[i].fClass;
             Bool_t isPtrPtr = (strstr(aElement->GetTypeName(), "**") != 0);
-            ROOT::NewArrFunc_t arrayNew = cl->GetNewArray();
-            ROOT::DelArrFunc_t arrayDel = cl->GetDeleteArray();
-            //ROOT::DelFunc_t   normalDel = cl->GetDelete();
             UInt_t start, count;
             b.ReadVersion(&start, &count, cl);
             if (pstreamer) {
@@ -1104,15 +1101,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                if (pp == 0) continue;
                for (Int_t ndx = 0; ndx < fLength[i]; ++ndx) {
                   if (!isPtrPtr) {
-                     if (arrayDel != 0) {
-                        arrayDel(pp[ndx]);
-                     } else {
-                        //Warning("ReadBuffer", "Leaking memory because class %s does not have an operator delete[]!\n", cl->GetName());
-                        // Assume this is the emulated class case,
-                        // we cannot tell for sure because that info
-                        // is private to TClass.
-                        delete[] pp[ndx];
-                     }
+                     cl->DeleteArray(pp[ndx]);
                      pp[ndx] = 0;
                   } else {
                      // Using vlen is wrong here because it has already
@@ -1128,11 +1117,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                      //char **r = (char**)(pp[ndx]);
                      //if (r != 0) {
                      //   for (Int_t v = 0; v < vlen; ++v) {
-                     //      if (normalDel != 0) {
-                     //         normalDel(r[v]);
-                     //      } else {
-                     //         Warning("ReadBuffer", "Leaking memory because class %s does not have an operator delete!\n", cl->GetName());
-                     //      }
+                     //      cl->Destructor(r[v]);
+                     //      r[v] = 0;
                      //   }
                      //}
                      delete[] pp[ndx];
@@ -1140,23 +1126,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   }
                   if (vlen == 0) continue;
                   if (!isPtrPtr) {
-                     if (arrayNew != 0) {
-                        pp[ndx] = (char*)(arrayNew(vlen));
-                        if (pp[ndx] == 0) {
-                           Error("ReadBuffer", "Memory allocation failed!\n");
-                           continue;
-                        }
-                     } else {
-                        //Error("ReadBuffer", "Cannot allocate requested array because class %s does not have an operator new[]!\n", cl->GetName());
-                        // Assume this is the emulated class case,
-                        // we cannot tell for sure because that info
-                        // is private to TClass.
-                        pp[ndx] = new char[cl->Size()*vlen];
-                        if (pp[ndx] == 0) {
-                           Error("ReadBuffer", "Memory allocation failed!\n");
-                           continue;
-                        }
-                        memset(pp[ndx], 0, cl->Size()*vlen);
+                     pp[ndx] = (char*)(cl->NewArray(vlen));
+                     if (pp[ndx] == 0) {
+                        Error("ReadBuffer", "Memory allocation failed!\n");
+                        continue;
                      }
                   } else {
                      pp[ndx] = (char*)(new char*[vlen]);
