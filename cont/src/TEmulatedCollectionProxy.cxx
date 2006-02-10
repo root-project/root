@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.18 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.19 2006/02/09 20:40:47 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -212,13 +212,17 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
             case G__BIT_ISPOINTER|G__BIT_ISCLASS:
                for( i=left; i<nCurr; ++i, addr += fValDiff )  {
                   StreamHelper* h = (StreamHelper*)addr;
-                  void* ptr = h->ptr();
+                  //Eventually we'll need to delete this
+                  //(but only when needed).
+                  //void* ptr = h->ptr();
                   //fKey->fType->Destructor(ptr);
                   h->set(0);
                }
             case G__BIT_ISPOINTER|R__BIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
+                  //Eventually we'll need to delete this
+                  //(but only when needed).
                   //delete (std::string*)h->ptr();
                   h->set(0);
                }
