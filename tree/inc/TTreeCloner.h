@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.2 2005/11/29 06:01:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.3 2006/02/03 21:55:39 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -31,6 +31,7 @@ namespace std {
 #endif
 
 class TTreeCloner {
+   Bool_t     fIsValid;
    TTree     *fFromTree;
    TTree     *fToTree;
    Option_t  *fMethod;
@@ -67,6 +68,7 @@ public:
    void   CopyStreamerInfos();
    void   CopyProcessIds();
    Bool_t Exec();
+   Bool_t IsValid() { return fIsValid; }
    void   SortBaskets();
    void   WriteBaskets();
 

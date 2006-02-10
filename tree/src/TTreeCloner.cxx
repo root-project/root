@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.4 2006/01/23 19:38:34 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.5 2006/01/30 09:01:12 rdm Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TFile.h"
 
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
+   fIsValid(kTRUE),
    fFromTree(from),
    fToTree(to),
    fMethod(method),
@@ -154,7 +155,8 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
       Error("TTreeCloner::CollectSubBranches",
          "The export branch and the import branch do not have the same number of branches (%d vs %d)",
          fnb,nb);
-      return kFALSE;
+      fIsValid = kFALSE;
+      return 0;
    }
 
    UInt_t numBasket = 0;

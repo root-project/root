@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.273 2006/02/01 05:51:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.274 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1886,9 +1886,14 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *option)
       
       // Quickly copy the basket without decompression and streaming.
       TTreeCloner t(this,newtree,option);
-      newtree->fEntries += fEntries;
-      t.Exec();
-
+      if (t.IsValid()) {
+         newtree->fEntries += fEntries;
+         t.Exec();
+      } else {
+         Error("CloneTree","Tree has not been cloned\n");
+         delete newtree;
+         return 0;
+      }
    } else {
       // may be copy some entries
       if (nentries < 0) nentries = fEntries;

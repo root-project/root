@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.122 2005/11/29 10:43:54 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.123 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1226,6 +1226,10 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    // one can instruct Merge to not close the file by specifying the option "keep".
    //
    // The function returns the total number of files produced.
+   // To check that all files have been merged use something like:
+   //    if (newchain->GetEntries()!=oldchain->GetEntries()) {
+   //      ... not all the file have been copied ...
+   //    }
 
    if (!file) return 0;
 
@@ -1280,8 +1284,16 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
       {
          if (LoadTree(i) < 0) break;
          TTreeCloner t(GetTree(),hnew,option);
-         hnew->SetEntries( hnew->GetEntries() + GetTree()->GetEntries() );
-         t.Exec();
+         if (t.IsValid()) {
+            hnew->SetEntries( hnew->GetEntries() + GetTree()->GetEntries() );
+            t.Exec();
+         } else {
+            if (GetFile()) {
+               Warning("Merge","Skipped file %s\n", GetFile()->GetName());
+            } else {
+               Warning("Merge","Skipped file number %d\n", fTreeNumber);
+            }
+         }
       }
 
    } else {
