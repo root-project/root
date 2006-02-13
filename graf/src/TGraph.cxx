@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.178 2006/01/26 07:55:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.179 2006/02/01 17:45:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2121,6 +2121,11 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    //  chopt='B' :  A Bar chart is drawn at each point
    //
    //  chopt='1' :  ylow=rwymin
+   //
+   //  chopt='X+' : The X-axis is drawn on the top side of the plot.
+   //
+   //  chopt='Y+' : The Y-axis is drawn on the right side of the plot.
+
 
    Int_t optionLine , optionAxis , optionCurve, optionStar ,optionMark;
    Int_t optionBar  , optionR    , optionOne  , optionE;
@@ -2153,9 +2158,8 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    if(opt.Contains("2") || opt.Contains("3") ||
       opt.Contains("4")) optionE = 1;  else optionE = 0;
    optionZ    = 0;
-   //          If no "drawing" option is selected and if chopt<>' '
-   //          nothing is done.
 
+   // If no "drawing" option is selected and if chopt<>' ' nothing is done.
    if (optionLine+optionFill+optionCurve+optionStar+optionMark+optionBar+optionE == 0) {
       if (strlen(chopt) == 0)  optionLine=1;
       else   return;
@@ -2169,13 +2173,9 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       optionFill      = 0;
    }
 
-
-   //           Draw the Axis with a fixed number of division: 510
-
+   // Draw the Axis.
    Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
-
    if (optionAxis) {
-
       if (fHistogram) {
          rwxmin    = gPad->GetUxmin();
          rwxmax    = gPad->GetUxmax();
@@ -2240,10 +2240,14 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       rwymin = minimum;
       rwymax = maximum;
 
-   //  Create a temporary histogram and fill each channel with the function value
+      // Create a temporary histogram and fill each channel with the
+      // function value.
+      char chopth[8] = "";
+      if (strstr(chopt,"x+")) strcat(chopth, "x+");
+      if (strstr(chopt,"y+")) strcat(chopth, "y+");
       if (!fHistogram) {
-         // the graph is created with at least as many channels as there are points
-         // to permit zooming on the full range
+         // the graph is created with at least as many channels as there are
+         // points to permit zooming on the full range.
          rwxmin = uxmin;
          rwxmax = uxmax;
          npt = 100;
@@ -2259,18 +2263,18 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
          fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
          fHistogram->SetBit(TH1::kNoStats);
          fHistogram->SetDirectory(0);
-         fHistogram->Paint(" "); // Draw histogram axis, title and grid
+         fHistogram->Paint(chopth); // Draw histogram axis, title and grid
       } else {
          if (gPad->GetLogy()) {
             fHistogram->SetMinimum(rwymin);
             fHistogram->SetMaximum(rwymax);
             fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
          }
-         fHistogram->Paint(" "); // Draw histogram axis, title and grid
+         fHistogram->Paint(chopth); // Draw histogram axis, title and grid
       }
    }
 
-   //*-*  Set Clipping option
+   // Set Clipping option
    gPad->SetBit(kClipFrame, TestBit(kClipFrame));
 
    TF1 *fit = 0;
@@ -2301,23 +2305,22 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       minimum = gPad->PadtoY(rwymin);
    }
 
-   //           Set attributes
+   // Set attributes
    TAttLine::Modify();
    TAttFill::Modify();
    TAttMarker::Modify();
 
-   //           Draw the graph with a polyline or a fill area
-
+   // Draw the graph with a polyline or a fill area
    gxwork  = new Double_t[2*npoints+10];
    gywork  = new Double_t[2*npoints+10];
    gxworkl = new Double_t[2*npoints+10];
    gyworkl = new Double_t[2*npoints+10];
 
    if (optionLine || optionFill) {
-      x1       = x[0];
-      xn       = x[npoints-1];
-      y1       = y[0];
-      yn       = y[npoints-1];
+      x1    = x[0];
+      xn    = x[npoints-1];
+      y1    = y[0];
+      yn    = y[npoints-1];
       nloop = npoints;
       if (optionFill && (xn != x1 || yn != y1)) nloop++;
       npt = 0;
@@ -2351,8 +2354,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       }
    }
 
-   //           Draw the graph with a smooth Curve. Smoothing via Smooth
-
+   // Draw the graph with a smooth Curve. Smoothing via Smooth
    if (optionCurve) {
       x1 = x[0];
       xn = x[npoints-1];
@@ -2383,7 +2385,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
                npt=1;
                continue;
             }
-         }  //endfor (i=0;i<nloop;i++)
+         }
          if (npt > 1) {
             ComputeLogs(npt, optionZ);
             Smooth(npt,gxworkl,gyworkl,drawtype);
@@ -2411,7 +2413,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
                npt=1;
                continue;
             }
-         } //endfor (i=1;i<=nloop;i++)
+         }
          if (npt > 1) {
             ComputeLogs(npt, optionZ);
             Smooth(npt,gxworkl,gyworkl,drawtype);
@@ -2419,8 +2421,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       }
    }
 
-   //           Draw the graph with a '*' on every points
-
+   // Draw the graph with a '*' on every points
    if (optionStar) {
       SetMarkerStyle(3);
       npt = 0;
@@ -2438,9 +2439,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       }
    }
 
-   //           Draw the graph with the current polymarker on
-   //           every points
-
+   // Draw the graph with the current polymarker on every points
    if (optionMark) {
       npt = 0;
       for (i=1;i<=npoints;i++) {
@@ -2457,8 +2456,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       }
    }
 
-   //           Draw the graph as a bar chart
-
+   // Draw the graph as a bar chart
    if (optionBar) {
       if (!optionR) {
          barxmin = x[0];

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.243 2006/02/05 17:51:47 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.244 2006/02/08 11:01:27 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -573,8 +573,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text  = 0;
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
-   Hoption.Off  = Hoption.Tri    = 0;
-   Hoption.Proj = 0;
+   Hoption.Off  = Hoption.Tri    = Hoption.Proj    = Hoption.AxisPos = 0;
 
    //    special 2-D options
    Hoption.List     = 0;
@@ -593,6 +592,19 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (!nch) Hoption.Hist = 1;
    if (fFunctions->First()) Hoption.Func = 2;
    if (fH->GetSumw2N() && fH->GetDimension() == 1) Hoption.Error = 2;
+
+   l = strstr(chopt,"X+");
+   if (l) {
+      Hoption.AxisPos = 10;
+      strncpy(l,"  ",2);
+   }
+   l = strstr(chopt,"Y+");
+   if (l) {
+      Hoption.AxisPos += 1;
+      strncpy(l,"  ",2);
+   }
+   if((Hoption.AxisPos == 10 || Hoption.AxisPos == 1) && (nch == 2)) Hoption.Hist = 1;
+   if(Hoption.AxisPos == 11 && nch == 4) Hoption.Hist = 1;
 
    l = strstr(chopt,"SAMES");
    if (l) {
@@ -921,6 +933,8 @@ void THistPainter::Paint(Option_t *option)
    //               option CYL, SPH or PSR it allows to draw colored contours on a
    //               sphere, a cylinder or a in pseudo rapidy space. In cartesian
    //               or polar coordinates, option SURF3 is used.
+   //    "X+"     : The X-axis is drawn on the top side of the plot.
+   //    "Y+"     : The Y-axis is drawn on the right side of the plot.
    //
    //  The following options are supported for 1-D types:
    //    "AH"     : Draw histogram without axis. "A" can be combined with any drawing option.
@@ -1671,6 +1685,8 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    Int_t ndiv, ndivx, ndivy, nx1, nx2, ndivsave;
    Int_t useHparam = 0;
    Double_t umin, umax, uminsave, umaxsave;
+   Short_t xAxisPos = Hoption.AxisPos/10;
+   Short_t yAxisPos = Hoption.AxisPos - 10*xAxisPos;
 
    Double_t axmin = gPad->GetUxmin();
    Double_t axmax = gPad->GetUxmax();
@@ -1741,23 +1757,44 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       }
    }
 
-   // Paint the bottom X axis (always)
+   // The main X axis can be on the bottom or on the top of the pad 
+   Double_t xAxisYPos1, xAxisYPos2;
+   if (xAxisPos == 1) {
+      // Main X axis top
+      xAxisYPos1 = aymax;
+      xAxisYPos2 = aymin;
+   } else {
+      // Main X axis bottom
+      xAxisYPos1 = aymin;
+      xAxisYPos2 = aymax;
+   }
+
+   // Paint the main X axis (always)
    uminsave = umin;
    umaxsave = umax;
    ndivsave = ndiv;
    axis.SetOption(chopt);
-   axis.PaintAxis(axmin, aymin,
-                  axmax, aymin,
+   if (xAxisPos) {
+      strcat(chopt, "-");
+      gridl = -gridl;
+   }
+   axis.PaintAxis(axmin, xAxisYPos1,
+                  axmax, xAxisYPos1,
                   umin, umax,  ndiv, chopt, gridl, drawGridOnly);
 
-   // Paint the top X axis (if needed)
+   // Paint additional X axis (if needed)
    if (gPad->GetTickx()) {
-      strcat(chopt, "-");
+      if (xAxisPos) {
+         cw=strstr(chopt,"-");
+         *cw='z';
+      } else {
+         strcat(chopt, "-");
+      }
       if (gPad->GetTickx() < 2) strcat(chopt, "U");
       if ((cw=strstr(chopt,"W"))) *cw='z';
       axis.SetTitle("");
-      axis.PaintAxis(axmin, aymax,
-                     axmax, aymax,
+      axis.PaintAxis(axmin, xAxisYPos2,
+                     axmax, xAxisYPos2,
                      uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
    }
 
@@ -1803,16 +1840,32 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       }
    }
 
-   // Paint the left Y axis (always)
+   // The main Y axis can be on the left or on the right of the pad 
+   Double_t yAxisXPos1, yAxisXPos2;
+   if (yAxisPos == 1) {
+      // Main Y axis left
+      yAxisXPos1 = axmax;
+      yAxisXPos2 = axmin;
+   } else {
+      // Main Y axis right
+      yAxisXPos1 = axmin;
+      yAxisXPos2 = axmax;
+   }
+
+   // Paint the main Y axis (always)
    uminsave = umin;
    umaxsave = umax;
    ndivsave = ndiv;
    axis.SetOption(chopt);
-   axis.PaintAxis(axmin, aymin,
-                  axmin, aymax,
+   if (yAxisPos) {
+      strcat(chopt, "+L");
+      gridl = -gridl;
+   }
+   axis.PaintAxis(yAxisXPos1, aymin,
+                  yAxisXPos1, aymax,
                   umin, umax,  ndiv, chopt, gridl, drawGridOnly);
 
-   // Paint the right Y axis (if needed)
+   // Paint the additional Y axis (if needed)
    if (gPad->GetTicky()) {
       if (gPad->GetTicky() < 2) {
          strcat(chopt, "U");
@@ -1822,8 +1875,8 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       }
       if ((cw=strstr(chopt,"W"))) *cw='z';
       axis.SetTitle("");
-      axis.PaintAxis(axmax, aymin,
-                     axmax, aymax,
+      axis.PaintAxis(yAxisXPos2, aymin,
+                     yAxisXPos2, aymax,
                      uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
    }
 }

@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.5 2004/01/23 23:30:31 brun Exp $ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.6 2004/10/05 10:28:24 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,10 +22,8 @@
 
 
 typedef struct Hoption_t {
-//*-*-     chopt may be the concatenation of the following options:
-//*-*      =======================================================
-//*-*
-//*-*   the following structure members are set to 1 if the option is selected.
+   // chopt may be the concatenation of the following options:
+
    int Axis;        // "A"  Axis are not drawn around the graph.
    int Bar;         // "B"  A Bar chart is drawn at each point.
    int Curve;       // "C"  A smooth Curve is drawn.
@@ -61,9 +59,10 @@ typedef struct Hoption_t {
                     //  = 2 to get a Mercator ptojection
                     //  = 3 to get a Sinusoidal ptojection
                     //  = 4 to get a Parabolic ptojection
-   //*-*
-//*-*   the following structure members are set to 1 if the corresponding option
-//*-*   in the current style is selected.
+   int AxisPos;     //  Axis position
+
+   // the following structure members are set to 1 if the corresponding option
+   // in the current style is selected.
 
    int Logx;        // log scale in X. Also set by histogram option
    int Logy;        // log scale in Y. Also set by histogram option
