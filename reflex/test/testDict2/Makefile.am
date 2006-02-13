@@ -19,9 +19,11 @@ EXTRA_DIST =          \
   ClassL.h            \
   ClassM.h            \
   ClassT.h            \
+  ClassSelections.h   \
   MemberPointer.h     \
   Functions.h         \
   InheritanceTree.txt \
+  TemplatedClasses.h  \
   selection.xml 
 
 check_LTLIBRARIES = libtest_Class2DictRflx.la
