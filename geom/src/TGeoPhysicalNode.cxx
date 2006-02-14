@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.9 2006/01/25 08:19:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.10 2006/01/25 10:17:30 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -103,11 +103,11 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
             return;
          }
          // Clone daughter volume and node
-         if (!node->GetVolume()->IsReplicated()) {
-            vm = node->GetVolume();
-            nnode = node;
-            continue;
-         }   
+//         if (!node->GetVolume()->IsReplicated()) {
+//            vm = node->GetVolume();
+//            nnode = node;
+//            continue;
+//         }   
          vd = node->GetVolume()->CloneVolume();
          nnode = node->MakeCopyNode();
          // Correct pointers to mother and volume
