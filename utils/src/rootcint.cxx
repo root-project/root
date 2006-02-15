@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.234 2006/02/07 18:52:37 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.235 2006/02/09 20:44:22 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2635,8 +2635,10 @@ void WriteStreamer(G__ClassInfo &cl)
                  " dummy Streamer() called\"); if (R__b.IsReading()) { }" << std::endl;
       }
       (*dictSrcOut) << "}" << std::endl << std::endl;
-      if (!nsname.empty())
-        (*dictSrcOut) << "} // namespace " << nsname << std::endl << std::endl;
+      while (enclSpaceNesting) {
+         (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+         --enclSpaceNesting;
+      }
       return;
    }
 
@@ -2650,7 +2652,7 @@ void WriteStreamer(G__ClassInfo &cl)
    if (strstr(cl.Fullname(),"::")) {
       // there is a namespace involved, trigger MS VC bug workaround
       (*dictSrcOut) << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
-          << "   typedef " << cl.Fullname() << " thisClass;" << std::endl;
+          << "   typedef ::" << cl.Fullname() << " thisClass;" << std::endl;
       classname = "thisClass";
    }
    for (int i = 0; i < 2; i++) {
