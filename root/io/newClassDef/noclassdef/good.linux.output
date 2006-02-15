@@ -3,7 +3,7 @@ Warning in <TClass::TClass>: no dictionary for class crap is available
 Warning in <TClass::TClass>: no dictionary for class RootPCnodict is available
 Warning in <Build:>: RootCaloHit: RootPCnodict has no streamer or dictionary, data member "mynocell" will not be saved
 Warning in <Build:>: RootPCellID: base class crap has no streamer or dictionary it will not be saved
-Warning in <TBuffer::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)
+Warning in <TBuffer::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
 Warning in <WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
 
 ==> Dumping object, name=RootCaloHit, class=RootCaloHit
@@ -223,7 +223,7 @@ id 	23
 obj 	102
 
 Writing Data
-Warning in <TBuffer::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)
+Warning in <TBuffer::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
 Warning in <WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
 
 ==> Dumping object, name=RootCaloHit, class=RootCaloHit
