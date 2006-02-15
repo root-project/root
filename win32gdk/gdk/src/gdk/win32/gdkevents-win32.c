@@ -4547,7 +4547,7 @@ is_grabbed_button(GdkWindow **window, gint button, gint mod, guint32 time)
    GdkWindow *found = NULL;
    GdkWindow *sav = *window;
 
-   while (1) {
+   while (*window) {
       if (((GDK_WINDOW_WIN32DATA(*window)->grab_button == 0) ||
            (GDK_WINDOW_WIN32DATA(*window)->grab_button == button))
          && ((GDK_WINDOW_WIN32DATA(*window)->grab_event_mask & GDK_BUTTON_PRESS_MASK)) //) {

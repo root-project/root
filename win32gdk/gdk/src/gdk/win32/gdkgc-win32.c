@@ -536,6 +536,7 @@ static void gdk_win32_gc_get_values(GdkGC * gc, GdkGCValues * values)
    values->stipple = data->stipple;
 
    values->clip_mask = NULL;
+#if 0 // bb mod 15.02.06
    if (data->clip_region != NULL) {
       RECT rect;
       HBRUSH hbr;
@@ -576,6 +577,7 @@ static void gdk_win32_gc_get_values(GdkGC * gc, GdkGCValues * values)
       else if (pixmap != NULL)
          gdk_drawable_unref(pixmap);
    }
+#endif // bb mod 15.02.06
 
    values->subwindow_mode = data->subwindow_mode;
    values->ts_x_origin = data->ts_x_origin;

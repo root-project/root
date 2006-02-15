@@ -1431,6 +1431,7 @@ gdk_window_set_cursor (GdkWindow *window,
    GdkCursorPrivate *cursor_private;
    HCURSOR xcursor;
    HCURSOR prev_xcursor;
+   DWORD ThisThreadId, WinThreadId;
   
    g_return_if_fail (window != NULL);
    g_return_if_fail (GDK_IS_WINDOW (window));
@@ -1471,8 +1472,20 @@ gdk_window_set_cursor (GdkWindow *window,
    }
     
    /* Set new cursor in all cases if we're over our window */
-   if (gdk_window_get_pointer(window, NULL, NULL, NULL) == window)
-      SetCursor (GDK_WINDOW_WIN32DATA (window)->xcursor);
+   if (gdk_window_get_pointer(window, NULL, NULL, NULL) == window) {
+      if (GDK_DRAWABLE_TYPE(window) == GDK_WINDOW_FOREIGN) {
+         ThisThreadId = GetCurrentThreadId();
+         WinThreadId = GetWindowThreadProcessId(GDK_DRAWABLE_XID(window), NULL);
+         if (WinThreadId != ThisThreadId)
+            AttachThreadInput(ThisThreadId, WinThreadId, TRUE);
+         SetCursor (GDK_WINDOW_WIN32DATA (window)->xcursor);
+         if (WinThreadId != ThisThreadId)
+            AttachThreadInput(ThisThreadId, WinThreadId, FALSE);
+      }
+      else {
+         SetCursor (GDK_WINDOW_WIN32DATA (window)->xcursor);
+      }
+   }
     
    /* Destroy the previous cursor:  Need to make sure it's no longer */
    /* in use before we destroy it, in case we're not over our window */
