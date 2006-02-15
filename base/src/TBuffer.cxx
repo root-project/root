@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.88 2005/12/22 19:04:48 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.89 2006/01/24 21:25:20 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2341,6 +2341,15 @@ void TBuffer::WriteObject(const void *actualObjectStart, const TClass *actualCla
    }
 }
 
+namespace {
+   struct DynamicType {
+      // Helper class to enable typeid on any address
+      // Used in code similar to:
+      //    typeid( * (DynamicType*) void_ptr );
+      virtual ~DynamicType() {}
+   };
+}
+
 //______________________________________________________________________________
 Int_t TBuffer::WriteObjectAny(const void *obj, const TClass *ptrClass)
 {
@@ -2365,14 +2374,24 @@ Int_t TBuffer::WriteObjectAny(const void *obj, const TClass *ptrClass)
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   if (clActual && (clActual != ptrClass)) {
+   if (clActual==0) {
+      // The ptrClass is a class with a virtual table and we have no
+      // TClass with the actual type_info in memory.
+
+      DynamicType* d_ptr = (DynamicType*)obj;
+      Warning("WriteObjectAny",
+              "An object of type %s (from type_info) passed through a %s pointer was truncated (due a missing dictionary)!!!",
+              typeid(*d_ptr).name(),ptrClass->GetName());
+      WriteObject(obj, ptrClass);
+      return 2;
+   } else if (clActual && (clActual != ptrClass)) {
       const char *temp = (const char*) obj;
       temp -= clActual->GetBaseClassOffset(ptrClass);
       WriteObject(temp, clActual);
       return 1;
    } else {
       WriteObject(obj, ptrClass);
-      return 1 + (clActual==0);
+      return 1;
    }
 }
 
