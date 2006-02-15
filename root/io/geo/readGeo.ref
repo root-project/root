@@ -24,15 +24,11 @@ Info in <TGeoManager::CloseGeometry>: ----------------modeler ready-------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume T3F1
-Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume T3F2
-Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume T3F3
 Info in <TGeoManager::CloseGeometry>: 2649 nodes/ 278 volume UID's in brahms.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is C0WA. Master volume is C0WA
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Error in <TGeoVoxelFinder::SortAll>: Wrong bounding box for volume BP01
 Info in <TGeoManager::CloseGeometry>: 295310 nodes/ 1988 volume UID's in btev.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
