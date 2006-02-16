@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.235 2006/02/09 20:44:22 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.236 2006/02/15 06:31:42 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -571,6 +571,9 @@ void LoadLibraryMap() {
             pos = 0;
             while ( (pos=classname.find("@@",pos)) >= 0 ) {
                classname.replace(pos,2,"::");
+            }
+            while ( (pos=classname.find("-",pos)) >= 0 ) {
+               classname.replace(pos,1," ");
             }
 
             getline(file,line,'\n');

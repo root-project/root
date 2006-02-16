@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.17 2005/11/04 09:17:05 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.18 2005/12/11 03:04:25 pcanal Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -229,6 +229,7 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
                char *s = cls;
                while (*s) {
                   if (*s == ':') *s = '@';
+                  else if (*s == ' ') *s = '-';
                   s++;
                }
                classes.push_back(cls);
