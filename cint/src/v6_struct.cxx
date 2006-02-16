@@ -368,15 +368,35 @@ void G__set_class_autoloading_callback(int (*p2f) G__P((char*,char*)))
  ******************************************************************/
 void G__set_class_autoloading_table(char *classname,char *libname)
 {
-  int tagnum;
-  G__enable_autoloading = 0;
-  tagnum = G__search_tagname(classname,G__CLASS_AUTOLOAD);
-  if(G__struct.libname[tagnum]) {
-    free((void*)G__struct.libname[tagnum]);
-  }
-  G__struct.libname[tagnum]=(char*)malloc(strlen(libname)+1);
-  strcpy(G__struct.libname[tagnum],libname);
-  G__enable_autoloading = 1;
+   int tagnum;
+   G__enable_autoloading = 0;
+   tagnum = G__search_tagname(classname,G__CLASS_AUTOLOAD);
+   if(G__struct.libname[tagnum]) {
+      free((void*)G__struct.libname[tagnum]);
+   }
+   G__struct.libname[tagnum]=(char*)malloc(strlen(libname)+1);
+   strcpy(G__struct.libname[tagnum],libname);
+   G__enable_autoloading = 1;
+
+   char *p = 0;
+   if((p=strchr(classname,'<'))) {
+      char *buf = new char[strlen(classname)+1];
+      strcpy(buf,classname);
+      buf[p-classname] = '\0';
+      if(!G__defined_templateclass(buf)) {
+         int store_def_tagnum = G__def_tagnum;
+         int store_tagdefining = G__tagdefining;
+         FILE* store_fp = G__ifile.fp;
+         G__ifile.fp = (FILE*)NULL;
+         G__def_tagnum = G__struct.parent_tagnum[tagnum];
+         G__tagdefining = G__struct.parent_tagnum[tagnum];
+         G__createtemplateclass(buf,(struct G__Templatearg*)NULL,0);
+         G__ifile.fp = store_fp;
+         G__def_tagnum = store_def_tagnum;
+         G__tagdefining = store_tagdefining;
+      }
+      delete [] buf;
+   }
 }
 
 /******************************************************************
