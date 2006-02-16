@@ -6,7 +6,7 @@
 #
 # This software is provided "as is" without express or implied warranty.
 
-import sys, os, gendict, selclass, gencapa, string, getopt
+import sys, os, gendict, selclass, gencapa, genrootmap, string, getopt
 
 class genreflex:
 #----------------------------------------------------------------------------------
@@ -16,6 +16,8 @@ class genreflex:
     self.outputDir       = None
     self.outputFile      = None
     self.capabilities    = None
+    self.rootmap         = None
+    self.rootmaplib      = None
     self.select          = None
     self.cppopt          = ''
     self.deep            = False
@@ -84,6 +86,11 @@ class genreflex:
       -c <file>, --capabilities=<file>
          Generate the capabilities file to be used by the SEAL Plugin Manager. This file
          lists the names of all classes for which the reflection is formation is provided.\n
+      --rootmap=<file>
+         Generate the rootmap file to be used by ROOT/CINT. This file lists the names of 
+         all classes for which the reflection is formation is provided.\n
+      --rootmap-lib=<library>
+         Library name for the rootmap file.\n
       --debug
          Print extra debug information while processing. Keep intermediate files\n
       --quiet
@@ -106,8 +113,8 @@ class genreflex:
     try:
       opts, args = getopt.getopt(options, 'ho:s:c:I:U:D:PC', \
       ['help','debug=', 'output=','selection_file=','pool','deep','gccxmlpath=',
-       'capabilities=','comments','no_membertypedefs', 'fail_on_warnings', 'quiet',
-       'reflex', 'split'])
+       'capabilities=','rootmap=','rootmap-lib=','comments','no_membertypedefs',
+       'fail_on_warnings', 'quiet', 'reflex', 'split'])
     except getopt.GetoptError:
       self.usage(2)
     self.output = '.'
@@ -145,6 +152,10 @@ class genreflex:
         self.gccxmlpath = a
       if o in ('-c', '--capabilities'):
         self.capabilities = a
+      if o in ('--rootmap',):
+        self.rootmap = a
+      if o in ('--rootmap-lib',):
+        self.rootmaplib = a
       if o in ('-I', '-U', '-D', '-P', '-C') :
         self.cppopt += o + a +' '
 #----------------------------------------------------------------------------------
@@ -235,6 +246,14 @@ class genreflex:
         else :
           capfile = os.path.join(self.outputDir, self.capabilities)
         gencapa.genCapabilities(capfile, name,  cnames)
+    #------------Produce rootmap file-----------------------
+      if self.rootmap :
+        if os.path.isdir(self.rootmap) :
+          mapfile = os.path.join(self.rootmap, 'rootmap')
+        else :
+          mapfile = os.path.join(self.outputDir, self.rootmap)
+        if not self.rootmaplib :  self.rootmaplib = 'lib'+name+'.so'
+        genrootmap.genRootMap(mapfile, name,  self.rootmaplib, cnames)
     #------------Report unused class selections in selection
     if self.selector : 
       warnings += self.selector.reportUnusedClasses()
