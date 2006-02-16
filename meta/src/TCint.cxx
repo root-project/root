@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.115 2006/01/07 03:48:19 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.116 2006/01/30 09:01:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -949,7 +949,11 @@ Int_t TCint::LoadLibraryMap()
 
       // load all rootmap files in the dynamic load path (LD_LIBRARY_PATH, etc.)
       TString ldpath = gSystem->GetDynamicPath();
+#ifdef WIN32
+      TObjArray *a = ldpath.Tokenize(";");
+#else 
       TObjArray *a = ldpath.Tokenize(":");
+#endif
       a->Sort();
       TString p;
       for (Int_t i = 0; i < a->GetEntries(); i++) {
@@ -986,7 +990,9 @@ Int_t TCint::LoadLibraryMap()
          // considers "::" a terminator
          cls.Remove(0,8);
          cls.ReplaceAll("@@", "::");
-
+         // convert "-" to " ", since class names may have 
+         // blanks and TEnv considers a blank a terminator 
+         cls.ReplaceAll("-", " ");
          if (cls.Contains(":")) {
             // We have a namespace and we have to check it first
             int slen = cls.Length();
