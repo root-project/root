@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.7 2005/12/12 09:12:26 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.8 2006/01/30 11:55:38 axel Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -73,7 +73,7 @@ namespace ROOT { namespace Cintex {
         G__search_tagname(fTaginfo->tagname, cl.IsClass() ? 'c' : 's'); 
         Setup_tagtable();
       }
-      if ( !info.IsLoaded() )  {
+      else if ( !info.IsLoaded() )  {
         Setup_tagtable();
       }
       else  {

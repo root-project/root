@@ -12,6 +12,7 @@ CINTEXDIRS   := $(CINTEXDIR)/src
 CINTEXDIRI   := $(CINTEXDIR)/inc
 
 ##### libCintex #####
+CINTEXL      := $(CINTEXDIRI)/LinkDef.h
 CINTEXH      := $(wildcard $(MODDIRI)/Cintex/*.h)
 CINTEXS      := $(wildcard $(MODDIRS)/*.cxx)
 CINTEXO      := $(CINTEXS:.cxx=.o)
@@ -111,6 +112,6 @@ $(CINTEXTESTDICTO): $(CINTEXTESTDICTS)
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
 
 $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
-		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --quiet --comments
+		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=./rootmap --rootmap-lib=$(CINTEXTESTDICT) --quiet --comments
 
 

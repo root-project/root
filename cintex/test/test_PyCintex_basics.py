@@ -9,10 +9,11 @@ import unittest
 import sys
 
 import PyCintex
-PyCintex.loadDict('test_CintexTestRflx')
+#PyCintex.loadDict('test_CintexTestRflx')
 
 class BasicsTestCase(unittest.TestCase):
   def setUp(self):
+    PyCintex.makeClass('A::B::C::MyClass')     # This is needed to force loading the dictionary
     self.A   = PyCintex.makeNamespace('A')
     self.std = PyCintex.makeNamespace('std')
     self.gbl = PyCintex.makeNamespace('')

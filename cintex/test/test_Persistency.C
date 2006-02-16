@@ -167,10 +167,9 @@ bool test_ReadTransientData() {
 
 void test_Persistency()
 {
-  gSystem->Load("libReflex");
-  gSystem->Load("test_CintexTestRflx");
-  gSystem->Load("libCintex");
-
+  //gSystem->Load("libReflex");
+  //gSystem->Load("test_CintexTestRflx");
+  //gSystem->Load("libCintex");
 
   Cintex::SetDebug(0);
   Cintex::Enable();

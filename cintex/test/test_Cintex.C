@@ -237,10 +237,13 @@ bool test_MethodOperators() {
 bool test_TemplatedClasses() {
   A::B::C::Template<A::B::C::MyClass,float> o1;
   GlobalTemplate<A::B::C::MyClass,float> o2;
+  A::B::C::Template<A::B::C::MyClass,unsigned long> o3;
   int r1 = o1.doSomething("Hello World");
   failUnlessEqual( r1, strlen("Hello World"));
   int r2 = o2.doSomething("Hello World");
   failUnlessEqual( r2, strlen("Hello World"));
+  int r3 = o3.doSomething("Hello World");
+  failUnlessEqual( r3, strlen("Hello World"));
   return true;
 }
 
@@ -319,12 +322,12 @@ bool test_Variables() {
 
 void test_Cintex()
 {
-  //gDebug = 4;
-  gSystem->Load("libReflex");
-  gSystem->Load("libCintex");
+  //gDebug = 2;
+  //gSystem->Load("libReflex");
+  //gSystem->Load("libCintex");
   Cintex::Enable();
   Cintex::SetDebug(0);
-  gSystem->Load("test_CintexTestRflx");
+  //gSystem->Load("test_CintexTestRflx");
 
   cout << "DoSomething: "        << (test_DoSomething()        ? "OK" : "FAIL") << endl;
   cout << "PrimitiveArgs: "      << (test_PrimitiveArgs()      ? "OK" : "FAIL") << endl;

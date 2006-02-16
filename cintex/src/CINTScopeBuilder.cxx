@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTScopeBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTScopeBuilder.cxx,v 1.5 2005/12/12 09:12:27 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -43,8 +43,8 @@ namespace ROOT { namespace Cintex {
     else if (scope.IsClass() ) taginfo.tagtype = 'c';
     else                       taginfo.tagtype = 'n'; // Undefined. Assume namespace
     taginfo.tagname = sname.c_str();
-    taginfo.tagnum = G__defined_tagname(taginfo.tagname, 2);
-    G__ClassInfo info(taginfo.tagnum);
+    int tagnum = G__defined_tagname(taginfo.tagname, 2);
+    G__ClassInfo info(tagnum);
     if ( !info.IsLoaded() )  {
       G__get_linked_tagnum(&taginfo);
       //--Setup the namespace---

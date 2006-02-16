@@ -391,6 +391,7 @@ struct _Instantiations {
   std::map<Key,std::string>::value_type Mkvt;
   std::map<Key,std::string>::iterator IMks;
   A::B::C::Template<A::B::C::MyClass,float>  m_temp1;
+  A::B::C::Template<A::B::C::MyClass,unsigned long>  m_temp4;
   A::B::C::Template<A::B::C::MyClass,float>::Nested  m_temp3;
   GlobalTemplate<A::B::C::MyClass,float>  m_temp2;
 };
