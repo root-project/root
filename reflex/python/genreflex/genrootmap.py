@@ -18,7 +18,7 @@ def genRootMap(mapfile, dicfile, libfile, classes) :
   startmark = '#--Begin ' + dicfile + '\n'
   endmark   = '#--End   ' + dicfile + '\n'
   finalmark = '#--Final End\n'
-  transtable = string.maketrans(': ', '@$')
+  transtable = string.maketrans(': ', '@-')
 
   new_lines = []
   if libfile.rfind('/') != -1 : libfile =  libfile[libfile.rfind('/')+1:]
