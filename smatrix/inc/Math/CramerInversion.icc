@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: CramerInversion.icc,v 1.1 2005/12/07 16:44:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: CramerInversion.icc,v 1.2 2006/02/08 14:45:35 moneta Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -225,7 +225,6 @@ bool Inverter<4>::Dinv(MatrixRep & rhs) {
 // Inversion for 5x5 matrices
 //==============================================================================
 // Mij are indices for a 5x5 matrix.
-
 #define M00 0
 #define M01 1
 #define M02 2
@@ -255,7 +254,6 @@ bool Inverter<4>::Dinv(MatrixRep & rhs) {
 #define M42 22
 #define M43 23
 #define M44 24
-
 
 
 template <class MatrixRep>
@@ -929,5 +927,100 @@ bool Inverter<6>::Dinv(MatrixRep & rhs) {
 }  // namespace ROOT
           
 
+
+
+// undef macros to avoid conflicts
+#undef F00 
+#undef F01 
+#undef F02
+#undef F03
+
+#undef F10
+#undef F11
+#undef F12
+#undef F13
+
+#undef F20
+#undef F21
+#undef F22
+#undef F23
+
+#undef F30
+#undef F31
+#undef F32
+#undef F33
+
+// undef 
+#undef M00
+#undef M01
+#undef M02
+#undef M03
+#undef M04
+
+#undef M10
+#undef M11
+#undef M12
+#undef M13
+#undef M14
+
+#undef M20
+#undef M21
+#undef M22
+#undef M23
+#undef M24
+
+#undef M30
+#undef M31
+#undef M32
+#undef M33
+#undef M34
+
+#undef M40
+#undef M41
+#undef M42
+#undef M43
+#undef M44
+
+#undef A00
+#undef A01
+#undef A02
+#undef A03
+#undef A04
+#undef A05
+
+#undef A10
+#undef A11
+#undef A12
+#undef A13
+#undef A14
+#undef A15
+
+#undef A20
+#undef A21
+#undef A22
+#undef A23
+#undef A24
+#undef A25
+
+#undef A30
+#undef A31
+#undef A32
+#undef A33
+#undef A34
+#undef A35
+
+#undef A40
+#undef A41
+#undef A42
+#undef A43
+#undef A44
+#undef A45
+
+#undef A50
+#undef A51
+#undef A52
+#undef A53
+#undef A54
+#undef A55
 
 #endif

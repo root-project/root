@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: CramerInversionSym.icc,v 1.1 2005/12/07 16:44:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: CramerInversionSym.icc,v 1.1 2006/02/08 14:45:35 moneta Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -735,6 +735,101 @@ bool Inverter<6>::Dinv(MatRepSym<T,6> & rhs) {
 
 }  // namespace ROOT
           
+
+// undef Smacros to avoid conflicts
+#undef SF00 
+#undef SF01 
+#undef SF02
+#undef SF03
+
+#undef SF10
+#undef SF11
+#undef SF12
+#undef SF13
+
+#undef SF20
+#undef SF21
+#undef SF22
+#undef SF23
+
+#undef SF30
+#undef SF31
+#undef SF32
+#undef SF33
+
+// undef S
+#undef SM00
+#undef SM01
+#undef SM02
+#undef SM03
+#undef SM04
+
+#undef SM10
+#undef SM11
+#undef SM12
+#undef SM13
+#undef SM14
+
+#undef SM20
+#undef SM21
+#undef SM22
+#undef SM23
+#undef SM24
+
+#undef SM30
+#undef SM31
+#undef SM32
+#undef SM33
+#undef SM34
+
+#undef SM40
+#undef SM41
+#undef SM42
+#undef SM43
+#undef SM44
+
+#undef SA00
+#undef SA01
+#undef SA02
+#undef SA03
+#undef SA04
+#undef SA05
+
+#undef SA10
+#undef SA11
+#undef SA12
+#undef SA13
+#undef SA14
+#undef SA15
+
+#undef SA20
+#undef SA21
+#undef SA22
+#undef SA23
+#undef SA24
+#undef SA25
+
+#undef SA30
+#undef SA31
+#undef SA32
+#undef SA33
+#undef SA34
+#undef SA35
+
+#undef SA40
+#undef SA41
+#undef SA42
+#undef SA43
+#undef SA44
+#undef SA45
+
+#undef SA50
+#undef SA51
+#undef SA52
+#undef SA53
+#undef SA54
+#undef SA55
+
 
 
 #endif
