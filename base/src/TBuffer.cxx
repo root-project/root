@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.89 2006/01/24 21:25:20 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.90 2006/02/15 06:37:17 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2567,7 +2567,13 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
          UInt_t checksum = 0;
          *this >> checksum;
          TStreamerInfo *vinfo = cl->FindStreamerInfo(checksum);
-         version = vinfo->GetClassVersion();
+         if (vinfo) {
+            version = vinfo->GetClassVersion();
+         } else {
+            Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
+                   checksum, cl->GetName(), ((TFile*)fParent)->GetName());
+            return 0;
+         }
       }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 ) {
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
@@ -2579,7 +2585,13 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
                TStreamerInfo *vinfo = cl->FindStreamerInfo(checksum);
-               version = vinfo->GetClassVersion();
+               if (vinfo) {
+                  version = vinfo->GetClassVersion();
+               } else {
+                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
+                        checksum, cl->GetName(), ((TFile*)fParent)->GetName());
+                  return 0;
+               }
             }
             else  {
                Error("ReadVersion", "Class %s not known to file %s.", 
