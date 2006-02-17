@@ -1,0 +1,3 @@
+Library.A<int>:                              spaces_C.dll
+Library.A<unsigned-int>:                     spaces_C.dll
+
