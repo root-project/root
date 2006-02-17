@@ -1,10 +1,11 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += test.root copy.root *.so *.out *.d test2.root
+CLEAN_TARGETS += test.root copy.root *.so *.out *.d test2.root \
+		 *.root.log tref_test_pid*.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += missingClass reftest
+TEST_TARGETS += missingClass reftest tref_pid_test
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -39,4 +40,53 @@ tref_test_rd.log: tref_test_rd.C test2.root
 		  $(CMDECHO) root.exe -q -l -b tref_test_rd.C > tref_test_rd.log
 
 reftest: tref_test_rd.log
+		  $(TestDiff)
+
+
+#################################
+
+TTP   := tref_test_pid
+TTP1  := echo '{gSystem->CompileMacro("$(TTP).C","k");'
+TTP2  := | root -l -b 
+
+$(TTP).root: $(TTP).C
+	$(CMDECHO)echo 'create("$@")'			 		> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'create("$@");}' $(TTP2) 			>> $@.log 2>&1
+
+$(TTP)_r.root: $(TTP).root
+	$(CMDECHO)echo 'addref("$<", "$@", "r1", "N");'			> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'addref("$<", "$@", "r1", "N");}' $(TTP2) 	>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r1");' 				>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r1");}' $(TTP2) 		>> $@.log 2>&1
+
+$(TTP)_rc.root: $(TTP)_r.root
+	$(CMDECHO)echo 'clone("$<", "$@");' 				> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'clone("$<", "$@");}' $(TTP2) 		>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r1"); readall("$@");'	 	>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r1"); readall("$@");}' $(TTP2)>> $@.log 2>&1
+
+$(TTP)_rcr.root: $(TTP)_rc.root
+	$(CMDECHO)echo 'addref("$<", "$@", "r2", "r1");'		> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'addref("$<", "$@", "r2", "r1");}' $(TTP2) 	>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r1"); readall("$@");' 		>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r1"); readall("$@");}' $(TTP2)>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r2"); readall("$@");' 		>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r2"); readall("$@");}' $(TTP2)>> $@.log 2>&1
+
+$(TTP)_rcrr.root: $(TTP)_rcr.root
+	$(CMDECHO)echo 'addref("$<", "$@", "r3", "N");'			> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'addref("$<", "$@", "r3", "N");}' $(TTP2) 	>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r1"); readall("$@");' 		>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r1"); readall("$@");}' $(TTP2)>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r2"); readall("$@");' 		>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r2"); readall("$@");}' $(TTP2)>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r3"); readall("$@");' 		>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r3"); readall("$@");}' $(TTP2)>> $@.log 2>&1
+	$(CMDECHO)echo 'readauto("$@", "r1:r2:r3");'	>> $@.log 2>&1
+	$(CMDECHO)$(TTP1) 'readauto("$@", "r1:r2:r3");}' $(TTP2)>> $@.log 2>&1
+
+$(TTP).log: $(TTP)_rcrr.root
+	$(CMDECHO)rm -f $@ ; cat `ls $(TTP)*.log | sort ` | grep -v ACLiC> $@
+
+tref_test_pid: $(TTP).log
 		  $(TestDiff)
