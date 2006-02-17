@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.31 2005/11/16 20:03:31 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.32 2005/11/21 11:17:18 rdm Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -27,16 +27,18 @@
 // However if the object event is split into several files or into several
 // branches of one or more Trees, normal C++ pointers cannot be used because
 // each I/O operation will write the referenced objects.
-// When a TRef is used to point to a TObject *robj.
-// For example in a class with
+// When a TRef is used to point to a TObject *robj, for example in a class with
 //     TRef  fRef;
 // one can do:
 //     fRef = robj;  //to set the pointer
-// this TRef and robj can be written with two different I/O calls
+// This TRef and robj can be written with two different I/O calls
 // in the same or different files, in the same or different branches of a Tree.
+//
 // If the TRef is read and the referenced object has not yet been read,
 // the TRef will return a null pointer. As soon as the referenced object
-// will be read, the TRef will point to it.
+// will be read, the TRef will point to it. If the referenced object is
+// contained in a TTree it can be autoloaded using the TBranchRef mechanism,
+// which is set up by simply calling TTree::BranchRef().
 //
 // TRef also supports the complex situation where a TFile is updated
 // multiple times on the same machine or a different machine.
@@ -189,7 +191,7 @@
 // The special class TRefArray should be used to store multiple references.
 // A TRefArray has one single pointer fPID for all objects in the array.
 // It has a dynamic compact table of fUniqueIDs. Use a TRefArray rather
-// then a collection of TRefs.
+// then a collection of TRefs if all TRefs stem from the same process.
 //
 // Example:
 // Suppose a TObjArray *mytracks containing a list of Track objects
@@ -330,16 +332,16 @@ TObject *TRef::GetObject() const
    if (!fPID) return 0;
    if (!TProcessID::IsValid(fPID)) return 0;
    UInt_t uid = GetUniqueID();
-   //Try to find the object from the table of the corresponding PID
-   TObject *obj = fPID->GetObjectWithID(uid);
 
    //the reference may be in the TRefTable
    TRefTable *table = TRefTable::GetRefTable();
    if (table) {
-      table->SetUID(uid);
+      table->SetUID(uid, fPID);
       table->Notify();
-      obj = fPID->GetObjectWithID(uid);
    }
+
+   //Try to find the object from the table of the corresponding PID
+   TObject *obj = fPID->GetObjectWithID(uid);
 
    //if object not found, then exec action if an action has been defined
    if (!obj) {

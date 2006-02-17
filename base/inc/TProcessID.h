@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.10 2005/01/28 05:45:41 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.11 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -61,6 +61,7 @@ public:
    static void         Cleanup();
    static TProcessID  *ReadProcessID(UShort_t pidf , TFile *file);
    static UShort_t     WriteProcessID(TProcessID *pid , TFile *file);
+   static UInt_t       GetNProcessIDs() {return fgPIDs ? fgPIDs->GetLast()+1 : 0;}
    static TProcessID  *GetProcessID(UShort_t pid);
    static TProcessID  *GetProcessWithUID(UInt_t uid,void *obj);
    static TProcessID  *GetSessionProcessID();

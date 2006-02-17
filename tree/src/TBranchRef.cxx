@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.6 2005/10/25 22:11:58 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.7 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -11,8 +11,24 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// A Branch for the case of an array of clone objects                   //                                                                      //
-// See TTree.                                                           //                                                                     //
+// A branch containing and managing a TRefTable for TRef autoloading.   //
+// It loads the TBranch containing a referenced object when requested   //
+// by TRef::GetObject(), so the reference can be resolved. The          //
+// information which branch to load is stored by TRefTable. Once a      //
+// TBranch has read the TBranchRef's current entry it will not be told  //
+// to re-read, in case the use has changed objects read from the        //
+// branch.                                                              //
+//                                                                      //
+//                                                                      //
+// *** LIMITATION ***                                                   //
+// Note that this does NOT allow for autoloading of references spanning //
+// different entries. The TBranchRef's current entry has to correspond  //
+// to the entry of the TBranch containing the referenced object.        //
+//                                                                      //
+// The TRef cannot be stored in a top-level branch which is a           //
+// TBranchObject for the auto-loading to work. E.g. you cannot store    //
+// the TRefs in TObjArray, and create a top-level branch storing this   //
+// TObjArray.                                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +96,7 @@ void TBranchRef::Clear(Option_t *option)
 {
   // Clear entries in the TRefTable.
 
-   fRefTable->Clear(option);
+   if (fRefTable) fRefTable->Clear(option);
 }
 
 //______________________________________________________________________________
@@ -97,6 +113,7 @@ void TBranchRef::FillLeaves(TBuffer &b)
 {
    // This function called by TBranch::Fill overloads TBranch::FillLeaves.
 
+   if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->FillBuffer(b);
 }
 
@@ -108,11 +125,15 @@ Bool_t TBranchRef::Notify()
    // The function reads the branch containing the object referenced
    // by the TRef.
 
+   if (!fRefTable) fRefTable = new TRefTable(this,100);
    UInt_t uid = fRefTable->GetUID();
+   TProcessID* context = fRefTable->GetUIDContext();
    GetEntry(fReadEntry);
-   TBranch *branch = (TBranch*)fRefTable->GetParent(uid);
+   TBranch *branch = (TBranch*)fRefTable->GetParent(uid, context);
    if (branch) {
-      branch->GetEntry(fReadEntry);
+      // don't re-read, the user might have changed some object
+      if (branch->GetReadEntry() != fReadEntry)
+         branch->GetEntry(fReadEntry);
    } else {
       //scan the TRefTable of possible friend Trees
       TList *friends = fTree->GetListOfFriends();
@@ -123,9 +144,11 @@ Bool_t TBranchRef::Notify()
          TBranchRef *bref = tree->GetBranchRef();
          if (!bref) continue;
          bref->GetEntry(fReadEntry);
-         branch = (TBranch*)bref->GetRefTable()->GetParent(uid);
+         branch = (TBranch*)bref->GetRefTable()->GetParent(uid, context);
          if (branch) {
-            branch->GetEntry(fReadEntry);
+	    // don't re-read, the user might have changed some object
+	    if (branch->GetReadEntry() != fReadEntry)
+               branch->GetEntry(fReadEntry);
             return kTRUE;
          }
          lnk = lnk->Next();
@@ -147,6 +170,7 @@ void TBranchRef::ReadLeaves(TBuffer &b)
 {
    // This function called by TBranch::GetEntry overloads TBranch::ReadLeaves.
 
+   if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->ReadBuffer(b);
 }
 
@@ -158,6 +182,7 @@ void TBranchRef::Reset(Option_t *option)
   //    TRefTable is cleared.
 
    TBranch::Reset(option);
+   if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->Reset();
 }
 
@@ -167,6 +192,7 @@ void TBranchRef::SetParent(const TObject *object)
    // this function is called by TBranchElement::Fill when filling
    // branches that may contain referenced objects.
 
+   if (!fRefTable) fRefTable = new TRefTable(this,100);
    TRefTable::SetRefTable(fRefTable);
    fRefTable->SetParent(object);
 }

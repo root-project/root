@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.72 2005/11/16 20:03:31 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.73 2005/11/21 11:17:18 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -806,13 +806,14 @@ void TObject::Streamer(TBuffer &R__b)
       } else {
          //if the object is referenced, we must save its address/file_pid
          UInt_t uid = fUniqueID & 0xffffff;
-         //add uid to the TRefTable if there is one
-         TRefTable *table = TRefTable::GetRefTable();
-         if(table) table->Add(uid);
          R__b << uid;
          R__b << fBits;
          TProcessID *pid;
          pid = TProcessID::GetProcessWithUID(fUniqueID,this);
+         //add uid to the TRefTable if there is one
+         TRefTable *table = TRefTable::GetRefTable();
+         if(table) table->Add(fUniqueID, pid);
+
          pidf = TProcessID::WriteProcessID(pid,file);
          R__b << pidf;
       }

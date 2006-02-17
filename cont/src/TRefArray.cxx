@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.22 2005/11/28 10:28:56 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.23 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -329,7 +329,7 @@ TObject *TRefArray::GetFromTable(Int_t idx) const
    //the reference may be in the TRefTable
    TRefTable *table = TRefTable::GetRefTable();
    if (table) {
-      table->SetUID(fUIDs[idx]);
+      table->SetUID(fUIDs[idx], fPID);
       table->Notify();
       return fPID->GetObjectWithID(fUIDs[idx]);
    }
