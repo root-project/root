@@ -99,3 +99,11 @@ $(sort $(GQTMOCO) $(GQTO)): %.o: %.cxx
 
 $(GQTMOC): $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 	$(QTMOCEXE) $< -o $@
+
+##### cintdlls ######
+
+$(CINTDIRDLLS)/qtcint: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h cint/lib/qt/qtfunctions.h
+	@$(MAKECINTDLL) $(PLATFORM) qtcint qt "qtcint.h qtclasses.h qtglobals.h qtfunctions.h" "$(CINTTMP)" "$(ROOTCINTTMP)" \
+	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
+	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
+

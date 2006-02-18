@@ -99,3 +99,12 @@ distclean-thread: clean-thread
 		@rm -f $(THREADDEP) $(THREADDS) $(THREADDH) $(THREADLIB)
 
 distclean::     distclean-thread
+
+##### cintdlls ######
+
+ifneq ($(ARCH),win32)
+$(CINTDIRDLLS)/pthread.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/pthread/pthd.h
+	@$(MAKECINTDLL) $(PLATFORM) pthread pthread pthd.h "$(CINTTMP)" "$(ROOTCINTTMP)" \
+	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
+	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
+endif

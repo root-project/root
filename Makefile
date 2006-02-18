@@ -305,6 +305,7 @@ MAKEMAKEINFO  = build/unix/makeinfo.sh
 MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
+MAKECINTDLL   = build/unix/makecintdll.sh
 MAKECINTDLLS  = build/unix/makecintdlls.sh
 MAKESTATIC    = build/unix/makestatic.sh
 RECONFIGURE   = build/unix/reconfigure.sh

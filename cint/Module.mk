@@ -13,6 +13,7 @@ CINTDIRI     := $(CINTDIR)/inc
 CINTDIRM     := $(CINTDIR)/main
 CINTDIRT     := $(CINTDIR)/tool
 CINTDIRL     := $(CINTDIR)/lib
+CINTDIRDLLS  := $(CINTDIR)/include
 
 ##### libCint #####
 CINTH        := $(wildcard $(MODDIRI)/*.h)
@@ -309,3 +310,10 @@ $(CINTDIRS)/v6_loadfile_tmp.d: $(CINTDIRS)/v6_loadfile.cxx $(RMKDEP)
 	@cp $(CINTDIRS)/v6_loadfile.cxx $(CINTDIRS)/v6_loadfile_tmp.cxx
 	$(MAKEDEP) $@ "$(CXXFLAGS)" $(CINTDIRS)/v6_loadfile_tmp.cxx > $@
 	@rm -f $(CINTDIRS)/v6_loadfile_tmp.cxx
+
+##### cintdlls ######
+
+$(CINTDIRDLLS)/stdfunc.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/stdstrct/stdfunc.h 
+	@$(MAKECINTDLL) $(PLATFORM) stdfunc stdstrct stdfunc.h "$(CINTTMP)" "$(ROOTCINTTMP)" \
+	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
+	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
