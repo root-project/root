@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.22 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.23 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -170,6 +170,7 @@ Int_t TPolyLine::DistancetoPrimitive(Int_t px, Int_t py)
    // check if point is near one of the points
    Int_t i, pxp, pyp, d;
    Int_t distance = big;
+   if (Size() <= 0) return distance;
 
    for (i=0;i<Size();i++) {
       pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
