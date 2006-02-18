@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.274 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.275 2006/02/10 23:43:51 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3418,6 +3418,9 @@ TList *TTree::GetUserInfo()
 {
    // return a pointer to the list containing user objects associated to this Tree
    // The list is automatically created if it does not exist
+   // WARNING: By default the TTree destructor will delete all objects added
+   //          to this list. If you do not want these objects to be deleted,
+   //          call  mytree->GetUserInfo()->Clear(); before delete mytree;
 
    if (!fUserInfo) fUserInfo = new TList();
    return fUserInfo;
