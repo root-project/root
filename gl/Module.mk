@@ -39,7 +39,7 @@ GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 $(X11LIBDIR) -lX11 -lXext -lXmu -lXi -lm
 endif
 ifeq ($(ARCH),win32)
-GLLIBS       := opengl32.lib glu32.lib $(LPATH)/libGraf.lib $(LPATH)/libHist.lib $(LPATH)/libThread.lib
+GLLIBS       := opengl32.lib glu32.lib $(LPATH)/libGraf.lib $(LPATH)/libHist.lib 
 endif
 
 GLO          := $(GLS:.cxx=.o)
