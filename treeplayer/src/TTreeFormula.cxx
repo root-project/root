@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.191 2006/02/09 00:00:17 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.192 2006/02/09 22:44:31 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -4335,7 +4335,13 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry==-1) readentry=0;
             if (!branchcount->GetAddress()) R__LoadBranch(branchcount,readentry,fQuickLoad);
-            else branchcount->TBranch::GetEntry(readentry);
+            else {
+               // Since we do not read the full branch let's reset the read entry number
+               // so that a subsequent read from TTreeFormula will properly load the full 
+               // object event if fQuickLoad is true.
+               branchcount->TBranch::GetEntry(readentry);
+               branchcount->ResetReadEntry();
+            }
 
             size = ((TBranchElement*)branchcount)->GetNdata();
             // Reading the size as above is correct only when the branchcount
