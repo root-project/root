@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.11 2005/08/29 10:45:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.12 2005/09/05 10:02:38 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
@@ -36,7 +36,7 @@
 //   Int_t status = fit->Fit();               // perform the fit
 //   cout << "fit status: " << status << endl;
 //   if (status == 0) {                       // check on fit status
-//     TH1F* prediction = (TH1F*) fit->GetPlot();
+//     TH1F* result = (TH1F*) fit->GetPlot();
 //     data->Draw("Ep");
 //     result->Draw("same");
 //   }
