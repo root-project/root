@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.49 2005/12/02 22:39:22 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.50 2005/12/08 22:34:23 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -197,6 +197,9 @@ TClonesArray::~TClonesArray()
       }
    }
    SafeDelete(fKeep);
+
+   // Protect against erroneously setting of owner bit
+   SetOwner(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -473,6 +476,16 @@ TObject *TClonesArray::Remove(TObject *obj)
       do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
    Changed();
    return obj;
+}
+
+//______________________________________________________________________________
+void TClonesArray::SetOwner(Bool_t /* enable */) 
+{
+   // A TClonesArray is always the owner of the object it contains.
+   // However the collection its inherits from (TObjArray) does not.
+   // Hence this member function needs to be a nop for TClonesArray.
+
+   // Nothing to be done.
 }
 
 //______________________________________________________________________________

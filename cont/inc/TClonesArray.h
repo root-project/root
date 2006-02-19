@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.9 2002/04/19 16:43:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.10 2004/11/12 21:55:41 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
    virtual void     ExpandCreate(Int_t n);
    virtual void     ExpandCreateFast(Int_t n);
    TClass          *GetClass() const { return fClass; }
+   virtual void     SetOwner(Bool_t enable = kTRUE);
 
    void             AddFirst(TObject *) { MayNotUse("AddFirst"); }
    void             AddLast(TObject *) { MayNotUse("AddLast"); }

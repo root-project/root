@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.18 2005/06/23 06:24:27 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.19 2005/08/30 02:45:05 pcanal Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -105,7 +105,7 @@ public:
    void               RemoveAll() { Clear(); }
    void               SetCurrentCollection();
    void               SetName(const char *name) { fName = name; }
-   void               SetOwner(Bool_t enable = kTRUE) { enable ? SetBit(kIsOwner) : ResetBit(kIsOwner); }
+   virtual void       SetOwner(Bool_t enable = kTRUE);
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 

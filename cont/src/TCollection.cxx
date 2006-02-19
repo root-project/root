@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.30 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.31 2005/12/16 11:34:13 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -474,6 +474,19 @@ void TCollection::GarbageCollect(TObject *obj)
 }
 
 //______________________________________________________________________________
+void TCollection::SetOwner(Bool_t enable) 
+{
+   // Set whether this collection is the owner (enable==true)
+   // of its content.  If it is the owner of its contents,
+   // these objects will be deleted whenever the collection itself
+   // is delete.   The objects might also be deleted or destructed when Clear 
+   // is called (depending on the collection).
+   
+   if (enable) SetBit(kIsOwner);
+   else ResetBit(kIsOwner); 
+}
+
+   //______________________________________________________________________________
 TIter::TIter(const TIter &iter)
 {
    // Copy a TIter. This involves allocating a new TIterator of the right
