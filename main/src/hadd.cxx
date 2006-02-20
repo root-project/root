@@ -165,7 +165,9 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) {
               ndir->cd();
               TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
               if (key2) {
-                 listH.Add(key2->ReadObj());
+                 TObject *hobj = key2->ReadObj();
+                 hobj->ResetBit(kMustCleanup);
+                 listH.Add(hobj);
                  h1->Merge(&listH);
                  listH.Delete();
               }
