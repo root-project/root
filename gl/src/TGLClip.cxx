@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx,v 1.5 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.cxx,v 1.6 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include "TGLClip.h"
 #include "TGLIncludes.h"
 
-#include "TGLSceneObject.h"
+#include "TGLFaceSet.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
@@ -73,7 +73,7 @@ TGLLogicalShape * CreateLogicalBox(TGLVector3 halfLengths)
    buff.fPols[33] = 5   ; buff.fPols[34] = 6   ;  buff.fPols[35] = 7  ;
 
    buff.SetSectionsValid(TBuffer3D::kRawSizes | TBuffer3D::kRaw);
-   return new TGLFaceSet(buff, 0);
+   return new TGLFaceSet(buff);
 }
 
 TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
@@ -97,7 +97,7 @@ TGLLogicalShape * CreateLogicalFace(Double_t width, Double_t depth)
    buff.fPols[ 3] = 1   ; buff.fPols[ 4] = 2   ;  buff.fPols[ 5] = 3  ;
 
    buff.SetSectionsValid(TBuffer3D::kRawSizes | TBuffer3D::kRaw);
-   return new TGLFaceSet(buff, 0);
+   return new TGLFaceSet(buff);
 }
 
 //////////////////////////////////////////////////////////////////////////

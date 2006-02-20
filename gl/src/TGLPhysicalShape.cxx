@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.17 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.18 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -202,7 +202,7 @@ void TGLPhysicalShape::Draw(const TGLDrawFlags & flags) const
          // Fill needs material colors
          // Outline needs material + a fixed (black) outline color
          // This is set once at scene level
-         // Set back diffuse only for clipping where inner (back) faces\
+         // Set back diffuse only for clipping where inner (back) faces
          // are shown. Don't set shinneness or specular as we want 
          // back face to appear as 'flat' as possible as crude visual
          // approximation to proper capped clipped solid

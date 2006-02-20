@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.10 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.11 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 // For debug tracing
 #include "TClass.h" 
 #include "TError.h"
+
+TGLQuadric TGLDrawable::fgQuad;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

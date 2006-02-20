@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.7 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.8 2006/01/05 15:11:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 //////////////////////////////////////////////////////////////////////////
@@ -33,16 +33,32 @@
 
 #include "TGLLogicalShape.h"
 #include "TGLDisplayListCache.h"
+#include "TContextMenu.h"
+#include "TBuffer3D.h"
 
 ClassImp(TGLLogicalShape)
 
 //______________________________________________________________________________
 TGLLogicalShape::TGLLogicalShape(ULong_t ID) :
    TGLDrawable(ID, kTRUE), // Logical shapes DL cached by default
-   fRef(0), fRefStrong(kFALSE)
+   fExternalObj(0), fRef(0), fRefStrong(kFALSE)
 {
    // Construct a logical shape with unique id 'ID'.
    // Logical shapes are not display list cached by default.
+}
+
+//______________________________________________________________________________
+TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
+   TGLDrawable(reinterpret_cast<ULong_t>(buffer.fID), kTRUE), // Logical shapes DL cached by default
+   fExternalObj(buffer.fID), fRef(0), fRefStrong(kFALSE)
+{
+   // Use the bounding box in buffer if valid
+   if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
+      fBoundingBox.Set(buffer.fBBVertex);
+   } else {
+   // otherwise use the raw points to generate one   
+      fBoundingBox.SetAligned(buffer.NbPnts(), buffer.fPnts);
+   }
 }
 
 //______________________________________________________________________________
@@ -53,5 +69,15 @@ TGLLogicalShape::~TGLLogicalShape()
    // Physical refs should have been cleared
    if (fRef > 0) {
       assert(kFALSE);
+   }
+}
+
+//______________________________________________________________________________
+void TGLLogicalShape::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const
+{
+   // Invoke popup menu or our bound external TObject (if any), using passed 
+   // 'menu' object, at location 'x' 'y' 
+   if (fExternalObj) {
+      menu.Popup(x, y, fExternalObj);
    }
 }

@@ -60,7 +60,6 @@
 
 #pragma link C++ class TGLRenderArea;
 #pragma link C++ class TGLWindow;
-#pragma link C++ class TGLSceneObject;
 #pragma link C++ class TGLFaceSet;
 #pragma link C++ class TGLPolyLine;
 #pragma link C++ class TGLPolyMarker;

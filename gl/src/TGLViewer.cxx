@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.36 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.37 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -17,9 +17,14 @@
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLStopwatch.h"
-#include "TGLSceneObject.h" // For TGLFaceSet
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+
+#include "TGLFaceSet.h"
+#include "TGLPolyLine.h"
+#include "TGLPolyMarker.h"
+#include "TGLCylinder.h"
+#include "TGLSphere.h"
 
 #include "TVirtualPad.h" // Remove when pad removed - use signal
 
@@ -623,19 +628,19 @@ TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
 
    switch (buffer.Type()) {
    case TBuffer3DTypes::kLine:
-      newLogical = new TGLPolyLine(buffer, buffer.fID);
+      newLogical = new TGLPolyLine(buffer);
       break;
    case TBuffer3DTypes::kMarker:
-      newLogical = new TGLPolyMarker(buffer, buffer.fID);
+      newLogical = new TGLPolyMarker(buffer);
       break;
    case TBuffer3DTypes::kSphere: {
       const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
       if (sphereBuffer) {
          // We can only draw solid uncut spheres natively at present
          if (sphereBuffer->IsSolidUncut()) {
-            newLogical = new TGLSphere(*sphereBuffer, sphereBuffer->fID);
+            newLogical = new TGLSphere(*sphereBuffer);
          } else {
-            newLogical = new TGLFaceSet(buffer, buffer.fID);
+            newLogical = new TGLFaceSet(buffer);
          }
       }
       else {
@@ -649,7 +654,7 @@ TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
       const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
       if (tubeBuffer)
       {
-         newLogical = new TGLCylinder(*tubeBuffer, tubeBuffer->fID);
+         newLogical = new TGLCylinder(*tubeBuffer);
       }
       else {
          Error("TGLViewer::CreateNewLogical", "failed to cast buffer of type 'kTube/kTubeSeg/kCutTube' to TBuffer3DTube");
@@ -662,12 +667,12 @@ TGLLogicalShape * TGLViewer::CreateNewLogical(const TBuffer3D & buffer) const
       if (fComposite) {
          Error("TGLViewer::CreateNewLogical", "composite already open");
       }
-      fComposite = new TGLFaceSet(buffer, buffer.fID);
+      fComposite = new TGLFaceSet(buffer);
       newLogical = fComposite;
       break;
    }
    default:
-      newLogical = new TGLFaceSet(buffer, buffer.fID);
+      newLogical = new TGLFaceSet(buffer);
       break;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.10 2006/01/18 16:57:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.11 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,6 +15,10 @@
 #ifndef ROOT_TGLBoundingBox
 #include "TGLBoundingBox.h"
 #endif
+#ifndef ROOT_TGLQuadric
+#include "TGLQuadric.h"
+#endif
+
 
 class TGLDrawFlags;
 
@@ -51,6 +55,8 @@ protected:
    // Fields
    Bool_t            fCached;      //! use display list cached
    TGLBoundingBox    fBoundingBox; //! the drawables bounding box
+
+   static TGLQuadric fgQuad;        //! Single common quadric drawing object
 
    // TODO: Split to AABB for logical, and OBB for physical - moved out of here
    // can keep requirement that all drawables support returning a base BB class.

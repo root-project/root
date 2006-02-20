@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.6 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.7 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 #include "TGLDrawable.h"
 #endif
 
+class TBuffer3D;
+class TObject;
 class TContextMenu;
 
 //////////////////////////////////////////////////////////////////////////
@@ -48,10 +50,12 @@ class TContextMenu;
 // viewer architecture and how external viewer clients use it.          //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLLogicalShape : public TGLDrawable { // Rename TGLLogicalObject?
-   private:
+class TGLLogicalShape : public TGLDrawable 
+{
+private:
    // Fields
-   mutable UInt_t fRef;       //! physical instance ref counting
+           TObject * fExternalObj;
+   mutable UInt_t    fRef;       //! physical instance ref counting
 
 protected:
    mutable Bool_t fRefStrong; //! Strong ref (delete on 0 ref)
@@ -60,9 +64,10 @@ protected:
 
 public:
    TGLLogicalShape(ULong_t ID);
+   TGLLogicalShape(const TBuffer3D & buffer);
    virtual ~TGLLogicalShape();
 
-   virtual void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const = 0;
+   void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
    // Physical shape ref counting
    void   AddRef() const                 { ++fRef; }
