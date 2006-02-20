@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.53 2005/11/18 16:55:07 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.54 2006/01/26 10:51:16 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -79,7 +79,11 @@ ClassImp(TLatex)
 <img src="gif/latex_symbols.gif">
 */
 //End_Html
-//    #Box draw a square
+//    #Box       draw a square
+//    #perp      draw the perpendicular symbol
+//    #odot      draw odot
+//    #hbar      draw h-bar (Planck constant divided by 2*Pi)
+//    #parallel  draw the parallel symbol
 //
 //   ** Delimiters
 //   -------------
@@ -440,8 +444,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opUnder         = -1;   // Position of first _ (indice)
    Int_t opFrac          = -1;   // Position of first \frac
    Int_t opSqrt          = -1;   // Position of first \sqrt
-   Int_t nBrackets      = 0;    // Nesting level in { }
-   Int_t nCroch         = 0;    // Nesting level in [ ]
+   Int_t nBrackets       = 0;    // Nesting level in { }
+   Int_t nCroch          = 0;    // Nesting level in [ ]
    Int_t opCurlyCurly    = -1;   // Position of first }{
    Int_t opSquareCurly   = -1;   // Position of first ]{
    Int_t opCloseCurly    = -2;   // Position of first }
@@ -456,9 +460,10 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opParen         = 0 ;   // position of a "(){" operator (big parenthesis #(){arg})
    Int_t abovePlace      = 0 ;   // true if subscripts must be written above and not after
    Int_t opBox           = 0 ;   // position of #Box
-   Int_t opPerp           = 0;    // position of #perp
+   Int_t opPerp          = 0;    // position of #perp
    Int_t opOdot          = 0;    // position of #odot
-   Int_t opParallel       = 0;    // position of #parallel
+   Int_t opHbar          = 0;    // position of #hbar
+   Int_t opParallel      = 0;    // position of #parallel
    Int_t opSplitLine     = -1;   // Position of first \splitline
    Bool_t opFound = kFALSE;
    Bool_t quote1 = kFALSE, quote2 = kFALSE ;
@@ -585,6 +590,11 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             strncpy(buf,&text[i+1],4);
             if (!opOdot && strncmp(buf,"odot",4)==0) {
                opOdot=1; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue;
+            }
+            if (!opHbar && strncmp(buf,"hbar",4)==0) {
+               opHbar=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
             }
@@ -898,6 +908,27 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          Double_t y1 = y-0.3*square-adjust;
          DrawCircle(x+0.6*square,y1,r1,spec) ;
          DrawCircle(x+0.6*square,y1,r1/100,spec) ;
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opHbar) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+5,length-5);
+         TText hbar;
+         hbar.SetTextFont(12);
+         hbar.SetTextColor(fTextColor);
+         hbar.SetTextSize(spec.fSize);
+         hbar.SetTextAngle(fTextAngle);
+         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t angle   = kPI*spec.fAngle/180.;
+         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         hbar.PaintText(xx,yy,"h");
+         DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
