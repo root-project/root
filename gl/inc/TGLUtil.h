@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.25 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.26 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -818,6 +818,7 @@ public:
    // Some simple shape drawing utils
    enum        ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
 
+   // TODO: These draw routines should take LOD hints
    static void SetDrawColors(const Float_t rgba[4]);
    static void DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4]);
    static void DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, const Float_t rgba[4]);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.22 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.23 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -160,7 +160,7 @@ public:
 
    // Drawing/Selection
    const TGLBoundingBox & BoundingBox() const; 
-   void                   Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags, 
+   void                   Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags, 
                                Double_t timeout, Int_t axesType, const TGLVertex3 * reference,
                                Bool_t forSelect = kFALSE);
    Bool_t                 Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlags);

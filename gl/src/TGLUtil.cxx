@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.23 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.24 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -875,8 +875,6 @@ void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
    TGLMatrix local(center, normal);
    glMultMatrixd(local.CArr());
 
-   glDisable(GL_CULL_FACE);
-
    // Shift half width so rings centered over center vertex 
    glTranslated(0.0, 0.0, -width/2.0);
 
@@ -890,7 +888,6 @@ void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
    glTranslated(0.0, 0.0, width);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
    gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality); 
-
-   glEnable(GL_CULL_FACE);
+   
    glPopMatrix();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.35 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.36 2006/02/21 15:34:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -323,7 +323,7 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 }
 
 //______________________________________________________________________________
-void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags, 
+void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags, 
                     Double_t timeout, Int_t axesType, const TGLVertex3 * reference,
                     Bool_t forSelect)
 {
@@ -382,7 +382,6 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
          break;
       }
       case (TGLDrawFlags::kWireFrame): {
-         //glDisable(GL_CULL_FACE);
          glDisable(GL_LIGHTING);
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
          glClearColor(0.0, 0.0, 0.0, 1.0); // Black
@@ -503,6 +502,7 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
    // Reset style related modes set above to defaults
    glEnable(GL_LIGHTING);
    glEnable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
    glPolygonMode(GL_FRONT, GL_FILL);
 
    // Draw guides - must be done before manipulator / selected object
@@ -513,7 +513,10 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
    if (!forSelect) {
       // Draw the clip shape (unclipped!) if it is being manipulated
       if (fCurrentClip && fCurrentManip->GetAttached() == fCurrentClip) {
-         fCurrentClip->Draw(fCurrentClip->CalcDrawFlags(camera, sceneFlags));
+         // Clip objects are always drawn with normal fill style
+         // regardless of main scene objects draw style
+         TGLDrawFlags clipSceneFlags(TGLDrawFlags::kFill, sceneFlags.LOD());
+         fCurrentClip->Draw(fCurrentClip->CalcDrawFlags(camera, clipSceneFlags));
       }
    
       // Draw the current manipulator - we want it depth buffer clipped against itself
@@ -595,6 +598,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
 
    glDisable(GL_BLEND);
 
+   TGLDrawFlags shapeFlags;
    DrawListIt_t drawIt;
    for (drawIt = fDrawList.begin(); drawIt != fDrawList.end() && run;
         drawIt++) {
@@ -647,9 +651,9 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
             continue;
          }
 
-         TGLDrawFlags flags = drawShape->CalcDrawFlags(camera, sceneFlags);
-         drawShape->Draw(flags);
-         UpdateDrawStats(*drawShape, flags);
+         shapeFlags = drawShape->CalcDrawFlags(camera, sceneFlags);
+         drawShape->Draw(shapeFlags);
+         UpdateDrawStats(*drawShape, shapeFlags);
       }
 
       // Terminate the draw if over opaque fraction timeout
@@ -667,9 +671,9 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    if (doSelected) {
       // Draw now if non-transparent
       if (!fSelectedPhysical->IsTransparent()) {
-         TGLDrawFlags flags = fSelectedPhysical->CalcDrawFlags(camera, sceneFlags);
-         fSelectedPhysical->Draw(flags);
-         UpdateDrawStats(*fSelectedPhysical, flags);
+         shapeFlags = fSelectedPhysical->CalcDrawFlags(camera, sceneFlags);
+         fSelectedPhysical->Draw(shapeFlags);
+         UpdateDrawStats(*fSelectedPhysical, shapeFlags);
       } else {
          // Add to transparent drawlist
          transDrawList.push_back(fSelectedPhysical);
@@ -685,9 +689,9 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
 
    for (drawIt = transDrawList.begin(); drawIt != transDrawList.end(); drawIt++) {
       drawShape = *drawIt;
-         TGLDrawFlags flags = drawShape->CalcDrawFlags(camera, sceneFlags);
-         drawShape->Draw(flags);
-         UpdateDrawStats(*drawShape, flags);
+         shapeFlags = drawShape->CalcDrawFlags(camera, sceneFlags);
+         drawShape->Draw(shapeFlags);
+         UpdateDrawStats(*drawShape, shapeFlags);
    }
 
    // Reset these after transparent done

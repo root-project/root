@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.6 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.7 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -44,12 +44,10 @@ class TGLViewer;
 // some common mouse action handling/tracking.                          //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLManip
+class TGLManip // TODO Should derive from TGLDrawable or TGLPhysicalShape
 {
 protected:
-   // Nasty - this only needs to be here to make a external cross-thread select call
-   // on us - gVirutalGL issues
-   TGLPhysicalShape * fShape;
+   TGLPhysicalShape * fShape;             //! manipulated shape
    UInt_t             fSelectedWidget;
    Bool_t             fActive;
 
