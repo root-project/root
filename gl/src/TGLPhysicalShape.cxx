@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.18 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.19 2006/02/20 11:02:19 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -199,9 +199,8 @@ void TGLPhysicalShape::Draw(const TGLDrawFlags & flags) const
       }
       case TGLDrawFlags::kFill: 
       case TGLDrawFlags::kOutline: {
-         // Fill needs material colors
-         // Outline needs material + a fixed (black) outline color
-         // This is set once at scene level
+         // Both need material colors
+
          // Set back diffuse only for clipping where inner (back) faces
          // are shown. Don't set shinneness or specular as we want 
          // back face to appear as 'flat' as possible as crude visual
@@ -211,11 +210,18 @@ void TGLPhysicalShape::Draw(const TGLDrawFlags & flags) const
          glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
          glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
          glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+
+         // Outline also needs grey wireframe but respecting 
+         // transparency of main diffuse color
+         if (flags.Style() == TGLDrawFlags::kOutline) {
+            glColor4f(0.1, 0.1, 0.1, fColor[3]/2.0);
+         }
+
          // TODO: Scene draws outline style in two passes - for second
          // wireframe overlay one we don't need to set materials
          // But don't know the pass here.....
          // Also we only need to set back materials when clipping
-         // - this might cause extra cost without
+         // - this might cause extra uneeded cost
          break;
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.34 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.35 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -414,15 +414,17 @@ void TGLScene::Draw(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(1.f, 1.f);
          } else {
-            // Second pass - black outline
+            // Second pass - outline (wireframe)
             glDisable(GL_POLYGON_OFFSET_FILL);
             glDisable(GL_LIGHTING);
-            glColor3d(.1, .1, .1);
-            // Cull back faces and only outline on front - we
-            // are only showing back faces with clipping as a 
-            // better solution than completely invisible faces
-            glEnable(GL_CULL_FACE);
-            glPolygonMode(GL_FRONT, GL_LINE);
+            
+            // We are only showing back faces with clipping as a 
+            // better solution than completely invisible faces.
+            // *Could* cull back faces and only outline on front like this:
+            //    glEnable(GL_CULL_FACE);
+            //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            // However this means clipped back edges not shown - so do inside and out....
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
          }
       }
 
@@ -651,10 +653,11 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
       }
 
       // Terminate the draw if over opaque fraction timeout
-      // Only test every 30 objects as this is somewhat costly
-      if (timeout > 0.0 && fDrawStats.fOpaque > 0 && (fDrawStats.fOpaque % 30) == 0) {
-         Double_t opaqueTimeFraction = fDrawStats.fOpaque / (transDrawList.size() + fDrawStats.fOpaque);
-         if (stopwatch.Lap() > timeout / opaqueTimeFraction) {
+      // Only test every 50 objects as this is somewhat costly
+      if (timeout > 0.0 && fDrawStats.fOpaque > 0 && (fDrawStats.fOpaque % 50) == 0) {
+         Double_t opaqueTimeFraction = static_cast<Double_t>(fDrawStats.fOpaque) /
+                                       static_cast<Double_t>(transDrawList.size() + fDrawStats.fOpaque);
+         if (stopwatch.Lap() > (timeout * opaqueTimeFraction)) {
             run = kFALSE;
          }   
       }
