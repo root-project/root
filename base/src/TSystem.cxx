@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.133 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.134 2005/12/08 23:08:19 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -622,9 +622,9 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       // rootd daemon ...
       if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path)) &&
           h->LoadPlugin() == 0)
-         helper = (TSystem*) h->ExecPlugin(1, path);
+         helper = (TSystem*) h->ExecPlugin(2, path, kFALSE);
       else
-         helper = new TNetSystem(path);
+         helper = new TNetSystem(path, kFALSE);
    } else if (!strcmp(url.GetProtocol(), "http") &&
               pname.BeginsWith("http")) {
       // http ...

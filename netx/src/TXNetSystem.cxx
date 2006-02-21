@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.1 2005/10/27 16:36:38 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.2 2005/12/12 12:54:27 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -40,7 +40,7 @@ Bool_t TXNetSystem::fgInitDone = kFALSE;
 Bool_t TXNetSystem::fgRootdBC = kTRUE;
 
 //_____________________________________________________________________________
-TXNetSystem::TXNetSystem() : TNetSystem()
+TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner)
 {
    // Create system management class without connecting to server.
 
@@ -53,7 +53,7 @@ TXNetSystem::TXNetSystem() : TNetSystem()
 }
 
 //_____________________________________________________________________________
-TXNetSystem::TXNetSystem(const char *url) : TNetSystem()
+TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
 {
    // Create system management class and connect to server specified by url.
 

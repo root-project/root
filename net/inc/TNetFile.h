@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.19 2005/09/05 10:28:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.20 2005/10/27 16:36:37 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -93,6 +93,7 @@ private:
    void       *fDirp;        // directory handler
    TFTP       *fFTP;         // Connection to rootd
    TString     fHost;        // Remote host
+   Bool_t      fFTPOwner;    // True if owner of the FTP instance
    TString     fUser;        // Remote user
 
    void       *GetDirPtr() const { return fDirp; }
@@ -101,8 +102,8 @@ protected:
    void        Create(const char *url, TSocket *sock = 0);
 
 public:
-   TNetSystem();
-   TNetSystem(const char *url);
+   TNetSystem(Bool_t ftpowner = kTRUE);
+   TNetSystem(const char *url, Bool_t ftpowner = kTRUE);
    virtual ~TNetSystem();
 
    Bool_t      ConsistentWith(const char *path, void *dirptr);

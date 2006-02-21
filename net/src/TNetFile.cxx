@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.62 2005/09/05 10:28:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.63 2005/10/27 16:36:38 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -634,9 +634,13 @@ void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
 //
 
 //______________________________________________________________________________
-TNetSystem::TNetSystem() : TSystem("-root", "Net file Helper System")
+TNetSystem::TNetSystem(Bool_t ftpowner)
+           : TSystem("-root", "Net file Helper System")
 {
    // Create helper class that allows directory access via rootd.
+   // Use ftpowner = TRUE (default) if this instance is responsible
+   // for cleaning of the underlying TFTP connection; this allows
+   // to have control on the order of the final cleaning.
 
    // name must start with '-' to bypass the TSystem singleton check
    SetName("root");
@@ -644,18 +648,24 @@ TNetSystem::TNetSystem() : TSystem("-root", "Net file Helper System")
    fDir = kFALSE;
    fDirp = 0;
    fFTP  = 0;
+   fFTPOwner = ftpowner;
    fUser = "";
    fHost = "";
 }
 
 //______________________________________________________________________________
-TNetSystem::TNetSystem(const char *url) : TSystem("-root", "Net file Helper System")
+TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
+           : TSystem("-root", "Net file Helper System")
 {
    // Create helper class that allows directory access via rootd.
+   // Use ftpowner = TRUE (default) if this instance is responsible
+   // for cleaning of the underlying TFTP connection; this allows
+   // to have control on the order of the final cleaning.
 
    // name must start with '-' to bypass the TSystem singleton check
    SetName("root");
 
+   fFTPOwner = ftpowner;
    Create(url);
 }
 
@@ -724,6 +734,11 @@ void TNetSystem::Create(const char *url, TSocket *sock)
          } else {
             fUser = fFTP->GetSocket()->GetSecContext()->GetUser();
             fHost = fFTP->GetSocket()->GetSecContext()->GetHost();
+            // If responsible for the TFTP connection, remove it from the
+            // socket global list to avoid problems with double deletion
+            // at final cleanup
+            if (fFTPOwner)
+               gROOT->GetListOfSockets()->Remove(fFTP);
          }
       }
    }
@@ -735,19 +750,20 @@ TNetSystem::~TNetSystem()
    // Dtor
 
    // Close FTP connection
-   if (fFTP) {
-      if (fFTP->IsOpen()) {
+   if (fFTPOwner) {
+      if (fFTP) {
+         if (fFTP->IsOpen()) {
 
-         // Close remote directory if still open
-         if (fDir) {
-            fFTP->FreeDirectory(kFALSE);
-            fDir = kFALSE;
+            // Close remote directory if still open
+            if (fDir) {
+               fFTP->FreeDirectory(kFALSE);
+               fDir = kFALSE;
+            }
+            fFTP->Close();
          }
-         fFTP->Close();
+         delete fFTP;
       }
-      delete fFTP;
    }
-
    fDirp = 0;
    fFTP  = 0;
 }

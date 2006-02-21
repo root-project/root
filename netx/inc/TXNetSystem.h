@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.cxx,v 1.61 2005/05/31 13:29:12 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.1 2005/10/27 16:36:38 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -60,8 +60,8 @@ private:
    void            InitXrdClient();
 
 public:
-   TXNetSystem();
-   TXNetSystem(const char *url);
+   TXNetSystem(Bool_t owner = kTRUE);
+   TXNetSystem(const char *url, Bool_t owner = kTRUE);
    virtual ~TXNetSystem();
 
    Bool_t              AccessPathName(const char *path, EAccessMode mode);
