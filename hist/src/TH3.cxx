@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.72 2006/01/31 12:13:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.73 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1791,7 +1791,7 @@ TH1 *TH3::Project3D(Option_t *option) const
 
    // Fill the projected histogram taking into accounts underflow/overflows
    if (!fXaxis.TestBit(TAxis::kAxisRange)) {ixmin--; ixmax++;}
-   if (!fYaxis.TestBit(TAxis::kAxisRange)) {iymin--; izmax++;}
+   if (!fYaxis.TestBit(TAxis::kAxisRange)) {iymin--; iymax++;}
    if (!fZaxis.TestBit(TAxis::kAxisRange)) {izmin--; izmax++;}
    Float_t cont,e,e1;
    Double_t entries  = 0;
