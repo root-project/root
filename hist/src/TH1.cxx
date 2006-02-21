@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.273 2006/01/31 20:14:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.274 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3864,8 +3864,13 @@ Long64_t TH1::Merge(TCollection *li)
    if (!li) return 0;
    if (li->IsEmpty()) return (Int_t) GetEntries();
 
+   // We don't want to add the clone to gDirectory,
+   // so remove our kMustCleanup bit temporarily
+   Bool_t mustCleanup = TestBit(kMustCleanup);
+   if (mustCleanup) ResetBit(kMustCleanup);
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
+   if (mustCleanup) SetBit(kMustCleanup);
    Assert(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
