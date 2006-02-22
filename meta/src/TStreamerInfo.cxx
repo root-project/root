@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.231 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.232 2006/02/09 20:43:37 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1813,101 +1813,101 @@ void* TStreamerInfo::New(void *obj)
 
    for (; element; element = (TStreamerElement*) next()) {
 
-    // Skip elements which have not been allocated memory.
-    if (element->GetOffset() == kMissing) {
-       continue;
-    }
+      // Skip elements which have not been allocated memory.
+      if (element->GetOffset() == kMissing) {
+         continue;
+      }
 
-    // Skip elements for which we do not have any class
-    // information.  FIXME: Document how this could happen.
-    TClass* cle = element->GetClassPointer();
-    if (!cle) {
-       continue;
-    }
+      // Skip elements for which we do not have any class
+      // information.  FIXME: Document how this could happen.
+      TClass* cle = element->GetClassPointer();
+      if (!cle) {
+         continue;
+      }
 
-    char* eaddr = p + element->GetOffset();
-    Int_t etype = element->GetType();
+      char* eaddr = p + element->GetOffset();
+      Int_t etype = element->GetType();
 
-    //cle->GetStreamerInfo(); //necessary in case "->" is not specified
+      //cle->GetStreamerInfo(); //necessary in case "->" is not specified
 
-    switch (etype) {
+      switch (etype) {
 
-       case kAnyP:
-       case kObjectP:
-       case kSTLp:
-       {
-	  // Initialize array of pointers with null pointers.
-	  char** r = (char**) eaddr;
-	  Int_t len = element->GetArrayLength();
-	  for (Int_t i = 0; i < len; ++i) {
-	     r[i] = 0;
-	  }
-       }
-       break;
+         case kAnyP:
+         case kObjectP:
+         case kSTLp:
+         {
+             // Initialize array of pointers with null pointers.
+             char** r = (char**) eaddr;
+             Int_t len = element->GetArrayLength();
+             for (Int_t i = 0; i < len; ++i) {
+                r[i] = 0;
+             }
+         }
+         break;
 
-       case kObjectp:
-       case kAnyp:
-       {
-	  // If the option "->" is given in the data member comment field
-	  // it is assumed that the object exists before reading data in,
-	  // so we create an object.
-	  if (cle != TClonesArray::Class()) {
-	     void** r = (void**) eaddr;
-	     *r = cle->New();
-	  } else {
-	     // In the case of a TClonesArray, the class name of
-	     // the contained objects must be specified in the
-	     // data member comment in this format:
-	     //    TClonesArray* myVar; //->(className)
-	     const char* title = element->GetTitle();
-	     const char* bracket1 = strrchr(title, '(');
-	     const char* bracket2 = strrchr(title, ')');
-	     if (bracket1 && bracket2 && (bracket2 != (bracket1 + 1))) {
-		Int_t len = bracket2 - (bracket1 + 1);
-		char* clonesClass = new char[len+1];
-		clonesClass[0] = '\0';
-		strncat(clonesClass, bracket1 + 1, len);
-		void** r = (void**) eaddr;
-		*r = (void*) new TClonesArray(clonesClass);
-		delete[] clonesClass;
-	     } else {
-		//Warning("New", "No class name found for TClonesArray initializer in data member comment (expected \"//->(className)\"");
-		void** r = (void**) eaddr;
-		*r = (void*) new TClonesArray();
-	     }
-	  }
-       }
-       break;
+         case kObjectp:
+         case kAnyp:
+         {
+            // If the option "->" is given in the data member comment field
+            // it is assumed that the object exists before reading data in,
+            // so we create an object.
+            if (cle != TClonesArray::Class()) {
+               void** r = (void**) eaddr;
+               *r = cle->New();
+            } else {
+               // In the case of a TClonesArray, the class name of
+               // the contained objects must be specified in the
+               // data member comment in this format:
+               //    TClonesArray* myVar; //->(className)
+               const char* title = element->GetTitle();
+               const char* bracket1 = strrchr(title, '(');
+               const char* bracket2 = strrchr(title, ')');
+               if (bracket1 && bracket2 && (bracket2 != (bracket1 + 1))) {
+                  Int_t len = bracket2 - (bracket1 + 1);
+                  char* clonesClass = new char[len+1];
+                  clonesClass[0] = '\0';
+                  strncat(clonesClass, bracket1 + 1, len);
+                  void** r = (void**) eaddr;
+                  *r = (void*) new TClonesArray(clonesClass);
+                  delete[] clonesClass;
+               } else {
+                  //Warning("New", "No class name found for TClonesArray initializer in data member comment (expected \"//->(className)\"");
+                  void** r = (void**) eaddr;
+                  *r = (void*) new TClonesArray();
+               }
+            }
+         }
+         break;
 
-       case kBase:
-       case kObject:
-       case kAny:
-       case kTObject:
-       case kTString:
-       case kTNamed:
-       case kSTL:
-       {
-	  cle->New(eaddr);
-       }
-       break;
+         case kBase:
+         case kObject:
+         case kAny:
+         case kTObject:
+         case kTString:
+         case kTNamed:
+         case kSTL:
+         {
+            cle->New(eaddr);
+         }
+         break;
 
-       case kObject + kOffsetL:
-       case kAny + kOffsetL:
-       case kTObject + kOffsetL:
-       case kTString + kOffsetL:
-       case kTNamed + kOffsetL:
-       case kSTL + kOffsetL:
-       {
-	  Int_t size = cle->Size();
-	  char* r = eaddr;
-	  Int_t len = element->GetArrayLength();
-	  for (Int_t i = 0; i < len; ++i, r += size) {
-	     cle->New(r);
-	  }
-       }
-       break;
+         case kObject + kOffsetL:
+         case kAny + kOffsetL:
+         case kTObject + kOffsetL:
+         case kTString + kOffsetL:
+         case kTNamed + kOffsetL:
+         case kSTL + kOffsetL:
+         {
+            Int_t size = cle->Size();
+            char* r = eaddr;
+            Int_t len = element->GetArrayLength();
+            for (Int_t i = 0; i < len; ++i, r += size) {
+               cle->New(r);
+            }
+         }
+         break;
 
-    } // switch etype
+      } // switch etype
    } // for TIter next(fElements)
 
    return p;
