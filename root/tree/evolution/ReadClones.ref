@@ -1,5 +1,6 @@
 
 Processing ReadClones.C...
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "fTracksPtr.fEnergy"
 Processing clonesfile.root
 *************************************************************
 *    Row   * Instance *                     fTracks.fEnergy *
@@ -13,12 +14,11 @@ Processing clonesfile.root
 *        0 *        0 *                                  33 *
 *        0 *        1 *                                  77 *
 *************************************************************
-*************************************************************
-*    Row   * Instance *                  fTracksPtr.fEnergy *
-*************************************************************
-*        0 *        0 *                                  33 *
-*        0 *        1 *                                  77 *
-*************************************************************
+**************************************************
+*    Row   *                  fTracksPtr.fEnergy *
+**************************************************
+*        0 *                                     *
+**************************************************
 *************************************************************
 *    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
 *************************************************************
@@ -52,13 +52,12 @@ Processing clonesfile.root
 
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:list<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:list<Track> to type:TClonesArray, skip element
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
 Processing listsfile.root
 *************************************************************
 *    Row   * Instance *                     fTracks.fEnergy *
 *************************************************************
-*        0 *        0 *                                     *
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
 *************************************************************
 *************************************************************
 *    Row   * Instance *          TopSplit99.fTracks.fEnergy *
@@ -66,13 +65,11 @@ Processing listsfile.root
 *        0 *        0 *                                  33 *
 *        0 *        1 *                                  77 *
 *************************************************************
-Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrievable for fTracksPtr.fEnergy!
-Error in <TTreeFormula::Compile>:  Bad numerical expression : "fTracksPtr.fEnergy"
-**************************************************
-*    Row   *                  fTracksPtr.fEnergy *
-**************************************************
-*        0 *                                     *
-**************************************************
+*************************************************************
+*    Row   * Instance *                  fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
 *************************************************************
 *    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
 *************************************************************
@@ -107,13 +104,12 @@ Error in <TTreeFormula::Compile>:  Bad numerical expression : "TopCl.fTracksPtr.
 *************************************************************
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:vector<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:vector<Track> to type:TClonesArray, skip element
-Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
 Processing vectorfile.root
 *************************************************************
 *    Row   * Instance *                     fTracks.fEnergy *
 *************************************************************
-*        0 *        0 *                                     *
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
 *************************************************************
 *************************************************************
 *    Row   * Instance *          TopSplit99.fTracks.fEnergy *
@@ -121,13 +117,11 @@ Processing vectorfile.root
 *        0 *        0 *                                  33 *
 *        0 *        1 *                                  77 *
 *************************************************************
-Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrievable for fTracksPtr.fEnergy!
-Error in <TTreeFormula::Compile>:  Bad numerical expression : "fTracksPtr.fEnergy"
-**************************************************
-*    Row   *                  fTracksPtr.fEnergy *
-**************************************************
-*        0 *                                     *
-**************************************************
+*************************************************************
+*    Row   * Instance *                  fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
 *************************************************************
 *    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
 *************************************************************
