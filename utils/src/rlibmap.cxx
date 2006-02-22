@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.18 2005/12/11 03:04:25 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.19 2006/02/16 19:03:54 pcanal Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -347,9 +347,7 @@ int main(int argc, char **argv)
     !defined(__OpenBSD__)
       // lock file
       if (lockf(fileno(fp), F_LOCK, (off_t)1) == -1) {
-         fprintf(stderr, "rlibmap: error locking output file\n");
-         fclose(fp);
-         return 1;
+         fprintf(stderr, "rlibmap: locking failed, don't use gmake -j\n");
       }
 #endif
 
@@ -365,9 +363,7 @@ int main(int argc, char **argv)
       // remove lock
       lseek(fileno(fp), 0, SEEK_SET);
       if (lockf(fileno(fp), F_ULOCK, (off_t)1) == -1) {
-         fprintf(stderr, "rlibmap: error unlocking output file\n");
-         fclose(fp);
-         return 1;
+         //fprintf(stderr, "rlibmap: error unlocking output file\n");
       }
 #endif
    }
