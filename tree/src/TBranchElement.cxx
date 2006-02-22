@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.187 2005/11/25 05:39:33 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.188 2005/12/02 18:49:44 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -230,18 +230,22 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          }
          basket->DeleteEntryOffset(); //entryoffset not required for the clonesarray counter
          fEntryOffsetLen = 0;
-         if (!clones) return;
-         clm = clones->GetClass();
-         if (!clm) return;
+
          // ===> Create a leafcount
          TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
          leaf->SetBranch(this);
          fNleaves = 1;
          fLeaves.Add(leaf);
          fTree->GetListOfLeaves()->Add(leaf);
+
+         if (!clones) return;
+         clm = clones->GetClass();
+         if (!clm) return;
+
          // Create a basket for the leafcount
          TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
          fBaskets.Add(basket2);
+
          // ===> create sub branches for each data member of a TClonesArray
          fType = 3;
          //check that the contained objects class name is part of the element title
@@ -339,7 +343,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    leaf->SetBranch(this);
    fNleaves = 1;
    fLeaves.Add(leaf);
-   gTree->GetListOfLeaves()->Add(leaf);
+   fTree->GetListOfLeaves()->Add(leaf);
    if (brcount) SetBranchCount(brcount);
 }
 
@@ -2545,6 +2549,16 @@ void TBranchElement::Streamer(TBuffer &R__b)
       TBranchElement::Class()->ReadBuffer(R__b, this);
       fParentClass.SetName(fParentName);
       fBranchClass.SetName(fClassName);
+
+      // Fixup a case where the TLeafElement was missing
+      if (fType==0 && fLeaves.GetEntriesFast()==0) {
+         TLeaf *leaf     = new TLeafElement(GetTitle(),fID, fStreamerType);
+         leaf->SetTitle(GetTitle());
+         leaf->SetBranch(this);
+         fNleaves = 1;
+         fLeaves.Add(leaf);
+         fTree->GetListOfLeaves()->Add(leaf);
+      }
    } else {
       TDirectory *dirsav = fDirectory;
       fDirectory = 0;  // to avoid recursive calls
