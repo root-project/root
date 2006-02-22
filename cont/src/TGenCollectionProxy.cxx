@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.24 2006/01/31 20:44:25 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.25 2006/02/09 20:41:40 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -576,7 +576,11 @@ UInt_t TGenCollectionProxy::Sizeof() const
 Bool_t TGenCollectionProxy::HasPointers() const
 {
    // Return true if the content is of type 'pointer to'
-   return fPointers;
+   
+   // The content of a map and multimap is always a 'pair' and hence 
+   // fPointers means "Flag to indicate if containee has pointers (key or value)"
+   // so we need to ignore its value for map and multimap;
+   return fPointers && !(fSTL_type == TClassEdit::kMap || fSTL_type == TClassEdit::kMultiMap);
 }
 
 //______________________________________________________________________________
