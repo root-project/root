@@ -1,32 +1,41 @@
 {
    gROOT->ProcessLine(".L MyClassClones.cxx+");
-   TFile *f = new TFile("clonesfile.root","READ");
-   TTree *t; f->GetObject("tree",t);
-   //TopLevel *obj = 0;
-   //t->SetBranchAddress("Top",&obj);
-   t->Scan("fTracks.fEnergy","","colsize=35");
-   t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
-   t->Scan("fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
-   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
-   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
-   f->Close();
-   delete f;
+   TFile *f;
+   TTree *t;
+
+   if (1) {
+      f = new TFile("clonesfile.root","READ");
+      f->GetObject("tree",t);
+      //TopLevel *obj = 0;
+      //t->SetBranchAddress("Top",&obj);
+      cout << "Processing clonesfile.root\n";
+      t->Scan("fTracks.fEnergy","","colsize=35");
+      t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
+      t->Scan("fTracksPtr.fEnergy","","colsize=35");
+      t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
+      t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
+      t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
+      t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
+      t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
+      f->Close();
+      delete f;
+   }
 
    f = new TFile("listfile.root","READ");
    f->GetObject("tree",t);
    //TopLevel *obj = 0;
    //t->SetBranchAddress("Top",&obj);
+   cerr << endl << flush;
+   cout << "Processing listsfile.root\n";
    t->Scan("fTracks.fEnergy","","colsize=35");
    t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
-   t->Scan("fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
-   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
-   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
+   cout << flush;
+   t->Scan("fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopCl.fTracks.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
    f->Close();
    delete f;
 
@@ -34,14 +43,15 @@
    f->GetObject("tree",t);
    //TopLevel *obj = 0;
    //t->SetBranchAddress("Top",&obj);
-   t->Scan("fTracks.fEnergy","","colsize=35");
-   t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
-   t->Scan("fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
-   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
-   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
-   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
+   cout << "Processing vectorfile.root\n";
+   t->Scan("fTracks.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopCl.fTracks.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
    f->Close();
    delete f;
 

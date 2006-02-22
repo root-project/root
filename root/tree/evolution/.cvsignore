@@ -1,2 +1,3 @@
  *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
 *.root
+MyClassClones_cxx.dll.manifest MyClassList_cxx.dll.manifest MyClassVector_cxx.dll.manifest SimpleOne_C.dll.manifest SimpleTwo_C.dll.manifest
