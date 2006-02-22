@@ -1217,7 +1217,8 @@ class genDictionary(object) :
     self.getAllBases( cid, bases ) 
     for b in bases :
       bname = self.genTypeName(b[0],colon=True)
-      s += '    s_bases.push_back(std::make_pair(ROOT::Reflex::Base( ROOT::Reflex::GetType< %s >(), ROOT::Reflex::BaseOffset< %s,%s >::Get(),%s), %d));\n' % (bname, cl, bname, b[1], b[2])
+      bname2 = self.genTypeName(b[0])
+      s += '    s_bases.push_back(std::make_pair(ROOT::Reflex::Base( ROOT::Reflex::TypeBuilder("%s"), ROOT::Reflex::BaseOffset< %s,%s >::Get(),%s), %d));\n' % (bname2, cl, bname, b[1], b[2])
     s += '  }\n  return &s_bases;\n' 
     s += '}\n'
     return s
