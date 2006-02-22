@@ -1,0 +1,38 @@
+void runQEvent() {
+
+    gROOT->ProcessLine(".L QEvent.cc+");
+
+    const Int_t n = 100;
+    UInt_t *array = new UInt_t[n];
+
+    for(Int_t i(0); i<n; i++)
+        array[i] = 300*TMath::Abs(TMath::Sin(TMath::TwoPi()*i/n));
+
+    QRawTriggerPulse* tp = new QRawTriggerPulse(n,array);
+
+    TFile *f = new TFile("myTest.root","recreate");
+    TTree *t = new TTree("t","mytree");
+
+    QEvent *q = new QEvent(*tp);
+    t->Branch("event.","QEvent",&q);
+    //t->Branch("thepulse",&tp);
+
+
+    t->Fill();
+    t->AutoSave();
+
+    for(Int_t i(0); i<n; i++)
+        cout << i << "   " << tp->GetSample()[i] << endl;
+
+    f->Close();
+    delete f;
+    delete q;
+    delete tp;
+
+    TFile *f = new TFile("myTest.root");
+    TTree *t = (TTree*)f->Get("t");
+    t->StartViewer();
+    t->Draw("event.fRawTriggerPulse.fSample");
+
+}
+

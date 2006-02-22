@@ -1,2 +1,2 @@
- *.clog *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+ *.manifest *.clog *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
 cmakeclass.C cmakeclass.h cmakeproxy.h generatedSel.h
