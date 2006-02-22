@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.19 2006/02/09 20:40:47 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.20 2006/02/10 18:23:05 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -510,7 +510,7 @@ void TEmulatedCollectionProxy::Streamer(TBuffer &b)
 //
 // Utility functions
 //
-static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char *dmFull)
+static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char *dmFull, Int_t offset)
 {
    // Create a TStreamerElement for the type 'dmFull' and whose data member name is 'dmName'.
 
@@ -518,7 +518,6 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
    TString dmType( TClassEdit::ShortType(dmFull,1) );
    bool dmIsPtr = (s1 != dmType);
    const char *dmTitle = "Emulation";
-   Int_t offset = 0;
 
    TDataType *dt = gROOT->GetType(dmType);
    if (dt) {  // found a basic type
@@ -530,7 +529,9 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
                dmFull);
          return 0;
       } else {
-         return new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
+         TStreamerElement *el = new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
+         el->SetSize(dsize);
+         return el;
       }
    } else {
 
@@ -578,8 +579,19 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    i->SetName(Form("pair<%s,%s>",fname.c_str(),sname.c_str()));
    i->SetClass(0);
    i->GetElements()->Clear();
-   i->GetElements()->Add( R__CreateEmulatedElement("first", fname.c_str()) );
-   i->GetElements()->Add( R__CreateEmulatedElement("second", sname.c_str()) );
+   TStreamerElement *fel = R__CreateEmulatedElement("first", fname.c_str(), 0);  
+   i->GetElements()->Add( fel );
+   Int_t size = 0;
+   if (fel) {
+      size = fel->GetSize();
+      Int_t sp = sizeof(void *);
+#if defined(R__SGI64)
+      sp = 8;
+#endif
+      //align the non-basic data types (required on alpha and IRIX!!)
+      if (size%sp != 0) size = size - size%sp + sp;
+   }
+   i->GetElements()->Add( R__CreateEmulatedElement("second", sname.c_str(), size) );
    Int_t oldlevel = gErrorIgnoreLevel;
    // Hide the warning about the missing pair dictionary.
    gErrorIgnoreLevel = kError;
