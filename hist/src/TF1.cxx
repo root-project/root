@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.118 2006/02/02 16:26:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.119 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -203,17 +203,18 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
 TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
       :TFormula(name,formula), TAttLine(), TAttFill(), TAttMarker()
 {
-//*-*-*-*-*-*-*F1 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
-//*-*          =========================================
-//*-*
-//*-*  See TFormula constructor for explanation of the formula syntax.
-//*-*
-//*-*  See tutorials: fillrandom, first, fit1, formula1, multifit
-//*-*  for real examples.
-//*-*
-//*-*  Creates a function of type A or B between xmin and xmax
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// F1 constructor using a formula definition
+//
+//  See TFormula constructor for explanation of the formula syntax.
+//
+//  See tutorials: fillrandom, first, fit1, formula1, multifit
+//  for real examples.
+//
+//  Creates a function of type A or B between xmin and xmax
+//
+//  if formula has the form "fffffff;xxxx;yyyy", it is assumed that
+//  the formula string is "fffffff" and "xxxx" and "yyyy" are the
+//  titles for the X and Y axis respectively.
 
    if (xmin < xmax ) {
       fXmin      = xmin;
@@ -2643,8 +2644,21 @@ void TF1::Paint(Option_t *option)
 
 //  Create a temporary histogram and fill each channel with the function value
 //  Preserve axis titles
-      TString xtitle = "";
+   TString xtitle = "";
    TString ytitle = "";
+   char *semicol = (char*)strstr(GetTitle(),";");
+   if (semicol) {
+      Int_t nxt = strlen(semicol);
+      char *ctemp = new char[nxt];
+      strcpy(ctemp,semicol+1);
+      semicol = (char*)strstr(ctemp,";");
+      if (semicol) {
+         *semicol = 0;
+         ytitle = semicol+1;
+      }
+      xtitle = ctemp;
+      delete [] ctemp;
+   }
    if (fHistogram) {
       xtitle = fHistogram->GetXaxis()->GetTitle();
       ytitle = fHistogram->GetYaxis()->GetTitle();

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.30 2005/11/21 09:47:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.31 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -54,13 +54,13 @@ TF2::TF2(): TF1(),fYmin(0),fYmax(0),fNpy(100)
 TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
       :TF1(name,formula,xmax,xmin)
 {
-//*-*-*-*-*-*-*F2 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
-//*-*          =========================================
-//*-*
-//*-*  See TFormula constructor for explanation of the formula syntax.
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// F2 constructor using a formula definition
+//
+//  See TFormula constructor for explanation of the formula syntax.
+//
+//  if formula has the form "fffffff;xxxx;yyyy", it is assumed that
+//  the formula string is "fffffff" and "xxxx" and "yyyy" are the
+//  titles for the X and Y axis respectively.
 
    if (ymin < ymax) {
       fYmin   = ymin;
