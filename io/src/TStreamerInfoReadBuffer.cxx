@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.39 2006/01/30 09:01:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.40 2006/02/09 20:44:00 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -972,7 +972,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   //  Backward compatibility. Some TStreamerElement's where without
                   //  Streamer but were not removed from element list
                   if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {
-                     b.SetBufferOffset(start);  //thre is no byte count
+                     b.SetBufferOffset(start);  //there is no byte count
+                  } else if (vers==0) {
+                     b.SetBufferOffset(start);  //there is no byte count
                   }
                }
                if (pstreamer == 0) {
