@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.97 2006/01/24 21:32:46 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.98 2006/01/31 20:58:45 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -636,7 +636,9 @@ TBranch *TBranch::FindBranch(const char* searchname)
    strcpy(longsearchname,GetName());
    char *dim = (char*)strstr(longsearchname,"[");
    if (dim) dim[0]='\0';
-   strcat(longsearchname,".");
+   if (longsearchname[strlen(longsearchname)-1] != '.') { 
+      strcat(longsearchname,".");
+   }
    strcat(longsearchname,searchname);
 
    TBranch *branch;
