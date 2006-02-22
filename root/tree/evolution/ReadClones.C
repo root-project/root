@@ -9,14 +9,14 @@
       //TopLevel *obj = 0;
       //t->SetBranchAddress("Top",&obj);
       cout << "Processing clonesfile.root\n";
-      t->Scan("fTracks.fEnergy","","colsize=35");
-      t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
-      t->Scan("fTracksPtr.fEnergy","","colsize=35");
-      t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
-      t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
-      t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
-      t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
-      t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
+      t->Scan("fTracks.fEnergy","","colsize=35"); cout << flush;
+      t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35"); cout << flush;
+      t->Scan("fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+      t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+      t->Scan("TopCl.fTracks.fEnergy","","colsize=35"); cout << flush;
+      t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35"); cout << flush;
+      t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
+      t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
       f->Close();
       delete f;
    }
