@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.36 2006/02/21 15:34:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.37 2006/02/21 16:39:49 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -358,45 +358,37 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
 
    // Setup GL light model and face culling depending on clip
    if (fCurrentClip) {
-      // Clip object - two sided lighting, don't cull (BACK) faces
-      glDisable(GL_CULL_FACE);
-      glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
    } else {
-      // No clip - single side lighting sufficient, can cull (BACK) faces
-      glEnable(GL_CULL_FACE);
-      glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
    }        
 
    // Setup GL for current draw style - fill, wireframe, outline
    // TODO: Could detect change and only mod if changed for speed
    UInt_t reqFullDraws = 1; // Default single full draw for fill+wireframe
    switch (sceneFlags.Style()) {
-      case (TGLDrawFlags::kFill): {
+      case (TGLDrawFlags::kFill):
+      case (TGLDrawFlags::kOutline): {
          glEnable(GL_LIGHTING);
          if (fCurrentClip) {
+            // Clip object - two sided lighting, two side polygons, don't cull (BACK) faces
+            glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-         } else {
-            glPolygonMode(GL_FRONT, GL_FILL);
+            glDisable(GL_CULL_FACE);
          }
-         glClearColor(0.0, 0.0, 0.0, 1.0); // Black
+         // No clip - default single side lighting,
+         // front polygons, cull (BACK) faces ok
+         if (sceneFlags.Style() == TGLDrawFlags::kFill) {
+            glClearColor(0.0, 0.0, 0.0, 1.0); // Black background for fill
+         } else {
+            glClearColor(1.0, 1.0, 1.0, 1.0); // White background for outline
+            reqFullDraws = 2;                 // Outline needs two full draws
+         }
+
          break;
       }
       case (TGLDrawFlags::kWireFrame): {
          glDisable(GL_LIGHTING);
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
          glClearColor(0.0, 0.0, 0.0, 1.0); // Black
-         break;
-      }
-      case (TGLDrawFlags::kOutline): {
-         glEnable(GL_LIGHTING);
-         if (fCurrentClip) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-         } else {
-            glPolygonMode(GL_FRONT, GL_FILL);
-         }
-         glClearColor(1.0, 1.0, 1.0, 1.0); // White
-         // Outline needs two full draws
-         reqFullDraws = 2;
          break;
       }
       default: {
@@ -499,11 +491,11 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
       }
    }
 
-   // Reset style related modes set above to defaults
-   glEnable(GL_LIGHTING);
-   glEnable(GL_CULL_FACE);
+   // Reset gl modes to defaults
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
    glPolygonMode(GL_FRONT, GL_FILL);
+   glEnable(GL_CULL_FACE);
+   glEnable(GL_LIGHTING);
 
    // Draw guides - must be done before manipulator / selected object
    // bounding box as we clear the depth buffer
@@ -591,17 +583,16 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    // which require drawing added to list during this
    // TODO: Sort front -> back for better performance
    glDepthMask(GL_TRUE);
+   glDisable(GL_BLEND);
 
    // If the scene bounding box is inside the camera frustum then
    // no need to check individual shapes - everything is visible
    Bool_t useFrustumCheck = (camera.FrustumOverlap(BoundingBox()) != kInside);
 
-   glDisable(GL_BLEND);
-
    TGLDrawFlags shapeFlags;
    DrawListIt_t drawIt;
    for (drawIt = fDrawList.begin(); drawIt != fDrawList.end() && run;
-        drawIt++) {
+        ++drawIt) {
       drawShape = *drawIt;
       if (!drawShape)
       {
@@ -626,7 +617,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
       // Draw test against passed clipping planes
       // Do before camera clipping on assumption clip planes remove more objects
       if (clipPlanes) {
-         for (UInt_t i = 0; i < clipPlanes->size(); i++) {
+         for (UInt_t i = 0; i < clipPlanes->size(); ++i) {
             overlap = drawShape->BoundingBox().Overlap((*clipPlanes)[i]);
             if (overlap == kOutside) {
                drawNeeded = kFALSE;
