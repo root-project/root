@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.53 2005/11/29 14:38:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.54 2005/11/29 19:02:58 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -170,6 +170,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
+   virtual void     SetTitle(const char *title=""); // *MENU*
    virtual void     Update();
 
    static  TF1     *GetCurrent();

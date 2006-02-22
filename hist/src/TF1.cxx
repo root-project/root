@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.119 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.120 2006/02/22 14:23:21 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -3013,6 +3013,33 @@ void TF1::SetSavedPoint(Int_t point, Double_t value)
    }
    if (point < 0 || point >= fNsave) return;
    fSave[point] = value;
+}
+
+//______________________________________________________________________________
+void TF1::SetTitle(const char *title)
+{
+// Set function title
+//  if title has the form "fffffff;xxxx;yyyy", it is assumed that
+//  the function title is "fffffff" and "xxxx" and "yyyy" are the
+//  titles for the X and Y axis respectively.
+
+   if (!title) return;
+   fTitle = title;
+   if (!fHistogram) return;
+   char *semicol = (char*)strstr(title,";");
+   if (semicol) {
+      Int_t nxt = strlen(semicol);
+      char *ctemp = new char[nxt];
+      strcpy(ctemp,semicol+1);
+      semicol = (char*)strstr(ctemp,";");
+      if (semicol) {
+         *semicol = 0;
+         fHistogram->GetYaxis()->SetTitle(semicol+1);
+      }
+      fHistogram->GetXaxis()->SetTitle(ctemp);
+      delete [] ctemp;
+   }
+   if (gPad) gPad->Modified();
 }
 
 //_______________________________________________________________________
