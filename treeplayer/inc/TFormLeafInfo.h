@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.6 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.7 2005/11/14 15:17:34 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -56,6 +56,7 @@ public:
    virtual Int_t GetArrayLength();
    virtual TClass*   GetClass() const;
    virtual Int_t     GetCounterValue(TLeaf* leaf);
+   virtual Int_t     ReadCounterValue(char *where);
 
    char* GetObjectAddress(TLeafElement* leaf, Int_t &instance);
 
@@ -169,6 +170,7 @@ public:
    }
 
    virtual Int_t     GetCounterValue(TLeaf* leaf);
+   virtual Int_t     ReadCounterValue(char *where);
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
@@ -212,6 +214,7 @@ public:
    virtual Bool_t    Update();
 
    virtual Int_t     GetCounterValue(TLeaf* leaf);
+   virtual Int_t     ReadCounterValue(char* where);
    virtual Int_t     GetCounterValue(TLeaf* leaf, Int_t instance);
    virtual Bool_t    HasCounter() const;
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);

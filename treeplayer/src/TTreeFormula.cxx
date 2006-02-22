@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.192 2006/02/09 22:44:31 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.193 2006/02/18 06:58:54 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -399,6 +399,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMult
 
 //______________________________________________________________________________
 Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
+                                       TFormLeafInfo *maininfo, 
                                        Bool_t useCollectionObject) {
    // This method is used internally to decode the dimensions of the variables
 
@@ -409,7 +410,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
 
    TFormLeafInfoMultiVarDim * multi = dynamic_cast<TFormLeafInfoMultiVarDim * >(leafinfo);
    if (multi) {
-      // With have a second variable dimensions
+      // We have a second variable dimensions
       fManager->EnableMultiVarDims();
       multi->fDim = fNdimensions[code];
       return RegisterDimensions(code, -1, multi);
@@ -427,10 +428,18 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
       }
 
       TStreamerBasicPointer *array = (TStreamerBasicPointer*)elem;
-      TClass * cl = leafinfo->fClass;
+      TClass *cl = leafinfo->fClass;
       Int_t offset;
       TStreamerElement* counter = cl->GetStreamerInfo()->GetStreamerElement(array->GetCountName(),offset);
-      leafinfo->fCounter = new TFormLeafInfo(cl,offset,counter);
+      if (maininfo==0 || maininfo==leafinfo || 1) {
+         leafinfo->fCounter = new TFormLeafInfo(cl,offset,counter);
+      } else {
+         leafinfo->fCounter = maininfo->DeepCopy();
+         TFormLeafInfo *current = leafinfo->fCounter;
+         while(current->fNext && current->fNext->fNext) current=current->fNext;
+         delete current->fNext;
+         current->fNext = new TFormLeafInfo(cl,offset,counter);
+      }
 
    } else if (!useCollectionObject && elem->GetClassPointer() == TClonesArray::Class() ) {
 
@@ -891,7 +900,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          } else {
             clonesinfo = new TFormLeafInfoClones(cl, 0, kTRUE);
             // The dimension needs to be handled!
-            numberOfVarDim += RegisterDimensions(code,clonesinfo,useLeafCollectionObject);
+            numberOfVarDim += RegisterDimensions(code,clonesinfo,maininfo,useLeafCollectionObject);
 
          }
          maininfo = clonesinfo;
@@ -905,7 +914,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          } else {
             collectioninfo = new TFormLeafInfoCollection(cl, 0, cl, kTRUE);
             // The dimension needs to be handled!
-            numberOfVarDim += RegisterDimensions(code,collectioninfo,useLeafCollectionObject);
+            numberOfVarDim += RegisterDimensions(code,collectioninfo,maininfo,useLeafCollectionObject);
          }
 
          maininfo = collectioninfo;
@@ -922,7 +931,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          } else {
             TFormLeafInfo *collectioninfo = new TFormLeafInfoCollection(cl, 0, cl, kTRUE);
             // The dimension needs to be handled!
-            numberOfVarDim += RegisterDimensions(code,collectioninfo,kFALSE);
+            numberOfVarDim += RegisterDimensions(code,collectioninfo,maininfo,kFALSE);
 
             maininfo = collectioninfo;
             previnfo = collectioninfo;
@@ -934,7 +943,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                      cl->GetCollectionProxy()->GetValueClass(),collectioninfo);
 
                fHasMultipleVarDim[code] = kTRUE;
-               numberOfVarDim += RegisterDimensions(code,multi, kFALSE);
+               numberOfVarDim += RegisterDimensions(code,multi,maininfo,kFALSE);
                previnfo->fNext = multi;
                cl = cl->GetCollectionProxy()->GetValueClass();
                multi->fNext =  new TFormLeafInfoCollection(cl, 0, cl, false);
@@ -964,7 +973,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                new TFormLeafInfoCollection(cl, 0, elemCl);
 
             // The dimension needs to be handled!
-            numberOfVarDim += RegisterDimensions(code,collectioninfo,kFALSE);
+            numberOfVarDim += RegisterDimensions(code,collectioninfo,maininfo,kFALSE);
 
             maininfo = collectioninfo;
             previnfo = collectioninfo;
@@ -975,7 +984,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                                                       collectioninfo);
 
             fHasMultipleVarDim[code] = kTRUE;
-            numberOfVarDim += RegisterDimensions(code,multi,kFALSE);
+            numberOfVarDim += RegisterDimensions(code,multi,maininfo,kFALSE);
             previnfo->fNext = multi;
             cl = elemCl->GetCollectionProxy()->GetValueClass();
             multi->fNext =  new TFormLeafInfoCollection(cl, 0, cl, false);
@@ -1003,7 +1012,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                new TFormLeafInfoCollection(cl, 0, elemCl);
 
             // The dimension needs to be handled!
-            numberOfVarDim += RegisterDimensions(code,collectioninfo, kFALSE);
+            numberOfVarDim += RegisterDimensions(code,collectioninfo,maininfo,kFALSE);
 
             collectioninfo->fNext =
                new TFormLeafInfoNumerical(elemCl->GetCollectionProxy()->GetType());
@@ -1034,7 +1043,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             TFormLeafInfo *multi =
                new TFormLeafInfoMultiVarDimCollection(cl, 0, cl, maininfo);
             fHasMultipleVarDim[code] = kTRUE;
-            numberOfVarDim += RegisterDimensions(code,multi,kFALSE);
+            numberOfVarDim += RegisterDimensions(code,multi,maininfo,kFALSE);
             previnfo->fNext = multi;
 
             multi->fNext =  new TFormLeafInfoCollection(cl, 0, cl, false);
@@ -1052,7 +1061,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             TFormLeafInfo *multi =
                new TFormLeafInfoMultiVarDimClones(cl, 0, cl, maininfo);
             fHasMultipleVarDim[code] = kTRUE;
-            numberOfVarDim += RegisterDimensions(code,multi,kFALSE);
+            numberOfVarDim += RegisterDimensions(code,multi,maininfo,kFALSE);
             previnfo->fNext = multi;
 
             multi->fNext =  new TFormLeafInfoClones(cl, 0, false);
@@ -1141,7 +1150,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0, top);
 
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,clonesinfo, kFALSE);
+                  numberOfVarDim += RegisterDimensions(code,clonesinfo,maininfo,kFALSE);
 
                   previnfo = clonesinfo;
                   maininfo = clonesinfo;
@@ -1173,7 +1182,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   TFormLeafInfo* collectioninfo =
                      new TFormLeafInfoCollection(mother_cl, 0,cl,top);
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,collectioninfo, kFALSE);
+                  numberOfVarDim += RegisterDimensions(code,collectioninfo,maininfo,kFALSE);
 
                   previnfo = collectioninfo;
                   maininfo = collectioninfo;
@@ -1340,7 +1349,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
 
                   TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,clonesinfo, kFALSE);
+                  numberOfVarDim += RegisterDimensions(code,clonesinfo,maininfo,kFALSE);
 
                   mustderef = kTRUE;
                   previnfo = clonesinfo;
@@ -1396,7 +1405,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   TFormLeafInfo* collectioninfo =
                      new TFormLeafInfoCollection(mother_cl, 0, cl);
                   // The dimension needs to be handled!
-                  numberOfVarDim += RegisterDimensions(code,collectioninfo, kFALSE);
+                  numberOfVarDim += RegisterDimensions(code,collectioninfo,maininfo,kFALSE);
 
                   mustderef = kTRUE;
                   previnfo = collectioninfo;
@@ -1450,7 +1459,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
 
                      if (element) {
                         leafinfo = new TFormLeafInfoClones(cl,clones_offset,curelem);
-                        numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
+                        numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,kFALSE);
                         if (maininfo==0) maininfo = leafinfo;
                         if (previnfo==0) previnfo = leafinfo;
                         else {
@@ -1482,10 +1491,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                                                                      curelem,maininfo);
                            fHasMultipleVarDim[code] = kTRUE;
                            leafinfo->fNext = new TFormLeafInfoCollection(cl,coll_offset,curelem);
-                           numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
+                           numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,kFALSE);
                         } else {
                            leafinfo = new TFormLeafInfoCollection(cl,coll_offset,curelem);
-                           numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
+                           numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,kFALSE);
                         }
                         if (maininfo==0) maininfo = leafinfo;
                         if (previnfo==0) previnfo = leafinfo;
@@ -1512,11 +1521,9 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   if (numberOfVarDim>=1 && type>40) {
                      // We have a variable array within a variable array!
                      leafinfo = new TFormLeafInfoMultiVarDim(cl,offset,element,maininfo);
-                     // fDataMembers.AddAtAndExpand(leafinfo,code);
                      fHasMultipleVarDim[code] = kTRUE;
                   } else {
-                     if (leafinfo) {
-                        // leafinfo->fOffset += offset;
+                     if (leafinfo && type<=40 ) {
                         leafinfo->AddOffset(offset,element);
                      } else {
                         leafinfo = new TFormLeafInfo(cl,offset,element);
@@ -1625,7 +1632,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
 
                            if (valueCl!=0 && valueCl->GetCollectionProxy()!=0) {
 
-                              numberOfVarDim += RegisterDimensions(code,leafinfo, kFALSE);
+                              numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,kFALSE);
                               if (previnfo==0) previnfo = leafinfo;
                               else {
                                  previnfo->fNext = leafinfo;
@@ -1664,7 +1671,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                return -1;
             }
 
-            numberOfVarDim += RegisterDimensions(code,leafinfo, useCollectionObject); // Note or useCollectionObject||prevUseColectionObject
+            numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,useCollectionObject); // Note or useCollectionObject||prevUseColectionObject
             if (maininfo==0) {
                maininfo = leafinfo;
             }

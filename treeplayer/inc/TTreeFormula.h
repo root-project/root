@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.47 2005/08/09 20:11:53 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.48 2005/11/11 23:21:43 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -122,7 +122,7 @@ protected:
    Int_t       ParseWithLeaf(TLeaf *leaf, const char *expression, Bool_t final, UInt_t paran_level, TObjArray &castqueue, Bool_t useLeafCollectionObject, const char *fullExpression);
    Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
    Int_t       RegisterDimensions(Int_t code, TBranchElement *branch);
-   Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info, Bool_t useCollectionObject);
+   Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info, TFormLeafInfo *maininfo, Bool_t useCollectionObject);
    Int_t       RegisterDimensions(Int_t code, TLeaf *leaf);
    Int_t       RegisterDimensions(const char *size, Int_t code);
 

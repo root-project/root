@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.25 2005/11/14 15:17:34 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.27 2006/01/19 20:15:03 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -261,8 +261,11 @@ Int_t TFormLeafInfo::GetNdata()
 //______________________________________________________________________________
 Bool_t TFormLeafInfo::HasCounter() const
 {
-   // Return true if the underlying data has a array size counter
-   return fCounter!=0;
+   // Return true if any of underlying data has a array size counter
+
+   Bool_t result = kFALSE;
+   if (fNext) result = fNext->HasCounter();
+   return fCounter!=0 || result;
 }
 
 //______________________________________________________________________________
@@ -475,8 +478,27 @@ Int_t TFormLeafInfo::GetCounterValue(TLeaf* leaf) {
 //*-*
 //  Return the size of the underlying array for the current entry in the TTree.
 
-   if (!fCounter) return 1;
+   if (!fCounter) {
+      if (fNext && fNext->HasCounter()) {
+         char *where = (char*)GetLocalValuePointer(leaf,0);
+         return fNext->ReadCounterValue(where);
+      } else return 1;
+   }
    return (Int_t)fCounter->GetValue(leaf);
+}
+
+//______________________________________________________________________________
+Int_t TFormLeafInfo::ReadCounterValue(char* where) 
+{
+   //  Return the size of the underlying array for the current entry in the TTree.
+
+   if (!fCounter) {
+      if (fNext) {
+         char *next = (char*)GetLocalValuePointer(where,0);
+         return fNext->ReadCounterValue(next);
+      } else return 1;
+   }
+   return (Int_t)fCounter->ReadValue(where,0);
 }
 
 //______________________________________________________________________________
@@ -681,6 +703,7 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
 Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
 {
    // Read the value at the given memory location
+   if (thisobj==0) return 0;
    if (fNext) {
       char *nextobj = thisobj+fOffset;
       Int_t sub_instance = instance;
@@ -959,6 +982,20 @@ Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf)
       fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
    }
    return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)) + 1;
+}
+
+//______________________________________________________________________________
+Int_t TFormLeafInfoClones::ReadCounterValue(char* where)
+{
+   // Return the current size of the the TClonesArray
+
+   if (!fCounter) {
+      TClass *clonesClass = TClonesArray::Class();
+      Int_t c_offset;
+      TStreamerElement *counter = clonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
+      fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
+   }
+   return (Int_t)fCounter->ReadValue(where) + 1;
 }
 
 //______________________________________________________________________________
@@ -1313,10 +1350,18 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf)
    // Return the current size of the the TClonesArray
 
    void *ptr = GetLocalValuePointer(leaf);
-   if (fCounter) { return (Int_t)fCounter->ReadValue((char*)ptr); }
+   return ReadCounterValue((char*)ptr);
+}
+
+//______________________________________________________________________________
+Int_t TFormLeafInfoCollection::ReadCounterValue(char* where) 
+{
+   //  Return the size of the underlying array for the current entry in the TTree.
+
+   if (fCounter) { return (Int_t)fCounter->ReadValue(where); }
    Assert(fCollProxy);
-   if (ptr==0) return 0;
-   TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
+   if (where==0) return 0;
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, where);
    return (Int_t)fCollProxy->Size();
 }
 
@@ -1411,12 +1456,15 @@ Double_t TFormLeafInfoCollection::GetValue(TLeaf *leaf, Int_t instance)
    }
 
    Assert(fCollProxy);
-   TVirtualCollectionProxy::TPushPop helper(fCollProxy,GetLocalValuePointer(leaf));
+   void *coll = GetLocalValuePointer(leaf);
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy,coll);
 
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)fCollProxy->At(index);
+   if (obj==0) return 0;
    if (fCollProxy->HasPointers()) obj = *(char**)obj;
+   if (obj==0) return 0;
    return fNext->ReadValue(obj,sub_instance);
 }
 
@@ -1661,7 +1709,7 @@ Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
       case TStreamerInfo::kAnyP:
       case TStreamerInfo::kSTLp:
       {TObject **obj = (TObject**)(whereoffset);
-      return fNext->ReadValue((char*)*obj,instance); }
+      return obj && *obj ? fNext->ReadValue((char*)*obj,instance) : 0; }
 
       case TStreamerInfo::kObject:
       case TStreamerInfo::kTString:
