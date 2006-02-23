@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.28 2005/12/01 17:47:55 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.29 2005/12/12 10:43:39 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2492,7 +2492,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
             Int_t cs = fColorTop;
             if ( nv > 2 && (v[nv-1] == v[nv-2])) {
                for (Int_t iv = nv-1; iv>2; iv--) {
-                  if (v[iv] == v[iv-1]) fColorTop = fColorMain[iv-2];
+                  if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
                }
             }
             (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
