@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.47 2005/11/21 09:31:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.48 2006/01/20 10:35:18 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1053,6 +1053,27 @@ void TGeoRotation::GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2,
    else phi3 = raddeg*TMath::ATan2(fRotationMatrix[5],fRotationMatrix[2]);
    if (phi3<0) phi3+=360.;
 }
+
+//_____________________________________________________________________________
+void TGeoRotation::GetAngles(Double_t &phi, Double_t &theta, Double_t &psi) const
+{
+// Retreive Euler angles.
+   const Double_t *m = fRotationMatrix;
+   // Check if theta is 0 or 180.
+   if (TMath::Abs(1.-TMath::Abs(m[8]))<1.e-9) {      
+      theta = TMath::ACos(m[8])*TMath::RadToDeg();
+      phi = TMath::ATan2(-m[8]*m[1],m[0])*TMath::RadToDeg();
+      psi = 0.; // convention, phi+psi matters
+      return;
+   }
+   // sin(theta) != 0
+   phi = TMath::ATan2(m[2],-m[5]);
+   Double_t sphi = TMath::Sin(phi);
+   if (TMath::Abs(sphi)<1.e-9) theta = -TMath::ASin(m[5]/TMath::Cos(phi))*TMath::RadToDeg();
+   else theta = TMath::ASin(m[2]/sphi)*TMath::RadToDeg();
+   phi *= TMath::RadToDeg();      
+   psi = TMath::ATan2(m[6],m[7])*TMath::RadToDeg();
+}   
 
 //_____________________________________________________________________________
 Double_t TGeoRotation::Determinant() const

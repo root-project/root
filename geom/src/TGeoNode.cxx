@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.30 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.31 2006/02/08 11:03:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -389,6 +389,16 @@ void TGeoNode::SaveAttributes(ofstream &out)
 }
 
 //_____________________________________________________________________________
+Bool_t TGeoNode::MayOverlap(Int_t iother) const 
+{
+// Check the overlab between the bounding box of the node overlaps with the one
+// the brother with index IOTHER.
+   if (!fOverlaps) return kFALSE;
+   for (Int_t i=0; i<fNovlp; i++) if (fOverlaps[i]==iother) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
 void TGeoNode::MasterToLocal(const Double_t *master, Double_t *local) const
 {
 // Convert the point coordinates from mother reference to local reference system
@@ -481,7 +491,7 @@ void TGeoNode::PrintCandidates() const
 void TGeoNode::PrintOverlaps() const
 {
 // print possible overlapping nodes
-   if (!IsOverlapping()) {printf("node %s is ONLY\n", GetName()); return;}
+//   if (!IsOverlapping()) {printf("node %s is ONLY\n", GetName()); return;}
    if (!fOverlaps) {printf("node %s no overlaps\n", GetName()); return;}
    printf("Overlaps for node %s :\n", GetName());
    TGeoNode *node;
@@ -749,9 +759,12 @@ TGeoIterator::TGeoIterator(TGeoVolume *top)
 // Geometry iterator for a branch starting with a TOP node.
    fTop = top;
    fLevel = 0;
+   fMustResume = kFALSE;
+   fMustStop = kFALSE;
    fType = 0;
    fArray = new Int_t[30];
    fMatrix = new TGeoHMatrix();
+   fTopName = fTop->GetName();
 }   
 
 //_____________________________________________________________________________
@@ -760,10 +773,13 @@ TGeoIterator::TGeoIterator(const TGeoIterator &iter)
 // Copy ctor.
    fTop = iter.GetTopVolume();
    fLevel = iter.GetLevel();
+   fMustResume = kFALSE;
+   fMustStop = kFALSE;
    fType = iter.GetType();
    fArray = new Int_t[30+ 30*Int_t(fLevel/30)];
    for (Int_t i=0; i<fLevel+1; i++) fArray[i] = iter.GetIndex(i);
    fMatrix = new TGeoHMatrix(*iter.GetCurrentMatrix());
+   fTopName = fTop->GetName();
 }
 
 //_____________________________________________________________________________
@@ -780,12 +796,15 @@ TGeoIterator &TGeoIterator::operator=(const TGeoIterator &iter)
 // Assignment.
    fTop = iter.GetTopVolume();
    fLevel = iter.GetLevel();
+   fMustResume = kFALSE;
+   fMustStop = kFALSE;
    fType = iter.GetType();
    if (fArray) delete [] fArray;
    fArray = new Int_t[30+ 30*Int_t(fLevel/30)];
    for (Int_t i=0; i<fLevel+1; i++) fArray[i] = iter.GetIndex(i);
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    *fMatrix = *iter.GetCurrentMatrix();
+   fTopName = fTop->GetName();
    return *this;   
 }   
 
@@ -793,11 +812,15 @@ TGeoIterator &TGeoIterator::operator=(const TGeoIterator &iter)
 TGeoNode *TGeoIterator::Next()
 {
 // Returns next node.
+   if (fMustStop) return 0;
    TGeoNode *mother = 0;
    TGeoNode *next = 0;
    Int_t i;
    Int_t nd = fTop->GetNdaughters();
-   if (!nd) return 0;
+   if (!nd) {
+      fMustStop = kTRUE;
+      return 0;
+   }   
    if (!fLevel) {
       fArray[++fLevel] = 0;
       next = fTop->GetNode(0);
@@ -808,6 +831,10 @@ TGeoNode *TGeoIterator::Next()
    for (i=2; i<fLevel+1; i++) {
       mother = next;
       next = mother->GetDaughter(fArray[i]);
+   }   
+   if (fMustResume) {
+      fMustResume = kFALSE;
+      return next;
    }   
    
    switch (fType) {
@@ -826,6 +853,7 @@ TGeoNode *TGeoIterator::Next()
             if (!next) {
                nd = fTop->GetNdaughters();
                if (fArray[fLevel]<nd-1) return fTop->GetNode(++fArray[fLevel]);
+               fMustStop = kTRUE;
                return 0;
             } else {
                nd = next->GetNdaughters();
@@ -840,9 +868,8 @@ TGeoNode *TGeoIterator::Next()
             if (!mother) return fTop->GetNode(++fArray[fLevel]);
             else return mother->GetDaughter(++fArray[fLevel]);
          }
-      default:
-         return 0;      
    }
+   fMustStop = kTRUE;
    return 0;
 }
    
@@ -879,6 +906,22 @@ TGeoNode *TGeoIterator::GetNode(Int_t level) const
 }
 
 //_____________________________________________________________________________
+void TGeoIterator::GetPath(TString &path) const
+{
+// Returns the path for the current node.
+   path = fTopName;
+   if (!fLevel) return;
+   TGeoNode *node = fTop->GetNode(fArray[1]);
+   path += "/";
+   path += node->GetName();
+   for (Int_t i=2; i<fLevel+1; i++) {
+      node = node->GetDaughter(fArray[i]);
+      path += "/";
+      path += node->GetName();
+   }   
+}      
+
+//_____________________________________________________________________________
 void TGeoIterator::IncreaseArray() 
 {
 // Increase by 30 the size of the array.
@@ -894,4 +937,51 @@ void TGeoIterator::Reset(TGeoVolume *top)
 // Resets the iterator for volume TOP.
    if (top) fTop = top;
    fLevel = 0;
+   fMustResume = kFALSE;
+   fMustStop = kFALSE;
 }      
+
+//_____________________________________________________________________________
+void TGeoIterator::SetTopName(const char *name)
+{
+// Set the top name for path
+   fTopName = name;
+}   
+
+//_____________________________________________________________________________
+void TGeoIterator::Skip()
+{
+// Stop iterating the current branch. The iteration of the next node will
+// behave as if the branch starting from the current node (included) is not existing.
+   fMustResume = kTRUE;
+   TGeoNode *next = GetNode(fLevel);
+   if (!next) return;
+   Int_t nd;
+   switch (fType) {
+      case 0:  // default next daughter behavior
+         // cd up and pick next
+         while (next) {
+            next = GetNode(fLevel-1);
+            nd = (next==0)?fTop->GetNdaughters():next->GetNdaughters();
+            if (fArray[fLevel]<nd-1) {
+               ++fArray[fLevel];
+               return;
+            }
+            fLevel--;
+            if (!fLevel) {
+               fMustStop = kTRUE;
+               return;
+            }   
+         }     
+         break;
+      case 1:  // one level search
+         next = GetNode(fLevel-1);
+         nd = (next==0)?fTop->GetNdaughters():next->GetNdaughters();
+         if (fArray[fLevel]<nd-1) {
+            ++fArray[fLevel];
+            return;
+         }
+         fMustStop = kTRUE;   
+         break;
+   }
+}         

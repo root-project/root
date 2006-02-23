@@ -16,8 +16,6 @@
 #pragma link C++ class TGeoPainter+;
 #pragma link C++ class TGeoChecker+;
 #pragma link C++ class TGeoOverlap+;
-#pragma link C++ class TGeoNodeOverlap+;
-#pragma link C++ class TGeoExtrusion+;
 #pragma link C++ class TGeoTrack+;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.75 2006/01/19 11:23:08 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.76 2006/01/31 14:02:36 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -280,22 +280,8 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    
    if (fPaintingOverlaps) {
       TGeoVolume *crt;
-      if (fOverlap->IsExtrusion()) {
-         crt = fOverlap->GetVolume();
-         fMatrix = gGeoIdentity;
-         dist = crt->GetShape()->DistancetoPrimitive(px,py);
-         if (dist<maxdist) {
-            gPad->SetSelected(crt);
-            box = (TGeoBBox*)crt->GetShape();
-            fMatrix->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-            fCheckedBox[3] = box->GetDX();
-            fCheckedBox[4] = box->GetDY();
-            fCheckedBox[5] = box->GetDZ();
-            return 0;
-         }
-      }   
-      crt = fOverlap->GetNode(0)->GetVolume();
-      fMatrix = fOverlap->GetNode(0)->GetMatrix();
+      crt = fOverlap->GetFirstVolume();
+      fMatrix = fOverlap->GetFirstMatrix();
       dist = crt->GetShape()->DistancetoPrimitive(px,py);
       if (dist<maxdist) {
          gPad->SetSelected(crt);
@@ -306,12 +292,8 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          fCheckedBox[5] = box->GetDZ();
          return 0;
       }
-      if (fOverlap->IsExtrusion()) {
-         gPad->SetSelected(view);
-         return big;
-      }
-      crt = fOverlap->GetNode(1)->GetVolume();
-      fMatrix = fOverlap->GetNode(1)->GetMatrix();
+      crt = fOverlap->GetSecondVolume();
+      fMatrix = fOverlap->GetSecondMatrix();
       dist = crt->GetShape()->DistancetoPrimitive(px,py);
       if (dist<maxdist) {
          gPad->SetSelected(crt);
@@ -734,15 +716,10 @@ char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /
          return info;
       }   
       TString ovtype, name;
-      if (fOverlap->IsExtrusion()) {
-         ovtype="EXTRUSION";
-         if (volume==fOverlap->GetVolume()) name=volume->GetName();
-         else name=fOverlap->GetNode(0)->GetName();
-      } else {
-         ovtype = "OVERLAP";
-         if (volume==fOverlap->GetNode(0)->GetVolume()) name=fOverlap->GetNode(0)->GetName();
-         else name=fOverlap->GetNode(1)->GetName();
-      }   
+      if (fOverlap->IsExtrusion()) ovtype="EXTRUSION";
+      else ovtype = "OVERLAP";
+      if (volume==fOverlap->GetFirstVolume()) name=volume->GetName();
+      else name=fOverlap->GetSecondVolume()->GetName();
       sprintf(info, "%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
       return info;
    }   
@@ -880,63 +857,39 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    Int_t color, transparency;
    if (fOverlap != overlap) fOverlap = overlap;
    TGeoHMatrix *hmat = fGeoManager->GetGLMatrix();
-   TGeoVolume *vol = overlap->GetVolume();
-   TGeoNode *node1=0, *node2=0;
+   TGeoVolume *vol;
+   TGeoVolume *vol1 = overlap->GetFirstVolume();
+   TGeoVolume *vol2 = overlap->GetSecondVolume();
+   TGeoHMatrix *matrix1 = overlap->GetFirstMatrix();
+   TGeoHMatrix *matrix2 = overlap->GetSecondMatrix();
    fGeoManager->SetMatrixTransform(kTRUE);
-   if (fOverlap->IsExtrusion()) {
-      if (!fVisLock) fVisVolumes->Add(vol);
-      *hmat = gGeoIdentity;
-      fGeoManager->SetMatrixReflection(kFALSE);
-      fGeoManager->SetPaintVolume(vol);
-      color = vol->GetLineColor();
-      transparency = vol->GetTransparency();
-      vol->SetLineColor(3);
-      vol->SetTransparency(49);
-      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      PaintShape(*(vol->GetShape()),option);
-      vol->SetLineColor(color);
-      vol->SetTransparency(transparency);
-      node1 = overlap->GetNode(0);
-      fGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
-      *hmat = node1->GetMatrix();
-      vol = node1->GetVolume();
-      if (!fVisLock) fVisVolumes->Add(vol);
-      fGeoManager->SetPaintVolume(vol);
-      color = vol->GetLineColor();
-      vol->SetLineColor(4);
-      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      PaintShape(*(vol->GetShape()),option);
-      vol->SetLineColor(color);
-   } else {
-      node1 = overlap->GetNode(0);
-      vol = node1->GetVolume();
-      *hmat = node1->GetMatrix();
-      fGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
-      if (!fVisLock) fVisVolumes->Add(vol);
-      fGeoManager->SetPaintVolume(vol);
-      color = vol->GetLineColor();
-      transparency = vol->GetTransparency();
-      vol->SetLineColor(3);
-      vol->SetTransparency(40);
-      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      PaintShape(*(vol->GetShape()),option);
-      vol->SetLineColor(color);
-      vol->SetTransparency(transparency);
-      node2 = overlap->GetNode(1);
-      fGeoManager->SetMatrixReflection(node2->GetMatrix()->IsReflection());
-      vol = node2->GetVolume();
-      *hmat = node2->GetMatrix();
-      if (!fVisLock) fVisVolumes->Add(vol);
-      fGeoManager->SetPaintVolume(vol);
-      color = vol->GetLineColor();
-      transparency = vol->GetTransparency();
-      vol->SetLineColor(4);
-      vol->SetTransparency(40);
-      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-      PaintShape(*(vol->GetShape()),option);
-      vol->SetLineColor(color);
-      vol->SetTransparency(transparency);
-   }     
+   //
+   vol = vol1;
+   *hmat = matrix1;
+   fGeoManager->SetMatrixReflection(matrix1->IsReflection());
+   if (!fVisLock) fVisVolumes->Add(vol);
+   fGeoManager->SetPaintVolume(vol);
+   color = vol->GetLineColor();
+   transparency = vol->GetTransparency();
+   vol->SetLineColor(kGreen);
+   vol->SetTransparency(40);
+   if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
+   PaintShape(*(vol->GetShape()),option);
+   vol->SetLineColor(color);
+   vol->SetTransparency(transparency);
+   vol = vol2;
+   *hmat = matrix2;
+   fGeoManager->SetMatrixReflection(matrix2->IsReflection());
+   if (!fVisLock) fVisVolumes->Add(vol);
+   fGeoManager->SetPaintVolume(vol);
+   color = vol->GetLineColor();
+   transparency = vol->GetTransparency();
+   vol->SetLineColor(kBlue);
+   vol->SetTransparency(40);
+   if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
+   PaintShape(*(vol->GetShape()),option);
+   vol->SetLineColor(color);
+   vol->SetTransparency(transparency);
    fGeoManager->SetMatrixTransform(kFALSE);
    fVisLock = kTRUE;
 }

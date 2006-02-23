@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.31 2006/02/01 13:30:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.32 2006/02/03 17:07:34 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -298,48 +298,34 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
    Int_t *otmp = new Int_t[nd-1]; 
    Int_t novlp = 0;
    TGeoNode *node = fVolume->GetNode(inode);
-//   printf("Finding overlaps for %s\n", node->GetName());
    xmin = fBoxes[6*inode+3] - fBoxes[6*inode];
    xmax = fBoxes[6*inode+3] + fBoxes[6*inode];
    ymin = fBoxes[6*inode+4] - fBoxes[6*inode+1];
    ymax = fBoxes[6*inode+4] + fBoxes[6*inode+1];
    zmin = fBoxes[6*inode+5] - fBoxes[6*inode+2];
    zmax = fBoxes[6*inode+5] + fBoxes[6*inode+2];
-//   printf("overlaps for MANY node %s\n", node->GetName());
-
-//   printf("xmin=%g  xmax=%g\n", xmin, xmax);
-//   printf("ymin=%g  ymax=%g\n", ymin, ymax);
-//   printf("zmin=%g  zmax=%g\n", zmin, zmax);
-   //TGeoNode *node1;
    // loop on brothers
    for (Int_t ib=0; ib<nd; ib++) {
       if (ib == inode) continue; // everyone overlaps with itself
-      //node1 = fVolume->GetNode(ib);
       xmin1 = fBoxes[6*ib+3] - fBoxes[6*ib];
       xmax1 = fBoxes[6*ib+3] + fBoxes[6*ib];
       ymin1 = fBoxes[6*ib+4] - fBoxes[6*ib+1];
       ymax1 = fBoxes[6*ib+4] + fBoxes[6*ib+1];
       zmin1 = fBoxes[6*ib+5] - fBoxes[6*ib+2];
       zmax1 = fBoxes[6*ib+5] + fBoxes[6*ib+2];
-//      printf(" node %s\n", node1->GetName());
-//      printf("  xmin1=%g  xmax1=%g\n", xmin1, xmax1);
-//      printf("  ymin1=%g  ymax1=%g\n", ymin1, ymax1);
-//      printf("  zmin1=%g  zmax1=%g\n", zmin1, zmax1);
 
-
-      ddx1 = xmin1-xmax;
+      ddx1 = xmax-xmin1;
       ddx2 = xmax1-xmin;
-      if ((ddx1>-1E-10)||(ddx2<1E-10)) continue;
-      ddx1 = ymin1-ymax;
+      if (ddx1*ddx2 <= 0.) continue;
+      ddx1 = ymax-ymin1;
       ddx2 = ymax1-ymin;
-      if ((ddx1>-1E-10)||(ddx2<1E-10)) continue;
-      ddx1 = zmin1-zmax;
+      if (ddx1*ddx2 <= 0.) continue;
+      ddx1 = zmax-zmin1;
       ddx2 = zmax1-zmin;
-      if ((ddx1>-1E-10)||(ddx2<1E-10)) continue;
+      if (ddx1*ddx2 <= 0.) continue;
       otmp[novlp++] = ib;
    }
    if (!novlp) {
-//      printf("---no overlaps for MANY node %s\n", node->GetName());
       delete [] otmp;
       node->SetOverlaps(ovlps, 0);
       return;
@@ -348,8 +334,8 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
    memcpy(ovlps, otmp, novlp*sizeof(Int_t));
    delete [] otmp;
    node->SetOverlaps(ovlps, novlp);
-//   printf("Overlaps for MANY node %s : %i\n", node->GetName(), novlp);
 }
+
 //-----------------------------------------------------------------------------
 Bool_t TGeoVoxelFinder::GetIndices(Double_t *point)
 {

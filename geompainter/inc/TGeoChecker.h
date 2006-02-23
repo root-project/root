@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.13 2005/04/25 07:53:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.14 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -22,6 +22,9 @@ class TGeoVolume;
 class TGeoVoxelFinder;
 class TGeoNode;
 class TGeoManager;
+class TGeoMatrix;
+class TGeoOverlap;
+class TBuffer3D;
 class TH2F;
 
 /*************************************************************************
@@ -37,6 +40,8 @@ private :
 // data members
    TGeoManager     *fGeoManager;      // pointer to geometry manager
    TGeoVolume      *fVsafe;           // volume to which a safety sphere node was added
+   TBuffer3D       *fBuff1;           // Buffer containing mesh vertices for first volume
+   TBuffer3D       *fBuff2;           // Buffer containing mesh vertices for second volume
 // methods
 
 public:
@@ -57,6 +62,7 @@ public:
    void             PrintOverlaps() const;
    void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
    void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
+   TGeoOverlap     *MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1, TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp);
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
    //void             ShowPoints(Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.22 2005/10/03 06:54:51 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.23 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -184,6 +184,7 @@ public :
    void                 FastRotZ(Double_t *sincos);
    void                 GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2, Double_t &phi2,
                                   Double_t &theta3, Double_t &phi3) const;
+   void                 GetAngles(Double_t &phi, Double_t &theta, Double_t &psi) const;
    Double_t             GetPhiRotation(Bool_t fixX=kFALSE) const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {TGeoRotation::LocalToMaster(local, master);}
@@ -196,7 +197,7 @@ public :
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
    virtual void         SavePrimitive(ofstream &out, Option_t *option);
-   void                 SetAngles(Double_t alpha, Double_t beta, Double_t gamma);
+   void                 SetAngles(Double_t phi, Double_t theta, Double_t psi);
    void                 SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                                   Double_t theta3, Double_t phi3);
    void                 SetMatrix(const Double_t *rot) {memcpy(&fRotationMatrix[0], rot, 9*sizeof(Double_t));CheckMatrix();}

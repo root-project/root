@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.3 2003/02/13 11:04:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.4 2005/11/18 16:07:59 brun Exp $
 // Author: Andrei Gheata   09/02/03
 
 /*************************************************************************
@@ -28,6 +28,10 @@
 #include "TAtt3D.h"
 #endif
 
+#ifndef ROOT_TGeoMatrix
+#include "TGeoMatrix.h"
+#endif
+
 class TGeoVolume;
 class TPolyMarker3D;
 class TBrowser;
@@ -44,86 +48,56 @@ class TGeoOverlap : public TNamed,
                     public TAttFill,
                     public TAtt3D
 {
+public:
+enum EOverlapType {
+   kGeoOverlap    = BIT(14),
+   kGeoExtrusion  = BIT(15)
+};
+   
 protected:
-   Double_t         fOverlap;    // overlap distance
-   TGeoVolume      *fVolume;     // volume containing the overlap
+   Double_t         fOverlap;     // overlap distance
+   TGeoVolume      *fVolume1;     // first volume
+   TGeoVolume      *fVolume2;     // second volume
+   TGeoHMatrix     *fMatrix1;     // positioning matrix for first volume
+   TGeoHMatrix     *fMatrix2;     // positioning matrix for second volume
    TPolyMarker3D   *fMarker;     // points in the overlapping region
 
 public:
    TGeoOverlap();
-   TGeoOverlap(const char *name, TGeoVolume *vol, Double_t ovlp);
+   TGeoOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2,
+               const TGeoMatrix *matrix1, const TGeoMatrix *matrix2,
+               Bool_t isovlp=kTRUE,  Double_t ovlp=0.01);
    virtual           ~TGeoOverlap();
    
    void              Browse(TBrowser *b);
    virtual Int_t     Compare(const TObject *obj) const;
    virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void      Draw(Option_t *option="")                   = 0;
+   virtual void      Draw(Option_t *option=""); // *MENU*
    virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
    TPolyMarker3D    *GetPolyMarker() const {return fMarker;}
-   virtual TGeoNode *GetNode(Int_t iovlp) const                  = 0;
+   TGeoVolume       *GetFirstVolume() const {return fVolume1;}
+   TGeoVolume       *GetSecondVolume() const {return fVolume2;}
+   TGeoHMatrix      *GetFirstMatrix() const {return fMatrix1;}
+   TGeoHMatrix      *GetSecondMatrix() const {return fMatrix2;}
    Double_t          GetOverlap() const {return fOverlap;}
-   TGeoVolume       *GetVolume() const  {return fVolume;}
-   virtual Bool_t    IsExtrusion() const                         = 0;
+   Bool_t            IsExtrusion() const {return TObject::TestBit(kGeoExtrusion);}
+   Bool_t            IsOverlap() const {return TObject::TestBit(kGeoOverlap);}
    Bool_t            IsFolder() const {return kFALSE;}
    virtual Bool_t    IsSortable() const {return kTRUE;}
    virtual void      Paint(Option_t *option="");
-   virtual void      PrintInfo() const                           = 0;
-   virtual void      Sizeof3D() const                            = 0;
+   virtual void      PrintInfo() const;
+   virtual void      Sizeof3D() const;
+   void              SetIsExtrusion(Bool_t flag=kTRUE) {TObject::SetBit(kGeoExtrusion,flag); TObject::SetBit(kGeoOverlap,!flag);}
+   void              SetIsOverlap(Bool_t flag=kTRUE) {TObject::SetBit(kGeoOverlap,flag); TObject::SetBit(kGeoExtrusion,!flag);}
    void              SetNextPoint(Double_t x, Double_t y, Double_t z);
-   void              SetVolume(TGeoVolume *vol) {fVolume=vol;}
+   void              SetFirstVolume(TGeoVolume *vol) {fVolume1=vol;}
+   void              SetSecondVolume(TGeoVolume *vol) {fVolume2=vol;}
+   void              SetFirstMatrix(TGeoMatrix *matrix) {*fMatrix1 = matrix;}
+   void              SetSecondMatrix(TGeoMatrix *matrix) {*fMatrix2 = matrix;}
    void              SetOverlap(Double_t ovlp)  {fOverlap=ovlp;}
    
    ClassDef(TGeoOverlap, 1)         // base class for geometical overlaps
 };
- 
-/*************************************************************************
- *   TGeoExtrusion - class representing the extrusion of a positioned volume
- *      with respect to its mother.
- ************************************************************************/
- 
-class TGeoExtrusion : public TGeoOverlap
-{
-private:
-   TGeoNode        *fNode;        // extruding daughter
-
-public:
-   TGeoExtrusion();
-   TGeoExtrusion(const char *name, TGeoVolume *vol, Int_t inode, Double_t ovlp);
-   virtual           ~TGeoExtrusion() {;}
-   
-   virtual TGeoNode *GetNode(Int_t iovlp) const;
-   virtual Bool_t    IsExtrusion() const {return kTRUE;}
-   virtual void      Draw(Option_t *option=""); // *MENU*
-   virtual void      PrintInfo() const;         // *MENU*
-   virtual void      Sizeof3D() const;
-   
-   ClassDef(TGeoExtrusion, 1)      // class representing an extruding node 
-};
- 
-/*************************************************************************
- *   TGeoNodeOverlap - class representing the overlap of 2 positioned 
- *      nodes inside a mother volume.
- ************************************************************************/
- 
-class TGeoNodeOverlap : public TGeoOverlap
-{
-private:
-   TGeoNode        *fNode1;       // first node
-   TGeoNode        *fNode2;       // second node
-
-public:
-   TGeoNodeOverlap();
-   TGeoNodeOverlap(const char *name, TGeoVolume *vol, Int_t inode1, Int_t inode2, Double_t ovlp);
-   virtual           ~TGeoNodeOverlap() {;}
-   
-   virtual TGeoNode *GetNode(Int_t iovlp) const;
-   virtual Bool_t    IsExtrusion() const {return kFALSE;}
-   virtual void      Draw(Option_t *option=""); // *MENU*
-   virtual void      PrintInfo() const;         // *MENU*
-   virtual void      Sizeof3D() const;
-   
-   ClassDef(TGeoNodeOverlap, 1)     // class representing 2 overlapping nodes
-};
-     
+      
 #endif
  

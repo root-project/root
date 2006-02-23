@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.20 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.21 2006/02/08 11:03:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #endif
 
 // forward declarations
+class TString;
 class TGeoVolume;
 class TGeoShape;
 class TGeoMedium;
@@ -106,6 +107,7 @@ public:
    Bool_t            IsVirtual() const {return TObject::TestBit(kGeoNodeVC);}
    Bool_t            IsVisible() const {return (TGeoAtt::IsVisible() && fVolume->IsVisible());}
    Bool_t            IsVisDaughters() const {return (TGeoAtt::IsVisDaughters() && fVolume->IsVisDaughters());}
+   Bool_t            MayOverlap(Int_t iother) const;
 
    virtual TGeoNode *MakeCopyNode() const {return 0;}
    Double_t          Safety(Double_t *point, Bool_t in=kTRUE) const;
@@ -200,14 +202,18 @@ class TGeoIterator
 {
 private:
    TGeoVolume       *fTop;                  // Top volume of the iterated branch
+   Bool_t            fMustResume;           // Private flag to resume from current node.
+   Bool_t            fMustStop;             // Private flag to signal that the iterator has finished.
    Int_t             fLevel;                // Current level in the tree
    Int_t             fType;                 // Type of iteration
    Int_t            *fArray;                // Array of node indices for the current path
    TGeoHMatrix      *fMatrix;               // Current global matrix
+   TString           fTopName;              // User name for top
 
    void            IncreaseArray();
 protected:
-   TGeoIterator() : fTop(0), fLevel(0), fType(0), fArray(0), fMatrix(0) { }
+   TGeoIterator() : fTop(0), fMustResume(0), fMustStop(0),
+                    fLevel(0), fType(0), fArray(0), fMatrix(0), fTopName() { }
 
 public:
    TGeoIterator(TGeoVolume *top);
@@ -222,10 +228,13 @@ public:
    Int_t           GetIndex(Int_t i) const {return ((i<=fLevel)?fArray[i]:-1);}
    Int_t           GetLevel() const {return fLevel;}
    TGeoNode       *GetNode(Int_t level) const;
+   void            GetPath(TString &path) const;
    TGeoVolume     *GetTopVolume() const {return fTop;}
    Int_t           GetType() const {return fType;}
    void            Reset(TGeoVolume *top=0);
    void            SetType(Int_t type) {fType = type;}
+   void            SetTopName(const char* name);
+   void            Skip();
    
    ClassDef(TGeoIterator,0)  //Iterator for geometry.
 };
