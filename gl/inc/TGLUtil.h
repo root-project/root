@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.26 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.27 2006/02/21 16:39:49 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -807,13 +807,13 @@ inline TGLMatrix operator * (const TGLMatrix & lhs, const TGLMatrix & rhs)
 class TGLUtil
 {
 private:
-      static UInt_t fgDrawQuality;
+   static UInt_t fgDrawQuality;
 
 public:
    virtual ~TGLUtil() { }
 
    // Error checking
-   static void   CheckError();
+   static void   CheckError(const char * loc);
 
    // Some simple shape drawing utils
    enum        ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };

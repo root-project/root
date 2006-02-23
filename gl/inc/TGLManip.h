@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.7 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.8 2006/02/21 16:39:49 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -48,12 +48,12 @@ class TGLManip // TODO Should derive from TGLDrawable or TGLPhysicalShape
 {
 protected:
    TGLPhysicalShape * fShape;             //! manipulated shape
-   UInt_t             fSelectedWidget;
-   Bool_t             fActive;
+   UInt_t             fSelectedWidget;    //! active width (axis) component
+   Bool_t             fActive;            //! manipulator is active?
 
    // Mouse tracking - in WINDOW coords
-   TPoint             fFirstMouse;
-   TPoint             fLastMouse;
+   TPoint             fFirstMouse;        //! first (start) mouse position (in WINDOW coords)
+   TPoint             fLastMouse;         //! last (latest) mouse position (in WINDOW coords)
 
    static Float_t     fgRed[4];
    static Float_t     fgGreen[4];

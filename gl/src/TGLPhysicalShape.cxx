@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.19 2006/02/20 11:02:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.20 2006/02/21 15:34:44 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -104,6 +104,7 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
 //______________________________________________________________________________
 TGLPhysicalShape::~TGLPhysicalShape()
 {
+   // Destroy the physical shape
    fLogicalShape.SubRef();
 }
 
@@ -279,28 +280,28 @@ TGLDrawFlags TGLPhysicalShape::CalcDrawFlags(const TGLCamera & camera, const TGL
    // does not support LOD at all
   
    std::vector <Double_t> boxViewportDiags;
-   TGLDrawable::ELODAxes LODAxes = SupportedLODAxes();
+   TGLDrawable::ELODAxes lodAxes = SupportedLODAxes();
    const TGLBoundingBox & box = BoundingBox();
 
-   if (SupportedLODAxes() == TGLDrawable::kLODAxesNone) {
+   if (lodAxes == TGLDrawable::kLODAxesNone) {
       // Shape doesn't support LOD along any axes return special unsupported LOD draw/cache flag
       return TGLDrawFlags(sceneFlags.Style(), TGLDrawFlags::kLODUnsupported);
    } 
    
-   if (LODAxes == TGLDrawable::kLODAxesAll) {
+   if (lodAxes == TGLDrawable::kLODAxesAll) {
       // Shape supports LOD along all axes - basis LOD hint on diagonal of viewport 
       // projection rect round whole bounding box
       boxViewportDiags.push_back(camera.ViewportRect(box).Diagonal());
-   } else if (LODAxes == (TGLDrawable::kLODAxesY | TGLDrawable::kLODAxesZ)) {
+   } else if (lodAxes == (TGLDrawable::kLODAxesY | TGLDrawable::kLODAxesZ)) {
       // Shape supports LOD along Y/Z axes (not X). LOD hint based on longest
       // diagonal (largest rect) of either of the X axis end faces
       boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowX).Diagonal());
       boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighX).Diagonal());
-   } else if (LODAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesZ)) {
+   } else if (lodAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesZ)) {
       // Shape supports LOD along X/Z axes (not Y). See above for Y/Z
       boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowY).Diagonal());
       boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighY).Diagonal());
-   } else if (LODAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesY)) {
+   } else if (lodAxes == (TGLDrawable::kLODAxesX | TGLDrawable::kLODAxesY)) {
       // Shape supports LOD along X/Y axes (not Z). See above for Y/Z
       boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceLowZ).Diagonal());
       boxViewportDiags.push_back(camera.ViewportRect(box, TGLBoundingBox::kFaceHighZ).Diagonal());

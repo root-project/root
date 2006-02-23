@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.h $
+// @(#)root/gl:$Name:  $:$Id: TGLScaleManip.h,v 1.5 2006/01/26 16:57:41 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 class TGLScaleManip : public TGLManip
 {
 private:
-   TGLVector3 fStartScale;
+   TGLVector3 fStartScale; //! initial scaling factors
 
    void LimitScale(Double_t & factor) const;
 

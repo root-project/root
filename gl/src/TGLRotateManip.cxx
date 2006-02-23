@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx,v 1.6 2006/01/30 17:42:06 rdm Exp $
 // Author:  Richard Maunder  04/10/2005
 
 /*************************************************************************
@@ -219,7 +219,7 @@ Double_t TGLRotateManip::CalculateAngleDelta(const TPoint & mouse, const TGLCame
       }
       TGLLine3 nearLine = nearLineIntersection.second;
       TGLVector3 activePlaneNear = camera.WorldDeltaToViewport(nearLine.Start(), nearLine.Vector());
-		activePlaneNear.Normalise();
+      activePlaneNear.Normalise();
       TGLVector3 mouseDelta(mouse.GetX() - fLastMouse.GetX(),
                             -(mouse.GetY() - fLastMouse.GetY()),
                             0.0);

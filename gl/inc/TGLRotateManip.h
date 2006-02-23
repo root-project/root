@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.h $
+// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.h,v 1.5 2006/01/30 17:42:06 rdm Exp $
 // Author:  Richard Maunder  04/10/2005
 
 /*************************************************************************
@@ -34,10 +34,14 @@ class TGLRotateManip : public TGLManip
 {
 private:
    // Active ring interaction - set on mouse down
-   Bool_t     fShallowRing;
-   Bool_t     fShallowFront;
-   TGLPlane   fActiveRingPlane;
-   TGLVertex3 fActiveRingCenter;
+   // Shallow ring interaction
+   // Where the ring plane forms a shallow angle to the eye direction - 
+   // a different interaction is required in these cases - see HandleMotion()
+   Bool_t     fShallowRing;         //! does active ring form shallow angle to eye?
+   Bool_t     fShallowFront;        //! front or back of the active shallow ring?
+   TGLPlane   fActiveRingPlane;     //! plane of the active ring (widget)
+   TGLVertex3 fActiveRingCenter;    //! center of active ring
+   // TODO: Is ring center required - why not get from plane?
 
    // Normal interaction tracking (non-shallow)
    TGLLine3 fRingLine;

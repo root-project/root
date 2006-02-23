@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.37 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.38 2006/02/20 11:02:19 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -743,18 +743,20 @@ void TGLViewer::InitGL()
    // GL initialisation 
    glEnable(GL_LIGHTING);
    glEnable(GL_DEPTH_TEST);
-   glEnable(GL_BLEND);
    glEnable(GL_CULL_FACE);
    glCullFace(GL_BACK);
    glClearColor(0.0, 0.0, 0.0, 0.0);
    glClearDepth(1.0);
    glMaterialf(GL_BACK, GL_SHININESS, 0.0);
+   glPolygonMode(GL_FRONT, GL_FILL);
+   glDisable(GL_BLEND);
 
    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodelAmb);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
    
-   TGLUtil::CheckError();
+   TGLUtil::CheckError("TGLViewer::InitGL");
    fInitGL = kTRUE;
 }
 
@@ -1026,7 +1028,7 @@ void TGLViewer::PreDraw()
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   TGLUtil::CheckError();
+   TGLUtil::CheckError("TGLViewer::PreDraw");
 }
 
 //______________________________________________________________________________
@@ -1038,7 +1040,7 @@ void TGLViewer::PostDraw()
    // Flush everything in case picking starts
    glFlush();
 
-   TGLUtil::CheckError();
+   TGLUtil::CheckError("TGLViewer::PostDraw");
 }
 
 //______________________________________________________________________________

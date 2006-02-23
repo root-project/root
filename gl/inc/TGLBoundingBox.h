@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.10 2005/11/18 20:26:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.11 2006/01/18 16:57:58 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -55,7 +55,7 @@ private:
    // For axis aligned 2 verticies would suffice.
    // Rest could be calculated on demand - however speed more important
    // than memory considerations
-   std::vector<TGLVertex3> fVertex;     //! the 8 bounding box vertices
+   std::vector<TGLVertex3> fVertex;           //! the 8 bounding box vertices
    Double_t                      fVolume;     //! box volume - cached for speed
    TGLVector3                    fAxes[3];    //! box axes in global frame - cached for speed
    TGLVector3                    fAxesNorm[3];//! normalised box axes in global frame - cached for speed
@@ -137,12 +137,7 @@ inline TGLBoundingBox & TGLBoundingBox::operator =(const TGLBoundingBox & other)
 //______________________________________________________________________________
 inline const TGLVertex3 & TGLBoundingBox::operator [] (UInt_t index) const
 {
-   //if (ValidIndex(index)) {
-      return fVertex[index];
-   /*} else {
-      assert(kFALSE);
-      return fVertex[0];
-   }*/
+   return fVertex[index];
 }
 
 //______________________________________________________________________________
@@ -160,6 +155,7 @@ inline const std::vector<TGLVertex3> & TGLBoundingBox::Vertices() const
 //______________________________________________________________________________
 inline TGLVector3 TGLBoundingBox::Extents() const
 {
+   // Return the local axis entents of the box
    return TGLVector3(Axis(0,kFALSE).Mag(),
                      Axis(1,kFALSE).Mag(),
                      Axis(2,kFALSE).Mag());
@@ -169,8 +165,6 @@ inline TGLVector3 TGLBoundingBox::Extents() const
 inline TGLVertex3 TGLBoundingBox::Center() const
 {
    // Return the center vertex of the box
-
-   // This looks clumsy but avoids construction of temporary TGLVector3 object
    return TGLVertex3((fVertex[0].X() + fVertex[6].X())/2.0,
                      (fVertex[0].Y() + fVertex[6].Y())/2.0,
                      (fVertex[0].Z() + fVertex[6].Z())/2.0);
@@ -203,6 +197,8 @@ inline const TGLVector3 & TGLBoundingBox::Axis(UInt_t i, Bool_t normalised) cons
 //______________________________________________________________________________
 inline Bool_t TGLBoundingBox::IsEmpty() const
 {
+   // Return kTRUE if box has zero volume - kFALSE otherwise
+
    // TODO: Round errors - should have epsilon test
    return (Volume() == 0.0);
 }

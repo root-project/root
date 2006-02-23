@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.27 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.28 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -41,8 +41,8 @@ const Double_t TGLCamera::fgInterestBoxExpansion = 1.3;
 //______________________________________________________________________________
 TGLCamera::TGLCamera() :
    fCacheDirty(kTRUE), 
-	fProjM(),  fModVM(), fClipM(),
-	fViewport(0,0,100,100),
+   fProjM(), fModVM(), fClipM(),
+   fViewport(0,0,100,100),
    fLargestSeen(0.0)
 {
    // Default base camera constructor

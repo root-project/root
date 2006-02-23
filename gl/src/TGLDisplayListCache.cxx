@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.10 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.11 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -76,7 +76,7 @@ void TGLDisplayListCache::Init()
    // fSize
    fDLBase = glGenLists(fSize);
    fDLNextFree = fDLBase;
-   TGLUtil::CheckError();
+   TGLUtil::CheckError("TGLDisplayListCache::Init");
    fInit = kTRUE;
 }
 
@@ -149,7 +149,7 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, const TGLD
    //assert( Find(cacheID) == fDLNextFree );
 
    glNewList(fDLNextFree,GL_COMPILE);
-   TGLUtil::CheckError();
+   TGLUtil::CheckError("TGLDisplayListCache::OpenCapture");
 
    fDLNextFree++;
    return kTRUE;
@@ -170,7 +170,7 @@ Bool_t TGLDisplayListCache::CloseCapture()
    }
 
    glEndList();
-   TGLUtil::CheckError();
+   TGLUtil::CheckError("TGLDisplayListCache::CloseCapture");
    fCaptureOpen = kFALSE;
 
    if (gDebug>4) {

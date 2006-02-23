@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.17 2006/01/18 16:57:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.18 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -157,6 +157,7 @@ public:
 
 inline const TGLPlane & TGLCamera::FrustumPlane(EFrustumPlane plane) const
 {
+   // Return one of the planes forming the camera frustum
    if (fCacheDirty) {
       Error("TGLCamera::FrustumBox()", "cache dirty");
    }

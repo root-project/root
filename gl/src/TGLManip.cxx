@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.8 2006/01/30 17:42:06 rdm Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -75,6 +75,7 @@ TGLManip::~TGLManip()
 //______________________________________________________________________________
 Bool_t TGLManip::Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox)
 {
+   // Select active widget (axis component) of the widget
    UInt_t oldSelection = fSelectedWidget;
 
    TGLRect viewportRect = rect;
@@ -89,7 +90,7 @@ Bool_t TGLManip::Select(const TGLCamera & camera, const TGLRect & rect, const TG
    glInitNames();
    Draw(camera);
    Int_t hits = glRenderMode(GL_RENDER);
-   TGLUtil::CheckError();
+   TGLUtil::CheckError("TGLManip::Select");
    if (hits < 0) {
       Error("TGLManip::Select", "selection buffer overflow");
       return kFALSE;
@@ -181,7 +182,7 @@ void TGLManip::CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camer
          axis[i] = box.Axis(i, kFALSE)*-0.51;
          if (axis[i].Mag() < base*10.0) {
             axis[i] *= base*10.0/axis[i].Mag();
-        }
+         }
       }
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.9 2005/12/09 18:09:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.10 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -32,22 +32,22 @@
 //////////////////////////////////////////////////////////////////////////
 
 class TGLOrthoCamera : public TGLCamera {
-   public:
-   enum EType { kXOY, kXOZ, kZOY  };
+public:
+   enum EType { kXOY, kXOZ, kZOY  }; // pair of world axes aligned to h/v screen
 private:
    // Fields
-   EType          fType;      //!
+   EType          fType;         //! type (EType) - one of kXOY, kXOZ, kZOY
 
    // Limits - set in Setup()
-   Double_t       fZoomMin;      //!
-   Double_t       fZoomDefault;  //!
-   Double_t       fZoomMax;      //!
+   Double_t       fZoomMin;      //! minimum zoom factor
+   Double_t       fZoomDefault;  //! default zoom factor
+   Double_t       fZoomMax;      //! maximum zoom factor
    TGLBoundingBox fVolume;       //!
 
 	// Current interaction
-   Double_t       fZoom;      //!
-   TGLVector3     fTruck;     //!
-   TGLMatrix      fMatrix;    //!
+   Double_t       fZoom;         //! current zoom
+   TGLVector3     fTruck;        //! current truck vector
+   TGLMatrix      fMatrix;       //! orthographic orientation matrix
 
    static   UInt_t   fgZoomDeltaSens;
 

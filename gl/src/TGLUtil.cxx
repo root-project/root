@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.24 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.25 2006/02/21 16:39:49 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -731,7 +731,7 @@ ClassImp(TGLUtil)
 UInt_t TGLUtil::fgDrawQuality = 60;
 
 //______________________________________________________________________________
-void TGLUtil::CheckError()
+void TGLUtil::CheckError(const char * loc)
 {
    // Check current GL error state, outputing details via ROOT
    // Error method if one
@@ -740,7 +740,11 @@ void TGLUtil::CheckError()
 
    if ((errCode = glGetError()) != GL_NO_ERROR) {
       errString = gluErrorString(errCode);
-      Error("TGLUtil::CheckError", (const char *)errString);
+      if (loc) {
+         Error(loc, "GL Error %s", (const char *)errString);
+      } else {
+         Error("TGLUtil::CheckError", "GL Error %s", (const char *)errString);
+      }
    }
 }
 

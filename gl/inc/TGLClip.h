@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLClip.h,v 1.5 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLClip.h,v 1.6 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
 class TGLClipPlane : public TGLClip
 {
 private:
-   static const float fgColor[4];
+   static const float fgColor[4];   //! Fixed color of clip plane
 
 public:
    TGLClipPlane(const TGLVector3 & norm, const TGLVertex3 & center, Double_t extents);
@@ -68,7 +68,7 @@ public:
 
    virtual void PlaneSet(TGLPlaneSet_t & set) const;
 
-   ClassDef(TGLClipPlane,0); // clipping plane
+   ClassDef(TGLClipPlane, 0); // clipping plane
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ public:
 class TGLClipBox : public TGLClip
 {
 private:
-   static const float fgColor[4];
+   static const float fgColor[4];   //! Fixed color of clip box
 
 public:
    TGLClipBox(const TGLVector3 & halfLengths, const TGLVertex3 & center);
@@ -91,7 +91,7 @@ public:
 
    virtual void PlaneSet(TGLPlaneSet_t & set) const;
 
-   ClassDef(TGLClipBox,0); // clipping box
+   ClassDef(TGLClipBox, 0); // clipping box
 };
 
 #endif

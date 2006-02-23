@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.14 2006/01/18 16:57:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.15 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -305,6 +305,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox, const TGLRect 
 void TGLPerspectiveCamera::Configure(Double_t fov, Double_t dolly, Double_t center[3], 
                                      Double_t hRotate, Double_t vRotate)
 {
+   // Configure the camera state
    fFOV = fov;
    fDolly = dolly;
    fCenter.Set(center[0], center[1], center[2]);
