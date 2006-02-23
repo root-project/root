@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.20 2006/02/10 18:23:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.21 2006/02/22 06:57:49 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -38,7 +38,7 @@
 // a dictionary (See end of file for implementation
 //
 
-static TStreamerElement* R__CreateEmulatedElement(const char *dmFull, const char *dmName);
+static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char *dmFull, Int_t offset);
 static TStreamerInfo *R__GenerateTClassForPair(const string &f, const string &s);
 
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy)
