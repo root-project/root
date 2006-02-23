@@ -36,5 +36,5 @@ libtest_Class2DictRflx_la_LIBADD = $(top_srcdir)/src/libReflex.la
 
 MOSTLYCLEANFILES = Class2Dict_rflx.cpp
 
-Class2Dict_rflx.cpp:
+Class2Dict_rflx.cpp: $(top_srcdir)/test/testDict2/selection.xml $(top_srcdir)/test/testDict2/Class2Dict.h
 	$(PYTHON) $(top_srcdir)/python/genreflex/genreflex.py ./Class2Dict.h -s./selection.xml --gccxmlpath=$(GCCXMLROOT)/bin -I$(top_srcdir)/inc/
