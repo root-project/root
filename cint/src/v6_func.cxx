@@ -2122,9 +2122,12 @@ G__value G__getfunction(char *item,int *known3,int memfunc_flag)
         case '<':
           if(double_quote==0&&single_quote==0) {
             result7[ig35]=0;
+            char* checkForTemplate = result7;
+            if (checkForTemplate && !strncmp(checkForTemplate, "const ", 6))
+               checkForTemplate += 6;
             if(0==strcmp(result7,"operator") ||
                tmpltnest || 
-               G__defined_templateclass(result7) ) ++tmpltnest;
+               G__defined_templateclass(checkForTemplate) ) ++tmpltnest;
           }
           break;
         case '>':

@@ -28,6 +28,7 @@ static void G__SlideString(char *str, unsigned int slide)
       str[i] = str[i+slide];
       ++i;
    }
+   str[i]=0;
 }
 
 extern "C" {
