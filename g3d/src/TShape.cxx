@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.10 2005/10/12 14:55:09 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.11 2005/11/24 17:28:07 couet Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TFile.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TVirtualViewer3D.h"
 
 #include <assert.h>
 
@@ -114,11 +115,14 @@ Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TShape::Paint(Option_t *)
 {
-   // Paint.
+   // This method is used only when a shape is painted outside a TNode.
 
-   AbstractMethod("TShape::Paint(Option_t *)");
+   TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
+   if (viewer3D) {
+      const TBuffer3D & buffer = GetBuffer3D(TBuffer3D::kAll);
+      viewer3D->AddObject(buffer);
+   }
 }
-
 
 //______________________________________________________________________________
 void TShape::SetPoints(Double_t *) const 
