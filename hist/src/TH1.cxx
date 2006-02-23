@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.274 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.275 2006/02/21 10:11:31 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2449,7 +2449,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
             if (!f1->IsInside(&cache[2])) continue;
             Int_t bin = GetBin(binx,biny,binz);
             cache[0] = GetBinContent(bin);
-            if (fitOption.W1) cache[1] = 1;
+            if (fitOption.W1 || fitOption.Like) cache[1] = 1;
             else              cache[1]  = GetBinError(bin);
             if (cache[1] == 0) continue;
             np++;
