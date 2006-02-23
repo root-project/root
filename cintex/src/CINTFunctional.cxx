@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.13 2006/01/31 13:40:04 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.14 2006/02/09 20:36:54 pcanal Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -186,13 +186,14 @@ int Method_stub_with_context(StubContext* context,
     if ( context->fRet_byvalue )  G__store_tempobject(*result);
   } 
   catch ( std::exception& e ) {
-    string errtxt(e.what());
+    string errtxt("Exception: ");
+    errtxt += e.what();
     errtxt += " (C++ exception)";
     G__genericerror(errtxt.c_str());
     G__setnull(result);
   } 
   catch (...) {
-    G__genericerror("Unknown C++ exception");
+    G__genericerror("Exception: Unknown C++ exception");
     G__setnull(result);
   }
   return(1);
@@ -232,14 +233,15 @@ int Constructor_stub_with_context(StubContext* context,
     }
   }
   catch ( std::exception& e ) {
-    string errtxt(e.what());
+    string errtxt("Exception: ");
+    errtxt += e.what();
     errtxt += " (C++ exception)";
     G__genericerror(errtxt.c_str());
     ::operator delete (obj);
     obj = 0; 
   } 
   catch (...) {
-    G__genericerror("Unknown C++ exception");
+    G__genericerror("Exception: Unknown C++ exception");
     ::operator delete (obj);
     obj = 0; 
   }

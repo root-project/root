@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.26 2006/01/03 08:50:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.27 2006/01/05 08:09:09 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -308,13 +308,15 @@ void PyROOT::Utility::ErrMsgCallback( char* msg ) {
    if ( ( p = strstr( msg, "Syntax Error:" ) ) )
       PyErr_Format( PyExc_SyntaxError, format, errFile, errLine, p+14 );
    else if ( ( p = strstr( msg, "Error: Array" ) ) )
-      PyErr_Format( PyExc_IndexError, format, errFile, errLine, p+7 );
+      PyErr_Format( PyExc_IndexError, format, errFile, errLine, p+12 );
    else if ( ( p = strstr( msg, "Error:" ) ) )
       PyErr_Format( PyExc_RuntimeError, format, errFile, errLine, p+7 );
+   else if ( ( p = strstr( msg, "Exception:" ) ) )
+      PyErr_Format( PyExc_RuntimeError, format, errFile, errLine, p+11 );
    else if ( ( p = strstr( msg, "Limitation:" ) ) )
       PyErr_Format( PyExc_NotImplementedError, format, errFile, errLine, p+12 );
    else if ( ( p = strstr( msg, "Internal Error: malloc" ) ) )
-      PyErr_Format( PyExc_MemoryError, format, errFile, errLine, p+16 );
+      PyErr_Format( PyExc_MemoryError, format, errFile, errLine, p+23 );
    else if ( ( p = strstr( msg, "Internal Error:" ) ) )
       PyErr_Format( PyExc_SystemError, format, errFile, errLine, p+16 );
    else if ( ( p = strstr( msg, "Warning:" ) ) )
