@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.h,v 1.10 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.h,v 1.1 2006/01/23 16:27:04 antcheva Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -72,7 +72,8 @@ protected:
    Bool_t           fRelative;     // kTRUE if pointer position is relative to slider
    const TGPicture *fPointerPic;   // picture to draw pointer
 
-   virtual void DoRedraw();
+   virtual void     DoRedraw();
+   virtual void     SetPointerPos(Int_t z, Int_t opt = 0);
 
 public:
    TGTripleVSlider(const TGWindow *p = 0, UInt_t h = 1, UInt_t type = 1, Int_t id = -1,
@@ -93,8 +94,7 @@ public:
    }
    virtual Bool_t    HandleButton(Event_t *event);
    virtual Bool_t    HandleMotion(Event_t *event);
-   virtual void      SetConstrained(Bool_t on = kTRUE) { fConstrained = on; }
-   virtual void      SetPointerPos(Int_t z, Int_t opt = 0);
+   virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
@@ -112,7 +112,8 @@ protected:
    Bool_t           fRelative;
    const TGPicture *fPointerPic;    // picture to draw pointer
 
-   virtual void       DoRedraw();
+   virtual void     DoRedraw();
+   virtual void     SetPointerPos(Int_t z, Int_t opt = 0);
 
 public:
    TGTripleHSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t type = 1, Int_t id = -1,
@@ -133,8 +134,7 @@ public:
    }
    virtual Bool_t    HandleButton(Event_t *event);
    virtual Bool_t    HandleMotion(Event_t *event);
-   virtual void      SetConstrained(Bool_t on = kTRUE) { fConstrained = on; }
-   virtual void      SetPointerPos(Int_t z, Int_t opt = 0);
+   virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
    virtual void      SavePrimitive(ofstream &out, Option_t *option);

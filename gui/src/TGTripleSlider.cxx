@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.1 2006/01/23 16:27:04 antcheva Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -224,6 +224,19 @@ Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
       PositionChanged();
    }
    return kTRUE;
+}
+
+//________________________________________________________________________________
+void TGTripleVSlider::SetConstrained(Bool_t on) 
+{
+   // Set pointer position constrained in the slider range.
+
+   fConstrained = on;
+
+   if (GetPointerPosition() < GetMinPosition()) 
+       SetPointerPos((Int_t)GetMinPosition(), 3);
+   else if (GetPointerPosition() > GetMaxPosition()) 
+       SetPointerPos((Int_t)GetMaxPosition(), 3);
 }
 
 //________________________________________________________________________________
@@ -454,6 +467,19 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
       PositionChanged();
    }
    return kTRUE;
+}
+
+//________________________________________________________________________________
+void TGTripleHSlider::SetConstrained(Bool_t on) 
+{
+   // Set pointer position constrained in the slider range.
+
+   fConstrained = on;
+
+   if (GetPointerPosition() < GetMinPosition()) 
+       SetPointerPos((Int_t)GetMinPosition(), 3);
+   else if (GetPointerPosition() > GetMaxPosition()) 
+       SetPointerPos((Int_t)GetMaxPosition(), 3);
 }
 
 //________________________________________________________________________________
