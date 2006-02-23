@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.113 2006/01/30 23:09:15 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.114 2006/02/02 16:26:01 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2033,6 +2033,15 @@ Int_t TFormula::Compile(const char *expression)
   if (strlen(expression)) SetTitle(expression);
 
   TString chaine = GetTitle();
+  
+  if (chaine.Contains(";")) {
+     char *ctemp = new char[chaine.Length()+1];
+     strcpy(ctemp,chaine.Data());
+     char *semicol = (char*)strstr(ctemp,";");
+     if (semicol) *semicol = 0;
+     chaine = ctemp;
+     delete [] ctemp;
+  }
 //  chaine.ToLower();
 
 //if the function is linear, process it and fill the array of linear parts
