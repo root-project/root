@@ -65,7 +65,7 @@ class genreflex:
       -o <file>, --output <file>
          Output file name. If an existing directory is specified instead of a file,
          then a filename will be build using the name of the input file and will
-         be placed in the given directory. <headerfile>_dict.cpp \n
+         be placed in the given directory. <headerfile>_rflx.cpp \n
       --pool
          Generate minimal dictionary required for POOL persistency\n
       --deep
