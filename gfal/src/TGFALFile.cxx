@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.1 2005/12/10 01:19:52 rdm Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.2 2006/02/24 08:45:31 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -247,7 +247,7 @@ Long64_t TGFALFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 }
 
 //______________________________________________________________________________
-Int_t TGFALFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
+Int_t TGFALFile::SysStat(Int_t /*fd*/, Long_t *id, Long64_t *size, Long_t *flags,
                          Long_t *modtime)
 {
    // Interface to TSystem:GetPathInfo(). Generally implemented via
