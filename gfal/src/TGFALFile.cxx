@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.33 2005/12/09 09:35:07 rdm Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.1 2005/12/10 01:19:52 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -63,8 +63,9 @@
 #include "TGFALFile.h"
 #include "TROOT.h"
 
+extern "C" {
 #include <gfal_api.h>
-
+}
 
 ClassImp(TGFALFile)
 ClassImp(TGFALSystem)
