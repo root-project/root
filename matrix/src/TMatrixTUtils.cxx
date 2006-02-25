@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.2 2005/12/23 07:20:11 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -145,7 +145,7 @@ void TMatrixTRow<Element>::operator=(const TMatrixTRow_const<Element> &mr)
 
   Element *rp1 = const_cast<Element *>(this->fPtr);
   const Element *rp2 = mr.GetPtr();
-  for ( ; rp1 < this->fPtr+this->fMatrix->GetNcols(); rp1 += this->fInc,rp2 += this->fInc)
+  for ( ; rp1 < this->fPtr+this->fMatrix->GetNcols(); rp1 += this->fInc,rp2 += mr.GetInc())
     *rp1 = *rp2;
 }
 
@@ -327,7 +327,7 @@ void TMatrixTColumn<Element>::operator=(const TMatrixTColumn_const<Element> &mc)
 
   Element *cp1 = const_cast<Element *>(this->fPtr);
   const Element *cp2 = mc.GetPtr();
-  for ( ; cp1 < this->fPtr+this->fMatrix->GetNoElements(); cp1 += this->fInc,cp2 += this->fInc)
+  for ( ; cp1 < this->fPtr+this->fMatrix->GetNoElements(); cp1 += this->fInc,cp2 += mc.GetInc())
     *cp1 = *cp2;
 }
 
@@ -371,7 +371,7 @@ void TMatrixTColumn<Element>::operator+=(const TMatrixTColumn_const<Element> &mc
 
   Element *cp1 = const_cast<Element *>(this->fPtr);
   const Element *cp2 = mc.GetPtr();
-  for ( ; cp1 < this->fPtr+this->fMatrix->GetNoElements(); cp1 += this->fInc,cp2 += this->fInc)
+  for ( ; cp1 < this->fPtr+this->fMatrix->GetNoElements(); cp1 += this->fInc,cp2 += mc.GetInc())
     *cp1 += *cp2;
 }
 
@@ -395,7 +395,7 @@ void TMatrixTColumn<Element>::operator*=(const TMatrixTColumn_const<Element> &mc
 
   Element *cp1 = const_cast<Element *>(this->fPtr);
   const Element *cp2 = mc.GetPtr();
-  for ( ; cp1 < this->fPtr+this->fMatrix->GetNoElements(); cp1 += this->fInc,cp2 += this->fInc)
+  for ( ; cp1 < this->fPtr+this->fMatrix->GetNoElements(); cp1 += this->fInc,cp2 += mc.GetInc())
     *cp1 *= *cp2;
 }
 
@@ -498,7 +498,7 @@ void TMatrixTDiag<Element>::operator=(const TMatrixTDiag_const<Element> &md)
 
   Element *dp1 = const_cast<Element *>(this->fPtr);
   const Element *dp2 = md.GetPtr();
-  for (Int_t i = 0; i < this->fNdiag; i++, dp1 += this->fInc, dp2 += this->fInc)
+  for (Int_t i = 0; i < this->fNdiag; i++, dp1 += this->fInc, dp2 += md.GetInc())
     *dp1 = *dp2;
 }
 
