@@ -1,10 +1,12 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.2 2005/12/01 17:17:54 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.3 2005/12/05 10:33:32 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 // rotation functions
 
 // rot 3D  
 #pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (double *, double*);
+#pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (ROOT::Math::XYZVector &, ROOT::Math::XYZVector &,ROOT::Math::XYZVector &);
+#pragma link C++ function  ROOT::Math::Rotation3D::SetComponents (ROOT::Math::XYZVector &, ROOT::Math::XYZVector &,ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::SetComponents (double *, double *);
 #pragma link C++ function  ROOT::Math::Rotation3D::GetComponents (double *, double *);
 #pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::XYZTVector &);

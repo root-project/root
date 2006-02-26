@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.4 2005/11/09 13:56:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.5 2006/02/26 15:23:32 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -44,12 +44,12 @@ Rotation3D::Rectify()
 
   // Step 1 -- form symmetric M = A.transpose * A
 
-  double M11 = fM[XX]*fM[XX] + fM[XY]*fM[YX] + fM[XZ]*fM[ZX];
-  double M12 = fM[XX]*fM[XY] + fM[XY]*fM[YY] + fM[XZ]*fM[ZY];
-  double M13 = fM[XX]*fM[XZ] + fM[XY]*fM[YZ] + fM[XZ]*fM[ZZ];
-  double M22 = fM[YX]*fM[XY] + fM[YY]*fM[YY] + fM[YZ]*fM[ZY];
-  double M23 = fM[YX]*fM[XZ] + fM[YY]*fM[YZ] + fM[YZ]*fM[ZZ];
-  double M33 = fM[ZX]*fM[XZ] + fM[ZY]*fM[YZ] + fM[ZZ]*fM[ZZ];
+  double M11 = fM[XX]*fM[XX] + fM[YX]*fM[YX] + fM[ZX]*fM[ZX];
+  double M12 = fM[XX]*fM[XY] + fM[YX]*fM[YY] + fM[ZX]*fM[ZY];
+  double M13 = fM[XX]*fM[XZ] + fM[YX]*fM[YZ] + fM[ZX]*fM[ZZ];
+  double M22 = fM[XY]*fM[XY] + fM[YY]*fM[YY] + fM[ZY]*fM[ZY];
+  double M23 = fM[XY]*fM[XZ] + fM[YY]*fM[YZ] + fM[ZY]*fM[ZZ];
+  double M33 = fM[XZ]*fM[XZ] + fM[YZ]*fM[YZ] + fM[ZZ]*fM[ZZ];
 
   // Step 2 -- find lower-triangular L such that L * L.transpose = M
 
