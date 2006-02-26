@@ -1,5 +1,8 @@
+// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// Author: G. Ganis Oct 2005
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,9 +14,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TXSocket                                                            //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2005                                        //
+// TXSocket                                                             //
 //                                                                      //
 // High level handler of connections to xproofd.                        //
 //                                                                      //
@@ -53,12 +54,70 @@ class TXSockBuf;
 class TXSocketHandler;
 class XrdClientMessage;
 
+
 class TXSocket  : public TSocket, public XrdClientAbsUnsolMsgHandler {
 
 friend class TXProofServ;
 friend class TXSlave;
 friend class TXSocketHandler;
 friend class TXUnixSocket;
+
+private:
+   char                fMode;          // 'e' (def) or 'i' (internal - proofsrv)
+   kXR_int32           fSendOpt;       // Options for sending messages
+   Short_t             fSessionID;     // proofsrv: remote ID of connected session
+   TString             fUser;          // Username used for login
+   TString             fHost;          // Remote host
+   Int_t               fPort;          // Remote port
+   TString             fAlias;         // An alias name for this connection
+
+   TObject            *fReference;     // Generic object reference of this socket
+
+   XrdProofConn       *fConn;          // instance of the underlying connection module
+
+   // Asynchronous messages
+   TSemaphore          fASem;          // Control access to conn async msg queue
+   TMutex             *fAMtx;          // To protect async msg queue
+   std::list<TXSockBuf *> fAQue;          // list of asynchronous messages
+   Int_t               fByteLeft;      // bytes left in the first buffer
+   Int_t               fByteCur;       // current position in the first buffer
+   TXSockBuf          *fBufCur;        // current read buffer
+
+   // List of spare buffers
+   TMutex             *fSMtx;          // To protect spare list
+   std::list<TXSockBuf *> fSQue;       // list of spare buffers
+
+   // Interrupts
+   TSemaphore          fISem;          // Control access to interrupt queue
+   TMutex             *fIMtx;          // To protect interrupt queue
+   kXR_int32           fILev;          // Highest received interrupt
+
+   // Process ID of the instatiating process (to signal interrupts)
+   Int_t               fPid;
+
+   // Static area for input handling
+   static TList        fgReadySock;    // Static list of sockets ready to be read
+   static TMutex       fgReadyMtx;     // Protect access to the sockets-ready list
+   static Int_t        fgPipe[2];      // Pipe for input monitoring
+   static TString      fgLoc;          // Location string
+   static Bool_t       fgInitDone;     // Avoid initializing more than once
+
+
+   // Manage asynchronous message
+   Int_t               PickUpReady();
+   TXSockBuf          *PopUpSpare(Int_t sz);
+   void                PushBackSpare();
+
+   // Auxilliary
+   Int_t               GetLowSocket() const { return (fConn ? fConn->GetLowSocket() : -1); }
+
+   static Int_t        GetPipeRead(); // Return the read-descriptor of the global pipe
+   static Int_t        PostPipe(TSocket *s=0);  // Notify socket ready via global pipe
+   static Int_t        CleanPipe(TSocket *s=0); // Clean previous pipe notification
+
+   static void         InitEnvs(); // Initialize environment variables
+
+   static void         DumpReadySock(); // Dump content of the ready-socket list
 
 public:
    // Should be the same as in proofd/src/XrdProofdProtocol::do_Admin
@@ -78,8 +137,8 @@ public:
    virtual UnsolRespProcResult ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *s,
                                                      XrdClientMessage *msg);
 
-   virtual Int_t       GetClientID() { return -1; }
-   virtual Int_t       GetClientIDSize() { return 1; }
+   virtual Int_t       GetClientID() const { return -1; }
+   virtual Int_t       GetClientIDSize() const { return 1; }
    Int_t               GetLogConnID() const { return (fConn ? fConn->GetLogConnID() : -1); }
    Int_t               GetOpenError() const { return (fConn ? fConn->GetOpenError() : -1); }
    Int_t               GetServType() const { return (fConn ? fConn->GetServType() : -1); }
@@ -128,64 +187,6 @@ public:
    // Standard options cannot be set
    Int_t               SetOption(ESockOptions, Int_t) { return 0; }
 
-private:
-
-   Char_t              fMode;          // 'e' (def) or 'i' (internal - proofsrv)
-   kXR_int32           fSendOpt;       // Options for sending messages 
-   Short_t             fSessionID;     // proofsrv: remote ID of connected session 
-   TString             fUser;          // Username used for login
-   TString             fHost;          // Remote host
-   Int_t               fPort;          // Remote port
-   TString             fAlias;         // An alias name for this connection 
-
-   TObject            *fReference;     // Generic object reference of this socket
-
-   XrdProofConn       *fConn;          // instance of the underlying connection module
-
-   // Asynchronous messages
-   TSemaphore          fASem;          // Control access to conn async msg queue
-   TMutex             *fAMtx;          // To protect async msg queue
-   std::list<TXSockBuf *> fAQue;          // list of asynchronous messages 
-   Int_t               fByteLeft;      // bytes left in the first buffer
-   Int_t               fByteCur;       // current position in the first buffer
-   TXSockBuf          *fBufCur;        // current read buffer
-
-   // List of spare buffers
-   TMutex             *fSMtx;          // To protect spare list
-   std::list<TXSockBuf *> fSQue;       // list of spare buffers 
-
-   // Interrupts
-   TSemaphore          fISem;          // Control access to interrupt queue
-   TMutex             *fIMtx;          // To protect interrupt queue
-   kXR_int32           fILev;          // Highest received interrupt 
-
-   // Process ID of the instatiating process (to signal interrupts)
-   Int_t               fPid;
-
-   // Manage asynchronous message
-   Int_t               PickUpReady();
-   TXSockBuf          *PopUpSpare(Int_t sz);
-   void                PushBackSpare();
-
-   // Auxilliary
-   Int_t               GetLowSocket() { return (fConn ? fConn->GetLowSocket() : -1); }
-
-   static Bool_t       fgInitDone;    // Avoid initializing more than once
-
-   // Static area for input handling
-   static TList        fgReadySock;    // Static list of sockets ready to be read
-   static TMutex       fgReadyMtx;     // Protect access to the sockets-ready list
-   static Int_t        fgPipe[2];      // Pipe for input monitoring
-   static TString      fgLoc;          // Location string
-
-   static Int_t        GetPipeRead(); // Return the read-descriptor of the global pipe
-   static Int_t        PostPipe(TSocket *s=0);  // Notify socket ready via global pipe
-   static Int_t        CleanPipe(TSocket *s=0); // Clean previous pipe notification
-
-   static void         InitEnvs(); // Initialize environment variables
-
-   static void         DumpReadySock(); // Dump content of the ready-socket list
-
    ClassDef(TXSocket, 0) //A high level connection class for PROOF
 };
 
@@ -205,7 +206,7 @@ public:
              { fBuf = fMem = bp; fSiz = fLen = sz; fOwn = own; fCid = -1; }
   ~TXSockBuf() {if (fOwn && fMem) free(fMem);}
 
-   void Resize(Int_t sz) { if (sz > fSiz) 
+   void Resize(Int_t sz) { if (sz > fSiz)
                               if ((fMem = (Char_t *)realloc(fMem, sz))) {
                                  fBuf = fMem; fSiz = sz; fLen = 0;}}
 

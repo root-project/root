@@ -1,7 +1,8 @@
+// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

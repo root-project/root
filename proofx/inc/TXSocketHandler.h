@@ -1,5 +1,8 @@
+// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// Author: G. Ganis Oct 2005
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,8 +15,6 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TXSocketHandler                                                      //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2005                                        //
 //                                                                      //
 // Input handler for xproofd sockets. These sockets cannot be directly  //
 // monitored on their descriptor, because the reading activity goes via //

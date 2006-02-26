@@ -1,8 +1,8 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.3 2005/12/13 10:12:02 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -92,7 +92,7 @@ Int_t TXProofMgr::Init(Int_t)
    TString u = fUrl.GetUrl(kTRUE);
 
    if (!(fSocket = new TXSocket(u,'M')) || !(fSocket->IsValid())) {
-      if (!fSocket || !(fSocket->IsServProofd())) 
+      if (!fSocket || !(fSocket->IsServProofd()))
          Error("Init", "while opening the connection to %s - exit", u.Data());
       if (fSocket && fSocket->IsServProofd())
          fServType = TVirtualProofMgr::kProofd;

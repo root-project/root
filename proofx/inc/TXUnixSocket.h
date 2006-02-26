@@ -1,5 +1,8 @@
+// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// Author: G. Ganis Oct 2005
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,8 +15,6 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TXUnixSocket                                                         //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2005                                        //
 //                                                                      //
 // Implementation of TXSocket using PF_UNIX sockets.                    //
 // Used for the internal connection between coordinator and proofserv.  //
@@ -29,22 +30,18 @@ class TXUnixSocket  : public TXSocket {
 
 friend class TXProofServ;
 
-public:
+private:
+   std::list<Int_t>  fClientIDs;
 
+public:
    TXUnixSocket(const char *u, Int_t psid = -1, Char_t ver = -1);
    virtual ~TXUnixSocket() { fSessionID = -1; }
 
-   Int_t               GetClientID()
-                      { return (fClientIDs.size() > 0) ? fClientIDs.front() : -1; }
-   Int_t               GetClientIDSize() { return fClientIDs.size(); }
+   Int_t GetClientID() const { return (fClientIDs.size() > 0) ? fClientIDs.front() : -1; }
+   Int_t GetClientIDSize() const { return fClientIDs.size(); }
 
-   void                RemoveClientID() { if (fClientIDs.size() > 1)
-                                              fClientIDs.pop_front(); }
-   void                SetClientID(Int_t cid) { fClientIDs.push_front(cid); }
-
-private:
-
-   std::list<Int_t>    fClientIDs; 
+   void  RemoveClientID() { if (fClientIDs.size() > 1) fClientIDs.pop_front(); }
+   void  SetClientID(Int_t cid) { fClientIDs.push_front(cid); }
 
    ClassDef(TXUnixSocket, 0) //Connection class for Xrd PROOF using UNIX sockets
 };

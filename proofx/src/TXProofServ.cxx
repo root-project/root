@@ -1,8 +1,8 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.3 2006/01/17 13:23:29 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -638,7 +638,7 @@ void TXProofServ::Setup()
       TProofResourcesStatic resources(fConfDir, conffile);
       if (resources.IsValid()) {
          if (resources.GetMaster()) {
-            TString tmpWorkDir = resources.GetMaster()->GetWorkDir(); 
+            TString tmpWorkDir = resources.GetMaster()->GetWorkDir();
             if (tmpWorkDir != "")
                fWorkDir = tmpWorkDir;
          }
