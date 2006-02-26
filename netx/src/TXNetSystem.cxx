@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.2 2005/12/12 12:54:27 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.3 2006/02/21 16:57:12 brun Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -64,9 +64,12 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    fDirp = 0;
    fDirListValid = kFALSE;
 
-   // The first timr do some global initialization
+   // The first time do some global initialization
    if (!fgInitDone)
       InitXrdClient();
+
+   // Fill in user, host, port
+   TNetSystem::InitRemoteEntity(url);
 
    // We need a dummy filename after the server url to connect
    TString dummy = url;
@@ -365,11 +368,8 @@ Int_t TXNetSystem::MakeDirectory(const char* dir)
    // Create a directory. Return 0 on success, -1 otherwise.
 
    if (fIsXRootd) {
-      // Extract the directory name
-      TString edir = TUrl(dir).GetFile();
-
       // use default permissions 755 to create directory
-      Bool_t ok = fClientAdmin->Mkdir(dir,7,5,5);
+      Bool_t ok = fClientAdmin->Mkdir(TUrl(dir).GetFile(),7,5,5);
       return (ok ? 0 : -1);
    }
 
@@ -457,11 +457,8 @@ Bool_t TXNetSystem::ConsistentWith(const char *path, void *dirptr)
    // Check consistency of this helper with the one required
    // by 'path' or 'dirptr'.
 
-   if (fIsXRootd) {
-      return TSystem::ConsistentWith(path,dirptr);
-   }
-
-   if (gDebug > 1) Info("ConsistenWith","Calling TNetSystem::ConsistenWith");
+   if (gDebug > 1)
+      Info("ConsistenWith","Calling TNetSystem::ConsistenWith");
    return TNetSystem::ConsistentWith(path,dirptr);    // for a rootd
 }
 

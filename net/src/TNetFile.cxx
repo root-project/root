@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.63 2005/10/27 16:36:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.64 2006/02/21 16:57:12 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -651,6 +651,7 @@ TNetSystem::TNetSystem(Bool_t ftpowner)
    fFTPOwner = ftpowner;
    fUser = "";
    fHost = "";
+   fPort = -1;
 }
 
 //______________________________________________________________________________
@@ -670,21 +671,11 @@ TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
 }
 
 //______________________________________________________________________________
-void TNetSystem::Create(const char *url, TSocket *sock)
+void TNetSystem::InitRemoteEntity(const char *url)
 {
-   // Create a TNetSystem object.
+   // Parse and save coordinates of the remote entity (user, host, port, ...)
 
-   // If we got here protocol must be at least its short form "^root.*:" :
-   // make sure that it is in the full form to avoid problems in TFTP
-   TString surl(url);
-   if (!surl.Contains("://")) {
-      surl.Insert(surl.Index(":")+1,"//");
-   }
-   TUrl turl(surl);
-
-   fDir  = kFALSE;
-   fDirp = 0;
-   fFTP  = 0;
+   TUrl turl(url);
 
    // Remote username: local as default
    fUser = turl.GetUser();
@@ -703,6 +694,31 @@ void TNetSystem::Create(const char *url, TSocket *sock)
       if (fHost == "UnNamedHost")
          fHost = addr.GetHostAddress();
    }
+
+   // Remote port: the deafult should be 1094 because we are here
+   // only if the protocol is "root://"
+   fPort = turl.GetPort();
+}
+
+//______________________________________________________________________________
+void TNetSystem::Create(const char *url, TSocket *sock)
+{
+   // Create a TNetSystem object.
+
+   // If we got here protocol must be at least its short form "^root.*:" :
+   // make sure that it is in the full form to avoid problems in TFTP
+   TString surl(url);
+   if (!surl.Contains("://")) {
+      surl.Insert(surl.Index(":")+1,"//");
+   }
+   TUrl turl(surl);
+
+   fDir  = kFALSE;
+   fDirp = 0;
+   fFTP  = 0;
+
+   // Fill in user, host, port
+   InitRemoteEntity(surl);
 
    // Build a TFTP url
    if (fHost.Length()) {
@@ -890,6 +906,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
    Bool_t checknet = path ? kFALSE : kTRUE;
    if (path && strlen(path)) {
 
+      // Get user name
       TUrl url(path);
       TString user = url.GetUser();
       if (!user.Length()) {
@@ -899,6 +916,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
          delete u;
       }
 
+      // Get host name
       TString host = url.GetHost();
       TInetAddress addr = gSystem->GetHostByName(host);
       if (addr.IsValid()) {
@@ -907,7 +925,10 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
             host = addr.GetHostAddress();
       }
 
-      if (user == fUser && host == fHost )
+      // Get port
+      Int_t port = url.GetPort();
+
+      if (user == fUser && host == fHost && port == fPort)
          checknet = kTRUE;
    }
 

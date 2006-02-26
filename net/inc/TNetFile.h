@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.20 2005/10/27 16:36:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.21 2006/02/21 16:57:12 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -95,11 +95,13 @@ private:
    TString     fHost;        // Remote host
    Bool_t      fFTPOwner;    // True if owner of the FTP instance
    TString     fUser;        // Remote user
+   Int_t       fPort;        // Remote port
 
    void       *GetDirPtr() const { return fDirp; }
 
 protected:
    void        Create(const char *url, TSocket *sock = 0);
+   void        InitRemoteEntity(const char *url);
 
 public:
    TNetSystem(Bool_t ftpowner = kTRUE);
