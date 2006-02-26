@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.3 2005/09/18 19:44:54 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.4 2005/11/09 13:56:00 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -56,9 +56,10 @@ Rotation3D::Rectify()
   double L11 = std::sqrt(M11);
   double L21 = M12/L11;
   double L31 = M13/L11;
-  double L22 = std::sqrt(M22-L11*L11);
+  double L22 = std::sqrt(M22-L21*L21);
   double L32 = (M23-M12*M13/M11)/L22;
   double L33 = std::sqrt(M33 - L31*L31 - L32*L32);
+
 
   // Step 3 -- find K such that K*K = L.  K is also lower-triangular
 
@@ -69,6 +70,7 @@ Rotation3D::Rectify()
   double K21 = -K22*L21/L11;
   double K11 = 1/L11;
 
+
   // Step 4 -- N = K.transpose * K is inverse(sqrt(A.transpose()*A.inverse()))
 
   double N11 = K11*K11 + K21*K21 + K31*K31;
@@ -78,10 +80,11 @@ Rotation3D::Rectify()
   double N23 = K21*K31 + K22*K32 + K32*K33;
   double N33 = K31*K31 + K32*K32 + K33*K33;
 
+
   // Step 5 -- The new matrix is A * N
 
   double A[9];
-  std::copy(A, &A[9], fM);
+  std::copy(fM, &fM[9], A);
 
   fM[XX] = A[XX]*N11 + A[XY]*N12 + A[XZ]*N13;
   fM[XY] = A[XX]*N12 + A[XY]*N22 + A[XZ]*N23;
@@ -92,6 +95,7 @@ Rotation3D::Rectify()
   fM[ZX] = A[ZX]*N11 + A[ZY]*N12 + A[ZZ]*N13;
   fM[ZY] = A[ZX]*N12 + A[ZY]*N22 + A[ZZ]*N23;
   fM[ZZ] = A[ZX]*N13 + A[ZY]*N23 + A[ZZ]*N33;
+
 
 } // Rectify()
 
