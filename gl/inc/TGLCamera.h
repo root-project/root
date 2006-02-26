@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.18 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.19 2006/02/23 16:44:51 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -42,7 +42,7 @@
 // expanded interest box, and for extracting eye position and direction.//
 //                                                                      //
 // It also defines the pure virtual manipulation interface methods the  //
-// concrete ortho and prespective classes must implement.               //    
+// concrete ortho and prespective classes must implement.               //
 //////////////////////////////////////////////////////////////////////////
 
 class TGLCamera
@@ -66,7 +66,7 @@ private:
    TGLBoundingBox   fPreviousInterestBox;  //! previous interest box (DEBUG)
    TGLBoundingBox   fInterestFrustum;      //! frustum basis of current interest box - NOT a true BB! (DEBUG)
    TGLBoundingBox   fInterestFrustumAsBox; //! frustum basis (as box) of current interest box (DEBUG)
-   
+
    static const Double_t fgInterestBoxExpansion; //! expansion c.f. aligned current frustum box
 
    // Methods
@@ -89,12 +89,12 @@ protected:
    TGLRect   fViewport;    //! viewport (GL coords - origin bottom left)
 
    TGLBoundingBox   fInterestBox;          //! the interest box - created in UpdateInterest()
-   mutable Double_t fLargestSeen;          //! largest box volume seen in OfInterest() - used when 
+   mutable Double_t fLargestSeen;          //! largest box volume seen in OfInterest() - used when
                                            // bootstrapping interest box
 
    // Methods
    Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
-                                Int_t screenShift, Int_t screenShiftRange, 
+                                Int_t screenShift, Int_t screenShiftRange,
                                 Bool_t mod1, Bool_t mod2) const;
 
    // Internal cache update - const as the actual camera configuration is unaffected
@@ -127,7 +127,7 @@ public:
    // Viewport is GL coorinate system - origin bottom/left
    EOverlap   FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
    EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
-   TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace face) const;
+   TGLRect    ViewportRect   (const TGLBoundingBox & box, TGLBoundingBox::EFace face) const;
    TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace * face = 0) const;
    TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex) const;
    TGLVector3 WorldDeltaToViewport(const TGLVertex3 & worldRef, const TGLVector3 & worldDelta) const;
