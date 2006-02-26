@@ -1,8 +1,8 @@
-// @(#)root/proofx:$Name:$:$Id:$
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -65,7 +65,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    // classes.
 
    // Url string with host, port information; 'host' may contain 'user' information
-   // in the usual form 'user@host' 
+   // in the usual form 'user@host'
 
    // Auxilliary url
    TUrl url(host);
@@ -138,8 +138,8 @@ void TXSlave::Init(const char *host, Int_t stype)
       return;
    }
 
-   // Set the proof as reference of this socket
-   ((TXSocket *)fSocket)->fReference = fProof;
+   // Set the this as reference of this socket
+   ((TXSocket *)fSocket)->fReference = this;
 
    // Set server type
    fProof->fServType = TVirtualProofMgr::kXProofd;

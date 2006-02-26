@@ -1,7 +1,8 @@
-// @(#)root/proofx:$Name:$:$Id:$
+// @(#)root/proofx:$Name:  $:$Id: TXSocketHandler.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,8 +12,6 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TXSocketHandler                                                      //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2005                                        //
 //                                                                      //
 // Input handler for xproofd sockets. These sockets cannot be directly  //
 // monitored on their descriptor, because the reading activity goes via //
@@ -64,9 +63,12 @@ Bool_t TXSocketHandler::Notify()
 
    // If not, check if the socket belongs to a TProof instance
    if (notdone) {
-      // Get the reference proof, if any
-      TProof *proof = (((TXSocket *)s)->fReference) ? 
-                      dynamic_cast<TProof *>(((TXSocket *)s)->fReference) : 0; 
+
+      // Get the proof reference via the slave, if any
+      TObject *ref = ((TXSocket *)s)->fReference;
+      TSlave *sl = (ref) ? dynamic_cast<TSlave *>(ref) : 0;
+      TProof *proof = (sl) ? (sl->GetProof()) : 0;
+
       if (proof) {
 
          // Attach to the monitor instance, if any
@@ -82,23 +84,15 @@ Bool_t TXSocketHandler::Notify()
                Info("Notify","posting monitor %p with socket %p", mon, s);
             mon->SetReady(s);
             notdone = kFALSE;
-         } else if (proof->GetListOfSlaves()) {
-            TIter nxsl(proof->GetListOfSlaves());
-            TSlave *sl = 0;
-            while ((sl = (TSlave *)nxsl())) {
-               if (gDebug > 2)
-                  Info("Notify","slave: %p, sock: %p", sl, sl->GetSocket());
-               if (s == sl->GetSocket())
-                   break;
-            }
-            if (sl) {
+         } else {
+            if (proof->GetListOfSlaves()->FindObject(sl)) {
                // Asynchronous collection in TProof
                if (gDebug > 2)
                   Info("Notify","calling TProof::CollectInputFrom for socket %p",s);
                proof->CollectInputFrom(s);
                notdone = kFALSE;
             } else
-               Info("Notify","socket %p not found in fSlaves list",s);
+               Warning("Notify","socket %p not found in fSlaves list",s);
          }
       } else {
          Warning("Notify",
@@ -117,7 +111,7 @@ Bool_t TXSocketHandler::Notify()
 //_______________________________________________________________________
 TXSocketHandler *TXSocketHandler::GetSocketHandler(TFileHandler *h, TSocket *s)
 {
-   // Get an instance of the input socket handler with 'h' as handler, 
+   // Get an instance of the input socket handler with 'h' as handler,
    // connected to socket 's'.
    // Create the instance, if not already existing
 

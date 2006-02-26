@@ -1,7 +1,8 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.3 2005/12/13 10:12:02 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,9 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TXSocket                                                            //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2005                                        //
+// TXSocket                                                             //
 //                                                                      //
 // High level handler of connections to xproofd.                        //
 //                                                                      //
@@ -85,7 +84,7 @@ Bool_t TXSocketPingHandler::Notify()
 // Env variables init flag
 Bool_t TXSocket::fgInitDone = kFALSE;
 
-// Static variables for input notification 
+// Static variables for input notification
 TList        TXSocket::fgReadySock;         // Static list of sockets ready to be read
 TMutex       TXSocket::fgReadyMtx;          // Protect access to the sockets-ready list
 Int_t        TXSocket::fgPipe[2] = {-1,-1}; // Pipe for input monitoring
@@ -191,7 +190,7 @@ TXSocket::~TXSocket()
 {
    // Destructor
 
-   // Disconnect from remote server (the connection manager is 
+   // Disconnect from remote server (the connection manager is
    // responsible of the underlying physical connection, so we do not
    // force its closing)
    Close();
@@ -226,7 +225,7 @@ void TXSocket::DisconnectSession(Int_t id, Option_t *opt)
       XPClientRequest Request;
       memset(&Request, 0, sizeof(Request) );
       fConn->SetSID(Request.header.streamid);
-      if (shutdown) 
+      if (shutdown)
          Request.proof.requestid = kXP_destroy;
       else
          Request.proof.requestid = kXP_detach;
@@ -301,13 +300,13 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if (!m) {
       Error("ProcessUnsolicitedMsg","undefined message");
       return rc;
-   } 
+   }
 
    Int_t len = 0;
    if ((len = m->DataLen()) < (int)sizeof(kXR_int32)) {
       Error("ProcessUnsolicitedMsg","empty or bad-formed message");
       return rc;
-   } 
+   }
 
    // The first 4 bytes contain the action code
    kXR_int32 acod = 0;
@@ -328,7 +327,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
 
    switch (acod) {
       case kXPD_ping:
-         // 
+         //
          // Special interrupt
          ilev = TProof::kPing;
       case kXPD_interrupt:
@@ -346,7 +345,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Post it
             if (gDebug > 3)
                Info("ProcessUnsolicitedMsg","%p: posting interrupt: %d",this,ilev);
-            fISem.Post();   
+            fISem.Post();
             //
             // Signal it
             if (gDebug > 3)
@@ -377,16 +376,16 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Produce the message
             fAQue.push_back(b);
 
-            // Signal it
+            // Post the global pipe
+            PostPipe(this);
+
+            // Signal it and release the mutex
             if (gDebug > 2)
                Info("ProcessUnsolicitedMsg","%p: posting semaphore: %p (%d bytes)",
                     this,&fASem,len);
             fASem.Post();
 
          }
-
-         // Post the global pipe
-         PostPipe(this);
 
          break;
       case kXPD_feedback:
@@ -435,15 +434,15 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Produce the message
             fAQue.push_back(b);
 
-            // Signal it
+            // Post the global pipe
+            PostPipe(this);
+
+            // Signal it and release the mutex
             if (gDebug > 2)
-               Info("ProcessUnsolicitedMsg","%p: posting semaphore: %p (%d bytes)",
-                    this,&fASem,len);
+               Info("ProcessUnsolicitedMsg","%p: cid: %d, posting semaphore: %p (%d bytes)",
+                    this, cid, &fASem, len);
             fASem.Post();
          }
-
-         // Post the global pipe
-         PostPipe(this);
 
          break;
      default:
@@ -537,7 +536,7 @@ Bool_t TXSocket::IsServProofd()
 
    if (fConn && (fConn->GetServType() == XrdProofConn::kSTProofd))
       return kTRUE;
- 
+
    // Failure
    return kFALSE;
 }
@@ -552,7 +551,7 @@ Int_t TXSocket::GetInterrupt(Int_t to)
    if (fISem.Wait(to) != 0) {
       Error("GetInterrupt","error waiting at semaphore");
       return -1;
-   }   
+   }
 
    R__LOCKGUARD(fIMtx);
 
@@ -746,7 +745,7 @@ Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 
    // Failure
    Error("SendRaw", "problems sending data to server");
-   return -1; 
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -794,7 +793,7 @@ Bool_t TXSocket::Ping(Bool_t)
    SafeDelete(xrsp);
 
    // Failure
-   return res; 
+   return res;
 }
 
 //______________________________________________________________________________
@@ -925,7 +924,7 @@ Int_t TXSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions)
          memcpy((void *)((Char_t *)buffer+at), fBufCur->fBuf, ncpy);
          fByteCur = ncpy;
          fByteLeft -= ncpy;
-         // Recalculate 
+         // Recalculate
          tobecopied -= ncpy;
          at += ncpy;
       }
@@ -976,7 +975,7 @@ Int_t TXSocket::SendInterrupt(Int_t type)
 
    // Failure
    Error("SendInterrupt", "problems sending interrupt to server");
-   return -1; 
+   return -1;
 }
 
 //______________________________________________________________________________
