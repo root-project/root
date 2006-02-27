@@ -222,7 +222,7 @@ int test_smatrix_sym_op() {
     MnVectorN   v1;  testMV(A,v,t_mv,v1);
     MnVectorN   v2;  testGMV(A,v,v1,t_gmv,v2);
     MnMatrixNN  C0;  testMM(A,B,C,t_mm,C0);
-    MnMatrixNN  C1;  testATBA_S(B,C0,t_ama,C1);
+    MnSymMatrixNN  C1;  testATBA_S2(C0,B,t_ama,C1);
     MnSymMatrixNN  C2;  testInv_S(A,t_inv,C2);
     MnSymMatrixNN  C3;  testMeq(C2,t_meq,C3);
     MnSymMatrixNN  C4;  testMad(A,C3,t_mad,C4);

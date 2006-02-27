@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.10 2005/12/13 18:28:09 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.11 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -60,8 +60,8 @@ namespace ROOT {
 
     template <class T, unsigned int D> class SVector;
 
-
-
+    struct SMatrixIdentity { };
+ 
 
 /** 
     SMatrix: a generic fixed size n x m Matrix class.
@@ -91,12 +91,17 @@ public:
   /** STL const_iterator interface. */
   typedef const T*  const_iterator;
 
+
+
   /** @name --- Constructors --- */
 
   /**
       Default constructor:
    */
   SMatrix();
+  /// 
+  /** construct identity matrix */
+  SMatrix( SMatrixIdentity ); 
   ///
   SMatrix(const SMatrix<T,D1,D2,R>& rhs);
   ///
@@ -157,6 +162,9 @@ public:
   
   template <class A, class R2>
   SMatrix<T,D1,D2,R>& operator=(const Expr<A,T,D1,D2,R2>& rhs);
+
+  /// assign from an identity
+  SMatrix<T,D1,D2,R> & operator=(SMatrixIdentity ); 
 
 
 #ifdef OLD_IMPL
@@ -286,9 +294,10 @@ public:
   /**
      invert symmetric, pos. def. Matrix via Dsinv.
      This method  returns a new matrix. In case the inversion fails
-     the current matrix is returned
+     the current matrix is returned. 
+      Return ifail = 0 when successfull 
   */
-  SMatrix<T,D1,D2,R>  Sinverse() const;
+  SMatrix<T,D1,D2,R>  Sinverse(int & ifail ) const;
 
   /** determinant of symmetrc, pos. def. Matrix via Dsfact. \textbf{Note:} this
       will destroy the contents of the Matrix!
@@ -311,8 +320,9 @@ public:
      invert square Matrix via Dinv.
      This method  returns a new matrix. In case the inversion fails
      the current matrix is returned
+     Return ifail = 0 when successfull 
   */
-  SMatrix<T,D1,D2,R> Inverse() const;
+  SMatrix<T,D1,D2,R> Inverse(int & ifail ) const;
 
   /**
       determinant of square Matrix via Dfact. \textbf{Note:} this will destroy
@@ -370,25 +380,28 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
   SVector<T,D1> Col(unsigned int thecol) const;
 
   /**
-     return a slice of therow as a vector starting at the colum value col0 until col0+N.
-     Condition  col0+N <= D2
+     return a slice of therow as a vector starting at the colum value col0 until col0+N, 
+     where N is the size of the vector (SubVector::kSize )
+     Condition  col0+N <= D2 
    */
-  template <unsigned int N>
-  SVector<T,N> SubRow(unsigned int therow, unsigned int col0 = 0 ) const;
+  template <class SubVector>
+  SubVector SubRow(unsigned int therow, unsigned int col0 = 0 ) const;
 
   /**
      return a slice of the column as a vector starting at the row value row0 until row0+Dsub.
+     where N is the size of the vector (SubVector::kSize )
      Condition  row0+N <= D1
    */
-  template <unsigned int N>
-  SVector<T,N> SubCol(unsigned int thecol, unsigned int row0 = 0) const;
+  template <class SubVector>
+  SubVector SubCol(unsigned int thecol, unsigned int row0 = 0) const;
 
   /**
      return a submatrix with the upper left corner at the values (row0, col0) and with sizes N1, N2
+     where N1 and N2 are the dimension of the sub-matrix (SubMatrix::kRows and SubMatrix::kCols )
      Condition  row0+N1 <= D1 && col0+N2 <=D2
    */
-  template <unsigned int N1, unsigned int N2 >
-  SMatrix<T,N1,N2> Sub(unsigned int row0, unsigned int col0) const;
+  template <class SubMatrix >
+  SubMatrix Sub(unsigned int row0, unsigned int col0) const;
 
   /**
      return diagonal elements of a matrix as a Vector.
@@ -404,8 +417,8 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
   SVector<T, D1 * (D2 +1)/2> UpperBlock() const;
 #else
-  template<unsigned int N>
-  SVector<T,N> UpperBlock() const;
+  template<class SubVector>
+  SubVector UpperBlock() const;
 #endif
   /**
      return the lower Triangular block of the matrices (including the diagonal) as
@@ -415,8 +428,8 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
   SVector<T, D1 * (D2 +1)/2> LowerBlock() const;
 #else
-  template<unsigned int N>
-  SVector<T,N> LowerBlock() const;
+  template<class SubVector>
+  SubVector LowerBlock() const;
 #endif
 
 

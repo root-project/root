@@ -80,6 +80,25 @@ int test1() {
 
   //if ( sp2 != sp) { cout << "Test STL interface for SVector failed" << endl; return -1; }
   if ( sm2 != sm) { cout << "Test STL interface for SMatrix failed" << endl; return -1; }
+
+
+  // test construction from identity
+  SMatrix<float,3,3> i3 = SMatrixIdentity(); 
+
+  cout << "3x3 Identity\n" << i3 << endl;
+
+  SMatrix<float,2,3> i23 = SMatrixIdentity(); 
+  cout << "2x3 Identity\n" << i23 << endl;
+
+  SMatrix<float,3,3,MatRepSym<float,3> > is3 = SMatrixIdentity(); 
+  cout << "Sym matrix Identity\n" << is3 << endl;
+
+
+  // test operator = from identity
+  A = SMatrixIdentity();
+  cout << "4x3 Identity\n" << A << endl;
+
+
     
   return 0;
     
@@ -140,7 +159,7 @@ int test4() {
   cout << "x: " << x << endl;
 
   // we add 1 to each component of x and A
-  cout << " (x+1)^T * (A+1) * (x+1): " << Product(x+1,A+1) << endl;
+  cout << " (x+1)^T * (A+1) * (x+1): " << Similarity(x+1,A+1) << endl;
 
   return 0;
 #endif
@@ -284,7 +303,12 @@ int test9() {
   A.Det2(det);
   cout << "Determinant: " << det << endl;
 
-  SMatrix<double,3> Ainv = A.Inverse();
+  int ifail; 
+  SMatrix<double,3> Ainv = A.Inverse(ifail);
+  if (ifail) { 
+    cout << "inversion failed\n";
+    return -1;
+  } 
   cout << "A^-1: " << endl << Ainv << endl;
 
   // check if this is really the inverse:
@@ -301,16 +325,16 @@ int test10() {
 
   cout << "A: " << A << endl;
 
-  SVector<double,2> v23 = A.SubRow<2>( 0,1);    
-  SVector<double,2> v69 = A.SubCol<2>( 2,1);    
+  SVector<double,2> v23 = A.SubRow<SVector<double,2> >( 0,1);    
+  SVector<double,2> v69 = A.SubCol<SVector<double,2> >( 2,1);    
 
   std::cout << " v23 =  " << v23 << " \tv69 = " << v69 << std::endl;
   iret |= compare( Dot(v23,v69),(2*6+3*9) ); 
   
-   SMatrix<double,2,2> subA1 = A.Sub<2,2>( 1,0);
-   SMatrix<double,2,3> subA2 = A.Sub<2,3>( 0,0);
-   //  SMatrix<double,2,2> subA1 = A.Sub< SMatrix<double,2,2> > ( 1,0);
-   //SMatrix<double,2,3> subA2 = A.Sub< SMatrix<double,2,3> > ( 0,0);
+//    SMatrix<double,2,2> subA1 = A.Sub<2,2>( 1,0);
+//    SMatrix<double,2,3> subA2 = A.Sub<2,3>( 0,0);
+  SMatrix<double,2,2> subA1 = A.Sub< SMatrix<double,2,2> > ( 1,0);
+  SMatrix<double,2,3> subA2 = A.Sub< SMatrix<double,2,3> > ( 0,0);
   std::cout << " subA1 =  " << subA1 << " \nsubA2 = " << subA2 << std::endl;
   iret |= compare ( subA1(0,0), subA2(1,0)); 
   iret |= compare ( subA1(0,1), subA2(1,1)); 
@@ -327,8 +351,8 @@ int test10() {
 
 #ifdef UNSUPPORTED_TEMPLATE_EXPRESSION
   // in this case  function is templated. Need to pass the 6 
-  SVector<double,6> vU = A.UpperBlock<6>();
-  SVector<double,6> vL = B.LowerBlock<6>();
+  SVector<double,6> vU = A.UpperBlock< SVector<double,6> >();
+  SVector<double,6> vL = B.LowerBlock< SVector<double,6> >();
 #else 
   // standards
   SVector<double,6> vU = A.UpperBlock();
@@ -339,7 +363,7 @@ int test10() {
   iret |= compare( Mag(vU), Mag(vL) ); 
 
   // test subvector
-  SVector<double,3> subV = vU.Sub<3>(1);
+  SVector<double,3> subV = vU.Sub< SVector<double,3> >(1);
   std::cout << " sub vU =  " << subV << std::endl;
 
   iret |= compare( vU[2], subV[1] ); 
@@ -400,6 +424,18 @@ int test11() {
 }
 
 
+int test12() {
+  // test of symmetric matrices
+
+  SMatrix<double,2,2,MatRepSym<double,2> >  S; 
+  S(0,0) = 1;
+  S(0,1) = 2; 
+  S(1,1) = 3; 
+  std::cout << "S\n" << S << std::endl;
+  return 0; 
+} 
+
+
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
   if (test##N() == 0) std::cout << " Test " << itest << "  OK " << std::endl;   \
@@ -422,6 +458,9 @@ int main(void) {
   TEST(9);
   TEST(10);
   TEST(11);
+  TEST(12);
+
+
 
   return 0;
 }

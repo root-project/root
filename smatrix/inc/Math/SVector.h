@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.5 2005/12/13 18:28:09 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.6 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -158,7 +158,14 @@ public:
   template <class A>
   SVector<T,D>& operator=(const VecExpr<A,T,D>& rhs);
 
+
+  enum {
+    /// return vector size
+    kSize = D
+  };
+
   /** @name --- Access functions --- */
+
   /// return dimension $D$
   inline static unsigned int Dim() { return D; }
   /// access the parse tree
@@ -261,10 +268,11 @@ public:
 
   /**
      return a subvector of size N starting at the value row
+     where N is the size of the returned vector (SubVector::kSize)
      Condition  row+N <= D
    */ 
-  template <unsigned int N >  
-  SVector<T,N> Sub(unsigned int row) const;
+  template <class SubVector >  
+  SubVector Sub(unsigned int row) const;
 
 
   /// used by operator<<()

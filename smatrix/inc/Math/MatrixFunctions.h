@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.3 2005/12/07 15:27:00 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.4 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -444,6 +444,7 @@ inline Expr<TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2>, T, D2, D1,R>
   return Expr<MatTrOp, T, D2, D1, R>(MatTrOp(rhs));
 }
 
+#ifdef OLD
 //==============================================================================
 // product: SMatrix/SVector calculate v^T * A * v
 //==============================================================================
@@ -507,6 +508,166 @@ template <class A, class B, class T, unsigned int D, class R>
 inline T Product(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
   return Dot(lhs, rhs * lhs);
 }
+#endif
+
+//---------------------------------------------------------------------------
+//Similarity (for vector equaal to product) 
+//---------------------------------------------------------------------------
+
+//==============================================================================
+// product: SMatrix/SVector calculate v^T * A * v
+//==============================================================================
+template <class T, unsigned int D, class R>
+inline T Similarity(const SMatrix<T,D,D,R>& lhs, const SVector<T,D>& rhs) {
+  return Dot(rhs, lhs * rhs);
+}
+
+//==============================================================================
+// product: SVector/SMatrix calculate v^T * A * v
+//==============================================================================
+template <class T, unsigned int D, class R>
+inline T Similarity(const SVector<T,D>& lhs, const SMatrix<T,D,D,R>& rhs) {
+  return Dot(lhs, rhs * lhs);
+}
+
+//==============================================================================
+// product: SMatrix/Expr calculate v^T * A * v
+//==============================================================================
+template <class A, class T, unsigned int D, class R>
+inline T Similarity(const SMatrix<T,D,D,R>& lhs, const VecExpr<A,T,D>& rhs) {
+  return Dot(rhs, lhs * rhs);
+}
+
+//==============================================================================
+// product: Expr/SMatrix calculate v^T * A * v
+//==============================================================================
+template <class A, class T, unsigned int D, class R>
+inline T Similarity(const VecExpr<A,T,D>& lhs, const SMatrix<T,D,D,R>& rhs) {
+  return Dot(lhs, rhs * lhs);
+}
+
+//==============================================================================
+// product: SVector/Expr calculate v^T * A * v
+//==============================================================================
+template <class A, class T, unsigned int D, class R>
+inline T Similarity(const SVector<T,D>& lhs, const Expr<A,T,D,D,R>& rhs) {
+  return Dot(lhs, rhs * lhs);
+}
+
+//==============================================================================
+// product: Expr/SVector calculate v^T * A * v
+//==============================================================================
+template <class A, class T, unsigned int D, class R>
+inline T Similarity(const Expr<A,T,D,D,R>& lhs, const SVector<T,D>& rhs) {
+  return Dot(rhs, lhs * rhs);
+}
+
+//==============================================================================
+// product: Expr/Expr calculate v^T * A * v
+//==============================================================================
+template <class A, class B, class T, unsigned int D, class R>
+inline T Similarity(const Expr<A,T,D,D,R>& lhs, const VecExpr<B,T,D>& rhs) {
+  return Dot(rhs, lhs * rhs);
+}
+
+//==============================================================================
+// product: Expr/Expr calculate v^T * A * v
+//==============================================================================
+template <class A, class B, class T, unsigned int D, class R>
+inline T Similarity(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
+  return Dot(lhs, rhs * lhs);
+}
+
+
+//==============================================================================
+// product: SMatrix/SMatrix calculate M * A * M^T where A is a symmetric matrix
+// return matrix will be nrows M x nrows M
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
+  SMatrix<T,D1,D2, MatRepStd<T,D1,D2> > tmp = lhs * rhs;
+  SMatrix<T,D1,D1, MatRepStd<T,D1,D1> > tmp2 =  tmp * Transpose(lhs); 
+  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
+  typedef  MatRepSym<T,D1>  RSym; 
+  // not very efficient but is OK for now
+  SMatrixSym mret; 
+  //std::cout << R::kSize << "  " << RSym::kSize << std::endl;
+  for(unsigned int i=0; i<D1; ++i) {
+    for(unsigned int j=0; j<=i; ++j) {  
+      mret(i,j) = tmp2(i,j);
+      //std::cout << "tmp2\n" << tmp2 << std::endl;
+      //std::cout << i << "  " << j << "  " << mret(i,j) << "  " << tmp2(i,j) << std::endl;
+    }
+  }
+// #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
+//   SVector<T,RSym::kSize> vtmp2 = tmp2.UpperBlock(); 
+// #else
+//   // for solaris problem
+//   SVector<T,RSym::kSize> vtmp2 = tmp2.UpperBlock< SVector<T,RSym::kSize> > (); 
+// #endif
+//   SMatrixSym mret(vtmp2); 
+
+  return mret; 
+}
+
+//==============================================================================
+// product: SMatrix/SMatrix calculate M * A * M^T where A is a symmetric matrix
+// return matrix will be nrowsM x nrows M
+// M is a matrix expression
+//==============================================================================
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
+  SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = lhs * rhs;
+  SMatrix<T,D1,D1,MatRepStd<T,D1,D1> > tmp2 =  tmp * Transpose(lhs); 
+  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
+  SMatrixSym mret; 
+  // not very efficient but is OK for now
+  for(unsigned int i=0; i<D1; ++i) {
+    for(unsigned int j=i; j<D1; ++j)  
+      mret(i,j) = tmp2(i,j);
+  }
+  return mret; 
+}
+
+
+//==============================================================================
+// product: SMatrix/SMatrix calculate M^T * A * M where A is a symmetric matrix
+// return matrix will be ncolsM x ncols M
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
+  SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
+  SMatrix<T,D2,D2,MatRepStd<T,D2,D2> > tmp2 = Transpose(lhs) * tmp; 
+  typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
+  SMatrixSym mret; 
+  // not very efficient but is OK for now
+  for(unsigned int i=0; i<D2; ++i) {
+    for(unsigned int j=i; j<D2; ++j)  
+      mret(i,j) = tmp2(i,j);
+  }
+  return mret; 
+}
+
+//==============================================================================
+// product: SMatrix/SMatrix calculate M^T * A * M where A is a symmetric matrix
+// return matrix will be ncolsM x ncols M
+// M is a matrix expression
+//==============================================================================
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
+  SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
+  SMatrix<T,D2,D2,MatRepStd<T,D2,D2> > tmp2 = Transpose(lhs) * tmp; 
+  typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
+  SMatrixSym mret; 
+  // not very efficient but is OK for now
+  for(unsigned int i=0; i<D2; ++i) {
+    for(unsigned int j=i; j<D2; ++j)  
+      mret(i,j) = tmp2(i,j);
+  }
+  return mret; 
+}
+
+
 
 
   }  // namespace Math

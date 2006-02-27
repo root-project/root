@@ -128,13 +128,13 @@ double testInnerProd_S(const M & a, const V & v, double & time) {
   double result=0; 
   for (int l = 0; l < NLOOP; l++) 	
     {
-#ifndef WIN32
-      result = Product(v,a);  
-#else 
-      // cannot instantiate on Windows (don't know why? )
-      V tmp = a*v; 
-      result = Dot(v,tmp);
-#endif
+      //#ifndef WIN32
+      result = Similarity(v,a);  
+// #else 
+//       // cannot instantiate on Windows (don't know why? )
+//       V tmp = a*v; 
+//       result = Dot(v,tmp);
+// #endif
     }
   return result; 
 }
@@ -143,9 +143,11 @@ double testInnerProd_S(const M & a, const V & v, double & time) {
 template<class M> 
 void  testInv_S( const M & a,  double & time, M& result){ 
   test::Timer t(time,"inv ");
+  int ifail = 0;
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = a.Inverse();  
+      result = a.Inverse(ifail);
+      // assert(ifail == 0);
     }
 }
 
@@ -161,6 +163,20 @@ void testATBA_S(const A & a, const B & b, double & time, C & result) {
       //result = a * b * a;  
       result  = b * Transpose(a);
       result = a * result; 
+    }
+}
+
+// general matrix matrix op
+template<class A, class B, class C> 
+void testATBA_S2(const A & a, const B & b, double & time, C & result) {  
+  test::Timer t(time,"At*M*A");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      //result = Transpose(a) * b * a;  
+      //result = a * b * Transpose(a);  
+      //result = a * b * a;  
+      result  = SimilarityT(a,b);
+      //result = a * result; 
     }
 }
 

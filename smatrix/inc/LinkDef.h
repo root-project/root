@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: LinkDef.h,v 1.2 2005/12/05 16:33:47 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: LinkDef.h,v 1.3 2006/02/08 14:45:35 moneta Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -16,11 +16,16 @@
 
 #pragma link C++ namespace ROOT::Math;
 
+#pragma link C++ class ROOT::Math::SMatrixIdentity+;
+
 //generate up to 5x5
 #pragma link C++ class ROOT::Math::SMatrix<double,2,2>+;
 #pragma link C++ class ROOT::Math::SMatrix<double,3,3>+;
 #pragma link C++ class ROOT::Math::SMatrix<double,4,4>+;
 #pragma link C++ class ROOT::Math::SMatrix<double,5,5>+;
+
+#pragma link C++ class ROOT::Math::SMatrix<double,4,3>+;
+#pragma link C++ class ROOT::Math::SMatrix<double,3,4>+;
 
 #pragma link C++ class ROOT::Math::SVector<double,2>+;
 #pragma link C++ class ROOT::Math::SVector<double,3>+;
