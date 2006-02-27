@@ -271,7 +271,7 @@ int test_smatrix_sym_kalman() {
 	  vtmp2 = Rinv.UpperBlock(); 
 #else
 	  // for solaris problem
-	  vtmp2 = Rinv.UpperBlock<NDIM1*(NDIM1+1)/2>(); 
+	  vtmp2 = Rinv.UpperBlock< MnVectorN2 >(); 
 #endif
 
 	  MnSymMatrixNN RinvSym(vtmp2); 
