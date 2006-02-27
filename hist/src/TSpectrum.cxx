@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.36 2006/01/25 08:21:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.37 2006/02/03 21:55:39 pcanal Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -4504,6 +4504,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    int xmin, xmax, l, peak_index = 0, size_ext = ssize + 2 * numberIterations, shift = numberIterations;
    float maxch;
    float nom, nip, nim, sp, sm, plocha = 0;
+   float m0low=0,m1low=0,m2low=0,m0high=0,m1high=0,m2high=0,l0low=0,l1low=0,l0high=0,l1high=0,detlow,dethigh;   
    if (sigma < 1) {
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
@@ -4534,20 +4535,51 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       }
    }
 
+   k = int(2 * sigma+0.5);
+   if(k >= 2){
+      for(i = 0;i < k;i++){
+         a = i,b = source[i];
+         m0low += 1,m1low += a,m2low += a * a,l0low += b,l1low += a * b;
+         a = ssize-1-i,b = source[ssize-1-i];
+         m0high += 1,m1high += a,m2high += a * a,l0high += b,l1high += a * b;
+      }
+      detlow = m0low * m2low - m1low * m1low;
+      if(detlow != 0)
+         l1low = (-l0low * m1low + l1low * m0low) / detlow;
+         
+      else
+         l1low = 0;
+      dethigh = m0high * m2high - m1high * m1high;
+      if(dethigh != 0)
+         l1high = (-l0high * m1high + l1high * m0high) / dethigh;
+                
+      else
+         l1high = 0;
+   }
+   
+   else{
+      l1low = 0,l1high = 0;
+   }
+
    i = (int)(7 * sigma + 0.5);
    i = 2 * i;
    double *working_space = new double [7 * (ssize + i)];    
    for (j=0;j<7 * (ssize + i);j++) working_space[j] = 0;
    for(i = 0; i < size_ext; i++){
-      if(i < shift)
-         working_space[i + size_ext] = source[0];
+      if(i < shift){
+         a = i - shift;      	
+         working_space[i + size_ext] = source[0] + l1low * a;         
+      }
 
-      else if(i >= ssize + shift)
-         working_space[i + size_ext] = source[ssize - 1];
+      else if(i >= ssize + shift){
+      	 a = i - (ssize - 1 + shift);
+         working_space[i + size_ext] = source[ssize - 1] + l1high * a;
+      }
 
       else
          working_space[i + size_ext] = source[i - shift];
    }
+   
    if(backgroundRemove == true){
       for(i = 1; i <= numberIterations; i++){
          for(j = i; j < size_ext - i; j++){
@@ -4562,11 +4594,15 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
             working_space[size_ext + j] = working_space[j];
       }
       for(j = 0;j < size_ext; j++){
-         if(j < shift)
-            working_space[size_ext + j] = source[0] - working_space[size_ext + j];
+         if(j < shift){
+         	  a = j - shift;
+            working_space[size_ext + j] = source[0] + l1low * a - working_space[size_ext + j];
+         }
 
-         else if(j >= ssize + shift)
-            working_space[size_ext + j] = source[ssize - 1] - working_space[size_ext + j];
+         else if(j >= ssize + shift){
+         	  a = j - (ssize - 1 + shift);
+            working_space[size_ext + j] = source[ssize - 1] + l1high * a - working_space[size_ext + j];
+         }
 
          else{
             working_space[size_ext + j] = source[j - shift] - working_space[size_ext + j];
