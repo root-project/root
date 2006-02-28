@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.43 2006/01/30 08:00:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.44 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -849,7 +849,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin, u*z);
    fSumw2.fArray[bin] += u*z*z;
-   fBinEntries.fArray[bin] += w;
+   fBinEntries.fArray[bin] += u;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }

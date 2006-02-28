@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.72 2006/01/30 08:00:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.73 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -743,7 +743,7 @@ Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
    bin =fXaxis.FindBin(x);
    AddBinContent(bin, z*y);
    fSumw2.fArray[bin] += z*y*y;
-   fBinEntries.fArray[bin] += w;
+   fBinEntries.fArray[bin] += z;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -772,7 +772,7 @@ Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
    bin =fXaxis.FindBin(namex);
    AddBinContent(bin, z*y);
    fSumw2.fArray[bin] += z*y*y;
-   fBinEntries.fArray[bin] += w;
+   fBinEntries.fArray[bin] += z;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -804,7 +804,7 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
       bin =fXaxis.FindBin(x[i]);
       AddBinContent(bin, z*y[i]);
       fSumw2.fArray[bin] += z*y[i]*y[i];
-      fBinEntries.fArray[bin] += w[i];
+      fBinEntries.fArray[bin] += z;
       if (bin == 0 || bin > fXaxis.GetNbins()) {
          if (!fgStatOverflows) continue;
       }
