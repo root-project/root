@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.30 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.31 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1033,7 +1033,7 @@ Int_t TView::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio)
    Double_t d     = TMath::Abs(a - u*u);
 
    Int_t dist = Int_t(TMath::Sqrt(d) - 0.5);
-   ratio = u/c;
+   ratio = u/v;
    return dist;
 }
 
