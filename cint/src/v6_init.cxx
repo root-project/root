@@ -1318,11 +1318,13 @@ int G__main(int argc,char **argv)
     G__cleardictfile(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
   }
+#ifdef G__ROOT
   else if (R__CPPLINK == G__globalcomp) {
     rflx_gendict(linkfilename,sourcefile);
     return(EXIT_SUCCESS);
   }
-
+#endif
+  
   optind--;
   if(G__debugtrace!=0) G__fprinterr(G__serr,"PRE-RUN END\n");
 
@@ -1436,14 +1438,14 @@ int G__main(int argc,char **argv)
         alarm(G__TIMEOUT);
       }
 #endif
-      G__pause();
+      if(G__catchexception!=2) G__pause();
 #ifdef SIGALRM
       if(G__RETURN_EXIT1==G__return) {
         alarm(0);
         G__fprinterr(G__serr,"Time out cancelled\n");
       }
 #endif
-      G__pause();
+      if(G__catchexception!=2) G__pause();
     }
     if(G__stepover) {
       G__step=0;
