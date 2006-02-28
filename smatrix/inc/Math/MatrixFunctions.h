@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.4 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.5 2006/02/27 18:41:58 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -591,12 +591,9 @@ inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D2,R>& lh
   typedef  MatRepSym<T,D1>  RSym; 
   // not very efficient but is OK for now
   SMatrixSym mret; 
-  //std::cout << R::kSize << "  " << RSym::kSize << std::endl;
   for(unsigned int i=0; i<D1; ++i) {
     for(unsigned int j=0; j<=i; ++j) {  
       mret(i,j) = tmp2(i,j);
-      //std::cout << "tmp2\n" << tmp2 << std::endl;
-      //std::cout << i << "  " << j << "  " << mret(i,j) << "  " << tmp2(i,j) << std::endl;
     }
   }
 // #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION

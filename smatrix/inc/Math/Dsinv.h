@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dsinv.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dsinv.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dsinv
@@ -55,7 +55,6 @@ public:
     /* Parameter adjustments */
     static int arrayOffset = -1*(idim + 1);
 
-    std::cout << " do sinv " << n << " " << idim << std::endl; 
 
     /* Function Body */
     if (idim < n || n <= 1) {
@@ -68,7 +67,6 @@ public:
       const int jj  = j + ja;
       const int ja1 = ja + idim;
 
-      std::cout << " diag " <<  jj << "  " << jj + arrayOffset << " " << rhs[jj + arrayOffset] << std::endl; 
 
       if (rhs[jj + arrayOffset] <= 0.) { return false; }
       rhs[jj + arrayOffset] = 1. / rhs[jj + arrayOffset];
