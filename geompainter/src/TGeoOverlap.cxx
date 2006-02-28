@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.8 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.9 2006/02/23 13:23:08 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -130,10 +130,23 @@ void TGeoOverlap::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TGeoOverlap::Print(Option_t *) const
+{
+// Print detailed info.
+   PrintInfo();
+   printf(" - first volume: %s at position:\n", fVolume1->GetName());
+   fMatrix1->Print();   
+   fVolume1->InspectShape();   
+   printf(" - second volume: %s at position:\n", fVolume2->GetName());
+   fMatrix2->Print();   
+   fVolume2->InspectShape();   
+}
+
+//______________________________________________________________________________
 void TGeoOverlap::PrintInfo() const
 {
 // Print some info.
-   printf(" = Overlap %s: %s\n", GetName(), GetTitle());
+   printf(" = Overlap %s: %s ovlp=%g\n", GetName(), GetTitle(),fOverlap);
 }
 
 //______________________________________________________________________________

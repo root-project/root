@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.4 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.h,v 1.5 2006/02/23 13:23:08 brun Exp $
 // Author: Andrei Gheata   09/02/03
 
 /*************************************************************************
@@ -85,6 +85,7 @@ public:
    Bool_t            IsFolder() const {return kFALSE;}
    virtual Bool_t    IsSortable() const {return kTRUE;}
    virtual void      Paint(Option_t *option="");
+   virtual void      Print(Option_t *option="") const; // *MENU*
    virtual void      PrintInfo() const;
    virtual void      Sizeof3D() const;
    void              SetIsExtrusion(Bool_t flag=kTRUE) {TObject::SetBit(kGeoExtrusion,flag); TObject::SetBit(kGeoOverlap,!flag);}
@@ -96,7 +97,7 @@ public:
    void              SetSecondMatrix(TGeoMatrix *matrix) {*fMatrix2 = matrix;}
    void              SetOverlap(Double_t ovlp)  {fOverlap=ovlp;}
    
-   ClassDef(TGeoOverlap, 1)         // base class for geometical overlaps
+   ClassDef(TGeoOverlap, 2)         // base class for geometical overlaps
 };
       
 #endif

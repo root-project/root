@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.41 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.42 2006/02/23 13:23:08 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -75,6 +75,7 @@
 #include "TStopwatch.h"
 
 #include "TGeoBBox.h"
+#include "TGeoPcon.h"
 #include "TGeoManager.h"
 #include "TGeoOverlap.h"
 #include "TGeoPainter.h"
@@ -298,6 +299,26 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
 }
 
 //-----------------------------------------------------------------------------
+void TGeoChecker::CleanPoints(Double_t *points, Int_t &numPoints) const
+{
+// Clean-up the mesh of pcon/pgon from useless points
+   Int_t ipoint = 0;
+   Int_t j, k=0;
+   Double_t rsq;
+   for (Int_t i=0; i<numPoints; i++) {
+      j = 3*i;
+      rsq = points[j]*points[j]+points[j+1]*points[j+1];
+      if (rsq < 1.e-10) continue;
+      points[k] = points[j];
+      points[k+1] = points[j+1];
+      points[k+2] = points[j+2];
+      ipoint++;
+      k = 3*ipoint;
+   }
+   numPoints = ipoint;
+}      
+
+//-----------------------------------------------------------------------------
 TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1, TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp)
 {
 // Check if the 2 non-assembly volume candidates overlap/extrude. Returns overlap object.
@@ -308,7 +329,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    Bool_t extrude, isextrusion, isoverlapping;
    Double_t *points1 = fBuff1->fPnts; 
    Double_t *points2 = fBuff2->fPnts;
-   Double_t local[3];
+   Double_t local[3], local1[3];
    Double_t point[3];
    Double_t safety = TGeoShape::Big();
    if (vol1->IsAssembly() || vol2->IsAssembly()) return nodeovlp;
@@ -322,6 +343,10 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
       fBuff1->SetRawSizes(numPoints1, 3*numPoints1, 0, 0, 0, 0);
       points1 = fBuff1->fPnts;
       shape1->SetPoints(points1);
+      if (shape1->InheritsFrom(TGeoPcon::Class())) {
+         CleanPoints(points1, numPoints1);
+         fBuff1->SetRawSizes(numPoints1, 3*numPoints1, 0, 0, 0, 0);
+      }   
       fBuff1->fID = shape1;
    }   
    if (!shape2->IsComposite() && 
@@ -331,6 +356,10 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
       fBuff2->SetRawSizes(numPoints2, 3*numPoints2, 0, 0, 0, 0);
       points2 = fBuff2->fPnts;
       shape2->SetPoints(points2);
+      if (shape2->InheritsFrom(TGeoPcon::Class())) {
+         CleanPoints(points2, numPoints2);
+         fBuff2->SetRawSizes(numPoints2, 3*numPoints2, 0, 0, 0, 0);
+      }   
       fBuff2->fID = shape2;
    }   
       
@@ -342,9 +371,10 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
          for (ip=0; ip<fBuff2->NbPnts(); ip++) {
             memcpy(local, &points2[3*ip], 3*sizeof(Double_t));
             mat2->LocalToMaster(local, point);
-            extrude = !shape1->Contains(point);
+            mat1->MasterToLocal(point, local);
+            extrude = !shape1->Contains(local);
             if (extrude) {
-               safety = shape1->Safety(point, kFALSE);
+               safety = shape1->Safety(local, kFALSE);
                if (safety<ovlp) extrude=kFALSE;
             }    
             if (extrude) {
@@ -363,16 +393,17 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
       // loop all points of the mother
       if (!shape1->IsComposite()) {
          for (ip=0; ip<fBuff1->NbPnts(); ip++) {
-            memcpy(point, &points1[3*ip], 3*sizeof(Double_t));
-            mat2->MasterToLocal(point, local);
-            extrude = shape2->Contains(local);
+            memcpy(local, &points1[3*ip], 3*sizeof(Double_t));
+            mat1->LocalToMaster(local, point);
+            mat2->MasterToLocal(point, local1);
+            extrude = shape2->Contains(local1);
             if (extrude) {
                // skip points on mother mesh that have no neghbourhood ouside mother
-               safety = shape1->Safety(point,kTRUE);
+               safety = shape1->Safety(local,kTRUE);
                if (safety>1E-6) {
                   extrude = kFALSE;
                } else {   
-                  safety = shape2->Safety(local,kTRUE);
+                  safety = shape2->Safety(local1,kTRUE);
                   if (safety<ovlp) extrude=kFALSE;
                }   
             }   

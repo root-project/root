@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.14 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.15 2006/02/23 13:23:08 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -43,7 +43,7 @@ private :
    TBuffer3D       *fBuff1;           // Buffer containing mesh vertices for first volume
    TBuffer3D       *fBuff2;           // Buffer containing mesh vertices for second volume
 // methods
-
+   void             CleanPoints(Double_t *points, Int_t &numPoints) const;
 public:
    // constructors
    TGeoChecker();

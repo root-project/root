@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.51 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.52 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -971,7 +971,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
       ipl = TMath::BinarySearch(fNz, fZ, point[2]);
       if (ipl==(fNz-1)) return 0;   // point on last Z boundary
       if (ipl<0) return 0;          // point on first Z boundary
-      if (ipl>0 && fZ[ipl-1]==fZ[ipl]) ipl--;
+      if (ipl>0 && fZ[ipl-1]==fZ[ipl] && point[2]==fZ[ipl-1]) ipl--;
       dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
       if (dz<1E-8) {
          // Point on a segment-changing plane
