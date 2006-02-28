@@ -20,6 +20,7 @@ found_hdr=no
 show_pkglist=no
 noact="no"
 nohowto="no"
+logfile=config.log
 
 options="                    \
    enable_afs                \
@@ -94,6 +95,9 @@ enable_soversion=no
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
 enable_xrootd=           # must be set explicitely via --enable-xrootd
+
+# Remove old log file
+rm -f $logfile
 
 #
 # ./configure arguments and defaults set via supported env vars
@@ -173,6 +177,28 @@ message() {
 	return 1
     fi
     echo $ac_n "$* ... $ac_c"
+    logmsg "$*"
+}
+
+#_____________________________________________________________________
+logmsg() {
+    # Write a simple message to std out
+    if test $# -lt 1 ; then
+	echo "logmsg: Too few arguments"
+	return 1
+    fi
+    if test "x$1" = "x-n"; then
+       shift
+       echo -n "$*" >> $logfile
+    else
+       echo "$*" >> $logfile
+    fi
+}
+
+#_____________________________________________________________________
+result() {
+    echo "$*"
+    logmsg "Result: $*"
 }
 
 #_____________________________________________________________________
@@ -183,14 +209,18 @@ checking_msg() {
 	return 1
     fi
     echo $ac_n "Checking for$ac_c"
-    while test $# -gt 1  ; do
+    logmsg $ac_n "Checking for$ac_c"
+    while test $# -gt 1 ; do
 	echo $ac_n " $1,$ac_c"
+	logmsg $ac_n " $1,$ac_c"
 	shift
 	if test $# -eq 1 ; then
 	    echo $ac_n " or$ac_c"
+	    logmsg $ac_n " or$ac_c"
 	fi
     done
     echo $ac_n " $1 ... $ac_c"
+    logmsg " $1 ... "
 }
 
 #_____________________________________________________________________
@@ -211,15 +241,21 @@ check_lib64() {
 
     # Save arguments in logical names
     chklib64=$1
-
+    logmsg "Checking if $chklib64 is a 64bit library"
     if [ "x`basename $chklib64 .a`" != "x`basename $chklib64`" ]; then
         # we have an archive .a file
+	logmsg "objdump -a $chklib64 | grep 'x86-64'"
         objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1
+	ret=$?
     else
+	logmsg "file -L $chklib64 | grep '64-bit'"
         file -L $chklib64 | grep '64-bit' > /dev/null 2>& 1
+	ret=$?
     fi
+    logmsg "result: $ret"
     if test $? -eq 0 ; then
         is_lib64=1
+	logmsg "is a 64bit library"
     fi
 }
 
@@ -276,6 +312,7 @@ check_library() {
         libs="$libs $slibs"
     fi
 
+    logmsg "libraries to check for: $libs"
     # Loop over the list of possible directories, and see if we can
     # find any of the library files as determind above.
     for i in $libdirs ; do
@@ -300,17 +337,21 @@ check_library() {
             i64=`echo $i | sed 's|\(lib\)|\1/hpux64|'`
             i="$i64"
         fi
+	logmsg "Checking in directories $i for $libs"
         for l in $i ; do
             l=`echo $l | sed 's,^//,/,'`
             if test ! -d $l ; then
 		continue
             fi
             for j in ${libs} ; do
+		logmsg "Checking for library $j in directory $i"
 	        # if we found the file (it's readable by user), we set the
 	        # logical variables and are on our way, otherwise we continue
                 liblist=`echo $l/$j`    # expands wildcard in $l/$j
                 for n in ${liblist} ; do
+		    logmsg "Checking $n"
                     if test -f $n ; then
+			logmsg "Found file $n"
                         if test "x$checklib64" = "xyes" ; then
                             check_lib64 $n
                             if test $is_lib64 -eq 1 ; then
@@ -331,6 +372,8 @@ check_library() {
                               break 4
                             fi
                         fi
+		    else
+			logmsg "$j not found in $j"
                     fi
                 done
             done
@@ -344,6 +387,7 @@ check_library() {
     if test "x$found_dir" = "xno" || test "x$found_lib" = "xno" ; then
 	found_dir=""
 	found_lib=""
+	logmsg "library not found"
     else
 	flib=""
         maclib=""
@@ -426,10 +470,13 @@ check_header()  {
     # find any of the library files as determind above.
 
     for i in $hdrdirs; do
+	logmsg "Checking in directory $i"
         for j in ${hdrs} ; do
+	    logmsg "Checking for $j in directory $i"
 	    # if we found the file (it's readable by user), we set the
 	    # logical variables and are on our way, otherwise we continue
             if test -r $i/$j ; then
+		logmsg "$i/$j is read-able"
                 found_dir=$i
                 found_hdr=$j
                 # skip cygwin headers when in pure Win32 mode
@@ -532,9 +579,13 @@ check_symbol() {
     fi
 
     for d in "$symboldir" $usrlib ; do
+	logmsg "Checking in $d"
 	if test ! -r $d/$symbollib ; then
+	    logmsg "$d/$symbollib not readable"
 	    for i in $exts ; do
+		logmsg "Checking extension $i with $d/$symbollib"
 		if test -r $d/$symbollib$i ; then
+		    logmsg "$d/$symbollib$i readable"
 		    symbolfile=$d/$symbollib$i
 		    break 2
                 fi
@@ -544,16 +595,19 @@ check_symbol() {
 
     if test "x$symbolfile" = "x" || test ! -r $symbolfile ; then
        found_symbol=0
+       logmsg "Symbol not found"
        return 1
     fi
 
     checking_msg "$symbol in $symbolfile"
-    nm $symbolfile 2> /dev/stdout | grep $symbol > /dev/null 2>&1
+    nm $symbolfile 2>&1 | grep $symbol > /dev/null 2>&1
     if test $? -eq 0 ; then
         found_symbol=1
+       logmsg "Symbol found"
     else
-	nm $symbolfile 2> /dev/stdout | grep "no symbols" > /dev/null 2>&1
+	nm $symbolfile 2>&1 | grep "no symbols" > /dev/null 2>&1
 	if test $? -eq 0 ; then
+	    logmsg "$symbolfile is stripped, trying a link"
 	    # stripped library - only safe test is to link against the
 	    # library!  However, we do not know what compiler to use
 	    # so we can not do the test.  Assume the symbol is in
@@ -566,21 +620,24 @@ conftest.c:
 	echo "extern int $symbol (); " > \$@
 	echo "int main() { $symbol (); return 0; }" >> \$@
 EOF
-	    $gnumake -f conftest.mk > /dev/null 2>&1
-	    rm -rf conftest.c conftest.mk conftest
+	    $gnumake -f conftest.mk >> $logfile 2>&1
 	    if test $? -eq 0 ; then
 		found_symbol=1
+		logmsg "Link OK"
 	    else
-        found_symbol=0
-    fi
+		found_symbol=0
+		logmsg "Failed code was"
+		cat conftest.mk >> $logfile
+	    fi
+	    rm -rf conftest.c conftest.mk conftest
 	else
 	    found_symbol=0
 	fi
     fi
     if test $found_symbol -eq 1 ; then
-	echo "ok"
+	result "ok"
     else
-	echo "no"
+	result "no"
     fi
 }
 
@@ -594,6 +651,9 @@ guess_architecture () {
     arch=`uname -s | tr '[A-Z]' '[a-z]'`
     chip=`uname -m | tr '[A-Z]' '[a-z]'`
     rele=`uname -r`
+    logmsg "arch=$arch"
+    logmsg "chip=$chip"
+    logmsg "rele=$rele"
     case "$arch:$chip:$rele" in
         aix*)                  arch=aix5            ;;
         osf1*:alpha:*)         arch=alphacxx6       ;;
@@ -629,6 +689,7 @@ guess_architecture () {
             exit 1
             ;;
    esac
+    result "$arch"
 }
 
 ###################################################################
@@ -763,7 +824,7 @@ enable/disable options, prefix with either --enable- or --disable-
   roofit             Build the libRooFit advanced fitting package
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
-  sapdb              SapDB support, requires libsqlod and libsqlrte
+  sapdb              MaxDB/SapDB support, requires libsqlod and libsqlrte
   shadowpw           Shadow password support
   shared             Use shared 3rd party libraries if possible
   soversion          Set version number in sonames (recommended)
@@ -861,6 +922,7 @@ else
           ;;
        *)
           arch=$1
+	  logmsg "Architecture set to $arch by user"
           shift
           ;;
    esac
@@ -885,12 +947,16 @@ platform=`grep "^PLATFORM *=" config/Makefile.$arch | awk '{ print $3 }'`
 
 case $arch in
 sgicc)
+   logmsg "Will check 32bit libraries"
    checklib32="yes" ;;
 linuxppc64*|sgicc64)
+   logmsg "Will ONLY check 64bit libraries"
    checkonlylib64="yes" ;;
 linuxx8664*)
+   logmsg "Will check 64bit libraries"
    checklib64="yes" ;;
 hpuxia64acc)
+   logmsg "Will HP/UX 64bit libraries"
    checkhpux64="yes" ;;
 esac
 
@@ -902,7 +968,9 @@ win32|linux|macosx)
 esac
 
 if test "x$platform" = "xmacosx" ; then
+   logmsg "Checking Fink directory"
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+   result "$finkdir"
 fi
 
 ######################################################################
@@ -1075,6 +1143,7 @@ fi
 ### echo %%% Should sonames contain version numbers
 #
 if test "x$enable_soversion" = "xyes"; then
+    logmsg "Enabling version numbers in so names"
     major=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number`
     minor=`sed 's|.*\.\(.*\)/.*|\1|' < build/version_number`
     revis=`sed 's|.*\..*/\([0-9]*\).*|\1|' < build/version_number`
@@ -1108,7 +1177,7 @@ if test ! "$platform" = "win32"; then
     x11libdir=$found_dir
 
     if test "x$found_lib" = "x" ; then
-	echo "`basename $0`: libX11 (package x11-devel) MUST be installed"
+	result "`basename $0`: libX11 (package x11-devel) MUST be installed"
         exit 1
     fi
 
@@ -1118,7 +1187,7 @@ if test ! "$platform" = "win32"; then
 	/usr/X11/include /usr/include/X11R5
 
     if test "x$found_dir" = "x" ; then
-	echo "`basename $0`: X11 headers (package x11-devel) MUST be installed"
+	result "`basename $0`: X11 headers (package x11-devel) MUST be installed"
         exit 1
     fi
 
@@ -1130,7 +1199,7 @@ if test ! "$platform" = "win32"; then
     xpmlibdir=$found_dir
 
     if test "x$xpmlib" = "x" ; then
-	echo "`basename $0`: libXpm MUST be installed"
+	result "`basename $0`: libXpm MUST be installed"
         exit 1
     fi
 fi
@@ -1220,19 +1289,19 @@ if test "x$enable_builtin_freetype" = "x" || \
               { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
       # First good version is 9.3.0
       if test $ttf2_version -lt 9003000 ; then
-         echo "no (`freetype-config --version`)"
+         result "no (`freetype-config --version`)"
          enable_builtin_freetype="yes"
       else
-         echo "ok"
+         result "ok"
          enable_builtin_freetype="no"
       fi
    else
       enable_builtin_freetype="no"
-      echo "not found"
+      result "not found"
    fi
 fi
 message "Checking whether to build included libfreetype6"
-echo "$enable_builtin_freetype"
+result "$enable_builtin_freetype"
 
 ######################################################################
 #
@@ -1254,10 +1323,10 @@ if test "x$enable_builtin_pcre" = "x" || \
               { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
       # First good version is 3.9
       if test $pcre_version -lt 3009000 ; then
-         echo "no (`pcre-config --version`)"
+         result "no (`pcre-config --version`)"
          enable_builtin_pcre="yes"
       else
-         echo "ok"
+         result "ok"
          enable_builtin_pcre="no"
       fi
    else
@@ -1266,7 +1335,7 @@ if test "x$enable_builtin_pcre" = "x" || \
    fi
 fi
 message "Checking whether to build included libpcre"
-echo "$enable_builtin_pcre"
+result "$enable_builtin_pcre"
 
 ######################################################################
 #
@@ -1433,9 +1502,9 @@ fi
 
 ######################################################################
 #
-### echo %%% SapDB Support - Third party libraries
+### echo %%% SapDB/MaxDB Support - Third party libraries
 #
-# (See www.sapdb.org)
+# (See www.sapdb.org or http://www.mysql.com/products/maxdb)
 #
 # If the user has set the flags "--disable-sapdb", we don't check for
 # SapDB at all.
@@ -1445,7 +1514,8 @@ if test ! "x$enable_sapdb" = "xno"; then
     check_header "sql.h" "$sapdbincdir" $SAPDB $SAPDB/include \
 	/opt/sapdb/interfaces/odbc/incl /usr/sapdb/interfaces/odbc/incl \
 	/usr/sapdb/include /usr/local/sapdb/interfaces/odbc/incl \
-	/usr/sapdb/web/incl /usr/include/sapdb /usr/local/include/sapdb \
+	/usr/sapdb/web/incl /usr/include/sapdb /usr/include/maxdb \
+	/usr/local/include/sapdb /usr/local/include/maxdb \
 	/usr/local/sapdb/include /usr/local/sapdb/web/incl /usr/sapdb \
 	/usr/local/sapdb /opt/sapdb /opt/sapdb/include /opt/sapdb/web/incl
     sapdbinc=$found_hdr
@@ -1453,12 +1523,13 @@ if test ! "x$enable_sapdb" = "xno"; then
 
     check_library "libsqlod" "$enable_shared" "$sapdblibdir" \
 	$SAPDB $SAPDB/lib /opt/sapdb/interfaces/odbc/lib \
-	/usr/sapdb/interfaces/odbc/lib /usr/spadb/lib \
+	/usr/sapdb/interfaces/odbc/lib /usr/sapdb/lib \
 	/usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
 	/usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
 	/usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
 	/opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
-	/usr/local/sapdb/web/lib /opt/sapdb/web/lib
+	/usr/local/sapdb/web/lib /opt/sapdb/web/lib \
+	/usr/lib /usr/local/lib
     sapdblib=$found_lib
     sapdblibdir=$found_dir
 
@@ -1493,28 +1564,32 @@ if test ! "x$enable_qt" = "xno"; then
     if test $? -ne 0 ; then
        for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
            /usr/qt3/bin /usr/share/qt3/bin ; do
+	  logmsg "Checking for $qtmocexe in $i"
 	  if test -x $i/moc ; then
 	      qtmocexe=$i/moc
+	      logmsg "$qtmocexe is executable"
 	      break
 	  elif  test -x $i/moc.exe ; then
 	      qtmocexe=$i/moc.exe
+	      logmsg "$qtmocexe is executable"
 	      break
 	  fi
        done
     fi
-    echo "$qtmocexe"
+    result "$qtmocexe"
 
     if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
 	test "x$qtmocexe" = "x"; then
         enable_qt="no"
     else
         message "Checking whether Qt version = 3.xx"
-        grep "QT_VERSION 0x03" $qtincdir/qglobal.h > /dev/null 2>&1
+	logmsg "grep 'QT_VERSION 0x03' $qtincdir/qglobal.h"
+        grep "QT_VERSION 0x03" $qtincdir/qglobal.h >> $logfile 2>&1
         if test $? -ne 0 ; then
-            echo "no"
+            result "no"
             enable_qt="no"
         else
-            echo "yes"
+            result "yes"
         fi
     fi
 fi
@@ -1540,13 +1615,14 @@ if test ! "x$enable_rfio" = "xno" ; then
 
     if test ! "x$shiftincdir" = "x"; then
         message "Checking whether rfio_fchmod declared in $shiftinc"
-        if `grep rfio_fchmod $shiftincdir/$shiftinc > /dev/null 2>&1` ; then
-            echo "yes"
+	logmsg "grep rfio_fchmod $shiftincdir/$shiftinc"
+        if `grep rfio_fchmod $shiftincdir/$shiftinc >> $logfile 2>&1` ; then
+            result "yes"
         else
             shiftincdir=""
             shiftold="yes"
-            echo "no"
-            echo "### Found old version of libshift, please uprade to >=1.5.2"
+            result "no"
+            result "### Found old version of libshift, please uprade to >=1.5.2"
         fi
     fi
 
@@ -1574,8 +1650,16 @@ if test ! "x$enable_rfio" = "xno" ; then
            linux)      shiftlib="$shiftlib -lnsl"
 		for i in "" -ladns ; do
 		    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
-		    gcc conftest.c $shiftlibdir $shiftlib $i -o conftest > /dev/null 2>&1
-		    if test $? -eq 0 ; then shiftlib="$shiftlib $i" ; break ; fi
+		    logmsg "Checking if we can link against $shiflib"
+		    logmsg "gcc conftest.c $shiftlibdir $shiftlib $i -o conftest"
+		    gcc conftest.c $shiftlibdir $shiftlib $i -o conftest >> $logfile 2>&1
+		    if test $? -eq 0 ; then
+			shiftlib="$shiftlib $i" ;
+			break ;
+		    else
+			logmsg "Failed program was:"
+			cat conftest.c >> $logfile
+		    fi
 		done
 		rm -f conftest.c conftest
 		;;
@@ -1673,11 +1757,11 @@ if test ! "x$enable_cern" = "xno"; then
             # check if libpacklib contains rfio code (case of < 2002 version)
             check_symbol rfio_connect "$packlib" "$packlibdir"
             if test  $found_symbol -eq 0 ; then
-                echo "### Need libshift with this version of $packlib"
+                result "### Need libshift with this version of $packlib"
                 if test "x$shiftold" = "xyes"; then
-                    echo "### Found old version of libshift, please uprade to >=1.5.2"
+                    result "### Found old version of libshift, please uprade to >=1.5.2"
                 else
-                    echo "### Run configure with --enable-rfio or set --with-shift-libdir"
+                    result "### Run configure with --enable-rfio or set --with-shift-libdir"
                 fi
                 packlib=""
             fi
@@ -1747,7 +1831,7 @@ if test ! "x$enable_pythia6" = "xno" ; then
 		if test $found_symbol -eq 1  ; then
 		    pythia6cppflags=-DPYTHIA6_NO_UNDERSCORE
 		else
-		    echo " didn't find pythia6_common_block_address[_]* in $found_lib"
+		    result " didn't find pythia6_common_block_address[_]* in $found_lib"
 		    enable_pythia6=no
 		fi
 	    fi
@@ -1798,7 +1882,7 @@ if test ! "x$enable_dcache" = "xno" ; then
     if test ! "x$dcaplib" = "x" ; then
         check_symbol dc_lseek64 "$dcaplib" "$dcaplibdir"
         if test  $found_symbol -eq 0 ; then
-            echo "### Need dc_lseek64 in libdcap, upgrade your d-cache client library"
+            result "### Need dc_lseek64 in libdcap, upgrade your d-cache client library"
             dcaplib=
             dcaplibdir=
             dcapincdir=
@@ -1883,14 +1967,14 @@ if test ! "x$enable_asimage" = "xno" ; then
           asimage_version=`afterimage-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
           #if test $asimage_version -gt 1003 ; then
           if test $asimage_version -gt 0 ; then
-             echo "WARNING: System libAfterImage is too new, using built-in"
+             result "WARNING: System libAfterImage is too new, using built-in"
           else
              enable_builtin_afterimage="no"
              asextralib=`afterimage-config --libs`
              asimageincdir=`afterimage-config --cflags | sed 's/-I//g'`
           fi
        else
-          echo "not found"
+          result "not found"
        fi
     fi
     # If we didn't find the system libAfterImage, or the user didn't ask
@@ -1956,7 +2040,7 @@ if test ! "x$enable_asimage" = "xno" ; then
        fi
    fi
    message "Checking whether to build included libAfterImage"
-   echo "$enable_builtin_afterimage"
+   result "$enable_builtin_afterimage"
 fi
 
 ######################################################################
@@ -2119,17 +2203,17 @@ if test ! "x$enable_xml" = "xno" ; then
        message "Checking for libxml2 version >= 2.4.x"
        xml2_version=`xml2-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
        if test $xml2_version -lt 2004 ; then
-          echo "no (`xml2-config --version`)"
+          result "no (`xml2-config --version`)"
           enable_xml="no"
           xmllibdir=""
        else
-          echo "ok"
+          result "ok"
           xmllib=`xml2-config --libs`
           xmlincdir=`xml2-config --cflags | sed 's/-I//g'`
           xmllibdir=""
        fi
     else
-       echo "not found"
+       result "not found"
        # fall back in case xml2-config is not found
        keepincdir=$xmlincdir
        check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
@@ -2233,7 +2317,7 @@ else
    xrdcomm="$enable_xrootd$xrdcomm"
 fi
 
-echo $xrdcomm
+result $xrdcomm
 
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
@@ -2258,14 +2342,16 @@ haveglobus=""
 if test ! "x$enable_globus" = "xno"; then
    # Check if the GLOBUS_LOCATION variable is set
    if test "x$globusdir" = "x" ; then
-      echo "Checking for globusdir ... no"
+      checking_msg "for globusdir"
+      result "no"
+      checking_msg "GLOBUS_LOCATION"
       if test "x$GLOBUS_LOCATION" = "x" ; then
           globusdir=""
           enable_globus="no"
-          echo "Checking for GLOBUS_LOCATION ... no"
+	  result "no"
       else
           globusdir=$GLOBUS_LOCATION
-          echo "Checking for GLOBUS_LOCATION ... $GLOBUS_LOCATION"
+	  result "$GLOBUS_LOCATION"
       fi
    fi
 fi
@@ -2412,9 +2498,9 @@ if test "x$enable_globus" = "xyes"; then
       sourcepath="$globusdir/etc"
    fi
    if test "x$sourcepath" = "x" ; then
-      echo "Checking for globus-user-env.sh ... no (cannot run as client)"
+      result "Checking for globus-user-env.sh ... no (cannot run as client)"
    else
-      echo "Checking for globus-user-env.sh ... $sourcepath"
+      result "Checking for globus-user-env.sh ... $sourcepath"
    fi
 
    # Need this to init proxies
@@ -2423,9 +2509,9 @@ if test "x$enable_globus" = "xyes"; then
       initpath="$globusdir/bin"
    fi
    if test "x$sourcepath" = "x" ; then
-      echo "Checking for grid-proxy-init ... no (cannot run as client)"
+      result "Checking for grid-proxy-init ... no (cannot run as client)"
    else
-      echo "Checking for grid-proxy-init ... $initpath"
+      result "Checking for grid-proxy-init ... $initpath"
    fi
 
    if test "x$globusincdir" = "x" || test "x$globuslib" = "x"; then
@@ -2476,10 +2562,10 @@ if test "x$enable_globus" = "xyes"; then
       fi
       if test "x$version" = "x" ; then
          patchneeded="no"
-         echo "Checking for need of globus patch ... no"
+         result "Checking for need of globus patch ... no"
       else
          patchneeded="yes"
-         echo "Checking for need of globus patch ... yes, version $version"
+         result "Checking for need of globus patch ... yes, version $version"
          # Check consistency: get reference versions
          gsicredconstantsh=`echo $gsicredentialh | sed 's|credential.h|cred_constants.h|'`
          grepout=`grep "Revision:" $gsicredentialh`
@@ -2519,17 +2605,17 @@ if test "x$enable_globus" = "xyes"; then
          if test "x$mismatch" = "xyes" ; then
             if test ! "x$vertmp" = "x" ; then
                version=$vertmp
-               echo "no: guess value from map file: $version"
+               result "no: guess value from map file: $version"
             else
-               echo "no: unable to guess value from map file: keep $version"
+               result "no: unable to guess value from map file: keep $version"
             fi
          else
-            echo "yes"
+            result "yes"
          fi
       fi
 
    else
-      echo "Checking for need of globus patch ... information directory not available"
+      result "Checking for need of globus patch ... information directory not available"
    fi
 
    # Now find includes needed for patch, if the case
@@ -2541,7 +2627,7 @@ if test "x$enable_globus" = "xyes"; then
       for i in globus_gsi_system_config.h globus_gsi_cert_utils.h ; do
          dirtmp=`find $globusincdir -name $i -exec dirname {} \;`
          if test ! "x$dirtmp" = "x" ; then
-            echo "Checking for $i ... $dirtmp"
+            result "Checking for $i ... $dirtmp"
             add="yes"
             for k in $glbpatchcflags ; do
                if test "x$k" = "x-I$dirtmp" ; then
@@ -2552,7 +2638,7 @@ if test "x$enable_globus" = "xyes"; then
                glbpatchcflags="$glbpatchcflags -I$dirtmp"
             fi
          else
-            echo "Checking for $i ... no (globus patch not applied)"
+            result "Checking for $i ... no (globus patch not applied)"
             patchneeded="no"
             glbpatchcflags=""
             break
@@ -2571,7 +2657,7 @@ if test "x$enable_globus" = "xyes"; then
       glbpatchcflags="$glbpatchcflags -I$globuspatchdir/include"
 
       if test ! "x$glbpatchcflags" = "x" ; then
-         echo "Applying experimental patch to $tobepatched.c"
+         result "Applying experimental patch to $tobepatched.c"
       fi
    fi
 fi
@@ -2633,7 +2719,7 @@ if test "x$enable_ssl" = "xyes" ; then
          ssllibdir="$found_dir"
          if test ! "x$found_dir" = "x$ssllibdir" ; then
             message "Checking for openssl"
-            echo "warning: paths to libcrypto and libssl do not match"
+            result "warning: paths to libcrypto and libssl do not match"
             ssllibdir="$ssllibdir $found_dir"
          fi
      fi
@@ -2871,7 +2957,7 @@ if test ! "x$enable_krb5" = "xno" ; then
         krb5libdir=$found_dir
     fi
     message "Checking whether we're using MIT Kerberos"
-    echo "$krb5mit"
+    result "$krb5mit"
 
     check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
     if test "x$found_lib" = "x" ; then
@@ -2912,7 +2998,7 @@ if test ! "x$enable_krb5" = "xno" ; then
     done
 
     if test "x$krb5init" = "x" ; then
-        echo "Checking for kinit ... no"
+        result "Checking for kinit ... no"
     else
         echo "Checking for kinit ... $krb5init"
     fi
@@ -2988,7 +3074,7 @@ if test "x$enable_shadowpw" = "xyes"; then
    shadowpw="-DR__SHADOWPW "
 fi
 
-echo $enable_shadowpw
+result $enable_shadowpw
 
 ######################################################################
 #
@@ -2997,10 +3083,10 @@ echo $enable_shadowpw
 message "Checking whether to build libMathCore"
 if test "x$enable_mathcore" = "xyes" || test ! "x$MATHCORE" = "x"; then
     enable_mathcore="yes"
-    echo "yes"
+    result "yes"
 else
     enable_mathcore=""
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3011,11 +3097,11 @@ message "Checking whether to build libMathMore"
 if test "x$enable_mathmore" = "xyes" || test ! "x$MATHMORE" = "x"; then
     enable_mathmore="yes"
     hasmathmore="define"
-    echo "yes"
+    result "yes"
 else
     enable_mathmore=""
     hasmathmore="undef"
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3025,10 +3111,10 @@ fi
 message "Checking whether to build libCintex"
 if test "x$enable_cintex" = "xyes" || test ! "x$CINTEX" = "x"; then
     enable_cintex="yes"
-    echo "yes"
+    result "yes"
 else
     enable_cintex=""
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3038,10 +3124,10 @@ fi
 message "Checking whether to build libReflex"
 if test "x$enable_reflex" = "xyes" || test ! "x$REFLEX" = "x"; then
     enable_reflex="yes"
-    echo "yes"
+    result "yes"
 else
     enable_reflex=""
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3051,10 +3137,10 @@ fi
 message "Checking whether to build libRooFit"
 if test "x$enable_roofit" = "xyes" || test ! "x$ROOFIT" = "x"; then
     enable_roofit="yes"
-    echo "yes"
+    result "yes"
 else
     enable_roofit=""
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3064,10 +3150,10 @@ fi
 message "Checking whether to build libMinuit2"
 if test "x$enable_minuit2" = "xyes" || test ! "x$MINUIT2" = "x"; then
     enable_minuit2="yes"
-    echo "yes"
+    result "yes"
 else
     enable_minuit2=""
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3077,10 +3163,10 @@ fi
 message "Checking whether to build libTable"
 if test "x$enable_table" = "xyes" || test ! "x$TABLE" = "x"; then
     enable_table="yes"
-    echo "yes"
+    result "yes"
 else
     enable_table=""
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3112,9 +3198,9 @@ if test ! "x$enable_clarens" = "xno" ; then
 fi
 
 if test "x$enable_clarens" = "xyes" ; then
-    echo "yes"
+    result "yes"
 else
-    echo "no"
+    result "no"
 fi
 
 ######################################################################
@@ -3139,7 +3225,7 @@ else
     buildpeac="no"
 fi
 
-echo "$buildpeac"
+result "$buildpeac"
 
 ######################################################################
 #
@@ -3165,12 +3251,12 @@ case "$dicttype" in
     reflex | gccxml)
         # check that cintex is enabled for reflex/gccxml
         if ! test "x$enable_cintex" = "xyes"; then
-            echo "Cannot generate $dicttype dictionaries with cintex disabled."
+            result "Cannot generate $dicttype dictionaries with cintex disabled."
             dicttype=cint
         fi ;;
     *)
-        echo "Unknown dictionary \"$dicttype\"."
-        echo "  Must be one of cint, reflex, gccxml."
+        result "Unknown dictionary \"$dicttype\"."
+        result "  Must be one of cint, reflex, gccxml."
         dicttype=cint
         ROOTDICTTYPE="trigger print info"
         ;;
@@ -3179,7 +3265,7 @@ esac
 # Print info if dicttype!=cint, or --with-dict overrides $ROOTDICTTYPE
 if test ! "x$dicttype" = "xcint" \
      -o ! "x$dicttype" = "x$ROOTDICTTYPE"; then
-    echo "Generating $dicttype dictionaries."
+    result "Generating $dicttype dictionaries."
 fi
 
 ######################################################################
@@ -3195,14 +3281,14 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_asimage" = "xyes" && pkglist="$pkglist root-plugin-asimage"
     test "x$enable_cern"    = "xyes" && pkglist="$pkglist root-plugin-hbook"
     test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
-    test "x$enable_clarens" = "xyes" && pkglist="$pkglist root-plugin-clarens"
+    test "x$enable_clarens" = "xyes" && pkglist="$pkglist libroot-clarens"
     test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
     test "x$enable_gfal"    = "xyes" && pkglist="$pkglist root-plugin-gfal"
     test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
-    test "x$enable_ldap"    = "xyes" && pkglist="$pkglist root-plugin-ldap"
+    test "x$enable_ldap"    = "xyes" && pkglist="$pkglist libroot-ldap"
     test "x$enable_minuit2" = "xyes" && pkglist="$pkglist root-plugin-minuit2"
-    test "x$enable_monalisa"= "xyes" && pkglist="$pkglist root-plugin-monalisa"
+    test "x$enable_monalisa" = "xyes" && pkglist="$pkglist root-plugin-monalisa"
     test "x$enable_mysql"   = "xyes" && pkglist="$pkglist root-plugin-mysql"
     test "x$enable_opengl"  = "xyes" && pkglist="$pkglist root-plugin-gl"
     test "x$enable_oracle"  = "xyes" && pkglist="$pkglist root-plugin-oracle"
@@ -3210,21 +3296,21 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_pgsql"   = "xyes" && pkglist="$pkglist root-plugin-pgsql"
     test "x$enable_pythia"  = "xyes" && pkglist="$pkglist root-plugin-pythia5"
     test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-plugin-pythia6"
-    test "x$enable_python"  = "xyes" && pkglist="$pkglist root-plugin-python"
+    test "x$enable_python"  = "xyes" && pkglist="$pkglist libroot-python"
     test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
-    test "x$enable_roofit"  = "xyes" && pkglist="$pkglist root-plugin-roofit"
-    test "x$enable_ruby"    = "xyes" && pkglist="$pkglist root-plugin-ruby"
+    test "x$enable_roofit"  = "xyes" && pkglist="$pkglist libroot-roofit"
+    test "x$enable_ruby"    = "xyes" && pkglist="$pkglist libroot-ruby"
     test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-castor"
-    test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-sapdb"
+    test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-maxdb"
     test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
     test "x$enable_venus"   = "xyes" && pkglist="$pkglist root-plugin-venus"
     test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
     test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-xrootd root-plugin-netx"
 
-    pkglist="$pkglist root-plugin-fumili root-plugin-minuit root-plugin-mlp root-plugin-proof root-proofd root-plugin-quadp root-rootd root-cint root-doc libroot-dev root-bin libroot ttf-root ttf-root-installer"
+    pkglist="$pkglist root-plugin-fumili libroot-minuit libroot-mlp root-plugin-proof root-plugin-xproof root-plugin-sql libroot-quadp root-proofd root-rootd root-doc root-bin libroot root-common ttf-root-installer"
     # If we're called from the package preparation script, then
     # print out the package list and exit
-    echo "packages: $pkglist"
+    result "packages: $pkglist"
     exit 0
 fi
 
@@ -3238,9 +3324,9 @@ case $platform in
         message "Checking whether setresuid declared in /usr/include/unistd.h"
         if `grep setresuid /usr/include/unistd.h > /dev/null 2>&1` ; then
             setresuid="define"
-            echo "yes"
+            result "yes"
         else
-            echo "no"
+            result "no"
         fi ;;
 esac
 
@@ -3272,17 +3358,17 @@ fi
 if test ! -d include ; then
    message "Creating include"
    mkdir include
-   echo "done"
+   result "done"
 fi
 if test ! -d bin ; then
    message "Creating bin"
    mkdir bin
-   echo "done"
+   result "done"
 fi
 if test ! -d lib ; then
    message "Creating lib"
    mkdir lib
-   echo "done"
+   result "done"
 fi
 
 ######################################################################
@@ -3605,7 +3691,7 @@ if test "x$platform" = "xwin32"; then
     mv -f Makefile.tmp $MAKEOUT
 fi
 
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # include/config.h
@@ -3631,7 +3717,7 @@ sed \
     -e "s|@hasmathmore@|$hasmathmore|" \
     < config.tmp > $CONFOUT
 rm -f config.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # bin/root-config
@@ -3667,7 +3753,7 @@ sed -e "s|@architecture@|$arch|"           \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/system.rootrc
@@ -3682,7 +3768,7 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@hasxrd@|$hasxrd|"             \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/system.rootauthrc
@@ -3693,7 +3779,7 @@ sed -e "s|@havesrp@|$havesrp|"             \
     -e "s|@haveglobus@|$haveglobus|"       \
    < rootauthrc.tmp > $ROOTAUTHRCOUT
 rm -f rootauthrc.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/system.rootdaemonrc
@@ -3704,7 +3790,7 @@ sed -e "s|@havesrp@|$havesrp|"             \
     -e "s|@haveglobus@|$haveglobus|"       \
    < rootdaemonrc.tmp > $ROOTDAEMONRCOUT
 rm -f rootdaemonrc.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/root.mimes
@@ -3715,7 +3801,7 @@ if test "$platform" = "win32" ; then
 else
    cp -f $MIMEUNIXIN $MIMEOUT
 fi
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/rootd
@@ -3725,7 +3811,7 @@ sed -e "s|@bindir@|$bindir|" \
     < rootd.tmp > $ROOTDOUT
 chmod a+x $ROOTDOUT
 rm -f rootd.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/rootd.xinetd
@@ -3735,7 +3821,7 @@ sed -e "s|@bindir@|$bindir|" \
     -e "s|@prefix@|$prefix|" \
     < rootd.xinetd.tmp > $ROOTDXINETDOUT
 rm -f rootd.xinetd.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/proofd
@@ -3745,7 +3831,7 @@ sed -e "s|@bindir@|$bindir|" \
     < proofd.tmp > $PROOFDOUT
 chmod a+x $PROOFDOUT
 rm -f proofd.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # etc/proofd.xinetd
@@ -3755,7 +3841,7 @@ sed -e "s|@bindir@|$bindir|" \
     -e "s|@prefix@|$prefix|" \
     < proofd.xinetd.tmp > $PROOFDXINETDOUT
 rm -f proofd.xinetd.tmp
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # bin/memprobe
@@ -3770,7 +3856,7 @@ sed -e "s|@perl@|$perlexe|"                \
    < memprobe.tmp > $MEMPROBEOUT
 rm -f memprobe.tmp
 chmod 755 $MEMPROBEOUT
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # build/misc/root-help.el
@@ -3779,7 +3865,7 @@ message "Writing $ROOTHELPOUT"
 sed -e "s|@bindir@|$bindir|"           \
     -e "s|@incdir@|$incdir|"           \
     < $ROOTHELPIN > $ROOTHELPOUT
-echo "done"
+result "done"
 
 #---------------------------------------------------------------------
 # macros/html.C
@@ -3796,14 +3882,14 @@ for opt in $options; do
    sed_args="${sed_args}/g"
 done
 sed $sed_args < $HTMLIN > $HTMLOUT
-echo done
+result done
 
 #---------------------------------------------------------------------
 # config.status
 #
 message "Writing config.status"
 echo $configargs > config.status
-echo done
+result done
 
 #---------------------------------------------------------------------
 # for reconfigure
@@ -3847,7 +3933,7 @@ for opt in $options; do
 done
 if test "x$enabled_options" != "x"; then
    echo ""
-   echo "Enabled support for ${enabled_options}."
+   result "Enabled support for ${enabled_options}."
 fi
 
 ######################################################################
@@ -3856,7 +3942,7 @@ fi
 #
 echo ""
 if test "x$enable_opengl" = "xno" ; then
-    echo "To build the ROOT OpenGL add-on library see README/INSTALL."
+    result "To build the ROOT OpenGL add-on library see README/INSTALL."
     echo ""
     echo ""
 fi
@@ -3871,12 +3957,12 @@ if test "x$nohowto" = "xyes" ; then
     exit 0
 fi
 
-echo "To build ROOT type:"
-echo ""
-echo "   $gnumake"
+result "To build ROOT type:"
+result ""
+result "   $gnumake"
 if test ! "x$haveconfig" = "x" ; then
-    echo "   $gnumake install"
+    result "   $gnumake install"
 fi
-echo ""
+result ""
 
 exit 0

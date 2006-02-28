@@ -11,14 +11,13 @@ ASIMAGEDIR   := $(MODDIR)
 ASIMAGEDIRS  := $(ASIMAGEDIR)/src
 ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
-ifeq ($(BUILTINASIMAGE),yes)
 ASTEPVERS    := libAfterImage
+ifeq ($(BUILTINASIMAGE),yes)
 ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
 ASTEPDIRI    := -I$(MODDIRS)/$(ASTEPVERS)
 else
-ASTEPDIRI    := $(ASINCDIR:%=-I%)
 ASTEPDIRS    :=
-ASTEPVERS    :=
+ASTEPDIRI    := $(ASINCDIR:%=-I%)
 endif
 
 ##### libAfterImage #####
@@ -286,12 +285,8 @@ distclean-asimage: clean-asimage
 		   $(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) \
 		   $(ASIMAGEGUILIB) \
 		   $(ASIMAGEGSDEP) $(ASIMAGEGSDS) $(ASIMAGEGSDH) \
-		   $(ASIMAGEGSLIB)
-
-ifeq ($(BUILTINASIMAGE),yes)
-		@rm -rf $(ASTEPLIB)
-endif
-		@rm -rf $(ASTEPDIRS)
+		   $(ASIMAGEGSLIB) $(ASTEPLIB)
+		@rm -rf $(ASIMAGEDIRS)/$(ASTEPVERS)
 
 distclean::     distclean-asimage
 

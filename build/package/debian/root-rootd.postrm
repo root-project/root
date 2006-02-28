@@ -2,8 +2,7 @@
 # postrm script for root-rootd
 #
 # see: dh_installdeb(1)
-
-set -e
+# set -e
 
 case "$1" in
     purge|abort-install)
@@ -16,15 +15,16 @@ case "$1" in
 	    # Could not remove user. Ignore. 
 	    echo "Couldn't remove user rootd, check it. Reason"
 	    case $reason in 
-	    1)  echo "can't update password file"    ;;
-	    2)  echo "bad command syntax"            ;;
-	    6)  echo "specified user doesn't exist"  ;;
-	    8)  echo "user currently logged in"      ;;
-	    10) echo "can't update group file"       ;; 
-	    12) echo "can't remove home directory"   ;;
-	    *)  echo "Unknown"                       ;;
+	    1)  echo "can't update password file"     ;;
+	    2)  echo "bad command syntax"             ;;
+	    6)  echo "specified user doesn't exist"   ;;
+	    8)  echo "user currently logged in"       ;;
+	    10) echo "can't update group file"        ;; 
+	    12) echo "can't remove home directory"    ;;
+	    *)  echo "Unrecognized exit code $reason" ;;
 	    esac
 	fi
+	set -e 
 	;;
     remove|upgrade|failed-upgrade|abort-upgrade|disappear)
 	# Nothing to be done here 

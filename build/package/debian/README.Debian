@@ -14,9 +14,17 @@ Introduction:
 These are the Debian GNU/Linux and Redhat packages of ROOT, the
 analysis frame work written in C++.
 
+Meta package: 
+
+* root                  This will install the core of ROOT, plus some
+                        of the most useful packages.  Note, this works
+                        best on Debian as Debian has a higher level of
+                        granularity than Red Hat when it comes to
+                        dependencies. 
+
 The core packages are:
 
-* root-cint             Almost bare CINT, the C/C++ interpretor
+* root-common		Common files for ROOT
 * libroot               Basic ROOT libraries
 * root-bin              The interactive interface and utilities
 * libroot-dev           The header files for the ROOT libraries
@@ -28,6 +36,19 @@ A few `server' packages are available
 * root-proofd           PROOF environment
 * root-xrootd		Extendend ROOT Remote File server
 
+A few `extension' packages 
+
+* libroot-clarens       Grid-Enabled Web Services
+* libroot-clarens-dev   Development files for libroot-clarens
+* libroot-mlp	        Multi-Layer-Perceptron Neural Net (**)
+* libroot-mlp-dev       Development files for libroot-mlp
+* libroot-minuit        Fitting algorithm for ROOT (**)
+* libroot-minuit-dev    Development files for libroot-minuit
+* libroot-python        Python interface to ROOT
+* libroot-python-dev    Development files for libroot-python
+* libroot-ruby          Ruby interface to ROOT
+* libroot-ruby-dev      Development files for libroot-ruby
+
 Further more, there's a number of plugin packages.  Which exactly are
 built depends on your system. 
 
@@ -35,15 +56,12 @@ built depends on your system.
 * root-plugin-asimage   AfterStep image manipulation plugin
 * root-plugin-castor    Interface to CASTOR managed tape robots
 * root-plugin-chirp     Access files via the Chirp protocol
-* root-plugin-clarens   Grid-Enabled Web Services
 * root-plugin-dcache    Access to files data via a dCache server
 * root-plugin-fumuli    Alternative fitting algorithm for ROOT (**)
 * root-plugin-globus    Authentication and authorisation against Globus(*)
 * root-plugin-gl        OpenGL support using Mesa (or XFree)
 * root-plugin-hbook     Conversion tools from HBOOK to ROOT files
 * root-plugin-ldap      Interface to LDAP 
-* root-plugin-minuit    Fitting algorithm for ROOT (**)
-* root-plugin-mlp	Multi-Layer-Perceptron Neural Net (**)
 * root-plugin-mysql     MySQL client for ROOT
 * root-plugin-netx      Client for XRootd server (**)
 * root-plugin-oracle    Oracle client for ROOT
@@ -52,11 +70,9 @@ built depends on your system.
 * root-plugin-proof     PROOF Client (**)
 * root-plugin-pythia5   Wrapper for Pythia event generator (version 5)
 * root-plugin-pythia6   Wrapper for Pythia event generator (version 6)
-* root-plugin-python    Python interface to ROOT
 * root-plugin-qt        ROOT GUIs using QT
 * root-plugin-qaudp     Quadratic Programming plugin 
-* root-plugin-ruby      Ruby interface to ROOT
-* root-plugin-sapdb     SapDB client for ROOT
+* root-plugin-maxdb     MaxDB/SapDB client for ROOT
 * root-plugin-venus     Wrapper for Venus event generator
 * root-plugin-xml       XML plugin for ROOT
 
@@ -68,28 +84,49 @@ built depends on your system.
 The packages are structured like this, to allow maximum modularity and
 flexibility for the user.
 
+The `root-plugin-<plugin>' contain proper plug-ins, and should not
+be linked to by the developer.  For example `root-plugin-minuit'
+contain `libMinuit'.  This library is automatically loaded when one
+starts fitting data if the proper `TEnv' value is set in `.rootrc'.
+However, `libFumili' from `root-plugin-fumili' could also be loaded if
+so specified in `.rootrc'. The point here is, that the developer
+should not use `TMinuit' or similar directly in their code.  Instead
+they should use the proper virtual interface (e.g., `TVirtualFitter'),
+and leave the decision of which concrete implementation to use to the
+user.   
+
+The `libroot-<extension>' packages contain proper extensions, which
+the developer can link to explicitly, or load dynamically via ROOT.
+Hence, these packages comes in pairs - a run-time shared library
+package, and a development package. 
+
 The latest Debian GNU/Linux packages should be available from [1], and
 a back catalogue as well as latest build should be available from the
 ROOT web-site [2].
 
 It is hoped that these packages will eventually be part of some Debian
-GNU/Linux and Redhat distributions.  Current licensing issues
-prohibits the packages from entering the "main" distribution of Debian
-GNU/Linux - The ROOT team doesn't allow derived work to be
-redistributed with the prior explicit consent of the ROOT team; in any
-other respect, ROOT is truly OpenSource. However, these packages will
-probably go into "non-free".  Redhat may not have any such policy.
+GNU/Linux and Redhat distributions.  
 
-The current license of ROOT in fact means, that if you built the
-Redhat or Debian GNU/Linux packages, you may not redistribute those
-without the prior consent of the ROOT team.  The maintainers of the
-Debian GNU/Linux and Redhat packages has such a consent and may
-therefore redistribute packages.  So, in short, if you got a Redhat or
-Debian GNU/Linux ROOT package set from someone other than the ROOT
-team or the maintainers you are in violation with the License!
-
-[1] http://cholm.home.cern.ch/cholm
+[1] deb http://mirror.phy.bnl.gov/debian-root root main
 [2] http://root.cern.ch
+
+Parallel ROOT Facility Daemon:
+==============================
+Per default, the PROOF daemon (proofd) is turned off.   This is
+because the user need to set up a few things before starting the
+daemon.   Specifically, the user need to make the files
+`<proofd_dir>/etc/cluster.conf' and `<proofd_dir>/etc/proofd.conf'.
+Examples for these are provided in the documentation directory of
+`root-proofd' (`/usr/share/doc/root-proofd/examples/').
+`<proofd_dir>' can be set to any location in
+`/etc/default/root-proofd'.  Note, however, that ROOT recommends that
+this directory is shared (via NFS or similar) among all the nodes of
+the cluster.   To enable `root-proofd' set `ENABLE_PROOFD=yes' in
+`/etc/default/root-proofd'.    See also the `read me' file  
+`/usr/share/doc/root-doc/README.PROOF' in the `root-doc' package, as
+well as the web-site [1].
+
+[1] http://root.cern.ch/root/PROOF.html
 
 Original Sources:
 =================
@@ -109,8 +146,9 @@ The sources for ROOT are available via anonymous CVS from
 
 For more availability of ROOT, including other OSs then Linux - IBM
 AIX, HP Unix, Digital Unix on Alpha, FreeBSD, Windows, and many others
-- please refer to [2].
+- please refer to [1].
 
+[1] http://root.cern.ch
 
 Parallel Redhat and Debian GNU/Linux Packages:
 ==============================================
@@ -122,25 +160,26 @@ Documentation, Mailing list and Questions:
 ==========================================
 No documentation package is made.  This is because the documentation
 is vast and not particularly manageable in a package.  Instead, please
-refer to the ROOT web-site [2].  There you'll find reference pages for
-every class in ROOT [3], as well as a printable Users guide
-[4]. There's a mailing list for ROOT issues at [5], and an archive is
-available via the main ROOT web page [6].
+refer to the ROOT web-site [1].  There you'll find reference pages for
+every class in ROOT [2], as well as a printable Users guide
+[3]. There's a mailing list for ROOT issues at [4], and an archive is
+available via the main ROOT web page [5].
 
 Do not mail directly to the maintainer with questions on ROOT.
 Instead mail questions to [5] - The maintainer is on that list and
 will happily answer questions in that forum.
 
-[3] http://root.cern.ch/root/html/ClassIndex.html
-[4] http://root.cern.ch/root/UsersGuide.html
-[5] mailto:roottalk@root.cern.ch
-[6] http://root.cern.ch/root/AboutRootTalk.html
+[1] http://root.cern.ch
+[2] http://root.cern.ch/root/htmldoc/ClassIndex.html
+[3] http://root.cern.ch/root/UsersGuide.html
+[4] mailto:roottalk@root.cern.ch
+[5] http://root.cern.ch/root/AboutRootTalk.html
 
 
 Pure CINT and ROOT's CINT:
 ==========================
 To facilitate a parallel installation of a Pure CINT on a Debian
-GNU/Linux system, the `root-cint' package exploits the "alternatives"
+GNU/Linux system, the `root-bin' package exploits the "alternatives"
 feature of dpkg.  Since most ROOT users never use then Pure CINT
 programs "cint" and "makecint" is is reasonably safe to have a Pure
 CINT installation next to ROOT.  A Debian GNU/Linux package of CINT is
@@ -213,7 +252,15 @@ The source tree is configured with
   a restrictive license.  In a nut shell, this license prohibits
   the maintainer from including them in the packages, since it will
   violate other license issues, and make ROOT less close to being
-  OpenSource.  For now, we must endure.
+  OpenSource.  
+
+  The ROOT sources has been patched to allow using FreeFont files
+  instead of the MS Core fonts.  However, there's no DSFG free
+  alternative to `symbol.ttf', so either a user should get and install
+  that file herself, or make do with out.  The package
+  `ttf-root-installer' (in contrib) uses the MS Core fonts from the
+  package `msttcorefonts' and downloads the remaining fonts from the
+  ROOT web-site. 
 
 * Version number in soname:
   Debian GNU/Linux (indirectly) mandates that any shared library shall
@@ -226,11 +273,131 @@ The source tree is configured with
   resolve conflicts etc. cleanly.
 
 
-Features:
----------
-The number of features that is compiled in and how many packages are
-made depend upon the system you're building the packages.  The
-possible feature packages are
+3rd Party libraries:
+====================
+Below is listed the 3rd party interfaces possible which are not
+normally build on a Debian or Red Hat system.  Most have rather
+restrictive licenses which prohibits redistribution of modified
+sources, thereby rendering them non-free (in the meaning of
+`free-speech'). 
+ 
+SHIFT managed tape I/O:
+-----------------------
+To build the library providing CERN RFIO (remote I/O) support you need
+to get the "libshift.a" library from CERN. You can get pre-build
+libraries from
+
+  http://root.cern.ch/root/shift
+
+or you can download the full source from
+
+  http://castor.web.cern.ch/castor/
+
+The full sources may contain the `debian' directory. 
+
+Chirp File access:
+------------------
+This allows transparent access to files via Condor file access
+protocol chirp.    It requires libraries from 
+
+  http://www.cs.wisc.edu/condor/chirp
+
+There are no known Debian packages of this software. 
+
+DCache file access:
+-------------------
+Provides transparent access to files stored in a DCache file archive.
+This need client libraries from 
+
+  $ cvs -d :pserver:cvs@cvs.dcache.org:/cvs login
+  Logging in to :pserver:cvs@cvs.dcache.org:2401/cvs
+  CVS password: (password is 'cvs')
+  $ cvs -d :pserver:cvs@cvs.dcache.org:/cvs co .
+
+Note, there are no known packages of his software. 
+
+Oracle database access:
+-----------------------
+Provides transparent access to Oracle data bases.  This need the
+client interface library from 
+
+  http://www.oracle.com/
+
+There are RPMs of this client (you need oracle-instantclient-devel and
+oracle-instantclient-core) and these can be used on Debian via
+`alien'. 
+
+Pythia Event Generators:
+------------------------
+To build the event generator interfaces for Pythia and Pythia6, you
+first have to get the pythia libraries. You can get pre-build
+libraries from:
+
+   ftp://root.cern.ch/root/pythia/
+
+or you can download the source from the same directory. The original
+sources can be found via Lunds FTP server.
+
+More information is available from:
+
+   http://www.thep.lu.se/~torbjorn/Pythia.html
+
+Note, that one Debian you can use Kevin McCarty's
+`montecarlo-installer-data' package to make the packages `pythia6',
+`pythia6-dev', `pythia5', and `pythia5-dev'. 
+
+Venus Event Generators:
+-----------------------
+To build the event generator interface for Venus, you need to have the
+Venus libraries.  The sources can be downloaded from 
+
+    ftp://root.cern.ch/root/venus/
+
+There's no official or semi official package of this code, but the
+sources (from the above web-site) can easily be turned into a binary
+package.   However, this redistribution is painfully in conflict with
+the license given by the upstream author Klaus Werner: 
+
+  Copyright K. Werner, Nantes 1995.
+
+  Copyright reserved in all countries of the world.  The program may
+  not be reproduced by any method without prior consent of the author 
+  (K. Werner).
+
+Secure Remote Password (SRP) Authentication:
+--------------------------------------------
+To build the strong authentication module used by rootd and proofd,
+you first have to install the SRP (Secure Remote Password)
+system. See:
+
+   http://srp.stanford.edu/
+
+Please note, that the library "libsrp-dev" as distributed by Standford
+is not enough to build the two utility program in the `srputil'
+sub-directory.   There are no known packages of this code. 
+
+Globus Authentication:
+----------------------
+To build the Globus authentication module used by rootd and proofd,
+you first have to make sure that the Globus Tool Kit is installed
+on the machine. See:
+
+   http://www.globus.org/
+
+for details and downloads.
+
+Globus Tool Kit is available only for a subset of Unix platforms.  The
+variable GLOBUS_LOCATION should be defined as the directory containing
+Globus lib, include and bin. For compilation purposes you can pass
+this directory to the configure script with the option
+--with-globus-dir=<globus_dir>. An experimental path is available for
+versions 2.2.3 and 2.2.4 of the Globus Tool Kit to fix a small bug
+preventing full fonctionallity of the root implementation; this is
+activated by setting --with-globus-patch-dir=<globus_src_dir> where
+<globus_src_dir> is the globus tool kit source directory. 
+
+There exists experimental packages of this software. 
+
 
 Adding a new package:
 =====================
@@ -313,14 +480,6 @@ contains that new module.   Let's assume that the new plugin is called
 
 Package Bugs, etc.:
 ===================
-Debian GNU/Linux wants the <library>.so symbolic links in the
-development packages, but unfortunately that is not possible.  The
-ROOT libraries loads some libraries dynamically, and at the moment,
-the library file must end in one of ".so", ".a", ".sl", or ".dll", so
-the <library>.so files _must_ be in the binary packages.  If the ROOT
-team would change that behaviour of "TSystem::Load()", then we could
-separate out the development symbolic links.
-
 Since this package is not in any Debian GNU/Linux distribution, the
 regular Debian GNU/Linux bug tracking system cannot be used.
 Therefore, please send bug reports to the Debian GNU/Linux package
@@ -328,26 +487,48 @@ maintainer <cholm@nbi.dk>.
 
 Thanks:
 =======
-Many MANY thanks to the ROOT team - Rene Brun and Fons Rademarkers -
-for a great piece of software.  Especially thanks to Fons Rademarkers
-for putting up with a lot of emails from me (Christian Holm) during
-the initial development.
 
-Many thanks to Masaharu Goto for CINT, inspirrering correspondence,
-advice, and patience (loads of emails from me).
+* Many MANY thanks to the ROOT team - Rene Brun <Rene.Brun@cern.ch>
+  and Fons Rademakers <Fons.Rademakers@cern.ch> - for a great piece
+  of software.  Especially thanks to Fons Rademakers for putting up
+  with a lot of emails from me (Christian Holm) during the initial
+  development.  
 
-Also many thanks to all the contributors of ROOT, for making it
-great.
+* Many thanks to Masaharu Goto <gotom@hanno.jp> for CINT, inspiring
+  correspondence, advice, and patience (loads of emails from me).
 
-Thanks to Anders Waananen for putting the Redhat package together,
-many suggestions and inspirrational talks.
+* Also many thanks to all the contributors of ROOT, for making it
+  great.
 
-Thanks to Richard B. Kreckel the CINT Debian GNU/Linux package
-maintainer, for inspirring correspondence, advice, and great
-cooperation.
+* Anders Waananen <waananen@nbi.dk> for putting the initial Red Hat
+  packages together, many suggestions and inspirrational talks.
 
-Thanks to Brett Viren for alpha and beta testing of the Debian
-GNU/Linux packages.
+* Thanks to Richard B. Kreckel the CINT Debian GNU/Linux package
+  maintainer, for inspirring correspondence, advice, and great
+  cooperation.
 
- -- Anders Waananen <waananen@nbi.dk>, Fri,  16 Mar 2001 12:45:54 +0100
+* James Ferrando <ferrando@mail.desy.de> for the i386
+  `sarge' (stable) builds. 
+
+* John Kehayias <John.Kehayias@bnl.gov> for the amd64 `sid' (unstable)
+   builds. 
+
+* Frederic Lehobey <Frederic.Lehobey@free.fr> for linux-sparc64,
+  linux-powerpc, and gnu-kfreebsd-i386 testing and builds. 
+
+* Kevin McCarty <kmccarty@Princeton.edu> for his many suggestions,
+  testing, and sponsorship, as well as some amd64 builds. 
+
+* Daniele Nicolodi <daniele@grinta.net> for powerpc testing and builds
+  on Ubuntu.
+
+* Charles Plessy <charles-debian-nospam@plessy.org> for powerpc64
+  testing and builds. 
+
+* Brett Viren <bv@bnl.gov> for hosting the repository as well as doing
+  alpha and beta  testing of the Debian GNU/Linux packages.
+
+* Ricardo Yanez <Ricardo.Yanez@calel.org> for suggestions, testing and
+  stable i386 builds. 
+
  -- Christian Holm Christensen <cholm@nbi.dk>, Mon, 21 Feb 2005 16:28:37 +0100

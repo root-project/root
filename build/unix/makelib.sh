@@ -42,7 +42,7 @@ fi
 VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
-   if [ $LIB != "lib/libCint.$soext" -a $LIB != "lib/libReflex.$soext" ]; then
+   if test $LIB != "lib/libCint.$soext" && test $LIB != "lib/libReflex.$soext" ; then
       NEEDREFLEX=""
       if [ "$(bin/root-config --dicttype)" != "cint" ]; then
           NEEDREFLEX="-lReflex"

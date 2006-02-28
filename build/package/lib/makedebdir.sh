@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: makedebdir.sh,v 1.11 2005/07/13 17:14:28 rdm Exp $
+# $Id: makedebdir.sh,v 1.12 2005/09/22 09:09:03 rdm Exp $
 #
 # Make the debian packaging directory 
 #
@@ -19,6 +19,7 @@ mkdir -p debian
 
 ### echo %%% Copy files to directory, making subsitutions if needed
 cp -a build/package/debian/* debian/
+rm -r debian/root-bin.png
 chmod a+x debian/rules 
 chmod a+x build/package/lib/*
 

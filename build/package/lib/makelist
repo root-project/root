@@ -11,8 +11,8 @@ MINOR   = $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
 SOVER	= $(MAJOR).$(MINOR)
 
 ifneq ($(DIRS),)
-include $(foreach i, $(DIRS), $(i)/Module.mk)
 include config/Makefile.config 
+include $(foreach i, $(DIRS), $(i)/Module.mk)
 endif
 
 ifneq ($(DEV),)
@@ -48,7 +48,8 @@ PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(SOVER)
 endif # $(DIRS) = cint
 else # ! $(NOVERS) != 1
 ifeq ($(DIRS), xrootd)
-XRDLIBS := $(patsubst lib/%, $(LPATH)/%, $(wildcard lib/libXrd*.so))
+XRDLIBS := $(patsubst lib/%, $(LPATH)/%, \
+		$(filter-out lib/libXrdProofd.so, $(wildcard lib/libXrd*.so)))
 PKGLIBS	:= $(XRDLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%)
 else  # ! $(LIB)
 PKGLIBS	:= $(ALLLIBS) \
@@ -58,24 +59,23 @@ endif # $(DIRS) = xrootd
 endif # $(NOVERS) != 1
 endif # $(LIB) = $(DEV)
 liblist:
-	@echo "$(PKGLIBS)" 
 	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(LIB).install
 ifneq ($(LIB),$(DEV))
-	(cd debian/tmp/usr/lib/root && \
+	@(cd debian/tmp/usr/lib/root && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b . ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
 else 
 ifeq ($(DIRS), cint)
-	(cd debian/tmp/usr/lib/root && \
+	@(cd debian/tmp/usr/lib/root && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b . ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
 else 
 ifneq ($(DIRS), xrootd) 
-	(cd debian/tmp/usr/lib/root && \
+	@(cd debian/tmp/usr/lib/root && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
@@ -95,8 +95,8 @@ devlist:
 endif
 
 ifneq ($(BIN),)
-PKGEXECS:= $(ALLEXECS:bin/%=$(BPATH)/%) 
-PKGMANS := $(ALLEXECS:bin/%=$(MPATH)/%.1) 
+PKGEXECS= $(ALLEXECS:bin/%=$(BPATH)/%) 
+PKGMANS = $(ALLEXECS:bin/%=$(MPATH)/%.1) 
 binlist:
 	@for f in $(PKGEXECS)  ; do echo $$f ; done >> $(OUT)/$(BIN).install
 	@for f in $(PKGMANS)  ; do echo $$f ; done >> $(OUT)/$(BIN).install

@@ -15,7 +15,7 @@ else
 fi
 
 MACHINES=/usr/local/root/proof/etc/cluster.conf
-if [ -f $MACHINES -a "$display" ]
+if test -f $MACHINES && test "$display"
 then
    machines=`cat $MACHINES`
    typeset -i offset=772

@@ -13,7 +13,7 @@ SAVEDIR=${RET}
 
 case "$1" in
     configure)
-	if test ! -f /var/cache/ttf-root-installer || \
+	if test ! -f /var/cache/ttf-root-installer && \
           test "x`echo $LOCALCOPY | tr [:upper:] [:lower:]`" != "xnone" ; then 
 	    savdir=`pwd` 
 	    tmpdir=`mktemp -d`

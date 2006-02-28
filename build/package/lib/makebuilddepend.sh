@@ -5,7 +5,7 @@ if test "x$1" = "xrpm" ; then
     shift
     for i in $* ; do 
 	case $i in 
-	    libroot-dev)						;;
+	    *-dev) 						        ;;
 	    libroot)							;;
 	    root-bin)							;;
 	    root-cint)							;;
@@ -13,8 +13,8 @@ if test "x$1" = "xrpm" ; then
 	    *alien)	echo -n ", AliEn-Client" 			;;
 # Build dependency on AfterStep-devel temporarily commented out 
 # until such a time when ROOT can use the normal libAfterImage.
+# Input the build dependencies of the libafterimage-dev package
 #	    *asimage)	echo -n ", AfterStep-devel"			;;
-	    *asimage)							;;
 	    *asimage)							;;
 	    *castor)	echo -n ", CASTOR-client"			;;
 	    *chirp)							;;
@@ -38,11 +38,12 @@ if test "x$1" = "xrpm" ; then
 	    *pythia5)	echo -n ", pythia5-devel"			;;
 	    *pythia6)	echo -n ", pythia6-devel"			;;
 	    *python)	echo -n ", python-devel >= 2.1"			;;
-	    *qt)	echo -n ", qt3-devel"				;;
+	    *qt)	echo -n ", qt-devel >= 3.3.3"			;;
 	    *quadp)							;;
 	    *roofit)							;;
 	    *ruby)	echo -n ", ruby-devel >= 1.8"			;;
-	    *sapdb)	echo -n ", sapdb-callif"			;;
+	    *maxdb)	echo -n ", libsqlod75-dev"			;;
+	    *sql)							;;
 	    *srp)							;;
 	    *venus)							;;
 	    *xml)	echo -n ", libxml2-devel"			;;
@@ -50,6 +51,7 @@ if test "x$1" = "xrpm" ; then
 	    root-rootd)							;;
 	    root-xrootd) echo -n ", krb5-devel"				;;
 	    ttf-root*)							;;
+	    root-common)						;;
 	    *) 
 		echo "*** Warning *** Unknown package $i - please update $0" \
 		    > /dev/stderr 
@@ -63,7 +65,7 @@ fi
 bd=
 for i in $* ; do 
     case $i in 
-	libroot-dev)							;;
+	*-dev)							        ;;
 	libroot)							;;
 	root-bin)							;;
 	root-cint)							;;
@@ -72,22 +74,24 @@ for i in $* ; do
 # Build dependency on libafterimage-dev temporarily commented out 
 # until such a time when ROOT can use the normal libAfterImage.
 #	*asimage)	echo -n ", libafterimage-dev"			;;
-	*asimage)							;;
+# Input the build dependencies of the libafterimage-dev package
+#	*asimage)	echo -n ", AfterStep-devel"			;;
+	*asimage)	echo -n ", libjpeg62-dev, libpng12-dev, zlib1g-dev (>= 1:1.1.4), libtiff4-dev, libfreetype6-dev, libungif4-dev, libxinerama-dev" ;;
 	*castor)	echo -n ", libshift-dev"			;;
 	*chirp)		echo -n ", libchirp-dev"			;;
-	*clarens)	echo -n ", libxmlrpc-c-dev"			;;
+	*clarens)	echo -n ", libxmlrpc-c3-dev | libxmlrpc-c-dev"	;;
 	*dcache)	echo -n ", libdcap-dev"				;;
 	*fumili)							;;
-	*gl)		echo -n ", xlibmesa-glu-dev |  libglu-dev"	;;
+	*gl)		echo -n ", libglu1-xorg-dev | xlibmesa-glu-dev |  libglu-dev"	;;
 	*globus)	echo -n ", globus"				;;
-	*hbook)		echo -n ", libpacklib1-dev, fortran-compiler|g77" ;;
+	*hbook)		echo -n ", libpacklib1-dev [!kfreebsd-i386], g77|fortran-compiler" ;;
 	*krb5)		echo -n ", libkrb5-dev|heimdal-dev"		;;
-	*ldap)		echo -n ", libldap-dev"				;;
+	*ldap)		echo -n ", libldap2-dev | libldap-dev"		;;
 	*oracle)    	echo -n ", oracle-instantclient-devel"		;;
 	*minuit)							;;
 	*minuit2)							;;
 	*mlp)								;;
-	*mysql)		echo -n ", libmysqlclient-dev | libmysqlclient12-dev | libmysqlclient14-dev" ;;
+	*mysql)		echo -n ", libmysqlclient15-dev | libmysqlclient14-dev | libmysqlclient12-dev| libmysqlclient-dev" ;;
 	*netx)								;;
 	*peac)								;;
 	*pgsql)		echo -n ", postgresql-dev | libpq-dev"		;;
@@ -95,11 +99,12 @@ for i in $* ; do
 	*pythia5)	echo -n ", pythia5-dev"				;;
 	*pythia6)	echo -n ", pythia6-dev"				;;
 	*python)	echo -n ", python-dev (>= 2.1)"			;;
-	*qt)		echo -n ", libqt3-dev | libqt3-mt-dev"		;;
+	*qt)		echo -n ", libqt3-mt-dev, libqt3-headers, qt3-dev-tools"			;;
 	*quadp)								;;
 	*roofit)							;;
-	*ruby)		echo -n ", ruby1.8-dev | ruby-dev (>= 1.8)"	;;
-	*sapdb)		echo -n ", sapdb-callif"			;;
+	*ruby)		echo -n ", ruby (>= 1.8), ruby1.8-dev | ruby-dev (>= 1.8)"	;;
+	*maxdb)		echo -n ", libsqlod75-dev [i386 ia64]"		;;
+	*sql)								;;
 	*srp)		echo -n ", libsrputil-dev"			;;
 	*venus)		echo -n ", libvenus-dev"			;;
 	*xml)		echo -n ", libxml2-dev"				;;
@@ -107,10 +112,8 @@ for i in $* ; do
 	root-rootd)							;;
 	root-xrootd)	echo -n ", libkrb5-dev|heimdal-dev"		;;
 	ttf-root*)							;;
-	*) 
-	    echo "*** Warning *** Unknown package $i - please update $0" \
-		> /dev/stderr 
-	    ;;
+	root-common)							;;
+	*) echo "*** Warning *** Unknown package $i - please update $0" ;;
     esac
 done
 

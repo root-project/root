@@ -15,10 +15,31 @@
 
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_HOST_GNU_TYPE    ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+DEB_BUILD_GNU_SYSTEM ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_SYSTEM)
+DEB_BUILD_ARCH       ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+BUILDOPT	= --build=debug
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+INSTALL_PROGRAM = -s
+endif
+SAPDB		= --disable-sapdb
+ifneq (,$(findstring linux-gnu,$(DEB_BUILD_GNU_SYSTEM)))
+ifneq (,$(findstring i386,$(DEB_BUILD_ARCH)))
+SAPDB		= --enable-sapdb
+endif
+ifneq (,$(findstring ia64,$(DEB_BUILD_ARCH)))
+SAPDB		= --enable-sapdb
+endif
+endif
+HBOOK		= --enable-cern
+ifneq (,$(findstring kfreebsd-i386,$(DEB_BUILD_GNU_SYSTEM)))
+HBOOK		= --disable-cern
+endif
 
-
+DTMP		= debian/tmp
 PREFIX		= /usr
 SYSCONFDIR	= /etc
 PKGDOCDIR	= $(PREFIX)/share/doc/root
@@ -28,7 +49,6 @@ CONFOPTIONS	:=--enable-table				\
 		  --enable-ruby					\
 		  --enable-qt					\
 		  --enable-minuit2				\
-		  --enable-pythia				\
 		  --enable-xrootd				\
 		  --enable-shared				\
 		  --enable-soversion				\
@@ -37,36 +57,125 @@ CONFOPTIONS	:=--enable-table				\
 		  --disable-afs					\
 		  --disable-srp					\
 		  --disable-builtin-freetype			\
-		  --disable-builtin-afterimage			
+		  --disable-builtin-afterimage			\
+		  --disable-builtin-pcre			\
+		  --disable-alien				\
+		  --disable-rfio				\
+		  --disable-chirp				\
+		  --disable-dcache				\
+		  --disable-gfal				\
+		  --disable-globus				\
+		  --disable-monalisa				\
+		  --disable-oracle				\
+		  --disable-pythia				\
+		  --disable-pythia6				\
+		  --disable-venus				\
+		  $(SAPDB)					\
+		  $(HBOOK)					\
+		  $(BUILDOPT)					
+#
+# Things for the future 
+#
+#		  --enable-mathcore	libroot
+#		  --enable-mathmoree	libroot-mathmore
+#		  --enable-cintex	libroot
+#		  --enable-reflex	libroot
 #		  --with-globus=/opt/globus
-VERSION		= $(shell cat build/version_number | tr '/' '.')
-MAJOR   	= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
-MINOR   	= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
-SOVERS		= $(MAJOR).$(MINOR)
+
+VERSION		:= $(shell cat build/version_number | tr '/' '.')
+MAJOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
+MINOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
+SOVERS		:= $(MAJOR).$(MINOR)
 PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
-BUILDDEP	:= $(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))
+ESSENTIALS	:= libroot-dev 			\
+		   root-bin 			\
+		   libroot 			\
+		   ttf-root-installer		\
+		   root-common	
+PLUGINS		:= root-plugin-asimage 		\
+		   root-plugin-hbook 		\
+		   root-plugin-krb5 		\
+		   libroot-ldap 		\
+		   root-plugin-minuit2 		\
+		   root-plugin-gl 		\
+		   root-plugin-qt 		\
+		   root-plugin-xml 		\
+		   root-plugin-sql 		\
+		   root-plugin-netx 		\
+		   root-xrootd 			\
+		   root-plugin-fumili 		\
+		   libroot-minuit 		\
+		   libroot-mlp	 		\
+		   root-plugin-proof 		\
+		   root-plugin-xproof 		\
+		   root-proofd 			\
+		   libroot-quadp 		\
+		   root-rootd 			\
+		   root-doc 
+EXTRAS		:= root-plugin-alien 		\
+		   root-plugin-chirp  		\
+		   libroot-clarens 		\
+		   root-plugin-dcache 		\
+		   root-plugin-globus  		\
+		   root-plugin-peac 		\
+		   root-plugin-mysql 		\
+		   root-plugin-oracle 		\
+		   root-plugin-pgsql 		\
+		   root-plugin-pythia5 		\
+		   root-plugin-pythia6 		\
+		   libroot-python 		\
+		   libroot-roofit 		\
+		   libroot-ruby 		\
+		   root-plugin-castor 		\
+		   root-plugin-maxdb 		\
+		   root-plugin-srp 		\
+		   root-plugin-venus 		
+PLUGINLIST	:= $(filter-out $(EXTRAS) $(ESSENTIALS), $(PKGLIST))
+EXTRALIST	:= $(filter-out $(PLUGINS) $(ESSENTIALS), $(PKGLIST))
+PLUGINLIST	:= $(PLUGINLIST:libroot%=libroot%-dev)
+EXTRALIST	:= $(EXTRALIST:libroot%=libroot%-dev)
+PLUGINLIST	:= $(PLUGINLIST:%=%,)
+EXTRALIST	:= $(EXTRALIST:%=%,)
 TEMPLATES	:= $(wildcard debian/*.in)
-SPKGLIST	:= $(filter-out root-doc ttf-root ttf-root-installer libroot,$(PKGLIST)) libroot$(MAJOR).$(MINOR)
-IPKGLIST	:= root-doc ttf-root ttf-root-installer root
+SPKGLIST	:= $(filter-out root-doc root-common ttf-root-installer, $(PKGLIST:libroot%=libroot%$(SOVERS))) $(filter libroot%, $(PKGLIST:libroot%=libroot%-dev))
+IPKGLIST	:= root-doc ttf-root-installer root-common root
 DPKGLIST	:= $(SPKGLIST:%=%,) root-doc, root-ttf
 #root-plugins root-extra-plugins
 SPKGOPTS	:= $(SPKGLIST:%=-p%) 
 IPKGOPTS	:= $(IPKGLIST:%=-p%) 
 PKGOPTS		:= $(IPKGOPTS) $(SPKGOPTS)
+HAVERUBY	:= $(filter libroot-ruby, $(PKGLIST))
+ifeq ($(HAVERUBY), libroot-ruby)
+RUBYARCHDIR	:= $(shell ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]' | sed 's,/,,')
+else
+RUBYARCHDIR	:= 
+endif
+HAVEPYTHON	:= $(filter libroot-python, $(PKGLIST))
+ifeq ($(HAVEPYTHON), libroot-python)
+PYTHONDIR	:= usr/lib/python$(shell python -c 'import sys; print "%d.%d" % (sys.version_info[0], sys.version_info[1])')/site-packages
+else
+PYTHONDIR	:= 
+endif
+
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
+show_pkgs:
+	@echo -e "SPKGLIST:\n $(foreach i, $(SPKGLIST), \t$(i)\n)"
+	@echo -e "IPKGLIST:\n $(foreach i, $(IPKGLIST), \t$(i)\n)"
+	@echo -e "PLUGINLIST:\n $(foreach i, $(PLUGINLIST), \t$(i)\n)"
+	@echo -e "EXTRALIST:\n $(foreach i, $(EXTRALIST), \t$(i)\n)"
+	@echo -e "HAVERUBY: $(HAVERUBY)\nRUBYARCHDIR: $(RUBYARCHDIR)"
+	@echo -e "HAVEPYTHON: $(HAVEPYTHON)\nPYTHONDIR: $(PYTHONDIR)"
 
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CONFOPTONS+=--build=debug
-endif
-
-debian/%:debian/%.in 
+debian/%:debian/%.in  
 	@echo "Making $@ from $< "
 	@sed -e 's,@prefix@,$(PREFIX),g' \
 		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
 		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
-		-e 's/@builddepends@/$(BUILDDEP)/' < $< > $@ 
+		-e 's,@rubyarchdir@,$(RUBYARCHDIR),g' \
+		-e 's,@pythondir@,$(PYTHONDIR),g' \
+		-e 's,@libvers@,$(SOVERS),g' < $< > $@ 
 
 debian/control:debian/control.in
 	@echo "Making $@ (special)"
@@ -75,12 +184,15 @@ debian/control:debian/control.in
 	  if test -f build/package/common/$$p.control ; then \
 	    echo "Adding package $$p to control file" ; \
 	    cat build/package/common/$$p.control >> $@.tmp ; fi ; done 
-	@sed -e 's,@prefix@,$(PREFIX),g' \
-		-e 's,@libvers@,$(MAJOR).$(MINOR),g' \
+	@builddep="$(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))";\
+	    sed -e 's,@prefix@,$(PREFIX),g' \
+		-e 's,@libvers@,$(SOVERS),g' \
 		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
 		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
-		-e 's/@builddepends@/$(BUILDDEP)/' \
-		-e 's/@pkglist@/$(DPKGLIST)/' < $@.tmp > $@
+		-e "s/@builddepends@/$${builddep}/" \
+		-e 's/@pkglist@/$(DPKGLIST)/' 	\
+		-e 's/@plugins@/$(PLUGINLIST)/'	\
+		-e 's/@extras@/$(EXTRALIST)/' < $@.tmp > $@
 
 configure-stamp:$(TEMPLATES:%.in=%) config.status
 config.status: configure 
@@ -100,13 +212,16 @@ config.status: configure
 #Architecture 
 build: build-arch build-indep
 
-build-arch: build-arch-stamp
+build-arch: build-arch-cint-stamp
 build-arch-stamp:  configure-stamp
 
 	# Add here commands to compile the arch part of the package.
 	$(MAKE) 
-	$(MAKE) cintdlls
 	touch build-arch-stamp
+
+build-arch-cint-stamp:build-arch-stamp
+	$(MAKE) cintdlls
+	touch build-arch-cint-stamp
 
 build-indep: build-indep-stamp
 build-indep-stamp:  configure-stamp
@@ -118,7 +233,14 @@ build-indep-stamp:  configure-stamp
 clean:  $(TEMPLATES:%.in=%)
 	dh_testdir
 	dh_testroot
-	rm -f build-arch-stamp build-indep-stamp config.status configure-stamp
+	-rm -f build-arch-stamp build-indep-stamp build-arch-cint-stamp \
+		config.status configure-stamp config.log
+	-rm -rf minuit2/src/Minuit-1_7_6/src/.libs/ 
+	-rm -rf freetype/src/freetype-2.1.9
+	-rm -rf asimage/src/libAfterImage 
+	-rm -rf debian/*.files 	debian/*.install	
+	-rm -rf debian/libroot*$(SOVERS).*
+	-find . -name ".#*" | xargs rm -rf
 
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean 
@@ -139,91 +261,145 @@ clean:  $(TEMPLATES:%.in=%)
 	dh_clean 
 
 pkglists:
+	-rm -rf debian/*.files 	debian/*.install	
+	-rm -rf debian/libroot*$(SOVERS).*
 	build/package/lib/makelists.sh debian \
 		$(VERSION) $(PREFIX) $(SYSCONFDIR) $(PKGDOCDIR)
-	for i in debian/libroot.* ; do \
-	  cp $$i `echo $$i | sed 's/libroot\.\(.*\)/libroot$(MAJOR).$(MINOR).\1/'` ; \
+	@for i in debian/libroot* ; do \
+	  if test -d $$i ; then continue ; fi ; \
+	  case $$i in \
+          *-dev.*|*.in|libroot*$(SOVERS).*|*.overrides) continue ;; \
+	  *) echo "Renaming $$i to version specific" ; \
+	     cp $$i `echo $$i | sed 's/libroot\(.*\)\.\(.*\)/libroot\1$(SOVERS).\2/'` ;; esac ; \
 	done 
 
 install: install-indep install-arch
 install-indep: 
 	dh_testdir
 	dh_testroot
-	dh_clean -k -i -Xdebian/tmp
+	dh_clean -k -i -X$(DTMP)
 	dh_installdirs -i
 
 	# Add here commands to install the indep part of the package into
 	# debian/<package>-doc.
 	#INSTALLDOC#
 
-	dh_install $(IPKGOPTS) --sourcedir=debian/tmp
+	# dh_install $(IPKGOPTS) --sourcedir=$(DTMP)
+	dh_install -i --sourcedir=$(DTMP)
+	# Fix some permissions 
+	-find debian/root-common/$(PREFIX)/share/root/icons \
+		-perm 0755 -and -not -type d | xargs chmod a-x 
 
 install-arch: 
-	@echo $(SPKGLIST)
-	dh_testdir
 	dh_testroot
-	dh_clean -k -s -Xdebian/tmp
+	dh_clean -k -s -X$(DTMP)
 	dh_installdirs -s
 
 	# Add here commands to install the arch part of the package into 
-	# debian/tmp.
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+	# $(DTMP).
+	$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP)
 
-	# Make root-config output `/usr/lib/root' instead of 
-	# `/usr/lib/root/<version>' 
-	sed 's,/usr/lib/root/$(SOVERS),/usr/lib/root,' \
-		< debian/tmp/usr/bin/root-config > root-config.tmp 
-	mv root-config.tmp debian/tmp/usr/bin/root-config
+	# Make root-config output '/usr/lib/root' instead of 
+	# '/usr/lib/root/<version>' 
+	sed 's,$(PREFIX)/lib/root/$(SOVERS),$(PREFIX)/lib/root,' \
+		< $(DTMP)/$(PREFIX)/bin/root-config > root-config.tmp 
+	mv root-config.tmp $(DTMP)/$(PREFIX)/bin/root-config
+
+	# Rename proofserv, xrdgsiproxy, and xrdpwdadmin in /usr/bin 
+	# to end in `.bin' and make wrapper script in /usr/bin 
+	for i in proofserv xrdgsiproxy xrdpwdadmin ; do 		\
+	  if test -f $(DTMP)/$(PREFIX)/bin/$$i && 			\
+	     test -f build/package/common/$$i.in ; then 		\
+	    mv $(DTMP)/$(PREFIX)/bin/$$i 				\
+	      $(DTMP)/$(PREFIX)/bin/$$i.bin ; 			\
+	    sed -e 's,@prefix@,$(PREFIX),g'				\
+		-e 's,@libvers@,$(SOVERS),g'				\
+		< build/package/common/$$i.in				\
+		> $(DTMP)/$(PREFIX)/bin/$$i	; 			\
+	    chmod 755 $(DTMP)/$(PREFIX)/bin/$$i ; fi ; done 
+
+	# Make the empty proof log file 
+	mkdir -p $(DTMP)/$(PREFIX)/share/root/proof/log
+	touch $(DTMP)/$(PREFIX)/share/root/proof/log/proof.log 
+
 
 	# Remove some unwanted files 
-	rm -rf debian/tmp/usr/doc/root/INSTALL 
-	rm -rf debian/tmp/usr/share/root/fonts/LICENSE
+	rm -rf $(DTMP)/$(PREFIX)/share/doc/root/INSTALL 
+	rm -rf $(DTMP)/$(PREFIX)/share/doc/root/LICENSE
+	rm -rf $(DTMP)/$(PREFIX)/share/root/fonts/LICENSE
+
+	# Remove MacOSX service descriptions 
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.plist
+
+	# Remove Xinetd and Red Hat Init scripts from /etc 
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.xinetd 
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/proofd 
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/rootd 
+
+	# Remove sample configurations for PROOF 
+	rm -rf $(DTMP)/$(PREFIX)/share/root/proof/etc/*.sample
 
 	# Remove the CVS directories if present
-	find debian/tmp -name "CVS" | xargs rm -fr
-	find debian/tmp -name ".cvsignore" | xargs rm -fr
+	find $(DTMP) -name "CVS" | xargs rm -fr
+	find $(DTMP) -name ".cvsignore" | xargs rm -fr
 
-	mkdir -p debian/tmp/usr/lib/root
+	mkdir -p $(DTMP)/$(PREFIX)/lib/root
 	./debian/rules pkglists
 
-	dh_install --list-missing \
-		--sourcedir=debian/tmp $(SPKGOPTS) 	\
-		-Xetc/root/rootd 			\
-		-Xusr/include/root/config.h 		\
-		-Xusr/share/man/man1/rlibmap.1 		\
-		-Xusr/lib/root/*/libAfterImage.a 	\
-		-Xusr/include/root/rootcint.pri 	\
-		-Xusr/include/root/rootcintrule.pri 	\
-		-Xusr/include/root/rootlibs.pri 	\
-		-Xusr/include/root/TQtWidget.cw 	\
-		-Xusr/share/root/fonts 			\
-		-Xusr/share/doc/root			\
-		-Xusr/lib/root/$(SOVERS)/lib*.so.$(MAJOR)
+	#	--sourcedir=$(DTMP) $(SPKGOPTS) 		
+	dh_install -s						\
+		--list-missing 					\
+		--sourcedir=$(DTMP)	 			\
+		-Xetc/root/rootd 				\
+		-Xusr/include/root/config.h 			\
+		-Xusr/share/man/man1/rlibmap.1 			\
+		-Xusr/include/root/rootcint.pri 		\
+		-Xusr/include/root/rootcintrule.pri 		\
+		-Xusr/include/root/rootlibs.pri 		\
+		-Xusr/include/root/TQtWidget.cw 		\
+		-Xusr/share/root/fonts 				\
+		-Xusr/share/doc/root				\
+		-Xusr/lib/root/lib*.so.$(SOVERS)		\
+		-Xusr/share/root/icons/*			\
+		-Xusr/lib/root/$(SOVERS)/libAfterImage.a	
+
+	# Install Lintian overrides files 
+	for i in debian/*.overrides ; do 	\
+	  if test ! -f $$i ; then continue; fi;	\
+	  b=`basename $$i .overrides` ;		\
+	  case $$b in 				\
+		*-dev)  		;; 	\
+		lib*)  b=$${b}$(SOVERS) ;;	\
+		*)      		;; 	\
+	  esac ; 				\
+	  echo "Installing Lintian override $$i in /usr/share/lintian/overrides/$$b" ; \
+	  mkdir -p debian/$$b/usr/share/lintian/overrides/ ; \
+	  cp  $$i debian/$$b/usr/share/lintian/overrides/$$b ; \
+	done 
 
 	# Fix some permissions 
-	-find debian/root-bin/usr/share/root/icons \
-		-perm 0755 -and -not -type d | xargs chmod a-x 
-	-find debian/root-cint/$(CINTDIR) \
+	-find debian/libroot$(SOVERS)/$(CINTDIR) \
 		-perm 755 -and -not -type d | xargs chmod a-x 
-	-chmod a+x debian/root-cint/$(CINTDIR)/lib/pthread/setup
-	-chmod a+x debian/root-cint/$(CINTDIR)/include/makehpib
-	-chmod a-x debian/root-plugin-python/usr/lib/root/$(SOVERS)/ROOT.py
+	-chmod a+x debian/libroot$(SOVERS)/$(CINTDIR)/lib/pthread/setup
+	-chmod a+x debian/libroot$(SOVERS)/$(CINTDIR)/include/makehpib
+	-chmod a-x \
+	  debian/libroot-python-dev/$(PREFIX)/lib/root/$(SOVERS)/ROOT.py
 	# Install desktop entry and icon 
 	mkdir -p debian/root-bin/usr/share/applications
 	cp debian/root-bin.desktop debian/root-bin/usr/share/applications
 	mkdir -p debian/root-bin/usr/share/icons
-	cp debian/root-bin.png debian/root-bin/usr/share/icons
+	-cp build/package/debian/root-bin.png debian/root-bin/usr/share/icons
 
 	# This is for alternatives registration, if one want's to install
         # Richard Kreckels cint package next to ROOT
-	mv debian/root-cint/usr/bin/cint \
-		debian/root-cint/usr/bin/cint.root
-	mv debian/root-cint/usr/bin/makecint \
-		debian/root-cint/usr/bin/makecint.root
-	mv debian/root-cint/usr/share/man/man1/cint.1 \
-		debian/root-cint/usr/share/man/man1/cint.root.1
-	mv debian/root-cint/usr/share/man/man1/makecint.1 \
-		debian/root-cint/usr/share/man/man1/makecint.root.1
+	mv debian/root-bin/$(PREFIX)/bin/cint \
+		debian/root-bin/$(PREFIX)/bin/cint.root
+	mv debian/root-bin/$(PREFIX)/bin/makecint \
+		debian/root-bin/$(PREFIX)/bin/makecint.root
+	mv debian/root-bin/$(PREFIX)/share/man/man1/cint.1 \
+		debian/root-bin/$(PREFIX)/share/man/man1/cint.root.1
+	mv debian/root-bin/$(PREFIX)/share/man/man1/makecint.1 \
+		debian/root-bin/$(PREFIX)/share/man/man1/makecint.root.1
 
 # Must not depend on anything. This is to be called by
 # binary-arch/binary-indep
@@ -250,23 +426,30 @@ binary-common:
 	dh_compress -Xusr/share/doc/root/test -Xusr/share/doc/root/tutorials
 	dh_fixperms
 #	dh_perl
-	dh_python
+	dh_python -plibroot-python-dev \
+		$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
 	dh_makeshlibs -n -V
 	dh_installdeb
 #	dh_shlibdeps $(PKGLIST:%=-L%) $(PKGLIST:%=-ldebian/%/usr/lib/root)
 	dh_shlibdeps $(SPKGLIST:%=-L%) \
-	  -l$(shell echo $(SPKGLIST:%=debian/%/usr/lib/root) | tr ' ' ':')
+	  -l$(shell echo $(SPKGLIST:%=debian/%/$(PREFIX)/lib/root/$(SOVERS)) | tr ' ' ':')
 	dh_gencontrol
-	dh_md5sums
+	dh_md5sums 
 # Build architecture independant packages using the common target.
 binary-indep: build-indep install-indep
 	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
-	dh_builddeb $(IPKGOPTS)
+	# dh_builddeb $(IPKGOPTS)
+	dh_builddeb -i
 
 # Build architecture dependant packages using the common target.
 binary-arch: build-arch install-arch
-	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
-	dh_builddeb $(SPKGOPTS)
+	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
+	# dh_builddeb $(SPKGOPTS)
+	dh_builddeb -s 
 
 binary: binary-arch binary-indep
 .PHONY: build clean binary-indep binary-arch binary install install-indep install-arch 
+
+#
+# EOF
+#

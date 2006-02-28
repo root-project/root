@@ -1,14 +1,136 @@
+root (5.09.01-9) unstable; urgency=low
+
+  * Initial release. (Closes: #325306: RFP: root -- An object oriented
+    data analysis framework - Debian Bug report logs)
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 23 Feb 2006 15:25:22 +0100
+
+root (5.09.01-8) unstable; urgency=low
+
+  * Added some lintian overrides.
+  * Moved some shared configuration files to root-common.
+  * Fixed problems in init scripts.
+  * Fixed problem with wrappers using `root-config'.
+  * Removed some unused configuation scripts.
+  * Install xinetd files as examples.
+  * Removed /usr/share/root/proof/etc/*.sample and install them as
+    examples instead.
+  * Made `Replaces' and `Conflicts' dependencies on older packages
+    be version specific to static version numbers.  We don't want 
+    libroot-roofit to conflict with root-plugin-rootfit for all time. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 15 Feb 2006 23:11:28 +0100
+
+root (5.09.01-7) unstable; urgency=low
+
+  * [Kevin] Fixed a problem with libXrdProof.so symlinks in root-xrootd. 
+  * [Kevin] Made a wrapper script that calls proofserv with LD_LIBRARY_PATH 
+    set to the plugin directory.   This should be fixed upstream.
+  * [Kevin] Made wrapper scripts that calls xrdpwdadmin and xrdgsiproxy with
+    LD_LIBRARY_PATH set to plugin-script. 
+  * [Kevin] Fixed problem in man page of xrdcp.  
+  * Corrected kfreebsd-gnu to kfreebsd-i386. 
+  * [Kevin] Fixed problem in proofserv man page. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 15 Feb 2006 04:33:07 +0100
+
+root (5.09.01-6) unstable; urgency=low
+
+  * Fixed a problem in the rules file with a errornous backslash.
+  * Make configure output config.log for debugging.
+  * [Kevin] Build depend on libmysqlclient15-dev instead of older 12 or 14.
+  * [Kevin] Fix typo's in description of libroot-minuit.
+  * [Kevin] Use `-s' instead of `-a'.
+  * [Kevin] Fix a logic error in ttf-root-installer.
+  * [Kevin] Moved dependency of fonts from libroot to root-common.
+  * [Kevin] Removed all mention of root-cint
+  * [Kevin] Fixed problem with `set -e' in root-rootd.postrm.
+  * [Kevin] Set sticky bit on `/var/cache/rootd/{tmp,pub}' so users can
+    not overwrite each others files (root-rootd.preinst).
+  * Make sure that libHbook is linked against libg2c.so and not libg2c.a 
+    which made `lintian' complain about `shlib-with-non-pic-code'.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 14 Feb 2006 01:10:54 +0100
+
+root (5.09.01-5) unstable; urgency=low
+
+  * root-plugin-minuit moved to libroot-minut{,-dev} 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue,  7 Feb 2006 18:21:50 +0100
+
+root (5.09.01-4) unstable; urgency=low
+
+  * Fixed some build-dependencies.  In partiucular, libsqlod75-dev is only
+    available on certain platforms, and libpacklib1-dev is not available on
+    GNU/kFreeBSD. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun, 15 Jan 2006 12:43:38 +0100
+
+root (5.09.01-3) unstable; urgency=low
+
+  * Fixed some build dependencies.
+  * Fixed some non-POSIX /bin/sh code
+  * Fixed Python module location
+  * Added libafterimage-dev build-dependencies - eventually we'll use the
+    normal libafterimage-dev, but currently that's disabled up-stream.
+  * Added the executable xproofd to the root-proofd package, along with
+    it's man(1) page.
+  * Removed build-depends on libxpm4-dev, as that pulls in libxaw7-dev,
+    which is not really what we need.  Instead the build-depends is now
+    libxpm.
+  * The TTF installer package now depends on msttcorefonts, and makes 
+    mostly symbolic links to files in that package.  Hence, we only need
+    to get and install `symbol.ttf' and `windings.ttf'.
+  * Revived the package root-plugin-sapdb as root-plugin-maxdb.  Thanks to
+    Ricardo Yanez for pointing out libsqlod to me. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 13 Jan 2006 09:27:52 +0100
+
+root (5.09.01-2) unstable; urgency=low
+
+  * Added the package root-common to hold common files
+  * Replaced root-plugin-clarens, root-plugin-ldap, root-plugin-mlp
+    root-plugin-python, root-plugin-quadp, root-plugin-roofit,
+    root-plugin-ruby with two packages, a run-time library package
+    (libroot-<...><version>) and a development package (libroot-<...>-dev).
+    This is because developers may want to link against these libraries.
+  * Removed the package root-cint, and moved libraries to libroot, headers
+    and the like to libroot-dev, and programs to root-bin.  The
+    alternatives still exists for cint and makecint.
+  * Applied a patch that allows ROOT to use DFSG free TTF's rather than
+    the MS Core Fonts.
+  * Put a symlink to ruby extension library in ruby load directory.
+    These are in the _development_ package.
+  * Put a symlink to Python script and extension library in Python
+    load directory. These are in the _development_ package.
+  * Fixed some dependency issues, and similar - thanks to Kevin McCarty
+    for all his help on this. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 11 Jan 2006 01:16:25 +0100
+
+root (5.09.01-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon,  9 Jan 2006 21:49:48 +0100
+
+root (5.08.00-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 15 Dec 2005 14:59:41 +0100
+
 root (5.06.01-1) unstable; urgency=low
 
   * New upstream version
 
- -- Christian Holm Christensen <cholm@cholm>  Wed, 16 Nov 2005 10:46:04 +0100
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 16 Nov 2005 10:46:04 +0100
 
 root (5.05.01-1) unstable; urgency=low
 
   * New upstream version
 
- -- Christian Holm Christensen <cholm@cholm>  Wed, 12 Oct 2005 00:41:44 +0200
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 12 Oct 2005 00:41:44 +0200
 
 root (5.04.00-2) unstable; urgency=low
 

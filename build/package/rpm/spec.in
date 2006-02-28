@@ -18,7 +18,7 @@
 Name:         root
 Version:      %{ver}
 Release:      %{rel}
-Copyright:    ROOT Software Terms and Conditions (see package)
+License:      GNU Lesser General Public License
 Packager:     Christian Holm Christensen <cholm@nbi.dk>
 Distribution: Applications/Physics
 Vendor:       ROOT Team
@@ -71,6 +71,7 @@ sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 	    --disable-afs				\
 	    --disable-srp				\
 	    --disable-builtin-freetype			\
+	    --disable-builtin-pcre			\
 	    --prefix=%_prefix 				\
 	    --libdir=%_prefix/lib/root/${sovers}	\
 	    --mandir=%_prefix/share/man/man1		\
@@ -96,23 +97,56 @@ make cintdlls
 rm -rf ${RPM_BUILD_ROOT}
 make install DESTDIR=${RPM_BUILD_ROOT}
 find ${RPM_BUILD_ROOT} -name "CVS" | xargs rm -fr 
+
+# Make links from version specific directory to `normal' libary dir
 sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
-(cd ${RPM_BUILD_ROOT}/usr/lib/root && \
+(cd ${RPM_BUILD_ROOT}%{_prefix}/lib/root && \
     for i in ${sovers}/*.so.${sovers} ${sovers}/libXrd*.so ; do  \
         ln -sf $i . ; \
         ln -sf $i `basename $i .${sovers}` ; done; \
     ln -sf ${sovers}/cint .)
+
+# Rename proofserv, xrdgsiproxy, and xrdpwdadmin in /usr/bin 
+# to end in `.bin' and make wrapper script in /usr/bin 
+for i in proofserv xrdgsiproxy xrdpwdadmin ; do 		
+  if test -f ${RPM_BUILD_ROOT}%{_prefix}/bin/$i && 	\
+     test -f build/package/common/$i.in ; then 		
+    mv ${RPM_BUILD_ROOT}%{_prefix}/bin/$i 		\
+	 ${RPM_BUILD_ROOT}%{_prefix}/bin/$i.bin 
+    sed -e 's,@prefix@,%{_prefix},g'			\
+	-e 's,@libvers@,$(SOVERS),g'			\
+	< build/package/common/$$i.in			\
+	> ${RPM_BUILD_ROOT}%{_prefix}/bin/$i
+    chmod 755 ${RPM_BUILD_ROOT}%{_prefix}/bin/$i 
+  fi
+done 
+
+
 #sed 's|Unix\(.*\)DynamicPath:\( *\)\.:/usr/lib/root|Unix\1DynamicPath:\2.:/usr/lib/root/$sover|' < debian/tmp/etc/root/system.rootrc > tmp.systemrc 
 #	mv tmp.systemrc debian/tmp/etc/root/system.rootrc
-mkdir -p rpm
+
+# Prepare SYSV init scripts 
 mkdir -p ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d
 sed -e "s,/usr/local,%_prefix,g" \
     < rootd/misc/rootd.rc.d > \
     ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/rootd
+
+# Make the empty proof log file 
+mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log
+touch ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log/proof.log 
+
+# Make package lists 
+mkdir -p rpm
 build/package/lib/makelists.sh rpm %ver %_prefix %_sysconfdir %_defaultdocdir
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
     >> rpm/root-rootd.install
-EXT=$(grep -e '^[[:space:]]*COMPRESS_EXT=' /usr/lib/rpm/brp-compress  | sed 's/^\([[:space:]]*COMPRESS_EXT=\)\(.*\)/\.1\2/')
+
+
+# This is for older version of Red Hat.  In Red Hat Enterprise 4, RPM 
+# does not compress the files before installing into package specific 
+# directories. 
+# EXT=$(grep -e '^[[:space:]]*COMPRESS_EXT=' /usr/lib/rpm/brp-compress  | sed 's/^\([[:space:]]*COMPRESS_EXT=\)\(.*\)/\.1\2/')
+EXT=.1
 for i in rpm/*.install ; do 
     if test ! -f $i ; then continue ; fi
     echo "Fixing $i"
@@ -122,6 +156,8 @@ for i in rpm/*.install ; do
 	< $i > $i.tmp
     mv $i.tmp $i
 done
+
+# Remove bad files 
 rm -f ${RPM_BUILD_ROOT}%{_sysconfdir}/root/rootd		\
       ${RPM_BUILD_ROOT}%{_prefix}/include/root/config.h		\
       ${RPM_BUILD_ROOT}%{_prefix}/lib/root/libAfterImage.a	\

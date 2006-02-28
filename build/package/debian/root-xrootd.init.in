@@ -12,14 +12,14 @@ XDAEMON=@prefix@/bin/xrootd
 XDAEMON=@prefix@/bin/olbd
 XNAME=xrootd
 ONAME=olbd
-XDESC="Extendend ROOT file server"
+XDESC="Extended ROOT file server"
 ODESC="Open Load Balancer server"
-USER=rootd
+USER=root
 test -x $DAEMON || exit 0
 
 # Include root defaults if available
-if [ -f @sysconfdir@/default/root-rootd ] ; then
-	. @sysconfdir@/default/root-rootd
+if [ -f @sysconfdir@/default/root-xrootd ] ; then
+	. @sysconfdir@/default/root-xrootd
 fi
 
 enable_xrootd=`echo $ENABLE_XROOTD | tr '[:upper:]' '[:lower:]'`
@@ -44,16 +44,16 @@ fi
 
 # olbd options 
 if test "x$OLBD_CONFIG_FILE" != "x" ; then 
-    ODEAMON_OPTS="$ODEAMON_OPTS -c $OLBD_CONFIG_FILE" 
+    ODAEMON_OPTS="$ODAEMON_OPTS -c $OLBD_CONFIG_FILE" 
 fi
 if test "x$OLBD_LOG_FILE" != "x" ; then 
-    ODEAMON_OPTS="$ODEAMON_OPTS -l $OLBD_LOG_FILE" 
+    ODAEMON_OPTS="$ODAEMON_OPTS -l $OLBD_LOG_FILE" 
 fi
 if test "x$OLBD_PORT" != "x" ; then 
-    ODEAMON_OPTS="$ODEAMON_OPTS -p $OLBD_PORT" 
+    ODAEMON_OPTS="$ODAEMON_OPTS -p $OLBD_PORT" 
 fi
 if test "x$OLBD_REDIRECTOR" != "xyes" ; then 
-    ODEAMON_OPTS="$ODEAMON_OPTS -r" 
+    ODAEMON_OPTS="$ODAEMON_OPTS -r" 
 fi
 
 # User 
@@ -83,8 +83,8 @@ startitx ()
 startito ()
 {
     start-stop-daemon --make-pidfile --chuid $USER --start --quiet \
-	--pidfile /var/run/$XNAME.pid --exec $ODAEMON \
-	---background - $ODAEMON_OPTS
+	--pidfile /var/run/$ONAME.pid --exec $ODAEMON \
+	--background -- $ODAEMON_OPTS
     if test $? -ne 0 ; then 
 	echo "Failed" 
 	exit 1
@@ -155,7 +155,7 @@ case "$1" in
 	fi
 	;;
   *)
-	N=@sysconfdir@/init.d/$XNAME
+	N=@sysconfdir@/init.d/root-$XNAME
 	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
 	echo "Usage: $N {start|stop|restart|force-reload}" >&2
 	exit 1

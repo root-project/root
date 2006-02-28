@@ -13,6 +13,7 @@ case "$1" in
                 echo @prefix@/lib/root >> /etc/ld.so.conf
 	fi
 	ldconfig 
+
 	;;
     abort-upgrade|abort-remove|abort-deconfigure)
 	# Nothing to be done here

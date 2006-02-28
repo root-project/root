@@ -35,19 +35,20 @@ for d in * ; do
 	auth)       lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	base)       lib=libroot             ; dev=libroot-dev; bin=root-bin
 	            extra="ALLLIBS=/usr/lib/root/libCore.so" ;;  	
+	cint)	    lib=libroot             ; dev=libroot-dev; bin=root-bin
+	    	    extra="ALLLIBS=/usr/lib/root/libCint.so" ;;  	
 	clib|cont|eg|foam|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	matrix|meta*|net|newdelete|physics|postscript|rint|table|thread|tree*) 
+	matrix|meta*|net|newdelete|physics|postscript|rint)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx|splot|xml) 	
+	table|thread|tree*|unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx)
+	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
+	smatrix|splot|xml)    
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	globusauth) lib=root-plugin-globus  ; dev=$lib       ; bin=$lib ;;  
 	qtroot)     lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;
 	pythia)     lib=root-plugin-pythia5 ; dev=$lib       ; bin=$lib ;;  
-	pyroot)     lib=root-plugin-python  ; dev=$lib       ; bin=$lib ;;  
 	rfio)       lib=root-plugin-castor  ; dev=$lib       ; bin=$lib ;;  
-	cint)       lib=root-cint; dev=$lib ; bin=$lib 
-	    	    extra="ALLLIBS=/usr/lib/root/libCint.so" ;;  	
 	srputils)   lib=root-plugin-srp     ; dev=$lib       ; bin=$lib ;;  
 	xmlparser)  lib=root-plugin-xml     ; dev=$lib       ; bin=$lib ;;
 	krb5auth)   lib=root-plugin-krb5    ; dev=$lib       ; bin=$lib ;;
@@ -56,7 +57,12 @@ for d in * ; do
 	xrootd)     lib=root-$d             ; dev=$lib       ; bin=$lib ;
 	            xrdlibs=
 	    	    extra="ALLLIBS= NOVERS=1" ;;     
+	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;;  
+	clarens|ldap|mlp|quadp|roofit|ruby|minuit)
+	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
 	build|freetype|win*|main) continue ;; 			
+	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  
+	sapdb)      lib=root-plugin-maxdb   ; dev=$lib       ; bin=$lib ;;  
 	*)          lib=root-plugin-$d      ; dev=$lib       ; bin=$lib ;;  
     esac 
 

@@ -23,10 +23,10 @@ if test ! "x$ROOTD_USER" = "x" ; then
     USER=$ROOTD_USER
 fi
 if test ! "x$ROOTD_PORT" = "x" ; then 
-    DAEMON_OPTS="-p $ROOTD_PORT"
+    DAEMON_OPTS="$DEAMON_OPTS -p $ROOTD_PORT"
 fi
 if test ! "x$SSH_PORT" = "x" ; then 
-    DAEMON_OPTS="-s $SSH_PORT"
+    DAEMON_OPTS="$DEAMON_OPTS -s $SSH_PORT"
 fi
 
 if test -f /var/run/inetd.pid ; then 
@@ -38,20 +38,20 @@ if test -f /var/run/inetd.pid ; then
 fi
 if test -f /var/run/xinetd.pid ; then 
     # Inetd is running
-    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` ; then 
+    if grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1 ; then 
 	# ROOTD is controlled by xinetd. 
 	ENABLE_ROOTD=no
     fi
     # old name 
     if test -f /etc/xinetd.d/rootd && 
-	`grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/rootd > /dev/null 2>&1 ` ; then
+	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/rootd > /dev/null 2>&1  ; then
 	# ROOTD is controlled by xinetd. 
 	ENABLE_ROOTD=no
 	
     fi
     # new name 
     if test -f /etc/xinetd.d/root-rootd && 
-	`grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/root-rootd > /dev/null 2>&1 ` ; then
+	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/root-rootd > /dev/null 2>&1  ; then
 	# ROOTD is controlled by xinetd. 
 	ENABLE_ROOTD=no
 	
@@ -74,7 +74,7 @@ startit()
 	exit 1
     fi
     eval $o
-    echo " (pid: $ROOTD_PID) "
+    # echo " (pid: $ROOTD_PID) "
     echo $ROOTD_PID > /var/run/$NAME.pid
 }
 
@@ -83,7 +83,7 @@ stopit()
     start-stop-daemon --user $USER --stop --quiet --pidfile \
 	/var/run/$NAME.pid --exec $DAEMON
     if test $? -ne 0 ; then 
-	echo "Failed: $o" 
+	echo "Failed" 
 	exit 1
     fi
     rm -f /var/run/$NAME.pid
@@ -114,7 +114,7 @@ case "$1" in
 
 	;;
   *)
-	N=@sysconfdir@/init.d/$NAME
+	N=@sysconfdir@/init.d/root-$NAME
 	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
 	echo "Usage: $N {start|stop|restart|force-reload}" >&2
 	exit 1

@@ -1,7 +1,7 @@
 Package: root-plugin-peac
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: PEAC plugin for ROOT
+Description: PEAC plugin for ROOT - run-time libraries
  This package contains the PEAC (Proof Enabled Analysis Center)
  plug-in for ROOT.
  .

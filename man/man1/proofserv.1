@@ -1,5 +1,5 @@
 .\"
-.\" $Id: proofserv.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
+.\" $Id: proofserv.1,v 1.2 2005/09/07 10:23:23 rdm Exp $
 .\"
 .TH PROOFSERV 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
@@ -15,7 +15,8 @@ which is started via \fIinetd\fR(8).
 \fIproofd\fR takes care of user authentication and overlays itself
 then with the desired version of the \fIproofserv\fR(1)
 executable. 
-.PP The \fIproofserv\fR(1) is a basically the same as the \fBROOT\fR
+.PP 
+The \fIproofserv\fR(1) is a basically the same as the \fBROOT\fR
 interactive module \fIroot\fR(1), except that it reads its commands
 from a socket instead of from the terminal. 
 .PP
@@ -58,6 +59,12 @@ This manual page was written by Christian Holm Christensen
 others). 
 .\"
 .\" $Log: proofserv.1,v $
+.\" Revision 1.2  2005/09/07 10:23:23  rdm
+.\" From Christian Holm:
+.\" fixes for Debian packages (due to the license change ROOT can be moved
+.\" out of the non-free tree). Also updates in the man pages reflecting the
+.\" new license.
+.\"
 .\" Revision 1.1  2001/08/15 13:30:48  rdm
 .\" move man files to new subdir man1. This makes it possible to add
 .\" $ROOTSYS/man to MANPATH and have "man root" work.

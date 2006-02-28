@@ -337,13 +337,14 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
 
 ifeq ($(EXPLICITLINK),yes)
-MAINLIBS      = $(CORELIB) $(CINTLIB)
+MAINLIBS     := $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 MAINLIBS     := $(MAINLIBS) $(CINTEXLIB) $(REFLEXLIB)
 endif
-MAKE_VERSION_MAJOR = $(word 1,$(subst ., ,$(MAKE_VERSION)))
-MAKE_VERSION_MINOR = $(word 2,$(subst ., ,$(MAKE_VERSION)))
-ORDER_       := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 -o $(MAKE_VERSION_MAJOR) -eq 3 -a $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
+MAKE_VERSION_MAJOR := $(word 1,$(subst ., ,$(MAKE_VERSION)))
+MAKE_VERSION_MINOR := $(shell echo $(word 2,$(subst ., ,$(MAKE_VERSION))) | \
+                      sed 's/\([0-9][0-9]*\).*/\1/')
+ORDER_       := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || test $(MAKE_VERSION_MAJOR) -eq 3 && test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
 else
 MAINLIBS      =
 ORDER_        =
@@ -644,13 +645,12 @@ endif
 	-@mv -f rootd/misc/rootd.rc.dd rootd/misc/rootd.rc.d
 	-@cd test && $(MAKE) distclean
 
-
 maintainer-clean:: distclean
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
 	   etc/root.mimes build/misc/root-help.el \
 	   rootd/misc/rootd.rc.d build-arch-stamp build-indep-stamp \
-	   configure-stamp config.status
+	   configure-stamp build-arch-cint-stamp config.status config.log
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)

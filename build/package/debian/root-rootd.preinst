@@ -73,12 +73,12 @@ case "$1" in
 	# make them world read- and writeable. 
 	if [ ! -d /var/spool/rootd/tmp ] ; then 
 	    mkdir -p /var/spool/rootd/tmp
-	    chmod 777 /var/spool/rootd/tmp
+	    chmod 1777 /var/spool/rootd/tmp
 	fi
 
 	if [ ! -d /var/spool/rootd/pub ] ; then 
 	    mkdir -p /var/spool/rootd/pub
-	    chmod 777 /var/spool/rootd/pub
+	    chmod 1777 /var/spool/rootd/pub
 	fi
 
 	# Nothing to be done here

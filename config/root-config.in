@@ -27,7 +27,7 @@ rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
           -lPostscript -lMatrix -lPhysics"
 rootglibs="-lGui"
 
-if test "$dicttype" = "reflex" -o "$dicttype" = "gccxml"; then
+if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
     rootlibs="$rootlibs -lReflex"
 fi
 

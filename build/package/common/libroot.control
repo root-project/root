@@ -1,10 +1,11 @@
 Package: libroot@libvers@
 Section: libs
 Architecture: any
-Depends: root-ttf, ${shlibs:Depends}
+Depends: root-common, ${shlibs:Depends}
 Recommends: root-bin, libroot-dev 
-Conflicts: root-star
-Provides: root-star, libroot
+Conflicts: root-cint
+Provides: libroot
+Replaces: root-cint
 Description: Numerical data analysis framework - shared runtime libraries
  This package contains the shared libraries used by the ROOT
  system. The libraries contain numerous C++ class definitions for
@@ -19,3 +20,27 @@ Description: Numerical data analysis framework - shared runtime libraries
  .
  ROOT web-site: http://root.cern.ch
 
+Package: libroot-dev
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends}
+Suggests: root-bin
+Replaces: root-cint
+Conflicts: root-cint
+Description: Header files for ROOT
+ This package contains header files (Class declarations) for the ROOT
+ class libraries. Please refer the package documentation for libroot
+ and root-bin.
+ .
+ ROOT web-site: http://root.cern.ch
+
+Package: root-common
+Architecture: all
+Depends: ttf-freefont | root-ttf, ttf-opensymbol | root-ttf, 
+Replaces: libroot (<< 5.09.01-5), root-bin (<< 5.09.01-5), root-rootd (<< 5.09.01-7), root-proofd (<< 5.09.01-7), root-xrootd (<< 5.09.01-7)
+Conflicts: libroot (<< 5.09.01-5), root-bin (<< 5.09.01-5), root-rootd (<< 5.09.01-7), root-proofd (<< 5.09.01-7), root-xrootd (<< 5.09.01-7)
+Description: Common files for ROOT
+ This package contains some common infrastructure files for ROOT.
+ .
+ ROOT web-site: http://root.cern.ch
+ 
