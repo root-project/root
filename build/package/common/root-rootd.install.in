@@ -1,3 +1,0 @@
-@sysconfdir@/root/hostcert.conf
-@sysconfdir@/root/system.rootdaemonrc
-@prefix@/share/man/man1/system.rootdaemonrc.1
