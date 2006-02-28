@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOpPolicy.h,v 1.1 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOpPolicy.h,v 1.2 2006/02/08 15:29:24 moneta Exp $
 // Authors: J. Palacios    2006  
 #ifndef ROOT_Math_BinaryOpPolicy_h 
 #define ROOT_Math_BinaryOpPolicy_h 1
@@ -28,13 +28,21 @@ namespace ROOT {
     template <class T, class R1, class R2>
     struct MultPolicy
     {
-      typedef MatRepStd<T, R1::kRows, R2::kCols> RepType;
+      enum { 
+	N1 = R1::kRows,
+	N2 = R2::kCols
+      };
+      typedef MatRepStd<T, N1, N2> RepType;
     };
 
     template <class T, unsigned int D1, unsigned int D2, class R1, class R2>
     struct AddPolicy
     {
-      typedef MatRepStd<typename R1::value_type, R1::kRows, R1::kCols> RepType;  
+      enum { 
+	N1 = R1::kRows,
+	N2 = R1::kCols
+      };
+      typedef MatRepStd<typename R1::value_type, N1, N2 > RepType;  
     };
 
     template <class T, unsigned int D1, unsigned int D2>

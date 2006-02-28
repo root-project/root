@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dfact.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Dfact
@@ -67,7 +67,7 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
   
   /* Parameter adjustments */
   //  a -= idim + 1;
-  static int arrayOffset = -1*(idim+1);
+  static int arrayOffset = -(idim+1);
   /* Function Body */
   
   // fact.inc

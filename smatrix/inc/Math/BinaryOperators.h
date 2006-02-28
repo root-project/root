@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.1 2005/11/24 16:03:42 brun Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_BinaryOperators
@@ -542,13 +542,13 @@ inline VecExpr<BinaryOp<MulOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
   return VecExpr<MulOpBinOp,T,D>(MulOpBinOp(MulOp<T>(),Constant<A>(lhs),rhs));
 }
 
-
+// Times:  Function for element - wise multiplication
 //==============================================================================
-// times (SMatrix, binary)
+// Times (SMatrix, binary)
 //==============================================================================
 template <  class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<MulOp<T>, SMatrix<T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType>
- times(const SMatrix<T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+ Times(const SMatrix<T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
   typedef BinaryOp<MulOp<T>, SMatrix<T,D,D2,R1>, SMatrix<T,D,D2,R2>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(MulOpBinOp(MulOp<T>(),lhs,rhs));
@@ -556,11 +556,11 @@ inline Expr<BinaryOp<MulOp<T>, SMatrix<T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D,
 
 
 //==============================================================================
-// times (SMatrix, binary)
+// Times (SMatrix, binary)
 //==============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<MulOp<T>, Expr<A,T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType>
- times(const Expr<A,T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
+ Times(const Expr<A,T,D,D2,R1>& lhs, const SMatrix<T,D,D2,R2>& rhs) {
   typedef BinaryOp<MulOp<T>, Expr<A,T,D,D2,R1>, SMatrix<T,D,D2,R2>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(MulOpBinOp(MulOp<T>(),lhs,rhs));
@@ -568,11 +568,11 @@ inline Expr<BinaryOp<MulOp<T>, Expr<A,T,D,D2,R1>, SMatrix<T,D,D2,R2>, T>, T, D, 
 
 
 //==============================================================================
-// times (SMatrix, binary)
+// Times (SMatrix, binary)
 //==============================================================================
 template < class A, class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<MulOp<T>, SMatrix<T,D,D2,R1>, Expr<A,T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType>
- times(const SMatrix<T,D,D2,R1>& lhs, const Expr<A,T,D,D2,R2>& rhs) {
+ Times(const SMatrix<T,D,D2,R1>& lhs, const Expr<A,T,D,D2,R2>& rhs) {
   typedef BinaryOp<MulOp<T>, SMatrix<T,D,D2,R1>, Expr<A,T,D,D2,R2>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(MulOpBinOp(MulOp<T>(),lhs,rhs));
@@ -580,11 +580,11 @@ inline Expr<BinaryOp<MulOp<T>, SMatrix<T,D,D2,R1>, Expr<A,T,D,D2,R2>, T>, T, D, 
 
 
 //==============================================================================
-// times (SMatrix, binary)
+// Times (SMatrix, binary)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<MulOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType>
- times(const Expr<A,T,D,D2,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
+ Times(const Expr<A,T,D,D2,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
   typedef BinaryOp<MulOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(MulOpBinOp(MulOp<T>(),lhs,rhs));

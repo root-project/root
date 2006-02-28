@@ -219,8 +219,10 @@ int test7() {
   z.Place_in_col(zv,0,1);
   z.Place_in_col(zv,0,2);
 
+  cout << "x\n" << x << "y\n" << y << "z\n" << z << endl;
+
   // element wise multiplication
-  cout << "x * y: " << endl << times(x, -y) << endl;
+  cout << "x * (- y) : " << endl << Times(x, -y) << endl;
 
   x += z - y;
   cout << "x += z - y: " << endl << x << endl;
