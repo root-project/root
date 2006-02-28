@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.70 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.71 2005/11/24 23:30:05 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -168,6 +168,9 @@ TApplication::TApplication(const char *appClassName,
                                           "$(ROOTSYS)/fonts");
 # endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+      // Check for use of DFSG - fonts
+      if (!ttfont)
+         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
 
 #if !defined(R__WIN32)
       if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&

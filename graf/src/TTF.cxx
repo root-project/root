@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.8 2005/10/28 15:03:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.9 2005/10/28 15:09:00 brun Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -116,7 +116,7 @@ Short_t TTF::CharToUnicode(UInt_t code)
              (platform == 1 && encoding == 0 &&
               !strcmp(fgFontName[fgCurFontIdx], "wingding.ttf")) ||
              (platform == 1 && encoding == 0 &&
-              !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf"))) 
+              !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf")))
          {
             fgCharMap[fgCurFontIdx] = charmap;
             if (FT_Set_Charmap(fgFace[fgCurFontIdx], fgCharMap[fgCurFontIdx]))
@@ -415,60 +415,45 @@ void TTF::SetTextFont(Font_t fontnumber)
    //       13 : times-medium-r-normal       times.ttf
    //       14 :                             wingding.ttf
 
-   const char *fontname;
+   // Added by cholm for use of DFSG - fonts - based on Kevins fix.
+   // Table of Microsoft and (for non-MSFT operating systems) backup
+   // FreeFont TTF fonts.
+   static const char *fonttable[][2] = {
+      // fontnumber/10  MSFT font   Free font
+      /* 0 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
+      /* 1 */ { "timesi.ttf",    "FreeSerifItalic.ttf"     },
+      /* 2 */ { "timesbd.ttf",   "FreeSerifBold.ttf"       },
+      /* 3 */ { "timesbi.ttf",   "FreeSerifBoldItalic.ttf" },
+      /* 4 */ { "arial.ttf",     "FreeSans.ttf"            },
+      /* 5 */ { "ariali.ttf",    "FreeSansOblique.ttf"     },
+      /* 6 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
+      /* 7 */ { "arialbi.ttf",   "FreeSansBoldOblique.ttf" },
+      /* 8 */ { "cour.ttf",      "FreeMono.ttf"            },
+      /* 9 */ { "couri.ttf",     "FreeMonoOblique.ttf"     },
+      /*10 */ { "courbd.ttf",    "FreeMonoBold.ttf"        },
+      /*11 */ { "courbi.ttf",    "FreeMonoBoldOblique.ttf" },
+      /*12 */ { "symbol.ttf",    "FreeSans.ttf"            },
+      /*13 */ { "times.ttf",     "FreeSerif.ttf"           },
+      /*14 */ { "wingding.ttf",  "opens___.ttf"            }
+   };
 
-   if (!fgInit) Init();
-
-   switch (fontnumber/10) {
-
-      case 1:
-          fontname = "timesi.ttf";
-          break;
-      case 2:
-          fontname = "timesbd.ttf";
-          break;
-      case 3:
-          fontname = "timesbi.ttf";
-          break;
-      case 4:
-          fontname = "arial.ttf";
-          break;
-      case 5:
-          fontname = "ariali.ttf";
-          break;
-      case 6:
-          fontname = "arialbd.ttf";
-          break;
-      case 7:
-          fontname = "arialbi.ttf";
-          break;
-      case 8:
-          fontname = "cour.ttf";
-          break;
-      case 9:
-          fontname = "couri.ttf";
-          break;
-      case 10:
-          fontname = "courbd.ttf";
-          break;
-      case 11:
-          fontname = "courbi.ttf";
-          break;
-      case 12:
-          fontname = "symbol.ttf";
-          break;
-      case 13:
-          fontname = "times.ttf";
-          break;
-      case 14:
-          fontname = "wingding.ttf";
-          break;
-      default:
-          fontname = "arialbd.ttf";
-          break;
+   int fontid = fontnumber / 10;
+   if (fontid < 0 || fontid > 14) fontid = 0;
+   // try to load font (font must be in Root.TTFontPath resource)
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+# ifdef TTFFONTDIR
+                                       TTFFONTDIR);
+# else
+                                       "$(ROOTSYS)/fonts");
+# endif
+   char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
+   if (ttfont) {
+      delete [] ttfont;
+      SetTextFont(fonttable[fontid][0]);
+   } else {
+      // try backup free font
+      SetTextFont(fonttable[fontid][1]);
    }
-
-   SetTextFont(fontname);
 }
 
 //______________________________________________________________________________

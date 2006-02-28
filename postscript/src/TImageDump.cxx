@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.13 2005/11/10 11:11:46 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.14 2006/01/18 10:26:53 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -68,7 +68,7 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
    //    The possible workstation types are:
    //  111 - Portrait
    //  112 - Landscape
-   //  114 - preview, keep in memory (do not write on delete)  
+   //  114 - preview, keep in memory (do not write on delete)
 
    Open(fname, wtype);
    gVirtualPS = this;
@@ -158,7 +158,7 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    else           {pyl = py2; pyt = py1; yl = y2; yt = y1;}
 
    if (bordersize == 1) {
-      fImage->DrawBox(pxl, pyl, pxt, pyt-1, 
+      fImage->DrawBox(pxl, pyl, pxt, pyt-1,
                       gROOT->GetColor(fLineColor)->AsHexString());
       return;
    }
@@ -287,7 +287,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pt[0].fX = Short_t(ix-m2); pt[0].fY = Short_t(iy-m2);
          pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy-m2);
          pt[2].fX = Short_t(ix);    pt[2].fY = Short_t(iy+m2);
-         ms == 26 ? fImage->DrawPolyLine(3, pt, col->AsHexString()) : 
+         ms == 26 ? fImage->DrawPolyLine(3, pt, col->AsHexString()) :
                     fImage->FillPolygon(3, pt, col->AsHexString());
          break;
       case 27:
@@ -322,7 +322,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pt[7].fX = Short_t(ix-0.181635*m);  pt[7].fY = Short_t(iy-0.05902*m);
          pt[8].fX = Short_t(ix-0.47552*m);   pt[8].fY = Short_t(iy+0.15451*m);
          pt[9].fX = Short_t(ix-0.112255*m);  pt[9].fY = Short_t(iy+0.15451*m);
-         ms == 300 ? fImage->DrawPolyLine(10, pt, col->AsHexString()) : 
+         ms == 300 ? fImage->DrawPolyLine(10, pt, col->AsHexString()) :
                      fImage->FillPolygon(10, pt, col->AsHexString());
          break;
       default:
@@ -347,7 +347,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    TColor *col = 0;
    Int_t  fais = 0 , fasi = 0;
    Bool_t line = nn > 0;
-   UInt_t n = TMath::Abs(nn); 
+   UInt_t n = TMath::Abs(nn);
 
    fais = fFillStyle/1000;
    fasi = fFillStyle%1000;
@@ -424,14 +424,14 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
                fImage->FillPolygon(n, pt, fcol->AsHexString(), stipple);
             } else {
                fImage->DrawFillArea(n, pt, fcol->AsHexString(), stipple);
-            }          
+            }
          }
          if (line || !fFillStyle || stipple) {
             if (!lcol) return;
             fImage->DrawPolyLine(line ? n : n+1, pt, lcol->AsHexString(), fLineWidth);
          }
          if (del) delete [] pt;
-      }   
+      }
       break;
    }
 }
@@ -484,64 +484,47 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t x = gPad->XtoAbsPixel(xx);
    Double_t y = gPad->YtoAbsPixel(yy);
 
-   const char *fontname;
+   // Added by cholm for use of DFSG - fonts - based on Kevins fix.
+   // Table of Microsoft and (for non-MSFT operating systems) backup
+   // FreeFont TTF fonts.
+   static const char *fonttable[][2] = {
+      // fontnumber/10  MSFT font   Free font
+      /* 0 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
+      /* 1 */ { "timesi.ttf",    "FreeSerifItalic.ttf"     },
+      /* 2 */ { "timesbd.ttf",   "FreeSerifBold.ttf"       },
+      /* 3 */ { "timesbi.ttf",   "FreeSerifBoldItalic.ttf" },
+      /* 4 */ { "arial.ttf",     "FreeSans.ttf"            },
+      /* 5 */ { "ariali.ttf",    "FreeSansOblique.ttf"     },
+      /* 6 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
+      /* 7 */ { "arialbi.ttf",   "FreeSansBoldOblique.ttf" },
+      /* 8 */ { "cour.ttf",      "FreeMono.ttf"            },
+      /* 9 */ { "couri.ttf",     "FreeMonoOblique.ttf"     },
+      /*10 */ { "courbd.ttf",    "FreeMonoBold.ttf"        },
+      /*11 */ { "courbi.ttf",    "FreeMonoBoldOblique.ttf" },
+      /*12 */ { "symbol.ttf",    "opens___.ttf"            },
+      /*13 */ { "times.ttf",     "FreeSerif.ttf"           },
+      /*14 */ { "wingding.ttf",  "opens___.ttf"            }
+   };
 
-   switch (TMath::Abs(fTextFont/10)) {
-      case 1:
-         fontname = "timesi.ttf";
-         break;
-      case 2:
-         fontname = "timesbd.ttf";
-         break;
-      case 3:
-         fontname = "timesbi.ttf";
-         break;
-      case 4:
-         fontname = "arial.ttf";
-         break;
-      case 5:
-         fontname = "ariali.ttf";
-         break;
-      case 6:
-         fontname = "arialbd.ttf";
-         break;
-      case 7:
-         fontname = "arialbi.ttf";
-         break;
-      case 8:
-         fontname = "cour.ttf";
-         break;
-      case 9:
-         fontname = "couri.ttf";
-         break;
-      case 10:
-         fontname = "courbd.ttf";
-         break;
-      case 11:
-         fontname = "courbi.ttf";
-         break;
-      case 12:
-         fontname = "symbol.ttf";
-         break;
-      case 13:
-         fontname = "times.ttf";
-         break;
-      case 14:
-         fontname = "wingding.ttf";
-         break;
-      default:
-         fontname = "arialbd.ttf";
-         break;
-   }
+   int fontid = fTextFont / 10;
+   if (fontid < 0 || fontid > 14) fontid = 0;
 
-   // try to load font (font must be in Root.TTFontPath resource)
+    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+# ifdef TTFFONTDIR
+                                       TTFFONTDIR);
+# else
                                        "$(ROOTSYS)/fonts");
+# endif
 
-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
+   char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
+
+   if (!ttfont)
+      // try backup free font
+      ttfont = gSystem->Which(ttpath, fonttable[fontid][1], kReadPermission);
 
    if (!ttfont) {
-      Error("Text", "font file %s not found in path", fontname);
+      Error("Text", "font file %s not found in path", fonttable[fontid][0]);
       return;
    }
 
@@ -569,7 +552,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
 
    UInt_t w, h;
 
-   TText t;   
+   TText t;
    t.SetTextSize(fTextSize);
    t.SetTextFont(fTextFont);
    t.GetTextExtent(w, h, chars);
@@ -581,10 +564,10 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
 
    if (txalv == 3) {
       y += (fTextAngle != 0. ? h * TMath::Cos(angle) : h);
-   } 
+   }
    if (txalv == 2) {
       y += (fTextAngle != 0. ? (h>>1) * TMath::Cos(angle) : h>>1);
-   } 
+   }
 
    TColor *col = gROOT->GetColor(fTextColor);
    fImage->DrawText((int)x, angle ? (int)y - w: (int)y - h, chars, ttfsize, col->AsHexString(),
@@ -652,7 +635,7 @@ void TImageDump::CellArrayEnd()
       return;
    }
 
-   fImage->DrawCellArray(gCellArrayX1, gCellArrayX2, gCellArrayY1, gCellArrayY2, 
+   fImage->DrawCellArray(gCellArrayX1, gCellArrayX2, gCellArrayY1, gCellArrayY2,
                          gCellArrayW, gCellArrayH, gCellArrayColors);
 
    delete [] gCellArrayColors;

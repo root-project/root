@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.9 2005/01/05 01:28:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.10 2005/11/24 23:30:05 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -84,8 +84,11 @@ TGApplication::TGApplication(const char *appClassName,
 # else
                                           "$(ROOTSYS)/fonts");
 # endif
-      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 
+      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+      // Added by cholm for use of DFSG - fonts - based on fix by Kevin
+      if (!ttfont)
+         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
       if (ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
          TPluginHandler *h;
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))

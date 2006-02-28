@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.13 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -85,21 +85,28 @@ static const UInt_t gAlignValues[] = {
 };
 
 static const char *gFontList[] = {
-    "Arial",
-    "Comic Sans MS",
-    "Courier New",
-    "Georgia",
-    "Impact",
-    "Monotype",
-    "Symbol",
-    "Times New Roman",
-    "Trebuchet MS",
-    "Verdana",
-    "Webdings",
-    "Wingdings",
-    0
+   "Arial",
+   "Comic Sans MS",
+   "Courier New",
+   "Georgia",
+   "Impact",
+   "Monotype",
+   "Symbol",
+   "Times New Roman",
+   "Trebuchet MS",
+   "Verdana",
+   "Webdings",
+   "Wingdings",
+   0,
 };
 
+static const char *gFontList2[] = {
+   "FreeSans",
+   "FreeSerif",
+   "FreeMono",
+   "OpenSymbol",
+   0
+};
 
 ClassImp(TGFontDialog)
 
@@ -244,9 +251,18 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    if (!fontList)
       fontList = gFontList;
 
+   Int_t n = 0;
    for (i = 0; fontList[i] != 0; ++i)
-      if (GetFontProperties(fontList[i]))
+      if (GetFontProperties(fontList[i])) {
+         n++;
          fFontNames->AddEntry(new TGString(fontList[i]), i);
+      }
+   if (n == 0) {
+      fontList = gFontList2;
+      for (i = 0; fontList[i] != 0; ++i)
+         if (GetFontProperties(fontList[i]))
+            fFontNames->AddEntry(new TGString(fontList[i]), i);
+   }
 
    for (i = 0; gFontSizes[i] != 0; ++i)
       fFontSizes->AddEntry(new TGString(gFontSizes[i]), i);
@@ -310,7 +326,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fSample = new TGLabel(cf, fSampleText, (*fSampleTextGC)(), (*fLabelFont)());
    fSample->SetTextJustify(gAlignValues[fTextAligns->GetSelected()]);
    cf->AddFrame(fSample, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY |
-                                           kLHintsExpandX | kLHintsExpandY, 
+                                           kLHintsExpandX | kLHintsExpandY,
                                            1, 1, 1, 1));
    cf->Layout();
 
