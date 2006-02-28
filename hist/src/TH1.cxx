@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.275 2006/02/21 10:11:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.276 2006/02/23 20:53:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1188,7 +1188,7 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
       }
    }
 
-   Double_t prob = TMath::Prob(0.5*chi2, Int_t(0.5*ndf));
+   Double_t prob = TMath::Prob(chi2, ndf);
 
    return prob;
 }
