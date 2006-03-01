@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.56 2006/01/30 17:42:06 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -58,7 +58,6 @@
 #include "TSessionDialogs.h"
 #include "TEnv.h"
 #include "TH2.h"
-#include "TEnv.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -2951,12 +2950,13 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    // Read and set also global options as feedback histos.
 
    if (fViewerEnv)
-      fViewerEnv->Delete();
-   if (filename)
-      fViewerEnv = new TEnv(filename);
-   else
-      fViewerEnv = new TEnv(fConfigFile);
+      delete fViewerEnv;
+   fViewerEnv = new TEnv();
 
+   if (filename)
+      fViewerEnv->ReadFile(filename, kEnvUser);
+   else
+      fViewerEnv->ReadFile(fConfigFile, kEnvUser);
 
    Bool_t bval = (Bool_t)fViewerEnv->GetValue("Option.Feedback", 1);
    if (bval)
@@ -3316,9 +3316,9 @@ void TSessionViewer::WriteConfiguration(const char *filename)
    Int_t scnt = 0, qcnt = 1, pcnt = 1;
    const char *fname = filename ? filename : fConfigFile.Data();
 
-   fViewerEnv->Delete();
+   delete fViewerEnv;
    gSystem->Unlink(fname);
-   fViewerEnv = new TEnv(fname);
+   fViewerEnv = new TEnv();
 
    fViewerEnv->SetValue("Option.Feedback",
          (Int_t)fOptionsMenu->IsEntryChecked(kOptionsFeedback));
@@ -3409,12 +3409,8 @@ void TSessionViewer::WriteConfiguration(const char *filename)
          pcnt++;
       }
    }
-   fViewerEnv->Save();
-#ifdef R__WIN32
-   TString fnamenew = Form("%s.new", fname);
-   gSystem->Exec(Form("del %s", fname));
-   gSystem->Exec(Form("rename %s %s", fnamenew.Data(), gSystem->BaseName(fname)));
-#endif
+
+   fViewerEnv->WriteFile(fname);
 }
 
 //______________________________________________________________________________
@@ -4573,7 +4569,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileLoadConfig:
                      {
                         TGFileInfo fi;
-                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile.Data());
+                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile);
                         fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
@@ -4588,7 +4584,7 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kFileSaveConfig:
                      {
                         TGFileInfo fi;
-                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile.Data());
+                        fi.fFilename = (char *)gSystem->BaseName(fConfigFile);
                         fi.fIniDir = strdup((char *)gSystem->HomeDirectory());
                         fi.fFileTypes = conftypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
