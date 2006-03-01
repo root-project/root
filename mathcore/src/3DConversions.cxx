@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: 3DConversions.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005
 //
-// Last update: $Id: 3DConversions.cxx,v 1.1 2005/09/18 17:33:47 brun Exp $
+// Last update: $Id: 3DConversions.cxx,v 1.2 2005/09/19 09:57:07 brun Exp $
 //
 
 // TODO - For now, all conversions are grouped in this one compilation unit.
@@ -272,9 +272,13 @@ void convert( AxisAngle const & from, Rotation3D  & to)
   to.SetComponents(m,m+9);
 } // convert to Rotation3D
 
-void convert( AxisAngle const & /* from */ , EulerAngles & /* to */ )
+void convert( AxisAngle const & from , EulerAngles & to  )
 {
-  // TODO
+  // TODO better 
+  // temporary make conversion using  Rotation3D
+  Rotation3D tmp; 
+  convert(from,tmp); 
+  convert(tmp,to);
 }
 
 void convert( AxisAngle const & from, Quaternion  & to)
@@ -326,10 +330,10 @@ void convert( EulerAngles const & from, Quaternion  & to)
   const Scalar cPlus  = std::cos( plus  );  
   const Scalar sMinus = std::sin( minus );
   const Scalar cMinus = std::cos( minus );  
-  const Scalar sTheta = std::sin( from.Theta() );
-  const Scalar cTheta = std::cos( from.Theta() );
+  const Scalar sTheta = std::sin( from.Theta()/2 );
+  const Scalar cTheta = std::cos( from.Theta()/2 );
   
-  to.SetComponents ( cTheta*cPlus, sTheta*sMinus, sTheta*cMinus, cTheta*sPlus );
+  to.SetComponents ( cTheta*cPlus, -sTheta*cMinus, -sTheta*sMinus, -cTheta*sPlus );
   // TODO -- carefully check that this is correct
 }
 
@@ -380,9 +384,13 @@ void convert( Quaternion const & from, AxisAngle   & to)
   }
 } // conversion to AxisAngle
 
-void convert( Quaternion const & /* from */ , EulerAngles & /* to */ )
+void convert( Quaternion const &  from, EulerAngles & to  )
 {
-  // TODO
+  // TODO better 
+  // temporary make conversion using  Rotation3D
+  Rotation3D tmp; 
+  convert(from,tmp); 
+  convert(tmp,to);
 }
 
 
@@ -405,9 +413,13 @@ void convert( RotationX const & from, AxisAngle   & to)
   to.SetComponents ( axis, from.Angle() );
 }
 
-void convert( RotationX const & /* from */ , EulerAngles & /* to */ )
+void convert( RotationX const & from , EulerAngles &  to  )
 {
-  // TODO
+  //TODO better
+  // temporary make conversion using  Rotation3D
+  Rotation3D tmp; 
+  convert(from,tmp); 
+  convert(tmp,to);
 }
 
 void convert( RotationX const & from, Quaternion  & to)
@@ -435,9 +447,13 @@ void convert( RotationY const & from, AxisAngle   & to)
   to.SetComponents ( axis, from.Angle() );
 }
 
-void convert( RotationY const & /* from */ , EulerAngles & /* to */ )
+void convert( RotationY const & from, EulerAngles & to  )
 {
-  // TODO
+  // TODO better
+  // temporary make conversion using  Rotation3D
+  Rotation3D tmp; 
+  convert(from,tmp); 
+  convert(tmp,to);
 }
 
 void convert( RotationY const & from, Quaternion  & to)
@@ -465,9 +481,13 @@ void convert( RotationZ const & from, AxisAngle   & to)
   to.SetComponents ( axis, from.Angle() );
 }
 
-void convert( RotationZ const & /* from */ , EulerAngles & /* to */ )
+void convert( RotationZ const & from  , EulerAngles & to  )
 {
-  // TODO
+  // TODO better
+  // temporary make conversion using  Rotation3D
+  Rotation3D tmp; 
+  convert(from,tmp); 
+  convert(tmp,to);
 }
 
 void convert( RotationZ const & from, Quaternion  & to)
