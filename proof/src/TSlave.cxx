@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.46 2005/11/01 18:32:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.47 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -50,14 +50,8 @@ TSlave::TSlave(const char *url, const char *ord, Int_t perf,
     fParallel(0), fMsd(msd)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
-   fName = url;
+   fName = TUrl(url).GetHost();
    fPort = TUrl(url).GetPort();
-   TString sp(Form(":%d", fPort));
-   Int_t ip = kNPOS;
-   if ((ip = fName.Index(sp)) != kNPOS)
-      fName.Remove(ip);
-   if ((ip = fName.Index(TUrl(url).GetUser())) != kNPOS)
-      fName.Remove(0,ip);
 
    Init(url, -1, stype);
 }
@@ -315,7 +309,7 @@ void TSlave::Print(Option_t *) const
    TString sc;
 
    Printf("*** Slave %s  (%s)", fOrdinal.Data(), fSocket ? "valid" : "invalid");
-   Printf("    Host name:               %s", TUrl(GetName()).GetHost());
+   Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    if (fSocket) {
       Printf("    User:                    %s", GetUser());

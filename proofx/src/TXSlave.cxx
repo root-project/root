@@ -89,18 +89,8 @@ void TXSlave::Init(const char *host, Int_t stype)
    }
 
    // Fill members
-   fName = url.GetUrl();
+   fName = url.GetHost();
    fPort = url.GetPort(); // We get the right default if the port is not specified
-
-   // Cleanup the host field (should be in the form 'user@host' or 'host')
-   TString sp(Form(":%d", fPort));
-   Int_t ip = kNPOS;
-   if ((ip = fName.Index(sp)) != kNPOS)
-      fName.Remove(ip);
-   if ((ip = fName.Index(TUrl(url).GetUser())) != kNPOS)
-      fName.Remove(0,ip);
-   if (fName.EndsWith("/"))
-      fName.Remove(fName.Length()-1);
 
    // If we are attaching to an existing process, the ID is passed in the
    // options field of the url
@@ -125,7 +115,7 @@ void TXSlave::Init(const char *host, Int_t stype)
 
    // Open connection to a remote XrdPROOF slave server.
    // Login and authentication are dealt with at this level, if required.
-   if (!(fSocket = new TXSocket(Form("%s:%d",fName.Data(),url.GetPort()),
+   if (!(fSocket = new TXSocket(url.GetUrl(kTRUE),
                                 mode, psid, -1, fProof->GetTitle()))) {
       Error("Init", "while opening the connection to %s - exit", url.GetUrl(kTRUE));
       return;
