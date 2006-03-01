@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.24 2006/01/23 21:50:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.25 2006/01/31 11:21:54 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -609,6 +609,11 @@ void TEnv::Save()
    // Write the resource files for each level. The new files have the same
    // name as the original files. The old files are renamed to *.bak.
 
+   if (fRcName == "") {
+      Error("Save", "no resource file name specified");
+      return;
+   }
+
    SaveLevel(kEnvLocal);  // Be default, new items will be put into Local.
    SaveLevel(kEnvUser);
    SaveLevel(kEnvGlobal);
@@ -618,6 +623,11 @@ void TEnv::Save()
 void TEnv::SaveLevel(EEnvLevel level)
 {
    // Write the resource file for a certain level.
+
+   if (fRcName == "") {
+      Error("SaveLevel", "no resource file name specified");
+      return;
+   }
 
    TString   rootrcdir;
    FILE     *ifp, *ofp;
@@ -692,7 +702,9 @@ void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
 {
    // Set the value of a resource or create a new resource.
 
-   if (!fTable) return;
+   if (!fTable)
+      fTable  = new THashList(1000);
+
    const char *nam = name;
    Bool_t append = kFALSE;
    if (name[0] == '+') {

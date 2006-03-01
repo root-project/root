@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.10 2006/01/23 21:50:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.11 2006/01/31 11:21:54 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -124,7 +124,7 @@ class TEnv : public TObject {
 
 private:
    THashList        *fTable;     // hash table containing env records
-   TString           fRcName;    //
+   TString           fRcName;    // resource file base name
 
    const char       *Getvalue(const char *name);
 
@@ -137,6 +137,8 @@ public:
                                     { return Getvalue(name) != 0; }
 
    virtual const char *GetRcName() const { return fRcName; }
+   virtual void        SetRcName(const char *name) { fRcName = name; }
+
    virtual Int_t       GetValue(const char *name, Int_t dflt);
    virtual Double_t    GetValue(const char *name, Double_t dflt);
    virtual const char *GetValue(const char *name, const char *dflt);
