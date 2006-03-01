@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef_SpecFunc.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef_SpecFunc.h,v 1.2 2006/01/23 15:52:59 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 #ifdef __CINT__
@@ -10,6 +10,7 @@
 #pragma link C++ function ROOT::Math::comp_ellint_2(double);
 #pragma link C++ function ROOT::Math::comp_ellint_3(double, double);
 #pragma link C++ function ROOT::Math::conf_hyperg(double,double,double);
+#pragma link C++ function ROOT::Math::conf_hypergU(double,double,double);
 #pragma link C++ function ROOT::Math::cyl_bessel_i(double,double);
 #pragma link C++ function ROOT::Math::cyl_bessel_j(double,double);
 #pragma link C++ function ROOT::Math::cyl_bessel_k(double,double);

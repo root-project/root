@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.2 2005/09/20 06:22:34 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.h,v 1.3 2005/12/13 18:13:00 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -71,7 +71,7 @@ namespace Math {
   For detailed description see 
   <A HREF="">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC123">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC126">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -102,7 +102,7 @@ namespace Math {
   to distinguish the two. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LegendrePolynomial.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC127">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC129">GSL</A>.
 
   CROSSCHECK THAT THE GSL IMPLEMENTATION IS INDEED THE ARFKEN VERSION
 
@@ -126,7 +126,7 @@ namespace Math {
   with \f$0 \leq k^2 \leq 1\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/CompleteEllipticIntegraloftheFirstKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC97">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC100">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -147,7 +147,7 @@ namespace Math {
   with \f$0 \leq k^2 \leq 1\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/CompleteEllipticIntegraloftheSecondKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC97">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC100">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -179,7 +179,7 @@ namespace Math {
   CERNLIB</A>) use the + sign in front of n in the denominator. In
   order to be C++ compliant, the present library uses the former
   convention. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC98">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC101">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -199,7 +199,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ConfluentHypergeometricFunctionoftheFirstKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC122">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC125">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -208,6 +208,27 @@ namespace Math {
 
   double conf_hyperg(double a, double b, double z);
 
+
+  /**
+  
+  Calculates the confluent hypergeometric functions of the second kind, known also as Kummer function of the second kind, 
+  it is related to the confluent hypergeometric functions of the first kind.
+
+  \f[ U(a,b,z)  = \frac{ \pi}{ \sin{\pi b } } \left[ \frac{ _{1}F_{1}(a,b,z) } {\Gamma(a-b+1) } 
+            - \frac{ z^{1-b}  _{1}F_{1}(a-b+1,2-b,z)}{\Gamma(a)} \right]  \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/ConfluentHypergeometricFunctionoftheSecondKind.html">
+  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC125">GSL</A>.
+  This function is not part of the C++ standard proposal
+
+  @ingroup SpecFunc
+
+  */
+  // confluent hypergeometric functions of second type
+
+  double conf_hypergU(double a, double b, double z);
 
 
 
@@ -221,7 +242,7 @@ namespace Math {
   for \f$x>0, \nu > 0\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ModifiedBesselFunctionoftheFirstKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC76">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC71">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -243,7 +264,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/BesselFunctionoftheFirstKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC74">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC69">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -267,7 +288,7 @@ namespace Math {
   for \f$x>0, \nu > 0\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ModifiedBesselFunctionoftheSecondKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC77">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC72">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -290,7 +311,7 @@ namespace Math {
    For detailed description see 
   <A HREF="http://mathworld.wolfram.com/BesselFunctionoftheSecondKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC75">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC70">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -312,7 +333,7 @@ namespace Math {
   with \f$0 \leq k^2 \leq 1\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/EllipticIntegraloftheFirstKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC98">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC101">GSL</A>.
 
   @param phi angle in radians
 
@@ -336,7 +357,7 @@ namespace Math {
   with \f$0 \leq k^2 \leq 1\f$. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/EllipticIntegraloftheSecondKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC98">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC101">GSL</A>.
 
   @param phi angle in radians
 
@@ -371,7 +392,7 @@ namespace Math {
   CERNLIB</A>) use the + sign in front of n in the denominator. In
   order to be C++ compliant, the present library uses the former
   convention. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC98">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC101">GSL</A>.
 
   @param phi angle in radians
 
@@ -395,7 +416,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ExponentialIntegral.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC112">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC115">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -423,7 +444,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/HypergeometricFunction.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC122">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC125">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -449,7 +470,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LegendrePolynomial.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC126">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC129">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -470,7 +491,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/RiemannZetaFunction.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC146">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC149">GSL</A>.
 
   CHECK WHETHER THE IMPLEMENTATION CALCULATES X<1
 
@@ -492,7 +513,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/SphericalBesselFunctionoftheFirstKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC70">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC73">GSL</A>.
 
   @ingroup SpecFunc
 
@@ -519,7 +540,7 @@ namespace Math {
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/SphericalBesselFunctionoftheSecondKind.html">
   Mathworld</A>. The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC71">GSL</A>.
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC74">GSL</A>.
 
   @ingroup SpecFunc
 

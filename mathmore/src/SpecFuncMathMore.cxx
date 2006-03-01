@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFuncMathMore.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
@@ -132,6 +132,14 @@ double comp_ellint_3(double n, double k) {
 double conf_hyperg(double a, double b, double z) {
 
   return gsl_sf_hyperg_1F1(a, b, z);
+
+}
+
+//  confluent hypergeometric functions of second type
+
+double conf_hypergU(double a, double b, double z) {
+
+  return gsl_sf_hyperg_U(a, b, z);
 
 }
 
