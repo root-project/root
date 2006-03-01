@@ -1,8 +1,8 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.3 2005/12/13 17:59:10 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.4 2005/12/15 10:34:06 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -93,7 +93,7 @@ static const char    *gTraceID = " ";
 static XrdOucReqID   *XrdProofdReqID = 0;
 
 // Globals initialization
-int                   XrdProofdProtocol::fgCount = 0;
+int                   XrdProofdProtocol::fgCount    = 0;
 int                   XrdProofdProtocol::fghcMax    = 28657; // const for now
 XrdBuffManager       *XrdProofdProtocol::fgBPool    = 0;
 int                   XrdProofdProtocol::fgMaxBuffsz= 0;
@@ -186,7 +186,7 @@ XrdSecService *XrdProofdProtocol::LoadSecurity(char *seclib, char *cfn)
       if (nd == 0) {
          // No directives to be processed
          fgEDest.Emsg("LoadSecurity",
-                     "no security directives: strong authentication disabled"); 
+                     "no security directives: strong authentication disabled");
          return 0;
       }
       // Failure
@@ -202,7 +202,7 @@ XrdSecService *XrdProofdProtocol::LoadSecurity(char *seclib, char *cfn)
       return 0;
    }
    // Notify
-   fgEDest.Emsg("LoadSecurity", "strong authentication enabled"); 
+   fgEDest.Emsg("LoadSecurity", "strong authentication enabled");
 
    // Unlink the temporary file and cleanup its path
    unlink(rcfn);
@@ -281,7 +281,7 @@ extern "C"
 }
 
 //__________________________________________________________________________________
-XrdProofdProtocol::XrdProofdProtocol(const char *rsys, int intwait) 
+XrdProofdProtocol::XrdProofdProtocol(const char *rsys, int intwait)
    : XrdProtocol("xproofd protocol handler"), fProtLink(this)
 {
    // Protocol constructor
@@ -314,7 +314,7 @@ XrdProofdProtocol::XrdProofdProtocol(const char *rsys, int intwait)
    if (!fgPrgmSrv)
       fgEDest.Say(0, "XrdProofdProtocol: error:"
                   " could not allocate space for the server application path");
-   else 
+   else
       sprintf(fgPrgmSrv, "%s/bin/proofserv", fgROOTsys);
 }
 
@@ -508,7 +508,7 @@ int XrdProofdProtocol::Config(const char *cfn)
    while ((var = Config.GetMyFirstWord())) {
       if (!(ignore = strncmp("xrootd.", var, 7)) && var[7])
          var += 7;
-      if (!(ignore = strncmp("xpd.", var, 4)) && var[7])
+      if (!(ignore = strncmp("xpd.", var, 4)) && var[4])
          var += 4;
       if (!strcmp("seclib",var)) {
          NoGo |=  Xsecl(Config);
@@ -565,7 +565,7 @@ int XrdProofdProtocol::Process(XrdLink *)
    TRACEP(REQ,"Process: sizeof(Request) = " <<sizeof(fRequest)<<", rc = "<<rc);
 
    // Deserialize the data
-   TRACEP(REQ, "Process: " << 
+   TRACEP(REQ, "Process: " <<
                " req=" <<fRequest.header.requestid <<" dlen=" <<fRequest.header.dlen);
    fRequest.header.requestid = ntohs(fRequest.header.requestid);
    fRequest.header.dlen      = ntohl(fRequest.header.dlen);
@@ -663,7 +663,7 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
    TRACEP(REQ,"Recycle: XrdProofdProtocol =" <<this<<" : recycling");
 
    // This part may be not thread safe
-   XrdOucMutexHelper mtxh(&fgXPDMutex); 
+   XrdOucMutexHelper mtxh(&fgXPDMutex);
 
    // If we have a buffer, release it
    if (fArgp) {
@@ -681,7 +681,6 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
          pmgr = 0;
       }
    }
-
 
    // Loop over servers sessions associated to this client and update
    // their attached client vectors
@@ -787,13 +786,17 @@ int XrdProofdProtocol::GetFreeServID()
    // Get next free server ID. If none is found, increase the vector size
    // and get the first new one
 
+   XrdOucMutexHelper mh(fMutex);
+
    TRACEP(REQ,"GetFreeServID: size = "<<fPClient->fProofServs.size()<<
               "; capacity = "<<fPClient->fProofServs.capacity());
    int ic = 0;
    // Search for free places in the existing vector
    for (ic = 0; ic < (int)fPClient->fProofServs.size() ; ic++) {
-      if (fPClient->fProofServs[ic] && !(fPClient->fProofServs[ic]->IsValid()))
+      if (fPClient->fProofServs[ic] && !(fPClient->fProofServs[ic]->IsValid())) {
+         fPClient->fProofServs[ic]->SetValid();
          return ic;
+      }
    }
 
    // We may need to resize (double it)
@@ -817,6 +820,8 @@ XrdProofServProxy *XrdProofdProtocol::GetServer(int psid)
 {
    // Search the vector for a matching server
 
+   XrdOucMutexHelper mh(fMutex);
+
    XrdProofServProxy *xps = 0;
    std::vector<XrdProofServProxy *>::iterator ip;
    for (ip = fPClient->fProofServs.begin(); ip != fPClient->fProofServs.end(); ++ip) {
@@ -833,6 +838,8 @@ XrdProofServProxy *XrdProofdProtocol::GetServer(int psid)
 void XrdProofdProtocol::EraseServer(int psid)
 {
    // Erase server with id psid from the list
+
+   XrdOucMutexHelper mh(fMutex);
 
    XrdProofServProxy *xps = 0;
    std::vector<XrdProofServProxy *>::iterator ip;
@@ -953,7 +960,7 @@ int XrdProofdProtocol::MapClient(bool all)
    // Flag for internal connections
    bool proofsrv = ((fSrvType == kXPD_Internal) && all) ? 1 : 0;
 
-   // If call back from proofsrv, find out the target session 
+   // If call back from proofsrv, find out the target session
    short int psid = -1;
    char protver = -1;
    if (proofsrv) {
@@ -968,7 +975,7 @@ int XrdProofdProtocol::MapClient(bool all)
    }
 
    // This part may be not thread safe
-   XrdOucMutexHelper mtxh(&fgXPDMutex); 
+   XrdOucMutexHelper mtxh(&fgXPDMutex);
 
    // Now search for an existing manager session for this ClientID
    XrdProofClient *pmgr = 0;
@@ -1006,7 +1013,7 @@ int XrdProofdProtocol::MapClient(bool all)
             psrv->fProtVer = protver;
             // Assign this link to it
             psrv->fLink = fLink;
-            psrv->fProofSrv.Set(fLink); 
+            psrv->fProofSrv.Set(fLink);
             psrv->fProofSrv.Set(fRequest.header.streamid);
             TRACEP(REQ,"MapClient: proofsrv callback: link assigned to target session "<<psid);
          }
@@ -1507,7 +1514,8 @@ int XrdProofdProtocol::Create()
 
       // We set to the user environment
       if (SetUserEnvironment(fClientID) != 0) {
-         PRINT("Create: SetUserEnvironment did not return OK");
+         PRINT("Create: SetUserEnvironment did not return OK - EXIT");
+         exit(1);
       }
 
       // Close standard units
@@ -1650,7 +1658,7 @@ void XrdProofdProtocol::SetIgnoreZombieChild()
 //_____________________________________________________________________________
 int XrdProofdProtocol::SendMsg()
 {
-   // Handle a request to forward a message to another process 
+   // Handle a request to forward a message to another process
 
    static const char *crecv[4] = {"master proofserv", "top master",
                                   "client", "undefined"};
@@ -2098,11 +2106,17 @@ int XrdProofdProtocol::SetUserEnvironment(const char *usr, const char *dir)
    sprintf(h, "HOME=%s", home.c_str());
    putenv(h);
 
+   // Check if we need to change the effective uid/gid
+   if (geteuid() == pw->pw_uid && getegid() == pw->pw_gid) {
+      TRACEP(REQ,"SetUserEnvironment: no need to change uid/gid");
+      return 0;
+   }
+
    // Following actions require super-user privileges
    if (getuid() != 0) {
       TRACEP(REQ,"SetUserEnvironment: setresuid/gid require super-user privileges"
                  ": do nothing");
-      return 0;
+      return -1;
    }
 
    // set access control list from /etc/initgroup
@@ -2127,6 +2141,8 @@ int XrdProofClient::GetClientID(XrdProofdProtocol *p)
 {
    // Get next free client ID. If none is found, increase the vector size
    // and get the first new one
+
+   XrdOucMutexHelper mh(fMutex);
 
    int ic = 0;
    // Search for free places in the existing vector

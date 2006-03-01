@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.3 2005/12/13 10:12:02 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.4 2006/02/26 16:09:57 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -186,7 +186,8 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
          TString o = Form("%sA",opt);
          fSocket->DisconnectSession(-1, o);
       }
-      fSessions->Delete();
+      if (fSessions)
+         fSessions->Delete();
    }
 
    return;

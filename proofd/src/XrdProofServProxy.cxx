@@ -1,8 +1,8 @@
-// @(#)root/proofd:$Name:$:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -36,10 +36,11 @@ XrdProofServProxy::XrdProofServProxy()
    fPingSem = 0;
    fQueryNum = 0;
    fStartMsg = 0;
-   fStatus = kXPD_idle; 
+   fStatus = kXPD_idle;
    fSrvID = -1;
    fSrvType = kXPD_TopMaster;
    fID = -1;
+   fIsValid = true;  // It is created for a valid server ...
    fProtVer = -1;
    strcpy(fFileout,"none");
    strcpy(fTag,"");
@@ -73,10 +74,11 @@ void XrdProofServProxy::Reset()
    SafeDelete(fQueryNum);
    SafeDelete(fStartMsg);
    SafeDelete(fPingSem);
-   fStatus = kXPD_idle; 
+   fStatus = kXPD_idle;
    fSrvID = -1;
    fSrvType = kXPD_TopMaster;
    fID = -1;
+   fIsValid = false;
    fProtVer = -1;
    strcpy(fFileout,"none");
    strcpy(fTag,"");

@@ -1,7 +1,8 @@
+// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -79,7 +80,7 @@ class XrdClientID {
             { fP = pt; fSid = id; }
    ~XrdClientID() { }
 
-   bool   IsValid() { return (fP != 0); }
+   bool   IsValid() const { return (fP != 0); }
    void   Reset() { fP = 0; fSid = 0; }
 };
 
@@ -111,6 +112,7 @@ public:
    inline void         SetID(short int id) { fID = id;}
    inline void         SetSrv(int id) { fSrvID = id; }
    inline void         SetSrvType(int id) { fSrvType = id; }
+   inline void         SetValid(bool valid = 1) { fIsValid = valid; }
    inline int          Status() const { return fStatus;}
    inline const char  *Tag() const { return (const char *)fTag; }
 
@@ -118,7 +120,7 @@ public:
    int                 GetFreeID();
    int                 GetNClients();
 
-   bool                IsValid() { return ((fSrvID > -1) ? 1 : 0); }
+   bool                IsValid() const { return fIsValid; }
 
    void                Reset();
 
@@ -142,6 +144,8 @@ public:
    short int                 fID;
    char                      fProtVer;
    char                      fFileout[1024];
+
+   bool                      fIsValid; // Validity flag
 
    char                      fTag[kXPROOFSRVTAGMAX];
    char                      fAlias[kXPROOFSRVALIASMAX];
