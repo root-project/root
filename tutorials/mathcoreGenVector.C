@@ -567,10 +567,9 @@ int testRotation() {
   double pi = TMath::Pi();
   // initiate rotation with some non -trivial angles to test all matrix
   EulerAngles r1( pi/2.,pi/4., pi/3 );
-  //  AxisAngle   r2(r1); (this not yet implemented)
   Rotation3D  r2(r1);
-  AxisAngle   r3(r2);
-  Quaternion  r4(r3);
+  AxisAngle   r3(r1);
+  Quaternion  r4(r2);
 
   XYZPoint v1 = r1(v);
   XYZPoint v2 = r2(v);
@@ -672,6 +671,19 @@ int testRotation() {
 
   if (ok == 0) std::cout << "\t OK " << std::endl;
 
+  // test Rectify 
+
+  std::cout << "Test rectify :                  "; 
+
+  XYZVector u1(0.999498,-0.00118212,-0.0316611); 
+  XYZVector u2(0,0.999304,-0.0373108); 
+  XYZVector u3(0.0316832,0.0372921,0.998802); 
+  Rotation3D rr(u1,u2,u3); 
+  // check orto-normality
+  XYZPoint vrr = rr(v); 
+  ok+= compare(v.R(), vrr.R(), "R",1.E9); 
+
+  if (ok == 0) std::cout << "\t\t OK " << std::endl;
   
   std::cout << "Test Transform3D :              "; 
 
