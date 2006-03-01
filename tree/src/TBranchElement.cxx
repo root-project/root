@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.188 2005/12/02 18:49:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.189 2006/02/22 23:28:27 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2113,13 +2113,34 @@ void TBranchElement::InitializeOffsets()
             fParentOffset = GetDataMemberOffsetEx(parentBranchClass, parentDataName, lOffset);
 
             if (parent->fType==1) {
-               const char *name = GetName();
-               const char *pos = strchr( name, '.');
+               std::string myName(parent->GetName());
+               Bool_t stripSuffix = kTRUE;
+               TBranch* mother = GetMother();
+               if (mother == GetSubBranch(parent)) {
+                  const char* motherName = mother->GetName();
+                  if (strlen(motherName) && (motherName[strlen(motherName)-1] == '.')) {
+                    stripSuffix = kFALSE;
+                    myName.append(".");
+                  }
+               }
+               if (stripSuffix) {
+                  size_t pos = myName.find_last_of('.');
+                  if (pos == std::string::npos) {
+                     myName.clear();
+                  } else {
+                     myName.erase(pos+1);
+                  }
+               }
+               std::string brName(GetName());
+               brName.erase(brName.begin(), brName.begin() + myName.size());
+               //const char *name = GetName();
+               const char *name = brName.c_str();
+               const char *pos = strchr(name, '.');
                if (pos && fParentOffset) {
-                  size_t idx = (pos-name);
+                  size_t idx = pos - name;
                   TClass *pbc = parentBranchClass;
-                  if ( pbc && (parentInfo=pbc->GetStreamerInfo()) )  {
-                     std::string enam( name, idx );
+                  if (pbc && (parentInfo = pbc->GetStreamerInfo()))  {
+                     std::string enam(name, idx);
                      TObject *info = parentInfo->GetElements()->FindObject(enam.c_str());
                      if (info) {
                         // If all the condition above are fullfilled we have already
@@ -2240,16 +2261,38 @@ void TBranchElement::InitializeOffsets()
          }
          else if ( fType == 1 ) {
             // Offset seems to need correction for TStreamerBases
-            const char *name = branch->GetName();
-            const char *pos = strchr( name, '.');
+            std::string myName(GetName());
+            Bool_t stripSuffix = kTRUE;
+            TBranch* mother = GetMother();
+            if (mother == GetSubBranch(this)) {
+               const char* motherName = mother->GetName();
+               if (strlen(motherName) && (motherName[strlen(motherName)-1] == '.')) {
+                 stripSuffix = kFALSE;
+                 myName.append(".");
+               }
+            }
+            if (stripSuffix) {
+               size_t pos = myName.find_last_of('.');
+               if (pos == std::string::npos) {
+                  myName.clear();
+               } else {
+                  myName.erase(pos+1);
+               }
+            }
+            std::string brName(branch->GetName());
+            brName.erase(brName.begin(), brName.begin() + myName.size());
+            //const char *name = branch->GetName();
+            const char *name = brName.c_str();
+            const char *pos = strchr(name, '.');
             if (pos) {
-               size_t idx = (pos-name);
+               size_t idx = pos - name;
                // Broken branch hierarchy: need to look for offset 
                // in the parents StreamerInfo if the branch represents
                // a TStreamerBase
                TClass *pbc = parentBranchClass;
-               if ( pbc && (parentInfo=pbc->GetStreamerInfo()) )  {
-                  std::string enam( branch->GetName(), idx );
+               if (pbc && (parentInfo = pbc->GetStreamerInfo()))  {
+                  //std::string enam(branch->GetName(), idx);
+                  std::string enam(name, idx);
                   fBranchOffset[i] = parentInfo->GetOffset(enam.c_str());
                }
                else  {
