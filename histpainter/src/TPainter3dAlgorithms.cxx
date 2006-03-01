@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.29 2005/12/12 10:43:39 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.30 2006/02/23 14:15:21 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2694,7 +2694,14 @@ L100:
             iface[i - 1] = i + 4;
             tface[i - 1] = tt[i + (nv << 2) - 5];
          }
+         Int_t cs = fColorTop;
+         if ( nv > 2 && (v[nv-1] == v[nv-2])) {
+            for (Int_t iv = nv-1; iv>2; iv--) {
+               if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
+            }
+         }
          (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+         fColorTop = cs;
       }
    }
 //*-*-      N E X T   P H I
@@ -2917,7 +2924,14 @@ L100:
             iface[i - 1] = 5 - i + 4;
             tface[i - 1] = tt[5 - i + (nv << 2) - 5];
          }
+         Int_t cs = fColorTop;
+         if ( nv > 2 && (v[nv-1] == v[nv-2])) {
+            for (Int_t iv = nv-1; iv>2; iv--) {
+               if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
+            }
+         }
          (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+         fColorTop = cs;
       }
    }
 //*-*-      N E X T   P H I
@@ -3190,7 +3204,14 @@ L200:
          iface[i - 1] = i + 4;
          tface[i - 1] = tt[i + 4 + 2*nv - 5];
       }
+      Int_t cs = fColorTop;
+      if ( nv > 2 && (v[nv-1] == v[nv-2])) {
+         for (Int_t iv = nv-1; iv>2; iv--) {
+            if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
+         }
+      }
       (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
+      fColorTop = cs;
    }
 //*-*-      N E X T   T H E T A
 L400:
