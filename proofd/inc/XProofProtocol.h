@@ -1,3 +1,6 @@
+// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// Author: G. Ganis  June 2005
+
 #ifndef ROOT_XProofProtocol
 #define ROOT_XProofProtocol
 
@@ -18,9 +21,9 @@
 //
 // These are used by TXProofMgr to interact with its image on
 // the server side and the sessions
-// 
+//
 //______________________________________________
-// 
+//
 enum XProofRequestTypes {
    kXP_version      = 3100,   // protocol version
    kXP_login,      // 3101    // request to start session-context
@@ -122,14 +125,14 @@ enum XPErrorCode {
    kXP_Unsupported,
    kXP_noserver,
    kXP_nosession,
-   kXP_nomanager 
+   kXP_nomanager
 };
 
 
 //______________________________________________
 // PROTOCOL DEFINITION: CLIENT'S REQUESTS STRUCTS
 //______________________________________________
-// 
+//
 // We need to pack structures sent all over the net!
 // __attribute__((packed)) assures no padding bytes.
 //

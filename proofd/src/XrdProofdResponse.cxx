@@ -1,8 +1,8 @@
-// @(#)root/proofd:$Name:$:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -372,7 +372,7 @@ void XrdProofdResponse::Set(unsigned short sid)
 //______________________________________________________________________________
 void XrdProofdResponse::GetSID(unsigned short &sid)
 {
-   // Get stream ID (to be able to restore it later 
+   // Get stream ID (to be able to restore it later
 
    memcpy((void *)&sid, (void *)&fResp.streamid[0], sizeof(sid));
 }

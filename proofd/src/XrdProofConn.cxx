@@ -1,7 +1,8 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.3 2005/12/13 10:12:02 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -184,7 +185,7 @@ XrdProofConn::~XrdProofConn()
 {
    // Destructor
 
-   // Disconnect from remote server (the connection manager is 
+   // Disconnect from remote server (the connection manager is
    // responsible of the underlying physical connection, so we do not
    // force its closing)
    Close();
@@ -192,7 +193,7 @@ XrdProofConn::~XrdProofConn()
 //_____________________________________________________________________________
 bool XrdProofConn::IsDefaultPort(int port, int defport[2])
 {
-   // Check if port is an IANA default for 'rootd' and 'proofd', 
+   // Check if port is an IANA default for 'rootd' and 'proofd',
    // and in such a case return default values for 'rootd' and 'proofd'
    // in defport
 
@@ -381,7 +382,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
    if (TRACING(TRACE_ALL))
       XPD::smartPrintClientHeader(req);
 
-   // We need the right order 
+   // We need the right order
    int reqDataLen = req->header.dlen;
    XPD::clientMarshall(req);
    if (LowWrite(req, reqData, reqDataLen) != kOK) {
@@ -864,7 +865,7 @@ bool XrdProofConn::Login()
    else
       strcpy( (char *)reqhdr.login.username, "????" );
 
-   // This is the place to send a token for fast authentication 
+   // This is the place to send a token for fast authentication
    // or id tothe server
    XrdOucString internalToken = "";
    reqhdr.header.dlen = internalToken.length();
@@ -908,7 +909,7 @@ bool XrdProofConn::Login()
       secp = 0;
       if (xrsp) {
          // Check if we need to authenticate
-         if (pltmp && (xrsp->DataLen() > 0)) { 
+         if (pltmp && (xrsp->DataLen() > 0)) {
             //
             // Reset the result
             resp = 0;
@@ -1126,7 +1127,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
                fLastErrMsg = "cannot obtain credentials";
                break;
             } else {
-               TRACE(REQ,"XrdProofConn::Authenticate:" 
+               TRACE(REQ,"XrdProofConn::Authenticate:"
                          "credentials size " << credentials->size);
             }
          } else if (status == kXR_ok) {
