@@ -139,7 +139,7 @@ ROOTDICTTYPE     \
 "
 configenvvars=
 for c in $envvars ; do
-   cc=`eval echo "$"$c`
+   cc=`eval echo "$"$c | sed 's,\\\,\\\\\\\,g'`
    if test ! "x$cc" = "x" ; then
       if test ! "x$configenvvars" = "x" ; then
          configenvvars="$configenvvars $c=$cc"
@@ -151,7 +151,7 @@ done
 
 configargs="$*"
 # don't write --nohowto to config.h
-configargs=`echo $configargs|sed 's, *--nohowto,,g'`
+configargs=`echo $configargs | sed 's, *--nohowto,,g'`
 
 configoptions=
 if test ! "x$configenvvars" = "x" ; then
@@ -164,6 +164,7 @@ if test ! "x$configargs" = "x" ; then
       configoptions=$configargs
    fi
 fi
+configoptions=`echo $configoptions | sed 's,\\\,\\\\\\\,g'`
 
 ######################################################################
 #
@@ -2547,17 +2548,27 @@ if test "x$enable_globus" = "xyes"; then
          fi
       done
       version=""
+      checkminor=""
       if test ! "x$packfileinfo" = "x" ; then
          packfiletmp=`basename $packfileinfo`
          echo "Checking for $packfiletmp ... $packdir"
          versionstring=`grep Minor $packfileinfo`
          for i in $versionstring ; do
-            for k in 5 7 8 9 ; do
-               if test "Minor=\"$k\"" = "$i" ; then
-                  version="0.$k"
-                  break 2
+            # Check for Major: only versions 0.x may need the patch
+            if test "x$checkminor" = "x" ; then
+               if test "Major=\"0\"" = "$i" ; then
+                  checkminor="yes"
                fi
-            done
+            else
+               if test "x$checkminor" = "xyes" ; then
+                  for k in 5 7 8 9 ; do
+                     if test "Minor=\"$k\"" = "$i" ; then
+                        version="0.$k"
+                        break 2
+                     fi
+                  done
+               fi
+            fi
          done
       fi
       if test "x$version" = "x" ; then
@@ -3404,15 +3415,20 @@ if test "$platform" = "win32" ; then
     mv Makefile.tmpp Makefile.tmp
 fi
 
-if test "x$enable_globus" = "xyes" ; then
-    if test "$arch" = "solarisCC5"; then
-	sed -e "s|@ldflags@|-R$globusdir/lib @ldflags@|" \
-	    < Makefile.tmp > Makefile.tmpp
-    else
-	sed -e "s|@ldflags@|-Wl,-rpath,$globusdir/lib @ldflags@|" \
-	    < Makefile.tmp > Makefile.tmpp
+if test "x$enable_globus" = "xyes" && test "x$enable_rpath" = "xyes"; then
+    case "$arch" in
+        solarisCC5)
+          sed -e "s|@ldflags@|-R$globusdir/lib @ldflags@|" \
+                 < Makefile.tmp > Makefile.tmpp
+          ;;
+        linux*)
+          sed -e "s|@ldflags@|-Wl,-rpath,$globusdir/lib @ldflags@|" \
+                 < Makefile.tmp > Makefile.tmpp
+          ;;
+    esac
+    if test -f Makefile.tmpp ; then
+       mv Makefile.tmpp Makefile.tmp
     fi
-    mv Makefile.tmpp Makefile.tmp
 fi
 
 if test ! "x$haveconfig" = "x" ; then
@@ -3440,14 +3456,19 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$elispdir" = "x";     then elispdir=$prefix/share/emacs/site-lisp; fi
 
     if test "x$enable_rpath" = "xyes" ; then
-        if test "$arch" = "solarisCC5"; then
-            sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
+       case "$arch" in
+          solarisCC5)
+             sed -e "s|@ldflags@|-R$libdir/lib @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
-        else
-	    sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
-		< Makefile.tmp > Makefile.tmpp
-        fi
-        mv Makefile.tmpp Makefile.tmp
+             ;;
+          linux*)
+             sed -e "s|@ldflags@|-Wl,-rpath,$libdir/lib @ldflags@|" \
+                    < Makefile.tmp > Makefile.tmpp
+             ;;
+       esac
+       if test -f Makefile.tmpp ; then
+          mv Makefile.tmpp Makefile.tmp
+       fi
     fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
