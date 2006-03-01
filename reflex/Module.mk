@@ -136,7 +136,7 @@ map::           map-reflex
 
 clean-genreflex:
 		@rm -f bin/genreflex*
-		@rm -fr lib/python/genreflex
+		@rm -rf lib/python/genreflex
 
 clean-check-reflex:
 		@rm -f $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
@@ -148,7 +148,7 @@ clean::         clean-reflex
 
 distclean-reflex: clean-reflex
 		@rm -f $(REFLEXDEP) $(REFLEXLIB)
-		@rm -rf include/Reflex
+		@rm -rf include/Reflex lib/python
 
 distclean::     distclean-reflex
 
