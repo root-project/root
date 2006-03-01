@@ -41,6 +41,7 @@ COMPILER      = gnu
 
 # OS version
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+MACOSX_CPU   := $(shell uname -p)
 FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
 # Linker:
