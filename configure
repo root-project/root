@@ -689,8 +689,8 @@ guess_architecture () {
             echo "Do '$0 --help' for a list of avaliable architectures."
             exit 1
             ;;
-   esac
-    result "$arch"
+    esac
+    logmsg "$arch"
 }
 
 ###################################################################
@@ -971,7 +971,7 @@ esac
 if test "x$platform" = "xmacosx" ; then
    logmsg "Checking Fink directory"
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-   result "$finkdir"
+   logmsg "$finkdir"
 fi
 
 ######################################################################
