@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.139 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.140 2006/02/09 11:48:45 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -952,6 +952,44 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
    return nref;
 }         
          
+//_____________________________________________________________________________
+Int_t TGeoManager::TransformVolumeToAssembly(const char *vname)
+{
+// Transform all volumes named VNAME to assemblies. The volumes must be virtual.
+   TGeoVolume *toTransform = FindVolumeFast(vname);
+   if (!toTransform) {
+      Warning("TransformVolumeToAssembly", "Volume %s not found", vname);
+      return 0;
+   }
+   Int_t index = fVolumes->IndexOf(toTransform);
+   Int_t count = 0;
+   Int_t indmax = fVolumes->GetEntries();     
+   Bool_t replace = kTRUE;
+   TGeoVolume *transformed;
+   while (index<indmax) {
+      if (replace) {
+         replace = kFALSE;
+         transformed = TGeoVolumeAssembly::MakeAssemblyFromVolume(toTransform);
+         if (transformed) {
+            ReplaceVolume(toTransform, transformed);
+            count++;
+         } else {
+            if (toTransform->IsAssembly())
+               Warning("TransformVolumeToAssembly", "Volume %s already assembly", toTransform->GetName());
+            if (!toTransform->GetNdaughters())
+               Warning("TransformVolumeToAssembly", "Volume %s has no daughters, cannot transform", toTransform->GetName());
+            if (toTransform->IsVolumeMulti())
+               Warning("TransformVolumeToAssembly", "Volume %s divided, cannot transform", toTransform->GetName());
+         }   
+      }   
+      index++;
+      if (index >= indmax) return count;
+      toTransform = (TGeoVolume*)fVolumes->At(index);
+      if (!strcmp(toTransform->GetName(),vname)) replace = kTRUE;
+   }
+   return count;   
+}
+
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)

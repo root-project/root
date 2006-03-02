@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.73 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.74 2006/02/09 11:48:45 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -399,6 +399,7 @@ public:
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    Int_t                  ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew);
+   Int_t                  TransformVolumeToAssembly(const char *vname);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
    Int_t                 *GetIntBuffer(Int_t length);
