@@ -122,7 +122,7 @@ merge: merge.log
 CloneTree.log: make_CloneTree.C
 	$(CMDECHO) root.exe -q -b -l make_CloneTree.C > make_CloneTree.log 2>&1
 
-cloneChain.log: CloneTree.log
+cloneChain.log: CloneTree.root
 
 cloneChain: cloneChain.log
 	$(TestDiff)
