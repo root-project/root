@@ -1,3 +1,11 @@
+root (5.09.01-10) unstable; urgency=low
+
+  * Removed dangling code directory in `minuit2/src' 
+  * Set `Root.Zlib=1' in `/etc/root/system.rootrc' per default. 
+  * Fixed some minor bugs in wrapper scripts and SYSV init scripts.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 24 Feb 2006 11:47:18 +0100
+
 root (5.09.01-9) unstable; urgency=low
 
   * Initial release. (Closes: #325306: RFP: root -- An object oriented

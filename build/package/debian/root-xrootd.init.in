@@ -9,7 +9,7 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 XDAEMON=@prefix@/bin/xrootd
-XDAEMON=@prefix@/bin/olbd
+ODAEMON=@prefix@/bin/olbd
 XNAME=xrootd
 ONAME=olbd
 XDESC="Extended ROOT file server"

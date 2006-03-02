@@ -23,15 +23,15 @@ if test ! "x$ROOTD_USER" = "x" ; then
     USER=$ROOTD_USER
 fi
 if test ! "x$ROOTD_PORT" = "x" ; then 
-    DAEMON_OPTS="$DEAMON_OPTS -p $ROOTD_PORT"
+    DAEMON_OPTS="$DAEMON_OPTS -p $ROOTD_PORT"
 fi
 if test ! "x$SSH_PORT" = "x" ; then 
-    DAEMON_OPTS="$DEAMON_OPTS -s $SSH_PORT"
+    DAEMON_OPTS="$DAEMON_OPTS -s $SSH_PORT"
 fi
 
 if test -f /var/run/inetd.pid ; then 
     # Inetd is running
-    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` ; then 
+    if grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1 ; then 
 	# ROOTD is controlled by inetd. 
 	ENABLE_ROOTD=no
     fi

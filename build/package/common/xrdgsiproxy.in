@@ -5,7 +5,7 @@ rootbindir=@prefix@/bin
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$rootplugins
 
-exec $rootbindir/xrdgsiproxy.bin $*
+exec $rootbindir/xrdgsiproxy.bin "$@"
 
 # EOF
 

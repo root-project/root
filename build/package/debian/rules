@@ -235,11 +235,16 @@ clean:  $(TEMPLATES:%.in=%)
 	dh_testroot
 	-rm -f build-arch-stamp build-indep-stamp build-arch-cint-stamp \
 		config.status configure-stamp config.log
-	-rm -rf minuit2/src/Minuit-1_7_6/src/.libs/ 
+	-rm -rf minuit2/src/Minuit-1_7_6
 	-rm -rf freetype/src/freetype-2.1.9
 	-rm -rf asimage/src/libAfterImage 
 	-rm -rf debian/*.files 	debian/*.install	
 	-rm -rf debian/libroot*$(SOVERS).*
+	-rm -f  macros/html.C 
+	-rm -f  etc/proofd
+	-rm -f  etc/proofd.xinetd
+	-rm -f  etc/rootd
+	-rm -f  etc/rootd.xinetd
 	-find . -name ".#*" | xargs rm -rf
 
 	# Add here commands to clean up after the build process.

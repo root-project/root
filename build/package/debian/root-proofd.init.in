@@ -34,14 +34,14 @@ if test -f /var/run/xinetd.pid ; then
     fi
     # old name 
     if test -f /etc/xinetd.d/proofd && 
-	`grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/proofd > /dev/null 2>&1 ` ; then
+	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/proofd > /dev/null 2>&1 ; then
 	# PROOFD is controlled by xinetd. 
 	ENABLE_PROOFD=no
 	
     fi
     # new name 
     if test -f /etc/xinetd.d/root-proofd && 
-	`grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/root-proofd > /dev/null 2>&1 ` ; then
+	grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/root-proofd > /dev/null 2>&1  ; then
 	# PROOFD is controlled by xinetd. 
 	ENABLE_PROOFD=no
 	

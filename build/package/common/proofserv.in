@@ -5,7 +5,7 @@ rootbindir=@prefix@/bin
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$rootplugins
 
-exec $rootbindir/proofserv.bin $*
+exec $rootbindir/proofserv.bin "$@"
 
 # EOF
 
