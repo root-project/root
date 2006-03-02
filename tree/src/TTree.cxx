@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.275 2006/02/10 23:43:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.276 2006/02/18 12:47:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1885,14 +1885,27 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *option)
        newtree->GetListOfLeaves()->GetEntries()==GetListOfLeaves()->GetEntries()) {
       
       // Quickly copy the basket without decompression and streaming.
-      TTreeCloner t(this,newtree,option);
-      if (t.IsValid()) {
-         newtree->fEntries += fEntries;
-         t.Exec();
-      } else {
-         Error("CloneTree","Tree has not been cloned\n");
-         delete newtree;
-         return 0;
+      nentries = GetEntriesFast();
+      for (Long64_t i=0; i<nentries; i += this->GetTree()->GetEntries() )
+      {
+         if (LoadTree(i) < 0) break;
+         TTreeCloner t(GetTree(),newtree,option);
+         if (t.IsValid()) {
+            newtree->SetEntries( newtree->GetEntries() + GetTree()->GetEntries() );
+            t.Exec();
+         } else {
+            if (i==0) {
+               Error("CloneTree","Tree has not been cloned\n");
+               delete newtree;
+               return 0;
+            } else {
+               if (GetCurrentFile()) {
+                  Warning("CloneTree","Skipped file %s\n", GetCurrentFile()->GetName());
+               } else {
+                  Warning("Merge","Skipped file number %d\n", GetTreeNumber());
+               }
+            }
+         }
       }
    } else {
       // may be copy some entries
