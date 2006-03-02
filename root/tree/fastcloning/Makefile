@@ -119,7 +119,7 @@ single: single.log
 merge: merge.log
 	$(TestDiff)
 
-CloneTree.log: make_CloneTree.C
+CloneTree.root: make_CloneTree.C
 	$(CMDECHO) root.exe -q -b -l make_CloneTree.C > make_CloneTree.log 2>&1
 
 cloneChain.log: CloneTree.root
