@@ -5,6 +5,8 @@ c->Add("ver_40200_copy.root");
 TFile* newfile = new TFile("CloneTree.root","recreate");
 TTree* tc = c->CloneTree(-1,"fast");
 tc->Write();
+delete tc->GetCurrentFile();
+delete c;
 return 0;
 }
 

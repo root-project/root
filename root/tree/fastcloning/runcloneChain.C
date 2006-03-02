@@ -14,5 +14,7 @@
      cout << "The 2nd number should have been twice the first\n";
      return 1;
   }
+  OriginalFile.Close();
+  CloneFile.Close();
 }
 
