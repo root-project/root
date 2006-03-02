@@ -8,4 +8,5 @@
 *.exp
 
  *.pdb
-*.clog 
+*.clog
+*.manifest 
