@@ -4,7 +4,7 @@
 CLEAN_TARGETS += testFormulaFuncCall.log prova.root *.log $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += fullload testFormulaFuncCall testNestedFunc nestedHists
+TEST_TARGETS += fullload staticFunc testFormulaFuncCall testNestedFunc nestedHists
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -37,8 +37,13 @@ nestedHists: nestedHists.log
 testNestedFunc: NestedFunc.log
 	$(TestDiff)
 
+staticFunc.log: MyClass_cxx.$(DllSuf)
+
+staticFunc: staticFunc.log
+	$(TestDiff)
+
 test.root: write.C all_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l runwrite.C
+	$(CMDECHO) root.exe -b -q -l runwrite.C > write.log 2>&1
 
 fullload.log: test.root
 
