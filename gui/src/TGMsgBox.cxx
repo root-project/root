@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.8 2004/09/13 09:29:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
 {
    // Create a message dialog box.
    
-   if (p && main)
+   if (p)
       PMsgBox(title, msg, icon, buttons, ret_code);
    else
       MakeZombie();
@@ -89,7 +89,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
          break;
    }
 
-   if (p && main)
+   if (p)
       PMsgBox(title, msg, icon_pic, buttons, ret_code);
    else
       MakeZombie();
