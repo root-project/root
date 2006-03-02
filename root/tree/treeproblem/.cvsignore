@@ -1,3 +1,4 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
  *.out 
  FooDict* file.root  *.dylib reader writer
+*.manifest
