@@ -3458,11 +3458,11 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$enable_rpath" = "xyes" ; then
        case "$arch" in
           solarisCC5)
-             sed -e "s|@ldflags@|-R$libdir/lib @ldflags@|" \
+             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
              ;;
           linux*)
-             sed -e "s|@ldflags@|-Wl,-rpath,$libdir/lib @ldflags@|" \
+             sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
              ;;
        esac
