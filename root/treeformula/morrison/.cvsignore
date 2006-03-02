@@ -5,3 +5,4 @@ fooDict.h
 barDict.h
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
  Event.root 
+*.manifest

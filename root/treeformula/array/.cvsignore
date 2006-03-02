@@ -9,3 +9,4 @@ twodim_99.root
 filltree.output
 arrayDrawTest.output
 *.pdb *.def *.exp *ilk *.lib *.clog
+*.manifest
