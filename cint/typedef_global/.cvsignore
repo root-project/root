@@ -9,4 +9,4 @@
 *.out
 *.d
 *Dict*
-output
+output*.manifest

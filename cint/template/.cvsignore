@@ -12,3 +12,4 @@ slaveDict.h
 .def
 *.out
 *.d
+*.manifest

@@ -6,3 +6,4 @@ templateMembers.ref
 templateMembersNoMem.ref
 *.def *.exp *.lib *.pdb *.log *Dict.*
  *.dll
+*.manifest

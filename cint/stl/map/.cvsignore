@@ -7,3 +7,4 @@
 *.pdb
 dict*
 .def
+*.manifest
