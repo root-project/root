@@ -1,5 +1,6 @@
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged *.root
-TEST_TARGETS += single merge
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged \
+	Event*.root dt_reference.root CloneTree.root
+TEST_TARGETS += cloneChain single merge
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -116,4 +117,12 @@ single: single.log
 	$(TestDiff)
 
 merge: merge.log
+	$(TestDiff)
+
+CloneTree.log: make_CloneTree.C
+	$(CMDECHO) root.exe -q -b -l make_CloneTree.C > make_CloneTree.log 2>&1
+
+cloneChain.log: CloneTree.log
+
+cloneChain: cloneChain.log
 	$(TestDiff)

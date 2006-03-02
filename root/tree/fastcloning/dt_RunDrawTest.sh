@@ -22,7 +22,7 @@ launch () {
 }
 
 
-if test "x$subdir" == "x"; then
+if test "x$subdir" = "x"; then
    launch "Event.old.split.root" 0 "'$ClassWarning'" "'$RootPrompt'" "'$EmptyLine'" && \
    launch "Event.old.split.root" 1 "'$RootPrompt'" "'$EmptyLine' " && \
    launch "Event.old.split.root" 2 "'$ClassWarning'" "'$RootPrompt'" "'$EmptyLine' " && \
