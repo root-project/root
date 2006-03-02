@@ -1,0 +1,9 @@
+
+Processing rungetobj.C...
+TFile**		TDirGetObj.root	
+ TFile*		TDirGetObj.root	
+  TDirectory*		a	a
+   TDirectory*		b	b
+    KEY: TNamed	a;1	this is not gDir->GetDir("a")!
+   KEY: TDirectory	b;1	b
+  KEY: TDirectory	a;1	a
