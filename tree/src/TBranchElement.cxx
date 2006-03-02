@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.189 2006/02/22 23:28:27 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.190 2006/03/01 15:43:29 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -64,7 +64,6 @@ TBranchElement::TBranchElement(): TBranch(), fCurrentClass(), fParentClass(), fB
    fCheckSum      = 0;
    fBranchOffset  = 0;
    fBranchTypes   = 0;
-   fParentOffset  = 0;
    fInit = fInitOffsets = kFALSE;
    fType          = 0;
 }
@@ -108,7 +107,6 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fTree         = gTree;
    fMaximum      = 0;
    fBranchOffset = 0;
-   fParentOffset = 0;
    fBranchTypes  = 0;
    fInitOffsets  = kFALSE;
    ULong_t *elems = sinfo->GetElems();
@@ -370,7 +368,6 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fBranchPointer = 0;
    fMaximum       = 0;
    fBranchOffset  = 0;
-   fParentOffset  = 0;
    fBranchTypes   = 0;
    fSTLtype       = TClassEdit::kNotSTL;
    fInitOffsets   = kFALSE;
@@ -472,7 +469,6 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    fBranchPointer = 0;
    fMaximum       = 0;
    fBranchOffset  = 0;
-   fParentOffset  = 0;
    fBranchTypes   = 0;
    fSTLtype       = TClassEdit::kNotSTL;
 
@@ -1553,6 +1549,28 @@ void TBranchElement::Print(Option_t *option) const
 //*-*                    ========================
 
    Int_t nbranches = fBranches.GetEntriesFast();
+   if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
+      if (strlen(option)==strlen("debugAddress")) {
+         Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s\n", 
+                "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject");
+      }
+      TBranchElement *parent = (TBranchElement*) GetMother()->GetSubBranch(this);
+      Int_t ind = parent->GetListOfBranches()->IndexOf(this);
+      if (strlen(GetName())>24) Printf("%-24s\n%-24s ", GetName(),"");
+      else Printf("%-24s ", GetName());
+      Printf("%-16s %2d %4d %-16s %-16s %8x %8x %8x\n",
+             ((TBranchElement*)this)->GetInfo()->GetName(), GetID(), GetType(), 
+             GetClassName(), GetParentName(), 
+             (fBranchOffset&&parent) ? parent->fBranchOffset[ind] : 0, 
+             GetOffset(), GetObject());
+      TObjArray* brl = ((TBranchElement*)this)->GetListOfBranches();
+      Int_t nbranches = brl->GetEntriesFast();
+      for (Int_t i = 0; i < nbranches; ++i) {
+         TBranchElement* subbranch = (TBranchElement*)brl->At(i);
+         subbranch->Print("debugAddressSub");
+      }
+      return;
+   }
    if (nbranches) {
       if (fID == -2) {
          if (strcmp(GetName(),GetTitle()) == 0) {
@@ -2067,99 +2085,6 @@ void TBranchElement::InitializeOffsets()
          printf("fOffset=%d\n",fOffset);
       }
    }
-   else if (nbranches == 0) {
-      if (clparent && clparent != clm) {
-         // We need to discover if 'this' represents a direct datamember of the class in parent or
-         // if it is an indirect one (with a missing branch in the hierachy)
-         
-         TBranchElement *parent = (TBranchElement*) GetMother()->GetSubBranch(this);
-         assert(parent!=this);
-         
-         Int_t parentID = parent->GetID();
-         assert(parentID>=0);  // if the ID was negative, the branch would not have been split!
-         
-         TStreamerInfo *parentInfo = parent->GetInfo();
-         assert(parentInfo != 0);
-
-         TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
-         TClass *parentBranchClass = parentElem->GetClassPointer();
-
-         if ( ! parentBranchClass->InheritsFrom(clm) ) {
-
-            // We are in the case where there is a missing branch in the hiearchy
-            TString parentDataName( GetName() );
-            const char *ename = fID<0 ? 0 : ((TStreamerElement*)fInfo->GetElems()[fID])->GetName();
-            Int_t lOffset    = clm->GetStreamerInfo()->GetOffset(ename); // offset in the local streamerInfo.
-            TString parentName( parent->GetName() );
-            if (parentElem->IsBase()) {
-               TBranchElement *pparent = (TBranchElement*) parent->GetMother()->GetSubBranch(parent);
-               if (pparent != GetMother())  // And not at the 2nd level 
-                  {
-                     TString pattern( Form(".%s",parentElem->GetName()) );
-                     if (pattern.Length()<parentName.Length()) {
-                        if ( strcmp(parentName.Data()+(parentName.Length()-pattern.Length()),
-                                    pattern.Data()) == 0 ) {
-                           // The parent branch name contains the name of the base class in it.
-                           // This name is not reproduce in the sub-branches, so we need to
-                           // remove it.
-                           parentName.Remove(parentName.Length()-pattern.Length());
-                        }
-                     }
-                  }
-            }
-            // remove the parent branch name (if present)
-            CleanParentName(parentDataName,parentName);
-
-            fParentOffset = GetDataMemberOffsetEx(parentBranchClass, parentDataName, lOffset);
-
-            if (parent->fType==1) {
-               std::string myName(parent->GetName());
-               Bool_t stripSuffix = kTRUE;
-               TBranch* mother = GetMother();
-               if (mother == GetSubBranch(parent)) {
-                  const char* motherName = mother->GetName();
-                  if (strlen(motherName) && (motherName[strlen(motherName)-1] == '.')) {
-                    stripSuffix = kFALSE;
-                    myName.append(".");
-                  }
-               }
-               if (stripSuffix) {
-                  size_t pos = myName.find_last_of('.');
-                  if (pos == std::string::npos) {
-                     myName.clear();
-                  } else {
-                     myName.erase(pos+1);
-                  }
-               }
-               std::string brName(GetName());
-               brName.erase(brName.begin(), brName.begin() + myName.size());
-               //const char *name = GetName();
-               const char *name = brName.c_str();
-               const char *pos = strchr(name, '.');
-               if (pos && fParentOffset) {
-                  size_t idx = pos - name;
-                  TClass *pbc = parentBranchClass;
-                  if (pbc && (parentInfo = pbc->GetStreamerInfo()))  {
-                     std::string enam(name, idx);
-                     TObject *info = parentInfo->GetElements()->FindObject(enam.c_str());
-                     if (info) {
-                        // If all the condition above are fullfilled we have already
-                        // compensated for the missing branch.
-                        Int_t ind = parent->GetListOfBranches()->IndexOf(this);
-                        fParentOffset -= parent->fBranchOffset[ind];
-                     }
-                  }
-               }
-            }
-         } else {
-            // Case where we have a proper branch hierachy
-            // fObject is already correct!
-
-            // nothing to do :)
-            // fprintf(stderr,"section has nothing to do!\n");
-         }
-      }
-   }
    if ( nbranches > 0 )  {
       Int_t parentID = 0;
       TClass* parentBranchClass = 0;
@@ -2167,11 +2092,6 @@ void TBranchElement::InitializeOffsets()
       const char *ename = elem ? elem->GetName() : 0;
       fBranchOffset = new Int_t[nbranches];
       fBranchTypes  = new Bool_t[nbranches];
-      //for (Int_t j=0; j<nbranches; j++ )  {
-      //   fBranchOffset[j] = 0;
-      //   TBranch *abranch = (TBranch*)fBranches[j];
-      //   fBranchTypes[j]  = abranch->InheritsFrom(TBranchElement::Class());
-      //}
       for (Int_t i=0; i<nbranches;i++ )  {
          fBranchOffset[i] = 0;
          TBranch *abranch = (TBranch*)fBranches[i];
@@ -2208,15 +2128,15 @@ void TBranchElement::InitializeOffsets()
          assert(parentInfo != 0);
 
          switch(parentID) {
-         case -2:
-         case -1:
-            parentBranchClass = parentInfo->GetClass();
-            break;
-         default: {
-            TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
-            parentBranchClass = parentElem->GetClassPointer();
-            break;
-         }
+            case -2:
+            case -1:
+               parentBranchClass = parentInfo->GetClass();
+               break;
+            default: {
+               TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
+               parentBranchClass = parentElem->GetClassPointer();
+               break;
+            }
          }
          if ( nb2 > 0 )   {
             // The branch has some sub-branches
@@ -2259,44 +2179,104 @@ void TBranchElement::InitializeOffsets()
                Error("SetAddress","branch=%s, info=0",branch->GetName());
             }
          }
-         else if ( fType == 1 ) {
-            // Offset seems to need correction for TStreamerBases
-            std::string myName(GetName());
-            Bool_t stripSuffix = kTRUE;
-            TBranch* mother = GetMother();
-            if (mother == GetSubBranch(this)) {
-               const char* motherName = mother->GetName();
-               if (strlen(motherName) && (motherName[strlen(motherName)-1] == '.')) {
-                 stripSuffix = kFALSE;
-                 myName.append(".");
+         else {
+            Bool_t fixedBaseOffset = kFALSE;
+            if ( fType == 1 ) {
+               // Offset seems to need correction for TStreamerBases
+               std::string myName(GetName());
+               Bool_t stripSuffix = kTRUE;
+               TBranch* mother = GetMother();
+               if (mother == GetSubBranch(this)) {
+                  const char* motherName = mother->GetName();
+                  if (strlen(motherName) && (motherName[strlen(motherName)-1] == '.')) {
+                     stripSuffix = kFALSE;
+                     myName.append(".");
+                  }
+               }
+               if (stripSuffix) {
+                  size_t pos = myName.find_last_of('.');
+                  if (pos == std::string::npos) {
+                     myName.clear();
+                  } else {
+                     myName.erase(pos+1);
+                  }
+               }
+               std::string brName(branch->GetName());
+               brName.erase(brName.begin(), brName.begin() + myName.size());
+               //const char *name = branch->GetName();
+               const char *name = brName.c_str();
+               const char *pos = strchr(name, '.');
+               if (pos) {
+                  size_t idx = pos - name;
+                  // Broken branch hierarchy: need to look for offset 
+                  // in the parents StreamerInfo if the branch represents
+                  // a TStreamerBase
+                  TClass *pbc = parentBranchClass;
+                  TStreamerInfo *pInfo = 0;
+                  if (pbc && (pInfo = pbc->GetStreamerInfo()))  {
+                     //std::string enam(branch->GetName(), idx);
+                     std::string enam(name, idx);
+                     fixedBaseOffset = kTRUE;
+                     fBranchOffset[i] = pInfo->GetOffset(enam.c_str());
+                  }
+                  else  {
+                     Error("SetAddress","branch=%s, parentInfo==0",branch->GetName());
+                  }
                }
             }
-            if (stripSuffix) {
-               size_t pos = myName.find_last_of('.');
-               if (pos == std::string::npos) {
-                  myName.clear();
+            TClass *kidClass = branch->fBranchClass;
+            TClass *pClass = branch->GetParentClass();
+            if ( !(branch->fType == 31 || branch->fType == 41)
+                && pClass && pClass != kidClass) {
+               // We need to discover if 'this' represents a direct datamember of the class in parent or
+               // if it is an indirect one (with a missing branch in the hierachy)
+         
+               assert(parentID>=0);  // if the ID was negative, the branch would not have been split!       
+               assert(parentInfo != 0);
+
+               if ( ! parentBranchClass->InheritsFrom(kidClass) ) {
+
+                  // We are in the case where there is a missing branch in the hiearchy
+                  TString parentDataName( branch->GetName() );
+                  const char *ename = branch->fID<0 ? 0 : ((TStreamerElement*)branch->fInfo->GetElems()[branch->fID])->GetName();
+                  Int_t lOffset    = kidClass->GetStreamerInfo()->GetOffset(ename); // offset in the local streamerInfo.
+                  TString parentName( parent->GetName() );
+                  TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
+
+                  if (parentElem->IsBase()) {
+                     TBranchElement *pparent = (TBranchElement*) parent->GetMother()->GetSubBranch(parent);
+                     if (pparent != branch->GetMother())  // And not at the 2nd level 
+                     {
+                        TString pattern( Form(".%s",parentElem->GetName()) );
+                        if (pattern.Length()<parentName.Length()) {
+                           if ( strcmp(parentName.Data()+(parentName.Length()-pattern.Length()),
+                              pattern.Data()) == 0 ) {
+                                 // The parent branch name contains the name of the base class in it.
+                                 // This name is not reproduce in the sub-branches, so we need to
+                                 // remove it.
+                                 parentName.Remove(parentName.Length()-pattern.Length());
+                           }
+                        }
+                     }
+                  }
+                  // remove the parent branch name (if present)
+                  CleanParentName(parentDataName,parentName);
+
+                  Int_t parentOffset = GetDataMemberOffsetEx(parentBranchClass, parentDataName, lOffset);
+                  if (fixedBaseOffset) {
+                     // If all the condition above are fullfilled we have already
+                     // compensated for (some of) the missing branch(es).
+                     parentOffset -= fBranchOffset[i];
+                  }
+                  // Now transfer parentOffset up to the parent so that it is only
+                  // used when recursively setting the addresses.
+                  parent->fBranchOffset[i] += parentOffset;
                } else {
-                  myName.erase(pos+1);
-               }
-            }
-            std::string brName(branch->GetName());
-            brName.erase(brName.begin(), brName.begin() + myName.size());
-            //const char *name = branch->GetName();
-            const char *name = brName.c_str();
-            const char *pos = strchr(name, '.');
-            if (pos) {
-               size_t idx = pos - name;
-               // Broken branch hierarchy: need to look for offset 
-               // in the parents StreamerInfo if the branch represents
-               // a TStreamerBase
-               TClass *pbc = parentBranchClass;
-               if (pbc && (parentInfo = pbc->GetStreamerInfo()))  {
-                  //std::string enam(branch->GetName(), idx);
-                  std::string enam(name, idx);
-                  fBranchOffset[i] = parentInfo->GetOffset(enam.c_str());
-               }
-               else  {
-                  Error("SetAddress","branch=%s, parentInfo==0",branch->GetName());
+                  // Case where we have a proper branch hierachy
+                  // fObject is already correct!
+
+                  // nothing to do :)
+                  // fprintf(stderr,"section has nothing to do!\n");
                }
             }
          }
@@ -2516,15 +2496,8 @@ void TBranchElement::SetAddress(void *add)
 
    if ( !fInfo ) return;
    if ( !fInitOffsets ) InitializeOffsets();
-   
+
    if (fType == 31 || fType == 41) {
-      return;
-   }
-   if (nbranches == 0) {
-      if (fAddress==fObject) {
-         fAddress += fParentOffset;
-      }
-      fObject += fParentOffset;
       return;
    }
    for (Int_t i=0;i<nbranches;i++)  {
