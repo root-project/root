@@ -1,6 +1,11 @@
 #include "TBits.h"
 #include "Riostream.h"
 
+#ifndef __CINT__
+#include <bitset>
+using namespace std;
+#endif
+
 bool runtbits() {
    TBits a;  a.SetBitNumber(2,1);  a.SetBitNumber(12,1); 
    TBits b;  b.SetBitNumber(2,1);  b.SetBitNumber(15,1); 
@@ -21,5 +26,12 @@ bool runtbits() {
    cout << bb << endl;
    bb = a[2] & b[3];
    cout << bb << endl;
+
+#ifndef __CINT__
+   bitset<16> bs;
+   bs[2] = 1;
+   //bs[12]= 1;
+   cout << bs << endl;
+#endif
    return 0;
 }
