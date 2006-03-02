@@ -1,10 +1,11 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += *.log hsimple1.root hsimple2.root event1.root event2.root merge.root
+CLEAN_TARGETS += *.log hsimple1.root hsimple2.root event1.root event2.root merge.root \
+	CopyTree.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += mergeWithDir treeCloneTest treeCloneTest2
+TEST_TARGETS += deepClass mergeWithDir treeCloneTest treeCloneTest2
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -40,7 +41,13 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
-
-
 mergeWithDir: mergeWithDir.log
+	$(TestDiff)
+
+CopyTree.root: make_CopyTree.C ver_40200.root
+	$(CMDECHO) root.exe -q -b -l make_CopyTree.C > make_CopyTree.log 2>&1
+
+deepClass.log: CopyTree.root
+
+deepClass: deepClass.log
 	$(TestDiff)
