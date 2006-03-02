@@ -1,3 +1,4 @@
  *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
 generatedSel.h red.h
 *.manifest
+withfriend*
