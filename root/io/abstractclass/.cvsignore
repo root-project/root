@@ -1,2 +1,3 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
  DataCint* 
+*.manifest

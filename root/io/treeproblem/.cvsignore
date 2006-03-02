@@ -2,3 +2,5 @@
  *.dll 
 FooDict.h
 reader writer file.root FooDict*
+*.manifest
+*.manifest

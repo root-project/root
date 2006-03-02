@@ -4,3 +4,4 @@
 *.so
 *.dll
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+*.manifest

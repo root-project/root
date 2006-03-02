@@ -13,3 +13,4 @@ unpack.lastaleph.root aleph_all.C alice_itsv.C ams.root atlas_sctt.C brahms.C br
 aleph.root
 unpack.last
 babar_all.C babar_emca.C babar_ssvd.C lhcb_mag.C
+*.manifest

@@ -1,1 +1,2 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk *.clog
+*.manifest

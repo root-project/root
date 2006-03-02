@@ -4,3 +4,4 @@
 *.sln *.suo
 Event
 *.dylib
+*.manifest

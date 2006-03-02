@@ -1,3 +1,5 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
  *.dll 
  test.root 
+*.manifest
+*.manifest

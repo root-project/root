@@ -1,2 +1,3 @@
 *.def *.so *.dll *.exp *.lib *.pdb idDict*
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+*.manifest

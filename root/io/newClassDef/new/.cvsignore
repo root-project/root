@@ -1,3 +1,5 @@
  new.root *dict* 
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
  test.root 
+*.manifest
+*.manifest
