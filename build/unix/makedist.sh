@@ -7,6 +7,9 @@
 
 ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 TYPE=`bin/root-config --arch`
+if [ "x$TYPE" = "xmacosx" ]; then
+   TYPE=$TYPE-`uname -p`
+fi
 if [ "x$1" = "x" ]; then
    TARFILE=root_v$ROOTVERS.$TYPE.tar
 else
