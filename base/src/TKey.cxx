@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.52 2006/02/01 18:54:51 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.53 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -67,7 +67,11 @@ const Int_t kTitleMax = 32000;
 const Int_t kMAXFILEBUFFER = 262144;
 #endif
 
+#if !defined(_MSC_VER) || (_MSC_VER>1300)
 const ULong64_t kPidOffsetMask = 0xffffffffffffULL;
+#else
+const ULong64_t kPidOffsetMask = 0xffffffffffffUL;
+#endif
 const UChar_t kPidOffsetShift = 48;
 
 UInt_t keyAbsNumber = 0;
