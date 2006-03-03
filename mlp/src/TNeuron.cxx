@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.15 2006/01/09 15:47:30 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.16 2006/01/13 09:10:12 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -845,11 +845,11 @@ void TNeuron::AddPost(TSynapse * post)
 }
 
 //______________________________________________________________________________
-void TNeuron::AddInLayer(TNeuron * near)
+void TNeuron::AddInLayer(TNeuron * nearP)
 {
    // Tells a neuron which neurons form its layer (including itself).
    // This is needed for self-normalizing functions, like Softmax.
-   flayer.AddLast(near);
+   flayer.AddLast(nearP);
    if (flayer.GetEntriesFast() == flayer.GetSize())
       flayer.Expand(2 * flayer.GetSize());
 }
