@@ -5,7 +5,7 @@ Processing testBoolOpt.C...
  fExpr[1] = || checkpoint  action = 142 action param = 22 
  fExpr[2] = bool right()  action = 145 action param = 1000 
  fExpr[3] = ||  action = 61 action param = 0 
-Optimized expresion
+Optimized expression
  fExpr[0] = bool left()		  action = 145 action param = 0 
  fExpr[1] = || checkpoint		  action = 156 action param = 0 
  fExpr[2] = bool right()		  action = 145 action param = 1000 
@@ -17,7 +17,7 @@ Optimized expresion
  fExpr[3] = bool right()  action = 145 action param = 1000 
  fExpr[4] = !  action = 68 action param = 0 
  fExpr[5] = &&  action = 60 action param = 0 
-Optimized expresion
+Optimized expression
  fExpr[0] = bool left()		  action = 145 action param = 0 
  fExpr[1] = !		  action = 68 action param = 0 
  fExpr[2] = && checkpoint		  action = 157 action param = 0 
