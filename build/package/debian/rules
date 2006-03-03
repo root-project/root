@@ -268,7 +268,7 @@ clean:  $(TEMPLATES:%.in=%)
 pkglists:
 	-rm -rf debian/*.files 	debian/*.install	
 	-rm -rf debian/libroot*$(SOVERS).*
-	build/package/lib/makelists.sh debian \
+	build/package/lib/makelists.sh debian debian/tmp \
 		$(VERSION) $(PREFIX) $(SYSCONFDIR) $(PKGDOCDIR)
 	@for i in debian/libroot* ; do \
 	  if test -d $$i ; then continue ; fi ; \

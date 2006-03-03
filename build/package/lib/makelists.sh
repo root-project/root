@@ -1,6 +1,7 @@
 #!/bin/sh
 
 outdir=$1  	; shift
+build=$1        ; shift
 version=$1 	; shift
 prefix=$1  	; shift
 sysconfdir=$1	; shift
@@ -73,7 +74,7 @@ for d in * ; do
     # echo "Making list for $d (dev=$dev lib=$lib bin=$bin extra=$extra)"
     echo "Making list for $d"
     build/package/lib/makelist DIRS=$d DEV=$dev LIB=$lib BIN=$bin  \
-	VERSION=$version PREFIX=$prefix OUT=$outdir $extra  \
+	VERSION=$version PREFIX=$prefix OUT=$outdir BUILD=$build $extra  \
 	--no-print-directory all
 done
 

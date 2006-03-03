@@ -61,21 +61,21 @@ endif # $(LIB) = $(DEV)
 liblist:
 	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(LIB).install
 ifneq ($(LIB),$(DEV))
-	@(cd debian/tmp/usr/lib/root && \
+	@(cd $(BUILD)/$(PREFIX)/lib/root && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b . ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
 else 
 ifeq ($(DIRS), cint)
-	@(cd debian/tmp/usr/lib/root && \
+	@(cd $(BUILD)/$(PREFIX)/lib/root && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b . ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
 else 
 ifneq ($(DIRS), xrootd) 
-	@(cd debian/tmp/usr/lib/root && \
+	@(cd $(BUILD)/$(PREFIX)/lib/root && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)

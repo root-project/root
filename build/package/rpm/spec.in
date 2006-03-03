@@ -27,7 +27,7 @@ Source:       ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
 Group:        Applications/Physics
 BuildRoot:    /tmp/rootrpm
 Summary:      Numerical data analysis framework (OO)
-BuildRequires: XFree86-devel@builddepends@
+BuildRequires: xorg-x11-devel@builddepends@
 Requires:     @pkglist@
 #
 # Over all description - not used, but required
@@ -114,16 +114,13 @@ for i in proofserv xrdgsiproxy xrdpwdadmin ; do
     mv ${RPM_BUILD_ROOT}%{_prefix}/bin/$i 		\
 	 ${RPM_BUILD_ROOT}%{_prefix}/bin/$i.bin 
     sed -e 's,@prefix@,%{_prefix},g'			\
-	-e 's,@libvers@,$(SOVERS),g'			\
-	< build/package/common/$$i.in			\
+	-e 's,@libvers@,${sovers},g'			\
+	< build/package/common/$i.in			\
 	> ${RPM_BUILD_ROOT}%{_prefix}/bin/$i
     chmod 755 ${RPM_BUILD_ROOT}%{_prefix}/bin/$i 
   fi
 done 
 
-
-#sed 's|Unix\(.*\)DynamicPath:\( *\)\.:/usr/lib/root|Unix\1DynamicPath:\2.:/usr/lib/root/$sover|' < debian/tmp/etc/root/system.rootrc > tmp.systemrc 
-#	mv tmp.systemrc debian/tmp/etc/root/system.rootrc
 
 # Prepare SYSV init scripts 
 mkdir -p ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d
@@ -137,7 +134,8 @@ touch ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log/proof.log
 
 # Make package lists 
 mkdir -p rpm
-build/package/lib/makelists.sh rpm %ver %_prefix %_sysconfdir %_defaultdocdir
+build/package/lib/makelists.sh rpm ${RPM_BUILD_ROOT} \
+    %ver %_prefix %_sysconfdir %_defaultdocdir
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
     >> rpm/root-rootd.install
 

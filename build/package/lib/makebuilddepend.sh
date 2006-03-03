@@ -38,7 +38,7 @@ if test "x$1" = "xrpm" ; then
 	    *pythia5)	echo -n ", pythia5-devel"			;;
 	    *pythia6)	echo -n ", pythia6-devel"			;;
 	    *python)	echo -n ", python-devel >= 2.1"			;;
-	    *qt)	echo -n ", qt-devel >= 3.3.3 or qt3-devel or libqt3-devel"			;;
+	    *qt)	echo -n ", qt-devel >= 3.3.3"			;;
 	    *quadp)							;;
 	    *roofit)							;;
 	    *ruby)	echo -n ", ruby-devel >= 1.8"			;;
