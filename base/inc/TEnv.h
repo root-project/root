@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.11 2006/01/31 11:21:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.12 2006/03/01 12:07:24 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -151,8 +151,8 @@ public:
    virtual void        SetValue(const char *name, Double_t value);
 
    virtual TEnvRec    *Lookup(const char *n);
-   virtual void        ReadFile(const char *fname, EEnvLevel level);
-   virtual void        WriteFile(const char *fname, EEnvLevel level = kEnvAll);
+   virtual Int_t       ReadFile(const char *fname, EEnvLevel level);
+   virtual Int_t       WriteFile(const char *fname, EEnvLevel level = kEnvAll);
    virtual void        Save();
    virtual void        SaveLevel(EEnvLevel level);
    virtual void        Print(Option_t *option="") const;

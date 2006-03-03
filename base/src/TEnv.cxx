@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.25 2006/01/31 11:21:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.26 2006/03/01 12:07:24 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -530,6 +530,7 @@ TEnvRec *TEnv::Lookup(const char *name)
    // Loop over all resource records and return the one with name.
    // Return 0 in case name is not in the resoucre table.
 
+   if (!fTable) return 0;
    return (TEnvRec*) fTable->FindObject(name);
 }
 
@@ -556,6 +557,8 @@ void TEnv::PrintEnv(EEnvLevel level) const
 {
    // Print all resources for a certain level (global, user, local, changed).
 
+   if (!fTable) return;
+
    TIter next(fTable);
    TEnvRec *er;
    static const char *lc[] = { "Global", "User", "Local", "Changed" };
@@ -567,31 +570,47 @@ void TEnv::PrintEnv(EEnvLevel level) const
 }
 
 //______________________________________________________________________________
-void TEnv::ReadFile(const char *fname, EEnvLevel level)
+Int_t TEnv::ReadFile(const char *fname, EEnvLevel level)
 {
    // Read and parse the resource file for a certain level.
+   // Returns -1 on case of error, 0 in case of success.
+
+   if (!fname || !strlen(fname)) {
+      Error("ReadFile", "no file name specified");
+      return -1;
+   }
 
    FILE *ifp;
    if ((ifp = fopen(fname, "r"))) {
       TReadEnvParser rp(this, ifp, level);
       rp.Parse();
       fclose(ifp);
+      return 0;
    }
+
+   // no Error() here since we are allowed to try to read from a non-existing
+   // file (like ./.rootrc, $HOME/.rootrc, etc.)
+   return -1;
 }
 
 //______________________________________________________________________________
-void TEnv::WriteFile(const char *fname, EEnvLevel level)
+Int_t TEnv::WriteFile(const char *fname, EEnvLevel level)
 {
    // Write resourse records to file fname for a certain level. Use
-   // level kEnvAll to write all resources.
+   // level kEnvAll to write all resources. Returns -1 on case of error,
+   // 0 in case of success.
 
    if (!fname || !strlen(fname)) {
       Error("WriteFile", "no file name specified");
-      return;
+      return -1;
+   }
+
+   if (!fTable) {
+      Error("WriteFile", "TEnv table is empty");
+      return -1;
    }
 
    FILE *ofp;
-
    if ((ofp = fopen(fname, "w"))) {
       TIter next(fTable);
       TEnvRec *er;
@@ -599,8 +618,11 @@ void TEnv::WriteFile(const char *fname, EEnvLevel level)
          if (er->fLevel == level || level == kEnvAll)
             fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
                     er->fValue.Data());
-   } else
-      Error("WriteFile", "cannot open %s for writing", fname);
+      return 0;
+   }
+
+   Error("WriteFile", "cannot open %s for writing", fname);
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -626,6 +648,11 @@ void TEnv::SaveLevel(EEnvLevel level)
 
    if (fRcName == "") {
       Error("SaveLevel", "no resource file name specified");
+      return;
+   }
+
+   if (!fTable) {
+      Error("SaveLevel", "TEnv table is empty");
       return;
    }
 
