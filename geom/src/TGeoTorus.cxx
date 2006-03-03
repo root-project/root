@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.30 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.31 2006/02/13 12:12:32 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -392,7 +392,8 @@ Double_t TGeoTorus::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, 
       // find first crossing with inner torus
       dd = ToBoundary(pt,dir, fRmin);
       // find exit distance from inner bounding ring
-      dring = TGeoTubeSeg::DistFromInsideS(pt,dir, fR-fRmin, fR+fRmin, fRmin,c1,s1,c2,s2,cm,sm,cdfi);
+      if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(point,dir,fR-fRmin,fR+fRmin, fRmin, c1,s1,c2,s2,cm,sm,cdfi);            
+      else        dring = TGeoTube::DistFromInsideS(point,dir,fR-fRmin,fR+fRmin, fRmin);
       if (dd<dring) return (snext+dd);
       // we were exiting a hole
       return TGeoShape::Big();
