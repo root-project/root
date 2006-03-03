@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.3 2005/12/13 10:12:02 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.4 2006/02/26 16:09:24 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -96,6 +96,16 @@ TXSocket::TXSocket(const char *url,
          : TSocket(), fMode(m), fSessionID(psid), fAlias(alias), fASem(0), fISem(0)
 {
    // Constructor
+   // Open the connection to a remote XrdProofd instance and start a PROOF
+   // session.
+   // The mode 'm' indicates the role of this connection:
+   //     'a'      Administrator; used by an XPD to contact the head XPD
+   //     'i'      Internal; used by a TXProofServ to call back its creator
+   //              (see XrdProofUnixConn)
+   //     'C'      PROOF manager: open connection only (do not start a session)
+   //     'M'      Client contacting a top master
+   //     'm'      Top master contacting a submaster
+   //     's'      Master contacting a slave
 
    // Enable tracing in the XrdProof client. if not done already
    eDest.logger(&eLogger);
@@ -152,8 +162,10 @@ TXSocket::TXSocket(const char *url,
 
    if (url) {
 
-      // Create connection
-      fConn = new XrdProofConn(url, m, psid, capver, this);
+      // Create connection (for managers the type of the connection is the same
+      // as for top masters)
+      char md = (m != 'C') ? m : 'M';
+      fConn = new XrdProofConn(url, md, psid, capver, this);
       if (!fConn || !(fConn->IsValid())) {
          if (fConn->GetServType() != XrdProofConn::kSTProofd)
              Error("TXSocket", "severe error occurred while opening a connection"
@@ -162,7 +174,7 @@ TXSocket::TXSocket(const char *url,
       }
 
       // Create new proofserv if not client manager or administrator or internal mode
-      if (m == 'm' || m == 's' || (m == 'M' && fConn->GetLogConnID() != 0)) {
+      if (m == 'm' || m == 's' || m == 'M') {
          // We attach or create
          if (!Create()) {
             // Failure

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.4 2006/02/26 16:09:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.5 2006/03/01 15:46:12 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -91,7 +91,7 @@ Int_t TXProofMgr::Init(Int_t)
    // even when it matches the default value
    TString u = fUrl.GetUrl(kTRUE);
 
-   if (!(fSocket = new TXSocket(u,'M')) || !(fSocket->IsValid())) {
+   if (!(fSocket = new TXSocket(u,'C')) || !(fSocket->IsValid())) {
       if (!fSocket || !(fSocket->IsServProofd()))
          Error("Init", "while opening the connection to %s - exit", u.Data());
       if (fSocket && fSocket->IsServProofd())

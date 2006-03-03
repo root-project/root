@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.1 2005/12/10 16:51:57 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -106,9 +106,6 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
 
    // Fill-in entries from the official list
    if (gROOT->GetListOfProofs()) {
-      // Notify
-      Printf("//");
-      Printf("// Found %d open sessions", gROOT->GetListOfProofs()->GetSize());
       // Loop over
       TIter nxp(gROOT->GetListOfProofs());
       TVirtualProof *p = 0;

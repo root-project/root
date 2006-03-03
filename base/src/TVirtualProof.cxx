@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.2 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.3 2006/01/17 09:55:38 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TVirtualProof.h"
 
 TVirtualProof *gProof = 0;
@@ -73,8 +74,9 @@ TVirtualProof *TVirtualProof::Open(const char *cluster, const char *conffile,
 
       TVirtualProof *proof = 0;
 
+      // If the master was specified as "", try to get the localhost FQDN
       if (!strlen(cluster))
-         cluster = "proof://localhost";
+         cluster = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
 
       TUrl u(cluster);
       // in case user gave as url: "machine.dom.ain", replace
