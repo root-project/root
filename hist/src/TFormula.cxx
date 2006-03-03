@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.114 2006/02/02 16:26:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.115 2006/02/23 12:01:48 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -387,7 +387,6 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
 
    TClass *ns = (spaceName.Length()) ? gROOT->GetClass(spaceName) : 0;
-
    TMethodCall *method = new TMethodCall();
    if (ns) {
       method->Init(ns,functionName,proto);
@@ -396,7 +395,6 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    if (method->IsValid()) {
-
       if (method->ReturnType() == TMethodCall::kOther) {
          /*
            Error("Compile",
@@ -418,7 +416,6 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
          fExpr[fNoper] = method->GetMethod()->GetPrototype();
          SetAction(fNoper, kFunctionCall, fFunctions.GetLast()*1000 + nargs);
          fNoper++;
-
          return true;
       }
    }
@@ -2949,7 +2946,7 @@ void TFormula::Print(Option_t *) const
    //MI change
    //
    if (fNOperOptimized>0){
-      Printf("Optimized expresion");
+      Printf("Optimized expression");
       for (i=0;i<fNOperOptimized;i++) {
          Printf(" fExpr[%d] = %s\t\t  action = %d action param = %d ",
             i,(const char*)fExprOptimized[i],GetActionOptimized(i),GetActionParamOptimized(i));
