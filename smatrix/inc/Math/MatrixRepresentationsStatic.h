@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.1 2005/12/07 16:44:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.1 2006/02/08 14:45:35 moneta Exp $
 // Authors: L. Moneta, J. Palacios    2006  
 
 #ifndef ROOT_Math_MatrixRepresentationsStatic_h
@@ -102,39 +102,50 @@ namespace ROOT {
 	}
       }
       int operator()(unsigned int i, unsigned int j) const { return off[i][j]; }
+      int apply(unsigned int i) const { return this->operator()(i/D, i%D); }
       int off[D][D];
     };
 
     // offset specializations for small matrix sizes
 
     int off2[2][2] = { { 0 , 1 } , { 1 , 2 }  };
+    int ind2[4] = { 0 , 1  ,  1 , 2   };
     template<>
     struct RowOffsets<2> {
-      int operator()(unsigned int i, unsigned int j) const { return off2[i][j]; }
+      inline int operator()(unsigned int i, unsigned int j) const { return off2[i][j]; }
+      inline int apply(unsigned int i) const { return this->operator()(i/2, i%2); }
     };
 
     int off3[3][3] = { { 0 , 1 , 3 } , { 1 , 2 , 4 } , { 3 , 4 , 5 }  };
+    int ind3[9] = { 0 , 1 , 3 , 1 , 2 , 4 , 3 , 4 , 5   };
     template<>
     struct RowOffsets<3> {
-      int operator()(unsigned int i, unsigned int j) const { return off3[i][j]; }
+      inline int operator()(unsigned int i, unsigned int j) const { return off3[i][j]; }
+      inline int apply(unsigned int i) const { return ind3[i]; }
     };
 
     int off4[4][4] = { { 0 , 1 , 3 , 6 } , { 1 , 2 , 4 , 7 } , { 3 , 4 , 5 , 8 } , { 6 , 7 , 8 , 9 }  };
+    int ind4[16] = { 0 , 1 , 3 , 6 ,  1 , 2 , 4 , 7  ,  3 , 4 , 5 , 8  ,  6 , 7 , 8 , 9   };
     template<>
     struct RowOffsets<4> {
-      int operator()(unsigned int i, unsigned int j) const { return off4[i][j]; }
+      inline int operator()(unsigned int i, unsigned int j) const { return off4[i][j]; }
+      inline int apply(unsigned int i) const { return ind4[i]; }
     };
 
     int off5[5][5] = { { 0 , 1 , 3 , 6 , 10 } , { 1 , 2 , 4 , 7 , 11 } , { 3 , 4 , 5 , 8 , 12 } , { 6 , 7 , 8 , 9 , 13 } , { 10 , 11 , 12 , 13 , 14 }  };                       
+    int ind5[25] = { 0 , 1 , 3 , 6 , 10 ,  1 , 2 , 4 , 7 , 11 ,  3 , 4 , 5 , 8 , 12 ,  6 , 7 , 8 , 9 , 13 ,  10 , 11 , 12 , 13 , 14   };                       
     template<>
     struct RowOffsets<5> {
-      int operator()(unsigned int i, unsigned int j) const { return off5[i][j]; }
+      inline int operator()(unsigned int i, unsigned int j) const { return off5[i][j]; }
+      inline int apply(unsigned int i) const { return ind5[i]; }
     };
 
     int off6[6][6] = { { 0 , 1 , 3 , 6 , 10 , 15 } , { 1 , 2 , 4 , 7 , 11 , 16 } , { 3 , 4 , 5 , 8 , 12 , 17 } , { 6 , 7 , 8 , 9 , 13 , 18 } , { 10 , 11 , 12 , 13 , 14 , 19 } , { 15 , 16 , 17 , 18 , 19 , 20 }  };
+    int ind6[36] = { 0 , 1 , 3 , 6 , 10 , 15 , 1 , 2 , 4 , 7 , 11 , 16 ,  3 , 4 , 5 , 8 , 12 , 17 ,  6 , 7 , 8 , 9 , 13 , 18 ,  10 , 11 , 12 , 13 , 14 , 19 ,  15 , 16 , 17 , 18 , 19 , 20   };
     template<>
     struct RowOffsets<6> {
-      int operator()(unsigned int i, unsigned int j) const { return off6[i][j]; }
+      inline int operator()(unsigned int i, unsigned int j) const { return off6[i][j]; }
+      inline int apply(unsigned int i) const { return ind6[i]; }
     };
 
 
@@ -153,14 +164,19 @@ namespace ROOT {
         return fArray[fOffsets(i,j)];
       }
 
-      inline T& operator[](unsigned int i) { return operator()(i/D, i%D); }
+      inline T& operator[](unsigned int i) { 
+	return fArray[fOffsets.apply(i) ];
+	//return operator()(i/D, i%D); 
+      }
 
       inline const T& operator[](unsigned int i) const {
-        return operator()(i/D, i%D);
+	return fArray[fOffsets.apply(i) ];
+        //return operator()(i/D, i%D);
       }
 
       inline T apply(unsigned int i) const {
-        return operator()(i/D, i%D);
+	return fArray[fOffsets.apply(i) ];
+        //return operator()(i/D, i%D);
       }
 
       inline T* Array() { return fArray; }  
@@ -206,6 +222,7 @@ namespace ROOT {
 
     private:
       T fArray[kSize];
+
       RowOffsets<D> fOffsets;
     };
 
