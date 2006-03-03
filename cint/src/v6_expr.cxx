@@ -1849,6 +1849,15 @@ G__value G__getitem(char *item)
     G__var_type = 'p';
     /* variable */
     result3=G__getvariable(item,&known,&G__global,G__p_local);
+    if (!known && -1!=result3.tagnum && result3.obj.i == 0) {
+       // this is "a.b", we know "a", but it has no "b" - there is no use
+       // in looking at other places.
+        if(G__noerr_defined==0 && G__definemacro==0)
+            return G__interactivereturn();
+        else 
+            return(G__null);
+    }
+
     /* function */
     if(known==0) {
       G__var_typeB = store_var_typeB;
@@ -1913,23 +1922,7 @@ G__value G__getitem(char *item)
         if(G__noerr_defined==0) {
           
           if(G__definemacro==0) {
-            char *pxx;
             G__warnundefined(item);
-            pxx = strstr(item,"::");
-            if(!pxx || pxx==item) {
-              pxx = strchr(item,'(');
-              if(pxx) {
-                *pxx = 0;
-                if((0==G__const_noerror&&!G__asm_wholefunction)
-                   && (!G__no_exec_compile || G__asm_noverflow)
-                   ) {
-                  G__fprinterr(G__serr,"Possible candidates are...\n");
-                  if('$'==item[0]) G__display_proto(G__serr,item+1);
-                  else             G__display_proto(G__serr,item);
-                }
-                *pxx = '(';
-              }
-            }
             result3=G__interactivereturn();
           }
           else {

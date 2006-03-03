@@ -380,6 +380,9 @@ void G__set_class_autoloading_table(char *classname,char *libname)
 
    char *p = 0;
    if((p=strchr(classname,'<'))) {
+      // If the class is a template instantiation we need
+      // to also register the template itself so that the
+      // properly recognize it.
       char *buf = new char[strlen(classname)+1];
       strcpy(buf,classname);
       buf[p-classname] = '\0';

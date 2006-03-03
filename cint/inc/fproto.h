@@ -95,9 +95,11 @@ struct G__var_array* G__incmemvar G__P((struct G__var_array* memvar,int* pindex,
 int G__initstruct G__P((char *new_name));
 int G__ignoreinit G__P((char *new_name));
 int G__listfunc G__P((FILE *fp,int access,char* fname,struct G__ifunc_table *ifunc));
+int G__listfunc_pretty G__P((FILE *fp,int access,char* fname,struct G__ifunc_table *ifunc,char friendlyStyle));
 int G__showstack G__P((FILE *fout));
 void G__display_note G__P((void));
 int G__display_proto G__P((FILE *fout,char *string));
+int G__display_proto_pretty G__P((FILE *fout,char *string,char friendlyStyle));
 int G__display_newtypes G__P((FILE *fout,char *string));
 int G__display_class G__P((FILE *fout,char *name,int base,int start));
 int G__display_typedef G__P((FILE *fout,char *name,int startin));

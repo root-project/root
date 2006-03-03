@@ -383,6 +383,8 @@ class vector {
 #endif
   size_type size(void) const ;
   size_type max_size(void) const ;
+  void resize(size_type sz) ;
+  void resize(size_type sz, T c) ;
   size_type capacity(void) const ;
   bool empty(void) const ;
   T& operator[](size_type n) ;

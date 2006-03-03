@@ -151,6 +151,14 @@ int G__findfuncposition(char *func,int *pline,int *pfnum)
 ****************************************************************/
 int G__display_proto(FILE *fp,char *func)
 {
+   return G__display_proto_pretty(fp,func,0);
+}
+
+/****************************************************************
+* G__display_proto_pretty()
+****************************************************************/
+int G__display_proto_pretty(FILE *fp,char *func, char friendlyStyle)
+{
   char funcname[G__LONGLINE];
   char scope[G__LONGLINE];
   char temp[G__LONGLINE];
@@ -189,10 +197,10 @@ int G__display_proto(FILE *fp,char *func)
   i=strlen(funcname);
   while(i&&(isspace(funcname[i-1])||'('==funcname[i-1])) funcname[--i]='\0';
   if(i) {
-    if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc)) return(1);
+    if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc,friendlyStyle)) return(1);
   }
   else  {
-    if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc))return(1);
+    if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc,friendlyStyle))return(1);
   }
   if(-1!=tagnum) {
     int i1;
@@ -200,11 +208,11 @@ int G__display_proto(FILE *fp,char *func)
     for(i1=0;i1<baseclass->basen;i1++) {
       ifunc = G__struct.memfunc[baseclass->basetagnum[i1]];
       if(i) {
-        if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc)) 
+        if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc,friendlyStyle)) 
           return(1);
       }
       else  {
-        if(G__listfunc(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc))
+        if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc,friendlyStyle))
           return(1);
       }
     }

@@ -170,6 +170,8 @@ class list {
   void insert(iterator position,size_type n,const T& x);
   void push_front(const T& x);
   void push_back(const T& x);
+  void resize(size_type n);
+  void resize(size_type n, T v);
   void erase(iterator position);
   void erase(iterator first,iterator last);
   void clear() ;

@@ -1324,7 +1324,7 @@ int G__main(int argc,char **argv)
     return(EXIT_SUCCESS);
   }
 #endif
-  
+
   optind--;
   if(G__debugtrace!=0) G__fprinterr(G__serr,"PRE-RUN END\n");
 

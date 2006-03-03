@@ -333,6 +333,14 @@ int G__display_friend(FILE *fp,G__friendtag*friendtag)
 ***********************************************************************/
 int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
 {
+   return G__listfunc_pretty(fp,access,fname,ifunc,0);
+}
+
+/***********************************************************************
+* void G__listfunc_pretty
+***********************************************************************/
+int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *ifunc, char friendlyStyle)
+{
   int i,n;
   char temp[G__ONELINE];
   char msg[G__LONGLINE];
@@ -341,17 +349,25 @@ int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
   
   if(!ifunc) ifunc = G__p_ifunc;
   
-  sprintf(msg,"%-15sline:size busy function type and name  ","filename");
-  if(G__more(fp,msg)) return(1);
+  bool showHeader = !friendlyStyle;
+  showHeader |= (ifunc->allifunc>0 && ifunc->pentry[0]->filenum>=0); // if we need to display filenames
 
-  if(-1!=ifunc->tagnum) {
-    sprintf(msg,"(in %s)\n",G__struct.name[ifunc->tagnum]);
-    if(G__more(fp,msg)) return(1);
+  if (showHeader) {
+     if (!friendlyStyle || -1==ifunc->tagnum) {
+        sprintf(msg,"%-15sline:size busy function type and name  ","filename");
+        if(G__more(fp,msg)) return(1);
+     }
+     if(-1!=ifunc->tagnum) {
+       sprintf(msg,"(in %s)\n",G__struct.name[ifunc->tagnum]);
+       if(G__more(fp,msg)) return(1);
+     }
+     else {
+       if(G__more(fp,"\n")) return(1);
+     }
   }
-  else {
-    if(G__more(fp,"\n")) return(1);
-  }
-  
+
+  const char* parentname = (-1==ifunc->tagnum)? "" : G__struct.name[ifunc->tagnum];
+
   /***************************************************
    * while interpreted function table list exists
    ***************************************************/
@@ -408,8 +424,10 @@ int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
 #endif
         }
         else {
-          sprintf(msg,"%-15s%4d:%-3d%3d " ,"(compiled)" ,0,0 ,ifunc->busy[i]);
-          if(G__more(fp,msg)) return(1);
+          if (!friendlyStyle) {
+            sprintf(msg,"%-15s%4d:%-3d%3d " ,"(compiled)" ,0,0 ,ifunc->busy[i]);
+            if(G__more(fp,msg)) return(1);
+          }
         }
         
         if(ifunc->hash[i])
@@ -459,6 +477,10 @@ int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
           strcat(msg,"...(");
         }
         else {
+          if (friendlyStyle) {
+             sprintf(msg,"%s::",parentname);
+             if(G__more(fp,msg)) return(1);
+          }
           sprintf(msg,"%s(",ifunc->funcname[i]);
         }
         if(G__more(fp,msg)) return(1);

@@ -236,11 +236,11 @@ int G__splitmessage(char *item)
     result = G__getexpr(buf);
     if(result.type) {
       G__fprinterr(G__serr,
-         "Error: Failed to evaluate class member '%s' (%s)",p,item[0]=='$'?item+1:item);
+         "Error: Failed to evaluate class member '%s' (%s)\n",p,item[0]=='$'?item+1:item);
     }
     else {
       G__fprinterr(G__serr,
-         "Error: Failed to evaluate %s",item[0]=='$'?item+1:item);
+         "Error: Failed to evaluate %s\n",item[0]=='$'?item+1:item);
     }
   }
   free((void*)buf);
