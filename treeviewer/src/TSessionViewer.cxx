@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.56 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.57 2006/03/01 12:08:43 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2953,10 +2953,9 @@ void TSessionViewer::ReadConfiguration(const char *filename)
       delete fViewerEnv;
    fViewerEnv = new TEnv();
 
-   if (filename)
-      fViewerEnv->ReadFile(filename, kEnvUser);
-   else
-      fViewerEnv->ReadFile(fConfigFile, kEnvUser);
+   const char *fn = (filename && strlen(filename)) ? filename : fConfigFile.Data();
+
+   fViewerEnv->ReadFile(fn, kEnvUser);
 
    Bool_t bval = (Bool_t)fViewerEnv->GetValue("Option.Feedback", 1);
    if (bval)
