@@ -3583,7 +3583,10 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@gfalincdir@|$gfalincdir|"            \
     -e "s|@gfallib@|$gfallib|"                  \
     -e "s|@gfallibdir@|$gfallibdir|"            \
-    -e "s|@globusincdir@|$globusincdir|"        \
+        < Makefile.tmp > Makefile.tmpp
+mv Makefile.tmpp Makefile.tmp
+
+sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@globuslib@|$globuslib|"              \
     -e "s|@globuslibdir@|$globuslibdir|"        \
     -e "s|@glbextracflags@|$glbextracflags|"    \
@@ -3599,10 +3602,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@ldapincdir@|$ldapincdir|"            \
     -e "s|@ldaplib@|$ldaplib|"                  \
     -e "s|@ldaplibdir@|$ldaplibdir|"            \
-        < Makefile.tmp > Makefile.tmpp
-mv Makefile.tmpp Makefile.tmp
-
-sed -e "s|@ldflags@||"                          \
+    -e "s|@ldflags@||"                          \
     -e "s|@libdir@|$libdir|"                    \
     -e "s|@macrodir@|$macrodir|"                \
     -e "s|@mandir@|$mandir|"                    \
@@ -3650,7 +3650,10 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@shiftlib@|$shiftlib|"                \
     -e "s|@shiftlibdir@|$shiftlibdir|"          \
     -e "s|@shiftcflags@|$shiftcflags|"          \
-    -e "s|@srcdir@|$srcdir|"                    \
+        < Makefile.tmp > Makefile.tmpp
+mv Makefile.tmpp Makefile.tmp
+
+sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@srpincdir@|$srpincdir|"              \
     -e "s|@srplib@|$srplib|"                    \
     -e "s|@srplibdir@|$srplibdir|"              \
