@@ -525,7 +525,7 @@ redhat:
 	build/package/lib/makerpmspec.sh
 	@echo "To build the packages, make a gzipped tar ball of the sources"
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
-	  echo "called root-v$$vers.source.tar.gz and put it in you RPM "
+	  echo "called root_v$$vers.source.tar.gz and put it in you RPM "
 	@echo "source directory (default /usr/src/rpm/SOURCES) and the "
 	@echo "spec-file root.spec in your RPM spec directory"
 	@echo "(default /usr/src/RPM/SPECS). If you want to build outside"
