@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.7 2006/01/06 15:09:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.8 2006/01/27 16:10:20 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -712,7 +712,7 @@ void ReflexSimple2Test::testFreeFunctions() {
   CPPUNIT_ASSERT(o);
   int arg = 2;
   std::vector<void*> argVec;
-  for (int i = 0; i < 20; ++i) argVec.push_back(&arg);
+  for (int j = 0; j < 20; ++j) argVec.push_back(&arg);
   int ret = Object_Cast<int>(o.Invoke("funWithManyArgs",argVec));
   CPPUNIT_ASSERT_EQUAL(ret,40);
 

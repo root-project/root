@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -14,9 +14,9 @@
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Base::Base( const Type &    baseType,
-                          OffsetFunction  OffsetFP,
+                          OffsetFunction  offsetfp,
                           unsigned int    modifiers )
-   : fOffsetFP( OffsetFP ),
+   : fOffsetFP( offsetfp ),
      fModifiers( modifiers ),
      fBaseType( Type() ),
      fBaseClass( 0 ) {

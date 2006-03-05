@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.4 2006/01/06 09:01:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.5 2006/01/06 10:26:24 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -180,7 +180,7 @@ namespace a {
     // Special cases
     void (* ff1(void) )(void) {return s0; }          // returning a function pointer 
     bool (* ff2(double) )(bool)  {return b1; }       // returning a function pointer
-    float (* ff3(float(*f)(int)) )(int) {return f; } // returning and receiving a function pointer
+    float (* ff3(float(*ff)(int)) )(int) {return ff; } // returning and receiving a function pointer
   };
 }
 

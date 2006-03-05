@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -451,9 +451,9 @@ inline ROOT::Reflex::Member ROOT::Reflex::Typedef::DataMemberAt( size_t nth ) co
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::DataMemberByName( const std::string & Name ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::DataMemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
-   if ( ForwardStruct()) return fTypedefType.DataMemberByName( Name );
+   if ( ForwardStruct()) return fTypedefType.DataMemberByName( name );
    return Member();
 }
 
@@ -523,10 +523,10 @@ inline ROOT::Reflex::Member ROOT::Reflex::Typedef::FunctionMemberAt( size_t nth 
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::FunctionMemberByName( const std::string & Name,
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::FunctionMemberByName( const std::string & name,
                                                                          const Type & signature ) const {
 //-------------------------------------------------------------------------------
-   if ( ForwardStruct()) return fTypedefType.FunctionMemberByName( Name, signature );
+   if ( ForwardStruct()) return fTypedefType.FunctionMemberByName( name, signature );
    return Member();
 }
 
@@ -604,10 +604,10 @@ inline bool ROOT::Reflex::Typedef::IsVirtual() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Typedef::MemberByName( const std::string & Name,
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::MemberByName( const std::string & name,
                                                                  const Type & signature ) const {
 //-------------------------------------------------------------------------------
-   if ( ForwardStruct()) return fTypedefType.MemberByName( Name, signature );
+   if ( ForwardStruct()) return fTypedefType.MemberByName( name, signature );
    return Member();
 }
 

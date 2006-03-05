@@ -3,21 +3,21 @@
 
 #include "ClassM.h"
 
-static int i = 97;
+static int s_i = 97;
 
 class ClassA : public ClassM {
  public:
   template < class T > ClassA & operator=( const T & ) { return * this; }
-  ClassA() : fA(i) {}            // This is the "constructor"
+  ClassA() : fA(s_i) {}            // This is the "constructor"
   virtual ~ClassA() {}            // This is the 'destructor'
   operator int() { return 1; }    // This is operator int()
   int a() { return fA; }         // This is a comment of method a()
   void          // This the previous line 
   setA(int v) {  // This is a comment of method setA()         
     fA = v;
-    ClassA a;
+    ClassA aa;
     int i = 3;
-    a = i;
+    aa = i;
   }             // End of body
   void dummy(int,float); // Dummy comment
  private:
