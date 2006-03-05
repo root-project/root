@@ -1,4 +1,4 @@
-# Module.mk for reflex module
+# Module.mk for reflex module 
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 29/2/2000
@@ -49,6 +49,7 @@ SHEXT    = .bat
 else
 REFLEXLL = -Llib -lReflex -ldl
 CINTEXLL = -Llib -lCintex
+SHEXT    = .sh
 endif
 
 GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py 
@@ -106,7 +107,8 @@ check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT)
 		@cintex/test/test_all$(SHEXT)  $(PYTHONINCDIR)
 
 $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(REFLEXLL)
+		echo $(REFLEXLL)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< "$(REFLEXLL)"
 
 $(CINTEXTESTDICTO): $(CINTEXTESTDICTS)
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
