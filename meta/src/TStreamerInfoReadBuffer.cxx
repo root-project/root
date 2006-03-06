@@ -950,7 +950,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   //  Backward compatibility. Some TStreamerElement's where without
                   //  Streamer but were not removed from element list
                   if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {
-                     b.SetBufferOffset(start);  //thre is no byte count
+                     b.SetBufferOffset(start);  //there is no byte count
+                  } else if (vers==0) {
+                     b.SetBufferOffset(start);  //there is no byte count
                   }
                }
                if (pstreamer == 0) {
