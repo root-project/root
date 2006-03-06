@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.35 2005/11/16 20:11:59 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.36 2006/02/03 21:55:39 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -2493,14 +2493,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    TString className = DetermineClass(varName);
 
-   Bool_t fVarIsPointer = className[className.Length() - 1] == '*';
-
-   // frodo: I shouldn't have to do this, but for some reason now I have to
-   //        otherwise the varptr->[TAB] won't work    :(
-   if (className[className.Length()-1] == '*')
-      className[className.Length()-1] = 0;
-
-   if (className.Length() < 1) {
+   if (className.IsNull() || className == "*") {
       // this will happen if "varName" is a fundamental type (as opposed to class type).
       // or a pointer to a pointer.
       // or a function pointer.
@@ -2508,6 +2501,13 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          << endl;
       return 0;                 //* RETURN *//
    }
+
+   Bool_t fVarIsPointer = className[className.Length() - 1] == '*';
+
+   // frodo: I shouldn't have to do this, but for some reason now I have to
+   //        otherwise the varptr->[TAB] won't work    :(
+   if (fVarIsPointer)
+      className[className.Length()-1] = 0;
 
    //
    // frodo: I wasn't able to put the automatic "." to "->" replacing working
