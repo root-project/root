@@ -1,5 +1,6 @@
 //
 {
+  gSystem->Load("libPhysics");
   gSystem->Load("all_C");
   TFile* tf = new TFile("test.root");
   new TCanvas;
