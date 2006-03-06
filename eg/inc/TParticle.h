@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.11 2005/03/03 11:37:40 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.12 2006/01/18 16:47:43 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -130,8 +130,10 @@ public:
   Double_t       Pt              ()            const { return TMath::Sqrt(fPx*fPx+fPy*fPy);                    }
   Double_t       Energy          ()            const { return fE;                                              }
   Double_t       Eta             ()            const
-  { if (TMath::Abs(P() != fPz)) return 0.5*TMath::Log((P()+fPz)/(P()-fPz));
-      else                      return 1.e30;
+  {
+    Double_t pmom = P();
+    if (pmom != fPz) return 0.5*TMath::Log((pmom+fPz)/(pmom-fPz));
+    else             return 1.e30;
   }
 
   Double_t         Phi   () const { return TMath::Pi()+TMath::ATan2(-fPy,-fPx); }  // note that Phi() returns an angle between 0 and 2pi
