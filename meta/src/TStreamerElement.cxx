@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.85 2005/12/14 16:49:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.86 2006/02/22 19:52:08 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -388,13 +388,24 @@ void TStreamerElement::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       //NOTE that when reading, one cannot use Class()->ReadBuffer
+      // TBuffer::Class methods used for reading streamerinfos from SQL database
+      // Any changes of class structure should be reflected by them starting from version 4
+      
+      R__b.ClassBegin(TStreamerElement::Class(), R__v);
+      R__b.ClassMember("TNamed");
       TNamed::Streamer(R__b);
+      R__b.ClassMember("fType","Int_t");
       R__b >> fType;
+      R__b.ClassMember("fSize","Int_t");
       R__b >> fSize;
+      R__b.ClassMember("fArrayLength","Int_t");
       R__b >> fArrayLength;
+      R__b.ClassMember("fArrayDim","Int_t");
       R__b >> fArrayDim;
+      R__b.ClassMember("fMaxIndex","Int_t", 5);
       if (R__v == 1) R__b.ReadStaticArray(fMaxIndex);
       else           R__b.ReadFastArray(fMaxIndex,5);
+      R__b.ClassMember("fTypeName","TString");
       fTypeName.Streamer(R__b);
       if (fType==11&&(fTypeName=="Bool_t"||fTypeName=="bool")) fType = 18;
       if (R__v > 1) {
@@ -419,6 +430,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
          if (TestBit(kHasRange)) GetRange(GetTitle(),fXmin,fXmax,fFactor);
       }
       //R__b.CheckByteCount(R__s, R__c, TStreamerElement::IsA());
+      R__b.ClassEnd(TStreamerElement::Class());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
       TStreamerElement::Class()->WriteBuffer(R__b,this);
@@ -571,6 +583,10 @@ void TStreamerBase::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      
+      R__b.ClassBegin(TStreamerBase::Class(), R__v);
+      
+      R__b.ClassMember("TStreamerElement");
       TStreamerElement::Streamer(R__b);
       // If the class owning the TStreamerElement and the base class are not
       // loaded, on the file their streamer info might be in the following 
@@ -578,12 +594,14 @@ void TStreamerBase::Streamer(TBuffer &R__b)
       // yet emulated.
       fBaseClass = (TClass*)-1; 
       if (R__v > 2) {
+         R__b.ClassMember("fBaseVersion","Int_t");
          R__b >> fBaseVersion;
       } else {
          // could have been: fBaseVersion = GetClassPointer()->GetClassVersion();
          fBaseClass = gROOT->GetClass(GetName());         
          fBaseVersion = fBaseClass->GetClassVersion();
       }
+      R__b.ClassEnd(TStreamerBase::Class());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
       TStreamerBase::Class()->WriteBuffer(R__b,this);
