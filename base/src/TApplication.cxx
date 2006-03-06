@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.71 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.72 2006/02/28 16:48:17 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -162,11 +162,11 @@ TApplication::TApplication(const char *appClassName,
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-# ifdef TTFFONTDIR
+#ifdef TTFFONTDIR
                                           TTFFONTDIR);
-# else
+#else
                                           "$(ROOTSYS)/fonts");
-# endif
+#endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
       // Check for use of DFSG - fonts
       if (!ttfont)

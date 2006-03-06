@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.9 2005/10/28 15:09:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.10 2006/02/28 16:48:17 rdm Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -441,11 +441,11 @@ void TTF::SetTextFont(Font_t fontnumber)
    if (fontid < 0 || fontid > 14) fontid = 0;
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-# ifdef TTFFONTDIR
+#ifdef TTFFONTDIR
                                        TTFFONTDIR);
-# else
+#else
                                        "$(ROOTSYS)/fonts");
-# endif
+#endif
    char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
    if (ttfont) {
       delete [] ttfont;
