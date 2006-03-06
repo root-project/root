@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cylindrical3D.h,v 1.2 2006/02/02 20:15:39 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cylindrical3D.h,v 1.2 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -122,7 +122,7 @@ public :
       std::pow(std::numeric_limits<Scalar>::epsilon(),static_cast<Scalar>(-.6)); 
     if (rho > 0) {
       Scalar z_scaled(fZ/rho);
-      if (fabs(z_scaled) < big_z_scaled) {
+      if (std::fabs(z_scaled) < big_z_scaled) {
         return std::log(z_scaled+std::sqrt(z_scaled*z_scaled+1)); 
       } else {
         return  fZ>0 ? std::log(2.0*z_scaled) : -std::log(-2.0*z_scaled);

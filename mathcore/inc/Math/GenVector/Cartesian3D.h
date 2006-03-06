@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.3 2005/12/09 15:57:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Cartesian3D.h,v 1.4 2005/12/09 17:53:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -112,7 +112,7 @@ public :
       std::pow(std::numeric_limits<Scalar>::epsilon(),static_cast<Scalar>(-.6)); 
     if (rho > 0) {
       Scalar z_scaled(fZ/rho);
-      if (fabs(z_scaled) < big_z_scaled) {
+      if (std::fabs(z_scaled) < big_z_scaled) {
         return std::log(z_scaled+std::sqrt(z_scaled*z_scaled+1)); 
       } else {
         return  fZ>0 ? std::log(2.0*z_scaled) : -std::log(-2.0*z_scaled);
