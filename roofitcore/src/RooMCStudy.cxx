@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.29 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.30 2005/06/20 15:44:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -294,6 +294,7 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
     cout << "sample " << nSamples << endl ;
     
     RooDataSet* genSample = 0;
+    Bool_t existingData = kFALSE ;
     if (generate) {
       // Generate sample
       Int_t nEvt(nEvtPerSample) ;
@@ -322,6 +323,7 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
       
       // Load sample from internal list
       genSample = (RooDataSet*) _genDataList.At(nSamples) ;
+      existingData = kTRUE ;
       if (!genSample) {
    	cout << "RooMCStudy::run: WARNING: Sample #" << nSamples << " not loaded, skipping" << endl ;
    	continue ;
@@ -338,13 +340,15 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
     }
     
     // Add to list or delete
-    if (keepGenData) {
-      _genDataList.Add(genSample) ;
-    } else {
-      delete genSample ;
+    if (!existingData) {
+      if (keepGenData) {
+	_genDataList.Add(genSample) ;
+      } else {
+	delete genSample ;
+      }
     }
   }
-  
+
   _canAddFitResults = kFALSE ;
   if (fit) calcPulls() ;
   return kFALSE ;
