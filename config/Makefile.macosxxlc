@@ -69,8 +69,8 @@ F77LIBS       = -lg2c -L/opt/ibmcmp/xlf/8.1/lib \
                 -lxlf90 -lxlomp_ser -lxlfmath
 
 # Override default in Makefile.config
-INSTALL      := cp -pPR
-INSTALLDATA  := cp -pPR
+INSTALL      := /bin/cp -pPR
+INSTALLDATA  := /bin/cp -pPR
 
 # Extras
 ifeq ($(NEEDFINK),yes)

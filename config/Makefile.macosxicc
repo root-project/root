@@ -81,8 +81,8 @@ F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -lifcore
 
 # Override default in Makefile.config
-INSTALL      := cp -pPR
-INSTALLDATA  := cp -pPR
+INSTALL      := /bin/cp -pPR
+INSTALLDATA  := /bin/cp -pPR
 
 # Extras
 ifeq ($(NEEDFINK),yes)
