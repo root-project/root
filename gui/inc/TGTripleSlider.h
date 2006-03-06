@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.h,v 1.1 2006/01/23 16:27:04 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.h,v 1.2 2006/02/23 15:40:30 antcheva Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -109,8 +109,8 @@ protected:
    Int_t            fCz;           // horizontal pointer position in pixel coordinates
    Float_t          fSCz;          // vertical pointer position
    Bool_t           fConstrained;  // kTRUE if pointer is constrained to slider edges
-   Bool_t           fRelative;
-   const TGPicture *fPointerPic;    // picture to draw pointer
+   Bool_t           fRelative;     // kTRUE if pointer position is relative to slider
+   const TGPicture *fPointerPic;   // picture to draw pointer
 
    virtual void     DoRedraw();
    virtual void     SetPointerPos(Int_t z, Int_t opt = 0);
