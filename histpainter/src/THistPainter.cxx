@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.244 2006/02/08 11:01:27 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.245 2006/02/13 09:52:33 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -182,23 +182,47 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    doption.ToLower();
    dsame = kFALSE;
    if (doption.Contains("same")) dsame = kTRUE;
-   xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
+
    dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
-   if (px >= xyaxis-dyaxis && px <= xyaxis && py >puymax && py < puymin) {
-      if (!dsame) {
-         if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
-         else                    gPad->SetSelected(fXaxis);
-         return 0;
+   if (doption.Contains("y+")) {
+      xyaxis = puxmax + Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
+      if (px <= xyaxis+dyaxis && px >= xyaxis && py >puymax && py < puymin) {
+         if (!dsame) {
+            if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
+            else                    gPad->SetSelected(fXaxis);
+            return 0;
+         }
+      }
+   } else {
+      xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
+      if (px >= xyaxis-dyaxis && px <= xyaxis && py >puymax && py < puymin) {
+         if (!dsame) {
+            if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
+            else                    gPad->SetSelected(fXaxis);
+            return 0;
+         }
       }
    }
-   yxaxis = puymin + Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
-   if (yxaxis < puymin) yxaxis = puymin;
+
    dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
-   if (py <= yxaxis+dxaxis && py >= yxaxis && px <puxmax && px > puxmin) {
-      if (!dsame) {
-         if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
-         else                    gPad->SetSelected(fYaxis);
-         return 0;
+   if (doption.Contains("x+")) {
+      yxaxis = puymax - Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
+      if (py >= yxaxis-dxaxis && py <= yxaxis && px <puxmax && px > puxmin) {
+         if (!dsame) {
+            if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
+            else                    gPad->SetSelected(fYaxis);
+            return 0;
+         }
+      }
+   } else {
+      yxaxis = puymin + Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
+      if (yxaxis < puymin) yxaxis = puymin;
+      if (py <= yxaxis+dxaxis && py >= yxaxis && px <puxmax && px > puxmin) {
+         if (!dsame) {
+            if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
+            else                    gPad->SetSelected(fYaxis);
+            return 0;
+         }
       }
    }
 
