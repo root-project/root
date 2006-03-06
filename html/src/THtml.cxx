@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.81 2005/10/13 14:57:53 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.82 2005/12/01 12:11:16 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -500,7 +500,9 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
          // make a link to the description
          classFile << "<!--BEGIN-->" << endl;
          classFile << "<center>" << endl;
-         classFile << "<h1>" << classPtr->GetName() << "</h1>" << endl;
+         classFile << "<h1>"; 
+         ReplaceSpecialChars(classFile, classPtr->GetName());
+         classFile << "</h1>" << endl;
          classFile << "<hr width=300>" << endl;
          classFile << "<!--SDL--><em><a href=\"#" << classPtr->GetName();
          if (IsNamespace(classPtr)) {
@@ -531,11 +533,11 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
 
          // make a link to the '.h' file
-         classFile << "<h2>" << "class <a name=\"" << classPtr->
-            GetName() << "\" href=\"";
-         classFile << GetFileName((const char *) classPtr->
-                                  GetDeclFileName()) << "\"";
-         classFile << ">" << classPtr->GetName() << "</a> ";
+         classFile << "<h2>class <a name=\"" << classPtr->GetName() 
+                   << "\" href=\"";
+         classFile << GetFileName((const char *) classPtr->GetDeclFileName()) << "\">";
+         ReplaceSpecialChars(classFile, classPtr->GetName());
+         classFile << "</a> ";
          
          
          // copy .h file to the Html output directory
@@ -1537,7 +1539,8 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                      out << ":" << method->GetName() << "\" href=\"";
                      out << GetFileName(classPtr->
                                         GetDeclFileName()) << "\">";
-                     out << method->GetName() << "</a>";
+                     ReplaceSpecialChars(out, method->GetName());
+                     out << "</a>";
 
                      strcpy(fLine, method->GetSignature());
                      ExpandKeywords(out, fLine, classPtr, flag);
