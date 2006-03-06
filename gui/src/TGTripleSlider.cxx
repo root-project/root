@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.1 2006/01/23 16:27:04 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.2 2006/02/23 15:40:30 antcheva Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -234,9 +234,9 @@ void TGTripleVSlider::SetConstrained(Bool_t on)
    fConstrained = on;
 
    if (GetPointerPosition() < GetMinPosition()) 
-       SetPointerPos((Int_t)GetMinPosition(), 3);
+      SetPointerPos((Int_t)GetMinPosition(), 3);
    else if (GetPointerPosition() > GetMaxPosition()) 
-       SetPointerPos((Int_t)GetMaxPosition(), 3);
+      SetPointerPos((Int_t)GetMaxPosition(), 3);
 }
 
 //________________________________________________________________________________
@@ -477,9 +477,9 @@ void TGTripleHSlider::SetConstrained(Bool_t on)
    fConstrained = on;
 
    if (GetPointerPosition() < GetMinPosition()) 
-       SetPointerPos((Int_t)GetMinPosition(), 3);
+      SetPointerPos((Int_t)GetMinPosition(), 3);
    else if (GetPointerPosition() > GetMaxPosition()) 
-       SetPointerPos((Int_t)GetMaxPosition(), 3);
+      SetPointerPos((Int_t)GetMaxPosition(), 3);
 }
 
 //________________________________________________________________________________
