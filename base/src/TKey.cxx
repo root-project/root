@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.53 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.54 2006/03/03 20:36:20 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -824,6 +824,25 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       }
    } else {
       cl->Streamer((void*)pobj, *fBufferRef);    //read object
+   }
+
+   if (cl->InheritsFrom(TObject::Class())) {
+      Int_t baseOffset = cl->GetBaseClassOffset(TObject::Class());
+      if (baseOffset==-1) {
+         Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",
+            fClassName.Data());
+      }
+      TObject *tobj = (TObject*)( ((char*)pobj) +baseOffset);
+
+      // See similar adjustments in ReadObj
+      if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
+
+      if (cl == TDirectory::Class()) {
+         TDirectory *dir = dynamic_cast<TDirectory*>(tobj);
+         dir->SetName(GetName());
+         dir->SetTitle(GetTitle());
+         gDirectory->Append(dir);
+      }
    }
 
    CLEAR:
