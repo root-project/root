@@ -1,7 +1,7 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.3 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.4 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and

@@ -1,7 +1,7 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.6 2005/12/12 09:14:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.7 2006/01/06 10:26:24 roiser Exp $
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and

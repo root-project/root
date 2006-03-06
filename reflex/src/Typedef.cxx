@@ -1,7 +1,7 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.cxx,v 1.2 2005/11/03 15:24:40 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.cxx,v 1.3 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
