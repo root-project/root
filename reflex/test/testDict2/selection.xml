@@ -20,6 +20,8 @@
 
   <class name="TT::Outer<TT::A<unsigned long> >"/>
 
+  <class pattern="testclasses::*"/>
+
   <exclusion>
     <class name="TT::Outer<TT::A<unsigned long> >">
       <method name="unwantedFunction"/>
