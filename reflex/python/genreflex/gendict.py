@@ -30,7 +30,7 @@ class genDictionary(object) :
     self.xrefinv    = {}
     self.cppselect  = {} 
     self.last_id    = ''
-    self.transtable = string.maketrans('<>&*,: ().', '__rp__s___')
+    self.transtable = string.maketrans('<>&*,: ().$', '__rp__s___d')
     self.ignoremeth = ('rbegin', 'rend', '_Eq','_Lt', 'value_comp')
     self.x_id       = iter(xrange(sys.maxint))
     self.errors     = 0
@@ -313,7 +313,7 @@ class genDictionary(object) :
     return
 #----------------------------------------------------------------------------------
   def isUnnamedType(self, name) :
-    if name.find('.') != -1 or name.find('$') != -1 : return 1
+    if name and (name.find('.') != -1 or name.find('$') != -1): return 1
     else                                            : return 0
 #----------------------------------------------------------------------------------
   def filefilter(self, attrs):
@@ -486,8 +486,11 @@ class genDictionary(object) :
       cid = attrs['extra']['contid'].upper()
     else :
       cid = getContainerId(clf)[0]
+    notAccessibleType = self.checkAccessibleType(self.xref[attrs['id']])
     if self.isUnnamedType(clf) : 
-      sc += '  ClassBuilder("%s", typeid(Unnamed%s), 0, %s)' % (cls, self.xref[attrs['id']]['elem'], mod)
+      sc += '  ClassBuilder("%s", typeid(Unnamed%s), sizeof(%s), %s)' % ( cls, self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable),mod )
+    elif notAccessibleType :
+      sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s), %s)' % ( cls, self.xref[notAccessibleType]['attrs']['access'].title(), self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable),mod )
     else :
       sc += '  ClassBuilder("%s", typeid(%s), sizeof(%s), %s)' % (cls, cls, cls, mod)
     if 'extra' in attrs :
@@ -497,15 +500,14 @@ class genDictionary(object) :
           sc += '\n  .AddProperty("%s", "%s")' % (pname, pval)
     for b in bases :
       sc += '\n' + self.genBaseClassBuild( clf, b )
-    if not self.isUnnamedType(clf) :
-      for m in members :
-        funcname = 'gen'+self.xref[m]['elem']+'Build'
-        if funcname in dir(self) :
-          line = self.__class__.__dict__[funcname](self, self.xref[m]['attrs'], self.xref[m]['subelems'])
-          if line : sc += '\n' + line 
+    for m in members :
+      funcname = 'gen'+self.xref[m]['elem']+'Build'
+      if funcname in dir(self) :
+        line = self.__class__.__dict__[funcname](self, self.xref[m]['attrs'], self.xref[m]['subelems'])
+        if line : sc += '\n' + line 
     sc += ';\n}\n\n'
     ss = ''
-    if not self.isUnnamedType(clf):
+    if not self.isUnnamedType(clf) and not notAccessibleType:
       ss = '//------Stub functions for class %s -------------------------------\n' % cl
       for m in members :
         funcname = 'gen'+self.xref[m]['elem']+'Def'
@@ -525,7 +527,9 @@ class genDictionary(object) :
     bases = self.getBases( attrs['id'] )
     cls = self.genTypeName(attrs['id'],const=True,colon=True)
     clt = string.translate(str(cls), self.transtable)
-    typ = self.xref[attrs['id']]['elem'].lower()
+    if self.isUnnamedType(cls) and inner : clt = ''
+    xtyp = self.xref[attrs['id']]
+    typ = xtyp['elem'].lower()
     indent = inner * 2 * ' '
     if typ == 'enumeration' :
       c = indent + 'enum %s {};\n' % clt
@@ -543,16 +547,17 @@ class genDictionary(object) :
           c += indent + '%s %s' % ( acc , bname )
           if b is not bases[-1] : c += ', ' 
         c += indent + ' {\n' + indent +'  public:\n'
-      c += indent + '  %s();\n' % (clt)
-      if  self.isClassVirtual( attrs ) :
-        c += indent + '  virtual ~%s() throw();\n' % ( clt )
+      if clt: # and not self.checkAccessibleType(xtyp):
+        c += indent + '  %s();\n' % (clt)
+        if self.isClassVirtual( attrs ) :
+          c += indent + '  virtual ~%s() throw();\n' % ( clt )
       members = attrs.get('members','')
       memList = members.split()
       for m in memList :
         member = self.xref[m]
         if member['elem'] in ('Class','Struct','Union','Enumeration') \
-           and 'access' in member['attrs'] \
-           and member['attrs']['access'] in ('private','protected') :
+           and member['attrs'].get('access') in ('private','protected') \
+           and not self.isUnnamedType(member['attrs'].get('name')):
           cmem = self.genTypeName(member['attrs']['id'],const=True,colon=True)
           if cmem != cls and cmem not in inner_shadows :
             inner_shadows[cmem] = string.translate(str(cmem), self.transtable)
@@ -564,7 +569,7 @@ class genDictionary(object) :
           t = self.genTypeName(a['type'],colon=True,const=True)
           #---- Check for non public types------------------------
           noPublicType = self.checkAccessibleType(self.xref[a['type']])
-          if ( noPublicType ):
+          if ( noPublicType and not self.isUnnamedType(self.xref[a['type']]['attrs'].get('name'))):
             noPubTypeAttrs = self.xref[noPublicType]['attrs']
             cmem = self.genTypeName(noPubTypeAttrs['id'],const=True,colon=True)
             if cmem != cls and cmem not in inner_shadows :
@@ -576,6 +581,9 @@ class genDictionary(object) :
           for ikey in ikeys :      
             if   t.find(ikey) == 0      : t = t.replace(ikey, inner_shadows[ikey])     # change current class by shadow name 
             elif t.find(ikey[2:]) != -1 : t = t.replace(ikey[2:], inner_shadows[ikey]) # idem without leading ::
+          mType = self.xref[a.get('type')]
+          if mType and self.isUnnamedType(mType['attrs'].get('name')) :
+            t = self.genClassShadow(mType['attrs'], inner+1)[:-2]
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
           elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
           else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
@@ -959,6 +967,8 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genMCOBuild(self, type, name, attrs, args):
     id       = attrs['id']
+    if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('name')) or \
+       self.checkAccessibleType(self.xref[attrs['context']]) : return ''
     if type == 'constructor' : returns  = 'void'
     else                     : returns  = self.genTypeName(attrs['returns'])
     mod = self.genModifier(attrs, None)
@@ -1101,6 +1111,8 @@ class genDictionary(object) :
     return 'static void* destructor%s(void * o, const std::vector<void*>&, void *) {\n  ((::%s*)o)->~%s(); return 0;\n}' % ( attrs['id'], cl, attrs['name'] )
 #----------------------------------------------------------------------------------
   def genDestructorBuild(self, attrs, childs):
+    if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('name')) or \
+       self.checkAccessibleType(self.xref[attrs['context']]) : return ''
     mod = self.genModifier(attrs,None)
     id       = attrs['id']
     s = '  .AddFunctionMember(%s, "~%s", destructor%s, 0, 0, %s | DESTRUCTOR )' % (self.genTypeID(id), attrs['name'], attrs['id'], mod)
@@ -1141,6 +1153,7 @@ class genDictionary(object) :
     return '  .AddBase(%s, BaseOffset< %s, %s >::Get(), %s)' %  (self.genTypeID(b['type']), clf, self.genTypeName(b['type'],colon=True), mod)
 #----------------------------------------------------------------------------------
   def enhanceClass(self, attrs):
+    if self.isUnnamedType(attrs['name']) or self.checkAccessibleType(self.xref[attrs['id']]) : return
     # Default constructor
     if 'members' in attrs : members = attrs['members'].split()
     else                  : members = []
@@ -1239,7 +1252,7 @@ class genDictionary(object) :
     s += '  s_funcs.fDelete      = NewDelFunctionsT< %s >::delete_T;\n' % cl
     s += '  s_funcs.fDeleteArray = NewDelFunctionsT< %s >::deleteArray_T;\n' % cl
     s += '  s_funcs.fDestructor  = NewDelFunctionsT< %s >::destruct_T;\n' % cl
-    s += '  return &s_funcs;\n;'
+    s += '  return &s_funcs;\n'
     s += '}\n'
     return s
 #----------------------------------------------------------------------------------
