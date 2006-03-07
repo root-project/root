@@ -4,8 +4,13 @@
 #include "Windows4root.h"
 #endif
 
+#include "Riostream.h"
+
 #include <GL/gl.h>
 #include <GL/glu.h>
+
+#include "TVirtualPS.h"
+#include "gl2ps.h"
 
 #include "THLimitsFinder.h"
 #include "TVirtualGL.h"
@@ -293,6 +298,7 @@ void TGLHistPainter::Paint()
    SetTransformation();
    //Define front point, draw frame and 'profiles'
    fFrontPoint = FrontPoint();
+   if (gVirtualPS) PrintPlot();
    DrawFrame();
    //Surface/lego color
    SetPlotColor();
@@ -313,6 +319,89 @@ void TGLHistPainter::Paint()
    gVirtualX->SelectWindow(gPad->GetPixmapID());
    //Flush pixmap during rotation
    gGLManager->Flush(fGLDevice);
+}
+
+//______________________________________________________________________________
+void TGLHistPainter::PrintPlot()
+{
+   // Generate PS using gl2ps
+
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("% Start gl2ps EPS@");
+   gVirtualPS->PrintStr("newpath gsave save@");
+   Double_t xx[2], yy[2];
+   xx[0] = gPad->GetUxmin();
+   yy[0] = gPad->GetUymin();
+   xx[1] = gPad->GetUxmax();
+   yy[1] = gPad->GetUymax();
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" add exch");
+   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" add exch translate");
+   gVirtualPS->PrintStr("@");
+   GLint vp[4];
+   glGetIntegerv(GL_VIEWPORT,vp);
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->PrintStr(" exch");
+   xx[0] = xx[1];
+   yy[0] = yy[1];
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->PrintStr(" 4 1 roll exch sub 3 1 roll sub");
+   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" sub exch");
+   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" sub exch");
+   gVirtualPS->WriteInteger((Int_t)(vp[3]));
+   gVirtualPS->WriteInteger((Int_t)(vp[2]));
+   gVirtualPS->PrintStr(" 4 1 roll div 3 1 roll exch div exch scale@");
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("countdictstack@");
+   gVirtualPS->PrintStr("mark@");
+   gVirtualPS->PrintStr("/showpage {} def@");
+   
+   // Close the gVirtualPS output stream
+   ofstream *fs = (ofstream*)gVirtualPS->GetStream();
+   fs->close();
+
+   // Generate GL view
+   FILE *output = fopen (gVirtualPS->GetName(), "a");
+   Int_t gl2psFormat;
+   Int_t gl2psSort;
+   gl2psFormat = GL2PS_EPS;
+   gl2psSort = GL2PS_BSP_SORT;
+   Int_t buffsize = 0, state = GL2PS_OVERFLOW;
+		                                                                                     
+   while (state == GL2PS_OVERFLOW) {
+      buffsize += 1024*1024;
+      gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+                      gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
+                      | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
+                      | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
+                      | 0,
+                      GL_RGBA, 0, NULL,0, 0, 0,
+                      buffsize, output, NULL);
+      DrawFrame();
+      //Surface/lego color
+      SetPlotColor();
+      //Call current painting function
+      (this->*fCurrentPainter)();
+      state = gl2psEndPage();
+   }
+   
+   fclose (output);
+   
+   // Restore the gVirtualPS output stream
+   fs = new ofstream(gVirtualPS->GetName(),ios::app);
+   gVirtualPS->SetStream(fs);
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("cleartomark@");
+   gVirtualPS->PrintStr("countdictstack exch sub { end } repeat@");
+   gVirtualPS->PrintStr("restore grestore@");
+   gVirtualPS->PrintStr("% End gl2ps EPS@");
+   
+   glFlush();
 }
 
 //______________________________________________________________________________

@@ -214,6 +214,8 @@ private:
 
    Int_t          FrontPoint()const;
 
+   void           PrintPlot();
+
    void           SetPlotColor()const;
    void           SetCamera()const;
    void           SetTransformation()const;
