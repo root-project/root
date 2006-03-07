@@ -18,9 +18,9 @@ fi
 # adding .d file as target
 isdict=`expr $3 : '.*/G__.*\.cxx'`
 if test $isdict -ne 0 ; then
-   sed -e 's@^\(.*\)\.o:@\1.d \1.cxx:@' -e 's@^#.*$@@' -e '/^$/d' $1.tmp
+   sed -e 's@^\(.*\)\.o[ :]*\(.*\)@\1.d: $\(wildcard \2\)\n\1.cxx: \2@' -e 's@^#.*$@@' -e '/^$/d' $1.tmp
 else
-   sed -e 's@^\(.*\)\.o:@\1.d \1.o:@' -e 's@^#.*$@@' -e '/^$/d' $1.tmp
+   sed -e 's@^\(.*\)\.o[ :]*\(.*\)@\1.d: $\(wildcard \2\)\n\1.o: \2@' -e 's@^#.*$@@' -e '/^$/d' $1.tmp
 fi
 rm -f $1.tmp $1.tmp.bak
 
