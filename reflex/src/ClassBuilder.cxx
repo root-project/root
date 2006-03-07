@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.5 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.6 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,6 +21,109 @@
 #include "Enum.h"
 #include "DataMember.h"
 #include "FunctionMemberTemplateInstance.h"
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ClassBuilder::ClassBuilder( const char * nam, 
+                                          const std::type_info & ti,
+                                          size_t size,
+                                          unsigned int modifiers ) 
+//-------------------------------------------------------------------------------
+  : fClassBuilderImpl( nam, ti, size, modifiers ) { }
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ClassBuilder & 
+ROOT::Reflex::ClassBuilder::AddBase( const Type & bas,
+                                     OffsetFunction offsFP, 
+                                     unsigned int modifiers ) {
+//-------------------------------------------------------------------------------
+   fClassBuilderImpl.AddBase( bas, 
+                              offsFP,
+                              modifiers );
+   return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ClassBuilder & 
+ROOT::Reflex::ClassBuilder::AddDataMember( const Type &  typ,
+                                           const char *  nam,
+                                           size_t        offs,
+                                           unsigned int modifiers ) {
+//-------------------------------------------------------------------------------
+   fClassBuilderImpl.AddDataMember( nam,
+                                    typ,
+                                    offs,
+                                    modifiers );
+   return * this;
+}
+    
+    
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ClassBuilder & 
+ROOT::Reflex::ClassBuilder::AddFunctionMember( const Type & typ,
+                                               const char * nam,
+                                               StubFunction stubFP,
+                                               void * stubCtx,
+                                               const char * params, 
+                                               unsigned int modifiers ) {
+//-------------------------------------------------------------------------------
+   fClassBuilderImpl.AddFunctionMember( nam,
+                                        typ,
+                                        stubFP,
+                                        stubCtx,
+                                        params,
+                                        modifiers );
+   return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ClassBuilder & 
+ROOT::Reflex::ClassBuilder::AddTypedef( const char * typ,
+                                        const char * def ) {
+//-------------------------------------------------------------------------------
+   fClassBuilderImpl.AddTypedef( TypeBuilder( typ ),
+                                 def );
+   return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ClassBuilder & 
+ROOT::Reflex::ClassBuilder::AddTypedef( const Type & typ,
+                                        const char * def ) {
+//-------------------------------------------------------------------------------
+   fClassBuilderImpl.AddTypedef( typ,
+                                 def );
+   return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::ClassBuilder &
+ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
+                                     const char * values,
+                                     const std::type_info * ti ) {
+//-------------------------------------------------------------------------------
+   fClassBuilderImpl.AddEnum( nam, 
+                              values, 
+                              ti );
+   return * this;
+}
+
+
+/*/-------------------------------------------------------------------------------
+  ROOT::Reflex::ClassBuilder &
+  ROOT::Reflex::ClassBuilder::addUnion( const char * nam,
+  const char * values ) {
+//-------------------------------------------------------------------------------
+  fClassBuilderImpl.addUnion( nam, values );
+  return * this;
+  }
+*/
+
 
 //-------------------------------------------------------------------------------
 ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam, 

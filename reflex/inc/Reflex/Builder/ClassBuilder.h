@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -345,34 +345,12 @@ namespace ROOT {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::ClassBuilder::ClassBuilder( const char * nam, 
-                                                 const std::type_info & ti,
-                                                 size_t size,
-                                                 unsigned int modifiers ) 
-//-------------------------------------------------------------------------------
-   : fClassBuilderImpl( nam, ti, size, modifiers ) { }
-    
-
-//-------------------------------------------------------------------------------
 template< class C, class B > 
 inline ROOT::Reflex::ClassBuilder & 
 ROOT::Reflex::ClassBuilder::AddBase( unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddBase( GetType<B>(), 
                               BaseOffset<C,B>::Get(),
-                              modifiers );
-   return * this;
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddBase( const Type & bas,
-                                     OffsetFunction offsFP, 
-                                     unsigned int modifiers ) {
-//-------------------------------------------------------------------------------
-   fClassBuilderImpl.AddBase( bas, 
-                              offsFP,
                               modifiers );
    return * this;
 }
@@ -394,21 +372,6 @@ ROOT::Reflex::ClassBuilder::AddDataMember( const char *  nam,
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddDataMember( const Type &  typ,
-                                           const char *  nam,
-                                           size_t        offs,
-                                           unsigned int modifiers ) {
-//-------------------------------------------------------------------------------
-   fClassBuilderImpl.AddDataMember( nam,
-                                    typ,
-                                    offs,
-                                    modifiers );
-   return * this;
-}
-    
-    
-//-------------------------------------------------------------------------------
 template < class F >
 inline ROOT::Reflex::ClassBuilder & 
 ROOT::Reflex::ClassBuilder::AddFunctionMember( const char * nam,
@@ -428,52 +391,11 @@ ROOT::Reflex::ClassBuilder::AddFunctionMember( const char * nam,
     
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddFunctionMember( const Type & typ,
-                                               const char * nam,
-                                               StubFunction stubFP,
-                                               void * stubCtx,
-                                               const char * params, 
-                                               unsigned int modifiers ) {
-//-------------------------------------------------------------------------------
-   fClassBuilderImpl.AddFunctionMember( nam,
-                                        typ,
-                                        stubFP,
-                                        stubCtx,
-                                        params,
-                                        modifiers );
-   return * this;
-}
-
-
-//-------------------------------------------------------------------------------
 template < typename TD > 
 inline ROOT::Reflex::ClassBuilder &
 ROOT::Reflex::ClassBuilder::AddTypedef( const char * def ) {
 //-------------------------------------------------------------------------------
    fClassBuilderImpl.AddTypedef( TypeDistiller<TD>::Get(),
-                                 def );
-   return * this;
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddTypedef( const char * typ,
-                                        const char * def ) {
-//-------------------------------------------------------------------------------
-   fClassBuilderImpl.AddTypedef( TypeBuilder( typ ),
-                                 def );
-   return * this;
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddTypedef( const Type & typ,
-                                        const char * def ) {
-//-------------------------------------------------------------------------------
-   fClassBuilderImpl.AddTypedef( typ,
                                  def );
    return * this;
 }
@@ -489,30 +411,6 @@ ROOT::Reflex::ClassBuilder::AddEnum( const char * values ) {
                               & typeid(E));
    return * this;
 }
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::ClassBuilder &
-ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
-                                     const char * values,
-                                     const std::type_info * ti ) {
-//-------------------------------------------------------------------------------
-   fClassBuilderImpl.AddEnum( nam, 
-                              values, 
-                              ti );
-   return * this;
-}
-
-
-/*/-------------------------------------------------------------------------------
-  inline ROOT::Reflex::ClassBuilder &
-  ROOT::Reflex::ClassBuilder::addUnion( const char * nam,
-  const char * values ) {
-//-------------------------------------------------------------------------------
-  fClassBuilderImpl.addUnion( nam, values );
-  return * this;
-  }
-*/
 
 
 //-------------------------------------------------------------------------------

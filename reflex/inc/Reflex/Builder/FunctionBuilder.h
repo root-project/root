@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -143,33 +143,6 @@ namespace ROOT {
 } // namespace ROOT
 
 #include "Reflex/Builder/TypeBuilder.h"
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::FunctionBuilder::~FunctionBuilder() {
-//-------------------------------------------------------------------------------
-   FireFunctionCallback( fFunction );
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::FunctionBuilder & 
-ROOT::Reflex::FunctionBuilder::AddProperty( const char * key, 
-                                            const char * value ) {
-//-------------------------------------------------------------------------------
-   fFunction.Properties().AddProperty( key , value );
-   return * this;
-}
-
-
-//-------------------------------------------------------------------------------
-inline ROOT::Reflex::FunctionBuilder & 
-ROOT::Reflex::FunctionBuilder::AddProperty( const char * key, 
-                                            Any value ) {
-//-------------------------------------------------------------------------------
-   fFunction.Properties().AddProperty( key , value );
-   return * this;
-}
-
 
 //-------------------------------------------------------------------------------
 template < typename  F > 
