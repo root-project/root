@@ -76,39 +76,47 @@ char *G__valuemonitor(G__value buf,char *temp)
     break;
     default:
       if(islower(buf.type)) {
-        if('u'==buf.type && -1!=buf.tagnum &&
-           (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
-            strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
-            strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0)) {
-          if(G__in_pause) {
-            char llbuf[100];
-            sprintf(temp,"(%s)" 
-                    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-                                    ,buf.obj.reftype.reftype,0));
-            if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
-              sprintf(llbuf
-          ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
-                      ,(long)llbuf,buf.obj.i);
-              G__getitem(llbuf);
-              strcat(temp,llbuf);
+         if('u'==buf.type && -1!=buf.tagnum && 
+            (G__struct.type[buf.tagnum]=='c' || G__struct.type[buf.tagnum]=='s')) 
+         {
+            if (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
+                strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
+                strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
+               if(G__in_pause) {
+                 char llbuf[100];
+                 sprintf(temp,"(%s)" 
+                         ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                         ,buf.obj.reftype.reftype,0));
+                 if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
+                    sprintf(llbuf
+                           ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
+                           ,(long)llbuf,buf.obj.i);
+                    G__getitem(llbuf);
+                    strcat(temp,llbuf);
+                 }
+                 else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
+                    sprintf(llbuf
+                            ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
+                            ,(long)llbuf,buf.obj.i);
+                    G__getitem(llbuf);
+                    strcat(temp,llbuf);
+                 }
+                 else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
+                    sprintf(llbuf
+                            ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
+                            ,(long)llbuf,buf.obj.i);
+                    G__getitem(llbuf);
+                    strcat(temp,llbuf);
+                 }
+               }
+               else
+                  G__setiparseobject(&buf,temp);
+            } else {
+                sprintf(temp,"(class %s)%ld" 
+                        ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                        ,buf.obj.reftype.reftype,0)
+                        ,buf.obj.i);
             }
-            else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
-              sprintf(llbuf
-          ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
-                      ,(long)llbuf,buf.obj.i);
-              G__getitem(llbuf);
-              strcat(temp,llbuf);
-            }
-            else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
-              sprintf(llbuf
-          ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
-                      ,(long)llbuf,buf.obj.i);
-              G__getitem(llbuf);
-              strcat(temp,llbuf);
-            }
-          }
-          else
-            G__setiparseobject(&buf,temp);
         } else
 #if defined(G__WIN32)
           if (buf.type=='n' && buf.obj.ll<0) 
@@ -138,15 +146,15 @@ char *G__valuemonitor(G__value buf,char *temp)
           else 
 #endif
              if(buf.obj.i<0)
-          sprintf(temp,"(%s)(%ld)" 
-                  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-                                  ,buf.obj.reftype.reftype,0)
-                  ,buf.obj.i);
-        else
-          sprintf(temp,"(%s)%ld" 
-                  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-                                  ,buf.obj.reftype.reftype,0)
-                  ,buf.obj.i);
+                sprintf(temp,"(%s)(%ld)" 
+                        ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                        ,buf.obj.reftype.reftype,0)
+                        ,buf.obj.i);
+             else
+                sprintf(temp,"(%s)%ld" 
+                        ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+                        ,buf.obj.reftype.reftype,0)
+                        ,buf.obj.i);
       }
       else {
         if('C'==buf.type&&G__in_pause && buf.obj.i>0x10000 &&
