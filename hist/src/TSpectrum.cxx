@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.37 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.38 2006/02/27 15:36:15 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -4498,13 +4498,13 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 <!-- */
 // --> End_Html
    int i, j, numberIterations = (int)(7 * sigma + 0.5);
-   float a, b;
+   double a, b;
    int k, lindex, posit, imin, imax, jmin, jmax, lh_gold, priz;
    double lda, ldb, ldc, area, maximum, maximum_decon;
    int xmin, xmax, l, peak_index = 0, size_ext = ssize + 2 * numberIterations, shift = numberIterations;
-   float maxch;
-   float nom, nip, nim, sp, sm, plocha = 0;
-   float m0low=0,m1low=0,m2low=0,m0high=0,m1high=0,m2high=0,l0low=0,l1low=0,l0high=0,l1high=0,detlow,dethigh;   
+   double maxch;
+   double nom, nip, nim, sp, sm, plocha = 0;
+   double m0low=0,m1low=0,m2low=0,m0high=0,m1high=0,m2high=0,l0low=0,l1low=0,l0high=0,l1high=0,detlow,dethigh;   
    if (sigma < 1) {
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
@@ -4821,6 +4821,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    if(lda>threshold)
       lda=threshold;
    lda=lda/100;
+
 //searching for peaks in deconvolved spectrum
    for(i = 1; i < size_ext - 1; i++){
       if(working_space[i] > working_space[i - 1] && working_space[i] > working_space[i + 1]){
