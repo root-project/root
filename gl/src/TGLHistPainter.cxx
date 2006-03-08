@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 
 #ifdef WIN32
 #include "Windows4root.h"
@@ -22,6 +23,11 @@
 #include "TROOT.h"
 #include "TAxis.h"
 #include "TMath.h"
+#include "TFile.h"
+
+#include "TH2.h"
+
+#include "TGLBoundingBox.h"
 #include "TPad.h"
 #include "TH1.h"
 #include "TF3.h"
@@ -58,7 +64,8 @@ TGLHistPainter::TGLHistPainter(TH1 *hist)
                      f2DPass(kFALSE),
                      fTextureName(0),
                      fCurrentPainter(0),
-                     fFrontPoint(2)
+                     fFrontPoint(2),
+                     fZoom(1.)
 {
    //Each TGLHistPainter has default painter as a member
    //to delegate unsupported calls
@@ -88,6 +95,8 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       }
 
       if (!MakeCurrent())return 1000;
+
+      
 
       if (!Select(px, py))
          gPad->SetSelected(gPad);// To avoid TF2 selection
@@ -143,7 +152,20 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kMouseMotion:
          gPad->SetCursor(kRotate);//Does not work for TF2 (?)
          break;
+      case kButton2Down:
+         gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
+         fCurrPos.fX = px;
+         fCurrPos.fY = fViewport[3] - py;
+         break;
+      case kButton2Motion:
+         Pan(px, fViewport[3] - py);
+         break;
+      case kButton2Up:
+         gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
+         break;
       case kKeyPress:
+      case 5:
+      case 6:
          if (fLastOption == kTF3 && (py == kKey_s || py == kKey_S)) {
             if(fTF3Style < kMaple2)
                fTF3Style = EGLTF3Style(fTF3Style + 1);
@@ -153,6 +175,18 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gPad->Modified();
             gPad->Update();
          }
+         if (event == 5 || py == kKey_J || py == kKey_j) {
+            gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
+            fZoom /= 1.2;
+            gGLManager->PaintSingleObject(this);
+            gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
+         } else if (event == 6 || py == kKey_K || py == kKey_k) {
+            gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
+            fZoom *= 1.2;
+            gGLManager->PaintSingleObject(this);
+            gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
+         }
+         break;
       }
    }
 }
@@ -281,6 +315,7 @@ void TGLHistPainter::Paint(Option_t *o)
 void TGLHistPainter::Paint()
 {
    //This function indirectly called via gGLManager->PaintSingleObject
+   
    gPad->SetCopyGLDevice(kTRUE);
    //Calculate translation, frustum.
    CalculateTransformation();
@@ -318,6 +353,29 @@ void TGLHistPainter::Paint()
    DrawAxes();
    gVirtualX->SelectWindow(gPad->GetPixmapID());
    //Flush pixmap during rotation
+   
+ /*  gPad->SetCopyGLDevice(kTRUE);
+   glColor3d(1., 0., 0.);
+   glDisable(GL_CULL_FACE);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glOrtho(-1., 1., -1., 1., -200000., 149999.);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+//   glTranslated(0, 0, -15000.);
+   glBegin(GL_POLYGON);
+   glNormal3d(0.,0., 1);
+   glVertex3d(-0.5, -0.5, 150000.);
+   glVertex3d(0.5, -0.5, 150000.);
+   glVertex3d(0.5, 0.5, 150000.);
+   glVertex3d(-0.5, 0.5, 150000.);
+   glEnd();   
+
+   glFlush();   
+   //Put content of GL buffer into pixmap/DIB
+   gGLManager->ReadGLBuffer(fGLDevice);
+   gGLManager->Flush(fGLDevice);*/
    gGLManager->Flush(fGLDevice);
 }
 
@@ -1034,8 +1092,8 @@ void TGLHistPainter::CalculateTransformation()
 
    fFrustum[0] = maxDim;
    fFrustum[1] = maxDim;
-   fFrustum[2] = maxDim * 0.707;
-   fFrustum[3] = 3 * maxDim;
+   fFrustum[2] = -100 * maxDim;
+   fFrustum[3] = 100 * maxDim;
    fShift = maxDim * 1.5;
 }
 
@@ -1240,7 +1298,7 @@ void TGLHistPainter::SetCamera()const
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   glOrtho(-fFrustum[0], fFrustum[0], -fFrustum[1], fFrustum[1], fFrustum[2], fFrustum[3]);
+   glOrtho(-fFrustum[0] * fZoom, fFrustum[0] * fZoom, - fFrustum[1] * fZoom, fFrustum[1] * fZoom, -200000, 200000);//fFrustum[2], fFrustum[3]);
 
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
@@ -1256,6 +1314,7 @@ void TGLHistPainter::SetTransformation()const
    glRotated(-45., 0., 1., 0.);
    glRotated(-90., 0., 1., 0.);
    glRotated(-90., 1., 0., 0.);
+      glTranslated(-fPan[0], -fPan[1], -fPan[2]);
    glTranslated(-fCenter[0] * fScaleX, -fCenter[1] * fScaleY, -fCenter[2] * fScaleZ);
 }
 
@@ -1929,7 +1988,9 @@ namespace {
             255, 255, 185, 200
            };
 
+
    const UChar_t gDefTexture2[] =
+
            {
           //R    G    B    A
             230, 0,   115, 255,
@@ -1950,6 +2011,24 @@ namespace {
             202, 228, 255, 255
            };
 }
+
+void TGLHistPainter::Pan(Int_t x, Int_t y)
+{
+   Double_t mvMatrix[16] = {0.};
+   glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);
+   Double_t prMatrix[16] = {0.};
+   glGetDoublev(GL_PROJECTION_MATRIX, prMatrix);
+
+   TGLVertex3 start, end;
+   gluUnProject(fCurrPos.fX, fCurrPos.fY, 1., mvMatrix, prMatrix, fViewport, &start.X(), &start.Y(), &start.Z());
+   gluUnProject(x, y, 1., mvMatrix, prMatrix, fViewport, &end.X(), &end.Y(), &end.Z());
+   TGLVector3 delta = start - end;
+   fPan = fPan + delta / 2.;
+   fCurrPos.fX = x, fCurrPos.fY = y;
+//   fFrustum[0] *= 1.2, fFrustum[1] *= 1.2;
+   gGLManager->PaintSingleObject(this);
+}
+
 
 //______________________________________________________________________________
 void TGLHistPainter::SetTexture()

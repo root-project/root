@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.38 2006/02/20 11:02:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.39 2006/02/23 16:44:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TGLSphere.h"
 
 #include "TVirtualPad.h" // Remove when pad removed - use signal
+#include "TVirtualX.h"
 
 #include "TColor.h"
 #include "TError.h"
@@ -100,7 +101,8 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fAcceptedPhysicals(0), 
    fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
-   fGLWindow(0)
+   fGLWindow(0),
+   fGLDevice(-1)
 {
    // Construct the viewer object, with following arguments:
    //    'pad' - external pad viewer is bound to
@@ -109,6 +111,55 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    // Create timer
    fRedrawTimer = new TGLRedrawTimer(*this);
    SetViewport(x, y, width, height);
+}
+
+//______________________________________________________________________________
+TGLViewer::TGLViewer(TVirtualPad * pad) : 
+   fPad(pad),
+   fContextMenu(0),
+   fPerspectiveCameraXOZ(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
+   fPerspectiveCameraYOZ(TGLVector3(0.0, 1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
+   fPerspectiveCameraXOY(TGLVector3(1.0, 0.0, 0.0), TGLVector3(0.0, 0.0,-1.0)), // XOY floor
+   fOrthoXOYCamera(TGLOrthoCamera::kXOY),
+   fOrthoXOZCamera(TGLOrthoCamera::kXOZ),
+   fOrthoZOYCamera(TGLOrthoCamera::kZOY),
+   fCurrentCamera(&fPerspectiveCameraXOZ),
+   fInternalRebuild(kFALSE), 
+   fPostSceneBuildSetup(kTRUE),
+   fAcceptedAllPhysicals(kTRUE),
+   fForceAcceptAll(kFALSE),
+   fInternalPIDs(kFALSE), 
+   fNextInternalPID(1), // 0 reserved
+   fComposite(0), fCSLevel(0),
+   fAction(kCameraNone), fLastPos(0,0), fActiveButtonID(0),
+   fDrawFlags(TGLDrawFlags::kFill, TGLDrawFlags::kLODHigh),
+   fRedrawTimer(0),
+   fLightState(kLightMask), // All on
+   fAxesType(kAxesNone),
+   fReferenceOn(kFALSE),
+   fReferencePos(0.0, 0.0, 0.0),
+   fInitGL(kFALSE),
+   fDebugMode(kFALSE),
+   fAcceptedPhysicals(0), 
+   fRejectedPhysicals(0),
+   fIsPrinting(kFALSE),
+   fGLWindow(0),
+   fGLDevice(fPad->GetGLDevice())
+{
+   //gl-embedded viewer's ctor
+   // Construct the viewer object, with following arguments:
+   //    'pad' - external pad viewer is bound to
+   //    'x', 'y' - initial top left position
+   //    'width', 'height' - initial width/height
+   // Create timer
+   fRedrawTimer = new TGLRedrawTimer(*this);
+   if (fGLDevice != -1) {
+      Int_t viewport[4] = {0};
+      gGLManager->ExtractViewport(fGLDevice, viewport);
+      SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+   }
+   else
+      Error("TGLViewer", "VAH!!! Dermo kakoe!!!\n");
 }
 
 //______________________________________________________________________________
@@ -745,7 +796,7 @@ void TGLViewer::InitGL()
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_CULL_FACE);
    glCullFace(GL_BACK);
-   glClearColor(0.0, 0.0, 0.0, 0.0);
+   glClearColor(0.f, 0.f, 0.f, 1.f);
    glClearDepth(1.0);
    glMaterialf(GL_BACK, GL_SHININESS, 0.0);
    glPolygonMode(GL_FRONT, GL_FILL);
@@ -894,10 +945,11 @@ void TGLViewer::RequestDraw(Short_t LOD)
    // Post request for redraw of viewer at level of detail 'LOD'
    // Request is directed via cross thread gVirtualGL object
    fRedrawTimer->Stop();
+//   std::cout<<"Draw requested\n";
    
    // Ignore request if GL window or context not yet availible - we
    // will get redraw later
-   if (!fGLWindow || !gVirtualGL) {
+   if ((!fGLWindow || !gVirtualGL) && fGLDevice == -1) {
       return;
    }
 
@@ -912,7 +964,10 @@ void TGLViewer::RequestDraw(Short_t LOD)
       return;
    }
    fDrawFlags.SetLOD(LOD);
-   gVirtualGL->DrawViewer(this);
+   if (fGLDevice == -1)
+      gVirtualGL->DrawViewer(this);
+   else
+      gGLManager->DrawViewer(this);
 }
 
 //______________________________________________________________________________
@@ -931,6 +986,12 @@ void TGLViewer::DoDraw()
    }
 
    fRedrawTimer->Stop();
+   
+   if (fGLDevice != -1) {
+      Int_t viewport[4] = {};
+      gGLManager->ExtractViewport(fGLDevice, viewport);
+      SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+   }
 
    TGLStopwatch timer;
    if (gDebug>2) {
@@ -1025,6 +1086,18 @@ void TGLViewer::PreDraw()
    }
 
    MakeCurrent();
+   
+   if (fGLDevice != -1) {
+      //Clear color must be canvas's background color
+      Color_t ci = gPad->GetFillColor();
+      TColor *color = gROOT->GetColor(ci);
+      Float_t sc[3] = {1.f, 1.f, 1.f};
+   
+      if (color)
+         color->GetRGB(sc[0], sc[1], sc[2]);
+   
+      glClearColor(sc[0], sc[1], sc[2], 1.);
+   }
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1035,10 +1108,11 @@ void TGLViewer::PreDraw()
 void TGLViewer::PostDraw()
 {
    // Perform GL work which must be done after each draw of scene
+   glFlush();
    SwapBuffers();
 
    // Flush everything in case picking starts
-   glFlush();
+//   glFlush();
 
    TGLUtil::CheckError("TGLViewer::PostDraw");
 }
@@ -1047,7 +1121,9 @@ void TGLViewer::PostDraw()
 void TGLViewer::MakeCurrent() const
 {
    // Make GL context current
-   fGLWindow->MakeCurrent();
+   if (fGLDevice == -1)
+      fGLWindow->MakeCurrent();
+   else gGLManager->MakeCurrent(fGLDevice);
 
    // Don't call TGLUtil::CheckError() as we do not
    // have to be in GL thread here - GL window will call 
@@ -1063,7 +1139,13 @@ void TGLViewer::SwapBuffers() const
       fScene.CurrentLock() != TGLScene::kSelectLock) {
       Error("TGLViewer::SwapBuffers", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));   
    }
-   fGLWindow->SwapBuffers();
+   if (fGLDevice == -1)
+      fGLWindow->SwapBuffers();
+   else {
+      gGLManager->ReadGLBuffer(fGLDevice);
+      gGLManager->Flush(fGLDevice);
+      gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
+   }
 }
 
 //______________________________________________________________________________
@@ -1083,7 +1165,10 @@ void TGLViewer::RequestSelect(UInt_t x, UInt_t y)
    // TODO: Check only the GUI thread ever enters here & DoSelect.
    // Then TVirtualGL and TGLKernel can be obsoleted.
    TGLRect selectRect(x, y, 3, 3); // TODO: Constant somewhere
-   gVirtualGL->SelectViewer(this, &selectRect); 
+   if (fGLDevice == -1)
+      gVirtualGL->SelectViewer(this, &selectRect);
+   else
+      gGLManager->SelectViewer(this, &selectRect);
 }
 
 //______________________________________________________________________________
@@ -1133,7 +1218,7 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
    // Set viewer viewport (window area) with bottom/left at (x,y), with
    // dimensions 'width'/'height' 
-   if (fScene.IsLocked()) {
+   if (fScene.IsLocked() && fGLDevice == -1) {
       Error("TGLViewer::SetViewport", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
       return;
    }
@@ -1315,6 +1400,9 @@ void TGLViewer::ToggleLight(ELight light)
    }
 
    fLightState ^= light;
+   if (fGLDevice != -1)
+      gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
+      
    RequestDraw();
 }
 
@@ -1356,6 +1444,8 @@ void TGLViewer::SetGuideState(EAxesType axesType, Bool_t referenceOn, const Doub
    fAxesType = axesType;
    fReferenceOn = referenceOn;
    fReferencePos.Set(referencePos[0], referencePos[1], referencePos[2]);
+   if (fGLDevice != -1)
+      gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
    RequestDraw();
 }
 
@@ -1462,27 +1552,42 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    eventSt.fY = py;
 
    switch (event) {
+      case kMouseMotion:
+         eventSt.fCode = kMouseMotion;
+         eventSt.fType = kMotionNotify;
+         HandleMotion(&eventSt);
+         break;
       case kButton1Down:
       case kButton1Up:
       {
          eventSt.fCode = kButton1;
-         eventSt.fType = kButton1Down ? kButtonPress:kButtonRelease;
+         eventSt.fType = event == kButton1Down ? kButtonPress:kButtonRelease;
          HandleButton(&eventSt);
       }
+      break;
       case kButton2Down:
       case kButton2Up:
       {
          eventSt.fCode = kButton2;
-         eventSt.fType = kButton2Down ? kButtonPress:kButtonRelease;
+         eventSt.fType = event == kButton2Down ? kButtonPress:kButtonRelease;
          HandleButton(&eventSt);
       }
+      break;
       case kButton3Down:
+      {
+         eventSt.fState = kKeyShiftMask;
+         eventSt.fCode = kButton1;
+         eventSt.fType = kButtonPress;
+         HandleButton(&eventSt);
+      }
+      break;
       case kButton3Up:
       {
          eventSt.fCode = kButton3;
-         eventSt.fType = kButton3Down ? kButtonPress:kButtonRelease;
+         eventSt.fType = kButtonRelease;//event == kButton3Down ? kButtonPress:kButtonRelease;
          HandleButton(&eventSt);
       }
+      break;
       case kButton1Double:
       case kButton2Double:
       case kButton3Double:
@@ -1491,26 +1596,54 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          eventSt.fType = kButtonDoubleClick;
          HandleDoubleClick(&eventSt);
       }
+      break;
       case kButton1Motion:
       case kButton2Motion:
       case kButton3Motion:
       {
-         eventSt.fCode = kButton1Motion ? kButton1 : kButton2Motion ? kButton2 : kButton3;
+         eventSt.fCode = event == kButton1Motion ? kButton1 : event == kButton2Motion ? kButton2 : kButton3;
          eventSt.fType = kMotionNotify;
          HandleMotion(&eventSt);
       }
+      break;
       case kKeyPress: // We only care about full key 'presses' not individual down/up
       {
          eventSt.fType = kKeyRelease;
-         eventSt.fCode = px; // px contains key code - need modifiers from somewhere
+         eventSt.fCode = py; // px contains key code - need modifiers from somewhere
          HandleKey(&eventSt);
       }
+      break;
+      case 5://trick :)
+         //
+         if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
+            if (fGLDevice != -1) {
+               gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
+               gVirtualX->SetDrawMode(TVirtualX::kCopy);
+            }
+            RequestDraw();
+         }
+         break;
+      case 6://trick :)
+         if (CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
+            if (fGLDevice != -1) {
+               gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
+               gVirtualX->SetDrawMode(TVirtualX::kCopy);
+            }
+            RequestDraw();
+         }
+         break;
+      case 7://trick :)
+         eventSt.fState = kKeyShiftMask;
+         eventSt.fCode = kButton1;
+         eventSt.fType = kButtonPress;
+         HandleButton(&eventSt);
+         break;
       default: 
       {
-         Error("TGLViewer::ExecuteEvent", "invalid event type");
+        // Error("TGLViewer::ExecuteEvent", "invalid event type");
       }
    }
-};
+}
 
 //______________________________________________________________________________
 Bool_t TGLViewer::HandleEvent(Event_t *event)
@@ -1556,7 +1689,7 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
          return kFALSE;
       }
    }
-   
+
    // Button DOWN
    if (event->fType == kButtonPress) {
       Bool_t grabPointer = kFALSE;
@@ -1612,7 +1745,7 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
          // Note: Modifiers (ctrl/shift) disabled as fState doesn't seem to
          // have correct modifier flags with mouse wheel under Windows..
          case(kButton4): {
-            // Zoom out (adjust camera FOV)
+               // Zoom out (adjust camera FOV)
             if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
             }
@@ -1627,6 +1760,8 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
          }
       }
       fAction = kCameraNone;
+      if (fGLDevice != -1)
+         gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
    }
 
    return kTRUE;
@@ -1679,11 +1814,14 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
       }
       return kFALSE;
    }
-
+   
    char tmp[10] = {0};
    UInt_t keysym = 0;
 
-   gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
+   if (fGLDevice == -1)
+      gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
+   else
+      keysym = event->fCode;
    
    Bool_t redraw = kFALSE;
 
@@ -1755,9 +1893,12 @@ Bool_t TGLViewer::HandleKey(Event_t *event)
          Info("OpenGL viewer FORCED rebuild", "");
          RebuildScene();
       }
+   default:;
    }
 
    if (redraw) {
+      if (fGLDevice != -1)
+         gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
       RequestDraw();
    }
    
@@ -1786,7 +1927,7 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
    Int_t yDelta = event->fY - fLastPos.fY;
    
    // If no current camera action give to scene to pass on to manipulator
-   if (fAction == kNone) {
+   if (fAction == kNone/* && fGLDevice == -1*/) {
       MakeCurrent();
       processed = fScene.HandleMotion(*event, *fCurrentCamera);
 
@@ -1807,6 +1948,11 @@ Bool_t TGLViewer::HandleMotion(Event_t * event)
    fLastPos.fY = event->fY;
    
    if (processed) {
+      if (fGLDevice != -1) {
+         gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
+         gVirtualX->SetDrawMode(TVirtualX::kCopy);
+      }
+ 
       RequestDraw();
    }
    

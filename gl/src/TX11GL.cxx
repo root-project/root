@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.13 2006/02/06 16:15:13 couet Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.14 2006/02/07 14:18:46 couet Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -21,6 +21,8 @@
 
 #include "TVirtualViewer3D.h"
 #include "TVirtualX.h"
+#include "TGLViewer.h"
+#include "TGLManip.h"
 #include "TX11GL.h"
 #include "TError.h"
 #include "TROOT.h"
@@ -556,12 +558,14 @@ void TX11GLManager::DeleteGLContext(Int_t ctxInd)
    ctx.fWindowIndex = ctxInd;
 }
 
+//______________________________________________________________________________
 Int_t TX11GLManager::GetVirtualXInd(Int_t ctxInd)
 {
    //Returns index appropriate for gVirtualX
    return fPimpl->fGLContexts[ctxInd].fPixmapIndex;
 }
 
+//______________________________________________________________________________
 void TX11GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
 {
    //Returns current sizes of gl pixmap
@@ -576,20 +580,6 @@ void TX11GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
 }
 
 //______________________________________________________________________________
-void TX11GLManager::DrawViewer(TVirtualViewer3D *vv)
-{
-   //
-   vv->DrawViewer();
-}
-
-//______________________________________________________________________________
-TObject *TX11GLManager::Select(TVirtualViewer3D *vv, Int_t x, Int_t y)
-{
-   //
-   return vv->SelectObject(x, y);
-}
-
-//______________________________________________________________________________
 void TX11GLManager::PaintSingleObject(TVirtualGLPainter *p)
 {
    //
@@ -600,4 +590,22 @@ void TX11GLManager::PrintViewer(TVirtualViewer3D *vv)
 {
    //
    vv->PrintObjects();
+}
+
+//______________________________________________________________________________
+void TX11GLManager::DrawViewer(TVirtualViewer3D *viewer)
+{
+   viewer->DoDraw();
+}
+
+//______________________________________________________________________________
+Bool_t TX11GLManager::SelectViewer(TVirtualViewer3D *viewer, const TGLRect *rect)
+{
+   return viewer->DoSelect(*rect);
+}
+
+//______________________________________________________________________________
+Bool_t TX11GLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
+{
+   return manip->Select(*camera, *rect, *sceneBox);
 }

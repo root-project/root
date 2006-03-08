@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.9 2006/01/30 17:42:05 rdm Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 
 class TBuffer3D;
 class TVirtualPad;
+class TGLRect;
 
 class TVirtualViewer3D : public TObject
 {
@@ -68,6 +69,9 @@ public:
 
    virtual TObject *SelectObject(Int_t, Int_t){return 0;}
    virtual void   DrawViewer(){}
+
+   virtual void DoDraw(){}
+   virtual Bool_t DoSelect(const TGLRect &){return kFALSE;}
 
    virtual void PrintObjects(){}
 

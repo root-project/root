@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.9 2005/11/17 14:43:17 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.10 2006/02/06 16:48:12 couet Exp $
 // Author: Valeriy Onuchin(TGWin32GL)/ Timur Pocheptsov (TGWin32GLManager)
 
 /*************************************************************************
@@ -587,18 +587,6 @@ void TGWin32GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
 }
 
 //______________________________________________________________________________
-void TGWin32GLManager::DrawViewer(TVirtualViewer3D *vv)
-{
-   vv->DrawViewer();
-}
-
-//______________________________________________________________________________
-TObject *TGWin32GLManager::Select(TVirtualViewer3D *vv, Int_t x, Int_t y)
-{
-   return vv->SelectObject(x, y);
-}
-
-//______________________________________________________________________________
 void TGWin32GLManager::PaintSingleObject(TVirtualGLPainter *p)
 {
    p->Paint();
@@ -608,4 +596,22 @@ void TGWin32GLManager::PaintSingleObject(TVirtualGLPainter *p)
 void TGWin32GLManager::PrintViewer(TVirtualViewer3D *vv)
 {
    vv->PrintObjects();
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::DrawViewer(TVirtualViewer3D *viewer)
+{
+   viewer->DoDraw();
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32GLManager::SelectViewer(TVirtualViewer3D *viewer, const TGLRect *rect)
+{
+   return viewer->DoSelect(*rect);
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32GLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
+{
+   return manip->Select(*camera, *rect, *sceneBox);
 }

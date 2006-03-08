@@ -20,6 +20,14 @@
 #include "TGLUtil.h"
 #endif
 
+#ifndef ROOT_TPoint
+#include "TPoint.h"
+#endif
+
+#ifndef ROOT_TGLOrthoCamera
+#include "TGLOrthoCamera.h"
+#endif
+
 class TString;
 class TAxis;
 class TF3;
@@ -148,7 +156,11 @@ private:
    std::vector<UChar_t> fTexture;
    void (TGLHistPainter::*fCurrentPainter)()const;
    mutable Int_t        fFrontPoint;
-
+   
+   Double_t             fZoom;
+   TGLVertex3           fPan;
+   TPoint               fCurrPos;
+   
 public:
    TGLHistPainter(TH1 *hist);
    ~TGLHistPainter();
@@ -221,6 +233,8 @@ private:
    void           SetTransformation()const;
    void           ClearBuffers()const;
 
+   
+   void           Pan(Int_t newX, Int_t newY);
    Bool_t         Select(Int_t x, Int_t y)const;
    void           SelectAxes(Int_t front, Int_t x, Int_t y)const;
 

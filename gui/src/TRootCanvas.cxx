@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.91 2006/01/10 09:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.92 2006/02/06 16:46:41 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -274,13 +274,13 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
       newpos = y - page;
       if (newpos < 0) newpos = 0;
       fCanvas->fCanvasWindow->SetVsbPosition(newpos);
-      return kTRUE;
+//      return kTRUE;
    }
    if (event->fCode == kButton5) {
       // scroll down
       newpos = fCanvas->fCanvasWindow->GetVsbPosition() + page;
       fCanvas->fCanvasWindow->SetVsbPosition(newpos);
-      return kTRUE;
+//      return kTRUE;
    }
    return fCanvas->HandleContainerButton(event);
 }
@@ -1321,7 +1321,6 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 void TRootCanvas::ShowEditor(Bool_t show)
 {
    // Show or hide side frame.
-
    TVirtualPad *savedPad = 0;
    savedPad = (TVirtualPad *) gPad;
    gPad = Canvas();
@@ -1490,8 +1489,12 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
 
    if (event->fType == kButtonPress) {
       fButton = button;
-      if (button == kButton1)
-         fCanvas->HandleInput(kButton1Down, x, y);
+      if (button == kButton1) {
+         if (event->fState & kKeyShiftMask)
+            fCanvas->HandleInput(EEventType(7), x, y);
+         else
+            fCanvas->HandleInput(kButton1Down, x, y);
+      }
       if (button == kButton2)
          fCanvas->HandleInput(kButton2Down, x, y);
       if (button == kButton3) {
@@ -1500,6 +1503,10 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
       }
 
    } else if (event->fType == kButtonRelease) {
+      if (button == kButton4)
+         fCanvas->HandleInput(EEventType(5), x, y);//hack
+      if (button == kButton5)
+         fCanvas->HandleInput(EEventType(6), x, y);//hack
       if (button == kButton1)
          fCanvas->HandleInput(kButton1Up, x, y);
       if (button == kButton2)
@@ -1585,6 +1592,8 @@ Bool_t TRootCanvas::HandleContainerMotion(Event_t *event)
       fCanvas->HandleInput(kMouseMotion, x, y);
    if (fButton == kButton1)
       fCanvas->HandleInput(kButton1Motion, x, y);
+   if (fButton == kButton2)
+      fCanvas->HandleInput(kButton2Motion, x, y);
 
    return kTRUE;
 }

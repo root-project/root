@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.22 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.24 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -190,7 +190,9 @@ private:
 
 protected:
    TGLWindow * fGLWindow;    //! remove - replace with TGLManager
-
+   //NEW
+   Int_t       fGLDevice; //!for embedded gl viewer
+   //NEW
    // Overloadable 
    virtual void PostSceneBuildSetup();
    virtual void SelectionChanged(); // *SIGNAL*
@@ -198,6 +200,7 @@ protected:
 
 public:
    TGLViewer(TVirtualPad * pad, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   TGLViewer(TVirtualPad * pad);
    virtual ~TGLViewer();
 
    // TVirtualViewer3D interface
@@ -212,6 +215,8 @@ public:
    virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
+   
+   Int_t   GetDev()const{return fGLDevice;}
 
    // External GUI component interface
    void SetDrawStyle(TGLDrawFlags::EStyle style);

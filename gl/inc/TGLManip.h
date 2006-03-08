@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.8 2006/02/21 16:39:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.9 2006/02/23 16:44:51 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -12,6 +12,9 @@
 #ifndef ROOT_TGLManip
 #define ROOT_TGLManip
 
+#ifndef ROOT_TVirtualGL
+#include "TVirtualGL.h"
+#endif
 #ifndef ROOT_TPoint
 #include "TPoint.h"
 #endif
@@ -44,8 +47,7 @@ class TGLViewer;
 // some common mouse action handling/tracking.                          //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLManip // TODO Should derive from TGLDrawable or TGLPhysicalShape
-{
+class TGLManip : public TVirtualGLManip {
 protected:
    TGLPhysicalShape * fShape;             //! manipulated shape
    UInt_t             fSelectedWidget;    //! active width (axis) component

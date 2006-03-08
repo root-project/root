@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.7 2006/01/12 16:56:08 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.8 2006/02/06 16:48:12 couet Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -86,8 +86,10 @@ public:
 
    //functions to switch between threads in win32
    //used by viewer
-   void     DrawViewer(TVirtualViewer3D *vv);
-   TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y);
+   void     DrawViewer(TVirtualViewer3D *glv);
+   Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
+   Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
+
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PrintViewer(TVirtualViewer3D *vv);
 

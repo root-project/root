@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.102 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.103 2005/11/28 13:50:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1158,13 +1158,21 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          while ((tc = (TCanvas *)next()))
             tc->Update();
       }
+      
+      if (pad->GetGLDevice() != -1)
+         fSelected->ExecuteEvent(event, px, py);
 
       break;   // don't want fPadSave->cd() to be executed at the end
 
    case kButton2Motion:
-      break;
-
+      //was empty!
    case kButton2Up:
+      if (fSelected) {
+         gPad = fSelectedPad;
+
+         fSelected->ExecuteEvent(event, px, py);
+         RunAutoExec();
+      }
       break;
 
    case kButton2Double:
@@ -1196,22 +1204,40 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
 
    case kKeyPress:
-
-      // find pad in which input occured
-      pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
-
-      gPad = pad;   // don't use cd() because we won't draw in pad
+      if (!fSelectedPad || !fSelected) return;
+      gPad = fSelectedPad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
-
       fSelected->ExecuteEvent(event, px, py);
 
       RunAutoExec();
 
       break;
+   case 7:
+      // Try to select
+      pad = Pick(px, py, prevSelObj);
 
-   default:
+      if (!pad) return;
+
+      EnterLeave(prevSelPad, prevSelObj);
+
+      gPad = pad;   // don't use cd() we will use the current
+                    // canvas via the GetCanvas member and not via
+                    // gPad->GetCanvas
+      fSelected->ExecuteEvent(event, px, py);
+      RunAutoExec();
+
       break;
+   default:
+      //kButton4/kButton5 for embedded gl/ glhistpainter
+      //5 and 6
+      if (event == 5 || event == 6)
+      {
+         pad = Pick(px, py, prevSelObj);
+         if (!pad) return;
+         
+         gPad = pad;
+         fSelected->ExecuteEvent(event, px, py);
+      }
    }
 
    if (fPadSave && event != kButton2Down)

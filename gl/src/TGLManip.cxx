@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.8 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.cxx,v 1.9 2006/02/23 16:44:52 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -151,6 +151,9 @@ Bool_t TGLManip::HandleMotion(const Event_t & event, const TGLCamera & camera, c
 
    // TODO: Again very ugly cross thread gVirtual GL call requires passing viewer
    //
+   if (gGLManager)
+      return gGLManager->SelectManip(this, &camera, &selectRect, &sceneBox);
+      
    return gVirtualGL->SelectManip(this, &camera, &selectRect, &sceneBox);
 }
 

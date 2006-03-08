@@ -65,8 +65,8 @@
 #pragma link C++ class TGLPolyMarker;
 #pragma link C++ class TGLCylinder;
 #pragma link C++ class TGLSphere;
-#pragma link C++ class TGLPixmap;
 #pragma link C++ class TGLHistPainter;
+#pragma link C++ class TGLViewerEditor;
 #ifndef _WIN32
 #pragma link C++ class TX11GL;
 #pragma link C++ class TX11GLManager;

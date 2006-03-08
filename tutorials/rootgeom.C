@@ -1,6 +1,7 @@
 void rootgeom()
 {
 //--- Definition of a simple geometry
+// gStyle->SetCanvasPreferGL(true);
    gSystem->Load("libGeom");
    TGeoManager *geom = new TGeoManager("simple1", "Simple geometry");
    
@@ -128,6 +129,6 @@ void rootgeom()
    //#Viewer3D.DefaultDrawOption:   ogl
    
    geom->SetVisLevel(4);
-   top->Draw();
+   top->Draw("ogle");
 }   
    

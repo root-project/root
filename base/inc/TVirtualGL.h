@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.27 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.28 2006/02/06 16:15:12 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -174,10 +174,6 @@ public:
 R__EXTERN TVirtualGL *(*gPtr2VirtualGL)();
 #endif
 
-//This class (and its descendants) in future will replace (?)
-//TVirtualGL/TGLKernel/TGWin32GL/TGX11GL
-
-
 class TVirtualGLPainter {
 public:
    virtual ~TVirtualGLPainter(){}
@@ -185,6 +181,18 @@ public:
 
    ClassDef(TVirtualGLPainter, 0); // Interface for OpenGL painter
 };
+
+//We need this class to implement TGWin32GLManager's SelectManip
+class TVirtualGLManip {
+public:
+   virtual ~TVirtualGLManip(){}
+   virtual Bool_t Select(const TGLCamera & camera, const TGLRect & rect, const TGLBoundingBox & sceneBox) = 0;
+      
+   ClassDef(TVirtualGLManip, 0); //Interface for GL manipulator
+};
+
+//This class (and its descendants) in future will replace (?)
+//TVirtualGL/TGLKernel/TGWin32GL/TGX11GL
 
 class TGLManager : public TNamed {
 public:
@@ -221,7 +229,10 @@ public:
 
    //functions to switch between threads in win32
    virtual void     DrawViewer(TVirtualViewer3D *vv) = 0;
-   virtual TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y) = 0;
+   //
+   virtual Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect) = 0;
+   virtual Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox) = 0;
+   //
    virtual void     PaintSingleObject(TVirtualGLPainter *) = 0;
    //EPS/PDF output
    virtual void     PrintViewer(TVirtualViewer3D *vv) = 0;

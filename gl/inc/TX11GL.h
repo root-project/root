@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.9 2006/02/06 16:15:13 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.10 2006/02/07 14:18:45 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -93,7 +93,10 @@ public:
 
    //used by viewer
    void     DrawViewer(TVirtualViewer3D *vv);
-   TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y);
+   //
+   Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
+   Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
+   //
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PrintViewer(TVirtualViewer3D *vv);
 

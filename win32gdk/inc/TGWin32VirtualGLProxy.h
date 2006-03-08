@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.15 2006/01/26 11:59:42 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.16 2006/02/06 16:48:12 couet Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -147,7 +147,8 @@ public:
    void     Flush(Int_t ctxInd);
    void     DeleteGLContext(Int_t devInd);
    void     DrawViewer(TVirtualViewer3D *vv);
-   TObject* Select(TVirtualViewer3D *vv, Int_t x, Int_t y);
+   Bool_t   SelectViewer(TVirtualViewer3D *viewer, const TGLRect *selRect);
+   Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PrintViewer(TVirtualViewer3D *vv);
 
