@@ -10,6 +10,11 @@ include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
 
+ifeq ($(PLATFORM),macosx) 
+CXXFLAGS+= -g
+endif
+
+
 
 TESTSMATRIXOBJ     = testSMatrix.$(ObjSuf)
 TESTSMATRIXSRC     = testSMatrix.$(SrcSuf)
@@ -70,4 +75,4 @@ distclean:      clean
 
 
 .$(SrcSuf).$(ObjSuf):
-	$(CXX) -g $(CXXFLAGS) -c $<
+	$(CXX)  $(CXXFLAGS) -c $<
