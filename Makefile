@@ -294,7 +294,11 @@ endif
 ##### Utilities #####
 
 ROOTCINTTMP   = $(ROOTCINTTMPEXE) $(addprefix -,$(ROOTDICTTYPE))
+ifeq ($(PLATFORM),macosx)
+MAKEDEP       = build/unix/depend_macosx.sh
+else
 MAKEDEP       = build/unix/depend.sh
+endif
 MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      = build/unix/makedist.sh
 MAKEDISTSRC   = build/unix/makedistsrc.sh
