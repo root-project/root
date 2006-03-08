@@ -3349,7 +3349,7 @@ void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
       default:
         /* questionable */
 #ifndef G__OLDIMPLEMENTATION2191
-        if((param_type=='Y'||param_type=='1'||0==libp->para[0].obj.i)&&
+        if((param_type=='Y'||param_type=='1')&&
            (isupper(formal_type) || 'a'==formal_type)) {
           funclist->p_rate[i] = G__STDCONVMATCH;
         }
