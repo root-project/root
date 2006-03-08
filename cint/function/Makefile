@@ -4,19 +4,13 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += mytest longArgTest
+TEST_TARGETS += longArgTest overloadResolution
 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
-testWithFailure:
 
 ifeq ($(FAIL),)
 longArgTest:
@@ -25,3 +19,8 @@ else
 longArgTest: longArgTest.log
 	$(TestDiff)
 endif
+
+overloadResolution.log: TheClass_h.$(DllSuf)
+
+overloadResolution: overloadResolution.log
+	$(TestDiff)
