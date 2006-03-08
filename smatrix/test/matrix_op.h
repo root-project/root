@@ -161,8 +161,8 @@ void testATBA_S(const A & a, const B & b, double & time, C & result) {
       //result = Transpose(a) * b * a;  
       //result = a * b * Transpose(a);  
       //result = a * b * a;  
-      result  = b * Transpose(a);
-      result = a * result; 
+      C tmp = b * Transpose(a);
+      result = a * tmp; 
     }
 }
 
@@ -179,6 +179,19 @@ void testATBA_S2(const A & a, const B & b, double & time, C & result) {
       //result = a * result; 
     }
 }
+
+template<class A, class C> 
+void testMT_S(const A & a, double & time, C & result) {  
+  test::Timer t(time,"Transp");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      //result = Transpose(a) * b * a;  
+      //result = a * b * Transpose(a);  
+      //result = a * b * a;  
+      result  = Transpose(a);
+    }
+}
+
 
 // for root
 
@@ -236,8 +249,8 @@ void testATBA_T(const A & a, const B & b, double & time, C & result) {
   for (int l = 0; l < NLOOP; l++) 	
     {
       A a2 = a; a2.T();
-      //result = a2 * b * a;  
       result = a * b * a2;  
+      //result = b * a2;  
     }
 }
 
@@ -252,6 +265,17 @@ void testATBA_T2(const A & a, const B & b, double & time, C & result) {
       result = result.Similarity(a); 
     }
 }
+
+template<class A, class C> 
+void testMT_T(const A & a, double & time, C & result) {  
+  test::Timer t(time,"Transp");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      result  = a; 
+      result = result.T();
+    }
+}
+
  
 // for clhep
 

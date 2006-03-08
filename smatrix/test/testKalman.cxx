@@ -119,10 +119,8 @@ int test_smatrix_kalman() {
       MnSymMatrixNN Rinv; 
       MnMatrixMN K; 
       MnSymMatrixMM C; 
-      //MnMatrixNM tmp2; 
-      MnMatrixMM tmp2; 
       MnVectorN vtmp1; 
-      MnVectorN vtmp; 
+      MnVectorN vtmp;
 
       for (int l = 0; l < NLOOP; l++) 	
 	{
@@ -142,8 +140,7 @@ int test_smatrix_kalman() {
 	  }
 
 	  K =  tmp * Rinv ; 
-	  tmp2 = K * H;
-	  C = Cp - tmp2 * Cp;
+	  C = Cp; C -= K * Transpose(tmp);
 	  //C = ( I - K * H ) * Cp;
 	  //x2 = Product(Rinv,m-H*xp);  // this does not compile on WIN32
  	  vtmp = m-H*xp; 
@@ -250,8 +247,6 @@ int test_smatrix_sym_kalman() {
       MnMatrixMN K; 
       // C has to be non -symmetric due to missing similarity product
       MnMatrixMM C; 
-      //MnMatrixNM tmp2; 
-      MnMatrixMM tmp2; 
       MnVectorN vtmp1; 
       MnVectorN vtmp; 
       MnVectorN2 vtmp2; 
@@ -283,8 +278,7 @@ int test_smatrix_sym_kalman() {
 	  }
 
 	  K =  tmp * RinvSym ; 
-	  tmp2 = K * H;
-	  C = Cp - tmp2 * Cp;
+	  C = Cp;  C -= K * Transpose(tmp);
 	  //C = ( I - K * H ) * Cp;
 	  //x2 = Product(Rinv,m-H*xp);  // this does not compile on WIN32
  	  vtmp = m-H*xp; 
@@ -393,7 +387,7 @@ int test_tmatrix_kalman() {
         tmp2 = TMatrixD(Cp,TMatrixD::kMultTranspose,H);
         Rinv = V ; Rinv += TMatrixD(H,TMatrixD::kMult,tmp2);
         RinvSym.Use(first,Rinv.GetMatrixArray()); RinvSym.InvertFast();
-        C = Cp; C -= TMatrixD(TMatrixD(tmp2,TMatrixD::kMult,Rinv),TMatrixD::kMult,TMatrixD(H,TMatrixD::kMult,Cp));
+        C = Cp; C -= TMatrixD(TMatrixD(tmp2,TMatrixD::kMult,Rinv),TMatrixD::kMultTranspose,tmp2);
         x2 = RinvSym.Similarity(tmp1);
 #else 
 	tmp1 = H*xp -m;
