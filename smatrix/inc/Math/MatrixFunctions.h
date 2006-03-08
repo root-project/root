@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.5 2006/02/27 18:41:58 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.6 2006/02/28 13:45:05 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -240,6 +240,7 @@ inline VecExpr<VectorMatrixColOp<VecExpr<A,T,D1>, Expr<B,T,D1,D2,R>, D1>, T, D2>
 //==============================================================================
 template <unsigned int I>
 struct meta_matrix_dot {
+
   template <class MatrixA, class MatrixB>
   static inline typename MatrixA::value_type f(const MatrixA& lhs, 
                                                const MatrixB& rhs,
@@ -247,6 +248,16 @@ struct meta_matrix_dot {
     return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols + I) *
            rhs.apply(MatrixB::kCols*I + offset%MatrixB::kCols) + 
            meta_matrix_dot<I-1>::f(lhs,rhs,offset);
+  }
+
+  // multiplication using i and j indeces
+  template <class MatrixA, class MatrixB>
+  static inline typename MatrixA::value_type g(const MatrixA& lhs, 
+                                               const MatrixB& rhs,
+                                               unsigned int i, 
+					       unsigned int j) {
+    return lhs.apply(i, I) * rhs.apply(I , j) + 
+           meta_matrix_dot<I-1>::g(lhs,rhs,i,j);
   }
 };
 
@@ -256,6 +267,7 @@ struct meta_matrix_dot {
 //==============================================================================
 template <>
 struct meta_matrix_dot<0> {
+
   template <class MatrixA, class MatrixB>
   static inline typename MatrixA::value_type f(const MatrixA& lhs, 
                                                const MatrixB& rhs,
@@ -263,6 +275,15 @@ struct meta_matrix_dot<0> {
     return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols) *
            rhs.apply(offset%MatrixB::kCols);
   }
+
+  // multiplication using i and j 
+  template <class MatrixA, class MatrixB>
+  static inline typename MatrixA::value_type g(const MatrixA& lhs, 
+                                               const MatrixB& rhs,
+                                               unsigned int i, unsigned int j) {
+    return lhs.apply(i,0) * rhs.apply(0,j);
+  }
+
 };
 
 //==============================================================================
@@ -281,6 +302,10 @@ public:
   /// calc $\sum_{j} a_{ik} * b_{kj}$
   inline T apply(unsigned int i) const {
     return meta_matrix_dot<D-1>::f(lhs_, rhs_, i);
+  }
+
+  inline T apply(unsigned int i, unsigned j) const {
+    return meta_matrix_dot<D-1>::g(lhs_, rhs_, i, j);
   }
 
 protected:
@@ -415,6 +440,9 @@ public:
   ///
   inline T apply(unsigned int i) const {
     return rhs_.apply( (i%D1)*D2 + i/D1);
+  }
+  inline T apply(unsigned int i, unsigned j) const {
+    return rhs_.apply( j, i);
   }
 
 protected:

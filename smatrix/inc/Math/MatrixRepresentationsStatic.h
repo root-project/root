@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.1 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.2 2006/03/03 17:24:51 moneta Exp $
 // Authors: L. Moneta, J. Palacios    2006  
 
 #ifndef ROOT_Math_MatrixRepresentationsStatic_h
@@ -158,24 +158,24 @@ namespace ROOT {
       typedef T  value_type;
 
       inline const T& operator()(unsigned int i, unsigned int j) const {
-        return fArray[fOffsets(i,j)];
+        return fArray[Offsets()(i,j)];
       }
       inline T& operator()(unsigned int i, unsigned int j) {
-        return fArray[fOffsets(i,j)];
+        return fArray[Offsets()(i,j)];
       }
 
       inline T& operator[](unsigned int i) { 
-	return fArray[fOffsets.apply(i) ];
+	return fArray[Offsets().apply(i) ];
 	//return operator()(i/D, i%D); 
       }
 
       inline const T& operator[](unsigned int i) const {
-	return fArray[fOffsets.apply(i) ];
+	return fArray[Offsets().apply(i) ];
         //return operator()(i/D, i%D);
       }
 
       inline T apply(unsigned int i) const {
-	return fArray[fOffsets.apply(i) ];
+	return fArray[Offsets().apply(i) ];
         //return operator()(i/D, i%D);
       }
 
@@ -220,10 +220,17 @@ namespace ROOT {
         kSize = D*(D+1)/2
       };
 
+      
+      inline static const RowOffsets<D> & Offsets() {
+	static RowOffsets<D> fOffsets;
+	return fOffsets;
+      }
+
+
     private:
       T fArray[kSize];
 
-      RowOffsets<D> fOffsets;
+      //static const RowOffsets<D> fOffsets;
     };
 
 

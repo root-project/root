@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.1 2005/12/07 16:44:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.1 2006/02/08 14:45:35 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps_h 
@@ -38,7 +38,13 @@ namespace ROOT {
     {
       static void evaluate(SMatrix<T,D1,D2,R1>& lhs,  const Expr<A,T,D1,D2,R2>& rhs) 
       {
-        for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep[i] = rhs.apply(i);
+        //for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep[i] = rhs.apply(i);
+	unsigned int l = 0; 
+        for(unsigned int i=0; i<D1; ++i) 
+	  for(unsigned int j=0; j<D2; ++j) { 
+	    lhs.fRep[l] = rhs.apply(i,j);
+	    l++;
+	  }
       }
     };
     
@@ -60,7 +66,13 @@ namespace ROOT {
     {
       static void evaluate(SMatrix<T,D1,D2,R1>& lhs,  const Expr<A,T,D1,D2,R2>& rhs) 
       {
-        for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep.Array()[i] += rhs.apply(i);
+        //for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep.Array()[i] += rhs.apply(i);
+	unsigned int l = 0; 
+        for(unsigned int i=0; i<D1; ++i) 
+	  for(unsigned int j=0; j<D2; ++j) { 
+	    lhs.fRep[l] += rhs.apply(i,j);
+	    l++;
+	  }
       }
     };
     
@@ -81,7 +93,13 @@ namespace ROOT {
     {
       static void evaluate(SMatrix<T,D1,D2,R1>& lhs,  const Expr<A,T,D1,D2,R2>& rhs) 
       {
-        for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep.Array()[i] -= rhs.apply(i);
+        //for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep.Array()[i] -= rhs.apply(i);
+	unsigned int l = 0; 
+        for(unsigned int i=0; i<D1; ++i) 
+	  for(unsigned int j=0; j<D2; ++j) { 
+	    lhs.fRep[l] -= rhs.apply(i,j);
+	    l++;
+	  }
       }
     };
     

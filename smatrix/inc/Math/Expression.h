@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.4 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.5 2006/02/08 16:52:38 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -73,6 +73,7 @@ public:
     return rhs_.apply(i);
   }
 
+
 #ifdef OLD_IMPL
   ///
   static const unsigned int rows = D;
@@ -126,6 +127,10 @@ public:
   inline T apply(unsigned int i) const {
     return rhs_.apply(i);
   }
+  inline T apply(unsigned int i, unsigned j) const {
+    return rhs_.apply(i,j);
+  }
+
 
 #ifdef OLD_IMPL
   ///
@@ -209,6 +214,9 @@ public:
   inline T apply(unsigned int i) const {
     return Operator::apply(lhs_.apply(i), rhs_.apply(i));
   }
+  inline T apply(unsigned int i, unsigned int j) const {
+    return Operator::apply(lhs_.apply(i,j), rhs_.apply(i,j));
+  }
 
 protected:
 
@@ -246,6 +254,9 @@ public:
   inline T apply(unsigned int i) const {
     return Operator::apply(rhs_.apply(i));
   }
+  inline T apply(unsigned int i, unsigned int j) const {
+    return Operator::apply(rhs_.apply(i,j));
+  }
 
 protected:
 
@@ -279,6 +290,8 @@ public:
 
   ///
   inline T apply(unsigned int /*i */ ) const { return rhs_; }
+
+  inline T apply(unsigned int /*i */, unsigned int /*j */ ) const { return rhs_; }
 
 protected:
 
