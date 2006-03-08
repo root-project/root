@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.5 2006/02/08 16:52:38 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.6 2006/03/08 15:11:06 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -148,20 +148,14 @@ public:
 #endif
 
   /// used by operator<<()
+  /// simplify to use apply(i,j) 
   std::ostream& print(std::ostream& os) const {
     os.setf(std::ios::right,std::ios::adjustfield);
-    if(D2 == 1 || D2 ==0 ) {
-      unsigned int i=0;
-      for(; i<D-1; ++i) {
-        os << apply(i) << ", ";
-      }
-      os << apply(i);
-    } else {
       os << "[ ";
       for (unsigned int i=0; i < D; ++i) {
-        unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
+	unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
         for (unsigned int j=0; j < D2; ++j) {
-          os << std::setw(12) << apply(i*D2+j);
+          os << std::setw(12) << apply(i,j);
           if ((!((j+1)%12)) && (j < d2-1))
             os << std::endl << "         ...";
         }
@@ -169,7 +163,6 @@ public:
           os << std::endl  << "  ";
       }
       os << " ]";
-    } // if D2==0
 
     return os;
   }
