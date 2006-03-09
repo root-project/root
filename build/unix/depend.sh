@@ -2,13 +2,13 @@
 
 # Adding the '-w' flag shortens the .d files by allowing
 # more dependencies on one line. It may even speed up rmkdepend
-# (picking 3000 somewhat arbitrarily).
+# (picking 1000 because larger seems to break sed on some systems)
 
 trap "rm -f $1.tmp $1.tmp.bak; exit 1" 1 2 3 15
 
 touch $1.tmp
 
-bin/rmkdepend -f$1.tmp -Y -w 3000 -- $2 -- $3 > /dev/null 2>&1
+bin/rmkdepend -f$1.tmp -Y -w 1000 -- $2 -- $3 > /dev/null 2>&1
 depstat=$?
 if [ $depstat -ne 0 ]; then
    rm -f $1.tmp $1.tmp.bak
