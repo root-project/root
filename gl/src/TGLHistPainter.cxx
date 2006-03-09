@@ -1298,7 +1298,7 @@ void TGLHistPainter::SetCamera()const
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   glOrtho(-fFrustum[0] * fZoom, fFrustum[0] * fZoom, - fFrustum[1] * fZoom, fFrustum[1] * fZoom, -200000, 200000);//fFrustum[2], fFrustum[3]);
+   glOrtho(-fFrustum[0] * fZoom, fFrustum[0] * fZoom, - fFrustum[1] * fZoom, fFrustum[1] * fZoom, fFrustum[2], fFrustum[3]);
 
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
