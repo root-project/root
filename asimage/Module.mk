@@ -120,8 +120,9 @@ ifeq ($(PLATFORM),win32)
 		fi; \
 		cd $(ASTEPVERS); \
 		unset MAKEFLAGS; \
-		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) -nologo -f libAfterImage.mak \
-		CFG=$(ASTEPBLD))
+		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) \
+                -nologo -f libAfterImage.mak \
+		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I../../../build/win -FIw32pragma.h")
 else
 		@(if [ -d $(ASTEPDIRS) ]; then \
 			rm -rf $(ASTEPDIRS); \

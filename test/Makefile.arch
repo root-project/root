@@ -498,6 +498,8 @@ endif
 
 ifeq ($(ARCH),win32)
 # Windows with the VC++ compiler
+VC_MAJOR     := $(shell VS_UNICODE_OUTPUT= cl.exe 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+                cut -d'.' -f1)
 ObjSuf        = obj
 SrcSuf        = cxx
 ExeSuf        = .exe
@@ -506,8 +508,7 @@ OutPutOpt     = -out:
 CXX           = cl
 CXXOPT        = -O2
 #CXXOPT        = -Z7
-CXXFLAGS      = $(CXXOPT) -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -nologo \
-                -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
+CXXFLAGS      = $(CXXOPT) -nologo -I$(shell $(ROOTCONFIG) --incdir) -FIw32pragma.h
 LD            = link
 LDOPT         = -opt:ref
 #LDOPT         = -debug

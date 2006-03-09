@@ -33,7 +33,7 @@ R__LEXTRA=$9
 
 lastsyslib=comctl32.lib
 extralibs=$lastsyslib
-syslibs="msvcrt.lib oldnames.lib kernel32.lib advapi32.lib \
+syslibs="kernel32.lib advapi32.lib \
          user32.lib gdi32.lib comdlg32.lib winspool.lib \
          $extralibs"
 

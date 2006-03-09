@@ -23,6 +23,12 @@ GDKDLL       := bin/gdk-1.3.dll
 GDKLIB       := $(LPATH)/gdk-1.3.lib
 GDKSRC       := $(wildcard $(GDKDIRS)/*.c) $(wildcard $(GDKDIRS)/win32/*.c)
 
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+GDKNMCXXFLAGS:= "$(BLDCXXFLAGS)" DEBUG=1
+else
+GDKNMCXXFLAGS:= "$(BLDCXXFLAGS)"
+endif
+
 ##### libWin32gdk #####
 WIN32GDKL    := $(MODDIRI)/LinkDef.h
 WIN32GDKDS   := $(MODDIRS)/G__Win32gdk.cxx
@@ -72,9 +78,11 @@ $(GDKLIBA):     $(GDKSRC)
 		@(echo "*** Building $@..."; \
 		  unset MAKEFLAGS; \
 		  cd $(GDKDIRS)/win32; \
-		  nmake -nologo -f makefile.msc; \
+		  nmake -nologo -f makefile.msc \
+		  NMCXXFLAGS=$(GDKNMCXXFLAGS) VC_MAJOR=$(VC_MAJOR); \
 		  cd ..; \
-		  nmake -nologo -f makefile.msc)
+		  nmake -nologo -f makefile.msc \
+                  NMCXXFLAGS=$(GDKNMCXXFLAGS) VC_MAJOR=$(VC_MAJOR))
 
 $(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPEDEP) $(GDKLIB) $(GDKDLL) \
                 $(ORDER_) $(MAINLIBS) $(WIN32GDKLIBDEP)
@@ -110,7 +118,7 @@ distclean-win32gdk: clean-win32gdk
 		   $(WIN32GDKLIB) $(GDKLIBS) $(GDKDLLS)
 ifeq ($(PLATFORM),win32)
 		-@(cd $(GDKDIRS); unset MAKEFLAGS; \
-		nmake -nologo -f makefile.msc clean)
+		nmake -nologo -f makefile.msc clean VC_MAJOR=$(VC_MAJOR))
 endif
 
 distclean::     distclean-win32gdk

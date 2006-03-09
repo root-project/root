@@ -223,7 +223,7 @@ G__COMPLETIONLIST G__completionlist[] = {
 	{"fgets",(void (*)())fgets},
 #endif
 #ifndef G__NOMATHLIB
-#if defined(floor) || !defined(G__FUNCPOINTER)
+#if defined(floor) || !defined(G__FUNCPOINTER) || (_MSC_VER == 1400)
 	{"floor",NULL},
 #else
 	{"floor",(void (*)())floor},

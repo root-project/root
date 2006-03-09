@@ -13,20 +13,20 @@
 
 # Nothing much configurable below
 
-# !IFNDEF DEBUG
+!IFNDEF DEBUG
 # Full optimization:
 #OPTIMIZE = -Ox -MD -Zi
 OPTIMIZE = -Ox -MD
-LINKDEBUG = /nodefaultlib:libc.lib
-# !ELSE
+#LINKDEBUG = /nodefaultlib:libc.lib
+!ELSE
 # Debugging:
-#OPTIMIZE = -Zi -MDd
-#LINKDEBUG = /nodefaultlib:libcd.lib /nodefaultlib:libc.lib /debug
-# !ENDIF
+OPTIMIZE = -Zi -MDd
+LINKDEBUG = /debug
+!ENDIF
 
 # cl -? describes the options
 #CC = cl -G5 -GF $(OPTIMIZE) -W3 -nologo
-CC = cl -G5 -GR -GX $(OPTIMIZE) -W3 -nologo
+CC = cl -GR $(OPTIMIZE) -W3 -nologo $(NMCXXFLAGS)
 
 LDFLAGS = /link $(LINKDEBUG)
 
@@ -61,6 +61,10 @@ win32\gdk-win32.lib:
 
 gdk-$(GTK_VER).dll : $(gdk_OBJECTS) gdk.def win32\gdk-win32.lib
 	$(CC) $(CFLAGS) -LD -Fegdk-$(GTK_VER).dll $(gdk_OBJECTS) win32\gdk-win32.lib ..\..\lib\glib-$(GLIB_VER).lib gdi32.lib user32.lib imm32.lib shell32.lib ole32.lib uuid.lib win32\gdk.res $(LDFLAGS) /def:gdk.def
+!IF EXIST(gdk-$(GTK_VER).dll.manifest)
+        mt -nologo -manifest gdk-$(GTK_VER).dll.manifest -outputresource:gdk-$(GTK_VER).dll;2
+        del gdk-$(GTK_VER).dll.manifest
+!ENDIF
 
 .c.obj :
 	$(CC) $(CFLAGS) -c -DGDK_COMPILATION -DG_LOG_DOMAIN=\"Gdk\" $<

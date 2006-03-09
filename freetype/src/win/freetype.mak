@@ -71,35 +71,35 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 .c{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .c{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
@@ -184,35 +184,35 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 .c{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .c{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
@@ -297,35 +297,35 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 .c{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .c{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
@@ -410,35 +410,35 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 .c{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .c{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
@@ -523,35 +523,35 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 .c{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .c{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
@@ -636,35 +636,35 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_PROJ=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 .c{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.obj::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .c{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cpp{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
 .cxx{$(INTDIR)}.sbr::
-   $(CPP) @<<
+   $(CPP) -nologo @<<
    $(CPP_PROJ) $< 
 <<
 
@@ -724,60 +724,60 @@ SOURCE=..\..\..\src\autohint\autohint.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\autohint.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\autohint.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\autohint.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\autohint.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\autohint.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\autohint.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -788,60 +788,60 @@ SOURCE=..\..\..\src\bdf\bdf.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\bdf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\bdf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\bdf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\bdf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\bdf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\bdf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -852,60 +852,60 @@ SOURCE=..\..\..\src\cff\cff.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\cff.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\cff.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\cff.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\cff.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\cff.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\cff.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -916,60 +916,60 @@ SOURCE=..\..\..\src\base\ftbase.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftbase.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftbase.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftbase.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftbase.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftbase.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftbase.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -980,60 +980,60 @@ SOURCE=..\..\..\src\cache\ftcache.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftcache.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftcache.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftcache.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftcache.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftcache.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftcache.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1044,60 +1044,60 @@ SOURCE=..\ftdebug.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Ze /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftdebug.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Ze /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftdebug.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Ze /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftdebug.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Ze /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftdebug.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Ze /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftdebug.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Ze /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftdebug.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1108,60 +1108,60 @@ SOURCE=..\..\..\src\base\ftglyph.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftglyph.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftglyph.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftglyph.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftglyph.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftglyph.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftglyph.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1178,60 +1178,60 @@ SOURCE=..\..\..\src\base\ftinit.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftinit.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftinit.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftinit.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftinit.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftinit.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftinit.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1248,60 +1248,60 @@ SOURCE=..\..\..\src\base\ftmm.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftmm.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftmm.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftmm.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftmm.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftmm.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftmm.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1312,60 +1312,60 @@ SOURCE=..\..\..\src\base\ftsystem.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftsystem.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftsystem.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftsystem.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftsystem.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftsystem.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\ftsystem.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1376,60 +1376,60 @@ SOURCE=..\..\..\src\pcf\pcf.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pcf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pcf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pcf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pcf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pcf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pcf.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1446,60 +1446,60 @@ SOURCE=..\..\..\src\psaux\psaux.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psaux.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psaux.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psaux.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psaux.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psaux.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psaux.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1510,60 +1510,60 @@ SOURCE=..\..\..\src\pshinter\pshinter.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pshinter.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pshinter.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pshinter.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pshinter.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pshinter.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\pshinter.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1574,60 +1574,60 @@ SOURCE=..\..\..\src\psnames\psmodule.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psmodule.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psmodule.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psmodule.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psmodule.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psmodule.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\psmodule.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1638,60 +1638,60 @@ SOURCE=..\..\..\src\raster\raster.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\raster.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\raster.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\raster.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\raster.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\raster.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\raster.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1702,60 +1702,60 @@ SOURCE=..\..\..\src\sfnt\sfnt.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\sfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\sfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\sfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\sfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\sfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\sfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1766,60 +1766,60 @@ SOURCE=..\..\..\src\smooth\smooth.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\smooth.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\smooth.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\smooth.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\smooth.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\smooth.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\smooth.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1830,60 +1830,60 @@ SOURCE=..\..\..\src\truetype\truetype.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\truetype.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\truetype.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\truetype.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\truetype.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\truetype.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\truetype.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1894,60 +1894,60 @@ SOURCE=..\..\..\src\type1\type1.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -1958,60 +1958,60 @@ SOURCE=..\..\..\src\cid\type1cid.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1cid.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1cid.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1cid.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1cid.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1cid.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type1cid.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -2022,60 +2022,60 @@ SOURCE=..\..\..\src\type42\type42.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type42.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type42.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type42.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type42.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type42.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\type42.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
@@ -2086,60 +2086,60 @@ SOURCE=..\..\..\src\winfonts\winfnt.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
 
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\winfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
 
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\winfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
 
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\winfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
 
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\winfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
 
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\winfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 
 
 !ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
 
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
+CPP_SWITCHES=$(NMAKECXXFLAGS) /W4 /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 "$(INTDIR)\winfnt.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
+	$(CPP) -nologo @<<
   $(CPP_SWITCHES) $(SOURCE)
 <<
 

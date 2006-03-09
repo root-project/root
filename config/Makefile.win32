@@ -6,76 +6,75 @@ PLATFORM      = win32
 
 DEBUGFLAGS    = -Z7
 OPTFLAGS      = -O2 
+
+# Compiler version:
+ifeq ($(VC_MAJOR),)
+   # Visual Studio 2005 set VS_UNICODE_OUTPUT to redirect the output
+   # of cl directly to its log mechanism.
+   VC_MAJOR     := $(shell unset VS_UNICODE_OUTPUT ; $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+                   cut -d'.' -f1)
+   VC_MINOR     := $(shell unset VS_UNICODE_OUTPUT ; $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+                   cut -d'.' -f2)
+endif
+
+# these define the build compatibility
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+  BLDCXXFLAGS = -MDd -GR
+  BLDCFLAGS   = -MDd
+  BLDF77FLAGS = -MDd
+else
+  BLDCXXFLAGS = -MD -GR
+  BLDCFLAGS   = -MD
+  BLDF77FLAGS = -MD
+endif
+
+ifeq ($(VC_MAJOR),14)
+  BLDCXXFLAGS+= -EHs
+  BLDCFLAGS  += -EHs
+
+  ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+    BLDCXXFLAGS += -RTC1
+  endif
+else
+ifeq ($(VC_MINOR),10)
+  BLDCXXFLAGS+= -G5 -GX
+  BLDCFLAGS  += -G5 -GX
+  BLDF77FLAGS+= -G5
+else
+ifeq ($(VC_MINOR),00)
+  BLDCXXFLAGS+= -Zm200
+  BLDCFLAGS  += -Zm200
+endif
+endif
+endif
+
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 LDOPT         = -debug
-F77OPT        = -debug -nopdbfile
-NOOPT         =
+F77OPT        = -debug -nopdbfile -MDd
 else
 OPT           = $(OPTFLAGS)
 LDOPT         =
-#LDOPT         = -opt:ref
-F77OPT        = -optimize:0 -nopdbfile -recursive
-NOOPT         =
+F77OPT        = -optimize:0 -nopdbfile -recursive -MD
 endif
+NOOPT         =
+
 
 # Compiler:
 CXX           = build/win/cxx.sh
 CC            = build/win/cc.sh
-CXXFLAGS      = -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
-                -nologo -DCRTAPI1=_cdecl -DCRTAPI2=_cdecl -FIw32pragma.h \
-                -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CXXFLAGS) \
-		/wd4661
-CFLAGS        = -G5 -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
-                -FIsehmap.h -nologo -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
-                $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -G5 -GR -GX -MD -DWIN32 -D_WIN32 -D_WINDOWS \
-                -DWINVER=0x0400 -nologo -DCRTAPI1=_cdecl \
-                -DCRTAPI2=_cdecl -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
-                -DG__REDIRECTIO -DG__SHAREDLIB -DG__UNIX -DG__ROOT \
-                -DG__WIN32 $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -G5 -MD -DWIN32 -D_WIN32 -D_WINDOWS \
-                -DWINVER=0x0400 -FIsehmap.h -nologo -D_X86_=1 -D_DLL \
-                -DVISUAL_CPLUSPLUS -DG__SHAREDLIB -DG__UNIX -DG__ROOT \
-                -DG__REDIRECTIO -DG__WIN32 $(EXTRA_CXXFLAGS)
-
-# Compiler version:
-VC_MAJOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
-                cut -d'.' -f1)
-VC_MINOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
-                cut -d'.' -f2)
-
-# 1310 is VC++.NET
-ifeq ($(VC_MAJOR),13)
- ifeq ($(VC_MINOR),00)
- CINTCXXFLAGS += -Zm200
- CXXFLAGS     += -Zm200
- endif
- ifeq ($(VC_MINOR),10)
- CINTCXXFLAGS += -DG__NEWSTDHEADER
- CINTCFLAGS   += -DG__NEWSTDHEADER
- endif
-else
- ifeq ($(VC_MAJOR),14)
-  CINTCXXFLAGS += -DG__NEWSTDHEADER
-  CINTCFLAGS   += -DG__NEWSTDHEADER
-
-  CFLAGS       := $(filter-out -G5,$(CFLAGS))
-  CXXFLAGS     := $(filter-out -G5,$(CXXFLAGS))
-  CINTCFLAGS   := $(filter-out -G5,$(CINTCFLAGS))
-  CINTCXXFLAGS := $(filter-out -G5,$(CINTCXXFLAGS))
-  DISABLE_DEPR_WARNINGS := -D_CRT_SECURE_NO_DEPRECATE -D_SECURE_SCL=0
-  CFLAGS       := $(CFLAGS:-GX=-EHs) $(DISABLE_DEPR_WARNINGS)
-  CXXFLAGS     := $(CXXFLAGS:-GX=-EHs) $(DISABLE_DEPR_WARNINGS)
-  CINTCFLAGS   := $(CINTCFLAGS:-GX=-EHs) $(DISABLE_DEPR_WARNINGS)
-  CINTCXXFLAGS := $(CINTCXXFLAGS:-GX=-EHs) $(DISABLE_DEPR_WARNINGS)
- endif
-endif
+CXXFLAGS      =  -nologo -Ibuild/win -FIw32pragma.h \
+                $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS)
+CFLAGS        = -nologo -Ibuild/win -FIw32pragma.h -FIsehmap.h\
+                $(BLDCFLAGS) $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = $(CXXFLAGS)
+CINTCFLAGS    = $(CFLAGS)
 
 # Linker:
 LD            = build/win/ld.sh
-LDFLAGS       = -nologo -ignore:4049 -ignore:4217 -ignore:4221 -incremental:no $(LDOPT) $(EXTRA_LDFLAGS) $(LDNODEF)
-LDNODEF       = -nodefaultlib:libc.lib -nodefaultlib:dfor.lib
+LDFLAGS       = -nologo -ignore:4049,4217,4221 -incremental:no \
+                $(LDOPT) $(EXTRA_LDFLAGS) 
 SOFLAGS       = -DLL
 SOEXT         = dll
 EXEEXT        = .exe
@@ -88,7 +87,7 @@ CRYPTLIBS     =
 
 # Fortran:
 F77           = build/win/f77.sh
-F77FLAGS      = -nologo -4Nportlib -G5 -MD -recursive
+F77FLAGS      = -nologo -4Nportlib $(BLDF77FLAGS) -recursive
 F77LD         = $(F77)
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =

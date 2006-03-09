@@ -7,20 +7,20 @@
 
 # Nothing much configurable below
 
-# !IFNDEF DEBUG
+!IFNDEF DEBUG
 # Full optimization:
 OPTIMIZE = -Ox -MD
-# !ELSE
+!ELSE
 # Debugging:
-#OPTIMIZE = -Zi -MDd
-#LINKDEBUG = /debug /profile
-# !ENDIF
+OPTIMIZE = -Zi -MDd
+LINKDEBUG = /debug /profile
+!ENDIF
 
 LINKDEBUG =/nodefaultlib
  
 # cl -? describes the options
 #CC = cl -G5 -GF $(OPTIMIZE) -W3 -nologo
-CC = cl -G5 -GR -GX $(OPTIMIZE) -W3 -nologo
+CC = cl -GR $(OPTIMIZE) -W3 -nologo $(NMCXXFLAGS)
 
 LDFLAGS = /link /machine:ix86 $(LINKDEBUG)
 

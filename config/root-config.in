@@ -339,6 +339,15 @@ hiux)
 win32)
    # Win32
    auxcflags="-MD"
+   if [ "${rootbuild/debug/}" != "$rootbuild" ]; then
+	  auxcflags="-MDd"
+   fi
+   VC_MAJOR=`VS_UNICODE_OUTPUT= cl.exe 2>&1 | awk '{ if (NR==1) print $8 }' | cut -d'.' -f1`
+   if [ "$VC_MAJOR" != "" -a $VC_MAJOR -gt 13 ]; then
+      auxcflags="$auxcflags -EHs -GR"
+   else
+      auxcflags="$auxcflags -GX -G5"
+   fi
    auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs

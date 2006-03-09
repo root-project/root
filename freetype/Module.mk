@@ -22,8 +22,14 @@ FREETYPEDIRI := $(MODDIRS)/$(FREETYPEVERS)/include
 ##### libfreetype #####
 FREETYPELIBS := $(MODDIRS)/$(FREETYPEVERS).tar.gz
 ifeq ($(PLATFORM),win32)
-FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype219MT.lib
 FREETYPELIB  := $(LPATH)/libfreetype.lib
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype219MT_D.lib
+FTNMCFG      := "freetype - Win32 Debug Multithreaded"
+else
+FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype219MT.lib
+FTNMCFG      := "freetype - Win32 Release Multithreaded"
+endif
 else
 FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a
 ifeq ($(PLATFORM),macosx)
@@ -78,7 +84,8 @@ ifeq ($(PLATFORM),win32)
 		cp ../../../../win/freetype.dep .; \
 		unset MAKEFLAGS; \
 		nmake -nologo -f freetype.mak \
-		CFG="freetype - Win32 Release Multithreaded")
+		CFG=$(FTNMCFG) \
+		NMAKECXXFLAGS="$(BLDCXXFLAGS)")
 else
 		@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \
 			rm -rf $(FREETYPEDIRS)/$(FREETYPEVERS); \
