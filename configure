@@ -583,6 +583,7 @@ check_symbol() {
 	logmsg "Checking in $d"
 	if test ! -r $d/$symbollib ; then
 	    logmsg "$d/$symbollib not readable"
+        else
 	    for i in $exts ; do
 		logmsg "Checking extension $i with $d/$symbollib"
 		if test -r $d/$symbollib$i ; then
@@ -2698,41 +2699,39 @@ if test "x$enable_ssl" = "xyes" ; then
      fi
      check_library "$libssl" "$enable_shared" "$tmpglbslibdir" \
          $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
-     if test "x$found_lib" = "x" ; then
-         ssllib=""
-         ssllibdir=""
-         enable_ssl="no"
-         break
-     else
+     if test "x$found_lib" != "x" ; then
          ssllib="$found_lib"
          ssllibdir="$found_dir"
-     fi
 
-     #
-     # libcrypto, in the same dir
-     #
-     libcrypto="libcrypto"
-     if test "x$enable_globus" = "xyes" ; then
-        libcrypto="libcrypto_$flavour"
-        tmpglbslibdir="$globusdir/lib"
+         #
+         # libcrypto, in the same dir
+         #
+         libcrypto="libcrypto"
+         if test "x$enable_globus" = "xyes" ; then
+             libcrypto="libcrypto_$flavour"
+             tmpglbslibdir="$globusdir/lib"
+         else
+             tmpglbslibdir=$ssllibdir
+         fi
+         check_library "$libcrypto" "$enable_shared" "$tmpglbslibdir" \
+             $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
+         if test "x$found_lib" != "x" ; then
+             ssllib="$ssllib $found_lib"
+             ssllibdir="$found_dir"
+             if test ! "x$found_dir" = "x$ssllibdir" ; then
+                 message "Checking for openssl"
+                 result "warning: paths to libcrypto and libssl do not match"
+                 ssllibdir="$ssllibdir $found_dir"
+             fi
+         else
+             ssllib=""
+             ssllibdir=""
+             enable_ssl="no"
+         fi
      else
-        tmpglbslibdir=$ssllibdir
-     fi
-     check_library "$libcrypto" "$enable_shared" "$tmpglbslibdir" \
-         $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
-     if test "x$found_lib" = "x" ; then
          ssllib=""
          ssllibdir=""
          enable_ssl="no"
-         break
-     else
-         ssllib="$ssllib $found_lib"
-         ssllibdir="$found_dir"
-         if test ! "x$found_dir" = "x$ssllibdir" ; then
-            message "Checking for openssl"
-            result "warning: paths to libcrypto and libssl do not match"
-            ssllibdir="$ssllibdir $found_dir"
-         fi
      fi
 fi
 
