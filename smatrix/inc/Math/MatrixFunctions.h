@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.6 2006/02/28 13:45:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.7 2006/03/08 15:11:06 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -256,7 +256,7 @@ struct meta_matrix_dot {
                                                const MatrixB& rhs,
                                                unsigned int i, 
 					       unsigned int j) {
-    return lhs.apply(i, I) * rhs.apply(I , j) + 
+    return lhs(i, I) * rhs(I , j) + 
            meta_matrix_dot<I-1>::g(lhs,rhs,i,j);
   }
 };
@@ -281,7 +281,7 @@ struct meta_matrix_dot<0> {
   static inline typename MatrixA::value_type g(const MatrixA& lhs, 
                                                const MatrixB& rhs,
                                                unsigned int i, unsigned int j) {
-    return lhs.apply(i,0) * rhs.apply(0,j);
+    return lhs(i,0) * rhs(0,j);
   }
 
 };
@@ -304,7 +304,7 @@ public:
     return meta_matrix_dot<D-1>::f(lhs_, rhs_, i);
   }
 
-  inline T apply(unsigned int i, unsigned j) const {
+  inline T operator() (unsigned int i, unsigned j) const {
     return meta_matrix_dot<D-1>::g(lhs_, rhs_, i, j);
   }
 
@@ -441,8 +441,8 @@ public:
   inline T apply(unsigned int i) const {
     return rhs_.apply( (i%D1)*D2 + i/D1);
   }
-  inline T apply(unsigned int i, unsigned j) const {
-    return rhs_.apply( j, i);
+  inline T operator() (unsigned int i, unsigned j) const {
+    return rhs_( j, i);
   }
 
 protected:

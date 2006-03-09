@@ -14,6 +14,10 @@ ifeq ($(PLATFORM),macosx)
 CXXFLAGS+= -g
 endif
 
+ifneq ($(PLATFORM),win32) 
+LIBM = -lm
+endif
+
 
 
 TESTSMATRIXOBJ     = testSMatrix.$(ObjSuf)
@@ -46,7 +50,7 @@ all:            $(PROGRAMS)
 
 
 $(TESTSMATRIX):   $(TESTSMATRIXOBJ)
-		    $(LD) $(LDFLAGS) $^   -lm  $(OutPutOpt)$@
+		    $(LD) $(LDFLAGS) $^  $(LIBM) $(OutPutOpt)$@
 		    @echo "$@ done"
 
 $(TESTOPERATIONS):   $(TESTOPERATIONSOBJ)

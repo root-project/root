@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.6 2006/03/08 15:11:06 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.7 2006/03/08 17:39:47 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -127,8 +127,8 @@ public:
   inline T apply(unsigned int i) const {
     return rhs_.apply(i);
   }
-  inline T apply(unsigned int i, unsigned j) const {
-    return rhs_.apply(i,j);
+  inline T operator() (unsigned int i, unsigned j) const {
+    return rhs_(i,j);
   }
 
 
@@ -155,7 +155,7 @@ public:
       for (unsigned int i=0; i < D; ++i) {
 	unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
         for (unsigned int j=0; j < D2; ++j) {
-          os << std::setw(12) << apply(i,j);
+          os << std::setw(12) << this->operator() (i,j);
           if ((!((j+1)%12)) && (j < d2-1))
             os << std::endl << "         ...";
         }
@@ -207,8 +207,8 @@ public:
   inline T apply(unsigned int i) const {
     return Operator::apply(lhs_.apply(i), rhs_.apply(i));
   }
-  inline T apply(unsigned int i, unsigned int j) const {
-    return Operator::apply(lhs_.apply(i,j), rhs_.apply(i,j));
+  inline T operator() (unsigned int i, unsigned int j) const {
+    return Operator::apply(lhs_(i,j), rhs_(i,j) );
   }
 
 protected:
@@ -247,8 +247,8 @@ public:
   inline T apply(unsigned int i) const {
     return Operator::apply(rhs_.apply(i));
   }
-  inline T apply(unsigned int i, unsigned int j) const {
-    return Operator::apply(rhs_.apply(i,j));
+  inline T operator() (unsigned int i, unsigned int j) const {
+    return Operator::apply(rhs_(i,j));
   }
 
 protected:
@@ -284,7 +284,7 @@ public:
   ///
   inline T apply(unsigned int /*i */ ) const { return rhs_; }
 
-  inline T apply(unsigned int /*i */, unsigned int /*j */ ) const { return rhs_; }
+  inline T operator() (unsigned int /*i */, unsigned int /*j */ ) const { return rhs_; }
 
 protected:
 

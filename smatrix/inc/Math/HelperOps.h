@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.1 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.2 2006/03/08 15:11:06 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps_h 
@@ -42,7 +42,7 @@ namespace ROOT {
 	unsigned int l = 0; 
         for(unsigned int i=0; i<D1; ++i) 
 	  for(unsigned int j=0; j<D2; ++j) { 
-	    lhs.fRep[l] = rhs.apply(i,j);
+	    lhs.fRep[l] = rhs(i,j);
 	    l++;
 	  }
       }
@@ -70,7 +70,7 @@ namespace ROOT {
 	unsigned int l = 0; 
         for(unsigned int i=0; i<D1; ++i) 
 	  for(unsigned int j=0; j<D2; ++j) { 
-	    lhs.fRep[l] += rhs.apply(i,j);
+	    lhs.fRep[l] += rhs(i,j);
 	    l++;
 	  }
       }
@@ -97,7 +97,7 @@ namespace ROOT {
 	unsigned int l = 0; 
         for(unsigned int i=0; i<D1; ++i) 
 	  for(unsigned int j=0; j<D2; ++j) { 
-	    lhs.fRep[l] -= rhs.apply(i,j);
+	    lhs.fRep[l] -= rhs(i,j);
 	    l++;
 	  }
       }

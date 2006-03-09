@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.12 2006/02/27 18:41:58 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.13 2006/03/08 15:11:06 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -187,7 +187,6 @@ public:
   /** @name --- Access functions --- */
   /// access the parse tree
   T apply(unsigned int i) const;
-  T apply(unsigned int i, unsigned j) const;
 
   /// return read-only pointer to internal array
   const T* Array() const;
