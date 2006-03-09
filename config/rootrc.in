@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.128 2006/02/21 16:57:12 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.129 2006/03/02 08:34:54 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -495,14 +495,13 @@ Plugin.TVirtualProofMgr: ^std  TProofMgr    Proof        "TProofMgr(const char *
 @hasxrd@+Plugin.TVirtualProofMgr:  ^xpd  TXProofMgr   Proofx       "TXProofMgr(const char *,Int_t,const char *)"
 Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
 +Plugin.TVirtualViewer3D:   ogl TGLSAViewer RGL   "TGLSAViewer(TVirtualPad*)"
-+Plugin.TVirtualViewer3D:   ogle TGLPixmap    RGL "TGLPixmap(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   ogle TGLViewer    RGL "TGLViewer(TVirtualPad*)"
 Plugin.TVirtualDragManager: *   TGuiBldDragManager GuiBld "TGuiBldDragManager()"
 Plugin.TGuiBuilder:         *   TRootGuiBuilder    GuiBld "TRootGuiBuilder()"
 Unix.*.Plugin.TVirtualGLImp:  * TX11GL       RGL          "TX11GL()"
 WinNT.*.Plugin.TVirtualGLImp: * TGWin32GL    RGL          "TGWin32GL()"
 Unix.*.Plugin.TGLManager:   *   TX11GLManager    RGL "TX11GLManager()"
 WinNT.*.Plugin.TGLManager:  *   TGWin32GLManager RGL "TGWin32GLManager()"
-Plugin.TGLPixmap:           *   TGLPixmap        RGL "TGLPixmap(TPad*,Int_t,Int_t,Int_t,UInt_t,UInt_t)"
 Plugin.TGLHistPainter:        * TGLHistPainter   RGL "TGLHistPainter(TH1*)"
 
 # Example of custom setting for the Rint application (root.exe).
