@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.7 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.8 2006/02/20 11:02:19 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -74,6 +74,7 @@ public:
    Bool_t SubRef() const;
    UInt_t Ref()    const                 { return fRef; }
    void   StrongRef(Bool_t strong) const { fRefStrong = strong; }
+   TObject *GetExternal()const{return fExternalObj;}
 
    ClassDef(TGLLogicalShape,0) // a logical (non-placed, local frame) drawable object
 };

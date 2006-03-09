@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.37 2006/02/21 16:39:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.38 2006/02/22 14:26:15 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -11,6 +11,7 @@
  *************************************************************************/
 
 #include "Riostream.h"
+#include "TAttLine.h"
 #include "TGLScene.h"
 #include "TGLCamera.h"
 #include "TGLLogicalShape.h"
@@ -23,7 +24,7 @@
 #include "TString.h"
 #include "TClass.h" // For non-TObject reflection
 #include "TGLViewer.h" // Only here for some draw style enums - remove these
-                       // moved to proper class
+#include "TColor.h"     // moved to proper class
 
 #include <algorithm>
 
@@ -1074,6 +1075,9 @@ Bool_t TGLScene::SetColorOnSelectedFamily(const Float_t color[17])
    //
    // see OpenGL documentation for details of materials
    if (fSelectedPhysical) {
+      if (TAttLine *test = dynamic_cast<TAttLine *>(fSelectedPhysical->GetLogical().GetExternal()))
+         test->SetLineColor(TColor::GetColor(color[0], color[1], color[2]));
+
       TGLPhysicalShape * physical;
       PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
       while (physicalShapeIt != fPhysicalShapes.end()) {
