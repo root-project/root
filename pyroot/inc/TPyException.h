@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.2 2005/03/04 18:44:14 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.3 2005/05/06 10:08:53 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 #ifndef ROOT_TPyException
@@ -40,14 +40,10 @@
 // Standard
 #include <exception>
 
-// Python
-struct _object;
-typedef _object PyObject;
-
 
 namespace PyROOT {
 
-R__EXTERN PyObject* TPyExceptionMagic;
+R__EXTERN void* TPyExceptionMagic;
 
 class TPyException : public std::exception {
 public:

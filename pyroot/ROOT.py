@@ -1,4 +1,4 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.34 2005/12/07 06:16:16 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.35 2006/01/03 08:50:19 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 01/02/06
@@ -78,15 +78,24 @@ if needsGlobal:
    sys.setdlopenflags( dlflags )
 del needsGlobal
 
-## normally, you'll want a ROOT application; fine if one pre-exists from C++
-InitRootApplication()
+## choose interactive-favoured policies
+SetMemoryPolicy( kMemoryHeuristics )
+SetSignalPolicy( kSignalSafe )
+
+## normally, you'll want a ROOT application; don't init any further if
+## one pre-exists from some C++ code somewhere
+c = MakeRootClass( 'PyROOT::TPyROOTApplication' )
+if c.CreatePyROOTApplication():
+   c.InitROOTGlobals()
+   c.InitCINTMessageCallback();
+del c
 
 ## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
 sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
-__version__ = '3.3.0'
+__version__ = '4.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 __pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'gVirtualX',
@@ -95,15 +104,9 @@ __all__         = []                         # purposedly empty
 
 _orig_ehook = sys.excepthook
 
-## for setting memory policies; not exported
+## for setting memory and speed policies; not exported
 _memPolicyAPI = [ 'SetMemoryPolicy', 'SetOwnership', 'kMemoryHeuristics', 'kMemoryStrict' ]
-kMemoryHeuristics = 1
-kMemoryStrict     = 2
-
-## speed hack
 _sigPolicyAPI = [ 'SetSignalPolicy', 'kSignalFast', 'kSignalSafe' ]
-kSignalFast = 1
-kSignalSafe = 2
 
 
 ### helpers ---------------------------------------------------------------------
@@ -113,12 +116,6 @@ def split( str ):
       return str[:npos], str[npos+1:]
    else:
       return str, ''
-
-def safeLookupCall( func, arg ):
-   try:
-      return func( arg )
-   except:
-      return None
 
 
 ### template support ------------------------------------------------------------
@@ -145,7 +142,7 @@ class std:
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------
 class _ExpandMacroFunction( object ):
    def __init__( self, klass, func ):
-      c = makeRootClass( klass )
+      c = MakeRootClass( klass )
       self.func = getattr( c, func )
 
    def __getattr__( self, what ):
@@ -242,6 +239,7 @@ def _processRootEvents( controller ):
 class ModuleFacade( object ):
    def __init__( self, module ):
       self.module = module
+      self.libmodule = sys.modules[ 'libPyROOT' ]
 
     # root thread to prevent GUIs from starving
       if not self.module.gROOT.IsBatch():
@@ -268,36 +266,25 @@ class ModuleFacade( object ):
          for name in self.module.__pseudo__all__:
             caller.__dict__[ name ] = getattr( self.module, name )
 
-         sys.modules[ 'libPyROOT' ].gPad = gPad
+         self.libmodule.gPad = gPad
 
        # make the distionary of the calling module ROOT lazy
-         self.module.setRootLazyLookup( caller.__dict__ )
+         self.module.SetRootLazyLookup( caller.__dict__ )
 
        # the actual __all__ is empty
          return self.module.__all__
 
-    # block search for privates
-      if name[0:2] == '__':
-         raise AttributeError( name )
+    # lookup into ROOT (which may cause python-side enum/class/global creation)
+      attr = self.libmodule.LookupRootEntity( name )
 
-    # attempt to construct "name" as a ROOT class
-      attr = safeLookupCall( makeRootClass, name )
-      if ( attr == None ):
-       # no such class ... try global variable or global enum
-         attr = safeLookupCall( getRootGlobal, name )
-      
-      if ( attr == None ):
-       # no global either ... try through gROOT (e.g. objects from files)
-         attr = gROOT.FindObject( name )
-
-    # if available, cache attribute as appropriate, so we don't come back
-      if attr != None:
-         if type(attr) == PropertyProxy:
-            setattr( self.__class__, name, attr )      # descriptor
-            return getattr( self, name )
-         else:
-            self.__dict__[ name ] = attr               # normal member
-            return attr
+    # the call above will raise AttributeError as necessary; so if we get here,
+    # attr is valid: cache as appropriate, so we don't come back
+      if type(attr) == PropertyProxy:
+          setattr( self.__class__, name, attr )        # descriptor
+          return getattr( self, name )
+      else:
+          self.__dict__[ name ] = attr                 # normal member
+          return attr
 
     # reaching this point means failure ...
       raise AttributeError( name )
@@ -322,6 +309,7 @@ def cleanup():
       facade.keeppolling = 0
 
  # destroy ROOT module
+   del facade.libmodule
    del sys.modules[ 'libPyROOT' ]
    del facade.module
 

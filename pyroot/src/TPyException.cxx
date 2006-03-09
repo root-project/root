@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyException.cxx,v 1.2 2005/05/06 10:08:53 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 // Bindings
@@ -21,7 +21,7 @@
 
 //- data ---------------------------------------------------------------------
 ClassImp(PyROOT::TPyException)
-PyObject* PyROOT::TPyExceptionMagic = (PyObject*)-1;
+void* PyROOT::TPyExceptionMagic = (PyObject*)-1;
 
 
 //- constructors/destructor --------------------------------------------------

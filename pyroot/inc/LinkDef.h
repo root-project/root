@@ -6,6 +6,9 @@
 
 #pragma link C++ class TPython;
 #pragma link C++ class TPyReturn;
+
+#pragma link C++ namespace PyROOT;
 #pragma link C++ class PyROOT::TPyException;
+#pragma link C++ class PyROOT::TPyROOTApplication;
 
 #endif

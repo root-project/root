@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.31 2005/12/03 04:00:15 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.33 2005/12/12 18:06:19 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1300,8 +1300,8 @@ namespace {
             }
          }
 
-         if ( argc == reqNArgs )
-            PyTuple_SET_ITEM( args, reqNArgs, PyInt_FromLong( 0l ) );
+         if ( argc == reqNArgs )             // meaning: use default for last value
+            PyTuple_SET_ITEM( newArgs, reqNArgs, PyInt_FromLong( 0l ) );
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );

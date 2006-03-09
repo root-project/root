@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.8 2005/08/10 05:25:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.9 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -9,6 +9,7 @@
 #include "TPyException.h"
 
 // Standard
+#include <algorithm>
 #include <functional>
 #include <vector>
 #include <algorithm>
@@ -47,6 +48,11 @@ namespace {
       return hash;
    }
 
+// helper to sort on method priority
+   int PriorityCmp( PyCallable* left, PyCallable* right )
+   {
+      return left->GetPriority() > right->GetPriority();
+   }
 
 //= PyROOT method proxy object behaviour =====================================
    PyObject* mp_name( MethodProxy* meth, void* )
@@ -108,7 +114,7 @@ namespace {
          Int_t index = m->second;
          PyObject* result = (*methods[ index ])( meth->fSelf, args, kwds );
 
-         if ( result == TPyExceptionMagic )
+         if ( result == (PyObject*)TPyExceptionMagic )
             return 0;              // exception info was already set
 
          if ( result != 0 )
@@ -119,11 +125,16 @@ namespace {
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
+      if ( ! meth->fMethodInfo->fIsSorted ) {
+         std::stable_sort( methods.begin(), methods.end(), PriorityCmp );
+         meth->fMethodInfo->fIsSorted = kTRUE;
+      }
+
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
          PyObject* result = (*methods[i])( meth->fSelf, args, kwds );
 
-         if ( result == TPyExceptionMagic ) {
+         if ( result == (PyObject*)TPyExceptionMagic ) {
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
             return 0;              // exception info was already set
          }
@@ -289,4 +300,5 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
 // set method data
    fMethodInfo->fName = name;
    fMethodInfo->fMethods.swap( methods );
+   fMethodInfo->fIsSorted = kFALSE;
 }

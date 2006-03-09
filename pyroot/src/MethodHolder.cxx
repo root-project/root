@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.43 2005/12/03 04:00:15 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.44 2005/12/06 11:47:09 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -32,7 +32,7 @@
 #include <string>
 
 
-//- local helpers ------------------------------------------------------------
+//- data and local helpers ---------------------------------------------------
 namespace {
 
 // CINT temp level guard
@@ -96,7 +96,7 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self )
    try {       // C++ try block
       result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset) );
    } catch ( TPyException& ) {
-      result = TPyExceptionMagic;
+      result = (PyObject*)TPyExceptionMagic;
    } catch ( std::exception& e ) {
       PyErr_Format( PyExc_Exception, "%s (C++ exception)", e.what() );
       result = 0;
@@ -255,6 +255,31 @@ PyObject* PyROOT::TMethodHolder::GetDocString()
 {
    return PyString_FromFormat( "%s%s",
       ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetPrototype() );
+}
+
+//____________________________________________________________________________
+Int_t PyROOT::TMethodHolder::GetPriority()
+{
+// Method priorities exist (in lieu of true overloading) there to prevent
+// void* or <unknown>* from usurping otherwise valid calls. TODO: extend this
+// to favour classes that are not bases.
+
+   Int_t priority = 0;
+
+   TIter nextarg( fMethod->GetListOfMethodArgs() );
+   while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
+      G__TypeInfo ti( arg->GetFullTypeName() );
+
+      if ( ! ti.IsValid() )
+         priority -= 1000;    // class is gibberish
+      else if ( (ti.Property() & (kIsClass|kIsStruct)) && ! ti.IsLoaded() )
+         priority -= 100;     // class is known, but no dictionary available
+      else if ( TClassEdit::CleanType( ti.TrueName(), 1 ) == "void*" )
+         priority -= 10;      // void* shouldn't be too greedy
+
+   }
+
+   return priority;
 }
 
 //____________________________________________________________________________

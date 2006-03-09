@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.17 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.18 2005/12/06 11:47:09 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMETHODHOLDER_H
@@ -26,7 +26,7 @@ namespace PyROOT {
 /** Python side ROOT method
       @author  WLAV
       @date    05/06/2004
-      @version 2.0
+      @version 2.1
  */
 
    class TExecutor;
@@ -42,6 +42,7 @@ namespace PyROOT {
 
    public:
       virtual PyObject* GetDocString();
+      virtual Int_t GetPriority();
 
    public:
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds );

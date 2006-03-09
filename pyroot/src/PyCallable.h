@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyCallable.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyCallable.h,v 1.2 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 #ifndef PYROOT_PYCALLABLE_H
@@ -21,6 +21,7 @@ namespace PyROOT {
 
    public:
       virtual PyObject* GetDocString() = 0;
+      virtual Int_t GetPriority() { return 0; }
 
    public:
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds ) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.6 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.7 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -94,8 +94,9 @@ PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* a
       return Py_None;                        // by definition
    }
 
-   PyErr_SetString( PyExc_TypeError, const_cast< char* >(
-      ( std::string( klass->GetName() ) + " constructor failed" ).c_str() ) );
+   if ( ! PyErr_Occurred() )   // should be set, otherwise write a generic error msg
+      PyErr_SetString( PyExc_TypeError, const_cast< char* >(
+         ( std::string( klass->GetName() ) + " constructor failed" ).c_str() ) );
 
 // do not throw an exception, '0' might trigger the overload handler to choose a
 // different constructor, which if all fails will throw an exception

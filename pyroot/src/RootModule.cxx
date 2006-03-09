@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.20 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.21 2005/11/17 06:26:35 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -13,14 +13,7 @@
 
 // ROOT
 #include "TROOT.h"
-#include "TSystem.h"
-#include "TInterpreter.h"
-#include "TApplication.h"
-#include "TBenchmark.h"
-#include "TStyle.h"
-
-// CINT
-#include "Api.h"
+#include "TObject.h"
 
 // Standard
 #include <string>
@@ -35,40 +28,46 @@ namespace {
 
    using namespace PyROOT;
 
-//______________________________________________________________________________
-   class TPyROOTApplication : public TApplication {
-   public:
-      TPyROOTApplication( const char* acn, int* argc, char** argv ) :
-            TApplication( acn, argc, argv )
+//____________________________________________________________________________
+   PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
+   {
+      if ( ! ( pyname && PyString_CheckExact( pyname ) ) )
+         if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "S" ), &pyname ) ) )
+            return 0;
+
+      std::string name = PyString_AS_STRING( pyname );
+
+   // block search for privates
+      if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" )
       {
-      // follow TRint to minimize differences with CINT
-         ProcessLine( "#include <iostream>", kTRUE );
-         ProcessLine( "#include <_string>",  kTRUE ); // for std::string iostream.
-         ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
-         ProcessLine( "#include <pair>",     kTRUE ); //  core ROOT dicts and CINT won't be able
-                                                      //  to properly unload these files
+      // 1st attempt: look in myself
+         PyObject* attr = PyObject_GetAttr( gRootModule, pyname );
+         if ( attr != 0 )
+            return attr;
 
-      // allow the usage of ClassDef and ClassImp in interpreted macros
-         ProcessLine( "#include <RtypesCint.h>", kTRUE );
+      // 2nd attempt: construct name as a class
+         PyErr_Clear();
+         attr = MakeRootClassFromString( name );
+         if ( attr != 0 )
+            return attr;
 
-      // disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-         ProcessLine( "#define ROOT_Rtypes 0", kTRUE );
-         ProcessLine( "#define ROOT_TError 0", kTRUE );
-         ProcessLine( "#define ROOT_TGenericClassInfo 0", kTRUE );
+      // 3rd attempt: lookup name as global variable
+         PyErr_Clear();
+         attr = GetRootGlobalFromString( name );
+         if ( attr != 0 )
+            return attr;
 
-      // the following libs are also useful to have, make sure they are loaded...
-         gROOT->LoadClass("TMinuit",     "Minuit");
-         gROOT->LoadClass("TPostScript", "Postscript");
-         gROOT->LoadClass("THtml",       "Html");
-
-      // save current interpreter context
-         gInterpreter->SaveContext();
-         gInterpreter->SaveGlobalsContext();
-
-      // prevent ROOT from exiting python
-         SetReturnFromRun( kTRUE );
+      // 4th attempt: find existing object (e.g. from file)
+         PyErr_Clear();
+         TObject* object = gROOT->FindObject( name.c_str() );
+         if ( object != 0 )
+            return BindRootObject( object, object->IsA() );
       }
-   };
+
+   // still here? raise attribute error
+      PyErr_Format( PyExc_AttributeError, "%s", name.c_str() );
+      return 0;
+   }
 
 //____________________________________________________________________________
    PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, Long_t hash )
@@ -83,36 +82,11 @@ namespace {
          return ep;
       }
 
-   // filter python private variables (C++ discourages __ as variable start)
-      if ( ! PyString_CheckExact( key ) )
-         return ep;
-
-      std::string strkey = PyString_AS_STRING( key );
-      if ( 2 < strkey.size() && strkey.substr( 0, 2 ) == "__" )
-         return ep;
-
    // all failed, start calling into ROOT
       gDictLookupActive = kTRUE;
 
    // attempt to get ROOT enum/global/class
-      PyObject* val = PyObject_GetAttr( gRootModule, key );
-
-      if ( ! val ) {
-         PyErr_Clear();
-         val = MakeRootClassFromString( strkey );
-      }
-
-      if ( ! val ) {
-         PyErr_Clear();
-         val = GetRootGlobalFromString( strkey );
-      }
-
-      if ( ! val ) {
-         PyErr_Clear();
-         TObject* object = gROOT->FindObject( strkey.c_str() );
-         if ( object != 0 )
-            val = BindRootObject( object, object->IsA() );
-      }
+      PyObject* val = LookupRootEntity( key, 0 );
 
       if ( val != 0 ) {
       // success ...
@@ -134,7 +108,8 @@ namespace {
             ep->me_value = val;
             mp->ma_used++;
          }
-      }
+      } else
+         PyErr_Clear();
 
    // stopped calling into ROOT
       gDictLookupActive = kFALSE;
@@ -143,43 +118,13 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* InitRootApplication()
-   {
-      if ( ! gApplication ) {
-      // retrieve arg list from python, translate to raw C, pass on
-         PyObject* argl = PySys_GetObject( const_cast< char* >( "argv" ) );
-
-         int argc = argl ? PyList_Size( argl ) : 1;
-         char** argv = new char*[ argc ];
-         for ( int i = 1; i < argc; ++i )
-            argv[ i ] = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
-         argv[ 0 ] = Py_GetProgramName();
-
-         gApplication = new TPyROOTApplication( "PyROOT", &argc, argv );
-
-      // CINT message callback (only if loaded from python, i.e. !gApplication)
-         G__set_errmsgcallback( (void*)&PyROOT::Utility::ErrMsgCallback );
-      }
-
-   // setup some more handy ROOT globals
-      if ( ! gBenchmark ) gBenchmark = new TBenchmark();
-      if ( ! gStyle ) gStyle = new TStyle();
-
-      if ( ! gProgName )              // should be set by TApplication
-         gSystem->SetProgname( Py_GetProgramName() );
-
-      Py_INCREF( Py_None );
-      return Py_None;
-   }
-
-//____________________________________________________________________________
    PyObject* SetRootLazyLookup( PyObject*, PyObject* args )
    {
-      PyObject* dict = 0;
+      PyDictObject* dict = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
 
-      ((DictLookup_t&)((PyDictObject*)dict)->ma_lookup) = RootLookDictString;
+      ((DictLookup_t&)dict->ma_lookup) = RootLookDictString;
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -377,13 +322,13 @@ namespace {
 
 //- data -----------------------------------------------------------------------
 static PyMethodDef gPyROOTMethods[] = {
-   { (char*) "makeRootClass", (PyCFunction)PyROOT::MakeRootClass,
+   { (char*) "MakeRootClass", (PyCFunction)PyROOT::MakeRootClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "getRootGlobal", (PyCFunction)PyROOT::GetRootGlobal,
+   { (char*) "GetRootGlobal", (PyCFunction)PyROOT::GetRootGlobal,
      METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "InitRootApplication", (PyCFunction)InitRootApplication,
-     METH_NOARGS,  (char*) "PyROOT internal function" },
-   { (char*) "setRootLazyLookup", (PyCFunction)SetRootLazyLookup,
+   { (char*) "LookupRootEntity", (PyCFunction)LookupRootEntity,
+     METH_VARARGS, (char*) "PyROOT internal function" },
+   { (char*) "SetRootLazyLookup", (PyCFunction)SetRootLazyLookup,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
@@ -432,6 +377,12 @@ extern "C" void initlibPyROOT()
 // inject property proxy type
    if ( ! Utility::InitProxy( gRootModule, &PropertyProxy_Type, "PropertyProxy" ) )
       return;
+
+// policy labels
+   PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics", PyInt_FromLong( 1l ) );
+   PyModule_AddObject( gRootModule, (char*)"kMemoryStrict",     PyInt_FromLong( 2l ) );
+   PyModule_AddObject( gRootModule, (char*)"kSignalFast",       PyInt_FromLong( 1l ) );
+   PyModule_AddObject( gRootModule, (char*)"kSignalSafe",       PyInt_FromLong( 2l ) );
 
 // setup ROOT
    PyROOT::InitRoot();

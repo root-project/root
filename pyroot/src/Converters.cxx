@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.24 2005/12/05 17:40:54 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.25 2005/12/07 06:16:16 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -75,41 +75,41 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, G__CallFunc* func
    if ( PyString_Check( pyobject ) ) {                                        \
       if ( PyString_GET_SIZE( pyobject ) == 1 )                               \
          func->SetArg( (Long_t)PyString_AS_STRING( pyobject )[0] );           \
-      else                                                                    \
+      else {                                                                  \
          PyErr_Format( PyExc_TypeError,                                       \
             #type" expected, got string of size %d", PyString_GET_SIZE( pyobject ) );\
-   } else {                                                                  \
-      Long_t l = PyLong_AsLong( pyobject );                                  \
-      if ( PyErr_Occurred() )                                                \
-         return kFALSE;                                                      \
-      if ( ! ( low <= l && l <= high ) ) {                                   \
+         return kFALSE;                                                       \
+      }                                                                       \
+   } else {                                                                   \
+      Long_t l = PyLong_AsLong( pyobject );                                   \
+      if ( PyErr_Occurred() )                                                 \
+         return kFALSE;                                                       \
+      if ( ! ( low <= l && l <= high ) ) {                                    \
          PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
-         return kFALSE;                                                      \
-      }                                                                      \
-      func->SetArg( l );                                                     \
-   }                                                                         \
-   return kTRUE;                                                             \
-}                                                                            \
-                                                                             \
-PyObject* PyROOT::T##name##Converter::FromMemory( void* address )            \
-{                                                                            \
-   return PyString_FromFormat( "%c", *((type*)address) );                    \
-}                                                                            \
-                                                                             \
-Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address )\
-{                                                                            \
-   const char* buf = PyString_AsString( value );                             \
-   if ( PyErr_Occurred() )                                                   \
-      return kFALSE;                                                         \
-                                                                             \
-   int len = strlen( buf );                                                  \
-   if ( len != 1 ) {                                                         \
+         return kFALSE;                                                       \
+      }                                                                       \
+      func->SetArg( l );                                                      \
+   }                                                                          \
+   return kTRUE;                                                              \
+}                                                                             \
+                                                                              \
+PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
+{                                                                             \
+   return PyString_FromFormat( "%c", *((type*)address) );                     \
+}                                                                             \
+                                                                              \
+Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
+{                                                                             \
+   const char* buf = PyString_AsString( value );                              \
+   if ( PyErr_Occurred() )                                                    \
+      return kFALSE;                                                          \
+   int len = strlen( buf );                                                   \
+   if ( len != 1 ) {                                                          \
       PyErr_Format( PyExc_TypeError, #type" expected, got string of size %d", len );\
-      return kFALSE;                                                         \
-   }                                                                         \
-                                                                             \
-   *((type*)address) = (type)buf[0];                                         \
-   return kTRUE;                                                             \
+      return kFALSE;                                                          \
+   }                                                                          \
+   *((type*)address) = (type)buf[0];                                          \
+   return kTRUE;                                                              \
 }
 
 
@@ -613,6 +613,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data )
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
 
+static int kaas = 0;
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
@@ -638,7 +639,7 @@ Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* fu
       G__ClassInfo* clFormalInfo = fClass->GetClassInfo();
       G__ClassInfo* clActualInfo = pyobj->ObjectIsA()->GetClassInfo();
       Long_t offset = 0;
-      if ( clFormalInfo && clActualInfo )
+      if ( clFormalInfo && clActualInfo && clFormalInfo != clActualInfo )
          offset = G__isanybase( clFormalInfo->Tagnum(), clActualInfo->Tagnum(), (Long_t)obj );
 
    // set pointer (may be null) and declare success

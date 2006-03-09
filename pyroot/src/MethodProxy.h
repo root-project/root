@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.h,v 1.2 2005/04/13 05:04:50 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.h,v 1.3 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_METHODPROXY_H
@@ -26,17 +26,18 @@ namespace PyROOT {
 
    class MethodProxy {
    public:
-      typedef std::map< Long_t, Int_t >      DispatchMap_t;
+      typedef std::map< Long_t, Int_t >  DispatchMap_t;
       typedef std::vector< PyCallable* > Methods_t;
 
       struct MethodInfo_t {
-         MethodInfo_t() { fRefCount = new int(1); }
+         MethodInfo_t() : fIsSorted( kFALSE ) { fRefCount = new int(1); }
          ~MethodInfo_t() { delete fRefCount; }
 
          std::string                 fName;
          MethodProxy::DispatchMap_t  fDispatchMap;
          MethodProxy::Methods_t      fMethods;
          std::string                 fDoc;
+         Bool_t                      fIsSorted;
 
          int* fRefCount;
       };
@@ -45,7 +46,8 @@ namespace PyROOT {
       void Set( const std::string& name, std::vector< PyCallable* >& methods );
 
       const std::string& GetName() const { return fMethodInfo->fName; }
-      void AddMethod( PyCallable* pc ) { fMethodInfo->fMethods.push_back( pc ); }
+      void AddMethod( PyCallable* pc ) {
+         fMethodInfo->fIsSorted = kFALSE; fMethodInfo->fMethods.push_back( pc ); }
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
