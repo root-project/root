@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.39 2006/02/23 16:44:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.40 2006/03/08 21:09:43 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -158,8 +158,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
       gGLManager->ExtractViewport(fGLDevice, viewport);
       SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
    }
-   else
-      Error("TGLViewer", "VAH!!! Dermo kakoe!!!\n");
 }
 
 //______________________________________________________________________________

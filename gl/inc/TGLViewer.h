@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.24 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.25 2006/03/08 21:09:42 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -190,9 +190,7 @@ private:
 
 protected:
    TGLWindow * fGLWindow;    //! remove - replace with TGLManager
-   //NEW
    Int_t       fGLDevice; //!for embedded gl viewer
-   //NEW
    // Overloadable 
    virtual void PostSceneBuildSetup();
    virtual void SelectionChanged(); // *SIGNAL*

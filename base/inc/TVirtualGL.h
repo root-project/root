@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.28 2006/02/06 16:15:12 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.29 2006/03/08 21:09:42 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -178,6 +178,7 @@ class TVirtualGLPainter {
 public:
    virtual ~TVirtualGLPainter(){}
    virtual void Paint() = 0;
+   virtual void Pan(Int_t px, Int_t py) = 0;
 
    ClassDef(TVirtualGLPainter, 0); // Interface for OpenGL painter
 };
@@ -234,6 +235,7 @@ public:
    virtual Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox) = 0;
    //
    virtual void     PaintSingleObject(TVirtualGLPainter *) = 0;
+   virtual void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y) = 0;
    //EPS/PDF output
    virtual void     PrintViewer(TVirtualViewer3D *vv) = 0;
 

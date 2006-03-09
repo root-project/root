@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.10 2006/02/06 16:48:12 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.11 2006/03/08 21:09:43 brun Exp $
 // Author: Valeriy Onuchin(TGWin32GL)/ Timur Pocheptsov (TGWin32GLManager)
 
 /*************************************************************************
@@ -614,4 +614,10 @@ Bool_t TGWin32GLManager::SelectViewer(TVirtualViewer3D *viewer, const TGLRect *r
 Bool_t TGWin32GLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
 {
    return manip->Select(*camera, *rect, *sceneBox);
+}
+
+//______________________________________________________________________________
+void TGWin32GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
+{
+   return o->Pan(x, y);
 }

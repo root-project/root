@@ -24,10 +24,6 @@
 #include "TPoint.h"
 #endif
 
-#ifndef ROOT_TGLOrthoCamera
-#include "TGLOrthoCamera.h"
-#endif
-
 class TString;
 class TAxis;
 class TF3;

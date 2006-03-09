@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.10 2006/02/07 14:18:45 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.11 2006/03/08 21:09:42 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
    Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
    //
    void     PaintSingleObject(TVirtualGLPainter *);
+   void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
    void     PrintViewer(TVirtualViewer3D *vv);
 
    struct TGLContext_t;

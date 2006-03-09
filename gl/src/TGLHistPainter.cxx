@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 
 #ifdef WIN32
 #include "Windows4root.h"
@@ -15,6 +14,7 @@
 
 #include "THLimitsFinder.h"
 #include "TVirtualGL.h"
+#include "KeySymbols.h"
 #include "TVirtualX.h"
 #include "TGaxis.h"
 #include "TString.h"
@@ -23,15 +23,10 @@
 #include "TROOT.h"
 #include "TAxis.h"
 #include "TMath.h"
-#include "TFile.h"
-
-#include "TH2.h"
-
-#include "TGLBoundingBox.h"
 #include "TPad.h"
+#include "TH2.h"
 #include "TH1.h"
 #include "TF3.h"
-#include "KeySymbols.h"
 
 #include "TGLHistPainter.h"
 
@@ -158,7 +153,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fCurrPos.fY = fViewport[3] - py;
          break;
       case kButton2Motion:
-         Pan(px, fViewport[3] - py);
+         gGLManager->PanObject(this, px, fViewport[3] - py);
          break;
       case kButton2Up:
          gGLManager->MarkForDirectCopy(fGLDevice, kFALSE);
@@ -353,29 +348,6 @@ void TGLHistPainter::Paint()
    DrawAxes();
    gVirtualX->SelectWindow(gPad->GetPixmapID());
    //Flush pixmap during rotation
-   
- /*  gPad->SetCopyGLDevice(kTRUE);
-   glColor3d(1., 0., 0.);
-   glDisable(GL_CULL_FACE);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(-1., 1., -1., 1., -200000., 149999.);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-//   glTranslated(0, 0, -15000.);
-   glBegin(GL_POLYGON);
-   glNormal3d(0.,0., 1);
-   glVertex3d(-0.5, -0.5, 150000.);
-   glVertex3d(0.5, -0.5, 150000.);
-   glVertex3d(0.5, 0.5, 150000.);
-   glVertex3d(-0.5, 0.5, 150000.);
-   glEnd();   
-
-   glFlush();   
-   //Put content of GL buffer into pixmap/DIB
-   gGLManager->ReadGLBuffer(fGLDevice);
-   gGLManager->Flush(fGLDevice);*/
    gGLManager->Flush(fGLDevice);
 }
 
@@ -1314,7 +1286,7 @@ void TGLHistPainter::SetTransformation()const
    glRotated(-45., 0., 1., 0.);
    glRotated(-90., 0., 1., 0.);
    glRotated(-90., 1., 0., 0.);
-      glTranslated(-fPan[0], -fPan[1], -fPan[2]);
+   glTranslated(-fPan[0], -fPan[1], -fPan[2]);
    glTranslated(-fCenter[0] * fScaleX, -fCenter[1] * fScaleY, -fCenter[2] * fScaleZ);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.14 2006/02/07 14:18:46 couet Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.15 2006/03/08 21:09:43 brun Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -608,4 +608,10 @@ Bool_t TX11GLManager::SelectViewer(TVirtualViewer3D *viewer, const TGLRect *rect
 Bool_t TX11GLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
 {
    return manip->Select(*camera, *rect, *sceneBox);
+}
+
+//______________________________________________________________________________
+void TX11GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
+{
+   return o->Pan(x, y);
 }
