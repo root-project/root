@@ -1092,7 +1092,8 @@ if test $# -gt 0 ; then
       #
       # Build steering option
       #
-      --build=*)      rootbuild="ROOTBUILD      := $optarg"  ;;
+      # No spaces between "ROOTBUILD" and ":=" allowed!
+      --build=*)      rootbuild="ROOTBUILD:=$optarg"  ;;
       ################################################################
       #
       # Install path options
@@ -3771,6 +3772,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@features@|$features|"           \
+    -e "s|@rootbuild@|${rootbuild/:=/=}|"  \
     -e "s|@configargs@|$configargs|"       \
     -e "s|@dicttype@|$dicttype|"           \
    < root-config.tmp > $RCONFOUT

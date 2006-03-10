@@ -339,6 +339,7 @@ hiux)
 win32)
    # Win32
    auxcflags="-MD"
+   @rootbuild@ # replaced by ROOTBUILD=whatever
    if [ "${ROOTBUILD/debug/}" != "$ROOTBUILD" ]; then
 	  auxcflags="-MDd"
    fi
@@ -694,6 +695,7 @@ while test $# -gt 0; do
       ;;
     *)
       ### Give an error
+      echo "Unknown argument \"$1\"!" 1>&2
       echo "${usage}" 1>&2
       exit 1
       ;;
