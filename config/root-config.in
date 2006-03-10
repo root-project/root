@@ -346,7 +346,7 @@ win32)
    if test "$VC_MAJOR" != "" -a $VC_MAJOR -gt 13; then
       auxcflags="$auxcflags -EHs -GR"
    else
-      auxcflags="$auxcflags -GX -G5"
+      auxcflags="$auxcflags -GR -GX -G5"
    fi
    auxlibs=
    forcelibs=$rootulibs
