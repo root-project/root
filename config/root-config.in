@@ -340,7 +340,7 @@ win32)
    # Win32
    auxcflags="-MD"
    @rootbuild@ # replaced by ROOTBUILD=whatever
-   if [ "${ROOTBUILD/debug/}" != "$ROOTBUILD" ]; then
+   if [ "`echo $ROOTBUILD | sed 's,debug,,'`" != "$ROOTBUILD" ]; then
 	  auxcflags="-MDd"
    fi
    VC_MAJOR=`unset VS_UNICODE_OUTPUT; cl.exe 2>&1 | awk '{ if (NR==1) print $8 }' | cut -d'.' -f1`
