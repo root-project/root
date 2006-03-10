@@ -19,7 +19,7 @@ endif
 
 # these define the build compatibility
 
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
   BLDCXXFLAGS = -MDd -GR
   BLDCFLAGS   = -MDd
   BLDF77FLAGS = -MDd
@@ -49,7 +49,7 @@ endif
 endif
 endif
 
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
 OPT           = $(DEBUGFLAGS)
 LDOPT         = -debug
 F77OPT        = -debug -nopdbfile -MDd

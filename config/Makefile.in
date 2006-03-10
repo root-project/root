@@ -3,13 +3,14 @@
 # Makefile definitions included by the top Makefile
 
 ARCH           := @architecture@
-ROOTBUILD      := @rootbuild@
+@rootbuild@
 USECONFIG      := @useconfig@
 MKLIBOPTIONS   := @mkliboption@
 
 EXTRA_CFLAGS   := -Iinclude @cflags@
 EXTRA_CXXFLAGS := -Iinclude @cflags@
 EXTRA_LDFLAGS  := @ldflags@
+WINRTDEBUG     := @winrtdebug@
 
 GLBPATCHFLAGS  := @glbpatchcflags@
 EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@

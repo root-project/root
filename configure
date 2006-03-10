@@ -21,7 +21,6 @@ show_pkglist=no
 noact="no"
 nohowto="no"
 logfile=config.log
-rootbuild=$ROOTBUILD
 
 options="                    \
    enable_afs                \
@@ -69,6 +68,7 @@ options="                    \
    enable_table              \
    enable_thread             \
    enable_venus              \
+   enable_winrtdebug         \
    enable_xml                \
    enable_xrootd             \
 "
@@ -95,6 +95,7 @@ enable_shadowpw=
 enable_soversion=no
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
+enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
 
 # Remove old log file
@@ -836,6 +837,7 @@ enable/disable options, prefix with either --enable- or --disable-
   table              Build libTable contrib library
   thread             Thread support
   venus              Venus EG support, requires libVenus
+  winrtdebug         Link against the Windows debug runtime library
   xml                XML parser interface
   xrootd             Build xrootd file server and its client (if supported)
 
@@ -1093,7 +1095,7 @@ if test $# -gt 0 ; then
       #
       # Build steering option
       #
-      --build=*)      rootbuild=$optarg  ;;
+      --build=*)      rootbuild="ROOTBUILD      := $optarg"  ;;
       ################################################################
       #
       # Install path options
@@ -1217,6 +1219,19 @@ fi
 e=`echo $rootbuild | sed 's/.*exceptions.*/1/'`
 if test "x$e" = "x1" ; then
     enable_exceptions=no
+fi
+
+######################################################################
+#
+### echo %%% Windows Debug Runtime (-MDd)
+#
+if test "x$enable_winrtdebug" = "x" ; then
+    e=`echo $rootbuild | sed 's/.*debug.*/1/'`
+    if test "x$e" = "x1"; then
+        enable_winrtdebug=yes
+    else
+        enable_winrtdebug=no
+    fi
 fi
 
 ######################################################################
@@ -3673,6 +3688,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@tutdir@|$tutdir|"                    \
     -e "s|@venuslib@|$venuslib|"                \
     -e "s|@venuslibdir@|$venuslibdir|"          \
+    -e "s|@winrtdebug@|$enable_winrtdebug|"     \
     -e "s|@xmlincdir@|$xmlincdir|"              \
     -e "s|@xmllib@|$xmllib|"                    \
     -e "s|@xmllibdir@|$xmllibdir|"              \
@@ -3765,7 +3781,6 @@ for f in $options ; do
        features="$features $feat"
     fi
 done
-
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@platform@|$platform|"           \
     -e "s|@prefix@|$prefix2|"              \
@@ -3773,7 +3788,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@features@|$features|"           \
-    -e "s|@rootbuild@|$rootbuild|"         \
+    -e "s|@winrtdebug@|$enable_winrtdebug|"\
     -e "s|@configargs@|$configargs|"       \
     -e "s|@dicttype@|$dicttype|"           \
    < root-config.tmp > $RCONFOUT
