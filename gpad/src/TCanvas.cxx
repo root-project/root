@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.103 2005/11/28 13:50:41 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.104 2006/03/08 21:09:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1690,7 +1690,12 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
    // Use this function to zoom in a canvas and naviguate via
    // the scroll bars.
 
-   if (fCanvasImp) fCanvasImp->SetCanvasSize(ww, wh);
+   if (fCanvasImp) {
+      fCanvasImp->SetCanvasSize(ww, wh);
+      fCw = ww;
+      fCh = wh;
+      ResizePad();
+   }
 }
 
 
