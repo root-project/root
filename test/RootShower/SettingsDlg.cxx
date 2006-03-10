@@ -223,7 +223,7 @@ SettingsDialog::~SettingsDialog()
 void SettingsDialog::CloseWindow()
 {
     // Called when window is closed via the window manager.
-    delete this;
+    DeleteWindow();
 }
 
 //______________________________________________________________________________

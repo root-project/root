@@ -576,6 +576,7 @@ void RootShower::CloseWindow()
         }
     }
     cout << "Terminating RootShower" << endl;
+    DeleteWindow();
     gApplication->Terminate(0);
 }
 

@@ -120,7 +120,7 @@ void RootShowerMsgBox::CloseWindow()
 {
    // Close dialog in response to window manager close.
 
-   delete this;
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
