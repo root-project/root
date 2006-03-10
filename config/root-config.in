@@ -339,7 +339,7 @@ hiux)
 win32)
    # Win32
    auxcflags="-MD"
-   @rootbuild@ # replaced by ROOTBUILD=whatever
+   ROOTBUILD="@rootbuild@"
    if [ "`echo $ROOTBUILD | sed 's,debug,,'`" != "$ROOTBUILD" ]; then
 	  auxcflags="-MDd"
    fi

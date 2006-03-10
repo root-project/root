@@ -21,6 +21,7 @@ show_pkglist=no
 noact="no"
 nohowto="no"
 logfile=config.log
+rootbuild=$ROOTBUILD
 
 options="                    \
    enable_afs                \
@@ -95,7 +96,6 @@ enable_soversion=no
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
 enable_xrootd=           # must be set explicitely via --enable-xrootd
-rootbuild="ROOTBUILD:="
 
 # Remove old log file
 rm -f $logfile
@@ -1093,8 +1093,7 @@ if test $# -gt 0 ; then
       #
       # Build steering option
       #
-      # No spaces between "ROOTBUILD" and ":=" allowed!
-      --build=*)      rootbuild="ROOTBUILD:=$optarg"  ;;
+      --build=*)      rootbuild=$optarg  ;;
       ################################################################
       #
       # Install path options
@@ -3766,7 +3765,7 @@ for f in $options ; do
        features="$features $feat"
     fi
 done
-rootbuild="`echo $rootbuild|sed 's,:=,=,'`"
+
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@platform@|$platform|"           \
     -e "s|@prefix@|$prefix2|"              \
@@ -3774,7 +3773,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
     -e "s|@features@|$features|"           \
-    -e "s|@rootbuild@|$rootbuild|"  \
+    -e "s|@rootbuild@|$rootbuild|"         \
     -e "s|@configargs@|$configargs|"       \
     -e "s|@dicttype@|$dicttype|"           \
    < root-config.tmp > $RCONFOUT
