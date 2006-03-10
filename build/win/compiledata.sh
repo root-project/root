@@ -39,6 +39,14 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=%ROOTSYS%/lib
 fi
 
+HAVEMT=`(unset VS_UNICODE_OUTPUT; mt '/?' >/dev/null 2>&1) && echo 1`
+if [ "$HAVEMT" == "1" ]; then
+   HAVEMT1=' && if EXIST $BuildDir\\$LibName.dll.manifest ( mt -nologo -manifest $BuildDir\\$LibName.dll.manifest -outputresource:$BuildDir\\$LibName.dll'
+   HAVEMT2=' && del $BuildDir\\$LibName.dll.manifest)'
+   HAVEMTDLL="${HAVEMT1}${HAVEMT2}"
+   HAVEMTEXE="${HAVEMT1}${HAVEMT2}"
+fi
+
 rm -f __compiledata
 
 echo "Running $0"
@@ -47,13 +55,13 @@ echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then 
-   echo "#define  MAKESHAREDLIB \"cl \$Opt -nologo -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles -Fo\$ObjectFiles && bindexplib \$LibName \$ObjectFiles > \$BuildDir\\\\\$LibName.def && lib -nologo -MACHINE:IX86 -out:\$BuildDir\\\\\$LibName.lib \$ObjectFiles -def:\$BuildDir\\\\\$LibName.def && link -nologo \$ObjectFiles -DLL $LDFLAGS -out:\$BuildDir\\\\\$LibName.dll \$BuildDir\\\\\$LibName.exp -LIBPATH:%ROOTSYS%\\\\lib  \$LinkedLibs libCore.lib libCint.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \" " >> __compiledata
+   echo "#define  MAKESHAREDLIB \"cl \$Opt -nologo -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles -Fo\$ObjectFiles && bindexplib \$LibName \$ObjectFiles > \$BuildDir\\\\\$LibName.def && lib -nologo -MACHINE:IX86 -out:\$BuildDir\\\\\$LibName.lib \$ObjectFiles -def:\$BuildDir\\\\\$LibName.def && link -nologo \$ObjectFiles -DLL $LDFLAGS -out:\$BuildDir\\\\\$LibName.dll \$BuildDir\\\\\$LibName.exp -LIBPATH:%ROOTSYS%\\\\lib  \$LinkedLibs libCore.lib libCint.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib $HAVEMTDLL \" " >> __compiledata
 else
    echo "#define  MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
 
 if [ "$CUSTOMEXE" = "" ]; then 
-   echo "#define MAKEEXE \"cl -nologo -TP -Iinclude -I../include -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles; link -opt:ref $LDFLAGS \$ObjectFiles \$LinkedLibs $SYSLIBS -out:\$ExeName \""  >> __compiledata
+   echo "#define MAKEEXE \"cl -nologo -TP -Iinclude -I../include -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles; link -opt:ref $LDFLAGS \$ObjectFiles \$LinkedLibs $SYSLIBS -out:\$ExeName $HAVEMTEXE \""  >> __compiledata
 else 
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
 fi
