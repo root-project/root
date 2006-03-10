@@ -51,7 +51,7 @@ endif
 endif
 endif
 
-ifeq (yes,$(WINRTDEBUG))
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 LDOPT         = -debug
 F77OPT        = -debug -nopdbfile
