@@ -33,9 +33,11 @@ ifeq ($(VC_MAJOR),14)
   BLDCXXFLAGS+= -EHs
   BLDCFLAGS  += -EHs
 
-  ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ ifeq (yes,$(WINRTDEBUG))
     BLDCXXFLAGS += -RTC1
-  endif
+    BLDCFLAGS   += -RTC1
+    BLDF77FLAGS += -RTC1
+ endif
 else
 ifeq ($(VC_MINOR),10)
   BLDCXXFLAGS+= -G5 -GX
@@ -52,14 +54,14 @@ endif
 ifeq (yes,$(WINRTDEBUG))
 OPT           = $(DEBUGFLAGS)
 LDOPT         = -debug
-F77OPT        = -debug -nopdbfile -MDd
+F77OPT        = -debug -nopdbfile
 else
 OPT           = $(OPTFLAGS)
 LDOPT         =
-F77OPT        = -optimize:0 -nopdbfile -recursive -MD
+F77OPT        = -optimize:0 -nopdbfile -recursive 
 endif
-NOOPT         =
 
+NOOPT         =
 
 # Compiler:
 CXX           = build/win/cxx.sh
