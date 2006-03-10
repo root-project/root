@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: CylindricalEta3D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
+// @(#)root/mathcore:$Name: v5-10-00 $:$Id: CylindricalEta3D.h,v 1.6 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 11:58:46 2005
 // Major revamp:  M. Fischler  at Fri Jun 10 2005
 // 
-// Last update: $Id: CylindricalEta3D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
+// Last update: $Id: CylindricalEta3D.h,v 1.6 2006/02/06 17:22:03 moneta Exp $
 
 // 
 #ifndef ROOT_Math_GenVector_CylindricalEta3D 
@@ -66,7 +66,7 @@ public :
   {  
     static Scalar bigEta = 
     			-.3 *std::log(std::numeric_limits<Scalar>::epsilon());
-    if ( fabs(fEta) > bigEta ) {
+    if ( std::fabs(fEta) > bigEta ) {
       fRho *= v.Z()/Z(); // This gives a small absolute adjustment in rho,
     		 	 // which, for large eta, results in a significant
 			 // improvement in the faithfullness of reproducing z.
