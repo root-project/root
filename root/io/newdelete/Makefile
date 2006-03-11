@@ -1,5 +1,5 @@
 TEST_TARGETS += OperatorNewTest
-CLEAN_TARGETS += *Dict* output *.o *.so *.log
+CLEAN_TARGETS += *Dict* output *.o *.so *.log $(ALL_LIBRARIES)
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')

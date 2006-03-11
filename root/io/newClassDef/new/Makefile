@@ -59,7 +59,7 @@ $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 local_clean:
 	$(CMDECHO)rm -rf ti_files $(DICTS) $(DICTS_H) ii_files ti_files
 	$(CMDECHO)rm -rf *.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~
-	$(CMDECHO)rm -rf *.exp .def *.log
+	$(CMDECHO)rm -rf *.exp .def *.log *.pdb
 
 clean: local_clean
 

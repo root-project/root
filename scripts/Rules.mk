@@ -141,16 +141,15 @@ CXXOPT        = -O2
 #CXXOPT        = -Z7
 #CXXFLAGS      = $(CXXOPT) -G5 -GR -MD -DWIN32 -D_WINDOWS -nologo \
 #                -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
-CXXFLAGS      += /TP /GX  -G5 -GR
+CXXFLAGS      += $(CXXOPT) -nologo -I$(shell root-config --incdir) -FIw32pragma.h
+CXXFLAGS      += /TP 
 LD            = link
 #LDOPT         = -opt:ref
 #LDOPT         = -debug
 #LDFLAGS       = $(LDOPT) -nologo -nodefaultlib -incremental:no
 SOFLAGS       = -DLL
-SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
+SYSLIBS       = kernel32.lib  ws2_32.lib mswsock.lib \
                 advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib 
-
-#                msvcirt.lib
 
 else 
 
@@ -348,7 +347,7 @@ define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
 	root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$<\")" > $@.build.log 2>&1 && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
-	rm dummy$$$$.C \
+	rm dummy$$$$.C dummy$$$$_C.* \
 )
 endef
 
