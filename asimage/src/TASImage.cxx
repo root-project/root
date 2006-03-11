@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.50 2006/01/18 10:25:13 couet Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.51 2006/01/30 09:01:11 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -1332,6 +1332,31 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
             gVirtualX->SetLineColor(-1);
             gPad->Modified(kTRUE);
+            //recompute the pad range
+            Double_t wpad  = gPad->GetWw()*gPad->GetWNDC();
+            Double_t hpad  = gPad->GetWh()*gPad->GetHNDC();
+            Double_t uxmin = gPad->AbsPixeltoX(stx);
+            Double_t uxmax = gPad->AbsPixeltoX(px);
+            if (uxmin > uxmax) {Double_t temp = uxmin; uxmin = uxmax; uxmax = temp;}
+            Double_t uymax = gPad->AbsPixeltoY(sty);
+            Double_t uymin = gPad->AbsPixeltoY(py);
+            if (uymin > uymax) {Double_t temp = uymin; uymin = uymax; uymax = temp;}
+            Double_t zw=0, zh=0;
+            if (fZoomWidth > fZoomHeight) {
+               zw = wpad*(1-gPad->GetLeftMargin()-gPad->GetRightMargin());
+               zh = fZoomHeight*zw/fZoomWidth;
+            } else {
+               zh = hpad*(1-gPad->GetBottomMargin()-gPad->GetLeftMargin());
+               zw = fZoomWidth*zh/fZoomHeight;
+            } 
+            Double_t dx1 = (uxmax-uxmin)/zw;
+            Double_t dy1 = (uymax-uymin)/zh;
+            Double_t y2 = uymax + dy1*hpad*gPad->GetTopMargin();
+            Double_t y1 = y2 - dy1*hpad;
+            Double_t x1 = uxmin -dx1*wpad*gPad->GetLeftMargin();
+            Double_t x2 = x1 + dx1*wpad;
+   
+            gPad->Range(x1,y1,x2,y2);
             gPad->Update();
             break;
       }
@@ -1584,6 +1609,9 @@ void TASImage::UnZoom()
 
    delete fScaledImage;
    fScaledImage = 0;
+   //the following line should be fixed. it assumes an original
+   //pad range in [0,1] and 10% for the margins
+   if (gPad) gPad->Range(-0.125,-0.125,1.125,1.125);
 }
 
 //______________________________________________________________________________
