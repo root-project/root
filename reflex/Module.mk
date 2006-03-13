@@ -55,10 +55,10 @@ RFLX_CPPUNITLL  = $(shell cygpath -w "$(CPPUNIT)/lib/cppunit.lib")
 RFLX_REFLEXLL   = lib/libReflex.lib
 else
 RFLX_GENREFLEX = bin/genreflex
-RFLX_GNRFLX_L1 = "\#!/bin/csh -f"
+RFLX_GNRFLX_L1 = "\#!/bin/sh"
 RFLX_GNRFLX_L2 = 'eval "python $$0:h/../lib/python/genreflex/genreflex.py $$*"'
 RFLX_GENRFLXRC = bin/genreflex-rootcint
-RFLX_GRFLXRC_L1 = "\#!/bin/csh -f"
+RFLX_GRFLXRC_L1 = "\#!/bin/sh"
 RFLX_GRFLXRC_L2 = 'eval "python $$0:h/../lib/python/genreflex/genreflex-rootcint.py $$*"'
 # test suite
 RFLX_CPPUNITI   = $(CPPUNIT)/include
