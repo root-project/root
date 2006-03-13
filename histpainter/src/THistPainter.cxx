@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.245 2006/02/13 09:52:33 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.246 2006/03/06 13:13:47 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -617,6 +617,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (fFunctions->First()) Hoption.Func = 2;
    if (fH->GetSumw2N() && fH->GetDimension() == 1) Hoption.Error = 2;
 
+   l = strstr(chopt,"GL");
+   if (l) {
+      strncpy(l,"  ",2);
+   }
    l = strstr(chopt,"X+");
    if (l) {
       Hoption.AxisPos = 10;

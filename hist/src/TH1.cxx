@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.276 2006/02/23 20:53:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.277 2006/02/28 10:07:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2746,12 +2746,14 @@ char *TH1::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 //______________________________________________________________________________
-TVirtualHistPainter *TH1::GetPainter()
+TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 {
    // return pointer to painter
    // if painter does not exist, it is created
    if (!fPainter) {
-      if (gStyle->GetCanvasPreferGL()) {
+      TString opt = option;
+      opt.ToLower();
+      if (opt.Contains("gl") || gStyle->GetCanvasPreferGL()) {
          //try to create TGLHistPainter
          TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TGLHistPainter");
 
