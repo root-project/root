@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.25 2005/12/07 06:16:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.26 2006/03/09 09:07:02 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -223,7 +223,7 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
       PyErr_SetString( PyExc_OverflowError, "value to large for unsigned int" );
       return kFALSE;
    }
- 
+
    *((UInt_t*)address) = (UInt_t)u;
    return kTRUE;
 }
@@ -264,7 +264,7 @@ Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, G__CallFunc* ) {
    PyErr_SetString( PyExc_SystemError, "macro arguments can\'t be set" );
    return kFALSE;
 }
-   
+
 PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
 {
 // no info available from ROOT/meta; go directly to CINT for the type info
@@ -347,7 +347,7 @@ Bool_t PyROOT::TULongLongConverter::SetArg( PyObject* pyobject, G__CallFunc* fun
 }
 
 PyObject* PyROOT::TULongLongConverter::FromMemory( void* address )
-{  
+{
    return PyLong_FromUnsignedLongLong( *(ULong64_t*)address );
 }
 
@@ -577,7 +577,7 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc*
       Py_DECREF( pytc );           // such thing for long long in module array
       return kFALSE;
    }
-   
+
    return TVoidArrayConverter::SetArg( pyobject, func );
 }
 
@@ -613,7 +613,6 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data )
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
 
-static int kaas = 0;
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
