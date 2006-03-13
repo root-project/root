@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.h,v 1.5 2005/12/12 09:14:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -26,7 +26,7 @@ namespace ROOT {
        *  @date 6/4/2005
        *  @ingroup RefBld
        */
-      class VariableBuilder {
+      class RFLX_API VariableBuilder {
 
       public:
 
@@ -66,7 +66,7 @@ namespace ROOT {
        * @date 6/4/2005
        * @ingroup RefBld
        */
-      class VariableBuilderImpl {
+      class RFLX_API VariableBuilderImpl {
 
       public:
 

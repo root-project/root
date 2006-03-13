@@ -1,8 +1,10 @@
-// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.2 2005/11/11 07:18:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.3 2005/11/23 16:08:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #ifndef ROOT_Reflex_DictSelection
 #define ROOT_Reflex_DictSelection
+
+#include "Reflex/Kernel.h"
 
 /**
  * @file  DictSelection.h
@@ -241,7 +243,7 @@ namespace ROOT {
           * This should be used in a selection class.  This marks the corresponding
           * MemberAt as being transient.  See the header comments for examples.
           */
-         class TRANSIENT {};
+         class RFLX_API TRANSIENT {};
       
       
          /*
@@ -252,7 +254,7 @@ namespace ROOT {
           * selected to have dictionary information generated wherever it's
           * needed.  See the header comments for examples.
           */
-         class AUTOSELECT{};
+         class RFLX_API AUTOSELECT{};
       
       
          /*
@@ -261,7 +263,7 @@ namespace ROOT {
           * This is used in the @c TEMPLATE_DEFAULTS template argument list
           * for positions where template arguments cannot be defaulted.
           */
-         struct NODEFAULT {};
+         struct RFLX_API  NODEFAULT {};
       
       
          /*

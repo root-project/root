@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.6 2006/01/06 09:18:31 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.7 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -8,6 +8,8 @@
 // permissions notice appear in all copies and derivatives.
 //
 // This software is provided "as is" without express or implied warranty.
+
+#define REFLEX_BUILD
 
 #include "Reflex/TypeName.h"
 

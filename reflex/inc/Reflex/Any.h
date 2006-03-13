@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.5 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.6 2006/01/27 16:10:20 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -33,7 +33,7 @@ namespace ROOT {
        * @class Any Any.h Reflex/Any.h
        * @author K. Henney
        */
-      class Any {
+      class RFLX_API Any {
 
          friend std::ostream& operator << ( std::ostream&, 
                                             const Any& );

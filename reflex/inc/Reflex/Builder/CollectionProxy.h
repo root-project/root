@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.10 2005/12/14 18:14:02 brun Exp $
+// @(#)root/reflex:$Name:  $:$Id: CollectionProxy.h,v 1.11 2006/03/06 12:51:46 roiser Exp $
 // Author: Markus Frank 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -280,7 +280,7 @@ namespace ROOT {
        *
        * @author  M.Frank
        */
-      struct CollFuncTable  {
+      struct RFLX_API CollFuncTable  {
          size_t iter_size;
          size_t value_diff;
          int    value_offset;

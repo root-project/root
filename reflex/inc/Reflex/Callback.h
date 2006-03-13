@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Callback.h,v 1.4 2006/01/27 16:10:20 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Callback.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -27,7 +27,7 @@ namespace ROOT {
        * @date 12/11/2004
        * @ingroup Ref
        */
-      class ICallback {
+      class RFLX_API ICallback {
       
       public:
 
@@ -46,10 +46,10 @@ namespace ROOT {
       }; // class ICallback
     
     
-      void InstallClassCallback( ICallback * cb );
-      void UninstallClassCallback( ICallback * cb );
-      void FireClassCallback( const Type & );
-      void FireFunctionCallback( const Member & );
+      RFLX_API void InstallClassCallback( ICallback * cb );
+      RFLX_API void UninstallClassCallback( ICallback * cb );
+      RFLX_API void FireClassCallback( const Type & );
+      RFLX_API void FireFunctionCallback( const Member & );
     
    } // namespace Reflex
 } // namespace ROOT

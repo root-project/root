@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.5 2005/11/30 13:22:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,7 +33,7 @@ namespace ROOT {
           * @param ti the mangled At string
           * @return the demangled string
           */
-         std::string Demangle( const std::type_info & ti );
+          RFLX_API std::string Demangle( const std::type_info & ti );
 
 
          /**
@@ -42,9 +42,9 @@ namespace ROOT {
           * @param  str the input string
           * @param  delim the delimiter on which to split 
           */
-         void StringSplit(std::vector < std:: string > & splitValues,
-                          const std::string & str, 
-                          const std::string & delim = ",");
+         RFLX_API void StringSplit(std::vector < std:: string > & splitValues,
+                                   const std::string & str, 
+                                   const std::string & delim = ",");
 
 
          /** 
@@ -54,42 +54,42 @@ namespace ROOT {
           * @param  str the string to be split
           * @param  delim the delimiter on which to split
           */
-         void StringSplitPair(std::string & val1,
-                              std::string & val2,
-                              const std::string & str,
-                              const std::string & delim = ",");
+         RFLX_API void StringSplitPair(std::string & val1,
+                                       std::string & val2,
+                                       const std::string & str,
+                                       const std::string & delim = ",");
 
 
          /**
           * StringStrip will strip off Empty spaces of a string
           * @param str a reference to a string to be stripped
           */
-         void StringStrip(std::string & str);
+         RFLX_API void StringStrip(std::string & str);
 
-         std::string BuildTypeName( Type & t, 
-                                    unsigned int modifiers );
+         RFLX_API std::string BuildTypeName( Type & t, 
+                                             unsigned int modifiers );
 
 
-         std::vector<std::string> GenTemplateArgVec( const std::string & name );
+         RFLX_API std::vector<std::string> GenTemplateArgVec( const std::string & name );
 
 
          /**
           * getUnscopedPosition will return the position in a
           * string where the unscoped At begins
           */
-         size_t GetBasePosition( const std::string & name );
+         RFLX_API size_t GetBasePosition( const std::string & name );
 
 
          /**
           * Get the At part of a given At/member Name
           */
-         std::string GetScopeName( const std::string & name );
+         RFLX_API std::string GetScopeName( const std::string & name );
 
 
          /** 
           * Get the BaseAt (unscoped) Name of a At/member Name
           */
-         std::string GetBaseName( const std::string & name );
+         RFLX_API std::string GetBaseName( const std::string & name );
 
 
          /**
@@ -97,7 +97,7 @@ namespace ROOT {
           * @param Name the At Name
           * @return true if At is templated
           */
-         bool IsTemplated( const char * name );
+         RFLX_API bool IsTemplated( const char * name );
 
 
          /**
@@ -106,7 +106,7 @@ namespace ROOT {
           * @param Name the Name of the templated At
           * @return template arguments of the templated At
           */
-         std::string GetTemplateArguments( const char * name );
+         RFLX_API std::string GetTemplateArguments( const char * name );
 
 
          /** 
@@ -114,7 +114,7 @@ namespace ROOT {
           * @param Name the Name of the template At
           * @return template Name
           */
-         std::string GetTemplateName( const char * name );
+         RFLX_API std::string GetTemplateName( const char * name );
 
    
          /**

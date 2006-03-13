@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.6 2006/03/07 09:37:44 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -29,7 +29,7 @@ namespace ROOT {
        * @date 30/3/2004
        * @ingroup RefBld
        */
-      class ClassBuilderImpl {
+      class RFLX_API ClassBuilderImpl {
     
       public:
       
@@ -130,7 +130,7 @@ namespace ROOT {
        * @date 24/5/2004
        * @ingroup RefBld
        */
-      class ClassBuilder {
+      class RFLX_API ClassBuilder {
 
       public:
 

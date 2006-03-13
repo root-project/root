@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.6 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.7 2006/03/07 09:37:44 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -8,6 +8,8 @@
 // permissions notice appear in all copies and derivatives.
 //
 // This software is provided "as is" without express or implied warranty.
+
+#define REFLEX_BUILD
 
 #include "Reflex/Builder/ClassBuilder.h"
 

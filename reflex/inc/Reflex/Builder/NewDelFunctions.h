@@ -1,4 +1,4 @@
-// $Id: NewDelFunctions.h,v 1.3 2005/11/24 17:08:36 rdm Exp $
+// $Id: NewDelFunctions.h,v 1.4 2006/02/09 20:36:54 pcanal Exp $
 
 #ifndef ROOT_Reflex_NewDelFunctions
 #define ROOT_Reflex_NewFelFunctions
@@ -17,7 +17,7 @@ namespace ROOT {
       typedef void  (*DelArrFunc_t)( void* );
       typedef void  (*DesFunc_t)( void* ); 
     
-      struct NewDelFunctions {
+      struct RFLX_API NewDelFunctions {
          NewFunc_t    fNew;             //pointer to a function newing one object.
          NewArrFunc_t fNewArray;        //pointer to a function newing an array of objects.
          DelFunc_t    fDelete;          //pointer to a function deleting one object.

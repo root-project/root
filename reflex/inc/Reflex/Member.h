@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.5 2006/01/06 08:34:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -32,7 +32,7 @@ namespace ROOT {
        * @date 24/11/2003
        * @ingroup Ref
        */
-      class Member {
+      class RFLX_API Member {
 
       public:
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.9 2006/03/06 12:24:00 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.10 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,34 +15,35 @@
 // These macros will allow selection on exported symbols
 // taken from http://www.nedprod.com/programs/gccvisibility.html
 // Shared library support
+
+#if __GNUC__ >= 4
+  #define GCC_HASCLASSVISIBILITY
+#endif
+
 #ifdef WIN32
   #define RFLX_IMPORT __declspec(dllimport)
   #define RFLX_EXPORT __declspec(dllexport)
   #define RFLX_DLLLOCAL
   #define RFLX_DLLPUBLIC
 #else
-  #define RFLX_IMPORT
   #ifdef GCC_HASCLASSVISIBILITY
-    #define RFLX_EXPORT __attribute__ ((visibility("default")))
-    #define RFLX_DLLLOCAL __attribute__ ((visibility("hidden")))
-    #define RFLX_DLLPUBLIC __attribute__ ((visibility("default")))
+    #define RFLX_EXPORT __attribute__((visibility("default")))
+    #define RFLX_DLLLOCAL __attribute__((visibility("hidden")))
+    #define RFLX_DLLPUBLIC __attribute__((visibility("default")))
   #else
     #define RFLX_EXPORT
     #define RFLX_DLLLOCAL
     #define RFLX_DLLPUBLIC
   #endif
+  #define RFLX_IMPORT
 #endif
 
 // Define RFLX_API for DLL builds
-#ifdef FOXDLL
-  #ifdef FOXDLL_EXPORTS
-    #define RFLX_API RFLX_EXPORT
-  #else
-    #define RFLX_API  RFLX_IMPORT
-  #endif // FOXDLL_EXPORTS
+#ifdef REFLEX_BUILD
+  #define RFLX_API RFLX_EXPORT
 #else
-  #define RFLX_API
-#endif // FOXDLL
+  #define RFLX_API  RFLX_IMPORT
+#endif // RFLX_BUILD
 
 // Throwable classes must always be visible on GCC in all binaries
 #ifdef WIN32
@@ -163,7 +164,7 @@ namespace ROOT {
       typedef MemberTemplate_Cont_Type_t::reverse_iterator Reverse_MemberTemplate_Iterator;
 
       /** some general information about the Reflex package */
-      class Reflex {
+      class RFLX_API Reflex {
          public:
       
          /** default constructor */
@@ -279,24 +280,24 @@ namespace ROOT {
       typedef size_t( * OffsetFunction ) ( void * );
 
       /** dummy types for type_info purposes */
-      class NullType {};
-      class UnknownType {};
+      class RFLX_API NullType {};
+      class RFLX_API UnknownType {};
       /** place holders for protected types */
-      class ProtectedClass {};
-      class ProtectedEnum {};
-      class ProtectedStruct {};
-      class ProtectedUnion {};
+      class RFLX_API ProtectedClass {};
+      class RFLX_API ProtectedEnum {};
+      class RFLX_API ProtectedStruct {};
+      class RFLX_API ProtectedUnion {};
       /** place holders for private types */
-      class PrivateClass {};
-      class PrivateEnum {};
-      class PrivateStruct {};
-      class PrivateUnion {};
+      class RFLX_API PrivateClass {};
+      class RFLX_API PrivateEnum {};
+      class RFLX_API PrivateStruct {};
+      class RFLX_API PrivateUnion {};
       /** place holders for unnamed types (also typeinfo purposes) */
-      class UnnamedClass {};
-      class UnnamedEnum {};
-      class UnnamedNamespace {};
-      class UnnamedStruct {};
-      class UnnamedUnion {};
+      class RFLX_API UnnamedClass {};
+      class RFLX_API UnnamedEnum {};
+      class RFLX_API UnnamedNamespace {};
+      class RFLX_API UnnamedStruct {};
+      class RFLX_API UnnamedUnion {};
       
       /** exception classes */
       class RFLX_EXCEPTIONAPI(RFLX_API) RuntimeError : public std::exception {

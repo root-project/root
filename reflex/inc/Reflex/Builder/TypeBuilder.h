@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.7 2006/01/06 10:26:24 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.8 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -27,302 +27,302 @@
 namespace ROOT{ 
    namespace Reflex{
 
-      Type TypeBuilder( const char * n,
-                        unsigned int modifiers = 0 );
+      RFLX_API Type TypeBuilder( const char * n,
+                                 unsigned int modifiers = 0 );
 
 
-      Type ConstBuilder( const Type & t );
+      RFLX_API Type ConstBuilder( const Type & t );
+      
+
+      RFLX_API Type VolatileBuilder( const Type & t );
 
 
-      Type VolatileBuilder( const Type & t );
+      RFLX_API Type PointerBuilder( const Type & t,
+                                    const std::type_info & ti = typeid(UnknownType));
 
 
-      Type PointerBuilder( const Type & t,
-                           const std::type_info & ti = typeid(UnknownType));
+      RFLX_API Type ReferenceBuilder( const Type & t );
 
 
-      Type ReferenceBuilder( const Type & t );
+      RFLX_API Type ArrayBuilder( const Type & t, 
+                                  size_t n,
+                                  const std::type_info & ti = typeid(UnknownType));
+
+      RFLX_API Type EnumTypeBuilder( const char *, 
+                                     const char * items = "",
+                                     const std::type_info & ti = typeid(UnknownType));
+
+      RFLX_API Type TypedefTypeBuilder( const char * Name, 
+                                        const Type & t );
 
 
-      Type ArrayBuilder( const Type & t, 
-                         size_t n,
-                         const std::type_info & ti = typeid(UnknownType));
-
-      Type EnumTypeBuilder( const char *, 
-                            const char * items = "",
-                            const std::type_info & ti = typeid(UnknownType));
-
-      Type TypedefTypeBuilder( const char * Name, 
-                               const Type & t );
+      RFLX_API Type FunctionTypeBuilder( const Type & r,
+                                         const std::vector<Type> & p,
+                                         const std::type_info & ti = typeid(UnknownType));
 
 
-      Type FunctionTypeBuilder( const Type & r,
-                                const std::vector<Type> & p,
-                                const std::type_info & ti = typeid(UnknownType));
+      RFLX_API Type FunctionTypeBuilder(const Type & r);
 
 
-    Type FunctionTypeBuilder(const Type & r);
-
-
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0);
+  
+      
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14);
+      
+
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24, const Type & t25);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24, const Type & t25,
+                                        const Type & t26);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24, const Type & t25);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24, const Type & t25,
+                                        const Type & t26, const Type & t27);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24, const Type & t25,
-                             const Type & t26);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24, const Type & t25,
+                                        const Type & t26, const Type & t27, const Type & t28);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24, const Type & t25,
-                             const Type & t26, const Type & t27);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24, const Type & t25,
+                                        const Type & t26, const Type & t27, const Type & t28,
+                                        const Type & t29);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24, const Type & t25,
-                             const Type & t26, const Type & t27, const Type & t28);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24, const Type & t25,
+                                        const Type & t26, const Type & t27, const Type & t28,
+                                        const Type & t29, const Type & t30);
   
 
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24, const Type & t25,
-                             const Type & t26, const Type & t27, const Type & t28,
-                             const Type & t29);
-  
-
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24, const Type & t25,
-                             const Type & t26, const Type & t27, const Type & t28,
-                             const Type & t29, const Type & t30);
-  
-
-    Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
-                             const Type & t2,  const Type & t3,  const Type & t4, 
-                             const Type & t5,  const Type & t6,  const Type & t7,
-                             const Type & t8,  const Type & t9,  const Type & t10, 
-                             const Type & t11, const Type & t12, const Type & t13, 
-                             const Type & t14, const Type & t15, const Type & t16,
-                             const Type & t17, const Type & t18, const Type & t19,
-                             const Type & t20, const Type & t21, const Type & t22,
-                             const Type & t23, const Type & t24, const Type & t25,
-                             const Type & t26, const Type & t27, const Type & t28,
-                             const Type & t29, const Type & t30, const Type & t31);
+      RFLX_API Type FunctionTypeBuilder(const Type & r,   const Type & t0,  const Type & t1, 
+                                        const Type & t2,  const Type & t3,  const Type & t4, 
+                                        const Type & t5,  const Type & t6,  const Type & t7,
+                                        const Type & t8,  const Type & t9,  const Type & t10, 
+                                        const Type & t11, const Type & t12, const Type & t13, 
+                                        const Type & t14, const Type & t15, const Type & t16,
+                                        const Type & t17, const Type & t18, const Type & t19,
+                                        const Type & t20, const Type & t21, const Type & t22,
+                                        const Type & t23, const Type & t24, const Type & t25,
+                                        const Type & t26, const Type & t27, const Type & t28,
+                                        const Type & t29, const Type & t30, const Type & t31);
   
 
       /**
