@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name: v5-10-00 $:$Id: rootcint.cxx,v 1.237 2006/02/16 19:03:26 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.238 2006/03/03 20:36:33 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2427,7 +2427,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    (*dictSrcOut) << "   namespace ROOT {" << std::endl;
 
-#if !defined(R__SGI) && !defined(R__AIX) && !(defined(R__MACOSX) && defined(R__INTEL_COMPILER))
+#if !defined(R__SGI) && !defined(R__AIX)
    (*dictSrcOut) << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
 #endif
 
@@ -2438,11 +2438,8 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
        << "      // Function generating the singleton type initializer" << std::endl
 
-#if !defined(R__SGI) && !defined(R__AIX) && !(defined(R__MACOSX) && defined(R__INTEL_COMPILER))
+#if !defined(R__SGI) && !defined(R__AIX)
        << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl 
-       << "      {" << std::endl
-#elif defined(R__MACOSX) && defined(R__INTEL_COMPILER)
-       << "      static ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl 
        << "      {" << std::endl
 #else
        << "      ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl

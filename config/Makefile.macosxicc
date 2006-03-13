@@ -17,15 +17,15 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      =  -fPIC -wd1476 -fno-common \
+CXXFLAGS      =  -fPIC -wd1476 \
                 -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -fPIC -fno-common -I/usr/X11R6/include $(EXTRA_CFLAGS) \
+CFLAGS        = -fPIC -I/usr/X11R6/include $(EXTRA_CFLAGS) \
                 $(FINK_CFLAGS) -restrict
-CINTCXXFLAGS  = -fPIC -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION
-CINTCFLAGS    = -fPIC -fno-common $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
+CINTCFLAGS    = -fPIC $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION

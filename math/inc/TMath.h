@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.65 2005/11/18 20:30:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.66 2006/01/31 17:08:29 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -364,7 +364,7 @@ namespace TMath {
           Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
           Double_t KolmogorovProb(Double_t z);
           Double_t KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Double_t *b, Option_t *option);
-          Double_t LandauI(Double_t x); 
+          Double_t LandauI(Double_t x);
           Double_t LaplaceDist(Double_t x, Double_t alpha=0, Double_t beta=1);
           Double_t LaplaceDistI(Double_t x, Double_t alpha=0, Double_t beta=1);
           Double_t LnGamma(Double_t z);
@@ -523,7 +523,7 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #   endif
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
-    defined(R__HPUX11) || defined(R__GLIBC)
+    defined(R__HPUX11) || defined(R__GLIBC) || defined(R__MACOSX)
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
