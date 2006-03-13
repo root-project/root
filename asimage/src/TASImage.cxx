@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.51 2006/01/30 09:01:11 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.52 2006/03/11 16:53:26 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -808,7 +808,8 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    TCanvas *canvas = pad->GetCanvas();
    Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
-   Window_t wd = (Window_t)gVirtualX->GetWindowID(wid);
+	gVirtualX->Update(1);
+   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
    if (!wd) return;
 
    static int x11 = -1;
@@ -849,8 +850,10 @@ void TASImage::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("n") || !gPad || !gPad->IsEditable()) {
-      Int_t w = fImage->height < 65 ? -fImage->width : fImage->width;
-      Int_t h = fImage->height < 65 ? 64 : fImage->height;
+      Int_t w = -64;
+		Int_t h = 64;
+		w = (fImage->width > 64) ? fImage->width : w;
+      h = (fImage->height > 64) ? fImage->height : h;
       TString rname = GetName();
       rname.ReplaceAll(".", "");
       new TCanvas(rname.Data(), Form("%s (%d x %d)", rname.Data(),
@@ -5295,6 +5298,7 @@ void TASImage::Streamer(TBuffer &b)
          Double_t *vec = new Double_t[size];
          b.ReadFastArray(vec, size);
          SetImage(vec, w, h, &fPalette);
+			delete vec;
       }
       b.CheckByteCount(R__s, R__c, TASImage::IsA());
    } else {
@@ -5343,6 +5347,10 @@ void TASImage::Browse(TBrowser *)
 const char *TASImage::GetTitle() const
 {
    // title is used to keep 32x32 xpm image's thumbnail
+
+	if (!gFile || !gFile->IsOpen() || !gFile->IsWritable()) {
+		return 0;
+	}
 
    TASImage *mutble = (TASImage *)this;
 
@@ -5471,13 +5479,13 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, UInt_t thi
 
    for (int i = 0; i < sz; i++) {
       matrix[i] = (CARD32)color;
-   };
-
+   }
+ 
    static ASDrawTool *brush = new ASDrawTool;
    brush->matrix = matrix;
    brush->width = thick;
    brush->height = thick;
-   brush->center_y = brush->center_x = thick/2;
+   brush->center_y = brush->center_x = thick/2; 
 
    ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
    asim_circle(ctx, x,  y, r, 0);
