@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.76 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.77 2006/02/23 13:23:08 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -903,8 +903,9 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    fGeoManager->SetPaintVolume(vol);
    TGeoHMatrix *currentMatrix = fGeoManager->GetCurrentMatrix();
    fGeoManager->SetMatrixReflection(currentMatrix->IsReflection());
+   TGeoHMatrix *glmat;
    if (vol->GetShape()->IsComposite()) {
-      TGeoHMatrix *glmat = fGeoManager->GetGLMatrix();
+      glmat = fGeoManager->GetGLMatrix();
       // Components of composite shape for a local frame viewer are 
       // painted in frame of the top level composite shape - so load
       // identity matrix in this case
@@ -979,17 +980,27 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          break;
       case kGeoVisBranch:
          fGeoManager->cd(fVisBranch);
-         vol = fGeoManager->GetCurrentVolume();
+         glmat = fGeoManager->GetGLMatrix();
+         fGeoManager->SetMatrixTransform(kTRUE);
+         Int_t transparency;
          while (fGeoManager->GetLevel()) {
-            if (vol->IsVisible()) {
-               drawDaughters = PaintShape(*(vol->GetShape()),option);
-               if (!fVisLock && !fGeoManager->GetCurrentNode()->IsOnScreen()) {
-                  fVisVolumes->Add(fGeoManager->GetCurrentVolume());
-                  vol->SetAttBit(TGeoAtt::kVisOnScreen);
-               }   
+            fGeoManager->SetMatrixReflection(fGeoManager->GetCurrentMatrix()->IsReflection());
+            *glmat = fGeoManager->GetCurrentMatrix();
+            vol = fGeoManager->GetCurrentVolume();
+            if (!fVisLock) {
+               fVisVolumes->Add(vol);
+               vol->SetAttBit(TGeoAtt::kVisOnScreen);
             }   
+            fGeoManager->SetPaintVolume(vol);
+            transparency = vol->GetTransparency();
+            vol->SetTransparency(40);
+            if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
+            PaintShape(*(vol->GetShape()),option);
+            vol->SetTransparency(transparency);
             fGeoManager->CdUp();
          }
+         fGeoManager->SetMatrixTransform(kFALSE);
+         fVisLock = kTRUE;   
          break;
       default:
          return;

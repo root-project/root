@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.32 2006/02/03 17:07:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.33 2006/02/23 13:23:08 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -1992,15 +1992,11 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    delete [] extra_left;
    delete [] extra_right;
 
-//   Print();
    if ((!fPriority[0]) && (!fPriority[1]) && (!fPriority[2])) {
-      fVolume->SetVoxelFinder(0);
-      delete this;
-   } else {
-//      Efficiency();
+      SetInvalid();
+      if (nd>1) Error("SortAll", "Volume %s: Cannot make slices on any axis", fVolume->GetName());
    } 
 }
-
 
 //-----------------------------------------------------------------------------
 void TGeoVoxelFinder::Print(Option_t *) const

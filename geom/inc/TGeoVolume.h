@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.45 2006/01/19 11:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.46 2006/01/31 14:02:36 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -42,11 +42,14 @@
 #include "TGeoShape.h"
 #endif
 
+#ifndef ROOT_TGeoVoxelFinder
+#include "TGeoVoxelFinder.h"
+#endif
+
 // forward declarations
 class TH2F;
 class TGeoNode;
 class TGeoMatrix;
-class TGeoVoxelFinder;
 class TGeoPatternFinder;
 class TGeoManager;
 
@@ -152,7 +155,7 @@ public:
    TGeoMedium     *GetMedium() const                 {return fMedium;}
    TObject        *GetField() const                  {return fField;}
    TGeoPatternFinder *GetFinder() const              {return fFinder;}
-   TGeoVoxelFinder   *GetVoxels() const              {return fVoxels;}
+   TGeoVoxelFinder   *GetVoxels() const              {return (fVoxels && !fVoxels->IsInvalid())?fVoxels:NULL;}
    const char     *GetIconName() const               {return fShape->GetName();}
    Int_t           GetIndex(const TGeoNode *node) const;
    TGeoNode       *GetNode(const char *name) const;
