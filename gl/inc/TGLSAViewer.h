@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.9 2005/12/05 17:34:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.10 2006/01/26 11:59:41 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -16,21 +16,14 @@
 #include "TGLViewer.h"
 #endif
 
-class TGLSAFrame;
 class TGCompositeFrame;
-class TGVerticalFrame;
-class TGLayoutHints;
-class TGLGeometryEditor;
-class TGTab;
-class TGLSelection;
-class TGVSplitter;
 class TGPopupMenu;
+class TGLSAFrame;
+class TGTab;
+
+class TGLGeometryEditor;
+class TGLViewerEditor;
 class TGLColorEditor;
-class TGLClipEditor;
-class TGLLightEditor;
-class TGLGuideEditor;
-class TGMenuBar;
-class TGCanvas;
 class TGLRenderArea; // Remove - replace with TGLManager
 
 //////////////////////////////////////////////////////////////////////////
@@ -44,8 +37,8 @@ class TGLRenderArea; // Remove - replace with TGLManager
 // TODO: This really needs to be re-examined along with GUI parts in TGLViewer. 
 // It still contiains lots of legacy parts for binding to external GUI (TGLEditors) 
 // which could be neater.
-class TGLSAViewer : public TGLViewer
-{
+
+class TGLSAViewer : public TGLViewer {
 public:
    enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
       kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY, kGLPrintEPS_SIMPLE,
@@ -55,31 +48,18 @@ public:
 private:
    // GUI components
    TGLSAFrame        *fFrame;
-   TGCompositeFrame  *fCompositeFrame;
-   TGVerticalFrame   *fV1;
-   TGVerticalFrame   *fV2;
-
-   TGLayoutHints     *fL1, *fL2, *fL3;
-   TGLayoutHints     *fCanvasLayout;
-   TGMenuBar         *fMenuBar;
-   TGPopupMenu       *fFileMenu, *fCameraMenu, *fHelpMenu;
-   TGLayoutHints     *fMenuBarLayout;
-   TGLayoutHints     *fMenuBarItemLayout;
-   TGLayoutHints     *fMenuBarHelpLayout;
-   TGCanvas          *fCanvasWindow;
+   TGPopupMenu       *fFileMenu;
+   TGPopupMenu       *fCameraMenu;
+   TGPopupMenu       *fHelpMenu;
    TGLRenderArea     *fGLArea;
-
    // Tabs
+   TGCompositeFrame  *fLeftVerticalFrame;
    TGTab             *fEditorTab;
-   TGTab             *fShapesTab;
-   TGTab             *fSceneTab;
-
-   // Sub tabs
-   TGLColorEditor    *fColorEditor; // Under shapes
-   TGLGeometryEditor *fGeomEditor;  // Under shapes
-   TGLClipEditor     *fClipEditor;  // Under scene
-   TGLLightEditor    *fLightEditor; // Under scene
-   TGLGuideEditor    *fGuideEditor; // Under scene
+   TGLViewerEditor   *fGLEd;
+   TGTab             *fObjEdTab;
+   TGLColorEditor    *fColorEd;
+   TGLGeometryEditor *fGeomEd;
+   
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -89,7 +69,8 @@ private:
 
    static const char * fgHelpText;
 
-   void CreateViewer();
+   void CreateMenus();
+   void CreateFrames();
 
    // non-copyable class
    TGLSAViewer(const TGLSAViewer &);

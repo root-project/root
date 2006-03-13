@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.25 2006/03/08 21:09:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.26 2006/03/09 11:18:30 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 
 class TGLFaceSet;
 class TGLRedrawTimer;
+class TGLViewerEditor;
 class TGLWindow; // Remove - TGLManager
 class TContextMenu;
 
@@ -189,8 +190,9 @@ private:
    TGLViewer & operator=(const TGLViewer &);
 
 protected:
-   TGLWindow * fGLWindow;    //! remove - replace with TGLManager
-   Int_t       fGLDevice; //!for embedded gl viewer
+   TGLWindow       *fGLWindow;    //! remove - replace with TGLManager
+   Int_t            fGLDevice; //!for embedded gl viewer
+   TGLViewerEditor *fPadEditor;
    // Overloadable 
    virtual void PostSceneBuildSetup();
    virtual void SelectionChanged(); // *SIGNAL*
@@ -252,6 +254,8 @@ public:
    Bool_t HandleKey(Event_t *ev);
    Bool_t HandleMotion(Event_t *ev);
    Bool_t HandleExpose(Event_t *ev);
+   
+   void SetPadEditor(TGLViewerEditor *ed){fPadEditor = ed;}
 
    ClassDef(TGLViewer,0) // GL viewer generic base class
 };

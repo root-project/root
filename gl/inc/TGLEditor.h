@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.17 2005/12/11 20:15:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.18 2006/01/26 11:59:41 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -64,7 +64,7 @@ class TGLColorEditor : public TGCompositeFrame {
    friend class TGLMatView;
 private:
    TGLSAViewer   *fViewer;
-   TGLMatView    *fMatView;
+   TGLMatView    *fMatView;//MUST BE DELETED
    TGLayoutHints *fFrameLayout;
 
    enum ELightMode{kDiffuse, kAmbient, kSpecular, kEmission, kTot};
@@ -86,21 +86,19 @@ private:
    Window_t       fGLWin;
    ULong_t        fCtx;
 
-   TList fTrash;
 public:
    TGLColorEditor(const TGWindow *parent, TGLSAViewer *viewer);
    ~TGLColorEditor();
+
    void SetRGBA(const Float_t *rgba);
-   const Float_t *GetRGBA()const
-   {
-      return fRGBA;
-   }
+   const Float_t *GetRGBA()const{return fRGBA;}
    //slots
    void DoSlider(Int_t val);
    void DoButton();
    void Disable();
 
 private:
+   void CreateMaterialView();
    void CreateRadioButtons();
    void CreateSliders();
    void SetSlidersPos();
@@ -136,8 +134,6 @@ private:
    };
 
    TGLSAViewer   *fViewer;
-   TList          fTrash;
-   TGLayoutHints  *fL1, *fL2;
    TGNumberEntry  *fGeomData[kTot];
    TGButton       *fApplyButton;
    Bool_t         fIsActive;

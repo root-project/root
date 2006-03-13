@@ -60,6 +60,7 @@ private:
    TGButton         *fApplyButton;
    //Model
    TGLViewer        *fViewer;
+   Bool_t	         fIsInPad;
 
    void ConnectSignals2Slots();
    
@@ -75,6 +76,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
+         
+   TGLViewerEditor(const TGWindow *p);
                    
    ~TGLViewerEditor();
 
@@ -90,6 +93,9 @@ public:
    void ClipValueChanged();
    void ClipTypeChanged(Int_t);
    void UpdateViewerClip();
+   
+   void DetachFromPad(){fIsInPad = kFALSE;}
+   void HideClippingGUI();
    
    ClassDef(TGLViewerEditor, 0) //GUI for editing TGLViewer attributes
 };

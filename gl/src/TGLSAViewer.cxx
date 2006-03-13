@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.14 2005/12/11 20:15:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.15 2006/01/26 11:59:41 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -8,41 +8,32 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+#include <iostream>
 
-#include "TGLSAViewer.h"
-#include "TGLSAFrame.h"
 #include "TRootHelpDialog.h"
-#include "TContextMenu.h"
-#include "KeySymbols.h"
-#include "TGButton.h"
+#include "TPluginManager.h"
 #include "TGClient.h"
 #include "TGCanvas.h"
 #include "HelpText.h"
-#include "Buttons.h"
-#include "TAtt3D.h"
-#include "TGMenu.h"
-#include "TColor.h"
-#include "TMath.h"
+#include "GuiTypes.h"
+#include "TG3DLine.h"
 #include "TSystem.h"
+#include "TGLabel.h"
+#include "TGMenu.h"
 #include "TGTab.h"
-
-#include "TGLEditor.h"
-#include "TGLOutput.h"
-
-#include "TGLPhysicalShape.h"
-#include "TGLClip.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
 
-
-#include <assert.h>
-
-// Remove - replace with TGLManager
-#include "TPluginManager.h"
-#include "TGLKernel.h"
+#include "TGLPhysicalShape.h"
+#include "TGLViewerEditor.h"
 #include "TGLRenderArea.h"
+#include "TGLSAViewer.h"
+#include "TGLSAFrame.h"
+#include "TGLEditor.h"
+#include "TGLOutput.h"
+#include "TGLKernel.h"
 
 const char * TGLSAViewer::fgHelpText = "\
 DIRECT SCENE INTERACTIONS\n\n\
@@ -60,6 +51,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    mouse button or using the mouse wheel.\n\n\
    RESET the camera by double clicking any button.\n\n\
    SELECT a shape with Shift+Left mouse button click.\n\n\
+   SELECT the viewer with Shift+Left mouse button click on a free space.\n\n\
    MOVE a selected shape using Shift+Mid mouse drag.\n\n\
    Invoke the CONTEXT menu with Shift+Right mouse click.\n\n\
 CAMERA\n\n\
@@ -124,35 +116,61 @@ const Int_t TGLSAViewer::fgInitY = 0;
 const Int_t TGLSAViewer::fgInitW = 780;
 const Int_t TGLSAViewer::fgInitH = 670;
 
+//A lot of raw pointers/naked new-expressions - good way to discredit C++ (or C++ programmer :) ) :(
+//ROOT has system to cleanup - I'll try to use it
+
 //______________________________________________________________________________
-TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
-   TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
-   fFrame(0),
-   fCompositeFrame(0), fV1(0), fV2(0), fL1(0), fL2(0), fL3(0),
-   fCanvasLayout(0), fMenuBar(0), fFileMenu(0), fCameraMenu(0), fHelpMenu(0),
-   fMenuBarLayout(0), fMenuBarItemLayout(0), fMenuBarHelpLayout(0),
-   fCanvasWindow(0),
-   fEditorTab(0), fShapesTab(0), fSceneTab(0),
-   fColorEditor(0), fGeomEditor(0), fClipEditor(0), fLightEditor(0), fGuideEditor(0)
+TGLSAViewer::TGLSAViewer(TVirtualPad * pad) 
+               : TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
+                 fFrame(0), 
+                 fFileMenu(0), 
+                 fCameraMenu(0), 
+                 fHelpMenu(0), 
+                 fGLArea(0),
+                 fLeftVerticalFrame(0),
+                 fEditorTab(0),
+                 fGLEd(0),
+                 fObjEdTab(0)
 {
    // Construct a standalone viewer, bound to supplied 'pad'.
-   
    // First create gVirtualGL/kernel - to be replaced with TGLManager
-   static Bool_t init = kFALSE;
-   if (!init) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGLImp"))) {
+   if (!gVirtualGL) {
+      if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("TVirtualGLImp")) {
          if (h->LoadPlugin() == -1)
-            return;
+            return;// bad, must be exception
          TVirtualGLImp * imp = (TVirtualGLImp *) h->ExecPlugin(0);
          new TGLKernel(imp);
       }
-      init = kTRUE;
    }
 
    fFrame = new TGLSAFrame(*this);
+   fFrame->SetCleanup(kDeepCleanup);
 
-   // Menus creation
+   CreateMenus();
+   CreateFrames();
+
+   fFrame->SetWindowName("ROOT's GL viewer");
+   fFrame->SetClassHints("GLViewer", "GLViewer");
+   fFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
+   fFrame->MapSubwindows();
+
+   fFrame->Resize(fFrame->GetDefaultSize());
+   fFrame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
+   fFrame->SetWMPosition(fgInitX, fgInitY);
+
+   // Defer until layout done
+   
+   //fFrame->HideFrame(fEditorTab);
+   fLeftVerticalFrame->HideFrame(fObjEdTab);
+   fGLEd->HideClippingGUI();
+   
+   Show();
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::CreateMenus()
+{
+   //File/Camera/Help menus
    fFileMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
    fFileMenu->AddEntry("Print &EPS", kGLPrintEPS_SIMPLE);
    fFileMenu->AddEntry("Print EP&S (High quality)", kGLPrintEPS_BSP);
@@ -176,68 +194,76 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    fHelpMenu->AddEntry("&About ROOT...", kGLHelpAbout);
    fHelpMenu->Associate(fFrame);
 
-   // Create menubar layout hints
-   fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
-   fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
-   fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
-
    // Create menubar
-   fMenuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame | kRaisedFrame);
-   fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Camera", fCameraMenu, fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
-   fFrame->AddFrame(fMenuBar, fMenuBarLayout);
+   TGMenuBar *menuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame | kRaisedFrame);
+   menuBar->AddPopup("&File", fFileMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+   menuBar->AddPopup("&Camera", fCameraMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+   menuBar->AddPopup("&Help",    fHelpMenu,    new TGLayoutHints(kLHintsTop | kLHintsRight));
+   fFrame->AddFrame(menuBar, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1));
 
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::CreateFrames()
+{
    // Internal frames creation
-   fCompositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
-   fV1 = new TGVerticalFrame(fCompositeFrame, 180, 10, /*kSunkenFrame |*/ kFixedWidth);
-   fEditorTab = new TGTab(fV1, 180, 10);
-   fL3 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 2, 1, 2);
-   fV1->AddFrame(fEditorTab, fL3);
-   fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
-   fCompositeFrame->AddFrame(fV1, fL1);
+   TGCompositeFrame *compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
+   fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
+   fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 180, 10, kFixedWidth);
+   compositeFrame->AddFrame(fLeftVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2));
+
+   fEditorTab = new TGTab(fLeftVerticalFrame, 180, 10);
+   fLeftVerticalFrame->AddFrame(fEditorTab, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY , 2, 2, 1, 2));
+
+   TGCompositeFrame *styleContainer = fEditorTab->AddTab("Style");
+   TGCompositeFrame *styleFrame = new TGCompositeFrame(styleContainer, 110, 30, kVerticalFrame);
+   TGCompositeFrame *nameBin = new TGCompositeFrame(styleFrame, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
+
+   nameBin->AddFrame(new TGLabel(nameBin,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 5, 0));
+   nameBin->AddFrame(new TGHorizontal3DLine(nameBin), new TGLayoutHints(kLHintsExpandX, 5, 5, 12, 7));
+   styleFrame->AddFrame(nameBin, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   TGLabel *nameLabel = new TGLabel(styleFrame, "TGLViewer::TGLViewer");
+   Pixel_t color;
+   gClient->GetColorByName("#ff0000", color);
+   nameLabel->SetTextColor(color, kFALSE);
+   styleFrame->AddFrame(nameLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   styleContainer->AddFrame(styleFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 0, 2, 2));
+   fGLEd = new TGLViewerEditor(styleFrame);
+   styleFrame->AddFrame(fGLEd, new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
+//   fGLEd->DetachFromPad();
+   fGLEd->SetModel(0, this, 0);
    
-   // Scene main tab
-   TGCompositeFrame *sceneTabFrame = fEditorTab->AddTab("Scene");
-   fSceneTab = new TGTab(sceneTabFrame, 160, 10);
-   sceneTabFrame->AddFrame(fSceneTab, fL3);
+   //Shape's colour editor
+   fObjEdTab = new TGTab(fLeftVerticalFrame, 180, 10);
+   fLeftVerticalFrame->AddFrame(fObjEdTab, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY , 2, 2, 1, 2));
+   TGCompositeFrame *colorCont = fObjEdTab->AddTab("Color");
+   nameBin = new TGCompositeFrame(colorCont, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
+   nameBin->AddFrame(new TGLabel(nameBin,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 5, 0));
+   nameBin->AddFrame(new TGHorizontal3DLine(nameBin), new TGLayoutHints(kLHintsExpandX, 5, 5, 12, 7));
+   colorCont->AddFrame(nameBin, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   nameLabel = new TGLabel(colorCont, "TGLViewer::TGLViewer");
+   nameLabel->SetTextColor(color, kFALSE);
+   colorCont->AddFrame(nameLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fColorEd = new TGLColorEditor(colorCont, this);
+   colorCont->AddFrame(fColorEd, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 2, 1, 2));
+   //Geometry editor
+   TGCompositeFrame *geomCont = fObjEdTab->AddTab("Geometry");
+   nameBin = new TGCompositeFrame(geomCont, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
+   nameBin->AddFrame(new TGLabel(nameBin,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 5, 0));
+   nameBin->AddFrame(new TGHorizontal3DLine(nameBin), new TGLayoutHints(kLHintsExpandX, 5, 5, 12, 7));
+   geomCont->AddFrame(nameBin, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   nameLabel = new TGLabel(geomCont, "TGLViewer::TGLViewer");
+   nameLabel->SetTextColor(color, kFALSE);
+   geomCont->AddFrame(nameLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fGeomEd = new TGLGeometryEditor(geomCont, this);
+   geomCont->AddFrame(fGeomEd, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 2, 1, 2));
 
-   // Scene / Clipping subtab
-   TGCompositeFrame *tabCont = fSceneTab->AddTab("Clipping");
-   fClipEditor = new TGLClipEditor(tabCont, this);
-   tabCont->AddFrame(fClipEditor, fL3);
+   TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10, kSunkenFrame);
+   compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2));
 
-   // Scene / Lighting subtab
-   tabCont = fSceneTab->AddTab("Lights");
-   fLightEditor = new TGLLightEditor(tabCont, this);
-   tabCont->AddFrame(fLightEditor, fL3);
-
-   // Scene / Guides subtab
-   tabCont = fSceneTab->AddTab("Guides");
-   fGuideEditor = new TGLGuideEditor(tabCont, this);
-   tabCont->AddFrame(fGuideEditor, fL3);
-
-   // Shapes main tab
-   TGCompositeFrame *objTabFrame = fEditorTab->AddTab("Shapes");
-   fShapesTab = new TGTab(objTabFrame, 160, 10);
-   objTabFrame->AddFrame(fShapesTab, fL3);
-   
-   // Shapes / Color subtab
-   tabCont = fShapesTab->AddTab("Color");
-   fColorEditor = new TGLColorEditor(tabCont, this);
-   tabCont->AddFrame(fColorEditor, fL3);
-
-   // Shapes / Geom subtab
-   tabCont = fShapesTab->AddTab("Geom");
-   fGeomEditor = new TGLGeometryEditor(tabCont, this);
-   tabCont->AddFrame(fGeomEditor, fL3);
-
-   fV2 = new TGVerticalFrame(fCompositeFrame, 10, 10, kSunkenFrame);
-   fL2 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
-   fCompositeFrame->AddFrame(fV2, fL2);
-
-   fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder);
-   fGLArea = new TGLRenderArea(fCanvasWindow->GetViewPort()->GetId(), fCanvasWindow->GetViewPort());
+   TGCanvas *canvasWindow = new TGCanvas(rightVerticalFrame, 10, 10, kSunkenFrame | kDoubleBorder);
+   fGLArea = new TGLRenderArea(canvasWindow->GetViewPort()->GetId(), canvasWindow->GetViewPort());
    fGLWindow = fGLArea->GetGLWindow();
 
    // Direct events from the TGWindow directly to the base viewer
@@ -249,53 +275,16 @@ TGLSAViewer::TGLSAViewer(TVirtualPad * pad) :
    ok = ok && fGLWindow->Connect("HandleMotion(Event_t*)", "TGLViewer", this, "HandleMotion(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
    ok = ok && fGLWindow->Connect("HandleConfigureNotify(Event_t*)", "TGLViewer", this, "HandleConfigureNotify(Event_t*)");
-   assert(ok);
 
-   fCanvasWindow->SetContainer(fGLWindow);
-   fCanvasLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
-   fV2->AddFrame(fCanvasWindow, fCanvasLayout);
-   fFrame->AddFrame(fCompositeFrame, fCanvasLayout);
-
-   fFrame->SetWindowName("ROOT's GL viewer");
-   fFrame->SetClassHints("GLViewer", "GLViewer");
-   fFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
-   fFrame->MapSubwindows();
-
-   fFrame->Resize(fFrame->GetDefaultSize());
-   fFrame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
-   fFrame->SetWMPosition(fgInitX, fgInitY);
-
-   // Defer until layout done
-   fClipEditor->HideParts();
-
-   Show();
+   canvasWindow->SetContainer(fGLWindow);
+   rightVerticalFrame->AddFrame(canvasWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 }
 
 //______________________________________________________________________________
 TGLSAViewer::~TGLSAViewer()
 {
    // Destroy standalone viewer object
-   delete fCanvasLayout;
    delete fGLArea;
-   delete fCanvasWindow;
-   delete fL2;
-   delete fV2;
-   delete fGeomEditor;
-   delete fColorEditor;
-   delete fShapesTab;
-   delete fGuideEditor;
-   delete fLightEditor;
-   delete fClipEditor;
-   delete fSceneTab;
-   delete fL1;
-   delete fL3;
-   delete fEditorTab;
-   delete fV1;
-   delete fCompositeFrame;
-   delete fMenuBar;
-   delete fMenuBarHelpLayout;
-   delete fMenuBarItemLayout;
-   delete fMenuBarLayout;
    delete fHelpMenu;
    delete fCameraMenu;
    delete fFileMenu;
@@ -332,12 +321,12 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLHelpAbout: {
 #ifdef R__UNIX
             TString rootx;
-# ifdef ROOTBINDIR
+#ifdef ROOTBINDIR
             rootx = ROOTBINDIR;
-# else
+#else
             rootx = gSystem->Getenv("ROOTSYS");
             if (!rootx.IsNull()) rootx += "/bin";
-# endif
+#endif
             rootx += "/root -a &";
             gSystem->Exec(rootx);
 #else
@@ -413,57 +402,18 @@ void TGLSAViewer::ProcessGUIEvent(Int_t wid)
    // Process GUI event generated by GUI components - TGLEditor derivived classes
    switch (wid) {
    case kTBa:
-      SetSelectedColor(fColorEditor->GetRGBA());
+      SetSelectedColor(fColorEd->GetRGBA());
       break;
    case kTBaf:
-      SetColorOnSelectedFamily(fColorEditor->GetRGBA());
+      SetColorOnSelectedFamily(fColorEd->GetRGBA());
       break;
    case kTBa1: {
       TGLVertex3 trans;
       TGLVector3 scale;
-      fGeomEditor->GetObjectData(trans.Arr(), scale.Arr());
+      fGeomEd->GetObjectData(trans.Arr(), scale.Arr());
       SetSelectedGeom(trans,scale);
       break;
    }
-   case kTBcpm: {
-      if (!fClipEditor) {
-         return;
-      }
-      // Sync clipping
-      EClipType clipType;
-      Double_t clipData[6];
-      Bool_t  clipEdit;
-      fClipEditor->GetCurrent(clipType, clipEdit);
-      fClipEditor->GetState(clipType, clipData);
-      SetClipState(clipType, clipData);
-      SetCurrentClip(clipType, clipEdit);
-      break;
-   }
-   case kTBFront:
-      ToggleLight(TGLViewer::kLightFront);
-      break;
-   case kTBTop:
-      ToggleLight(TGLViewer::kLightTop);
-      break;
-   case kTBBottom:
-      ToggleLight(TGLViewer::kLightBottom);
-      break;
-   case kTBRight:
-      ToggleLight(TGLViewer::kLightRight);
-      break;
-   case kTBLeft:
-      ToggleLight(TGLViewer::kLightLeft);
-      break;
-   case kTBGuide:
-      if (!fGuideEditor) {
-         return;
-      }
-      EAxesType axesType;
-      Bool_t referenceOn;
-      Double_t referencePos[3];
-      fGuideEditor->GetState(axesType, referenceOn, referencePos);
-      SetGuideState(axesType, referenceOn, referencePos);
-      break;
    }
 }
 
@@ -474,12 +424,16 @@ void TGLSAViewer::SelectionChanged()
 
    const TGLPhysicalShape * selected = GetSelected();
    if (selected) {
-      fColorEditor->SetRGBA(selected->Color());
-      fGeomEditor->SetCenter(selected->GetTranslation().CArr());
-      fGeomEditor->SetScale(selected->GetScale().CArr());
+      fLeftVerticalFrame->HideFrame(fEditorTab);
+      fLeftVerticalFrame->ShowFrame(fObjEdTab);
+      fColorEd->SetRGBA(selected->Color());
+      fGeomEd->SetCenter(selected->GetTranslation().CArr());
+      fGeomEd->SetScale(selected->GetScale().CArr());
    } else { // No selection
-      fColorEditor->Disable();
-      fGeomEditor->Disable();
+      fLeftVerticalFrame->ShowFrame(fEditorTab);
+      fLeftVerticalFrame->HideFrame(fObjEdTab);
+      fColorEd->Disable();
+      fGeomEd->Disable();
    }
 }
 
@@ -487,16 +441,7 @@ void TGLSAViewer::SelectionChanged()
 void TGLSAViewer::ClipChanged()
 {
    // Update GUI components for embedded viewer clipping change
-   EClipType type;
-   Bool_t edit;
-   GetCurrentClip(type, edit);   
-   fClipEditor->SetCurrent(type, edit);
-
-   if (type != kClipNone) {
-      Double_t data[6];
-      GetClipState(type, data);
-      fClipEditor->SetState(type, data);
-   }
+   fGLEd->SetCurrentClip();
 }
 
 //______________________________________________________________________________
@@ -508,21 +453,5 @@ void TGLSAViewer::PostSceneBuildSetup()
    // Do base work first
    TGLViewer::PostSceneBuildSetup();
 
-   // Now synconise the GUI
-   
-   // Default clips
-   Double_t data[6];
-   GetClipState(kClipPlane, data);
-   fClipEditor->SetState(kClipPlane, data);
-   GetClipState(kClipBox, data);
-   fClipEditor->SetState(kClipBox, data);
-   fClipEditor->SetCurrent(kClipNone, kFALSE);
-
-   // Guides
-   EAxesType axesType;
-   Bool_t referenceOn;
-   Double_t referencePos[3];
-   GetGuideState(axesType, referenceOn, referencePos);
-   fGuideEditor->SetState(axesType, referenceOn, referencePos);
+   // Now synconise the GUI-removed
 }
-

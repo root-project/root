@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cstring>
 
 #include "TGNumberEntry.h"
@@ -17,7 +16,7 @@
 
 ClassImp(TGLViewerEditor)
 
-//A lot of raw pointers/naked new-expressions - good way to discredit C++ :(
+//A lot of raw pointers/naked new-expressions - good way to discredit C++ (or C++ programmer :) ) :(
 //ROOT has system to cleanup - I'll try to use it
 
 //______________________________________________________________________________
@@ -50,7 +49,8 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p, Int_t id, Int_t width, Int_t
                     fBoxProp(),
                     fEdit(0),
                     fApplyButton(0),
-                    fViewer(0)
+                    fViewer(0),
+		              fIsInPad(kTRUE)
 {
    //Create tabs
    CreateLightsTab();
@@ -64,6 +64,48 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p, Int_t id, Int_t width, Int_t
    ged->fGedFrame = this;
    ged->fCanvas = 0;
    TGLViewer::Class()->GetEditorList()->Add(ged);   
+}
+
+//______________________________________________________________________________
+TGLViewerEditor::TGLViewerEditor(const TGWindow *p)
+                  : TGedFrame(p, 0, 140, 30, kChildFrame | kVerticalFrame, GetDefaultFrameBackground()),
+                    fGuidesTabEl(0), 
+                    fClipTabEl(0), 
+                    fGuidesFrame(0), 
+                    fClipFrame(0),
+                    fLightFrame(0), 
+                    fTopLight(0), 
+                    fRightLight(0), 
+                    fBottomLight(0),
+                    fLeftLight(0), 
+                    fFrontLight(0), 
+                    fAxesContainer(0), 
+                    fAxesNone(0),
+                    fAxesEdge(0), 
+                    fAxesOrigin(0), 
+                    fRefContainer(0), 
+                    fReferenceOn(0),
+                    fReferencePosX(0),
+                    fReferencePosY(0),
+                    fReferencePosZ(0),
+                    fCurrentClip(kClipNone),
+                    fTypeButtons(0),
+                    fPlanePropFrame(0),
+                    fPlaneProp(),
+                    fBoxPropFrame(0),
+                    fBoxProp(),
+                    fEdit(0),
+                    fApplyButton(0),
+                    fViewer(0),
+		              fIsInPad(kFALSE)
+{
+   //Create tabs
+   CreateLightsTab();
+   CreateGuidesTab();
+   CreateClippingTab();
+   
+   fTab->Layout();
+   fTab->MapSubwindows();
 }
 
 //______________________________________________________________________________
@@ -360,7 +402,8 @@ void TGLViewerEditor::ClipTypeChanged(Int_t id)
    }
 
    // Internal GUI change - need to update the viewer
-   gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
+   if (gGLManager && fIsInPad)
+      gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
    fViewer->RequestDraw();
 }
 
@@ -369,7 +412,6 @@ void TGLViewerEditor::UpdateViewerClip()
 {
    //Change clipping volume
    Double_t data[6] = {0.};
-
    // Fetch GUI state for clip if 'type' into 'data' vector
    if (fCurrentClip == kClipPlane)
       for (Int_t i = 0; i < 4; ++i)
@@ -381,7 +423,8 @@ void TGLViewerEditor::UpdateViewerClip()
    fApplyButton->SetState(kButtonDisabled);
    fViewer->SetClipState(fCurrentClip, data);
    fViewer->SetCurrentClip(fCurrentClip, fEdit->IsDown());
-   gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
+   if (fIsInPad && gGLManager)
+      gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
    fViewer->RequestDraw();
 }
 
@@ -423,7 +466,8 @@ void TGLViewerEditor::SetCurrentClip()
       for (Int_t i = 0; i < 6; ++i)
          fBoxProp[i]->SetNumber(clip[i]);
 
-   gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);     
+   if (fIsInPad && gGLManager)
+      gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);     
    fViewer->RequestDraw();
 }
 
@@ -445,4 +489,11 @@ void TGLViewerEditor::SetGuides()
    fReferencePosY->SetNumber(referencePos[1]);
    fReferencePosZ->SetNumber(referencePos[2]);
    UpdateReferencePos();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::HideClippingGUI()
+{
+   fClipFrame->HideFrame(fPlanePropFrame);
+   fClipFrame->HideFrame(fBoxPropFrame);   
 }

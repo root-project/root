@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.40 2006/03/08 21:09:43 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.41 2006/03/09 11:18:31 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 // Remove - replace with TGLManager
 #include "TVirtualGL.h"
 #include "TGLRenderArea.h"
+#include "TGLViewerEditor.h"
 
 #include "KeySymbols.h"
 #include "TContextMenu.h"
@@ -102,7 +103,8 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
    fGLWindow(0),
-   fGLDevice(-1)
+   fGLDevice(-1),
+   fPadEditor(0)
 {
    // Construct the viewer object, with following arguments:
    //    'pad' - external pad viewer is bound to
@@ -144,7 +146,8 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
    fGLWindow(0),
-   fGLDevice(fPad->GetGLDevice())
+   fGLDevice(fPad->GetGLDevice()),
+   fPadEditor(0)
 {
    //gl-embedded viewer's ctor
    // Construct the viewer object, with following arguments:
@@ -166,7 +169,9 @@ TGLViewer::~TGLViewer()
    // Destroy viewer object
    delete fContextMenu;
    delete fRedrawTimer;
-   fPad->ReleaseViewer3D();   
+   if (fPadEditor)
+      fPadEditor->SetModel(fPad, 0, 0);
+   fPad->ReleaseViewer3D();
 }
 
 //______________________________________________________________________________
@@ -943,8 +948,6 @@ void TGLViewer::RequestDraw(Short_t LOD)
    // Post request for redraw of viewer at level of detail 'LOD'
    // Request is directed via cross thread gVirtualGL object
    fRedrawTimer->Stop();
-//   std::cout<<"Draw requested\n";
-   
    // Ignore request if GL window or context not yet availible - we
    // will get redraw later
    if ((!fGLWindow || !gVirtualGL) && fGLDevice == -1) {
