@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.10 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.11 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -39,11 +39,15 @@
 #endif
 
 // Define RFLX_API for DLL builds
-#ifdef REFLEX_BUILD
-  #define RFLX_API RFLX_EXPORT
+#ifdef REFLEX_DLL
+  #ifdef REFLEX_BUILD
+    #define RFLX_API RFLX_EXPORT
+  #else
+    #define RFLX_API  RFLX_IMPORT
+  #endif // REFLEX_BUILD
 #else
-  #define RFLX_API  RFLX_IMPORT
-#endif // RFLX_BUILD
+  #define RFLX_API
+#endif // REFLEX_DLL
 
 // Throwable classes must always be visible on GCC in all binaries
 #ifdef WIN32
