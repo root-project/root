@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.66 2006/01/31 17:08:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.67 2006/03/13 01:19:57 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -523,7 +523,7 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #   endif
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
-    defined(R__HPUX11) || defined(R__GLIBC) || defined(R__MACOSX)
+    defined(R__HPUX11) || defined(R__GLIBC) || defined(MAC_OS_X_VERSION_10_4)
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
