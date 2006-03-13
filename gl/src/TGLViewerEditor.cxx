@@ -177,7 +177,8 @@ void TGLViewerEditor::SetModel(TVirtualPad *pad, TObject *obj, Int_t)
    }
 
    fViewer = static_cast<TGLViewer *>(obj);
-//   fViewer->SetPadEditor(this);
+   if (fIsInPad)
+      fViewer->SetPadEditor(this);
    fModel = obj;
    fPad = pad;
    //Set guides controls' values
