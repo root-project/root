@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.277 2006/02/28 10:07:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.278 2006/03/13 10:57:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4276,7 +4276,7 @@ void TH1::Paint(Option_t *option)
    //  This function is automatically called by TCanvas::Update.
    //  (see TH1::Draw for the list of options)
 
-   GetPainter();
+   GetPainter(option);
 
    if (fPainter) {
       if (strlen(option) > 0) fPainter->Paint(option);
