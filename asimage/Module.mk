@@ -269,7 +269,7 @@ ifeq ($(PLATFORM),win32)
 			cd $(ASTEPDIRS); \
 			unset MAKEFLAGS; \
 			nmake -nologo -f libAfterImage.mak clean \
-			CFG="libAfterImage - Win32 Release"; \
+			CFG=$(ASTEPBLD); \
 		fi)
 else
 		-@(if [ -d $(ASTEPDIRS) ]; then \

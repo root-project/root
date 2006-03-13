@@ -421,8 +421,8 @@ esac
 
 
 prefix=@prefix@
-if test "$platform" = "win32"; then
-   prefix=`cygpath -u ${prefix}`
+if test "$platform" = "win32" && test "$prefix" != ""; then
+   prefix=`cygpath -u $prefix`
 fi
 exec_prefix=${prefix}
 exec_prefix_set=no

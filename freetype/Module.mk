@@ -137,7 +137,7 @@ ifeq ($(PLATFORM),win32)
 			cd $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc; \
 			unset MAKEFLAGS; \
 			nmake -nologo -f freetype.mak \
-			CFG="freetype - Win32 Release Multithreaded" clean; \
+			CFG=$(FTNMCFG) clean; \
 		fi)
 else
 		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \

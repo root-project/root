@@ -6,12 +6,11 @@
 args=
 dll=
 while [ "$1" != "" ]; do
-   arg=`cygpath -w -- $1`
-   case "$arg" in
-   -o) args="$args -out:"; shift
-       dll="$1"
-       args="$args`cygpath -w -- $1`" ;;
-   *) args="$args $arg" ;;
+   case "$1" in
+   -o) args="$args -out:$2"
+       dll="$2"
+       shift ;;
+   *) args="$args $1" ;;
    esac
    shift
 done
