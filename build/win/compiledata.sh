@@ -41,10 +41,8 @@ fi
 
 HAVEMT=`(unset VS_UNICODE_OUTPUT; mt '/?' >/dev/null 2>&1) && echo 1`
 if [ "$HAVEMT" == "1" ]; then
-   HAVEMT1=' && if EXIST \"$BuildDir\\$LibName.dll.manifest\" ( mt -nologo -manifest \"$BuildDir\\$LibName.dll.manifest\" \"-outputresource:$BuildDir\\$LibName.dll\"'
-   HAVEMT2=' && del \"$BuildDir\\$LibName.dll.manifest\")'
-   HAVEMTDLL="${HAVEMT1}${HAVEMT2}"
-   HAVEMTEXE="${HAVEMT1}${HAVEMT2}"
+   HAVEMTDLL=' && if EXIST \"$BuildDir\\$LibName.dll.manifest\" ( mt -nologo -manifest \"$BuildDir\\$LibName.dll.manifest\" \"-outputresource:$BuildDir\\$LibName.dll;2\" && del \"$BuildDir\\$LibName.dll.manifest\" )'
+   HAVEMTEXE=' && if EXIST \"$ExeName.exe.manifest\" ( mt -nologo -manifest \"$ExeName.exe.manifest\" \"-outputresource:$ExeName.exe;1\" && del \"$ExeName.exe.manifest\" )'
 fi
 
 rm -f __compiledata
