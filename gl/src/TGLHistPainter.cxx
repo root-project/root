@@ -251,8 +251,9 @@ void TGLHistPainter::ProcessMessage(const char *mess, const TObject *obj)
 
    if (tf3String == mess) {
       fF3 = static_cast<TF3 *>((TObject *)obj);//in principle, we can use dynamic_cast and check result
-   } else if (fLastOption == kUnsupported && fDefaultPainter)
-      fDefaultPainter->ProcessMessage(mess, obj);
+   }// else if (fLastOption == kUnsupported && fDefaultPainter)
+   
+   fDefaultPainter->ProcessMessage(mess, obj);
 }
 
 //______________________________________________________________________________
@@ -302,7 +303,7 @@ void TGLHistPainter::Paint(Option_t *o)
          if (!MakeCurrent()) return;
          gGLManager->PaintSingleObject(this);
       } else if (fDefaultPainter)
-         fDefaultPainter->Paint(o);
+         fDefaultPainter->Paint(option.Data());
    }
 }
 
@@ -435,9 +436,15 @@ void TGLHistPainter::PrintPlot()
 }
 
 //______________________________________________________________________________
-TGLHistPainter::EGLPaintOption TGLHistPainter::SetPaintFunction(const TString &option)
+TGLHistPainter::EGLPaintOption TGLHistPainter::SetPaintFunction(TString &option)
 {
    //Check, if Paint's option is supported
+   const Ssiz_t glPos = option.Index("gl");
+   if(glPos != kNPOS)
+      option.Remove(glPos, 2);
+   else
+      return kUnsupported;
+      
    if (fF3 && fLastOption == kTF3)
       return kTF3; //tf3 can be drawn only with tf3 ??
       

@@ -2,9 +2,8 @@
    //
    // To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html
    //
-   gStyle->SetCanvasPreferGL(true);
    gROOT->Reset();
-   c1 = new TCanvas("c1","Geometry Shapes",200,10,700,500);
+   c1 = new TCanvas("glc1","Geometry Shapes",200,10,700,500);
 
    //delete previous geometry objects in case this script is reexecuted
    if (gGeometry) {
@@ -79,7 +78,7 @@
 
    // Draw this geometry in the current canvas
    node1->cd();
-   node1->Draw("ogle");
+   node1->Draw("gl");
    c1->Update();
    //
    //  Draw the geometry using the OpenGL viewver.

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.104 2006/03/08 21:09:43 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.105 2006/03/10 15:06:12 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -169,6 +169,8 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
 
    Init();
 
+   fUseGL = name && strstr(name, "gl") ? kTRUE : kFALSE;
+
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -197,7 +199,8 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad()
    //  form = 3    500x500 at 30,30
    //  form = 4    500x500 at 40,40
    //  form = 5    500x500 at 50,50
-
+   fUseGL = name && strstr(name, "gl") ? kTRUE : kFALSE;
+   
    Constructor(name, title, form);
 }
 
@@ -214,8 +217,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    //  form = 4    500x500 at 40,40
    //  form = 5    500x500 at 50,50
 
-   fUseGL     = kFALSE;
-   
    if (gThreadXAR) {
       void *arr[6];
       static Int_t ww = 500;
@@ -277,7 +278,8 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
    //  ww is the canvas size in pixels along X
    //      (if ww < 0  the menubar is not shown)
    //  wh is the canvas size in pixels along Y
-
+   fUseGL = name && strstr(name, "gl") ? kTRUE : kFALSE;
+   
    Constructor(name, title, ww, wh);
 }
 
@@ -290,8 +292,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    //  ww is the canvas size in pixels along X
    //      (if ww < 0  the menubar is not shown)
    //  wh is the canvas size in pixels along Y
-
-   fUseGL     = kFALSE;
 
    if (gThreadXAR) {
       void *arr[6];
@@ -343,7 +343,8 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
    //  the canvas (if wtopx < 0) the menubar is not shown)
    //  ww is the canvas size in pixels along X
    //  wh is the canvas size in pixels along Y
-
+   fUseGL = name && strstr(name, "gl") ? kTRUE : kFALSE;
+   
    Constructor(name, title, wtopx, wtopy, ww, wh);
 }
 
@@ -358,8 +359,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    //  the canvas (if wtopx < 0) the menubar is not shown)
    //  ww is the canvas size in pixels along X
    //  wh is the canvas size in pixels along Y
-
-   fUseGL     = kFALSE;
 
    if (gThreadXAR) {
       void *arr[8];

@@ -181,7 +181,7 @@ public:
    Int_t          MakeCuts(char *cutsOpt);
 
 private:
-   EGLPaintOption SetPaintFunction(const TString &option);
+   EGLPaintOption SetPaintFunction(TString &option);
    //TVirtualGLPainter's final overrider
    void           Paint();
    //Texture for lego2/surf1/surf2 options

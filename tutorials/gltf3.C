@@ -8,9 +8,10 @@
 
    gStyle->SetCanvasPreferGL(kTRUE);
    
-   TCanvas *cnv = new TCanvas("c", "TF3 sample (press 's' to change colour)", 700, 10, 700, 700);
-   TF3 *tf3 = new TF3("sample", "x*x+y*y-z*z-1", -2., 2., -2., 2., -2., 2.);
+   TCanvas *cnv = new TCanvas("glc", "TF3 sample (press 's' to change colour)", 700, 10, 700, 700);
+//   TF3 *tf3 = new TF3("sample", "x*x+y*y-z*z-1", -2., 2., -2., 2., -2., 2.);
+   TF3 *tf3 = new TF3("sample", "cos(x*x+y*y+z*z-36)", -2., 2., -2., 2., -2., 2.);
    
    tf3->SetFillColor(kGreen);
-   tf3->Draw();
+   tf3->Draw("gl");
 }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.220 2006/02/05 11:51:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.221 2006/02/06 16:15:13 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5434,7 +5434,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    Bool_t validType = kFALSE;
    
-   if ( (!type || !type[0] || strstr(type, "ogle")) && ! fCanvas->UseGL())
+   if ( (!type || !type[0] || (strstr(type, "gl") && !strstr(type, "ogl"))) && ! fCanvas->UseGL())
       type = "pad";
    
    if (type && type[0]) {
@@ -5491,7 +5491,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          return fViewer3D;
       }
       
-      if (strstr(type, "ogle"))
+      if (strstr(type, "gl") && !strstr(type, "ogl"))
          fEmbeddedGL = kTRUE, fCopyGLDevice = kTRUE;
       else
          createdExternal = kTRUE;

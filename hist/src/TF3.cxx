@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.24 2005/12/31 07:59:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.25 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -488,7 +488,7 @@ void TF3::Paint(Option_t *option)
       fHistogram->SetDirectory(0);
    }
 
-   fHistogram->GetPainter()->ProcessMessage("SetF3",this);
+   fHistogram->GetPainter(option)->ProcessMessage("SetF3",this);
    if (opt.Length() == 0 ) {
       fHistogram->Paint("tf3");
    } else {
