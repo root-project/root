@@ -21,6 +21,10 @@ public:
       fData = data;
    }
 
+   void ByValue( SimpleClass )
+   {
+   }
+
 public:
    int fData;
 };

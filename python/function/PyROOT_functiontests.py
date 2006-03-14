@@ -55,6 +55,11 @@ class CallFunctionTestCase( unittest.TestCase ):
       self.assertEqual( f.Eval( -10. ), -10.  )
       self.assertEqual( f.Eval(  1.  ),   1.  )
 
+    # check proper propagation of default value
+      f = TF1( "pyf1d", identity, -1., 1. )
+
+      self.assertEqual( f.Eval(  0.5 ),   0.5 )
+
    def test2CallableObject( self ):
       """Test calling of a python callable object"""
 

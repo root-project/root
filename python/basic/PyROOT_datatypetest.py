@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 05/26/05
+# Last: 12/06/05
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -119,6 +119,17 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
          b[i] = 28
          for i in range(N):
             exec 'self.assertEqual( c.f%sArray2[i], b[i] )' % names[j]
+
+   def testRangeAccess( self ):
+      """Test the ranges of integer types"""
+
+      def call( c, name, value ):
+         exec 'c.%s = %d' % (name,value)
+
+      c = ClassWithData()
+
+      self.assertRaises( OverflowError, call, c, 'fUInt',  -1  )
+      self.assertRaises( OverflowError, call, c, 'fULong', -1  )
 
 
 ### access to class data members =============================================

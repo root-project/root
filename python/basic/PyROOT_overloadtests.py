@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 05/11/05
+# Last: 03/09/05
 
 """Overload unit tests for PyROOT package."""
 
@@ -27,7 +27,15 @@ class Overloads1ClassArrayTestCase( unittest.TestCase ):
       self.assertEqual( MyD().GetInt( MyA() ), 42 )
       self.assertEqual( MyD().GetInt( MyB() ), 13 )
 
-   def test2ArrayOverloads( self ):
+   def test2ClassOverloads( self ):
+      """Test functions overloaded on void* and non-existing classes."""
+
+      self.assertEqual( MyOverloads().call( AA() ), "AA" )
+      self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
+      self.assertEqual( MyOverloads().call( CC() ), "CC" )
+      self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
+
+   def test3ArrayOverloads( self ):
       """Test functions overloaded on different arrays"""
 
       ai = array( 'i', [ 525252 ] )

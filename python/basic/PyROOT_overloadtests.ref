@@ -1,4 +1,9 @@
 Test functions overloaded on different ROOT clases ... ok
+Test functions overloaded on void* and non-existing classes. ... Warning in <TClass::TClass>: no dictionary for class BB is available
+Warning in <TClass::TClass>: no dictionary for class BB is available
+Warning in <TClass::TClass>: no dictionary for class DD is available
+Warning in <TClass::TClass>: no dictionary for class DD is available
+ok
 Test functions overloaded on different arrays ... ok
 Test overloads using TMath::Mean(), TMath::Median ... ok
 

@@ -1,5 +1,6 @@
 Test read access to instance public data and verify values ... ok
 Test write access to instance public data and verify values ... ok
+Test the ranges of integer types ... ok
 Test read access to class public data and verify values ... ok
 
 ----------------------------------------------------------------------
