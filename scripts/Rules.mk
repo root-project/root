@@ -347,7 +347,7 @@ define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
 	root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$<\")" > $@.build.log 2>&1 && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
-	rm dummy$$$$.C dummy$$$$_C.* \
+	rm -f dummy$$$$.C dummy$$$$_C.* \
 )
 endef
 
