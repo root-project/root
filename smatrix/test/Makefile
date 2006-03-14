@@ -36,11 +36,15 @@ TESTIOOBJ     = testIO.$(ObjSuf)
 TESTIOSRC     = testIO.$(SrcSuf)
 TESTIO        = testIO$(ExeSuf)
 
+STRESSKALMANOBJ     = stressKalman.$(ObjSuf)
+STRESSKALMANSRC     = stressKalman.$(SrcSuf)
+STRESSKALMAN        = stressKalman$(ExeSuf)
 
-OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ)
+
+OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ) $(STRESSKALMANOBJ)
 
 
-PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO)
+PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO) $(STRESSKALMAN)
 
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -57,7 +61,11 @@ $(TESTOPERATIONS):   $(TESTOPERATIONSOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(TESTKALMAN):        $(TESTKALMANOBJ)
+$(TESTKALMAN):    $(TESTKALMANOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(STRESSKALMAN):  $(STRESSKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 

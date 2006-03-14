@@ -409,12 +409,14 @@ int test11() {
   // this works probably becuse here multiplication is done first
   
   SMatrix<double,5,5> m6 = m3*m2;
-  m6 =  - m6 * m1 + m1;
+  //m6 =  - m6 * m1 + m1;
+  // this does not work if use reference in binary and unary operators , better this
+  m6 =  - m32 * m1 + m1;
 
   
   std::cout << m4 << std::endl;
   std::cout << m5 << std::endl;
-  //  std::cout << m6 << std::endl;
+  std::cout << m6 << std::endl;
 
   // this is test will fail because operation is done at the same time
   iret |= compare( m4==m5, false ); 
@@ -430,10 +432,23 @@ int test12() {
   // test of symmetric matrices
 
   SMatrix<double,2,2,MatRepSym<double,2> >  S; 
-  S(0,0) = 1;
-  S(0,1) = 2; 
-  S(1,1) = 3; 
+  S(0,0) = 1.233;
+  S(0,1) = 2.33; 
+  S(1,1) = 3.45; 
   std::cout << "S\n" << S << std::endl;
+
+  double a = 3; 
+  std::cout << "S\n" << a * S << std::endl;
+
+  SMatrix<float,100,100,MatRepSym<float,100> >  mSym; 
+  SMatrix<float,100 >  m; 
+  std::cout << " Symmetric matrix size: " << sizeof(mSym) << std::endl; 
+  std::cout << " Normal    matrix size: " << sizeof( m  ) << std::endl; 
+
+  SMatrix<float,100,100,MatRepSym<float,100> >  mSym2; 
+  std::cout << " Symmetric matrix size: " << sizeof(mSym2) << std::endl; 
+
+
   return 0; 
 } 
 
