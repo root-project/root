@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.67 2006/03/13 01:19:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.68 2006/03/13 22:12:35 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -143,8 +143,8 @@ namespace TMath {
    inline Int_t    IsNaN(Double_t x);
 
    // Some integer math
-          Long_t   NextPrime(Long_t x);   // Least prime number greater than x
-          Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
+   Long_t   NextPrime(Long_t x);   // Least prime number greater than x
+   Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
 
    // Abs
    inline Short_t  Abs(Short_t d);
@@ -248,7 +248,6 @@ namespace TMath {
 
    //k-th order statistic
    template <class Element, class Index, class Size>  Element KOrdStatImp(Size n, const Element *a, Size k, Index *work = 0);
-
    Short_t   KOrdStat(Long64_t n, const Short_t *a,  Long64_t k, Long64_t *work=0);
    Int_t     KOrdStat(Long64_t n, const Int_t *a,    Long64_t k, Long64_t *work=0);
    Float_t   KOrdStat(Long64_t n, const Float_t *a,  Long64_t k, Long64_t *work=0);
@@ -259,7 +258,6 @@ namespace TMath {
 
    //Sample quantiles
    void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob, Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
-
 
    // Range
    inline Short_t   Range(Short_t lb, Short_t ub, Short_t x);
@@ -307,7 +305,6 @@ namespace TMath {
    void Sort(Long64_t n, const Long64_t *a, Long64_t *index, Bool_t down=kTRUE);
    void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
    void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
-
 
    // Advanced
           Float_t  *Cross(const Float_t v1[3],const Float_t v2[3],Float_t out[3]);    // Calculate the Cross Product of two vectors
@@ -513,7 +510,6 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 
 //---- Trig and other functions ------------------------------------------------
 
-
 #include <float.h>
 
 #if defined(R__WIN32) && !defined(__CINT__)
@@ -523,7 +519,8 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #   endif
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
-    defined(R__HPUX11) || defined(R__GLIBC) || defined(MAC_OS_X_VERSION_10_4)
+    defined(R__HPUX11) || defined(R__GLIBC) || \
+    (defined(R__MACOSX) && defined(__INTEL_COMPILER))
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
@@ -652,7 +649,6 @@ inline Int_t TMath::Finite(Double_t x)
 
 inline Int_t TMath::IsNaN(Double_t x)
    { return isnan(x); }
-
 
 //-------- Advanced -------------
 
