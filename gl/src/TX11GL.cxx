@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.15 2006/03/08 21:09:43 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.16 2006/03/09 11:18:31 brun Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -122,27 +122,29 @@ struct TX11GLManager::TGLContext_t {
    //these are numbers returned by gVirtualX->AddWindow and gVirtualX->AddPixmap
    TGLContext_t() : fWindowIndex(-1), fPixmapIndex(-1), fX11Pixmap(0), fW(0), 
                   fH(0), fX(0), fY(0), fGLXContext(0), fDirect(kFALSE),
-                  fXImage(0), fNextFreeContext(0)
+                  fXImage(0), fNextFreeContext(0), fDirectGC(0), fPixmapGC(0)
    {
-   }
-   Int_t        fWindowIndex;
-   Int_t        fPixmapIndex;
+   }//FIXME
+   Int_t                fWindowIndex;
+   Int_t                fPixmapIndex;
    //X11 pixmap
-   Pixmap       fX11Pixmap; 
+   Pixmap               fX11Pixmap; 
    //
-   UInt_t       fW;
-   UInt_t       fH;
+   UInt_t               fW;
+   UInt_t               fH;
    //
-   Int_t        fX;
-   Int_t        fY;
+   Int_t                fX;
+   Int_t                fY;
    //
-   GLXContext   fGLXContext;
-   Bool_t       fDirect;
+   GLXContext           fGLXContext;
+   Bool_t               fDirect;
    //GL buffer is read into XImage
-   XImage      *fXImage;
+   XImage              *fXImage;
    std::vector<UChar_t> fBUBuffer;//gl buffer is read from bottom to top.
    //
-   TGLContext_t *fNextFreeContext;
+   TGLContext_t        *fNextFreeContext;
+   GC                   fDirectGC;
+   GC                   fPixmapGC;
 };
 
 namespace {
@@ -371,16 +373,16 @@ void TX11GLManager::Flush(Int_t ctxInd)
    if (ctx.fPixmapIndex == -1)
       glXSwapBuffers(fPimpl->fDpy, winID);
    else if (ctx.fXImage && ctx.fDirect) {
-      GC gc = XCreateGC(fPimpl->fDpy, winID, 0, 0);
+      if (!ctx.fDirectGC)
+         ctx.fDirectGC = XCreateGC(fPimpl->fDpy, winID, 0, 0);
 
-      if (!gc) {
+      if (!ctx.fDirectGC) {
          Error("Flush", "XCreateGC failed while copying pixmap\n");
          ctx.fDirect = kFALSE;
          return;
       }
 
-      XCopyArea(fPimpl->fDpy, ctx.fX11Pixmap, winID, gc, 0, 0, ctx.fW, ctx.fH, ctx.fX, ctx.fY);
-      XFreeGC(fPimpl->fDpy, gc);
+      XCopyArea(fPimpl->fDpy, ctx.fX11Pixmap, winID, ctx.fDirectGC, 0, 0, ctx.fW, ctx.fH, ctx.fX, ctx.fY);
    }
 }
 
@@ -513,8 +515,9 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
       glReadBuffer(GL_BACK);
       glReadPixels(0, 0, ctx.fW, ctx.fH, GL_BGRA, GL_UNSIGNED_BYTE, &ctx.fBUBuffer[0]);
 
-      GC gc = XCreateGC(fPimpl->fDpy, ctx.fX11Pixmap, 0, 0);
-      if (gc) {
+      if (!ctx.fPixmapGC) 
+         ctx.fPixmapGC = XCreateGC(fPimpl->fDpy, ctx.fX11Pixmap, 0, 0);
+      if (ctx.fPixmapGC) {
          /*
          GL buffer read operation gives bottom-up order of pixels, but XImage require top-down. 
          So, change RGB lines first.
@@ -527,8 +530,7 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
             src -= ctx.fW * 4;
          }
 
-         XPutImage(fPimpl->fDpy, ctx.fX11Pixmap, gc, ctx.fXImage, 0, 0, 0, 0, ctx.fW, ctx.fH);
-         XFreeGC(fPimpl->fDpy, gc);
+         XPutImage(fPimpl->fDpy, ctx.fX11Pixmap, ctx.fPixmapGC, ctx.fXImage, 0, 0, 0, 0, ctx.fW, ctx.fH);
       } else 
          Error("ReadGLBuffer", "XCreateGC error while attempt to copy XImage\n");
    }
@@ -551,6 +553,10 @@ void TX11GLManager::DeleteGLContext(Int_t ctxInd)
          XDestroyImage(ctx.fXImage);
          ctx.fXImage = 0;
       }
+      if (ctx.fDirectGC)
+         XFreeGC(fPimpl->fDpy, ctx.fDirectGC), ctx.fDirectGC = 0;
+      if (ctx.fPixmapGC)
+         XFreeGC(fPimpl->fDpy, ctx.fPixmapGC), ctx.fPixmapGC = 0;
    }
 
    ctx.fNextFreeContext = fPimpl->fNextFreeContext;
