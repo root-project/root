@@ -6,7 +6,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-include $(ROOTSYS)/test/Makefile.arch
+include ../../test/Makefile.arch
 
 #------------------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIO
 
 PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO)
 
-		  
+
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
 
