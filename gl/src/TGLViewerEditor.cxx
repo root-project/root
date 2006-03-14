@@ -204,7 +204,6 @@ void TGLViewerEditor::UpdateViewerGuides()
 {
    // Update viewer with GUI state
    TGLViewer::EAxesType axesType = TGLViewer::kAxesNone;
-   
    for (Int_t i = 1; i < 4; i++) { 
       TGButton * button = fAxesContainer->GetButton(i);
       if (button && button->IsDown()) {
@@ -375,9 +374,9 @@ void TGLViewerEditor::UpdateReferencePos()
 {
    // Enable/disable reference position (x/y/z) number edits based on 
    // reference check box
-   fReferencePosX->SetState(fReferenceOn->IsDown());
+/*   fReferencePosX->SetState(fReferenceOn->IsDown());
    fReferencePosY->SetState(fReferenceOn->IsDown());
-   fReferencePosZ->SetState(fReferenceOn->IsDown());
+   fReferencePosZ->SetState(fReferenceOn->IsDown());*/
 }
 
 //______________________________________________________________________________
