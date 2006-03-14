@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.3 2005/11/09 09:57:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.4 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -69,6 +69,7 @@ void TGeoShapeAssembly::ComputeBBox()
    Double_t pt[3];
    for (Int_t i=0; i<nd; i++) {
       node = fVolume->GetNode(i);
+      if (node->GetVolume()->IsAssembly()) node->GetVolume()->GetShape()->ComputeBBox();
       box = (TGeoBBox*)node->GetVolume()->GetShape();
       box->SetBoxPoints(vert);
       for (Int_t ipt=0; ipt<8; ipt++) {

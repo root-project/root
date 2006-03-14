@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.75 2006/02/09 11:48:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.76 2006/03/13 11:03:36 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -416,18 +416,28 @@ void TGeoVolume::Browse(TBrowser *b)
    if (!b) return;
 
    if (!GetNdaughters()) b->Add(this, 0, IsVisible());
+   TGeoVolume *daughter;
+   TString title;
    for (Int_t i=0; i<GetNdaughters(); i++) { 
-      TString title;
-      title.Form("%s : %d daughter(s), %d bytes", 
-                 GetNode(i)->GetVolume()->GetShape()->GetName(),
-                 GetNode(i)->GetVolume()->GetNdaughters(),
-                 GetNode(i)->GetVolume()->GetByteCount());
-      GetNode(i)->GetVolume()->SetTitle(title.Data());
-      b->Add(GetNode(i)->GetVolume());
+      daughter = GetNode(i)->GetVolume();
+      if(!strlen(daughter->GetTitle())) {
+         if (daughter->IsAssembly()) title.Form("Assembly with %d daughter(s)", 
+                                                daughter->GetNdaughters());
+         else if (daughter->GetFinder()) {
+            TString s1 = daughter->GetFinder()->ClassName();
+            s1.ReplaceAll("TGeoPattern","");
+            title.Form("Volume having %s shape divided in %d %s slices",
+                       daughter->GetShape()->ClassName(),daughter->GetNdaughters(), s1.Data()); 
+                       
+         } else title.Form("Volume with %s shape having %d daughter(s)", 
+                         daughter->GetShape()->ClassName(),daughter->GetNdaughters());
+         daughter->SetTitle(title.Data());
+      }   
+      b->Add(daughter);
       if (IsVisDaughters())
-         b->AddCheckBox(GetNode(i)->GetVolume(), GetNode(i)->GetVolume()->IsVisible());
+         b->AddCheckBox(daughter, daughter->IsVisible());
       else
-         b->AddCheckBox(GetNode(i)->GetVolume(), kFALSE);
+         b->AddCheckBox(daughter, kFALSE);
    }
 }
 
@@ -1650,6 +1660,8 @@ void TGeoVolume::Voxelize(Option_t *option)
    // or final leaves
    Int_t nd = GetNdaughters();
    if (!nd) return;
+   // If this is an assembly, re-compute bounding box
+   if (IsAssembly()) fShape->ComputeBBox();
    // delete old voxelization if any
    if (fVoxels) {
       if (!TObject::TestBit(kVolumeClone)) delete fVoxels;
