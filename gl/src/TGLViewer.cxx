@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.41 2006/03/09 11:18:31 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.42 2006/03/13 09:33:50 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1551,6 +1551,7 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Event_t eventSt;
    eventSt.fX = px;
    eventSt.fY = py;
+   eventSt.fState = 0;
 
    switch (event) {
       case kMouseMotion:

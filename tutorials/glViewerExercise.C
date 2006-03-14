@@ -97,9 +97,9 @@ void glViewerExercise()
    // Random draw style 
    Int_t style = randGen.Integer(3);
    switch (style) {
-      case 0: v->SetDrawStyle(TGLViewer::kFill); break;
-      case 1: v->SetDrawStyle(TGLViewer::kOutline); break;
-      case 2: v->SetDrawStyle(TGLViewer::kWireFrame); break;
+      case 0: v->SetDrawStyle(TGLDrawFlags::kFill); break;
+      case 1: v->SetDrawStyle(TGLDrawFlags::kOutline); break;
+      case 2: v->SetDrawStyle(TGLDrawFlags::kWireFrame); break;
    }   
 
    // Clipping setup - something like this:
