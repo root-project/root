@@ -54,6 +54,7 @@ class Basic2SetupTestCase( unittest.TestCase ):
       """Test auto-loading by retrieving a non-preloaded class"""
 
       t = TLorentzVector()
+      self.failUnless( isinstance( t, TLorentzVector ) )
 
    def test4MacroLoading( self ):
       """Test accessibility to macro classes"""
@@ -64,6 +65,7 @@ class Basic2SetupTestCase( unittest.TestCase ):
       self.assertEqual( SimpleClass, SimpleClass_t )
 
       c = SimpleClass()
+      self.failUnless( isinstance( c, SimpleClass ) )
       self.assertEqual( c.fData, c.GetData() )
 
       c.SetData( 13 )

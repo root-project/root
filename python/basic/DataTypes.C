@@ -16,6 +16,7 @@ class ClassWithData {
 public:
    ClassWithData() : fOwnsArrays( false )
    {
+      fBool   = kFALSE;
       fChar   = 'a';
       fUChar  = 'c';
       fShort  = -11;
@@ -85,6 +86,7 @@ public:
    }
 
 // getters
+   Bool_t   GetBool()   { return fBool; }
    Char_t   GetChar()   { return fChar; }
    UChar_t  GetUChar()  { return fUChar; }
    Short_t  GetShort()  { return fShort; }
@@ -115,6 +117,7 @@ public:
    Double_t* GetDoubleArray2() { return fDoubleArray2; }
 
 // setters
+   void SetBool( Bool_t b )      { fBool   = b;  }
    void SetChar( Char_t c )      { fChar   = c;  }
    void SetUChar( UChar_t uc )   { fUChar  = uc; }
    void SetShort( Short_t s )    { fShort  = s;  }
@@ -128,6 +131,7 @@ public:
 
 public:
 // basic types
+   Bool_t   fBool;
    Char_t   fChar;
    UChar_t  fUChar;
    Short_t  fShort;

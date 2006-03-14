@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 12/06/05
+# Last: 03/13/06
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -24,7 +24,9 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       """Test read access to instance public data and verify values"""
 
       c = ClassWithData()
+      self.failUnless( isinstance( c, ClassWithData ) )
 
+      self.assertEqual( c.fBool, False )
       self.assertEqual( c.fChar,   'a' )
       self.assertEqual( c.fUChar,  'c' )
       self.assertEqual( c.fShort,  -11 )
@@ -80,12 +82,23 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       """Test write access to instance public data and verify values"""
 
       c = ClassWithData()
+      self.failUnless( isinstance( c, ClassWithData ) )
+
+    # boolean types
+      c.fBool = True;     self.assertEqual( c.GetBool(),  True )
+      c.SetBool( True );  self.assertEqual( c.fBool,      True )
+      c.fBool = kTRUE;    self.assertEqual( c.GetBool(), kTRUE )
+      c.SetBool( kTRUE ); self.assertEqual( c.fBool,     kTRUE )
+      self.failUnlessRaises( TypeError, c.SetBool, 10 )
 
     # char types
-      c.fChar = 'b';     self.assertEqual( c.GetChar(),  'b' )
-      c.SetChar( 'c' );  self.assertEqual( c.fChar,      'c' )
-      c.fUChar = 'd';    self.assertEqual( c.GetUChar(), 'd' )
-      c.SetUChar( 'e' ); self.assertEqual( c.fUChar,     'e' )
+      c.fChar = 'b';      self.assertEqual( c.GetChar(),     'b' )
+      c.SetChar( 'c' );   self.assertEqual( c.fChar,         'c' )
+      c.SetChar( 41 );    self.assertEqual( c.fChar, chr(41)     )
+      c.fUChar = 'd';     self.assertEqual( c.GetUChar(),    'd' )
+      c.SetUChar( 'e' );  self.assertEqual( c.fUChar,        'e' )
+      self.failUnlessRaises( TypeError, c.SetChar, 256 )
+      self.failUnlessRaises( TypeError, c.SetChar, "string" )
 
     # integer types
       names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong' ]
@@ -127,6 +140,7 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
          exec 'c.%s = %d' % (name,value)
 
       c = ClassWithData()
+      self.failUnless( isinstance( c, ClassWithData ) )
 
       self.assertRaises( OverflowError, call, c, 'fUInt',  -1  )
       self.assertRaises( OverflowError, call, c, 'fULong', -1  )
