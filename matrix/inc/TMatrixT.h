@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.2 2005/12/23 07:20:10 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.3 2006/01/05 08:26:13 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -50,22 +50,6 @@ protected:
   void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
                     Int_t nr_nonzeros = -1);
 
-  // Elementary constructors
-  void AMultB (const TMatrixT   <Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
-  void AMultB (const TMatrixT   <Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1);
-  void AMultB (const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
-  void AMultB (const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1);
-
-  void AtMultB(const TMatrixT   <Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
-  void AtMultB(const TMatrixT   <Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1);
-  void AtMultB(const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
-  void AtMultB(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
-
-  void AMultBt(const TMatrixT   <Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
-  void AMultBt(const TMatrixT   <Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
-  void AMultBt(const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
-  void AMultBt(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
-
 public:
 
   enum {kWorkMax = 100};
@@ -95,6 +79,22 @@ public:
   TMatrixT(const TMatrixTLazy<Element> &lazy_constructor);
 
   virtual ~TMatrixT() { Clear(); }
+
+  // Elementary constructors
+  void AMultB (const TMatrixT   <Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
+  void AMultB (const TMatrixT   <Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1);
+  void AMultB (const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
+  void AMultB (const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1);
+
+  void AtMultB(const TMatrixT   <Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
+  void AtMultB(const TMatrixT   <Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1);
+  void AtMultB(const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
+  void AtMultB(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
+
+  void AMultBt(const TMatrixT   <Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
+  void AMultBt(const TMatrixT   <Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
+  void AMultBt(const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b,Int_t constr=1);
+  void AMultBt(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=1) { AMultB(a,b,constr); }
 
   virtual const Element *GetMatrixArray  () const;
   virtual       Element *GetMatrixArray  ();
