@@ -188,7 +188,7 @@ void printTime(TStopwatch & time, std::string s) {
 }
 
 // reference times for sizes <=6 and > 6 on Linux slc3 P4 3Ghz ("SMatrix","SMatrix_sym","TMatrix")
-double refTime1[3] = { 50.49, 53.75, 83.21 }; 
+double refTime1[3] = { 40.49, 53.75, 83.21 }; 
 double refTime2[3] = { 393.81, 462.16, 785.50 }; 
 
 #define NMAX1  9   // matrix storese results from 2 to 10
