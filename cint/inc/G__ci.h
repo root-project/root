@@ -1827,6 +1827,7 @@ extern G__EXPORT void G__RegisterScriptCompiler G__P((int(*p2f)(G__CONST char*,G
 *************************************************************************/
 
 extern G__EXPORT int G__defined_tagname G__P((G__CONST char* tagname,int noerror));
+extern G__EXPORT struct G__Definedtemplateclass *G__defined_templateclass G__P((char *name));
 
 int G__deleteglobal G__P((void* p));
 int G__deletevariable G__P((G__CONST char* varname));
@@ -1878,7 +1879,9 @@ extern G__EXPORT int G__fputerr G__P((int c));
 extern G__EXPORT void G__SetUseCINTSYSDIR G__P((int UseCINTSYSDIR));
 extern G__EXPORT void G__SetCINTSYSDIR G__P((char* cintsysdir));
 extern G__EXPORT void G__set_eolcallback G__P((void* eolcallback));
-
+typedef void G__parse_hook_t ();
+extern G__EXPORT G__parse_hook_t* G__set_beforeparse_hook G__P((G__parse_hook_t* hook));
+extern G__EXPORT void G__set_ioctortype_handler G__P((int (*p2f) G__P((const char*))));
 extern G__EXPORT void G__SetCatchException G__P((int mode));
 
 #ifdef G__ASM_WHOLEFUNC
@@ -1913,6 +1916,7 @@ extern G__EXPORT void G__mask_errmsg G__P((char* msg));
 
 extern G__EXPORT int G__main G__P((int argc,char **argv));
 extern G__EXPORT void G__setothermain G__P((int othermain));
+extern G__EXPORT void G__exit G__P((int rtn));
 extern G__EXPORT int G__getnumbaseclass G__P((int tagnum));
 extern G__EXPORT void G__setnewtype G__P((int globalcomp,G__CONST char* comment,int nindex));
 extern G__EXPORT void G__setnewtypeindex G__P((int j,int index));
@@ -1955,6 +1959,7 @@ extern G__EXPORT int G__inheritance_setup G__P((int tagnum,int basetagnum,long b
 extern G__EXPORT void G__add_compiledheader G__P((G__CONST char *headerfile));
 extern G__EXPORT void G__add_ipath G__P((G__CONST char *ipath));
 extern G__EXPORT int G__delete_ipath G__P((G__CONST char *ipath));
+extern G__EXPORT struct G__includepath *G__getipathentry();
 extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
 extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 extern G__EXPORT long G__int G__P((G__value buf));

@@ -1357,6 +1357,7 @@ int G__loadfile(const char *filenamein)
   if (pres!=0) {
      G__fprinterr(G__serr,"Error: external preprocessing failed.");
      G__genericerror((char*)NULL);
+      G__UnlockCriticalSection();
      return(G__LOADFILE_FAILURE);
   }
 

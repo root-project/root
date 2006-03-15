@@ -31,7 +31,7 @@
 #ifdef _WIN32
 #include "windows.h"
 #include <errno.h>
-extern "C" FILE *FOpenAndSleep(const char *filename, const char *mode) {
+extern "C" G__EXPORT FILE *FOpenAndSleep(const char *filename, const char *mode) {
    int tries=0;
    FILE *ret=0;
    while (!ret && ++tries<51)

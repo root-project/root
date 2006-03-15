@@ -178,7 +178,7 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
 * Shadow class functions
 *********************************************************************/
 #ifndef __CINT__
-class G__ShadowMaker {
+class G__EXPORT G__ShadowMaker {
 public:
    static bool NeedShadowClass(G__ClassInfo& cl);
    G__ShadowMaker(std::ostream& out, const char* nsprefix, 
