@@ -5,6 +5,7 @@ event.par
 stress
 stressLinear
 stressgeom
+stressSpectrum
 AclockDict.cxx
 AclockDict.h
 HelloDict.cxx
