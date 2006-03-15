@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.278 2006/03/13 10:57:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.279 2006/03/13 11:00:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2374,6 +2374,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    }
 
    TVirtualFitter *hFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
+   if (!hFitter) return 0;
    hFitter->Clear();
 
 //   - Get pointer to the function by searching in the list of functions in ROOT
