@@ -13,8 +13,10 @@
 
 //#define HAVE_CLHEP
 #define TEST_SYM
-#define REPORT_TIME
 //#define LOOP
+#ifdef LOOP
+#define REPORT_TIME
+#endif
 #define NITER 1  // number of iterations
 
 
@@ -711,12 +713,18 @@ void ROOT::Math::test::reportTime(std::string s, double time) {
 
 
 
-int main() { 
+int main(int argc , char *argv[] ) { 
+
+  std::string fname = "testOperations"; 
+  if (argc > 1) { 
+    std::string platf(argv[1]); 
+    fname = fname + "_" + platf; 
+  }
+  fname = fname + ".root"; 
 
 
 #ifdef REPORT_TIME
-
-  TFile * f = new TFile("testOperations.root","recreate");
+  TFile * f = new TFile(fname.c_str(),"recreate");
 
   typeNames[0] = "SMatrix";
   typeNames[1] = "TMatrix";
@@ -729,18 +737,20 @@ int main() {
   NLOOP = 1000*NLOOP_MIN 
   TEST(5)
 #else
-  NLOOP = 1000*NLOOP_MIN; 
+  NLOOP = 10000*NLOOP_MIN; 
   TEST(2);
   TEST(3);
   TEST(4);
-  NLOOP = 100*NLOOP_MIN 
+  NLOOP = 1000*NLOOP_MIN 
   TEST(5);
+  TEST(6);
   TEST(7);
   TEST(10); 
-//  NLOOP = 10*NLOOP_MIN; 
-//   TEST(15); 
-//   TEST(20);
-//   TEST(30);
+  NLOOP = 100*NLOOP_MIN; 
+  TEST(15); 
+  TEST(20);
+  NLOOP = 50*NLOOP_MIN; 
+  TEST(30);
 //   NLOOP = NLOOP_MIN;
 //   TEST(50);
 //   TEST(75);

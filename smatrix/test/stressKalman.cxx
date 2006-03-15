@@ -706,40 +706,29 @@ int TestRunner<NDIM1,NDIM2>::test_tmatrix_kalman() {
     {
       double x2 = 0,c2 = 0;
       TVectorD x(second);
+      TMatrixD Rtmp(first,first);
       TMatrixD Rinv(first,first);
       TMatrixDSym RinvSym;
       TMatrixD K(second,first);
       TMatrixD C(second,second);
+      TMatrixD Ctmp(second,second);
       TVectorD tmp1(first);
       TMatrixD tmp2(second,first);
-#define OPTIMIZED
-#ifndef OPTIMIZED
-      TMatrixD HT(second,first);
-#endif
       
       TestTimer t(gReporter);
       for (Int_t l = 0; l < NLOOP; l++)
       {
-#ifdef OPTIMIZED
         tmp1 = m; Add(tmp1,-1.0,H,xp);
         x = xp; Add(x,+1.0,K0,tmp1);
-        tmp2 = TMatrixD(Cp,TMatrixD::kMultTranspose,H);
-        Rinv = V ; Rinv += TMatrixD(H,TMatrixD::kMult,tmp2);
-        RinvSym.Use(first,Rinv.GetMatrixArray()); RinvSym.InvertFast();
-        C = Cp; C -= TMatrixD(TMatrixD(tmp2,TMatrixD::kMult,Rinv),TMatrixD::kMultTranspose,tmp2);
-        x2 = RinvSym.Similarity(tmp1);
-#else 
-	tmp1 = H*xp -m;
-	//x = xp + K0 * (m- H * xp);
-	x = xp - K0 * tmp1;
-	tmp2 = Cp * HT.Transpose(H);
-	Rinv = V;  Rinv +=  H * tmp2;
-	RinvSym.Use(first,Rinv.GetMatrixArray()); 
+	tmp2.AMultBt(Cp,H,0);
+	Rtmp.AMultB(H,tmp2,0);
+        Rinv = V ;    Rinv += Rtmp;
+        RinvSym.Use(first,Rinv.GetMatrixArray()); 
 	RinvSym.InvertFast();
-	K= tmp2* Rinv;
-	C = (I-K*H)*Cp ;
-	x2= RinvSym.Similarity(tmp1);
-#endif
+	K.AMultB(tmp2,Rinv,0);
+	Ctmp.AMultBt(K,tmp2,0);
+        C = Cp; C -= Ctmp;
+        x2 = RinvSym.Similarity(tmp1);
 
 
 #ifdef DEBUG 
