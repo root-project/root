@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.13 2005/10/27 10:00:41 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.14 2005/12/09 16:24:34 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -377,6 +377,9 @@ void TAlienFile::Seek(Long64_t offset, ERelativeTo pos)
 void TAlienFile::Close(Option_t *option)
 {
    // Close file.
+
+   if (fOption == "READ")
+      return;
 
    // set GCLIENT_EXTRA_ARG environment
    gSystem->Setenv("GCLIENT_EXTRA_ARG",fAuthz.Data());
