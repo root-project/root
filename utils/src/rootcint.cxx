@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.238 2006/03/03 20:36:33 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.239 2006/03/13 01:19:57 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -166,6 +166,20 @@
 #include "RConfig.h"
 #include "Api.h"
 #include <iostream>
+
+#ifdef fgets // in G__ci.h
+#  undef fgets
+#  undef printf
+#  undef fprintf
+#  undef fputc
+#  undef putc
+#  undef putchar
+#  undef fputs
+#  undef puts
+#  undef fgets
+#  undef gets
+#  undef system
+#endif
 
 extern "C" {
    void  G__setothermain(int othermain);
@@ -339,7 +353,6 @@ void AddConstructorType(const char *arg)
 { 
    if (arg) gIoConstructorTypes.push_back(string(arg));
 }
-extern "C" void G__set_ioctortype_handler( void (*)(const char*) );
 
 //const char* root_style()  {
 //  static const char* s = ::getenv("MY_ROOT");
@@ -4337,7 +4350,7 @@ int main(int argc, char **argv)
    }
    G__ShadowMaker::VetoShadow(); // we create them ourselves
    G__setothermain(2);
-   G__set_ioctortype_handler( AddConstructorType );
+   G__set_ioctortype_handler( (int (*)(const char*))AddConstructorType );
    if (gLiblistPrefix.length()) G__set_beforeparse_hook (EnableAutoLoading);
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
