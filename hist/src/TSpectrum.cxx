@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.38 2006/02/27 15:36:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.39 2006/03/07 11:36:14 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -2951,7 +2951,7 @@ large oscillations  (Figure 15). </span></p>
 -18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span><span style='font-size:16.0pt'>from mathematical point of view,
 it is the optimal solution in the unconstrained space of independent variables.
-From physical point of view we are interested only in a meaningful solution. </span></p>
+>From physical point of view we are interested only in a meaningful solution. </span></p>
 
 <p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
 -18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -4549,12 +4549,16 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
          
       else
          l1low = 0;
+      if(l1low > 0)
+         l1low=0;
       dethigh = m0high * m2high - m1high * m1high;
       if(dethigh != 0)
          l1high = (-l0high * m1high + l1high * m0high) / dethigh;
                 
       else
          l1high = 0;
+      if(l1high > 0)
+         l1high=0;
    }
    
    else{
@@ -4569,11 +4573,15 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       if(i < shift){
          a = i - shift;      	
          working_space[i + size_ext] = source[0] + l1low * a;         
+         if(working_space[i + size_ext] < 0)
+            working_space[i + size_ext]=0;         
       }
 
       else if(i >= ssize + shift){
       	 a = i - (ssize - 1 + shift);
          working_space[i + size_ext] = source[ssize - 1] + l1high * a;
+         if(working_space[i + size_ext] < 0)
+            working_space[i + size_ext]=0;
       }
 
       else
@@ -4596,12 +4604,18 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
       for(j = 0;j < size_ext; j++){
          if(j < shift){
          	  a = j - shift;
-            working_space[size_ext + j] = source[0] + l1low * a - working_space[size_ext + j];
+         	  b = source[0] + l1low * a;
+         	  if(b < 0)
+         	     b = 0;
+            working_space[size_ext + j] = b - working_space[size_ext + j];
          }
 
          else if(j >= ssize + shift){
          	  a = j - (ssize - 1 + shift);
-            working_space[size_ext + j] = source[ssize - 1] + l1high * a - working_space[size_ext + j];
+         	  b = source[ssize - 1] + l1high * a;
+         	  if(b < 0)
+         	     b = 0;         	  
+            working_space[size_ext + j] = b - working_space[size_ext + j];
          }
 
          else{
