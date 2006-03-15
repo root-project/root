@@ -65,7 +65,7 @@ $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
 		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL)
 #		python reflex/python/genreflex/genreflex.py $(SMATRIXDIRS)/Dict.h -I$(SMATRIXDIRI) --selection_file=$(SMATRIXDIRS)/Selection.xml -o $(SMATRIXDIRS)/G__Smatrix.cxx
 
-ifeq ($(ARCH),linuxicc)
+ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range
 $(SMATRIXDO):  $(SMATRIXDS)
 		$(CXX) $(NOOPT) -wd175 $(CXXFLAGS) -I. -I$(SMATRIXDIRI) -o $@ -c $<

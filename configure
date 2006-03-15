@@ -607,7 +607,7 @@ check_symbol() {
     nm $symbolfile 2>&1 | grep $symbol > /dev/null 2>&1
     if test $? -eq 0 ; then
         found_symbol=1
-       logmsg "Symbol found"
+        logmsg "Symbol found"
     else
 	nm $symbolfile 2>&1 | grep "no symbols" > /dev/null 2>&1
 	if test $? -eq 0 ; then
