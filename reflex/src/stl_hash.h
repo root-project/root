@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.4 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.5 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -15,7 +15,9 @@
 #if defined(__INTEL_COMPILER)
 #include <ext/hash_map>
 #include <ext/hash_set>
-//#define __gnu_cxx              std
+#if (__INTEL_COMPILER<=800)
+#define __gnu_cxx              std
+#endif
 #elif defined(__GNUC__)
 // For gcc, the hash_map and hash_set classes are in the extensions area
 #include <ext/hash_set>
