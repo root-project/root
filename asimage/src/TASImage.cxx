@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.53 2006/03/13 14:32:30 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.54 2006/03/13 15:18:56 rdm E
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -808,8 +808,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    TCanvas *canvas = pad->GetCanvas();
    Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
-   gVirtualX->Update(1);
-   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
+   Window_t wd = (Window_t)gVirtualX->GetWindowID(wid);
    if (!wd) return;
 
    static int x11 = -1;
@@ -850,10 +849,8 @@ void TASImage::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("n") || !gPad || !gPad->IsEditable()) {
-      Int_t w = -64;
-      Int_t h = 64;
-      w = (fImage->width > 64) ? fImage->width : w;
-      h = (fImage->height > 64) ? fImage->height : h;
+      Int_t w = fImage->height < 65 ? -fImage->width : fImage->width;
+      Int_t h = fImage->height < 65 ? 64 : fImage->height;
       TString rname = GetName();
       rname.ReplaceAll(".", "");
       new TCanvas(rname.Data(), Form("%s (%d x %d)", rname.Data(),
@@ -1335,31 +1332,6 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
             gVirtualX->SetLineColor(-1);
             gPad->Modified(kTRUE);
-            //recompute the pad range
-            Double_t wpad  = gPad->GetWw()*gPad->GetWNDC();
-            Double_t hpad  = gPad->GetWh()*gPad->GetHNDC();
-            Double_t uxmin = gPad->AbsPixeltoX(stx);
-            Double_t uxmax = gPad->AbsPixeltoX(px);
-            if (uxmin > uxmax) {Double_t temp = uxmin; uxmin = uxmax; uxmax = temp;}
-            Double_t uymax = gPad->AbsPixeltoY(sty);
-            Double_t uymin = gPad->AbsPixeltoY(py);
-            if (uymin > uymax) {Double_t temp = uymin; uymin = uymax; uymax = temp;}
-            Double_t zw=0, zh=0;
-            if (fZoomWidth > fZoomHeight) {
-               zw = wpad*(1-gPad->GetLeftMargin()-gPad->GetRightMargin());
-               zh = fZoomHeight*zw/fZoomWidth;
-            } else {
-               zh = hpad*(1-gPad->GetBottomMargin()-gPad->GetLeftMargin());
-               zw = fZoomWidth*zh/fZoomHeight;
-            }
-            Double_t dx1 = (uxmax-uxmin)/zw;
-            Double_t dy1 = (uymax-uymin)/zh;
-            Double_t y2 = uymax + dy1*hpad*gPad->GetTopMargin();
-            Double_t y1 = y2 - dy1*hpad;
-            Double_t x1 = uxmin -dx1*wpad*gPad->GetLeftMargin();
-            Double_t x2 = x1 + dx1*wpad;
-
-            gPad->Range(x1,y1,x2,y2);
             gPad->Update();
             break;
       }
@@ -1612,9 +1584,6 @@ void TASImage::UnZoom()
 
    delete fScaledImage;
    fScaledImage = 0;
-   //the following line should be fixed. it assumes an original
-   //pad range in [0,1] and 10% for the margins
-   if (gPad) gPad->Range(-0.125,-0.125,1.125,1.125);
 }
 
 //______________________________________________________________________________
@@ -4698,7 +4667,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
       while (pAET) {
          ptsOut->fX = pAET->bres.minor_axis;
          ptsOut->fY = y;
-         ptsOut++;
+		   ptsOut++;
          nPts++;
 
          *width++ = pAET->next->bres.minor_axis - pAET->bres.minor_axis;
@@ -4798,7 +4767,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
       while (pAET) {
          ptsOut->fX = pAET->bres.minor_axis;
          ptsOut->fY = y;
-         ptsOut++;
+		   ptsOut++;
          nPts++;
 
          *width++ = pAET->next->bres.minor_axis - pAET->bres.minor_axis;
@@ -4866,7 +4835,7 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
 
    if (corner_x+tw <= 0 || corner_x >= cw || corner_y+th <= 0 || corner_y >= ch) {
       return;
-   }
+	}
 
    if (corner_y > 0) {
       dst += corner_y*cw;
@@ -4906,16 +4875,16 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 
    static ASDrawContext *ctx = new ASDrawContext;
 
-   ctx->canvas_width = im->width;
-   ctx->canvas_height = im->height;
-   ctx->canvas = im->alt.argb32;
+	ctx->canvas_width = im->width;
+	ctx->canvas_height = im->height;
+	ctx->canvas = im->alt.argb32;
    ctx->scratch_canvas = 0;
 
-   ctx->tool = brush;
-   ctx->fill_hline_func = fill_hline_notile_argb32;
+	ctx->tool = brush;
+	ctx->fill_hline_func = fill_hline_notile_argb32;
    ctx->apply_tool_func = apply_tool_2D_argb32;
 
-   return ctx;
+	return ctx;
 }
 
 static const UInt_t kBrushCacheSize = 20;
@@ -5298,7 +5267,6 @@ void TASImage::Streamer(TBuffer &b)
          Double_t *vec = new Double_t[size];
          b.ReadFastArray(vec, size);
          SetImage(vec, w, h, &fPalette);
-         delete vec;
       }
       b.CheckByteCount(R__s, R__c, TASImage::IsA());
    } else {
@@ -5347,10 +5315,6 @@ void TASImage::Browse(TBrowser *)
 const char *TASImage::GetTitle() const
 {
    // title is used to keep 32x32 xpm image's thumbnail
-
-   if (!gFile || !gFile->IsOpen() || !gFile->IsWritable()) {
-      return 0;
-   }
 
    TASImage *mutble = (TASImage *)this;
 
@@ -5479,7 +5443,7 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, UInt_t thi
 
    for (int i = 0; i < sz; i++) {
       matrix[i] = (CARD32)color;
-   }
+   };
 
    static ASDrawTool *brush = new ASDrawTool;
    brush->matrix = matrix;
