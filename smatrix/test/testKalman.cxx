@@ -376,7 +376,7 @@ int test_tmatrix_kalman() {
       TMatrixD Ctmp(second,second);
       TVectorD tmp1(first);
       TMatrixD tmp2(second,first);
-      //#define OPTIMIZED
+#define OPTIMIZED
 #ifndef OPTIMIZED
       TMatrixD HT(second,first);
       TMatrixD tmp2T(first,second);
