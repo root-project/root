@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.3 2005/12/13 10:12:02 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.4 2006/03/01 15:46:33 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -25,7 +25,6 @@
 #include "XrdClient/XrdClientConnMgr.hh"
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientDebug.hh"
-#include "XrdClient/XrdClientDNS.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientLogConnection.hh"
 #include "XrdClient/XrdClientPhyConnection.hh"
@@ -108,7 +107,7 @@ bool XrdProofConn::Init(const char *url)
    }
 
    // Parse Url
-   fUrl.TakeUrl(XrdClientString(url));
+   fUrl.TakeUrl(XrdOucString(url));
    fUser = fUrl.User.c_str();
    fHost = fUrl.Host.c_str();
    fPort = fUrl.Port;
@@ -237,17 +236,16 @@ int XrdProofConn::Connect()
    int logid;
    logid = -1;
 
-   // Connect
-   // Resolv the DNS information
-   XrdClientDNS hdns(fUrl.Host.c_str());
-   XrdClientString haddr[10], hname[10];
-   int naddr = hdns.HostAddr(10, haddr, hname);
+   // Resolve the DNS information
+   char *haddr[10] = {0}, *hname[10] = {0};
+   int naddr = XrdNetDNS::getAddrName(fUrl.Host.c_str(), 10, haddr, hname);
+
    int i = 0;
    for (; i < naddr; i++ ) {
       // Address
-      fUrl.HostAddr = haddr[i];
+      fUrl.HostAddr = (const char *) haddr[i];
       // Name
-      fUrl.Host = hname[i];
+      fUrl.Host = (const char *) hname[i];
       // Notify
       TRACE(REQ,"XrdProofConn::Connect: found host "<<fUrl.Host<<
                 " with addr " << fUrl.HostAddr);

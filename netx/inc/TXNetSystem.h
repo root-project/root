@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.1 2005/10/27 16:36:38 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.2 2006/02/21 16:57:12 brun Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -33,13 +33,13 @@
 #include "Rtypes.h"
 #endif
 
-#include "XrdClient/XrdClientString.hh"
+#include "XrdOuc/XrdOucString.hh"
 #include "XrdClient/XrdClientVector.hh"
 
 class XrdClientAdmin;
 
-typedef XrdClientVector<XrdClientString> vecString;
-typedef XrdClientVector<bool>            vecBool;
+typedef XrdClientVector<XrdOucString> vecString;
+typedef XrdClientVector<bool>         vecBool;
 
 
 class TXNetSystem : public TNetSystem {

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.3 2006/03/01 15:46:33 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -64,7 +64,7 @@ bool XrdProofPhyConn::Init(const char *url)
    // Initialization
 
    // Save url
-   fUrl.TakeUrl(XrdClientString(url));
+   fUrl.TakeUrl(XrdOucString(url));
 
    if (!fTcp) {
       // Set some variables

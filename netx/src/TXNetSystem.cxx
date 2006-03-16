@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.3 2006/02/21 16:57:12 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.4 2006/02/26 16:13:38 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -326,7 +326,7 @@ void* TXNetSystem::OpenDirectory(const char* dir)
 
       vecString dirs;
       vecBool existDirs;
-      XrdClientString s(fDir.Data());
+      XrdOucString s(fDir.Data());
       dirs.Push_back(s);
       // Check if the directory exists
       fClientAdmin->ExistDirs(dirs,existDirs);
