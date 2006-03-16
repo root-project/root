@@ -44,7 +44,7 @@ class DerivedClass : public TestClass  {
 
 void writeTree(bool withdot)  {
   DerivedClass* d = new DerivedClass(0);
-  TFile f("dummy.root","RECREATE");
+  TFile f("dummy3.root","RECREATE");
   TTree* t = new TTree("T","T");
   if (withdot) t->Branch("DerivedClass.",&d);
   else t->Branch("DerivedClass",&d);
@@ -63,7 +63,7 @@ void writeTree(bool withdot)  {
 void readTree(bool withdot)  {
   std::cout << "Reading" << std::endl;
   DerivedClass* d = new DerivedClass(0);
-  TFile f("dummy.root");
+  TFile f("dummy3.root");
   //f.ls();
   TTree* t = (TTree*)f.Get("T");
   //t->Print();

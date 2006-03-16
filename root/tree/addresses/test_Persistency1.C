@@ -77,7 +77,7 @@ struct Event : public DataObject  {
 void writeTree()  {
   SmartRef<Obj> ref;
   Event* d = new Event();
-  TFile f("dummy.root","RECREATE");
+  TFile f("dummy1.root","RECREATE");
   TTree* t = new TTree("T","T");
   TBranch* b = t->Branch("Event","Event",&d);
   std::cout << "Filling: ";
@@ -100,7 +100,7 @@ void writeTree()  {
 void readTree()  {
   std::cout << "Reading" << std::endl;
   Event* d = new Event();
-  TFile f("dummy.root");
+  TFile f("dummy1.root");
   f.ls();
   TTree* t = (TTree*)f.Get("T");
   t->GetBranch("Event")->SetAddress(&d);

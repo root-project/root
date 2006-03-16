@@ -3,7 +3,7 @@
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d 
 CLEAN_TARGETS += Embedded.root RootRelations.root clonesA_Event.root 
-CLEAN_TARGETS += data.root dummy.root problem.root tree.root
+CLEAN_TARGETS += data.root dummy*.root problem.root tree.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
