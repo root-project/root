@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.4 2005/12/15 10:34:06 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.5 2006/03/01 15:46:12 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -116,7 +116,9 @@ XrdProofdProtocol::fgProtStack("ProtStack", "xproofd protocol anchor");
 #define MAX_ARGS 128
 #define TRACELINK lp
 #define TRACEID gTraceID
+#ifndef SafeDelete
 #define SafeDelete(x) { if (x) delete x; x = 0; }
+#endif
 #define INRANGE(x,y) ((x >= 0) && (x < (int)y.size()))
 
 typedef struct {
