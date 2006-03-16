@@ -36,15 +36,21 @@ TESTIOOBJ     = testIO.$(ObjSuf)
 TESTIOSRC     = testIO.$(SrcSuf)
 TESTIO        = testIO$(ExeSuf)
 
+
+STRESSOPERATIONSOBJ     = stressOperations.$(ObjSuf)
+STRESSOPERATIONSSRC     = stressOperations.$(SrcSuf)
+STRESSOPERATIONS        = stressOperations$(ExeSuf)
+
+
 STRESSKALMANOBJ     = stressKalman.$(ObjSuf)
 STRESSKALMANSRC     = stressKalman.$(SrcSuf)
 STRESSKALMAN        = stressKalman$(ExeSuf)
 
 
-OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ) $(STRESSKALMANOBJ)
+OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ) $(STRESSOPERATIONSOBJ) $(STRESSKALMANOBJ)
 
 
-PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO) $(STRESSKALMAN)
+PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO) $(STRESSOPERATIONS) $(STRESSKALMAN) 
 
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -65,22 +71,25 @@ $(TESTKALMAN):    $(TESTKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
+$(TESTIO):        $(TESTIOOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
 $(STRESSKALMAN):  $(STRESSKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(TESTIO):        $(TESTIOOBJ)
+$(STRESSOPERATIONS):  $(STRESSOPERATIONSOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
 
 
 clean:
-		@rm -f $(OBJS) core *.root
+		@rm -f $(OBJS) $(PROGRAMS) core 
 
 distclean:      clean
 		@rm -f $(PROGRAMS) 
-
 
 
 .SUFFIXES: .$(SrcSuf)

@@ -13,8 +13,8 @@
 
 //#define HAVE_CLHEP
 #define TEST_SYM
-//#define LOOP
-#ifdef LOOP
+
+#ifdef TEST_ALL_MATRIX_SIZES
 #define REPORT_TIME
 #endif
 #define NITER 1  // number of iterations
@@ -733,7 +733,7 @@ int main(int argc , char *argv[] ) {
   typeNames[3] = "TMatrix_sym";
 #endif
 
-#ifndef LOOP
+#ifndef TEST_ALL_MATRIX_SIZES
   NLOOP = 1000*NLOOP_MIN 
   TEST(5)
 #else
