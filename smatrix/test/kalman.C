@@ -18,13 +18,13 @@ void kalman(int sym=1,int cut =6) {
   cout << "loading lib smatrix" << std::endl; 
   gSystem->Load("libSmatrix");
 
-  kalman_do(0,sym,cut);
+  kalman_do("kalman",sym,cut);
+  //kalman_do("kalman_win7.1",sym,cut);
 }   
 
-void read_data(char *  machine, double * s, double * ss, double * t) { 
+void read_data(const char *  machine, double * s, double * ss, double * t) { 
 
-  std::string fileName = "kalman_" + std::string(machine) + ".root";
-  TFile * file = new TFile(fileName.c_str() ); 
+  TFile * file = new TFile(Form("%s.root",machine)); 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *ms; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *mss; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *mt; 
@@ -44,17 +44,14 @@ void read_data(char *  machine, double * s, double * ss, double * t) {
   
 
 
-void kalman_do(int machine,int sym, int cut) {
+void kalman_do(const char *machine,int sym, int cut) {
    //testing SMatrix[nx,ny]  2<=nx<=10,   2<=ny<<8
    //sym =0  shade cases where SMatrix is faster than TMatrix
    //sym =1  shade cases where SMatrix_Sym is faster than TMatrix
-   //machine=1, Windows VC++7.1 (pcbrun3)
-   //machine=2, Windows VC++8.0 (axel) (table to be filled by Axel)
-   //machine=3, slc3 gcc3.2.3 (pcbrun)
-   //machine=4, fc3, amd64 gcc3.4.3 (venus)
-   //machine=5, solaris CC5.2 (refsol9)
                   
       
+   static Int_t xtop = 0, ytop = 0;
+   xtop += 10; ytop += 10;
    TCanvas *c1 = 0;
    char tmachine[50];
    
@@ -62,54 +59,9 @@ void kalman_do(int machine,int sym, int cut) {
    double ss[n]; 
    double t[n]; 
  
-  if (machine ==0) {
-      //Linnux slc3 gcc 3.2.3
-      sprintf(tmachine,"%s","slc3_ia32/gcc3.2.3");
-      c1 = new TCanvas("kalmanslc3","slc3_ia32/gcc3.2.3",70,70,800,650);
-      read_data("ref",s,ss,t);
-   }
-   if (machine ==1) {
-      //Windows/VC++7.1
-      sprintf(tmachine,"%s","Windows/VC++7.1");
-      c1 = new TCanvas("kalmanvc7","windows/vc7.1",10,10,800,650);
-      read_data("pcphsft15_win",s,ss,t);
-   }
-   if (machine ==2) {
-      //windows/VC++8.0
-      sprintf(tmachine,"%s","Windows/VC++8.0");
-      c1 = new TCanvas("kalmanvc8","Windows/VC++8.0",30,30,800,650);
-      //read_data("pcphsft15_win2",s,ss,t);
-   }
-   if (machine ==3) {
-      //slc3-amd64/gcc3.4.3
-      sprintf(tmachine,"%s","SLC3-amd64/gcc3.4");
-      c1 = new TCanvas("kalmanslc3-amd64","slc3-amd64/gcc3.4",50,50,800,650);
-      read_data("slc3-amd64",s,ss,t);
-   }
-   if (machine ==4) {
-      //amd64 fc3/gcc3.4.3
-     sprintf(tmachine,"%s","amd64 FC3/gcc3.4.3");
-     c1 = new TCanvas("kalmanamd64","amd64 fc3/gcc3.4.3",70,70,800,650);
-     //read_data("slc3-amd64",s,ss,t);
-   }
-   if (machine ==5) {
-      //solaris CC5.2
-      sprintf(tmachine,"%s","Solaris/CC5.2");
-      c1 = new TCanvas("kalmansol","solaris/cc5.2",90,90,800,650);
-      read_data("refsol9",s,ss,t);
-   }
-   if (machine ==7) {
-      //Linnux slc3 gcc 3.2.3
-      sprintf(tmachine,"%s","New slc3_ia32/gcc3.2.3");
-      c1 = new TCanvas("kalmanslc3_new","New slc3_ia32/gcc3.2.3",70,70,800,650);
-      read_data("pcphsft19_new",s,ss,t);
-   }
-  if (machine ==8) {
-      //MACOS powerPC
-      sprintf(tmachine,"%s","MacOS/gcc 4.0");
-      c1 = new TCanvas("kalmanMac","MacOS/gcc 4.0",10,10,800,650);
-      read_data("sealg5",s,ss,t);
-   }
+   sprintf(tmachine,"%s",machine);
+   c1 = new TCanvas(machine,machine,xtop,ytop,800,650);
+   read_data(machine,s,ss,t);
  
    c1->SetHighLightColor(19);
    int i,j;
