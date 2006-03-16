@@ -1,6 +1,18 @@
 int fillCol=20;
 std::string systemName; 
 bool drawSingleGraph = false; 
+int topX=10;
+int topY=50;
+
+void matrixOperations_do(std::string type = ""); 
+
+void matrixOperations(std::string type = "") { 
+
+  matrixOperations_do(type); 
+//   matrixOperations_do("slc3_ia32_gcc323"); 
+//   matrixOperations_do("win32_vc71"); 
+
+}
 
 
 void DrawData(char *  title, TGraphErrors * h1, TGraphErrors * h2, TGraphErrors * h3 = 0, TGraphErrors * h4 = 0, TGraphErrors * h5 = 0, TGraphErrors * h6 = 0) {  
@@ -108,7 +120,11 @@ TGraphErrors * hd = h1;
 }
 
 void GetData(std::string s,double * x, double * y, double * ey) {
-  std::string fileName="testOperations_" + systemName + ".root";
+  if (systemName != "") 
+    std::string fileName="testOperations_" + systemName + ".root";
+  else 
+    std::string fileName="testOperations.root";
+
   TFile * f = new TFile(fileName.c_str());
   TProfile * h1 = (TProfile * ) f->Get(s.c_str() );
   if (h1 ==0) { 
@@ -122,11 +138,17 @@ void GetData(std::string s,double * x, double * y, double * ey) {
 }
 
 
-void matrixOperations(std::string type = "slc3_ia32_gcc323") { 
 
-  systemName = type;
+void matrixOperations_do(std::string type ) { 
 
-   TCanvas * c1 = new TCanvas("c1","Matrix Operations",10,10,800*TMath::Sqrt(2),800);
+
+   systemName = type;
+   std::string cName = "c1_" + type; 
+   std::string cTitle = "Matrix operations " + type;
+
+   TCanvas * c1 = new TCanvas(cName.c_str(),cTitle.c_str(),topX,topY,800*TMath::Sqrt(2),800);
+   topX+=20;
+   topY+=20;
 
    c1->Divide(3,2);
 
