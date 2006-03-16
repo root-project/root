@@ -19,7 +19,6 @@ launch () {
     ;
 }
 
-
 launch "Event.new.split9.root" 0 "'$ClassWarning'" "'$RootPrompt'" "'$EmptyLine' " && \
 launch "Event.new.split9.root" 1 "'$RootPrompt'" "'$EmptyLine' " && \
 launch "Event.new.split9.root" 2 "'$ClassWarning'" "'$RootPrompt'" "'$EmptyLine' " && \

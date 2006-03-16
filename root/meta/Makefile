@@ -77,8 +77,15 @@ nospace.log: WrapSimple_h.$(DllSuf)
 nospace: nospace.log
 	$(TestDiff)
 
-drawing:
-	$(CMDECHO) ./DrawTest.sh
+drawing.raw.log: DrawTest.sh  $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV) MainEvent.cxx Event.cxx Event.h \
+				 dt_reference.root $(wildcard dt_wrap*.C) dt_MakeFiles.sh dt_RunDrawTest.sh
+	$(CMDECHO) ./DrawTest.sh 2>&1 > drawing.raw.log
+
+drawing.log: drawing.raw.log
+	grep -v 'ROOTMARKS' drawing.raw.log | grep '^..' | grep -v 'gmake' > drawing.log
+
+drawing: drawing.log
+	$(TestDiff)
 
 missingInfo.log: missingInfo_C.$(DllSuf)
 
