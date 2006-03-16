@@ -50,6 +50,7 @@ BASES        := $(filter-out $(BASEDS4),$(filter-out $(MODDIRS)/G__%,$(wildcard 
 else
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 endif
+BASES        := $(filter-out $(MODDIRS)/precompile.cxx,$(BASES))
 BASEO        := $(BASES:.cxx=.o)
 
 BASEDEP      := $(BASEO:.o=.d) $(BASEDO:.o=.d)

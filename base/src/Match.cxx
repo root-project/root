@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.4 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.5 2005/10/27 10:00:41 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -81,6 +81,10 @@ inline void ADVANCE(const Pattern_t*& pat)
 //
 
 //______________________________________________________________________________
+#ifdef SETBIT // from Rtypes.h
+#undef SETBIT
+#endif
+
 static void SETBIT(unsigned char b, Pattern_t* map)
 {
    map[b >> 4] |= 1 << (b & 0x0f);

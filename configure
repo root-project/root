@@ -47,6 +47,7 @@ options="                    \
    enable_mysql              \
    enable_opengl             \
    enable_oracle             \
+   enable_pch                \
    enable_peac               \
    enable_pgsql              \
    enable_pythia             \
@@ -585,7 +586,6 @@ check_symbol() {
 	logmsg "Checking in $d"
 	if test ! -r $d/$symbollib ; then
 	    logmsg "$d/$symbollib not readable"
-        else
 	    for i in $exts ; do
 		logmsg "Checking extension $i with $d/$symbollib"
 		if test -r $d/$symbollib$i ; then
@@ -817,6 +817,7 @@ enable/disable options, prefix with either --enable- or --disable-
   mysql              MySQL support, requires libmysqlclient
   opengl             OpenGL support, requires libGL and libGLU
   oracle             Oracle support, requires libocci
+  pch                Precompiled headers (if supported by the compiler)
   peac               PEAC, PROOF Enabled Analysis Center, requires Clarens
   pgsql              PostgreSQL support, requires libpq
   pythia             Pythia5 EG support, requires libPythia
@@ -3591,6 +3592,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
+    -e "s|@enable_pch@|$enable_pch|"            \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \

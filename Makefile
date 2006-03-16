@@ -264,6 +264,18 @@ GCC_MINOR     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
 GCC_PATCH     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f3)
 GCC_VERS      := gcc-$(GCC_MAJOR).$(GCC_MINOR)
 GCC_VERS_FULL := gcc-$(GCC_MAJOR).$(GCC_MINOR).$(GCC_PATCH)
+
+# Precompiled headers:
+ifeq ($(GCC_MAJOR),4)
+PCHSUPPORTED  := $(ENABLEPCH)
+endif
+ifeq ($(PCHSUPPORTED),yes)
+  PCHFILE      = include/precompile.h.gch
+  PCHCXXFLAGS  = -DUSEPCH -include precompile.h -Winvalid-pch
+  PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGSNOPCH) -DUSEPCH $(OPT) -x c++-header \
+                        -c include/precompile.h -o $(PCHFILE) \
+                     && $(CXX) $(CXXFLAGS) $(OPT) -c $< -o $(PCHEXTRAOBJ)
+endif
 endif
 
 ##### f77 options #####
@@ -363,13 +375,13 @@ INCLUDEFILES :=
 .PRECIOUS: include/%.h
 
 # special rules (need to be defined before generic ones)
-cint/src/%.o: cint/src/%.cxx
+cint/src/%.o: cint/src/%.cxx $(PCHEXTRAOBJ) $(PCHFILE)
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -o $@ -c $<
 
 cint/src/%.o: cint/src/%.c
 	$(CC) $(OPT) $(CINTCFLAGS) -o $@ -c $<
 
-%.o: %.cxx
+%.o: %.cxx $(PCHEXTRAOBJ) $(PCHFILE)
 	$(CXX) $(OPT) $(CXXFLAGS) -o $@ -c $<
 
 %.o: %.c
@@ -404,6 +416,13 @@ fast:           rootexecs
 
 skip:
 		@true;
+
+ifeq ($(PCHSUPPORTED),yes)
+include config/Makefile.precomp
+CXXFLAGSNOPCH = $(subst $(PCHCXXFLAGS),,$(CXXFLAGS))
+else
+CXXFLAGSNOPCH = $(CXXFLAGS)
+endif
 
 include $(patsubst %,%/Module.mk,$(MODULES))
 
@@ -467,11 +486,11 @@ build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	$(MAKEDEP) $@ "$(CFLAGS)" $< > $@
 
 G__%.d: G__%.cxx $(RMKDEP)
-	$(MAKEDEP) $@ "$(CXXFLAGS) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl" \
+	$(MAKEDEP) $@ "$(CXXFLAGSNOPCH) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl" \
 	   $< > $@
 
 %.d: %.cxx $(RMKDEP)
-	$(MAKEDEP) $@ "$(CXXFLAGS)" $< > $@
+	$(MAKEDEP) $@ "$(CXXFLAGSNOPCH)" $< > $@
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)

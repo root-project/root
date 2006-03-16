@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Windows4Root.h,v 1.5 2003/08/06 20:25:04 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Windows4Root.h,v 1.6 2004/01/23 18:50:03 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -111,6 +111,7 @@
 #undef EqualRegion
 #undef GetRegionBox
 #undef GetCurrentTime
+#undef GetTimeFormat
 
 #if !defined(ROOT_TGWin32Object) && !defined(ROOT_TGWin32)
 #   undef GetObject

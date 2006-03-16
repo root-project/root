@@ -71,4 +71,4 @@ $(RMKDEPO): %.o: %.c
 
 $(BINDEXPO): %.o: %.cxx
 	cp build/win/w32pragma.h include/w32pragma.h
-	$(CXX) $(OPT) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGSNOPCH) -o $@ -c $<

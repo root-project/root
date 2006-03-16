@@ -66,9 +66,9 @@ NOOPT         =
 # Compiler:
 CXX           = build/win/cxx.sh
 CC            = build/win/cc.sh
-CXXFLAGS      =  -nologo -Ibuild/win -FIw32pragma.h \
+CXXFLAGS      = -nologo -FIw32pragma.h \
                 $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS)
-CFLAGS        = -nologo -Ibuild/win -FIw32pragma.h -FIsehmap.h\
+CFLAGS        = -nologo -Ibuild/win -FIw32pragma.h -FIsehmap.h \
                 $(BLDCFLAGS) $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(CXXFLAGS)
 CINTCFLAGS    = $(CFLAGS)
@@ -93,5 +93,15 @@ F77FLAGS      = -nologo -4Nportlib $(BLDF77FLAGS) -recursive
 F77LD         = $(F77)
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =
+
+# Precompiled headers:
+PCHSUPPORTED  := $(ENABLEPCH)
+ifeq ($(PCHSUPPORTED),yes)
+  PCHFILE      = include/w32pragma.pch
+  PCHCXXFLAGS  = -Yuw32pragma.h -Fpinclude/w32pragma.pch -DUSEPCH
+  PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGS) $(OPT) -Ycw32pragma.h -Fp$(PCHFILE) \
+        -c $(PCHEXTRASRC) -Fo$(PCHEXTRAOBJ)
+  LDFLAGS     += $(wildcard $(PCHEXTRAOBJ)) 
+endif
 
 # Extras

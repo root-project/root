@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.109 2005/09/04 19:46:03 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.110 2005/12/07 13:50:39 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -345,7 +345,7 @@ static int gClientProtocol       = -1;      // Determined by RpdInitSession
 static int gAnon                 = 0;       // anonymous user flag
 static double gBytesRead         = 0;
 static double gBytesWritten      = 0;
-static DIR *gDirectory           = 0;
+static DIR *gRDDirectory         = 0;
 static int gDownloaded           = 0;
 static int gFd                   = -1;
 static int gFtp                  = 0;
@@ -1736,10 +1736,10 @@ void RootdFreeDir()
 
    char buffer[kMAXPATHLEN];
 
-   if (!gDirectory) {
+   if (!gRDDirectory) {
       SPrintf(buffer,kMAXPATHLEN,"no directory open");
       ErrorInfo("RootdFreeDir: %s", buffer);
-   } else if (closedir(gDirectory) == -1) {
+   } else if (closedir(gRDDirectory) == -1) {
       SPrintf(buffer,kMAXPATHLEN,"cannot free open directory");
       Perror(buffer);
       ErrorInfo("RootdFreeDir: %s", buffer);
@@ -1757,10 +1757,10 @@ void RootdGetDirEntry()
    char buffer[kMAXPATHLEN];
    struct dirent *dp = 0;
 
-   if (!gDirectory) {
+   if (!gRDDirectory) {
       SPrintf(buffer,kMAXPATHLEN,"no directory open");
       ErrorInfo("RootdGetDirEntry: %s", buffer);
-   } else if ((dp = readdir(gDirectory)) == 0) {
+   } else if ((dp = readdir(gRDDirectory)) == 0) {
       if (GetErrno() == EBADF) {
          SPrintf(buffer,kMAXPATHLEN,"cannot read open directory");
          Perror(buffer);
@@ -1785,7 +1785,7 @@ void RootdOpenDir(const char *dir)
    if (dir[0] == '/')
       edir++;
 
-   if ((gDirectory = opendir(edir)) == 0) {
+   if ((gRDDirectory = opendir(edir)) == 0) {
       SPrintf(buffer,kMAXPATHLEN,"cannot open directory %s",edir);
       Perror(buffer);
       ErrorInfo("RootdOpenDir: %s", buffer);

@@ -1,0 +1,34 @@
+# -*- mode: makefile -*-
+#
+# Makefile containing precompiled header rules
+# Get the list of all included ROOT headers and how often they are
+# included by running
+#   cat */src/*.d|egrep '.o: '|sed 's,^[^:]*: ,,'|tr ' ' '\n'|sort \
+#     |awk '{if(o!=$1){if(n)printf "%8d %s\n",n,o;o=$1;n=0;};n++}' \
+#     |sort -n -r | head
+
+PCHHEADERS    = "TROOT.h" "TClass.h" "TH1.h"
+
+PCHEXTRASRC   = base/src/precompile.cxx
+PCHEXTRAOBJ   = $(PCHEXTRASRC:.cxx=.o)
+PCHEXTRAHDRI  = config/precompile.h.in
+PCHEXTRAHDR   = include/precompile.h
+ALLHDRS      += $(PCHEXTRAHDR)
+CXXFLAGS     += $(PCHCXXFLAGS)
+CINTCXXFLAGS += $(PCHCXXFLAGS)
+
+ifneq ($(PCHFILE),)
+$(ALLLIBS): $(PCHEXTRAOBJ)
+clean::
+	@rm -f $(PCHFILE)
+endif
+
+$(PCHEXTRAHDR): PCHINCSTATEM = // see config/Makefile.precomp$(addprefix @\1,$(addsuffix \2,$(PCHHEADERS)))
+$(PCHEXTRAHDR): $(PCHEXTRAHDRI)
+	cat $< | \
+        sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \
+        tr '@' '\n' > $@
+
+$(PCHFILE) $(PCHEXTRAOBJ): $(PCHEXTRASRC) $(PCHEXTRAHDR)
+	@echo Building precompiled header...
+	$(PCHEXTRAOBJBUILD)
