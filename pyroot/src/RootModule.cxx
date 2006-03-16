@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.21 2005/11/17 06:26:35 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.22 2006/03/09 09:07:02 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -74,7 +74,7 @@ namespace {
    {
    // first search dictionary itself
       PyDictEntry* ep = (*gDictLookupOrg)( mp, key, hash );
-      if ( ! ep || ep->me_value != 0 )
+      if ( ! ep || ep->me_value != 0 || gDictLookupActive )
          return ep;
 
    // filter for builtins
@@ -96,17 +96,16 @@ namespace {
             ep->me_hash  = hash;
             ep->me_value = val->ob_type->tp_descr_get( val, NULL, NULL );
          } else {
-         // add reference to ROOT entity in the module dictionary
-            Py_INCREF( key );
-
-            if ( ! ep->me_key )
-               mp->ma_fill++;
-            else
-               Py_DECREF( ep->me_key );
-            ep->me_key   = key;
-            ep->me_hash  = hash;
-            ep->me_value = val;
-            mp->ma_used++;
+         // add reference to ROOT entity in the given dictionary
+            ((DictLookup_t&)mp->ma_lookup) = gDictLookupOrg;     // prevent recursion
+            if ( PyDict_SetItem( (PyObject*)mp, key, val ) == 0 ) {
+               if ( ep->me_value != val )
+                  ep = (*gDictLookupOrg)( mp, key, hash );
+            } else {
+               ep->me_key   = 0;
+               ep->me_value = 0;
+            }
+            ((DictLookup_t&)mp->ma_lookup) = RootLookDictString; // restore
          }
       } else
          PyErr_Clear();

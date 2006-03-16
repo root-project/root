@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.35 2006/01/03 08:50:19 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.36 2006/03/09 09:07:01 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 01/02/06
+# Last: 03/14/06
 
 """PyROOT user module.
 
@@ -238,14 +238,15 @@ def _processRootEvents( controller ):
 ### allow loading ROOT classes as attributes ------------------------------------
 class ModuleFacade( object ):
    def __init__( self, module ):
-      self.module = module
-      self.libmodule = sys.modules[ 'libPyROOT' ]
+      self.__dict__[ 'module' ]    = module
+      self.__dict__[ 'libmodule' ] = sys.modules[ 'libPyROOT' ]
 
     # root thread to prevent GUIs from starving
       if not self.module.gROOT.IsBatch():
          import threading, time
-         self.keeppolling = 1
-         self.thread = threading.Thread( None, _processRootEvents, None, ( self, ) )
+         self.__dict__[ 'keeppolling' ] = 1
+         self.__dict__[ 'thread' ] = \
+            threading.Thread( None, _processRootEvents, None, ( self, ) )
          self.thread.start()
 
     # store already available ROOT objects to prevent spurious lookups
@@ -257,6 +258,26 @@ class ModuleFacade( object ):
 
       self.__dict__[ '__doc__'  ] = self.module.__doc__
       self.__dict__[ '__name__' ] = self.module.__name__
+
+   def __setattr__( self, name, value ):
+    # to allow assignments to ROOT globals such as ROOT.gDebug
+      if not name in self.__dict__:
+         try:
+          # assignment to an existing ROOT global
+            setattr( self.__class__, name, GetRootGlobal( name ) )
+         except LookupError:
+          # allow a few limited cases where new globals can be set
+            tcnv = { int         : 'int %s = %d;',
+                     long        : 'long %s = %d;',
+                     float       : 'double %s = %f;',
+                     str         : 'string %s = "%s";' }
+            try:
+               gROOT.ProcessLine( tcnv[ type(value) ] % (name,value) );
+               setattr( self.__class__, name, GetRootGlobal( name ) )
+            except KeyError:
+               pass
+
+      super( self.__class__, self ).__setattr__( name, value )
 
    def __getattr__( self, name ):
     # support for "from ROOT import *" at the module level

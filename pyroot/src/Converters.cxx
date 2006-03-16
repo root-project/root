@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.26 2006/03/09 09:07:02 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.27 2006/03/13 22:13:37 rdm Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -260,7 +260,8 @@ Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, G__CallFunc* )
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, G__CallFunc* ) {
+Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, G__CallFunc* )
+{
    PyErr_SetString( PyExc_SystemError, "macro arguments can\'t be set" );
    return kFALSE;
 }
@@ -381,7 +382,8 @@ Bool_t PyROOT::TCStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
    return kTRUE;
 }
 
-PyObject* PyROOT::TCStringConverter::FromMemory( void* address ) {
+PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
+{
    if ( address && *(char**)address ) {
       if ( fMaxSize != UINT_MAX ) {          // need to prevent reading beyond boundary
          std::string buf( *(char**)address, fMaxSize );
@@ -395,7 +397,8 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address ) {
    return PyString_FromString( const_cast< char* >( "" ) );
 }
 
-Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address ) {
+Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
+{
    const char* s = PyString_AsString( value );
    if ( PyErr_Occurred() )
       return kFALSE;
@@ -594,7 +597,8 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, G__CallFunc* func
    return kTRUE;                                                              \
 }                                                                             \
                                                                               \
-PyObject* PyROOT::T##name##Converter::FromMemory( void* address ) {           \
+PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
+{                                                                             \
    if ( address )                                                             \
       return PyString_FromString( ((strtype*)address)->DF1() );               \
    return PyString_FromString( const_cast< char* >( "" ) );                   \

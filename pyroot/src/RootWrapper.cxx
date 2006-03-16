@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.39 2005/11/17 06:26:35 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.40 2006/01/05 08:09:09 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -489,25 +489,36 @@ PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
 //____________________________________________________________________________
 PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 {
-// loop over globals to find this enum
-   TIter nextGlobal( gROOT->GetListOfGlobals( kTRUE ) );
-   while ( TGlobal* gb = (TGlobal*)nextGlobal() ) {
-      if ( gb->GetName() == name && gb->GetAddress() ) {
+// try named global variable/enum (first ROOT, then CINT: sync is too slow)
+   TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );
+   if ( gb ) return BindRootGlobal( gb );
 
-         if ( G__TypeInfo( gb->GetTypeName() ).Property() & G__BIT_ISENUM )
-         // enum, deref and return as long
-            return PyInt_FromLong( *((int*)gb->GetAddress()) );
-
-         else
-         // TGlobal, attempt to get the actual class and cast as appropriate
-            return BindRootGlobal( gb );
+   G__DataMemberInfo t;
+   while ( t.Next() ) {
+      if ( t.IsValid() && t.Name() == name ) {
+         TGlobal gbl = TGlobal( new G__DataMemberInfo( t ) );
+         return BindRootGlobal( &gbl );
       }
    }
 
-// still here ... try functions
-   TFunction* func = gROOT->GetGlobalFunction( name.c_str(), 0, kTRUE );
+// still here ... try functions (first ROOT, then CINT: sync is too slow)
+   TFunction* func =
+      (TFunction*)gROOT->GetListOfGlobalFunctions( kFALSE )->FindObject( name.c_str() );
    if ( func ) {
-      PyObject* pyobject = BindRootObject( new TFunction( *func ), TFunction::Class() );
+      func = new TFunction( *func );         // copy to take ownership
+   } else {
+      G__MethodInfo t;
+      while ( t.Next() ) {
+         if ( t.IsValid() && t.Name() == name ) {
+            func = new TFunction( new G__MethodInfo( t ) );
+            break;
+         }
+      }
+   }
+
+   if ( func ) {
+   // function found: TFunction is not a real python function, but emulates with __call__
+      PyObject* pyobject = BindRootObject( func, TFunction::Class() );
       ((ObjectProxy*)pyobject)->fFlags |= ObjectProxy::kIsOwner;
       return pyobject;
    }
@@ -616,6 +627,11 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
          return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
 
       return BindRootObject( (void*)gbl->GetAddress(), klass );
+   }
+
+   if ( gbl->GetAddress() &&       // check for enums (which are const, not properties)
+        ( G__TypeInfo( gbl->GetTypeName() ).Property() & G__BIT_ISENUM ) ) {
+      return PyInt_FromLong( *((int*)gbl->GetAddress()) );
    }
 
 // for built-in types, to ensure setability
