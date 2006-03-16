@@ -32,11 +32,7 @@ FTNMCFG      := "freetype - Win32 Release Multithreaded"
 endif
 else
 FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a
-ifeq ($(PLATFORM),macosx)
-FREETYPELIB  := $(LPATH)/libfreetype.dylib
-else
 FREETYPELIB  := $(LPATH)/libfreetype.a
-endif
 endif
 FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
 FREETYPEDEP  := $(FREETYPELIB)
@@ -44,29 +40,13 @@ FREETYPELDFLAGS :=
 
 ##### local rules #####
 $(FREETYPELIB): $(FREETYPELIBA)
-ifeq ($(PLATFORM),macosx)
-		$(MACOSXTARGET) $(CC) $(SOFLAGS)libfreetype.dylib -o $@ \
-		   $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/*.o
-ifeq ($(USECONFIG),TRUE)
-		@($(INSTALLDIR) $(LIBDIR); \
-		if [ -d $(LIBDIR) ]; then \
-		   inode1=`ls -id $(LIBDIR) | awk '{ print $$1 }'`; \
-		else \
-		   echo "#### run make under the account that has permission"; \
-		   echo "#### to create $(LIBDIR)"; \
-		   exit 1; \
-		fi; \
-		inode2=`ls -id $$PWD/lib | awk '{ print $$1 }'`; \
-		if [ -d $(LIBDIR) ] && [ $$inode1 -ne $$inode2 ]; then \
-		   cp $@ $(LIBDIR)/ ; \
-		fi)
-endif
-else
 ifeq ($(PLATFORM),aix5)
 		ar rv $@ $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/.libs/*.o
 else
 		cp $< $@
-endif
+		@(if [ $(PLATFORM) = "macosx" ]; then \
+			ranlib $@; \
+		fi)
 endif
 
 $(FREETYPELIBA): $(FREETYPELIBS)
