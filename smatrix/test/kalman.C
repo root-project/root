@@ -6,31 +6,35 @@
 #include "TText.h"
 #include "TLine.h"
 #include "Math/SMatrix.h"
+
+#include <string>
    
 using namespace ROOT::Math; 
-void kalman_do(int machine,int sym, int cut);
+void kalman_do(const char * machine,int sym, int cut);
 const int nx = 9;
 const int ny = 7;
 const Int_t n=nx*ny;
 
-void kalman(int sym=1,int cut =6) {
+void kalman(std::string machine = "kalman",int sym=1,int cut =6) {
 
   cout << "loading lib smatrix" << std::endl; 
   gSystem->Load("libSmatrix");
 
-  kalman_do("kalman",sym,cut);
+  kalman_do(machine.c_str(),sym,cut);
   //kalman_do("kalman_win7.1",sym,cut);
 }   
 
-void read_data(const char *  machine, double * s, double * ss, double * t) { 
+int read_data(const char *  machine, double * s, double * ss, double * t) { 
 
   TFile * file = new TFile(Form("%s.root",machine)); 
+  if (file == 0) return -1; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *ms; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *mss; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *mt; 
   file->GetObject("SMatrix",ms);   
   file->GetObject("SMatrix_sym",mss);   
   file->GetObject("TMatrix",mt); 
+  if (ms == 0 || mss == 0 || mt == 0) return -1;
   for (int i=0; i<n; ++i){
     s[i]  = ms->apply(i);
     ss[i] = mss->apply(i);
@@ -39,7 +43,7 @@ void read_data(const char *  machine, double * s, double * ss, double * t) {
 
   file->Close(); 
   delete file; 
-   
+  return 0; 
 }
   
 
@@ -61,7 +65,7 @@ void kalman_do(const char *machine,int sym, int cut) {
  
    sprintf(tmachine,"%s",machine);
    c1 = new TCanvas(machine,machine,xtop,ytop,800,650);
-   read_data(machine,s,ss,t);
+   if (read_data(machine,s,ss,t)) return;
  
    c1->SetHighLightColor(19);
    int i,j;
