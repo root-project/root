@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofNodeInfo.h,v 1.1 2005/12/09 01:12:16 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -54,6 +54,7 @@ private:
 
 public:
    TProofNodeInfo();
+   TProofNodeInfo(const char *str);
    TProofNodeInfo(const TProofNodeInfo &nodeInfo);
    ~TProofNodeInfo() { }
 
@@ -67,6 +68,8 @@ public:
    const TString &GetMsd() const { return fMsd; }
    Int_t          GetPort() const { return fPort; }
    Int_t          GetPerfIndex() const { return fPerfIndex; }
+
+   void Assign(const TProofNodeInfo &n);
 
    void Print(const Option_t *) const;
 

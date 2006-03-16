@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.71 2005/10/27 23:28:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofNodeInfo.cxx,v 1.1 2005/12/09 01:12:17 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -19,10 +19,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TObjArray.h"
+#include "TObjString.h"
 #include "TProofNodeInfo.h"
 
 ClassImp(TProofNodeInfo)
 
+// Macros used in decoding serialized info
+#define PNISETANY(a) \
+  { if (os->String() != "-") { a; } \
+    if (!(os = (TObjString *) nxos())) return; }
+#define PNISETSTRING(s) PNISETANY(s = os->GetName())
+#define PNISETINT(i) PNISETANY(i = os->String().Atoi())
 
 //______________________________________________________________________________
 TProofNodeInfo::TProofNodeInfo():
@@ -31,6 +39,59 @@ TProofNodeInfo::TProofNodeInfo():
    fPerfIndex(100)
 {
    // Constructor.
+}
+
+//______________________________________________________________________________
+TProofNodeInfo::TProofNodeInfo(const char *str)
+               : fNodeType(kWorker), fPort(-1), fPerfIndex(100)
+{
+   // Constructor from a string containing all the information in a serialized
+   // way. Used to decode thr information coming from the coordinator
+   // <type>|<host@user>|<port>|<ord>|<id>|<perfidx>|<img>|<workdir>|<msd>|<cfg>
+
+   // Needs a non empty string to do something
+   if (!str || strlen(str) <= 0)
+      return;
+
+   // Tokenize
+   TString ss(str);
+   TObjArray *oa = ss.Tokenize("|");
+   if (!oa)
+      return;
+   TIter nxos(oa);
+   TObjString *os = (TObjString *) nxos();
+   if (!os)
+      return;
+
+   // Node type
+   PNISETANY(fNodeType = GetNodeType(os->GetName()));
+
+   // Host and user name
+   PNISETSTRING(fNodeName);
+
+   // Port
+   PNISETINT(fPort);
+
+   // Ordinal
+   PNISETSTRING(fOrdinal);
+
+   // ID string
+   PNISETSTRING(fId);
+
+   // Performance index
+   PNISETINT(fPerfIndex);
+
+   // Image
+   PNISETSTRING(fImage);
+
+   // Working dir
+   PNISETSTRING(fWorkDir);
+
+   // Mass Storage Domain
+   PNISETSTRING(fMsd);
+
+   // Config file (master or submaster; for backward compatibility)
+   PNISETSTRING(fConfig);
 }
 
 //______________________________________________________________________________
@@ -48,6 +109,23 @@ TProofNodeInfo::TProofNodeInfo(const TProofNodeInfo &nodeInfo) : TObject(nodeInf
    fMsd       = nodeInfo.fMsd;
    fPort      = nodeInfo.fPort;
    fPerfIndex = nodeInfo.fPerfIndex;
+}
+
+//______________________________________________________________________________
+void TProofNodeInfo::Assign(const TProofNodeInfo &n)
+{
+   // Asssign content of node n to this node
+
+   fNodeType  = n.fNodeType;
+   fNodeName  = n.fNodeName;
+   fWorkDir   = n.fWorkDir;
+   fOrdinal   = n.fOrdinal;
+   fImage     = n.fImage;
+   fId        = n.fId;
+   fConfig    = n.fConfig;
+   fMsd       = n.fMsd;
+   fPort      = n.fPort;
+   fPerfIndex = n.fPerfIndex;
 }
 
 //______________________________________________________________________________
@@ -75,10 +153,10 @@ TProofNodeInfo::ENodeType TProofNodeInfo::GetNodeType(const TString &type)
 
    ENodeType enType;
 
-   if (type == "master") {
+   if (type == "M" || type == "master") {
       enType = kMaster;
    }
-   else if (type == "submaster") {
+   else if (type == "S" || type == "submaster") {
       enType = kSubMaster;
    }
    else { // [worker/slave or condorworker]

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.3 2005/12/09 14:56:47 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.4 2006/01/17 13:23:29 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -213,9 +213,8 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
                switch (GetInfoType(keyword)) {
                case kNodeType: {
                   if (keyword == "master" || keyword == "node") {
-                     nodeinfo = fMaster;
+                     nodeinfo = CreateNodeInfo(keyword);
                      isMaster = kTRUE;     // will be reset
-                     fFoundMaster = kTRUE; // will not be reset
                   }
                   // [either submaster, worker or condorworker]
                   else if (keyword == "submaster") {
@@ -274,6 +273,18 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
 
             } // end if
 
+            // Check if we found a good master
+            if (isMaster) {
+               // Check if the master can run on this node
+               TString node = TUrl(nodeinfo->fNodeName).GetHost();
+               TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+               TInetAddress inetaddr = gSystem->GetHostByName(node);
+               if (!host.CompareTo(inetaddr.GetHostName()) || (node == "localhost")) {
+                  fFoundMaster = kTRUE;
+                  fMaster->Assign(*nodeinfo);
+               }
+            }
+
             // Store the submaster, worker or condorworker
             if (isWorker) {
                fWorkerList->Add(nodeinfo);
@@ -290,15 +301,6 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
       if (!fFoundMaster) {
          Error("ReadConfigFile","No master info found in config file");
          status = kFALSE;
-      } else {
-         // Check if the master can run on this node
-         TString node = TUrl(fMaster->fNodeName).GetHost();
-         TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-         TInetAddress inetaddr = gSystem->GetHostByName(node);
-         if (host.CompareTo(inetaddr.GetHostName()) && (node != "localhost")) {
-            Error("ReadConfigFile","No appropriate master found in config file");
-            status = kFALSE;
-         }
       }
    } // end if (infile.is_open())
    else {
