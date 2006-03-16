@@ -23,10 +23,9 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
-                -fsigned-char -fno-common \
-                -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
+                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
-                -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
+                $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \

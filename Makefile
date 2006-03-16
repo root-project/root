@@ -271,10 +271,10 @@ PCHSUPPORTED  := $(ENABLEPCH)
 endif
 ifeq ($(PCHSUPPORTED),yes)
   PCHFILE      = include/precompile.h.gch
-  PCHCXXFLAGS  = -DUSEPCH -include precompile.h -Winvalid-pch
+  PCHCXXFLAGS  = -DUSEPCH -include precompile.h
   PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGSNOPCH) -DUSEPCH $(OPT) -x c++-header \
                         -c include/precompile.h -o $(PCHFILE) \
-                     && $(CXX) $(CXXFLAGS) $(OPT) -c $< -o $(PCHEXTRAOBJ)
+                     && touch $(PCHEXTRAOBJ)
 endif
 endif
 

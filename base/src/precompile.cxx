@@ -1,1 +1,3 @@
-#include "precompile.h"
+#ifdef USEPCH
+#  include "precompile.h"
+#endif

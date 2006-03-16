@@ -50,10 +50,11 @@ BASES        := $(filter-out $(BASEDS4),$(filter-out $(MODDIRS)/G__%,$(wildcard 
 else
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 endif
-BASES        := $(filter-out $(MODDIRS)/precompile.cxx,$(BASES))
 BASEO        := $(BASES:.cxx=.o)
 
 BASEDEP      := $(BASEO:.o=.d) $(BASEDO:.o=.d)
+
+BASEO        := $(filter-out $(MODDIRS)/precompile.o,$(BASEO))
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))
@@ -101,7 +102,7 @@ $(BASEDO4):     $(BASEDS4)
 all-base:       $(BASEO) $(BASEDO)
 
 clean-base:
-		@rm -f $(BASEO) $(BASEDO)
+		@rm -f $(BASEO) $(BASEDO) $(BASEDIRS)/precompile.o
 
 clean::         clean-base
 

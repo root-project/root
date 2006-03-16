@@ -7,7 +7,9 @@
 #     |awk '{if(o!=$1){if(n)printf "%8d %s\n",n,o;o=$1;n=0;};n++}' \
 #     |sort -n -r | head
 
-PCHHEADERS    = "TROOT.h" "TClass.h" "TH1.h"
+PCHHEADERS    = TH1.h
+
+PCHHEADERS := $(subst include/,,$(wildcard $(addprefix include/,$(PCHHEADERS))))
 
 PCHEXTRASRC   = base/src/precompile.cxx
 PCHEXTRAOBJ   = $(PCHEXTRASRC:.cxx=.o)
@@ -23,7 +25,7 @@ clean::
 	@rm -f $(PCHFILE)
 endif
 
-$(PCHEXTRAHDR): PCHINCSTATEM = // see config/Makefile.precomp$(addprefix @\1,$(addsuffix \2,$(PCHHEADERS)))
+$(PCHEXTRAHDR): PCHINCSTATEM = // see config/Makefile.precomp$(addprefix @\1",$(addsuffix "\2,$(PCHHEADERS)))
 $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
 	cat $< | \
         sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \

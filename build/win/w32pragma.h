@@ -1,4 +1,4 @@
-/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.1 2002/05/03 18:13:32 rdm Exp $ */
+/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.2 2006/03/09 17:42:01 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -56,5 +56,9 @@
 #endif
 
 #endif // _WIN32
+
+#if defined(__cplusplus) && defined(USEPCH)
+#  include "precompile.h"
+#endif
 
 #endif // defined ROOT_w32pragma
