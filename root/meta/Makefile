@@ -78,11 +78,12 @@ nospace: nospace.log
 	$(TestDiff)
 
 drawing.raw.log: DrawTest.sh  $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV) MainEvent.cxx Event.cxx Event.h \
-				 dt_reference.root $(wildcard dt_wrap*.C) dt_MakeFiles.sh dt_RunDrawTest.sh
-	$(CMDECHO) ./DrawTest.sh 2>&1 > drawing.raw.log
+                 $(wildcard dt_wrap*.C) dt_MakeFiles.sh dt_RunDrawTest.sh
+	$(CMDECHO) unset V; unset VERBOSE; ./DrawTest.sh 2>&1 > drawing.raw.log
 
 drawing.log: drawing.raw.log
-	grep -v 'ROOTMARKS' drawing.raw.log | grep '^..' | grep -v 'gmake' > drawing.log
+	grep -v 'ROOTMARKS' drawing.raw.log | grep '^..' | grep -v 'gmake' | \
+        grep -v 'Event.*root made' | grep -v 'dt.*made' > drawing.log
 
 drawing: drawing.log
 	$(TestDiff)
