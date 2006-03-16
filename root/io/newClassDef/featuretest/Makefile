@@ -1,6 +1,6 @@
 
 TEST_TARGETS += feature
-CLEAN_TARGETS += local_clean
+CLEAN_TARGETS += $(ALL_LIBRARIES) run.out
 
 #include $(ROOTSYS)/test/Makefile.arch
 
@@ -9,8 +9,12 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-feature: Run.C
+run.out: Run.C ClassTrick_C.$(DllSuf)  Class_C.$(DllSuf) typeidtest_C.$(DllSuf)
 	$(CMDECHO)root -q -l -b Run.C >run.out 2>&1
+
+feature: run.out
+
+
 #	$(CMDECHO)echo "All test succeeded in `pwd`"
 
 #clean:
