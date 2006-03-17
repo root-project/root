@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.31 2006/01/09 15:47:30 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.32 2006/01/13 09:10:12 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -256,6 +256,7 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TMarker.h"
 #include "TLine.h"
 #include "TText.h"
+#include "TObjString.h"
 
 ClassImp(TMultiLayerPerceptron)
 
@@ -1185,47 +1186,45 @@ void TMultiLayerPerceptron::AttachData()
    // performance for classification jobs.
    // Normalisation can be requested by putting '@' in front of the formula.
    Int_t j = 0;
-   Int_t beg = 0;
-   TString brName;
    TNeuron *neuron = NULL;
    Bool_t normalize = false;
    fManager = new TTreeFormulaManager;
    //first layer
-   TString input  = TString(fStructure(0, fStructure.First(':')));
-   Int_t end = input.Index(",", beg + 1);
+   const TString input = TString(fStructure(0, fStructure.First(':')));
+   const TObjArray *inpL = input.Tokenize(", ");
    Int_t nentries = fFirstLayer.GetEntriesFast();
+   // make sure nentries == entries in inpL
+   Assert(nentries == inpL->GetLast()+1);
    for (j=0;j<nentries;j++) {
-      end = (end == -1 ? input.Length() : end);
       normalize = false;
-      brName = TString(input(beg, end - beg));
+      const TString brName = ((TObjString *)inpL->At(j))->GetString();
       neuron = (TNeuron *) fFirstLayer.UncheckedAt(j);
       if (brName[0]=='@')
          normalize = true;
       fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
       if(!normalize) neuron->SetNormalisation(0., 1.);
-      beg = end + 1;
-      end = input.Index(",", beg + 1);
    }
+   delete inpL;
+
    // last layer
    TString output = TString(
            fStructure(fStructure.Last(':') + 1,
                       fStructure.Length() - fStructure.Last(':')));
-   j = 0;
-   beg = 0;
-   end = output.Index(",", beg + 1);
+   const TObjArray *outL = output.Tokenize(", ");
    nentries = fLastLayer.GetEntriesFast();
+   // make sure nentries == entries in outL
+   Assert(nentries == outL->GetLast()+1);
    for (j=0;j<nentries;j++) {
-      end = (end == -1 ? output.Length() : end);
       normalize = false;
-      brName = TString(output(beg, end - beg));
+      const TString brName = ((TObjString *)inpL->At(j))->GetString();
       neuron = (TNeuron *) fLastLayer.UncheckedAt(j);
       if (brName[0]=='@')
          normalize = true;
       fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
       if(!normalize) neuron->SetNormalisation(0., 1.);
-      beg = end + 1;
-      end = output.Index(",", beg + 1);
    }
+   delete outL;
+
    fManager->Add((fEventWeight = new TTreeFormula("NNweight",fWeight.Data(),fData)));
    //fManager->Sync();
 }
@@ -1235,22 +1234,18 @@ void TMultiLayerPerceptron::ExpandStructure()
 {
    // Expand the structure of the first layer
    TString input  = TString(fStructure(0, fStructure.First(':')));
+   const TObjArray *inpL = input.Tokenize(", ");
+   Int_t nneurons = inpL->GetLast()+1;
+
    TString hiddenAndOutput = TString(
          fStructure(fStructure.First(':') + 1,
                     fStructure.Length() - fStructure.First(':')));
-   Int_t nneurons = input.CountChar(',')+1;
    TString newInput;
    Int_t i = 0;
-   Ssiz_t pos = 0;
-   TString name;
    TTreeFormula* f = 0;
    // loop on input neurons
    for (i = 0; i<nneurons; i++) {
-      Ssiz_t nextpos=input.Index(",",pos);
-      if (nextpos!=kNPOS)
-         name=input(pos,nextpos-pos);
-      else name=input(pos,input.Length());
-      pos=nextpos+1;
+      const TString name = ((TObjString *)inpL->At(i))->GetString();
       f = new TTreeFormula("sizeTestFormula",name,fData);
       // Variable size arrays are unrelialable
       if(f->GetMultiplicity()==1 && f->GetNdata()>1) {
@@ -1274,6 +1269,8 @@ void TMultiLayerPerceptron::ExpandStructure()
       if(i) newInput += ",";
       newInput += name;
    }
+   delete inpL;
+
    // Save the result
    fStructure = newInput + ":" + hiddenAndOutput;
 }
@@ -1313,21 +1310,18 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
    // Inputs are normalised and the type is set to kOff
    // (simple forward of the formula value)
 
-   Int_t nneurons = input.CountChar(',')+1;
+   const TObjArray *inpL = input.Tokenize(", ");
+   const Int_t nneurons =inpL->GetLast()+1; 
    TNeuron *neuron = NULL;
    Int_t i = 0;
-   Ssiz_t pos = 0;
    TString name;
    for (i = 0; i<nneurons; i++) {
-      Ssiz_t nextpos=input.Index(",",pos);
-      if (nextpos!=kNPOS)
-         name=input(pos,nextpos-pos);
-      else name=input(pos,input.Length());
-      pos=nextpos+1;
+      const TString name = ((TObjString *)inpL->At(i))->GetString();
       neuron = new TNeuron(TNeuron::kOff, name);
       fFirstLayer.AddLast(neuron);
       fNetwork.AddLast(neuron);
    }
+   delete inpL;
 }
 
 //______________________________________________________________________________
@@ -2500,24 +2494,16 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
          m->Draw();
       }
    }
-   TString input      = TString(fStructure(0, fStructure.First(':')));
-   Int_t beg = 0;
-   Int_t end = input.Index(",", beg + 1);
-   TString brName;
-   Int_t cnt = 0;
-   Float_t yStep = 1./(input.CountChar(',')+2.);
-   while (end != -1) {
-      brName = TString(input(beg, end - beg));
-      beg = end + 1;
-      end = input.Index(",", beg + 1);
-      cnt++;
-      TText* label = new TText(0.5*xStep,yStep*cnt,brName.Data());
+   const TString input = TString(fStructure(0, fStructure.First(':')));
+   const TObjArray *inpL = input.Tokenize(" ,");
+   const Int_t nrItems = inpL->GetLast()+1;
+   Float_t yStep = 1./(nrItems+1);
+   for (Int_t item = 0; item < nrItems; item++) {
+      const TString brName = ((TObjString *)inpL->At(item))->GetString();
+      TText* label = new TText(0.5*xStep,yStep*(item+1),brName.Data());
       label->Draw();
    }
-   brName = TString(input(beg, input.Length() - beg));
-   cnt++;
-   TText* label = new TText(0.5*xStep,yStep*cnt,brName.Data());
-   label->Draw();
+   delete inpL;
 
    Int_t numOutNodes=fLastLayer.GetEntriesFast();
    yStep=1./(numOutNodes+1);
