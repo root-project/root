@@ -42,7 +42,7 @@ data3.root: writefile.C data3_C.$(DllSuf)
 data4.root: writefile.C data4_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l 'writefile.C(4)' 2>&1 > data4.log
 	
-foreign.log: data.root data2_C.$(DllSuf)
+foreign.log: data1.root data2_C.$(DllSuf)
 
 foreign: foreign.log
 ifeq ($(FAIL),)

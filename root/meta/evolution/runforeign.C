@@ -1,0 +1,60 @@
+{
+   // gROOT->ProcessLine(".L datatwo.C+");
+
+   gROOT->Reset();
+
+   TFile *f = new TFile("data1.root");
+   cout << "\n==> Looking at the StreamerInfo before loading the library\n"; 
+
+   TClass *cl = gROOT->GetClass("data");
+   TStreamerInfo *info = cl->GetStreamerInfo();
+   info->ls();
+   cout << cl->GetName() << "'s streamerInfo #" 
+      << info->GetClassVersion() << " has a checksum of " 
+      << "0x" << hex << info->GetCheckSum() << endl;
+
+   cl = gROOT->GetClass("Tdata");
+   info = cl->GetStreamerInfo();
+   info->ls();
+   cout << cl->GetName() << "'s streamerInfo #" 
+      << info->GetClassVersion() << " has a checksum of " 
+      << "0x" << hex << info->GetCheckSum() << endl;
+
+   gROOT->ProcessLine(".L data2.C+");
+
+   cout << "\n==> Looking at the StreamerInfo after loading the library\n"; 
+
+   cl = gROOT->GetClass("data");
+   info = cl->GetStreamerInfo();
+   info->ls();
+   cout << cl->GetName() << "'s streamerInfo #" 
+      << info->GetClassVersion() << " has a checksum of " 
+      << "0x" << hex << info->GetCheckSum() << endl;
+
+   cout << "\n==> List all the StreamerInfo after loading the library\n"; 
+   cl->GetStreamerInfos()->ls();
+
+   cout << "\n==> Looking at the StreamerInfo after loading the library\n"; 
+
+   cl = gROOT->GetClass("Tdata");
+   info = cl->GetStreamerInfo();
+   info->ls();
+   cout << cl->GetName() << "'s streamerInfo #" 
+      << info->GetClassVersion() << " has a checksum of " 
+      << "0x" << hex << info->GetCheckSum() << endl;
+
+   cout << "\n==> List all the StreamerInfo after loading the library\n"; 
+   cl->GetStreamerInfos()->ls();
+
+   TFile *f2 = new TFile("data2.root");
+   TFile *f3 = new TFile("data3.root");
+   TFile *f4 = new TFile("data4.root");
+
+   cout << "\n==> List all the StreamerInfo after loading all the files\n"; 
+
+   gROOT->GetClass("data")->GetStreamerInfos()->ls();
+
+   f3->Get("myobj");
+
+   return 0;
+}

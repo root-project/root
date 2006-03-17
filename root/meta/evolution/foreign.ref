@@ -1,0 +1,26 @@
+
+Processing runforeign.C...
+Warning in <TClass::TClass>: no dictionary for class data is available
+
+Looking at the StreamerInfo before loading the library
+
+StreamerInfo for class: data, version=1
+  int            myvar           offset=  0 type= 3                     
+   i= 0, myvar           type=  3, offset=  0, len=1, method=0
+data's streamerInfo #1 has a checksum of 0x197dcda
+
+Looking at the StreamerInfo after loading the library
+
+StreamerInfo for class: data, checksum=0x89506954
+  double         mydouble        offset=  0 type= 8                     
+   i= 0, mydouble        type=  8, offset=  0, len=1, method=0
+data's streamerInfo #1 has a checksum of 0x89506954
+
+List all the StreamerInfo after loading the library
+
+StreamerInfo for class: data, checksum=0x89506954
+  double         mydouble        offset=  0 type= 8                     
+   i= 0, mydouble        type=  8, offset=  0, len=1, method=0
+
+StreamerInfo for class: data, checksum=0x197dcda
+  int            myvar           offset=  0 type= 3                     
