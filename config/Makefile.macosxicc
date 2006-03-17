@@ -17,10 +17,8 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      =  -fPIC -wd1476 \
-                -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -fPIC -I/usr/X11R6/include $(EXTRA_CFLAGS) \
-                $(FINK_CFLAGS) -restrict
+CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
+CFLAGS        = -fPIC $(EXTRA_CFLAGS) $(FINK_CFLAGS) -restrict
 CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
@@ -79,6 +77,16 @@ endif
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
+
+# Precompiled headers:
+PCHSUPPORTED := $(ENABLEPCH)
+ifeq ($(PCHSUPPORTED),yes)
+  PCHFILE          = include/precompile.pchi
+  PCHCXXFLAGS      = -DUSEPCH -include precompile.h -use_pch $(PCHFILE)
+  PCHEXTRAOBJBUILD = $(CXX) $(OPT) $(CXXFLAGSNOPCH) -DUSEPCH \
+                     -include precompile.h -create_pch $(PCHFILE) \
+                     -c $(PCHEXTRASRC) -o $(PCHEXTRAOBJ)
+endif
 
 # Override default in Makefile.config
 INSTALL      := /bin/cp -pPR

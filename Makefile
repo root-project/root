@@ -375,7 +375,7 @@ INCLUDEFILES :=
 .PRECIOUS: include/%.h
 
 # special rules (need to be defined before generic ones)
-cint/src/%.o: cint/src/%.cxx $(PCHEXTRAOBJ) $(PCHFILE)
+cint/src/%.o: cint/src/%.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -o $@ -c $<
 
 cint/src/%.o: cint/src/%.c

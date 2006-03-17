@@ -33,11 +33,11 @@ ifeq ($(VC_MAJOR),14)
   BLDCXXFLAGS+= -EHs
   BLDCFLAGS  += -EHs
 
- ifeq (yes,$(WINRTDEBUG))
+  ifeq (yes,$(WINRTDEBUG))
     BLDCXXFLAGS += -RTC1
     BLDCFLAGS   += -RTC1
     BLDF77FLAGS += -RTC1
- endif
+  endif
 else
 ifeq ($(VC_MINOR),10)
   BLDCXXFLAGS+= -G5 -GX
@@ -97,8 +97,8 @@ F77LIBS       =
 # Precompiled headers:
 PCHSUPPORTED  := $(ENABLEPCH)
 ifeq ($(PCHSUPPORTED),yes)
-  PCHFILE      = include/w32pragma.pch
-  PCHCXXFLAGS  = -Yuw32pragma.h -Fpinclude/w32pragma.pch -DUSEPCH
+  PCHFILE      = include/precompile.pch
+  PCHCXXFLAGS  = -Yuw32pragma.h -Fp$(PCHFILE) -DUSEPCH
   PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGS) $(OPT) -Ycw32pragma.h -Fp$(PCHFILE) \
         -c $(PCHEXTRASRC) -Fo$(PCHEXTRAOBJ)
   LDFLAGS     += $(wildcard $(PCHEXTRAOBJ)) 

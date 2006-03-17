@@ -15,7 +15,6 @@ PCHEXTRAHDRI  = config/precompile.h.in
 PCHEXTRAHDR   = include/precompile.h
 ALLHDRS      += $(PCHEXTRAHDR)
 CXXFLAGS     += $(PCHCXXFLAGS)
-CINTCXXFLAGS += $(PCHCXXFLAGS)
 
 ifneq ($(PCHFILE),)
 $(ALLLIBS): $(PCHEXTRAOBJ)
