@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.10 2005/11/21 17:26:31 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.11 2005/11/24 23:30:05 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -233,6 +233,8 @@ void TButton::PaintModified()
       text->SetTextColor(GetTextColor());
       text->SetTextAngle(GetTextAngle());
    }
+   SetLogx(0);
+   SetLogy(0);
    TPad::PaintModified();
 }
 
