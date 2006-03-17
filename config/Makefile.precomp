@@ -9,8 +9,6 @@
 
 PCHHEADERS    = TH1.h
 
-PCHHEADERS := $(subst include/,,$(wildcard $(addprefix include/,$(PCHHEADERS))))
-
 PCHEXTRASRC   = base/src/precompile.cxx
 PCHEXTRAOBJ   = $(PCHEXTRASRC:.cxx=.o)
 PCHEXTRAHDRI  = config/precompile.h.in
