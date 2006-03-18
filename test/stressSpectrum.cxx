@@ -53,7 +53,8 @@
 #include "TSpectrum2.h"
 #include "TStyle.h"
 #include "Riostream.h"
-   
+#include "TROOT.h"
+
 Int_t npeaks;
 Double_t fpeaks(Double_t *x, Double_t *par) {
    Double_t result = par[0] + par[1]*x[0];
