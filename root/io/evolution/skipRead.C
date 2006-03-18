@@ -2,6 +2,7 @@
 #include "TFile.h"
 #include "TRef.h"
 #include "TClass.h"
+#include "TStreamerInfo.h"
 
 class MyClass : public TObject {
    public:
