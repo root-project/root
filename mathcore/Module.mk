@@ -82,9 +82,6 @@ $(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(MATHCORELINC) $(ROOTCINTTMPEXE)
 		@echo "for files $(MATHCOREDH1)"
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH1) $(MATHCOREL)
 
-$(MATHCOREDO):  $(MATHCOREDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-mathcore:   $(MATHCORELIB)
 
 map-mathcore:   $(RLIBMAP)

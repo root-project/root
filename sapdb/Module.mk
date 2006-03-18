@@ -45,9 +45,6 @@ $(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SAPDBH) $(SAPDBL)
 
-$(SAPDBDO):     $(SAPDBDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(SAPDBINCDIR:%=-I%) -I. -o $@ -c $<
-
 all-sapdb:      $(SAPDBLIB)
 
 map-sapdb:      $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-sapdb: clean-sapdb
 distclean::     distclean-sapdb
 
 ##### extra rules ######
-$(SAPDBO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(SAPDBINCDIR:%=-I%) -o $@ -c $<
+$(SAPDBO) $(SAPDBDO): CXXFLAGS += $(SAPDBINCDIR:%=-I%)

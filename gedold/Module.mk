@@ -45,9 +45,6 @@ $(GEDOLDDS):    $(GEDOLDH) $(GEDOLDL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEDOLDH) $(GEDOLDL)
 
-$(GEDOLDDO):    $(GEDOLDDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-gedold:     $(GEDOLDLIB)
 
 map-gedold:     $(RLIBMAP)

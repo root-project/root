@@ -45,9 +45,6 @@ $(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MLPH) $(MLPL)
 
-$(MLPDO):       $(MLPDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-mlp:        $(MLPLIB)
 
 map-mlp:        $(RLIBMAP)

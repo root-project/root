@@ -44,9 +44,6 @@ $(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CHIRPH) $(CHIRPL)
 
-$(CHIRPDO):     $(CHIRPDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(CHIRPINCDIR:%=-I%) -I. -o $@ -c $<
-
 all-chirp:      $(CHIRPLIB)
 
 map-chirp:      $(RLIBMAP)
@@ -66,5 +63,4 @@ distclean-chirp: clean-chirp
 distclean::     distclean-chirp
 
 ##### extra rules ######
-$(CHIRPO): %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(CHIRPINCDIR:%=-I%) -o $@ -c $<
+$(CHIRPO) $(CHIRPDO): CXXFLAGS += $(CHIRPINCDIR:%=-I%)

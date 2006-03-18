@@ -47,9 +47,6 @@ $(VENUSDS):     $(VENUSH1) $(VENUSL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(VENUSH1) $(VENUSL)
 
-$(VENUSDO):     $(VENUSDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-venus:      $(VENUSLIB)
 
 map-venus:      $(RLIBMAP)

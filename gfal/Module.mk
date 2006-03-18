@@ -45,9 +45,6 @@ $(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GFALH) $(GFALL)
 
-$(GFALDO):      $(GFALDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-gfal:       $(GFALLIB)
 
 map-gfal:       $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-gfal: clean-gfal
 distclean::     distclean-gfal
 
 ##### extra rules ######
-$(GFALO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(GFALINCDIR:%=-I%) -o $@ -c $<
+$(GFALO): CXXFLAGS += $(GFALINCDIR:%=-I%)

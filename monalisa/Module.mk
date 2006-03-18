@@ -45,9 +45,6 @@ $(MONALISADS):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MONALISAH) $(MONALISAL)
 
-$(MONALISADO):  $(MONALISADS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(MONALISAINCDIR:%=-I%) -I. -o $@ -c $<
-
 all-monalisa:   $(MONALISALIB)
 
 map-monalisa:   $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-monalisa: clean-monalisa
 distclean::     distclean-monalisa
 
 ##### extra rules ######
-$(MONALISAO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(MONALISAINCDIR:%=-I%) -o $@ -c $<
+$(MONALISAO) $(MONALISADO): CXXFLAGS += $(MONALISAINCDIR:%=-I%)

@@ -45,9 +45,6 @@ $(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATRIXH) $(MATRIXL)
 
-$(MATRIXDO):    $(MATRIXDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-matrix:     $(MATRIXLIB)
 
 map-matrix:     $(RLIBMAP)

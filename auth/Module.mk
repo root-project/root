@@ -64,9 +64,6 @@ $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RAUTHH) $(RAUTHL)
 
-$(RAUTHDO):     $(RAUTHDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-auth:       $(RAUTHLIB)
 
 map-auth:       $(RLIBMAP)
@@ -86,5 +83,4 @@ distclean-auth: clean-auth
 distclean::     distclean-auth
 
 ##### extra rules ######
-$(RAUTHO):      %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(EXTRA_RAUTHFLAGS) -I. -o $@ -c $<
+$(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS)

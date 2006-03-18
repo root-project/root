@@ -46,9 +46,6 @@ $(XMLPARSERDS): $(XMLPARSERH) $(XMLPARSERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(XMLPARSERH) $(XMLPARSERL)
 
-$(XMLPARSERDO): $(XMLPARSERDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-xmlparser:  $(XMLPARSERLIB)
 
 map-xmlparser:  $(RLIBMAP)
@@ -69,5 +66,4 @@ distclean-xmlparser: clean-xmlparser
 distclean::     distclean-xmlparser
 
 ##### extra rules ######
-$(XMLPARSERO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(XMLINCDIR:%=-I%) -o $@ -c $<
+$(XMLPARSERO): CXXFLAGS += $(XMLINCDIR:%=-I%)

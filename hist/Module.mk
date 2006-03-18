@@ -45,9 +45,6 @@ $(HISTDS):      $(HISTH) $(HISTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HISTH) $(HISTL)
 
-$(HISTDO):      $(HISTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-hist:       $(HISTLIB)
 
 map-hist:       $(RLIBMAP)

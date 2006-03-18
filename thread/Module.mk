@@ -79,9 +79,6 @@ $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(THREADH) $(THREADL)
 
-$(THREADDO):    $(THREADDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-thread:     $(THREADLIB)
 
 map-thread:     $(RLIBMAP)

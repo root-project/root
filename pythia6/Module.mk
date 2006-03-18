@@ -46,9 +46,6 @@ $(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PYTHIA6H) $(PYTHIA6L)
 
-$(PYTHIA6DO):   $(PYTHIA6DS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-pythia6:    $(PYTHIA6LIB)
 
 map-pythia6:    $(RLIBMAP)
@@ -68,5 +65,4 @@ distclean-pythia6: clean-pythia6
 distclean::     distclean-pythia6
 
 ##### extra rules ######
-$(PYTHIA6O):    %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(FPYTHIA6CPPFLAGS) -I. -o $@ -c $<
+$(PYTHIA6O):    CXXFLAGS += $(FPYTHIA6CPPFLAGS)

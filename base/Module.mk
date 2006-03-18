@@ -85,20 +85,6 @@ $(BASEDS4):
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH4) $(BASEL4)
 
-$(BASEDO1):     $(BASEDS1) $(PCREDEP)
-		$(CXX) $(NOOPT) $(PCREINC) $(CXXFLAGS) -I. -o $@ -c $<
-$(BASEDO2):     $(BASEDS2) $(PCREDEP)
-		$(CXX) $(NOOPT) $(PCREINC) $(CXXFLAGS) -I. -o $@ -c $<
-ifeq ($(ARCH),linuxicc)
-$(BASEDO3):     $(BASEDS3)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -wd191 -I. -o $@ -c $<
-else
-$(BASEDO3):     $(BASEDS3)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-endif
-$(BASEDO4):     $(BASEDS4)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-base:       $(BASEO) $(BASEDO)
 
 clean-base:
@@ -114,10 +100,17 @@ distclean-base: clean-base
 distclean::     distclean-base
 
 ##### extra rules ######
-base/src/TPRegexp.o: base/src/TPRegexp.cxx $(PCREDEP)
-	$(CXX) $(OPT) $(PCREINC) $(CXXFLAGS) -o $@ -c $<
+base/src/TPRegexp.o: $(PCREDEP)
+base/src/TPRegexp.o: CXXFLAGS += $(PCREINC)
 
 ifeq ($(ARCH),alphacxx6)
-$(BASEDIRS)/TRandom.o: $(BASEDIRS)/TRandom.cxx
-	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<
+$(BASEDIRS)/TRandom.o: OPT = $(NOOPT)
 endif
+
+$(BASEDO1) $(BASEDO2): $(PCREDEP)
+$(BASEDO1) $(BASEDO2): CXXFLAGS += $(PCREINC)
+ifeq ($(ARCH),linuxicc)
+$(BASEDO3):     CXXFLAGS += -wd191
+endif
+$(BASEDO4): OPT = $(NOOPT)
+$(BASEDO4): CXXFLAGS += -I.

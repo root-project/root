@@ -45,9 +45,6 @@ $(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTROOTH) $(QTROOTL)
 
-$(QTROOTDO):    $(QTROOTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
-
 all-qtroot:     $(QTROOTLIB)
 
 map-qtroot:     $(RLIBMAP)
@@ -68,5 +65,4 @@ distclean::     distclean-qtroot
 
 
 ##### extra rules ######
-$(sort $(QTROOTO)): %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
+$(sort $(QTROOTO)) $(QTROOTDO): CXXFLAGS += $(GQTCXXFLAGS)

@@ -47,9 +47,6 @@ $(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X11H1) $(X11L)
 
-$(X11DO):       $(X11DS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-x11:        $(X11LIB)
 
 map-x11:        $(RLIBMAP)

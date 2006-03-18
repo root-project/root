@@ -40,11 +40,7 @@ $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 
-$(NETO):        %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) -I. -o $@ -c $<
-
-$(NETDO):       $(NETDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+$(NETO):        CXXFLAGS += -I.
 
 all-net:        $(NETO) $(NETDO)
 

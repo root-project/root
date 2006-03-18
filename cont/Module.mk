@@ -37,9 +37,6 @@ $(CONTDS):      $(CONTH) $(CONTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CONTH) $(CONTL)
 
-$(CONTDO):      $(CONTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-cont:       $(CONTO) $(CONTDO)
 
 clean-cont:

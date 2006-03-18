@@ -45,9 +45,6 @@ $(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PGSQLH) $(PGSQLL)
 
-$(PGSQLDO):     $(PGSQLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(PGSQLINCDIR:%=-I%) -I. -o $@ -c $<
-
 all-pgsql:      $(PGSQLLIB)
 
 map-pgsql:      $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-pgsql: clean-pgsql
 distclean::     distclean-pgsql
 
 ##### extra rules ######
-$(PGSQLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(PGSQLINCDIR:%=-I%) -o $@ -c $<
+$(PGSQLO) $(PGSQLDO): CXXFLAGS += $(PGSQLINCDIR:%=-I%)

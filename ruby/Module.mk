@@ -46,9 +46,6 @@ $(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RUBYROOTH) $(RUBYROOTL)
 
-$(RUBYROOTDO):  $(RUBYROOTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-ruby:       $(RUBYROOTLIB)
 
 map-ruby:       $(RLIBMAP)
@@ -68,5 +65,4 @@ distclean-ruby: clean-ruby
 distclean::     distclean-ruby
 
 ##### extra rules ######
-$(RUBYROOTO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(RUBYINCDIR:%=-I%) -o $@ -c $<
+$(RUBYROOTO): CXXFLAGS += $(RUBYINCDIR:%=-I%)

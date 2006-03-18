@@ -13,11 +13,11 @@ PCHEXTRASRC   = base/src/precompile.cxx
 PCHEXTRAOBJ   = $(PCHEXTRASRC:.cxx=.o)
 PCHEXTRAHDRI  = config/precompile.h.in
 PCHEXTRAHDR   = include/precompile.h
+PCHDEP        = $(ORDER_) $(PCHEXTRAOBJ) $(PCHFILE)
 ALLHDRS      += $(PCHEXTRAHDR)
 CXXFLAGS     += $(PCHCXXFLAGS)
 
 ifneq ($(PCHFILE),)
-$(ALLLIBS): $(PCHEXTRAOBJ)
 clean::
 	@rm -f $(PCHFILE)
 endif
@@ -28,6 +28,9 @@ $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
         sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \
         tr '@' '\n' > $@
 
-$(PCHFILE) $(PCHEXTRAOBJ): $(PCHEXTRASRC) $(PCHEXTRAHDR)
+$(PCHEXTRAOBJ): $(PCHEXTRASRC) $(PCHFILE)
+$(PCHFILE):
 	@echo Building precompiled header...
 	$(PCHEXTRAOBJBUILD)
+
+$(ALLLIBS): $(PCHEXTRAOBJ)

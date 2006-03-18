@@ -45,9 +45,6 @@ $(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FOAMH) $(FOAML)
 
-$(FOAMDO):      $(FOAMDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-foam:       $(FOAMLIB)
 
 map-foam:       $(RLIBMAP)

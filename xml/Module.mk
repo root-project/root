@@ -44,9 +44,6 @@ $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(XMLH) $(XMLL)
 
-$(XMLDO):       $(XMLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-xml:        $(XMLLIB)
 
 map-xml:        $(RLIBMAP)

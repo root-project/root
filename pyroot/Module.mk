@@ -63,9 +63,6 @@ $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PYROOTH) $(PYROOTL)
 
-$(PYROOTDO):    $(PYROOTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-pyroot:     $(PYROOTLIB)
 
 map-pyroot:     $(RLIBMAP)
@@ -86,5 +83,4 @@ distclean-pyroot: clean-pyroot
 distclean::     distclean-pyroot
 
 ##### extra rules ######
-$(PYROOTO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(PYTHONINCDIR:%=-I%) -o $@ -c $<
+$(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)

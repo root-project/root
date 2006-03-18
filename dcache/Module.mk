@@ -44,9 +44,6 @@ $(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPEXE)
 	@echo "Generating dictionary $@..."
 	$(ROOTCINTTMP) -f $@ -c $(DCACHEH) $(DCACHEL)
 
-$(DCACHEDO):    $(DCACHEDS)
-	$(CXX) $(NOOPT) $(CXXFLAGS) $(DCAPINCDIR:%=-I%) -I. -o $@ -c $<
-
 all-dcache:     $(DCACHELIB)
 
 map-dcache:     $(RLIBMAP)
@@ -66,5 +63,4 @@ distclean-dcache: clean-dcache
 distclean::     distclean-dcache
 
 ##### extra rules ######
-$(DCACHEO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(DCAPINCDIR:%=-I%) -o $@ -c $<
+$(DCACHEO) $(DCACHEDO): CXXFLAGS += $(DCAPINCDIR:%=-I%)

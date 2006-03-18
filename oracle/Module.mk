@@ -45,9 +45,6 @@ $(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ORACLEH) $(ORACLEL)
 
-$(ORACLEDO):    $(ORACLEDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(ORACLEINCDIR) -I. -o $@ -c $<
-
 all-oracle:     $(ORACLELIB)
 
 map-oracle:     $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-oracle: clean-oracle
 distclean::     distclean-oracle
 
 ##### extra rules ######
-$(ORACLEO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(ORACLEINCDIR) -o $@ -c $<
+$(ORACLEO) $(ORACLEDO): CXXFLAGS += -I$(ORACLEINCDIR)

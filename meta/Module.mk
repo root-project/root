@@ -37,9 +37,6 @@ $(METADS):      $(METAH) $(METAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAH) $(METAL)
 
-$(METADO):      $(METADS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $(METADO) -c $(METADS)
-
 all-meta:       $(METAO) $(METADO)
 
 clean-meta:

@@ -52,9 +52,6 @@ $(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(EGH1) $(EGL)
 
-$(EGDO):        $(EGDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-eg:         $(EGLIB)
 
 map-eg:         $(RLIBMAP)

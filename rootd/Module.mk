@@ -46,5 +46,4 @@ distclean-rootd: clean-rootd
 distclean::     distclean-rootd
 
 ##### extra rules ######
-$(ROOTDDIRS)/rootd.o: $(ROOTDDIRS)/rootd.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<
+$(ROOTDDIRS)/rootd.o: CXXFLAGS += $(AUTHFLAGS)

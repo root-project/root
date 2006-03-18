@@ -76,9 +76,6 @@ $(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MINUIT2H) $(MINUIT2L)
 
-$(MINUIT2DO):   $(MINUIT2DS)
-		$(CXX) $(NOOPT) $(CXXFLAGS)  -I. -o $@ -c $<
-
 all-minuit2:    $(MINUIT2LIB)
 
 map-minuit2:    $(RLIBMAP)

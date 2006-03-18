@@ -60,9 +60,6 @@ $(TREEVIEWERDS): $(TREEVIEWERH) $(TREEVIEWERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEVIEWERH) $(TREEVIEWERL)
 
-$(TREEVIEWERDO): $(TREEVIEWERDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-treeviewer: $(TREEVIEWERLIB)
 
 map-treeviewer: $(RLIBMAP)

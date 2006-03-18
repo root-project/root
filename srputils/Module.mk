@@ -73,13 +73,5 @@ distclean-srputils: clean-srputils
 distclean::     distclean-srputils
 
 ##### extra rules ######
-$(SRPUTILSO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(SRPINCDIR:%=-I%) -o $@ -c $<
-
-$(RPASSWDO): $(RPASSWDS)
-	$(CC) $(OPT) $(CFLAGS) $(SRPUTILINCDIR:%=-I%) $(SRPINCDIR:%=-I%) \
-	   -o $@ -c $<
-
-$(RTCONFO): $(RTCONFS)
-	$(CC) $(OPT) $(CFLAGS) $(SRPUTILINCDIR:%=-I%) $(SRPINCDIR:%=-I%) \
-	   -o $@ -c $<
+$(SRPUTILSO): CXXFLAGS += $(SRPINCDIR:%=-I%)
+$(RTCONFO): CFLAGS += $(SRPUTILINCDIR:%=-I%) $(SRPINCDIR:%=-I%)

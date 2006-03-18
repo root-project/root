@@ -45,9 +45,6 @@ $(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(LDAPH) $(LDAPL)
 
-$(LDAPDO):      $(LDAPDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-ldap:       $(LDAPLIB)
 
 map-ldap:       $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-ldap: clean-ldap
 distclean::     distclean-ldap
 
 ##### extra rules ######
-$(LDAPO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(LDAPINCDIR:%=-I%) -o $@ -c $<
+$(LDAPO): CXXFLAGS += $(LDAPINCDIR:%=-I%)

@@ -67,11 +67,9 @@ $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPEXE)
 
 ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range
-$(SMATRIXDO):  $(SMATRIXDS)
-		$(CXX) $(NOOPT) -wd175 $(CXXFLAGS) -I. -I$(SMATRIXDIRI) -o $@ -c $<
+$(SMATRIXDO): CXXFLAGS += -wd175 -I$(SMATRIXDIRI)
 else
-$(SMATRIXDO):  $(SMATRIXDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(SMATRIXDIRI) -o $@ -c $<
+$(SMATRIXDO): CXXFLAGS += -I$(SMATRIXDIRI)
 endif
 
 all-smatrix:   $(SMATRIXLIB)

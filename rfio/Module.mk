@@ -45,9 +45,6 @@ $(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RFIOH) $(RFIOL)
 
-$(RFIODO):      $(RFIODS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-rfio:       $(RFIOLIB)
 
 map-rfio:       $(RLIBMAP)
@@ -67,11 +64,7 @@ distclean-rfio: clean-rfio
 distclean::     distclean-rfio
 
 ##### extra rules ######
-$(RFIOO): %.o: %.cxx
+$(RFIOO): CXXFLAGS += $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%)
 ifeq ($(PLATFORM),win32)
-	$(CXX) $(OPT) $(CXXFLAGS) $(SHIFTCFLAGS) -D__INSIDE_CYGWIN__ \
-	   $(SHIFTINCDIR:%=-I%) -o $@ -c $<
-else
-	$(CXX) $(OPT) $(CXXFLAGS) $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%) \
-	   -o $@ -c $<
+$(RFIOO): CXXFLAGS += -D__INSIDE_CYGWIN__
 endif

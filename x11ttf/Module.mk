@@ -47,9 +47,6 @@ $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
 
-$(X11TTFDO):    $(X11TTFDS) $(FREETYPEDEP)
-		$(CXX) $(NOOPT) $(FREETYPEINC) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-x11ttf:     $(X11TTFLIB)
 
 map-x11ttf:     $(RLIBMAP)
@@ -69,5 +66,8 @@ distclean-x11ttf: clean-x11ttf
 distclean::     distclean-x11ttf
 
 ##### extra rules ######
-$(X11TTFO): %.o: %.cxx $(FREETYPEDEP)
-	$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
+$(X11TTFO):     $(FREETYPEDEP)
+$(X11TTFO):     CXXFLAGS += $(FREETYPEINC)
+$(X11TTFDO):    $(FREETYPEDEP)
+$(X11TTFDO):    CXXFLAGS += $(FREETYPEINC)
+

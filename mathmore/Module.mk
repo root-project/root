@@ -154,9 +154,6 @@ $(MATHMOREDS):  $(MATHMOREDH1) $(MATHMOREL) $(MATHMORELINC) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHMOREDH1) $(MATHMOREL)
 
-$(MATHMOREDO):  $(MATHMOREDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-mathmore:   $(MATHMORELIB)
 
 map-mathmore:   $(RLIBMAP)
@@ -193,5 +190,5 @@ distclean-mathmore: clean-mathmore
 distclean::     distclean-mathmore
 
 ##### extra rules ######
-$(MATHMOREO): %.o: %.cxx $(GSLLIBA)
-	$(CXX) $(OPT) $(CXXFLAGS) $(GSLDIRI) -o $@ -c $<
+$(MATHMOREO): $(GSLLIBA)
+$(MATHMOREO): CXXFLAGS += $(GSLDIRI)

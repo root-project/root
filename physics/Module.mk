@@ -45,9 +45,6 @@ $(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PHYSICSH) $(PHYSICSL)
 
-$(PHYSICSDO):   $(PHYSICSDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-physics:    $(PHYSICSLIB)
 
 map-physics:    $(RLIBMAP)

@@ -49,9 +49,6 @@ $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HBOOKH) $(HBOOKL)
 
-$(HBOOKDO):     $(HBOOKDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-hbook:      $(HBOOKLIB)
 
 map-hbook:      $(RLIBMAP)

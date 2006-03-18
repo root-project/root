@@ -45,9 +45,6 @@ $(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TABLEH) $(TABLEL)
 
-$(TABLEDO):     $(TABLEDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-table:      $(TABLELIB)
 
 map-table:      $(RLIBMAP)

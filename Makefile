@@ -375,13 +375,16 @@ INCLUDEFILES :=
 .PRECIOUS: include/%.h
 
 # special rules (need to be defined before generic ones)
+G__%.o: G__%.cxx 
+	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+
 cint/src/%.o: cint/src/%.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -o $@ -c $<
 
 cint/src/%.o: cint/src/%.c
 	$(CC) $(OPT) $(CINTCFLAGS) -o $@ -c $<
 
-%.o: %.cxx $(PCHEXTRAOBJ) $(PCHFILE)
+%.o: %.cxx $(ORDER_) $(PCHEXTRAOBJ) $(PCHFILE)
 	$(CXX) $(OPT) $(CXXFLAGS) -o $@ -c $<
 
 %.o: %.c
@@ -417,14 +420,14 @@ fast:           rootexecs
 skip:
 		@true;
 
+include $(patsubst %,%/Module.mk,$(MODULES))
+
 ifeq ($(PCHSUPPORTED),yes)
 include config/Makefile.precomp
 CXXFLAGSNOPCH = $(subst $(PCHCXXFLAGS),,$(CXXFLAGS))
 else
 CXXFLAGSNOPCH = $(CXXFLAGS)
 endif
-
-include $(patsubst %,%/Module.mk,$(MODULES))
 
 -include MyRules.mk            # allow local rules
 

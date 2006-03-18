@@ -46,9 +46,6 @@ $(CLARENSDS):   $(CLARENSH) $(CLARENSL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CLARENSH) $(CLARENSL)
 
-$(CLARENSDO):   $(CLARENSDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(CLARENSINC) -I. -o $@ -c $<
-
 all-clarens:    $(CLARENSLIB)
 
 map-clarens:    $(RLIBMAP)
@@ -68,5 +65,4 @@ distclean-clarens: clean-clarens
 distclean::     distclean-clarens
 
 ##### extra rules ######
-$(CLARENSO):    %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(CLARENSINC) -o $@ -c $<
+$(CLARENSO) $(CLARENSDO):    CXXFLAGS += $(CLARENSINC)

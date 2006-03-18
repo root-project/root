@@ -57,11 +57,6 @@ $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(GRAFH) $(GRAFL2)
 
-$(GRAFDO1):     $(GRAFDS1)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-$(GRAFDO2):     $(GRAFDS2) $(FREETYPEDEP)
-		$(CXX) $(NOOPT) $(FREETYPEINC) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-graf:       $(GRAFLIB)
 
 map-graf:       $(RLIBMAP)
@@ -81,15 +76,15 @@ distclean-graf: clean-graf
 distclean::     distclean-graf
 
 ##### extra rules ######
-graf/src/TTF.o: graf/src/TTF.cxx $(FREETYPEDEP)
-		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
+$(GRAFDO2):     $(FREETYPEDEP)
+$(GRAFDO2):     OPT = $(NOOPT)
+$(GRAFDO2):     CXXFLAGS += $(FREETYPEINC)
 
-graf/src/TText.o: graf/src/TText.cxx $(FREETYPEDEP)
-		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
+graf/src/TTF.o graf/src/TText.o graf/src/TLatex.o: \
+                $(FREETYPEDEP)
+graf/src/TTF.o graf/src/TText.o graf/src/TLatex.o: \
+                CXXFLAGS += $(FREETYPEINC)
 
-graf/src/TLatex.o: graf/src/TLatex.cxx $(FREETYPEDEP)
-ifneq ($(PLATFORM),win32)
-		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
-else
-		$(CXX) $(DEBUGFLAGS) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
+ifeq ($(PLATFORM),win32)
+graf/src/TLatex.o: OPT = $(NOOPT)
 endif

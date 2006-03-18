@@ -45,9 +45,6 @@ $(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QUADPH) $(QUADPL)
 
-$(QUADPDO):     $(QUADPDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-quadp:      $(QUADPLIB)
 
 map-quadp:      $(RLIBMAP)

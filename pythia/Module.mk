@@ -47,9 +47,6 @@ $(PYTHIADS):    $(PYTHIAH1) $(PYTHIAL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PYTHIAH1) $(PYTHIAL)
 
-$(PYTHIADO):    $(PYTHIADS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-pythia:     $(PYTHIALIB)
 
 map-pythia:     $(RLIBMAP)

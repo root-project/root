@@ -45,9 +45,6 @@ $(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HTMLH) $(HTMLL)
 
-$(HTMLDO):      $(HTMLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-html:       $(HTMLLIB)
 
 map-html:       $(RLIBMAP)

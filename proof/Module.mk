@@ -66,9 +66,6 @@ $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
 
-$(PROOFDO):     $(PROOFDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 $(PROOFGUILIB): $(PROOFGUIO) $(PROOFGUIDO) $(ORDER_) $(MAINLIBS) $(PROOFGUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libProofGui.$(SOEXT) $@ \
@@ -78,9 +75,6 @@ $(PROOFGUILIB): $(PROOFGUIO) $(PROOFGUIDO) $(ORDER_) $(MAINLIBS) $(PROOFGUILIBDE
 $(PROOFGUIDS):  $(PROOFGUIH) $(PROOFGUIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFGUIH) $(PROOFGUIL)
-
-$(PROOFGUIDO):  $(PROOFGUIDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-proof:      $(PROOFLIB) $(PROOFGUILIB)
 

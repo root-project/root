@@ -38,9 +38,6 @@ $(WINNTDS):     $(WINNTH1) $(WINNTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WINNTH1) $(WINNTL)
 
-$(WINNTDO):     $(WINNTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-winnt:      $(WINNTO) $(WINNTDO)
 
 clean-winnt:

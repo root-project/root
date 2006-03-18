@@ -58,10 +58,10 @@ include/%.h:    $(GQTDIRI)/%.h
 
 include/%.cw:    $(GQTDIRI)/%.cw
 		cp $< $@
-      
+
 include/%.pri:    $(GQTDIRI)/%.pri
 		cp $< $@
-      
+
 $(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ \
@@ -71,9 +71,6 @@ $(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 $(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTINCDIR:%=-I%) $(GQTH1) $(GQTL)
-
-$(GQTDO):       $(GQTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
 
 all-qt:         $(GQTLIB)
 
@@ -94,8 +91,7 @@ distclean-qt:   clean-qt
 distclean::     distclean-qt
 
 ##### extra rules ######
-$(sort $(GQTMOCO) $(GQTO)): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
+$(sort $(GQTMOCO) $(GQTO)) $(GQTDO): CXXFLAGS += $(GQTCXXFLAGS)
 
 $(GQTMOC): $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 	$(QTMOCEXE) $< -o $@

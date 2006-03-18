@@ -50,9 +50,6 @@ $(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(KRB5INCDIR:%=-I%) $(KRB5AUTHH1) $(KRB5AUTHL)
 
-$(KRB5AUTHDO):  $(KRB5AUTHDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(KRB5INCDIR:%=-I%) -o $@ -c $<
-
 all-krb5auth:   $(KRB5AUTHLIB)
 
 map-krb5auth:   $(RLIBMAP)
@@ -72,6 +69,12 @@ distclean-krb5auth: clean-krb5auth
 distclean::     distclean-krb5auth
 
 ##### extra rules ######
+ifneq ($(ICC_MAJOR),)
 $(KRB5AUTHO): %.o: %.cxx
 	$(CXX) $(OPT) $(CXXFLAGSNOPCH) -DR__KRB5INIT="\"$(KRB5INIT)\"" \
 	   $(KRB5INCDIR:%=-I%) -o $@ -c $<
+else
+$(KRB5AUTHO): %.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) -DR__KRB5INIT="\"$(KRB5INIT)\"" \
+	   $(KRB5INCDIR:%=-I%) -o $@ -c $<
+endif

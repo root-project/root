@@ -48,9 +48,6 @@ $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X3DH1) $(X3DL)
 
-$(X3DDO):       $(X3DDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-x3d:        $(X3DLIB)
 
 map-x3d:        $(RLIBMAP)

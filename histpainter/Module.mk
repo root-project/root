@@ -48,9 +48,6 @@ $(HISTPAINTERDS): $(HISTPAINTERH1) $(HISTPAINTERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(HISTPAINTERH1) $(HISTPAINTERL)
 
-$(HISTPAINTERDO): $(HISTPAINTERDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-histpainter: $(HISTPAINTERLIB)
 
 map-histpainter: $(RLIBMAP)

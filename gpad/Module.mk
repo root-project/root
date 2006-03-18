@@ -45,9 +45,6 @@ $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GPADH) $(GPADL)
 
-$(GPADDO):      $(GPADDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-gpad:       $(GPADLIB)
 
 map-gpad:       $(RLIBMAP)

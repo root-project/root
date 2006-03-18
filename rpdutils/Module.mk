@@ -97,5 +97,4 @@ distclean-rpdutils: clean-rpdutils
 distclean::     distclean-rpdutils
 
 ##### extra rules ######
-$(RPDUTILO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<
+$(RPDUTILO): CXXFLAGS += $(AUTHFLAGS)

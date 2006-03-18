@@ -111,7 +111,7 @@ $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< "$(REFLEXLL)"
 
 $(CINTEXTESTDICTO): $(CINTEXTESTDICTS)
-		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
+		$(CXX) $(OPT) $(CXXFLAGSNOPCH) -c $< -o $@
 
 $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
 		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=./rootmap --rootmap-lib=$(CINTEXTESTDICT) --quiet --comments

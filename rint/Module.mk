@@ -45,9 +45,6 @@ $(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RINTH) $(RINTL)
 
-$(RINTDO):      $(RINTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-rint:       $(RINTLIB)
 
 map-rint:       $(RLIBMAP)

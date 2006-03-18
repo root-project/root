@@ -73,12 +73,8 @@ $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPEXE)
 		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
 
 ifeq ($(ARCH),win32)
-$(GLDO):        $(GLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(WIN32GDKDIR)/gdk/src \
 		   $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) -o $@ -c $<
 else
-$(GLDO):        $(GLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(OPENGLINCDIR:%=-I%) -o $@ -c $<
 endif
 
 all-gl:         $(GLLIB)
@@ -99,14 +95,10 @@ distclean-gl:   clean-gl
 distclean::     distclean-gl
 
 ##### extra rules ######
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
 ifeq ($(ARCH),win32)
-$(GLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
-	   $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) -o $@ -c $<
-else
-$(GLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(OPENGLINCDIR:%=-I%) -o $@ -c $<
+$(GLO) $(GLDO): CXXFLAGS += -I$(WIN32GDKDIR)/gdk/src 
+$(GLO) $(GLDO): CXXFLAGS += $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
 endif
 
-$(GLDIRS)/gl2ps.o: $(GLDIRS)/gl2ps.c
-	$(CC) $(OPT) $(CFLAGS) $(OPENGLINCDIR:%=-I%) -o $@ -c $<
+$(GLDIRS)/gl2ps.o: CFLAGS += $(OPENGLINCDIR:%=-I%)

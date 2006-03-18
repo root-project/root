@@ -48,9 +48,6 @@ $(GEOMPAINTERDS): $(GEOMPAINTERH1) $(GEOMPAINTERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMPAINTERH1) $(GEOMPAINTERL)
 
-$(GEOMPAINTERDO): $(GEOMPAINTERDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-geompainter: $(GEOMPAINTERLIB)
 
 map-geompainter: $(RLIBMAP)

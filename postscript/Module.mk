@@ -46,9 +46,6 @@ $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(POSTSCRIPTH) $(POSTSCRIPTL)
 
-$(POSTSCRIPTDO): $(POSTSCRIPTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-postscript: $(POSTSCRIPTLIB)
 
 map-postscript: $(RLIBMAP)
@@ -70,6 +67,5 @@ distclean::     distclean-postscript
 
 ##### extra rules ######
 ifeq ($(ARCH),alphacxx6)
-$(POSTSCRIPTDIRS)/TPostScript.o: $(POSTSCRIPTDIRS)/TPostScript.cxx
-	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<
+$(POSTSCRIPTDIRS)/TPostScript.o: OPT = $(NOOPT)
 endif

@@ -45,9 +45,6 @@ $(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FUMILIH) $(FUMILIL)
 
-$(FUMILIDO):    $(FUMILIDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-fumili:     $(FUMILILIB)
 
 map-fumili:     $(RLIBMAP)

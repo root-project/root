@@ -66,9 +66,6 @@ $(PEACDS):      $(PEACH) $(PEACL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PEACH) $(PEACL)
 
-$(PEACDO):      $(PEACDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 $(PEACGUILIB):  $(PEACGUIO) $(PEACGUIDO) $(ORDER_) $(MAINLIBS) $(PEACGUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libPeacGui.$(SOEXT) $@ \
@@ -78,9 +75,6 @@ $(PEACGUILIB):  $(PEACGUIO) $(PEACGUIDO) $(ORDER_) $(MAINLIBS) $(PEACGUILIBDEP)
 $(PEACGUIDS):   $(PEACGUIH) $(PEACGUIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PEACGUIH) $(PEACGUIL)
-
-$(PEACGUIDO):   $(PEACGUIDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-peac:       $(PEACLIB) $(PEACGUILIB)
 
@@ -106,5 +100,4 @@ distclean-peac: clean-peac
 distclean::     distclean-peac
 
 ##### extra rules ######
-$(PEACO):       %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(CLARENSINC) -o $@ -c $<
+$(PEACO):       CXXFLAGS += $(CLARENSINC)

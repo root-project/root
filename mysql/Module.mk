@@ -45,9 +45,6 @@ $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
-$(MYSQLDO):     $(MYSQLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(MYSQLINCDIR:%=-I%) -I. -o $@ -c $<
-
 all-mysql:      $(MYSQLLIB)
 
 map-mysql:      $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-mysql: clean-mysql
 distclean::     distclean-mysql
 
 ##### extra rules ######
-$(MYSQLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(MYSQLINCDIR:%=-I%) -o $@ -c $<
+$(MYSQLO) $(MYSQLDO): CXXFLAGS += $(MYSQLINCDIR:%=-I%)

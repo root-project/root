@@ -95,11 +95,6 @@ $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WIN32GDKH1) $(WIN32GDKL)
 
-$(WIN32GDKDO):  $(WIN32GDKDS) $(FREETYPEDEP)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(FREETYPEINC) \
-		   -I$(WIN32GDKDIR)/gdk/src $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) \
-		   -o $@ -c $<
-
 all-win32gdk:   $(WIN32GDKLIB)
 
 map-win32gdk:   $(RLIBMAP)
@@ -124,7 +119,6 @@ endif
 distclean::     distclean-win32gdk
 
 ##### extra rules #####
-$(WIN32GDKO1): %.o: %.cxx $(FREETYPEDEP)
-	$(CXX) $(OPT) $(CXXFLAGS) $(FREETYPEINC) \
-	   -I$(WIN32GDKDIR)/gdk/src $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) \
-	   -o $@ -c $<
+$(WIN32GDKO1) $(WIN32GDKDO): $(FREETYPEDEP)
+$(WIN32GDKO1) $(WIN32GDKDO): CXXFLAGS += $(FREETYPEINC) \
+  -I$(WIN32GDKDIR)/gdk/src CXXFLAGS += $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)

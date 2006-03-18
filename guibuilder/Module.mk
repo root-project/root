@@ -45,9 +45,6 @@ $(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIBLDH) $(GUIBLDL)
 
-$(GUIBLDDO):    $(GUIBLDDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-guibuilder: $(GUIBLDLIB)
 
 map-guibuilder: $(RLIBMAP)

@@ -45,9 +45,6 @@ $(SPLOTDS):    $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPLOTH) $(SPLOTL)
 
-$(SPLOTDO):    $(SPLOTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-splot:     $(SPLOTLIB)
 
 map-splot:     $(RLIBMAP)

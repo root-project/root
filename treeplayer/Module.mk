@@ -47,9 +47,6 @@ $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEPLAYERH) $(TREEPLAYERL)
 
-$(TREEPLAYERDO): $(TREEPLAYERDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-treeplayer: $(TREEPLAYERLIB)
 
 map-treeplayer: $(RLIBMAP)
@@ -72,7 +69,6 @@ distclean::     distclean-treeplayer
 ##### extra rules ######
 ifeq ($(ARCH),macosx)
 ifeq ($(GCC_VERS_FULL),gcc-4.0.1)
-$(TREEPLAYERDIRS)/TTreeFormula.o: $(TREEPLAYERDIRS)/TTreeFormula.cxx
-	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<
+$(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
 endif
 endif

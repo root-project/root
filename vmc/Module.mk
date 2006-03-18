@@ -46,9 +46,6 @@ $(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(VMCH1) $(VMCL)
 
-$(VMCDO):       $(VMCDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-vmc:        $(VMCLIB)
 
 map-vmc:        $(RLIBMAP)

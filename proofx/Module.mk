@@ -69,9 +69,6 @@ $(PROOFXDS):    $(PROOFXH1) $(PROOFXL) $(ROOTCINTTMPEXE) $(XROOTDETAG)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
 
-$(PROOFXDO):    $(PROOFXDS) $(XROOTDETAG)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(PROOFXINCEXTRA) -o $@ -c $<
-
 all-proofx:     $(PROOFXLIB)
 
 map-proofx:     $(RLIBMAP)
@@ -91,11 +88,9 @@ distclean-proofx: clean-proofx
 distclean::     distclean-proofx
 
 ##### extra rules ######
+$(PROOFXO) $(PROOFXDO): $(XROOTDETAG)
+$(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA)
 ifeq ($(ARCH),linuxicc)
 # remove when xrootd has moved from strstream.h -> sstream.
-$(PROOFXO): %.o: %.cxx $(XROOTDETAG)
-	$(CXX) $(OPT) -Wno-deprecated $(CXXFLAGS) $(PROOFXINCEXTRA) -o $@ -c $<
-else
-$(PROOFXO): %.o: %.cxx $(XROOTDETAG)
-	$(CXX) $(OPT) $(CXXFLAGS) $(PROOFXINCEXTRA) -o $@ -c $<
+$(PROOFXO): CXXFLAGS += -Wno-deprecated
 endif

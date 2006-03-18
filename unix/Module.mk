@@ -37,9 +37,6 @@ $(UNIXDS):      $(UNIXH) $(UNIXL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(UNIXH) $(UNIXL)
 
-$(UNIXDO):      $(UNIXDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-unix:       $(UNIXO) $(UNIXDO)
 
 clean-unix:

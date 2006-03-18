@@ -68,12 +68,6 @@ $(GEOMDS2):     $(GEOMH2) $(GEOML2) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEOMH2) $(GEOML2)
 
-$(GEOMDO1):     $(GEOMDS1)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
-$(GEOMDO2):     $(GEOMDS2)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-geom:       $(GEOMLIB)
 
 map-geom:       $(RLIBMAP)

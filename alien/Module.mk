@@ -45,9 +45,6 @@ $(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ALIENH) $(ALIENL)
 
-$(ALIENDO):     $(ALIENDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(ALIENINCDIR:%=-I%) -I. -o $@ -c $<
-
 all-alien:      $(ALIENLIB)
 
 map-alien :     $(RLIBMAP)
@@ -67,5 +64,4 @@ distclean-alien: clean-alien
 distclean::     distclean-alien
 
 ##### extra rules ######
-$(ALIENO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(ALIENINCDIR:%=-I%) -o $@ -c $<
+$(ALIENO) $(ALIENDO): CXXFLAGS += $(ALIENINCDIR:%=-I%)

@@ -45,9 +45,6 @@ $(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SQLH) $(SQLL)
 
-$(SQLDO):       $(SQLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-sql:        $(SQLLIB)
 
 map-sql:        $(RLIBMAP)

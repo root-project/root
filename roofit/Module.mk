@@ -118,15 +118,6 @@ $(ROOFITDS3):   $(ROOFITETAG) $(ROOFITH3) $(ROOFITL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITH3) $(ROOFITL3)
 
-$(ROOFITDO1):   $(ROOFITDS1)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
-$(ROOFITDO2):   $(ROOFITDS2)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
-$(ROOFITDO3):   $(ROOFITDS3)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-roofit:     $(ROOFITLIB)
 
 map-roofit:     $(RLIBMAP)

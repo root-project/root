@@ -85,13 +85,6 @@ $(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
 
-$(GUIDO1):      $(GUIDS1)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-$(GUIDO2):      $(GUIDS2)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-$(GUIDO3):      $(GUIDS3)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-gui:        $(GUILIB)
 
 map-gui:        $(RLIBMAP)

@@ -103,13 +103,11 @@ distclean-proofd: clean-proofd
 distclean::     distclean-proofd
 
 ##### extra rules ######
-$(PROOFDDIRS)/proofd.o: $(PROOFDDIRS)/proofd.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(AUTHFLAGS) -o $@ -c $<
+$(PROOFDDIRS)/proofd.o: CXXFLAGS += $(AUTHFLAGS)
+
 ifneq (,$(findstring $(CXX),"g++ icc"))
 # remove when xrootd has moved from strstream.h -> sstream.
-$(XPDO): %.o: %.cxx
-	$(CXX) $(OPT) -Wno-deprecated $(CXXFLAGS) $(XPDINCEXTRA) -o $@ -c $<
+$(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA)
 else
-$(XPDO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(XPDINCEXTRA) -o $@ -c $<
+$(XPDO): CXXFLAGS += $(XPDINCEXTRA)
 endif

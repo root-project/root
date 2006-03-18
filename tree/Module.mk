@@ -58,9 +58,6 @@ $(TREEDS2):
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEDH2) $(TREEL2)
 
-$(TREEDO):      $(TREEDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-tree:       $(TREELIB)
 
 map-tree:       $(RLIBMAP)

@@ -38,9 +38,6 @@ $(METAUTILSDS): $(METAUTILSH) $(METAUTILSL) utils/src/rootcint_tmp$(EXEEXT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAUTILSH) $(METAUTILSL)
 
-$(METAUTILSDO): $(METAUTILSDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $(METAUTILSDO) -c $(METAUTILSDS)
-
 all-metautils:  $(METAUTILSO) $(METAUTILSDO)
 
 clean-metautils:

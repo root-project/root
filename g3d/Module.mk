@@ -50,9 +50,6 @@ $(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(G3DH1) $(G3DL)
 
-$(G3DDO):       $(G3DDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-g3d:        $(G3DLIB)
 
 map-g3d:        $(RLIBMAP)

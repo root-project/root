@@ -45,9 +45,6 @@ $(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MINUITH) $(MINUITL)
 
-$(MINUITDO):    $(MINUITDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-
 all-minuit:     $(MINUITLIB)
 
 map-minuit:     $(RLIBMAP)
