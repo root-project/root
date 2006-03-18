@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.6 2000/10/21 10:56:25 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.1.1.1 2002/08/02 22:24:39 pcanal Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -79,6 +79,7 @@
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
+#include "TClass.h"
 
 #include "Event.h"
 
