@@ -20,7 +20,7 @@ GSLDIRI      := -I$(MODDIRS)/$(GSLVERS)
 ifeq ($(PLATFORM),win32)
 GSLLIBA      := $(GSLDIRS)/libgsl.lib
 #GSLLIB       := $(LPATH)/libgsl.lib
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
 GSLBLD        = "libgsl - Win32 Debug"
 else
 GSLBLD        = "libgsl - Win32 Release"

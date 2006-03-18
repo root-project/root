@@ -25,7 +25,7 @@ ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.lib
 ASTEPLIB     := $(LPATH)/libAfterImage.lib
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
 ASTEPBLD      = "libAfterImage - Win32 Debug"
 else
 ASTEPBLD      = "libAfterImage - Win32 Release"

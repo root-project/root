@@ -23,7 +23,7 @@ FREETYPEDIRI := $(MODDIRS)/$(FREETYPEVERS)/include
 FREETYPELIBS := $(MODDIRS)/$(FREETYPEVERS).tar.gz
 ifeq ($(PLATFORM),win32)
 FREETYPELIB  := $(LPATH)/libfreetype.lib
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
 FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype219MT_D.lib
 FTNMCFG      := "freetype - Win32 Debug Multithreaded"
 else

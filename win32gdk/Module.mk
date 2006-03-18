@@ -23,7 +23,7 @@ GDKDLL       := bin/gdk-1.3.dll
 GDKLIB       := $(LPATH)/gdk-1.3.lib
 GDKSRC       := $(wildcard $(GDKDIRS)/*.c) $(wildcard $(GDKDIRS)/win32/*.c)
 
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
 GDKNMCXXFLAGS:= "$(BLDCXXFLAGS)" DEBUG=1
 else
 GDKNMCXXFLAGS:= "$(BLDCXXFLAGS)"
@@ -121,4 +121,4 @@ distclean::     distclean-win32gdk
 ##### extra rules #####
 $(WIN32GDKO1) $(WIN32GDKDO): $(FREETYPEDEP)
 $(WIN32GDKO1) $(WIN32GDKDO): CXXFLAGS += $(FREETYPEINC) \
-  -I$(WIN32GDKDIR)/gdk/src CXXFLAGS += $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+  -I$(WIN32GDKDIR)/gdk/src $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)

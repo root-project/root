@@ -24,7 +24,7 @@ PCRELIBS     := $(MODDIRS)/$(PCREVERS).tar.gz
 ifeq ($(PLATFORM),win32)
 PCRELIBA     := $(MODDIRS)/$(PCREVERS)/Win32/libpcre-6.4.lib
 PCRELIB      := $(LPATH)/libpcre.lib
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
 PCREBLD      := "libpcre - Win32 Debug"
 else
 PCREBLD      := "libpcre - Win32 Release"
