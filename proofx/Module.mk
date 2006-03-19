@@ -89,8 +89,15 @@ distclean::     distclean-proofx
 
 ##### extra rules ######
 $(PROOFXO) $(PROOFXDO): $(XROOTDETAG)
-$(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA)
-ifeq ($(ARCH),linuxicc)
+
+ifeq ($(ICC_MAJOR),9)
 # remove when xrootd has moved from strstream.h -> sstream.
-$(PROOFXO): CXXFLAGS += -Wno-deprecated
+$(PROOFXO) $(PROOFXDO): CXXFLAGS += -Wno-deprecated $(PROOFXINCEXTRA)
+else
+ifeq ($(GCC_MAJOR),4)
+# remove when xrootd has moved from strstream.h -> sstream.
+$(PROOFXO) $(PROOFXDO): CXXFLAGS += -Wno-deprecated $(PROOFXINCEXTRA)
+else
+$(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA)
+endif
 endif
