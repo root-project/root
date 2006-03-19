@@ -89,7 +89,7 @@ clean:
 		@rm -f $(OBJS) $(PROGRAMS) core 
 
 distclean:      clean
-		@rm -f $(PROGRAMS) 
+		@rm -f $(PROGRAMS) kalman.root stressOperations.root 
 
 
 .SUFFIXES: .$(SrcSuf)
