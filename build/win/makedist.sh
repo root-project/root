@@ -23,6 +23,12 @@ else
    EXCLUDE="--exclude CVS --exclude .cvsignore"
 fi
 
+for i in include/precompile.*; do
+   if [ "x$i" != "xinclude/precompile.h" ]; then
+      EXCLUDE="--exclude $i "$EXCLUDE
+   fi
+done
+
 cp -f main/src/rmain.cxx include/
 pwd=`pwd`
 dir=`basename $pwd`
