@@ -2,3 +2,5 @@ testKalman
 testOperations
 testSMatrix
 testIO
+stressKalman
+stressOperations
