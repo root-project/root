@@ -41,8 +41,32 @@ data3.root: writefile.C data3_C.$(DllSuf)
 
 data4.root: writefile.C data4_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l 'writefile.C(4)' 2>&1 > data4.log
+
+data5.root: writefile.C data5_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l 'writefile.C(5)' 2>&1 > data4.log
+
+data6.root: writefile.C data6_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l 'writefile.C(6)' 2>&1 > data4.log
 	
 foreign.log: data1.root data2_C.$(DllSuf)
+
+warning.log: data1.root data2.root data3.root data4.root data5.root \
+	         data6.root data2_C.$(DllSuf) checkWarn.C
+	$(CMDECHO) (root.exe -q -b -l 'checkWarn.C(0)' \
+	    && root.exe -q -b -l 'checkWarn.C(1)' \
+	    && root.exe -q -b -l 'checkWarn.C(2)' \
+	    && root.exe -q -b -l 'checkWarn.C(3)' \
+	    && root.exe -q -b -l 'checkWarn.C(4)' \
+	    && root.exe -q -b -l 'checkWarn.C(10)' \
+	    && root.exe -q -b -l 'checkWarn.C(11)' \
+	    && root.exe -q -b -l 'checkWarn.C(12)' \
+	    && root.exe -q -b -l 'checkWarn.C(13)' \
+	    && root.exe -q -b -l 'checkWarn.C(14)' \
+	    && root.exe -q -b -l 'checkWarn.C(15)' \
+	    && root.exe -q -b -l 'checkWarn.C(16)' \
+	    && root.exe -q -b -l 'checkWarn.C(17)' \
+	    && root.exe -q -b -l 'checkWarn.C(18)' \
+	    ) > warning.log 2>&1
 
 foreign: foreign.log
 ifeq ($(FAIL),)

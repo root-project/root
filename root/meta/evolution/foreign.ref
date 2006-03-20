@@ -1,26 +1,73 @@
 
 Processing runforeign.C...
 Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
 
-Looking at the StreamerInfo before loading the library
+==> Looking at the StreamerInfo before loading the library
 
 StreamerInfo for class: data, version=1
-  int            myvar           offset=  0 type= 3                     
-   i= 0, myvar           type=  3, offset=  0, len=1, method=0
-data's streamerInfo #1 has a checksum of 0x197dcda
+  int            myvar_one       offset=  0 type= 3                     
+   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+data's streamerInfo #1 has a checksum of 0x810cd3a3
 
-Looking at the StreamerInfo after loading the library
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=  0 type= 3                     
+   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+Tdata's streamerInfo #1 has a checksum of 0x589374f7
+Warning in <TClass::BuildCheck>: 
+        The StreamerInfo of class Tdata read from a previous opened file
+        has the same version (=1) as the active class but a different checksum.
+        You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
 
-StreamerInfo for class: data, checksum=0x89506954
+
+==> Looking at the StreamerInfo after loading the library
+
+StreamerInfo for class: data, checksum=0x72709669
+  double         mydouble_two    offset=  0 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  0, len=1, method=0
+data's streamerInfo #1 has a checksum of 0x72709669
+
+==> List all the StreamerInfo after loading the library
+
+StreamerInfo for class: data, checksum=0x72709669
+  double         mydouble_two    offset=  0 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  0, len=1, method=0
+
+StreamerInfo for class: data, checksum=0x810cd3a3
+  int            myvar_one       offset=  0 type= 3                     
+
+==> Looking at the StreamerInfo after loading the library
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+Tdata's streamerInfo #1 has a checksum of 0x589374f7
+
+==> List all the StreamerInfo after loading the library
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+Warning in <TStreamerInfo::BuildCheck>: TStreamerInfo from data2.root does not match existing one (Tdata:1)
+Warning in <TStreamerInfo::BuildCheck>: TStreamerInfo from data3.root does not match existing one (Tdata:1)
+Warning in <TStreamerInfo::BuildCheck>: TStreamerInfo from data4.root does not match existing one (Tdata:1)
+
+==> List all the StreamerInfo after loading all the files
+
+StreamerInfo for class: data, checksum=0x72709669
+  double         mydouble_two    offset=  0 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  0, len=1, method=0
+
+StreamerInfo for class: data, checksum=0x810cd3a3
+  int            myvar_one       offset=  0 type= 3                     
+
+StreamerInfo for class: data, checksum=0x489331ab
   double         mydouble        offset=  0 type= 8                     
-   i= 0, mydouble        type=  8, offset=  0, len=1, method=0
-data's streamerInfo #1 has a checksum of 0x89506954
+  int            more            offset=  0 type= 3                     
+  int            three           offset=  0 type= 3                     
 
-List all the StreamerInfo after loading the library
-
-StreamerInfo for class: data, checksum=0x89506954
+StreamerInfo for class: data, checksum=0xe4e85aea
   double         mydouble        offset=  0 type= 8                     
-   i= 0, mydouble        type=  8, offset=  0, len=1, method=0
-
-StreamerInfo for class: data, checksum=0x197dcda
-  int            myvar           offset=  0 type= 3                     
+  double         more            offset=  0 type= 8                     
