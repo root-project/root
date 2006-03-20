@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.9 2005/12/19 17:40:36 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.10 2006/03/20 08:22:40 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -242,6 +242,7 @@ public:
    virtual Int_t      GetNumberFreeParameters() const {return fNfunctions-fNfixed;}
    virtual void       GetParameters(TVectorD &vpar);
    virtual Double_t   GetParameter(Int_t ipar) const {return fParams(ipar);}
+   virtual Int_t     GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const;
    virtual const char *GetParName(Int_t ipar) const;
    virtual Double_t   GetParError(Int_t ipar) const;
    virtual Double_t   GetParTValue(Int_t ipar);
@@ -260,7 +261,7 @@ public:
 
    virtual Double_t  Chisquare(Int_t /*npar*/, Double_t * /*params*/) const {return 0;}
    virtual Int_t     GetErrors(Int_t /*ipar*/,Double_t & /*eplus*/, Double_t & /*eminus*/, Double_t & /*eparab*/, Double_t & /*globcc*/) const {return 0;}
-   virtual Int_t     GetParameter(Int_t /*ipar*/,char* /*name*/,Double_t& /*value*/,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const  {return 0;}
+
    virtual Int_t     GetStats(Double_t& /*amin*/, Double_t& /*edm*/, Double_t& /*errdef*/, Int_t& /*nvpar*/, Int_t& /*nparx*/) const {return 0;}
    virtual Double_t  GetSumLog(Int_t /*i*/) {return 0;}
    virtual void      SetFitMethod(const char * /*name*/) {;}

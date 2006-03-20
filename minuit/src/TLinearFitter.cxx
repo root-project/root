@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.20 2005/12/20 15:09:17 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.21 2006/03/20 08:22:40 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -1046,6 +1046,24 @@ void TLinearFitter::GetParameters(TVectorD &vpar)
 }
 
 //______________________________________________________________________________
+Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const
+{
+//Returns the value and the name of the parameter #ipar
+
+   if (ipar<0 || ipar>fNfunctions) {
+      Error("GetParError", "illegal value of parameter");
+      return 0;
+   }
+   value = fParams(ipar);
+   if (fInputFunction)
+      strcpy(name, fInputFunction->GetParName(ipar));
+   else 
+      name = "";
+   return 1;
+}
+
+
+//______________________________________________________________________________
 Double_t TLinearFitter::GetParError(Int_t ipar) const
 {
 //Returns the error of parameter #ipar
@@ -1068,7 +1086,8 @@ const char *TLinearFitter::GetParName(Int_t ipar) const
       Error("GetParError", "illegal value of parameter");
       return 0;
    }
-
+   if (fInputFunction)
+      return fInputFunction->GetParName(ipar);
    return "";
 }
 
@@ -1219,7 +1238,6 @@ void TLinearFitter::SetFormula(const char *formula)
    fAtbTemp.ResizeTo(size);
    fAtbTemp2.ResizeTo(size);
    fAtbTemp3.ResizeTo(size);
-   //
    if (fFixedParams)
       delete [] fFixedParams;
    fFixedParams=new Bool_t[size];
