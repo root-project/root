@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.72 2005/11/11 13:54:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.73 2006/03/20 21:26:55 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -52,6 +52,7 @@
 #include "TQueryResult.h"
 #include "TMD5.h"
 #include "TMethodCall.h"
+#include "TObjArray.h"
 #ifndef R__TH1MERGEFIXED
 #include "TH1.h"
 #endif
