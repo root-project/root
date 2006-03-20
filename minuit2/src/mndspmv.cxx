@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: mndspmv.cpp,v 1.1.6.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: mndspmv.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -247,9 +247,9 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
 		ix = kx;
 		iy = ky;
 		i__2 = kk + j - 2;
-		for (k = kk; k <= i__2; ++k) {
-		    y[iy] += temp1 * ap[k];
-		    temp2 += ap[k] * x[ix];
+		for (k = 0; k <= i__2 - kk; ++k) {
+		    y[iy] += temp1 * ap[k + kk];
+		    temp2 += ap[k + kk] * x[ix];
 		    ix += incx;
 		    iy += incy;
 /* L70: */
