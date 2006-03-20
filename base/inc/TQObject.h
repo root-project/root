@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.25 2005/05/27 03:00:04 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.26 2005/05/27 16:42:58 pcanal Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -37,19 +37,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
 #ifndef ROOT_Varargs
 #include "Varargs.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TList;
 class TObject;
 class TQConnection;
-class TQClass;
-
-
+class TClass;
 
 class TQObject {
 
@@ -172,8 +170,6 @@ public:
 
 R__EXTERN void *gTQSender;   // the latest sender object
 
-
-
 class TQObjSender : public TQObject {
 
 protected:
@@ -194,29 +190,6 @@ public:
                            //to interpreted classes, see also RQ_OBJECT.h
 };
 
-
-
-// This class makes it possible to have a single connection from
-// all objects of the same class
-class TQClass : public TQObject, public TClass {
-
-friend class TQObject;
-
-public:
-   TQClass(const char *name, Version_t cversion,
-           const type_info &info, TVirtualIsAProxy *isa,
-           ShowMembersFunc_t showmembers,
-           const char *dfil = 0, const char *ifil = 0,
-           Int_t dl = 0, Int_t il = 0) :
-           TQObject(),
-           TClass(name, cversion, info,isa,showmembers, dfil, ifil, dl, il) { }
-
-   virtual ~TQClass() { Disconnect(); }
-
-   ClassDef(TQClass,0)  // Class with connections
-};
-
-
 // Global function which simplifies making connections in interpreted
 // ROOT session
 //
@@ -225,6 +198,9 @@ public:
 extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
                           const char *slot);
 
+#ifdef G__DICTIONARY
+#include "TQClass.h"
+#endif
 
 //---- ClassImpQ macro ----------------------------------------------
 //
@@ -236,32 +212,5 @@ extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
 
 #define ClassImpQ(name) \
    ClassImp(name)
-
-
-//---- Class Initialization Behavior --------------------------------------
-//
-// This Class and Function are automatically used for classes inheriting from
-// TQObject. They make it possible to have a single connection from all
-// objects of the same class.
-namespace ROOT {
-   class TDefaultInitBehavior;
-   class TQObjectInitBehavior : public TDefaultInitBehavior {
-   public:
-      virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsAProxy *isa,
-                                  ShowMembersFunc_t show,
-                                  const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const
-      {
-         return new TQClass(cname, id, info, isa, show, dfil, ifil,dl, il);
-      }
-   };
-
-   inline const TQObjectInitBehavior *DefineBehavior(TQObject*, TQObject*)
-   {
-      TQObjectInitBehavior *behave = new TQObjectInitBehavior;
-      return behave;
-   }
-}
 
 #endif
