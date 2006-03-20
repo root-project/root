@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.279 2006/03/13 11:00:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.280 2006/03/15 20:07:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1243,7 +1243,7 @@ Double_t *TH1::GetIntegral()
    //  Return a pointer to the array of bins integral.
    //  if the pointer fIntegral is null, TH1::ComputeIntegral is called
 
-   if (fIntegral) ComputeIntegral();
+   if (!fIntegral) ComputeIntegral();
    return fIntegral;
 }
 
