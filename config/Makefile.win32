@@ -36,7 +36,6 @@ ifeq ($(VC_MAJOR),14)
   ifeq (yes,$(WINRTDEBUG))
     BLDCXXFLAGS += -RTC1
     BLDCFLAGS   += -RTC1
-    BLDF77FLAGS += -RTC1
   endif
 else
 ifeq ($(VC_MINOR),10)
