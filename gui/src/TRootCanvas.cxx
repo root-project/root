@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.93 2006/03/08 21:09:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.94 2006/03/13 15:04:58 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -388,7 +388,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fViewMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fViewMenu->AddEntry("&Editor",       kViewEditor);
    fViewMenu->AddEntry("&Toolbar",      kViewToolbar);
-   fViewMenu->AddEntry("Event &Status", kViewEventStatus);
+   fViewMenu->AddEntry("Event &Statusbar", kViewEventStatus);
    fViewMenu->AddSeparator();
    fViewMenu->AddEntry("&Colors",       kViewColors);
    fViewMenu->AddEntry("&Fonts",        kViewFonts);
@@ -1303,17 +1303,22 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 {
    // Show or hide statusbar.
 
+   UInt_t dh = fClient->GetDisplayHeight();
+   UInt_t ch = fCanvas->GetWindowHeight();
+
    UInt_t h = GetHeight();
    UInt_t sh = fStatusBar->GetHeight()+2;
 
    if (show) {
       ShowFrame(fStatusBar);
       fViewMenu->CheckEntry(kViewEventStatus);
-      h = h + sh;
-   } else {
+      if (dh - ch >= sh) h = h + sh;
+      else h = ch;
+  } else {
       HideFrame(fStatusBar);
       fViewMenu->UnCheckEntry(kViewEventStatus);
-      h = h - sh;
+      if (dh - ch < sh) h = ch;
+      else h = h - sh;
    }
    Resize(GetWidth(), h);
 }
