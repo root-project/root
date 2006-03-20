@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.7 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.8 2006/03/13 15:49:51 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -9,7 +9,9 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
+#ifndef REFLEX_BUILD
 #define REFLEX_BUILD
+#endif
 
 #include "Reflex/Tools.h"
 
