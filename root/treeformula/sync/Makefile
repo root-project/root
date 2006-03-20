@@ -21,7 +21,8 @@ Event$(ExeSuf): $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 	$(CMDECHO) if [ -e $(EVENTDIR)/Event$(ExeSuf).manifest ] ; then cp $(EVENTDIR)/Event$(ExeSuf).manifest ./copiedEvent$(ExeSuf).manifest ; fi
 endif
-	$(CMDECHO)cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)* $(ROOTTEST_HOME)/root/io/event/libEvent.* $(ROOTTEST_HOME)/root/io/event/Event.h .
+	$(CMDECHO)cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)* $(ROOTTEST_HOME)/root/io/event/libEvent.*  .
+	$(CMDECHO)cp $(ROOTTEST_HOME)/root/io/event/Event.h .
 
 Event.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO) ./Event 20 1 9 1 > createfile.out
