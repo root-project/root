@@ -1,0 +1,204 @@
+
+Processing checkWarn.C(0)...
+Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::PostLoadCheck>: 
+        The StreamerInfo version 1 for the class Tdata which was read
+        from a file previously opened has the same version as the active class 
+        but a different checksum. You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+Processing checkWarn.C(1)...
+Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=  0 type= 3                     
+   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+Warning in <TClass::PostLoadCheck>: 
+        The StreamerInfo version 1 for the class Tdata which was read
+        from a file previously opened has the same version as the active class 
+        but a different checksum. You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+Processing checkWarn.C(2)...
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo of class Tdata read from file data1.root
+        has the same version (=1) as the active class but a different checksum.
+        You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+Processing checkWarn.C(3)...
+
+StreamerInfo for class: Tdata, version=1
+  double         mydouble_two    offset=  8 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo for version 1 of class Tdata read from file data1.root
+        has a different checksum than the previously loaded StreamerInfo.
+        Reading objects of type Tdata from the file data1.root 
+        (and potentially other files) might not work correctly.
+        Most likely you the version number of the class was not properly
+        updated [See ClassDef(Tdata,1)].
+
+
+Processing checkWarn.C(4)...
+No warning is expected from the 1st 4 files opening since we
+can not distinguish an emulated ClassDef(name,1) from a foreign class
+Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo for version 2 of class Tdata read from file data5.root
+        has a different checksum than the previously loaded StreamerInfo.
+        Reading objects of type Tdata from the file data5.root 
+        (and potentially other files) might not work correctly.
+        Most likely you the version number of the class was not properly
+        updated [See ClassDef(Tdata,2)].
+
+
+Processing checkWarn.C(10)...
+Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::PostLoadCheck>: 
+        The StreamerInfo version 1 for the class Tdata which was read
+        from a file previously opened has the same version as the active class 
+        but a different checksum. You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+Processing checkWarn.C(11)...
+Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=  0 type= 3                     
+   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+Warning in <TClass::PostLoadCheck>: 
+        The StreamerInfo version 1 for the class Tdata which was read
+        from a file previously opened has the same version as the active class 
+        but a different checksum. You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+Processing checkWarn.C(12)...
+Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::PostLoadCheck>: 
+        The StreamerInfo version 1 for the class Tdata which was read
+        from a file previously opened has the same version as the active class 
+        but a different checksum. You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+Processing checkWarn.C(13)...
+Warning in <TClass::TClass>: no dictionary for class data is available
+Warning in <TClass::TClass>: no dictionary for class Tdata is available
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=  0 type= 3                     
+   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+Warning in <TClass::PostLoadCheck>: 
+        The StreamerInfo version 1 for the class Tdata which was read
+        from a file previously opened has the same version as the active class 
+        but a different checksum. You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+Processing checkWarn.C(14)...
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo of class Tdata read from file data1.root
+        has the same version (=1) as the active class but a different checksum.
+        You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+Processing checkWarn.C(15)...
+
+StreamerInfo for class: Tdata, version=1
+  double         mydouble_two    offset=  8 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo for version 1 of class Tdata read from file data1.root
+        has a different checksum than the previously loaded StreamerInfo.
+        Reading objects of type Tdata from the file data1.root 
+        (and potentially other files) might not work correctly.
+        Most likely you the version number of the class was not properly
+        updated [See ClassDef(Tdata,1)].
+
+
+Processing checkWarn.C(16)...
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo of class Tdata read from file data1.root
+        has the same version (=1) as the active class but a different checksum.
+        You should update the version to ClassDef(Tdata,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+StreamerInfo for class: Tdata, version=1
+  int            myvar_one       offset=99999 type= 3                     
+   i= 0, myvar_one       type=103, offset=99999, len=1, method=0
+
+Processing checkWarn.C(17)...
+
+StreamerInfo for class: Tdata, version=1
+  double         mydouble_two    offset=  8 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo for version 1 of class Tdata read from file data1.root
+        has a different checksum than the previously loaded StreamerInfo.
+        Reading objects of type Tdata from the file data1.root 
+        (and potentially other files) might not work correctly.
+        Most likely you the version number of the class was not properly
+        updated [See ClassDef(Tdata,1)].
+
+
+StreamerInfo for class: Tdata, version=1
+  double         mydouble_two    offset=  8 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+
+StreamerInfo for class: Tdata, version=1
+  double         mydouble_two    offset=  8 type= 8                     
+   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+
+Processing checkWarn.C(18)...
+Test not implemented

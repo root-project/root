@@ -14,10 +14,10 @@ StreamerInfo for class: Tdata, version=1
   int            myvar_one       offset=  0 type= 3                     
    i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
 Tdata's streamerInfo #1 has a checksum of 0x589374f7
-Warning in <TClass::BuildCheck>: 
-        The StreamerInfo of class Tdata read from a previous opened file
-        has the same version (=1) as the active class but a different checksum.
-        You should update the version to ClassDef(Tdata,2).
+Warning in <TClass::PostLoadCheck>: 
+        The StreamerInfo version 1 for the class Tdata which was read
+        from a file previously opened has the same version as the active class 
+        but a different checksum. You should update the version to ClassDef(Tdata,2).
         Do not try to write objects with the current class definition,
         the files will not be readable.
 
@@ -50,9 +50,6 @@ Tdata's streamerInfo #1 has a checksum of 0x589374f7
 StreamerInfo for class: Tdata, version=1
   int            myvar_one       offset=99999 type= 3                     
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
-Warning in <TStreamerInfo::BuildCheck>: TStreamerInfo from data2.root does not match existing one (Tdata:1)
-Warning in <TStreamerInfo::BuildCheck>: TStreamerInfo from data3.root does not match existing one (Tdata:1)
-Warning in <TStreamerInfo::BuildCheck>: TStreamerInfo from data4.root does not match existing one (Tdata:1)
 
 ==> List all the StreamerInfo after loading all the files
 
@@ -68,6 +65,7 @@ StreamerInfo for class: data, checksum=0x489331ab
   int            more            offset=  0 type= 3                     
   int            three           offset=  0 type= 3                     
 
-StreamerInfo for class: data, checksum=0xe4e85aea
+StreamerInfo for class: data, checksum=0x8d026f5b
   double         mydouble        offset=  0 type= 8                     
   double         more            offset=  0 type= 8                     
+  int            four            offset=  0 type= 3                     

@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += foreign 
+TEST_TARGETS += foreign warning
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -69,6 +69,13 @@ warning.log: data1.root data2.root data3.root data4.root data5.root \
 	    ) > warning.log 2>&1
 
 foreign: foreign.log
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+else
+	$(TestDiff)
+endif
+
+warning: warning.log
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 else
