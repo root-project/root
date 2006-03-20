@@ -48,7 +48,7 @@ data5.root: writefile.C data5_C.$(DllSuf)
 data6.root: writefile.C data6_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l 'writefile.C(6)' 2>&1 > data4.log
 	
-foreign.log: data1.root data2_C.$(DllSuf)
+foreign.log: data1.root data2.root data3.root data4.root data2_C.$(DllSuf)
 
 warning.log: data1.root data2.root data3.root data4.root data5.root \
 	         data6.root data2_C.$(DllSuf) checkWarn.C
