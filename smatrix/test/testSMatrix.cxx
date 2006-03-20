@@ -431,6 +431,7 @@ int test11() {
 int test12() {
   // test of symmetric matrices
 
+  int iret = 0; 
   SMatrix<double,2,2,MatRepSym<double,2> >  S; 
   S(0,0) = 1.233;
   S(0,1) = 2.33; 
@@ -439,6 +440,21 @@ int test12() {
 
   double a = 3; 
   std::cout << "S\n" << a * S << std::endl;
+
+  SMatrix<double,2,3  >  M1 =  SMatrixIdentity(); 
+  M1(0,1) = 1; M1(1,0) = 1; M1(0,2) = 1; M1(1,2) = 1;
+  SMatrix<double,2,3  >  M2 =  SMatrixIdentity(); 
+  SMatrix<double,2,2,MatRepSym<double,2> >  S2=S; 
+  // S2 -= M1*Transpose(M2);  // this should fails to compile
+  SMatrix<double,2 > mS2(S2);  
+  mS2 -= M1*Transpose(M2);
+  std::cout << "S2=S-M1*M2T\n" << mS2 << std::endl;
+  iret |= compare( mS2(0,1), S(0,1)-1 ); 
+  mS2 += M1*Transpose(M2); 
+  iret |= compare( mS2(0,1), S(0,1) ); 
+ 
+  std::cout << "S2+=M1*M2T\n" << mS2 << std::endl;
+
 
   SMatrix<float,100,100,MatRepSym<float,100> >  mSym; 
   SMatrix<float,100 >  m; 
@@ -449,8 +465,144 @@ int test12() {
   std::cout << " Symmetric matrix size: " << sizeof(mSym2) << std::endl; 
 
 
-  return 0; 
+  return iret; 
 } 
+
+int test13() { 
+  // test of operation with a constant; 
+
+  int iret = 0; 
+
+  int a = 2;
+  float b = 3;
+
+  SVector<double,2> v(1,2); 
+  SVector<double,2> v2= v + a; 
+  iret |= compare( v2[1], v[1]+a ); 
+  SVector<double,2> v3= a + v; 
+  iret |= compare( v3[1], v[1]+a ); 
+  iret |= compare( v3[0], v2[0] ); 
+
+  v2 = v - a; 
+  iret |= compare( v2[1], v[1]-a ); 
+  v3 = a - v; 
+  iret |= compare( v3[1], a - v[1] ); 
+
+  // test now with expression
+  v2 = b*v + a; 
+  iret |= compare( v2[1], b*v[1]+a ); 
+  v3 = a + v*b; 
+  iret |= compare( v3[1], b*v[1]+a ); 
+  v2 = v*b - a; 
+  iret |= compare( v2[1], b*v[1]-a ); 
+  v3 = a - b*v; 
+  iret |= compare( v3[1], a - b*v[1] ); 
+
+  v2 = a * v/b; 
+  iret |= compare( v2[1], a*v[1]/b ); 
+
+  SVector<double,2> p(1,2); 
+  SVector<double,2> q(3,4);
+  v = p+q; 
+  v2 = a*(p+q);
+  iret |= compare( v2[1], a*v[1] ); 
+  v3 = (p+q)*b;
+  iret |= compare( v3[1], b*v[1] ); 
+  v2 = (p+q)/b;
+  iret |= compare( v2[1], v[1]/b ); 
+
+  // now test the matrix (normal)
+
+  SMatrix<double,2,2> m; 
+  m.Place_in_row(p,0,0);
+  m.Place_in_row(q,1,0);
+
+  SMatrix<double,2,2> m2,m3; 
+
+  m2= m + a; 
+  iret |= compare( m2(1,0), m(1,0)+a ); 
+  m3= a + m; 
+  iret |= compare( m3(1,0), m(1,0)+a ); 
+  iret |= compare( m3(0,0), m2(0,0) ); 
+
+  m2 = m - a; 
+  iret |= compare( m2(1,0), m(1,0)-a ); 
+  m3 = a - m; 
+  iret |= compare( m3(1,0), a - m(1,0) ); 
+
+  // test now with expression
+  m2 = b*m + a; 
+  iret |= compare( m2(1,0), b*m(1,0)+a ); 
+  m3 = a + m*b; 
+  iret |= compare( m3(1,0), b*m(1,0)+a ); 
+  m2 = m*b - a; 
+  iret |= compare( m2(1,0), b*m(1,0)-a ); 
+  m3 = a - b*m; 
+  iret |= compare( m3(1,0), a - b*m(1,0) ); 
+
+  m2 = a * m/b; 
+  iret |= compare( m2(1,0), a*m(1,0)/b ); 
+
+  SMatrix<double,2> u = m; 
+  SMatrix<double,2> w; 
+  w(0,0) = 5; w(0,1) = 6; w(1,0)=7; w(1,1) = 8;
+
+  m = u+w; 
+  m2 = a*(u+w);
+  iret |= compare( m2(1,0), a*m(1,0) ); 
+  m3 = (u+w)*b;
+  iret |= compare( m3(1,0), b*m(1,0) ); 
+  m2 = (u+w)/b;
+  iret |= compare( m2(1,0), m(1,0)/b ); 
+  
+
+  // now test the symmetric matrix 
+
+  SMatrix<double,2,2,MatRepSym<double,2> > s; 
+  s(0,0) = 1; s(1,0) = 2; s(1,1) = 3; 
+
+  SMatrix<double,2,2,MatRepSym<double,2> > s2,s3; 
+
+  s2= s + a; 
+  iret |= compare( s2(1,0), s(1,0)+a ); 
+  s3= a + s; 
+  iret |= compare( s3(1,0), s(1,0)+a ); 
+  iret |= compare( s3(0,0), s2(0,0) ); 
+
+  s2 = s - a; 
+  iret |= compare( s2(1,0), s(1,0)-a ); 
+  s3 = a - s; 
+  iret |= compare( s3(1,0), a - s(1,0) ); 
+
+  // test now with expression
+  s2 = b*s + a; 
+  iret |= compare( s2(1,0), b*s(1,0)+a ); 
+  s3 = a + s*b; 
+  iret |= compare( s3(1,0), b*s(1,0)+a ); 
+  s2 = s*b - a; 
+  iret |= compare( s2(1,0), b*s(1,0)-a ); 
+  s3 = a - b*s; 
+  iret |= compare( s3(1,0), a - b*s(1,0) ); 
+
+  s2 = a * s/b; 
+  iret |= compare( s2(1,0), a*s(1,0)/b ); 
+
+  SMatrix<double,2,2,MatRepSym<double,2> > r = s; 
+  SMatrix<double,2,2,MatRepSym<double,2> > t; 
+  t(0,0) = 4; t(0,1) = 5; t(1,1) = 6;
+
+  s = r+t; 
+  s2 = a*(r+t);
+  iret |= compare( s2(1,0), a*s(1,0) ); 
+  s3 = (t+r)*b;
+  iret |= compare( s2(1,0), b*s(1,0) ); 
+  s2 = (r+t)/b;
+  iret |= compare( s2(1,0), s(1,0)/b ); 
+
+
+
+  return iret; 
+}
 
 
 #define TEST(N)                                                                 \
@@ -461,7 +613,7 @@ int test12() {
 
 
 
-int main(void) {
+int main() {
 
   int itest;
   TEST(1);

@@ -51,6 +51,7 @@ void testMad(const M & m1, const M & m2, double & time, M & result) {
   for (int l = 0; l < NLOOP; l++) 	
     {
       result = m1 + m2;  
+      //result = m1; result += m2;  
     }
 }
 
@@ -105,6 +106,7 @@ void testMM(const A & a, const B & b, const C & c, double & time, C & result) {
       result = a * b + c;  
     }
 }
+
 
 
 

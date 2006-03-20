@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.7 2006/03/08 15:11:06 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.8 2006/03/09 09:24:04 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -454,22 +454,22 @@ protected:
 // transpose
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
-inline Expr<TransposeOp<SMatrix<T,D1,D2,R>,T,D1,D2>, T, D2, D1, R>
+inline Expr<TransposeOp<SMatrix<T,D1,D2,R>,T,D1,D2>, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
  Transpose(const SMatrix<T,D1,D2, R>& rhs) {
   typedef TransposeOp<SMatrix<T,D1,D2,R>,T,D1,D2> MatTrOp;
 
-  return Expr<MatTrOp, T, D2, D1, R>(MatTrOp(rhs));
+  return Expr<MatTrOp, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>(MatTrOp(rhs));
 }
 
 //==============================================================================
 // transpose
 //==============================================================================
 template <class A, class T, unsigned int D1, unsigned int D2, class R>
-inline Expr<TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2>, T, D2, D1,R>
+inline Expr<TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2>, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
  Transpose(const Expr<A,T,D1,D2,R>& rhs) {
   typedef TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2> MatTrOp;
 
-  return Expr<MatTrOp, T, D2, D1, R>(MatTrOp(rhs));
+  return Expr<MatTrOp, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>(MatTrOp(rhs));
 }
 
 #ifdef OLD
@@ -614,24 +614,9 @@ inline T Similarity(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
   SMatrix<T,D1,D2, MatRepStd<T,D1,D2> > tmp = lhs * rhs;
-  SMatrix<T,D1,D1, MatRepStd<T,D1,D1> > tmp2 =  tmp * Transpose(lhs); 
   typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
-  typedef  MatRepSym<T,D1>  RSym; 
-  // not very efficient but is OK for now
   SMatrixSym mret; 
-  for(unsigned int i=0; i<D1; ++i) {
-    for(unsigned int j=0; j<=i; ++j) {  
-      mret(i,j) = tmp2(i,j);
-    }
-  }
-// #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
-//   SVector<T,RSym::kSize> vtmp2 = tmp2.UpperBlock(); 
-// #else
-//   // for solaris problem
-//   SVector<T,RSym::kSize> vtmp2 = tmp2.UpperBlock< SVector<T,RSym::kSize> > (); 
-// #endif
-//   SMatrixSym mret(vtmp2); 
-
+  AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  ); 
   return mret; 
 }
 
@@ -643,16 +628,27 @@ inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D2,R>& lh
 template <class A, class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = lhs * rhs;
-  SMatrix<T,D1,D1,MatRepStd<T,D1,D1> > tmp2 =  tmp * Transpose(lhs); 
   typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
   SMatrixSym mret; 
-  // not very efficient but is OK for now
-  for(unsigned int i=0; i<D1; ++i) {
-    for(unsigned int j=i; j<D1; ++j)  
-      mret(i,j) = tmp2(i,j);
-  }
+  AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  ); 
   return mret; 
 }
+
+#ifdef XXX
+    // not needed (
+//==============================================================================
+// product: SMatrix/SMatrix calculate M * A * M where A and M are symmetric matrices
+// return matrix will be nrows M x nrows M
+//==============================================================================
+template <class T, unsigned int D1>
+inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D1,MatRepSym<T,D1> >& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
+  SMatrix<T,D1,D1, MatRepStd<T,D1,D1> > tmp = lhs * rhs;
+  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
+  SMatrixSym mret; 
+  AssignSym::Evaluate(mret,  tmp * lhs  ); 
+  return mret; 
+}
+#endif
 
 
 //==============================================================================
@@ -662,14 +658,9 @@ inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const Expr<A,T,D1,D2,R>& lhs
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
-  SMatrix<T,D2,D2,MatRepStd<T,D2,D2> > tmp2 = Transpose(lhs) * tmp; 
   typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
   SMatrixSym mret; 
-  // not very efficient but is OK for now
-  for(unsigned int i=0; i<D2; ++i) {
-    for(unsigned int j=i; j<D2; ++j)  
-      mret(i,j) = tmp2(i,j);
-  }
+  AssignSym::Evaluate(mret,  Transpose(lhs) * tmp ); 
   return mret; 
 }
 
@@ -681,17 +672,26 @@ inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const SMatrix<T,D1,D2,R>& l
 template <class A, class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
-  SMatrix<T,D2,D2,MatRepStd<T,D2,D2> > tmp2 = Transpose(lhs) * tmp; 
   typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
   SMatrixSym mret; 
-  // not very efficient but is OK for now
-  for(unsigned int i=0; i<D2; ++i) {
-    for(unsigned int j=i; j<D2; ++j)  
-      mret(i,j) = tmp2(i,j);
-  }
+  AssignSym::Evaluate(mret,  Transpose(lhs) * tmp ); 
   return mret; 
 }
 
+
+
+
+
+// //==============================================================================
+// // Mult * (Expr * Expr, binary) with a symmetric result
+// // the operation is done only for half
+// //==============================================================================
+// template <class A, class B, class T, unsigned int D1, unsigned int D, unsigned int D2, class R1, class R2>
+// inline Expr<MatrixMulOp<Expr<A,T,D,D,MatRepSym<T,D> >, Expr<B,T,D,D2,R2>,T,D>, T, D1, D2, typename MultPolicy<T,R1,R2>::RepType>
+//  operator*(const Expr<A,T,D1,D,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
+//   typedef MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>, T,D> MatMulOp;
+//   return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
+// }
 
 
 

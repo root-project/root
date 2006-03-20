@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.14 2006/03/08 15:11:06 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.15 2006/03/09 09:24:04 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -80,6 +80,14 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>::SMatrix(const SMatrix<T,D1,D2,R>& rhs) {
     fRep = rhs.fRep;
 }
+
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+template <class R2>
+SMatrix<T,D1,D2,R>::SMatrix(const SMatrix<T,D1,D2,R2>& rhs) {
+  operator=(rhs);
+}
+
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
@@ -215,7 +223,7 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const Expr<A,T,D1,D2,R2>&  rhs) {
 
-  Assign<T,D1,D2,A,R,R2>::evaluate(*this, rhs);
+  Assign<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
   return *this;
 }
 
@@ -248,7 +256,7 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator+=(const M&  rhs) {
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator+=(const Expr<A,T,D1,D2,R2>&  rhs) {
-  PlusEquals<T,D1,D2,A,R,R2>::evaluate(*this, rhs);
+  PlusEquals<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
   return *this;
 }
 
@@ -266,7 +274,7 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator-=(const M&  rhs) {
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class A, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator-=(const Expr<A,T,D1,D2,R2>&  rhs) {
-  MinusEquals<T,D1,D2,A,R,R2>::evaluate(*this, rhs);
+  MinusEquals<T,D1,D2,A,R,R2>::Evaluate(*this, rhs);
   return *this;
 }
 

@@ -242,35 +242,30 @@ int test_smatrix_sym_kalman() {
       test::Timer t("SMatrix Kalman ");
 
       MnVectorM x; 
-      MnMatrixMN tmp;   
-      MnMatrixNN Rinv; 
-      //MnSymMatrixNN RinvSym; 
+      MnSymMatrixNN RinvSym; 
       MnMatrixMN K; 
-      // C has to be non -symmetric due to missing similarity product
-      MnMatrixMM C; 
+      MnSymMatrixMM C; 
+      MnSymMatrixMM Ctmp; 
       MnVectorN vtmp1; 
       MnVectorN vtmp; 
       MnVectorN2 vtmp2; 
+#define OPTIMIZED_SMATRIX_SYM
+#ifdef OPTIMIZED_SMATRIX_SYM
+      MnMatrixMN tmp;   
+#endif
 
       for (int l = 0; l < NLOOP; l++) 	
 	{
 
 
-
+#ifdef OPTIMIZED_SMATRIX_SYM
 	  vtmp1 = H*xp -m;
 	  //x = xp + K0 * (m- H * xp);
 	  x = xp - K0 * vtmp1;
 	  tmp = Cp * Transpose(H);
-	  Rinv = V;  Rinv +=  H * tmp;
-	  // note that similarity op on symmetric matrices is not yet implemented
-#ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
-	  vtmp2 = Rinv.UpperBlock(); 
-#else
-	  // for solaris problem
-	  vtmp2 = Rinv.UpperBlock< MnVectorN2 >(); 
-#endif
-
-	  MnSymMatrixNN RinvSym(vtmp2); 
+	  // we are sure that H*tmp result is symmetric 
+	  AssignSym::Evaluate(RinvSym,H*tmp); 
+	  RinvSym += V; 
 
 	  bool test = RinvSym.Invert();
  	  if(!test) { 
@@ -279,11 +274,30 @@ int test_smatrix_sym_kalman() {
 	  }
 
 	  K =  tmp * RinvSym ; 
-	  C = Cp;  C -= K * Transpose(tmp);
+	  // we profit from the fact that result of K*tmpT is symmetric
+	  AssignSym::Evaluate(Ctmp, K*Transpose(tmp) ); 
+	  C = Cp; C -= Ctmp;
 	  //C = ( I - K * H ) * Cp;
 	  //x2 = Product(Rinv,m-H*xp);  // this does not compile on WIN32
  	  vtmp = m-H*xp; 
  	  x2 = Dot(vtmp, RinvSym*vtmp);
+#else 
+	  // use similarity function
+	  vtmp1 = H*xp -m;
+	  x = xp - K0 * vtmp1;
+ 	  RinvSym = V;  RinvSym +=  Similarity(H,Cp);
+
+	  bool test = RinvSym.Invert();
+ 	  if(!test) { 
+ 	    std::cout<<"inversion failed" <<std::endl;
+	    std::cout << RinvSym << std::endl;
+	  }
+	  
+	  Ctmp = SimilarityT(H, RinvSym); 
+	  C = Cp; C -= Similarity(Cp, Ctmp);
+ 	  vtmp = m-H*xp; 
+ 	  x2 = Similarity(vtmp, RinvSym);
+#endif
 
 	}
 	//std::cout << k << " chi2 = " << x2 << std::endl;
@@ -376,8 +390,8 @@ int test_tmatrix_kalman() {
       TMatrixD Ctmp(second,second);
       TVectorD tmp1(first);
       TMatrixD tmp2(second,first);
-#define OPTIMIZED
-#ifndef OPTIMIZED
+#define OPTIMIZED_TMATRIX
+#ifndef OPTIMIZED_TMATRIX
       TMatrixD HT(second,first);
       TMatrixD tmp2T(first,second);
 #endif
@@ -385,7 +399,7 @@ int test_tmatrix_kalman() {
       test::Timer t("TMatrix Kalman ");
       for (Int_t l = 0; l < NLOOP; l++)
       {
-#ifdef OPTIMIZED
+#ifdef OPTIMIZED_TMATRIX
         tmp1 = m; Add(tmp1,-1.0,H,xp);
         x = xp; Add(x,+1.0,K0,tmp1);
 	tmp2.AMultBt(Cp,H,0);

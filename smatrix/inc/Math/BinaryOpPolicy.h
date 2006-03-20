@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOpPolicy.h,v 1.2 2006/02/08 15:29:24 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOpPolicy.h,v 1.3 2006/02/28 15:54:33 moneta Exp $
 // Authors: J. Palacios    2006  
 #ifndef ROOT_Math_BinaryOpPolicy_h 
 #define ROOT_Math_BinaryOpPolicy_h 1
@@ -51,6 +51,21 @@ namespace ROOT {
       typedef  MatRepSym<T,D1> RepType;
     };
 
+    template <class T, unsigned int D1, unsigned int D2, class R>
+    struct TranspPolicy
+    {
+      enum { 
+	N1 = R::kRows,
+	N2 = R::kCols
+      };
+      typedef MatRepStd<T, N2, N1> RepType;
+    };
+    // specialized case of transpose of sym matrices
+    template <class T, unsigned int D1, unsigned int D2>
+    struct TranspPolicy<T, D1, D2, MatRepSym<T,D1> > 
+    {
+      typedef MatRepSym<T, D1> RepType;
+    };
   }  // namespace Math
   
 }  // namespace ROOT
