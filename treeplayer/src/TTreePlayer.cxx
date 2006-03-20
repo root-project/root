@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.205 2005/11/24 23:30:06 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.206 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2800,7 +2800,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
 //*-*- Compile selection expression if there is one
    TTreeFormula        *select  = 0;
-   if (strlen(selection)) {
+   if (selection && strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return -1;
       if (!select->GetNdim()) { delete select; return -1; }
