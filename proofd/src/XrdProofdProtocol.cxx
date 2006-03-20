@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.5 2006/03/01 15:46:12 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.6 2006/03/16 16:41:59 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -117,7 +117,7 @@ XrdProofdProtocol::fgProtStack("ProtStack", "xproofd protocol anchor");
 #define TRACELINK lp
 #define TRACEID gTraceID
 #ifndef SafeDelete
-#define SafeDelete(x) { if (x) delete x; x = 0; }
+#define SafeDelete(x) { if (x) { delete x; x = 0; } }
 #endif
 #define INRANGE(x,y) ((x >= 0) && (x < (int)y.size()))
 

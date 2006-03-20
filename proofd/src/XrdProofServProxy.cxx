@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.3 2006/03/01 15:46:12 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -23,8 +23,9 @@
 extern XrdOucTrace *XrdProofdTrace;
 static const char *TraceID = " ";
 #define TRACEID TraceID
-
-#define SafeDelete(x) { if (x) delete x; x = 0; }
+#ifndef SafeDelete
+#define SafeDelete(x) { if (x) { delete x; x = 0; } }
+#endif
 
 //__________________________________________________________________________
 XrdProofServProxy::XrdProofServProxy()

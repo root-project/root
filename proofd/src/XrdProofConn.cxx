@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.4 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.5 2006/03/16 09:08:08 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -66,7 +66,9 @@ typedef XrdSecProtocol *(*XrdSecGetProt_t)(const char *, const struct sockaddr &
 
 XrdClientConnectionMgr *XrdProofConn::fgConnMgr = 0;
 
+#ifndef SafeDelete
 #define SafeDelete(x) { if (x) { delete x; x = 0; } }
+#endif
 #define URLTAG "["<<fUrl.Host<<":"<<fUrl.Port<<"]"
 
 //_____________________________________________________________________________
