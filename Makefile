@@ -256,6 +256,9 @@ ROOTULIBS    := -include:_G__cpp_setupG__Hist    \
                 -include:_G__cpp_setupG__Matrix
 endif
 
+# Compiler output option
+CXXOUT ?= -o # keep whitespace after "-o"
+
 ##### gcc version #####
 
 ifneq ($(findstring gnu,$(COMPILER)),)
@@ -273,7 +276,7 @@ ifeq ($(PCHSUPPORTED),yes)
   PCHFILE      = include/precompile.h.gch
   PCHCXXFLAGS  = -DUSEPCH -include precompile.h
   PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGSNOPCH) -DUSEPCH $(OPT) -x c++-header \
-                        -c include/precompile.h -o $(PCHFILE) \
+                        -c include/precompile.h $(CXXOUT)$(PCHFILE) \
                      && touch $(PCHEXTRAOBJ)
 endif
 endif
@@ -306,7 +309,7 @@ endif
 ##### Utilities #####
 
 ROOTCINTTMP   = $(ROOTCINTTMPEXE) $(addprefix -,$(ROOTDICTTYPE))
-MAKEDEP       = build/unix/depend.sh
+MAKEDEP       = $(RMKDEP)
 MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      = build/unix/makedist.sh
 MAKEDISTSRC   = build/unix/makedistsrc.sh
@@ -376,26 +379,26 @@ INCLUDEFILES :=
 
 # special rules (need to be defined before generic ones)
 G__%.o: G__%.cxx 
-	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+	$(CXX) $(NOOPT) $(CXXFLAGSNOPCH) -I. $(CXXOUT)$@ -c $<
 
 cint/src/%.o: cint/src/%.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
 
 cint/src/%.o: cint/src/%.c
-	$(CC) $(OPT) $(CINTCFLAGS) -o $@ -c $<
+	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.cxx $(ORDER_) $(PCHEXTRAOBJ) $(PCHFILE)
-	$(CXX) $(OPT) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.c
-	$(CC) $(OPT) $(CFLAGS) -o $@ -c $<
+	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.f
 ifeq ($(F77),f2c)
 	f2c -a -A $<
-	$(CC) $(F77OPT) $(CFLAGS) -o $@ -c $*.c
+	$(CC) $(F77OPT) $(CFLAGS) $(CXXOUT)$@ -c $*.c
 else
-	$(F77) $(F77OPT) $(F77FLAGS) -o $@ -c $<
+	$(F77) $(F77OPT) $(F77FLAGS) $(CXXOUT)$@ -c $<
 endif
 
 
@@ -488,14 +491,13 @@ build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	fi)
 
 %.d: %.c $(RMKDEP)
-	$(MAKEDEP) $@ "$(CFLAGS)" $< > $@
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CFLAGS) -- $<
 
 G__%.d: G__%.cxx $(RMKDEP)
-	$(MAKEDEP) $@ "$(CXXFLAGSNOPCH) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl" \
-	   $< > $@
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
 
 %.d: %.cxx $(RMKDEP)
-	$(MAKEDEP) $@ "$(CXXFLAGSNOPCH)" $< > $@
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -- $<
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)

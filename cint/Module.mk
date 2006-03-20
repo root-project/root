@@ -271,44 +271,44 @@ distclean::     distclean-cint
 
 ##### extra rules ######
 $(CINTDIRS)/libstrm.o: $(CINTDIRS)/libstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/stream -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/stream $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/vcstrm.o: $(CINTDIRS)/vcstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vcstream -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vcstream $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/vc7strm.o: $(CINTDIRS)/vc7strm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vc7strm -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vc7strm $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/sunstrm.o: $(CINTDIRS)/sunstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/sun5strm.o: $(CINTDIRS)/sun5strm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/gcc3strm.o: $(CINTDIRS)/gcc3strm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/gcc3strm -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/gcc3strm $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/iccstrm.o: $(CINTDIRS)/iccstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/iccstrm -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/iccstrm $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/accstrm.o: $(CINTDIRS)/accstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/accstrm -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/accstrm $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/v6_stdstrct.o: $(CINTDIRS)/v6_stdstrct.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/stdstrct $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/v6_loadfile_tmp.o: $(CINTDIRS)/v6_loadfile.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -UHAVE_CONFIG -DROOTBUILD $(CXXOUT)$@ -c $<
 
 $(CINTDIRT)/makecint.o: $(CINTDIRT)/makecint.c
-	$(CC) $(OPT) $(CINTCFLAGS) -o $@ -c $<
+	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
 $(CINTDIRT)/makecint_tmp.o: $(CINTDIRT)/makecint.c
-	$(CC) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD -o $@ -c $<
+	$(CC) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD $(CXXOUT)$@ -c $<
 
 $(CINTDIRS)/v6_loadfile_tmp.d: $(CINTDIRS)/v6_loadfile.cxx $(RMKDEP)
 	@cp $(CINTDIRS)/v6_loadfile.cxx $(CINTDIRS)/v6_loadfile_tmp.cxx
-	$(MAKEDEP) $@ "$(CXXFLAGSNOPCH)" $(CINTDIRS)/v6_loadfile_tmp.cxx > $@
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -- $(CINTDIRS)/v6_loadfile_tmp.cxx
 	@rm -f $(CINTDIRS)/v6_loadfile_tmp.cxx
 
 ##### cintdlls ######

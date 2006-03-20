@@ -150,9 +150,7 @@ extern int find_includes(struct filepointer *filep, struct inclist *file,
 extern void recursive_pr_include(struct inclist *head, char *file, char *base);
 extern void inc_clean();
 
-
-
-int main(argc, argv)
+int main_orig(argc, argv)
 	int	argc;
 	char	**argv;
 {
@@ -480,9 +478,12 @@ int main(argc, argv)
 		recursive_pr_include(ip, ip->i_file, base_name(*fp));
 		inc_clean();
 	}
-	if (printed)
-		printf("\n");
-	exit(0);
+        if (!rootBuild) {
+	   if (printed)
+		   printf("\n");
+	   exit(0);
+        }
+        return 0;
 }
 
 #ifdef __EMX__
@@ -701,43 +702,47 @@ redirect(line, makefile)
 	}
 	else
 	    stat(makefile, &st);
-	if ((fdin = fopen(makefile, "r")) == NULL)
-		fatalerr("cannot open \"%s\"\n", makefile);
-	sprintf(backup, "%s.bak", makefile);
-	unlink(backup);
+        if (!rootBuild) {
+	   if ((fdin = fopen(makefile, "r")) == NULL)
+		   fatalerr("cannot open \"%s\"\n", makefile);
+	   sprintf(backup, "%s.bak", makefile);
+	   unlink(backup);
 #if defined(WIN32) || defined(__EMX__)
-	fclose(fdin);
+   	   fclose(fdin);
 #endif
-	if (rename(makefile, backup) < 0)
+	   if (rename(makefile, backup) < 0)
 		fatalerr("cannot rename %s to %s\n", makefile, backup);
 #if defined(WIN32) || defined(__EMX__)
-	if ((fdin = fopen(backup, "r")) == NULL)
+	   if ((fdin = fopen(backup, "r")) == NULL)
 		fatalerr("cannot open \"%s\"\n", backup);
 #endif
+        }
 	if ((fdout = freopen(makefile, "w", stdout)) == NULL)
 		fatalerr("cannot open \"%s\"\n", backup);
-	len = strlen(line);
-	while (!found && fgets(buf, BUFSIZ, fdin)) {
-		if (*buf == '#' && strncmp(line, buf, len) == 0)
-			found = TRUE;
-		fputs(buf, fdout);
-	}
-	if (!found) {
-		if (verbose)
-		warning("Adding new delimiting line \"%s\" and dependencies...\n",
-			line);
-		puts(line); /* same as fputs(fdout); but with newline */
-	} else if (append) {
-	    while (fgets(buf, BUFSIZ, fdin)) {
-		fputs(buf, fdout);
-	    }
-	}
-	fflush(fdout);
+        if (!rootBuild) {
+	   len = strlen(line);
+	   while (!found && fgets(buf, BUFSIZ, fdin)) {
+		   if (*buf == '#' && strncmp(line, buf, len) == 0)
+			   found = TRUE;
+		   fputs(buf, fdout);
+	   }
+	   if (!found) {
+		   if (verbose)
+		   warning("Adding new delimiting line \"%s\" and dependencies...\n",
+			   line);
+		   puts(line); /* same as fputs(fdout); but with newline */
+	   } else if (append) {
+	       while (fgets(buf, BUFSIZ, fdin)) {
+		   fputs(buf, fdout);
+	       }
+	   }
+	   fflush(fdout);
 #if defined(USGISH) || defined(_SEQUENT_) || defined(USE_CHMOD)
-	chmod(makefile, st.st_mode);
+	   chmod(makefile, st.st_mode);
 #else
-        fchmod(fileno(fdout), st.st_mode);
+           fchmod(fileno(fdout), st.st_mode);
 #endif /* USGISH */
+        }
 }
 
 void fatalerr(char *msg, ...)
@@ -752,17 +757,21 @@ void fatalerr(char *msg, ...)
 
 void warning(char *msg, ...)
 {
+   if (!rootBuild) {
 	va_list args;
 	fprintf(stderr, "%s: warning:  ", ProgramName);
 	va_start(args, msg);
 	vfprintf(stderr, msg, args);
 	va_end(args);
+   }
 }
 
 void warning1(char *msg, ...)
 {
+   if (!rootBuild) {
 	va_list args;
 	va_start(args, msg);
 	vfprintf(stderr, msg, args);
 	va_end(args);
+   }
 }

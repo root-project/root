@@ -166,7 +166,7 @@ lib/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $@ $@ $< $(RFLX_REFLEXLL)
 
 %_rflx.o : %_rflx.cpp $(PCHDEP)
-		$(CXX) $(OPT) $(CXXFLAGS) -c $< -o $@
+		$(CXX) $(OPT) $(CXXFLAGS) -c $< $(CXXOUT)$@
 
 $(RFLX_TESTLIBS1) : $(REFLEXDIRI)/Reflex/Reflex.h $(RFLX_TESTLIBD1)/selection.xml
 		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) ../../include/Reflex/Reflex.h -s testDict1/selection.xml -I../../include
@@ -175,7 +175,7 @@ $(RFLX_TESTLIBS2) : $(RFLX_TESTLIBD2)/Class2Dict.h $(RFLX_TESTLIBD2)/selection.x
 		cd $(RFLX_TESTD); $(RFLX_GENREFLEX_CMD) testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include
 
 $(RFLX_UNITTESTO) : $(RFLX_TESTD)/test_Reflex%.o : $(RFLX_TESTD)/test_Reflex%.cxx $(PCHDEP)
-		$(CXX) $(OPT) $(CXXFLAGS) $(RFLX_CPPUNITI:%=-I%) -Ireflex -c $< -o $@
+		$(CXX) $(OPT) $(CXXFLAGS) $(RFLX_CPPUNITI:%=-I%) -Ireflex -c $< $(CXXOUT)$@
 
 $(RFLX_UNITTESTX) : $(RFLX_TESTD)/test_Reflex% : $(RFLX_TESTD)/test_Reflex%.o
 		$(LD) $(LDFLAGS) -o $@ $< $(RFLX_CPPUNITLL) $(RFLX_REFLEXLL)

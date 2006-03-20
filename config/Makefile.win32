@@ -64,10 +64,11 @@ endif
 NOOPT         =
 
 # Compiler:
-CXX           = build/win/cxx.sh
-CC            = build/win/cc.sh
+CXX           = cl
+CC            = cl
 CXXFLAGS      = -nologo -FIw32pragma.h \
                 $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS)
+CXXOUT        = -Fo
 CFLAGS        = -nologo -Ibuild/win -FIw32pragma.h -FIsehmap.h \
                 $(BLDCFLAGS) $(EXTRA_CFLAGS)
 CINTCXXFLAGS := $(CXXFLAGS)

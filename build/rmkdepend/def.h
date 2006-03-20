@@ -147,3 +147,5 @@ void			undefine_all(struct inclist *);
 extern void fatalerr(char *, ...);
 extern void warning(char *, ...);
 extern void warning1(char *, ...);
+
+extern int rootBuild;

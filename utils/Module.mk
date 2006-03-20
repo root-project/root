@@ -60,4 +60,4 @@ distclean::     distclean-utils
 
 ##### extra rules ######
 $(UTILSDIRS)%_tmp.o: $(UTILSDIRS)%.cxx
-	$(CXX) $(OPT) $(CXXFLAGSNOPCH) -UHAVE_CONFIG -DROOTBUILD -c $< -o $@
+	$(CXX) $(OPT) $(CXXFLAGSNOPCH) -UHAVE_CONFIG -DROOTBUILD -c $< $(CXXOUT)$@

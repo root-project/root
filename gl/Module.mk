@@ -73,7 +73,7 @@ $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPEXE)
 		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
 
 ifeq ($(ARCH),win32)
-		   $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) -o $@ -c $<
+		   $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(CXXOUT)$@ -c $<
 else
 endif
 
@@ -95,10 +95,11 @@ distclean-gl:   clean-gl
 distclean::     distclean-gl
 
 ##### extra rules ######
-$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
 ifeq ($(ARCH),win32)
-$(GLO) $(GLDO): CXXFLAGS += -I$(WIN32GDKDIR)/gdk/src 
-$(GLO) $(GLDO): CXXFLAGS += $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
+                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+else
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
 endif
 
 $(GLDIRS)/gl2ps.o: CFLAGS += $(OPENGLINCDIR:%=-I%)

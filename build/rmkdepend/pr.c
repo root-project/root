@@ -43,6 +43,8 @@ extern int find_includes(struct filepointer *filep, struct inclist *file,
                          boolean failOK);
 extern void freefile(struct filepointer *fp);
 
+extern void ROOT_adddep(char* buf, size_t len);
+extern void ROOT_newFile();
 
 void
 add_include(filep, file, file_red, include, dot, failOK)
@@ -97,6 +99,8 @@ pr(ip, file, base)
 	len = strlen(ip->i_file)+1;
 	if (current_len + len > width || file != lastfile) {
 		lastfile = file;
+                if (rootBuild)
+                   ROOT_newFile();
 		sprintf(buf, "\n%s%s%s: %s", objprefix, base, objsuffix,
 			ip->i_file);
 		len = current_len = strlen(buf);
@@ -106,7 +110,10 @@ pr(ip, file, base)
 		strcpy(buf+1, ip->i_file);
 		current_len += len;
 	}
-	fwrite(buf, len, 1, stdout);
+        if (rootBuild)
+           ROOT_adddep(buf, len);
+        else
+	   fwrite(buf, len, 1, stdout);
 
 	/*
 	 * If verbose is set, then print out what this file includes.
