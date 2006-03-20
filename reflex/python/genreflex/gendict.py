@@ -1236,6 +1236,32 @@ class genDictionary(object) :
     s += '}\n'
     return s
 #----Constructor/Destructor stuff--------------------------------------------------------
+  def checkOperators(self,cid):
+    opnewc = 0
+    plopnewc = 0
+    opnewa = 0
+    plopnewa = 0
+    attrs = self.xref[cid]['attrs']
+    for m in attrs.get('members').split():
+      mm = self.xref[m]
+      if mm['elem'] == 'OperatorMethod':
+        opname = mm['attrs'].get('name')
+        # we assume that 'subelems' only contains Arguments
+        sems = mm['subelems']
+        if opname == 'new':
+          if len(sems) == 1 and self.genTypeName(sems[0]['type']) in ('size_t',): opnewc = 1
+          if len(sems) == 2 and self.genTypeName(sems[0]['type']) in ('size_t',) and self.genTypeName(sems[1]['type']) in ('void*',): plopnewc = 1
+        if opname == 'new []':
+          if len(sems) == 1 and self.genTypeName(sems[0]['type']) in ('size_t',): opnewa = 1
+          if len(sems) == 2 and self.genTypeName(sems[0]['type']) in ('size_t',) and self.genTypeName(sems[1]['type']) in ('void*',): plopnewa = 1
+    newc = ''
+    newa = ''
+    if opnewc and not plopnewc: newc = '_np'
+    elif not opnewc and plopnewc : newc = '_p'
+    if opnewa and not plopnewa: newa = '_np'
+    elif not opnewa and plopnewa : newa = '_p'
+    return (newc, newa)
+#----Constructor/Destructor stuff--------------------------------------------------------
   def genGetNewDelFunctionsDecl( self, attrs, args ) :
     return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genGetNewDelFunctionsBuild( self, attrs, args ) :
@@ -1245,10 +1271,11 @@ class genDictionary(object) :
     cid      = attrs['context']
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
+    (newc, newa) = self.checkOperators(cid)
     s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'] )
     s += '  static NewDelFunctions s_funcs;\n'
-    s += '  s_funcs.fNew         = NewDelFunctionsT< %s >::new_T;\n' % cl
-    s += '  s_funcs.fNewArray    = NewDelFunctionsT< %s >::newArray_T;\n' % cl
+    s += '  s_funcs.fNew         = NewDelFunctionsT< %s >::new%s_T;\n' % (cl, newc)
+    s += '  s_funcs.fNewArray    = NewDelFunctionsT< %s >::newArray%s_T;\n' % (cl, newa)
     s += '  s_funcs.fDelete      = NewDelFunctionsT< %s >::delete_T;\n' % cl
     s += '  s_funcs.fDeleteArray = NewDelFunctionsT< %s >::deleteArray_T;\n' % cl
     s += '  s_funcs.fDestructor  = NewDelFunctionsT< %s >::destruct_T;\n' % cl

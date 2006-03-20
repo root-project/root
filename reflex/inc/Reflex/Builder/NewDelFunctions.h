@@ -1,4 +1,4 @@
-// $Id: NewDelFunctions.h,v 1.4 2006/02/09 20:36:54 pcanal Exp $
+// $Id: NewDelFunctions.h,v 1.5 2006/03/13 15:49:50 roiser Exp $
 
 #ifndef ROOT_Reflex_NewDelFunctions
 #define ROOT_Reflex_NewFelFunctions
@@ -26,8 +26,12 @@ namespace ROOT {
       };
     
       template <class T>  struct NewDelFunctionsT : public NewDelFunctions {
-         static void* new_T(void* p) { return  p ? new(p) T : new T; }
-         static void* newArray_T(size_t size, void *arena) { return arena ? new (arena) T[size] : new T[size]; }
+         static void* new_T(void* p) { return p ? new(p) T : new T; }
+         static void* new_p_T(void* p) { return p ? new(p) T : ::new T; }
+         static void* new_np_T(void* p) { return p ? ::new(p) T : new T; }
+         static void* newArray_T(size_t size, void* p) { return p ? new (p) T[size] : new T[size]; }
+         static void* newArray_p_T(size_t size, void* p) { return p ? new (p) T[size] : ::new T[size]; }
+         static void* newArray_np_T(size_t size, void* p) { return p ? ::new (p) T[size] : new T[size]; }
          static void  delete_T(void *p) { delete (T*)p; }
          static void  deleteArray_T(void* p) { delete [] (T*)p; }
          static void  destruct_T(void* p) { ((T*)p)->~T(); }
