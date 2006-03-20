@@ -440,6 +440,12 @@ Int_t TFitterMinuit::GetParameter(Int_t ipar,char *name,Double_t &value,Double_t
   return 0;
 }
 
+const char *TFitterMinuit::GetParName(Int_t ipar) const {
+//   return name of parameter ipar
+  const MinuitParameter& mp = State().Parameter(ipar);
+  return mp.Name();
+}
+
 Int_t TFitterMinuit::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const {
 //   std::cout<<"GetStats"<<std::endl;
   amin = State().Fval();

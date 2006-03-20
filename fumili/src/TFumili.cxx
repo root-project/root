@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.28 2005/11/26 15:03:06 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.29 2005/11/26 15:25:38 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -860,6 +860,15 @@ Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &ver
   vlow  = fAMN[ipar];
   vhigh = fAMX[ipar];
   return 0;
+}
+
+//______________________________________________________________________________
+const char *TFumili::GetParName(Int_t ipar) const
+{
+   // return name of parameter ipar
+   
+   if (ipar < 0 || ipar > fNpar) return "";
+   return fANames[ipar].Data();
 }
 
 //______________________________________________________________________________

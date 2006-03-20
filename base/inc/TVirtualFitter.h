@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.14 2005/11/29 14:43:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.15 2005/11/29 19:02:58 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
    virtual Double_t  GetParError(Int_t ipar) const = 0;
    virtual Double_t  GetParameter(Int_t ipar) const = 0;
    virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const  = 0;
+   virtual const char *GetParName(Int_t ipar) const = 0;
    virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const  = 0;
    virtual Double_t  GetSumLog(Int_t i) = 0;
    virtual TObject  *GetUserFunc() const {return fUserFunc;}

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.19 2005/12/19 17:40:36 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.20 2005/12/20 15:09:17 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -1056,6 +1056,20 @@ Double_t TLinearFitter::GetParError(Int_t ipar) const
    }
 
    return TMath::Sqrt(fParCovar(ipar, ipar));
+}
+
+
+//______________________________________________________________________________
+const char *TLinearFitter::GetParName(Int_t ipar) const
+{
+//Returns name of parameter #ipar
+
+   if (ipar<0 || ipar>fNfunctions) {
+      Error("GetParError", "illegal value of parameter");
+      return 0;
+   }
+
+   return "";
 }
 
 //______________________________________________________________________________

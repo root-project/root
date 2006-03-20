@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.3 2005/12/01 10:26:05 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.4 2005/12/09 09:49:00 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -67,6 +67,7 @@ public:
    virtual Double_t  GetParError(Int_t ipar) const;
    virtual Double_t  GetParameter(Int_t ipar) const;
    virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
+   virtual const char *GetParName(Int_t ipar) const;
    virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
    virtual Double_t  GetSumLog(Int_t i);
 

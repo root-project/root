@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.7 2004/10/22 21:18:23 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.8 2005/11/26 15:03:06 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /////////////////////////////////////////////////////////////////////////
@@ -107,6 +107,7 @@ public:
   virtual Double_t GetParError(Int_t ipar) const;
   virtual Double_t GetParameter(Int_t ipar) const ;
   virtual Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
+  virtual const char *GetParName(Int_t ipar) const;
   virtual Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
   virtual Double_t GetSumLog(Int_t );
   Double_t*        GetZ() const { return fZ;}

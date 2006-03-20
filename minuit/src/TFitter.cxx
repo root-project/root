@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.38 2005/11/29 14:43:59 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.39 2005/11/29 19:02:58 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -412,6 +412,15 @@ Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &
    fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
    strcpy(parname,pname.Data());
    return ierr;
+}
+
+//______________________________________________________________________________
+const char *TFitter::GetParName(Int_t ipar) const
+{
+   // return name of parameter ipar
+   
+   if (!fMinuit || ipar < 0 || ipar > fMinuit->fNu) return "";
+   return fMinuit->fCpnam[ipar];
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.8 2005/11/29 19:02:58 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.9 2005/12/19 17:40:36 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -242,6 +242,7 @@ public:
    virtual Int_t      GetNumberFreeParameters() const {return fNfunctions-fNfixed;}
    virtual void       GetParameters(TVectorD &vpar);
    virtual Double_t   GetParameter(Int_t ipar) const {return fParams(ipar);}
+   virtual const char *GetParName(Int_t ipar) const;
    virtual Double_t   GetParError(Int_t ipar) const;
    virtual Double_t   GetParTValue(Int_t ipar);
    virtual Double_t   GetParSignificance(Int_t ipar);
