@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.3 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.4 2005/09/24 11:33:41 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -170,8 +170,8 @@ TQueryResult *TQueryResult::CloneInfo()
 void TQueryResult::SaveSelector(const char *selector)
 {
    // Save the selector header and implementation into the dedicated
-   // TMacro instances. The header is serached for in the same directory
-   // as the implementation file.
+   // TMacro instances. The header is searched for in the same directory
+   // of the implementation file.
 
    if (!selector)
       return;
@@ -187,43 +187,55 @@ void TQueryResult::SaveSelector(const char *selector)
    if (aclicMode.Length() > 0)
       fOptions += Form("#%s", aclicMode.Data());
 
-   // Selector name
+   // If the selector is in a precompiled shared lib (e.g. in a PAR)
+   // we just save the name
    TString selname = gSystem->BaseName(selec);
    Int_t idx = selname.Index(".");
-   if (idx > -1)
-      selname.Remove(idx);
-
-   // Locate the implementation file
-   char *selc = gSystem->Which(TROOT::GetMacroPath(), selec, kReadPermission);
-   if (!selc) {
-      Warning("SaveSelector",
-              "could not locate selector implementation file (%s)", selec.Data());
-      return;
-   }
-
-   // Fill the TMacro instance
-   fSelecImp->ReadFile(selc);
-   fSelecImp->SetName(gSystem->BaseName(selc));
-   fSelecImp->SetTitle(selname);
-
-   // Locate the included header file
-   char *p = (char *) strrchr(selc,'.');
-   if (p) {
-      strcpy(p+1,"h");
-   } else {
-      Warning("SaveSelector",
-              "bad formatted name (%s): could not build header file name", selc);
-   }
-   if (!(gSystem->AccessPathName(selc, kReadPermission))) {
-      fSelecHdr->ReadFile(selc);
-      fSelecHdr->SetName(gSystem->BaseName(selc));
+   if (idx < 0) {
+      // Notify
+      if (gDebug > 0)
+         Info("SaveSelector", "precompiled selector: just save the name");
+      fSelecImp->SetName(selname);
+      fSelecImp->SetTitle(selname);
+      fSelecHdr->SetName(selname);
       fSelecHdr->SetTitle(selname);
    } else {
-      Warning("SaveSelector",
-              "could not locate selector header file (%s)", selc);
-   }
+      // We locate the file and save it in compressed form
+      if (idx > -1)
+         selname.Remove(idx);
 
-   delete[] selc;
+      // Locate the implementation file
+      char *selc = gSystem->Which(TROOT::GetMacroPath(), selec, kReadPermission);
+      if (!selc) {
+         Warning("SaveSelector",
+                 "could not locate selector implementation file (%s)", selec.Data());
+         return;
+      }
+
+      // Fill the TMacro instance
+      fSelecImp->ReadFile(selc);
+      fSelecImp->SetName(gSystem->BaseName(selc));
+      fSelecImp->SetTitle(selname);
+
+      // Locate the included header file
+      char *p = (char *) strrchr(selc,'.');
+      if (p) {
+         strcpy(p+1,"h");
+      } else {
+         Warning("SaveSelector",
+                 "bad formatted name (%s): could not build header file name", selc);
+      }
+      if (!(gSystem->AccessPathName(selc, kReadPermission))) {
+         fSelecHdr->ReadFile(selc);
+         fSelecHdr->SetName(gSystem->BaseName(selc));
+         fSelecHdr->SetTitle(selname);
+      } else {
+         Warning("SaveSelector",
+                 "could not locate selector header file (%s)", selc);
+      }
+
+      delete[] selc;
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.71 2005/11/02 15:35:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.72 2005/11/11 13:54:20 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -260,6 +260,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
    // Reinitialize fSelector using the selector files in the query result.
    // Needed when Finalize is called after a Process execution for the same
    // selector name
+   Int_t rc = 0;
 
    // Make sure we have a query
    if (!qr) {
@@ -277,9 +278,13 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
    // Find out if this is a standard selection used for Draw actions
    Bool_t stdselec = TSelector::IsStandardDraw(selec);
 
+   // Find out if this is a precompiled selector: in such a case we do not
+   // have the code in TMacros, so we must rely on local libraries
+   Bool_t compselec = (selec.Contains(".") || stdselec) ? kFALSE : kTRUE;
+
    // If not, find out if it needs to be expanded
    TString ipathold;
-   if (!stdselec) {
+   if (!stdselec && !compselec) {
       // Check checksums for the versions of the selector files
       Bool_t expandselec = kTRUE;
       TString dir, ipath;
@@ -356,7 +361,14 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
    fSelectorClass = 0;
 
    // Init the selector now
+   Int_t iglevelsave = gErrorIgnoreLevel;
+   if (compselec)
+      // Silent error printout on first attempt
+      gErrorIgnoreLevel = kBreak; 
+
    if ((fSelector = TSelector::GetSelector(selec))) {
+      if (compselec)
+         gErrorIgnoreLevel = iglevelsave; // restore ignore level
       fSelectorClass = fSelector->IsA();
       fSelector->SetOption(qr->GetOptions());
 
@@ -365,13 +377,47 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
          fSelector->SetInputList(qr->GetInputList());
          ((TProofDraw *)fSelector)->DefVar();
       }
+   } else {
+      if (compselec) {
+         gErrorIgnoreLevel = iglevelsave; // restore ignore level
+         // Retry by loading first the libraries listed in TQueryResult, if any
+         if (strlen(qr->GetLibList()) > 0) {
+            TString sl(qr->GetLibList());
+            TObjArray *oa = sl.Tokenize(" ");
+            if (oa) {
+               Bool_t retry = kFALSE;
+               TIter nxl(oa);
+               TObjString *os = 0;
+               while ((os = (TObjString *) nxl())) {
+                  TString lib = gSystem->BaseName(os->GetName());
+                  if (lib != "lib") {
+                     lib.ReplaceAll("-l", "lib");
+                     if (gSystem->Load(lib) == 0)
+                        retry = kTRUE;
+                  }
+               }
+               // Retry now, if the case
+               if (retry && (fSelector = TSelector::GetSelector(selec))) {
+                  fSelectorClass = fSelector->IsA();
+                  fSelector->SetOption(qr->GetOptions());
+               }
+            }
+         }
+      }
+      if (!fSelector) { 
+         if (compselec) 
+            Info("ReinitSelector", "compiled selector re-init failed:"
+                                   " automatic reload unsuccessful:"
+                                   " please load manually the correct library");
+         rc = -1;
+      }
    }
 
    // Restore original include path, if needed
    if (ipathold.Length() > 0)
       gSystem->SetIncludePath(ipathold.Data());
 
-   return 0;
+   return rc;
 }
 
 //______________________________________________________________________________
