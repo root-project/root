@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.1 2005/12/22 09:19:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.2 2006/01/05 08:26:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -123,7 +123,7 @@ public:
           TMatrixTSym<Element>  &Rank1Update   (const TVectorT   <Element> &v,Element alpha=1.0);
           TMatrixTSym<Element>  &Similarity    (const TMatrixT   <Element> &n);
           TMatrixTSym<Element>  &Similarity    (const TMatrixTSym<Element> &n);
-          Element                Similarity    (const TVectorT   <Element> &v);
+          Element                Similarity    (const TVectorT   <Element> &v) const;
           TMatrixTSym<Element>  &SimilarityT   (const TMatrixT   <Element> &n);
 
   // Either access a_ij as a(i,j)

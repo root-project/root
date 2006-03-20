@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.7 2006/03/20 20:13:43 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.8 2006/03/20 21:43:43 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1589,7 +1589,7 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,co
 
 //______________________________________________________________________________
 template<class Element>
-Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v)
+Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v) const
 {
 // Calculate scalar v * (*this) * v^T
 
@@ -1598,13 +1598,11 @@ Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v)
 
   if (this->fNcols != this->fNrows || this->fColLwb != this->fRowLwb) {
     Error("Similarity(const TVectorT &)","matrix is not square");
-    this->Invalidate();
     return -1.;
   }
 
   if (this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
     Error("Similarity(const TVectorT &)","vector and matrix incompatible");
-    this->Invalidate();
     return -1.;
   }
 

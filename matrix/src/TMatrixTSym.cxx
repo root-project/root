@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.4 2006/01/25 18:49:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.5 2006/03/20 21:43:43 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1165,7 +1165,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
 
 //______________________________________________________________________________
 template<class Element> 
-Element TMatrixTSym<Element>::Similarity(const TVectorT<Element> &v)
+Element TMatrixTSym<Element>::Similarity(const TVectorT<Element> &v) const
 {
 // Calculate scalar v * (*this) * v^T
 
@@ -1174,7 +1174,6 @@ Element TMatrixTSym<Element>::Similarity(const TVectorT<Element> &v)
 
   if (this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
     Error("Similarity(const TVectorT &)","vector and matrix incompatible");
-    this->Invalidate();
     return -1.;
   }
 
