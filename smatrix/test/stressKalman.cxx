@@ -569,36 +569,30 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_sym_kalman() {
       TestTimer t(gReporter);
 
       MnVectorM x; 
-      MnMatrixMN tmp;   
-      MnMatrixNN Rinv; 
-      //MnSymMatrixNN RinvSym; 
+      MnSymMatrixNN RinvSym; 
       MnMatrixMN K; 
-      // C has to be non -symmetric due to missing similarity product
-      MnMatrixMM C; 
+      MnSymMatrixMM C; 
+      MnSymMatrixMM Ctmp; 
       MnVectorN vtmp1; 
       MnVectorN vtmp; 
       MnVectorN2 vtmp2; 
+#define OPTIMIZED_SMATRIX_SYM
+#ifdef OPTIMIZED_SMATRIX_SYM
+      MnMatrixMN tmp;   
+#endif
 
       for (int l = 0; l < NLOOP; l++) 	
 	{
 
 
-
+#ifdef OPTIMIZED_SMATRIX_SYM
 	  vtmp1 = H*xp -m;
 	  //x = xp + K0 * (m- H * xp);
 	  x = xp - K0 * vtmp1;
 	  tmp = Cp * Transpose(H);
-	  Rinv = V;  Rinv +=  H * tmp;
-
-	  // note that similarity op on symmetric matrices is not yet implemented
-#ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
-	  vtmp2 = Rinv.UpperBlock(); 
-#else
-	  // for solaris problem
-	  vtmp2 = Rinv.UpperBlock< MnVectorN2 >(); 
-#endif
-
-	  MnSymMatrixNN RinvSym(vtmp2); 
+	  // we are sure that H*tmp result is symmetric 
+	  ROOT::Math::AssignSym::Evaluate(RinvSym,H*tmp); 
+	  RinvSym += V; 
 
 	  bool test = RinvSym.Invert();
  	  if(!test) { 
@@ -607,23 +601,32 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_sym_kalman() {
 	  }
 
 	  K =  tmp * RinvSym ; 
-	  C = Cp;  C -= K * Transpose(tmp);
+	  // we profit from the fact that result of K*tmpT is symmetric
+	  ROOT::Math::AssignSym::Evaluate(Ctmp, K*Transpose(tmp) ); 
+	  C = Cp; C -= Ctmp;
 	  //C = ( I - K * H ) * Cp;
 	  //x2 = Product(Rinv,m-H*xp);  // this does not compile on WIN32
  	  vtmp = m-H*xp; 
- 	  x2 = Dot(vtmp, RinvSym*vtmp);
+ 	  x2 = ROOT::Math::Dot(vtmp, RinvSym*vtmp);
+#else 
+	  // use similarity function
+	  vtmp1 = H*xp -m;
+	  x = xp - K0 * vtmp1;
+ 	  RinvSym = V;  RinvSym +=  Similarity(H,Cp);
 
-#ifdef DEBUG 
-	  if (l == 0) { 
-	    std::cout << " Rinv =\n " << Rinv << std::endl;
-	    std::cout << " RinvSym =\n " << RinvSym << std::endl;
-	    std::cout << " C =\n " << C << std::endl;
+	  bool test = RinvSym.Invert();
+ 	  if(!test) { 
+ 	    std::cout<<"inversion failed" <<std::endl;
+	    std::cout << RinvSym << std::endl;
 	  }
+	  
+	  Ctmp = ROOT::Math::SimilarityT(H, RinvSym); 
+	  C = Cp; C -= ROOT::Math::Similarity(Cp, Ctmp);
+ 	  vtmp = m-H*xp; 
+ 	  x2 = ROOT::Math::Similarity(vtmp, RinvSym);
 #endif
+
 	}
-
-    
-
 	//std::cout << k << " chi2 = " << x2 << std::endl;
       x2sum += x2;
       c2 = 0;
@@ -633,7 +636,6 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_sym_kalman() {
       c2sum += c2;
     }
   }
-  //tr.dump();
 
   std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
 
