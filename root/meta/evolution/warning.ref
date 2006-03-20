@@ -19,8 +19,8 @@ Warning in <TClass::TClass>: no dictionary for class data is available
 Warning in <TClass::TClass>: no dictionary for class Tdata is available
 
 StreamerInfo for class: Tdata, version=1
-  int            myvar_one       offset=  0 type= 3                     
-   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+  int            myvar_one       offset= n/a type= 3                     
+   i= 0, myvar_one       type=  3, offset= n/a, len=1, method=0
 Warning in <TClass::PostLoadCheck>: 
         The StreamerInfo version 1 for the class Tdata which was read
         from a file previously opened has the same version as the active class 
@@ -45,8 +45,8 @@ StreamerInfo for class: Tdata, version=1
 Processing checkWarn.C(3)...
 
 StreamerInfo for class: Tdata, version=1
-  double         mydouble_two    offset=  8 type= 8                     
-   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+  double         mydouble_two    offset= n/a type= 8                     
+   i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
         The StreamerInfo for version 1 of class Tdata read from file data1.root
         has a different checksum than the previously loaded StreamerInfo.
@@ -90,8 +90,8 @@ Warning in <TClass::TClass>: no dictionary for class data is available
 Warning in <TClass::TClass>: no dictionary for class Tdata is available
 
 StreamerInfo for class: Tdata, version=1
-  int            myvar_one       offset=  0 type= 3                     
-   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+  int            myvar_one       offset= n/a type= 3                     
+   i= 0, myvar_one       type=  3, offset= n/a, len=1, method=0
 Warning in <TClass::PostLoadCheck>: 
         The StreamerInfo version 1 for the class Tdata which was read
         from a file previously opened has the same version as the active class 
@@ -120,8 +120,8 @@ Warning in <TClass::TClass>: no dictionary for class data is available
 Warning in <TClass::TClass>: no dictionary for class Tdata is available
 
 StreamerInfo for class: Tdata, version=1
-  int            myvar_one       offset=  0 type= 3                     
-   i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
+  int            myvar_one       offset= n/a type= 3                     
+   i= 0, myvar_one       type=  3, offset= n/a, len=1, method=0
 Warning in <TClass::PostLoadCheck>: 
         The StreamerInfo version 1 for the class Tdata which was read
         from a file previously opened has the same version as the active class 
@@ -150,8 +150,8 @@ StreamerInfo for class: Tdata, version=1
 Processing checkWarn.C(15)...
 
 StreamerInfo for class: Tdata, version=1
-  double         mydouble_two    offset=  8 type= 8                     
-   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+  double         mydouble_two    offset= n/a type= 8                     
+   i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
         The StreamerInfo for version 1 of class Tdata read from file data1.root
         has a different checksum than the previously loaded StreamerInfo.
@@ -181,8 +181,8 @@ StreamerInfo for class: Tdata, version=1
 Processing checkWarn.C(17)...
 
 StreamerInfo for class: Tdata, version=1
-  double         mydouble_two    offset=  8 type= 8                     
-   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+  double         mydouble_two    offset= n/a type= 8                     
+   i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
         The StreamerInfo for version 1 of class Tdata read from file data1.root
         has a different checksum than the previously loaded StreamerInfo.
@@ -193,12 +193,12 @@ Warning in <TStreamerInfo::BuildCheck>:
 
 
 StreamerInfo for class: Tdata, version=1
-  double         mydouble_two    offset=  8 type= 8                     
-   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+  double         mydouble_two    offset= n/a type= 8                     
+   i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 
 StreamerInfo for class: Tdata, version=1
-  double         mydouble_two    offset=  8 type= 8                     
-   i= 0, mydouble_two    type=  8, offset=  8, len=1, method=0
+  double         mydouble_two    offset= n/a type= 8                     
+   i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 
 Processing checkWarn.C(18)...
 Test not implemented

@@ -47,7 +47,7 @@ data5.root: writefile.C data5_C.$(DllSuf)
 
 data6.root: writefile.C data6_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l 'writefile.C(6)' 2>&1 > data4.log
-	
+
 foreign.log: data1.root data2.root data3.root data4.root data2_C.$(DllSuf)
 
 warning.log: data1.root data2.root data3.root data4.root data5.root \
@@ -66,7 +66,7 @@ warning.log: data1.root data2.root data3.root data4.root data5.root \
 	    && root.exe -q -b -l 'checkWarn.C(16)' \
 	    && root.exe -q -b -l 'checkWarn.C(17)' \
 	    && root.exe -q -b -l 'checkWarn.C(18)' \
-	    ) > warning.log 2>&1
+	    ) 2>&1 | sed -e 's@offset=  [0-9]*@offset= n/a@' > warning.log
 
 foreign: foreign.log
 ifeq ($(FAIL),)
