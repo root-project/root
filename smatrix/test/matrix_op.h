@@ -214,10 +214,7 @@ double testInnerProd_T(const M & a, const V & v, double & time) {
   test::Timer t(time,"prod");
   double result=0; 
   for (int l = 0; l < NLOOP; l++) 	
-    {
-      V tmp = a * v;
-      result = v * tmp;
-    }
+    result = a.Similarity(v);
   return result; 
 }
 
