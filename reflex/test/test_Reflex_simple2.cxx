@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.8 2006/01/27 16:10:20 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.9 2006/03/05 21:49:48 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -164,6 +164,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testFunctionMembers );
   CPPUNIT_TEST( testFreeFunctions );
   CPPUNIT_TEST( testDiamond );
+  CPPUNIT_TEST( testOperators );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -180,6 +181,7 @@ public:
   void testFunctionMembers();
   void testFreeFunctions();
   void testDiamond();
+  void testOperators();
 
   void tearDown() {}
 
@@ -748,6 +750,47 @@ void ReflexSimple2Test::testDiamond() {
   CPPUNIT_ASSERT_EQUAL(99,*(int*)m.Get(o).Address());
   l.UpdateMembers();
   CPPUNIT_ASSERT_EQUAL(99,*(int*)m.Get(o).Address());
+}
+
+int countNewOperators(const Type & t) {
+   int cnt = 0;
+   for (Member_Iterator mi = t.FunctionMember_Begin(); mi != t.FunctionMember_End(); ++mi) 
+      if ((*mi).IsOperator() && ((*mi).Name() == "operator new" || (*mi).Name() == "operator new []"))
+         ++cnt;
+   return cnt;
+}
+
+
+void ReflexSimple2Test::testOperators() {
+
+   Type t1 = Type::ByName("testclasses::OverloadedOperators::NoOp");
+   CPPUNIT_ASSERT(t1);
+   CPPUNIT_ASSERT_EQUAL(0,countNewOperators(t1));
+
+   Type t2 = Type::ByName("testclasses::OverloadedOperators::OpNew");
+   CPPUNIT_ASSERT(t2);
+   CPPUNIT_ASSERT_EQUAL(1,countNewOperators(t2));
+
+   Type t3 = Type::ByName("testclasses::OverloadedOperators::PlOpNew");
+   CPPUNIT_ASSERT(t3);
+   CPPUNIT_ASSERT_EQUAL(1,countNewOperators(t3));
+
+   Type t4 = Type::ByName("testclasses::OverloadedOperators::PlOpOpNew");
+   CPPUNIT_ASSERT(t4);
+   CPPUNIT_ASSERT_EQUAL(2,countNewOperators(t4));
+
+   Type t5 = Type::ByName("testclasses::OverloadedOperators::OpANew");
+   CPPUNIT_ASSERT(t5);
+   CPPUNIT_ASSERT_EQUAL(1,countNewOperators(t5));
+
+   Type t6 = Type::ByName("testclasses::OverloadedOperators::PlOpANew");
+   CPPUNIT_ASSERT(t6);
+   CPPUNIT_ASSERT_EQUAL(1,countNewOperators(t6));
+
+   Type t7 = Type::ByName("testclasses::OverloadedOperators::PlOpAOpANew");
+   CPPUNIT_ASSERT(t7);
+   CPPUNIT_ASSERT_EQUAL(2,countNewOperators(t7));
+
 }
 
 // Class registration on cppunit framework
