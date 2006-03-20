@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.10 2006/01/25 10:17:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.11 2006/02/14 02:55:08 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -140,6 +140,15 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    }
    // Change the shape for the aligned node
    if (newshape) vd->SetShape(newshape);
+
+   // Re-compute bounding box of mother(s) if needed
+   for (i=fLevel-1; i>0; i--) {
+      vd = GetVolume(i);
+      if (!vd->IsAssembly()) break;
+      vd->GetShape()->ComputeBBox();
+   }
+      
+   if (vm->IsAssembly()) vm->GetShape()->ComputeBBox();
    // Now we have to re-voxelize the mother volume
    TGeoVoxelFinder *voxels = vm->GetVoxels();
    if (voxels) voxels->SetNeedRebuild();

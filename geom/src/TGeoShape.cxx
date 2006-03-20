@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.34 2005/09/04 15:12:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.35 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -152,6 +152,8 @@
 #include "TBuffer3DTypes.h"
 
 ClassImp(TGeoShape)
+
+TGeoMatrix *TGeoShape::fgTransform = NULL;
 
 //_____________________________________________________________________________
 TGeoShape::TGeoShape()
@@ -360,31 +362,56 @@ void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
 }
 
 //_____________________________________________________________________________
+TGeoMatrix *TGeoShape::GetTransform()
+{
+// Returns current transformation matrix that applies to shape.
+   return fgTransform;
+}   
+
+//_____________________________________________________________________________
+void TGeoShape::SetTransform(TGeoMatrix *matrix)
+{
+// Set current transformation matrix that applies to shape.
+   fgTransform = matrix;
+}   
+
+//_____________________________________________________________________________
 void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 {
    // Tranform a set of points (LocalToMaster)
-   if (gGeoManager) {
-      Double_t dlocal[3];
-      Double_t dmaster[3];
-      Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;
-
-      for (UInt_t j = 0; j < NbPnts; j++) {
-         dlocal[0] = points[3*j];
-         dlocal[1] = points[3*j+1];
-         dlocal[2] = points[3*j+2];
-         if (gGeoManager->IsMatrixTransform()) {
-            TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
-            if (bomb) glmat->LocalToMasterBomb(dlocal, dmaster);
-            else      glmat->LocalToMaster(dlocal, dmaster);
-         } else {
-            if (bomb) gGeoManager->LocalToMasterBomb(dlocal, dmaster);
-            else      gGeoManager->LocalToMaster(dlocal,dmaster);
-         }
-         points[3*j]   = dmaster[0];
-         points[3*j+1] = dmaster[1];
-         points[3*j+2] = dmaster[2];
+   UInt_t i,j;
+   Double_t dlocal[3];
+   Double_t dmaster[3];
+   if (fgTransform) {
+      for (j = 0; j < NbPnts; j++) {
+         i = 3*j;
+         fgTransform->LocalToMaster(&points[i], dmaster);
+         points[i]   = dmaster[0];
+         points[i+1] = dmaster[1];
+         points[i+2] = dmaster[2];
       }
+      return;   
+   }   
+      
+   if (!gGeoManager) return;
+   Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;
 
+   for (j = 0; j < NbPnts; j++) {
+      i = 3*j;
+      dlocal[0] = points[3*j];
+      dlocal[1] = points[3*j+1];
+      dlocal[2] = points[3*j+2];
+      if (gGeoManager->IsMatrixTransform()) {
+         TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
+         if (bomb) glmat->LocalToMasterBomb(&points[i], dmaster);
+         else      glmat->LocalToMaster(&points[i], dmaster);
+      } else {
+         if (bomb) gGeoManager->LocalToMasterBomb(&points[i], dmaster);
+         else      gGeoManager->LocalToMaster(&points[i],dmaster);
+      }
+      points[i]   = dmaster[0];
+      points[i+1] = dmaster[1];
+      points[i+2] = dmaster[2];
    }
 }
 

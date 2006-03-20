@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.36 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.37 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -33,6 +33,8 @@ class TBuffer3D;
 
 class TGeoShape : public TNamed
 {
+private:
+   static TGeoMatrix     *fgTransform;  // current transformation matrix that applies to shape
 public:
 enum EShapeType {
    kBitMask32  = 0xffffffff,
@@ -90,6 +92,8 @@ public:
    // methods
 
    static Double_t       Big() {return 1.E30;}
+   static TGeoMatrix    *GetTransform();
+   static void           SetTransform(TGeoMatrix *matrix);
    static Double_t       Tolerance() {return 1.E-10;}
    virtual Double_t      Capacity() const                        = 0;
    virtual void          ComputeBBox()                           = 0;
