@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.3 2004/06/03 06:49:12 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.4 2004/06/03 13:07:19 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  dynamic ruby-root
@@ -17,6 +17,7 @@
 
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TApplication.h"
 #include "TSystem.h"
 #include "TRandom.h"
