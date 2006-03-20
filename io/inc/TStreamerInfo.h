@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.62 2006/01/30 09:01:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.63 2006/02/09 20:42:41 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -87,7 +87,11 @@ private:
 public:
 
    //status bits
-   enum { kCannotOptimize = BIT(12),kRecovered=BIT(13)};
+   enum { kCannotOptimize        = BIT(12),
+          kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
+          kRecovered             = BIT(14), 
+          kNeedCheck             = BIT(15) 
+   };
 
    enum EReadWrite {
       kBase     =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
@@ -133,6 +137,7 @@ public:
    void                BuildCheck();
    void                BuildEmulated(TFile *file);
    void                BuildOld();
+   void                Clear(Option_t *);
    void                Compile();
    void                ComputeSize();
    void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);

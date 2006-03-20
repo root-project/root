@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.232 2006/02/09 20:43:37 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.233 2006/02/22 19:51:06 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -165,29 +165,29 @@ void TStreamerInfo::Build()
       const char* btitle = base->GetTitle();
       // this case appears with STL collections as base class.
       if (!strcmp(bname, "string")) {
-	 element = new TStreamerSTLstring(bname, btitle, offset, bname, kFALSE);
+         element = new TStreamerSTLstring(bname, btitle, offset, bname, kFALSE);
       } else if (base->IsSTLContainer()) {
-	 element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
+         element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
       } else {
-	 element = new TStreamerBase(bname, btitle, offset);
-	 TClass* clm = element->GetClassPointer();
-	 if (!clm) {
-	    Error("Build", "%s, unknown type: %s %s\n", GetName(), bname, btitle);
-	    delete element;
-	    element = 0;
-	 } else {
-	    clm->GetStreamerInfo();
-	    if ((clm == TObject::Class()) && fClass->CanIgnoreTObjectStreamer()) {
-	       SetBit(TClass::kIgnoreTObjectStreamer);
-	       element->SetType(-1);
-	    }
-	    if (!clm->IsLoaded()) {
-	       Warning("Build:", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
-	    }
-	 }
+         element = new TStreamerBase(bname, btitle, offset);
+         TClass* clm = element->GetClassPointer();
+         if (!clm) {
+            Error("Build", "%s, unknown type: %s %s\n", GetName(), bname, btitle);
+            delete element;
+            element = 0;
+         } else {
+            clm->GetStreamerInfo();
+            if ((clm == TObject::Class()) && fClass->CanIgnoreTObjectStreamer()) {
+               SetBit(kIgnoreTObjectStreamer);
+               element->SetType(-1);
+            }
+            if (!clm->IsLoaded()) {
+               Warning("Build:", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
+            }
+         }
       }
       if (element) {
-	 fElements->Add(element);
+         fElements->Add(element);
       }
    } // end of base class loop
 
@@ -219,130 +219,130 @@ void TStreamerInfo::Build()
       Bool_t dmIsPtr = dm->IsaPointer();
       TDataMember* dmCounter = 0;
       if (dmIsPtr) {
-	 //
-	 // look for a pointer data member with a counter
-	 // in the comment string, like so:
-	 //
-	 //      int n;
-	 //      double* MyArray; //[n]
-	 //
-	 const char* lbracket = ::strchr(dmTitle, '[');
-	 const char* rbracket = ::strchr(dmTitle, ']');
-	 if (lbracket && rbracket) {
-	    const char* counterName = dm->GetArrayIndex();
-	    TRealData* rdCounter = (TRealData*) fClass->GetListOfRealData()->FindObject(counterName);
-	    if (!rdCounter) {
-	       Error("Build", "%s, discarding: %s %s, illegal %s\n", GetName(), dmFull, dmName, dmTitle);
+         //
+         // look for a pointer data member with a counter
+         // in the comment string, like so:
+         //
+         //      int n;
+         //      double* MyArray; //[n]
+         //
+         const char* lbracket = ::strchr(dmTitle, '[');
+         const char* rbracket = ::strchr(dmTitle, ']');
+         if (lbracket && rbracket) {
+            const char* counterName = dm->GetArrayIndex();
+            TRealData* rdCounter = (TRealData*) fClass->GetListOfRealData()->FindObject(counterName);
+            if (!rdCounter) {
+               Error("Build", "%s, discarding: %s %s, illegal %s\n", GetName(), dmFull, dmName, dmTitle);
                continue;
-	    }
-	    dmCounter = rdCounter->GetDataMember();
-	    TDataType* dtCounter = dmCounter->GetDataType();
-	    Bool_t isInteger = ((dtCounter->GetType() == 3) || (dtCounter->GetType() == 13));
-	    if (!dtCounter || !isInteger) {
-	       Error("Build", "%s, discarding: %s %s, illegal [%s] (must be Int_t)\n", GetName(), dmFull, dmName, counterName);
+            }
+            dmCounter = rdCounter->GetDataMember();
+            TDataType* dtCounter = dmCounter->GetDataType();
+            Bool_t isInteger = ((dtCounter->GetType() == 3) || (dtCounter->GetType() == 13));
+            if (!dtCounter || !isInteger) {
+               Error("Build", "%s, discarding: %s %s, illegal [%s] (must be Int_t)\n", GetName(), dmFull, dmName, counterName);
                continue;
-	    }
-	    TStreamerBasicType* bt = TStreamerInfo::GetElementCounter(counterName, dmCounter->GetClass());
-	    if (!bt) {
-	       if (dmCounter->GetClass()->Property() & kIsAbstract) {
+            }
+            TStreamerBasicType* bt = TStreamerInfo::GetElementCounter(counterName, dmCounter->GetClass());
+            if (!bt) {
+               if (dmCounter->GetClass()->Property() & kIsAbstract) {
                   continue;
-	       }
-	       Error("Build", "%s, discarding: %s %s, illegal [%s] must be placed before \n", GetName(), dmFull, dmName, counterName);
+               }
+               Error("Build", "%s, discarding: %s %s, illegal [%s] must be placed before \n", GetName(), dmFull, dmName, counterName);
                continue;
-	    }
-	 }
+            }
+         }
       }
       TDataType* dt = dm->GetDataType();
       if (dt) {
-	 // found a basic type
-	 Int_t dtype = dt->GetType();
-	 dsize = dt->Size();
-	 if (!dmCounter && (strstr(dmFull, "char*") || strstr(dmFull, "Char_t*"))) {
-	    dtype = kCharStar;
-	    dsize = sizeof(char*);
-	 }
-	 if (dmIsPtr && (dtype != kCharStar)) {
-	    if (dmCounter) {
-	       // data member is pointer to an array of basic types
-	       element = new TStreamerBasicPointer(dmName, dmTitle, offset, dtype, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
-	    } else {
-	       if ((fName == "TString") || (fName == "TClass")) {
+         // found a basic type
+         Int_t dtype = dt->GetType();
+         dsize = dt->Size();
+         if (!dmCounter && (strstr(dmFull, "char*") || strstr(dmFull, "Char_t*"))) {
+            dtype = kCharStar;
+            dsize = sizeof(char*);
+         }
+         if (dmIsPtr && (dtype != kCharStar)) {
+            if (dmCounter) {
+               // data member is pointer to an array of basic types
+               element = new TStreamerBasicPointer(dmName, dmTitle, offset, dtype, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
+            } else {
+               if ((fName == "TString") || (fName == "TClass")) {
                   continue;
-	       }
-	       Error("Build", "%s, discarding: %s %s, no [dimension]\n", GetName(), dmFull, dmName);
+               }
+               Error("Build", "%s, discarding: %s %s, no [dimension]\n", GetName(), dmFull, dmName);
                continue;
-	    }
-	 } else {
-	    // data member is a basic type
-	    if ((fClass == TObject::Class()) && !strcmp(dmName, "fBits")) {
-	       //printf("found fBits, changing dtype from %d to 15\n", dtype);
-	       dtype = kBits;
-	    }
-	    element = new TStreamerBasicType(dmName, dmTitle, offset, dtype, dmFull);
+            }
+         } else {
+            // data member is a basic type
+            if ((fClass == TObject::Class()) && !strcmp(dmName, "fBits")) {
+               //printf("found fBits, changing dtype from %d to 15\n", dtype);
+               dtype = kBits;
+            }
+            element = new TStreamerBasicType(dmName, dmTitle, offset, dtype, dmFull);
          }
       } else {
-	 // try STL container or string
-	 static const char* full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-	 if (!strcmp(dmType, "string") || !strcmp(dmType, full_string_name)) {
-	    element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
-	 } else if (dm->IsSTLContainer()) {
-	    element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
-	 } else {
-	    TClass* clm = gROOT->GetClass(dmType);
-	    if (!clm) {
-	       Error("Build", "%s, unknown type: %s %s\n", GetName(), dmFull, dmName);
-	       continue;
-	    }
-	    if (dmIsPtr) {
-	       // a pointer to a class
-	       if (dmCounter) {
-		  element = new TStreamerLoop(dmName, dmTitle, offset, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
-	       } else {
-		  if (clm->InheritsFrom(TObject::Class())) {
-		     element = new TStreamerObjectPointer(dmName, dmTitle, offset, dmFull);
-		  } else {
-		     element = new TStreamerObjectAnyPointer(dmName, dmTitle, offset, dmFull);
-		     if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-			Error("Build:", "%s: %s has no streamer or dictionary, data member %s will not be saved", GetName(), dmFull, dmName);
-		     }
-		  }
-	       }
-	    } else if (clm->InheritsFrom(TObject::Class())) {
-	       element = new TStreamerObject(dmName, dmTitle, offset, dmFull);
-	    } else if ((clm == TString::Class()) && !dmIsPtr) {
-	       element = new TStreamerString(dmName, dmTitle, offset);
-	    } else {
-	       element = new TStreamerObjectAny(dmName, dmTitle, offset, dmFull);
-	       if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-		  Warning("Build:", "%s: %s has no streamer or dictionary, data member \"%s\" will not be saved", GetName(), dmFull, dmName);
-	       }
-	    }
+         // try STL container or string
+         static const char* full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+         if (!strcmp(dmType, "string") || !strcmp(dmType, full_string_name)) {
+            element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
+         } else if (dm->IsSTLContainer()) {
+            element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+         } else {
+            TClass* clm = gROOT->GetClass(dmType);
+            if (!clm) {
+               Error("Build", "%s, unknown type: %s %s\n", GetName(), dmFull, dmName);
+               continue;
+            }
+            if (dmIsPtr) {
+               // a pointer to a class
+               if (dmCounter) {
+                  element = new TStreamerLoop(dmName, dmTitle, offset, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
+               } else {
+                  if (clm->InheritsFrom(TObject::Class())) {
+                     element = new TStreamerObjectPointer(dmName, dmTitle, offset, dmFull);
+                  } else {
+                     element = new TStreamerObjectAnyPointer(dmName, dmTitle, offset, dmFull);
+                     if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
+                        Error("Build:", "%s: %s has no streamer or dictionary, data member %s will not be saved", GetName(), dmFull, dmName);
+                     }
+                  }
+               }
+            } else if (clm->InheritsFrom(TObject::Class())) {
+               element = new TStreamerObject(dmName, dmTitle, offset, dmFull);
+            } else if ((clm == TString::Class()) && !dmIsPtr) {
+               element = new TStreamerString(dmName, dmTitle, offset);
+            } else {
+               element = new TStreamerObjectAny(dmName, dmTitle, offset, dmFull);
+               if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
+                  Warning("Build:", "%s: %s has no streamer or dictionary, data member \"%s\" will not be saved", GetName(), dmFull, dmName);
+               }
+            }
          }
       }
       if (!element) {
-	 // If we didn't make an element, there is nothing to do.
-	 continue;
+         // If we didn't make an element, there is nothing to do.
+         continue;
       }
       Int_t ndim = dm->GetArrayDim();
       if (!dsize) {
-	 dsize = dm->GetUnitSize();
+         dsize = dm->GetUnitSize();
       }
       for (Int_t i = 0; i < ndim; ++i) {
-	 element->SetMaxIndex(i, dm->GetMaxIndex(i));
+         element->SetMaxIndex(i, dm->GetMaxIndex(i));
       }
       element->SetArrayDim(ndim);
       Int_t narr = element->GetArrayLength();
       if (!narr) {
-	 narr = 1;
+         narr = 1;
       }
       element->SetSize(dsize*narr);
       element->SetStreamer(streamer);
       if (!streamer) {
-	 Int_t k = element->GetType();
-	 if (k == kStreamer) {
-	    //if ((k == kSTL) || (k == kSTL + kOffsetL) || (k == kStreamer) || (k == kStreamLoop))
-	    element->SetType(-1);
-	 }
+         Int_t k = element->GetType();
+         if (k == kStreamer) {
+            //if ((k == kSTL) || (k == kSTL + kOffsetL) || (k == kStreamer) || (k == kStreamLoop))
+            element->SetType(-1);
+         }
       }
       fElements->Add(element);
    } // end of member loop
@@ -357,8 +357,9 @@ void TStreamerInfo::Build()
 //______________________________________________________________________________
 void TStreamerInfo::BuildCheck()
 {
-   // check if the TStreamerInfo structure is already created
-   // called by TFile::ReadStreamerInfo
+   // Check if the TStreamerInfo structure is already created and is consistent
+   // with the dictionary information.
+   // This method is called by TFile::ReadStreamerInfo.
 
    fClass = gROOT->GetClass(GetName());
    TObjArray *array;
@@ -393,7 +394,7 @@ void TStreamerInfo::BuildCheck()
 
       if (searchOnChecksum) {
          Int_t ninfos = array->GetEntriesFast();
-         for (Int_t i=1;i<ninfos;i++) {
+         for (Int_t i=0;i<ninfos;i++) {
             info = (TStreamerInfo*)array->UncheckedAt(i);
             if (!info) continue;
             if (fCheckSum == info->GetCheckSum()) {
@@ -413,7 +414,14 @@ void TStreamerInfo::BuildCheck()
       // that the old info does not have the class name (Track) in the data
       // member title. Set old title to new title
       if (info) {
-
+         // We found an existing TStreamerInfo for our ClassVersion
+         Bool_t match = kTRUE;
+         Bool_t done = kFALSE;
+         if (!fClass->TestBit(TClass::kWarned) &&
+             fClassVersion == info->GetClassVersion() && fCheckSum != info->GetCheckSum()) 
+         {
+            match = kFALSE;
+         }
          if (info->IsBuilt()) {
             SetBit(kCanDelete);
             fNumber = info->GetNumber();
@@ -428,40 +436,90 @@ void TStreamerInfo::BuildCheck()
                   e2->SetTitle(e1->GetTitle());
                }
             }
-            return;
+            if (!match 
+                && fClass->IsLoaded()
+                && (fClassVersion == fClass->GetClassVersion())
+                && fClass->GetListOfDataMembers()
+                && (fCheckSum != fClass->GetCheckSum())
+                && (fClass->GetClassInfo()) )
+            {
+               // In the case where the read-in TStreamerInfo does not
+               // match in the 'current' in memory TStreamerInfo for
+               // a non foreign class (we can get here if this is 
+               // a foreign class so we do not need to test it),
+               // we need to add this one more test since the CINT behaviour 
+               // with enums changed over time, so verify the checksum ignoring 
+               // members of type enum
+               if (fCheckSum == fClass->GetCheckSum(1)) match = kTRUE;
+               if (fOldVersion<=2) {
+                  // Names of STL base classes was modified in vers==3. Allocators removed
+                  // (We could be more specific (see test for the same case below)
+                  match = kTRUE;
+               }
+            }
+            done = kTRUE;
          } else {
             array->RemoveAt(fClassVersion);
             delete info; info = 0;
          }
+         if (!match && !fClass->TestBit(TClass::kWarned)) {
+            if (done) 
+               Warning("BuildCheck","\n\
+        The StreamerInfo for version %d of class %s read from file %s\n\
+        has a different checksum than the previously loaded StreamerInfo.\n\
+        Reading objects of type %s from the file %s \n\
+        (and potentially other files) might not work correctly.\n\
+        Most likely you the version number of the class was not properly\n\
+        updated [See ClassDef(%s,%d)].\n"
+                       ,fClassVersion, GetName()
+                       ,gDirectory->GetFile()->GetName()
+                       ,GetName(),gDirectory->GetFile()->GetName()
+                       ,GetName(),fClassVersion);
+            else 
+               Warning("BuildCheck","TStreamerInfo (WriteWarning) from %s does not match existing one (%s:%d)"
+                    ,gDirectory->GetFile()->GetName()
+                    ,GetName(),fClassVersion);
+            fClass->SetBit(TClass::kWarned);
+         }
+         if (done) return;
       }
       if (fClass->GetListOfDataMembers()
           && (fClassVersion == fClass->GetClassVersion())
           && (fCheckSum != fClass->GetCheckSum())
           && (fClass->GetClassInfo()) ) {
-         //give a last chance. Due to a new CINT behaviour with enums
-         //verify the checksum ignoring members of type enum
+         // Give a last chance. Due to a new CINT behaviour with enums
+         // verify the checksum ignoring members of type enum
          if (fCheckSum != fClass->GetCheckSum(1)) {
             if (fClass->IsForeign()) {
-               fClassVersion = fClass->GetClassVersion() + 1;
+               // Find an empty slot.
+               Int_t ninfos = array->GetEntriesFast();
+               Int_t slot = 3; // Start of Class version 2.
+               while( slot < ninfos && array->UncheckedAt(slot)!=0 ) {
+                  ++slot;
+               }
+               fClassVersion = slot - 1;
                //printf("setting fClassVersion=%d\n",fClassVersion);
             } else {
-               int warn = 1;
-               if (fOldVersion<=2) {
+               Bool_t warn = ! fClass->TestBit(TClass::kWarned);
+               if (warn && fOldVersion<=2) {
                   // Names of STL base classes was modified in vers==3. Allocators removed
                   //
                   TIter nextBC(fClass->GetListOfBases());
                   TBaseClass *bc;
                   while ((bc=(TBaseClass*)nextBC()))
-                  {if (TClassEdit::IsSTLCont(bc->GetName())) warn = 0;}
+                  {if (TClassEdit::IsSTLCont(bc->GetName())) warn = kFALSE;}
                }
 
-               if (warn) Warning("BuildCheck","\n\
+               if (warn) {
+                  Warning("BuildCheck","\n\
         The StreamerInfo of class %s read from file %s\n\
         has the same version (=%d) as the active class but a different checksum.\n\
         You should update the version to ClassDef(%s,%d).\n\
         Do not try to write objects with the current class definition,\n\
         the files will not be readable.\n",GetName(),gDirectory->GetFile()->GetName()
                               ,fClassVersion,GetName(),fClassVersion+1);
+                  fClass->SetBit(TClass::kWarned);
+               }
             }
          }
       } else {
@@ -476,7 +534,7 @@ void TStreamerInfo::BuildCheck()
       fClass->SetBit(TClass::kIsEmulation);
       array = fClass->GetStreamerInfos();
    }
-   if (TestBit(TClass::kIgnoreTObjectStreamer)) fClass->IgnoreTObjectStreamer();
+   if (TestBit(kIgnoreTObjectStreamer)) fClass->IgnoreTObjectStreamer();
    if (fClassVersion < 0 || fClassVersion > 65000) {
       printf("ERROR reading TStreamerInfo: %s fClassVersion=%d\n",GetName(),fClassVersion);
       SetBit(kCanDelete);
@@ -1086,6 +1144,28 @@ Bool_t TStreamerInfo::CanOptimize()
 {
    // static function returning true if optimization can be on
    return fgOptimize;
+}
+
+//______________________________________________________________________________
+void TStreamerInfo::Clear(Option_t *option)
+{
+   // If opt cointains 'built', reset this StreamerInfo as if Build or BuildOld
+   // was never called on it (usefull to force their re-running).
+
+   TString opt = option;
+   opt.ToLower();
+  
+   if (opt.Contains("build")) {
+      delete [] fType;     fType    = 0;
+      delete [] fNewType;  fNewType = 0;
+      delete [] fOffset;   fOffset  = 0;
+      delete [] fLength;   fLength  = 0;
+      delete [] fElem;     fElem    = 0;
+      delete [] fMethod;   fMethod  = 0;
+      delete [] fComp;     fComp    = 0;
+      fNdata = 0;
+      fSize = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -1783,12 +1863,16 @@ Double_t TStreamerInfo::GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables
-   printf("\nStreamerInfo for class: %s, version=%d\n",GetName(),fClassVersion);
+   if (fClass->IsForeign()) {
+      Printf("\nStreamerInfo for class: %s, checksum=0x%x",GetName(),GetCheckSum());
+   } else {
+      Printf("\nStreamerInfo for class: %s, version=%d",GetName(),fClassVersion);
+   }
 
    if (fElements) fElements->ls(option);
    for (Int_t i=0;i<fNdata;i++) {
       TStreamerElement *element = (TStreamerElement*)fElem[i];
-      printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld\n",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i]);
+      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i]);
    }
 }
 
