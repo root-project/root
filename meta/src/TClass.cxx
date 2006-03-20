@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.184 2005/12/22 18:59:35 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.185 2006/02/09 20:43:12 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -54,6 +54,8 @@
 #include "TVirtualUtilPad.h"
 #include "TPluginManager.h"
 #include "TStreamer.h"
+#include "TStreamerInfo.h"
+#include "TObjArray.h"
 #include "TCollectionProxy.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
@@ -592,12 +594,10 @@ void TClass::Init(const char *name, Version_t cversion,
 
       TIter next(oldcl->GetStreamerInfos());
       while ((info = (TStreamerInfo*)next())) {
+         // We need to force a call to BuildOld
+         info->Clear("build");
          info->SetClass(this);
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
-         if (info->GetClassVersion()==cversion) {
-            // We need to force a recall to BuildOld
-
-         }
       }
       oldcl->GetStreamerInfos()->Clear();
 
@@ -641,7 +641,7 @@ void TClass::Init(const char *name, Version_t cversion,
          }
          if (!fClassInfo) {
             isStl = TClassEdit::IsSTLCont(name);
-         }
+         } 
       }
    }
    if (!fClassInfo && !isStl)
@@ -681,6 +681,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
             TIter next(oldcl->GetStreamerInfos());
             while ((info = (TStreamerInfo*)next())) {
+               info->Clear("build");
                info->SetClass(this);
                fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
             }
@@ -2141,17 +2142,19 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
    // If the object doest not exist, it is created
 
    if (version == 0) version = fClassVersion;
+
    if (!fStreamerInfo) fStreamerInfo = new TObjArray(version+10,-1);
    else {
       Int_t ninfos = fStreamerInfo->GetSize();
-      if (version < 0 || version >= ninfos) {
+      if (version < -1 || version >= ninfos) {
          Error("GetStreamerInfo","class: %s, attempting to access a wrong version: %d",GetName(),version);
          version = 0;
       }
    }
+
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
    if (!sinfo && version!=fClassVersion) {
-      // When the request version does not exist we return the current TStreamerInfo.
+      // When the requested version does not exist we return the current TStreamerInfo.
       // However to be consistent we need to first check if that StreamerInfo already
       // exist.
       sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
@@ -3030,6 +3033,55 @@ Bool_t  TClass::IsForeign() const
 }
 
 //______________________________________________________________________________
+void TClass::PostLoadCheck() 
+{
+   // Do the initialization that can only be done after the CINT dictionary has
+   // been fully populated and can not be delayed efficiently.
+
+   // In the case of a Foreign class (loaded class without a Streamer function)
+   // we reset fClassVersion to be -1 so that the current TStreamerInfo will not
+   // be confused with a previously loaded streamerInfo.
+
+   if (IsLoaded() && fClassInfo && fClassVersion==1 && fStreamerInfo 
+      && fStreamerInfo->At(1) && IsForeign() ) 
+   {
+      SetClassVersion(-1);
+   } 
+   else if (IsLoaded() && fClassInfo && fStreamerInfo && !IsForeign() ) 
+   {
+      TStreamerInfo *info = dynamic_cast<TStreamerInfo*>(fStreamerInfo->At(fClassVersion));
+      // Here we need to check whether this TStreamerInfo (which presumably has been 
+      // loaded from a file) is consisten with the definition in the library we just loaded.
+      // BuildCheck is not appropriate here since it check a streamerinfo against the 
+      // 'current streamerinfo' which, at time point, would be the same as 'info'!
+      if (info && GetListOfDataMembers() 
+          && (info->GetCheckSum()!=GetCheckSum() && info->GetCheckSum()!=GetCheckSum(1))) 
+      {
+         Bool_t warn = ! TestBit(kWarned);
+         if (warn && info->GetOldVersion()<=2) {
+            // Names of STL base classes was modified in vers==3. Allocators removed
+            //
+            TIter nextBC(GetListOfBases());
+            TBaseClass *bc;
+            while ((bc=(TBaseClass*)nextBC()))
+            {if (TClassEdit::IsSTLCont(bc->GetName())) warn = kFALSE;}
+         }
+
+         if (warn) {
+            Warning("PostLoadCheck","\n\
+        The StreamerInfo version %d for the class %s which was read\n\
+        from a file previously opened has the same version as the active class \n\
+        but a different checksum. You should update the version to ClassDef(%s,%d).\n\
+        Do not try to write objects with the current class definition,\n\
+        the files will not be readable.\n"
+                    , fClassVersion, GetName(), GetName(), fClassVersion+1);
+            SetBit(kWarned);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 Long_t TClass::Property() const
 {
    // Set TObject::fBits and fStreamerType to cache information about the
@@ -3656,13 +3708,13 @@ TStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
    // Find the TStreamerInfo in the StreamerInfos corresponding to checksum
 
    Int_t ninfos = GetStreamerInfos()->GetEntriesFast();
-   for (Int_t i=1;i<ninfos;i++) {
+   for (Int_t i=-1;i<ninfos;i++) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
       // so we have to use At and should not use UncheckedAt
       TStreamerInfo *info = (TStreamerInfo*)GetStreamerInfos()->At(i);
       if (!info) continue;
       if (info->GetCheckSum() == checksum) {
-         Assert(i==info->GetClassVersion());
+         Assert(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
          return info;
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.57 2005/11/16 20:08:39 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.58 2006/02/09 20:42:01 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -33,9 +33,6 @@
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
-#ifndef ROOT_TStreamerInfo
-#include "TStreamerInfo.h"
-#endif
 
 #include <map>
 
@@ -48,6 +45,7 @@ class TRealData;
 class TCint;
 class TBuffer;
 class G__ClassInfo;
+class TStreamerInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;
 class TVirtualIsAProxy;
@@ -62,10 +60,11 @@ friend class ROOT::TGenericClassInfo;
 
 public:
    // TClass status bits
-   enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(13),
-          kUnloaded    = BIT(15), kIsTObject = BIT(16),
-          kIsForeign   = BIT(17), kIsEmulation = BIT(18),
-          kStartWithTObject = BIT(19)  // see comments for IsStartingWithTObject()
+   enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(15), 
+          kUnloaded    = BIT(16), kIsTObject = BIT(17),
+          kIsForeign   = BIT(18), kIsEmulation = BIT(19),
+          kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
+          kWarned      = BIT(21)
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
@@ -170,7 +169,7 @@ public:
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
-   Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return fClassVersion; }
+   Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return (fClassVersion>=0) ? fClassVersion : (-fClassVersion); }
    TDataMember       *GetDataMember(const char *datamember) const;
    Int_t              GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const { return fDeclFileName; }
@@ -226,6 +225,7 @@ public:
    void              *New(void *arena, ENewType defConstructor = kClassNew);
    void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew);
    void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew);
+   virtual void       PostLoadCheck();
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
