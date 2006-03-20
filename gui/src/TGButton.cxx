@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.61 2005/11/03 23:30:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.62 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -61,6 +61,7 @@
 #include "TSystem.h"
 #include "TImage.h"
 #include "TEnv.h"
+#include "TClass.h"
 
 const TGGC *TGButton::fgHibckgndGC = 0;
 const TGGC *TGButton::fgDefaultGC = 0;

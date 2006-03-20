@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.6 2006/01/25 18:49:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.7 2006/03/20 20:13:43 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TMatrixTCramerInv.h"
 #include "TDecompLU.h"
 #include "TMatrixDEigen.h"
+#include "TClass.h"
 
 #ifndef R__ALPHA
 templateClassImp(TMatrixT)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.11 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.12 2005/11/24 23:30:05 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #include "TToggle.h"
 #include "TClassMenuItem.h"
 #include "TBrowser.h"
-
+#include "TClass.h"
 
 ClassImp(TContextMenu)
 

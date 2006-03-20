@@ -34,6 +34,7 @@
 #include "TGLabel.h"
 #include "TFrame.h"
 #include "TVirtualPad.h"
+#include "TClass.h"
 
 ClassImp(TFrameEditor)
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.73 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.74 2006/02/28 10:08:19 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "Riostream.h"
 #include "TVirtualPad.h"
 #include "TError.h"
+#include "TClass.h"
 
 const Int_t kNstat = 11;
 Bool_t TProfile::fgApproximate = kFALSE;

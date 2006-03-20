@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.1 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.2 2006/03/03 15:42:37 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #include "TList.h"
 #include "TProof.h"
 #include "TProofMgr.h"
-
+#include "TROOT.h"
 
 ClassImp(TProofMgr)
 

@@ -33,6 +33,7 @@
 #include "TGroupButton.h"
 #include "TVirtualPad.h"
 #include "TCreatePrimitives.h"
+#include "TROOT.h"
 
 //______________________________________________________________________________
 TCreatePrimitives::TCreatePrimitives()

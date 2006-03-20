@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.53 2005/11/16 17:38:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.54 2006/01/26 07:55:46 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TH1.h"
 #include "TVector.h"
 #include "TVectorD.h"
+#include "TClass.h"
 
 ClassImp(TGraphAsymmErrors)
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.19 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.20 2005/11/08 17:22:09 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -37,7 +37,7 @@
 #include "TError.h"
 #include "TSelectorCint.h"
 #include "Api.h"
-
+#include "TClass.h"
 
 ClassImp(TSelector)
 

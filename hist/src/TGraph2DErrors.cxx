@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TGraph2DErrors.h"
 #include "TMath.h"
 #include "TPolyLine.h"

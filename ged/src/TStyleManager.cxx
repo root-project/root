@@ -137,6 +137,7 @@
 #include <TGStatusBar.h>
 #include <TGTab.h>
 #include <TGToolBar.h>
+#include <TROOT.h>
 #include <TRootHelpDialog.h>
 #include <TStyle.h>
 #include <TSystem.h>

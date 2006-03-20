@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.cxx,v 1.7 2006/01/30 17:42:05 rdm Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -256,7 +256,7 @@ indicating if children (contained within the one just sent) are worth adding.</p
 #include "TVirtualPad.h"
 #include "TPluginManager.h"
 #include "TError.h"
-
+#include "TClass.h"
 
 ClassImp(TVirtualViewer3D)
 

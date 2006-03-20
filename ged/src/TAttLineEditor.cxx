@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.6 2005/05/14 00:19:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.7 2005/11/25 09:56:35 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TColor.h"
 #include "TAttLine.h"
 #include "TVirtualPad.h"
+#include "TClass.h"
 
 ClassImp(TAttLineEditor)
 

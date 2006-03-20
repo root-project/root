@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.54 2005/11/18 16:55:07 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.55 2006/01/26 07:55:46 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TVector.h"
 #include "TVectorD.h"
 #include "TStyle.h"
+#include "TClass.h"
 
 ClassImp(TGraphErrors)
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.24 2005/06/13 16:48:01 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.25 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TObjArray.h"
 #include "TMath.h"
 #include "TError.h"
-#include "TClass.h"
 #include "TROOT.h"
 
 ClassImp(TObjArray)

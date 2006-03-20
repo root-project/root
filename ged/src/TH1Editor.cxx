@@ -147,6 +147,7 @@
 #include "TGTab.h"
 #include "TGFrame.h"
 #include "TGMsgBox.h"
+#include "TClass.h"
 
 R__EXTERN TTree *gTree;
 

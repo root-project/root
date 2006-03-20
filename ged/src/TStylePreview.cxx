@@ -25,6 +25,7 @@
 #include <TCanvas.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TStyle.h>
+#include <TROOT.h>
 
 ClassImp(TStylePreview)
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.40 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.41 2005/12/10 16:51:57 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #include "TSocket.h"
 #include "TTimer.h"
 #include "TUrl.h"
-
+#include "TClass.h"
 
 //
 // The following three utility classes manage the state of the

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.179 2006/02/01 17:45:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.180 2006/02/13 09:52:33 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 #include "TVirtualUtilPad.h"
 #include "TVirtualHistPainter.h"
 #include "TBrowser.h"
-
+#include "TClass.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 

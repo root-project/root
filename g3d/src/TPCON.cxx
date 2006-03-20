@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.11 2005/09/04 14:53:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.12 2005/11/24 17:28:07 couet Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
+#include "TClass.h"
 
 ClassImp(TPCON)
 

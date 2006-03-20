@@ -37,6 +37,8 @@
 #include "TText.h"
 #include "zlib.h"
 #include "TObjString.h"
+#include "TClass.h"
+#include "TObjArray.h"
 
 // To scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;

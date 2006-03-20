@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.42 2006/03/13 09:33:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.43 2006/03/14 15:29:15 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 
 #include "TColor.h"
 #include "TError.h"
+#include "TROOT.h"
 
 // For event type translation ExecuteEvent
 #include "Buttons.h"

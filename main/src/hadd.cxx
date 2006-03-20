@@ -46,6 +46,7 @@
 #include "TKey.h"
 #include "TObjString.h"
 #include "Riostream.h"
+#include "TClass.h"
 
 TList *FileList;
 TFile *Target, *Source;

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.11 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.12 2005/11/24 17:28:07 couet Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -66,7 +66,7 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "THelix.h"
-
+#include "TClass.h"
 
 Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D
 

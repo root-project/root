@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.21 2005/07/08 12:33:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.22 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TLatex.h"
 #include "TError.h"
 #include "TColor.h"
+#include "TClass.h"
 
 ClassImp(TPaveText)
 

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.11 2006/01/18 16:47:44 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.12 2006/01/18 19:41:55 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -6,6 +6,7 @@
 #include "TPolyLine3D.h"
 #include "TDatabasePDG.h"
 #include "TParticle.h"
+#include "TClass.h"
 
 ClassImp(TParticle)
 

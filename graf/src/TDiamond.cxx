@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.8 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.9 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -16,7 +16,6 @@
 #include "TDiamond.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
-#include "TClass.h"
 #include "TMath.h"
 
 

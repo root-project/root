@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.25 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.26 2006/03/13 15:04:58 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 #include "Riostream.h"
 #include "TColor.h"
 #include "TVirtualFitter.h"
-
+#include "TClass.h"
 
 ClassImp(TF3)
 

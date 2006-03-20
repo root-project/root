@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.5 2005/04/07 10:57:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.6 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/08/2001
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TLeaf.h"
 #include "TBrowser.h"
 #include "Riostream.h"
+#include "TClass.h"
 
 ClassImp(TNtupleD)
 

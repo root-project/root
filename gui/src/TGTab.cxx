@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.22 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.23 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -41,7 +41,7 @@
 #include "TList.h"
 #include "TMath.h"
 #include "Riostream.h"
-
+#include "TClass.h"
 
 const TGFont *TGTab::fgDefaultFont = 0;
 const TGGC   *TGTab::fgDefaultGC = 0;

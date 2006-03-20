@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.15 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.16 2005/12/13 16:03:42 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TContextMenu.h"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
+#include "TClass.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

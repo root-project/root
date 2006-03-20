@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.45 2006/01/09 18:28:22 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.46 2006/03/02 07:45:47 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -36,7 +36,7 @@ class TVirtualCollectionProxy;
 class TBranchElement : public TBranch {
 
 protected:
-   enum { kWarn = BIT(13), kBranchFolder = BIT(14) ,kDeleteObject = BIT(16)};
+   enum { kBranchFolder = BIT(14), kDeleteObject = BIT(16) };
    
    TString                  fClassName;     //Class name of referenced object
    TString                  fParentName;    //Name of parent class

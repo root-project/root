@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.16 2005/05/18 12:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.17 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TPolyMarker.h"
+#include "TClass.h"
 
 ClassImp(TPolyMarker)
 

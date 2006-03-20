@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.3 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.4 2005/11/16 20:07:50 pcanal Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 
 #include "TContainerConverters.h"
 #include "TClonesArray.h"
+#include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TError.h"
 

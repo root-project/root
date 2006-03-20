@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.15 2005/10/28 16:24:43 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.16 2005/11/10 11:11:46 couet Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -34,6 +34,8 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TObjArray.h"
+#include "TClass.h"
 
 ClassImp(TSVG)
 

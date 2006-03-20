@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.23 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.24 2006/02/18 12:40:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TPolyLine.h"
+#include "TClass.h"
 
 ClassImp(TPolyLine)
 

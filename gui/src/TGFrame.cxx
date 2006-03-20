@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.116 2005/10/27 11:08:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.117 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -69,6 +69,7 @@
 #include "TApplication.h"
 #include "TTimer.h"
 #include "Riostream.h"
+#include "TClass.h"
 
 #include "TObjString.h"
 #include "TObjArray.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.31 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.32 2006/02/28 16:32:24 couet Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "TView.h"
 #include "TVirtualX.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TList.h"
 #include "TFile.h"
 #include "TPluginManager.h"

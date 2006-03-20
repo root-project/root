@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.6 2006/02/08 21:03:56 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.7 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 #include "TObjArray.h"
 #include "TStreamerInfo.h"
 #include "TFile.h"
-#include "TClass.h"
 #include "TProcessID.h"
 #include <algorithm>
 

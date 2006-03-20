@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.21 2005/10/14 10:59:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.22 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 
 class TBlinkTimer;
 class TGToolTip;
-
+class TColor;
 
 class TGTextEntry : public TGFrame, public TGWidget {
 

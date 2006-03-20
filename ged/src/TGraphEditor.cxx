@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.15 2006/01/30 17:42:05 rdm Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
+#include "TClass.h"
 
 ClassImp(TGraphEditor)
 

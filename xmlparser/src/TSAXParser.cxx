@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.4 2005/05/11 13:19:50 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.5 2006/01/17 17:42:36 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "Varargs.h"
 #include "TObjString.h"
 #include "TList.h"
+#include "TClass.h"
 #include "snprintf.h"
 
 #include <libxml/parser.h>

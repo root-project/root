@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.5 2005/09/18 13:00:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.6 2005/11/16 20:04:11 pcanal Exp $
 // Author: Valeriy Onuchin 04/27/2004
 
 /*************************************************************************
@@ -107,6 +107,7 @@
 #include "TQConnection.h"
 #include "TDataType.h"
 #include "stdarg.h"
+#include "TROOT.h"
 
 ClassImp(TQCommand)
 ClassImp(TQUndoManager)

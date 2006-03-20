@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.140 2006/02/09 11:48:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.141 2006/03/02 11:29:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -413,6 +413,7 @@
 #include "TFile.h"
 #include "TKey.h"
 #include "THashList.h"
+#include "TClass.h"
 
 #include "TGeoElement.h"
 #include "TGeoMaterial.h"

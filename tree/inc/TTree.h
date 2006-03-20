@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.84 2005/10/13 10:26:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.85 2005/11/16 20:22:48 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -68,6 +68,10 @@
 
 #ifndef ROOT_TDataType
 #include "TDataType.h"
+#endif
+
+#ifndef ROOT_TROOT
+#include "TROOT.h"
 #endif
 
 class TBrowser;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.148 2006/01/24 21:31:17 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.149 2006/02/01 18:54:51 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "Riostream.h"
 #include "Strlen.h"
 #include "TArrayC.h"
+#include "TClass.h"
 #include "TClassTable.h"
 #include "TDatime.h"
 #include "TError.h"

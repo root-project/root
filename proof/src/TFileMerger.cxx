@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.2 2005/05/31 13:58:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.3 2005/06/10 18:01:36 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include "TH1.h"
 #include "TChain.h"
 #include "TKey.h"
-
+#include "TClass.h"
 
 ClassImp(TFileMerger)
 

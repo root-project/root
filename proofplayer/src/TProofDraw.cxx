@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.20 2005/07/09 04:03:23 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.21 2005/09/22 23:29:30 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -11,6 +11,7 @@
 
 
 #include "TProofDraw.h"
+#include "TClass.h"
 #include "TError.h"
 #include "TH1F.h"
 #include "TH2F.h"

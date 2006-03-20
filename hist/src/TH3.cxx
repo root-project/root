@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.73 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.74 2006/02/21 10:55:26 couet Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TH3.h"
 #include "TH2.h"
 #include "TF1.h"

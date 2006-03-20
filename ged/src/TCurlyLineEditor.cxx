@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx $
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx,v 1.9 2006/01/30 17:42:05 rdm Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TCurlyLine.h"
 #include "TVirtualPad.h"
 #include "iostream"
+#include "TClass.h"
 
 ClassImp(TCurlyLineEditor)
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.28 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.29 2005/11/18 16:07:59 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TClass.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"

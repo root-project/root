@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.123 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.124 2006/02/10 23:43:51 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TCut.h"

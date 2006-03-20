@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.17 2003/10/23 09:36:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.18 2005/01/13 10:24:10 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TPoint.h"
+#include "TClass.h"
 
 ClassImp(TText)
 

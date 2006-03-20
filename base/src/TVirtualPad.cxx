@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.5 2003/04/14 13:53:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.6 2005/11/16 20:04:12 pcanal Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TVirtualPad.h"
 #include "X3DBuffer.h"
+#include "TClass.h"
 
 Size3D gVarSize3D;
 Size3D* gFuncSize3D(){ return &gVarSize3D; }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.3 2005/12/23 19:55:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.4 2006/01/25 18:49:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TDecompLU.h"
 #include "TDecompBK.h"
 #include "TMatrixDSymEigen.h"
+#include "TClass.h"
 
 #ifndef R__ALPHA
 templateClassImp(TMatrixTSym)

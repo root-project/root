@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.10 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.11 2006/01/06 12:56:28 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TColor.h"
+#include "TClass.h"
 
 ClassImp(TAttAxis)
 

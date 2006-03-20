@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.6 2005/05/14 00:19:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.7 2005/11/25 09:56:35 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 #include "TPaveLabel.h"
 #include "TVirtualPad.h"
 #include "snprintf.h"
-
+#include "TClass.h"
 
 ClassImp(TAttTextEditor)
 

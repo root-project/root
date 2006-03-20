@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.15 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.16 2006/03/13 09:33:50 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TGLabel.h"
 #include "TGMenu.h"
 #include "TGTab.h"
+#include "TROOT.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"

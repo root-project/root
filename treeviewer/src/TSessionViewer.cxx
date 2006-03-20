@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.57 2006/03/01 12:08:43 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.58 2006/03/03 09:49:48 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TApplication.h"
+#include "TClass.h"
 #include "TSystem.h"
 #include "TGFileDialog.h"
 #include "TBrowser.h"

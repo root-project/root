@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.280 2006/03/15 20:07:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.281 2006/03/20 19:42:42 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TF2.h"

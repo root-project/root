@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.9 2004/01/27 13:28:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.10 2004/09/03 10:51:36 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -20,15 +20,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
-#ifndef ROOT_TClass
-#include "TClass.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
 #endif
 
+class TClass;
 class TH1;
 class TF1;
 class TList;
-
 
 class TVirtualHistPainter : public TObject {
 

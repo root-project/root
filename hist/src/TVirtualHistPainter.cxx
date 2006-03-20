@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.2 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.3 2002/07/16 17:20:17 brun Exp $
 // Author: Rene Brun   30/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -11,6 +11,7 @@
 #include "TROOT.h"
 #include "TVirtualHistPainter.h"
 #include "TPluginManager.h"
+#include "TClass.h"
 
 TClass *TVirtualHistPainter::fgPainter = 0;
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.15 2002/11/27 15:23:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.16 2004/09/20 19:34:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -24,14 +24,11 @@
 #include "Riostream.h"
 #include "Strlen.h"
 #include "TNamed.h"
-#include "TClass.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
-#include "Bytes.h"
-
+#include "TClass.h"
 
 ClassImp(TNamed)
-
 
 //______________________________________________________________________________
 TNamed::TNamed(const TNamed &named) : TObject(named),fName(named.fName),fTitle(named.fTitle)

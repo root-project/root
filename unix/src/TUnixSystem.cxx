@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.145 2005/11/15 22:22:15 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.146 2006/01/25 15:08:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "TUrl.h"
+#include "TObjArray.h"
 
 //#define G__OLDEXPAND
 

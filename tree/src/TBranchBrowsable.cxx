@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.6 2005/07/18 21:05:03 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.7 2005/11/11 22:16:04 pcanal Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TClass.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
+#include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TVirtualCollectionProxy.h"
 #include "TRef.h"

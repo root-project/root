@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.7 2005/06/21 10:45:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.8 2006/02/03 21:55:38 pcanal Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -44,8 +44,8 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
-#include "TClass.h"
 #include "TMath.h"
+#include "TClass.h"
 #include "TUUID.h"
 
 ClassImp(TRandom3)

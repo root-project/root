@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.69 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.70 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TH1.h"
 #include "TObjString.h"
 #include "TDatime.h"
+#include "TClass.h"
 #include <time.h>
 
 ClassImp(TAxis)

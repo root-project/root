@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.13 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.14 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 #include "TMap.h"
 #include "THashTable.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TBrowser.h"
 #include "TRegexp.h"
 

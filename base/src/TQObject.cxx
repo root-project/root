@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.44 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.45 2005/11/21 11:17:18 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -66,7 +66,7 @@
 #include "TBaseClass.h"
 #include "TDataType.h"
 #include "TInterpreter.h"
-#include "TClass.h"
+#include "TQClass.h"
 #include "TError.h"
 #include "G__ci.h"
 #include "Api.h"

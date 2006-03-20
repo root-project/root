@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.24 2005/11/25 09:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.25 2005/12/06 17:32:15 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TGedFrame.h"
 #include "TGLabel.h"
 #include "TGFrame.h"
+#include "TClass.h"
 #include "TBaseClass.h"
 #include "TSystem.h"
 

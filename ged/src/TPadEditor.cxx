@@ -39,6 +39,7 @@
 #include "TGLabel.h"
 #include "TColor.h"
 #include "TCanvas.h"
+#include "TClass.h"
 
 ClassImp(TPadEditor)
 

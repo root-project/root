@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.83 2005/11/15 15:13:59 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.84 2005/11/22 11:09:20 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "TColor.h"
+#include "TClass.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 const Int_t kHori = BIT(9); //defined in TPad

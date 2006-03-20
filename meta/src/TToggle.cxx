@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.5 2004/03/24 13:38:02 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.6 2005/06/21 17:09:26 brun Exp $
 // Author: Piotr Golonka   30/07/97
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TClass.h"
 #include "TMethod.h"
 #include "TToggle.h"
 #include "TDataMember.h"

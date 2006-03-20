@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -42,19 +42,6 @@
 
 #ifndef ROOT_TQpProbBase
 #define ROOT_TQpProbBase
-
-#ifndef ROOT_TROOT
-#include "TROOT.h"
-#endif
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
-#ifndef ROOT_TError
-#include "TError.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
 
 #ifndef ROOT_TQpVar
 #include "TQpVar.h"

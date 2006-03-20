@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.12 2003/10/23 09:36:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.13 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TMath.h"
 #include "TPoint.h"
 #include "TText.h"
+#include "TClass.h"
 
 ClassImp(TMarker)
 

@@ -16,9 +16,9 @@
 #include "TGraphDelaunay.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
+#include "TClass.h"
 
 ClassImp(TGraph2D)
-
 
 //______________________________________________________________________________
 //

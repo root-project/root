@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.33 2005/10/14 10:59:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.34 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -210,7 +210,7 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include "TColor.h"
 #include "KeySymbols.h"
 #include "Riostream.h"
-
+#include "TClass.h"
 
 TString      *TGTextEntry::fgClipboardText = 0;
 const TGFont *TGTextEntry::fgDefaultFont = 0;

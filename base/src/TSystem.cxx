@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.134 2005/12/08 23:08:19 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.135 2006/02/21 16:57:11 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TApplication.h"
 #include "TException.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TEnv.h"
 #include "TBrowser.h"
 #include "TString.h"

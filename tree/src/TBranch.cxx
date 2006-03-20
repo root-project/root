@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.98 2006/01/31 20:58:45 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.99 2006/02/22 23:26:12 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TFile.h"
 #include "TBranch.h"
 #include "TTree.h"

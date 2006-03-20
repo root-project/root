@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.18 2005/12/09 16:24:34 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.19 2005/12/12 12:54:27 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "TEnv.h"
 #include "TSocket.h"
 #include "TXNetFile.h"
+#include "TROOT.h"
 
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>

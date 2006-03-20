@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.5 2005/12/01 16:09:46 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.6 2005/12/09 17:46:04 brun Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************
@@ -15,6 +15,7 @@
 #include "TTreeFormulaManager.h"
 #include "TSelectorDraw.h"
 #include "TBrowser.h"
+#include "TClass.h"
 
 extern void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t iflag);
 

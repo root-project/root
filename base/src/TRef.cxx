@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.32 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.33 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -204,6 +204,7 @@
 
 #include "TRef.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TProcessUUID.h"
 #include "TFile.h"
 #include "TRefTable.h"

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.4 2006/02/26 16:13:38 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.5 2006/03/16 09:08:08 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TVirtualMutex.h"
 #include "TXNetFile.h"
 #include "TXNetSystem.h"
+#include "TROOT.h"
 
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientEnv.hh"

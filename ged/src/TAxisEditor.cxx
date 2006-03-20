@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.10 2005/09/26 14:03:20 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.11 2005/11/25 09:56:35 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
+#include "TClass.h"
 
 ClassImp(TAxisEditor)
 

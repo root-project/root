@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.8 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.9 2005/03/30 08:37:34 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TProofDebug.h"
 #include "Riostream.h"
 #include "TEnv.h"
+#include "TClass.h"
 
 ClassImp(TCondorSlave)
 ClassImp(TCondor)

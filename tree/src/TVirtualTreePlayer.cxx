@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.5 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.6 2005/05/02 10:57:32 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include "TROOT.h"
 #include "TVirtualTreePlayer.h"
 #include "TPluginManager.h"
-
+#include "TClass.h"
 
 TClass              *TVirtualTreePlayer::fgPlayer  = 0;
 TVirtualTreePlayer  *TVirtualTreePlayer::fgCurrent = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.14 2005/09/13 15:52:00 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.15 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
+#include "TClass.h"
 
 #include <ctype.h>
 

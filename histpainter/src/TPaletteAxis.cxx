@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.12 2005/05/24 09:41:18 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.13 2005/11/10 10:36:59 couet Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -14,7 +14,6 @@
 #include "TPaletteAxis.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include "TClass.h"
 #include "TMath.h"
 #include "TView.h"
 

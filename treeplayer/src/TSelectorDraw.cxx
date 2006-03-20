@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.57 2005/11/09 16:20:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.58 2005/12/09 17:57:12 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TEventList.h"
 #include "THLimitsFinder.h"
 #include "TStyle.h"
+#include "TClass.h"
 
 ClassImp(TSelectorDraw)
 

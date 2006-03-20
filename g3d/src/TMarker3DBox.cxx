@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.14 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.15 2005/12/12 15:28:32 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -22,6 +22,7 @@
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TGeometry.h"
+#include "TClass.h"
 
 #include <assert.h>
 

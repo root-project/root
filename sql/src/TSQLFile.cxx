@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.6 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.7 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -177,6 +177,7 @@
 #include "TStreamerElement.h"
 #include "TProcessID.h"
 #include "TError.h"
+#include "TClass.h"
 
 #include "TSQLServer.h"
 #include "TSQLResult.h"

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.22 2006/01/18 10:16:58 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.23 2006/01/24 09:38:14 couet Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TEllipse.h"
 #include "TVirtualPad.h"
 #include "TMath.h"
+#include "TClass.h"
 
 const Double_t kPI = 3.14159265358979323846;
 

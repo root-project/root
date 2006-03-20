@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TToggleGroup.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TToggleGroup.cxx,v 1.2 2005/11/16 20:10:45 pcanal Exp $
 // Author: Piotr Golonka   31/07/97
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include "TClass.h"
 #include "TMethod.h"
 #include "TToggleGroup.h"
 

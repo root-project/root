@@ -33,6 +33,7 @@
 #include "TGButton.h"
 #include "TGButtonGroup.h"
 #include "TVirtualPad.h"
+#include "TClass.h"
 
 ClassImp(TPaveStatsEditor)
 

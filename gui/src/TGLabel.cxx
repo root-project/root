@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.19 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.20 2005/11/24 15:53:56 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include "TGResourcePool.h"
 #include "Riostream.h"
 #include "TColor.h"
-
+#include "TClass.h"
 
 const TGFont *TGLabel::fgDefaultFont = 0;
 const TGGC   *TGLabel::fgDefaultGC = 0;

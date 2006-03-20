@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.7 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.8 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "TBranchProxyDescriptor.h"
 
-#include "TClass.h"
 #include "TClonesArray.h"
 #include "TError.h"
 #include "TROOT.h"

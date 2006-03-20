@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeRow.cxx,v 1.3 2002/01/08 09:59:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeRow.cxx,v 1.4 2005/11/11 22:16:04 pcanal Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -22,7 +22,6 @@
 
 #include "TTreeRow.h"
 #include "TObjArray.h"
-#include "TClass.h"
 
 ClassImp(TTreeRow)
 

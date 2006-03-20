@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.40 2006/01/31 10:22:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.41 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TFrame.h"

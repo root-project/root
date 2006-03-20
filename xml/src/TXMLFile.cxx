@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.17 2006/01/20 01:12:13 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.18 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -86,6 +86,7 @@
 #include "TStreamerElement.h"
 #include "TProcessID.h"
 #include "TError.h"
+#include "TClass.h"
 
 ClassImp(TXMLFile);
 

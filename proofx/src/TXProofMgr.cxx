@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.5 2006/03/01 15:46:12 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.6 2006/03/03 15:42:37 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TProof.h"
 #include "TXProofMgr.h"
 #include "TXSocket.h"
+#include "TROOT.h"
 
 ClassImp(TXProofMgr)
 
