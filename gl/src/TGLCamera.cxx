@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.28 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.29 2006/02/23 16:44:51 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -550,7 +550,9 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box) const
    // We then do a TGLCamera::UpdateInterest() - which always return kTRUE , and thus
    // fires an internal rebuild to fill scene properly and finally setup camera properly.....
    if (fInterestBox.IsEmpty()) {
-      if (box.Volume() >= fLargestSeen * 0.01) {
+//      if (box.Volume() >= fLargestSeen * 0.01) {
+      if (box.Volume() >= fLargestSeen * 0.001) {
+
          if (box.Volume() > fLargestSeen) {
             fLargestSeen = box.Volume();
          }
@@ -570,7 +572,9 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box) const
          volumeRatio = box.Volume() / fInterestBox.Volume();
       }
 
-      if ((lengthRatio > 0.001) || (volumeRatio > 0.0001)) {
+//      if ((lengthRatio > 0.001) || (volumeRatio > 0.0001)) {
+      if ((lengthRatio > 0.0001) || (volumeRatio > 0.0001)) {
+
          interest = fInterestBox.Overlap(box) != kOutside;
       }
    }
