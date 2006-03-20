@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.5 2005/12/23 19:55:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.6 2006/01/25 18:49:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1584,6 +1584,45 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,co
   }
 
   return *this;
+}
+
+//______________________________________________________________________________
+template<class Element>
+Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v)
+{
+// Calculate scalar v * (*this) * v^T
+
+  Assert(this->IsValid());
+  Assert(v.IsValid());
+
+  if (this->fNcols != this->fNrows || this->fColLwb != this->fRowLwb) {
+    Error("Similarity(const TVectorT &)","matrix is not square");
+    this->Invalidate();
+    return -1.;
+  }
+
+  if (this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
+    Error("Similarity(const TVectorT &)","vector and matrix incompatible");
+    this->Invalidate();
+    return -1.;
+  }
+
+  const Element *mp = this->GetMatrixArray(); // Matrix row ptr
+  const Element *vp = v.GetMatrixArray();     // vector ptr
+
+  Element sum1 = 0;
+  const Element * const vp_first = vp;
+  const Element * const vp_last  = vp+v.GetNrows();
+  while (vp < vp_last) {
+    Element sum2 = 0;
+    for (const Element *sp = vp_first; sp < vp_last; )
+      sum2 += *mp++ * *sp++;
+    sum1 += sum2 * *vp++;
+  }
+
+  Assert(mp == this->GetMatrixArray()+this->GetNoElements());
+
+  return sum1;
 }
 
 //______________________________________________________________________________

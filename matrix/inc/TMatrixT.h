@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.3 2006/01/05 08:26:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.4 2006/03/15 15:27:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -133,6 +133,7 @@ public:
   inline  TMatrixT<Element> &T           () { return this->Transpose(*this); }
           TMatrixT<Element> &Rank1Update (const TVectorT<Element> &v,Element alpha=1.0);
           TMatrixT<Element> &Rank1Update (const TVectorT<Element> &v1,const TVectorT<Element> &v2,Element alpha=1.0);
+          Element            Similarity  (const TVectorT<Element> &v);
 
   TMatrixT<Element> &NormByColumn(const TVectorT<Element> &v,Option_t *option="D");
   TMatrixT<Element> &NormByRow   (const TVectorT<Element> &v,Option_t *option="D");
