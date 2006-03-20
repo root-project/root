@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.172 2006/01/17 09:55:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.173 2006/01/23 18:06:44 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1021,7 +1021,9 @@ TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
    VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
    if (dict) {
       (dict)();
-      return GetClass(typeinfo);
+      TClass *cl = GetClass(typeinfo);
+      if (cl) cl->PostLoadCheck();
+      return cl;
    }
    if (cl) return cl;
 
@@ -1029,7 +1031,10 @@ TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
    TClassGenerator *gen;
    while( (gen = (TClassGenerator*) next()) ) {
       cl = gen->GetClass(typeinfo,load);
-      if (cl) return cl;
+      if (cl) {
+         cl->PostLoadCheck();
+         return cl;
+      }
    }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
@@ -1450,14 +1455,19 @@ TClass *TROOT::LoadClass(const char *classname) const
       // The dictionary generation might change/delete classname
       TString clname(classname);
       (dict)();
-      return GetClass(clname, kFALSE);
+      TClass *ncl = GetClass(clname, kFALSE);
+      if (ncl) ncl->PostLoadCheck();
+      return ncl;
    }
 
    TIter next(fClassGenerators);
    TClassGenerator *gen;
    while ((gen = (TClassGenerator*) next())) {
       TClass *cl = gen->GetClass(classname, kTRUE);
-      if (cl) return cl;
+      if (cl) {
+         cl->PostLoadCheck();
+         return cl;
+      }
    }
    return 0;
 }
