@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.4 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.h,v 1.5 2005/11/24 17:08:35 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -66,6 +66,8 @@ protected:
 
    void AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
    void RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
+   void ShowFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
+   void HideFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
 
 public:
    TGMdiMenuBar(const TGWindow *p, Int_t w = 1, Int_t h = 20);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.5 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.6 2005/11/21 00:25:38 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -92,6 +92,17 @@ void TGMdiMenuBar::AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 {
    // This is called from TGMdiMainFrame on Maximize().
 
+   // Hide all frames first
+   TGFrameElement *el;
+   TIter nextl(fLeft->GetList());
+   while ((el = (TGFrameElement *) nextl())) {
+      fLeft->HideFrame(el->fFrame);
+   }
+   TIter nextr(fRight->GetList());
+   while ((el = (TGFrameElement *) nextr())) {
+      fRight->HideFrame(el->fFrame);
+   }
+   // Then add specified frames
    icon->ReparentWindow(fLeft);
    buttons->ReparentWindow(fRight);
    fLeft->AddFrame(icon, fLHint);
@@ -103,8 +114,56 @@ void TGMdiMenuBar::RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 {
    // This is called from TGMdiMainFrame on Restore()
 
+   // Remove specified frames
    fLeft->RemoveFrame(icon);
    fRight->RemoveFrame(buttons);
+   // Then show (restore) last frames
+   TGFrameElement *el;
+   el = (TGFrameElement *)fLeft->GetList()->Last();
+   if (el)
+      fLeft->ShowFrame(el->fFrame);
+   el = (TGFrameElement *)fRight->GetList()->Last();
+   if (el)
+      fRight->ShowFrame(el->fFrame);
+}
+
+//______________________________________________________________________________
+void TGMdiMenuBar::ShowFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
+{
+   // This is called from TGMdiMainFrame on Maximize().
+
+   // Hide all frames first
+   TGFrameElement *el;
+   TIter nextl(fLeft->GetList());
+   while ((el = (TGFrameElement *) nextl())) {
+      fLeft->HideFrame(el->fFrame);
+   }
+   TIter nextr(fRight->GetList());
+   while ((el = (TGFrameElement *) nextr())) {
+      fRight->HideFrame(el->fFrame);
+   }
+   // Then show specified frames
+   fLeft->ShowFrame(icon);
+   fRight->ShowFrame(buttons);
+}
+
+//______________________________________________________________________________
+void TGMdiMenuBar::HideFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
+{
+   // Used to hide specific frames from menu bar
+
+   // Hide specified frames
+   fLeft->HideFrame(icon);
+   fRight->HideFrame(buttons);
+   
+   // Then show (restore) last frames
+   TGFrameElement *el;
+   el = (TGFrameElement *)fLeft->GetList()->Last();
+   if (el)
+      fLeft->ShowFrame(el->fFrame);
+   el = (TGFrameElement *)fRight->GetList()->Last();
+   if (el)
+      fRight->ShowFrame(el->fFrame);
 }
 
 //______________________________________________________________________________

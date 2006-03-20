@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.17 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.18 2005/11/21 00:25:38 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -279,6 +279,10 @@ Bool_t TGMdiMainFrame::SetCurrent(UInt_t id)
 
    if (fCurrent && (fCurrent->GetDecorFrame()->GetId() == id)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
+      if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
+         fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
+                              fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
+      
       Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
@@ -297,6 +301,9 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrame *f)
 
    if (fCurrent && (fCurrent->GetDecorFrame()->GetMdiFrame() == f)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
+      if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
+         fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
+                              fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
       Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
@@ -315,6 +322,9 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
 
    if (fCurrent && (fCurrent == newcurrent)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
+      if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
+         fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
+                              fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
       Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
@@ -365,6 +375,10 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
 
    fWinListMenu->RCheckEntry(fCurrent->GetDecorFrame()->GetId(), 0, kMaxInt);
 
+   if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
+      fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
+                           fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
+
    return kTRUE;
 }
 
@@ -384,6 +398,9 @@ void TGMdiMainFrame::CirculateUp()
       fCurrent->GetDecorFrame()->GetTitleBar()->SetTitleBarColors(fForeCurrent,
                                                      fBackCurrent,
                                                      fFontCurrent);
+      if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
+         fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
+                              fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
 
    } else if (fChildren) {
       SetCurrent(fChildren);
@@ -407,7 +424,9 @@ void TGMdiMainFrame::CirculateDown()
       fCurrent->GetDecorFrame()->GetTitleBar()->SetTitleBarColors(fForeCurrent,
                                                      fBackCurrent,
                                                      fFontCurrent);
-
+      if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
+         fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
+                              fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
    } else if (fChildren) {
       SetCurrent(fChildren);
    }
