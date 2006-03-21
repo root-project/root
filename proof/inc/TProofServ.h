@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.33 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -132,6 +132,7 @@ private:
    Int_t         LockSession(const char *sessiontag, Int_t &fid, TString &qlock);
    Int_t         CleanupSession(const char *sessiontag);
    void          ScanPreviousQueries(const char *dir);
+   TList        *GetDataSets();
 
 protected:
    virtual void  HandleArchive(TMessage *mess);

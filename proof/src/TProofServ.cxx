@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.112 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.113 2006/01/17 13:23:29 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -81,6 +81,7 @@
 #include "compiledata.h"
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
+#include "TFileInfo.h"
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -f";
@@ -233,6 +234,26 @@ Bool_t TProofServInputHandler::Notify()
 
 // Max number of queries kept (-1 to disable)
 Int_t TProofServ::fgMaxQueries = -1;
+
+//______________________________________________________________________________
+static TList *GetDataSet(const char *name)
+{
+   // Utility function used in various methods for user dataset upload.
+
+   const char *fileListPath = Form("%s/%s/%s.root",
+                                   gSystem->ExpandPathName(kPROOF_WorkDir),
+                                   kPROOF_DataSetDir,
+                                   name);
+   if (gSystem->AccessPathName(fileListPath, kFileExists) == kFALSE) {
+      TFile *f = TFile::Open(fileListPath);
+      f->cd();
+      TList *fileList = (TList *) f->Get("fileList");
+      f->Close();
+      delete f;
+      return fileList;
+   } else
+      return 0;
+}
 
 ClassImp(TProofServ)
 
@@ -1414,6 +1435,164 @@ void TProofServ::HandleSocketInput()
          }
          break;
 
+      case kPROOF_UPLOAD_DATASET:
+         //
+         // Communication Summary
+         //   Client                             Master
+         //     |------------>DataSetName----------->|
+         //     |<-------kMESS_OK/kMESS_NOTOK<-------| (Name OK/file exist)
+         //     |-->TList of TFileInfo/kMESS_NOTOK-->| (dataset/Cancel)
+         //  (*)|<-------kMESS_OK/kMESS_NOTOK<-------| (transaction complete?)
+         //  if the message with dataset is of type kPROOF_APPEND_DATASET => we append
+         //  (*) - optional
+         {
+            char fileListName[1024];
+            TMessage *retMess;
+            Bool_t goodName = kFALSE;
+            mess->ReadString(fileListName, 1024);
+            char *fileListPath = Form("%s/%s/%s.root",
+                                      gSystem->ExpandPathName(kPROOF_WorkDir),
+                                      kPROOF_DataSetDir,
+                                      fileListName);
+            if (gSystem->AccessPathName(fileListPath, kFileExists) == kFALSE) {
+               //Dataset name does exist
+               fSocket->Send(kMESS_NOTOK);
+            } else {
+               fSocket->Send("", kMESS_OK);
+               goodName = kTRUE;
+            }
+
+            fSocket->Recv(retMess);
+            Int_t kind = retMess->What();
+            if (kind == kMESS_OK || kind == kPROOF_APPEND_DATASET)
+               //User wants to overwrite or append
+               goodName = kTRUE;
+            else if (kind != kMESS_NOTOK)
+               Error("HandleSocketInput", "Wrong message type (%d)", kind);
+
+            if (goodName) {
+               //if the fileName had existed user agreed to overwrite
+               TList *fileList =
+                   (TList *) (retMess->ReadObject(TList::Class()));
+               // (re)create file and save dataset in its current status
+               if (retMess->What() == kPROOF_APPEND_DATASET) {
+                  TList *oldFileList = GetDataSet(fileListName);
+                  TIter nextOldFile(oldFileList);
+                  while (TFileInfo *obj = (TFileInfo*)nextOldFile())
+                     fileList->Add(obj);
+                  delete oldFileList;
+               }
+               if (fileList->GetSize() > 0) {
+                  // We will save a sorted list
+                  fileList->Sort();
+                  // Removing repeated files (also when it's a new dataset name!
+                  TList *newFileList = new TList();
+                  TIter nextFile(fileList);
+                  TFileInfo *prevFile = (TFileInfo*)nextFile();
+                  newFileList->Add(prevFile);
+                  while (TFileInfo *obj = (TFileInfo*)nextFile())
+                     if (prevFile->Compare(obj)) {
+                        newFileList->Add(obj);
+                        prevFile = obj;
+                     }
+                  TFile *f = TFile::Open(fileListPath, "RECREATE");
+                  if (f) {
+                     f->cd();
+                     newFileList->Write("fileList", TObject::kSingleKey);
+                     f->Close();
+                     fSocket->Send(kMESS_OK);
+                     //should depend on what Write returns
+                  } else {
+                     fSocket->Send(kMESS_NOTOK);
+                     Error("HandleSocketInput",
+                           "can't open dataset file for writing");
+                  }
+                  delete f;
+                  delete newFileList;
+                  fileList->SetOwner();
+                  delete fileList;
+               } else {
+                  fSocket->Send(kMESS_NOTOK);
+                  Printf("No files were copied.");
+               } // if (fileList->GetSize() > 0)
+            } // if (goodName)
+            delete retMess;
+            // Notify
+            SendLogFile();
+         }
+         break;
+      case kPROOF_QUERY_DATASETS:
+         {
+            const char *ent;
+            TList *fileList = new TList();
+            void *dataSetDir = gSystem->OpenDirectory(
+                                 Form("%s/%s",
+                                 gSystem->ExpandPathName(kPROOF_WorkDir), //fWorkDir??
+                                 kPROOF_DataSetDir));
+            TRegexp rg(".*.root"); //check that it is a root file
+            while ((ent = gSystem->GetDirEntry(dataSetDir))) {
+               if (TString(ent).Index(rg) != kNPOS)
+                  //Matching dir entry
+                  fileList->Add(new TObjString(TString(ent, strlen(ent) - 5)));
+            }
+            fileList->Sort();
+            fSocket->SendObject(fileList, kMESS_OBJECT);
+            fileList->SetOwner();
+            delete fileList;
+            SendLogFile();
+         }
+         break;
+      case kPROOF_GET_DATASET:
+         {
+            char name[1024];
+            (*mess) >> name;
+            if (TList *fileList = GetDataSet(name))
+               fSocket->SendObject(fileList, kMESS_OK);
+            else                   // no such dataset
+               fSocket->Send(kMESS_NOTOK);
+            SendLogFile();
+         }
+         break;
+      case kPROOF_RM_DATASET:
+         {
+            char name[1024];
+            (*mess) >> name;
+            const char *fileListPath = Form("%s/%s/%s.root",
+                                            gSystem->
+                                            ExpandPathName(kPROOF_WorkDir),
+                                            kPROOF_DataSetDir, name);
+            if (gSystem->AccessPathName(fileListPath, kFileExists) == kFALSE) {
+               gSystem->Unlink(fileListPath);
+               fSocket->Send("", kMESS_OK);
+            } else
+               fSocket->Send("The dataset does not exist", kMESS_NOTOK);
+            SendLogFile();
+         }
+         break;
+      case kPROOF_VERIFY_DATASET:
+         {
+            char name[1024];
+            (*mess) >> name;
+            if (TList *fileList = GetDataSet(name)) {
+               TList *missingFileList = new TList();
+               TIter next(fileList);
+               TFileInfo *fileInfo;
+               while ((fileInfo = (TFileInfo *)next())) {
+//                  fileInfo->ResetUrl();
+//                  const char *fileName = fileInfo->GetCurrentUrl()->GetUrl();
+                  if (gSystem->AccessPathName(fileInfo->GetFirstUrl()->GetUrl(),
+                                              kFileExists)
+                      != kFALSE)
+                     missingFileList->Add(fileInfo);
+               }
+               fSocket->SendObject(missingFileList, kMESS_OK);
+            } else
+               fSocket->Send(kMESS_NOTOK); //??
+
+            SendLogFile();
+         }
+         break;
+
       default:
          Error("HandleSocketInput", "unknown command %d", what);
          break;
@@ -1517,6 +1696,7 @@ void TProofServ::HandleSocketInputDuringProcess()
       default:
          Error("HandleSocketInputDuringProcess", "unknown command %d", what);
          break;
+
    }
    delete mess;
 }
@@ -2219,7 +2399,7 @@ void TProofServ::Setup()
       TProofResourcesStatic resources(fConfDir, conffile);
       if (resources.IsValid()) {
          if (resources.GetMaster()) {
-            TString tmpWorkDir = resources.GetMaster()->GetWorkDir(); 
+            TString tmpWorkDir = resources.GetMaster()->GetWorkDir();
             if (tmpWorkDir != "")
                fWorkDir = tmpWorkDir;
          }
