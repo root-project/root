@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.10 2005/12/09 15:12:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.11 2006/01/23 18:06:33 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -40,7 +40,7 @@ private:
    TString fUser;           // user name
    TString fPasswd;         // password
    TString fHost;           // remote host
-   TString fFile;           // remote object
+   TString fFile;           // remote object including the slash after host
    TString fAnchor;         // anchor in object (after #)
    TString fOptions;        // options/search (after ?)
    mutable TString fFileAO; //!file and option
@@ -69,7 +69,7 @@ public:
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fPort == -1 ? kFALSE : kTRUE; }
 
-   void        SetProtocol(const char *proto) { fProtocol = proto; fUrl = ""; }
+   void        SetProtocol(const char *proto);
    void        SetUser(const char *user) { fUser = user; fUrl = ""; }
    void        SetPasswd(const char *pw) { fPasswd = pw; fUrl = ""; }
    void        SetHost(const char *host) { fHost = host; fUrl = ""; }
@@ -77,6 +77,9 @@ public:
    void        SetAnchor(const char *anchor) { fAnchor = anchor; fUrl = ""; }
    void        SetOptions(const char *opt) { fOptions = opt; fUrl = ""; }
    void        SetPort(Int_t port) { fPort = port; fUrl = ""; }
+
+   Bool_t      IsSortable() const { return kTRUE; }
+   Int_t       Compare(const TObject *obj) const;
 
    void        Print(Option_t *option="") const;
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.22 2005/09/04 15:16:12 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.23 2005/12/09 15:12:19 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -125,22 +125,8 @@ tryfile:
       }
       sav = *s;
       *s = 0;
-      fProtocol = u;
+      SetProtocol(u);
       *s = sav;
-      if (!fProtocol.CompareTo("http"))
-         fPort = 80;
-      else if (fProtocol.BeginsWith("proof"))  // can also be proofs or proofk
-         fPort = 1093;
-      else if (fProtocol.BeginsWith("root"))   // can also be roots or rootk
-         fPort = 1094;
-      else if (!fProtocol.CompareTo("ftp"))
-         fPort = 20;
-      else if (!fProtocol.CompareTo("news"))
-         fPort = 119;
-      else {
-         // generic protocol (no default port)
-         fPort = 0;
-      }
       s += 3;
       if (!*s) {
          // error if we are at end of string
@@ -399,6 +385,40 @@ const char *TUrl::GetFileAndOptions() const
       fFileAO += fOptions;
    }
    return fFileAO;
+}
+
+//______________________________________________________________________________
+void TUrl::SetProtocol(const char *proto)
+{
+   // Set protocol and change the port accordingly.
+
+   fProtocol = proto;
+   if (!fProtocol.CompareTo("http"))
+      fPort = 80;
+   else if (fProtocol.BeginsWith("proof"))  // can also be proofs or proofk
+      fPort = 1093;
+   else if (fProtocol.BeginsWith("root"))   // can also be roots or rootk
+      fPort = 1094;
+   else if (!fProtocol.CompareTo("ftp"))
+      fPort = 20;
+   else if (!fProtocol.CompareTo("news"))
+      fPort = 119;
+   else {
+         // generic protocol (no default port)
+         fPort = 0;
+   }
+   fUrl = "";
+}
+
+//______________________________________________________________________________
+Int_t TUrl::Compare(const TObject *obj) const
+{
+   // Compare two urls as strings.
+
+   if (this == obj) return 0;
+   if (TUrl::Class() != obj->IsA()) return -1;
+   return TString(((TUrl*)this)->GetUrl()).CompareTo(((TUrl*)obj)->GetUrl(),
+                                                     TString::kExact);
 }
 
 //______________________________________________________________________________
