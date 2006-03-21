@@ -678,7 +678,7 @@ redirect(line, makefile)
 		*makefile;
 {
 	struct stat	st;
-	FILE	*fdin, *fdout;
+	FILE	*fdin=0, *fdout=0;
 	char	backup[ BUFSIZ ],
 		buf[ BUFSIZ ];
 	boolean	found = FALSE;
