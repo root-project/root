@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.10 2005/10/17 10:20:01 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.11 2005/11/11 15:38:30 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -109,6 +109,12 @@ TGedMarkerPopup::~TGedMarkerPopup()
 {
    // Destructor.
    
+   TGFrameElement *el;
+   TIter next(GetList());
+   while ((el = (TGFrameElement *)next())) {
+      if (el->fFrame->InheritsFrom(TGPictureButton::Class()))
+         fClient->FreePicture(((TGPictureButton *)el->fFrame)->GetPicture());
+   }
    Cleanup();
 }
 
