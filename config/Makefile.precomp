@@ -28,9 +28,10 @@ $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
         sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \
         tr '@' '\n' > $@
 
-$(PCHEXTRAOBJ): $(PCHEXTRASRC) $(PCHFILE)
+$(PCHEXTRAOBJ): $(PCHEXTRASRC)
+	@touch $@
 $(PCHEXTRAOBJ:.o=.d): CXXFLAGS+=-DUSEPCH
-$(PCHFILE):
+$(PCHFILE): $(PCHEXTRAOBJ)
 	@echo Building precompiled header...
 	$(PCHEXTRAOBJBUILD)
 
