@@ -494,10 +494,10 @@ build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CFLAGS) -- $<
 
 G__%.d: G__%.cxx $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -D__cplusplus -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
 
 %.d: %.cxx $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -- $<
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -D__cplusplus -- $<
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)

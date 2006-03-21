@@ -72,11 +72,6 @@ $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
 
-ifeq ($(ARCH),win32)
-		   $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(CXXOUT)$@ -c $<
-else
-endif
-
 all-gl:         $(GLLIB)
 
 map-gl:         $(RLIBMAP)

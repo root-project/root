@@ -1,4 +1,4 @@
-// @(#)root/build:$Name:$:$Id:$
+// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.1 2006/03/20 17:55:49 rdm Exp $
 // Author: Axel Naumann   21/03/06
 
 /*************************************************************************
@@ -109,6 +109,7 @@ int main(int argc, char **argv)
    if (outname)
       isDict = (strstr(outname, "/G__") != 0 && strstr(outname, ".cxx"));
 
+   argv[1] = argv[0]; // keep program name
    int ret = main_orig(argc-1, &argv[1]);
    if (ret) {
       // delete output file

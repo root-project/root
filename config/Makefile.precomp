@@ -29,6 +29,7 @@ $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
         tr '@' '\n' > $@
 
 $(PCHEXTRAOBJ): $(PCHEXTRASRC) $(PCHFILE)
+$(PCHEXTRAOBJ:.o=.d): CXXFLAGS+=-DUSEPCH
 $(PCHFILE):
 	@echo Building precompiled header...
 	$(PCHEXTRAOBJBUILD)
