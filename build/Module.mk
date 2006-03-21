@@ -74,8 +74,8 @@ $(RMKDEPO1): %.o: %.c
 	$(CC) $(OPT) $(CFLAGS) $(RMKDEPCFLAGS) $(CXXOUT)$@ -c $<
 $(RMKDEPO2): %.o: %.cxx
 	cp build/win/w32pragma.h include/w32pragma.h
-	$(CXX) $(OPT) $(CXXFLAGSNOPCH) $(RMKDEPCFLAGS) $(CXXOUT)$@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(RMKDEPCFLAGS) $(CXXOUT)$@ -c $<
 
 $(BINDEXPO): %.o: %.cxx
 	cp build/win/w32pragma.h include/w32pragma.h
-	$(CXX) $(OPT) $(CXXFLAGSNOPCH) $(CXXOUT)$@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<

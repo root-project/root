@@ -16,6 +16,13 @@ ifeq ($(MAKECMDGOALS),clean)
 include config/Makefile.config
 endif
 
+MAKE_VERSION_MAJOR := $(word 1,$(subst ., ,$(MAKE_VERSION)))
+MAKE_VERSION_MINOR := $(shell echo $(word 2,$(subst ., ,$(MAKE_VERSION))) | \
+                      sed 's/\([0-9][0-9]*\).*/\1/')
+MAKE_VERSION_MAJOR ?= 0
+MAKE_VERSION_MINOR ?= 0
+ORDER_       := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || test $(MAKE_VERSION_MAJOR) -eq 3 && test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
+
 ##### Include machine dependent macros                     #####
 ##### However, if we are building packages or cleaning, we #####
 ##### don't include this file since it may screw up things #####
@@ -275,7 +282,7 @@ endif
 ifeq ($(PCHSUPPORTED),yes)
   PCHFILE      = include/precompile.h.gch
   PCHCXXFLAGS  = -DUSEPCH -include precompile.h
-  PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGSNOPCH) -DUSEPCH $(OPT) -x c++-header \
+  PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGS) -DUSEPCH $(OPT) -x c++-header \
                         -c include/precompile.h $(CXXOUT)$(PCHFILE) \
                      && touch $(PCHEXTRAOBJ)
 endif
@@ -356,13 +363,8 @@ MAINLIBS     := $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 MAINLIBS     := $(MAINLIBS) $(CINTEXLIB) $(REFLEXLIB)
 endif
-MAKE_VERSION_MAJOR := $(word 1,$(subst ., ,$(MAKE_VERSION)))
-MAKE_VERSION_MINOR := $(shell echo $(word 2,$(subst ., ,$(MAKE_VERSION))) | \
-                      sed 's/\([0-9][0-9]*\).*/\1/')
-ORDER_       := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || test $(MAKE_VERSION_MAJOR) -eq 3 && test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
 else
 MAINLIBS      =
-ORDER_        =
 endif
 
 ##### all #####
@@ -379,7 +381,7 @@ INCLUDEFILES :=
 
 # special rules (need to be defined before generic ones)
 G__%.o: G__%.cxx 
-	$(CXX) $(NOOPT) $(CXXFLAGSNOPCH) -I. $(CXXOUT)$@ -c $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(CXXOUT)$@ -c $<
 
 cint/src/%.o: cint/src/%.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
@@ -387,8 +389,8 @@ cint/src/%.o: cint/src/%.cxx
 cint/src/%.o: cint/src/%.c
 	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
-%.o: %.cxx $(ORDER_) $(PCHEXTRAOBJ) $(PCHFILE)
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
+%.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.c
 	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
@@ -427,9 +429,6 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 
 ifeq ($(PCHSUPPORTED),yes)
 include config/Makefile.precomp
-CXXFLAGSNOPCH = $(subst $(PCHCXXFLAGS),,$(CXXFLAGS))
-else
-CXXFLAGSNOPCH = $(CXXFLAGS)
 endif
 
 -include MyRules.mk            # allow local rules
@@ -485,7 +484,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 $(MAKEINFO): config/Makefile.$(ARCH) $(MAKEMAKEINFO)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
-build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
+build/dummy.d: config Makefile $(PCHFILE) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
@@ -494,10 +493,10 @@ build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CFLAGS) -- $<
 
 G__%.d: G__%.cxx $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -D__cplusplus -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
 
 %.d: %.cxx $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -D__cplusplus -- $<
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)

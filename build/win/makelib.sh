@@ -47,7 +47,7 @@ if [ "$R__PLATFORM" = "win32" ]; then
    if [ "$R__LD" = "build/win/ld.sh" ]; then
       echo "$bindexp $name $R__OBJS > lib/${name}.def"
       $bindexp $name $R__OBJS > lib/${name}.def
-      cmd="lib -ignore:4049 -ignore:4217 -ignore:4221 \
+      cmd="lib -ignore:4049,4206,4217,4221 \
            -nologo -MACHINE:IX86 -out:lib/${name}.lib $R__OBJS \
            -def:lib/${name}.def $R__LEXTRA"
       echo $cmd

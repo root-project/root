@@ -236,7 +236,7 @@ $(CINT):        $(CINTEXEO) $(CINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(CINTEXEO) \
 		   $(RPATH) $(CINTLIBS) $(CILIBS)
 
-$(CINTTMP):     $(CINTEXEO) $(CINTTMPO) $(PCHEXTRAOBJ)
+$(CINTTMP):     $(CINTEXEO) $(CINTTMPO)
 		$(LD) $(LDFLAGS) -o $@ $(CINTEXEO) \
 		   $(CINTTMPO) $(CILIBS)
 
@@ -308,7 +308,7 @@ $(CINTDIRT)/makecint_tmp.o: $(CINTDIRT)/makecint.c
 
 $(CINTDIRS)/v6_loadfile_tmp.d: $(CINTDIRS)/v6_loadfile.cxx $(RMKDEP)
 	@cp $(CINTDIRS)/v6_loadfile.cxx $(CINTDIRS)/v6_loadfile_tmp.cxx
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGSNOPCH) -- $(CINTDIRS)/v6_loadfile_tmp.cxx
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -- $(CINTDIRS)/v6_loadfile_tmp.cxx
 	@rm -f $(CINTDIRS)/v6_loadfile_tmp.cxx
 
 ##### cintdlls ######

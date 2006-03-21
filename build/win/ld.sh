@@ -14,6 +14,9 @@ while [ "$1" != "" ]; do
    esac
    shift
 done
+if [ -r base/src/precompile.o ]; then
+  args="$args base/src/precompile.o"
+fi
 
 link $args || exit $?
 if [ "$dll" != "" -a -f $dll.manifest ]; then

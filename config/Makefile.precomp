@@ -13,9 +13,8 @@ PCHEXTRASRC   = base/src/precompile.cxx
 PCHEXTRAOBJ   = $(PCHEXTRASRC:.cxx=.o)
 PCHEXTRAHDRI  = config/precompile.h.in
 PCHEXTRAHDR   = include/precompile.h
-PCHDEP        = $(ORDER_) $(PCHEXTRAOBJ) $(PCHFILE)
+PCHDEP        = $(ORDER_) $(PCHFILE)
 ALLHDRS      += $(PCHEXTRAHDR)
-CXXFLAGS     += $(PCHCXXFLAGS)
 
 ifneq ($(PCHFILE),)
 clean::
@@ -23,16 +22,20 @@ clean::
 endif
 
 $(PCHEXTRAHDR): PCHINCSTATEM = // see config/Makefile.precomp$(addprefix @\1",$(addsuffix "\2,$(PCHHEADERS)))
+
 $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
 	cat $< | \
         sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \
         tr '@' '\n' > $@
 
-$(PCHEXTRAOBJ): $(PCHEXTRASRC)
+$(PCHEXTRAOBJ):
 	@touch $@
-$(PCHEXTRAOBJ:.o=.d): CXXFLAGS+=-DUSEPCH
-$(PCHFILE): $(PCHEXTRAOBJ)
-	@echo Building precompiled header...
-	$(PCHEXTRAOBJBUILD)
 
-$(ALLLIBS): $(PCHEXTRAOBJ)
+$(PCHEXTRAOBJ:.o=.d): CXXFLAGS+=-DUSEPCH
+
+$(PCHFILE): $(PCHEXTRAOBJ) $(PCHEXTRAHDR)
+	@echo Building precompiled header...
+	$(PCHEXTRAOBJBUILD) && touch $(PCHFILE)
+
+$(CINTTMP): PCHCXXFLAGS=
+$(ROOTCINTTMPEXE): PCHCXXFLAGS=
