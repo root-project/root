@@ -250,6 +250,10 @@ N: Marian Ivanov
 E: m.ivanov@gsi.de
 D: memory leak checker
 
+N: Jan Iwaszkiewicz
+E: Jan.Iwaszkiewicz@cern.ch
+D: PROOF dataset upload mechanism
+
 N: Stanislaw Jadach
 E: Stanislaw.jadach@ifj.edu.pl
 D: the FOAM classes
