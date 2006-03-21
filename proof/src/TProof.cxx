@@ -71,6 +71,12 @@
 #include "TProofNodeInfo.h"
 #include "TProofResourcesStatic.h"
 
+#include "TRandom.h"
+#include "TRegexp.h"
+#include "TFileInfo.h"
+#include "TFileMerger.h"
+
+
 TVirtualMutex *gProofMutex = 0;
 
 //----- Helper classes used for parallel startup -------------------------------
@@ -194,6 +200,32 @@ void TSlaveInfo::Print(Option_t *opt) const
 
 
 //------------------------------------------------------------------------------
+
+//______________________________________________________________________________
+static char *CollapseSlashesInPath(const char *path)
+{
+   // Get rid of spare slashes in a path. Returned path must be deleted
+   // by the user.
+
+   if (path) {
+      Int_t i = 1; // current index as we go along the string
+      Int_t j = 0; // current end of new path in newPath
+      char *newPath = new char [strlen(path) + 1];
+      newPath[0] = path[0];
+      while (path[i]) {
+         if (path[i] != '/' || newPath[j] != '/') {
+            j++;
+            newPath[j] = path[i];
+         }
+         i++;
+      }
+      if (newPath[j] != '/')
+         j++;
+      newPath[j] = 0; // We have to terminate the new path.
+      return newPath;
+   }
+   return 0;
+}
 
 ClassImp(TProof)
 
@@ -331,13 +363,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          delete pw;
       }
    }
-   // Make sure to store the FQDN, so to get a solid reference for
-   // subsequent checks (strings corresponding to non-existing hosts
-   // - like "__master__" - will not be touched by this)
-   if (!strlen(fUrl.GetHost()))
-      fMaster = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-   else
-      fMaster = gSystem->GetHostByName(fUrl.GetHost()).GetHostName();
+   fMaster         = fUrl.GetHost();
    fConfDir        = confdir;
    fConfFile       = conffile;
    fWorkDir        = gSystem->WorkingDirectory();
@@ -4430,6 +4456,342 @@ void TProof::SetAlias(const char *alias)
    }
 
    return;
+}
+
+//______________________________________________________________________________
+Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
+                            const char *dataSetName, Int_t opt)
+{
+   // Upload a set of files and save the list of files by name dataSetName.
+   // The mask 'opt' is a combination of EUploadDataSetOpt:
+   //   kAppend             (0x1)   if set true files will be appended to
+   //                               the dataset existing by given name
+   //   kOverwriteDataSet   (0x2)   if dataset with given name exited it
+   //                               would be overwritten
+   //   kNoOverwriteDataSet (0x4)   do not overwirte if the dataset exists
+   //   kOverwriteAllFiles  (0x8)   overwrite all files that may exist
+   //   kOverwriteNoFiles   (0x10)   overwrite none
+   //   kAskUser            (0x0)   ask user before overwriteng dataset/files
+   //
+   // Communication Summary
+   // Client                             Master
+   //    |------------>DataSetName----------->|
+   //    |<-------kMESS_OK/kMESS_NOTOK<-------| (Name OK/file exist)
+   //    |-->TList of TFileInfo/kMESS_NOTOK-->| (dataset/Cancel)
+   // (*)|<-------kMESS_OK/kMESS_NOTOK<-------| (transaction complete?)
+   // if the message with dataset is of type kPROOF_APPEND_DATASET => we append.
+   // (*) - optional
+
+   if (opt & kOverwriteAllFiles && opt & kOverwriteNoFiles
+       || opt & kOverwriteDataSet && opt & kAppend
+       || opt & kNoOverwriteDataSet && opt & kOverwriteDataSet) {
+      Error("UploadDataSet", "you specified contradicting options.");
+      return -1;
+   }
+
+   // Decode options
+   Int_t overwriteAll = (opt & kOverwriteAllFiles) ? kTRUE : kFALSE;
+   Int_t overwriteNone = (opt & kOverwriteNoFiles) ? kTRUE : kFALSE;
+   Int_t goodName = (opt & (kOverwriteDataSet | kAppend)) ? 1 : -1;
+   Int_t appendToDataSet = (opt & kAppend) ? kTRUE : kFALSE;
+   Int_t overwriteNoDataSet = (opt & kNoOverwriteDataSet) ? kTRUE : kFALSE;
+
+   // First check whether this dataset already exist
+   TSocket *master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
+   TMessage *retMess;
+   master->Send(dataSetName, kPROOF_UPLOAD_DATASET);
+   master->Recv(retMess);
+   Int_t fileCount = 0; // return value
+   if (retMess->What() == kMESS_NOTOK) {
+      //We ask user to agree on overwriting the dataset name
+      while (goodName == -1 && !overwriteNoDataSet) {
+         char answer[1024];
+         printf("Dataset %s already exist. ",
+                dataSetName);
+         printf("Do you want to overwrite it[Yes/No/Append]?\n");
+         scanf("%s", answer);
+         if (!strncasecmp(answer, "y", 1)) {
+            goodName = 1;
+         } else if (!strncasecmp(answer, "n", 1)) {
+            master->Send(kMESS_NOTOK);
+            goodName = 0;
+         } else if (!strncasecmp(answer, "a", 1)) {
+            goodName = 1;
+            appendToDataSet = kTRUE;
+         }
+      }
+   }
+   else if (retMess->What() == kMESS_OK)
+      goodName = 1;
+   else
+      Error("UploadDataSet", "unrecongnized message type: %d!",
+            retMess->What());
+   delete retMess;
+   // Now we will actually copy files and create the TList object
+   if (goodName == 1) {  //must be == 1 as -1 was used for a bad name!
+      // preparing destination url
+      const char* dest;
+      TUrl destUrl(desiredDest);
+      destUrl.SetProtocol("root");
+#if 0
+      //Code for enforcing writing in user "home dir" only
+      const char* userName = gSystem->GetUserInfo()->fUser.Data();
+      const char* dataDir = "/tmp";
+      if (strncmp(destUrl.GetFile(),
+                 Form("/%s/%s", dataDir, userName),
+                      strlen(dataDir) + strlen(userName) + 2)) // 2 for 2 slashes
+         destUrl.SetFile(Form("/%s/%s/%s", dataDir, userName,
+                              destUrl.GetFile()));
+      delete dataDir;
+#endif
+      char *colpath = CollapseSlashesInPath(destUrl.GetFile());
+      destUrl.SetFile(Form("/%s", colpath));
+      delete [] colpath;
+      dest = destUrl.GetUrl();
+      //creating the default directory
+      if (gSystem->AccessPathName(dest, kFileExists) == kTRUE)
+         // directory does not exist
+         gSystem->mkdir(dest, kTRUE);
+      TList *fileList = new TList();
+      void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(files));
+      const char* ent;
+      TString filesExp(gSystem->BaseName(files));
+      filesExp.ReplaceAll("*",".*");
+      TRegexp rg(filesExp);
+      TFileMerger fileCopier;
+      while ((ent = gSystem->GetDirEntry(dataSetDir))) {
+         TString entryString(ent);
+         if (entryString.Index(rg) != kNPOS &&
+             gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(files),
+                ent), kReadPermission) == kFALSE) {
+            //matching dir entry
+            Int_t goodFileName = 1;
+            if (!overwriteAll &&
+               gSystem->AccessPathName(Form("%s/%s", dest, ent), kFileExists)
+                  == kFALSE) {  //Destination file exists
+               goodFileName = -1;
+               while (goodFileName == -1 && !overwriteAll && !overwriteNone) {
+                  char answer [1024];
+                  printf("File %s already exist. ", Form("%s/%s", dest, ent));
+                  printf("Do you want to overwrite it [Yes/No/all/none]?\n");
+                  scanf("%s", answer);
+                  if (!strncasecmp(answer, "y", 1))
+                     goodFileName = 1;
+                  else if (!strncasecmp(answer, "n", 1))
+                     goodFileName = 0;
+                  else if (!strncasecmp(answer, "all", 3))
+                     overwriteAll = kTRUE;
+                  else if (!strncasecmp(answer, "none", 4))
+                     overwriteNone = kTRUE;
+               }
+            } //if file exists
+
+            // Copy the file to the redirector indicated
+            if (goodFileName == 1 || overwriteAll) {
+            //must be == 1 as -1 was meant for bad name!
+               Printf("Uploading %s/%s ...", gSystem->DirName(files), ent);
+               if (fileCopier.Cp(Form("%s/%s", gSystem->DirName(files), ent),
+                                 Form("%s/%s", dest, ent))) {
+               fileList->Add(new TFileInfo(Form("%s/%s", dest, ent)));
+             } else
+               Error("UploadDataSet", "file %s/%s was not copied",
+                     gSystem->DirName(files), ent);
+             } else // don't overwrite, but file exist and must be included
+               fileList->Add(new TFileInfo(Form("%s/%s", dest, ent)));
+         } //if matching dir entry
+      } //while
+
+      if ((fileCount = fileList->GetSize()) == 0) {
+         master->Send(kMESS_NOTOK);
+         Printf("No files were copied. The dataset will not be saved");
+      } else {
+         TMessage mess;
+         if (appendToDataSet)
+            mess.SetWhat(kPROOF_APPEND_DATASET);
+         else
+            mess.SetWhat(kMESS_OK);
+         mess.WriteObject(fileList);
+         master->Send(mess);
+         //Reusing the retMess.
+         master->Recv(retMess);
+         if (retMess->What() != kMESS_OK) {
+            printf("Dataset was not saved.\n");
+            fileCount = -1;
+         }
+         delete retMess;
+      }
+      gSystem->FreeDirectory(dataSetDir);
+      fileList->SetOwner();
+      delete fileList;
+   }
+   else if (overwriteNoDataSet) {
+      master->Send(kMESS_NOTOK);
+      Printf("Dataset %s already exists", dataSetName);
+   } //if(goodName == 1)
+
+   Collect((TSlave*)(fActiveSlaves->First()));
+
+   return fileCount;
+}
+//______________________________________________________________________________
+Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
+                                    const char *dataset, Int_t opt)
+{
+   // Upload files listed in "file" to PROOF cluster.
+   // Where file = name of file containing list of files and
+   // dataset = dataset name
+   // Each file description (line) can include wildcards.
+
+   Int_t fileCount = 0;
+   FILE *f;
+   char line[1024]; // use TString
+   if ((f = fopen(gSystem->ExpandPathName(file), "r"))) {
+      while (fscanf(f, "%s\n", line) > 0) {
+         if (fileCount == 0) {
+            // when uploading the first file user may have to decide
+            fileCount += UploadDataSet(line, dest, dataset, opt);
+         } else // later - just append
+            fileCount += UploadDataSet(line, dest, dataset, opt | kAppend);
+      }
+      fclose(f);
+   } else {
+      Error("UploadDataSetFromFile", "unable to open the specified file");
+      return -1;
+   }
+   return fileCount;
+}
+
+//______________________________________________________________________________
+void TProof::ShowDataSets()
+{
+   // Show all datasets available on master (just ls contents of
+   // ~/proof/datasets).
+
+   TSocket *master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
+   master->Send(kPROOF_QUERY_DATASETS);
+   TMessage *retMess;
+   master->Recv(retMess);
+   TList *dataSetList;
+   if ((dataSetList = (TList*)(retMess->ReadObject(TList::Class())))) {
+      Printf("Existing DataSets:");
+      TIter next(dataSetList);
+      while (TObjString *obj = (TObjString*)next())
+         Printf("%s", obj->GetString().Data());
+      dataSetList->SetOwner();
+      delete dataSetList;
+   }
+   Collect();
+   delete retMess;
+}
+//______________________________________________________________________________
+TList *TProof::GetDataSet(const char *dataset)
+{
+   // Get a list of TFileInfo objects describing the files of the specified
+   // dataset.
+
+   TSocket *master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
+   if (master->Send(dataset, kPROOF_GET_DATASET) < 0)
+      Error("GetDataSet", "Sending request failed");
+   TMessage *retMess;
+   master->Recv(retMess);
+   Collect();
+   TList *fileList;
+   if (retMess->What() == kMESS_OK) {
+      if ((fileList = (TList*)(retMess->ReadObject(TList::Class())))) {
+         delete retMess;
+         return fileList;
+      } else
+         Error("GetDataSet", "Error reading list of files");
+   } else if (retMess->What() != kMESS_NOTOK)
+      Error("GetDataSet", "Wrong message type %d", retMess->What());
+   delete retMess;
+   return 0;
+}
+//______________________________________________________________________________
+void TProof::ShowDataSet(const char *dataset)
+{
+   //Show content of specific dataset (cat ~/proof/datasets/dataset).
+
+   TList *fileList;
+   if ((fileList = GetDataSet(dataset))) {
+      if (fileList->GetSize()) {
+         //printing sorted list
+         Printf("Files in %s:", dataset);
+         TIter next(fileList);
+         while (TFileInfo *obj = (TFileInfo*)next())
+            Printf("%s", obj->GetFirstUrl()->GetUrl());
+      } else
+         Printf("There are no files in %s", dataset);
+      delete fileList;
+   }
+   else
+      Printf("No such dataset: %s", dataset);
+}
+
+//______________________________________________________________________________
+Int_t TProof::RemoveDataSet(const char *dataset)
+{
+   // Remove the specified dataset from the PROOF cluster.
+   // Files are not deleted.
+
+   TSocket *master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
+   if (master->Send(dataset, kPROOF_RM_DATASET) < 0)
+      Error("RemoveDataSet", "Sending request failed");
+   TMessage *mess;
+   char errorMess[1024];
+   master->Recv(mess);
+   if (mess->What() == kMESS_NOTOK) {
+      mess->ReadString(errorMess, 1024);
+      Printf("%s", errorMess);
+   } else if (mess->What() != kMESS_OK) {
+      Error("RemoveDataSet", "unrecongnized message type: %d!",
+            mess->What());
+      delete mess;
+      return -1;
+   }
+   Collect();
+   delete mess;
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::VerifyDataSet(const char *dataSet)
+{
+   // Verify if all files in the specified dataset are available.
+
+   TSocket *master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
+   if (master->Send(dataSet, kPROOF_VERIFY_DATASET) < 0)
+      Error("VerifyDataSet", "Sending request failed");
+   TMessage *mess;
+   TList *missingFiles;
+
+   master->Recv(mess);
+   Collect();
+   if (mess->What() == kMESS_OK) {
+      missingFiles = (TList*)(mess->ReadObject(TList::Class()));
+      if (missingFiles->GetSize() == 0)
+         Printf("The files from %s dataset are all present on the cluster",
+                dataSet);
+      else {
+         printf("The following files are missing from dataset %s ", dataSet);
+         printf("at the moment:\n");
+         TIter next(missingFiles);
+         TFileInfo* fileInfo;
+         while ((fileInfo = (TFileInfo*)next())) {
+            printf("\t%s\n", fileInfo->GetFirstUrl()->GetUrl());
+         }
+      }
+      missingFiles->SetOwner();
+      delete missingFiles;
+   }
+   else if (mess->What() == kMESS_NOTOK) {
+      Printf("ValidateDataSet: no such dataset %s", dataSet);
+      delete mess;
+      return  -1;
+   } else
+      Fatal("ValidateDataSet", "unknown message type %d", mess->What());
+   delete mess;
+   return 0;
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.72 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.73 2006/01/17 09:55:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -100,10 +100,10 @@ const char* const kPROOF_WorkDir  = "~/proof";     // default working directory
 const char* const kPROOF_CacheDir = "cache";       // file cache dir, under WorkDir
 const char* const kPROOF_PackDir  = "packages";    // package dir, under WorkDir
 const char* const kPROOF_QueryDir = "queries";     // query dir, under WorkDir
+const char* const kPROOF_DataSetDir      = "datasets";
 const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
 const char* const kPROOF_QueryLockFile = "/tmp/proof-query-lock-"; // package lock file
-
 R__EXTERN TVirtualMutex *gProofMutex;
 
 
@@ -243,6 +243,14 @@ private:
       kBinary        = 0x1,
       kForce         = 0x2,
       kForward       = 0x4
+   };
+   enum EUploadDataSetOpt {
+      kAppend             = 0x1,
+      kOverwriteDataSet   = 0x2,
+      kNoOverwriteDataSet = 0x4,
+      kOverwriteAllFiles  = 0x8,
+      kOverwriteNoFiles   = 0x10,
+      kAskUser            = 0x0
    };
 
    Bool_t          fValid;          //is this a valid proof object
@@ -440,6 +448,7 @@ public:
    void        Close(Option_t *option="");
    void        Print(Option_t *option="") const;
 
+   //-- cache and package management
    void        ShowCache(Bool_t all = kFALSE);
    void        ClearCache();
    void        ShowPackages(Bool_t all = kFALSE);
@@ -448,6 +457,21 @@ public:
    Int_t       ClearPackage(const char *package);
    Int_t       EnablePackage(const char *package);
    Int_t       UploadPackage(const char *par);
+
+   //-- dataset management
+   Int_t       UploadDataSet(const char *files,
+                             const char *dest,
+                             const char *dataset,
+                             Int_t opt = kAskUser);
+   Int_t       UploadDataSetFromFile(const char *file,
+                                     const char *dest,
+                                     const char *dataset,
+                                      Int_t opt = kAskUser);
+   void        ShowDataSets();
+   void        ShowDataSet(const char *dataset);
+   Int_t       RemoveDataSet(const char *dateset);
+   Int_t       VerifyDataSet(const char *dataset);
+   TList      *GetDataSet(const char *dataset);
 
    const char *GetMaster() const { return fMaster; }
    const char *GetConfDir() const { return fConfDir; }
