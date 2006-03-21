@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.247 2006/03/13 10:57:07 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.248 2006/03/21 15:40:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TF2.h"
 #include "TF3.h"
 #include "TPad.h"
-#include "TCanvas.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
 #include "TLatex.h"
@@ -6172,8 +6171,10 @@ void THistPainter::SetShowProjectionX() {
     //
     if (fShowProjectionX) return;
     fShowProjectionX = kTRUE;
-    TCanvas *c = new TCanvas("c_projection_x", "ProjectionX Canvas",700, 500);
-    c->SetGrid();
+    if (!gROOT->GetMakeDefCanvas()) return;
+    (gROOT->GetMakeDefCanvas())();
+    gPad->SetName("c_projection_x");
+    gPad->SetGrid();
 }
 
 //______________________________________________________________________________
@@ -6183,8 +6184,10 @@ void THistPainter::SetShowProjectionY() {
     //
     if (fShowProjectionY) return;
     fShowProjectionY = kTRUE;
-    TCanvas *c = new TCanvas("c_projection_y", "ProjectionY Canvas",700, 500);
-    c->SetGrid();
+    if (!gROOT->GetMakeDefCanvas()) return;
+    (gROOT->GetMakeDefCanvas())();
+    gPad->SetName("c_projection_y");
+    gPad->SetGrid();
 }
 
 //______________________________________________________________________________
@@ -6192,7 +6195,9 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py) {
     //
     // Show projection onto X
     //
-    gPad->GetCanvas()->FeedbackMode(kTRUE);
+
+    gPad->SetDoubleBuffer(0);             // turn off double buffer mode
+    gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
       
     // Erase old position and draw a line at current position
     static int pyold = 0;
@@ -6208,7 +6213,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py) {
 
     // Create or set the new canvas proj x
     TVirtualPad *padsav = gPad;
-    TCanvas *c = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("c_projection_x");
+    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_x");
     if(c) {
        c->Clear();
     } else {
@@ -6235,7 +6240,9 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/) {
     //
     // Show projection onto Y
     //
-    gPad->GetCanvas()->FeedbackMode(kTRUE);
+
+    gPad->SetDoubleBuffer(0);             // turn off double buffer mode
+    gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
       
     // Erase old position and draw a line at current position
     static int pxold = 0;
@@ -6251,7 +6258,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/) {
 
     // Create or set the new canvas proj y
     TVirtualPad *padsav = gPad;
-    TCanvas *c = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("c_projection_y");
+    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_y");
     if(c) {
        c->Clear();
     } else {
