@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.3 2005/06/10 18:01:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.4 2006/03/20 21:43:43 pcanal Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -65,19 +65,23 @@ void TFileMerger::PrintProgress(Long64_t bytesread, Long64_t size)
    // Print file copy progress.
 
    fprintf(stderr, "[TFile::Cp] Total %.02f MB\t|", (Double_t)size/1048576);
+
    for (int l = 0; l < 20; l++) {
-      if (l < 20*bytesread/size)
+      if (size > 0) {
+         if (l < 20*bytesread/size)
+            fprintf(stderr, "=");
+         else if (l == 20*bytesread/size)
+            fprintf(stderr, ">");
+         else if (l > 20*bytesread/size)
+            fprintf(stderr, ".");
+      } else
          fprintf(stderr, "=");
-      if (l == 20*bytesread/size)
-         fprintf(stderr, ">");
-      if (l > 20*bytesread/size)
-         fprintf(stderr, ".");
    }
 
    fWatch.Stop();
    Double_t lCopy_time = fWatch.RealTime();
    fprintf(stderr, "| %.02f %% [%.01f MB/s]\r",
-          100.0*bytesread/size, bytesread/lCopy_time/1048576.);
+           100.0*(size?(bytesread/size):1), bytesread/lCopy_time/1048576.);
    fWatch.Continue();
 }
 
@@ -192,7 +196,7 @@ copyout:
 
    if (sfile) delete sfile;
    if (dfile) delete dfile;
-   if (copybuffer) delete copybuffer;
+   if (copybuffer) delete[] copybuffer;
 
    fWatch.Stop();
    fWatch.Reset();
