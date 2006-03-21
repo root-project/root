@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.32 2006/01/13 09:10:12 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.33 2006/03/17 18:49:36 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -1216,7 +1216,7 @@ void TMultiLayerPerceptron::AttachData()
    Assert(nentries == outL->GetLast()+1);
    for (j=0;j<nentries;j++) {
       normalize = false;
-      const TString brName = ((TObjString *)inpL->At(j))->GetString();
+      const TString brName = ((TObjString *)outL->At(j))->GetString();
       neuron = (TNeuron *) fLastLayer.UncheckedAt(j);
       if (brName[0]=='@')
          normalize = true;
