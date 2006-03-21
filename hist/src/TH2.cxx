@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.87 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.88 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2205,6 +2205,35 @@ void TH2::Reset(Option_t *option)
    fTsumwy  = 0;
    fTsumwy2 = 0;
    fTsumwxy = 0;
+}
+
+//______________________________________________________________________________
+void TH2::SetShowProjectionX()
+{
+   // When the mouse is moved in a pad containing a 2-d view of this histogram
+   // a second canvas shows the projection along X corresponding to the
+   // mouse position along Y.
+   // To stop the generation of the projections, delete the canvas
+   // containing the projection.
+   
+   GetPainter();
+
+   if (fPainter) fPainter->SetShowProjectionX();
+}
+
+
+//______________________________________________________________________________
+void TH2::SetShowProjectionY()
+{
+   // When the mouse is moved in a pad containing a 2-d view of this histogram
+   // a second canvas shows the projection along Y corresponding to the
+   // mouse position along X.
+   // To stop the generation of the projections, delete the canvas
+   // containing the projection.
+   
+   GetPainter();
+
+   if (fPainter) fPainter->SetShowProjectionY();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.246 2006/03/06 13:13:47 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.247 2006/03/13 10:57:07 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TF2.h"
 #include "TF3.h"
 #include "TPad.h"
+#include "TCanvas.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
 #include "TLatex.h"
@@ -106,6 +107,9 @@ THistPainter::THistPainter()
    fStack = 0;
    fLego  = 0;
    fGraphPainter = 0;
+   fShowProjectionX = kFALSE;
+   fShowProjectionY = kFALSE;
+  
    gStringEntries   = gEnv->GetValue("Hist.Stats.Entries",   "Entries");
    gStringMean      = gEnv->GetValue("Hist.Stats.Mean",      "Mean");
    gStringMeanX     = gEnv->GetValue("Hist.Stats.MeanX",     "Mean x");
@@ -358,7 +362,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kMouseMotion:
 
-      if (Hoption.Bar) {
+     if (fShowProjectionX) {ShowProjectionX(px,py); break;}
+     if (fShowProjectionY) {ShowProjectionY(px,py); break;}
+     
+     if (Hoption.Bar) {
          baroffset = fH->GetBarOffset();
          barwidth  = fH->GetBarWidth();
       } else {
@@ -6156,4 +6163,112 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
    }
 
    return ef;
+}
+
+//______________________________________________________________________________
+void THistPainter::SetShowProjectionX() {
+    //
+    // Set projection onto X
+    //
+    if (fShowProjectionX) return;
+    fShowProjectionX = kTRUE;
+    TCanvas *c = new TCanvas("c_projection_x", "ProjectionX Canvas",700, 500);
+    c->SetGrid();
+}
+
+//______________________________________________________________________________
+void THistPainter::SetShowProjectionY() {
+    //
+    // Set projection onto Y
+    //
+    if (fShowProjectionY) return;
+    fShowProjectionY = kTRUE;
+    TCanvas *c = new TCanvas("c_projection_y", "ProjectionY Canvas",700, 500);
+    c->SetGrid();
+}
+
+//______________________________________________________________________________
+void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py) {
+    //
+    // Show projection onto X
+    //
+    gPad->GetCanvas()->FeedbackMode(kTRUE);
+      
+    // Erase old position and draw a line at current position
+    static int pyold = 0;
+    float uxmin = gPad->GetUxmin();
+    float uxmax = gPad->GetUxmax();
+    int pxmin = gPad->XtoAbsPixel(uxmin);
+    int pxmax = gPad->XtoAbsPixel(uxmax);
+    if( pyold ) gVirtualX->DrawLine(pxmin,pyold,pxmax,pyold);
+    gVirtualX->DrawLine(pxmin,py,pxmax,py);
+    pyold = py;
+    Float_t upy = gPad->AbsPixeltoY(py);
+    Float_t y = gPad->PadtoY(upy);
+
+    // Create or set the new canvas proj x
+    TVirtualPad *padsav = gPad;
+    TCanvas *c = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("c_projection_x");
+    if(c) {
+       c->Clear();
+    } else {
+       fShowProjectionX = kFALSE;
+       return;
+    }
+    c->cd();
+
+    // Draw slice corresponding to mouse position
+    Int_t biny = fH->GetYaxis()->FindBin(y);
+    TH1D *hp = ((TH2*)fH)->ProjectionX("", biny, biny);
+    hp->SetFillColor(38);
+    hp->SetName("ProjectionX");
+    hp->SetTitle(Form("ProjectionX of biny=%d", biny));
+    hp->SetXTitle(fH->GetXaxis()->GetTitle());
+    hp->SetYTitle("Number of Entries");
+    hp->Draw();
+    c->Update();
+    padsav->cd();
+}
+
+//______________________________________________________________________________
+void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/) {
+    //
+    // Show projection onto Y
+    //
+    gPad->GetCanvas()->FeedbackMode(kTRUE);
+      
+    // Erase old position and draw a line at current position
+    static int pxold = 0;
+    float uymin = gPad->GetUymin();
+    float uymax = gPad->GetUymax();
+    int pymin = gPad->YtoAbsPixel(uymin);
+    int pymax = gPad->YtoAbsPixel(uymax);
+    if( pxold ) gVirtualX->DrawLine(pxold,pymin,pxold,pymax);
+    gVirtualX->DrawLine(px,pymin,px,pymax);
+    pxold = px;
+    Float_t upx = gPad->AbsPixeltoX(px);
+    Float_t x = gPad->PadtoX(upx);
+
+    // Create or set the new canvas proj y
+    TVirtualPad *padsav = gPad;
+    TCanvas *c = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("c_projection_y");
+    if(c) {
+       c->Clear();
+    } else {
+       fShowProjectionY = kFALSE;
+       return;
+    }
+    c->cd();
+
+    // Draw slice corresponding to mouse position
+    Int_t binx = fH->GetXaxis()->FindBin(x);
+    TH1D *hp = ((TH2*)fH)->ProjectionY("", binx, binx);
+    hp->SetFillColor(38);
+    hp->SetName("ProjectionY");
+    hp->SetTitle(Form("ProjectionY of binx=%d", binx));
+    hp->SetXTitle(fH->GetYaxis()->GetTitle());
+    hp->SetYTitle("Number of Entries");
+    hp->Draw();
+    c->Update();
+    padsav->cd();
 }

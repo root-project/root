@@ -233,6 +233,8 @@ private:
    void           Pan(Int_t newX, Int_t newY);
    Bool_t         Select(Int_t x, Int_t y)const;
    void           SelectAxes(Int_t front, Int_t x, Int_t y)const;
+   void           ShowProjectionX(Int_t px, Int_t py) {;}
+   void           ShowProjectionY(Int_t px, Int_t py) {;}
 
    TGLHistPainter(const TGLHistPainter &);
    TGLHistPainter &operator = (const TGLHistPainter &);

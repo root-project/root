@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.35 2005/11/01 16:42:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.36 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -94,7 +94,9 @@ public:
           TH1D     *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
    virtual void     Reset(Option_t *option="");
-
+   virtual void     SetShowProjectionX();  // *MENU*
+   virtual void     SetShowProjectionY();  // *MENU*
+           
    ClassDef(TH2,4)  //2-Dim histogram base class
 };
 
