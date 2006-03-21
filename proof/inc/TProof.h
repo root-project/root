@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.73 2006/01/17 09:55:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.74 2006/03/21 15:07:22 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -244,14 +244,6 @@ private:
       kForce         = 0x2,
       kForward       = 0x4
    };
-   enum EUploadDataSetOpt {
-      kAppend             = 0x1,
-      kOverwriteDataSet   = 0x2,
-      kNoOverwriteDataSet = 0x4,
-      kOverwriteAllFiles  = 0x8,
-      kOverwriteNoFiles   = 0x10,
-      kAskUser            = 0x0
-   };
 
    Bool_t          fValid;          //is this a valid proof object
    TString         fMaster;         //master server ("" if a master); used in the browser
@@ -466,7 +458,7 @@ public:
    Int_t       UploadDataSetFromFile(const char *file,
                                      const char *dest,
                                      const char *dataset,
-                                      Int_t opt = kAskUser);
+                                     Int_t opt = kAskUser);
    void        ShowDataSets();
    void        ShowDataSet(const char *dataset);
    Int_t       RemoveDataSet(const char *dateset);

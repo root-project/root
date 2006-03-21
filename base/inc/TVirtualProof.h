@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.24 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.25 2006/01/17 09:55:38 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -50,7 +50,18 @@ public:
    enum EStatusBits {
       kUsingSessionGui = BIT(14)
    };
-   enum EQueryMode { kSync = 0, kAsync = 1 };
+   enum EQueryMode {
+      kSync = 0,
+      kAsync = 1
+   };
+   enum EUploadOpt {
+      kAppend             = 0x1,
+      kOverwriteDataSet   = 0x2,
+      kNoOverwriteDataSet = 0x4,
+      kOverwriteAllFiles  = 0x8,
+      kOverwriteNoFiles   = 0x10,
+      kAskUser            = 0x0
+   };
 
 protected:
    TVirtualProofMgr::EServType  fServType;  // Type of server: proofd, XrdProofd
@@ -103,6 +114,7 @@ public:
    virtual void        Close(Option_t *option="") = 0;
    virtual void        Print(Option_t *option="") const = 0;
 
+   //-- cache and package management
    virtual void        ShowCache(Bool_t all = kFALSE) = 0;
    virtual void        ClearCache() = 0;
    virtual void        ShowPackages(Bool_t all = kFALSE) = 0;
@@ -111,6 +123,21 @@ public:
    virtual Int_t       ClearPackage(const char *package) = 0;
    virtual Int_t       EnablePackage(const char *package) = 0;
    virtual Int_t       UploadPackage(const char *par) = 0;
+
+   //-- dataset management
+   virtual Int_t       UploadDataSet(const char *files,
+                                     const char *dest,
+                                     const char *dataset,
+                                     Int_t opt = kAskUser) = 0;
+   virtual Int_t       UploadDataSetFromFile(const char *file,
+                                             const char *dest,
+                                             const char *dataset,
+                                             Int_t opt = kAskUser) = 0;
+   virtual void        ShowDataSets() = 0;
+   virtual void        ShowDataSet(const char *dataset) = 0;
+   virtual Int_t       RemoveDataSet(const char *dateset) = 0;
+   virtual Int_t       VerifyDataSet(const char *dataset) = 0;
+   virtual TList      *GetDataSet(const char *dataset) = 0;
 
    virtual const char *GetMaster() const = 0;
    virtual const char *GetConfDir() const = 0;

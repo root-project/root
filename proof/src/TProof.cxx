@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.132 2006/01/30 09:01:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.134 2006/03/21 15:07:22 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4463,7 +4463,7 @@ Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
                             const char *dataSetName, Int_t opt)
 {
    // Upload a set of files and save the list of files by name dataSetName.
-   // The mask 'opt' is a combination of EUploadDataSetOpt:
+   // The mask 'opt' is a combination of EUploadOpt:
    //   kAppend             (0x1)   if set true files will be appended to
    //                               the dataset existing by given name
    //   kOverwriteDataSet   (0x2)   if dataset with given name exited it
@@ -4639,7 +4639,7 @@ Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
 {
    // Upload files listed in "file" to PROOF cluster.
    // Where file = name of file containing list of files and
-   // dataset = dataset name
+   // dataset = dataset name and opt is a combination of EUploadOpt bits.
    // Each file description (line) can include wildcards.
 
    Int_t fileCount = 0;
