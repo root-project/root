@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.26 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.27 2006/03/20 21:42:28 pcanal Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -198,9 +198,9 @@ public:
 extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
                           const char *slot);
 
-#ifdef G__DICTIONARY
+// This include is no longer necessary but is kept to be 
+// backward compatible with user code.
 #include "TQClass.h"
-#endif
 
 //---- ClassImpQ macro ----------------------------------------------
 //

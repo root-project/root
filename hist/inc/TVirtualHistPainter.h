@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.10 2004/09/03 10:51:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.11 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -22,6 +22,11 @@
 
 #ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TClass
+// This include is no longer necessary but is kept to be 
+// backward compatible with user code.
+#include "TClass.h"
 #endif
 
 class TClass;

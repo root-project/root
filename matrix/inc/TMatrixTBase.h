@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.6 2006/01/26 16:31:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.7 2006/03/20 21:43:43 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -67,8 +67,11 @@
 
 #include <limits>
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TROOT
+#include "TROOT.h"
+#endif
+#ifndef ROOT_TClass
+#include "TClass.h"
 #endif
 #ifndef ROOT_TPluginManager
 #include "TPluginManager.h"

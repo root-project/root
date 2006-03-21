@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.h,v 1.3 2004/09/03 13:41:34 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.h,v 1.4 2006/03/20 21:43:44 pcanal Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -42,6 +42,19 @@
 
 #ifndef ROOT_TQpVar
 #define ROOT_TQpVar
+
+#ifndef ROOT_TROOT
+#include "TROOT.h"
+#endif
+#ifndef ROOT_TClass
+#include "TClass.h"
+#endif
+#ifndef ROOT_TError
+#include "TError.h"
+#endif
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
 
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
