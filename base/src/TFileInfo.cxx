@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.4 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.cxx,v 1.5 2006/01/24 14:39:59 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -150,6 +150,16 @@ void TFileInfo::RemoveMetaDataObject()
       delete fMetaDataObject;
       fMetaDataObject = 0;
    }
+}
+
+//______________________________________________________________________________
+Int_t TFileInfo::Compare(const TObject *obj) const
+{
+   // Compare TFileInfo object by their first urls.
+
+   if (this == obj) return 0;
+   if (TFileInfo::Class() != obj->IsA()) return -1;
+   return (GetFirstUrl()->Compare(((TFileInfo*)obj)->GetFirstUrl()));
 }
 
 //______________________________________________________________________________

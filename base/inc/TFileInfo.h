@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.2 2005/11/24 17:08:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.3 2006/01/24 14:39:59 rdm Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    void            ResetUrl() { fCurrentUrl = (TUrl*)fUrlList->First(); }
    TUrl           *NextUrl();
    TUrl           *GetCurrentUrl() const { return ((fCurrentUrl)?fCurrentUrl:0) ; };
+   TUrl           *GetFirstUrl() const { return (TUrl*)fUrlList->First(); }
 
    Long64_t        GetSize() const       { return fSize; }
    Long64_t        GetEntries() const    { return fEntries; }
@@ -90,7 +91,10 @@ public:
    void            AddMetaDataObject(TObject *obj);
    void            RemoveMetaDataObject();
 
-   void            Print(Option_t *options="") const ;
+   Bool_t          IsSortable() const { return kTRUE; }
+   Int_t           Compare(const TObject *obj) const;
+
+   void            Print(Option_t *options="") const;
 
    ClassDef(TFileInfo,1)  // Describes generic file info including meta information
 };
