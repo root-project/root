@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.26 2005/09/16 08:48:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.27 2005/09/22 23:29:30 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -78,6 +78,12 @@ enum EMessageTypes {
    kPROOF_MAXQUERIES,                    //Message with max number of queries
    kPROOF_CLEANUPSESSION,                //Cleanup session query area
    kPROOF_SERVERSTARTED,                 //Signal completion of a server startup
+   kPROOF_UPLOAD_DATASET,                //Get content of uploaded dataset (TList)
+   kPROOF_QUERY_DATASETS,                //List datasets saved on master node
+   kPROOF_GET_DATASET,	                 //Get a TList of TFileInfo objects
+   kPROOF_VERIFY_DATASET,                //Try open all files from a dataset and report results
+   kPROOF_RM_DATASET,                    //Remove a dataset but leave files belonging to it
+   kPROOF_APPEND_DATASET,                //Add new files to an existing dataset
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
