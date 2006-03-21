@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.129 2005/11/13 17:58:03 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.130 2005/12/01 17:26:58 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -808,7 +808,7 @@ void TWinNTSystem::SetProgname(const char *name)
 
       progname = StrDup(BaseName(fullname));
       dot = strrchr(progname, '.');
-      idot = (ULong_t)(dot - progname);
+      idot = dot ? (ULong_t)(dot - progname) : strlen(progname);
 
       char *which = 0;
 
