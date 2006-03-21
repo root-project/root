@@ -79,7 +79,7 @@ class genreflex:
       --no_membertypedefs
          Disable the definition of class member typedefs \n
       --fail_on_warnings
-         The lcgdict command fails (retuns the value 1) if any warning message is issued \n
+         The genreflex command fails (retuns the value 1) if any warning message is issued \n
       --gccxmlpath=<path>
          Path path where the gccxml tool is installed.
          If not defined the standard PATH environ variable is used\n
@@ -225,7 +225,7 @@ class genreflex:
       if not self.quiet : print 'Parsing file %s with GCC_XML' % source,
       status = os.system(cmd)
       if status :
-        print 'Error processing file with gccxml. Lcgdict command failed.'
+        print 'Error processing file with gccxml. genreflex command failed.'
         sys.exit(1)
       else: 
         if not self.quiet : print 'OK'
