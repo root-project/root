@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.115 2006/02/23 12:01:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.116 2006/03/03 08:20:28 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2880,7 +2880,7 @@ Double_t TFormula::GetParameter(Int_t ipar) const
 {
   //return value of parameter number ipar
 
-  if (ipar <0 && ipar >= fNpar) return 0;
+  if (ipar <0 || ipar >= fNpar) return 0;
   return fParams[ipar];
 }
 
