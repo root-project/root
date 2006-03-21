@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.276 2006/02/18 12:47:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.277 2006/03/02 07:27:18 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2270,7 +2270,7 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //
 //  gPad always contains a TH1 derived object called "htemp" which allows to
 //  access the axes:
-//    TGraph *graph = (TGraph*)gPad->GetPrimitive("graph"); // 2D
+//    TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph"); // 2D
 //    TH2F   *htemp = (TH2F*)gPad->GetPrimitive("htemp"); // empty, but has axes
 //    TAxis  *xaxis = htemp->GetXaxis();
 //
