@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.23 2005/12/09 15:12:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.24 2006/03/21 14:53:33 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -125,7 +125,7 @@ tryfile:
       }
       sav = *s;
       *s = 0;
-      SetProtocol(u);
+      SetProtocol(u, kTRUE);
       *s = sav;
       s += 3;
       if (!*s) {
@@ -388,24 +388,26 @@ const char *TUrl::GetFileAndOptions() const
 }
 
 //______________________________________________________________________________
-void TUrl::SetProtocol(const char *proto)
+void TUrl::SetProtocol(const char *proto, Bool_t setDefaultPort)
 {
-   // Set protocol and change the port accordingly.
+   // Set protocol and, optionally, change the port accordingly.
 
    fProtocol = proto;
-   if (!fProtocol.CompareTo("http"))
-      fPort = 80;
-   else if (fProtocol.BeginsWith("proof"))  // can also be proofs or proofk
-      fPort = 1093;
-   else if (fProtocol.BeginsWith("root"))   // can also be roots or rootk
-      fPort = 1094;
-   else if (!fProtocol.CompareTo("ftp"))
-      fPort = 20;
-   else if (!fProtocol.CompareTo("news"))
-      fPort = 119;
-   else {
+   if (setDefaultPort) {
+      if (!fProtocol.CompareTo("http"))
+         fPort = 80;
+      else if (fProtocol.BeginsWith("proof"))  // can also be proofs or proofk
+         fPort = 1093;
+      else if (fProtocol.BeginsWith("root"))   // can also be roots or rootk
+         fPort = 1094;
+      else if (!fProtocol.CompareTo("ftp"))
+         fPort = 20;
+      else if (!fProtocol.CompareTo("news"))
+         fPort = 119;
+      else {
          // generic protocol (no default port)
          fPort = 0;
+      }
    }
    fUrl = "";
 }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.11 2006/01/23 18:06:33 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.12 2006/03/21 14:53:33 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fPort == -1 ? kFALSE : kTRUE; }
 
-   void        SetProtocol(const char *proto);
+   void        SetProtocol(const char *proto, Bool_t setDefaultPort = kFALSE);
    void        SetUser(const char *user) { fUser = user; fUrl = ""; }
    void        SetPasswd(const char *pw) { fPasswd = pw; fUrl = ""; }
    void        SetHost(const char *host) { fHost = host; fUrl = ""; }
