@@ -35,14 +35,14 @@ endif
 
 ##### local rules #####
 $(RMKDEP):      $(RMKDEPO)
-		$(LD) $(subst $(PCHEXTRAOBJ),,$(LDFLAGS)) -o $@ $(RMKDEPO)
+		$(LD) $(LDFLAGS) -o $@ $(RMKDEPO)
 
 ifeq ($(PLATFORM),win32)
 include/%.h:    build/win/%.h
 		cp $< $@
 
 $(BINDEXP):     $(BINDEXPO)
-		$(LD) $(subst $(PCHEXTRAOBJ),,$(LDFLAGS)) -o $@ $(BINDEXPO)
+		$(LD) $(LDFLAGS) -o $@ $(BINDEXPO)
 
 all-build:      $(RMKDEP) $(BINDEXP)
 else

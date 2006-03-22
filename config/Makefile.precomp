@@ -28,14 +28,16 @@ $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
         sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \
         tr '@' '\n' > $@
 
-$(PCHEXTRAOBJ):
-	@touch $@
+$(PCHEXTRAOBJ):;
 
 $(PCHEXTRAOBJ:.o=.d): CXXFLAGS+=-DUSEPCH
 
-$(PCHFILE): $(PCHEXTRAOBJ) $(PCHEXTRAHDR)
-	@echo Building precompiled header...
-	$(PCHEXTRAOBJBUILD) && touch $(PCHFILE)
+$(PCHFILE): $(PCHEXTRAOBJ) $(PCHEXTRAHDR) $(W32PRAGMA)
+	@if test -r $(PCHEXTRAOBJ:.o=.d) ; then \
+	  echo Building precompiled header...; \
+	  echo $(PCHEXTRAOBJBUILD); \
+	  $(PCHEXTRAOBJBUILD); \
+	fi
 
 $(CINTTMP): PCHCXXFLAGS=
 $(ROOTCINTTMPEXE): PCHCXXFLAGS=
