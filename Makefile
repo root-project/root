@@ -18,10 +18,12 @@ endif
 
 MAKE_VERSION_MAJOR := $(word 1,$(subst ., ,$(MAKE_VERSION)))
 MAKE_VERSION_MINOR := $(shell echo $(word 2,$(subst ., ,$(MAKE_VERSION))) | \
-                      sed 's/\([0-9][0-9]*\).*/\1/')
+                              sed 's/\([0-9][0-9]*\).*/\1/')
 MAKE_VERSION_MAJOR ?= 0
 MAKE_VERSION_MINOR ?= 0
-ORDER_       := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || test $(MAKE_VERSION_MAJOR) -eq 3 && test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
+ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || \
+                  test $(MAKE_VERSION_MAJOR) -eq 3 && \
+                  test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
 
 ##### Include machine dependent macros                     #####
 ##### However, if we are building packages or cleaning, we #####
@@ -214,7 +216,7 @@ CINTLIBS     := -lCint
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
 ifneq ($(ROOTDICTTYPE),cint)
-ROOTLIBS     := $(ROOTLIBS) -lCintex -lReflex
+ROOTLIBS     += -lCintex -lReflex
 endif
 RINTLIBS     := -lRint
 PROOFLIBS    := -lProof -lTreePlayer -lThread
@@ -226,17 +228,22 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
 ifneq ($(ROOTDICTTYPE),cint)
-ROOTLIBS     := $(ROOTLIBS) $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
+ROOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib \
                 $(LPATH)/libThread.lib
 endif
+
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
-ifeq ($(FORCELINK),yes)
+ifneq ($(ROOTDICTTYPE),cint)
+ROOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
+endif
+
 # Force linking of not referenced libraries
+ifeq ($(FORCELINK),yes)
 ifeq ($(PLATFORM),aix5)
 ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Hist     \
                 -Wl,-u,.G__cpp_setupG__Graf1    \
@@ -254,7 +261,6 @@ ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Hist    \
 endif
 endif
 ifeq ($(PLATFORM),win32)
-# Force linking of not referenced libraries
 ROOTULIBS    := -include:_G__cpp_setupG__Hist    \
                 -include:_G__cpp_setupG__Graf1   \
                 -include:_G__cpp_setupG__G3D     \
@@ -263,7 +269,8 @@ ROOTULIBS    := -include:_G__cpp_setupG__Hist    \
                 -include:_G__cpp_setupG__Matrix
 endif
 
-# Compiler output option
+##### Compiler output option #####
+
 CXXOUT ?= -o # keep whitespace after "-o"
 
 ##### gcc version #####
@@ -275,16 +282,16 @@ GCC_PATCH     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f3)
 GCC_VERS      := gcc-$(GCC_MAJOR).$(GCC_MINOR)
 GCC_VERS_FULL := gcc-$(GCC_MAJOR).$(GCC_MINOR).$(GCC_PATCH)
 
-# Precompiled headers:
+# Precompiled headers for gcc
 ifeq ($(GCC_MAJOR),4)
 PCHSUPPORTED  := $(ENABLEPCH)
 endif
 ifeq ($(PCHSUPPORTED),yes)
-  PCHFILE      = include/precompile.h.gch
-  PCHCXXFLAGS  = -DUSEPCH -include precompile.h
-  PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGS) -DUSEPCH $(OPT) -x c++-header \
-                        -c include/precompile.h $(CXXOUT)$(PCHFILE) \
-                     && touch $(PCHEXTRAOBJ)
+PCHFILE        = include/precompile.h.gch
+PCHCXXFLAGS    = -DUSEPCH -include precompile.h
+PCHEXTRAOBJBUILD = $(CXX) $(CXXFLAGS) -DUSEPCH $(OPT) -x c++-header \
+                   -c include/precompile.h $(CXXOUT)$(PCHFILE) \
+                   && touch $(PCHEXTRAOBJ)
 endif
 endif
 
@@ -361,7 +368,7 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 ifeq ($(EXPLICITLINK),yes)
 MAINLIBS     := $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
-MAINLIBS     := $(MAINLIBS) $(CINTEXLIB) $(REFLEXLIB)
+MAINLIBS     += $(CINTEXLIB) $(REFLEXLIB)
 endif
 else
 MAINLIBS      =
@@ -493,7 +500,8 @@ build/dummy.d: config Makefile $(PCHFILE) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CFLAGS) -- $<
 
 G__%.d: G__%.cxx $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
+	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus \
+	   -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
 
 %.d: %.cxx $(RMKDEP)
 	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
