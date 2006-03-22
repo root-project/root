@@ -65,6 +65,23 @@ namespace testclasses {
 
   } // ns OverloadedOperators
 
+  namespace NonPublicDestructor {
+
+     class BaseWithProtectedDestructor {
+     protected:
+        ~BaseWithProtectedDestructor() {}
+     };
+
+     class Derived20 : public BaseWithProtectedDestructor {
+     };
+
+     class Derived21 : public BaseWithProtectedDestructor {
+     public:
+        ~Derived21() {}
+     };
+
+  } // ns NonPublicDestructor
+
   
 #if 0
   
@@ -108,6 +125,7 @@ namespace testclasses {
 #endif
   
 } // namespace testclasses
+
 
 
 // template instances
