@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.2 2006/01/05 08:26:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.3 2006/03/20 22:27:30 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -49,12 +49,6 @@ protected:
   void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
                     Int_t nr_nonzeros = -1);
 
-  // Elementary constructors
-  void AtMultA(const TMatrixT   <Element> &a,Int_t constr=1);
-  void AtMultA(const TMatrixTSym<Element> &a,Int_t constr=1);
-
-  void AMultA (const TMatrixTSym<Element> &a,Int_t constr=1) { AtMultA(a,constr); }
-
 public:
 
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
@@ -79,6 +73,14 @@ public:
   TMatrixTSym(const TMatrixTSymLazy<Element> &lazy_constructor);
 
   virtual ~TMatrixTSym() { Clear(); }
+
+ // Elementary constructors
+  void AtMultA(const TMatrixT   <Element> &a,Int_t constr=0);
+  void AtMultA(const TMatrixTSym<Element> &a,Int_t constr=0);
+  void AMultA (const TMatrixTSym<Element> &a,Int_t constr=0) { AtMultA(a,constr); }
+
+  void APlusB (const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=0);
+  void AMinusB(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=0);
 
   virtual const Element *GetMatrixArray  () const;
   virtual       Element *GetMatrixArray  ();

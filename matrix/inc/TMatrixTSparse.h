@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.1 2005/12/22 09:19:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.2 2006/01/05 08:26:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -48,25 +48,25 @@ protected:
                 Int_t init = 0,Int_t nr_nonzeros = 0);
 
   // Elementary constructors
-  void AMultB (const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=1) {
+  void AMultB (const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0) {
                const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,b); AMultBt(a,bt,constr); }
-  void AMultB (const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=1) {
+  void AMultB (const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0) {
                const TMatrixTSparse<Element> bsp = b;
                const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,bsp); AMultBt(a,bt,constr); }
-  void AMultB (const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=1) {
+  void AMultB (const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0) {
                const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,b); AMultBt(a,bt,constr); }
 
-  void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=1);
-  void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=1);
-  void AMultBt(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=1);
+  void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
+  void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0);
+  void AMultBt(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
 
-  void APlusB (const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=1);
-  void APlusB (const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=1);
-  void APlusB (const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=1) { APlusB(b,a,constr); }
+  void APlusB (const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
+  void APlusB (const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0);
+  void APlusB (const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0) { APlusB(b,a,constr); }
 
-  void AMinusB(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=1);
-  void AMinusB(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=1);
-  void AMinusB(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=1);
+  void AMinusB(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
+  void AMinusB(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0);
+  void AMinusB(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
 
 public:
 
@@ -163,20 +163,20 @@ public:
   TMatrixTSparse<Element> &operator*=(Element val);
 
   TMatrixTSparse<Element> &operator+=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this);
-                                                                               if (this == &source) APlusB (tmp,tmp);
-                                                                               else                 APlusB (tmp,source); return *this; }
+                                                                               if (this == &source) APlusB (tmp,tmp,1);
+                                                                               else                 APlusB (tmp,source,1); return *this; }
   TMatrixTSparse<Element> &operator+=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this);
-                                                                               APlusB(tmp,source); return *this; }
+                                                                               APlusB(tmp,source,1); return *this; }
   TMatrixTSparse<Element> &operator-=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this);
-                                                                               if (this == &source) AMinusB (tmp,tmp);
-                                                                               else                 AMinusB(tmp,source); return *this; }
+                                                                               if (this == &source) AMinusB (tmp,tmp,1);
+                                                                               else                 AMinusB(tmp,source,1); return *this; }
   TMatrixTSparse<Element> &operator-=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this);
-                                                                               AMinusB(tmp,source); return *this; }
+                                                                               AMinusB(tmp,source,1); return *this; }
   TMatrixTSparse<Element> &operator*=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this);
-                                                                               if (this == &source) AMultB (tmp,tmp);
-                                                                               else                 AMultB (tmp,source); return *this; }
+                                                                               if (this == &source) AMultB (tmp,tmp,1);
+                                                                               else                 AMultB (tmp,source,1); return *this; }
   TMatrixTSparse<Element> &operator*=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this);
-                                                                               AMultB(tmp,source); return *this; }
+                                                                               AMultB(tmp,source,1); return *this; }
 
   virtual TMatrixTBase  <Element> &Randomize  (Element alpha,Element beta,Double_t &seed);
   virtual TMatrixTSparse<Element> &RandomizePD(Element alpha,Element beta,Double_t &seed);

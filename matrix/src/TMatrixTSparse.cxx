@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.2 2005/12/23 19:55:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.3 2006/01/25 18:49:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -181,7 +181,7 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
     case kAtA:
       {
         const TMatrixTSparse<Element> at(TMatrixTSparse<Element>::kTransposed,prototype);
-        AMultBt(at,at);
+        AMultBt(at,at,1);
         break;
       }
 
@@ -204,19 +204,19 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
 
   switch(op) {
     case kMult:
-      AMultB(a,b);
+      AMultB(a,b,1);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b);
+      AMultBt(a,b,1);
       break;
 
     case kPlus:
-      APlusB(a,b);
+      APlusB(a,b,1);
       break;
 
     case kMinus:
-      AMinusB(a,b);
+      AMinusB(a,b,1);
       break;
 
     default:

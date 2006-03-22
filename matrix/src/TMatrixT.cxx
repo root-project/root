@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.8 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.9 2006/03/20 22:27:30 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -143,7 +143,7 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &proto
     }
 
     case kAtA:
-      AtMultB(prototype,prototype);
+      AtMultB(prototype,prototype,1);
       break;
 
     default:
@@ -166,15 +166,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
   switch(op) {
     case kMult:
-      AMultB(a,b);
+      AMultB(a,b,1);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b);
+      AtMultB(a,b,1);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b);
+      AMultBt(a,b,1);
       break;
 
     case kInvMult:
@@ -191,19 +191,13 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
     case kPlus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this += b;
+      APlusB(a,b,1);
       break;
     }
 
     case kMinus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this -= b;
+      AMinusB(a,b,1);
       break;
     }
 
@@ -223,15 +217,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
   switch(op) {
     case kMult:
-      AMultB(a,b);
+      AMultB(a,b,1);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b);
+      AtMultB(a,b,1);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b);
+      AMultBt(a,b,1);
       break;
 
     case kInvMult:
@@ -248,19 +242,13 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
     case kPlus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this += b;
+      APlusB(a,b,1);
       break; 
     }
 
     case kMinus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this -= b;
+      AMinusB(a,b,1);
       break;
     }
 
@@ -280,15 +268,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 
   switch(op) {
     case kMult:
-      AMultB(a,b);
+      AMultB(a,b,1);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b);
+      AtMultB(a,b,1);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b);
+      AMultBt(a,b,1);
       break;
 
     case kInvMult:
@@ -305,19 +293,13 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 
     case kPlus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this += b;
+      APlusB(a,b,1);
       break; 
     }
 
     case kMinus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this -= b;
+      AMinusB(a,b,1);
       break;
     }
 
@@ -337,15 +319,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 
   switch(op) {
     case kMult:
-      AMultB(a,b);
+      AMultB(a,b,1);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b);
+      AtMultB(a,b,1);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b);
+      AMultBt(a,b,1);
       break;
 
     case kInvMult:
@@ -481,6 +463,158 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
       memset(fElements,0,this->fNelems*sizeof(Element));
   } else
     fElements = 0;
+}
+
+//______________________________________________________________________________
+template<class Element>
+void TMatrixT<Element>::APlusB(const TMatrixT<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+{
+  // General matrix summation. Create a matrix C such that C = A + B.
+  // Note, matrix C is allocated for constr=1.
+
+  if (!AreCompatible(a,b)) {
+    Error("APlusB","matrices not compatible");
+    return;
+  }
+
+  if (this == &a) {
+    Error("APlusB","this == &a");
+    this->Invalidate();
+    return;
+  }
+
+  if (this == &b) {
+    Error("APlusB","this == &b");
+    this->Invalidate();
+    return;
+  }
+
+  if (constr)
+    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+
+  const Element *       ap      = a.GetMatrixArray();
+  const Element *       bp      = b.GetMatrixArray();
+        Element *       cp      = this->GetMatrixArray();
+  const Element * const cp_last = cp+this->fNelems;
+
+  while (cp < cp_last) {
+     *cp = *ap++ + *bp++;
+     cp++;
+  }
+}
+
+//______________________________________________________________________________
+template<class Element>
+void TMatrixT<Element>::APlusB(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+{
+  // General matrix summation. Create a matrix C such that C = A + B.
+  // Note, matrix C is allocated for constr=1.
+
+  if (!AreCompatible(a,b)) {
+    Error("APlusB","matrices not compatible");
+    return;
+  }
+
+  if (this == &a) {
+    Error("APlusB","this == &a");
+    this->Invalidate();
+    return;
+  }
+
+  if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
+    Error("APlusB","this == &b");
+    this->Invalidate();
+    return;
+  }
+
+  if (constr)
+    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+
+  const Element *       ap      = a.GetMatrixArray();
+  const Element *       bp      = b.GetMatrixArray();
+        Element *       cp      = this->GetMatrixArray();
+  const Element * const cp_last = cp+this->fNelems;
+
+  while (cp < cp_last) {
+     *cp = *ap++ + *bp++;
+     cp++;
+  }
+}
+
+//______________________________________________________________________________
+template<class Element>
+void TMatrixT<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+{
+  // General matrix summation. Create a matrix C such that C = A + B.
+  // Note, matrix C is allocated for constr=1.
+
+  if (!AreCompatible(a,b)) {
+    Error("AMinusB","matrices not compatible");
+    return;
+  }
+
+  if (this == &a) {
+    Error("AMinusB","this == &a");
+    this->Invalidate();
+    return;
+  }
+
+  if (this == &b) {
+    Error("AMinusB","this == &b");
+    this->Invalidate();
+    return;
+  }
+
+  if (constr)
+    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+
+  const Element *       ap      = a.GetMatrixArray();
+  const Element *       bp      = b.GetMatrixArray();
+        Element *       cp      = this->GetMatrixArray();
+  const Element * const cp_last = cp+this->fNelems;
+
+  while (cp < cp_last) {
+     *cp = *ap++ - *bp++;
+     cp++;
+  }
+}
+
+//______________________________________________________________________________
+template<class Element>
+void TMatrixT<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+{
+  // General matrix summation. Create a matrix C such that C = A + B.
+  // Note, matrix C is allocated for constr=1.
+
+  if (!AreCompatible(a,b)) {
+    Error("AMinusB","matrices not compatible");
+    return;
+  }
+
+  if (this == &a) {
+    Error("AMinusB","this == &a");
+    this->Invalidate();
+    return;
+  }
+
+  if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
+    Error("AMinusB","this == &b");
+    this->Invalidate();
+    return;
+  }
+
+  if (constr)
+    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+
+  const Element *       ap      = a.GetMatrixArray();
+  const Element *       bp      = b.GetMatrixArray();
+        Element *       cp      = this->GetMatrixArray();
+  const Element * const cp_last = cp+this->fNelems;
+
+  while (cp < cp_last) {
+     *cp = *ap++ - *bp++;
+     cp++;
+  }
 }
 
 //______________________________________________________________________________
