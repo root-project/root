@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.35 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.36 2006/03/20 10:09:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -392,7 +392,6 @@ void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
       }
       return;   
    }   
-      
    if (!gGeoManager) return;
    Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;
 
@@ -469,6 +468,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
          if (gGeoManager->IsMatrixTransform() && !IsComposite()) {
             localMasterMat = gGeoManager->GetGLMatrix();
          }
+         if (TGeoShape::GetTransform()) localMasterMat = TGeoShape::GetTransform();
          if (!localMasterMat) { 
             assert(kFALSE); 
             return; 

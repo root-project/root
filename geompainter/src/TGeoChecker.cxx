@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.42 2006/02/23 13:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.43 2006/02/28 10:57:12 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -103,8 +103,8 @@ TGeoChecker::TGeoChecker(TGeoManager *geom)
 // Constructor for a given geometry
    fGeoManager = geom;
    fVsafe = 0;
-   fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);
-   fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);   
+   fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
+   fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);   
 }
 //-----------------------------------------------------------------------------
 TGeoChecker::TGeoChecker(const char * /*treename*/, const char * /*filename*/)
@@ -112,8 +112,8 @@ TGeoChecker::TGeoChecker(const char * /*treename*/, const char * /*filename*/)
 // constructor
    fGeoManager = gGeoManager;
    fVsafe = 0;
-   fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);
-   fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3,0,0,0,0);   
+   fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
+   fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);   
 }
 //-----------------------------------------------------------------------------
 TGeoChecker::~TGeoChecker()

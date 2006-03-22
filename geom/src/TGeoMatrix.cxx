@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.48 2006/01/20 10:35:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.49 2006/02/23 13:23:07 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1907,6 +1907,7 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
 void TGeoHMatrix::Clear(Option_t *)
 {
 // clear the data for this matrix
+   SetBit(kGeoReflection, kFALSE);
    if (IsIdentity()) return;
    if (IsTranslation()) {
       ResetBit(kGeoTranslation);

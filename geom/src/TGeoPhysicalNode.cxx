@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.11 2006/02/14 02:55:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.12 2006/03/20 10:09:14 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -103,11 +103,6 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
             return;
          }
          // Clone daughter volume and node
-//         if (!node->GetVolume()->IsReplicated()) {
-//            vm = node->GetVolume();
-//            nnode = node;
-//            continue;
-//         }   
          vd = node->GetVolume()->CloneVolume();
          nnode = node->MakeCopyNode();
          // Correct pointers to mother and volume
@@ -146,9 +141,9 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
       vd = GetVolume(i);
       if (!vd->IsAssembly()) break;
       vd->GetShape()->ComputeBBox();
+      if (vd->GetVoxels()) vd->GetVoxels()->SetNeedRebuild();
    }
       
-   if (vm->IsAssembly()) vm->GetShape()->ComputeBBox();
    // Now we have to re-voxelize the mother volume
    TGeoVoxelFinder *voxels = vm->GetVoxels();
    if (voxels) voxels->SetNeedRebuild();
