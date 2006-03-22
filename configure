@@ -2788,7 +2788,7 @@ if test "x$enable_ssl" = "xno" ; then
     sslextracflags=""
 else
     sslincdir=$ssl_incdir
-    sslextracflags="-DR__SSL"
+    sslextracflags="-DR__SSL -DOPENSSL_NO_KRB5"
 fi
 
 ######################################################################
