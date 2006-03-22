@@ -396,7 +396,8 @@ class genDictionary(object) :
          elem = self.xref[m]['elem']
          attr = self.xref[m]['attrs']
          if elem == 'Destructor' :
-           if 'access' in attr and attr['access'] in ('private','protected') : return True
+           if attr.get('access') in ('private','protected') : return True
+           else : return False
     if 'bases' in attrs :
        for b in attrs['bases'].split() :
          if b[:10] == 'protected:' : b = b[10:]
