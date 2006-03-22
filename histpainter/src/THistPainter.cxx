@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.248 2006/03/21 15:40:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.249 2006/03/21 18:11:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6224,9 +6224,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py) {
 
     // Draw slice corresponding to mouse position
     Int_t biny = fH->GetYaxis()->FindBin(y);
-    TH1D *hp = ((TH2*)fH)->ProjectionX("", biny, biny);
+    TH1D *hp = ((TH2*)fH)->ProjectionX("_px", biny, biny);
     hp->SetFillColor(38);
-    hp->SetName("ProjectionX");
     hp->SetTitle(Form("ProjectionX of biny=%d", biny));
     hp->SetXTitle(fH->GetXaxis()->GetTitle());
     hp->SetYTitle("Number of Entries");
@@ -6269,9 +6268,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/) {
 
     // Draw slice corresponding to mouse position
     Int_t binx = fH->GetXaxis()->FindBin(x);
-    TH1D *hp = ((TH2*)fH)->ProjectionY("", binx, binx);
+    TH1D *hp = ((TH2*)fH)->ProjectionY("_py", binx, binx);
     hp->SetFillColor(38);
-    hp->SetName("ProjectionY");
     hp->SetTitle(Form("ProjectionY of binx=%d", binx));
     hp->SetXTitle(fH->GetYaxis()->GetTitle());
     hp->SetYTitle("Number of Entries");

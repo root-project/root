@@ -129,7 +129,7 @@ int test_smatrix_op() {
     w.Start(); 
 	        
     MnVectorN   v1;  testMV(A,v,t_mv,v1);
-    // if (k == 0) v1.Print(std::cout);
+    //if (k == 0) v1.Print(std::cout);
     MnVectorN   v2;  testGMV(A,v,v1,t_gmv,v2);
     //if (k == 0) v2.Print(std::cout);
     MnMatrixNN  C0;  testMM(A,B,C,t_mm,C0);
@@ -336,21 +336,21 @@ int test_tmatrix_op() {
     w.Start(); 
 	
     
-    MnVector v1(NDIM1);        testMV(A,v,t_mv,v1);
+    MnVector v1(NDIM1);        testMV_T(A,v,t_mv,v1);
     //if (k == 0) v1.Print();
-    MnVector v2(NDIM1);        testGMV(A,v,v1,t_gmv,v2);
+    MnVector v2(NDIM1);        testGMV_T(A,v,v1,t_gmv,v2);
     //if (k == 0) v2.Print();
-    MnMatrix C0(NDIM1,NDIM1);  testMM(A,B,C,t_mm,C0);
+    MnMatrix C0(NDIM1,NDIM1);  testMM_T(A,B,C,t_mm,C0);
     //if (k == 0) C0.Print();
     MnMatrix C1(NDIM1,NDIM1);  testATBA_T(B,C0,t_ama,C1);
     //if (k == 0) C1.Print();
     MnMatrix C2(NDIM1,NDIM1);  testInv_T(C1,t_inv,C2);
     MnVector v3(NDIM1);        testVeq(v,t_veq,v3);
-    MnVector v4(NDIM1);        testVad(v2,v3,t_vad,v4);
-    MnVector v5(NDIM1);        testVscale(v4,2.0,t_vsc,v5);
+    MnVector v4(NDIM1);        testVad_T(v2,v3,t_vad,v4);
+    MnVector v5(NDIM1);        testVscale_T(v4,2.0,t_vsc,v5);
     MnMatrix C3(NDIM1,NDIM1);  testMeq(C,t_meq,C3);
-    MnMatrix C4(NDIM1,NDIM1);  testMad(C2,C3,t_mad,C4);
-    MnMatrix C5(NDIM1,NDIM1);  testMscale(C4,0.5,t_msc,C5);
+    MnMatrix C4(NDIM1,NDIM1);  testMad_T(C2,C3,t_mad,C4);
+    MnMatrix C5(NDIM1,NDIM1);  testMscale_T(C4,0.5,t_msc,C5);
     MnMatrix C6(NDIM1,NDIM1);  testMT_T(C5,t_tra,C6);
 
 #ifdef DEBUG
@@ -442,14 +442,14 @@ int test_tmatrix_sym_op() {
 
     w.Start(); 
 	        
-    MnVector   v1(N);  testMV(A,v,t_mv,v1);
-    MnVector   v2(N);  testGMV(A,v,v1,t_gmv,v2);
-    MnMatrix   C0(N,N);  testMM(A,B,C,t_mm,C0);
+    MnVector   v1(N);  testMV_T(A,v,t_mv,v1);
+    MnVector   v2(N);  testGMV_T(A,v,v1,t_gmv,v2);
+    MnMatrix   C0(N,N);  testMM_T(A,B,C,t_mm,C0);
     MnSymMatrix  C1(N);  testATBA_T2(C0,B,t_ama,C1);
     MnSymMatrix  C2(N);  testInv_T(A,t_inv,C2);
     MnSymMatrix  C3(N);  testMeq(C2,t_meq,C3);
-    MnSymMatrix  C4(N);  testMad(A,C3,t_mad,C4);
-    MnSymMatrix  C5(N);  testMscale(C4,0.5,t_msc,C5);
+    MnSymMatrix  C4(N);  testMad_T(A,C3,t_mad,C4);
+    MnSymMatrix  C5(N);  testMscale_T(C4,0.5,t_msc,C5);
 
     r1 = testInnerProd_T(C5,v2,t_prd);
 

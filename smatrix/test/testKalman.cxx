@@ -404,12 +404,12 @@ int test_tmatrix_kalman() {
         x = xp; Add(x,+1.0,K0,tmp1);
 	tmp2.AMultBt(Cp,H,0);
 	Rtmp.AMultB(H,tmp2,0);
-        Rinv = V ;    Rinv += Rtmp;
+        Rinv.APlusB(V,Rtmp);
         RinvSym.Use(first,Rinv.GetMatrixArray()); 
 	RinvSym.InvertFast();
 	K.AMultB(tmp2,Rinv,0);
 	Ctmp.AMultBt(K,tmp2,0);
-        C = Cp; C -= Ctmp;
+        C.AMinusB(Cp,Ctmp);
         x2 = RinvSym.Similarity(tmp1);
 
 #else 
