@@ -6,9 +6,18 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-include $(ROOTSYS)/test/Makefile.arch
+include ../../test/Makefile.arch
 
 #------------------------------------------------------------------------------
+
+ifeq ($(PLATFORM),macosx) 
+CXXFLAGS+= -g
+endif
+
+ifneq ($(PLATFORM),win32) 
+LIBM = -lm
+endif
+
 
 
 TESTSMATRIXOBJ     = testSMatrix.$(ObjSuf)
@@ -28,12 +37,22 @@ TESTIOSRC     = testIO.$(SrcSuf)
 TESTIO        = testIO$(ExeSuf)
 
 
-OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ)
+STRESSOPERATIONSOBJ     = stressOperations.$(ObjSuf)
+STRESSOPERATIONSSRC     = stressOperations.$(SrcSuf)
+STRESSOPERATIONS        = stressOperations$(ExeSuf)
 
 
-PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO)
+STRESSKALMANOBJ     = stressKalman.$(ObjSuf)
+STRESSKALMANSRC     = stressKalman.$(SrcSuf)
+STRESSKALMAN        = stressKalman$(ExeSuf)
 
-		  
+
+OBJS          = $(TESTSMATRIXOBJ) $(TESTOPERATIONSOBJ) $(TESTKALMANOBJ) $(TESTIOOBJ) $(STRESSOPERATIONSOBJ) $(STRESSKALMANOBJ)
+
+
+PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO) $(STRESSOPERATIONS) $(STRESSKALMAN) 
+
+
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
 
@@ -41,14 +60,14 @@ all:            $(PROGRAMS)
 
 
 $(TESTSMATRIX):   $(TESTSMATRIXOBJ)
-		    $(LD) $(LDFLAGS) $^   -lm  $(OutPutOpt)$@
+		    $(LD) $(LDFLAGS) $^  $(LIBM) $(OutPutOpt)$@
 		    @echo "$@ done"
 
 $(TESTOPERATIONS):   $(TESTOPERATIONSOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(TESTKALMAN):        $(TESTKALMANOBJ)
+$(TESTKALMAN):    $(TESTKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
@@ -56,18 +75,25 @@ $(TESTIO):        $(TESTIOOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
+$(STRESSKALMAN):  $(STRESSKALMANOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(STRESSOPERATIONS):  $(STRESSOPERATIONSOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
 
 
 clean:
-		@rm -f $(OBJS) core *.root
+		@rm -f $(OBJS) $(PROGRAMS) core 
 
 distclean:      clean
-		@rm -f $(PROGRAMS) 
-
+		@rm -f $(PROGRAMS) kalman.root stressOperations.root 
 
 
 .SUFFIXES: .$(SrcSuf)
 
 
 .$(SrcSuf).$(ObjSuf):
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX)  $(CXXFLAGS) -c $<

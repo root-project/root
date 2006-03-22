@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.11 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.15 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -100,11 +100,27 @@ public:
    */
   SMatrix();
   /// 
-  /** construct identity matrix */
+  /** 
+      construct from an identity matrix 
+  */
   SMatrix( SMatrixIdentity ); 
-  ///
+  /** 
+      copy constructor (from a matrix of the same representation 
+  */ 
   SMatrix(const SMatrix<T,D1,D2,R>& rhs);
-  ///
+  /**
+     construct from a matrix with different representation
+     Works only from symmetric to general and not viceversa. 
+   */ 
+  template <class R2>
+  SMatrix(const SMatrix<T,D1,D2,R2>& rhs);
+
+  /**
+     construct from an expression. 
+     In case of symmetric matrices doesnot work if expression is of type general 
+     matrices. In case one needs to force the assignment from general to symmetric, one can use the 
+     ROOT::Math::AssignSym::Evaluate function. 
+   */ 
   template <class A, class R2>
   SMatrix(const Expr<A,T,D1,D2,R2>& rhs);
 
@@ -187,6 +203,7 @@ public:
   /** @name --- Access functions --- */
   /// access the parse tree
   T apply(unsigned int i) const;
+
   /// return read-only pointer to internal array
   const T* Array() const;
   /// return pointer to internal array

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: BinaryOperators.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_BinaryOperators
@@ -94,9 +94,9 @@ inline VecExpr<BinaryOp<AddOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 // operator+ (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<AddOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<AddOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
  operator+(const SVector<T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<AddOp<T>, SVector<T,D>, Constant<A>, T> AddOpBinOp;
+  typedef BinaryOpCopyR<AddOp<T>, SVector<T,D>, Constant<A>, T> AddOpBinOp;
 
   return VecExpr<AddOpBinOp,T,D>(AddOpBinOp(AddOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -105,9 +105,9 @@ inline VecExpr<BinaryOp<AddOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
 // operator+ (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<AddOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<AddOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
  operator+(const A& lhs, const SVector<T,D>& rhs) {
-  typedef BinaryOp<AddOp<T>, Constant<A>, SVector<T,D>, T> AddOpBinOp;
+  typedef BinaryOpCopyL<AddOp<T>, Constant<A>, SVector<T,D>, T> AddOpBinOp;
 
   return VecExpr<AddOpBinOp,T,D>(AddOpBinOp(AddOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -117,9 +117,9 @@ inline VecExpr<BinaryOp<AddOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
 // operator+ (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<AddOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<AddOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
  operator+(const VecExpr<B,T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<AddOp<T>, VecExpr<B,T,D>, Constant<A>, T> AddOpBinOp;
+  typedef BinaryOpCopyR<AddOp<T>, VecExpr<B,T,D>, Constant<A>, T> AddOpBinOp;
 
   return VecExpr<AddOpBinOp,T,D>(AddOpBinOp(AddOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -128,9 +128,9 @@ inline VecExpr<BinaryOp<AddOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
 // operator+ (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<AddOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<AddOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
  operator+(const A& lhs, const VecExpr<B,T,D>& rhs) {
-  typedef BinaryOp<AddOp<T>, Constant<A>, VecExpr<B,T,D>, T> AddOpBinOp;
+  typedef BinaryOpCopyL<AddOp<T>, Constant<A>, VecExpr<B,T,D>, T> AddOpBinOp;
 
   return VecExpr<AddOpBinOp,T,D>(AddOpBinOp(AddOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -188,9 +188,9 @@ inline Expr<BinaryOp<AddOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 // operator+ (SMatrix, binary, Constant)
 //=============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<AddOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<AddOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator+(const SMatrix<T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<AddOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> AddOpBinOp;
+  typedef BinaryOpCopyR<AddOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> AddOpBinOp;
 
   return Expr<AddOpBinOp,T,D,D2,R>(AddOpBinOp(AddOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -199,9 +199,9 @@ inline Expr<BinaryOp<AddOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator+ (SMatrix, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<AddOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyL<AddOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
  operator+(const A& lhs, const SMatrix<T,D,D2,R>& rhs) {
-  typedef BinaryOp<AddOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> AddOpBinOp;
+  typedef BinaryOpCopyL<AddOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> AddOpBinOp;
 
   return Expr<AddOpBinOp,T,D,D2,R>(AddOpBinOp(AddOp<T>(),
                                               Constant<A>(lhs),rhs));
@@ -212,9 +212,9 @@ inline Expr<BinaryOp<AddOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
 // operator+ (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<AddOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<AddOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator+(const Expr<B,T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<AddOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> AddOpBinOp;
+  typedef BinaryOpCopyR<AddOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> AddOpBinOp;
 
   return Expr<AddOpBinOp,T,D,D2,R>(AddOpBinOp(AddOp<T>(),
                                               lhs,Constant<A>(rhs)));
@@ -224,9 +224,9 @@ inline Expr<BinaryOp<AddOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator+ (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<AddOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2>
+inline Expr<BinaryOpCopyL<AddOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2, R>
  operator+(const A& lhs, const Expr<B,T,D,D2,R>& rhs) {
-  typedef BinaryOp<AddOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> AddOpBinOp;
+  typedef BinaryOpCopyL<AddOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> AddOpBinOp;
 
   return Expr<AddOpBinOp,T,D,D2,R>(AddOpBinOp(AddOp<T>(),
                                               Constant<A>(lhs),rhs));
@@ -297,9 +297,9 @@ inline VecExpr<BinaryOp<MinOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 // operator- (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<MinOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<MinOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
  operator-(const SVector<T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<MinOp<T>, SVector<T,D>, Constant<A>, T> MinOpBinOp;
+  typedef BinaryOpCopyR<MinOp<T>, SVector<T,D>, Constant<A>, T> MinOpBinOp;
 
   return VecExpr<MinOpBinOp,T,D>(MinOpBinOp(MinOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -308,9 +308,9 @@ inline VecExpr<BinaryOp<MinOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
 // operator- (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<MinOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<MinOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
  operator-(const A& lhs, const SVector<T,D>& rhs) {
-  typedef BinaryOp<MinOp<T>, Constant<A>, SVector<T,D>, T> MinOpBinOp;
+  typedef BinaryOpCopyL<MinOp<T>, Constant<A>, SVector<T,D>, T> MinOpBinOp;
 
   return VecExpr<MinOpBinOp,T,D>(MinOpBinOp(MinOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -320,9 +320,9 @@ inline VecExpr<BinaryOp<MinOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
 // operator- (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<MinOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<MinOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
  operator-(const VecExpr<B,T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<MinOp<T>, VecExpr<B,T,D>, Constant<A>, T> MinOpBinOp;
+  typedef BinaryOpCopyR<MinOp<T>, VecExpr<B,T,D>, Constant<A>, T> MinOpBinOp;
 
   return VecExpr<MinOpBinOp,T,D>(MinOpBinOp(MinOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -331,9 +331,9 @@ inline VecExpr<BinaryOp<MinOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
 // operator- (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<MinOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<MinOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
  operator-(const A& lhs, const VecExpr<B,T,D>& rhs) {
-  typedef BinaryOp<MinOp<T>, Constant<A>, VecExpr<B,T,D>, T> MinOpBinOp;
+  typedef BinaryOpCopyL<MinOp<T>, Constant<A>, VecExpr<B,T,D>, T> MinOpBinOp;
 
   return VecExpr<MinOpBinOp,T,D>(MinOpBinOp(MinOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -391,9 +391,9 @@ inline Expr<BinaryOp<MinOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 // operator- (SMatrix, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MinOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<MinOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator-(const SMatrix<T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<MinOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> MinOpBinOp;
+  typedef BinaryOpCopyR<MinOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> MinOpBinOp;
 
   return Expr<MinOpBinOp,T,D,D2,R>(MinOpBinOp(MinOp<T>(),
                                               lhs,Constant<A>(rhs)));
@@ -403,9 +403,9 @@ inline Expr<BinaryOp<MinOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator- (SMatrix, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MinOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyL<MinOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
  operator-(const A& lhs, const SMatrix<T,D,D2,R>& rhs) {
-  typedef BinaryOp<MinOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> MinOpBinOp;
+  typedef BinaryOpCopyL<MinOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> MinOpBinOp;
 
   return Expr<MinOpBinOp,T,D,D2,R>(MinOpBinOp(MinOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -414,9 +414,9 @@ inline Expr<BinaryOp<MinOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
 // operator- (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MinOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<MinOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator-(const Expr<B,T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<MinOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> MinOpBinOp;
+  typedef BinaryOpCopyR<MinOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> MinOpBinOp;
 
   return Expr<MinOpBinOp,T,D,D2,R>(MinOpBinOp(MinOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -425,9 +425,9 @@ inline Expr<BinaryOp<MinOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator- (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MinOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyL<MinOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2, R>
  operator-(const A& lhs, const Expr<B,T,D,D2,R>& rhs) {
-  typedef BinaryOp<MinOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> MinOpBinOp;
+  typedef BinaryOpCopyL<MinOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> MinOpBinOp;
 
   return Expr<MinOpBinOp,T,D,D2,R>(MinOpBinOp(MinOp<T>(),
                                               Constant<A>(lhs),rhs));
@@ -501,9 +501,9 @@ inline VecExpr<BinaryOp<MulOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 // operator* (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<MulOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<MulOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
  operator*(const SVector<T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<MulOp<T>, SVector<T,D>, Constant<A>, T> MulOpBinOp;
+  typedef BinaryOpCopyR<MulOp<T>, SVector<T,D>, Constant<A>, T> MulOpBinOp;
 
   return VecExpr<MulOpBinOp,T,D>(MulOpBinOp(MulOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -512,9 +512,9 @@ inline VecExpr<BinaryOp<MulOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
 // operator* (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<MulOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<MulOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
  operator*(const A& lhs, const SVector<T,D>& rhs) {
-  typedef BinaryOp<MulOp<T>, Constant<A>, SVector<T,D>, T> MulOpBinOp;
+  typedef BinaryOpCopyL<MulOp<T>, Constant<A>, SVector<T,D>, T> MulOpBinOp;
 
   return VecExpr<MulOpBinOp,T,D>(MulOpBinOp(MulOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -524,9 +524,9 @@ inline VecExpr<BinaryOp<MulOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
 // operator* (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<MulOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<MulOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
  operator*(const VecExpr<B,T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<MulOp<T>, VecExpr<B,T,D>, Constant<A>, T> MulOpBinOp;
+  typedef BinaryOpCopyR<MulOp<T>, VecExpr<B,T,D>, Constant<A>, T> MulOpBinOp;
 
   return VecExpr<MulOpBinOp,T,D>(MulOpBinOp(MulOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -535,9 +535,9 @@ inline VecExpr<BinaryOp<MulOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
 // operator* (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<MulOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<MulOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
  operator*(const A& lhs, const VecExpr<B,T,D>& rhs) {
-  typedef BinaryOp<MulOp<T>, Constant<A>, VecExpr<B,T,D>, T> MulOpBinOp;
+  typedef BinaryOpCopyL<MulOp<T>, Constant<A>, VecExpr<B,T,D>, T> MulOpBinOp;
 
   return VecExpr<MulOpBinOp,T,D>(MulOpBinOp(MulOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -595,9 +595,9 @@ inline Expr<BinaryOp<MulOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 // operator* (SMatrix, binary, Constant)
 //=============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MulOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<MulOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator*(const SMatrix<T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<MulOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> MulOpBinOp;
+  typedef BinaryOpCopyR<MulOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,R>(MulOpBinOp(MulOp<T>(),
                                               lhs,Constant<A>(rhs)));
@@ -607,9 +607,9 @@ inline Expr<BinaryOp<MulOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator* (SMatrix, binary, Constant)
 //=============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MulOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyL<MulOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
  operator*(const A& lhs, const SMatrix<T,D,D2,R>& rhs) {
-  typedef BinaryOp<MulOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> MulOpBinOp;
+  typedef BinaryOpCopyL<MulOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,R>(MulOpBinOp(MulOp<T>(),
                                               Constant<A>(lhs),rhs));
@@ -620,9 +620,9 @@ inline Expr<BinaryOp<MulOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
 // operator* (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MulOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<MulOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator*(const Expr<B,T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<MulOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> MulOpBinOp;
+  typedef BinaryOpCopyR<MulOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,R>(MulOpBinOp(MulOp<T>(),
                                               lhs,Constant<A>(rhs)));
@@ -632,9 +632,9 @@ inline Expr<BinaryOp<MulOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator* (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<MulOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyL<MulOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2, R>
  operator*(const A& lhs, const Expr<B,T,D,D2,R>& rhs) {
-  typedef BinaryOp<MulOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> MulOpBinOp;
+  typedef BinaryOpCopyL<MulOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> MulOpBinOp;
 
   return Expr<MulOpBinOp,T,D,D2,R>(MulOpBinOp(MulOp<T>(),
                                               Constant<A>(lhs),rhs));
@@ -704,9 +704,9 @@ inline VecExpr<BinaryOp<DivOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 // operator/ (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<DivOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<DivOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
  operator/(const SVector<T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<DivOp<T>, SVector<T,D>, Constant<A>, T> DivOpBinOp;
+  typedef BinaryOpCopyR<DivOp<T>, SVector<T,D>, Constant<A>, T> DivOpBinOp;
 
   return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -715,9 +715,9 @@ inline VecExpr<BinaryOp<DivOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
 // operator/ (SVector, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D>
-inline VecExpr<BinaryOp<DivOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<DivOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
  operator/(const A& lhs, const SVector<T,D>& rhs) {
-  typedef BinaryOp<DivOp<T>, Constant<A>, SVector<T,D>, T> DivOpBinOp;
+  typedef BinaryOpCopyL<DivOp<T>, Constant<A>, SVector<T,D>, T> DivOpBinOp;
 
   return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -727,9 +727,9 @@ inline VecExpr<BinaryOp<DivOp<T>, Constant<A>, SVector<T,D>, T>, T, D>
 // operator/ (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<DivOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
+inline VecExpr<BinaryOpCopyR<DivOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
  operator/(const VecExpr<B,T,D>& lhs, const A& rhs) {
-  typedef BinaryOp<DivOp<T>, VecExpr<B,T,D>, Constant<A>, T> DivOpBinOp;
+  typedef BinaryOpCopyR<DivOp<T>, VecExpr<B,T,D>, Constant<A>, T> DivOpBinOp;
 
   return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,Constant<A>(rhs)));
 }
@@ -738,9 +738,9 @@ inline VecExpr<BinaryOp<DivOp<T>, VecExpr<B,T,D>, Constant<A>, T>, T, D>
 // operator/ (SVector, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D>
-inline VecExpr<BinaryOp<DivOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
+inline VecExpr<BinaryOpCopyL<DivOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
  operator/(const A& lhs, const VecExpr<B,T,D>& rhs) {
-  typedef BinaryOp<DivOp<T>, Constant<A>, VecExpr<B,T,D>, T> DivOpBinOp;
+  typedef BinaryOpCopyL<DivOp<T>, Constant<A>, VecExpr<B,T,D>, T> DivOpBinOp;
 
   return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),Constant<A>(lhs),rhs));
 }
@@ -798,9 +798,9 @@ inline Expr<BinaryOp<DivOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 // operator/ (SMatrix, binary, Constant)
 //=============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<DivOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<DivOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator/(const SMatrix<T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<DivOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> DivOpBinOp;
+  typedef BinaryOpCopyR<DivOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,R>(DivOpBinOp(DivOp<T>(),
                                               lhs,Constant<A>(rhs)));
@@ -810,9 +810,9 @@ inline Expr<BinaryOp<DivOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator/ (SMatrix, binary, Constant)
 //==============================================================================
 template <class A,  class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<DivOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyL<DivOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
  operator/(const A& lhs, const SMatrix<T,D,D2,R>& rhs) {
-  typedef BinaryOp<DivOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> DivOpBinOp;
+  typedef BinaryOpCopyL<DivOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,R>(DivOpBinOp(DivOp<T>(),
                                               Constant<A>(lhs),rhs));
@@ -823,9 +823,9 @@ inline Expr<BinaryOp<DivOp<T>, Constant<A>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
 // operator/ (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<DivOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
+inline Expr<BinaryOpCopyR<DivOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
  operator/(const Expr<B,T,D,D2,R>& lhs, const A& rhs) {
-  typedef BinaryOp<DivOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> DivOpBinOp;
+  typedef BinaryOpCopyR<DivOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,R>(DivOpBinOp(DivOp<T>(),
                                               lhs,Constant<A>(rhs)));
@@ -835,9 +835,9 @@ inline Expr<BinaryOp<DivOp<T>, Expr<B,T,D,D2,R>, Constant<A>, T>, T, D, D2, R>
 // operator/ (SMatrix, binary, Constant)
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R>
-inline Expr<BinaryOp<DivOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2,R>
+inline Expr<BinaryOpCopyL<DivOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2,R>
  operator/(const A& lhs, const Expr<B,T,D,D2,R>& rhs) {
-  typedef BinaryOp<DivOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> DivOpBinOp;
+  typedef BinaryOpCopyL<DivOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T> DivOpBinOp;
 
   return Expr<DivOpBinOp,T,D,D2,R>(DivOpBinOp(DivOp<T>(),Constant<A>(lhs),rhs));
 }

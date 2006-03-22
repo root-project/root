@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.1 2005/12/07 16:44:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.5 2006/03/17 15:11:35 moneta Exp $
 // Authors: L. Moneta, J. Palacios    2006  
 
 #ifndef ROOT_Math_MatrixRepresentationsStatic_h
@@ -87,6 +87,15 @@ namespace ROOT {
     };
     
     
+//     template<unigned int D>
+//     struct Creator { 
+//       static const RowOffsets<D> & Offsets() {
+// 	static RowOffsets<D> off;
+// 	return off;
+//       }
+
+
+
     template<unsigned int D>
     struct RowOffsets {
       RowOffsets() {
@@ -96,47 +105,15 @@ namespace ROOT {
           v[i]=v[i-1]+i;
         for (unsigned int i=0; i<D; ++i) { 
           for (unsigned int j=0; j<=i; ++j)
-	    off[i][j] = v[i]+j; 
+	    fOff[i*D+j] = v[i]+j; 
           for (unsigned int j=i+1; j<D; ++j)
-	    off[i][j] = v[j]+i ;
+	    fOff[i*D+j] = v[j]+i ;
 	}
       }
-      int operator()(unsigned int i, unsigned int j) const { return off[i][j]; }
-      int off[D][D];
+      int operator()(unsigned int i, unsigned int j) const { return fOff[i*D+j]; }
+      int apply(unsigned int i) const { return fOff[i]; }
+      int fOff[D*D];
     };
-
-    // offset specializations for small matrix sizes
-
-    int off2[2][2] = { { 0 , 1 } , { 1 , 2 }  };
-    template<>
-    struct RowOffsets<2> {
-      int operator()(unsigned int i, unsigned int j) const { return off2[i][j]; }
-    };
-
-    int off3[3][3] = { { 0 , 1 , 3 } , { 1 , 2 , 4 } , { 3 , 4 , 5 }  };
-    template<>
-    struct RowOffsets<3> {
-      int operator()(unsigned int i, unsigned int j) const { return off3[i][j]; }
-    };
-
-    int off4[4][4] = { { 0 , 1 , 3 , 6 } , { 1 , 2 , 4 , 7 } , { 3 , 4 , 5 , 8 } , { 6 , 7 , 8 , 9 }  };
-    template<>
-    struct RowOffsets<4> {
-      int operator()(unsigned int i, unsigned int j) const { return off4[i][j]; }
-    };
-
-    int off5[5][5] = { { 0 , 1 , 3 , 6 , 10 } , { 1 , 2 , 4 , 7 , 11 } , { 3 , 4 , 5 , 8 , 12 } , { 6 , 7 , 8 , 9 , 13 } , { 10 , 11 , 12 , 13 , 14 }  };                       
-    template<>
-    struct RowOffsets<5> {
-      int operator()(unsigned int i, unsigned int j) const { return off5[i][j]; }
-    };
-
-    int off6[6][6] = { { 0 , 1 , 3 , 6 , 10 , 15 } , { 1 , 2 , 4 , 7 , 11 , 16 } , { 3 , 4 , 5 , 8 , 12 , 17 } , { 6 , 7 , 8 , 9 , 13 , 18 } , { 10 , 11 , 12 , 13 , 14 , 19 } , { 15 , 16 , 17 , 18 , 19 , 20 }  };
-    template<>
-    struct RowOffsets<6> {
-      int operator()(unsigned int i, unsigned int j) const { return off6[i][j]; }
-    };
-
 
 
     template <class T, unsigned int D>
@@ -144,23 +121,28 @@ namespace ROOT {
 
     public: 
 
+      MatRepSym() :fOff(0) { CreateOffsets(); } 
+
       typedef T  value_type;
 
       inline const T& operator()(unsigned int i, unsigned int j) const {
-        return fArray[fOffsets(i,j)];
+        return fArray[Offsets()(i,j)];
       }
       inline T& operator()(unsigned int i, unsigned int j) {
-        return fArray[fOffsets(i,j)];
+        return fArray[Offsets()(i,j)];
       }
 
-      inline T& operator[](unsigned int i) { return operator()(i/D, i%D); }
+      inline T& operator[](unsigned int i) { 
+	return fArray[Offsets().apply(i) ];
+      }
 
       inline const T& operator[](unsigned int i) const {
-        return operator()(i/D, i%D);
-      }
+	return fArray[Offsets().apply(i) ];
+     }
 
       inline T apply(unsigned int i) const {
-        return operator()(i/D, i%D);
+	return fArray[Offsets().apply(i) ];
+        //return operator()(i/D, i%D);
       }
 
       inline T* Array() { return fArray; }  
@@ -204,9 +186,20 @@ namespace ROOT {
         kSize = D*(D+1)/2
       };
 
+      
+      void CreateOffsets() {
+	static RowOffsets<D> off;
+	fOff = &off;
+      }
+      
+      inline const RowOffsets<D> & Offsets() const {
+	return *fOff;
+      }
+
     private:
       T fArray[kSize];
-      RowOffsets<D> fOffsets;
+      RowOffsets<D> * fOff; 
+
     };
 
 

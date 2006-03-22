@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.4 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.9 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -40,9 +40,9 @@
 // Expr: class representing SVector expressions
 //=============================================================================
 
-// originally references where used as data members of operation wrappers
-// problem appear on Windows because original ref goes out of scope use then by value by default (like in tvmet)
-//#define SMATRIX_USE_REFERENCES   
+// modified BinaryOp with two extension BinaryOpCopyL and BinaryOpCopyR to store the 
+// object in BinaryOp by value and not reference. When used with constant BinaryOp reference give problems
+// on some compilers (like Windows) where a temporary Constant object is ccreated and then destructed
 
 
 #include <iomanip>
@@ -72,6 +72,7 @@ public:
   inline T apply(unsigned int i) const {
     return rhs_.apply(i);
   }
+
 
 #ifdef OLD_IMPL
   ///
@@ -126,6 +127,10 @@ public:
   inline T apply(unsigned int i) const {
     return rhs_.apply(i);
   }
+  inline T operator() (unsigned int i, unsigned j) const {
+    return rhs_(i,j);
+  }
+
 
 #ifdef OLD_IMPL
   ///
@@ -143,20 +148,14 @@ public:
 #endif
 
   /// used by operator<<()
+  /// simplify to use apply(i,j) 
   std::ostream& print(std::ostream& os) const {
     os.setf(std::ios::right,std::ios::adjustfield);
-    if(D2 == 1 || D2 ==0 ) {
-      unsigned int i=0;
-      for(; i<D-1; ++i) {
-        os << apply(i) << ", ";
-      }
-      os << apply(i);
-    } else {
       os << "[ ";
       for (unsigned int i=0; i < D; ++i) {
-        unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
+	unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
         for (unsigned int j=0; j < D2; ++j) {
-          os << std::setw(12) << apply(i*D2+j);
+          os << std::setw(12) << this->operator() (i,j);
           if ((!((j+1)%12)) && (j < d2-1))
             os << std::endl << "         ...";
         }
@@ -164,7 +163,6 @@ public:
           os << std::endl  << "  ";
       }
       os << " ]";
-    } // if D2==0
 
     return os;
   }
@@ -192,6 +190,9 @@ inline std::ostream& operator<<(std::ostream& os, const Expr<A,T,D1,D2,R1>& rhs)
     @memo BinaryOp
     @author T. Glebe
 */
+
+
+
 //==============================================================================
 // BinaryOp
 //==============================================================================
@@ -209,18 +210,85 @@ public:
   inline T apply(unsigned int i) const {
     return Operator::apply(lhs_.apply(i), rhs_.apply(i));
   }
+  inline T operator() (unsigned int i, unsigned int j) const {
+    return Operator::apply(lhs_(i,j), rhs_(i,j) );
+  }
 
 protected:
 
-#ifdef SMATRIX_USE_REFERENCES
   const LHS& lhs_;
   const RHS& rhs_;
-#else
-  const LHS lhs_;
-  const RHS rhs_;
-#endif
 
 };
+
+//LM :: add specialization of BinaryOP when first or second argument needs to be copied
+// (maybe it can be doen with a template specialization, but it is not worth, easier to have a separate class    
+
+//==============================================================================
+/**
+   Special case of BinaryOp where for the left argument a copy is stored instead of a reference 
+   This is use in the coase for example of constant where we cannot store by reference 
+   but need to copy since Constant is a temporary object
+*/
+//==============================================================================
+template <class Operator, class LHS, class RHS, class T>
+class BinaryOpCopyL {
+public:
+  ///
+  BinaryOpCopyL( Operator /* op */, const LHS& lhs, const RHS& rhs) :
+    lhs_(lhs), rhs_(rhs) {}
+
+  ///
+  ~BinaryOpCopyL() {}
+
+  ///
+  inline T apply(unsigned int i) const {
+    return Operator::apply(lhs_.apply(i), rhs_.apply(i));
+  }
+  inline T operator() (unsigned int i, unsigned int j) const {
+    return Operator::apply(lhs_(i,j), rhs_(i,j) );
+  }
+
+protected:
+
+  const LHS  lhs_;
+  const RHS& rhs_;
+
+};
+
+
+//==============================================================================
+/**
+   Special case of BinaryOp where for the wight argument a copy is stored instead of a reference 
+   This is use in the coase for example of constant where we cannot store by reference 
+   but need to copy since Constant is a temporary object
+*/
+//==============================================================================
+template <class Operator, class LHS, class RHS, class T>
+class BinaryOpCopyR {
+public:
+  ///
+  BinaryOpCopyR( Operator /* op */, const LHS& lhs, const RHS& rhs) :
+    lhs_(lhs), rhs_(rhs) {}
+
+  ///
+  ~BinaryOpCopyR() {}
+
+  ///
+  inline T apply(unsigned int i) const {
+    return Operator::apply(lhs_.apply(i), rhs_.apply(i));
+  }
+  inline T operator() (unsigned int i, unsigned int j) const {
+    return Operator::apply(lhs_(i,j), rhs_(i,j) );
+  }
+
+protected:
+
+  const LHS&  lhs_;
+  const RHS rhs_;
+
+};
+
 
 
 /** UnaryOp.
@@ -246,14 +314,13 @@ public:
   inline T apply(unsigned int i) const {
     return Operator::apply(rhs_.apply(i));
   }
+  inline T operator() (unsigned int i, unsigned int j) const {
+    return Operator::apply(rhs_(i,j));
+  }
 
 protected:
 
-#ifdef SMATRIX_USE_REFERENCES
   const RHS& rhs_;
-#else
-  const RHS rhs_;
-#endif
 
 };
 
@@ -280,13 +347,12 @@ public:
   ///
   inline T apply(unsigned int /*i */ ) const { return rhs_; }
 
+  inline T operator() (unsigned int /*i */, unsigned int /*j */ ) const { return rhs_; }
+
 protected:
 
-#ifdef SMATRIX_USE_REFERENCES
-  const T& rhs_;
-#else
-  const T rhs_;
-#endif
+  const T rhs_;  // no need for reference. It is  a fundamental type normally 
+
 
 };
 
