@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.110 2005/12/07 13:50:39 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.111 2006/03/16 16:07:21 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -201,6 +201,7 @@
 //           and support for OpenSSL keys for encryption
 // 12 -> 13: changed return message of RootdFstat()
 // 13 -> 14: support for TNetFile setup via TXNetFile
+// 14 -> 15: support for SSH authentication via SSH tunnel
 
 #include "config.h"
 #include "RConfig.h"
@@ -340,7 +341,7 @@ enum EFileMode{ kBinary, kAscii };
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 14;      // increase when protocol changes
+static int gProtocol             = 15;      // increase when protocol changes
 static int gClientProtocol       = -1;      // Determined by RpdInitSession
 static int gAnon                 = 0;       // anonymous user flag
 static double gBytesRead         = 0;

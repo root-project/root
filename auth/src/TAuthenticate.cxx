@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.9 2006/01/17 14:12:48 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.10 2006/01/18 21:49:25 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -73,6 +73,7 @@ extern "C" char *crypt(const char *, const char *);
 #   include <openssl/pem.h>
 #   include <openssl/rand.h>
 #   include <openssl/rsa.h>
+#   include <openssl/ssl.h>
 #endif
 
 // Statics initialization
@@ -1860,7 +1861,7 @@ Int_t TAuthenticate::SshAuth(TString &user)
 
    int rport = -1;
    char *pd = 0;
-   if ((pd = strstr(cmdinfo, ":")) != 0) {
+   if ((pd = strstr(cmdinfo, "p:")) != 0 || (pd = strstr(cmdinfo, "k:"))) {
       Int_t clen = (Int_t) (pd - cmdinfo) - 1;
       cmdinfo[clen] = '\0';
       char ss[2][20] = {{0},{0}};
@@ -1891,6 +1892,10 @@ Int_t TAuthenticate::SshAuth(TString &user)
       if (gDebug > 3)
          Info("SshAuth", "using noprompt options: %s", noPrompt.Data());
    }
+
+   // Remote settings
+   Int_t srvtyp = fSocket->GetServType();
+   Int_t rproto = fSocket->GetRemoteProtocol();
 
    // Send authentication request to remote sshd
    // Create command
@@ -1928,6 +1933,13 @@ Int_t TAuthenticate::SshAuth(TString &user)
          }
       }
    } else {
+      // Whether we need to add info about user@host in the command
+      // Recent rootd/proofd set this correctly so that it works also
+      // via SSH tunnel
+      Bool_t addhost = ((srvtyp == TSocket::kROOTD && rproto < 15) ||
+                        (srvtyp == TSocket::kPROOFD && rproto < 13)||
+                        (srvtyp == TSocket::kSOCKD && rproto < 1)) ? 1 : 0;
+
       // Prepare local file first in the home directory
       TString fileLoc = "rootsshtmp_";
       FILE *floc = gSystem->TempFileName(fileLoc,gSystem->HomeDirectory());
@@ -1966,8 +1978,12 @@ Int_t TAuthenticate::SshAuth(TString &user)
             if (rport != -1)
                sshcmd += TString(Form(" -P %d",rport));
             sshcmd += TString(Form(" %s",fileLoc.Data()));
-            sshcmd += TString(Form(" %s@%s:%s 1> /dev/null",
-                                   user.Data(),fRemote.Data(),cmdinfo));
+            if (addhost) {
+               sshcmd += TString(Form(" %s@%s:%s 1> /dev/null",
+                                        user.Data(),fRemote.Data(),cmdinfo));
+            } else {
+               sshcmd += TString(Form("%s 1> /dev/null", cmdinfo));
+            }
             sshcmd += TString(Form(" 2> %s",fileErr.Data()));
             // Execute command
             ssh_rc = 1;
@@ -2283,12 +2299,11 @@ Int_t TAuthenticate::RfioAuth(TString &username)
    UserGroup_t *pw = gSystem->GetUserInfo(gSystem->GetEffectiveUid());
    if (pw) {
 
-      // These are the details to be saved in case of success ...
-      username = pw->fUser;
-      fDetails = TString("pt:0 ru:0 us:") + username;
+      // Check that we are not root and that the requested user is ourselves
+      if (pw->fUid != 0 && username == pw->fUser) {
 
-      // Check that we are not root ...
-      if (pw->fUid != 0) {
+         // These are the details to be saved in case of success ...
+         fDetails = TString("pt:0 ru:0 us:") + username;
 
          UserGroup_t *grp = gSystem->GetGroupInfo(gSystem->GetEffectiveGid());
 
@@ -3429,6 +3444,15 @@ Int_t TAuthenticate::GenRSAKeys()
       // Generate also the SSL key
       if (gDebug > 2)
          Info("GenRSAKeys","SSL: Generate Blowfish key");
+
+      // Init SSL ...
+      SSL_library_init();
+
+      //  ... and its error strings
+      SSL_load_error_strings();
+
+      // Load Ciphers
+      OpenSSL_add_all_ciphers();
 
       // Number of bits for key
       Int_t nbits = gEnv->GetValue("SSL.BFBits",256);

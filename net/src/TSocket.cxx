@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.34 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.35 2005/07/29 14:26:51 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -51,8 +51,9 @@ ULong64_t TSocket::fgBytesRecv = 0;
 // 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
 // 11 -> 12: add random tags to avoid reply attacks (password+token)
 // 12 -> 13: authentication re-organization; cleanup in PROOF 
+// 13 -> 14: support for SSH authentication via SSH tunnel
 //
-Int_t TSocket::fgClientProtocol = 13;  // increase when client protocol changes
+Int_t TSocket::fgClientProtocol = 14;  // increase when client protocol changes
 
 TVirtualMutex *gSocketAuthMutex = 0; 
 

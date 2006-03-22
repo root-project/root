@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.82 2005/09/13 13:08:24 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.83 2005/11/01 18:33:40 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -151,6 +151,7 @@
 // 10: modified SSH protocol + support for server 'no authentication' mode
 // 11: added support for openSSL keys for encryption
 // 12: major authentication re-organization
+// 13: support for SSH authentication via SSH tunnel
 
 #include "config.h"
 #include "RConfig.h"
@@ -239,7 +240,7 @@ static std::string gRpdAuthTab;   // keeps track of authentication info
 static std::string gTmpDir;
 static std::string gUser;
 static EService gService         = kPROOFD;
-static int gProtocol             = 12;       // increase when protocol changes
+static int gProtocol             = 13;       // increase when protocol changes
 static int gRemPid               = -1;      // remote process ID
 static std::string gReadHomeAuthrc = "0";
 static int gInetdFlag            = 0;

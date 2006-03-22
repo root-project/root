@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.89 2005/09/30 09:47:00 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.90 2005/10/10 10:53:50 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -177,6 +177,7 @@ extern krb5_deltat krb5_clockskew;
 #include <openssl/pem.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
+#include <openssl/ssl.h>
 #endif
 
 #include "rpdp.h"
@@ -233,6 +234,14 @@ extern "C" {
    int setresgid(gid_t r, gid_t e, gid_t s);
    int setresuid(uid_t r, uid_t e, uid_t s);
 }
+#endif
+#endif
+
+#if defined(__sun)
+#if defined(R__SUNGCC3)
+extern "C" int gethostname(char *, unsigned int);
+#else
+extern "C" int gethostname(char *, int);
 #endif
 #endif
 
@@ -2481,7 +2490,18 @@ int RpdSshAuth(const char *sstr)
          ErrorInfo("RpdSshAuth: cannot stat %s",authFile);
 
       // Send Back the name of the file
-      cmdInfo = std::string(authFile);
+      if (gClientProtocol > 13) {
+         // Add the full coordinates, so that it works in all cases,
+         // included SSH tunnelling ...
+         char hostname[64];
+         gethostname(hostname, sizeof(hostname));
+         char *cmd = new char[strlen(authFile) + strlen(user) + strlen(hostname) + 5];
+         sprintf(cmd, " %s@%s:%s ", user, hostname, authFile);
+         cmdInfo.append(cmd);
+         delete[] cmd;
+      } else {
+         cmdInfo = std::string(authFile);
+      }
    }
 
    // Add non-standard port, if so
@@ -5232,6 +5252,15 @@ int RpdGenRSAKeys(int setrndinit)
    // Generate also the SSL key
    if (gDebug > 2)
       ErrorInfo("RpdGenRSAKeys: Generate RSA SSL keys");
+
+   // Init SSL ...
+   SSL_library_init();
+
+   //  ... and its error strings
+   SSL_load_error_strings();
+
+   // Load Ciphers
+   OpenSSL_add_all_ciphers();
 
    // Number of bits for key
    Int_t nbits = 1024;

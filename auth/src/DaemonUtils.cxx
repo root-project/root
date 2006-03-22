@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.2 2005/09/06 09:34:33 brun Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************
@@ -64,7 +64,8 @@ static TSocket *gSocket;
 
 // This is to be changed whenever something is changed
 // in non-backward compatible way
-static Int_t gSrvProtocol = 0;
+// 0 -> 1: support for SSH authentication via SSH tunnel
+static Int_t gSrvProtocol = 1;
 static EService gService = kSOCKD;
 static Int_t gReuseAllow = 0x1F;
 
