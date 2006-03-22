@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.7 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.8 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 #include "TTree.h"
 #include "TBasket.h"
 #include "TFile.h"
-//#include "TObjLink.h"
+#include "TFriendElement.h"
 
 ClassImp(TBranchRef)
 
@@ -140,16 +140,18 @@ Bool_t TBranchRef::Notify()
       if (!friends) return kTRUE;
       TObjLink *lnk = friends->FirstLink();
       while (lnk) {
-         TTree *tree = (TTree*)lnk->GetObject();
+         TFriendElement* elem = (TFriendElement*)lnk->GetObject();
+         TTree *tree = elem->GetTree();
          TBranchRef *bref = tree->GetBranchRef();
-         if (!bref) continue;
-         bref->GetEntry(fReadEntry);
-         branch = (TBranch*)bref->GetRefTable()->GetParent(uid, context);
-         if (branch) {
-	    // don't re-read, the user might have changed some object
-	    if (branch->GetReadEntry() != fReadEntry)
-               branch->GetEntry(fReadEntry);
-            return kTRUE;
+         if (bref) {
+            bref->GetEntry(fReadEntry);
+            branch = (TBranch*)bref->GetRefTable()->GetParent(uid, context);
+            if (branch) {
+               // don't re-read, the user might have changed some object
+               if (branch->GetReadEntry() != fReadEntry)
+                  branch->GetEntry(fReadEntry);
+               return kTRUE;
+            }
          }
          lnk = lnk->Next();
       }
