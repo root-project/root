@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.94 2006/03/13 15:04:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.95 2006/03/20 12:31:02 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1190,7 +1190,7 @@ void TRootCanvas::SetWindowPosition(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
 {
-   // Set size of canvas( units in pixels).
+   // Set size of canvas (units in pixels).
 
    Resize(w, h);
 }
@@ -1314,7 +1314,7 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
       fViewMenu->CheckEntry(kViewEventStatus);
       if (dh - ch >= sh) h = h + sh;
       else h = ch;
-  } else {
+   } else {
       HideFrame(fStatusBar);
       fViewMenu->UnCheckEntry(kViewEventStatus);
       if (dh - ch < sh) h = ch;
@@ -1327,6 +1327,7 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 void TRootCanvas::ShowEditor(Bool_t show)
 {
    // Show or hide side frame.
+
    TVirtualPad *savedPad = 0;
    savedPad = (TVirtualPad *) gPad;
    gPad = Canvas();
