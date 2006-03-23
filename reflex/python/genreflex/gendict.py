@@ -1001,12 +1001,20 @@ class genDictionary(object) :
       s +=  '%s%s( void* o, const std::vector<void*>& arg, void*)\n{\n' %( type, id )
     else :
       s +=  '%s%s( void* o, const std::vector<void*>&, void*)\n{\n' %( type, id )
+    # If we construct a conversion operator to pointer to function member the name
+    # will contain TDF_<attrs['id']>
+    tdfname = 'TDF%s'%attrs['id']
+    if name.find(tdfname) != -1 :
+      print name
+      s += '  typedef %s;\n'%name
+      name = 'operator ' + tdfname
+      returns = tdfname
     ndarg = self.getDefaultArgs(args)
     narg  = len(args)
     if ndarg : iden = '  '
     else     : iden = ''
     if returns != 'void' :
-      if returns in self.basictypes :
+      if returns in self.basictypes or name == 'operator %s'%tdfname:
         s += '  static %s ret;\n' % returns
       elif returns.find('::*)') != -1 :
         s += '  static %s;\n' % returns.replace('::*','::* ret')
@@ -1028,7 +1036,7 @@ class genDictionary(object) :
         elif returns[-1] == '&' :
           first = iden + '  return (void*)&((%s*)o)->%s(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-        elif returns in self.basictypes or returns.find('::*') != -1 :
+        elif returns in self.basictypes or returns.find('::*') != -1 or name == 'operator '+tdfname:
           first = iden + '  ret = ((%s*)o)->%s(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
           s += iden + '  return &ret;\n'        
@@ -1152,7 +1160,15 @@ class genDictionary(object) :
     return self.genMCOBuild( 'converter', 'operator '+self.genTypeName(attrs['returns'],enum=True,const=True), attrs, args )    
 #----------------------------------------------------------------------------------
   def genConverterDef( self, attrs, args ) :
-    return self.genMCODef( 'converter', 'operator '+self.genTypeName(attrs['returns']), attrs, args )    
+    # If this is a conversion operator to pointer to function member we will need
+    # to create a typedef for the typename which is needed in the stub function
+    tdf = 'operator '+self.genTypeName(attrs['returns'])
+    t1 = self.xref[attrs['returns']]
+    if t1['elem'] == 'PointerType':
+      t2 = self.xref[t1['attrs']['type']]
+      if t2['elem'] == 'MethodType':
+        tdf = self.genTypeName(attrs['returns']).replace('*)(','* TDF%s)('%attrs['id'])
+    return self.genMCODef( 'converter', tdf, attrs, args )    
 #----------------------------------------------------------------------------------
   def genEnumValue(self, attrs):
     return '%s = %s' % (attrs['name'], attrs['init'])

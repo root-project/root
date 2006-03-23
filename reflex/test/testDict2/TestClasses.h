@@ -85,8 +85,6 @@ namespace testclasses {
   } // ns NonPublicDestructor
 
   
-#if 0
-  
   struct ConversionOperator {
 
     typedef const int* (ConversionOperator::* ptr_to_mem_fun)() const;
@@ -124,8 +122,6 @@ namespace testclasses {
 
   };
 
-#endif
-  
 } // namespace testclasses
 
 
