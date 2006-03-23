@@ -568,6 +568,15 @@ class genDictionary(object) :
         if member['elem'] in ('Field',) :
           a = member['attrs']
           t = self.genTypeName(a['type'],colon=True,const=True)
+          #---- Check if a type and a member with the same name exist in the same scope
+          mTypeElem = self.xref[a['type']]['elem']
+          if mTypeElem in ('Class','Struct'):
+            mTypeName = self.xref[a['type']]['attrs']['name']
+            mTypeId = a['type']
+            for el in self.xref[self.xref[a['type']]['attrs']['context']]['attrs'].get('members').split():
+              if self.xref[el]['attrs'].get('name') == mTypeName and mTypeId != el :
+                t = mTypeElem.lower() + ' ' + t[2:]
+                break
           #---- Check for non public types------------------------
           noPublicType = self.checkAccessibleType(self.xref[a['type']])
           if ( noPublicType and not self.isUnnamedType(self.xref[a['type']]['attrs'].get('name'))):
