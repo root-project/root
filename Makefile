@@ -511,9 +511,13 @@ build/pch.d: $(PCHFILE)
 	fi)
 
 base/src/precompile.d: $(PCHEXTRASRC) $(RMKDEP)
+ifeq ($(PCHSUPPORTED),yes)
 	$(MAKEDEP) -R -f$@.tmp -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
 	sed -e 's,$(PCHEXTRAOBJ),$(PCHFILE),' $@.tmp > $@
 	@rm -f $@.tmp
+else
+	@touch $@
+endif
 
 %.d: %.c $(RMKDEP)
 	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CFLAGS) -- $<
