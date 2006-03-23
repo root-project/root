@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.19 2005/12/12 12:54:27 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.20 2006/03/20 21:43:43 pcanal Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -312,72 +312,78 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
 
    //
    // Open file
-   if (!fClient->IsOpen() && !fClient->IsOpen_wait()) {
-      if (gDebug > 1)
-         Info("CreateXClient", "remote file could not be open");
+   if (!fClient->IsOpen()) {
+      if (fClient->IsOpen_wait()) {
+         if (gDebug > 1)
+            Info("CreateXClient", "remote file could not be open");
 
-      // If the server is a rootd we need to create a TNetFile
-      isRootd = (fClient->GetClientConn()->GetServerType() == XrdClientConn::kSTRootd);
+         // If the server is a rootd we need to create a TNetFile
+         isRootd = (fClient->GetClientConn()->GetServerType() ==
+                    XrdClientConn::kSTRootd);
 
-      if (isRootd && fgRootdBC) {
+         if (isRootd && fgRootdBC) {
 
-         Int_t sd = fClient->GetClientConn()->GetOpenSockFD();
-         if (sd > -1) {
-            //
-            // Create a TSocket on the open connection
-            TSocket *s = new TSocket(sd);
+            Int_t sd = fClient->GetClientConn()->GetOpenSockFD();
+            if (sd > -1) {
+               //
+               // Create a TSocket on the open connection
+               TSocket *s = new TSocket(sd);
 
-            s->SetOption(kNoBlock, 0);
+               s->SetOption(kNoBlock, 0);
 
-            // Find out the remote protocol (send the client protocol first)
-            Int_t rproto = GetRootdProtocol(s);
-            if (rproto < 0) {
-               Error("CreateXClient", "getting rootd server protocol");
+               // Find out the remote protocol (send the client protocol first)
+               Int_t rproto = GetRootdProtocol(s);
+               if (rproto < 0) {
+                  Error("CreateXClient", "getting rootd server protocol");
+                  goto zombie;
+               }
+
+               // Finalize TSocket initialization
+               s->SetRemoteProtocol(rproto);
+               TUrl uut((fClient->GetClientConn()
+                                ->GetCurrentUrl()).GetUrl().c_str());
+               TString uu;
+               FormUrl(uut,uu);
+
+               if (gDebug > 2)
+                  Info("CreateXClient"," url: %s",uu.Data());
+               s->SetUrl(uu.Data());
+               s->SetService("rootd");
+               s->SetServType(TSocket::kROOTD);
+               //
+               // Set rootd flag
+               fIsRootd = kTRUE;
+               //
+               // Now we can check if we can create a TNetFile on the
+               // open connection
+               if (rproto > 13) {
+                  //
+                  // Remote support for reuse of open connection
+                  TNetFile::Create(s, option, netopt);
+               } else {
+                  //
+                  // Open connection has been closed because could
+                  // not be reused; TNetFile will open a new connection
+                  TNetFile::Create(uu.Data(), option, netopt);
+               }
+
+               return;
+            } else {
+               Error("CreateXClient", "rootd: underlying socket undefined");
                goto zombie;
             }
-
-            // Finalize TSocket initialization
-            s->SetRemoteProtocol(rproto);
-            TUrl uut((fClient->GetClientConn()
-                             ->GetCurrentUrl()).GetUrl().c_str());
-            TString uu;
-            FormUrl(uut,uu);
-
-            if (gDebug > 2)
-               Info("CreateXClient"," url: %s",uu.Data());
-            s->SetUrl(uu.Data());
-            s->SetService("rootd");
-            s->SetServType(TSocket::kROOTD);
-            //
-            // Set rootd flag
-            fIsRootd = kTRUE;
-            //
-            // Now we can check if we can create a TNetFile on the
-            // open connection
-            if (rproto > 13) {
-               //
-               // Remote support for reuse of open connection
-               TNetFile::Create(s, option, netopt);
-            } else {
-               //
-               // Open connection has been closed because could
-               // not be reused; TNetFile will open a new connection
-               TNetFile::Create(uu.Data(), option, netopt);
-            }
-
-            return;
          } else {
-            Error("CreateXClient", "rootd: underlying socket undefined");
+            if (isRootd)
+               if (gDebug > 0)
+                  Info("CreateXClient", "rootd: fall back not enabled - closing");
             goto zombie;
          }
       } else {
-         if (isRootd)
-            if (gDebug > 0)
-               Info("CreateXClient", "rootd: fall back not enabled - closing");
+         if (gDebug > 0)
+            Info("CreateXClient", "open attempt failed");
          goto zombie;
       }
    }
-
    // set the Endpoint Url we are now connected to
    fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
 
@@ -508,6 +514,8 @@ void TXNetFile::Open(Option_t *option)
    // Create and Recreate are correlated
    if (recreate) {
       openOpt |= kXR_delete;
+      openOpt |= kXR_new;
+      create = kTRUE;
    } else if (create) {
       openOpt |= kXR_new;
    }
