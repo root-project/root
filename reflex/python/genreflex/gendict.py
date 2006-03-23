@@ -595,7 +595,7 @@ class genDictionary(object) :
           if mType and self.isUnnamedType(mType['attrs'].get('name')) :
             t = self.genClassShadow(mType['attrs'], inner+1)[:-2]
           if t[-1] == ']'         : c += indent + '  %s %s;\n' % ( t[:t.find('[')], a['name']+t[t.find('['):] )
-          elif t.find(')(') != -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
+          elif t.find(')(') != -1 and t.find('<') == -1 : c += indent + '  %s;\n' % ( t.replace(')(', ' %s)('%a['name']))
           else                    : c += indent + '  %s %s;\n' % ( t, a['name'] )
       c += indent + '};\n'
     return c    
