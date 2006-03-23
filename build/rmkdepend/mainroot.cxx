@@ -1,4 +1,4 @@
-// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.1 2006/03/20 17:55:49 rdm Exp $
+// @(#)root/build:$Name:  $:$Id: mainroot.cxx,v 1.2 2006/03/21 00:21:00 rdm Exp $
 // Author: Axel Naumann   21/03/06
 
 /*************************************************************************
@@ -10,6 +10,9 @@
  *************************************************************************/
 
 extern "C" {
+#if defined(__sun) && defined(__SUNPRO_CC)
+#include <signal.h>
+#endif
 #include "def.h"
 }
 
