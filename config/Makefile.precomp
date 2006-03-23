@@ -33,6 +33,7 @@ $(PCHEXTRAOBJ:.o=.d): CXXFLAGS+=-DUSEPCH
 
 $(PCHEXTRAOBJ) $(PCHFILE): $(PCHEXTRAHDR) $(W32PRAGMA)
 	@echo Building precompiled header...
+	rm -f $(PCHFILE)
 	$(PCHEXTRAOBJBUILD)
 
 $(CINTTMP): PCHCXXFLAGS=
