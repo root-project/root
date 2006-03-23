@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.3 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.4 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings
@@ -6,8 +6,8 @@
 #include "ClassMethodHolder.h"
 
 
-//- constructor -----------------------------------------------------------------
-PyROOT::TClassMethodHolder::TClassMethodHolder( TClass* klass, TMethod* method ) :
+//- constructors/destructor -----------------------------------------------------
+PyROOT::TClassMethodHolder::TClassMethodHolder( TClass* klass, TFunction* method ) :
       TMethodHolder( klass, method )
 {
 }

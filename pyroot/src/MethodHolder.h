@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.18 2005/12/06 11:47:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.19 2006/03/09 09:07:02 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMETHODHOLDER_H
@@ -34,8 +34,7 @@ namespace PyROOT {
 
    class TMethodHolder : public PyCallable {
    public:
-      TMethodHolder( TClass* klass, TMethod* method );
-      TMethodHolder( TFunction* function );
+      TMethodHolder( TClass* klass, TFunction* method );
       TMethodHolder( const TMethodHolder& );
       TMethodHolder& operator=( const TMethodHolder& );
       virtual ~TMethodHolder();

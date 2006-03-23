@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.33 2005/12/12 18:06:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.34 2006/03/09 09:07:02 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -182,6 +182,105 @@ namespace {
       return CallPyObjMethod( self, "IsEqual", obj );
    }
 
+
+//- TClass behaviour -----------------------------------------------------------
+   PyObject* TClassStaticCast( PyObject*, PyObject* args )
+   {
+   // Implemented somewhat different than TClass::DynamicClass, in that "up" is
+   // chosen automatically based on the relationship between self and arg pyclass.
+      ObjectProxy* self = 0, *pyclass = 0;
+      PyObject* pyobject = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!O:StaticCast" ),
+              &ObjectProxy_Type, &self, &ObjectProxy_Type, &pyclass, &pyobject ) )
+         return 0;
+
+   // check the given arguments (dcasts are necessary b/c of could be a TQClass
+      TClass* from =
+         (TClass*)self->ObjectIsA()->DynamicCast( TClass::Class(), self->GetObject() );
+      TClass* to   =
+         (TClass*)pyclass->ObjectIsA()->DynamicCast( TClass::Class(), pyclass->GetObject() );
+
+      if ( ! from ) {
+         PyErr_SetString( PyExc_TypeError, "unbound method TClass::StaticCast "
+            "must be called with a TClass instance as first argument" );
+         return 0;
+      }
+
+      if ( ! to ) {
+         PyErr_SetString( PyExc_TypeError, "could not convert argument 1 (TClass* expected)" );
+         return 0;
+      }
+
+   // retrieve object address
+      void* address = 0;
+      if ( ObjectProxy_Check( pyobject ) ) address = ((ObjectProxy*)pyobject)->GetObject();
+      else if ( PyInt_Check( pyobject ) ) address = (void*)PyInt_AS_LONG( pyobject );
+      else Utility::GetBuffer( pyobject, '*', 1, address, kFALSE );
+
+      if ( ! address ) {
+         PyErr_SetString( PyExc_TypeError, "could not convert argument 2 (void* expected)" );
+         return 0;
+      }
+
+   // determine direction of cast
+      int up = -1;
+      if ( from->InheritsFrom( to ) ) up = 1;
+      else if ( to->InheritsFrom( from ) ) {
+         TClass* tmp = to; to = from; from = tmp;
+         up = 0;
+      }
+
+      if ( up == -1 ) {
+         PyErr_Format( PyExc_TypeError, "unable to cast %s to %s", from->GetName(), to->GetName() );
+         return 0;
+      }
+
+   // perform actual cast
+      void* result = from->DynamicCast( to, address, (Bool_t)up );
+
+   // at this point, "result" can't be null (but is still safe if it is)
+      return BindRootObjectNoCast( result, to );
+   }
+
+//____________________________________________________________________________
+   PyObject* TClassDynamicCast( PyObject*, PyObject* args )
+   {
+      PyObject* self = 0, *pyclass = 0, *pyobject = 0;
+      long up = 1;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!O|l:DynamicCast" ),
+              &ObjectProxy_Type, &self, &ObjectProxy_Type, &pyclass, &pyobject, &up ) )
+         return 0;
+
+   // perform actual cast
+      PyObject* meth = PyObject_GetAttrString( self, (char*)"_TClass__DynamicCast" );
+      PyObject* ptr = PyObject_Call(
+         meth, PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) ), 0 );
+
+   // simply forward in case of call failure
+      if ( ! ptr )
+         return ptr;
+
+   // supposed to be an int or long ...
+      long address = PyLong_AsLong( ptr );
+      if ( PyErr_Occurred() ) {
+         PyErr_Clear();
+         return ptr;
+      }
+
+   // now use binding to return a usable class
+      TClass* klass = 0;
+      if ( up ) {                  // up-cast: result is a base
+         klass = (TClass*)((ObjectProxy*)pyclass)->ObjectIsA()->DynamicCast(
+            TClass::Class(), ((ObjectProxy*)pyclass)->GetObject() );
+      } else {                     // down-cast: result is a derived
+         klass = (TClass*)((ObjectProxy*)self)->ObjectIsA()->DynamicCast(
+            TClass::Class(), ((ObjectProxy*)self)->GetObject() );
+      }
+
+      PyObject* result = BindRootObjectNoCast( (void*)address, klass );
+      Py_DECREF( ptr );
+      return result;
+   }
 
 //- TCollection behaviour ------------------------------------------------------
    PyObject* TCollectionExtend( PyObject*, PyObject* args )
@@ -1353,8 +1452,12 @@ namespace {
          return 0;
       }
 
-      return TFunctionHolder(
-         (TFunction*)((ObjectProxy*)PyTuple_GET_ITEM( args, 0 ))->GetObject() )( 0, args, 0 );
+      PyObject* newArgs = PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) );
+      PyObject* result = TFunctionHolder(
+         (TFunction*)((ObjectProxy*)PyTuple_GET_ITEM( args, 0 ))->GetObject() )( 0, newArgs, 0 );
+      Py_DECREF( newArgs );
+
+      return result;
    }
 
 
@@ -1441,6 +1544,17 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // comparing for lists
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjectCompare );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjectIsEqual );
+
+      return kTRUE;
+   }
+
+   if ( name == "TClass" ) {
+   // make DynamicCast return a usable python object, rather than void*
+      Utility::AddToClass( pyclass, "_TClass__DynamicCast", "DynamicCast" );
+      Utility::AddToClass( pyclass, "DynamicCast", (PyCFunction) TClassDynamicCast );
+
+   // the following cast is easier to use (reads both ways)
+      Utility::AddToClass( pyclass, "StaticCast", (PyCFunction) TClassStaticCast );
 
       return kTRUE;
    }

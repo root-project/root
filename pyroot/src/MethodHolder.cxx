@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.44 2005/12/06 11:47:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.45 2006/03/09 09:07:02 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -15,7 +15,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TString.h"
-#include "TMethod.h"
+#include "TFunction.h"
 #include "TMethodArg.h"
 #include "TClassEdit.h"
 #include "TVirtualMutex.h"
@@ -40,11 +40,6 @@ namespace {
       TempLevelGuard_t() { G__settemplevel( 1 ); }
       ~TempLevelGuard_t() { G__settemplevel( -1 ); }
    };
-
-   TClassRef GetGlobalNamespace() {
-      static TClass c;
-      return &c;
-   }
 
    G__ClassInfo* GetGlobalNamespaceInfo() {
       static G__ClassInfo gcl;
@@ -203,20 +198,8 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 }
 
 //- constructors and destructor ----------------------------------------------
-PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TMethod* method ) :
+PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TFunction* method ) :
       fClass( klass ), fMethod( method )
-{
-   fMethodCall    =  0;
-   fExecutor      =  0;
-   fArgsRequired  = -1;
-   fOffset        =  0;
-
-   fIsInitialized = kFALSE;
-}
-
-//____________________________________________________________________________
-PyROOT::TMethodHolder::TMethodHolder( TFunction* function ) :
-      fClass( GetGlobalNamespace() ), fMethod( function )
 {
    fMethodCall    =  0;
    fExecutor      =  0;
@@ -424,7 +407,7 @@ PyObject* PyROOT::TMethodHolder::operator()( ObjectProxy* self, PyObject* args, 
    Py_DECREF( args );
 
    if ( bConvertOk == kFALSE )
-      return 0;
+      return 0;                              // important: 0, not Py_None
 
 // get the ROOT object that this object proxy is a handle for
    void* object = self->GetObject();

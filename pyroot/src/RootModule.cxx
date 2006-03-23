@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.22 2006/03/09 09:07:02 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.23 2006/03/16 06:07:32 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -92,6 +92,7 @@ namespace {
       // success ...
          if ( PropertyProxy_Check( val ) ) {
          // pretend something was actually found, but don't add to dictionary
+            Py_INCREF( key );
             ep->me_key   = key;
             ep->me_hash  = hash;
             ep->me_value = val->ob_type->tp_descr_get( val, NULL, NULL );
@@ -107,6 +108,9 @@ namespace {
             }
             ((DictLookup_t&)mp->ma_lookup) = RootLookDictString; // restore
          }
+
+      // done with val
+         Py_DECREF( val );
       } else
          PyErr_Clear();
 

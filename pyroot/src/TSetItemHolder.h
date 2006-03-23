@@ -23,7 +23,7 @@ namespace PyROOT {
 
    class TSetItemHolder : public TMethodHolder {
    public:
-      TSetItemHolder( TClass* klass, TMethod* method );
+      TSetItemHolder( TClass* klass, TFunction* method );
 
    public:
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );

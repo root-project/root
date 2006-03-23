@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.8 2005/08/31 21:30:34 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.9 2005/11/17 06:26:35 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -64,6 +64,21 @@ namespace {
       if ( pyobj->fFlags & ObjectProxy::kIsReference )
          clName.append( "*" );
 
+      PyObject* name = PyObject_CallMethod( (PyObject*)pyobj,
+         const_cast< char* >( "GetName" ), const_cast< char* >( "" ) );
+
+      if ( name ) {
+         if ( PyString_GET_SIZE( name ) != 0 ) {
+            PyObject* repr = PyString_FromFormat( "<ROOT.%s object (\"%s\") at %p>",
+               clName.c_str(), PyString_AS_STRING( name ), pyobj->fObject );
+            Py_DECREF( name );
+            return repr;
+         }
+         Py_DECREF( name );
+      } else
+         PyErr_Clear();
+
+   // get here if object has no method GetName() or name = ""
       return PyString_FromFormat( const_cast< char* >( "<ROOT.%s object at %p>" ),
          clName.c_str(), pyobj->fObject );
    }

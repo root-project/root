@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.40 2006/01/05 08:09:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.41 2006/03/16 06:07:32 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -12,6 +12,7 @@
 #include "MethodHolder.h"
 #include "ConstructorHolder.h"
 #include "ClassMethodHolder.h"
+#include "FunctionHolder.h"
 #include "TSetItemHolder.h"
 #include "MemoryRegulator.h"
 #include "Utility.h"
@@ -429,6 +430,8 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
    if ( force == kFALSE )
       pyclass = PyObject_GetAttr( scope, pyactual );
 
+   Bool_t bClassFound = pyclass ? kTRUE : kFALSE;
+
 // build if the class does not yet exist
    if ( ! pyclass ) {
    // ignore error generated from the failed lookup
@@ -464,10 +467,11 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
    Py_DECREF( pyactual );
    Py_DECREF( scope );
 
-// add python-style features
-   if ( ! Pythonize( pyclass, klass->GetName() ) ) {
-      Py_XDECREF( pyclass );
-      pyclass = 0;
+   if ( ! bClassFound ) {               // add python-style features to newly minted classes
+      if ( ! Pythonize( pyclass, klass->GetName() ) ) {
+         Py_XDECREF( pyclass );
+         pyclass = 0;
+      }
    }
 
 // all done
@@ -493,10 +497,10 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
    TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );
    if ( gb ) return BindRootGlobal( gb );
 
-   G__DataMemberInfo t;
-   while ( t.Next() ) {
-      if ( t.IsValid() && t.Name() == name ) {
-         TGlobal gbl = TGlobal( new G__DataMemberInfo( t ) );
+   G__DataMemberInfo dt;
+   while ( dt.Next() ) {
+      if ( dt.IsValid() && dt.Name() == name ) {
+         TGlobal gbl = TGlobal( new G__DataMemberInfo( dt ) );
          return BindRootGlobal( &gbl );
       }
    }
@@ -504,24 +508,22 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 // still here ... try functions (first ROOT, then CINT: sync is too slow)
    TFunction* func =
       (TFunction*)gROOT->GetListOfGlobalFunctions( kFALSE )->FindObject( name.c_str() );
-   if ( func ) {
-      func = new TFunction( *func );         // copy to take ownership
-   } else {
-      G__MethodInfo t;
-      while ( t.Next() ) {
-         if ( t.IsValid() && t.Name() == name ) {
-            func = new TFunction( new G__MethodInfo( t ) );
-            break;
-         }
+   if ( func ) return (PyObject*)MethodProxy_New( name, new TFunctionHolder( func ) );
+
+   std::vector< PyCallable* > overloads;
+   G__MethodInfo mt;
+   while ( mt.Next() ) {
+      if ( mt.IsValid() && mt.Name() == name ) {
+      // add to list of globals (same as synchronization would do for all funcs)
+         TFunction* func = new TFunction( new G__MethodInfo( mt ) );
+         gROOT->GetListOfGlobalFunctions()->Add( func );
+
+         overloads.push_back( new TFunctionHolder( func ) );
       }
    }
 
-   if ( func ) {
-   // function found: TFunction is not a real python function, but emulates with __call__
-      PyObject* pyobject = BindRootObject( func, TFunction::Class() );
-      ((ObjectProxy*)pyobject)->fFlags |= ObjectProxy::kIsOwner;
-      return pyobject;
-   }
+   if ( ! overloads.empty() )
+      return (PyObject*)MethodProxy_New( name, overloads );
 
 // nothing found
    PyErr_Format( PyExc_LookupError, "no such global: %s", name.c_str() );

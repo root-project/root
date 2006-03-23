@@ -28,7 +28,7 @@ Bool_t PyROOT::TSetItemHolder::InitExecutor_( TExecutor*& executor )
 
 
 //- constructor --------------------------------------------------------------
-PyROOT::TSetItemHolder::TSetItemHolder( TClass* klass, TMethod* method ) :
+PyROOT::TSetItemHolder::TSetItemHolder( TClass* klass, TFunction* method ) :
       TMethodHolder( klass, method )
 {
 }

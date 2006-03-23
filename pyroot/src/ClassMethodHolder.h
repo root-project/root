@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.h,v 1.3 2005/04/13 05:04:49 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.h,v 1.4 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 #ifndef PYROOT_TCLASSMETHODHOLDER_H
@@ -22,10 +22,10 @@ namespace PyROOT {
 
    class TClassMethodHolder : public TMethodHolder {
    public:
-      TClassMethodHolder( TClass* klass, TMethod* method );
+      TClassMethodHolder( TClass* klass, TFunction* method );
 
       virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds );
-    };
+   };
 
 } // namespace PyROOT
 
