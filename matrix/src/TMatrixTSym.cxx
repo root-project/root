@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.7 2006/03/22 15:16:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.8 2006/03/23 11:23:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -25,7 +25,6 @@
 #include "TMatrixTLazy.h"
 #include "TMatrixTSymCramerInv.h"
 #include "TDecompLU.h"
-#include "TDecompBK.h"
 #include "TMatrixDSymEigen.h"
 #include "TClass.h"
 
@@ -979,16 +978,13 @@ template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::Invert(Double_t *det)
 {     
   // Invert the matrix and calculate its determinant
-  // Notice that we need to invoke an additional LU decomposition in order to
-  // calculate the determinant beacuse the Bunch-Kaufman does not result in a
-  // convenient triagularr matrix .
+  // Notice that the LU decomposition is used instead of Bunch-Kaufman
+  // Bunch-Kaufman guarantees a symmetric inverted matrix but is slower than LU .
+  // The user can access Bunch-Kaufman through the TDecompBK class .
     
-  if (det)
-    *det = this->Determinant();
-  TMatrixDSym tmp = *this;
-  TDecompBK bk(tmp,this->fTol);
-  bk.Invert(tmp);
-  *this = tmp;
+  TMatrixD tmp(*this);
+  TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+  memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
   return *this;
 }
 
@@ -1044,12 +1040,9 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::InvertFast(Double_t *det)
 
     default:
     {
-      if (det)
-        *det = this->Determinant();
-      TMatrixDSym tmp = *this;
-      TDecompBK bk(tmp,this->fTol);
-      bk.Invert(tmp);
-      *this = tmp;
+      TMatrixD tmp(*this);
+      TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
+      memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
       return *this;
     }
   }

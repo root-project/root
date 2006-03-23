@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.10 2006/03/22 15:16:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.11 2006/03/23 11:23:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1546,7 +1546,7 @@ TMatrixT<Element> &TMatrixT<Element>::Invert(Double_t *det)
   Assert(this->IsValid());
   TMatrixD tmp(*this);
   TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-  *this = tmp;
+  memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
 
   return *this;
 }
@@ -1610,7 +1610,7 @@ TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
     {
       TMatrixD tmp(*this);
       TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
-      *this = tmp;
+      memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
       return *this;
     }
   }
