@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/03/05
-# Last: 10/17/05
+# Last: 03/22/06
 
 """C++ language interface unit tests for PyROOT package."""
 
@@ -119,7 +119,7 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
 
       import array
       if hasattr( array.array, 'buffer_info' ):   # not supported in p2.2
-         addressofo = array.array( 'l', [o.IsA().DynamicCast( o.IsA(), o )] )
+         addressofo = array.array( 'l', [o.IsA()._TClass__DynamicCast( o.IsA(), o )] )
          self.assertEqual( addressofo.buffer_info()[0], Z.GimeAddressPtrPtr( addressofo ) )
 
       self.assertEqual( 0, Z.GimeAddressPtr( 0 ) );
