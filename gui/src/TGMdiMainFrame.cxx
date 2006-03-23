@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.18 2005/11/21 00:25:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.19 2006/03/20 13:34:03 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -1117,7 +1117,8 @@ void TGMdiMainFrame::CloseAll()
    while (travel) {
       tmp = travel->GetNext();
       mdi = travel->GetDecorFrame()->GetMdiFrame();
-      RemoveMdiFrame(mdi);
+      SetCurrent(travel);
+      Close(GetCurrent());
       travel = tmp;
    }
 }
