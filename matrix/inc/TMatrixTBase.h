@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.7 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.8 2006/03/21 05:20:33 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -89,6 +89,8 @@
 template<class Element> class TVectorT;
 template<class Element> class TElementActionT;
 template<class Element> class TElementPosActionT;
+
+R__EXTERN Int_t gMatrixCheck;
 
 template<class Element> class TMatrixTBase : public TObject {
 

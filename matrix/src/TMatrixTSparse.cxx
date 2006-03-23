@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.3 2006/01/25 18:49:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.4 2006/03/22 15:16:59 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -278,22 +278,24 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::InsertRow(Int_t rown,Int_t coln,
   const Int_t acoln = coln-this->fColLwb;
   const Int_t nr = (n > 0) ? n : this->fNcols;
 
-  if (arown >= this->fNrows || arown < 0) {
-    Error("InsertRow","row %d out of matrix range",rown);
-    this->Invalidate();
-    return *this;
-  }
+  if (gMatrixCheck) {
+    if (arown >= this->fNrows || arown < 0) {
+      Error("InsertRow","row %d out of matrix range",rown);
+      this->Invalidate();
+      return *this;
+    }
 
-  if (acoln >= this->fNcols || acoln < 0) {
-    Error("InsertRow","column %d out of matrix range",coln);
-    this->Invalidate();
-    return *this;
-  }
+    if (acoln >= this->fNcols || acoln < 0) {
+      Error("InsertRow","column %d out of matrix range",coln);
+      this->Invalidate();
+      return *this;
+    }
 
-  if (acoln+nr > this->fNcols || nr < 0) {
-    Error("InsertRow","row length %d out of range",nr);
-    this->Invalidate();
-    return *this;
+    if (acoln+nr > this->fNcols || nr < 0) {
+      Error("InsertRow","row length %d out of range",nr);
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Int_t sIndex = fRowIndex[arown];
@@ -362,19 +364,21 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
   const Int_t acoln = coln-this->fColLwb;
   const Int_t nr = (n > 0) ? n : this->fNcols;
 
-  if (arown >= this->fNrows || arown < 0) {
-    Error("ExtractRow","row %d out of matrix range",rown);
-    return;
-  }
+  if (gMatrixCheck) {
+    if (arown >= this->fNrows || arown < 0) {
+      Error("ExtractRow","row %d out of matrix range",rown);
+      return;
+    }
 
-  if (acoln >= this->fNcols || acoln < 0) {
-    Error("ExtractRow","column %d out of matrix range",coln);
-    return;
-  }
+    if (acoln >= this->fNcols || acoln < 0) {
+      Error("ExtractRow","column %d out of matrix range",coln);
+      return;
+    }
 
-  if (acoln+n >= this->fNcols || nr < 0) {
-    Error("ExtractRow","row length %d out of range",nr);
-    return;
+    if (acoln+n >= this->fNcols || nr < 0) {
+      Error("ExtractRow","row length %d out of range",nr);
+      return;
+    }
   }
 
   const Int_t sIndex = fRowIndex[arown];
@@ -397,26 +401,28 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
   // General matrix multiplication. Create a matrix C such that C = A * B'.
   // Note, matrix C is allocated for constr=1.
   
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
-    Error("AMultBt","A and B columns incompatible");
-    this->Invalidate();
-    return;
+    if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
+      Error("AMultBt","A and B columns incompatible");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == &a) {
+      Error("AMultB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == &b) {
+      Error("AMultB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == &a) {
-    Error("AMultB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == &b) {
-    Error("AMultB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   const Int_t * const pRowIndexa = a.GetRowIndexArray();
   const Int_t * const pColIndexa = a.GetColIndexArray();
@@ -515,26 +521,28 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
   // General matrix multiplication. Create a matrix C such that C = A * B'.
   // Note, matrix C is allocated for constr=1.
   
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
-    Error("AMultBt","A and B columns incompatible");
-    this->Invalidate();
-    return;
+    if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
+      Error("AMultBt","A and B columns incompatible");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == &a) {
+      Error("AMultB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
+      Error("AMultB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == &a) {
-    Error("AMultB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
-    Error("AMultB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   const Int_t * const pRowIndexa = a.GetRowIndexArray();
   const Int_t * const pColIndexa = a.GetColIndexArray();
@@ -616,26 +624,28 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
   // General matrix multiplication. Create a matrix C such that C = A * B'.
   // Note, matrix C is allocated for constr=1.
   
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
-    Error("AMultBt","A and B columns incompatible");
-    this->Invalidate();
-    return;
+    if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
+      Error("AMultBt","A and B columns incompatible");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&a)) {
+      Error("AMultB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == &b) {
+      Error("AMultB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&a)) {
-    Error("AMultB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == &b) {
-    Error("AMultB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   const Int_t * const pRowIndexb = b.GetRowIndexArray();
   const Int_t * const pColIndexb = b.GetColIndexArray();
@@ -721,23 +731,25 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
   Assert(a.IsValid());
   Assert(b.IsValid());
 
-  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
-      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
-    Error("APlusB(const TMatrixTSparse &,const TMatrixTSparse &","matrices not compatible");
-    return;
+  if (gMatrixCheck) {
+    if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+        a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+      Error("APlusB(const TMatrixTSparse &,const TMatrixTSparse &","matrices not compatible");
+      return;
+    }
+
+    if (this == &a) {
+      Error("APlusB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == &b) {
+      Error("APlusB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == &a) {
-    Error("APlusB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == &b) {
-    Error("APlusB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   const Int_t * const pRowIndexa = a.GetRowIndexArray();
   const Int_t * const pRowIndexb = b.GetRowIndexArray();
@@ -809,26 +821,28 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
   // General matrix addition. Create a matrix C such that C = A + B.
   // Note, matrix C is allocated for constr=1.
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
-      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
-    Error("APlusB(const TMatrixTSparse &,const TMatrixT &","matrices not compatible");
-    return;
+    if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+        a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+      Error("APlusB(const TMatrixTSparse &,const TMatrixT &","matrices not compatible");
+      return;
+    }
+
+    if (this == &a) {
+      Error("APlusB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
+      Error("APlusB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == &a) {
-    Error("APlusB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
-    Error("APlusB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   if (constr)
     *this = b;
@@ -885,26 +899,28 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
   // General matrix subtraction. Create a matrix C such that C = A - B.
   // Note, matrix C is allocated for constr=1.
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
-      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
-    Error("AMinusB(const TMatrixTSparse &,const TMatrixTSparse &","matrices not compatible");
-    return;
+    if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+        a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+      Error("AMinusB(const TMatrixTSparse &,const TMatrixTSparse &","matrices not compatible");
+      return;
+    }
+
+    if (this == &a) {
+      Error("AMinusB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == &b) {
+      Error("AMinusB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == &a) {
-    Error("AMinusB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == &b) {
-    Error("AMinusB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   const Int_t * const pRowIndexa = a.GetRowIndexArray();
   const Int_t * const pRowIndexb = b.GetRowIndexArray();
@@ -976,26 +992,28 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
   // General matrix subtraction. Create a matrix C such that C = A - B.
   // Note, matrix C is allocated for constr=1.
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
-      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
-    Error("AMinusB(const TMatrixTSparse &,const TMatrixT &","matrices not compatible");
-    return;
+    if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+        a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+      Error("AMinusB(const TMatrixTSparse &,const TMatrixT &","matrices not compatible");
+      return;
+    }
+
+    if (this == &a) {
+      Error("AMinusB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
+      Error("AMinusB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == &a) {
-    Error("AMinusB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&b)) {
-    Error("AMinusB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   if (constr)
     *this = b;
@@ -1052,26 +1070,28 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
   // General matrix subtraction. Create a matrix C such that C = A - B.
   // Note, matrix C is allocated for constr=1.
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
-      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
-    Error("AMinusB(const TMatrixT &,const TMatrixTSparse &","matrices not compatible");
-    return;
+    if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+        a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+      Error("AMinusB(const TMatrixT &,const TMatrixTSparse &","matrices not compatible");
+      return;
+    }
+
+    if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&a)) {
+      Error("AMinusB","this = &a");
+      this->Invalidate();
+      return;
+    }
+
+    if (this == &b) {
+      Error("AMinusB","this = &b");
+      this->Invalidate();
+      return;
+    }
   }
-
-  if (this == dynamic_cast<const TMatrixTSparse<Element> *>(&a)) {
-    Error("AMinusB","this = &a");
-    this->Invalidate();
-    return;
-  }     
-
-  if (this == &b) {
-    Error("AMinusB","this = &b");
-    this->Invalidate();
-    return;
-  }     
 
   if (constr)
     *this = a;
@@ -1239,12 +1259,14 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(const TMatrixTB
 {
   // Use non-zero data of matrix source to set the sparse structure
 
-  Assert(source.IsValid());
-  if (this->GetNrows()  != source.GetNrows()  || this->GetNcols()  != source.GetNcols() ||
-      this->GetRowLwb() != source.GetRowLwb() || this->GetColLwb() != source.GetColLwb()) {
-    Error("SetSparseIndex","matrices not compatible");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(source.IsValid());
+    if (this->GetNrows()  != source.GetNrows()  || this->GetNcols()  != source.GetNcols() ||
+        this->GetRowLwb() != source.GetRowLwb() || this->GetColLwb() != source.GetColLwb()) {
+      Error("SetSparseIndex","matrices not compatible");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Int_t nr_nonzeros = source.NonZeros();
@@ -1281,19 +1303,21 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
   // Set the row/column indices to the "sum" of matrices a and b
   // It is checked that enough space has been allocated
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
 
-  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
-      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
-    Error("SetSparseIndexAB","source matrices not compatible");
-    return *this;
-  }
+    if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+        a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+      Error("SetSparseIndexAB","source matrices not compatible");
+      return *this;
+    }
 
-  if (this->GetNrows()  != a.GetNrows()  || this->GetNcols()  != a.GetNcols() ||
-      this->GetRowLwb() != a.GetRowLwb() || this->GetColLwb() != a.GetColLwb()) {
-    Error("SetSparseIndexAB","matrix not compatible with source matrices");
-    return *this;
+    if (this->GetNrows()  != a.GetNrows()  || this->GetNcols()  != a.GetNcols() ||
+        this->GetRowLwb() != a.GetRowLwb() || this->GetColLwb() != a.GetColLwb()) {
+      Error("SetSparseIndexAB","matrix not compatible with source matrices");
+      return *this;
+    }
   }
 
   const Int_t * const pRowIndexa = a.GetRowIndexArray();
@@ -1441,8 +1465,8 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t nrows,Int_t ncols
       }
     }
 
-    if (rowIndex_old) delete [] (Int_t*)    rowIndex_old;
-    if (colIndex_old) delete [] (Int_t*)    colIndex_old;
+    if (rowIndex_old) delete [] (Int_t*)   rowIndex_old;
+    if (colIndex_old) delete [] (Int_t*)   colIndex_old;
     if (elements_old) delete [] (Element*) elements_old;
 
     if (nrowIndex_old < this->fNrowIndex) {
@@ -1547,8 +1571,8 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t row_lwb,Int_t row
       }
     }
 
-    if (rowIndex_old) delete [] (Int_t*)    rowIndex_old;
-    if (colIndex_old) delete [] (Int_t*)    colIndex_old;
+    if (rowIndex_old) delete [] (Int_t*)   rowIndex_old;
+    if (colIndex_old) delete [] (Int_t*)   colIndex_old;
     if (elements_old) delete [] (Element*) elements_old;
 
     if (nrowIndex_old < this->fNrowIndex) {
@@ -1568,17 +1592,19 @@ template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                     Int_t nr_nonzeros,Int_t *pRowIndex,Int_t *pColIndex,Element *pData)
 {
-  if (row_upb < row_lwb)
-  {
-    Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
-    this->Invalidate();
-    return *this;
-  }
-  if (col_upb < col_lwb)
-  {
-    Error("Use","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    if (row_upb < row_lwb)
+    {
+      Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
+      this->Invalidate();
+      return *this;
+    }
+    if (col_upb < col_lwb)
+    {
+      Error("Use","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
+      this->Invalidate();
+      return *this;
+    }
   }
 
   Clear();
@@ -1610,31 +1636,33 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::GetSub(Int_t row_lwb,Int_t row_u
   // option == "S" : return [0..row_upb-row_lwb+1][0..col_upb-col_lwb+1] (default)
   // else          : return [row_lwb..row_upb][col_lwb..col_upb]
 
-  Assert(this->IsValid());
-  if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
-    Error("GetSub","row_lwb out-of-bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (col_lwb < this->fColLwb || col_lwb > this->fColLwb+this->fNcols-1) {
-    Error("GetSub","col_lwb out-of-bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (row_upb < this->fRowLwb || row_upb > this->fRowLwb+this->fNrows-1) {
-    Error("GetSub","row_upb out-of-bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (col_upb < this->fColLwb || col_upb > this->fColLwb+this->fNcols-1) {
-    Error("GetSub","col_upb out-of-bounds");
-    target.Invalidate();
-    return target;
-  }
-  if (row_upb < row_lwb || col_upb < col_lwb) {
-    Error("GetSub","row_upb < row_lwb || col_upb < col_lwb");
-    target.Invalidate();
-    return target;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
+      Error("GetSub","row_lwb out-of-bounds");
+      target.Invalidate();
+      return target;
+    }
+    if (col_lwb < this->fColLwb || col_lwb > this->fColLwb+this->fNcols-1) {
+      Error("GetSub","col_lwb out-of-bounds");
+      target.Invalidate();
+      return target;
+    }
+    if (row_upb < this->fRowLwb || row_upb > this->fRowLwb+this->fNrows-1) {
+      Error("GetSub","row_upb out-of-bounds");
+      target.Invalidate();
+      return target;
+    }
+    if (col_upb < this->fColLwb || col_upb > this->fColLwb+this->fNcols-1) {
+      Error("GetSub","col_upb out-of-bounds");
+      target.Invalidate();
+      return target;
+    }
+    if (row_upb < row_lwb || col_upb < col_lwb) {
+      Error("GetSub","row_upb < row_lwb || col_upb < col_lwb");
+      target.Invalidate();
+      return target;
+    }
   }
 
   TString opt(option);
@@ -1712,26 +1740,29 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
   // Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source-1][col_lwb..col_lwb+ncols_source-1];
 
-  Assert(this->IsValid());
-  Assert(source.IsValid());
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(source.IsValid());
 
-  if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
-    Error("SetSub","row_lwb out-of-bounds");
-    this->Invalidate();
-    return *this;
+    if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
+      Error("SetSub","row_lwb out-of-bounds");
+      this->Invalidate();
+      return *this;
+    }
+    if (col_lwb < this->fColLwb || col_lwb > this->fColLwb+this->fNcols-1) {
+      Error("SetSub","col_lwb out-of-bounds");
+      this->Invalidate();
+      return *this;
+    }
+    if (row_lwb+source.GetNrows() > this->fRowLwb+this->fNrows || col_lwb+source.GetNcols() > this->fColLwb+this->fNcols) {
+      Error("SetSub","source matrix too large");
+      this->Invalidate();
+      return *this;
+    }
   }
-  if (col_lwb < this->fColLwb || col_lwb > this->fColLwb+this->fNcols-1) {
-    Error("SetSub","col_lwb out-of-bounds");
-    this->Invalidate();
-    return *this;
-  }
+
   const Int_t nRows_source = source.GetNrows();
   const Int_t nCols_source = source.GetNcols();
-  if (row_lwb+nRows_source > this->fRowLwb+this->fNrows || col_lwb+nCols_source > this->fColLwb+this->fNcols) {
-    Error("SetSub","source matrix too large");
-    this->Invalidate();
-    return *this;
-  }
 
   // Determine how many non-zero's are already available in
   // [row_lwb..row_lwb+nrows_source-1][col_lwb..col_lwb+ncols_source-1]
@@ -1849,27 +1880,30 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
 {
   // Transpose a matrix.
 
-  Assert(this->IsValid());
-  Assert(source.IsValid());
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(source.IsValid());
 
-  if (this->fNrows  != source.GetNcols()  || this->fNcols  != source.GetNrows() ||
-      this->fRowLwb != source.GetColLwb() || this->fColLwb != source.GetRowLwb())
-  {
-    Error("Transpose","matrix has wrong shape");
-    this->Invalidate();
-    return *this;
+    if (this->fNrows  != source.GetNcols()  || this->fNcols  != source.GetNrows() ||
+        this->fRowLwb != source.GetColLwb() || this->fColLwb != source.GetRowLwb())
+    {
+      Error("Transpose","matrix has wrong shape");
+      this->Invalidate();
+      return *this;
+    }
+
+    if (source.NonZeros() <= 0)
+      return *this;
   }
 
   const Int_t nr_nonzeros = source.NonZeros();
-  if (nr_nonzeros <= 0)
-    return *this;
 
-  const Int_t    * const pRowIndex_s = source.GetRowIndexArray();
-  const Int_t    * const pColIndex_s = source.GetColIndexArray();
+  const Int_t   * const pRowIndex_s = source.GetRowIndexArray();
+  const Int_t   * const pColIndex_s = source.GetColIndexArray();
   const Element * const pData_s     = source.GetMatrixArray();
 
-  Int_t   *rownr   = new Int_t[nr_nonzeros];
-  Int_t   *colnr   = new Int_t[nr_nonzeros];
+  Int_t   *rownr   = new Int_t  [nr_nonzeros];
+  Int_t   *colnr   = new Int_t  [nr_nonzeros];
   Element *pData_t = new Element[nr_nonzeros];
 
   Int_t ielem = 0;
@@ -2059,7 +2093,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixTSparse
   // Notice that the sparsity of the matrix is NOT changed : its fRowIndex/fColIndex
   // are used !
 
-  if (!AreCompatible(*this,source)) {
+  if (gMatrixCheck && !AreCompatible(*this,source)) {
     Error("operator=(const TMatrixTSparse &)","matrices not compatible");
     this->Invalidate();
     return *this;
@@ -2083,7 +2117,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixT<Eleme
   // Notice that the sparsity of the matrix is NOT changed : its fRowIndex/fColIndex
   // are used !
 
-  if (!AreCompatible(*this,(TMatrixTBase<Element> &)source)) {
+  if (gMatrixCheck && !AreCompatible(*this,(TMatrixTBase<Element> &)source)) {
     Error("operator=(const TMatrixT &)","matrices not compatible");
     this->Invalidate();
     return *this;
@@ -2237,7 +2271,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Elem
   const Element scale = beta-alpha;
   const Element shift = alpha/scale;
 
-  if (this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
+  if (gMatrixCheck && this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
     Error("RandomizePD(Element &","matrix should be square");
     this->Invalidate();
     return *this;
@@ -2497,7 +2531,7 @@ TMatrixTSparse<Element> &ElementMult(TMatrixTSparse<Element> &target,const TMatr
 {
   // Multiply target by the source, element-by-element.
 
-  if (!AreCompatible(target,source)) {
+  if (gMatrixCheck && !AreCompatible(target,source)) {
     ::Error("ElementMult(TMatrixTSparse &,const TMatrixTSparse &)","matrices not compatible");
     target.Invalidate();
     return target;
@@ -2518,7 +2552,7 @@ TMatrixTSparse<Element> &ElementDiv(TMatrixTSparse<Element> &target,const TMatri
 {
   // Divide target by the source, element-by-element. 
     
-  if (!AreCompatible(target,source)) {
+  if (gMatrixCheck && !AreCompatible(target,source)) {
     ::Error("ElementDiv(TMatrixT &,const TMatrixT &)","matrices not compatible");
     target.Invalidate();
     return target;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.4 2006/01/26 16:31:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.5 2006/03/20 21:43:43 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -203,6 +203,8 @@
 #include "TMatrixTBase.h"
 #include "TVectorT.h"
 #include "TClass.h"
+
+Int_t gMatrixCheck = 1;
 
 #ifndef R__ALPHA
 templateClassImp(TMatrixTBase)
@@ -438,22 +440,24 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::InsertRow(Int_t rown,Int_t coln,co
   const Int_t acoln = coln-fColLwb;
   const Int_t nr = (n > 0) ? n : fNcols;
 
-  if (arown >= fNrows || arown < 0) {
-    Error("InsertRow","row %d out of matrix range",rown); 
-    Invalidate();
-    return *this;
-  }                                                                     
+  if (gMatrixCheck) {
+    if (arown >= fNrows || arown < 0) {
+      Error("InsertRow","row %d out of matrix range",rown); 
+      Invalidate();
+      return *this;
+    }
 
-  if (acoln >= fNcols || acoln < 0) {                                     
-    Error("InsertRow","column %d out of matrix range",coln);
-    Invalidate();
-    return *this;
-  }
+    if (acoln >= fNcols || acoln < 0) {                                     
+      Error("InsertRow","column %d out of matrix range",coln);
+      Invalidate();
+      return *this;
+    }
 
-  if (acoln+nr >= fNcols || nr < 0) {
-    Error("InsertRow","row length %d out of range",nr);
-    Invalidate();
-    return *this;
+    if (acoln+nr >= fNcols || nr < 0) {
+      Error("InsertRow","row length %d out of range",nr);
+      Invalidate();
+      return *this;
+    }
   }
 
   const Int_t off = arown*fNcols+acoln;
@@ -473,19 +477,21 @@ void TMatrixTBase<Element>::ExtractRow(Int_t rown,Int_t coln,Element *v,Int_t n)
   const Int_t acoln = coln-fColLwb;
   const Int_t nr = (n > 0) ? n : fNcols;
 
-  if (arown >= fNrows || arown < 0) {
-    Error("ExtractRow","row %d out of matrix range",rown);
-    return;
-  }
+  if (gMatrixCheck) {
+    if (arown >= fNrows || arown < 0) {
+      Error("ExtractRow","row %d out of matrix range",rown);
+      return;
+    }
 
-  if (acoln >= fNcols || acoln < 0) {
-    Error("ExtractRow","column %d out of matrix range",coln);
-    return;
-  }
+    if (acoln >= fNcols || acoln < 0) {
+      Error("ExtractRow","column %d out of matrix range",coln);
+      return;
+    }
 
-  if (acoln+n >= fNcols || nr < 0) {
-    Error("ExtractRow","row length %d out of range",nr);
-    return;
+    if (acoln+n >= fNcols || nr < 0) {
+      Error("ExtractRow","row length %d out of range",nr);
+      return;
+    }
   }
 
   const Int_t off = arown*fNcols+acoln;
@@ -599,11 +605,13 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::NormByDiag(const TVectorT<Element>
   Assert(IsValid());
   Assert(v.IsValid());
 
-  const Int_t nMax = TMath::Max(fNrows,fNcols);
-  if (v.GetNoElements() < nMax) {
-    Error("NormByDiag","vector shorter than matrix diagonal");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) { 
+    const Int_t nMax = TMath::Max(fNrows,fNcols);
+    if (v.GetNoElements() < nMax) {
+      Error("NormByDiag","vector shorter than matrix diagonal");
+      Invalidate();
+      return *this;
+    }
   }
 
   TString opt(option);
@@ -998,7 +1006,7 @@ Element E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
 {
   // Square of the Euclidian norm of the difference between two matrices.
 
-  if (!AreCompatible(m1,m2)) {
+  if (gMatrixCheck && !AreCompatible(m1,m2)) {
     ::Error("E2Norm","matrices not compatible");
     return -1.0;
   }
