@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.32 2005/02/18 11:22:28 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.33 2005/12/08 13:03:57 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -540,7 +540,7 @@ Bool_t TGuiBldDragManager::IgnoreEvent(Event_t *event)
    if (event->fType == kClientMessage) return kFALSE;
 
    const TGWindow *w = fClient->GetWindowById(event->fWindow);
-   return w ? w->IsEditDisabled() : kTRUE;
+   return w ? w->GetEditDisabled() : kTRUE;
 }
 
 //______________________________________________________________________________
@@ -892,7 +892,7 @@ void TGuiBldDragManager::HighlightCompositeFrame(Window_t win)
 
    TGWindow *w = fClient->GetWindowById(win);
 
-   if (!w || (w == fPimpl->fPlane) || w->IsEditDisabled() || w->IsEditable() ||
+   if (!w || (w == fPimpl->fPlane) || w->GetEditDisabled() || w->IsEditable() ||
        !w->InheritsFrom(TGCompositeFrame::Class())) return;
 
    TGFrame *frame = (TGFrame*)w;
@@ -1053,7 +1053,7 @@ Bool_t TGuiBldDragManager::RecognizeGesture(Event_t *event, TGFrame *frame)
 
    HideGrabRectangles();
 
-   if (fBuilder && fBuilder->IsExecutalble() &&
+   if (fBuilder && fBuilder->IsExecutable() &&
        frame->InheritsFrom(TGCompositeFrame::Class()) &&
        !frame->IsEditable()) {
 
@@ -2020,7 +2020,7 @@ void TGuiBldDragManager::HandleReplace()
    fPimpl->fReplaceOn = kTRUE;
    TGFrame *frame = 0;
 
-   if (fBuilder && fBuilder->IsExecutalble())  {
+   if (fBuilder && fBuilder->IsExecutable())  {
       frame = (TGFrame *)fBuilder->ExecuteAction();
    } else {
       HandlePaste();
@@ -2493,7 +2493,7 @@ Bool_t TGuiBldDragManager::EndDrag()
    if (fPimpl->fGrab && (fDragType >= kDragMove) && (fDragType <= kDragLink)) {
 
       ret = Drop();
-   } else if (fBuilder && fBuilder->IsExecutalble() &&
+   } else if (fBuilder && fBuilder->IsExecutable() &&
               (fDragType == kDragLasso) && !fSelectionIsOn) {
 
       frame = (TGFrame*)fBuilder->ExecuteAction();
