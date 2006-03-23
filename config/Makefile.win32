@@ -4,8 +4,8 @@
 
 PLATFORM      = win32
 
-DEBUGFLAGS    = -Z7
 OPTFLAGS      = -O2 
+DEBUGFLAGS    = -Z7
 
 # Compiler version:
 ifeq ($(VC_MAJOR),)
@@ -17,8 +17,9 @@ ifeq ($(VC_MAJOR),)
                    cut -d'.' -f2)
 endif
 
-# these define the build compatibility
+BUILDING_WITHIN_IDE = $(VS_UNICODE_OUTPUT)
 
+# these define the build compatibility
 ifeq (yes,$(WINRTDEBUG))
   BLDCXXFLAGS = -MDd -GR
   BLDCFLAGS   = -MDd
@@ -32,6 +33,7 @@ endif
 ifeq ($(VC_MAJOR),14)
   BLDCXXFLAGS+= -EHs
   BLDCFLAGS  += -EHs
+  DEBUGFLAGS  = -Zi -Fdbin/root.pdb
 
   ifeq (yes,$(WINRTDEBUG))
     BLDCXXFLAGS += -RTC1
@@ -52,9 +54,8 @@ endif
 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
-LDOPT         = -debug
+LDOPT        += -debug
 F77OPT        = -debug -nopdbfile
-PCHDBGLNK4206 = -YlROOT_LNK4206
 else
 OPT           = $(OPTFLAGS)
 LDOPT         =
@@ -76,7 +77,7 @@ CINTCFLAGS   := $(CFLAGS)
 
 # Linker:
 LD            = build/win/ld.sh
-LDFLAGS       = -nologo -ignore:4049,4206,4217,4221 -incremental:no \
+LDFLAGS       = -nologo -ignore:4049,4075,4217,4221 -incremental:no \
                 $(LDOPT) $(EXTRA_LDFLAGS) 
 SOFLAGS       = -DLL
 SOEXT         = dll
@@ -99,11 +100,9 @@ F77LIBS       =
 PCHSUPPORTED  := $(ENABLEPCH)
 ifeq ($(PCHSUPPORTED),yes)
   PCHFILE      = include/precompile.pch
-  CXXFLAGS    += $(PCHDBGLNK4206) 
   PCHCXXFLAGS  = -DUSEPCH -Yuw32pragma.h -Fp$(PCHFILE) 
   PCHEXTRAOBJBUILD = $(CXX) -DUSEPCH $(CXXFLAGS) $(OPT) \
-        -Ycw32pragma.h $(PCHDBGLNK4206) \
-        -Fp$(PCHFILE) -c $(PCHEXTRASRC) -Fo$(PCHEXTRAOBJ)
+        -Ycw32pragma.h -Fp$(PCHFILE) -c $(PCHEXTRASRC) -Fo$(PCHEXTRAOBJ)
 endif
 
 # Extras

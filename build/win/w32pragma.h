@@ -1,4 +1,4 @@
-/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.2 2006/03/09 17:42:01 pcanal Exp $ */
+/* @(#)build/win:$Name:  $:$Id: w32pragma.h,v 1.3 2006/03/16 23:43:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -29,6 +29,8 @@
 #pragma warning (disable: 4661)
 /* "deprecated, use ISO C++ conformant name" */
 #pragma warning (disable: 4996)
+/* "new behavior: elements default initialized" */
+#pragma warning (disable: 4351)
 
 #define WIN32 1
 #define _WINDOWS 1

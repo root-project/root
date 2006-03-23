@@ -387,7 +387,7 @@ INCLUDEFILES :=
 .PRECIOUS: include/%.h
 
 # special rules (need to be defined before generic ones)
-G__%.o: G__%.cxx 
+G__%.o: G__%.cxx
 	$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(CXXOUT)$@ -c $<
 
 cint/src/%.o: cint/src/%.cxx
@@ -396,7 +396,7 @@ cint/src/%.o: cint/src/%.cxx
 cint/src/%.o: cint/src/%.c
 	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
-%.o: %.cxx
+%.o: %.cxx $(PCHDEP)
 	$(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.c
@@ -447,6 +447,9 @@ ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
 -include $(INCLUDEFILES)
 endif
+ifeq ($(PCHSUPPORTED),yes)
+-include build/pch.d            # must be second to last include
+endif
 -include build/dummy.d          # must be last include
 endif
 endif
@@ -460,10 +463,17 @@ rootexecs:      rootlibs $(ALLEXECS)
 compiledata:    $(COMPILEDATA) $(MAKEINFO)
 
 config config/Makefile.:
+ifeq ($(BUILDING_WITHIN_IDE),)
 	@(if [ ! -f config/Makefile.config ] ; then \
 	   echo ""; echo "Please, run ./configure first"; echo ""; \
 	   exit 1; \
 	fi)
+else
+# Building from within an IDE, running configure
+	@(if [ ! -f config/Makefile.config ] ; then \
+	   ./configure --build=debug `cat config.status 2>/dev/null`; \
+	fi)
+endif
 
 # Target Makefile is synonym for "run (re-)configure"
 # Makefile is target as we need to re-parse dependencies after
@@ -474,7 +484,7 @@ config/Makefile.config include/config.h etc/system.rootauthrc \
 ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
 Makefile: configure config/rootrc.in config/config.in config/Makefile.in \
   config/root-config.in config/rootauthrc.in config/rootdaemonrc.in \
-  config/mimes.unix.in config/mimes.win32.in
+  config/mimes.unix.in config/mimes.win32.in config.status
 	@(if [ ! -x $(RECONFIGURE) ] || ! $(RECONFIGURE) "$?"; then \
 	   echo ""; echo "Please, run ./configure again as config option files ($?) have changed."; \
 	   echo ""; exit 1; \
@@ -487,14 +497,23 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	   "$(LIBDIR)" "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)"
 
-
 $(MAKEINFO): config/Makefile.$(ARCH) $(MAKEMAKEINFO)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
-build/dummy.d: config Makefile $(PCHFILE) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
+build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
+
+build/pch.d: $(PCHFILE)
+	@(if [ ! -f $@ ] ; then \
+	   touch $@; \
+	fi)
+
+base/src/precompile.d: $(PCHEXTRASRC) $(RMKDEP)
+	$(MAKEDEP) -R -f$@.tmp -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
+	sed -e 's,$(PCHEXTRAOBJ),$(PCHFILE),' $@.tmp > $@
+	@rm -f $@.tmp
 
 %.d: %.c $(RMKDEP)
 	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CFLAGS) -- $<

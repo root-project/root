@@ -49,9 +49,6 @@ in this Software without prior written authorization from the X Consortium.
 #include <stdarg.h>
 #ifndef WIN32
 #include <unistd.h>
-#include <utime.h>
-#else
-#include <sys/utime.h>
 #endif
 #if !defined(__hpux)
 #if defined(__APPLE__)
@@ -745,8 +742,10 @@ redirect(line, makefile)
 #else
 	   fchmod(fileno(fdout), st.st_mode);
 #endif /* USGISH */
-	} else 
-	   utime(makefile, NULL);
+	} else {
+	   printf(" "); /* we need this to update the time stamp! */
+	   fflush(fdout);
+   }
 }
 
 void fatalerr(char *msg, ...)

@@ -15,6 +15,7 @@ PCHEXTRAHDRI  = config/precompile.h.in
 PCHEXTRAHDR   = include/precompile.h
 PCHDEP        = $(ORDER_) $(PCHFILE)
 ALLHDRS      += $(PCHEXTRAHDR)
+INCLUDEFILES += $(PCHEXTRAOBJ:.o=.d)
 
 ifneq ($(PCHFILE),)
 clean::
@@ -28,16 +29,12 @@ $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
         sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \
         tr '@' '\n' > $@
 
-$(PCHEXTRAOBJ):;
-
 $(PCHEXTRAOBJ:.o=.d): CXXFLAGS+=-DUSEPCH
 
-$(PCHFILE): $(PCHEXTRAOBJ) $(PCHEXTRAHDR) $(W32PRAGMA)
-	@if test -r $(PCHEXTRAOBJ:.o=.d) ; then \
-	  echo Building precompiled header...; \
-	  echo $(PCHEXTRAOBJBUILD); \
-	  $(PCHEXTRAOBJBUILD); \
-	fi
+$(PCHEXTRAOBJ) $(PCHFILE): $(PCHEXTRAHDR) $(W32PRAGMA)
+	@echo Building precompiled header...
+	$(PCHEXTRAOBJBUILD)
 
 $(CINTTMP): PCHCXXFLAGS=
 $(ROOTCINTTMPEXE): PCHCXXFLAGS=
+dummy.d: PCHDEP=

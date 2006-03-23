@@ -14,7 +14,10 @@ while [ "$1" != "" ]; do
    esac
    shift
 done
-if [ -r base/src/precompile.o ]; then
+if [ "$dll" != "bin/rmkdepend.exe" -a \
+     "$dll" != "bin/bindexplib.exe" -a \
+     "$dll" != "utils/src/rootcint_tmp.exe" -a \
+     -r base/src/precompile.o ]; then
   args="$args base/src/precompile.o"
 fi
 
