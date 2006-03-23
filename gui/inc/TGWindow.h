@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.22 2005/10/13 13:43:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.23 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -44,13 +44,24 @@ protected:
    Bool_t            fNeedRedraw;     // kTRUE if window needs to be redrawn
    TString           fName;           // name of the window used in SavePrimitive()
    static Int_t      fgCounter;       // counter of created windows in SavePrimitive
-   Bool_t            fEditDisabled;   // if kTRUE window edit is disabled
+   UInt_t            fEditDisabled;   // flags used for "guibuilding"
 
    TGWindow(Window_t id) : fNeedRedraw(kFALSE) { fClient = 0; fId = id; }
 
    virtual void DoRedraw() { }
 
 public:
+   enum  EEditMode { 
+      kEditEnable        = 0,         // allow edit of this window
+      kEditDisable       = BIT(0),    // disable edit of this window
+      kEditDisableEvents = BIT(1),    // window events cannot be edited
+      kEditDisableGrab   = BIT(2),    // window grab cannot be edited 
+      kEditDisableLayout = BIT(3),    // window layout cannot be edited 
+      kEditDisableResize = BIT(4),    // window size cannot be edited 
+      kEditDisableHeight = BIT(5),    // window height cannot be edited 
+      kEditDisableWidth  = BIT(6)     // window width cannon be edited
+   };
+
    TGWindow(const TGWindow *p = 0, Int_t x = 0, Int_t y = 0,
             UInt_t w = 0, UInt_t h = 0, UInt_t border = 0,
             Int_t depth = 0,
@@ -93,8 +104,8 @@ public:
    virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t IsMapped();
    virtual Bool_t IsEditable() const { return (fClient->GetRoot() == this); }
-   virtual Bool_t IsEditDisabled() const { return fEditDisabled; }
-   virtual void   SetEditDisabled(Bool_t on = kTRUE) { fEditDisabled = on; }
+   virtual UInt_t GetEditDisabled() const { return fEditDisabled; }
+   virtual void   SetEditDisabled(UInt_t on = 1) { fEditDisabled = on; }
    virtual void   SetEditable(Bool_t on = kTRUE) 
                   { if (!fEditDisabled) fClient->SetRoot(on ? this : 0); }
    virtual Int_t  MustCleanup() const { return 0; }

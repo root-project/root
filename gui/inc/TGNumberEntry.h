@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.6 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.7 2005/12/12 17:54:27 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -150,6 +150,7 @@ public:
    virtual void   TextChanged(const char *text = 0);
    virtual void   ReturnPressed();
    virtual void   Layout();
+   virtual Bool_t IsEditable() const { return kFALSE; }
    virtual void   InvalidInput(const char *instr) { Emit("InvalidInput(char*)", instr); }   //*SIGNAL*
 
    ClassDef(TGNumberEntryField,0)  // A text entry field used by a TGNumberEntry
@@ -260,6 +261,9 @@ public:
       // Get the down button
       return fButtonDown; }
 
+   virtual Bool_t IsEditable() const { return kFALSE; }
+
+   UInt_t GetDefaultHeight() const { return fNumericEntry->GetDefaultHeight(); }
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGNumberEntry,0)  // Entry field widget for several numeric formats

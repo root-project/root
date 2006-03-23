@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.57 2004/10/07 09:56:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.h,v 1.1 2004/10/15 15:34:52 rdm Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    virtual TGFrame  *ExecuteAction() { return 0; }
    virtual void      SetAction(TGuiBldAction *act) { fAction = act; }
    TGuiBldAction    *GetAction() const { return fAction; }
-   virtual Bool_t    IsExecutalble() const  { return fAction && !fAction->fAct.IsNull(); }
+   virtual Bool_t    IsExecutable() const  { return fAction && !fAction->fAct.IsNull(); }
    virtual void      Show() {}
    virtual void      Hide() {}
 

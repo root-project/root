@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.117 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.118 2006/03/20 21:43:42 pcanal Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -430,7 +430,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
 
             if (dbl_clk) {
                if ((event->fState & kKeyControlMask) &&
-                    !IsEditDisabled() && gGuiBuilder) {
+                    !GetEditDisabled() && gGuiBuilder) {
                   StartGuiBuilding(!IsEditable());
                   return kTRUE;
                }
@@ -749,7 +749,7 @@ void TGFrame::StartGuiBuilding(Bool_t on)
 {
    // Go into GUI building mode.
 
-   if (IsEditDisabled()) return;
+   if (GetEditDisabled()) return;
    if (!gDragManager) gDragManager = TVirtualDragManager::Instance();
    if (!gDragManager) return;
 
@@ -852,7 +852,7 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    //    m->MapWindow();
    //
 
-   if (on && IsEditDisabled()) return;
+   if (on && (GetEditDisabled() & kEditDisable)) return;
 
    if (on) {
       fClient->SetRoot(this);
@@ -920,7 +920,7 @@ void TGCompositeFrame::SetLayoutBroken(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::SetEditDisabled(Bool_t on)
+void TGCompositeFrame::SetEditDisabled(UInt_t on)
 {
    //  Disable/enable edit this frame and all subframes.
 
@@ -1239,7 +1239,7 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
 
-      if (IsEditDisabled()) return kFALSE;
+      if (fEditDisabled & (kEditDisable | kEditDisableLayout)) return kFALSE;
 
       Float_t r, g, b;
       TColor::Pixel2RGB(fBackground, r, g, b);
@@ -1261,7 +1261,7 @@ Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
 
-      if (IsEditDisabled()) return kFALSE;
+      if (fEditDisabled & (kEditDisable | kEditDisableLayout)) return kFALSE;
 
       gVirtualX->SetWindowBackground(fId, fBackground);
       return kTRUE;
@@ -1287,7 +1287,7 @@ Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y,
    if (fClient && fClient->IsEditable() && frame && (x >= 0) && (y >= 0) &&
        (x + frame->GetWidth() <= fWidth) && (y + frame->GetHeight() <= fHeight)) {
 
-      if (IsEditDisabled()) return kFALSE;
+      if (fEditDisabled & (kEditDisable | kEditDisableLayout)) return kFALSE;
 
       frame->ReparentWindow(this, x, y);
       AddFrame(frame, lo);

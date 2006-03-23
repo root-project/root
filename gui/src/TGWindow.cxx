@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.23 2005/01/13 20:03:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.24 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -77,7 +77,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       fName += fgCounter;
    }
    fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?
-                    fParent->fEditDisabled : kFALSE;
+                    (fParent->fEditDisabled == kEditDisable) : 0;
 
    SetWindowName();
 }

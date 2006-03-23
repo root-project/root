@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.13 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.14 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -74,7 +74,7 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
 
 
    fMdiMainFrame = main;
-   fEditDisabled = kTRUE;
+   fEditDisabled = 1;
    fFrame = frame;
    fIsMinimized = fIsMaximized = kFALSE;
    fMinimizedX = fMinimizedY = 0;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-08-00 $:$Id: TRootBrowser.cxx,v 1.90 2005/12/14 13:12:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.91 2005/12/19 10:46:58 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -869,10 +869,10 @@ void TRootBrowser::CreateBrowser(const char *name)
    // Create the actual canvas.
 
    fWidgets = new TList;
-   fEditDisabled = kTRUE;
    fHistory = new TRootBrowserHistory;
    fHistoryCursor = 0;
    fBrowseTextFile = kFALSE;
+   fEditDisabled = 1;
 
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -1300,9 +1300,9 @@ void TRootBrowser::AddToTree(TObject *obj, const char *name, Int_t check)
             tip += obj->GetTitle();
          }
          fLt->SetToolTipItem(item, tip.Data());
-      }
-      else
+      } else {
          fLt->AddItem(fListLevel, name, obj);
+      }
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.16 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.17 2005/12/12 17:54:27 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1068,6 +1068,7 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * p, Int_t id,
    fStepLog = kFALSE;
    SetAlignment(kTextRight);
    SetNumber(val);
+   fEditDisabled = 1 | kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -1084,6 +1085,7 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * parent,
    fStepLog = kFALSE;
    SetAlignment(kTextRight);
    SetNumber(val);
+   fEditDisabled = 1 | kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -1105,7 +1107,8 @@ void TGNumberEntryField::SetNumber(Double_t val)
       SetIntNumber(Round(1000.0 * val));
       break;
    case kNESRealFour:
-      SetIntNumber(Round(10000.0 * val));
+      SetIntNumber(Round(10000.0 * val));                  
+
       break;
    case kNESReal:
       {
@@ -1610,12 +1613,14 @@ Bool_t TGNumberEntryField::HandleKey(Event_t * event)
       }
       // cntrl-up
       else if (event->fState & kKeyControlMask) {
-         IncreaseNumber(kNSSLarge, 1, logstep);
+         IncreaseNumber(kNSSLarge, 1, logstep);                  
+
       }
       // shift-up
       else if (event->fState & kKeyShiftMask) {
          IncreaseNumber(kNSSMedium, 1, logstep);
-      }
+      } 
+
       // up
       else {
          IncreaseNumber(kNSSSmall, 1, logstep);
@@ -1823,7 +1828,7 @@ public:
    TGRepeatFireButton(const TGWindow *p, const TGPicture *pic,
                       Int_t id, Bool_t logstep)
     : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
-       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { fEditDisabled = kTRUE; }
+       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { fEditDisabled = 1 | kEditDisableGrab; }
    virtual ~TGRepeatFireButton() { delete fTimer; }
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -1944,6 +1949,7 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    SetLayoutManager(new TGNumberEntryLayout(this));
    MapSubwindows();
    Resize(w, h);
+   fEditDisabled = kEditDisableLayout; // | kEditDisableHeight;
 }
 
 //______________________________________________________________________________

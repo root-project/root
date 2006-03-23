@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.23 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.24 2006/03/20 21:43:42 pcanal Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -63,7 +63,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fBorderWidth  = 0;
    fNormGC       = norm;
    fFontStruct   = font;
-   fEditDisabled = kTRUE;
+   fEditDisabled = kEditDisableGrab;
 
    int max_ascent, max_descent;
    if (fText)
@@ -266,6 +266,15 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
    fContainer = new TGCompositeFrame(this, fWidth, fHeight - fTabh,
                        kVerticalFrame | kRaisedFrame | kDoubleBorder);
    AddFrame(fContainer, 0);
+
+   fEditDisabled = 1 | kEditDisableLayout;
+   fContainer->SetEditDisabled(1 |  kEditDisableGrab);
+
+   if (!p) {  // defauld used in the GUI builder
+      AddTab("Tab1");
+      AddTab("Tab2");
+      MapSubwindows();
+   }
 }
 
 //______________________________________________________________________________
@@ -290,6 +299,7 @@ TGCompositeFrame *TGTab::AddTab(TGString *text)
    AddFrame(new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct), 0);
    cf = new TGCompositeFrame(this, fWidth, fHeight-21);
    AddFrame(cf, 0);
+   cf->SetEditDisabled(kEditDisableResize);
 
    return cf;
 }
@@ -652,21 +662,9 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
       out << "   " << cf->GetName() << " = " << GetName()
                    << "->AddTab(" << quote << GetTabTab(i)->GetString()
                    << quote << ");" << endl;
-      if (((TGCompositeFrame *)cf)->GetLayoutManager() != 0) {
-         out << "   " << cf->GetName() <<"->SetLayoutManager(";
-         ((TGCompositeFrame *)cf)->GetLayoutManager()->SavePrimitive(out, option);
-         out << ");" << endl;
-      }
 
-      TGFrameElement *el;
-      TIter next(cf->GetList());
-      while ((el = (TGFrameElement *) next())) {
-         el->fFrame->SavePrimitive(out, option);
-         out << "   " << cf->GetName() << "->AddFrame(" << el->fFrame->GetName();
-         el->fLayout->SavePrimitive(out, option);
-         out << ");" << endl;
-      }
-      //cf->SavePrimitive(out, option);
+      cf->SavePrimitiveSubframes(out, option);
+
       if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {
          GetTabTab(i)->SaveUserColor(out, option);
          out << "   TGTabElement *tab" << i << " = "

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.11 2005/03/15 09:38:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.12 2005/04/19 09:10:59 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -85,8 +85,8 @@ public:
    virtual ~TGTab();
 
    virtual TGCompositeFrame *AddTab(TGString *text);
-   virtual TGCompositeFrame *AddTab(const char *text);
-   virtual void              RemoveTab(Int_t tabIndex);
+   virtual TGCompositeFrame *AddTab(const char *text);   // *MENU*
+   virtual void              RemoveTab(Int_t tabIndex);  // *MENU*
    virtual Bool_t            SetTab(Int_t tabIndex);
    virtual Bool_t            SetTab(const char *name);
    virtual void              DrawBorder() { }

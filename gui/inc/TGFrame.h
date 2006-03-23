@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.62 2005/10/10 10:52:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.63 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -324,8 +324,6 @@ protected:
    static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
 
-   virtual void SavePrimitiveSubframes(ofstream &out, Option_t *option);
-
 public:
    TGCompositeFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = 0,
@@ -377,7 +375,7 @@ public:
    virtual void   SetLayoutBroken(Bool_t on = kTRUE);
    virtual Bool_t IsLayoutBroken() const
                   { return fLayoutBroken || !fLayoutManager || IsEditable(); }
-   virtual void   SetEditDisabled(Bool_t on = kTRUE);
+   virtual void   SetEditDisabled(UInt_t on = 1);
    virtual void   SetCleanup(Int_t mode = kLocalCleanup);
    virtual Int_t  MustCleanup() const { return fMustCleanup; }
    virtual void   Cleanup();
@@ -386,6 +384,7 @@ public:
 
    virtual void   Print(Option_t *option="") const;
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   SavePrimitiveSubframes(ofstream &out, Option_t *option);
 
    ClassDef(TGCompositeFrame,0)  // Base class for composite widgets (menubars, etc.)
 };

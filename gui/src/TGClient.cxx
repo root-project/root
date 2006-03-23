@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.46 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.47 2006/01/25 19:46:42 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -829,11 +829,11 @@ Bool_t TGClient::IsEditDisabled() const
 {
    // returns kTRUE if edit/guibuilding is forbidden
 
-   return fDefaultRoot->IsEditDisabled();
+   return (fDefaultRoot->GetEditDisabled() == 1);
 }
 
 //______________________________________________________________________________
-void  TGClient::SetEditDisabled(Bool_t on)
+void TGClient::SetEditDisabled(Bool_t on)
 {
    // if on is kTRUE editting/guibuilding is forbidden
 
