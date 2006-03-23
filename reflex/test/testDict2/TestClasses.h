@@ -69,6 +69,8 @@ namespace testclasses {
 
      class BaseWithProtectedDestructor {
      protected:
+        BaseWithProtectedDestructor() {}
+        BaseWithProtectedDestructor(const BaseWithProtectedDestructor& /* arg */) {}
         ~BaseWithProtectedDestructor() {}
      };
 

@@ -26,7 +26,6 @@
     <class name="TT::Outer<TT::A<unsigned long> >">
       <method name="unwantedFunction"/>
     </class>
-    <class name="testclasses::NonPublicDestructor::BaseWithProtectedDestructor"/>
   </exclusion>
 
   <class pattern="Bla*"/>
