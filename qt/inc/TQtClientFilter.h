@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.26 2005/12/09 03:41:34 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.29 2006/03/15 19:18:48 fine Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -18,18 +18,27 @@
 
 #ifndef __CINT__
 #  include <qobject.h>
-#if (QT_VERSION > 0x039999)
+#  if (QT_VERSION > 0x039999)
 // Added by qt3to4:
-#  include <QEvent>
-#endif 
-#  include <qptrqueue.h>
-#  include <qptrlist.h>
-#  include <qintdict.h>
+#    include <QEvent>
+#    include <QMouseEvent>
+#    include <q3ptrqueue.h>
+#    include <q3ptrlist.h>
+#    include <q3intdict.h>
+#  else 
+#    include <qptrqueue.h>
+#    include <qptrlist.h>
+#    include <qintdict.h>
+#  endif  /* QT_VERSION */
 #  include <qapplication.h>
 #else
-  class QObject;
-  class QPtrList<TQtClientWidget>;
-#endif
+   class QObject;
+#  if (QT_VERSION > 0x039999)
+     class Q3PtrList<TQtClientWidget>;
+#  else /* QT_VERSION */
+     class QPtrList<TQtClientWidget>;
+#  endif /* QT_VERSION */
+#endif  /* CINT */ 
 
 #include "TQtClientWidget.h"
 
@@ -50,12 +59,18 @@ class TQtClientFilter : public QObject {
    friend class TQtClientWidget;
 private:
          void operator=(const TQtClientFilter &){}
+#if !defined(_MSC_VER)  || _MSC_VER >= 1310
          void operator=(const TQtClientFilter &) const {}
-         TQtClientFilter(const TQtClientFilter &) : QObject() {}
+#endif
+			TQtClientFilter(const TQtClientFilter &) : QObject() {}
 protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;
+#if (QT_VERSION > 0x039999)
+   Q3PtrList<TQtClientWidget>  fButtonGrabList;
+#else /* QT_VERSION */
    QPtrList<TQtClientWidget>  fButtonGrabList;
+#endif /* QT_VERSION */
    static TQtClientWidget    *fgPointerGrabber;
    static TQtClientWidget    *fgButtonGrabber;
    static TQtClientWidget    *fgActiveGrabber;
@@ -87,9 +102,11 @@ public:
 public slots:
    void AppendButtonGrab (TQtClientWidget *);
    void RemoveButtonGrab (QObject *);
+#ifndef Q_MOC_RUN
 //MOC_SKIP_BEGIN
    ClassDef(TQtClientFilter,0) // Map Qt and ROOT event
 //MOC_SKIP_END
+#endif
 };
 
 //
@@ -147,14 +164,7 @@ inline   void TQtClientFilter::RemoveButtonGrab(QObject *widget)
 
 //______________________________________________________________________________
 inline   TQtEventQueue *TQtClientFilter::Queue() {
-#ifdef R__QTGUITHREAD
-      qApp->lock();
       TQtEventQueue *save = fRootEventQueue;
-      fRootEventQueue = 0;
-      qApp->unlock();
-#else
-      TQtEventQueue *save = fRootEventQueue;
-#endif
       // fprintf(stderr," Queue %d \n", save ? save->count():-1);
       return save;
    }

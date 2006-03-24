@@ -1,3 +1,4 @@
+# $Id: Module.mk,v 1.12 2006/03/20 05:21:59 fine Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -16,11 +17,11 @@ GQTL          := $(MODDIRI)/LinkDef.h
 GQTDS         := $(MODDIRS)/G__GQt.cxx
 GQTDO         := $(GQTDS:.cxx=.o)
 GQTDH         := $(GQTDS:.cxx=.h)
-
-GQTH1         := $(GQTDIRI)/TGQt.h $(GQTDIRI)/TQtThread.h \
-                 $(GQTDIRI)/TQtApplication.h $(GQTDIRI)/TQtBrush.h \
+                 
+GQTH1         := $(GQTDIRI)/TGQt.h  $(GQTDIRI)/TQtTimer.h              \
+                 $(GQTDIRI)/TQtApplication.h $(GQTDIRI)/TQtBrush.h     \
                  $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h \
-                 $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h \
+                 $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h   \
                  $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h
 
 GQTH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
@@ -28,7 +29,12 @@ GQTS          := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 GQTO          := $(GQTS:.cxx=.o)
 
-GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTH)))
+GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h           \
+                 $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h       \
+                 $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h
+                
+
+GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))) 
 GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
@@ -58,48 +64,53 @@ include/%.h:    $(GQTDIRI)/%.h
 
 include/%.cw:    $(GQTDIRI)/%.cw
 		cp $< $@
-
+      
 include/%.pri:    $(GQTDIRI)/%.pri
 		cp $< $@
 
-$(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
+$(GQTLIB):    $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ \
-		   "$(GQTO) $(GQTMOCO) $(GQTDO)" \
-		   "$(GQTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
+         "$(GQTO) $(GQTMOCO) $(GQTDO)" \
+		  "$(GQTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
+
 
 $(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(QTINCDIR:%=-I%) $(GQTH1) $(GQTL)
+		$(ROOTCINTTMP) -f $@ -c $(GQTH1) $(GQTL)
 
-all-qt:         $(GQTLIB)
+$(GQTDO): $(GQTDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
 
-map-qt:         $(RLIBMAP)
+all-qt:      $(GQTLIB)
+
+map-qt:        $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(GQTLIB) \
-		   -d $(GQTLIBDEP) -c $(GQTL)
+                  -d $(GQTLIBDEP) -c $(GQTL)
 
 map::           map-qt
 
 clean-qt:
-		@rm -f $(GQTO) $(GQTDO) $(GQTMOCO)
+		@rm  -f $(GQTO) $(GQTDO) $(GQTMOCO) $(GQTMOC) 
 
 clean::         clean-qt
 
-distclean-qt:   clean-qt
+distclean-qt: clean-qt
 		@rm -f $(GQTDEP) $(GQTDS) $(GQTDH) $(GQTMOC) $(GQTLIB)
 
 distclean::     distclean-qt
 
 ##### extra rules ######
-$(sort $(GQTMOCO) $(GQTO)) $(GQTDO): CXXFLAGS += $(GQTCXXFLAGS)
+$(sort $(GQTMOCO) $(GQTO)): %.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
 
-$(GQTMOC): $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
+$(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 	$(QTMOCEXE) $< -o $@
 
 ##### cintdlls ######
 
-$(CINTDIRDLLS)/qtcint: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h cint/lib/qt/qtfunctions.h
-	@$(MAKECINTDLL) $(PLATFORM) qtcint qt "qtcint.h qtclasses.h qtglobals.h qtfunctions.h" "$(CINTTMP)" "$(ROOTCINTTMP)" \
-	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
-	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
+#$(CINTDIRDLLS)/qtcint: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h cint/lib/qt/qtclasses.h cint                                             /lib/qt/qtglobals.h cint/lib/qt/qtfunctions.h
+#       @$(MAKECINTDLL) $(PLATFORM) qtcint qt "qtcint.h qtclasses.h qtglobals.h qtfunctions.h" "$(CINT                                             TMP)" "$(ROOTCINTTMP)" \
+#          "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
+#          "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
 

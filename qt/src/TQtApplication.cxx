@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.6 2005/03/07 07:44:12 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.7 2005/04/15 07:19:50 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -24,11 +24,6 @@
 
 #include "TQtApplication.h"
 #include "TSystem.h"
-
-#ifdef R__QTGUITHREAD
-# include "TQtApplicationThread.h"
-# include "TWaitCondition.h"
-#endif
 
 #include "TROOT.h"
 #include "TEnv.h"
@@ -59,13 +54,7 @@ TQtApplication::TQtApplication(const char * /*appClassName*/, int argc,char **ar
 }
 //______________________________________________________________________________
 TQtApplication::~TQtApplication()
-{
-#ifdef R__QTGUITHREAD
-    // Send WN_QUIT message to GUI thread
-    if (fGUIThread)
-        PostThreadMessage((DWORD)fGUIThread->GetThreadId(),WM_QUIT,0,0);
-#endif
-}
+{ }
 //______________________________________________________________________________
 void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
 {
@@ -80,7 +69,11 @@ void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
        QString display = gSystem->Getenv("DISPLAY");
        // check the QT_BATCH option
        if (display.contains("QT_BATCH")) GUIenabled = false;
+#if QT_VERSION < 0x40000
        qApp = new QApplication(argc,argv,GUIenabled);
+#else /* QT_VERSION */
+       new QApplication(argc,argv,GUIenabled);
+#endif /* QT_VERSION */
        // The string must be one of the QStyleFactory::keys(),
        // typically one of
        //      "windows", "motif",     "cde",    "motifplus", "platinum", "sgi"
@@ -127,16 +120,7 @@ void TQtApplication::CreateGUIThread(int argc, char **argv)
    if (gROOT->IsBatch()) {
      CreateQApplication(argc,argv,kFALSE);
    } else {
-#ifdef R__QTGUITHREAD
-     TWaitCondition ThrSem;
-     fGUIThread = new TQtApplicationThread(argc,argv);
-     fGUIThread->SetWait(ThrSem);
-     fGUIThread->start();
-     // Wait untill the thread initilized
-     fGUIThread->Wait();
-#else
      CreateQApplication(argc,argv, TRUE);
-#endif
    }
 }
 //______________________________________________________________________________
@@ -161,11 +145,5 @@ Int_t TQtApplication::QtVersion(){
 bool TQtApplication::IsThisGuiThread()
 {
    // Check whether the current thread belongs the GUI
-#ifdef R__QTGUITHREAD
- TQtApplication *app = GetQtApplication();
-   if (!app) return true;
-   if (app->fGUIThread)
-      return app->fGUIThread->IsThisThread();
-#endif
   return true;
 }

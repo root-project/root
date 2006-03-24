@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.15 2005/12/11 20:47:51 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.16 2005/12/15 06:10:37 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -13,9 +13,6 @@
 #include "TQtClientFilter.h"
 #include "TQtRConfig.h"
 
-#ifdef R__QTGUITHREAD
-#   include "TQtNextEventMessage.h"
-#endif
 #include "TQtClientWidget.h"
 #include "TGQt.h"
 #include "TQtEventQueue.h"
@@ -28,6 +25,18 @@
 #include <qdatetime.h>
 #include <qcursor.h>
 #include <qtextcodec.h>
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <QWheelEvent>
+#include <Q3CString>
+#include <QFocusEvent>
+#include <QPaintEvent>
+#include <QCloseEvent>
+#include <QMoveEvent>
+#include <QKeyEvent>
+#include <QResizeEvent>
+#include <QMouseEvent>
+#endif /* QT_VERSION */
 
 #include "KeySymbols.h"
 #define QTCLOSE_DESTROY_RESPOND 1
@@ -48,13 +57,23 @@ TQtPointerGrabber *TQtClientFilter::fgGrabber = 0;
 static inline UInt_t  MapModifierState(Qt::ButtonState qState)
 {
    UInt_t state = 0;
+#if QT_VERSION < 0x40000
    if ( qState & Qt::ShiftButton   ) state |= kKeyShiftMask;
    if ( qState & Qt::ControlButton ) state |= kKeyControlMask;
    if ( qState & Qt::AltButton     ) state |= kKeyMod1Mask;
+#else /* QT_VERSION */
+   if ( qState & Qt::ShiftModifier   ) state |= kKeyShiftMask;
+   if ( qState & Qt::ControlModifier ) state |= kKeyControlMask;
+   if ( qState & Qt::AltModifier     ) state |= kKeyMod1Mask;
+#endif /* QT_VERSION */
    if ( qState & Qt::RightButton   ) state |= kButton3Mask;
    if ( qState & Qt::MidButton     ) state |= kButton2Mask;
    if ( qState & Qt::LeftButton    ) state |= kButton1Mask;
+#if QT_VERSION < 0x40000
    if ( qState & Qt::MetaButton    ) state |= kKeyLockMask;
+#else /* QT_VERSION */
+   if ( qState & Qt::MetaModifier    ) state |= kKeyLockMask;
+#endif /* QT_VERSION */
    return state;
 }
 
@@ -80,7 +99,7 @@ static inline void MapEvent( QWheelEvent &qev, Event_t &ev)
    // fprintf(stderr, "QEvent::Wheel %p %d child=%p\n",ev.fWindow, ev.fCode, ev.fUser[0]);
 }
 //______________________________________________________________________________________
-inline Bool_t TQtClientFilter::IsGrabSelected(UInt_t selectEventMask)
+Bool_t TQtClientFilter::IsGrabSelected(UInt_t selectEventMask)
 {
    // return the selection by "grabButton" / "grabPointer"
    return fgGrabber ? fgGrabber->IsGrabSelected(selectEventMask) : kFALSE;
@@ -135,7 +154,11 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Escape,    kKey_Escape},
    {Qt::Key_Tab,       kKey_Tab},
    {Qt::Key_Backtab,   kKey_Backtab},
+#if QT_VERSION < 0x40000
    {Qt::Key_BackSpace, kKey_Backspace},
+#else /* QT_VERSION */
+   {Qt::Key_Backspace, kKey_Backspace},
+#endif /* QT_VERSION */
    {Qt::Key_Return,    kKey_Return},
    {Qt::Key_Insert,    kKey_Insert},
    {Qt::Key_Delete,    kKey_Delete},
@@ -148,8 +171,13 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Up,        kKey_Up},
    {Qt::Key_Right,     kKey_Right},
    {Qt::Key_Down,      kKey_Down},
+#if QT_VERSION < 0x40000
    {Qt::Key_Prior,     kKey_Prior},
    {Qt::Key_Next,      kKey_Next},
+#else /* QT_VERSION */
+   {Qt::Key_PageUp,     kKey_Prior},
+   {Qt::Key_PageDown,      kKey_Next},
+#endif /* QT_VERSION */
    {Qt::Key_Shift,     kKey_Shift},
    {Qt::Key_Control,   kKey_Control},
    {Qt::Key_Meta,      kKey_Meta},
@@ -180,15 +208,27 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
       }
    }
 #if 0
+#if QT_VERSION < 0x40000
    QCString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
+#else /* QT_VERSION */
+   Q3CString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
+#endif /* QT_VERSION */
    qstrncpy((char *)&text, (const char *)r,1);
    return text;
 #else
    text = UInt_t(qev.ascii());
    // Regenerate the ascii code (Qt bug I guess)
+#if QT_VERSION < 0x40000
    if ( (qev.state() & Qt::KeyButtonMask) ) {
+#else /* QT_VERSION */
+   if ( (qev.state() & Qt::KeyboardModifierMask) ) {
+#endif /* QT_VERSION */
       if (  ( Qt::Key_A <= key && key <= Qt::Key_Z)  ) 
+#if QT_VERSION < 0x40000
             text =  (( qev.state() & Qt::ShiftButton )?  'A' : 'a') + (key - Qt::Key_A) ;
+#else /* QT_VERSION */
+            text =  (( qev.state() & Qt::ShiftModifier )?  'A' : 'a') + (key - Qt::Key_A) ;
+#endif /* QT_VERSION */
       else if (  ( Qt::Key_0 <= key && key <= Qt::Key_9)  ) 
             text =    '0'  + (key - Qt::Key_0);
    }
@@ -239,9 +279,6 @@ static inline void MapEvent(const TQUserEvent &qev, Event_t &ev)
 TQtClientFilter::~TQtClientFilter()
 {
    TQtLock lock;  // critical section
-#ifdef R__QTGUITHREAD
-   delete fNotifyClient;fNotifyClient=0;
-#endif
    if (fRootEventQueue) {
       delete fRootEventQueue;
       fRootEventQueue = 0;
@@ -603,7 +640,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
             else if (event.fType == kDestroyNotify) {
                //  remove all events related to the dead window
                // fprintf(stderr,"kClientEvent kDestroyNotify %p id=%x event\n",((TQtClientWidget*)(TGQt::wid(event.fWindow))), event.fWindow);
- #ifdef QTDEBUG
+#ifdef QTDEBUG
                int nRemoved = fRootEventQueue->RemoveItems(&event);
                fprintf(stderr,"kClientMessage kDestroyNotify %p %d events have been removed from the queue\n",event.fWindow,nRemoved );
 #endif
@@ -623,8 +660,6 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
         //};
        break;
    };
-   
-   { TQtLock lock; // critical section
 
    bool justInit =  false;
    if (!fRootEventQueue) {
@@ -653,20 +688,6 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
       return kFALSE;  // We need the standard Qt processing
    }
 
-#ifdef R__QTGUITHREAD
-   if (!fNotifyClient) fNotifyClient = new TQtNextEventMessage();
-   if (justInit) {
-      justInit = false;
-      fNotifyClient->ExecCommandThread();
-   }
-   else {
-      //fprintf(stderr,"TQtClientFilter::eventFilter %d %s\n", fRootEventQueue->count(),
-      //   (const char *)qWidget->name());
-   }
-#else
-   // gSystem->DispatchOneEvent(kTRUE);
-#endif
-   } // End of the critical section 
    
    // We should hold ALL events because we want to process them themsleves.
    // However non-accepted mouse event should be propagated further

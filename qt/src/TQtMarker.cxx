@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtMarker.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtMarker.cxx,v 1.3 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -12,6 +12,10 @@
 
 #include "TQtRConfig.h"
 #include "TQtMarker.h"
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <Q3PointArray>
+#endif /* QT_VERSION */
 
 ClassImp(TQtMarker)
 
@@ -42,7 +46,11 @@ TQtMarker::~TQtMarker(){}
 //______________________________________________________________________________
 int    TQtMarker::GetNumber() const {return fNumNode;}
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 QPointArray &TQtMarker::GetNodes() {return fChain;}
+#else /* QT_VERSION */
+Q3PointArray &TQtMarker::GetNodes() {return fChain;}
+#endif /* QT_VERSION */
 //______________________________________________________________________________
 int  TQtMarker::GetType() const {return fMarkerType;}
 

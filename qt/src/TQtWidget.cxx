@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.67 2006/01/17 20:34:50 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.74 2006/03/21 20:40:04 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 #endif /* QT_VERSION */
 #include "TQtWidget.h"
 #include "TQtTimer.h"
-#include "TQtLock.h"
 
 #include "TROOT.h"
 #include "TEnv.h"
@@ -64,8 +63,8 @@ ClassImp(TQtWidget)
 //
 //   virtual void cd();  // make the associated TCanvas the current one (shortcut to TCanvas::cd()) 
 //   virtual void cd(int subpadnumber); // as above - shortcut to Canvas::cd(int subpadnumber)
-//   void Disconnect(); // disconnect the Qidget from the ROOT TCanvas (used in the class dtor)
-//   void Refresh();    // forece the aasociated TCanvas::Update to be called
+//   void Disconnect(); // disconnect the QWidget from the ROOT TCanvas (used in the class dtor)
+//   void Refresh();    // force the associated TCanvas::Update to be called
 //   virtual bool Save(const QString &fileName) const;  // Save the widget image with some ppixmap file 
 //   virtual bool Save(const char    *fileName) const;
 //   virtual bool Save(const QString &fileName,const char *format,int quality=60) const;
@@ -119,8 +118,7 @@ ClassImp(TQtWidget)
 //  tipText += " : ";
 //  tipText += objectInfo;
 //  
-//  QToolTip::remove(tipped);
-//  QToolTip::add(tipped,tipText);
+//   QWhatsThis::display(tipText)
 // }
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,18 +126,7 @@ ClassImp(TQtWidget)
 //_____________________________________________________________________________
 TCanvas  *TQtWidget::Canvas()
 {
-#ifdef R__QTGUITHREAD
-   if (qApp->tryLock() ) {
-      TCanvas  *c = 0;
-      if (fCanvas)
-         c = gROOT->IsLineProcessing() ? 0 : GetCanvas();
-      qApp->unlock();
-      return c;
-   }
-   return 0;
-#else
    return GetCanvas();
-#endif
 };
 
 //_____________________________________________________________________________
@@ -186,16 +173,13 @@ TQtWidget::~TQtWidget()
   TCanvas *c = 0;
   // to block the double deleting from
   TGQt::UnRegisterWid(this);
-  qApp->lock();
   if (fEmbedded) {
      // one has to set CanvasID = 0 to disconnect things properly.
      c = fCanvas; 
      fCanvas = 0; 
-     qApp->unlock();
      delete c;
   } else {
       fCanvas = 0;
-      qApp->unlock();
   }
 }
 
@@ -220,31 +204,46 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
    if (!gApplication) {
        localArgc = argc ? *argc : qApp->argc();
        // check the Gui.backend and Factory
-      TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));
-      guiBackend.ToLower();
-      // Enforce Qt-base Gui.Backend and Gui.Factory from within ROOT-based Qt-application
-      if (!guiBackend.BeginsWith("qt",TString::kIgnoreCase)) {
+       TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));
+       guiBackend.ToLower();
+       // Enforce Qt-base Gui.Backend and Gui.Factory from within ROOT-based Qt-application
+       if (!guiBackend.BeginsWith("qt",TString::kIgnoreCase)) {
          gEnv->SetValue("Gui.Backend", "qt");
-      }
-      TString guiFactory(gEnv->GetValue("Gui.Factory", "native"));
-      guiFactory.ToLower();
-      if (!guiFactory.BeginsWith("qt",TString::kIgnoreCase )){
+       }
+       TString guiFactory(gEnv->GetValue("Gui.Factory", "native"));
+       guiFactory.ToLower();
+       if (!guiFactory.BeginsWith("qt",TString::kIgnoreCase )){
          // Check for the extention
          char *extLib = gSystem->DynamicPathName("libQtGui",kTRUE);
          if (extLib) {
             gEnv->SetValue("Gui.Factory", "qtgui");
-        } else {
+         } else {
             gEnv->SetValue("Gui.Factory", "qt");
          }
          delete [] extLib;
-      }
+       }
 
-      TRint *rint = new TRint(appClassName, &localArgc, argv ? argv : qApp->argv(),options,numOptions,kFALSE);
-      // To mimic what TRint::Run(kTRUE) does.
-      const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
-      if (prompt)
-            Getlinem(kInit, rint->GetPrompt());
-      TQtTimer::Create()->start(0,TRUE);
+       TRint *rint = new TRint(appClassName, &localArgc, argv ? argv : qApp->argv(),options,numOptions,kFALSE);
+       // To mimic what TRint::Run(kTRUE) does.
+       const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
+       if (prompt) {
+           Getlinem(kInit, rint->GetPrompt());	    
+       } else {
+           // disable the TTermInputHandler too to avoid the crash under X11
+           // to get the pure "GUI" application
+           TSeqCollection* col = gSystem->GetListOfFileHandlers();
+           TIter next(col);
+           TFileHandler* o=0;
+           while ( ( o=(TFileHandler*) next() ) ) {
+              if ( o->GetFd()== 0 ) {
+                o->Remove();
+                break;
+              }
+           }
+           // Remove Ctrl-C, there will be ROOT prompt anyway
+           gSystem->RemoveSignalHandler(rint->GetSignalHandler());
+       }
+       TQtTimer::Create()->start(0,TRUE);
    }
    return gApplication;
 }
@@ -276,7 +275,6 @@ void TQtWidget::cd()
 void TQtWidget::cd(int subpadnumber)
 {
  // [slot] to make this embedded canvas / pad the current one
-  TQtLock lock;
   TCanvas *c = fCanvas;
   if (c) {
      c->cd(subpadnumber);
@@ -288,17 +286,17 @@ void TQtWidget::Disconnect()
    // [slot] Disconnect the Qt widget from TCanvas object before deleting
    // to avoid the dead lock
    // one has to set CanvasID = 0 to disconnect things properly.
-   TQtLock lock;
    fCanvas = 0;
 }
 //_____________________________________________________________________________
 void TQtWidget::Refresh()
 {
-   // [slot]  to allow Qt signal refreshing TOOT TCanvas if needed
+   // [slot]  to allow Qt signal refreshing the ROOT TCanvas if needed
 
    TCanvas *c = Canvas();
    if (!fPixmapID.paintingActive())  AdjustBufferSize();
    if (c) {
+      c->Modified();
       c->Resize();
       c->Update();
    }
@@ -386,7 +384,9 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
       };
       if (rootButton != kNoEvent) {
          c->HandleInput(rootButton, e->x(), e->y());
-         e->accept(); EmitSignal(kMousePressEvent); return;
+         e->accept(); 
+         EmitSignal(kMousePressEvent);
+         return;
       }
    } else {
       e->ignore();
@@ -531,7 +531,6 @@ void TQtWidget::resizeEvent(QResizeEvent *e)
       fPaint = kTRUE;
       exitSizeEvent();
 #endif
-
    }
 }
 //____________________________________________________________________________

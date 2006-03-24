@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtBrush.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtBrush.h,v 1.3 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -16,9 +16,11 @@
 #ifndef __CINT__
 #  include <qbrush.h>
 #  include <qcolor.h>
+#  include <qpixmap.h>
 #else
    class  QColor;
    class  QBrush;
+   class  QPixmap;
 #endif
 
 #include "Rtypes.h"
@@ -31,6 +33,9 @@ protected:
   QColor fBackground;
   int fStyle;
   int fFasi;
+#ifdef R__WIN32
+  QPixmap fCustomPixmap; // shadow transparent pixmap fro WIN32
+#endif
 public:
    TQtBrush();
    TQtBrush(const TQtBrush &src):QBrush(src)
@@ -44,7 +49,7 @@ public:
    void SetStyle(int style, int fasi);
    void SetColor(QColor &color);
    const QColor &GetColor() const { return fBackground;}
-   int   GetStyle() const  { return 1000*fStyle + fFasi; }
+   int   GetStyle()         const { return 1000*fStyle + fFasi; }
    ClassDef(TQtBrush,0); // create QBrush object based on the ROOT "fill" attributes 
 };
 

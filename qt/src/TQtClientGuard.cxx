@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.6 2005/10/18 18:53:42 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.7 2005/10/27 06:41:23 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -14,19 +14,31 @@
 
 #include "TQtClientGuard.h"
 #include "TGQt.h"
+#if QT_VERSION < 0x40000
 #include <qobjectlist.h>
+#else /* QT_VERSION */
+#include <qobject.h>
+#endif /* QT_VERSION */
 #include <qbitmap.h>
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <QPixmap>
+#endif /* QT_VERSION */
 
 //______________________________________________________________________________
 void TQtClientGuard::Add(QWidget *w)
 {
    // add the widget to list of the "guarded" widget
    fQClientGuard.prepend(w);
-   // fprintf(stderr," TQtClientGuard::Add %d %lp %p \n", TGQt::iwid(w), TGQt::iwid(w),w );
+   // fprintf(stderr," TQtClientGuard::Add %d %lp %p \n", TGQt::rootwid(w), TGQt::rootwid(w),w );
    connect(w,SIGNAL(destroyed()),this,SLOT(Disconnect()));
 }
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 TQtClientWidget *TQtClientGuard::Create(QWidget* parent, const char* name, WFlags f)
+#else /* QT_VERSION */
+TQtClientWidget *TQtClientGuard::Create(QWidget* parent, const char* name, Qt::WFlags f)
+#endif /* QT_VERSION */
 {
    // TQtClientWidget object factory
    TQtClientWidget *w =  new TQtClientWidget(this,parent,name,f);
@@ -72,16 +84,34 @@ void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
 {
    // Disconnect all children of the registered widget
    if (w) {
+#if QT_VERSION < 0x40000
       const QObjectList *childList = w->children();
+#else /* QT_VERSION */
+      const QObjectList &childList = w->children();
+#endif /* QT_VERSION */
       int nChild = 0;
+#if QT_VERSION < 0x40000
       if (childList) {
          nChild = childList->count();
          QObjectListIterator next(*childList);
          next.toLast();
+#else /* QT_VERSION */
+      if (!childList.isEmpty()) {
+         nChild = childList.count();
+         QListIterator<QObject *> next(childList);
+         next.toBack();
+#endif /* QT_VERSION */
          QObject *widget = 0;
          // while ( (widget = *next) )
+#if QT_VERSION < 0x40000
          for (widget=next.toLast(); (widget = next.current()); --next)
+#else /* QT_VERSION */
+         while( next.hasPrevious() )
+#endif /* QT_VERSION */
          {
+#if QT_VERSION >= 0x40000
+            widget = next.previous();
+#endif /* QT_VERSION */
             if (dynamic_cast<TQtClientWidget*>(widget)) {
                DisconnectChildren((TQtClientWidget*)widget);
             } else {
@@ -139,7 +169,11 @@ QPixmap* TQtPixmapGuard::Create(int w, int h, const uchar *bits, bool isXbitmap)
 QPixmap* TQtPixmapGuard::Create(int width, int height, int depth)
                                 // , Optimization optimization)
 {
+#if QT_VERSION < 0x40000
    QPixmap *w =  new QPixmap(width,height,depth); // ,optimization);
+#else /* QT_VERSION */
+   QPixmap *w =  new QPixmap(width,height); // ,optimization);
+#endif /* QT_VERSION */
    Add(w);
    return  w;
 }

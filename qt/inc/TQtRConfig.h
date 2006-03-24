@@ -34,7 +34,9 @@
 #endif
 
 #if defined(R__WIN32)
-# define R__QTGUITHREAD
+# ifndef GDK_WIN32
+//#  define R__QTGUITHREAD
+# endif
 # define R__QTWIN32
 #endif
 

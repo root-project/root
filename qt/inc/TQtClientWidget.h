@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.40 2005/12/09 03:41:34 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.43 2006/01/06 18:51:27 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -11,38 +11,55 @@
 #ifndef ROOT_TQtClientWidget
 #define ROOT_TQtClientWidget
 
+
 #ifndef __CINT__
-#  include <qframe.h>
-#  if (QT_VERSION > 0x039999)
+#  include "qglobal.h"
+#  if QT_VERSION < 0x40000
+#     include <qframe.h>
+#  else /* QT_VERSION */
 //    Added by qt3to4:
-#    include <QCloseEvent>
-#  endif
+#     include <QCloseEvent>
+#     include <q3frame.h>
+#  endif /* QT_VERSION */
 #  include <qcursor.h>
 #else
   class QFrame;
+  class Q3Frame;
   class QCursor;
+  class QAccel;
 #endif
+  
 #include "GuiTypes.h"
 
 //
 // TQtClientWidget  is a QFrame implemantation backing  ROOT TGWindow objects
 // It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
 //
-class QAccel;
+
 class QCursor;
 class QCloseEvent;
 class TQtClientGuard;
 class TQtWidget;
 
-class TQtClientWidget: public QFrame {
-#ifndef __CINT__
-       Q_OBJECT
+#if (QT_VERSION >= 0x39999)
+// Trick to fool the stupid Qt "moc" utility 15.12.2005
+class Q3Accel;
+#define CLIENT_WIDGET_BASE_CLASS Q3Frame
+#else
+#define CLIENT_WIDGET_BASE_CLASS QFrame
 #endif
+
+class TQtClientWidget: public CLIENT_WIDGET_BASE_CLASS {
+#ifndef __CINT__
+     Q_OBJECT
+#endif
+
 private:
          void  operator=(const TQtClientWidget&)  {}
+#if !defined(_MSC_VER)  || _MSC_VER >= 1310
          void  operator=(const TQtClientWidget&) const {}
-         TQtClientWidget(const TQtClientWidget&) : QFrame() {}
-
+#endif 
+         TQtClientWidget(const TQtClientWidget&) : CLIENT_WIDGET_BASE_CLASS(0) {}
 protected:
 
        UInt_t fGrabButtonMask;        // modifier button mask for TVirtualX::GrabButton
@@ -51,7 +68,11 @@ protected:
        UInt_t fSelectEventMask;       // input mask for SelectInput
        UInt_t fSaveSelectInputMask;   // To save dutinr the grabbing the selectInput
        EMouseButton fButton;
+#if (QT_VERSION >= 0x39999)
+       Q3Accel  *fGrabbedKey;
+#else /* QT_VERSION */
        QAccel  *fGrabbedKey;
+#endif /* QT_VERSION */
        Bool_t   fPointerOwner;
        QCursor *fNormalPointerCursor;
        QCursor *fGrabPointerCursor;
@@ -63,9 +84,13 @@ protected:
              friend class TQtClientGuard;
        friend class TGQt;
 
-       TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, WFlags f=0 ):
-          QFrame(parent,name,f)
-         ,fGrabButtonMask(kAnyModifier),      fGrabEventPointerMask(kNoEventMask)
+#ifndef __CINT__
+      TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, Qt::WFlags f=0 ):
+          CLIENT_WIDGET_BASE_CLASS(parent,name,f),
+#else
+     TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, WFlags f=0 ) :
+#endif             
+          fGrabButtonMask(kAnyModifier),      fGrabEventPointerMask(kNoEventMask)
          ,fGrabEventButtonMask(kNoEventMask), fSelectEventMask(kNoEventMask), fSaveSelectInputMask(kNoEventMask) // ,fAttributeEventMask(0)
          ,fButton(kAnyButton),fGrabbedKey(0), fPointerOwner(kFALSE)
          ,fNormalPointerCursor(0),fGrabPointerCursor(0),fGrabButtonCursor(0)
@@ -80,7 +105,11 @@ public:
     bool   DeleteNotify();
     TQtWidget *GetCanvasWidget() const;
     void   GrabEvent(Event_t &ev,bool own=TRUE);
+#if (QT_VERSION >= 0x39999)
+    Q3Accel *HasAccel() const ;
+#else /* QT_VERSION */
     QAccel *HasAccel() const ;
+#endif /* QT_VERSION */
     bool   IsClosing();
     bool   IsGrabbed       (Event_t &ev);
     bool   IsGrabPointerSelected(UInt_t evmask) const;
@@ -113,9 +142,11 @@ protected slots:
 public slots:
     virtual void Accelerate(int id);
     virtual void polish();
+#ifndef Q_MOC_RUN
 //MOC_SKIP_BEGIN
     ClassDef(TQtClientWidget,0) // QFrame implementation backing  ROOT TGWindow objects
 //MOC_SKIP_END
+#endif
 };
 
 //______________________________________________________________________________
@@ -125,7 +156,11 @@ inline bool TQtClientWidget::DeleteNotify(){return fDeleteNotify; }
 inline TQtWidget *TQtClientWidget::GetCanvasWidget() const
 { return fCanvasWidget;}
  //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 inline QAccel *TQtClientWidget::HasAccel() const 
+#else /* QT_VERSION */
+inline Q3Accel *TQtClientWidget::HasAccel() const 
+#endif /* QT_VERSION */
 {  return fGrabbedKey; }
 
 //______________________________________________________________________________
@@ -195,5 +230,5 @@ inline bool TQtClientWidget::IsGrabPointerSelected(UInt_t evmask) const
 //______________________________________________________________________________
 inline bool  TQtClientWidget::IsGrabButtonSelected (UInt_t evmask) const
 { return  evmask & ButtonEventMask(); }
-#endif
 
+#endif

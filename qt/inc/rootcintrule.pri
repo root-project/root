@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcintrule.pri,v 1.11 2005/10/20 16:16:24 fine Exp $
+# $Id: rootcintrule.pri,v 1.16 2006/03/21 03:49:48 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -55,7 +55,26 @@
 #
 # -----------------------------------------------
 
-exists ($(ROOTSYS)/include){
+win32 {
+  # Required to use dynamic_cast
+   CONFIG *= rtti
+}
+includeFile = $(QTROOTSYSDIR)/include
+exists ( $$includeFile ){
+
+  DEPENDPATH *= $(QTROOTSYSDIR)/include
+
+  win32 {
+     INCLUDEPATH	*= "%QTROOTSYSDIR%/include"
+  }
+
+  unix {
+     INCLUDEPATH	*= "$(QTROOTSYSDIR)/include"
+  }
+}
+
+includeFile = $(ROOTSYS)/include
+exists ($$includeFile){
 
   DEPENDPATH *= $(ROOTSYS)/include
 
@@ -68,6 +87,13 @@ exists ($(ROOTSYS)/include){
   }
 }
 !isEmpty( CREATE_ROOT_DICT_FOR_CLASSES ) {
+   DICTDEFINES += -DQT_VERSION=0x30000
+   QT_VERSION=$$[QT_VERSION]
+   contains( QT_VERSION, "^4.*" ) {
+     DICTDEFINES -= -DQT_VERSION=0x30000
+     DICTDEFINES *= -DQT_VERSION=0x40000
+   }
+
   ROOT_CINT_TARGET = $${TARGET}
   SOURCES	  *= $${ROOT_CINT_TARGET}Dict.cxx 
 
@@ -76,7 +102,7 @@ exists ($(ROOTSYS)/include){
   win32:  rootcint.commands    +=$(ROOTSYS)\bin\rootcint.exe
   unix:   rootcint.commands    +=$(ROOTSYS)/bin/rootcint
 
-  rootcint.commands    +=  -f $$rootcint.target  -c $(INCPATH) $$CREATE_ROOT_DICT_FOR_CLASSES
+  rootcint.commands    +=  -f $$rootcint.target  -c $$DICTDEFINES $(INCPATH) $$CREATE_ROOT_DICT_FOR_CLASSES
   rootcint.depends      = $$CREATE_ROOT_DICT_FOR_CLASSES
   
   rootcintecho.commands = @echo "Generating dictionary $$rootcint.target for $$CREATE_ROOT_DICT_FOR_CLASSES classes"

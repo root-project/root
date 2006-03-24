@@ -1,7 +1,5 @@
-// @(#)root/qt:$Name:  $:$Id: TQtSymbolCodec.h,v 1.1 2005/02/08 07:36:08 brun Exp $
-// Author: Valeri Fine   08/02/2005
 /****************************************************************************
-** $Id: TQtSymbolCodec.h,v 1.1 2005/02/08 07:36:08 brun Exp $
+** $Id: TQtSymbolCodec.h,v 1.2 2005/12/15 21:36:29 fine Exp $
 **
 ** Implementation of QTextCodec class
 **
@@ -12,27 +10,48 @@
 #ifndef ROOT_QSYMBOLCODEC_H
 #define ROOT_QSYMBOLCODEC_H
 
-#ifndef QT_H
-#include "qtextcodec.h"
-#endif
+#include "qglobal.h"
+
+#if QT_VERSION < 0x40000
+# ifndef QT_H
+#   include "qtextcodec.h"
+#  endif // QT_H
+#else
+//Added by qt3to4:
+#  include <Q3CString>
+
+#  include <QTextCodec>
+#  include <QByteArray>
+#endif /* QT_VERSION */
 
 #ifndef QT_NO_CODEC_SYMBOL
 
 class QSymbolCodec : public QTextCodec {
 public:
     virtual int mibEnum() const;
+#if QT_VERSION < 0x40000
     const char* name() const;
+#else
+    QByteArray  name() const;
+#endif /* QT_VERSION */
     const char* mimeName() const;
 
 #if !defined(Q_NO_USING_KEYWORD)
     using QTextCodec::fromUnicode;
 #endif
+#if QT_VERSION < 0x40000
     QCString fromUnicode(const QString& uc, int& lenInOut) const;
+#else
+    Q3CString fromUnicode(const QString& uc, int& lenInOut) const;
+    virtual QByteArray convertFromUnicode( const QChar * input, int number, ConverterState *state ) const;
+    virtual QString    convertToUnicode(const char *chars, int len, ConverterState *state) const;
+#endif /* QT_VERSION */
+    
     QString toUnicode(const char* chars, int len) const;
+    
 
     int heuristicContentMatch(const char* chars, int len) const;
 };
 
-#endif
-
+#endif /* QT_NO_CODEC_SYMBOL */
 #endif

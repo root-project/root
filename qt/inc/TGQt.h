@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.12 2005/08/17 20:08:37 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.13 2005/12/01 14:30:46 brun Exp $
  // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -29,22 +29,29 @@
 #include <vector>
 #include <map>
 
-#include <qnamespace.h>
-#if (QT_VERSION > 0x039999)
-# include <QPixmap>
-# include <QEvent>
-#endif 
 #include <qobject.h>
 #include <qmap.h>
 #include <qcolor.h>
 #include <qcursor.h>
 #include <qpainter.h>
-#include <qmemarray.h>
 #include <qrect.h>
 #include <qmap.h>
-#include <qptrqueue.h>
-#include <qptrlist.h>
-#include <qptrvector.h>
+#include <qnamespace.h>
+
+#if (QT_VERSION > 0x039999)
+#  include <QPixmap>
+#  include <QEvent>
+#  include <q3memarray.h>
+#  include <q3ptrqueue.h>
+#  include <q3ptrlist.h>
+#  include <q3ptrvector.h>
+#else
+#  include <qmemarray.h>
+#  include <qptrqueue.h>
+#  include <qptrlist.h>
+#  include <qptrvector.h>
+#endif /* QT_VERSION */
+
 #include <qfontdatabase.h>
 
 #include "TQtClientGuard.h"
@@ -52,7 +59,7 @@
 #else
   class QObject;
   class QEvent;
-#endif
+#endif  /* CINT */
 
 class  QPen;
 class  QMarker;
@@ -61,6 +68,7 @@ class  QPaintDevice;
 class  QTextCodec;
 
 #include "TVirtualX.h"
+#include "TQtEmitter.h"
 
 class TQtMarker;
 
@@ -73,19 +81,6 @@ class TQtApplication;
 class TQtClientFilter;
 class TQtEventQueue;
 
-#ifndef __CINT__
-class TQtEmitter : public QObject {
-  Q_OBJECT
-private:
-   friend class TGQt;
-  void EmitPadPainted(QPixmap *p)  { emit padPainted(p);}
-protected:
-  TQtEmitter& operator=(const TQtEmitter&); // AXEL: intentionally not implementedpublic:
-  TQtEmitter(){};
-signals:
-  void padPainted(QPixmap *p);
-};
-#endif
 
 //#define TRACE_TGQt() fprintf(stdout, "TGQt::%s() %d\n", __FUNCTION__, __LINE__)
 
@@ -114,7 +109,11 @@ protected:
 
    void        *fhEvent;                   // The event object to synch threads
 
+#if QT_VERSION < 0x40000
    QPtrVector<QCursor>   fCursors;
+#else /* QT_VERSION */
+   Q3PtrVector<QCursor>   fCursors;
+#endif /* QT_VERSION */
 //   Qt::CursorShape  fCursors[kNumCursors];  //List of cursors
    ECursor         fCursor;                 // Current cursor number;
 
@@ -133,7 +132,11 @@ protected:
    QPen      *fQPen;
    TQtMarker *fQtMarker;
    QFont     *fQFont;
+#if (QT_VERSION <0x40000)
    Qt::RasterOp fDrawMode;
+#else
+   QPainter::CompositionMode  fDrawMode;
+#endif
 
    typedef QMap<QPaintDevice *,QRect> TQTCLIPMAP;
    TQTCLIPMAP fClipMap;
@@ -247,8 +250,12 @@ public:
       static QString QtFileFormat(const QString &selector);
 #endif
 
-
+#ifndef Q_MOC_RUN
+//MOC_SKIP_BEGIN
    ClassDef(TGQt,0)  //Interface to Qt GUI
+//MOC_SKIP_END
+#endif
+
 };
 
 R__EXTERN  TGQt *gQt;

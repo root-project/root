@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.9 2005/10/27 06:41:23 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.10 2005/12/11 10:51:39 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -18,9 +18,20 @@
 #include "TQtLock.h"
 
 #include <qkeysequence.h>
+#if QT_VERSION < 0x40000
 #include <qaccel.h>
+#else /* QT_VERSION */
+#include <q3accel.h>
+#endif /* QT_VERSION */
 #include <qevent.h>
+#if QT_VERSION < 0x40000
 #include <qobjectlist.h>
+#else /* QT_VERSION */
+#include <qobject.h>
+//Added by qt3to4:
+#include <QKeyEvent>
+#include <QCloseEvent>
+#endif /* QT_VERSION */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -139,10 +150,17 @@ TQtClientWidget *TQtClientWidget::IsKeyGrabbed(const Event_t &ev)
    }
    if (!grabbed) {
       // Check children
+#if QT_VERSION < 0x40000
       const QObjectList *childList = children();
       if (childList) {
          QObjectListIterator next(*childList);
          while((wg = dynamic_cast<TQtClientWidget *>(next.current())) && !(grabbed=wg->IsKeyGrabbed(ev)) ) ++next;
+#else /* QT_VERSION */
+      const QObjectList &childList = children();
+      if (!childList.isEmpty()) {
+         QListIterator<QObject*> next(childList);
+         while(next.hasNext() && (wg = dynamic_cast<TQtClientWidget *>(next.next ())) && !(grabbed=wg->IsKeyGrabbed(ev)) ){;}
+#endif /* QT_VERSION */
       }
    }
    return grabbed;
@@ -211,19 +229,30 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
    if (keycode) {
       if (modifier & kAnyModifier)  assert(!(modifier & kAnyModifier));
       else {
+#if QT_VERSION < 0x40000
          if (modifier & kKeyShiftMask)   key[index++] = SHIFT;
          if (modifier & kKeyLockMask)    key[index++] = META;
          if (modifier & kKeyControlMask) key[index++] = CTRL;
          if (modifier & kKeyMod1Mask)    key[index++] = ALT;
+#else /* QT_VERSION */
+         if (modifier & kKeyShiftMask)   key[index++] = Qt::SHIFT;
+         if (modifier & kKeyLockMask)    key[index++] = Qt::META;
+         if (modifier & kKeyControlMask) key[index++] = Qt::CTRL;
+         if (modifier & kKeyMod1Mask)    key[index++] = Qt::ALT;
+#endif /* QT_VERSION */
      }
-                                         key[index++] = UNICODE_ACCEL + keycode;
+                                         key[index++] = Qt::UNICODE_ACCEL + keycode;
    }
    assert(index<=4);
    switch (insert) {
       case kInsert:
          if (keycode) {
            if (!fGrabbedKey)  {
+#if QT_VERSION < 0x40000
               fGrabbedKey = new QAccel(this);
+#else /* QT_VERSION */
+              fGrabbedKey = new Q3Accel(this);
+#endif /* QT_VERSION */
      //         connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
             }
             QKeySequence keys(key[0],key[1],key[2],key[3]);
@@ -276,7 +305,11 @@ void TQtClientWidget::SetCanvasWidget(TQtWidget *widget)
    fCanvasWidget = widget;
    if (fCanvasWidget) {
       // may be transparent
+#if QT_VERSION < 0x40000
       setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
+#else /* QT_VERSION */
+      setWindowFlags(windowFlags()  | Qt::WNoAutoErase | Qt:: WResizeNoErase );
+#endif /* QT_VERSION */
       connect(fCanvasWidget,SIGNAL(destroyed()),this,SLOT(Disconnect()));
    }
 }
@@ -297,10 +330,17 @@ void TQtClientWidget::Accelerate(int id)
   uint state =0;
   for (int i=0; i < l;i++) {
      switch (key[i]) {
+#if QT_VERSION < 0x40000
         case SHIFT:  state |= Qt::ShiftButton;   break;
         case META:   state |= Qt::MetaButton;    break;
         case CTRL:   state |= Qt::ControlButton; break;
         case ALT:    state |= Qt::AltButton;     break;
+#else /* QT_VERSION */
+        case Qt::SHIFT:  state |= Qt::ShiftModifier;   break;
+        case Qt::META:   state |= Qt::MetaModifier;    break;
+        case Qt::CTRL:   state |= Qt::ControlModifier; break;
+        case Qt::ALT:    state |= Qt::AltModifier;     break;
+#endif /* QT_VERSION */
      };
   }
   QKeyEvent ac(QEvent::KeyPress,keycode,keycode,state);

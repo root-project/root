@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.26 2005/12/11 10:51:39 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.27 2006/01/17 20:28:40 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -29,15 +29,29 @@
 
 #include <qapplication.h>
 #if (QT_VERSION < 0x030200)
-# include <qthread.h>
+#  include <qthread.h>
 #endif
+
 #include <qwidget.h>
-#include <qptrvector.h>
-#include <qvaluestack.h>
+
+#if QT_VERSION < 0x40000
+#  include <qptrvector.h>
+#  include <qvaluestack.h>
+#  include <qpicture.h>
+#else /* QT_VERSION */
+//Added by qt3to4:
+#  include <Q3CString>
+#  include <Q3PointArray>
+#  include <QEvent>
+#  include <QImageWriter>
+#  include <q3ptrvector.h>
+#  include <q3valuestack.h>
+#  include <q3picture.h>
+#endif /* QT_VERSION */
+
 #include <qpixmap.h>
 #include <qcursor.h>
 #include <qpen.h>
-#include <qpicture.h>
 #include <qdesktopwidget.h>
 #include <qimage.h>
 #include <qfontmetrics.h>
@@ -116,8 +130,13 @@ TQtEventInputHandler *TQtEventInputHandler::gfQtEventInputHandler = 0;
 
 class TQWidgetCollection {
  private:
+#if QT_VERSION < 0x40000
    QValueStack<int>         fFreeWindowsIdStack;
    QPtrVector<QPaintDevice> fWidgetCollection;
+#else /* QT_VERSION */
+   Q3ValueStack<int>         fFreeWindowsIdStack;
+   Q3PtrVector<QPaintDevice> fWidgetCollection;
+#endif /* QT_VERSION */
    Int_t                    fIDMax;       //  current max id
    Int_t                    fIDTotalMax;  // life-time max id
 protected:
@@ -530,9 +549,19 @@ QString TGQt::QtFileFormat(const QString &selector)
    //
    QString saveType="PNG"; // it is the default format
    if (!selector.isEmpty())  {
+#if QT_VERSION < 0x40000
       for (UInt_t j = 0; j < QImageIO::outputFormats().count(); j++ )
+#else /* QT_VERSION */
+      QList<QByteArray> formats =  QImageWriter::supportedImageFormats();
+      QList<QByteArray>::const_iterator j;
+      for (j = formats.constBegin(); j != formats.constEnd(); ++j)
+#endif /* QT_VERSION */
       {
+#if QT_VERSION < 0x40000
          QString nextFormat =  QImageIO::outputFormats().at( j );
+#else /* QT_VERSION */
+         QString nextFormat =  *j;
+#endif /* QT_VERSION */
          // Trick to count both "jpeg" and "jpg" extenstion
          QString checkString = selector.contains("jpg",FALSE) ? "JPEG" : selector;
          if (checkString.contains(nextFormat,FALSE) ) {
@@ -599,10 +628,8 @@ TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplay
    gQt   = this;
    fSelectedBuffer = 0;
    fSelectedWindow = fPrevWindow = NoOperation;
-#ifndef R__QTGUITHREAD
    CreateQtApplicationImp();
    Init();
-#endif
 }
 
 //______________________________________________________________________________
@@ -628,7 +655,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.26 2005/12/11 10:51:39 rdm Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.121 2006/03/16 18:02:34 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -637,7 +664,11 @@ Bool_t TGQt::Init(void* /*display*/)
    fTextMagnitude   = 1;
    fCharacterUpX    = 1;
    fCharacterUpY    = 1;
+#if QT_VERSION < 0x40000
    fDrawMode        = Qt::CopyROP;
+#else /* QT_VERSION */
+   fDrawMode        = QPainter::CompositionMode_Source; // Qt::CopyROP;
+#endif /* QT_VERSION */
    fTextFontModified = 0;
 
    fTextAlign   = 0;
@@ -684,7 +715,11 @@ Bool_t TGQt::Init(void* /*display*/)
    fCursors.insert(kRotate,     new QCursor(Qt::ForbiddenCursor)); // - a slashed circle LoadCursor(NULL, IDC_ARROW);    // (display, XC_exchange);
    fCursors.insert(kPointer,    new QCursor(Qt::ArrowCursor));     // standard arrow cursor  / (display, XC_left_ptr);
    fCursors.insert(kArrowRight, new QCursor(Qt::UpArrowCursor));   // - upwards arrow LoadCursor(NULL, IDC_ARROW);   // XC_arrow
+#if QT_VERSION < 0x40000
    fCursors.insert(kCaret,      new QCursor(Qt::IbeamCursor));     //  ibeam/text entry LoadCursor(NULL, IDC_IBEAM);   // XC_xterm
+#else /* QT_VERSION */
+   fCursors.insert(kCaret,      new QCursor(Qt::IBeamCursor));     //  ibeam/text entry LoadCursor(NULL, IDC_IBEAM);   // XC_xterm
+#endif /* QT_VERSION */
    fCursors.insert(kWatch,      new QCursor(Qt::WaitCursor));      //
 
    // The default cursor
@@ -730,9 +765,7 @@ Bool_t TGQt::Init(void* /*display*/)
    // QApplication::desktop()->installEventFilter(QClientFilter());
    fWidgetArray =  new TQWidgetCollection();
    fDisplayOpened = kTRUE;
-#ifndef  R__QTGUITHREAD
    TQtEventInputHandler::Instance();
-#endif
    return fDisplayOpened;
 }
 
@@ -861,7 +894,7 @@ void TGQt::GetPlanes(Int_t &nplanes){
 //*-*                    ============================
 //*-*  nplanes     : number of bit planes
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   nplanes  = QColor::numBitPlanes ();
+   nplanes  = QPixmap::defaultDepth();
 }
 
 //______________________________________________________________________________
@@ -880,7 +913,11 @@ void  TGQt::ClearWindow()
        break;
     case QInternal::Picture:
     case QInternal::Printer:
+#if QT_VERSION < 0x40000
     case QInternal::UndefinedDevice:
+#else /* QT_VERSION */
+   // case QInternal::UndefinedDevice:
+#endif /* QT_VERSION */
        fQPainter->eraseRect(GetQRect(*fSelectedWindow));
        break;
     default:
@@ -947,11 +984,19 @@ QRect TGQt::GetQRect(QPaintDevice &dev)
      break;
                           }
   case QInternal::Picture:
+#if QT_VERSION < 0x40000
      res = ((QPicture *)&dev)->boundingRect();
+#else /* QT_VERSION */
+     res = ((Q3Picture *)&dev)->boundingRect();
+#endif /* QT_VERSION */
      break;
 
   case QInternal::Printer:
+#if QT_VERSION < 0x40000
   case QInternal::UndefinedDevice:
+#else /* QT_VERSION */
+ // case QInternal::UndefinedDevice:
+#endif /* QT_VERSION */
      break;
   default:
      assert(0);
@@ -974,12 +1019,18 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
    //    fSelectedWindow,fSelectedBuffer,iwid(wid));
    if (fSelectedWindow )
    {
-      QRect sr = src->rect();
       // fprintf(stderr,"x=%d,y=%d: %d %d %d %d\n",xpos,ypos,sr.x(),sr.y(),sr.width(),sr.height());
       QPaintDevice *dst = fSelectedBuffer ? fSelectedBuffer : fSelectedWindow;
       bool isPainted = dst->paintingActive ();
       if (isPainted) End();
+#if QT_VERSION < 0x40000
+      QRect sr = src->rect();
       bitBlt ( dst,QPoint(xpos,ypos),src,sr,Qt::CopyROP); // bool ignoreMask )
+#else /* QT_VERSION */
+      QPainter paint(dst);
+      paint.drawPixmap(xpos,ypos,*src);
+     //  ----  !!!!  bitBlt ( dst,QPoint(xpos,ypos),src,sr,QPainter::CompositionMode_Source); // bool ignoreMask )
+#endif /* QT_VERSION */
       if (isPainted) Begin();
       Emitter()->EmitPadPainted(src);
       if (!fSelectedBuffer && (fSelectedWindow->devType() == QInternal::Widget ) )
@@ -1050,15 +1101,16 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
          fQPainter->setBrush(Qt::NoBrush);
          fQPainter->drawRect(x1,y2,x2-x1+1,y1-y2+1);
       } else {
-#ifdef QT_HATCHED_BACKGROUND         
-     //  The ROOT hatched styles background can be the transparent only
          if (fQBrush->style() != Qt::SolidPattern)
-         {
-            fQPainter->setBackgroundColor(fQBrush->GetColor());
-            fQPainter->setBackgroundMode( Qt::OpaqueMode );
-         }
-#endif         
-         fQPainter->fillRect(x1,y2,x2-x1+1,y1-y2+1,*fQBrush);
+            fQPainter->setPen(fQBrush->GetColor());  
+#ifdef R__WIN32
+         if ( 3000 <= fQBrush->GetStyle() && fQBrush->GetStyle() < 4000) {
+            QPixmap &px = *fQBrush->pixmap();
+            px.fill(fQBrush->GetColor());
+            fQPainter->drawTiledPixmap(x1,y2,x2-x1+1,y1-y2+1, px);
+         } else 
+#endif
+           fQPainter->fillRect(x1,y2,x2-x1+1,y1-y2+1,*fQBrush);
       }
       fQPainter->restore();
    }
@@ -1137,18 +1189,26 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
       fQPainter->save();
       if (fQBrush->style() == Qt::SolidPattern)
          fQPainter->setPen(Qt::NoPen);
-#ifdef QT_HATCHED_BACKGROUND         
-      //  The ROOT hatched styles background can be the transparent only
-      else {
-         fQPainter->setBackgroundColor(fQBrush->GetColor());
-         fQPainter->setBackgroundMode( Qt::OpaqueMode );
-      }
-#endif
-      
+      else 
+         fQPainter->setPen(fQBrush->GetColor());      
+
+#if QT_VERSION < 0x40000
       QPointArray qtPoints(n);
+#else /* QT_VERSION */
+      Q3PointArray qtPoints(n);
+#endif /* QT_VERSION */
       TPoint *rootPoint = xy;
       for (int i =0;i<n;i++,rootPoint++)
          qtPoints.setPoint(i,rootPoint->fX,rootPoint->fY);
+#ifdef R__WIN32
+      if ( 3000 <= fQBrush->GetStyle() && fQBrush->GetStyle() < 4000) {
+            QPixmap &px = *fQBrush->pixmap();
+            px.fill(fQBrush->GetColor());
+            QRegion clip(qtPoints);
+            fQPainter->setClipRegion(clip);
+            fQPainter->drawTiledPixmap(clip.boundingRect (), px);
+      } else 
+#endif
       fQPainter->drawPolygon(qtPoints);
       fQPainter->restore();
    }
@@ -1174,7 +1234,11 @@ void  TGQt::DrawPolyLine(int n, TPoint *xy)
 
   TQtLock lock;
   if (fSelectedWindow)  {
+#if QT_VERSION < 0x40000
     QPointArray qtPoints(n);
+#else /* QT_VERSION */
+    Q3PointArray qtPoints(n);
+#endif /* QT_VERSION */
     TPoint *rootPoint = xy;
     for (int i =0;i<n;i++,rootPoint++)
        qtPoints.setPoint(i,rootPoint->fX,rootPoint->fY);
@@ -1200,7 +1264,11 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
       if( CurMarker->GetNumber() <= 0 )
       {
          fQPainter->setPen(mColor);
+#if QT_VERSION < 0x40000
          QPointArray qtPoints(n);
+#else /* QT_VERSION */
+         Q3PointArray qtPoints(n);
+#endif /* QT_VERSION */
          TPoint *rootPoint = xy;
          for (int i=0;i<n;i++,rootPoint++)
             qtPoints.setPoint(i,rootPoint->fX,rootPoint->fY);
@@ -1235,7 +1303,11 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
             case 2:        /* hollow polygon */
             case 3:        /* filled polygon */
                {
+#if QT_VERSION < 0x40000
                   QPointArray &mxy = fQtMarker->GetNodes();
+#else /* QT_VERSION */
+                  Q3PointArray &mxy = fQtMarker->GetNodes();
+#endif /* QT_VERSION */
                   QPoint delta(xy[m].fX,xy[m].fY);
                   for( i = 0; i < CurMarker->GetNumber(); i++ )
                   {
@@ -1252,7 +1324,11 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
                }
             case 4:        /* segmented line */
                {
+#if QT_VERSION < 0x40000
                   QPointArray &mxy = fQtMarker->GetNodes();
+#else /* QT_VERSION */
+                  Q3PointArray &mxy = fQtMarker->GetNodes();
+#endif /* QT_VERSION */
                   QPoint delta(xy[m].fX,xy[m].fY);
                   for( i = 0; i < CurMarker->GetNumber(); i++ )
                   {
@@ -1473,7 +1549,11 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 
    TQtLock lock;
    if (fQFont) {
+#if QT_VERSION < 0x40000
       QSize textSize = QFontMetrics(*fQFont).size(Qt::SingleLine,GetTextDecoder()->toUnicode(mess)) ;
+#else /* QT_VERSION */
+      QSize textSize = QFontMetrics(*fQFont).size(Qt::TextSingleLine,GetTextDecoder()->toUnicode(mess)) ;
+#endif /* QT_VERSION */
       w = textSize.width() ;
       h = (unsigned int)(textSize.height());
 //      fprintf(stderr,"  TGQt::GetTextExtent  w=%d h=%d font = %d size =%f\n", w,h,fTextFont, fTextSize);
@@ -1507,7 +1587,7 @@ void  TGQt::PutByte(Byte_t )
 //______________________________________________________________________________
 void  TGQt::QueryPointer(int &ix, int &iy){
    // deprecated
-   if (ix*iy);
+	if (ix*iy){;}
 }
 
 //______________________________________________________________________________
@@ -1537,7 +1617,9 @@ Int_t  TGQt::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/, Int_t &/*x*/, Int_t 
   public:
     QString   fText;
     QLineEdit fEdit;
-    requestString(const char *text="") : QDialog(0,0,TRUE,Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop | Qt::WType_Popup), fText(text),fEdit(this)
+    requestString(const char *text="") : QDialog(0,0
+          , TRUE,Qt::WStyle_Customize | Qt::WStyle_NoBorder|Qt::WStyle_StaysOnTop | Qt::WType_Popup)
+          , fText(text),fEdit(this)
     {
        setBackgroundMode(Qt::NoBackground);
        connect(&fEdit,SIGNAL( returnPressed () ), this, SLOT( accept() ));
@@ -1576,7 +1658,11 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
      }
      res = reqDialog.exec();
      if (res == QDialog::Accepted ) {
+#if QT_VERSION < 0x40000
         QCString r = GetTextDecoder()->fromUnicode(reqDialog.fEdit.text());
+#else /* QT_VERSION */
+        Q3CString r = GetTextDecoder()->fromUnicode(reqDialog.fEdit.text());
+#endif /* QT_VERSION */
         qstrcpy(text, (const char *)r);
      }
      reqDialog.hide();
@@ -1639,20 +1725,12 @@ Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
 }
 
 //______________________________________________________________________________
-void  TGQt::ResizeWindow(int wid)
+void  TGQt::ResizeWindow(int /* wid */)
 {
    // Resize the current window if necessary.
-   if (wid && ( (wid != (int)kNone ) &&  (wid != -1)  &&  (wid != kDefault)) )
-   {
-      QPaintDevice *dev = iwid(wid);
-      TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
-      if (widget) {
-         bool painting = widget->paintingActive();
-         if (painting) End();
-         widget->adjustSize ();
-         if (painting) Begin();
-      }
-   }
+   // No implementation is required under Qt.
+   
+   return;
 }
 
 //______________________________________________________________________________
@@ -1776,17 +1854,32 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
    // mode : drawing mode
 
    // Map EDrawMode    { kCopy = 1, kXor, kInvert };
+#if QT_VERSION < 0x40000
    Qt::RasterOp newMode = Qt::CopyROP;
+#else /* QT_VERSION */
+   QPainter::CompositionMode newMode = QPainter::CompositionMode_Source;
+#endif /* QT_VERSION */
    switch (mode) {
+#if QT_VERSION < 0x40000
     case kCopy:   newMode = Qt::CopyROP; break;
     case kXor:    newMode = Qt::XorROP;  break;
     case kInvert: newMode = Qt::NotROP;  break;
     default:      newMode = Qt::CopyROP; break;
+#else /* QT_VERSION */
+    case kCopy:   newMode = QPainter::CompositionMode_Source; break;
+    case kXor:    newMode = QPainter::CompositionMode_Xor;  break;
+    case kInvert: newMode = QPainter::CompositionMode_Destination;  break;
+    default:      newMode = QPainter::CompositionMode_Source; break;
+#endif /* QT_VERSION */
    };
    if (newMode != fDrawMode)
    {
       fDrawMode = newMode;
+#if QT_VERSION < 0x40000
       if (fQPainter->isActive()) { fQPainter->setRasterOp(fDrawMode); }
+#else /* QT_VERSION */
+      if (fQPainter->isActive()) { fQPainter->setCompositionMode(fDrawMode); }
+#endif /* QT_VERSION */
    }
 }
 
@@ -2208,7 +2301,11 @@ void  TGQt::SetTextAlign(Short_t talign)
    fTextAlignH = txalh;
    fTextAlignV = txalv;
 
+#if QT_VERSION < 0x40000
    fTextAlign = Qt::AlignAuto;
+#else /* QT_VERSION */
+   fTextAlign = Qt::AlignLeft;
+#endif /* QT_VERSION */
    switch( txalh ) {
 
   case 2:
@@ -2480,11 +2577,21 @@ void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
    if (!wid || (wid == -1) ) return;
 
    QPaintDevice &dev = *iwid(wid);
+   QPixmap grabWidget;
    QPixmap *pix=0;
    switch (dev.devType()) {
-   case QInternal::Widget:
+   case QInternal::Widget: {
 //    bitBlt ( pix,QPoint(xpos,ypos),src,sr,Qt::CopyROP);
-      pix = &((TQtWidget*)&dev)->GetBuffer();
+        TQtWidget *thisWidget = (TQtWidget*)&dev;
+        if (thisWidget->IsDoubleBuffered() ) {
+           pix = &((TQtWidget*)&dev)->GetBuffer();
+        } else {
+           // Grab the widget rectangle area directly from the screen
+           // The image may contain the "alien" pieces !
+           grabWidget = QPixmap::grabWindow(thisWidget->winId());
+           pix = &grabWidget;
+        }
+     }
      break;
 
    case QInternal::Pixmap: {
@@ -2493,21 +2600,30 @@ void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
                           }
    case QInternal::Picture:
    case QInternal::Printer:
+#if QT_VERSION < 0x40000
    case QInternal::UndefinedDevice:
+#else /* QT_VERSION */
+   // case QInternal::UndefinedDevice:
+#endif /* QT_VERSION */
    default: assert(0);
      break;
    };
    if (pix) {
       // Create intermediate pixmap to stretch the original one if any
       QPixmap outMap(0,0);
-      if ( (h == w) && (w == UInt_t(-1) ) ) outMap.resize(pix->size());
-      else outMap.resize(w,h);
-      QPainter pnt(&outMap);
-      pnt.drawPixmap(outMap.rect(),*pix);
+      QPixmap *finalPixmap = pix;
+      if ( ( (h == w) && (w == UInt_t(-1) ) ) || ( QSize(w,h) == pix->size()) ) {
+//         finalPixmap = pix;
+      }  else  {
+         outMap.resize(w,h);
+         QPainter pnt(&outMap);
+         pnt.drawPixmap(outMap.rect(),*pix);
+         finalPixmap = &outMap;
+      }
       //  define the file extension
       QString saveType = QtFileFormat(QFileInfo(pxname).extension(FALSE));
       if (saveType.isEmpty()) saveType="PNG";
-      outMap.save(pxname,saveType);
+      finalPixmap->save(pxname,saveType);
    }
 }
 
@@ -2535,7 +2651,8 @@ void TGQt::UpdatePen()
 void TGQt::UpdateBrush()
 {
    // Update the current QBrush within active QPainter
-   if (fQBrush && fQPainter->isActive())
+  if (!fQPainter) fQPainter = new QPainter();
+  if (fQBrush && fQPainter->isActive())
    {
       fQPainter->setBrush(*fQBrush);
       // fprintf(stderr,"  uu --- uu TGQt::UpdateBrush() %p, r:g:b=%d:%d:%d\n",fQPainter->device(),
@@ -2582,7 +2699,11 @@ void TGQt::Begin()
          fQPainter->setClipRect(clipRect);
          fQPainter->setClipping(TRUE);
       }
+#if QT_VERSION < 0x40000
       fQPainter->setRasterOp(fDrawMode);
+#else /* QT_VERSION */
+      fQPainter->setCompositionMode(fDrawMode);
+#endif /* QT_VERSION */
    }
 }
 
@@ -2612,7 +2733,11 @@ Int_t TGQt::LoadQt(const char *shareLibFileName)
 Int_t TGQt::processQtEvents(Int_t maxtime)
 {
    // Force processing the Qt events only without entering the ROOT event loop
+#if QT_VERSION < 0x40000
    qApp->processEvents(maxtime);
+#else /* QT_VERSION */
+   qApp->processEvents(QEventLoop::AllEvents,maxtime);
+#endif /* QT_VERSION */
    // QEventLoop::ExcludeUserInput QEventLoop::ExcludeSocketNotifiers
    return 0;
  }

@@ -17,6 +17,7 @@
         </pixmap>
         <signal>CanvasPainted()</signal>
         <signal>Saved(bool)</signal>
+        <signal>RootEventProcessed(TObject *object, UInt_t event, TCanvas *RootCanvas)</signal>
         <slot access="public">cd(int)</slot>
         <slot access="public">Disconnect()</slot>
         <slot access="public">cd()</slot>

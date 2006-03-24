@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.cxx,v 1.3 2005/03/08 05:48:55 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.cxx,v 1.4 2005/07/08 06:43:09 brun Exp $
 // Author: Valeri Fine   25/03/2004
 
 /*************************************************************************
@@ -10,9 +10,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+
 #include "TQtEventQueue.h"
 #include "TQtLock.h"
 #include <qapplication.h>
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <Q3PtrList>
+#endif /* QT_VERSION */
+
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -26,7 +32,11 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 TQtEventQueue::TQtEventQueue(bool autoDelete): QPtrList<Event_t> ()
+#else /* QT_VERSION */
+TQtEventQueue::TQtEventQueue(bool autoDelete): Q3PtrList<Event_t> ()
+#endif /* QT_VERSION */
 { 
   //  If auto-deleting is turned on, all the items in a collection 
   //  are deleted when the collection itself is deleted.
@@ -34,7 +44,11 @@ TQtEventQueue::TQtEventQueue(bool autoDelete): QPtrList<Event_t> ()
 }
 
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 int TQtEventQueue::compareItems(QPtrCollection::Item i1, QPtrCollection::Item i2)
+#else /* QT_VERSION */
+int TQtEventQueue::compareItems(Q3PtrCollection::Item i1, Q3PtrCollection::Item i2)
+#endif /* QT_VERSION */
 {
 //   This virtual function compares two list items. 
 //   Returns:   zero if item1 == item2  

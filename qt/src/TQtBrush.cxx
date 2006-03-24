@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtBrush.cxx,v 1.4 2005/07/06 20:41:21 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtBrush.cxx,v 1.5 2005/07/13 20:10:12 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -137,7 +137,11 @@ static uchar *patter_bits[]= { p1_bits, p2_bits,   p3_bits,  p4_bits,  p5_bits,
 
 ClassImp(TQtBrush)
 //______________________________________________________________________________
-TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0) {}
+TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0)
+#ifdef R__WIN32
+   , fCustomPixmap(16,16)
+#endif
+{}
 //______________________________________________________________________________
 void TQtBrush::SetColor(QColor &color)
 {
@@ -163,15 +167,19 @@ void TQtBrush::SetStyle(int style, int fasi)
   case 1:                                           // solid
     setStyle(Qt::SolidPattern);
     break;
-
   case 3:                                           // pattern
-    if (fasi > 0 && fasi < 26 ) {
-      QBitmap bm(16,16,patter_bits[fasi-1],TRUE);
-      setPixmap(bm);
-    }  else {
-      QBitmap bm(16,16,p2_bits,TRUE);
-      setPixmap(bm);
-    }
+     {
+        int pattern = 1;
+        if (fasi > 0 && fasi < 26 ) pattern = fasi-1;
+        QBitmap bm(16,16,patter_bits[pattern],TRUE);
+#ifndef R__WIN32
+        setPixmap(bm);
+#else
+        fCustomPixmap.fill(Qt::color0);
+        fCustomPixmap.setMask(bm);
+        setPixmap(fCustomPixmap);
+#endif
+     }
     break;
   case 2:                                           // hatch
       switch (fasi)

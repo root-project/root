@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.12 2005/09/20 06:38:10 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.13 2005/10/18 18:53:42 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -82,10 +82,12 @@ class TQtWidgetBuffer : public QPixmap
 class  TQtWidget : public QWidget {
 #ifndef __CINT__   
  Q_OBJECT
-#endif       
+#endif
 private:
+#if !defined(_MSC_VER)  || _MSC_VER >= 1310
       void operator=(const TQtWidget&) const {}
-      void operator=(const TQtWidget&) {}
+#endif
+		void operator=(const TQtWidget&) {}
       TQtWidget(const TQtWidget&) :QWidget() {}
    //----- Private bits, clients can only test but not change them
    UInt_t         fBits;       //bit field status word
@@ -98,10 +100,10 @@ public:
       kENTERSIZEMOVE,
       kFORCESIZE
    };
-#ifndef __CINT__      
-  TQtWidget( QWidget* parent=0, const char* name=0, WFlags f=Qt::WStyle_NoBorder, bool embedded=TRUE);
+#ifndef __CINT__
+   TQtWidget( QWidget* parent=0, const char* name=0, Qt::WFlags f=Qt::WStyle_NoBorder, bool embedded=TRUE);
 #else
-  TQtWidget( QWidget* parent=0, const char* name=0, int f, bool embedded);
+  TQtWidget( QWidget* parent=0);
 #endif  
   virtual ~TQtWidget();
   void SetCanvas(TCanvas *c)                 { fCanvas = c;}
@@ -162,6 +164,7 @@ protected:
    // -- A special event handler
    virtual void exitSizeEvent ();
    virtual void stretchWidget(QResizeEvent *e);
+public:
    //----- bit manipulation (a'la TObject )
    void     SetBit     (UInt_t f, Bool_t set);
    void     SetBit     (UInt_t f);
@@ -171,6 +174,9 @@ protected:
    void     InvertBit  (UInt_t f);
    void     EmitSignal (UInt_t f);
    void     EmitTestedSignal();
+   UInt_t   GetAllBits() const;
+   void     SetAllBits(UInt_t f);
+   
 public:
    // Static method to inmitate ROOT as needed
    static TApplication *InitRint(Bool_t prompt=kFALSE, const char *appClassName="QtRint", int *argc=0, char **argv=0,
@@ -204,14 +210,16 @@ signals:
    // emit the Qt signal when the double buffer of the TCamvas has been filled up
    void CanvasPainted();  // Signal the TCanvas has been painted onto the screen
    void Saved(bool ok);   // Signal the TCanvas has been saved into the file
-   virtual void polish();
-   void  RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c);
+   void RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c);
 #endif
-//MOC_SKIP_BEGIN  
+
+#ifndef Q_MOC_RUN
+//MOC_SKIP_BEGIN
    ClassDef(TQtWidget,0) // QWidget to back ROOT TCanvas (Can be used with Qt designer)
 //MOC_SKIP_END
+#endif
 };
-   
+
 //______________________________________________________________________________
 inline void TQtWidget::AdjustBufferSize()
    {  if (fPixmapID.size() != size() ) fPixmapID.resize(size()); }
@@ -245,6 +253,8 @@ inline Int_t        TQtWidget::GetSelectedY()   const { return GetCanvas()->GetS
 inline TVirtualPad *TQtWidget::GetSelectedPad() const { return GetCanvas()->GetSelectedPad(); }
 
 //----- bit manipulation
+inline UInt_t TQtWidget::GetAllBits() const       { return fBits;                       }
+inline void   TQtWidget::SetAllBits(UInt_t f)     { fBits = f;                          }
 inline void   TQtWidget::SetBit(UInt_t f)         { fBits |= f & kBitMask;              }
 inline void   TQtWidget::ResetBit(UInt_t f)       { fBits &= ~(f & kBitMask);           }
 inline Bool_t TQtWidget::TestBit(UInt_t f) const  { return (Bool_t) ((fBits & f) != 0); }

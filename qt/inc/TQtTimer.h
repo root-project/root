@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtTimer.h,v 1.3 2005/02/08 07:36:08 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtTimer.h,v 1.4 2005/03/01 07:24:01 brun Exp $
 // Author: Valery Fine  09/08/2004
 
 /*************************************************************************
@@ -31,8 +31,10 @@ class  TQtTimer : public QTimer  {
      Q_OBJECT
 #endif
 private:
+#if !defined(_MSC_VER)  || _MSC_VER >= 1310
     void operator=(const TQtTimer &) const {}
-    void operator=(const TQtTimer &)  {}
+#endif
+	 void operator=(const TQtTimer &)  {}
     TQtTimer(const TQtTimer &) : QTimer()  {}
 protected:
   static TQtTimer *fgQTimer;

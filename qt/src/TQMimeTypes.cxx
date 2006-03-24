@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.cxx,v 1.8 2005/03/01 00:40:53 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.cxx,v 1.9 2005/12/15 21:36:29 fine Exp $
 // Author: Valeri Fine   21/01/2003
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -29,7 +29,11 @@
 
 #include "TQtRConfig.h"
 
+#if QT_VERSION < 0x40000
 #include <qiconset.h>
+#else /* QT_VERSION */
+#include <qicon.h>
+#endif /* QT_VERSION */
 #include <qpixmap.h>
 #include <qfileinfo.h>
 
@@ -166,7 +170,11 @@ TQMime *TQMimeTypes::Find(const char *filename) const
 }
 
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 const QIconSet *TQMimeTypes::GetIcon(const char *filename) const
+#else /* QT_VERSION */
+const QIcon *TQMimeTypes::GetIcon(const char *filename) const
+#endif /* QT_VERSION */
 {
    // Return icon belonging to mime type of filename.
    TQMime *mime= Find(filename);
@@ -174,16 +182,28 @@ const QIconSet *TQMimeTypes::GetIcon(const char *filename) const
    return 0;
 }
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 const QIconSet *TQMimeTypes::GetIcon(const TSystemFile *filename)
+#else /* QT_VERSION */
+const QIcon *TQMimeTypes::GetIcon(const TSystemFile *filename)
+#endif /* QT_VERSION */
 {
    // Return icon belonging to mime type of TSystemFile extension
    const char *name = filename->GetName();
+#if QT_VERSION < 0x40000
    const QIconSet *set = GetIcon(name);
+#else /* QT_VERSION */
+   const QIcon *set = GetIcon(name);
+#endif /* QT_VERSION */
    if (!set) set = AddType(filename);
    return set;
 }
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 const QIconSet *TQMimeTypes::AddType(const TSystemFile *filename)
+#else /* QT_VERSION */
+const QIcon *TQMimeTypes::AddType(const TSystemFile *filename)
+#endif /* QT_VERSION */
 {
    //
 
@@ -197,7 +217,11 @@ const QIconSet *TQMimeTypes::AddType(const TSystemFile *filename)
    mime->fPattern = "*.";
    mime->fPattern += (const char *)info.extension(FALSE);
    mime->fIcon  = 0;
+#if QT_VERSION < 0x40000
    mime->fIcon  = new QIconSet( QPixmap(*icon) ) ;
+#else /* QT_VERSION */
+   mime->fIcon  = new QIcon( QPixmap(*icon) ) ;
+#endif /* QT_VERSION */
 #ifdef R__QTWIN32
    mime->fAction  = "!%s";
 #else
@@ -304,7 +328,11 @@ void TQMimeTypes::AddType(const char *type, const char *pattern, const char *ico
    mime->fIcon    = 0;
    char *picnam = gSystem->Which(fIconPath.Data(),icon, kReadPermission);
    if (picnam) {
+#if QT_VERSION < 0x40000
       mime->fIcon  = new QIconSet( QPixmap(picnam) ) ;
+#else /* QT_VERSION */
+      mime->fIcon  = new QIcon( QPixmap(picnam) ) ;
+#endif /* QT_VERSION */
    }
    delete picnam;
    mime->fAction  = action;

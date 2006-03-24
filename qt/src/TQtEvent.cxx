@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtEvent.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtEvent.cxx,v 1.3 2005/12/09 10:21:55 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -13,6 +13,11 @@
 #include "TQtEvent.h"
 #include "TWaitCondition.h"
 #include "qobject.h"
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <QCustomEvent>
+#include <QEvent>
+#endif /* QT_VERSION */
 #include <assert.h>
 
 //////////////////////////////////////////////////////////////////////////////

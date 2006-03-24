@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQtDummy.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQtDummy.cxx,v 1.3 2005/03/04 07:11:54 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGQt.h"
-#include "TQtThread.h"
 
    Window_t     TGQt::GetPrimarySelectionOwner(){return 0;}
    void         TGQt::SetPrimarySelectionOwner(Window_t /*id*/){;}

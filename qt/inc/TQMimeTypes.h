@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.h,v 1.3 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2003
 
 /*************************************************************************
@@ -29,15 +29,25 @@
 #include "TObject.h"
 #include "TString.h"
 #ifndef __CINT__
-#  include <qfiledialog.h>
+#  include "qglobal.h"
+#  if QT_VERSION < 0x40000
+#    include <qfiledialog.h>
+#  else /* QT_VERSION */
+#    include <q3filedialog.h>
+#  endif /* QT_VERSION */
 #else
-  class QFileIconProvider;
+  class QFileIconProvider;  // Qt3 class to be deleted
+  class Q3FileIconProvider;
 #endif
 
 class TOrdCollection;
 class TRegexp;
 
-class QIconSet;
+#if (QT_VERSION > 0x39999)
+   class QIcon;
+#else /* QT_VERSION */
+   class QIconSet;
+#endif /* QT_VERSION */
 class TSystemFile;
 
 class TQMime : public TObject {
@@ -48,7 +58,11 @@ private:
    TString   fType;      // mime type
    TString   fPattern;   // filename pattern
    TString   fAction;    // associated action
+#if (QT_VERSION > 0x39999)
+   QIcon  *fIcon;     // associated icon set
+#else /* QT_VERSION */
    QIconSet  *fIcon;     // associated icon set
+#endif /* QT_VERSION */
    TRegexp   *fReg;      // pattern regular expression
 
 public:
@@ -58,7 +72,9 @@ public:
 
 class TQMimeTypes : public TObject {
 private:
+#if !defined(_MSC_VER)  || _MSC_VER >= 1310
       void operator=(const TQMimeTypes&) const {}
+#endif
       void operator=(const TQMimeTypes&)  {}
       TQMimeTypes(const TQMimeTypes&) : TObject()  {}
 
@@ -67,10 +83,18 @@ protected:
    TString          fFilename;   // file name of mime type file
    Bool_t           fChanged;    // true if file has changed
    TOrdCollection  *fList;       // list of mime types
+#if (QT_VERSION > 0x39999)
+   Q3FileIconProvider fDefaultProvider; // Default provider of the system icons;
+#else /* QT_VERSION */
    QFileIconProvider fDefaultProvider; // Default provider of the system icons;
+#endif /* QT_VERSION */
 
    TQMime    *Find(const char *filename) const;
+#if (QT_VERSION > 0x39999)
+   const QIcon *AddType(const TSystemFile *filename);
+#else /* QT_VERSION */
    const QIconSet *AddType(const TSystemFile *filename);
+#endif /* QT_VERSION */
 
 public:
    TQMimeTypes(const char *iconPath, const char *file);
@@ -81,13 +105,20 @@ public:
    void   Print(Option_t *option="") const;
    Bool_t GetAction(const char *filename, char *action) const;
    Bool_t GetType(const char *filename, char *type) const;
+#if (QT_VERSION > 0x39999)
+   const  QIcon *GetIcon(const char *filename) const;
+   const  QIcon *GetIcon(const TSystemFile *filename);
+#else /* QT_VERSION */
    const  QIconSet *GetIcon(const char *filename) const;
    const  QIconSet *GetIcon(const TSystemFile *filename);
+#endif /* QT_VERSION */
 
 
-//MOC_SKIP_BEGIN 
+#ifndef Q_MOC_RUN
+//MOC_SKIP_BEGIN
    ClassDef(TQMimeTypes,0)  // Pool of mime type objects
-//MOC_SKIP_END 
+//MOC_SKIP_END
+#endif
 };
 
 #endif

@@ -2,7 +2,7 @@
 #ifndef ROOT_TQtEventQueue
 #define ROOT_TQtEventQueue
 
-// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.h,v 1.3 2005/03/08 05:48:55 brun Exp $
 // Author: Valeri Fine   25/03/2004
 
 /*************************************************************************
@@ -15,7 +15,12 @@
  *************************************************************************/
 
 #include "GuiTypes.h"
+#include <qglobal.h> 
+#if QT_VERSION < 0x40000
 #include <qptrlist.h> 
+#else /* QT_VERSION */
+#include <q3ptrlist.h> 
+#endif /* QT_VERSION */
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -29,17 +34,29 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 
+#if QT_VERSION < 0x40000
 class TQtEventQueue : public QPtrList<Event_t> {
+#else /* QT_VERSION */
+class TQtEventQueue : public Q3PtrList<Event_t> {
+#endif /* QT_VERSION */
    public:
       TQtEventQueue(bool autoDelete=true);
+#if QT_VERSION < 0x40000
       TQtEventQueue(const TQtEventQueue &src): QPtrList<Event_t>(src) {;}
+#else /* QT_VERSION */
+      TQtEventQueue(const TQtEventQueue &src): Q3PtrList<Event_t>(src) {;}
+#endif /* QT_VERSION */
       virtual ~TQtEventQueue(){}
       void     enqueue(const Event_t *);
       Event_t *dequeue();
       int      RemoveItems(const Event_t *ev);
 
    protected:
+#if QT_VERSION < 0x40000
       virtual int compareItems(QPtrCollection::Item item1, QPtrCollection::Item item2);
+#else /* QT_VERSION */
+      virtual int compareItems(Q3PtrCollection::Item item1, Q3PtrCollection::Item item2);
+#endif /* QT_VERSION */
 };
 //______________________________________________________________________________
 inline void TQtEventQueue::enqueue(const Event_t *ev)

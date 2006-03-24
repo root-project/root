@@ -1,8 +1,5 @@
-// @(#)root/qt:$Name:  $:$Id: TQtSymbolCodec.cxx,v 1.1 2005/02/08 07:36:08 brun Exp $
-// Author: Valeri Fine   25/01/2005
-
 /****************************************************************************
-** $Id: TQtSymbolCodec.cxx,v 1.1 2005/02/08 07:36:08 brun Exp $
+** $Id: TQtSymbolCodec.cxx,v 1.3 2006/03/19 21:12:10 fine Exp $
 **
 ** Implementation of QTextCodec class
 **
@@ -12,6 +9,10 @@
 **********************************************************************/
 
 #include "TQtSymbolCodec.h"
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <Q3CString>
+#endif /* QT_VERSION */
 
 #ifndef QT_NO_CODEC_SYMBOL
 
@@ -115,9 +116,17 @@ int QSymbolCodec::mibEnum() const
 
 //_______________________________________________________________________
 /*! \reimp */
+#if QT_VERSION < 0x40000
 const char* QSymbolCodec::name() const
+#else /* QT_VERSION */
+QByteArray QSymbolCodec::name() const
+#endif /* QT_VERSION */
 {
+#if QT_VERSION < 0x40000
     return "symbol";
+#else /* QT_VERSION */
+    return mimeName(); // "symbol";
+#endif /* QT_VERSION */
 }
 
 //_______________________________________________________________________
@@ -155,7 +164,11 @@ QString QSymbolCodec::toUnicode(const char* chars, int len ) const
    return r;
 }
 //_______________________________________________________________________
+#if QT_VERSION < 0x40000
 QCString QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
+#else /* QT_VERSION */
+Q3CString QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
+#endif /* QT_VERSION */
 {
    // process only len chars...
    qWarning( "Method <QSymbolCodec::fromUnicode> has not been implemated yet");
@@ -164,11 +177,25 @@ QCString QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
       l = QMIN((int)uc.length(),lenInOut);
    else
       l = (int)uc.length();
+#if QT_VERSION < 0x40000
    QCString rstr;
+#else /* QT_VERSION */
+   Q3CString rstr;
+#endif /* QT_VERSION */
 
    return rstr;
 }
 
+#if QT_VERSION >= 0x40000
+//_______________________________________________________________________
+/*! \reimp */
+QByteArray QSymbolCodec::convertFromUnicode( const QChar *input, int number, ConverterState *) const
+{  return  fromUnicode(input, number) ;                         }
+ //_______________________________________________________________________
+/*! \reimp */
+QString    QSymbolCodec::convertToUnicode(const char *chars, int len, ConverterState *) const
+{  return toUnicode(chars,len);                                                    }
+#endif
 //_______________________________________________________________________
 /*! \reimp */
 int QSymbolCodec::heuristicContentMatch(const char* chars, int len) const

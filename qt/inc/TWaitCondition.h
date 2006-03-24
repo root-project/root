@@ -1,7 +1,7 @@
 #ifndef ROOT_TWaitCondition
 #define ROOT_TWaitCondition
 
-// @(#)root/qt:$Name:  $:$Id: TWaitCondition.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TWaitCondition.h,v 1.3 2005/03/04 07:11:54 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -33,7 +33,7 @@ class TWaitCondition
    public:
      TWaitCondition()  {}
      ~TWaitCondition() {}
-     bool wait (unsigned long time=ULONG_MAX ) { if (time) /* Wait() */ ; return TRUE;}
+	  bool wait (unsigned long time=ULONG_MAX ) { if (time) {/* Wait() */}  return TRUE;}
      void wakeOne () { /* Release();*/  }
 };
 

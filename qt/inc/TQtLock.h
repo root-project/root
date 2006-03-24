@@ -1,6 +1,5 @@
-// @(#)root/qt:$Name:  $:$Id: TQtLock.h,v 1.2 2005/07/08 14:17:20 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtLock.h,v 1.4 2006/03/16 18:02:34 fine Exp $
 // Author: Giulio Eulisse  04/07/2005
-
 #ifndef ROOT_TQtLock
 #define ROOT_TQtLock
 
@@ -15,14 +14,22 @@
 
 #include "Rtypes.h"
 #include <qapplication.h>
-
-class TQtLock {
-
-public:
-   TQtLock (void) { Lock();   }
+class TQtLock 
+{
+ public:
+    TQtLock (void) { Lock();   }
    ~TQtLock (void) { UnLock(); }
-   void Lock() { if (qApp) qApp->lock(); }
-   void UnLock() { if (qApp) qApp->unlock(); }
+    void Lock(Bool_t on=kTRUE) {
+#ifdef NEEDLOCKING
+       if (qApp) {
+          if (on)  qApp->lock();
+          else     qApp->unlock();
+       }
+#else
+       if(on) {}
+#endif
+    }
+    void UnLock(Bool_t on=kTRUE) { Lock(!on); }
 };
 
 #endif

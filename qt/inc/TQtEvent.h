@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtEvent.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtEvent.h,v 1.3 2005/12/09 10:21:54 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -14,6 +14,10 @@
 #define ROOT_TQtEvent
 
 #include "qevent.h"
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <QCustomEvent>
+#endif /* QT_VERSION */
 
 #include "TVirtualX.h"
 

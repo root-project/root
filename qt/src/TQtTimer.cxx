@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtTimer.cxx,v 1.4 2005/02/08 07:36:08 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtTimer.cxx,v 1.5 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -33,13 +33,9 @@ void TQtTimer::AwakeRootEvent(){
 TQtTimer * TQtTimer::Create(QObject *parent, const char *name)
 {
    // Create a singelton object TQtTimer
-   qApp->lock();
    if (!fgQTimer) {
       fgQTimer = new  TQtTimer(parent,name);
-      qApp->unlock();
       connect(fgQTimer,SIGNAL(timeout()),fgQTimer,SLOT(AwakeRootEvent()) );
-   } else {
-      qApp->unlock();
    }
    return fgQTimer;
 }
