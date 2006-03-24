@@ -42,6 +42,7 @@ class genDictionary(object) :
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
+    self.unnamedNamespaces = []
 #----------------------------------------------------------------------------------
   def start_element(self, name, attrs):
     if 'id' in attrs :
@@ -78,6 +79,11 @@ class genDictionary(object) :
     elif name == 'FundamentalType' :
       self.basictypes.append(normalizeFragment(attrs['name']))
 #----------------------------------------------------------------------------------
+  def findUnnamedNamespace(self):
+    for ns in self.namespaces:
+      if ns['name'].find('.') != -1:
+        self.unnamedNamespaces.append(ns['id'])
+#----------------------------------------------------------------------------------
   def parse(self, file) :
     p = xml.parsers.expat.ParserCreate()
     p.StartElementHandler = self.start_element
@@ -90,6 +96,7 @@ class genDictionary(object) :
       if (c.has_key('context') and (self.genTypeName(c['context'])[:len(self.selectionname)] == self.selectionname)):
 	self.cppselect[cname[len(self.selectionname)+2:]] = c['id']
     for c in self.classes: self.try_selection(c)
+    self.unnamedNamespace = self.findUnnamedNamespace()
 #----------------------------------------------------------------------------------
   def try_selection (self, c):
     id = self.cppselect.get(self.genTypeName(c['id'],alltempl=True))
@@ -624,7 +631,9 @@ class genDictionary(object) :
   def genScopeName(self, attrs, enum=False, const=False, colon=False) :
     s = ''
     if 'context' in attrs :
-      ns = self.genTypeName(attrs['context'], enum, const, colon)
+      ctxt = attrs['context']
+      while ctxt in self.unnamedNamespaces: ctxt = self.xref[ctxt]['attrs']['context']
+      ns = self.genTypeName(ctxt, enum, const, colon)
       if ns : s = ns + '::'
       elif colon  : s = '::'
     return s
