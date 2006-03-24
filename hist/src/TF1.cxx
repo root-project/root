@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.121 2006/02/22 14:57:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.122 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1975,34 +1975,34 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
    Double_t h;
    TF1 *func = (TF1*)this;
    //save original parameters
-   Double_t *opp;
+   Double_t *params=0;
    Double_t par_local[20];
    Bool_t isAllocated=kFALSE;
    if (fNpar > 20){
-      opp = new Double_t[fNpar];
+      params = new Double_t[fNpar];
       isAllocated = kTRUE;
    } else
-      opp = par_local;
+      params = par_local;
 
    Bool_t errorsComputed=kFALSE;
    for (Int_t ipar=0; ipar<fNpar; ipar++){
-      opp[ipar]=fParams[ipar];
+      params[ipar]=fParams[ipar];
       if (func->GetParError(ipar)!=0)
          errorsComputed=kTRUE;
    }
 
    for (Int_t ipar=0; ipar<fNpar; ipar++){
 
-      func->InitArgs(x, opp);
+      func->InitArgs(x, params);
       if (errorsComputed)
          h = eps*func->GetParError(ipar);
       else 
          h=eps;
-      fParams[ipar] = opp[ipar]+h;     Double_t f1 = func->EvalPar(x);
-      fParams[ipar] = opp[ipar]-h;     Double_t f2 = func->EvalPar(x);
+      params[ipar] = fParams[ipar]+h;     Double_t f1 = func->EvalPar(x,params);
+      params[ipar] = fParams[ipar]-h;     Double_t f2 = func->EvalPar(x,params);
       
-      fParams[ipar] = opp[ipar]+h/2;   Double_t g1 = func->EvalPar(x);
-      fParams[ipar] = opp[ipar]-h/2;   Double_t g2 = func->EvalPar(x);
+      params[ipar] = fParams[ipar]+h/2;   Double_t g1 = func->EvalPar(x,params);
+      params[ipar] = fParams[ipar]-h/2;   Double_t g2 = func->EvalPar(x,params);
       
       //compute the central differences
       Double_t h2    = 1/(2.*h);
@@ -2010,10 +2010,10 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
       Double_t d2    = 2*(g1 - g2);
       
       grad[ipar] = h2*(4*d2 - d0)/3.;
-      fParams[ipar]=opp[ipar];  
+      params[ipar]=fParams[ipar];  
    }
    if (isAllocated)
-      delete [] opp;
+      delete [] params;
 }
 
 //______________________________________________________________________________
