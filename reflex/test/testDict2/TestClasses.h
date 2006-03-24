@@ -1,4 +1,8 @@
 
+namespace {
+  class ForwardedUnnamedType;
+}
+
 namespace testclasses {
   
   class UnnamedTypes {
@@ -21,6 +25,10 @@ namespace testclasses {
     };
     
   };
+
+  namespace {
+    void foo() {}
+  }
 
   struct PrivateConstructors {
     int i;
@@ -84,43 +92,42 @@ namespace testclasses {
 
   } // ns NonPublicDestructor
 
+
+  namespace ConvOp {
   
-  struct ConversionOperator {
+    struct ConversionOperator {
+      typedef const int* (ConversionOperator::* ptr_to_mem_fun)() const;
+      operator ptr_to_mem_fun() const { return &ConversionOperator::i; }
+      typedef int* ConversionOperator::* ptr_to_mem_data;
+      operator ptr_to_mem_data() const { return &ConversionOperator::m_ip; }
+      const int* i() const { return &m_i; }
+      int m_i;
+      int * m_ip;
+    };
 
-    typedef const int* (ConversionOperator::* ptr_to_mem_fun)() const;
+    template < class T > struct ConversionOperatorT {
+      typedef const T* (ConversionOperatorT<T>::* ptr_to_mem_fun)() const;
+      operator ptr_to_mem_fun() const { return &ConversionOperatorT<T>::i; }
+      typedef T* ConversionOperatorT<T>::* ptr_to_mem_data;
+      operator ptr_to_mem_data() const { return &ConversionOperatorT<T>::m_ip; }
+      const T* i() const { return &m_i; }
+      T m_i;
+      T * m_ip;      
+    };
 
-    operator ptr_to_mem_fun() const { return &ConversionOperator::i; }
-    
-    typedef int* ConversionOperator::* ptr_to_mem_data;
+  } // ns ConvOp
 
-    operator ptr_to_mem_data() const { return &ConversionOperator::m_ip; }
 
-    const int* i() const { return &m_i; }
+  namespace { class ForwardedUnnamedNestedType; }
 
-    int m_i;
+  namespace FwUnnamedNSType {
 
-    int * m_ip;
+    struct ForwardUnnamedNamespaceType {
+      void foo (const ForwardedUnnamedType * /* fp */) {}
+      void foo2 (const ForwardedUnnamedNestedType * /* fp */) {}
+    };
 
-  };
-
-  
-  template < class T > struct ConversionOperatorT {
-
-    typedef const T* (ConversionOperatorT<T>::* ptr_to_mem_fun)() const;
-
-    operator ptr_to_mem_fun() const { return &ConversionOperatorT<T>::i; }
-    
-    typedef T* ConversionOperatorT<T>::* ptr_to_mem_data;
-
-    operator ptr_to_mem_data() const { return &ConversionOperatorT<T>::m_ip; }
-
-    const T* i() const { return &m_i; }
-
-    T m_i;
-
-    T * m_ip;
-
-  };
+  } // ns FwUnnamedNSType
 
 } // namespace testclasses
 
@@ -129,6 +136,6 @@ namespace testclasses {
 // template instances
 namespace {
   struct _testclasses_instances {
-    //testclasses::ConversionOperatorT<int> m1;
+    testclasses::ConvOp::ConversionOperatorT<int> m1;
   };
 }
