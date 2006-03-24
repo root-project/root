@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.9 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.10 2006/03/09 09:07:02 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -147,6 +147,13 @@ namespace {
          }
 
       // failure: collect error message/trace (automatically clears exception, too)
+         if ( ! PyErr_Occurred() ) {
+         // this should not happen; set an error to prevent core dump and report
+            PyObject* sig = methods[i]->GetSignatureString();
+            PyErr_Format( PyExc_SystemError, "%s =>\n    %s",
+               PyString_AS_STRING( sig ), (char*)"NULL result without error in mp_call" );
+            Py_DECREF( sig );
+         }
          PyError_t e;
          PyErr_Fetch( &e.fType, &e.fValue, &e.fTrace );
          errors.push_back( e );

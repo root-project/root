@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.45 2006/03/09 09:07:02 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.46 2006/03/23 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -183,7 +183,7 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 
    Py_XDECREF( etype ); Py_XDECREF( evalue ); Py_XDECREF( etrace );
 
-   PyObject* doc = GetDocString();
+   PyObject* doc = GetSignatureString();
 
    if ( details != "" ) {
       PyErr_Format( PyExc_TypeError, "%s =>\n    %s (%s)",
@@ -234,7 +234,7 @@ PyROOT::TMethodHolder::~TMethodHolder()
 
 
 //- public members -----------------------------------------------------------
-PyObject* PyROOT::TMethodHolder::GetDocString()
+PyObject* PyROOT::TMethodHolder::GetSignatureString()
 {
    return PyString_FromFormat( "%s%s",
       ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetPrototype() );

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.34 2006/03/09 09:07:02 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.35 2006/03/23 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -981,7 +981,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual PyObject* GetDocString()
+      virtual PyObject* GetSignatureString()
       {
          return PyString_FromString( "TBranch* TTree::Branch( ... )" );
       }
@@ -1100,7 +1100,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeSetBranchAddress( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
-      virtual PyObject* GetDocString()
+      virtual PyObject* GetSignatureString()
       {
          return PyString_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
       }
@@ -1325,7 +1325,7 @@ namespace {
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
 
    public:
-      virtual PyObject* GetDocString()
+      virtual PyObject* GetSignatureString()
       {
          return PyString_FromString(
             "TF1::TF1(const char* name, PyObject* callable, "
@@ -1418,7 +1418,7 @@ namespace {
       TF2InitWithPyFunc() : TF1InitWithPyFunc( 2 ) {}
 
    public:
-      virtual PyObject* GetDocString()
+      virtual PyObject* GetSignatureString()
       {
          return PyString_FromString(
             "TF2::TF2(const char* name, PyObject* callable, "
@@ -1433,7 +1433,7 @@ namespace {
       TF3InitWithPyFunc() : TF1InitWithPyFunc( 3 ) {}
 
    public:
-      virtual PyObject* GetDocString()
+      virtual PyObject* GetSignatureString()
       {
          return PyString_FromString(
             "TF3::TF3(const char* name, PyObject* callable, "
@@ -1467,7 +1467,7 @@ namespace {
       TMinuitSetFCN() : TPretendInterpreted( 1 ) {}
 
    public:
-      virtual PyObject* GetDocString()
+      virtual PyObject* GetSignatureString()
       {
          return PyString_FromString(
             "TMinuit::SetFCN( PyObject* callable )" );
