@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.77 2006/02/23 13:23:08 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.78 2006/03/13 11:03:36 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,12 +20,7 @@
 #include "TPolyMarker3D.h"
 #include "TVirtualGL.h"
 
-#include "TGeoTube.h"
-#include "TGeoCone.h"
-#include "TGeoSphere.h"
-#include "TGeoPcon.h"
-#include "TGeoTorus.h"
-#include "TGeoXtru.h"
+#include "TGeoAtt.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
@@ -34,11 +29,13 @@
 #include "TGeoChecker.h"
 #include "TGeoPhysicalNode.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoShapeAssembly.h"
 #include "TGeoPainter.h"
 
 #include "X3DBuffer.h"
 
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 
 ClassImp(TGeoPainter)
@@ -65,6 +62,7 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    fVisOption = fGeoManager->GetVisOption();
    fExplodedView = fGeoManager->GetBombMode();
    fVisBranch = "";
+   fVolInfo = "";
    fVisLock = kFALSE;
    fIsRaytracing = kFALSE;
    fTopVisible = kFALSE;
@@ -72,8 +70,10 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    fVisVolumes = new TObjArray();
    fOverlap = 0;
    fMatrix = 0;
+   fGlobal = new TGeoHMatrix();
    fClippingShape = 0;
    fLastVolume = 0;
+   fTopVolume = 0;
    memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
    
    fCheckedNode = fGeoManager->GetTopNode();
@@ -87,6 +87,7 @@ TGeoPainter::~TGeoPainter()
 //*-*                  ===================================
    if (fChecker) delete fChecker;
    delete fVisVolumes;
+   delete fGlobal;
 }
 //______________________________________________________________________________
 void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
@@ -254,14 +255,19 @@ TGeoVolume *TGeoPainter::GetDrawnVolume() const
 }         
  
 //______________________________________________________________________________
-Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
+Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py)
 {
 // compute the closest distance of approach from point px,py to a volume 
    const Int_t big = 9999;
    const Int_t inaxis = 7;
    const Int_t maxdist = 5;
-   
+
+   if (fTopVolume != volume) fTopVolume = volume;
+   TView *view = gPad->GetView();
+   if (!view) return big;   
    TGeoBBox *box;
+   fGlobal->Clear();
+   TGeoShape::SetTransform(fGlobal);
 
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
@@ -273,10 +279,34 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    if (px > puxmax + inaxis) return big;
    if (py < puymax - inaxis) return big;
    
-   TView *view = gPad->GetView();
-   if (!view) return big;
+   fCheckedNode = fGeoManager->GetTopNode();      
+   // Compute distance to the right edge
+   if ((puxmax+inaxis-px) < 40) {
+      if ((py-puymax+inaxis) < 40) {
+         // when the mouse points to the (40x40) right corner of the pad, the manager class is selected
+         gPad->SetSelected(fGeoManager);
+         fVolInfo = fGeoManager->GetName();
+         box = (TGeoBBox*)volume->GetShape();
+         fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         fCheckedBox[3] = box->GetDX();
+         fCheckedBox[4] = box->GetDY();
+         fCheckedBox[5] = box->GetDZ();
+         return 0;
+      }
+      // when the mouse points to the (40 pix) right edge of the pad, the top volume is selected
+      gPad->SetSelected(volume);
+      fVolInfo = volume->GetName();
+      box = (TGeoBBox*)volume->GetShape();
+      fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+      fCheckedBox[3] = box->GetDX();
+      fCheckedBox[4] = box->GetDY();
+      fCheckedBox[5] = box->GetDZ();
+      return 0;
+   }   
+   
+   gPad->SetSelected(view);
    Int_t dist = big;
-   Int_t id;
+//   Int_t id;
    
    if (fPaintingOverlaps) {
       TGeoVolume *crt;
@@ -304,78 +334,34 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          fCheckedBox[5] = box->GetDZ();
          return 0;
       }      
-      gPad->SetSelected(view);
       return dist;
    }
    
-   if (fGeoManager->GetTopVolume() == vol) fGeoManager->CdTop();
-   Int_t level = fGeoManager->GetLevel();
-   TGeoNode *current = fGeoManager->GetCurrentNode();
-   if (vol != current->GetVolume()) return 9999;
-   Bool_t vis=(current->IsVisible() && (level || (!level && fTopVisible)) && fGeoManager->IsInPhiRange())?kTRUE:kFALSE;
-   TGeoNode *node = 0;
-   Int_t nd = vol->GetNdaughters();
-   Bool_t last = kFALSE;
-   fCheckedNode = fGeoManager->GetTopNode();
-   switch (fVisOption) {
-      case kGeoVisDefault:
-         if (vis && (level<=fVisLevel)) { 
-            dist = vol->GetShape()->DistancetoPrimitive(px,py);
-            if (dist<maxdist) {
-               if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetCurrentNode());
-               else gPad->SetSelected(vol);
-               fCheckedNode = current;
-               box = (TGeoBBox*)vol->GetShape();
-               fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-               fCheckedBox[3] = box->GetDX();
-               fCheckedBox[4] = box->GetDY();
-               fCheckedBox[5] = box->GetDZ();
-               return 0;
-            }
-         }
-         // check daughters
-         if (level<fVisLevel) {
-            if ((!nd) || (!current->IsVisDaughters())) return dist;
-            for (id=0; id<nd; id++) {
-               node = vol->GetNode(id);
-               fGeoManager->CdDown(id);
-               dist = DistanceToPrimitiveVol(node->GetVolume(),px, py);
-               if (dist==0) return 0;
-               fGeoManager->CdUp();
-            }
-         }
-         break;
-      case kGeoVisLeaves:
-         last = ((nd==0) || (level==fVisLevel) || (!current->IsVisDaughters()))?kTRUE:kFALSE;
-         if (vis && last) {
-            dist = vol->GetShape()->DistancetoPrimitive(px, py);
-            if (dist<maxdist) {
-               if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetCurrentNode());
-               else gPad->SetSelected(vol);
-               fCheckedNode = current;
-               box = (TGeoBBox*)vol->GetShape();
-               fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-               fCheckedBox[3] = box->GetDX();
-               fCheckedBox[4] = box->GetDY();
-               fCheckedBox[5] = box->GetDZ();
-               return 0;
-            }
-         }
-         if (last) return dist;
-         for (id=0; id<nd; id++) {
-            node = vol->GetNode(id);
-            fGeoManager->CdDown(id);
-            dist = DistanceToPrimitiveVol(node->GetVolume(),px,py);
-            if (dist==0) return 0;
-            fGeoManager->CdUp();
-         }
-         break;
-      case kGeoVisOnly:
-         dist = vol->GetShape()->DistancetoPrimitive(px, py);
+   TGeoVolume *vol = volume;
+   Bool_t vis = vol->IsVisible();
+//   Bool_t drawDaughters = kTRUE;
+   // Do I need to look for the top volume ?
+   if (fTopVisible && vis) {
+      dist = vol->GetShape()->DistancetoPrimitive(px,py);
+      if (dist<maxdist) {
+         fVolInfo = vol->GetName();
+         gPad->SetSelected(vol);
+         box = (TGeoBBox*)vol->GetShape();
+         fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         fCheckedBox[3] = box->GetDX();
+         fCheckedBox[4] = box->GetDY();
+         fCheckedBox[5] = box->GetDZ();
+         return 0;
+      }
+      return dist;
+   }      
+   // Is this the only volume?
+   if (volume->IsVisOnly()) {
+      if (!fTopVisible) {
+         dist = vol->GetShape()->DistancetoPrimitive(px,py);
          if (dist<maxdist) {
-            if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetTopNode());
-            else gPad->SetSelected(vol);
-            fCheckedNode = current;
+            fVolInfo = vol->GetName();
+            gPad->SetSelected(vol);
             box = (TGeoBBox*)vol->GetShape();
             fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
             fCheckedBox[3] = box->GetDX();
@@ -383,35 +369,95 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             fCheckedBox[5] = box->GetDZ();
             return 0;
          }
-         break;
-      case kGeoVisBranch:
-         fGeoManager->cd(fVisBranch);
-         while (fGeoManager->GetLevel()) {
-            if (fGeoManager->GetCurrentVolume()->IsVisible()) {
-               dist = fGeoManager->GetCurrentVolume()->GetShape()->DistancetoPrimitive(px, py);
-               if (dist<maxdist) {
-                  if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(gGeoManager->GetCurrentNode());
-                  else gPad->SetSelected(fGeoManager->GetCurrentVolume());
-                  fCheckedNode = current;
-                  box = (TGeoBBox*)fGeoManager->GetCurrentVolume()->GetShape();
-                  fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-                  fCheckedBox[3] = box->GetDX();
-                  fCheckedBox[4] = box->GetDY();
-                  fCheckedBox[5] = box->GetDZ();
-                  return 0;
-               }
-            }   
-            fGeoManager->CdUp();
+      } 
+      return dist;  
+   }      
+   // Do we need to check a branch only?
+   if (volume->IsVisBranch()) {
+      fGeoManager->PushPath();
+      fGeoManager->cd(fVisBranch.Data());
+      while (fGeoManager->GetLevel()) {
+         vol = fGeoManager->GetCurrentVolume();
+         *fGlobal = gGeoManager->GetCurrentMatrix();
+         dist = vol->GetShape()->DistancetoPrimitive(px,py);
+         if (dist<maxdist) {
+            fVolInfo = fVisBranch;
+            box = (TGeoBBox*)vol->GetShape();
+            fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+            fCheckedNode = gGeoManager->GetCurrentNode();
+            if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(fCheckedNode);
+            else gPad->SetSelected(vol);
+            fCheckedBox[3] = box->GetDX();
+            fCheckedBox[4] = box->GetDY();
+            fCheckedBox[5] = box->GetDZ();
+            fGeoManager->PopPath();
+            return 0;
          }
-         gPad->SetSelected(view);
-         fCheckedNode = fGeoManager->GetTopNode();      
-         return big;   
-      default:
-         fCheckedNode = fGeoManager->GetTopNode();      
-         return big;
-   }       
-   if ((dist>maxdist) && !fGeoManager->GetLevel()) gPad->SetSelected(view);
-   fCheckedNode = fGeoManager->GetTopNode();      
+         fGeoManager->CdUp();
+      }
+      fGeoManager->PopPath();
+      return dist;
+   }      
+
+   // Iterate the volume content
+   TGeoIterator next(vol);
+   next.SetTopName(Form("%s_1",vol->GetName()));
+   TGeoNode *daughter;
+
+   Int_t level, nd;
+   Bool_t last;
+
+   while ((daughter=next())) {
+      vol = daughter->GetVolume();
+      level = next.GetLevel();
+      nd = daughter->GetNdaughters();
+      vis = daughter->IsVisible();
+      if (volume->IsVisContainers()) {
+         if (vis && level<=fVisLevel) {
+            *fGlobal = next.GetCurrentMatrix();
+            dist = vol->GetShape()->DistancetoPrimitive(px,py);
+            if (dist<maxdist) {
+               next.GetPath(fVolInfo);
+               box = (TGeoBBox*)vol->GetShape();
+               fGlobal->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+               fCheckedNode = daughter;
+               if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(fCheckedNode);
+               else gPad->SetSelected(vol);
+               fCheckedBox[3] = box->GetDX();
+               fCheckedBox[4] = box->GetDY();
+               fCheckedBox[5] = box->GetDZ();
+               fGeoManager->PopPath();
+               return 0;
+            }
+         }   
+         // Check if we have to skip this branch
+         if (level==fVisLevel || !daughter->IsVisDaughters()) {
+            next.Skip();
+            continue;
+         }   
+      } else if (volume->IsVisLeaves()) {
+         last = ((nd==0) || (level==fVisLevel) || (!daughter->IsVisDaughters()))?kTRUE:kFALSE;
+         if (vis && last) {
+            *fGlobal = next.GetCurrentMatrix();
+            dist = vol->GetShape()->DistancetoPrimitive(px,py);
+            if (dist<maxdist) {
+               next.GetPath(fVolInfo);
+               box = (TGeoBBox*)vol->GetShape();
+               fGlobal->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+               fCheckedNode = daughter;
+               if (fGeoManager->IsNodeSelectable()) gPad->SetSelected(fCheckedNode);
+               else gPad->SetSelected(vol);
+               fCheckedBox[3] = box->GetDX();
+               fCheckedBox[4] = box->GetDY();
+               fCheckedBox[5] = box->GetDZ();
+               fGeoManager->PopPath();
+               return 0;
+            }
+         }
+         // Check if we have to skip the branch
+         if (last) next.Skip();
+      }
+   }
    return dist;
 }
 
@@ -440,15 +486,66 @@ void TGeoPainter::DefaultColors()
 }   
 
 //______________________________________________________________________________
+Int_t TGeoPainter::CountNodes(TGeoVolume *volume, Int_t rlevel) const
+{
+// Count number of visible nodes down to a given level.
+   TGeoVolume *vol = volume;
+   Int_t count = 0;
+   Bool_t vis = vol->IsVisible();
+   // Do I need to look for the top volume ?
+   if (fTopVisible && vis) count++;
+   // Is this the only volume?
+   if (volume->IsVisOnly()) {
+      if (!fTopVisible) count++;
+      return count;
+   }   
+   // Do we need to check a branch only?
+   if (volume->IsVisBranch()) {
+      fGeoManager->PushPath();
+      fGeoManager->cd(fVisBranch.Data());
+      count = fGeoManager->GetLevel() + 1;
+      fGeoManager->PopPath();
+      return count;
+   }
+   // Iterate the volume content
+   TGeoIterator next(vol);
+   TGeoNode *daughter;
+   Int_t level, nd;
+   Bool_t last;
+      
+   while ((daughter=next())) {
+      vol = daughter->GetVolume();
+      level = next.GetLevel();
+      nd = daughter->GetNdaughters();
+      vis = daughter->IsVisible();
+      if (volume->IsVisContainers()) {
+         if (vis && level<=rlevel) count++;
+         // Check if we have to skip this branch
+         if (level==rlevel || !daughter->IsVisDaughters()) {
+            next.Skip();
+            continue;
+         }   
+      } else if (volume->IsVisLeaves()) {
+         last = ((nd==0) || (level==rlevel) || (!daughter->IsVisDaughters()))?kTRUE:kFALSE;
+         if (vis && last) count++;
+         // Check if we have to skip the branch
+         if (last) next.Skip();
+      }
+   }      
+    return count;    
+}   
+
+//______________________________________________________________________________
 Int_t TGeoPainter::CountVisibleNodes()
 {
 // Count total number of visible nodes.
    Int_t maxnodes = fGeoManager->GetMaxVisNodes(); 
    Int_t vislevel;
-   TGeoVolume *top = fGeoManager->GetTopVolume();
+//   TGeoVolume *top = fGeoManager->GetTopVolume();
+   TGeoVolume *top = fTopVolume;
    if (maxnodes <= 0) {
       vislevel = fGeoManager->GetVisLevel();
-      fNVisNodes = top->CountNodes(vislevel,2);
+      fNVisNodes = CountNodes(top, vislevel);
       SetVisLevel(vislevel);
       return fNVisNodes;
    }   
@@ -459,7 +556,12 @@ Int_t TGeoPainter::CountVisibleNodes()
    Bool_t again = kFALSE;
    for (Int_t level = 1;level<20;level++) {
       vislevel = level;
-      Int_t nnodes = top->CountNodes(level,2);
+      Int_t nnodes = CountNodes(top, level);
+      if (top->IsVisOnly() || top->IsVisBranch()) {
+         vislevel = fVisLevel;
+         fNVisNodes = nnodes;
+         break;
+      }   
       if (nnodes > maxnodes) {
          vislevel--;
          break;
@@ -478,13 +580,22 @@ Int_t TGeoPainter::CountVisibleNodes()
 void TGeoPainter::Draw(Option_t *option)
 {
 // Draw method.
+   DrawVolume(fGeoManager->GetTopVolume(), option);
+}
+
+//______________________________________________________________________________
+void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
+{
+// Draw method.
+   fTopVolume = vol;
    fLastVolume = 0;
+//   if (fVisOption==kGeoVisOnly ||
+//       fVisOption==kGeoVisBranch) fGeoManager->SetVisOption(kGeoVisLeaves);
    CountVisibleNodes();         
    TString opt = option;
    opt.ToLower();
    fPaintingOverlaps = kFALSE;
    fOverlap = 0;
-   if (fVisOption==kGeoVisOnly) fGeoManager->SetVisOption(kGeoVisDefault);
    
    if (fVisLock) {
       ClearVisibleVolumes();
@@ -498,7 +609,7 @@ void TGeoPainter::Draw(Option_t *option)
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
-   fGeoManager->GetTopVolume()->AppendPad(option);
+   fTopVolume->AppendPad(option);
 
    // Create a 3-D view
    TView *view = gPad->GetView();
@@ -512,9 +623,9 @@ void TGeoPainter::Draw(Option_t *option)
         
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
-   if (!view->IsPerspective()) view->SetPerspective();
+//   if (!view->IsPerspective()) view->SetPerspective();
    
-   fLastVolume = fGeoManager->GetTopVolume();
+   fLastVolume = fTopVolume;
  
          // Create a 3D viewer to paint us
    gPad->GetViewer3D(option);
@@ -561,7 +672,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
 
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
-   if (!view->IsPerspective()) view->SetPerspective();
+//   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
 }
 
@@ -585,7 +696,8 @@ void TGeoPainter::DrawOnly(Option_t *option)
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
-   fGeoManager->GetCurrentVolume()->AppendPad(option);
+   fTopVolume = fGeoManager->GetCurrentVolume();
+   fTopVolume->AppendPad(option);
 
    // Create a 3-D view
    TView *view = gPad->GetView();
@@ -600,7 +712,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
 
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
-   if (!view->IsPerspective()) view->SetPerspective();
+//   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
 }
 
@@ -630,7 +742,9 @@ void TGeoPainter::DrawPath(const char *path)
 // Draw all volumes for a given path.
    fVisOption=kGeoVisBranch;
    fVisBranch=path; 
-   fGeoManager->GetTopVolume()->Draw();   
+   fTopVolume = fGeoManager->GetTopVolume();
+   fTopVolume->SetVisRaytrace(kFALSE);
+   DrawVolume(fTopVolume,"");   
 }
 
 //______________________________________________________________________________
@@ -664,12 +778,22 @@ void TGeoPainter::EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *sta
 }
 
 //______________________________________________________________________________
+void TGeoPainter::ExecuteManagerEvent(TGeoManager */*geom*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+{
+// Execute mouse actions on a given volume.
+   if (!gPad) return;
+   gPad->SetCursor(kPointer);
+}
+   
+//______________________________________________________________________________
 void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given volume.
    if (!gPad) return;
-   gPad->SetCursor(kHand);
-   if (fIsRaytracing) return;
+//   if (fIsRaytracing) return;
+   Bool_t istop = (volume==fTopVolume)?kTRUE:kFALSE;
+   if (istop) gPad->SetCursor(kHand);
+   else gPad->SetCursor(kPointer);
    static Int_t width, color;
    switch (event) {
    case kMouseEnter:
@@ -723,7 +847,7 @@ char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /
       sprintf(info, "%s: %s of %g", name.Data(), ovtype.Data(), fOverlap->GetOverlap());
       return info;
    }   
-   else sprintf(info,"%s, shape=%s", fGeoManager->GetPath(), volume->GetShape()->ClassName());
+   else sprintf(info,"%s, shape=%s", fVolInfo.Data(), volume->GetShape()->ClassName());
    return info;
 }
 
@@ -807,20 +931,21 @@ void TGeoPainter::ModifiedPad() const
 void TGeoPainter::Paint(Option_t *option)
 {
 // Paint current geometry according to option.
-   if (!fGeoManager) return;
+   if (!fGeoManager || !fTopVolume) return;
    Bool_t is_padviewer = kTRUE;
    if (gPad) is_padviewer = (!strcmp(gPad->GetViewer3D()->ClassName(),"TViewer3DPad"))?kTRUE:kFALSE;
    
+   fIsRaytracing = fTopVolume->IsRaytracing();
+   if (fTopVolume->IsVisContainers()) fVisOption = kGeoVisDefault;
+   else if (fTopVolume->IsVisLeaves()) fVisOption = kGeoVisLeaves;
+   else if (fTopVolume->IsVisOnly()) fVisOption = kGeoVisOnly;
+   else if (fTopVolume->IsVisBranch()) fVisOption = kGeoVisBranch;
+   
+   
    if (!fIsRaytracing || !is_padviewer) {
-      if (fVisOption==kGeoVisOnly) {
-         fGeoManager->GetCurrentNode()->Paint(option);
-         return;
-      }
-      fGeoManager->CdTop();
-      TGeoNode *top = fGeoManager->GetTopNode();
-//      PaintNode(top,option);
       if (fGeoManager->IsDrawingExtra()) {
          // loop the list of physical volumes
+         fGeoManager->CdTop();
          TObjArray *nodeList = fGeoManager->GetListOfPhysicalNodes();
          Int_t nnodes = nodeList->GetEntriesFast();
          Int_t inode;
@@ -830,17 +955,8 @@ void TGeoPainter::Paint(Option_t *option)
             PaintPhysicalNode(node, option);
          }
       } else {
-         PaintNode(top,option);
-      }   
-              
-      
-      // If we are drawing into the pad, then the view needs to be
-      // set to perspective
-      TView *view = gPad->GetView();
-      if (view) {
-         if (!view->IsPerspective()) view->SetPerspective();
-      }
-      
+         PaintVolume(fTopVolume,option);
+      }                      
       fVisLock = kTRUE;
    } 
    // Check if we have to raytrace (only in pad)  
@@ -856,13 +972,13 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    if (!overlap) return;
    Int_t color, transparency;
    if (fOverlap != overlap) fOverlap = overlap;
-   TGeoHMatrix *hmat = fGeoManager->GetGLMatrix();
+   TGeoShape::SetTransform(fGlobal);
+   TGeoHMatrix *hmat = fGlobal;
    TGeoVolume *vol;
    TGeoVolume *vol1 = overlap->GetFirstVolume();
    TGeoVolume *vol2 = overlap->GetSecondVolume();
    TGeoHMatrix *matrix1 = overlap->GetFirstMatrix();
    TGeoHMatrix *matrix2 = overlap->GetSecondMatrix();
-   fGeoManager->SetMatrixTransform(kTRUE);
    //
    vol = vol1;
    *hmat = matrix1;
@@ -890,122 +1006,137 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    PaintShape(*(vol->GetShape()),option);
    vol->SetLineColor(color);
    vol->SetTransparency(transparency);
-   fGeoManager->SetMatrixTransform(kFALSE);
    fVisLock = kTRUE;
 }
 
 //______________________________________________________________________________
 void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 {
-// paint recursively a node and its content accordind to visualization options
-   TGeoNode *daughter = 0;
-   TGeoVolume *vol = node->GetVolume();
-   fGeoManager->SetPaintVolume(vol);
-   TGeoHMatrix *currentMatrix = fGeoManager->GetCurrentMatrix();
-   fGeoManager->SetMatrixReflection(currentMatrix->IsReflection());
-   TGeoHMatrix *glmat;
-   if (vol->GetShape()->IsComposite()) {
-      glmat = fGeoManager->GetGLMatrix();
-      // Components of composite shape for a local frame viewer are 
-      // painted in frame of the top level composite shape - so load
-      // identity matrix in this case
-      if (gPad->GetViewer3D()->PreferLocalFrame()) {
-         *glmat = gGeoIdentity;
-      } else {
-         *glmat = currentMatrix;
-      }
-      fGeoManager->SetMatrixTransform(kTRUE);
-   } else {
-//      if (fGeoManager->GetCurrentMatrix()->IsReflection()) printf("matrix for node %s is reflection\n", node->GetName());
-      fGeoManager->SetMatrixTransform(kFALSE);
-   }   
-// Temporary solution must go in TGeovolume ...
-// TODO: Still needed?
-   if (!strstr(option,"range")) {
-      ((TAttLine*)vol)->Modify();  //Change line attributes only if necessary
-      ((TAttFill*)vol)->Modify();  //Change fill area attributes only if necessary
-   }   
-//////
-   Int_t nd = node->GetNdaughters();
-   Bool_t last = kFALSE;
-   Int_t level = fGeoManager->GetLevel();
-   Bool_t vis=(node->IsVisible() && (level || (!level && fTopVisible)) && fGeoManager->IsInPhiRange())?kTRUE:kFALSE;
-   Int_t id;
-   Bool_t drawDaughters = kTRUE;
+// Paint recursively a node and its content accordind to visualization options.
+   PaintVolume(node->GetVolume(), option);
+} 
 
-   switch (fVisOption) {
-      case kGeoVisDefault:
-         if (vis && (level<=fVisLevel)) {
-            drawDaughters = PaintShape(*(vol->GetShape()),option);
-            if (!fVisLock && !node->IsOnScreen()) {
-               fVisVolumes->Add(vol);
-               vol->SetAttBit(TGeoAtt::kVisOnScreen);
-            }   
-         }   
-            // draw daughters
-         if (drawDaughters && level<fVisLevel) {
-            if ((!nd) || (!node->IsVisDaughters())) return;
-            for (id=0; id<nd; id++) {
-               daughter = node->GetDaughter(id);
-               fGeoManager->CdDown(id);
-               PaintNode(daughter, option);
-               fGeoManager->CdUp();
-            }
-         }
-         break;
-      case kGeoVisLeaves:
-         if (level>fVisLevel) return;
-         last = ((nd==0) || (level==fVisLevel) || (!node->IsVisDaughters()))?kTRUE:kFALSE;
-         if (vis && last) {
-            drawDaughters = PaintShape(*(vol->GetShape()),option);
-            if (!fVisLock && !node->IsOnScreen()) {
-               fVisVolumes->Add(vol);
-               vol->SetAttBit(TGeoAtt::kVisOnScreen);
-            }   
-         }            
-         if (last || !drawDaughters) return;
-         for (id=0; id<nd; id++) {
-            daughter = node->GetDaughter(id);
-            fGeoManager->CdDown(id);
-            PaintNode(daughter, option);
-            fGeoManager->CdUp();
-         }
-         break;
-      case kGeoVisOnly:
+//______________________________________________________________________________
+void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option)
+{
+// Paint recursively a node and its content accordind to visualization options.
+   if (fTopVolume != top) {
+      ClearVisibleVolumes();
+      fVisLock = kFALSE;
+   }   
+   fTopVolume = top;
+   if (!fVisLevel) return;
+   TGeoVolume *vol = top;
+   fGlobal->Clear();
+   TGeoShape::SetTransform(fGlobal);
+   Bool_t drawDaughters = kTRUE;
+   Bool_t vis = top->IsVisible();
+
+   // Update pad attributes in case we need to paint VOL
+   if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
+
+   // Do I need to draw the top volume ?
+   if (fTopVisible && vis) {
+      fGeoManager->SetPaintVolume(vol);
+      fGeoManager->SetMatrixReflection(kFALSE);
+      drawDaughters = PaintShape(*(vol->GetShape()),option);
+      if (!fVisLock && !vol->TestAttBit(TGeoAtt::kVisOnScreen)) {
+         fVisVolumes->Add(vol);
+         vol->SetAttBit(TGeoAtt::kVisOnScreen);
+      }   
+   }   
+
+   // Do we need to draw only this volume ?
+   if (top->IsVisOnly()) {
+      if (!fTopVisible) {
+         fGeoManager->SetPaintVolume(vol);
+         fGeoManager->SetMatrixReflection(kFALSE);
          drawDaughters = PaintShape(*(vol->GetShape()),option);
-         if (!fVisLock && !node->IsOnScreen()) {
+      }   
+      if (!fVisLock && !vol->TestAttBit(TGeoAtt::kVisOnScreen)) {
+         fVisVolumes->Add(vol);
+         vol->SetAttBit(TGeoAtt::kVisOnScreen);
+      }         
+      fVisLock = kTRUE;
+      return;
+   }   
+
+   // Do we need to draw a branch ?
+   if (top->IsVisBranch()) {
+      fGeoManager->PushPath();
+      fGeoManager->cd(fVisBranch.Data());
+      Int_t transparency;
+      while (fGeoManager->GetLevel()) {
+         fGeoManager->SetMatrixReflection(fGeoManager->GetCurrentMatrix()->IsReflection());
+         vol = fGeoManager->GetCurrentVolume();
+         if (!fVisLock) {
             fVisVolumes->Add(vol);
             vol->SetAttBit(TGeoAtt::kVisOnScreen);
          }   
-         break;
-      case kGeoVisBranch:
-         fGeoManager->cd(fVisBranch);
-         glmat = fGeoManager->GetGLMatrix();
-         fGeoManager->SetMatrixTransform(kTRUE);
-         Int_t transparency;
-         while (fGeoManager->GetLevel()) {
-            fGeoManager->SetMatrixReflection(fGeoManager->GetCurrentMatrix()->IsReflection());
-            *glmat = fGeoManager->GetCurrentMatrix();
-            vol = fGeoManager->GetCurrentVolume();
-            if (!fVisLock) {
+         fGeoManager->SetPaintVolume(vol);
+         transparency = vol->GetTransparency();
+         vol->SetTransparency(40);
+         if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
+         *fGlobal = fGeoManager->GetCurrentMatrix();
+         PaintShape(*(vol->GetShape()),option);
+         vol->SetTransparency(transparency);
+         fGeoManager->CdUp();
+      }
+      fVisLock = kTRUE;   
+      fGeoManager->PopPath();
+      fGeoManager->SetMatrixReflection(kFALSE);
+      return;
+   }   
+      
+   // Iterate the volume content
+   TGeoIterator next(vol);
+   TGeoNode *daughter;
+//   TGeoMatrix *glmat;
+   Int_t level, nd;
+   Bool_t last;
+
+   while ((daughter=next())) {
+      vol = daughter->GetVolume();
+      fGeoManager->SetPaintVolume(vol);
+      level = next.GetLevel();
+      nd = daughter->GetNdaughters();
+      vis = daughter->IsVisible();
+      drawDaughters = kTRUE;
+      if (top->IsVisContainers()) {
+         if (vis && level<=fVisLevel) {
+            if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
+            *fGlobal = next.GetCurrentMatrix();
+            fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
+            drawDaughters = PaintShape(*(vol->GetShape()),option);
+            if (!fVisLock && !daughter->IsOnScreen()) {
                fVisVolumes->Add(vol);
                vol->SetAttBit(TGeoAtt::kVisOnScreen);
             }   
-            fGeoManager->SetPaintVolume(vol);
-            transparency = vol->GetTransparency();
-            vol->SetTransparency(40);
+         }   
+         // Check if we have to skip this branch
+         if (!drawDaughters || level==fVisLevel || !daughter->IsVisDaughters()) {
+            next.Skip();
+            continue;
+         }   
+      } else if (top->IsVisLeaves()) {
+         last = ((nd==0) || (level==fVisLevel) || (!daughter->IsVisDaughters()))?kTRUE:kFALSE;
+         if (vis && last) {
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
-            PaintShape(*(vol->GetShape()),option);
-            vol->SetTransparency(transparency);
-            fGeoManager->CdUp();
+            *fGlobal = next.GetCurrentMatrix();
+            fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
+            drawDaughters = PaintShape(*(vol->GetShape()),option);
+            if (!fVisLock && !daughter->IsOnScreen()) {
+               fVisVolumes->Add(vol);
+               vol->SetAttBit(TGeoAtt::kVisOnScreen);
+            }   
          }
-         fGeoManager->SetMatrixTransform(kFALSE);
-         fVisLock = kTRUE;   
-         break;
-      default:
-         return;
+         // Check if we have to skip the branch
+         if (!drawDaughters || last) next.Skip();
+      }
    }
-} 
+   fGeoManager->SetMatrixReflection(kFALSE);
+   fVisLock = kTRUE;
+}
 
 //______________________________________________________________________________
 Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) const
@@ -1015,13 +1146,13 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
 
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
 
-   if (!viewer) {
+   if (!viewer || shape.IsA()==TGeoShapeAssembly::Class()) {
       return addDaughters;
    }
 
    // For non-composite shapes we are the main paint method & perform the negotation 
    // with the viewer here
-   if (shape.IsA() != TGeoCompositeShape::Class()) {
+   if (!shape.IsComposite()) {
       // Does viewer prefer local frame positions?
       Bool_t localFrame = viewer->PreferLocalFrame();
       // Perform first fetch of buffer from the shape and try adding it
@@ -1042,10 +1173,12 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
    // single buffer to here. So as a special case the TGeoCompositeShape
    // performs it's own painting & negotiation with the viewer.
    else {
-      const TGeoCompositeShape * composite = dynamic_cast<const TGeoCompositeShape *>(&shape);
+      const TGeoCompositeShape * composite = static_cast<const TGeoCompositeShape *>(&shape);
 
       // We need the addDaughters flag returned from the viewer from paint
       // so can't use the normal TObject::Paint()
+      TGeoHMatrix *matrix = (TGeoHMatrix*)TGeoShape::GetTransform();
+      if (viewer->PreferLocalFrame()) matrix->Clear();
       addDaughters = composite->PaintComposite(option);
    }
 
@@ -1060,9 +1193,9 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
    Int_t level = node->GetLevel();
    Int_t i, col, wid, sty;
    TGeoShape *shape;
-   TGeoHMatrix *matrix = fGeoManager->GetGLMatrix();
+   TGeoShape::SetTransform(fGlobal);
+   TGeoHMatrix *matrix = fGlobal;
    TGeoVolume *vcrt;
-   fGeoManager->SetMatrixTransform(kTRUE);
    if (!node->IsVisibleFull()) {
       // Paint only last node in the branch
       vcrt  = node->GetVolume();
@@ -1112,7 +1245,6 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
          }   
       }
    }      
-   fGeoManager->SetMatrixTransform(kFALSE);
 }   
 
 //______________________________________________________________________________
@@ -1140,9 +1272,12 @@ void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 void TGeoPainter::Raytrace(Option_t * /*option*/)
 {
 // Raytrace current drawn geometry
-   if (!gPad || gPad->IsBatch()) return;
+   if (!gPad || gPad->IsBatch()) return;   
    TView *view = gPad->GetView();
-   if (!view || ! view->IsPerspective()) return;
+   if (!view) return;
+   TGeoVolume *top = fGeoManager->GetTopVolume();
+   if (top != fTopVolume) fGeoManager->SetTopVolume(fTopVolume);
+   if (!view->IsPerspective()) view->SetPerspective();
    gVirtualX->SetMarkerSize(1);
    gVirtualX->SetMarkerStyle(1);
    Int_t i;
@@ -1319,6 +1454,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
       }
    } 
    delete [] pxy;      
+   if (top != fGeoManager->GetTopVolume()) fGeoManager->SetTopVolume(top);
 }
 
 //______________________________________________________________________________
@@ -1420,6 +1556,23 @@ void TGeoPainter::SetVisOption(Int_t option) {
       Warning("SetVisOption", "wrong visualization option");
       return;
    }
+   if (fTopVolume) {
+      TGeoAtt *att = (TGeoAtt*)fTopVolume;
+      att->SetAttBit(TGeoAtt::kVisBranch,kFALSE);
+      att->SetAttBit(TGeoAtt::kVisContainers,kFALSE);
+      att->SetAttBit(TGeoAtt::kVisOnly,kFALSE);
+      switch (option) {
+         case kGeoVisDefault:
+            att->SetAttBit(TGeoAtt::kVisContainers,kTRUE);
+            break;
+         case kGeoVisLeaves:
+            break;
+         case kGeoVisOnly:   
+            att->SetAttBit(TGeoAtt::kVisOnly,kTRUE);
+            break;
+      } 
+   }            
+
    if (fVisOption==option) return;   
    fVisOption=option;
    if (fVisLock) {
@@ -1433,29 +1586,34 @@ void TGeoPainter::SetVisOption(Int_t option) {
 Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const   
 {   
 //  Returns distance between point px,py on the pad an a shape.
+   static TBuffer3D buff(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
    Int_t dist = 9999;
    TView *view = gPad->GetView();
    if (!(numpoints && view)) return dist;
-   Float_t *points = new Float_t[3*numpoints];
+   if (shape->IsA()==TGeoShapeAssembly::Class()) return dist;
+   Double_t *points = buff.fPnts;
+   buff.SetRawSizes(numpoints, 3*numpoints, 0, 0, 0, 0);
    shape->SetPoints(points);
-   Float_t dpoint2, x1, y1, xndc[3];
-   Double_t dlocal[3], dmaster[3];
+   Double_t dpoint2, x1, y1, xndc[3];
+   Double_t dmaster[3];
+   Int_t j;
    for (Int_t i=0; i<numpoints; i++) {
-      dlocal[0]=points[3*i]; dlocal[1]=points[3*i+1]; dlocal[2]=points[3*i+2];
-      if (fPaintingOverlaps) {
-         fMatrix->LocalToMaster(&dlocal[0], &dmaster[0]);
-      } else if (IsExplodedView())
-         fGeoManager->LocalToMasterBomb(&dlocal[0], &dmaster[0]);
-      else   
-         fGeoManager->LocalToMaster(&dlocal[0], &dmaster[0]);
-      points[3*i]=dmaster[0]; points[3*i+1]=dmaster[1]; points[3*i+2]=dmaster[2];
-      view->WCtoNDC(&points[3*i], xndc);
+      j = 3*i;
+//      if (fPaintingOverlaps) {
+//         fMatrix->LocalToMaster(&dlocal[0], &dmaster[0]);
+//      } else if (IsExplodedView())
+//         fGeoManager->LocalToMasterBomb(&dlocal[0], &dmaster[0]);
+      if (TGeoShape::GetTransform()) TGeoShape::GetTransform()->LocalToMaster(&points[j], dmaster); 
+      else if (fPaintingOverlaps) fMatrix->LocalToMaster(&points[j], dmaster);
+      else fGeoManager->LocalToMaster(&points[j], dmaster);
+      points[j]=dmaster[0]; points[j+1]=dmaster[1]; points[j+2]=dmaster[2];
+      view->WCtoNDC(&points[j], xndc);
       x1 = gPad->XtoAbsPixel(xndc[0]);
       y1 = gPad->YtoAbsPixel(xndc[1]);
       dpoint2 = (px-x1)*(px-x1) + (py-y1)*(py-y1);
       if (dpoint2 < dist) dist=(Int_t)dpoint2;
    }
-   delete [] points;
+   if (dist > 100) return dist;
    return Int_t(TMath::Sqrt(Double_t(dist)));
 }
 

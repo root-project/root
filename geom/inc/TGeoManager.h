@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.74 2006/02/09 11:48:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.75 2006/03/02 11:29:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -397,6 +397,7 @@ public:
 
    //--- utilities
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
+   virtual void           ExecuteEvent(Int_t event, Int_t px, Int_t py);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    Int_t                  ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew);
    Int_t                  TransformVolumeToAssembly(const char *vname);

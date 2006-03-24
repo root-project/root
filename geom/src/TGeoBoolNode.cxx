@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.24 2005/11/18 16:07:58 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.25 2006/01/25 10:17:30 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -165,7 +165,7 @@ void TGeoBoolNode::Paint(Option_t * option)
    // conversion to this.  See TGeoPainter::PaintNode for loading of GLMatrix.
    Bool_t localFrame = kFALSE; //viewer->PreferLocalFrame();
 
-   TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
+   TGeoHMatrix *glmat = (TGeoHMatrix*)TGeoShape::GetTransform();
    TGeoHMatrix mat;
    mat = glmat; // keep a copy
 

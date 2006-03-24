@@ -27,7 +27,11 @@
 #include "TGeoManager.h"
 #endif
 
+class TString;
 class TGeoHMatrix;
+class TGeoNode;
+class TGeoVolume;
+class TGeoShape;
 class TVirtualGeoTrack;
 class TGeoPhysicalNode;
 class TGeoChecker;
@@ -51,13 +55,16 @@ private:
    Bool_t             fTopVisible;       // set top volume visible
    Bool_t             fPaintingOverlaps; // lock overlaps painting
    Bool_t             fIsRaytracing;     // raytracing flag
-   const char        *fVisBranch;        // drawn branch
+   TString            fVisBranch;        // drawn branch
+   TString            fVolInfo;          // volume info
    TGeoNode          *fCheckedNode;      // checked node
    TGeoOverlap       *fOverlap;          // current overlap
+   TGeoHMatrix       *fGlobal;           // current global matrix
    TGeoMatrix        *fMatrix;           // current local matrix in case of overlaps
    TGeoManager       *fGeoManager;       // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
    TGeoShape         *fClippingShape;    // clipping shape
+   TGeoVolume        *fTopVolume;        // top drawn volume
    TGeoVolume        *fLastVolume;       // last drawn volume
    TObjArray         *fVisVolumes;       // list of visible volumes
    
@@ -77,6 +84,7 @@ public:
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
    virtual void       CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const;
+   Int_t              CountNodes(TGeoVolume *vol, Int_t level) const;
    virtual Int_t      CountVisibleNodes();
    virtual void       DefaultAngles();
    virtual void       DefaultColors();
@@ -87,7 +95,9 @@ public:
    virtual void       DrawOnly(Option_t *option="");
    virtual void       DrawPanel();
    virtual void       DrawPath(const char *path);
+   virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="");
    virtual void       EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end);
+   virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py);
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py);
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
@@ -96,8 +106,9 @@ public:
    virtual TGeoNode  *GetCheckedNode() {return fCheckedNode;}
    TGeoChecker       *GetChecker();
    virtual Int_t      GetColor(Int_t base, Float_t light) const;
-   virtual const char *GetDrawPath() const     {return fVisBranch;}
+   virtual const char *GetDrawPath() const     {return fVisBranch.Data();}
    virtual TGeoVolume *GetDrawnVolume() const;
+   virtual TGeoVolume *GetTopVolume() const {return fTopVolume;} 
    virtual Int_t      GetVisLevel() const      {return fVisLevel;}
    virtual Int_t      GetVisOption() const     {return fVisOption;}
    Int_t              GetNsegments() const     {return fNsegments;}
@@ -114,6 +125,7 @@ public:
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    Bool_t             PaintShape(const TGeoShape & shape, Option_t * option) const;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");
+   virtual void       PaintVolume(TGeoVolume *vol, Option_t *option="");
    virtual void       PrintOverlaps() const;
    void               PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option="");
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
@@ -127,6 +139,7 @@ public:
    virtual void       SetGeoManager(TGeoManager *geom) {fGeoManager=geom;}
    virtual void       SetRaytracing(Bool_t flag=kTRUE) {fIsRaytracing = flag;}
    virtual void       SetTopVisible(Bool_t vis=kTRUE);
+   virtual void       SetTopVolume(TGeoVolume *vol) {fTopVolume = vol;}
    virtual void       SetVisLevel(Int_t level=3);
    virtual void       SetVisOption(Int_t option=0);
    virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const;   

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.30 2005/04/25 07:53:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.31 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -79,7 +79,9 @@ public:
    virtual void       DrawCurrentPoint(Int_t color) = 0;
    virtual void       DrawPanel() = 0;
    virtual void       DrawPath(const char *path) = 0;
+   virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="") = 0;
    virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {;}
+   virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py) = 0;
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
    virtual Int_t      GetColor(Int_t base, Float_t light) const = 0;
    virtual Int_t      GetNsegments() const = 0; 
@@ -87,6 +89,7 @@ public:
    virtual Int_t      GetBombMode() const = 0; 
    virtual const char *GetDrawPath() const = 0; 
    virtual TGeoVolume *GetDrawnVolume() const = 0;
+   virtual TGeoVolume *GetTopVolume() const = 0; 
    virtual void       GetViewAngles(Double_t &/*longitude*/, Double_t &/*latitude*/, Double_t &/*psi*/) {;}
    virtual Int_t      GetVisLevel() const = 0; 
    virtual Int_t      GetVisOption() const = 0; 
@@ -103,6 +106,7 @@ public:
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;
    virtual void       PrintOverlaps() const = 0;
+   virtual void       PaintVolume(TGeoVolume *vol, Option_t *option="") = 0;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;
    virtual void       Raytrace(Option_t *option="") = 0;
@@ -117,6 +121,7 @@ public:
    static  TVirtualGeoPainter *GeoPainter();
    static void        SetPainter(const TVirtualGeoPainter *painter);
    virtual void       SetTopVisible(Bool_t vis=kTRUE) = 0;
+   virtual void       SetTopVolume(TGeoVolume *vol) = 0;
    virtual void       SetVisLevel(Int_t level=3) = 0;
    virtual void       SetVisOption(Int_t option=0) = 0;
    virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const = 0;

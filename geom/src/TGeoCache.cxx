@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.39 2005/11/21 09:31:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.40 2005/11/21 13:52:50 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -103,7 +103,6 @@ TGeoNodeCache::TGeoNodeCache(Bool_t nodeid)
    fNodeIdArray = 0;
    fIndex = 0;
    if (nodeid) BuildIdArray();
-   else        printf("--- node ID tracking disabled\n");
 }
 
 //_____________________________________________________________________________

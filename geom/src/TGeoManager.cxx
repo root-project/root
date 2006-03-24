@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.141 2006/03/02 11:29:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.142 2006/03/20 21:43:41 pcanal Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1940,6 +1940,8 @@ void TGeoManager::DrawTracks(Option_t *option)
 void TGeoManager::DrawPath(const char *path)
 {
 // Draw current path
+   if (!fTopVolume) return;
+   fTopVolume->SetVisBranch();
    GetGeomPainter()->DrawPath(path);
 }
 //_____________________________________________________________________________
@@ -4691,6 +4693,8 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       fMasterVolume = vol;
       fUniqueVolumes->AddAtAndExpand(vol,0);
       GetHMatrix();
+      Info("SetTopVolume","Top volume is %s. Master volume is %s", fTopVolume->GetName(),
+           fMasterVolume->GetName());
    }
    *fCurrentMatrix = gGeoIdentity;
 //   fMasterVolume->FindMatrixOfDaughterVolume(vol);
@@ -4712,8 +4716,6 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       fCache = 0;
       BuildCache(dummy,nodeid);
    }
-   Info("SetTopVolume","Top volume is %s. Master volume is %s", fTopVolume->GetName(),
-           fMasterVolume->GetName());
 }
 //_____________________________________________________________________________
 void TGeoManager::SelectTrackingMedia()
@@ -4891,6 +4893,14 @@ void TGeoManager::Streamer(TBuffer &R__b)
    } else {
       TGeoManager::Class()->WriteBuffer(R__b, this);
    }
+}
+
+//_____________________________________________________________________________
+void TGeoManager::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+// Execute mouse actions on this manager.
+   if (!fPainter) return;
+   fPainter->ExecuteManagerEvent(this, event, px, py);
 }
 
 //______________________________________________________________________________

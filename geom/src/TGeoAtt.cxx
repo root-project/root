@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.7 2005/07/27 10:32:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.8 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -33,6 +33,7 @@ TGeoAtt::TGeoAtt()
    SetVisDaughters(kTRUE);
    SetVisStreamed(kFALSE);
    SetVisTouched(kFALSE);
+   SetVisLeaves();
 }
 //-----------------------------------------------------------------------------
 TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t * /*optimization_opt*/)
@@ -45,19 +46,55 @@ TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t *
    SetVisDaughters(kTRUE);
    SetVisStreamed(kFALSE);
    SetVisTouched(kFALSE);
+   SetVisLeaves();
 }
 //-----------------------------------------------------------------------------
 TGeoAtt::~TGeoAtt()
 {
 // Destructor
 }
+
+//-----------------------------------------------------------------------------
+void TGeoAtt::SetVisBranch()
+{
+// Set branch type visibility.
+   SetAttBit(kVisBranch, kTRUE);
+   SetAttBit(kVisContainers, kFALSE);
+   SetAttBit(kVisOnly, kFALSE);
+}
+
+//-----------------------------------------------------------------------------
+void TGeoAtt::SetVisContainers(Bool_t flag)
+{
+// Set branch type visibility.
+   SetVisLeaves(!flag);   
+}
+
+//-----------------------------------------------------------------------------
+void TGeoAtt::SetVisLeaves(Bool_t flag)
+{
+// Set branch type visibility.
+   SetAttBit(kVisBranch, kFALSE);
+   SetAttBit(kVisContainers, !flag);
+   SetAttBit(kVisOnly, kFALSE);
+}
+
+//-----------------------------------------------------------------------------
+void TGeoAtt::SetVisOnly(Bool_t flag)
+{
+// Set branch type visibility.
+   SetAttBit(kVisBranch, kFALSE);
+   SetAttBit(kVisContainers, kFALSE);
+   SetAttBit(kVisOnly, flag);
+}
+
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisibility(Bool_t vis)
 {
 // Set visibility for this object
    if (vis)  SetAttBit(kVisThis);
    else      ResetAttBit(kVisThis);
-   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   if (gGeoManager && gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisDaughters(Bool_t vis)
@@ -65,7 +102,7 @@ void TGeoAtt::SetVisDaughters(Bool_t vis)
 // Set visibility for the daughters.
    if (vis)  SetAttBit(kVisDaughters);
    else      ResetAttBit(kVisDaughters);
-   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   if (gGeoManager && gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetVisStreamed(Bool_t vis)

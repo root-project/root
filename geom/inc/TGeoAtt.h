@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.6 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.7 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -38,7 +38,11 @@ public:
       kVisOneLevel      = BIT(4),           // first level daughters are visible
       kVisStreamed      = BIT(5),           // true if attributes have been streamed
       kVisTouched       = BIT(6),           // true if attributes are changed after closing geom
-      kVisOnScreen      = BIT(7)            // true if volume is visible on screen
+      kVisOnScreen      = BIT(7),           // true if volume is visible on screen
+      kVisContainers    = BIT(12),          // all containers visible
+      kVisOnly          = BIT(13),          // just this visible
+      kVisBranch        = BIT(14),          // only a given branch visible
+      kVisRaytrace      = BIT(15)           // raytracing flag
    };                          // visibility attributes
 
    enum EGeoActivityAtt   {
@@ -72,6 +76,11 @@ public:
    void                ResetAttBit(UInt_t f) {fGeoAtt &= ~(f & kBitMask);}
    Bool_t              TestAttBit(UInt_t f) const {return (Bool_t)((fGeoAtt & f) != 0);}
 
+   void                SetVisRaytrace(Bool_t flag=kTRUE) {SetAttBit(kVisRaytrace, flag);}
+   void                SetVisBranch(); 
+   virtual void        SetVisContainers(Bool_t flag=kTRUE);
+   virtual void        SetVisLeaves(Bool_t flag=kTRUE);
+   virtual void        SetVisOnly(Bool_t flag=kTRUE);
    virtual void        SetVisibility(Bool_t vis=kTRUE);
    void                SetVisDaughters(Bool_t vis=kTRUE);
    void                SetVisStreamed(Bool_t vis=kTRUE);
@@ -84,13 +93,16 @@ public:
    
    Bool_t              IsActive() const {return TestAttBit(kActThis);}
    Bool_t              IsActiveDaughters() const {return TestAttBit(kActDaughters);}
+   Bool_t              IsVisRaytrace() const {return TestAttBit(kVisRaytrace);}
    Bool_t              IsVisible() const {return TestAttBit(kVisThis);}
    Bool_t              IsVisDaughters() const {return TestAttBit(kVisDaughters);}
+   Bool_t              IsVisBranch() const {return TestAttBit(kVisBranch);}
+   Bool_t              IsVisContainers() const {return TestAttBit(kVisContainers);}
+   Bool_t              IsVisLeaves() const {return !TestAttBit(kVisContainers | kVisOnly | kVisBranch);}
+   Bool_t              IsVisOnly() const {return TestAttBit(kVisOnly);}
+   
    Bool_t              IsVisStreamed() const {return TestAttBit(kVisStreamed);}
    Bool_t              IsVisTouched() const {return TestAttBit(kVisTouched);}
-//   EGeoVisibilityAtt   GetVisAttributes();
-//   EGeoActivityAtt     GetActivityAtt();
-//   EGeoOptimizationAtt GetOptimizationAtt();
 
    ClassDef(TGeoAtt, 1)         // class for visibility, activity and optimization attributes for volumes/nodes
 };

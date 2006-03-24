@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.77 2006/03/14 15:16:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.78 2006/03/20 21:43:41 pcanal Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -654,10 +654,7 @@ Bool_t TGeoVolume::IsTopVolume() const
 Bool_t TGeoVolume::IsRaytracing() const
 {
 // Check if the painter is currently ray-tracing the content of this volume.
-   if (fGeoManager->GetTopVolume() != this) return kFALSE;
-   TVirtualGeoPainter *painter = fGeoManager->GetPainter();
-   if (!painter) return kFALSE;
-   return painter->IsRaytracing();
+   return TGeoAtt::IsVisRaytrace();
 }
 
 //_____________________________________________________________________________
@@ -891,14 +888,13 @@ void TGeoVolume::Draw(Option_t *option)
 {
 // draw top volume according to option
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
-   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
-   if (old_vol!=this) fGeoManager->SetTopVolume(this);
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   painter->SetRaytracing(kFALSE);
+   TGeoAtt::SetVisRaytrace(kFALSE);
+   if (!IsVisContainers()) SetVisLeaves();
    if (option && strlen(option) > 0) {
-      painter->Draw(option); 
+      painter->DrawVolume(this, option); 
    } else {
-      painter->Draw(gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
+      painter->DrawVolume(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
    }  
 }
 
@@ -906,12 +902,19 @@ void TGeoVolume::Draw(Option_t *option)
 void TGeoVolume::DrawOnly(Option_t *option)
 {
 // draw only this volume
+   if (IsAssembly()) {
+      Info("DrawOnly", "Volume assemblies do not support this option.");
+      return;
+   }   
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
-   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
-   if (old_vol!=this) fGeoManager->SetTopVolume(this);
-   else old_vol=0;
+   SetVisOnly();
+   TGeoAtt::SetVisRaytrace(kFALSE);
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   painter->DrawOnly(option);   
+   if (option && strlen(option) > 0) {
+      painter->DrawVolume(this, option); 
+   } else {
+      painter->DrawVolume(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
+   }  
 }
 
 //_____________________________________________________________________________
@@ -929,7 +932,13 @@ void TGeoVolume::Paint(Option_t *option)
 {
 // paint volume
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   painter->Paint(option);   
+   painter->SetTopVolume(this);
+//   painter->Paint(option);   
+   if (option && strlen(option) > 0) {
+      painter->Paint(option); 
+   } else {
+      painter->Paint(gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
+   }  
 }
 
 //_____________________________________________________________________________
@@ -988,28 +997,17 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
 void TGeoVolume::Raytrace(Bool_t flag)
 {
 // Draw this volume with current settings and perform raytracing in the pad.
+   TGeoAtt::SetVisRaytrace(kFALSE);
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   Bool_t drawn = (painter->GetDrawnVolume()==this)?kTRUE:kFALSE;
-   Bool_t force_update = (gPad==0)?kTRUE:kFALSE;
-   
+   Bool_t drawn = (painter->GetDrawnVolume()==this)?kTRUE:kFALSE;   
    if (!drawn) {
-      fGeoManager->SetTopVolume(this);
-      painter->SetRaytracing(kFALSE);
-      painter->Draw();
-      if (force_update) {
-         gPad->Modified();
-         gPad->Update();
-      }   
-      painter->SetRaytracing(flag);
+      painter->DrawVolume(this, "");
+      TGeoAtt::SetVisRaytrace(flag);
       painter->ModifiedPad();
       return;
    }   
-   painter->SetRaytracing(flag);
-   if (!drawn) {
-      painter->Draw();
-      return;
-   }   
+   TGeoAtt::SetVisRaytrace(flag);
    painter->ModifiedPad();
 }   
 
@@ -1590,6 +1588,10 @@ void TGeoVolume::SelectVolume(Bool_t clear)
 void TGeoVolume::SetVisibility(Bool_t vis)
 {
 // set visibility of this volume
+   if (IsAssembly()) {
+      Info("SetVisibility", "Volume assemblies do not have visibility");
+      return;
+   }   
    TGeoAtt::SetVisibility(vis);
    if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
    fGeoManager->ModifiedPad();
@@ -1601,6 +1603,40 @@ void TGeoVolume::SetVisibility(Bool_t vis)
       browser->Refresh();
    }
 }   
+
+//_____________________________________________________________________________
+void TGeoVolume::SetVisContainers(Bool_t flag)
+{
+// Set visibility for containers.
+   TGeoAtt::SetVisContainers(flag);
+   if (fGeoManager && fGeoManager->IsClosed()) {
+      if (flag) fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisDefault);
+      else      fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisLeaves);
+   }   
+}
+   
+//_____________________________________________________________________________
+void TGeoVolume::SetVisLeaves(Bool_t flag)
+{
+// Set visibility for leaves.
+   TGeoAtt::SetVisLeaves(flag);
+   if (fGeoManager && fGeoManager->IsClosed()) {
+      if (flag) fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisLeaves);
+      else      fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisDefault);
+   }   
+}
+
+//_____________________________________________________________________________
+void TGeoVolume::SetVisOnly(Bool_t flag)
+{
+// Set visibility for leaves.
+   if (IsAssembly()) return;
+   TGeoAtt::SetVisOnly(flag);
+   if (fGeoManager && fGeoManager->IsClosed()) {
+      if (flag) fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisOnly);
+      else      fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisLeaves);
+   }   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoVolume::Valid() const

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.46 2006/01/31 14:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.47 2006/03/13 11:03:36 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -130,6 +130,8 @@ public:
    void            PrintVoxels() const; // *MENU*
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
+   Bool_t          IsActive() const {return TGeoAtt::IsActive();}
+   Bool_t          IsActiveDaughters() const {return TGeoAtt::IsActiveDaughters();}
    Bool_t          IsAdded()     const {return TObject::TestBit(kVolumeAdded);}
    Bool_t          IsReplicated() const {return TObject::TestBit(kVolumeReplicated);}
    Bool_t          IsSelected() const  {return TObject::TestBit(kVolumeSelected);}
@@ -139,6 +141,9 @@ public:
    Bool_t          IsValid() const {return fShape->IsValid();}
    virtual Bool_t  IsVisible() const {return TGeoAtt::IsVisible();}
    Bool_t          IsVisibleDaughters() const {return TGeoAtt::IsVisDaughters();}
+   Bool_t          IsVisContainers() const {return TGeoAtt::IsVisContainers();}
+   Bool_t          IsVisLeaves() const {return TGeoAtt::IsVisLeaves();}
+   Bool_t          IsVisOnly() const {return TGeoAtt::IsVisOnly();}
    Bool_t          IsAllInvisible() const {return ((!IsVisible()) & (!IsVisibleDaughters()));}
    Bool_t          IsRaytracing() const;
    TGeoNode       *FindNode(const char *name) const;
@@ -183,6 +188,8 @@ public:
    void            SaveAs(const char *filename); // *MENU*
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
    void            SelectVolume(Bool_t clear = kFALSE);
+   void            SetActivity(Bool_t flag=kTRUE) {TGeoAtt::SetActivity(flag);}
+   void            SetActiveDaughters(Bool_t flag=kTRUE) {TGeoAtt::SetActiveDaughters(flag);}
    void            SetAsTopVolume(); // *TOGGLE* *GETTER=IsTopVolume
    void            SetAdded()      {TObject::SetBit(kVolumeAdded);}
    void            SetReplicated() {TObject::SetBit(kVolumeReplicated);}
@@ -194,6 +201,9 @@ public:
    void            SetField(const TObject *field)          {fField = (TObject*)field;}
    void            SetOption(const char *option);
    virtual void    SetVisibility(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisible
+   virtual void    SetVisContainers(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisContainers
+   virtual void    SetVisLeaves(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisLeaves
+   virtual void    SetVisOnly(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisOnly
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
