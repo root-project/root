@@ -262,12 +262,14 @@ parse_product (g, cp, valp)
 
       case '/':
 	DO (cp = parse_product (g, cp + 1, &rightval));
-	*valp = (*valp / rightval);
+	if (rightval)
+	   *valp = (*valp / rightval);
 	break;
 
       case '%':
 	DO (cp = parse_product (g, cp + 1, &rightval));
-	*valp = (*valp % rightval);
+	if (rightval)
+	   *valp = (*valp % rightval);
 	break;
     }
     return cp;
