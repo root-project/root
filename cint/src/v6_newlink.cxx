@@ -2286,16 +2286,17 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
 #endif
             if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
               /* constructor need special handling */
-              if(0==G__struct.isabstract[i]&&0==isnonpublicnew
-                 )
+              if(0==G__struct.isabstract[i]&&0==isnonpublicnew) 
+              {
                 G__cppif_genconstructor(fp,hfp,i,j,ifunc);
+              }
               ++isconstructor;
               if(ifunc->para_nu[j]>=1&&
                  'u'==ifunc->para_type[j][0]&&
                  i==ifunc->para_p_tagtable[j][0]&&
                  G__PARAREFERENCE==ifunc->para_reftype[j][0]&&
                  (1==ifunc->para_nu[j]||ifunc->para_default[j][1])) {
-                ++iscopyconstructor;
+                    ++iscopyconstructor;
               }
             }
             else if('~'==ifunc->funcname[j][0]) {
@@ -3301,7 +3302,11 @@ int G__isprivateassignopr(int tagnum)
 * copy constructor or operator=().
 *
 **************************************************************************/
-void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum, int ifn, G__ifunc_table* ifunc, int isconstructor, int iscopyconstructor, int isdestructor, int isassignmentoperator, int isnonpublicnew)
+void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum, 
+                         int ifn, G__ifunc_table* ifunc, 
+                         int isconstructor, int iscopyconstructor, 
+                         int isdestructor, 
+                         int isassignmentoperator, int isnonpublicnew)
 {
 #ifndef G__SMALLOBJECT
   /* int k,m; */
@@ -3343,14 +3348,6 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum, int ifn, G__ifunc_
   }
 #endif
 
-  char buf[G__LONGLINE];
-
-  if ((G__PROTECTED == ifunc->access[ifn]) || (G__PRIVATE == ifunc->access[ifn])) {
-    sprintf(buf, "%s_PR", G__get_link_tagname(tagnum));
-  } else {
-    strcpy(buf, G__fulltagname(tagnum, 1));
-  }
-
   /*********************************************************************
   * default constructor
   *********************************************************************/
@@ -3361,7 +3358,10 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum, int ifn, G__ifunc_
 
   if (!isconstructor && !G__struct.isabstract[tagnum] && !isnonpublicnew) {
 
-    sprintf(funcname, "%s", G__struct.name[tagnum]);
+    char buf[G__LONGLINE];
+    strcpy(buf, G__fulltagname(tagnum, 1));
+
+    strcpy(funcname, G__struct.name[tagnum]);
     fprintf(fp,         "// automatic default constructor\n");
 
 #ifdef G__CPPIF_STATIC
