@@ -869,6 +869,7 @@ int G__search_tagname(const char *tagname,int type)
     G__struct.memfunc[i]->staticalloc[0] = 0; 
     G__struct.memfunc[i]->busy[0] = 0; 
     G__struct.memfunc[i]->isvirtual[0] = 0;
+    G__struct.memfunc[i]->globalcomp[0] = G__NOLINK;
 #endif
 
     G__struct.memfunc[i]->comment[0].filenum = -1;
