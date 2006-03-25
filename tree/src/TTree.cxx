@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.277 2006/03/02 07:27:18 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.278 2006/03/21 14:33:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4251,6 +4251,7 @@ void TTree::Refresh()
 //  updated by another process
 
    if (!fDirectory) return;
+   if (!fDirectory->GetFile()) return;
    fDirectory->ReadKeys();
    fDirectory->GetList()->Remove(this);
    TTree *tree = (TTree*)fDirectory->Get(GetName());
