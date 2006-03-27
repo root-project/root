@@ -17,8 +17,12 @@
 #ifdef TEST_ALL_MATRIX_SIZES
 #define REPORT_TIME
 #endif
+#ifndef NITER
 #define NITER 1  // number of iterations
-
+#endif
+#ifndef NLOOP_MIN
+#define NLOOP_MIN 1000;
+#endif
 
 #ifdef HAVE_CLHEP
 #include "CLHEP/Matrix/SymMatrix.h"
@@ -38,7 +42,6 @@
 // #endif
 
 
-#define NLOOP_MIN 1000;
 int NLOOP; 
 //#define NLOOP 1
 
@@ -695,19 +698,23 @@ void ROOT::Math::test::reportTime(std::string s, double time) {
   std::map<std::string, TH1D * > & result = testTimeResults[TEST_TYPE];
   
   std::map<std::string, TH1D * >::iterator pos = result.find(s);   
+  TH1D * h = 0; 
   if (  pos != result.end() ) { 
-    TH1D * h = pos->second; 
-    h->Fill(double(MATRIX_SIZE),time/double(NLOOP*NITER) ); 
+    h = pos->second; 
   }
   else { 
     // add new elements in map
     //std::cerr << "insert element in map" << s << typeNames[TEST_TYPE] << std::endl;
     std::string name = typeNames[TEST_TYPE] + "_" + s; 
-    TProfile * h = new TProfile(name.c_str(), name.c_str(),100,0.5,100.5);
-    h->Fill(double(MATRIX_SIZE),time/double(NLOOP*NITER) ); 
+    h = new TProfile(name.c_str(), name.c_str(),100,0.5,100.5);
     //result.insert(std::map<std::string, TH1D * >::value_type(s,h) ); 
     result[s] = h;
   }
+  double scale=1; 
+  if (s.find("dot") != std::string::npos || 
+      s.find("V=V") != std::string::npos || 
+      s.find("V+V") != std::string::npos ) scale = 10;  
+  h->Fill(double(MATRIX_SIZE),time/double(NLOOP*NITER*scale) ); 
 }
 #endif
 

@@ -25,7 +25,7 @@ TESTSMATRIXSRC     = testSMatrix.$(SrcSuf)
 TESTSMATRIX        = testSMatrix$(ExeSuf)
 
 TESTOPERATIONSOBJ     = testOperations.$(ObjSuf)
-TESTOPERATIONSSRC     = testOperations.$(SrcSuf)
+TESTOPERATIONSSRC     = testOperations.$(SrcSuf)  
 TESTOPERATIONS        = testOperations$(ExeSuf)
 
 TESTKALMANOBJ     = testKalman.$(ObjSuf)
@@ -58,12 +58,18 @@ PROGRAMS      = $(TESTSMATRIX)  $(TESTOPERATIONS) $(TESTKALMAN) $(TESTIO) $(STRE
 
 all:            $(PROGRAMS)
 
+testOperations.$(ObjSuf): matrix_op.h matrix_util.h TestTimer.h
+
+testKalman.$(ObjSuf): matrix_util.h TestTimer.h
+
+stressOperations.$(ObjSuf): $(TESTOPERATIONSOBJ)
+
 
 $(TESTSMATRIX):   $(TESTSMATRIXOBJ)
 		    $(LD) $(LDFLAGS) $^  $(LIBM) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(TESTOPERATIONS):   $(TESTOPERATIONSOBJ)
+$(TESTOPERATIONS):   $(TESTOPERATIONSOBJ) 
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
@@ -95,5 +101,5 @@ distclean:      clean
 .SUFFIXES: .$(SrcSuf)
 
 
-.$(SrcSuf).$(ObjSuf):
+.$(SrcSuf).$(ObjSuf):  
 	$(CXX)  $(CXXFLAGS) -c $<
