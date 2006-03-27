@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.78 2006/03/13 11:03:36 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.79 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -778,7 +778,7 @@ void TGeoPainter::EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *sta
 }
 
 //______________________________________________________________________________
-void TGeoPainter::ExecuteManagerEvent(TGeoManager */*geom*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+void TGeoPainter::ExecuteManagerEvent(TGeoManager * /*geom*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given volume.
    if (!gPad) return;
