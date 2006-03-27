@@ -70,12 +70,5 @@ $(RMKDEPDIR)/pr.o:       $(RMKDEPDIR)/def.h
 $(RMKDEPDIR)/mainroot.o: $(RMKDEPDIR)/def.h
 
 ##### local rules #####
-$(RMKDEPO1): %.o: %.c
-	$(CC) $(OPT) $(CFLAGS) $(RMKDEPCFLAGS) $(CXXOUT)$@ -c $<
-$(RMKDEPO2): %.o: %.cxx
-	cp build/win/w32pragma.h include/w32pragma.h
-	$(CXX) $(OPT) $(CXXFLAGS) $(RMKDEPCFLAGS) $(CXXOUT)$@ -c $<
-
-$(BINDEXPO): %.o: %.cxx
-	cp build/win/w32pragma.h include/w32pragma.h
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
+$(RMKDEPO1): CFLAGS += $(RMKDEPCFLAGS)
+$(RMKDEPO2): CXXFLAGS += $(RMKDEPCFLAGS)

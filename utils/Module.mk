@@ -29,11 +29,11 @@ RLIBMAP      := bin/rlibmap$(EXEEXT)
 INCLUDEFILES += $(ROOTCINTDEP) $(RLIBMAPDEP)
 
 ##### local rules #####
-$(ROOTCINTEXE): $(CINTLIB) $(ROOTCINTO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM) $(ORDER_) $(PCHEXTRAOBJ)
+$(ROOTCINTEXE): $(CINTLIB) $(ROOTCINTO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTCINTO) $(METAUTILSO) \
 		   $(RPATH) $(CINTLIBS) $(CILIBS)
 
-$(ROOTCINTTMPEXE): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM) $(ORDER_) $(PCHEXTRAOBJ)
+$(ROOTCINTTMPEXE): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ \
 		   $(ROOTCINTTMPO) $(METAUTILSO) $(CINTTMPO) $(CILIBS)
 
@@ -54,10 +54,12 @@ clean::         clean-utils
 distclean-utils: clean-utils
 		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMPEXE) $(ROOTCINTEXE) \
 		   $(RLIBMAPDEP) $(RLIBMAP) \
-		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib
+		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib $(UTILSDIRS)/*_tmp.cxx
 
 distclean::     distclean-utils
 
 ##### extra rules ######
-$(UTILSDIRS)%_tmp.o: $(UTILSDIRS)%.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -UHAVE_CONFIG -DROOTBUILD -c $< $(CXXOUT)$@
+$(UTILSDIRS)%_tmp.cxx: $(UTILSDIRS)%.cxx
+	cp -f $< $@
+
+$(ROOTCINTTMPO): CXXFLAGS += -UHAVE_CONFIG -DROOTBUILD

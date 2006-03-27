@@ -31,6 +31,7 @@ CINTS2       := $(filter-out $(MODDIRS)/v6_sunos.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/v6_macos.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/v6_winnt.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/v6_newsos.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/v6_loadfile_tmp.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/allstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
@@ -265,55 +266,26 @@ clean::         clean-cint
 distclean-cint: clean-cint
 		@rm -f $(CINTALLDEP) $(CINTLIB) $(IOSENUM) $(CINTEXEDEP) \
 		   $(CINT) $(CINTTMP) $(MAKECINT) $(CINTDIRM)/*.exp \
-		   $(CINTDIRM)/*.lib
+		   $(CINTDIRM)/*.lib $(CINTDIRS)/v6_loadfile_tmp.cxx
 
 distclean::     distclean-cint
 
 ##### extra rules ######
-$(CINTDIRS)/libstrm.o: $(CINTDIRS)/libstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/stream $(CXXOUT)$@ -c $<
+$(CINTDIRS)/libstrm.o:  CINTCXXFLAGS += -I$(CINTDIRL)/stream
+$(CINTDIRS)/sunstrm.o:  CINTCXXFLAGS += -I$(CINTDIRL)/snstream
+$(CINTDIRS)/sun5strm.o: CINTCXXFLAGS += -I$(CINTDIRL)/snstream
+$(CINTDIRS)/vcstrm.o:   CINTCXXFLAGS += -I$(CINTDIRL)/vcstream
+$(CINTDIRS)/%strm.o:    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
 
-$(CINTDIRS)/vcstrm.o: $(CINTDIRS)/vcstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vcstream $(CXXOUT)$@ -c $<
+$(CINTDIRS)/v6_stdstrct.o:     CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
+$(CINTDIRS)/v6_loadfile_tmp.o: CINTCXXFLAGS += -UHAVE_CONFIG -DROOTBUILD
 
-$(CINTDIRS)/vc7strm.o: $(CINTDIRS)/vc7strm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vc7strm $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/sunstrm.o: $(CINTDIRS)/sunstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/sun5strm.o: $(CINTDIRS)/sun5strm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/gcc3strm.o: $(CINTDIRS)/gcc3strm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/gcc3strm $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/iccstrm.o: $(CINTDIRS)/iccstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/iccstrm $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/accstrm.o: $(CINTDIRS)/accstrm.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/accstrm $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/v6_stdstrct.o: $(CINTDIRS)/v6_stdstrct.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/stdstrct $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/v6_loadfile_tmp.o: $(CINTDIRS)/v6_loadfile.cxx
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -UHAVE_CONFIG -DROOTBUILD $(CXXOUT)$@ -c $<
-
-$(CINTDIRT)/makecint.o: $(CINTDIRT)/makecint.c
-	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
-
-$(CINTDIRT)/makecint_tmp.o: $(CINTDIRT)/makecint.c
-	$(CC) $(OPT) $(CINTCFLAGS) -UHAVE_CONFIG -DROOTBUILD $(CXXOUT)$@ -c $<
-
-$(CINTDIRS)/v6_loadfile_tmp.d: $(CINTDIRS)/v6_loadfile.cxx $(RMKDEP)
-	@cp $(CINTDIRS)/v6_loadfile.cxx $(CINTDIRS)/v6_loadfile_tmp.cxx
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -- $(CINTDIRS)/v6_loadfile_tmp.cxx
-	@rm -f $(CINTDIRS)/v6_loadfile_tmp.cxx
+$(CINTDIRS)/v6_loadfile_tmp.cxx: $(CINTDIRS)/v6_loadfile.cxx
+	cp -f $< $@
 
 ##### cintdlls ######
 
-$(CINTDIRDLLS)/stdfunc.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/stdstrct/stdfunc.h 
+$(CINTDIRDLLS)/stdfunc.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/stdstrct/stdfunc.h
 	@$(MAKECINTDLL) $(PLATFORM) stdfunc stdstrct stdfunc.h "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
 	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"

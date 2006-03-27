@@ -374,6 +374,12 @@ else
 MAINLIBS      =
 endif
 
+##### pre-compiled header support #####
+
+ifeq ($(PCHSUPPORTED),yes)
+include config/Makefile.precomp
+endif
+
 ##### all #####
 
 ALLHDRS      :=
@@ -388,18 +394,55 @@ INCLUDEFILES :=
 
 # special rules (need to be defined before generic ones)
 G__%.o: G__%.cxx
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
+	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl \
+	   -I$(CINTDIR)/stl -- $<
 	$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(CXXOUT)$@ -c $<
 
-cint/src/%.o: cint/src/%.cxx
+cint/%.o: cint/%.cxx
+	$(MAKEDEP) -R -fcint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
 
-cint/src/%.o: cint/src/%.c
+cint/%.o: cint/%.c
+	$(MAKEDEP) -R -fcint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
+utils/%.o: utils/%.cxx
+	$(MAKEDEP) -R -futils/$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
+
+utils/%.o: utils/%.c
+	$(MAKEDEP) -R -futils/$*.d -Y -w 1000 -- $(CFLAGS) -- $<
+	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
+
+build/%.o: build/%.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
+
+build/%.o: build/%.c
+	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
+
+metautils/%.o: metautils/%.cxx
+	$(MAKEDEP) -R -fmetautils/$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
+
+ifeq ($(PCHSUPPORTED),yes)
 %.o: %.cxx $(PCHDEP)
-	$(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<
+	@(if [ "$?" != "$(PCHDEP)" ]; then \
+	   echo $(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<; \
+	   echo $(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<; \
+	   $(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<; \
+	   $(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<; \
+	else \
+	   touch $*.d $@; \
+	fi)
+else
+%.o: %.cxx
+	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
+endif
 
 %.o: %.c
+	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CFLAGS) -- $<
 	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.f
@@ -409,7 +452,6 @@ ifeq ($(F77),f2c)
 else
 	$(F77) $(F77OPT) $(F77FLAGS) $(CXXOUT)$@ -c $<
 endif
-
 
 ##### TARGETS #####
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
@@ -434,10 +476,6 @@ skip:
 
 include $(patsubst %,%/Module.mk,$(MODULES))
 
-ifeq ($(PCHSUPPORTED),yes)
-include config/Makefile.precomp
-endif
-
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
@@ -448,7 +486,8 @@ ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
 -include $(INCLUDEFILES)
 endif
 ifeq ($(PCHSUPPORTED),yes)
--include build/pch.d            # must be second to last include
+INCLUDEPCHRULES = yes
+include config/Makefile.precomp
 endif
 -include build/dummy.d          # must be last include
 endif
@@ -500,34 +539,10 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 $(MAKEINFO): config/Makefile.$(ARCH) $(MAKEMAKEINFO)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
-build/dummy.d: config Makefile $(RMKDEP) $(BINDEXP) $(ALLHDRS)
+build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
-
-build/pch.d: $(PCHFILE)
-	@(if [ ! -f $@ ] ; then \
-	   touch $@; \
-	fi)
-
-base/src/precompile.d: $(PCHEXTRASRC) $(RMKDEP)
-ifeq ($(PCHSUPPORTED),yes)
-	$(MAKEDEP) -R -f$@.tmp -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	sed -e 's,$(PCHEXTRAOBJ),$(PCHFILE),' $@.tmp > $@
-	@rm -f $@.tmp
-else
-	@touch $@
-endif
-
-%.d: %.c $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CFLAGS) -- $<
-
-G__%.d: G__%.cxx $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus \
-	   -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl -- $<
-
-%.d: %.cxx $(RMKDEP)
-	$(MAKEDEP) -R -f$@ -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)
@@ -660,7 +675,7 @@ rootdrpm:
 	fi
 
 clean::
-	@rm -f __compiledata __makeinfo *~ core
+	@rm -f __compiledata __makeinfo *~ core $(PCHFILE)
 
 ifeq ($(CXX),KCC)
 clean::

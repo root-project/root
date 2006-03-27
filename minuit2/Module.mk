@@ -97,7 +97,3 @@ distclean-minuit2: clean-minuit2
 		@rm -rf include/Minuit2
 
 distclean::     distclean-minuit2
-
-##### extra rules ######
-#$(MINUIT2O): %.o: %.cxx
-#	$(CXX) $(OPT) $(CXXFLAGS) $(MINUITBASEDIRI) -o $@ -c $<

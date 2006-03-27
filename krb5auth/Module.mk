@@ -71,6 +71,7 @@ distclean::     distclean-krb5auth
 ##### extra rules ######
 $(KRB5AUTHDO): CXXFLAGS += $(KRB5INCDIR:%=-I%)
 
-$(KRB5AUTHO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -DR__KRB5INIT="\"$(KRB5INIT)\"" \
-	   $(KRB5INCDIR:%=-I%) -o $@ -c $<
+$(KRB5AUTHO): CXXFLAGS += -DR__KRB5INIT="\"$(KRB5INIT)\"" $(KRB5INCDIR:%=-I%)
+ifeq ($(ICC_MAJOR),9)
+$(KRB5AUTHO): PCHCXXFLAGS =
+endif
