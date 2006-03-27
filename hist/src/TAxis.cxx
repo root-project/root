@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.70 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.71 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -75,6 +75,11 @@ TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 //______________________________________________________________________________
 TAxis::~TAxis()
 {
+   if (fLabels) {
+      fLabels->Delete();
+      delete fLabels;
+      fLabels = 0;
+   }
 }
 
 //______________________________________________________________________________
