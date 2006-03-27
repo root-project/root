@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.27 2006/01/17 20:28:40 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.28 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -655,7 +655,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.121 2006/03/16 18:02:34 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.28 2006/03/24 15:31:10 antcheva Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -766,6 +766,8 @@ Bool_t TGQt::Init(void* /*display*/)
    fWidgetArray =  new TQWidgetCollection();
    fDisplayOpened = kTRUE;
    TQtEventInputHandler::Instance();
+   // Add $QTDIR include  path to the  the list of includes for ACliC
+   gSystem->AddIncludePath("-I$QTDIR/include");
    return fDisplayOpened;
 }
 
