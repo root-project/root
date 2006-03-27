@@ -407,39 +407,15 @@ cint/%.o: cint/%.c
 	$(MAKEDEP) -R -fcint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
-utils/%.o: utils/%.cxx
-	$(MAKEDEP) -R -futils/$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
-
-utils/%.o: utils/%.c
-	$(MAKEDEP) -R -futils/$*.d -Y -w 1000 -- $(CFLAGS) -- $<
-	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
-
 build/%.o: build/%.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
 
 build/%.o: build/%.c
 	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
 
-metautils/%.o: metautils/%.cxx
-	$(MAKEDEP) -R -fmetautils/$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
-
-ifeq ($(PCHSUPPORTED),yes)
-%.o: %.cxx $(PCHDEP)
-	@(if [ "$?" != "$(PCHDEP)" ]; then \
-	   echo $(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<; \
-	   echo $(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<; \
-	   $(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<; \
-	   $(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<; \
-	else \
-	   touch $*.d $@; \
-	fi)
-else
 %.o: %.cxx
 	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
-endif
+	$(CXX) $(OPT) $(CXXFLAGS) $(PCHCXXFLAGS) $(CXXOUT)$@ -c $<
 
 %.o: %.c
 	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CFLAGS) -- $<
@@ -539,7 +515,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 $(MAKEINFO): config/Makefile.$(ARCH) $(MAKEMAKEINFO)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
 
-build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP)
+build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP) $(PCHDEP)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)

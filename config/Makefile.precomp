@@ -29,7 +29,7 @@ $(PCHEXTRAHDR): $(PCHEXTRAHDRI)
         sed 's,\(#[ ]*include \)@PRECOMPILE@\(.*\)$$,$(PCHINCSTATEM),' | \
         tr '@' '\n' > $@
 
-$(PCHEXTRAOBJ) $(PCHFILE): $(PCHEXTRAHDR) $(W32PRAGMA)
+$(PCHEXTRAOBJ) $(PCHFILE): $(PCHEXTRAHDR) $(W32PRAGMA) $(RMKDEP)
 	@echo Building precompiled header...
 	$(MAKEDEP) -R -f$(PCHEXTRADEP).tmp -Y -w 1000 -- $(CXXFLAGS) -DUSEPCH -D__cplusplus -- $<
 	sed -e 's,include/precompile.o,$(PCHFILE),' \
