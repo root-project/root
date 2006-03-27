@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.26 2006/03/01 12:07:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.27 2006/03/03 09:48:19 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -618,6 +618,7 @@ Int_t TEnv::WriteFile(const char *fname, EEnvLevel level)
          if (er->fLevel == level || level == kEnvAll)
             fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
                     er->fValue.Data());
+      fclose(ofp);
       return 0;
    }
 
