@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.75 2006/03/02 11:29:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.76 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -41,6 +41,8 @@ class THashList;
 
 class TGeoManager : public TNamed
 {
+protected:
+   static Bool_t         fgLock;            //! Lock preventing a second geometry to be loaded
 private :
    Double_t              fStep;             //! step to be done from current point and direction
    Double_t              fSafety;           //! safety radius from current point
@@ -54,7 +56,6 @@ private :
    TString               fPath;             //! path to current node
    TString               fParticleName;     //! particles to be drawn
    Double_t              fNormal[3];        //! cosine of incident angle on current checked surface
-//   Double_t              fNormalChecked;    //! cosine of incident angle on next crossed surface
    Double_t             *fCldir;            //! unit vector to current closest shape
    Double_t             *fCldirChecked;     //! unit vector to current checked shape
    Double_t             *fPoint;            //![3] current point
@@ -409,7 +410,10 @@ public:
 
    //--- I/O
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");
+   static  void           LockGeometry();
+   static  void           UnlockGeometry();
    static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
+   static Bool_t          IsLocked();
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
 
    //--- list getters

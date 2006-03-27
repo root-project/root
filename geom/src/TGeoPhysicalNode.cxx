@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.12 2006/03/20 10:09:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.13 2006/03/22 11:18:13 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -84,6 +84,10 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    //   volumes/nodes in the branch represented by this physical node are
    //   CLONED so the operation does not affect other possible replicas.
    if (!newmat && !newshape) return;
+   if (TGeoManager::IsLocked()) {
+      Error("Align", "Not performed. Geometry in LOCKED mode !");
+      return;
+   }   
    TGeoNode *node = GetNode();
    if (node->IsOffset()) {
       Error("Align", "Cannot align division nodes: %s\n",node->GetName());

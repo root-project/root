@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.142 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.143 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -451,6 +451,8 @@ const Int_t kN3 = 3*sizeof(Double_t);
 
 ClassImp(TGeoManager)
 
+Bool_t TGeoManager::fgLock = kFALSE;
+
 //_____________________________________________________________________________
 TGeoManager::TGeoManager()
 {
@@ -567,6 +569,7 @@ void TGeoManager::Init()
    if (gGeoManager) {
       Warning("Init","Deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
       delete gGeoManager;
+      if (fgLock) Fatal("Init", "New geometry created while the old one locked !!!");
    }
 
    gGeoManager = this;
@@ -4939,7 +4942,27 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    delete f;
    return nbytes;
 }
+//______________________________________________________________________________
+void TGeoManager::LockGeometry()
+{
+// Lock current geometry so that no other geometry can be imported.
+   fgLock = kTRUE;
+}
 
+//______________________________________________________________________________
+void TGeoManager::UnlockGeometry()
+{
+// Unlock current geometry.
+   fgLock = kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGeoManager::IsLocked()
+{
+// Check lock state.
+   return fgLock;
+}   
+   
 //______________________________________________________________________________
 TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_t * /*option*/)
 {
@@ -4948,7 +4971,10 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    //if name="" (default), the first TGeoManager object in the file is returned.
    //Note that this function deletes the current gGeoManager (if one)
    //before importing the new object.
-
+   if (fgLock) {
+      printf("WARNING: TGeoManager::Import : TGeoMananager in lock mode. NOT IMPORTING new geometry\n");
+      return NULL;
+   }
    printf("Info: TGeoManager::Import : Reading geometry from file\n");
    TFile *old = gFile;
    TFile *f = TFile::Open(filename);
