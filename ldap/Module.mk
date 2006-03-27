@@ -64,4 +64,4 @@ distclean-ldap: clean-ldap
 distclean::     distclean-ldap
 
 ##### extra rules ######
-$(LDAPO): CXXFLAGS += $(LDAPINCDIR:%=-I%)
+$(LDAPO): CXXFLAGS += -DLDAP_DEPRECATED $(LDAPINCDIR:%=-I%)
