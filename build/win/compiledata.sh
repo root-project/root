@@ -39,6 +39,8 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=%ROOTSYS%/lib
 fi
 
+CXXDEBUG=`echo $CXXDEBUG|sed 's,-Fdbin/root.pdb,,g'`
+
 HAVEMT=`(unset VS_UNICODE_OUTPUT; mt '/?' >/dev/null 2>&1) && echo 1`
 if [ "$HAVEMT" == "1" ]; then
    HAVEMTDLL=' && if EXIST \"$BuildDir\\$LibName.dll.manifest\" ( mt -nologo -manifest \"$BuildDir\\$LibName.dll.manifest\" \"-outputresource:$BuildDir\\$LibName.dll;2\" && del \"$BuildDir\\$LibName.dll.manifest\" )'

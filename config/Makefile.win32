@@ -31,8 +31,8 @@ else
 endif
 
 ifeq ($(VC_MAJOR),14)
-  BLDCXXFLAGS+= -EHs
-  BLDCFLAGS  += -EHs
+  BLDCXXFLAGS+= -EHa
+  BLDCFLAGS  += -EHa
   DEBUGFLAGS  = -Zi -Fdbin/root.pdb
 
   ifeq (yes,$(WINRTDEBUG))
