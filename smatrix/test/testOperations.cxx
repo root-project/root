@@ -306,7 +306,7 @@ int test_tmatrix_op() {
    
   double r1,r2;
   int npass = NITER; 
-  TRandom3 r;
+  TRandom3 r(111);
   gMatrixCheck = 0;
   
   for (int k = 0; k < npass; k++) {
