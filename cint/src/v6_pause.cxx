@@ -3377,12 +3377,12 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
           G__in_pause=0;
 #ifndef G__OLDIMPLEMENTATION1259
           if(buf.isconst&(G__CONSTVAR|G__CONSTFUNC)) {
-            char tmp[G__ONELINE];
+            char tmp[G__LONGLINE];
             sprintf(tmp,"(const %s",syscom+1);
             strcpy(syscom,tmp);
           }
           if(buf.isconst&G__PCONSTVAR) {
-            char tmp2[G__ONELINE];
+            char tmp2[G__LONGLINE];
             char *ptmp = strchr(syscom,')');
             strcpy(tmp2,ptmp);
             strcpy(ptmp,"const");
