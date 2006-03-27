@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.4 2005/07/20 15:13:51 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.5 2005/10/27 16:36:38 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -75,6 +75,7 @@ private:
    // Methods
    void    CreateXClient(const char *url, Option_t *option, Int_t netopt);
    void    Open(Option_t *option);
+   void    SetEnv();
    Int_t   SysStat(Int_t fd, Long_t* id, Long64_t* size, Long_t* flags,
                    Long_t* modtime);
    Int_t   SysOpen(const char *pathname, Int_t flags, UInt_t mode);
