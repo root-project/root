@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.79 2006/03/24 15:11:23 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.80 2006/03/27 10:22:56 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -69,8 +69,8 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    fPaintingOverlaps = kFALSE;
    fVisVolumes = new TObjArray();
    fOverlap = 0;
-   fMatrix = 0;
    fGlobal = new TGeoHMatrix();
+   fBuffer = new TBuffer3D(TBuffer3DTypes::kGeneric,20,3*20,0,0,0,0);
    fClippingShape = 0;
    fLastVolume = 0;
    fTopVolume = 0;
@@ -88,6 +88,7 @@ TGeoPainter::~TGeoPainter()
    if (fChecker) delete fChecker;
    delete fVisVolumes;
    delete fGlobal;
+   delete fBuffer;
 }
 //______________________________________________________________________________
 void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
@@ -279,8 +280,40 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
    if (px > puxmax + inaxis) return big;
    if (py < puymax - inaxis) return big;
    
-   fCheckedNode = fGeoManager->GetTopNode();      
-   // Compute distance to the right edge
+   fCheckedNode = fGeoManager->GetTopNode();         
+   gPad->SetSelected(view);
+   Int_t dist = big;
+//   Int_t id;
+   
+   if (fPaintingOverlaps) {
+      TGeoVolume *crt;
+      crt = fOverlap->GetFirstVolume();
+      *fGlobal = fOverlap->GetFirstMatrix();
+      dist = crt->GetShape()->DistancetoPrimitive(px,py);
+      if (dist<maxdist) {
+         gPad->SetSelected(crt);
+         box = (TGeoBBox*)crt->GetShape();
+         fGlobal->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         fCheckedBox[3] = box->GetDX();
+         fCheckedBox[4] = box->GetDY();
+         fCheckedBox[5] = box->GetDZ();
+         return 0;
+      }
+      crt = fOverlap->GetSecondVolume();
+      *fGlobal = fOverlap->GetSecondMatrix();
+      dist = crt->GetShape()->DistancetoPrimitive(px,py);
+      if (dist<maxdist) {
+         gPad->SetSelected(crt);
+         box = (TGeoBBox*)crt->GetShape();
+         fGlobal->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         fCheckedBox[3] = box->GetDX();
+         fCheckedBox[4] = box->GetDY();
+         fCheckedBox[5] = box->GetDZ();
+         return 0;
+      }      
+      return big;
+   }
+      // Compute distance to the right edge
    if ((puxmax+inaxis-px) < 40) {
       if ((py-puymax+inaxis) < 40) {
          // when the mouse points to the (40x40) right corner of the pad, the manager class is selected
@@ -303,40 +336,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
       fCheckedBox[5] = box->GetDZ();
       return 0;
    }   
-   
-   gPad->SetSelected(view);
-   Int_t dist = big;
-//   Int_t id;
-   
-   if (fPaintingOverlaps) {
-      TGeoVolume *crt;
-      crt = fOverlap->GetFirstVolume();
-      fMatrix = fOverlap->GetFirstMatrix();
-      dist = crt->GetShape()->DistancetoPrimitive(px,py);
-      if (dist<maxdist) {
-         gPad->SetSelected(crt);
-         box = (TGeoBBox*)crt->GetShape();
-         fMatrix->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-         fCheckedBox[3] = box->GetDX();
-         fCheckedBox[4] = box->GetDY();
-         fCheckedBox[5] = box->GetDZ();
-         return 0;
-      }
-      crt = fOverlap->GetSecondVolume();
-      fMatrix = fOverlap->GetSecondMatrix();
-      dist = crt->GetShape()->DistancetoPrimitive(px,py);
-      if (dist<maxdist) {
-         gPad->SetSelected(crt);
-         box = (TGeoBBox*)crt->GetShape();
-         fMatrix->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
-         fCheckedBox[3] = box->GetDX();
-         fCheckedBox[4] = box->GetDY();
-         fCheckedBox[5] = box->GetDZ();
-         return 0;
-      }      
-      return dist;
-   }
-   
+
    TGeoVolume *vol = volume;
    Bool_t vis = vol->IsVisible();
 //   Bool_t drawDaughters = kTRUE;
@@ -1586,26 +1586,19 @@ void TGeoPainter::SetVisOption(Int_t option) {
 Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const   
 {   
 //  Returns distance between point px,py on the pad an a shape.
-   static TBuffer3D buff(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
    Int_t dist = 9999;
    TView *view = gPad->GetView();
    if (!(numpoints && view)) return dist;
    if (shape->IsA()==TGeoShapeAssembly::Class()) return dist;
-   Double_t *points = buff.fPnts;
-   buff.SetRawSizes(numpoints, 3*numpoints, 0, 0, 0, 0);
+   fBuffer->SetRawSizes(numpoints, 3*numpoints, 0, 0, 0, 0);
+   Double_t *points = fBuffer->fPnts;
    shape->SetPoints(points);
    Double_t dpoint2, x1, y1, xndc[3];
    Double_t dmaster[3];
    Int_t j;
    for (Int_t i=0; i<numpoints; i++) {
       j = 3*i;
-//      if (fPaintingOverlaps) {
-//         fMatrix->LocalToMaster(&dlocal[0], &dmaster[0]);
-//      } else if (IsExplodedView())
-//         fGeoManager->LocalToMasterBomb(&dlocal[0], &dmaster[0]);
-      if (TGeoShape::GetTransform()) TGeoShape::GetTransform()->LocalToMaster(&points[j], dmaster); 
-      else if (fPaintingOverlaps) fMatrix->LocalToMaster(&points[j], dmaster);
-      else fGeoManager->LocalToMaster(&points[j], dmaster);
+      TGeoShape::GetTransform()->LocalToMaster(&points[j], dmaster); 
       points[j]=dmaster[0]; points[j+1]=dmaster[1]; points[j+2]=dmaster[2];
       view->WCtoNDC(&points[j], xndc);
       x1 = gPad->XtoAbsPixel(xndc[0]);

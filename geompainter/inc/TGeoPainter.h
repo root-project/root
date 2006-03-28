@@ -60,7 +60,7 @@ private:
    TGeoNode          *fCheckedNode;      // checked node
    TGeoOverlap       *fOverlap;          // current overlap
    TGeoHMatrix       *fGlobal;           // current global matrix
-   TGeoMatrix        *fMatrix;           // current local matrix in case of overlaps
+   TBuffer3D         *fBuffer;           // buffer used for painting
    TGeoManager       *fGeoManager;       // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
    TGeoShape         *fClippingShape;    // clipping shape
