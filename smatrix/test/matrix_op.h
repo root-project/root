@@ -244,9 +244,11 @@ void testMad_T(const M & m1, const M & m2, double & time, M & result) {
 template<class A, class B, class C> 
 void testATBA_T(const A & a, const B & b, double & time, C & result) {
   test::Timer t(time,"At*M*A");
+  C tmp = a;
   for (int l = 0; l < NLOOP; l++)
     {
-      result.AMultBt(TMatrixD(a,TMatrixD::kMult,b),a);
+      tmp.AMultB(a,b);
+      result.AMultBt(tmp,a);
     }
 }
 
