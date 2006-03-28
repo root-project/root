@@ -46,6 +46,7 @@ CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vc7strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/bcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrmold.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/alphastrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/Apiifold.%,$(CINTS2))
 
 # strip off possible leading path from compiler command name
@@ -105,7 +106,7 @@ ifeq ($(PLATFORM),sgi)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),alpha)
-CINTS2       += $(MODDIRS)/libstrm.cxx
+CINTS2       += $(MODDIRS)/alphastrm.cxx
 endif
 ifeq ($(PLATFORM),alphagcc)
 CINTS2       += $(MODDIRS)/libstrm.cxx
