@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.7 2006/03/28 10:00:17 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.8 2006/03/28 13:46:08 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1350,7 +1350,7 @@ Bool_t operator==(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
   // Check to see if two vectors are identical.
 
-  if (gMatrixCheck && !AreCompatible(v1,v2)) return kFALSE;
+  if (!AreCompatible(v1,v2)) return kFALSE;
   return (memcmp(v1.GetMatrixArray(),v2.GetMatrixArray(),v1.GetNrows()*sizeof(Element)) == 0);
 }
 
