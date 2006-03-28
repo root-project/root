@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.10 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.11 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -101,6 +101,8 @@ Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
    fClosingHeight = fClosingItem->GetHeight();
    fClosingHeight -= fClosingItem->fButton->GetDefaultHeight();
    fSelectedItem = item;
+   Selected(fSelectedItem);
+
    if (!fTimer) fTimer = new TTimer(this, 6); //10);
    fTimer->Reset();
    fTimer->TurnOn();

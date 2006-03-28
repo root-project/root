@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.6 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.7 2004/09/10 13:34:07 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -68,8 +68,6 @@ public:
 
 class TGShutter : public TGCompositeFrame {
 
-friend class OXShutterItem;
-
 protected:
    TTimer         *fTimer;                  // Timer for animation
    TGShutterItem  *fSelectedItem;           // Item currently open
@@ -92,6 +90,7 @@ public:
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    virtual Bool_t ProcessMessage(Long_t cmd, Long_t parm1, Long_t parm2);
+   virtual void   Selected(TGShutterItem *item) { Emit(" Selected(TGShutterItem*)", item); } //*SIGNAL*
 
    ClassDef(TGShutter,0)  // Shutter widget
 };
