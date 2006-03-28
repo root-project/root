@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.91 2005/12/19 10:46:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.92 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1180,7 +1180,7 @@ void TRootBrowser::Add(TObject *obj, const char *name, Int_t check)
    }
 
    // Don't show current dir and up dir links in the tree
-   if (name[0] == '.' && (name[1] == '.' || name[1] == '\0'))
+   if (name[0] == '.' && ((name[1] == '\0') || (name[1] == '.' && name[2] == '\0')))
       return;
 
    if (obj->IsFolder())
