@@ -135,7 +135,6 @@ else
 		fi; \
 		GNUMAKE=$(MAKE) ./configure CC="$$ACC" \
 		CFLAGS="$$ACFLAGS $$ACOPT" $(GSLDBG); \
-		echo $(MACOSX_CPU) > aap.h; \
 		if [ "$(MACOSX_CPU)" = "i386" ]; then \
 			sed '/DARWIN_IEEE_INTERFACE/d' config.status > _c.s; \
 			rm -f config.status config.h; \
@@ -190,5 +189,5 @@ distclean-mathmore: clean-mathmore
 distclean::     distclean-mathmore
 
 ##### extra rules ######
-$(MATHMOREO): $(GSLLIBA)
+$(MATHMOREO): $(GSLDEP)
 $(MATHMOREO): CXXFLAGS += $(GSLDIRI)
