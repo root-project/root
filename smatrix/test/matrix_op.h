@@ -119,7 +119,7 @@ double testDot_S(const V & v1, const V & v2, double & time) {
   double result=0; 
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result = Dot(v1,v2);  
+      result += Dot(v1,v2);  
     }
   return result; 
 }
@@ -131,7 +131,7 @@ double testInnerProd_S(const M & a, const V & v, double & time) {
   for (int l = 0; l < NLOOP; l++) 	
     {
       //#ifndef WIN32
-      result = Similarity(v,a);  
+      result += Similarity(v,a);  
 // #else 
 //       // cannot instantiate on Windows (don't know why? )
 //       V tmp = a*v; 
@@ -256,7 +256,7 @@ double testDot_T(const V & v1, const V & v2, double & time) {
   double result=0; 
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result = v1*v2;
+      result += v1*v2;
     }
   return result; 
 }
@@ -266,7 +266,7 @@ double testInnerProd_T(const M & a, const V & v, double & time) {
   test::Timer t(time,"prod");
   double result=0; 
   for (int l = 0; l < NLOOP; l++) 	
-    result = a.Similarity(v);
+    result += a.Similarity(v);
   return result; 
 }
 
@@ -356,7 +356,7 @@ double testDot_C(const V & v1, const V & v2, double & time) {
   double result=0; 
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result = dot(v1,v2);  
+      result += dot(v1,v2);  
     }
   return result; 
 }
@@ -368,7 +368,7 @@ double testInnerProd_C(const M & a, const V & v, double & time) {
   for (int l = 0; l < NLOOP; l++) 	
     {
       V tmp = a*v; 
-      result = dot(v,tmp);
+      result += dot(v,tmp);
     }
   return result; 
 }

@@ -11,7 +11,8 @@ include ../../test/Makefile.arch
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),macosx) 
-CXXFLAGS+= -g
+CXXFLAGS+= -g -funroll-loops
+#CXXFLAGS+= -g 
 endif
 
 ifneq ($(PLATFORM),win32) 
