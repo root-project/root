@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.92 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.93 2006/03/28 00:37:07 pcanal Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -791,7 +791,7 @@ ClassImp(TRootBrowser)
 
 //______________________________________________________________________________
 TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetRoot(), width, height), TBrowserImp(b)
+   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    // Create browser with a specified width and height.
 
@@ -804,7 +804,7 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width, UInt_t h
 //______________________________________________________________________________
 TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
                            UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetRoot(), width, height), TBrowserImp(b)
+   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    // Create browser with a specified width and height and at position x, y.
 
