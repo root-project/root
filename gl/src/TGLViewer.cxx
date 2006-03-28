@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.43 2006/03/14 15:29:15 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.44 2006/03/20 21:43:42 pcanal Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1553,7 +1553,12 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    eventSt.fX = px;
    eventSt.fY = py;
    eventSt.fState = 0;
-
+   
+   if (event != kKeyPress) {
+      eventSt.fY -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
+      eventSt.fX -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
+   }
+   
    switch (event) {
       case kMouseMotion:
          eventSt.fCode = kMouseMotion;
@@ -1604,6 +1609,7 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kButton2Motion:
       case kButton3Motion:
       {
+         
          eventSt.fCode = event == kButton1Motion ? kButton1 : event == kButton2Motion ? kButton2 : kButton3;
          eventSt.fType = kMotionNotify;
          HandleMotion(&eventSt);
