@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.16 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.17 2005/11/16 20:04:47 pcanal Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
    Bool_t                IsEqual(const TObject *obj) const { return fKey->IsEqual(obj); }
    TObject              *Key() const { return fKey; }
    TObject              *Value() const { return fValue; }
+   void                  SetValue(TObject *val) { fValue = val; }
 
    ClassDef(TPair,0); // Pair TObject*, TObject*
 };
