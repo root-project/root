@@ -298,8 +298,7 @@ void testVad_T(const V & v1, const V & v2, double & time, V & result) {
   test::Timer t(time,"V+V ");;
   for (int l = 0; l < 10*NLOOP; l++)
     {
-      result = v1;
-      result += v2;
+      result.Add(v1,v2);
     }
 }
 
