@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.63 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.64 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -374,7 +374,7 @@ public:
    virtual void   SetEditable(Bool_t on = kTRUE);
    virtual void   SetLayoutBroken(Bool_t on = kTRUE);
    virtual Bool_t IsLayoutBroken() const
-                  { return fLayoutBroken || !fLayoutManager || IsEditable(); }
+                  { return fLayoutBroken || !fLayoutManager; }
    virtual void   SetEditDisabled(UInt_t on = 1);
    virtual void   SetCleanup(Int_t mode = kLocalCleanup);
    virtual Int_t  MustCleanup() const { return fMustCleanup; }
