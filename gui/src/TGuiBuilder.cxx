@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.4 2004/12/09 22:55:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.5 2006/03/20 21:43:42 pcanal Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -59,21 +59,23 @@
 //
 //                    Key shortcuts
 //       ************************************************
-//   o Del       - delete selected frame
-//   o Shift-Del - crop action
-//   o Ctrl-X    - cut action
-//   o Ctrl-C    - copy action
-//   o Ctrl-V    - paste action
-//   o Ctrl-R    - replace action
-//   o Ctrl-L    - compact layout
-//   o Ctrl-B    - break layout
-//   o Ctrl-H    - switch horizontal-vertical layout
-//   o Ctrl-G    - switch on/off grid
-//   o Ctrl-S    - save action
-//   o Ctrl-O    - open and execute a ROOT macro file.  GUI components created
-//                 after macro execution will be emebedded to currently edited
-//                 design area.
-//   o Ctrl-N    - create new main frame
+//   o Return      - grab selected frames
+//   o Ctrl-Return - drop frames
+//   o Del         - delete selected frame
+//   o Shift-Del   - crop action
+//   o Ctrl-X      - cut action
+//   o Ctrl-C      - copy action
+//   o Ctrl-V      - paste action
+//   o Ctrl-R      - replace action
+//   o Ctrl-L      - compact layout
+//   o Ctrl-B      - break layout
+//   o Ctrl-H      - switch horizontal-vertical layout
+//   o Ctrl-G      - switch on/off grid
+//   o Ctrl-S      - save action
+//   o Ctrl-O      - open and execute a ROOT macro file. GUI components created
+//                   after macro execution will be emebedded to currently edited
+//                   design area.
+//   o Ctrl-N      - create new main frame
 //
 //Begin_Html
 /*
