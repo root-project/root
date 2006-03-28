@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.51 2005/11/16 20:11:59 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.52 2006/03/28 16:35:00 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -50,15 +50,19 @@ extern "C" {
 }
 #endif
 
-static Int_t key_pressed(Int_t key) { gApplication->KeyPressed(key); return 0; }
+//______________________________________________________________________________
+static Int_t Key_Pressed(Int_t key)
+{
+   gApplication->KeyPressed(key);
+   return 0;
+}
 
-namespace {
-   //______________________________________________________________________________
-   int BeepHook() {
-      if (!gSystem) return 0;
-      gSystem->Beep();
-      return 1;
-   }
+//______________________________________________________________________________
+static Int_t BeepHook()
+{
+   if (!gSystem) return 0;
+   gSystem->Beep();
+   return 1;
 }
 
 
@@ -199,8 +203,8 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    Gl_windowchanged();
 
    // Setup for tab completion
-   gTabCom = new TTabCom;
-   Gl_in_key = &key_pressed;
+   gTabCom      = new TTabCom;
+   Gl_in_key    = &Key_Pressed;
    Gl_beep_hook = &BeepHook;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.136 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.137 2006/03/28 16:35:00 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -274,12 +274,17 @@ const char *TSystem::HostName()
    return "Local host";
 }
 
-void TSystem::Beep(Int_t freq /*=-1*/, Int_t duration /*=-1*/, Bool_t setDefault /*=kFALSE*/) { 
+//______________________________________________________________________________
+void TSystem::Beep(Int_t freq /*=-1*/, Int_t duration /*=-1*/,
+                   Bool_t setDefault /*=kFALSE*/)
+{
    // Beep for duration milliseconds with a tone of freqency freq.
    // Defaults to printing the '\a' character to stdout.
    // If freq or duration is <0 respectively, use default value.
-   // If setDefault is set, only set the frequency and duration as new defaults, but don't beep.
+   // If setDefault is set, only set the frequency and duration as
+   // new defaults, but don't beep.
    // If default freq or duration is <0, never beep (silence)
+
    if (setDefault) {
       fBeepFreq     = freq;
       fBeepDuration = duration;
@@ -2293,14 +2298,14 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       if (libinfo) {
          Long_t load_time = libinfo->GetUniqueID();
          Long_t lib_time;
-         if ( gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) == 0 
+         if ( gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) == 0
               && (lib_time>load_time)) {
             reload = kTRUE;
          }
       }
 
       if ( !recompile && reload ) {
- 
+
          ::Info("ACLiC","%s has been modified and will be reloaded",
                 libname.Data());
          if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
@@ -2312,7 +2317,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
-         fCompiled->Add(k); 
+         fCompiled->Add(k);
 
          return !gSystem->Load(library);
       }
@@ -2350,7 +2355,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
-         fCompiled->Add(k); 
+         fCompiled->Add(k);
 
          return !gSystem->Load(library);
       }
@@ -2685,7 +2690,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
       k->SetUniqueID(lib_time);
       if (!keep) k->SetBit(kMustCleanup);
-      fCompiled->Add(k); 
+      fCompiled->Add(k);
 
 #ifndef NOCINT
       // This is intended to force a failure if not all symbols needed
@@ -3130,6 +3135,6 @@ void TSystem::CleanCompiledMacros()
    TIter next(fCompiled);
    TNamed *lib;
    while ((lib = (TNamed*)next())) {
-      if (lib->TestBit(kMustCleanup)) Unlink(lib->GetTitle()); 
+      if (lib->TestBit(kMustCleanup)) Unlink(lib->GetTitle());
    }
 }
