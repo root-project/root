@@ -9,39 +9,80 @@
 import os, sys, exceptions, string
 
 #---- Import PyROOT module -------------------------------------------
-import ROOT
-from libPyROOT import makeRootClass
-ROOT.SetMemoryPolicy( ROOT.kMemoryStrict )
+
+## load PyROOT C++ extension module, special case for linux and Sun
+needsGlobal =  ( 0 <= string.find( sys.platform, 'linux' ) ) or\
+               ( 0 <= string.find( sys.platform, 'sunos' ) )
+if needsGlobal:
+ # change dl flags to load dictionaries from pre-linked .so's
+   dlflags = sys.getdlopenflags()
+   sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
+
+import libPyROOT
+
+# reset dl flags if needed
+if needsGlobal:
+   sys.setdlopenflags( dlflags )
+del needsGlobal
+
+libPyROOT.SetMemoryPolicy( libPyROOT.kMemoryStrict )
+libPyROOT.MakeRootClass( 'PyROOT::TPyROOTApplication' ).InitCINTMessageCallback()
+#--- Enable Autoloading ignoring possible error for the time being
+try:    libPyROOT.gInterpreter.EnableAutoLoading()
+except: pass
+
+#--- template support ------------------------------------------------------------
+class Template:
+   def __init__( self, name ):
+      self.__name__ = name
+   def __call__( self, *args ):
+      name = self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:]
+      return libPyROOT.MakeRootTemplateClass( name, *args )
+
+sys.modules[ 'libPyROOT' ].Template = Template
+
+#--- scope place holder for STL classes ------------------------------------------
+class std:
+   stlclasses = ( 'complex', 'exception', 'pair', \
+      'deque', 'list', 'queue', 'stack', 'vector', 'map', 'multimap', 'set', 'multiset' )
+
+   for name in stlclasses:
+      exec '%(name)s = Template( "std::%(name)s" )' % { 'name' : name }
 
 #--- LoadDictionary function and aliases -----------------------------
 def loadDictionary(name) :
   if sys.platform == 'win32' :
-    sc = ROOT.gSystem.Load(name)
+    sc = libPyROOT.gSystem.Load(name)
   else :
-    sc = ROOT.gSystem.Load(name)
+    sc = libPyROOT.gSystem.Load(name)
   if sc == -1 : raise "Error Loading dictionary" 
 loadDict = loadDictionary
 
 #--- Load Cintex module and enable conversions Reflex->CINT-----------
-ROOT.gSystem.Load('libReflex')
-ROOT.gSystem.Load('libCintex')
-ROOT.Cintex.SetDebug(0)
-ROOT.Cintex.Enable()
+libPyROOT.gSystem.Load('libReflex')
+libPyROOT.gSystem.Load('libCintex')
+
+Cintex = libPyROOT.MakeRootClass( 'Cintex' )
+Cintex.SetDebug(0)
+Cintex.Enable()
 
 #--- Other functions needed -------------------------------------------
+class _global_cpp: pass
+libPyROOT.SetRootLazyLookup( _global_cpp.__dict__ ) 
+ 
 def Namespace( name ) :
-  if name == '' : return ROOT
-  else :          return getattr(ROOT,name)
+  if name == '' : return _global_cpp
+  else :          return libPyROOT.LookupRootEntity(name)
 makeNamespace = Namespace
 
 def makeClass( name ) :
-  return makeRootClass(name)
+  return libPyROOT.MakeRootClass(name)
   
 def addressOf( obj ) :
-  return ROOT.AddressOf(obj)[0]
+  return libPyROOT.AddressOf(obj)[0]
        
 def getAllClasses( ) :
-  TClassTable = makeRootClass('TClassTable')
+  TClassTable = makeClass('TClassTable')
   TClassTable.Init()
   classes = []
   while True :
@@ -51,8 +92,8 @@ def getAllClasses( ) :
   return classes
 
 #--- Global namespace and global objects -------------------------------
-gbl  = makeNamespace('')
-NULL = ROOT.NULL
+gbl  = _global_cpp
+NULL = 0 # libPyROOT.GetRootGlobal returns a descriptor, which needs a class
 class double(float): pass
 class short(int): pass
 class long_int(int): pass
@@ -63,5 +104,3 @@ class unsigned_long(long): pass
 #--- For test purposes --------------------------------------------------
 if __name__ == '__main__' :
   loadDict('test_CintexDict')
-
-    
