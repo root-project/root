@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.35 2005/08/18 11:12:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.36 2005/11/17 14:43:17 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -114,7 +114,8 @@ public:
       kShowToolBar      = BIT(18),
       kShowEditor       = BIT(19),
       kMoveOpaque       = BIT(20),
-      kResizeOpaque     = BIT(21)
+      kResizeOpaque     = BIT(21),
+      kIsGrayscale      = BIT(22)
    };
       
    TCanvas(Bool_t build=kTRUE);
@@ -177,6 +178,7 @@ public:
    void              Iconify() { fCanvasImp->Iconify(); }
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsFolder() const;
+   Bool_t            IsGrayscale();
    Bool_t            IsRetained() const { return fRetained; }
    virtual void      ls(Option_t *option="") const;
    void              MoveOpaque(Int_t set=1);
@@ -197,6 +199,7 @@ public:
    virtual void      SetCursor(ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t mode=1);
    virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
+   void              SetGrayscale(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsGrayscale
    void              SetWindowPosition(Int_t x, Int_t y) { fCanvasImp->SetWindowPosition(x, y); }
    void              SetWindowSize(UInt_t ww, UInt_t wh) { fCanvasImp->SetWindowSize(ww, wh); }
    void              SetCanvasSize(UInt_t ww, UInt_t wh); // *MENU*

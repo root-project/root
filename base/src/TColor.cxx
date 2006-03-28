@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.21 2004/12/07 15:34:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.22 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 
 
 ClassImp(TColor)
+
+Bool_t TColor::fgGrayscaleMode = kFALSE;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -41,6 +43,12 @@ ClassImp(TColor)
 <img src="gif/colors.gif">
 */
 //End_Html
+//
+// One can toggle between a grayscale preview and the regular           //
+// colored mode using SetGrayscale(). Note that in grayscale mode,      //
+// access via RGB will return grayscale values according to ITU         //
+// standards (and close to b&w printer grayscales), while access via    //
+// HLS returns de-saturated grayscales.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -148,6 +156,7 @@ void TColor::Copy(TObject &obj) const
    ((TColor&)obj).fLight = fLight;
    ((TColor&)obj).fAlpha = fAlpha;
    ((TColor&)obj).fSaturation = fSaturation;
+   ((TColor&)obj).fNumber = fNumber;
 }
 
 //______________________________________________________________________________
@@ -357,7 +366,7 @@ void TColor::Allocate()
    // Make this color known to the graphics system.
 
    if (gVirtualX && !gROOT->IsBatch())
-      gVirtualX->SetRGB(fNumber, fRed, fGreen, fBlue);
+      gVirtualX->SetRGB(fNumber, GetRed(), GetGreen(), GetBlue());
 }
 
 //______________________________________________________________________________
@@ -593,4 +602,27 @@ void TColor::SaveColor(ofstream &out, Int_t ci)
    }
 
    out<<"   ci = TColor::GetColor("<<quote<<cname<<quote<<");"<<endl;
+}
+
+//______________________________________________________________________________
+Bool_t TColor::IsGrayscale()
+{
+   // Return whether all colors return grayscale values
+   return fgGrayscaleMode;
+}
+
+//______________________________________________________________________________
+void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
+{
+   // Set whether all colors should return grayscale values
+   if (fgGrayscaleMode == set) return;
+
+   fgGrayscaleMode = set;
+
+   if (!gVirtualX || gROOT->IsBatch()) return;
+
+   TIter iColor(gROOT->GetListOfColors());
+   TColor* color = 0;
+   while ((color = (TColor*) iColor()))
+      color->Allocate();
 }

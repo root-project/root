@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.221 2006/02/06 16:15:13 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.222 2006/03/13 15:04:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2434,6 +2434,8 @@ void TPad::Paint(Option_t * /*option*/)
 {
    // Paint all primitives in pad.
 
+   if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
+
    TPad *padsav = (TPad*)gPad;
 
    fPadPaint = 1;
@@ -2651,6 +2653,8 @@ void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t y
 void TPad::PaintModified()
 {
    // Traverse pad hierarchy and (re)paint only modified pads.
+
+   if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
 
    TPad *padsav = (TPad*)gPad;
    TVirtualPS *saveps = gVirtualPS;

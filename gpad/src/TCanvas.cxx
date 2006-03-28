@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.106 2006/03/13 15:04:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.107 2006/03/13 16:14:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1998,4 +1998,21 @@ void TCanvas::DisconnectWidget()
 
    fCanvasID    = 0;
    fContextMenu = 0;
+}
+
+//______________________________________________________________________________
+Bool_t TCanvas::IsGrayscale() 
+{ 
+   // Check whether this canvas is to be drawn in grayscale mode.
+   return TestBit(kIsGrayscale); 
+}
+
+//______________________________________________________________________________
+void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
+{
+   // Set whether this canvas should be painted in grayscale, and re-paint 
+   // it if necessary.
+   if (IsGrayscale() == set) return;
+   SetBit(kIsGrayscale, set);
+   Paint(); // update canvas and all sub-pads, unconditionally!
 }

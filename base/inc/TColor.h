@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.10 2004/12/07 15:34:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.11 2004/12/10 15:54:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -44,14 +44,15 @@
 class TColor : public TNamed {
 
 private:
-   Int_t        fNumber;        //Color number identifier
-   Float_t      fRed;           //Fraction of Red
-   Float_t      fGreen;         //Fraction of Green
-   Float_t      fBlue;          //Fraction of Blue
-   Float_t      fHue;           //Hue
-   Float_t      fLight;         //Light
-   Float_t      fSaturation;    //Saturation
-   Float_t      fAlpha;         //Alpha (transparency)
+   Int_t         fNumber;        //Color number identifier
+   Float_t       fRed;           //Fraction of Red
+   Float_t       fGreen;         //Fraction of Green
+   Float_t       fBlue;          //Fraction of Blue
+   Float_t       fHue;           //Hue
+   Float_t       fLight;         //Light
+   Float_t       fSaturation;    //Saturation
+   Float_t       fAlpha;         //Alpha (transparency)
+   static Bool_t fgGrayscaleMode;//if set, GetColor will return grayscale
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
@@ -63,17 +64,20 @@ public:
    virtual ~TColor();
    const char   *AsHexString() const;
    void          Copy(TObject &color) const;
-   virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const { r = fRed; g = fGreen; b = fBlue; }
-   virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const { h = fHue; l = fLight; s = fSaturation; }
+   virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const 
+                    { r=GetRed(); g=GetGreen(); b=GetBlue(); }
+   virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const
+                    { h=GetHue(); l=GetLight(); s=GetSaturation(); }
    Int_t         GetNumber() const { return fNumber; }
    ULong_t       GetPixel() const;
-   Float_t       GetRed() const { return fRed; }
-   Float_t       GetGreen() const { return fGreen; }
-   Float_t       GetBlue() const { return fBlue; }
+   Float_t       GetRed() const { return IsGrayscale() ? GetGrayscale() : fRed; }
+   Float_t       GetGreen() const { return IsGrayscale() ? GetGrayscale() : fGreen; }
+   Float_t       GetBlue() const { return IsGrayscale() ? GetGrayscale() : fBlue; }
    Float_t       GetHue() const { return fHue; }
    Float_t       GetLight() const { return fLight; }
-   Float_t       GetSaturation() const { return fSaturation; }
+   Float_t       GetSaturation() const { return IsGrayscale() ? 0 : fSaturation; }
    Float_t       GetAlpha() const { return fAlpha; }
+   virtual Float_t GetGrayscale() const { /*ITU*/ return 0.299*fRed + 0.587*fGreen + 0.114*fBlue; }
    virtual void  ls(Option_t *option="") const;
    virtual void  Print(Option_t *option="") const;
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
@@ -97,6 +101,8 @@ public:
    static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
    static const char *PixelAsHexString(ULong_t pixel);
    static void    SaveColor(ofstream &out, Int_t ci);
+   static Bool_t  IsGrayscale();
+   static void    SetGrayscale(Bool_t set = kTRUE);
 
    ClassDef(TColor,2)  //Color defined by RGB or HLS
 };
