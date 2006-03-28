@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.50 2005/10/07 10:28:54 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.51 2005/11/16 20:11:59 pcanal Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -51,6 +51,15 @@ extern "C" {
 #endif
 
 static Int_t key_pressed(Int_t key) { gApplication->KeyPressed(key); return 0; }
+
+namespace {
+   //______________________________________________________________________________
+   int BeepHook() {
+      if (!gSystem) return 0;
+      gSystem->Beep();
+      return 1;
+   }
+}
 
 
 //----- Interrupt signal handler -----------------------------------------------
@@ -192,6 +201,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Setup for tab completion
    gTabCom = new TTabCom;
    Gl_in_key = &key_pressed;
+   Gl_beep_hook = &BeepHook;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.36 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.37 2006/03/06 21:59:30 pcanal Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1319,7 +1319,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
 
    if (nMatches == 0) {
       // Ring a bell!
-      cout << "\a" << flush;
+      gSystem->Beep();
       pos = -1;
       goto done;                //* RETURN *//
    }
@@ -2008,7 +2008,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             cout << endl;
             pos = -2;
          } else {
-            cout << "\a" << flush;
+            gSystem->Beep();
             pos = -1;
          }
 
@@ -2109,7 +2109,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             cout << endl;
             pos = -2;
          } else {
-            cout << "\a" << flush;
+            gSystem->Beep();
             pos = -1;
          }
 

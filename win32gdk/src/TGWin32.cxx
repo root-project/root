@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.107 2006/02/06 16:48:12 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.108 2006/02/20 12:02:18 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2547,7 +2547,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
                      break;
 
                   default:
-                     gdk_beep();
+                     gSystem->Beep();
                      break;
                   }
                }
@@ -5874,7 +5874,7 @@ void TGWin32::Bell(Int_t percent)
 {
    //
 
-   gdk_beep();
+   gSystem->Beep();
 }
 
 //______________________________________________________________________________

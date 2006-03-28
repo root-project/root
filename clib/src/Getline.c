@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.31 2005/03/29 13:10:21 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.32 2005/04/18 16:05:48 rdm Exp $ */
 /* Author: */
 
 /*
@@ -223,6 +223,9 @@ int (*Gl_tab_hook)(char *buf, int prompt_width, int *cursor_loc)
         line.  Not only does the cursor_loc tell the programmer where the
         TAB was received, but it can be reset so that the cursor will end
         up at the specified location after the screen is redrawn.
+
+int (*Gl_beep_hook)()
+        Called if \007 (beep) is about to be printed. Return !=0 if handled.
 */
 
 /* forward reference needed for Gl_tab_hook */
@@ -241,6 +244,7 @@ void    Gl_histadd(char *buf);       /* adds entries to hist */
 int             (*Gl_in_hook)(char *buf) = 0;
 int             (*Gl_out_hook)(char *buf) = 0;
 int             (*Gl_tab_hook)(char *buf, int prompt_width, int *loc) = gl_tab;
+int             (*Gl_beep_hook)() = 0;
 int             (*Gl_in_key)(int ch) = 0;
 
 /******************** imported interface *********************************/
@@ -639,6 +643,9 @@ gl_putc(int c)
 
     if ( !gl_passwd || !isgraph(c))
     {
+       if (c == '\007' && Gl_beep_hook && Gl_beep_hook())
+          return;
+
 #ifdef WIN32
        CharToOemBuff((char const *)&c,&ch,1);
 #endif

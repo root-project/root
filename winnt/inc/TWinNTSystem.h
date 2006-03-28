@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.37 2005/09/24 11:57:36 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.38 2006/01/10 19:41:10 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -99,6 +99,7 @@ private:
    Bool_t            CollectMembers(const char *lpszGroupName, int &groupIdx, int &memberIdx);
    Bool_t            CollectGroups();
    Bool_t            InitUsersGroups();
+   void              DoBeep(Int_t freq=-1, Int_t duration=-1) const;
 
 public:
    TWinNTSystem();

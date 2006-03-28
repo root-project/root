@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.130 2005/12/01 17:26:58 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.131 2006/03/21 11:32:58 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -875,6 +875,15 @@ const char *TWinNTSystem::HostName()
       fHostname = hn;
    }
    return fHostname;
+}
+
+
+//______________________________________________________________________________
+void TWinNTSystem::DoBeep(Int_t freq /*=-1*/, Int_t duration /*=-1*/) const {
+   // Beep
+   if (freq < 37) freq = 440;
+   if (duration < 0) duration = 100;
+   ::Beep(freq,duration);
 }
 
 //---- EventLoop ---------------------------------------------------------------

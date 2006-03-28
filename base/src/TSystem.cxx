@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.135 2006/02/21 16:57:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.136 2006/03/20 21:43:41 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -106,6 +106,8 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
    fCompiled      = 0;
    fHelpers       = 0;
    fInsideNotify  = kFALSE;
+   fBeepDuration  = 100;
+   fBeepFreq      = 440;
 }
 
 //______________________________________________________________________________
@@ -176,6 +178,10 @@ Bool_t TSystem::Init()
    fMakeExe       = MAKEEXE;
    fCompiled      = new TOrdCollection;
 
+   if (gEnv) {
+      fBeepDuration = gEnv->GetValue("Root.System.BeepDuration", 100);
+      fBeepFreq     = gEnv->GetValue("Root.System.BeepFreq", 440);
+   }
    if (!fName.CompareTo("Generic")) return kTRUE;
    return kFALSE;
 }
@@ -266,6 +272,23 @@ const char *TSystem::HostName()
    // Return the system's host name.
 
    return "Local host";
+}
+
+void TSystem::Beep(Int_t freq /*=-1*/, Int_t duration /*=-1*/, Bool_t setDefault /*=kFALSE*/) { 
+   // Beep for duration milliseconds with a tone of freqency freq.
+   // Defaults to printing the '\a' character to stdout.
+   // If freq or duration is <0 respectively, use default value.
+   // If setDefault is set, only set the frequency and duration as new defaults, but don't beep.
+   // If default freq or duration is <0, never beep (silence)
+   if (setDefault) {
+      fBeepFreq     = freq;
+      fBeepDuration = duration;
+      return;
+   }
+   if (fBeepDuration < 0 || fBeepFreq < 0) return; // silence
+   if (freq < 0) freq = fBeepFreq;
+   if (duration < 0) duration = fBeepDuration;
+   DoBeep(freq, duration);
 }
 
 //---- EventLoop ---------------------------------------------------------------

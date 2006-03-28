@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.52 2005/10/07 10:28:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.53 2005/11/14 09:46:45 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -202,6 +202,8 @@ protected:
    TString          fWdpath;           //Working directory
    TString          fHostname;         //Hostname
    Bool_t           fInsideNotify;     //Used by DispatchTimers()
+   Int_t            fBeepFreq;         //Used by Beep()
+   Int_t            fBeepDuration;     //Used by Beep()
 
    Bool_t           fInControl;        //True if in eventloop
    Bool_t           fDone;             //True if eventloop should be finished
@@ -237,6 +239,7 @@ protected:
    virtual const char    *ExpandFileName(const char *fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
    virtual const char    *GetLinkedLibraries();
+   virtual void           DoBeep(Int_t freq=-1, Int_t duration=-1) const { printf("\a"); fflush(stdout); }
 
 public:
    TSystem(const char *name = "Generic", const char *title = "Generic System");
@@ -254,6 +257,8 @@ public:
 
    static Int_t            GetErrno();
    static void             ResetErrno();
+   void                    Beep(Int_t freq=-1, Int_t duration=-1, Bool_t setDefault=kFALSE);
+   void                    GetBeepDefaults(Int_t &freq, Int_t &duration) const { freq = fBeepFreq; duration = fBeepDuration; }
 
    //---- EventLoop
    virtual void            Run();
