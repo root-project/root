@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.6 2006/03/23 11:23:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.7 2006/03/28 10:00:17 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1372,6 +1372,8 @@ Element operator*(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
   const Element * const fv1p = v1p+v1.GetNrows();
   while (v1p < fv1p)
     sum += *v1p++ * *v2p++;
+
+  return sum;
 }
 
 //______________________________________________________________________________
