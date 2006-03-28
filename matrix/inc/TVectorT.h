@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.3 2006/01/25 18:49:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.4 2006/01/26 16:31:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -171,6 +171,8 @@ public:
   TVectorT<Element> &Apply(const TElementActionT   <Element> &action);
   TVectorT<Element> &Apply(const TElementPosActionT<Element> &action);
 
+  void Add(const TVectorT<Element> &v);
+  void Add(const TVectorT<Element> &v1, const TVectorT<Element> &v2);
   void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements);
                                           else fElements = 0; fNrows = 0; }
   void Draw (Option_t *option=""); // *MENU*
@@ -202,7 +204,8 @@ template<class Element> inline const Element           &TVectorT<Element>::opera
 
   return fElements[aind];
 }
-
+template<class Element1,class Element2>
+                        Bool_t             AreCompatible(const TVectorT      <Element1> &source1,const TVectorT      <Element2> &source2,      Int_t              verbose=0);
 template<class Element> Bool_t             operator==   (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
 template<class Element> TVectorT<Element>  operator+    (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
 template<class Element> TVectorT<Element>  operator-    (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
@@ -230,8 +233,6 @@ template<class Element> TVectorT<Element> &ElementMult  (      TVectorT      <El
 template<class Element> TVectorT<Element> &ElementMult  (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source, const TVectorT<Element> &select);
 template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source);
 template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source, const TVectorT<Element> &select);
-template<class Element1,class Element2>
-                        Bool_t             AreCompatible(const TVectorT      <Element1> &source1,const TVectorT      <Element2> &source2,      Int_t              verbose=0);
 template<class Element> void               Compare      (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
 template<class Element> Bool_t             VerifyVectorValue
                                                         (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose=1,

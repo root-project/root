@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.5 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.6 2006/03/23 11:23:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -65,6 +65,43 @@ Element* TVectorT<Element>::New_m(Int_t size)
       return heap;
     }
   }
+}
+
+//______________________________________________________________________________
+template<class Element> 
+void TVectorT<Element>::Add(const TVectorT<Element> &v)
+{
+  // Add vector v to this vector
+
+  if (gMatrixCheck && !AreCompatible(*this,v)) {
+    Error("Add(TVectorT<Element> &)","vector's not compatible");
+    Invalidate();
+  }
+
+  const Element *sp = v.GetMatrixArray();
+        Element *tp = this->GetMatrixArray();
+  const Element * const tp_last = tp+fNrows;
+  while (tp < tp_last)
+    *tp++ += *sp++;
+}
+
+//______________________________________________________________________________
+template<class Element> 
+void TVectorT<Element>::Add(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
+{
+  // Set this vector to v1+v2
+
+  if (gMatrixCheck && !AreCompatible(*this,v1) && !AreCompatible(*this,v2)) {
+    Error("Add(TVectorT<Element> &)","vectors not compatible");
+    Invalidate();
+  }
+
+  const Element *sv1 = v1.GetMatrixArray();
+  const Element *sv2 = v2.GetMatrixArray();
+        Element *tp = this->GetMatrixArray();
+  const Element * const tp_last = tp+fNrows;
+  while (tp < tp_last)
+    *tp++ = *sv1++ + *sv2++;
 }
 
 //______________________________________________________________________________
@@ -611,14 +648,16 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTRow_const<Element>
 {
   // Assign a matrix row to a vector.
 
-  Assert(IsValid());
   const TMatrixTBase<Element> *mt = mr.GetMatrix();
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
-    Error("operator=(const TMatrixTRow_const &)","vector and row not compatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+     Assert(IsValid());
+     Assert(mt->IsValid());
+      if( mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
+         Error("operator=(const TMatrixTRow_const &)","vector and row not compatible");
+         Invalidate();
+         return *this;
+     }
   }
 
   const Int_t inc   = mr.GetInc();
@@ -641,14 +680,16 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTColumn_const<Eleme
 {
    // Assign a matrix column to a vector.
 
-  Assert(IsValid());
   const TMatrixTBase<Element> *mt = mc.GetMatrix();
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && mt->GetRowLwb() != fRowLwb || mt->GetNrows() != fNrows) {
-    Error("operator=(const TMatrixTColumn_const &)","vector and column not compatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+     Assert(IsValid());
+     Assert(mt->IsValid());
+     if( mt->GetRowLwb() != fRowLwb || mt->GetNrows() != fNrows) {
+        Error("operator=(const TMatrixTColumn_const &)","vector and column not compatible");
+        Invalidate();
+        return *this;
+     }
   }
 
   const Int_t inc    = mc.GetInc();
@@ -671,14 +712,16 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTDiag_const<Element
 {
   // Assign the matrix diagonal to a vector.
 
-  Assert(IsValid());
   const TMatrixTBase<Element> *mt = md.GetMatrix();
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && md.GetNdiags() != fNrows) {
-    Error("operator=(const TMatrixTDiag_const &)","vector and matrix-diagonal not compatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+     Assert(IsValid());
+     Assert(mt->IsValid());
+     if ( md.GetNdiags() != fNrows) {
+        Error("operator=(const TMatrixTDiag_const &)","vector and matrix-diagonal not compatible");
+       Invalidate();
+       return *this;
+     }
   }
 
   const Int_t    inc = md.GetInc();
@@ -702,14 +745,16 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseRow_const<El
   // Assign a sparse matrix row to a vector. The matrix row is implicitly transposed
   // to allow the assignment in the strict sense.
 
-  Assert(IsValid());
   const TMatrixTBase<Element> *mt = mr.GetMatrix();
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
-    Error("operator=(const TMatrixTSparseRow_const &)","vector and row not compatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+     Assert(IsValid());
+     Assert(mt->IsValid());
+     if (mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
+        Error("operator=(const TMatrixTSparseRow_const &)","vector and row not compatible");
+        Invalidate();
+        return *this;
+     }
   }
 
   const Int_t nIndex = mr.GetNindex();
@@ -732,14 +777,16 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseDiag_const<E
 {
   // Assign a sparse matrix diagonal to a vector.
 
-  Assert(IsValid());
   const TMatrixTBase<Element> *mt = md.GetMatrix();
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && md.GetNdiags() != fNrows) {
-    Error("operator=(const TMatrixTSparseDiag_const &)","vector and matrix-diagonal not compatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(IsValid());
+    Assert(mt->IsValid());
+    if (md.GetNdiags() != fNrows) {
+        Error("operator=(const TMatrixTSparseDiag_const &)","vector and matrix-diagonal not compatible");
+        Invalidate();
+        return *this;
+     } 
   } 
 
   Element * const pvData = this->GetMatrixArray();
@@ -862,13 +909,15 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
   // "Inplace" multiplication target = A*target. A needn't be a square one
   // If target has to be resized, it should own the storage: fIsOwner = kTRUE
 
-  Assert(IsValid());
-  Assert(a.IsValid());
 
-  if (gMatrixCheck && a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
-    Error("operator*=(const TMatrixT &)","vector and matrix incompatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+     Assert(IsValid());
+     Assert(a.IsValid());
+     if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
+        Error("operator*=(const TMatrixT &)","vector and matrix incompatible");
+        Invalidate();
+        return *this;
+     }
   }
 
   const Bool_t doResize = (fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb());
@@ -930,13 +979,14 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSparse<Element> &
   // "Inplace" multiplication target = A*target. A needn't be a square one
   // If target has to be resized, it should own the storage: fIsOwner = kTRUE
 
-  Assert(IsValid());
-  Assert(a.IsValid());
-
-  if (gMatrixCheck && a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
-    Error("operator*=(const TMatrixTSparse &)","vector and matrix incompatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+     Assert(IsValid());
+     Assert(a.IsValid());
+     if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
+        Error("operator*=(const TMatrixTSparse &)","vector and matrix incompatible");
+        Invalidate();
+        return *this;
+     }
   }
 
   const Bool_t doResize = (fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb());
@@ -994,13 +1044,14 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSym<Element> &a)
   // "Inplace" multiplication target = A*target. A is symmetric .
   // vector size will not change
 
-  Assert(IsValid());
-  Assert(a.IsValid());
-
-  if (gMatrixCheck && a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
-    Error("operator*=(const TMatrixTSym &)","vector and matrix incompatible");
-    Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+     Assert(IsValid());
+     Assert(a.IsValid());
+     if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
+        Error("operator*=(const TMatrixTSym &)","vector and matrix incompatible");
+        Invalidate();
+        return *this;
+     }
   }
 
   Element work[kWorkMax];
@@ -1299,7 +1350,7 @@ Bool_t operator==(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
   // Check to see if two vectors are identical.
 
-  if (!AreCompatible(v1,v2)) return kFALSE;
+  if (gMatrixCheck && !AreCompatible(v1,v2)) return kFALSE;
   return (memcmp(v1.GetMatrixArray(),v2.GetMatrixArray(),v1.GetNrows()*sizeof(Element)) == 0);
 }
 
@@ -1321,8 +1372,6 @@ Element operator*(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
   const Element * const fv1p = v1p+v1.GetNrows();
   while (v1p < fv1p)
     sum += *v1p++ * *v2p++;
-
-  return sum;
 }
 
 //______________________________________________________________________________
