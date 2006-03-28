@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.16 2005/08/25 16:37:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.17 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -134,6 +134,17 @@ TGButton *TGToolBar::GetButton(Int_t id) const
    }
 
    return item;
+}
+
+//______________________________________________________________________________
+void TGToolBar::SetId(TGButton *button, Int_t id)
+{
+   // changes id for button.
+
+   TPair *a = (TPair*) fMapOfButtons->FindObject(button);
+   if (a) {
+      a->SetValue((TObject*)id);
+   }
 }
 
 //______________________________________________________________________________
