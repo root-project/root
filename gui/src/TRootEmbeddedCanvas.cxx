@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.17 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.18 2005/12/11 10:36:41 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -74,6 +74,8 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
+
+   fEditDisabled = kEditDisable;
 }
 
 
@@ -100,6 +102,7 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    fCanvas  = 0;
    fButton  = 0;
    fAutoFit = kTRUE;
+   fEditDisabled = kEditDisableLayout;
 
    fCWinId = gVirtualX->InitWindow((ULong_t)GetViewPort()->GetId());
    Window_t win = gVirtualX->GetWindowID(fCWinId);
