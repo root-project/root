@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.8 2003/10/09 07:40:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -37,7 +37,8 @@ TRootControlBar::TRootControlBar(TControlBar *c, const char *title, Int_t x, Int
    fXpos    = x;
    fYpos    = y;
    fClicked = 0;
-   
+   SetCleanup(kDeepCleanup);
+
    // if controlbar orientation is horizontal change layout manager
    if (c && c->GetOrientation() == TControlBar::kHorizontal) {
       ChangeOptions(kHorizontalFrame);
@@ -54,9 +55,8 @@ TRootControlBar::~TRootControlBar()
 {
    // Delete the control bar implementation.
 
-   if (fWidgets) fWidgets->Delete();
    delete fWidgets;
-   delete fL1;
+   fWidgets = 0;
 }
 
 //______________________________________________________________________________
