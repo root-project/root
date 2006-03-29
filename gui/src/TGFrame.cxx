@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.118 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.119 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1243,8 +1243,9 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 
       Float_t r, g, b;
       TColor::Pixel2RGB(fBackground, r, g, b);
-      r *= 0.9;
-      b *= 0.9;
+      r *= 1.05;
+      g *= 1.07;
+      b *= 1.07;
       Pixel_t back = TColor::RGB2Pixel(r, g, b);
       gVirtualX->SetWindowBackground(fId, back);
       return kTRUE;

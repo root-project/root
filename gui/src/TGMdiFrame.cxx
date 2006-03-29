@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.7 2005/11/21 00:25:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.8 2005/11/24 17:08:35 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -64,6 +64,7 @@ TGMdiFrame::~TGMdiFrame()
 {
    // TGMdiFrame destructor.
 
+   Cleanup();
    fMain->RemoveMdiFrame(this);
 }
 

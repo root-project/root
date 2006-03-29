@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.18 2005/12/11 10:36:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.19 2006/03/28 16:26:47 antcheva Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
 
-   fEditDisabled = kEditDisable;
+   fEditDisabled = kEditDisableGrab;
 }
 
 
