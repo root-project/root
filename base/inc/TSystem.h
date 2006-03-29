@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.53 2005/11/14 09:46:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.54 2006/03/28 16:35:00 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -239,7 +239,7 @@ protected:
    virtual const char    *ExpandFileName(const char *fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
    virtual const char    *GetLinkedLibraries();
-   virtual void           DoBeep(Int_t freq=-1, Int_t duration=-1) const { printf("\a"); fflush(stdout); }
+   virtual void           DoBeep(Int_t /*freq*/=-1, Int_t /*duration*/=-1) const { printf("\a"); fflush(stdout); }
 
 public:
    TSystem(const char *name = "Generic", const char *title = "Generic System");
