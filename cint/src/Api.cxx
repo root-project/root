@@ -375,7 +375,7 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     throw;
   }
 #ifdef G__STD_EXCEPTION
-  catch(exception& x) {
+  catch(std::exception& x) {
     char buf[G__LONGLINE];
 #ifdef G__VISUAL
     // VC++ has problem in typeid(x).name(), so every thrown exception is
