@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.4 2004/10/15 15:36:41 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.5 2004/10/25 12:06:50 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -63,6 +63,7 @@ private:
    TGPopupMenu   *fLassoMenu;          // context menu for lasso drawn
    Window_t       fTargetId;           // an id of window where drop 
    Bool_t         fDropStatus;         // kTRUE if drop was successfull
+   Bool_t         fStop;               // kTRUE if stopped
 
    void           Init();
    void           DrawGrabRectangles(TGWindow *win = 0);
@@ -70,6 +71,19 @@ private:
    TGCompositeFrame *FindLayoutFrame(TGFrame *f);
    Bool_t         IsSelectedVisible();
    void           CloseMenus();
+   Bool_t         IsEditDisabled(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisable); }
+   Bool_t         IsGrabDisabled(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableGrab); }
+   Bool_t         IsEventsDisabled(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableEvents); }
+   Bool_t         IsFixedLayout(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableLayout); }
+   Bool_t         IsFixedH(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableHeight); }
+   Bool_t         IsFixedW(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableWidth); }
+   Bool_t         IsFixedSize(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableResize); }
+   void           ChangeSelected(TGFrame *f); 
+   TGFrame       *GetEditableParent(TGFrame *f);
+   TGFrame       *GetMovableParent(TGWindow *p);
+   TGWindow      *GetResizableParent(TGWindow *p);
+   void           RaiseMdiFrame(TGFrame *in);
+   Bool_t         CheckTargetAtPoint(Int_t x, Int_t y);
 
 public:
    TGFrame       *InEditable(Window_t id);
@@ -159,7 +173,10 @@ public:
    Bool_t         GetDropStatus() const { return fDropStatus; }
    void           SetBuilder(TRootGuiBuilder *b) { fBuilder = b; }
 
-   void           Selected(TGFrame *frame); //*SIGNAL*
+   Bool_t         CanChangeLayout(TGWindow *w) const;
+   Bool_t         CanChangeLayoutOrder(TGWindow *w) const;
+   Bool_t         CanCompact(TGWindow *w) const;
+   Bool_t         IsStopped() const { return fStop; }
 
    ClassDef(TGuiBldDragManager,0)  // drag and drop manager
 };

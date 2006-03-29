@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.2 2004/12/09 22:55:06 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.3 2005/08/19 09:46:37 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TRootGuiBuilder                                                          //
+// TRootGuiBuilder                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -25,6 +25,25 @@
 #ifndef ROOT_TGuiBuilder
 #include "TGuiBuilder.h"
 #endif
+
+enum EGuiBuilderMenuIds {
+   kGUIBLD_FILE_NEW,
+   kGUIBLD_FILE_CLOSE,
+   kGUIBLD_FILE_EXIT,
+   kGUIBLD_FILE_START,
+   kGUIBLD_FILE_STOP,
+   kGUIBLD_FILE_SAVE,
+
+   kGUIBLD_WINDOW_HOR,
+   kGUIBLD_WINDOW_VERT,
+   kGUIBLD_WINDOW_CASCADE,
+   kGUIBLD_WINDOW_OPAQUE,
+   kGUIBLD_WINDOW_ARRANGE,
+
+   kGUIBLD_HELP_CONTENTS,
+   kGUIBLD_HELP_ABOUT,
+   kGUIBLD_HELP_BUG
+};
 
 
 class TGShutter;
@@ -37,12 +56,14 @@ class TGuiBldDragManager;
 class TGToolBar;
 class TGMdiFrame;
 class TGuiBldEditor;
+class TGButton;
+class TGPictureButton;
 
 class TRootGuiBuilder : public TGuiBuilder, public TGMainFrame {
 
 private:
    TGuiBldDragManager *fManager;    // drag and drop manager
-
+   TGButton          *fActionButton;// action button 
    TGToolBar         *fToolBar;     // guibuider toolbar
    TGShutter         *fShutter;     // widget palette
    TGMdiMainFrame    *fMain;        // main mdi frame
@@ -57,6 +78,7 @@ private:
    TGMdiFrame        *fEditable;    //  mdi frame where editted frame is  located
    TGuiBldEditor     *fEditor;      // frame property editor
    const TGPicture   *fIconPic;     // icon picture
+   TGPictureButton   *fStartButton; // start button
 
    void InitMenu();
    void EnableLassoButtons(Bool_t on = kTRUE);
@@ -87,11 +109,13 @@ public:
    virtual void      HandleWindowClosed(Int_t id);
    virtual void      UpdateStatusBar(const char *text = 0);
    virtual void      EraseStatusBar();
+   virtual void      SwitchToolbarButton();
 
    TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
    TGuiBldEditor    *GetEditor() const { return fEditor; }
    static TGFrame   *HSplitter();
    static TGFrame   *VSplitter();
+   TGMdiMainFrame   *GetMdiMain() const { return fMain; }  
 
    ClassDef(TRootGuiBuilder,0)  // ROOT GUI Builder
 };

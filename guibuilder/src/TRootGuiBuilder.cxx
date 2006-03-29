@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.17 2005/08/30 12:30:11 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.18 2005/12/08 13:03:57 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -85,14 +85,16 @@
 //
 //                    Key shortcuts
 //       ************************************************
+//   o Return    - grab selected frames
+//   o Ctrl-Return - drop frames
 //   o Del       - delete selected frame
 //   o Shift-Del - crop action
 //   o Ctrl-X    - cut action
 //   o Ctrl-C    - copy action
 //   o Ctrl-V    - paste action
 //   o Ctrl-R    - replace action
-//   o Ctrl-L    - compact layout
-//   o Ctrl-B    - break layout
+//   o Ctrl-L    - compact
+//   o Ctrl-B    - enable/disable layout 
 //   o Ctrl-H    - switch horizontal-vertical layout
 //   o Ctrl-G    - switch on/off grid
 //   o Ctrl-S    - save action
@@ -107,23 +109,6 @@
 */
 //End_Html
 
-
-
-enum EMenuIds {
-   kFILE_NEW,
-   kFILE_CLOSE,
-   kFILE_EXIT,
-
-   kWINDOW_HOR,
-   kWINDOW_VERT,
-   kWINDOW_CASCADE,
-   kWINDOW_OPAQUE,
-   kWINDOW_ARRANGE,
-
-   kHELP_CONTENTS,
-   kHELP_ABOUT,
-   kHELP_BUG
-};
 
 const char gHelpBuilder[] = "\
  o Press Ctrl-Double-Click to start/stop edit mode\n\
@@ -147,14 +132,16 @@ const char gHelpBuilder[] = "\
 \n\
                     Key shortcuts\n\
      ************************************************\n\
+ o Return    - grab selected frames\n\
+ o Ctrl-Return - drop frames\n\
  o Del       - delete selected frame\n\
  o Shift-Del - crop\n\
  o Ctrl-X    - cut\n\
  o Ctrl-C    - copy\n\
  o Ctrl-V    - paste\n\
  o Ctrl-R    - replace\n\
- o Ctrl-L    - compact layout\n\
- o Ctrl-B    - break layout\n\
+ o Ctrl-L    - compact frame\n\
+ o Ctrl-B    - enable/disable layout\n\
  o Ctrl-H    - switch Horizontal-Vertical layout\n\
  o Ctrl-G    - switch ON/OFF grid\n\
  o Ctrl-S    - save\n\
@@ -179,18 +166,20 @@ const char gHelpAboutBuilder[] = "\
 //----- Toolbar stuff...
 
 static ToolBarData_t gToolBarData[] = {
+   { "bld_edit.xpm",   "Start Edit (Ctrl-Dbl-Click)",   kFALSE, kEditableAct, 0 },
+   { "",                 "",               kFALSE, -1, 0 },
    { "bld_new.xpm",   "New (Ctrl-N)",   kFALSE, kNewAct, 0 },
    { "bld_open.xpm",   "Open (Ctrl-O)",   kFALSE, kOpenAct, 0 },
    { "bld_save.xpm",   "Save (Ctrl-S)",   kFALSE, kSaveAct, 0 },
    { "",                 "",               kFALSE, -1, 0 },
-   { "bld_pointer.xpm",   "Selector (Ctrl-Click)",   kTRUE, kSelectAct, 0 },
-   { "bld_grab.xpm",   "Grab Selected Frames (Return)",   kTRUE, kGrabAct, 0 },
+//   { "bld_pointer.xpm",   "Selector (Ctrl-Click)",   kTRUE, kSelectAct, 0 },
+   //{ "bld_grab.xpm",   "Grab Selected Frames (Return)",   kTRUE, kGrabAct, 0 },
    { "",                 "",               kFALSE, -1, 0 },
+   { "bld_layout.xpm",   "Compact (Ctrl-L)",        kFALSE,  kCompactAct, 0 },
+   { "bld_break.xpm",   "Disable/Enable layout (Ctrl-B)",        kFALSE,  kBreakLayoutAct, 0 },
    { "bld_hbox.xpm",  "Lay Out Horizontally (Ctrl-H)",    kFALSE,  kLayoutHAct, 0 },
    { "bld_vbox.xpm",   "Lay Out Vertically (Ctrl-H)",    kFALSE,  kLayoutVAct, 0 },
-   { "bld_grid.xpm",   "Lay Out in a Grid (Ctrl+G)",     kFALSE,  kGridAct, 0 },
-   { "bld_layout.xpm",   "Compact Layout (Ctrl-L)",        kFALSE,  kCompactAct, 0 },
-   { "bld_break.xpm",   "Break Layout (Ctrl-B)",        kFALSE,  kBreakLayoutAct, 0 },
+   { "bld_grid.xpm",   "On/Off Grid (Ctrl+G)",     kFALSE,  kGridAct, 0 },
    { "",                 "",               kFALSE, -1, 0 },
    { "bld_AlignTop.xpm",   "Align Top (Up|Shift  Arrow)",        kFALSE,  kUpAct, 0 },
    { "bld_AlignBtm.xpm",   "Align Bottom (Down|Shift Arrow)",        kFALSE,  kDownAct, 0 },
@@ -203,9 +192,9 @@ static ToolBarData_t gToolBarData[] = {
    { "bld_replace.xpm",   "Replace (Ctrl-R)",        kFALSE,  kReplaceAct, 0 },
    { "bld_delete.xpm",   "Delete (Del/Backspace)",        kFALSE,  kDeleteAct, 0 },
    { "bld_crop.xpm",   "Crop (Shift-Del)",        kFALSE,  kCropAct, 0 },
-   { "",                 "",               kFALSE, -1, 0 },
-   { "bld_undo.xpm",   "Undo (Ctrl-Z)",        kFALSE,  kUndoAct, 0 },
-   { "bld_redo.xpm",   "Redo (Shift-Ctrl-Z)",        kFALSE,  kRedoAct, 0 },
+//   { "",                 "",               kFALSE, -1, 0 },
+//   { "bld_undo.xpm",   "Undo (Ctrl-Z)",        kFALSE,  kUndoAct, 0 },
+//   { "bld_redo.xpm",   "Redo (Shift-Ctrl-Z)",        kFALSE,  kRedoAct, 0 },
    { 0,                  0,                kFALSE, 0, 0 }
 };
 
@@ -228,14 +217,31 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+class TRootGuiBldMain : public TGMdiMainFrame {
+public:
+   TRootGuiBuilder *fBuilder;
+
+public:
+   TRootGuiBldMain(TRootGuiBuilder *bld, TGCompositeFrame *cf, TGMdiMenuBar *bar) :
+      TGMdiMainFrame(cf, bar, 1, 1), fBuilder(bld)
+   {
+
+   }
+   virtual ~TRootGuiBldMain() {}
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
              TGMainFrame(p ? p : gClient->GetDefaultRoot(), 1, 1)
 {
    // ctor
 
    SetCleanup(kDeepCleanup);
-   fEditDisabled = kTRUE;
+   fEditDisabled = kEditDisable;
    gGuiBuilder  = this;
+   fActionButton = 0;
 
    if (gDragManager) {
       fManager = (TGuiBldDragManager *)gDragManager;
@@ -266,6 +272,13 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
          continue;
       }
       TGPictureButton *pb = (TGPictureButton*)fToolBar->AddButton(this, &gToolBarData[i], spacing);
+      spacing = 0;
+
+      if (gToolBarData[i].fId == kEditableAct) {
+         fStartButton = pb;
+         continue;
+      }
+
       TGToolTip *tip = pb->GetToolTip();
       if (tip) {
          tip->Connect("Reset()", "TRootGuiBuilder", this, "UpdateStatusBar()");
@@ -274,15 +287,15 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 
       TString pname = gToolBarData[i].fPixmap;
       pname.ReplaceAll(".", "_d.");
+
       const TGPicture *dpic = fClient->GetPicture(pname.Data());
       if (dpic) pb->SetDisabledPicture(dpic);
 
       if ((gToolBarData[i].fId == kUndoAct) || (gToolBarData[i].fId == kRedoAct)) {
          pb->SetState(kButtonDisabled);
       }
-
-      spacing = 0;
    }
+
    fToolBar->Connect("Clicked(Int_t)", "TGuiBldDragManager", fManager, "HandleAction(Int_t)");
 
    hl = new TGHorizontal3DLine(this);
@@ -306,7 +319,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    splitter->SetFrame(fShutter, kTRUE);
    cf->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
-   fMain = new TGMdiMainFrame(cf, fMenuBar, 1, 1);
+   fMain = new TRootGuiBldMain(this, cf, fMenuBar);
    cf->AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    TGFrame *mdicont = fMain->GetContainer();
@@ -319,7 +332,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
       cf->AddFrame(fEditor, new TGLayoutHints(kLHintsNormal | kLHintsExpandY));
       fManager->SetPropertyEditor(fEditor);
       fEditor->SetEmbedded();
-      fMain->Connect("SetCurrent(TGMdiFrame*)", "TGuiBldEditor", fEditor, "ChangeSelected(TGFrame*)");
+
 //      ed->ChangeOptions(ed->GetOptions() | kFixedWidth);
 //      splitter = new TGVSplitter(cf);
 //      splitter->SetFrame(ed, kFALSE);
@@ -332,8 +345,6 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddSection("Input");
    AddSection("Display");
 //   AddSection("Complex Input");
-//   AddSection("Extended");
-
 //   AddSection("Extended");
 
    TGuiBldAction *act = new TGuiBldAction("TGMainFrame", "Main Frame", kGuiBldProj);
@@ -430,6 +441,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_groupframe.xpm";
    AddAction(act, "Containers");
 
+   act = new TGuiBldAction("TGTab", "Tabbed Frame", kGuiBldCtor);
+   act->fAct = "new TGTab()";
+   act->fPic = "bld_tab.xpm";
+   AddAction(act, "Containers");
+
+/*
    act = new TGuiBldAction("TGVSplitter", "Horizontal Panes", kGuiBldFunc);
    act->fAct = "TRootGuiBuilder::VSplitter()";
    act->fPic = "bld_hpaned.xpm";
@@ -439,6 +456,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fAct = "TRootGuiBuilder::HSplitter()";
    act->fPic = "bld_vpaned.xpm";
    AddAction(act, "Containers");
+*/
 
    fShutter->Resize(140, fShutter->GetHeight());
 
@@ -446,7 +464,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
    MapSubwindows();
-   Resize(1000, 700);
+	
+   Int_t qq; 
+	UInt_t ww; 
+	UInt_t hh;
+	gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), qq, qq, ww, hh);
+	Resize(ww - 100, hh - 100);
 
    SetWindowName("ROOT GuiBuilder");
    SetIconName("ROOT GuiBuilder");
@@ -489,7 +512,20 @@ void TRootGuiBuilder::CloseWindow()
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    if (root) root->SetEditable(kFALSE);
-   fManager->SetEditable(kFALSE);
+
+   fEditor->Reset();
+
+   if (fMain->GetNumberOfFrames() == 0) {
+      fMenuFile->DisableEntry(kGUIBLD_FILE_CLOSE);
+      fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+      fMenuFile->DisableEntry(kGUIBLD_FILE_START);
+   } else {
+      fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+      fMenuFile->EnableEntry(kGUIBLD_FILE_START);
+      fMenuFile->EnableEntry(kGUIBLD_FILE_CLOSE);
+   }
+
+   fMain->CloseAll();
    Hide();
 }
 
@@ -548,8 +584,23 @@ void TRootGuiBuilder::HandleButtons()
 {
    //
 
-   TGButton *btn = (TGButton *)gTQSender;
-   TGuiBldAction *act  = (TGuiBldAction *)btn->GetUserData();
+   TGFrame *parent;
+
+   if (fActionButton) {
+      parent = (TGFrame*)fActionButton->GetParent();
+      parent->ChangeOptions(parent->GetOptions() & ~kSunkenFrame);
+      fClient->NeedRedraw(parent, kTRUE);
+   }
+
+   if (!fClient->IsEditable()) {
+      HandleMenu(kGUIBLD_FILE_START);
+   }
+
+   fActionButton = (TGButton *)gTQSender;
+   TGuiBldAction *act  = (TGuiBldAction *)fActionButton->GetUserData();
+   parent = (TGFrame*)fActionButton->GetParent();
+   parent->ChangeOptions(parent->GetOptions() | kSunkenFrame);
+   fClient->NeedRedraw(parent, kTRUE);
 
    if (act) {
       fAction = act;
@@ -565,6 +616,11 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
    if (!fAction || fAction->fAct.IsNull()) return 0;
 
    TGFrame *ret = 0;
+
+   if (!fClient->IsEditable()) { 
+      TGMdiFrame *current = fMain->GetCurrent();
+      if (current) current->SetEditable(kTRUE);
+   }
 
    switch (fAction->fType) {
       case kGuiBldProj:
@@ -586,36 +642,42 @@ void TRootGuiBuilder::InitMenu()
 {
    // inititiate Gui Builder menu
 
-   fMenuBar->SetEditDisabled(kTRUE);
+   fMenuBar->SetEditDisabled(1);
 
    fMenuFile = new TGPopupMenu(fClient->GetDefaultRoot());
-   fMenuFile->SetEditDisabled(kTRUE);
-   fMenuFile->AddEntry(new TGHotString("&New Window"), kFILE_NEW);
-   fMenuFile->AddEntry(new TGHotString("&Close Window"), kFILE_CLOSE);
+   fMenuFile->SetEditDisabled(1);
+   fMenuFile->AddEntry(new TGHotString("&Edit (Ctrl-dbl-click)"), kGUIBLD_FILE_START);
+   fMenuFile->AddEntry(new TGHotString("&Stop (Ctrl-dbl-click)"), kGUIBLD_FILE_STOP);
+   fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+   fMenuFile->DisableEntry(kGUIBLD_FILE_START);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(new TGHotString("E&xit"), kFILE_EXIT);
+   fMenuFile->AddEntry(new TGHotString("&New Window"), kGUIBLD_FILE_NEW);
+   fMenuFile->AddEntry(new TGHotString("&Close Window"), kGUIBLD_FILE_CLOSE);
+   fMenuFile->DisableEntry(kGUIBLD_FILE_CLOSE);
+   fMenuFile->AddSeparator();
+   fMenuFile->AddEntry(new TGHotString("E&xit"), kGUIBLD_FILE_EXIT);
 
    fMenuWindow = new TGPopupMenu(fClient->GetDefaultRoot());
-   fMenuWindow->SetEditDisabled(kTRUE);
-   fMenuWindow->AddEntry(new TGHotString("Tile &Horizontally"), kWINDOW_HOR);
-   fMenuWindow->AddEntry(new TGHotString("Tile &Vertically"), kWINDOW_VERT);
-   fMenuWindow->AddEntry(new TGHotString("&Cascade"), kWINDOW_CASCADE);
+   fMenuWindow->SetEditDisabled(1);
+   fMenuWindow->AddEntry(new TGHotString("Tile &Horizontally"), kGUIBLD_WINDOW_HOR);
+   fMenuWindow->AddEntry(new TGHotString("Tile &Vertically"), kGUIBLD_WINDOW_VERT);
+   fMenuWindow->AddEntry(new TGHotString("&Cascade"), kGUIBLD_WINDOW_CASCADE);
    fMenuWindow->AddSeparator();
    //fMenuWindow->AddPopup(new TGHotString("&Windows"), fMain->GetWinListMenu());
    fMenuWindow->AddSeparator();
-   fMenuWindow->AddEntry(new TGHotString("&Arrange icons"), kWINDOW_ARRANGE);
+   fMenuWindow->AddEntry(new TGHotString("&Arrange icons"), kGUIBLD_WINDOW_ARRANGE);
    fMenuWindow->AddSeparator();
-   fMenuWindow->AddEntry(new TGHotString("&Opaque resize"), kWINDOW_OPAQUE);
+   fMenuWindow->AddEntry(new TGHotString("&Opaque resize"), kGUIBLD_WINDOW_OPAQUE);
 
-   fMenuWindow->CheckEntry(kWINDOW_OPAQUE);
+   fMenuWindow->CheckEntry(kGUIBLD_WINDOW_OPAQUE);
 
    fMenuHelp = new TGPopupMenu(fClient->GetDefaultRoot());
-   fMenuHelp->SetEditDisabled(kTRUE);
-   fMenuHelp->AddEntry(new TGHotString("&Contents"), kHELP_CONTENTS);
+   fMenuHelp->SetEditDisabled(1);
+   fMenuHelp->AddEntry(new TGHotString("&Contents"), kGUIBLD_HELP_CONTENTS);
    fMenuHelp->AddSeparator();
-   fMenuHelp->AddEntry(new TGHotString("&About"), kHELP_ABOUT);
+   fMenuHelp->AddEntry(new TGHotString("&About"), kGUIBLD_HELP_ABOUT);
    //fMenuHelp->AddSeparator();
-   //fMenuHelp->AddEntry(new TGHotString("&Send Bug Report"), kHELP_BUG);
+   //fMenuHelp->AddEntry(new TGHotString("&Send Bug Report"), kGUIBLD_HELP_BUG);
 
    fMenuBar->AddPopup(new TGHotString("&File"), fMenuFile,
                       new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
@@ -672,42 +734,57 @@ void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 {
    //
 
+   fSelected = fManager->GetSelected();
+
+   if (!fSelected) {
+      return;
+   }
+
    TGButton *btn = 0;
    Bool_t comp = kFALSE;
    TGLayoutManager *lm = 0;
    Bool_t hor = kFALSE;
+   Bool_t fixed = kFALSE;
+   Bool_t enable = on;
+   Bool_t compact_disable = kTRUE;
 
-   if (fSelected && fSelected->InheritsFrom(TGCompositeFrame::Class())) {
+   if (fSelected->InheritsFrom(TGCompositeFrame::Class())) {
       lm = ((TGCompositeFrame*)fSelected)->GetLayoutManager();
       comp = kTRUE;
       hor = lm && lm->InheritsFrom(TGHorizontalLayout::Class());
+      fixed = !fManager->CanChangeLayout(fSelected);
+      compact_disable = !fManager->CanCompact(fSelected);
+   } else {
+      enable = kFALSE;
    }
 
    btn = fToolBar->GetButton(kCompactAct);
-   if (btn) btn->SetState(on && comp ? kButtonUp : kButtonDisabled);
+   if (btn) btn->SetState(enable && comp && !fixed && !compact_disable ? 
+                          kButtonUp : kButtonDisabled);
 
    btn = fToolBar->GetButton(kLayoutHAct);
    if (btn) {
-      btn->SetState(on && comp && !hor ? kButtonUp : kButtonDisabled);
+      btn->SetState(enable && comp && !hor && !fixed ? kButtonUp : kButtonDisabled);
    }
 
    btn = fToolBar->GetButton(kLayoutVAct);
    if (btn) {
-      btn->SetState(on && comp && hor ? kButtonUp : kButtonDisabled);
+      btn->SetState(enable && comp && hor && !fixed ? kButtonUp : kButtonDisabled);
    }
 
    btn = fToolBar->GetButton(kBreakLayoutAct);
    if (btn) {
-      btn->SetState(on && comp ? kButtonUp : kButtonDisabled);
+      btn->SetState(enable && comp && !fixed ? kButtonUp : kButtonDisabled);
    }
-
+/*
    btn = fToolBar->GetButton(kGrabAct);
    if (btn) {
-      btn->SetState(on && comp ? kButtonDown : kButtonUp);
+      btn->SetState(enable && comp ? kButtonDown : kButtonUp);
       TGToolTip *tt = btn->GetToolTip();
       tt->SetText(btn->IsDown() ? "Drop Frames (Ctrl-Return)" :
                                   "Grab Selected Frames (Return)");
    }
+*/
 }
 
 //______________________________________________________________________________
@@ -763,9 +840,34 @@ void TRootGuiBuilder::Update()
 {
    //
 
-   EnableLassoButtons(fManager && fManager->IsLassoDrawn());
-   EnableSelectedButtons(fManager && (fSelected = fManager->GetSelected()));
+   if (!fManager) {
+      return;
+   }
+
+   EnableLassoButtons(fManager->IsLassoDrawn());
+   fSelected = fManager->GetSelected();
+   EnableSelectedButtons(fSelected);
    EnableEditButtons(fClient->IsEditable());
+
+   if (fActionButton) {
+      TGFrame *parent = (TGFrame*)fActionButton->GetParent();
+      parent->ChangeOptions(parent->GetOptions() & ~kSunkenFrame);
+      fClient->NeedRedraw(parent, kTRUE);
+   }
+
+   if (!fClient->IsEditable()) {
+      UpdateStatusBar("");
+      fMenuFile->EnableEntry(kGUIBLD_FILE_START);
+      fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+      fEditable = 0;
+      //fShutter->SetSelectedItem(fShutter->GetItem("Projects"));
+   } else {
+      fMenuFile->DisableEntry(kGUIBLD_FILE_START);
+      fMenuFile->EnableEntry(kGUIBLD_FILE_STOP);
+   }
+
+   SwitchToolbarButton();
+   fActionButton = 0;
 }
 
 //______________________________________________________________________________
@@ -841,15 +943,19 @@ Bool_t TRootGuiBuilder::NewProject(Event_t *)
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
 
-   root->SetEditable(kFALSE);
+   if (root) root->SetEditable(kFALSE);
    fEditable = new TGMdiFrame(fMain, 500, 400, kOwnBackground);
    fEditable->SetMdiHints(kMdiDefaultHints);
    fEditable->SetWindowName(fEditable->GetName());
-   fEditable->SetEditDisabled(kFALSE);
+   fEditable->SetEditDisabled(0);   // enable editting
    fEditable->MapRaised();
    fEditable->AddInput(kKeyPressMask | kButtonPressMask);
    fEditable->SetEditable(kTRUE);
    fManager->SetEditable(kTRUE);
+   fMenuFile->EnableEntry(kGUIBLD_FILE_CLOSE);
+   fMenuFile->EnableEntry(kGUIBLD_FILE_STOP);
+   fEditable->SetCleanup(kDeepCleanup);
+   fEditable->SetLayoutBroken(kTRUE);
 
    return kTRUE;
 }
@@ -898,6 +1004,8 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    }
    root->SetEditable(kTRUE);
    SetEditable(kTRUE);
+   fMenuFile->EnableEntry(kGUIBLD_FILE_CLOSE);
+   fMenuFile->EnableEntry(kGUIBLD_FILE_STOP);
    return kTRUE;
 }
 
@@ -910,13 +1018,11 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    if (!savfr) return kFALSE;
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
-
    TGFileInfo fi;
    static TString dir(".");
    static Bool_t overwr = kFALSE;
    const char *fname;
    root->SetEditable(kFALSE);
-   SetEditable(kFALSE);
 
    fi.fFileTypes = gSaveMacroTypes;
    fi.fIniDir    = StrDup(dir);
@@ -943,7 +1049,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
       savfr->SetName(main->GetName());
       main->SetList(savfr->GetList());
 
-      main->SetLayoutBroken(savfr->IsLayoutBroken());
+      main->SetLayoutBroken(savfr->GetDefaultWidth() != savfr->GetWidth());
       main->SaveSource(fname, "");
 
       main->SetList(list);
@@ -958,8 +1064,8 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
          HandleKey(event);
       }
    }
-   root->SetEditable(kTRUE);
-   SetEditable(kTRUE);
+   //root->SetEditable(kTRUE);
+
    return kTRUE;
 }
 
@@ -981,6 +1087,27 @@ TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
 }
 
 //______________________________________________________________________________
+void TRootGuiBuilder::SwitchToolbarButton()
+{
+   //
+
+   static const TGPicture *start = fClient->GetPicture("bld_edit.xpm");
+   static const TGPicture *stop = fClient->GetPicture("bld_stop.xpm");
+
+   if (fClient->IsEditable()) {
+      fStartButton->SetPicture(stop);
+      fToolBar->SetId(fStartButton, kEndEditAct);
+      fStartButton->SetToolTipText("Stop Edit (Ctrl-Dbl-Click)");
+   } else {
+      fStartButton->SetPicture(start);
+      fToolBar->SetId(fStartButton, kEditableAct);
+      fStartButton->SetToolTipText("Start Edit (Ctrl-Dbl-Click)");
+   }
+
+   fClient->NeedRedraw(fStartButton, kTRUE);
+}
+
+//______________________________________________________________________________
 void TRootGuiBuilder::HandleMenu(Int_t id)
 {
    // Handle menu items.
@@ -989,48 +1116,90 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
    TRootHelpDialog *hd;
 
    switch (id) {
-      case kFILE_NEW:
+      case kGUIBLD_FILE_START:
+         fEditable = fMain->GetCurrent();
+         if (fEditable) {
+            fEditable->SetEditable(kTRUE);
+         }
+         UpdateStatusBar("Start edit");
+         fMenuFile->EnableEntry(kGUIBLD_FILE_STOP);
+         fMenuFile->DisableEntry(kGUIBLD_FILE_START);
+         SwitchToolbarButton();
+         break;
+
+      case kGUIBLD_FILE_STOP:
+         fEditable = FindEditableMdiFrame(root);
+         if (fEditable) {
+            root->SetEditable(kFALSE);
+
+            UpdateStatusBar("Stop edit");
+            fMenuFile->EnableEntry(kGUIBLD_FILE_START);
+            fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+            fEditable = 0;
+            SwitchToolbarButton();
+         }
+         break;
+
+      case kGUIBLD_FILE_NEW:
          NewProject();
          break;
 
-      case kFILE_CLOSE:
+      case kGUIBLD_FILE_CLOSE:
          fEditable = FindEditableMdiFrame(root);
          if (fEditable && (fEditable == fMain->GetCurrent())) {
             root->SetEditable(kFALSE);
          }
+         fEditor->Reset();
+         UpdateStatusBar("");
          fMain->Close(fMain->GetCurrent());
+
+         if (fMain->GetNumberOfFrames() <= 1) {
+            fMenuFile->DisableEntry(kGUIBLD_FILE_CLOSE);
+            fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+            fMenuFile->DisableEntry(kGUIBLD_FILE_START);
+            break;
+         }
+
+         if (fClient->IsEditable()) {
+            fMenuFile->DisableEntry(kGUIBLD_FILE_START);
+            fMenuFile->EnableEntry(kGUIBLD_FILE_STOP);
+         } else {
+            fMenuFile->EnableEntry(kGUIBLD_FILE_START);
+            fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+         }
+
          break;
 
-      case kFILE_EXIT:
+      case kGUIBLD_FILE_EXIT:
          CloseWindow();
          break;
 
-      case kWINDOW_HOR:
+      case kGUIBLD_WINDOW_HOR:
          fMain->TileHorizontal();
          break;
 
-      case kWINDOW_VERT:
+      case kGUIBLD_WINDOW_VERT:
          fMain->TileVertical();
          break;
 
-      case kWINDOW_CASCADE:
+      case kGUIBLD_WINDOW_CASCADE:
          fMain->Cascade();
          break;
 
-      case kWINDOW_ARRANGE:
+      case kGUIBLD_WINDOW_ARRANGE:
          fMain->ArrangeMinimized();
          break;
 
-      case kWINDOW_OPAQUE:
-         if (fMenuWindow->IsEntryChecked(kWINDOW_OPAQUE)) {
-            fMenuWindow->UnCheckEntry(kWINDOW_OPAQUE);
+      case kGUIBLD_WINDOW_OPAQUE:
+         if (fMenuWindow->IsEntryChecked(kGUIBLD_WINDOW_OPAQUE)) {
+            fMenuWindow->UnCheckEntry(kGUIBLD_WINDOW_OPAQUE);
             fMain->SetResizeMode(kMdiNonOpaque);
          } else {
-            fMenuWindow->CheckEntry(kWINDOW_OPAQUE);
+            fMenuWindow->CheckEntry(kGUIBLD_WINDOW_OPAQUE);
             fMain->SetResizeMode(kMdiOpaque);
          }
          break;
-      case  kHELP_CONTENTS:
+      case  kGUIBLD_HELP_CONTENTS:
          root->SetEditable(kFALSE);
          hd = new TRootHelpDialog(this, "Help on Gui Builder...", 600, 400);
          hd->SetText(gHelpBuilder);
@@ -1038,7 +1207,8 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
          hd->Popup();
          root->SetEditable(kTRUE);
          break;
-      case  kHELP_ABOUT:
+
+      case  kGUIBLD_HELP_ABOUT:
          root->SetEditable(kFALSE);
          hd = new TRootHelpDialog(this, "About Gui Builder...", 520, 160);
          hd->SetEditDisabled();
@@ -1046,6 +1216,7 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
          hd->Popup();
          root->SetEditable(kTRUE);
          break;
+
       default:
          fMain->SetCurrent(id);
          break;
@@ -1060,8 +1231,21 @@ void TRootGuiBuilder::HandleWindowClosed(Int_t )
    fEditable = 0;
 
    if (fClient->IsEditable()) {
-      TGWindow *root = (TGWindow*)fClient->GetRoot();
-      fEditable = FindEditableMdiFrame(root);
+      fManager->SetEditable(kFALSE);
+      fMenuFile->DisableEntry(kGUIBLD_FILE_START);
+      fMenuFile->EnableEntry(kGUIBLD_FILE_STOP);
+   } else {
+      fMenuFile->EnableEntry(kGUIBLD_FILE_START);
+      fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+   }
+   fEditor->Reset();
+   UpdateStatusBar("");
+
+   if (fMain->GetNumberOfFrames() == 0) {
+      fMenuFile->DisableEntry(kGUIBLD_FILE_CLOSE);
+      fMenuFile->DisableEntry(kGUIBLD_FILE_STOP);
+      fMenuFile->DisableEntry(kGUIBLD_FILE_START);
+      return;
    }
 }
 

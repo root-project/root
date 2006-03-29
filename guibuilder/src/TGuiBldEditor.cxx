@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.7 2005/07/05 12:36:06 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.8 2005/12/08 13:03:57 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 #include "TGuiBldEditor.h"
 #include "TGuiBldHintsEditor.h"
+#include "TGuiBldNameFrame.h"
 #include "TGResourcePool.h"
 #include "TGTab.h"
 #include "TGLabel.h"
@@ -29,79 +30,6 @@
 
 ClassImp(TGuiBldEditor)
 
-
-////////////////////////////////////////////////////////////////////////////////
-class TGuiBldNameFrame : public TGCompositeFrame {
-
-private:
-   TGLabel         *fLabel;
-   TGTextEntry     *fFrameName;
-   TGuiBldEditor   *fEditor;
-
-public:
-   TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor);
-   virtual ~TGuiBldNameFrame() { }
-
-   void ChangeSelected(TGFrame *frame);
-};
-
-//______________________________________________________________________________
-TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
-                  TGCompositeFrame(p, 1, 1)
-{
-   //
-
-   fEditor = editor;
-   fEditDisabled = kTRUE;
-   SetCleanup(kDeepCleanup);
-   TGFrame *frame = fEditor->GetSelected();
-
-   TGCompositeFrame *f = new TGHorizontalFrame(this);
-   f->AddFrame(new TGLabel(f, "Name"), new TGLayoutHints(kLHintsLeft, 0, 1, 0, 0));
-   f->AddFrame(new TGHorizontal3DLine(f), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
-   AddFrame(f, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
-   f = new TGHorizontalFrame(this);
-   AddFrame(f, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 1, 1, 0, 0));
-
-   TString name = "";
-   if (frame) {
-      frame->ClassName();
-      name += "::";
-   }
-
-   fLabel = new TGLabel(f, name.Data());
-   f->AddFrame(fLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 10, 1, 0, 0));
-   fFrameName = new TGTextEntry(f, frame ? frame->GetName() : "noname");
-   fFrameName->SetAlignment(kTextLeft);
-   fFrameName->Resize(80, fFrameName->GetHeight());
-   f->AddFrame(fFrameName, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,1));
-   fFrameName->SetEnabled(kFALSE);
-
-   //Pixel_t color;
-   //fClient->GetColorByName("#ff0000", color);
-   //fLabel->SetTextColor(color, kFALSE);
-   //fFrameName->SetTextColor(color, kFALSE);
-}
-
-//______________________________________________________________________________
-void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
-{
-   //
-
-   fFrameName->Disconnect();
-
-   if (!frame) return;
-
-   TString name = frame->ClassName();
-   name += "::";
-
-   fLabel->SetText(name.Data());
-   fFrameName->SetText(frame->GetName());
-   fFrameName->Connect("TextChanged(char*)", frame->ClassName(), frame, "SetName(char*)");
-   Resize();
-   DoRedraw();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 class TGuiBldGeometryFrame : public TGVerticalFrame {
 
@@ -111,7 +39,6 @@ private:
 public:
    TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *editor);
    virtual ~TGuiBldGeometryFrame() { }
-
 };
 
 //______________________________________________________________________________
@@ -121,7 +48,7 @@ TGuiBldGeometryFrame::TGuiBldGeometryFrame(const TGWindow *p, TGuiBldEditor *edi
    //
 
    fEditor = editor;
-   fEditDisabled = kTRUE;
+   fEditDisabled = 1;
    SetCleanup(kDeepCleanup);
 
    TGCompositeFrame *f = new TGHorizontalFrame(this);
@@ -210,7 +137,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
    //
 
    fEditor = editor;
-   fEditDisabled = kTRUE;
+   fEditDisabled = 1;
    fBgndFrame = 0;
    fFgndFrame = 0;
 
@@ -266,6 +193,10 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 {
    //
 
+   if (!frame) {
+      return;
+   }
+
    fSelected = frame;
 
    UInt_t opt = fSelected->GetOptions();
@@ -286,32 +217,33 @@ TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
    //
 
    fSelected = 0;
-   fEditDisabled = kTRUE;
-
    SetCleanup(kDeepCleanup);
 
-   TGTab *tab = new TGTab(this, 80, 40);
-
-   AddFrame(tab, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
-   TGCompositeFrame *tabcont = tab->AddTab("Properties");
+   fTab = new TGTab(this, 80, 40);
+   AddFrame(fTab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   TGCompositeFrame *tabcont = fTab->AddTab("Style");
+   TGCompositeFrame *tablay = fTab->AddTab("Layout");
+   fLayoutId = 1; // 2nd tab
+   fTab->Connect("Selected(Int_t)", "TGuiBldEditor", this, "TabSelected(Int_t)");
 
    fNameFrame  = new TGuiBldNameFrame(tabcont, this);
-   tabcont->AddFrame(fNameFrame,  new TGLayoutHints(kLHintsNormal | kLHintsExpandX,2,2,2,2));
+   tabcont->AddFrame(fNameFrame,  new TGLayoutHints(kLHintsNormal | kLHintsExpandX,5,5,2,2));
 
    fHintsFrame = 0;
 
-   fHintsFrame = new TGuiBldHintsEditor(tabcont, this);
-   tabcont->AddFrame(fHintsFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX,2,2,2,2));
+   fHintsFrame = new TGuiBldHintsEditor(tablay, this);
+   tablay->AddFrame(fHintsFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX,2,2,2,2));
 
    //TGFrame *frame = new TGuiBldGeometryFrame(tabcont, this);
    //tabcont->AddFrame(frame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX,2,2,2,2));
 
    fBorderFrame = new TGuiBldBorderFrame(tabcont, this);
-   tabcont->AddFrame(fBorderFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX,2,2,2,2));
+   tabcont->AddFrame(fBorderFrame, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
 
    MapSubwindows();
-   Resize(239, 357);
+   Resize(140, 357);
    SetWindowName("Frame Property Editor");
+   SetEditDisabled(1);
 
    fEmbedded = kFALSE;
 }
@@ -324,7 +256,17 @@ TGuiBldEditor::~TGuiBldEditor()
 }
 
 //______________________________________________________________________________
-void  TGuiBldEditor::Hide()
+void TGuiBldEditor::TabSelected(Int_t id)
+{
+   // handle  selected
+
+   if (id == fLayoutId) {
+      //printf("%d\n", fSelected);
+   }
+}
+
+//______________________________________________________________________________
+void TGuiBldEditor::Hide()
 {
    //
 
@@ -332,43 +274,68 @@ void  TGuiBldEditor::Hide()
 }
 
 //______________________________________________________________________________
-void  TGuiBldEditor::ChangeSelected(TGFrame *frame)
+void TGuiBldEditor::ChangeSelected(TGFrame *frame)
 {
    //
 
-   if (!frame) return;
+   TGTabElement *tab = fTab->GetTabTab(fLayoutId);
+
+   if (!frame) {
+      fNameFrame->ChangeSelected(0);
+      //fTab->SetTab(0);
+      tab->SetEnabled(kFALSE);
+      fClient->NeedRedraw(tab);
+      return;
+   }
 
    fSelected = frame;
+   TGWindow *parent = (TGWindow*)fSelected->GetParent();
 
-   if (fNameFrame) fNameFrame->ChangeSelected(fSelected);
+   fNameFrame->ChangeSelected(fSelected);
 
-   if (frame->GetFrameElement()) {
-      if (fHintsFrame) {
-         fHintsFrame->MapWindow();
-         fHintsFrame->ChangeSelected(fSelected);
+   Bool_t enable_layout = kFALSE;
+   enable_layout |= !(parent->GetEditDisabled() & kEditDisableLayout);
+   enable_layout |= !(fSelected->GetEditDisabled() & kEditDisableLayout);
+   enable_layout |= (parent->InheritsFrom(TGCompositeFrame::Class()) &&
+                     !((TGCompositeFrame*)parent)->IsLayoutBroken());
+   enable_layout |= (fSelected->InheritsFrom(TGCompositeFrame::Class()) &&
+                     !((TGCompositeFrame*)fSelected)->IsLayoutBroken());
+
+   if (enable_layout) {
+      fHintsFrame->ChangeSelected(fSelected);
+
+      if (tab) {
+         tab->SetEnabled(kTRUE);
+         fClient->NeedRedraw(tab);
       }
    } else {
-      if (fHintsFrame) fHintsFrame->UnmapWindow();
+      fHintsFrame->ChangeSelected(0);
+
+      if (tab) {
+         fTab->SetTab(0);
+         tab->SetEnabled(kFALSE);
+         fClient->NeedRedraw(tab);
+      }
    }
 
    if (fBorderFrame) fBorderFrame->ChangeSelected(fSelected);
 
    Emit("ChangeSelected(TGFrame*)", (long)fSelected);
 
-   Resize(GetDefaultSize());
+   Resize();
    MapRaised();
 }
 
 //______________________________________________________________________________
-void  TGuiBldEditor::UpdateSelected(TGFrame *)
+void TGuiBldEditor::UpdateSelected(TGFrame *frame)
 {
    //
 
-   Emit("UpdateSelected(TGFrame*)", (long)fSelected);
+   Emit("UpdateSelected(TGFrame*)", (long)frame);
 }
 
 //______________________________________________________________________________
-void  TGuiBldEditor::UpdateBorder(Int_t b)
+void TGuiBldEditor::UpdateBorder(Int_t b)
 {
    //
 
@@ -404,7 +371,7 @@ void  TGuiBldEditor::UpdateBorder(Int_t b)
 }
 
 //______________________________________________________________________________
-void  TGuiBldEditor::UpdateBackground(Pixel_t col)
+void TGuiBldEditor::UpdateBackground(Pixel_t col)
 {
    //
 
@@ -415,7 +382,7 @@ void  TGuiBldEditor::UpdateBackground(Pixel_t col)
 }
 
 //______________________________________________________________________________
-void  TGuiBldEditor::UpdateForeground(Pixel_t col)
+void TGuiBldEditor::UpdateForeground(Pixel_t col)
 {
    //
 
@@ -423,5 +390,17 @@ void  TGuiBldEditor::UpdateForeground(Pixel_t col)
 
    fSelected->SetForegroundColor(col);
    fClient->NeedRedraw(fSelected, kTRUE);
+}
+
+//______________________________________________________________________________
+void TGuiBldEditor::Reset()
+{
+   // reset
+
+   fSelected = 0;
+   fNameFrame->Reset();
+   TGTabElement *tab = fTab->GetTabTab(fLayoutId);
+   fTab->SetTab(0);
+   tab->SetEnabled(kFALSE);
 }
 

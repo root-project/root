@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.h,v 1.2 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.h,v 1.3 2004/10/25 12:06:50 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGuiBldQuickHandler                                                  //
+// TGuiBldQuickHandler - quick handler for gui builder                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -31,11 +31,11 @@ class TGTextButton;
 class TGuiBldTextDialog : public TGTransientFrame {
 
 private:
-   TGWindow       *fSelected;
-   TGTextEntry    *fEntry;
-   TGTextButton   *fOK;
-   TGTextButton   *fCancel;
-   TString         fSavedText;
+   TGWindow       *fSelected; // pointer to selected window
+   TGTextEntry    *fEntry;    // entry for text edit
+   TGTextButton   *fOK;       // OK button
+   TGTextButton   *fCancel;   // cancel button
+   TString         fSavedText; // saved text before editting
 
 public:
    TGuiBldTextDialog(const char *win, const char *setter = "SetTitle(char*)", const char *getter = "GetTitle()");
@@ -55,12 +55,17 @@ private:
    TGWindow    *fSelected;    // editted frame
 
 public:
+   TGFrame     *fEditor;      // wizard/editor 
+
+public:
    TGuiBldQuickHandler();
    virtual ~TGuiBldQuickHandler();
 
    virtual Bool_t HandleEvent(TGWindow *win);
+   TGWindow *GetSelected() const { return fSelected; }
 
    ClassDef(TGuiBldQuickHandler,0)  // frame property editor
 };
+
 
 #endif

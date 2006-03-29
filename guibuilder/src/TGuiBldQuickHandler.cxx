@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.5 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.6 2004/10/25 12:06:50 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 ClassImp(TGuiBldQuickHandler)
 ClassImp(TGuiBldTextDialog)
 
+
+static TGuiBldQuickHandler *gQuickHandler = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
@@ -97,8 +99,7 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
    fCancel->Connect("Pressed()", "TGuiBldTextDialog", this, "DoCancel()");
    fOK->Connect("Pressed()", "TGuiBldTextDialog", this, "DoOK()");
 
-   fClient->WaitForUnmap(this);
-   DeleteWindow();
+   if (gQuickHandler) gQuickHandler->fEditor = this;
 }
 
 //______________________________________________________________________________
@@ -114,7 +115,9 @@ void TGuiBldTextDialog::DoCancel()
    //
 
    fEntry->SetText(fSavedText.Data());
-   UnmapWindow();
+
+   DeleteWindow();
+   if (gQuickHandler) gQuickHandler->fEditor = 0;
 }
 
 //______________________________________________________________________________
@@ -122,7 +125,8 @@ void TGuiBldTextDialog::DoOK()
 {
    //
 
-   UnmapWindow();
+   DeleteWindow();
+   if (gQuickHandler) gQuickHandler->fEditor = 0;
 }
 
 //______________________________________________________________________________
@@ -130,7 +134,8 @@ void TGuiBldTextDialog::CloseWindow()
 {
    //
 
-   UnmapWindow();
+   DeleteWindow();
+   if (gQuickHandler) gQuickHandler->fEditor = 0;
 }
 
 
@@ -142,6 +147,8 @@ TGuiBldQuickHandler::TGuiBldQuickHandler() :  TObject()
    //
 
    fSelected = 0;
+   fEditor = 0;
+   gQuickHandler = this;
 }
 
 //______________________________________________________________________________
@@ -150,6 +157,8 @@ TGuiBldQuickHandler::~TGuiBldQuickHandler()
    //
 
    fSelected = 0;
+   fEditor = 0;
+   gQuickHandler = 0;
 }
 
 //______________________________________________________________________________
@@ -171,7 +180,7 @@ Bool_t TGuiBldQuickHandler::HandleEvent(TGWindow *win)
          act.Remove(0, 1);
          gSystem->Exec(act.Data());
       } else {
-         gApplication->ProcessLine(act.Data());
+         gROOT->ProcessLineFast(act.Data());
       }
       ret = kTRUE;
    }
