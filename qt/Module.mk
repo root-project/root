@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.12 2006/03/24 15:31:10 antcheva Exp $
+# $Id: Module.mk,v 1.13 2006/03/29 20:17:12 pcanal Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -113,7 +113,7 @@ $(CINTDIRDLLS)/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
                            cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h \
 			   cint/lib/qt/qtfunctions.h
 	$(MAKECINTDLL) $(PLATFORM) C++ qtcint qt \
-	  " -p $(GQTCXXFLAGS) qtcint.h qtclasses.h qtglobals.h qtfunctions.h " \
+	  " -p $(GQTCXXFLAGS) qtcint.h " \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" \
            "$(CINTCXXFLAGS) $(GQTCXXFLAGS)" "$(CINTCFLAGS)" \

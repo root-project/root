@@ -8,7 +8,6 @@
 #pragma link C++ class QAction;
 #pragma link C++ class QActionGroup;
 #pragma link C++ class QApplication;
-#pragma link C++ class QArray;
 #pragma link C++ class QAsciiCache;
 #pragma link C++ class QAsciiCacheIterator;
 #pragma link C++ class QAsciiDict;
