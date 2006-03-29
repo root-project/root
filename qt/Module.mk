@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.12 2006/03/20 05:21:59 fine Exp $
+# $Id: Module.mk,v 1.12 2006/03/24 15:31:10 antcheva Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -109,8 +109,13 @@ $(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 
 ##### cintdlls ######
 
-#$(CINTDIRDLLS)/qtcint: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h cint/lib/qt/qtclasses.h cint                                             /lib/qt/qtglobals.h cint/lib/qt/qtfunctions.h
-#       @$(MAKECINTDLL) $(PLATFORM) qtcint qt "qtcint.h qtclasses.h qtglobals.h qtfunctions.h" "$(CINT                                             TMP)" "$(ROOTCINTTMP)" \
-#          "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
-#          "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
+$(CINTDIRDLLS)/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
+                           cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h \
+			   cint/lib/qt/qtfunctions.h
+	$(MAKECINTDLL) $(PLATFORM) C++ qtcint qt \
+	  " -p $(GQTCXXFLAGS) qtcint.h qtclasses.h qtglobals.h qtfunctions.h " \
+           "$(CINTTMP)" "$(ROOTCINTTMP)" \
+	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" \
+           "$(CINTCXXFLAGS) $(GQTCXXFLAGS)" "$(CINTCFLAGS)" \
+           "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"
 
