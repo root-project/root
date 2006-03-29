@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.85 2005/07/29 08:44:36 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.86 2006/01/24 18:59:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -74,6 +74,7 @@
 #   define __USE_STD_IOSTREAM
 #   endif
 #   define R__ANSISTREAM
+#   define R__SSTREAM
 #   define R__TMPLTSTREAM
 #   ifdef _XOPEN_SOURCE
 #      if _XOPEN_SOURCE+0 > 0
