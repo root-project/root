@@ -7,6 +7,7 @@
 
 PLATFORM=$1 ; shift
 if [ $PLATFORM != "clean" ]; then
+   TYPE=$1          ; shift
    DLLNAME=$1       ; shift
    DLLDIRNAME=$1    ; shift
    DLLHEADERS=$1    ; shift
@@ -23,6 +24,7 @@ if [ $PLATFORM != "clean" ]; then
    SOFLAGS=$1       ; shift 
    SOEXT=$1         ; shift
    COMPILER=$1      ; shift
+   CXXOUT=$1        ; shift
 fi
 if [ $PLATFORM = "macosx" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
@@ -36,6 +38,18 @@ if [ "x$COMPILER" = "xgnu" ]; then
    GCC_MAJOR=`$CXX -dumpversion 2>&1 | cut -d'.' -f1`
    GCC_MINOR=`$CXX -dumpversion 2>&1 | cut -d'.' -f2`
 fi
+if [ "x$TYPE" = "xC" ] ; then
+   CINT_TYPE=-c-2
+   CINT_EXT=c
+   COMP=$CC
+   COMPFLAGS=$CINTCFLAGS
+else
+   CINT_TYPE=-c-1
+   CINT_EXT=cxx 
+   COMP=$CXX
+   COMPFLAGS=$CINTCXXFLAGS
+fi
+
 
 # Filter out the explicit link flag
 if [ "x`echo $MAKELIB | grep build/unix/makelib.sh`" != "x" ]; then
@@ -96,14 +110,19 @@ fi
 ##### $DLLNAME.dll  & stdcxxfunc.dll #####
 
 DLLDIR=$CINTDIRL/$DLLDIRNAME
+DLLHEADER=$DLLDIR/G__$DLLNAME.h
+DLLSOURCE=$DLLDIR/G__$DLLNAME.$CINT_EXT
+DLLOBJECT=$DLLDIR/G__$DLLNAME.o
 
-execute "$CINT -K -w1 -z$DLLNAME -n$DLLDIR/G__$DLLNAME.c -D__MAKECINT__ \
-         -DG__MAKECINT -c-2 -Z0 -I$DLLDIR $DLLHEADERS"
-execute "$CC $OPT $CINTCFLAGS -I. -o $DLLDIR/G__$DLLNAME.o -I$DLLDIR \
-         -c $DLLDIR/G__$DLLNAME.c"
+execute "$CINT -K -w1 -z$DLLNAME -n$DLLSOURCE -D__MAKECINT__ \
+         -DG__MAKECINT $CINT_TYPE -Z0 -I$DLLDIR $DLLHEADERS"
+execute "$COMP $OPT $COMPFLAGS -I. $CXXOUT$DLLOBJECT -I$DLLDIR \
+         -c $DLLSOURCE"
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" $DLLNAME.$SOEXT \
-   $CINTDIRI/$DLLNAME.$SOEXT "$DLLDIR/G__$DLLNAME.o"
+   $CINTDIRI/$DLLNAME.$SOEXT "$DLLOBJECT"
 rename $CINTDIRI/$DLLNAME
+
+rm -f $DLLSOURCE $DLLOBJECT $DLLHEADER
 
 if [ $PLATFORM = "win32" ]; then
    cpdllwin32
