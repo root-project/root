@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.18 2005/11/11 23:23:26 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.19 2006/01/25 19:46:42 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -667,8 +667,9 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
    std::string ret = answ.str();
    answ.freeze(false);
    return ret;
-#endif
+#else
    return answ.str();
+#endif
 
 }
 
