@@ -204,11 +204,9 @@ void testMV_T(const M & mat, const V & v, double & time, V & result) {
   test::Timer t(time,"M*V ");
   for (int l = 0; l < NLOOP; l++)
     {
-      result = 0;
-      Add(result,1.0,mat,v);
       // result = mat * v;
-       //result = v;
-       //result *= mat;
+      result.Zero();
+      Add(result,1.0,mat,v);
     }
 } 
   
@@ -219,10 +217,8 @@ void testGMV_T(const M & mat, const V & v1, const V & v2, double & time, V & res
   for (int l = 0; l < NLOOP; l++)
     {
       //result = mat * v1 + v2; 
-      result = v2;
+      memcpy(result.GetMatrixArray(),v2.GetMatrixArray(),v2.GetNoElements()*sizeof(Double_t));
       Add(result,1.0,mat,v1);
-       //result  = mat * v1;
-       //result += v2;
     }
 }
 
@@ -316,7 +312,7 @@ void testVscale_T(const V & v1, double a, double & time, V & result) {
   test::Timer t(time,"a*V ");;
   for (int l = 0; l < NLOOP; l++)
     {
-      result = 0;
+      result.Zero();
       Add(result,a,v1);
     }
 }
@@ -338,7 +334,7 @@ void testMscale_T(const M & m1, double a, double & time, M & result) {
   test::Timer t(time,"a*M ");;
   for (int l = 0; l < NLOOP; l++)
     {
-      result = 0;
+      result.Zero();
       Add(result,a,m1);
     }
 }
