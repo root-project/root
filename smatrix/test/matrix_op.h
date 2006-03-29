@@ -206,6 +206,9 @@ void testMV_T(const M & mat, const V & v, double & time, V & result) {
     {
       result = 0;
       Add(result,1.0,mat,v);
+      // result = mat * v;
+       //result = v;
+       //result *= mat;
     }
 } 
   
@@ -215,8 +218,11 @@ void testGMV_T(const M & mat, const V & v1, const V & v2, double & time, V & res
   test::Timer t(time,"M*V+");
   for (int l = 0; l < NLOOP; l++)
     {
+      //result = mat * v1 + v2; 
       result = v2;
       Add(result,1.0,mat,v1);
+       //result  = mat * v1;
+       //result += v2;
     }
 }
 

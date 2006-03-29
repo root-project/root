@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.206 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.207 2006/03/20 21:34:22 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1121,6 +1121,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 //    root > t.Show();       // Show values of entry 12
 //    root > t.Show(16);     // Read and show values of entry 16
 //    root > t.Loop();       // Loop on all entries
+//
+//  NOTE: Do not use the code generated for one Tree in case of a TChain.
+//        Maximum dimensions calculated on the basis of one TTree only
+//        might be too small when processing all the TTrees in one TChain.
+//        Instead of myTree.MakeClass(..,  use myChain.MakeClass(..
 
    TString opt = option;
    opt.ToLower();
