@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.8 2006/03/23 11:23:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.9 2006/03/23 16:41:25 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -512,9 +512,8 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::GetSub(Int_t row_lwb,Int_t row_upb,
   // option == "S" : return [0..row_upb-row_lwb+1][0..row_upb-row_lwb+1] (default)
   // else          : return [row_lwb..row_upb][row_lwb..row_upb]
 
-  Assert(this->IsValid());
-
   if (gMatrixCheck) {
+    Assert(this->IsValid());
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("GetSub","row_lwb out of bounds");
       target.Invalidate();
@@ -1054,14 +1053,16 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Transpose(const TMatrixTSym<Element>
 {
   // Transpose a matrix.
 
-  Assert(this->IsValid());
-  Assert(source.IsValid());
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(source.IsValid());
 
-  if (this->fNrows != source.GetNcols() || this->fRowLwb != source.GetColLwb())
-  {
-    Error("Transpose","matrix has wrong shape");
-    this->Invalidate();
-    return *this;
+    if (this->fNrows != source.GetNcols() || this->fRowLwb != source.GetColLwb())
+    {
+      Error("Transpose","matrix has wrong shape");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   *this = source;
@@ -1075,13 +1076,14 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Rank1Update(const TVectorT<Element> 
   // Perform a rank 1 operation on the matrix:                          
   //     A += alpha * v * v^T
 
-  Assert(this->IsValid());
-  Assert(v.IsValid());
-
-  if (gMatrixCheck && v.GetNoElements() < this->fNrows) {
-    Error("Rank1Update","vector too short");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(v.IsValid());
+    if (v.GetNoElements() < this->fNrows) {
+      Error("Rank1Update","vector too short");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Element * const pv = v.GetMatrixArray();
@@ -1111,22 +1113,42 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
 // efficient than applying the actual multiplication because this
 // routine realizes that  the final matrix is symmetric . 
 
-  const TMatrixT<Element> ba(b,TMatrixT<Element>::kMult,*this);
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(b.IsValid());
+    if (this->fNcols != b.GetNcols() || this->fColLwb != b.GetColLwb()) {
+      Error("Similarity(const TMatrixT &)","matrices incompatible");
+      this->Invalidate();
+      return *this;
+    }
+  }
 
-  const Int_t nrowsb  = b.GetNrows();
+  const Int_t nrowsb = b.GetNrows();
+  const Int_t ncolsa = this->fNcols;
+
+  Element work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Element *bap = work;
+  if (nrowsb*ncolsa > kWorkMax) {
+    isAllocated = kTRUE;
+    bap = new Element[nrowsb*ncolsa];
+  }
+
+  TMatrixT<Element> ba; ba.Use(nrowsb,ncolsa,bap);
+  ba.AMultB(b,*this);
+
   if (nrowsb != this->fNrows)
     this->ResizeTo(nrowsb,nrowsb);
 
 #ifdef CBLAS
-  const Element *bap = ba.GetMatrixArray();
-  const Element *bp  = b.GetMatrixArray();
-        Element *cp  = this->GetMatrixArray();
+  const Element *bp = b.GetMatrixArray();
+        Element *cp = this->GetMatrixArray();
   if (typeid(Element) == typeid(Double_t))
     cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasTrans,this->fNrows,this->fNcols,ba.GetNcols(),
                  1.0,bap,ba.GetNcols(),bp,b.GetNcols(),1.0,cp,this->fNcols);
   else if (typeid(Element) != typeid(Float_t))
-    cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasTrans,fNrows,fNcols,ba.GetNcols(),
-                 1.0,bap,ba.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+    cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasTrans,this->fNrows,this->fNcols,ba.GetNcols(),
+                 1.0,bap,ba.GetNcols(),bp,b.GetNcols(),1.0,cp,this->fNcols);
   else
     Error("Similarity","type %s not implemented in BLAS library",typeid(Element));
 #else
@@ -1134,7 +1156,6 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
   const Int_t nb      = b.GetNoElements();
   const Int_t ncolsba = ba.GetNcols();
   const Int_t ncolsb  = b.GetNcols();
-  const Element * const bap  = ba.GetMatrixArray();
   const Element * const bp   = b.GetMatrixArray();
   const Element *       bi1p = bp;
         Element *       cp   = this->GetMatrixArray();
@@ -1169,6 +1190,9 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
     }
   }
 #endif
+
+  if (isAllocated)
+    delete [] bap;
 
   return *this;
 }
@@ -1182,28 +1206,62 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
 // efficient than applying the actual multiplication because this
 // routine realizes that  the final matrix is symmetric .
 
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(b.IsValid());
+    if (this->fNcols != b.GetNcols() || this->fColLwb != b.GetColLwb()) {
+      Error("Similarity(const TMatrixTSym &)","matrices incompatible");
+      this->Invalidate();
+      return *this;
+    }
+  }
+
 #ifdef CBLAS
+  const Int_t nrowsb = b.GetNrows();
+  const Int_t ncolsa = this->GetNcols();
+
+  Element work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Element *abtp = work;
+  if (this->fNcols > kWorkMax) {
+    isAllocated = kTRUE;
+    abtp = new Element[this->fNcols];
+  }
+
   const TMatrixT<Element> abt(*this,TMatrixT<Element>::kMultTranspose,b);
 
-  const Element *abtp = abt.GetMatrixArray();
-  const Element *bp   = b.GetMatrixArray();
-        Element *cp   = this->GetMatrixArray();
+  const Element *bp = b.GetMatrixArray();
+        Element *cp = this->GetMatrixArray();
   if (typeid(Element) == typeid(Double_t))
     cblas_dsymm (CblasRowMajor,CblasLeft,CblasUpper,this->fNrows,this->fNcols,1.0,
                  bp,b.GetNcols(),abtp,abt.GetNcols(),0.0,cp,this->fNcols);
   else if (typeid(Element) != typeid(Float_t))
-    cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
-                 bp,b.GetNcols(),abtp,abt.GetNcols(),0.0,cp,fNcols);
+    cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,this->fNrows,this->fNcols,1.0,
+                 bp,b.GetNcols(),abtp,abt.GetNcols(),0.0,cp,this->fNcols);
   else
     Error("Similarity","type %s not implemented in BLAS library",typeid(Element));
+
+  if (isAllocated)
+    delete [] abtp;
 #else
-  const TMatrixT<Element> ba(b,TMatrixT<Element>::kMult,*this);
+  const Int_t nrowsb = b.GetNrows();
+  const Int_t ncolsa = this->GetNcols();
+
+  Element work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Element *bap = work;
+  if (nrowsb*ncolsa > kWorkMax) {
+    isAllocated = kTRUE;
+    bap = new Element[nrowsb*ncolsa];
+  }
+
+  TMatrixT<Element> ba; ba.Use(nrowsb,ncolsa,bap);
+  ba.AMultB(b,*this);
 
   const Int_t nba     = ba.GetNoElements();
   const Int_t nb      = b.GetNoElements();
   const Int_t ncolsba = ba.GetNcols();
   const Int_t ncolsb  = b.GetNcols();
-  const Element * const bap  = ba.GetMatrixArray();
   const Element * const bp   = b.GetMatrixArray();
   const Element *       bi1p = bp;
         Element *       cp   = this->GetMatrixArray();
@@ -1237,6 +1295,9 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
       cp[rowOff1+icol] = cp[rowOff2+irow];
     }
   }
+
+  if (isAllocated)
+    delete [] bap;
 #endif
 
   return *this;
@@ -1248,12 +1309,13 @@ Element TMatrixTSym<Element>::Similarity(const TVectorT<Element> &v) const
 {
 // Calculate scalar v * (*this) * v^T
 
-  Assert(this->IsValid());
-  Assert(v.IsValid());
-
-  if (gMatrixCheck && this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
-    Error("Similarity(const TVectorT &)","vector and matrix incompatible");
-    return -1.;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(v.IsValid());
+    if (this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
+      Error("Similarity(const TVectorT &)","vector and matrix incompatible");
+      return -1.;
+    }
   }
 
   const Element *mp = this->GetMatrixArray(); // Matrix row ptr
@@ -1282,29 +1344,48 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SimilarityT(const TMatrixT<Element> 
 // It is more efficient than applying the actual multiplication because this
 // routine realizes that  the final matrix is symmetric .
 
-  const TMatrixT<Element> bta(b,TMatrixT<Element>::kTransposeMult,*this);
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(b.IsValid());
+    if (this->fNrows != b.GetNrows() || this->fRowLwb != b.GetRowLwb()) {
+      Error("SimilarityT(const TMatrixT &)","matrices incompatible");
+      this->Invalidate();
+      return *this;
+    }
+  }
 
   const Int_t ncolsb = b.GetNcols();
+  const Int_t ncolsa = this->GetNcols();
+
+  Element work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Element *btap = work;
+  if (ncolsb*ncolsa > kWorkMax) {
+    isAllocated = kTRUE;
+    btap = new Element[ncolsb*ncolsa];
+  }
+
+  TMatrixT<Element> bta; bta.Use(ncolsb,ncolsa,btap);
+  bta.AtMultB(b,*this);
+
   if (ncolsb != this->fNcols)
     this->ResizeTo(ncolsb,ncolsb);
 
 #ifdef CBLAS
-  const Element *btap = bta.GetMatrixArray();
-  const Element *bp   = b.GetMatrixArray();
-        Element *cp   = this->GetMatrixArray();
+  const Element *bp = b.GetMatrixArray();
+        Element *cp = this->GetMatrixArray();
   if (typeid(Element) == typeid(Double_t))
     cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,this->fNrows,this->fNcols,bta.GetNcols(),
                  1.0,btap,bta.GetNcols(),bp,b.GetNcols(),1.0,cp,this->fNcols);
   else if (typeid(Element) != typeid(Float_t))
-    cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,fNrows,fNcols,bta.GetNcols(),
-                 1.0,btap,bta.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+    cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,this->fNrows,this->fNcols,bta.GetNcols(),
+                 1.0,btap,bta.GetNcols(),bp,b.GetNcols(),1.0,cp,this->fNcols);
   else
     Error("similarityT","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t nbta     = bta.GetNoElements();
   const Int_t nb       = b.GetNoElements();
   const Int_t ncolsbta = bta.GetNcols();
-  const Element * const btap = bta.GetMatrixArray();
   const Element * const bp   = b.GetMatrixArray();
         Element *       cp   = this->GetMatrixArray();
         Element * const cp0  = cp;
@@ -1339,6 +1420,9 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SimilarityT(const TMatrixT<Element> 
     }
   }
 #endif
+
+  if (isAllocated)
+    delete [] btap;
 
   return *this;
 }
@@ -1543,12 +1627,13 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::Randomize(Element alpha,Element bet
 {
   // randomize matrix element values but keep matrix symmetric
 
-  Assert(this->IsValid());
-
-  if (gMatrixCheck && this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
-    Error("Randomize(Element,Element,Element &","matrix should be square");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    if (this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
+      Error("Randomize(Element,Element,Element &","matrix should be square");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Element scale = beta-alpha;
@@ -1574,12 +1659,13 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::RandomizePD(Element alpha,Element be
 {
   // randomize matrix element values but keep matrix symmetric positive definite
 
-  Assert(this->IsValid());
-
-  if (gMatrixCheck && this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
-    Error("RandomizeSym(Element,Element,Element &","matrix should be square");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    if (this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
+      Error("RandomizeSym(Element,Element,Element &","matrix should be square");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Element scale = beta-alpha;

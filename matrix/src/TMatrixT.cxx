@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.11 2006/03/23 11:23:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.12 2006/03/23 16:41:25 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1693,13 +1693,14 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v,Ele
   // Perform a rank 1 operation on the matrix:
   //     A += alpha * v * v^T
       
-  Assert(this->IsValid());
-  Assert(v.IsValid());
-
-  if (gMatrixCheck && v.GetNoElements() < TMath::Max(this->fNrows,this->fNcols)) {
-    Error("Rank1Update","vector too short");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(v.IsValid());
+   if (v.GetNoElements() < TMath::Max(this->fNrows,this->fNcols)) {
+      Error("Rank1Update","vector too short");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Element * const pv = v.GetMatrixArray();
@@ -1721,11 +1722,10 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,co
   // Perform a rank 1 operation on the matrix:                          
   //     A += alpha * v1 * v2^T
 
-  Assert(this->IsValid());
-  Assert(v1.IsValid());
-  Assert(v2.IsValid());
-
   if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(v1.IsValid());
+    Assert(v2.IsValid());
     if (v1.GetNoElements() < this->fNrows) {
       Error("Rank1Update","vector v1 too short");
       this->Invalidate();
@@ -1758,10 +1758,9 @@ Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v) const
 {
 // Calculate scalar v * (*this) * v^T
 
-  Assert(this->IsValid());
-  Assert(v.IsValid());
-
   if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(v.IsValid());
     if (this->fNcols != this->fNrows || this->fColLwb != this->fRowLwb) {
       Error("Similarity(const TVectorT &)","matrix is not square");
       return -1.;
@@ -1800,13 +1799,14 @@ TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Op
   // "D"   :  b(i,j) = a(i,j)/v(i)   i = 0,fNrows-1 (default)
   // else  :  b(i,j) = a(i,j)*v(i)
 
-  Assert(this->IsValid());
-  Assert(v.IsValid());
-
-  if (gMatrixCheck && v.GetNoElements() < this->fNrows) {
-    Error("NormByColumn","vector shorter than matrix column");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(v.IsValid());
+    if (v.GetNoElements() < this->fNrows) {
+      Error("NormByColumn","vector shorter than matrix column");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   TString opt(option);
@@ -1843,12 +1843,14 @@ TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Optio
   // "D"   :  b(i,j) = a(i,j)/v(j)   i = 0,fNcols-1 (default)
   // else  :  b(i,j) = a(i,j)*v(j)
 
-  Assert(this->IsValid());
-  Assert(v.IsValid());
-  if (gMatrixCheck && v.GetNoElements() < this->fNcols) {
-    Error("NormByRow","vector shorter than matrix column");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(v.IsValid());
+    if (v.GetNoElements() < this->fNcols) {
+      Error("NormByRow","vector shorter than matrix column");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   TString opt(option);
@@ -2121,15 +2123,15 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source
   // done inplace, though only the row of the target matrix needs to be saved.
   // "Inplace" multiplication is only allowed when the 'source' matrix is square.
 
-  Assert(this->IsValid());
-  Assert(source.IsValid());
-
-  if (gMatrixCheck &&
-      this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb() ||
-      this->fNcols != source.GetNcols() || this->fColLwb != source.GetColLwb()) {
-    Error("operator*=(const TMatrixT &)","source matrix has wrong shape");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(source.IsValid());
+    if (this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb() ||
+        this->fNcols != source.GetNcols() || this->fColLwb != source.GetColLwb()) {
+      Error("operator*=(const TMatrixT &)","source matrix has wrong shape");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   // Check for A *= A;
@@ -2185,13 +2187,14 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
   // Compute target = target * source inplace. Strictly speaking, it can't be
   // done inplace, though only the row of the target matrix needs to be saved.
 
-  Assert(this->IsValid());
-  Assert(source.IsValid());
-
-  if (gMatrixCheck && this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb()) {
-    Error("operator*=(const TMatrixTSym &)","source matrix has wrong shape");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(source.IsValid());
+    if (this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb()) {
+      Error("operator*=(const TMatrixTSym &)","source matrix has wrong shape");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   // Check for A *= A;
@@ -2248,14 +2251,15 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTDiag_const<Elemen
   // Multiply a matrix row by the diagonal of another matrix
   // matrix(i,j) *= diag(j), j=1,fNcols
 
-  Assert(this->IsValid());
-  Assert(diag.GetMatrix()->IsValid());
-  Assert(this->fNcols == diag.GetNdiags());
-
-  if (gMatrixCheck && this->fNcols != diag.GetNdiags()) {
-    Error("operator*=(const TMatrixDDiag_const &)","wrong diagonal length");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(diag.GetMatrix()->IsValid());
+    Assert(this->fNcols == diag.GetNdiags());
+    if (this->fNcols != diag.GetNdiags()) {
+      Error("operator*=(const TMatrixDDiag_const &)","wrong diagonal length");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   Element *mp = this->GetMatrixArray();  // Matrix ptr
@@ -2279,13 +2283,14 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Elemen
   // Divide a matrix row by the diagonal of another matrix
   // matrix(i,j) /= diag(j)
 
-  Assert(this->IsValid());
-  Assert(diag.GetMatrix()->IsValid());
-
-  if (gMatrixCheck && this->fNcols != diag.GetNdiags()) {
-    Error("operator/=(const TMatrixDDiag_const &)","wrong diagonal length");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(diag.GetMatrix()->IsValid());
+    if (this->fNcols != diag.GetNdiags()) {
+      Error("operator/=(const TMatrixDDiag_const &)","wrong diagonal length");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   Element *mp = this->GetMatrixArray();  // Matrix ptr
@@ -2311,13 +2316,15 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTColumn_const<Elem
   // matrix(i,j) *= another(i,k) for fixed k
 
   const TMatrixTBase<Element> *mt = col.GetMatrix();
-  Assert(this->IsValid());
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && this->fNrows != mt->GetNrows()) {
-    Error("operator*=(const TMatrixTColumn_const &)","wrong column length");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(mt->IsValid());
+    if (this->fNrows != mt->GetNrows()) {
+      Error("operator*=(const TMatrixTColumn_const &)","wrong column length");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Element * const endp = col.GetPtr()+mt->GetNoElements();
@@ -2343,13 +2350,15 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTColumn_const<Elem
   // matrix(i,j) /= another(i,k) for fixed k
 
   const TMatrixTBase<Element> *mt = col.GetMatrix();
-  Assert(this->IsValid());
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && this->fNrows != mt->GetNrows()) {
-    Error("operator/=(const TMatrixTColumn_const &)","wrong column matrix");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(mt->IsValid());
+    if (this->fNrows != mt->GetNrows()) {
+      Error("operator/=(const TMatrixTColumn_const &)","wrong column matrix");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Element * const endp = col.GetPtr()+mt->GetNoElements();
@@ -2376,13 +2385,15 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTRow_const<Element
   // matrix(i,j) *= another(k,j) for fixed k
 
   const TMatrixTBase<Element> *mt = row.GetMatrix();
-  Assert(this->IsValid());
-  Assert(mt->IsValid());
 
-  if (gMatrixCheck && this->fNcols != mt->GetNcols()) {
-    Error("operator*=(const TMatrixTRow_const &)","wrong row length");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+    Assert(mt->IsValid());
+    if (this->fNcols != mt->GetNcols()) {
+      Error("operator*=(const TMatrixTRow_const &)","wrong row length");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Element * const endp = row.GetPtr()+mt->GetNoElements();

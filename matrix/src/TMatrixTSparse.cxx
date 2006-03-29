@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.4 2006/03/22 15:16:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.5 2006/03/23 11:23:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -728,10 +728,10 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
   // General matrix addition. Create a matrix C such that C = A + B.
   // Note, matrix C is allocated for constr=1.
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
-
   if (gMatrixCheck) {
+    Assert(a.IsValid());
+    Assert(b.IsValid());
+
     if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
         a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
       Error("APlusB(const TMatrixTSparse &,const TMatrixTSparse &","matrices not compatible");
@@ -2266,15 +2266,17 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Elem
 {
   // randomize matrix element values but keep matrix symmetric positive definite
 
-  Assert(this->IsValid());
-  
   const Element scale = beta-alpha;
   const Element shift = alpha/scale;
 
-  if (gMatrixCheck && this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
-    Error("RandomizePD(Element &","matrix should be square");
-    this->Invalidate();
-    return *this;
+  if (gMatrixCheck) {
+    Assert(this->IsValid());
+  
+    if (this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
+      Error("RandomizePD(Element &","matrix should be square");
+      this->Invalidate();
+      return *this;
+    }
   }
 
   const Int_t n = this->fNcols;
