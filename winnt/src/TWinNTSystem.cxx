@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.132 2006/03/28 16:35:00 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.133 2006/03/28 23:59:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -534,6 +534,14 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
    if (initwinsock = ::WSAStartup(MAKEWORD(2, 0), &WSAData)) {
       Error("TWinNTSystem()","Starting sockets failed");
    }
+
+   // use ::MessageBeep by default for TWinNTSystem
+   fBeepDuration = 1;
+   fBeepFreq     = 0;
+   if (gEnv) {
+      fBeepDuration = gEnv->GetValue("Root.System.BeepDuration", 1);
+      fBeepFreq     = gEnv->GetValue("Root.System.BeepFreq", 0);
+   }
 }
 
 //______________________________________________________________________________
@@ -877,12 +885,16 @@ const char *TWinNTSystem::HostName()
    return fHostname;
 }
 
-
 //______________________________________________________________________________
 void TWinNTSystem::DoBeep(Int_t freq /*=-1*/, Int_t duration /*=-1*/) const
 {
-   // Beep.
+   // Beep. If freq==0 (the default for TWinNTSystem), use ::MessageBeep.
+   // Otherwise ::Beep with freq and duration.
 
+   if (freq == 0) {
+      ::MessageBeep(-1);
+      return;
+   }
    if (freq < 37) freq = 440;
    if (duration < 0) duration = 100;
    ::Beep(freq, duration);

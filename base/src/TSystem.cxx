@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.137 2006/03/28 16:35:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.138 2006/03/28 23:59:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -106,8 +106,8 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
    fCompiled      = 0;
    fHelpers       = 0;
    fInsideNotify  = kFALSE;
-   fBeepDuration  = 100;
-   fBeepFreq      = 440;
+   fBeepDuration  = 0;
+   fBeepFreq      = 0;
 }
 
 //______________________________________________________________________________
@@ -178,7 +178,7 @@ Bool_t TSystem::Init()
    fMakeExe       = MAKEEXE;
    fCompiled      = new TOrdCollection;
 
-   if (gEnv) {
+   if (gEnv && fBeepDuration == 0 && fBeepFreq == 0) {
       fBeepDuration = gEnv->GetValue("Root.System.BeepDuration", 100);
       fBeepFreq     = gEnv->GetValue("Root.System.BeepFreq", 440);
    }
