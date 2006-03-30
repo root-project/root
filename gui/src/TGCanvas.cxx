@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.37 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.38 2006/03/28 16:25:00 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -307,7 +307,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
 
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
-   fEditDisabled = kEditDisableLayout;
+   fEditDisabled = kEditDisableLayout | kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -341,7 +341,7 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
 
    AddInput(kKeyPressMask | kPointerMotionMask);
    SetWindowName();
-   fEditDisabled = kEditDisableLayout;
+   fEditDisabled = kEditDisableLayout | kEditDisableGrab;
 }
 
 //______________________________________________________________________________

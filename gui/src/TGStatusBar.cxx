@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.12 2004/10/21 14:25:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -63,6 +63,8 @@ TGStatusBarPart::TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t ba
    fYt = y + 1;
    fHeight = h;
    MapWindow();
+
+   fEditDisabled = kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -114,6 +116,8 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
    fStatusPart[0] = new TGStatusBarPart(this, ht, fYt);
    AddFrame(fStatusPart[0], fgHints);
    Resize(w, ht + 5);
+
+   fEditDisabled = kEditDisableLayout;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.64 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.65 2006/03/28 16:31:01 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -579,6 +579,7 @@ public:
    virtual ~TGGroupFrame();
 
    virtual TGDimension GetDefaultSize() const;
+   virtual void ChangeOptions(UInt_t options);
    virtual void DrawBorder();
    virtual void SetTitlePos(ETitlePos pos = kLeft) { fTitlePos = pos; }
    Int_t        GetTitlePos() const { return fTitlePos; }

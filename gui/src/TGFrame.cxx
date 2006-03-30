@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.119 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.120 2006/03/29 08:09:43 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -852,7 +852,8 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    //    m->MapWindow();
    //
 
-   if (on && (GetEditDisabled() & kEditDisable)) return;
+   if (on && ((fEditDisabled & kEditDisable) || 
+              (fEditDisabled & kEditDisableLayout))) return;
 
    if (on) {
       fClient->SetRoot(this);
@@ -922,16 +923,25 @@ void TGCompositeFrame::SetLayoutBroken(Bool_t on)
 //______________________________________________________________________________
 void TGCompositeFrame::SetEditDisabled(UInt_t on)
 {
-   //  Disable/enable edit this frame and all subframes.
+   // Set edit disable flag for this frame:
+   //
+   //  - if (on & kEditDisable) - disable edit for this frame and all subframes.
+   //  - if (on == kEditEnable) - enable edit for this frame and all subframes.
 
    fEditDisabled = on;
 
    TGFrameElement *el;
    TIter next(fList);
 
+   UInt_t set = on & kEditDisable;
+
+   if ((set != 0) && (set != 1)) { // propagate only kEditDisable or kEditEnable 
+      return;
+   }
+
    while ((el = (TGFrameElement *) next())) {
       if (el->fFrame) {
-         el->fFrame->SetEditDisabled(on);
+         el->fFrame->SetEditDisabled(set);
       }
    }
 }
@@ -1817,6 +1827,14 @@ TGGroupFrame::~TGGroupFrame()
    // Delete a group frame.
 
    delete fText;
+}
+
+//______________________________________________________________________________
+void TGGroupFrame::ChangeOptions(UInt_t options)
+{
+   // Change frame options. Options is an OR of the EFrameTypes.
+
+   fOptions = options;
 }
 
 //______________________________________________________________________________
