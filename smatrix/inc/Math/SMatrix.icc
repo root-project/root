@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.16 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.17 2006/03/30 08:21:28 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -741,32 +741,9 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 template <class SubMatrix>  
 SubMatrix SMatrix<T,D1,D2,R>::Sub(unsigned int row0, unsigned int col0) const { 
 
-  // to do: case when SubMatrix is a symmetric matrices should not compile 
-
-//   STATIC_CHECK( N1 <= D1,Smatrix_dimension1_too_small); 
-//   STATIC_CHECK( N2 <= D2,Smatrix_dimension2_too_small); 
-//   assert(row0 + N1 <= D1);
-//   assert(col0 + N2 <= D2);
-
-//   SMatrix<T,N1,N2> tmp;
-//   for(unsigned int i=0; i<N1; ++i) {
-//     for(unsigned int j=0; j<N2; ++j) {
-//       tmp(i,j) = fRep[(i+row0)*D2+j+col0];
-//     }
-//   }
-//   return tmp;
-//
-  STATIC_CHECK( SubMatrix::kRows <= D1,Smatrix_dimension1_too_small); 
-  STATIC_CHECK( SubMatrix::kCols <= D2,Smatrix_dimension2_too_small); 
-  assert(row0 + SubMatrix::kRows <= D1);
-  assert(col0 + SubMatrix::kCols <= D2);
-
   SubMatrix tmp;
-  for(unsigned int i=0; i<SubMatrix::kRows; ++i) {
-    for(unsigned int j=0; j<SubMatrix::kCols; ++j) {
-      tmp(i,j) = fRep[(i+row0)*D2+j+col0];
-    }
-  }
+  RetrieveMatrix<T,SubMatrix::kRows, SubMatrix::kCols, D1, D2, typename SubMatrix::rep_type, R>::Evaluate
+    (tmp,*this,row0,col0);
   return tmp;
 }
 
@@ -783,6 +760,22 @@ SVector<T,D1> SMatrix<T,D1,D2,R>::Diagonal( ) const {
   }
   return tmp;
 }
+
+//set diagonal
+template <class T, unsigned int D1, unsigned int D2, class R>
+template <class Vector> 
+void SMatrix<T,D1,D2,R>::SetDiagonal( const Vector & v) { 
+
+  // check size that size of vector is correct
+  STATIC_CHECK( ( ( D1 <= D2) && Vector::kSize == D1 ) || 
+		( ( D2 < D1 ) && Vector::kSize == D2 ), SVector_size_NOT_correct );
+
+
+  for(unsigned int i=0; i<Vector::kSize; ++i) {
+    fRep[ i*D2 + i] = v[i];
+  }
+}
+
 
 //upper block
 template <class T, unsigned int D1, unsigned int D2, class R>

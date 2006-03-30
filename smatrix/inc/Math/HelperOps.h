@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.5 2006/03/30 08:21:28 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps_h 
@@ -258,6 +258,64 @@ namespace ROOT {
       }
     }
   }; // struct PlaceExpr
+
+
+
+    /** Structure for getting sub matrices 
+	We have different cases according to the matrix representations
+    */
+    template <class T, unsigned int D1, unsigned int D2,   
+              unsigned int D3, unsigned int D4, 
+	      class R1, class R2>
+    struct RetrieveMatrix
+    {
+      static void Evaluate(SMatrix<T,D1,D2,R1>& lhs,  const SMatrix<T,D3,D4,R2>& rhs, 
+			   unsigned int row, unsigned int col) {
+	STATIC_CHECK( D1 <= D3,Smatrix_nrows_too_small); 
+	STATIC_CHECK( D2 <= D4,Smatrix_ncols_too_small); 
+
+	assert(row + D1 <= D3);
+	assert(col + D2 <= D4);
+
+	for(unsigned int i=0; i<D1; ++i) { 
+	  for(unsigned int j=0; j<D2; ++j) 
+	    lhs(i,j) = rhs(i+row,j+col);
+	}
+      }
+    };   // struct RetrieveMatrix
+
+  // specialization for getting symmetric matrices from  general matrices (MUST fail)
+  template <class T, unsigned int D1, unsigned int D2, 
+	    unsigned int D3, unsigned int D4 >
+  struct RetrieveMatrix<T, D1, D2, D3, D4, MatRepSym<T,D1>, MatRepStd<T,D3,D4> > { 
+    static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& ,  
+			 const SMatrix<T,D3,D4,MatRepStd<T,D3,D4> >& , 
+			 unsigned int , unsigned int ) 
+    {        
+      STATIC_CHECK(0==1, Cannot_Sub_Matrix_symmetric_in_general_matrix);
+    }
+  }; // struct RetrieveMatrix
+
+  // specialization for getting symmetric matrices from  symmetric matrices (OK if row == col)
+  template <class T, unsigned int D1, unsigned int D2, 
+	    unsigned int D3, unsigned int D4 >
+  struct RetrieveMatrix<T, D1, D2, D3, D4, MatRepSym<T,D1>, MatRepSym<T,D3> > { 
+    static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  
+			 const SMatrix<T,D3,D4,MatRepSym<T,D3> >& rhs, 
+			 unsigned int row, unsigned int col ) 
+    {        
+      STATIC_CHECK(  D1 <= D3,Smatrix_dimension1_too_small); 
+      // can work only if placed on the diagonal
+      assert(row == col); 
+      assert(row + D1 <= D3);
+
+      for(unsigned int i=0; i<D1; ++i) {
+	for(unsigned int j=0; j<=i; ++j) 
+	  lhs(i,j) = rhs(i+row,j+col );	
+      }
+    }
+
+  }; // struct RetrieveMatrix
     
 
   }  // namespace Math

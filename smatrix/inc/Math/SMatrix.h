@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.15 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.16 2006/03/30 08:21:28 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -84,6 +84,8 @@ public:
   /** @name --- Typedefs --- */
   ///
   typedef T  value_type;
+
+  typedef R  rep_type;
 
   /** STL iterator interface. */
   typedef T*  iterator;
@@ -425,6 +427,14 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
      It works only for squared matrices D1 == D2, otherwise it will produce a compile error
    */
   SVector<T,D1> Diagonal() const;
+
+  /**
+     Set the diagonal elements from a Vector
+     Require that vector implements ::kSize since a check (statically) is done on 
+     diagonal size == vector size
+   */
+  template <class Vector> 
+  void SetDiagonal(const Vector & v);
 
   /**
      return the upper Triangular block of the matrices (including the diagonal) as
