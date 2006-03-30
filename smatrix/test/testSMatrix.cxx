@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
 using namespace ROOT::Math;
 
@@ -17,7 +18,7 @@ using std::endl;
 
 int compare( double a, double b, const std::string & s="") { 
   if (a == b) return 0; 
-  if ( s != "") 
+  if ( s =="" ) 
     std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
   else 
     std::cout << "\n" << s << " : Failure " << a << " diffent than " << b << std::endl;
