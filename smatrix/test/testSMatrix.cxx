@@ -18,6 +18,7 @@ using std::endl;
 
 int compare( double a, double b, const std::string & s="") { 
   if (a == b) return 0; 
+  if (fabs(a-b) < a*1E-15) return 0; 
   if ( s =="" ) 
     std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
   else 
