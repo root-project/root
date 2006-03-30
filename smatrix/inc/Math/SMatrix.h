@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.14 2006/03/09 09:24:04 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.15 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -376,8 +376,8 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
 				 unsigned int row,
 				 unsigned int col);
   /// place a matrix in this matrix
-  template <unsigned int D3, unsigned int D4>
-  SMatrix<T,D1,D2,R>& Place_at(const SMatrix<T,D3,D4>& rhs,
+  template <unsigned int D3, unsigned int D4, class R2>
+  SMatrix<T,D1,D2,R>& Place_at(const SMatrix<T,D3,D4,R2>& rhs,
 			     unsigned int row,
 			     unsigned int col);
   /// place a matrix expression in this matrix

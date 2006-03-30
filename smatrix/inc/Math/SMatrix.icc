@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.15 2006/03/09 09:24:04 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.16 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -580,18 +580,11 @@ SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_in_col(const VecExpr<A,T,D>& rhs,
 // place_at
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
-template <unsigned int D3, unsigned int D4>
-SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_at(const SMatrix<T,D3,D4>& rhs,
+template <unsigned int D3, unsigned int D4, class R2>
+SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_at(const SMatrix<T,D3,D4,R2>& rhs,
 					     unsigned int row,
 					     unsigned int col) {
-  assert(row+D3 <= D1 && col+D4 <= D2);
-
-  const unsigned int offset = row*D2+col;
-
-  for(unsigned int i=0; i<D3*D4; ++i) {
-    fRep[offset+(i/D4)*D2+i%D4] = rhs.apply(i);
-  }
-
+  PlaceMatrix<T,D1,D2,D3,D4,R,R2>::Evaluate(*this,rhs,row,col);
   return *this;
 }
 
@@ -603,15 +596,8 @@ template <class A, unsigned int D3, unsigned int D4, class R2>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::Place_at(const Expr<A,T,D3,D4,R2>& rhs,
 					     unsigned int row,
 					     unsigned int col) {
-  assert(row+D3 <= D1 && col+D4 <= D2);
-
-  const unsigned int offset = row*D2+col;
-
-  for(unsigned int i=0; i<D3*D4; ++i) {
-    fRep[offset+(i/D4)*D2+i%D4] = rhs.apply(i);
-  }
-
-  return *this;
+  PlaceExpr<T,D1,D2,D3,D4,A,R,R2>::Evaluate(*this,rhs,row,col);
+  return *this; 
 }
 
 //==============================================================================
@@ -755,6 +741,7 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 template <class SubMatrix>  
 SubMatrix SMatrix<T,D1,D2,R>::Sub(unsigned int row0, unsigned int col0) const { 
 
+  // to do: case when SubMatrix is a symmetric matrices should not compile 
 
 //   STATIC_CHECK( N1 <= D1,Smatrix_dimension1_too_small); 
 //   STATIC_CHECK( N2 <= D2,Smatrix_dimension2_too_small); 

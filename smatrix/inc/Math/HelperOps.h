@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.3 2006/03/09 09:24:04 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.4 2006/03/20 17:11:44 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps_h 
@@ -161,6 +161,104 @@ namespace ROOT {
     }; // struct MinusEquals
 
 
+    /** Structure to deal when a submatrix is placed in a matrix.  
+	We have different cases according to the matrix representation
+    */
+    template <class T, unsigned int D1, unsigned int D2,   
+              unsigned int D3, unsigned int D4, 
+	      class R1, class R2>
+    struct PlaceMatrix
+    {
+      static void Evaluate(SMatrix<T,D1,D2,R1>& lhs,  const SMatrix<T,D3,D4,R2>& rhs, 
+			   unsigned int row, unsigned int col) {
+
+	assert(row+D3 <= D1 && col+D4 <= D2);
+	const unsigned int offset = row*D2+col;
+
+	for(unsigned int i=0; i<D3*D4; ++i) {
+	  lhs.fRep[offset+(i/D4)*D2+i%D4] = rhs.apply(i);
+	}
+
+      }
+    }; // struct PlaceMatrix
+
+    template <class T, unsigned int D1, unsigned int D2,   
+              unsigned int D3, unsigned int D4, 
+	      class A, class R1, class R2>
+    struct PlaceExpr { 
+    static void Evaluate(SMatrix<T,D1,D2,R1>& lhs,  const Expr<A,T,D3,D4,R2>& rhs, 
+			 unsigned int row, unsigned int col) { 
+
+	assert(row+D3 <= D1 && col+D4 <= D2);
+	const unsigned int offset = row*D2+col;
+
+	for(unsigned int i=0; i<D3*D4; ++i) {
+	  lhs.fRep[offset+(i/D4)*D2+i%D4] = rhs.apply(i);
+	}
+      }
+  };  // struct PlaceExpr 
+
+  // specialization for general matrix in symmetric matrices
+  template <class T, unsigned int D1, unsigned int D2, 
+	    unsigned int D3, unsigned int D4 >
+  struct PlaceMatrix<T, D1, D2, D3, D4, MatRepSym<T,D1>, MatRepStd<T,D3,D4> > { 
+    static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& ,  
+			 const SMatrix<T,D3,D4,MatRepStd<T,D3,D4> >& , 
+			 unsigned int , unsigned int ) 
+    {        
+      STATIC_CHECK(0==1, Cannot_Place_Matrix_general_in_symmetric_matrix);
+    }
+  }; // struct PlaceMatrix
+
+  // specialization for general expression in symmetric matrices
+  template <class T, unsigned int D1, unsigned int D2, 
+	    unsigned int D3, unsigned int D4, class A >
+  struct PlaceExpr<T, D1, D2, D3, D4, A, MatRepSym<T,D1>, MatRepStd<T,D3,D4> > { 
+    static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& ,  
+			 const Expr<A,T,D3,D4,MatRepStd<T,D3,D4> >& , 
+			 unsigned int , unsigned int ) 
+    {        
+      STATIC_CHECK(0==1, Cannot_Place_Matrix_general_in_symmetric_matrix);
+    }
+  }; // struct PlaceExpr
+
+  // specialization for symmetric matrix in symmetric matrices
+
+  template <class T, unsigned int D1, unsigned int D2, 
+	    unsigned int D3, unsigned int D4 >
+  struct PlaceMatrix<T, D1, D2, D3, D4, MatRepSym<T,D1>, MatRepSym<T,D3> > { 
+    static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  
+			 const SMatrix<T,D3,D4,MatRepSym<T,D3> >& rhs, 
+			 unsigned int row, unsigned int col ) 
+    {        
+      // can work only if placed on the diagonal
+      assert(row == col); 
+
+      for(unsigned int i=0; i<D3; ++i) {
+	for(unsigned int j=0; j<=i; ++j) 
+	  lhs.fRep(row+i,col+j) = rhs(i,j);
+      }	  
+    }
+  }; // struct PlaceMatrix
+
+  // specialization for symmetric expression in symmetric matrices
+  template <class T, unsigned int D1, unsigned int D2, 
+	    unsigned int D3, unsigned int D4, class A >
+  struct PlaceExpr<T, D1, D2, D3, D4, A, MatRepSym<T,D1>, MatRepSym<T,D3> > { 
+    static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  
+			 const Expr<A,T,D3,D4,MatRepSym<T,D3> >& rhs, 
+			 unsigned int row, unsigned int col ) 
+    {        
+      // can work only if placed on the diagonal
+      assert(row == col); 
+
+      for(unsigned int i=0; i<D3; ++i) {
+	for(unsigned int j=0; j<=i; ++j) 
+	  lhs.fRep(row+i,col+j) = rhs(i,j);
+      }
+    }
+  }; // struct PlaceExpr
+    
 
   }  // namespace Math
   
