@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.18 2005/12/08 13:03:57 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.19 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -838,7 +838,7 @@ void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 //______________________________________________________________________________
 void TRootGuiBuilder::Update()
 {
-   //
+   // update gui builder
 
    if (!fManager) {
       return;
@@ -1120,7 +1120,9 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
          fEditable = fMain->GetCurrent();
          if (fEditable) {
             fEditable->SetEditable(kTRUE);
-         }
+         } //else if (!fMain->GetCurrent()) {
+            //NewProject();
+         //}
          UpdateStatusBar("Start edit");
          fMenuFile->EnableEntry(kGUIBLD_FILE_STOP);
          fMenuFile->DisableEntry(kGUIBLD_FILE_START);
@@ -1226,7 +1228,7 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
 //______________________________________________________________________________
 void TRootGuiBuilder::HandleWindowClosed(Int_t )
 {
-   //
+   // handler for closed MDI frame
 
    fEditable = 0;
 
@@ -1252,7 +1254,7 @@ void TRootGuiBuilder::HandleWindowClosed(Int_t )
 //______________________________________________________________________________
 void TRootGuiBuilder::UpdateStatusBar(const char *txt)
 {
-   //
+   // update information shown on the status bar
 
    if (!fStatusBar) return;
 
@@ -1274,7 +1276,7 @@ void TRootGuiBuilder::UpdateStatusBar(const char *txt)
 //______________________________________________________________________________
 void TRootGuiBuilder::EraseStatusBar()
 {
-   //
+   // clear information shown in the status bar 
 
    if (!fStatusBar) return;
 
@@ -1284,7 +1286,7 @@ void TRootGuiBuilder::EraseStatusBar()
 //______________________________________________________________________________
 void TRootGuiBuilder::BindKeys()
 {
-   //
+   // keyborad key bind
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_a),
                       kKeyControlMask, kTRUE);

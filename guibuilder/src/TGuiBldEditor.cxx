@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGuiBldEditor                                                        //
+// TGuiBldEditor - the property editor                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -152,15 +152,16 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
    TGRadioButton *frame305 = new TGRadioButton(fBtnGroup," Raised",kBldBorderRaised);
    frame305->SetState(kButtonDown);
    frame305->SetToolTipText("Set a raised border of the frame");
-   TGCheckButton *frame300 = new TGCheckButton(fBtnGroup," Double",kBldBorderDouble);
-   frame300->SetToolTipText("Set double border of the frame");
+   TGCheckButton *check = new TGCheckButton(fBtnGroup," Double",kBldBorderDouble);
+   TQObject::Disconnect(check);
+   check->SetToolTipText("Set double border of the frame");
 
    fBtnGroup->SetRadioButtonExclusive(kTRUE);
    fBtnGroup->Resize(136,86);
    AddFrame(fBtnGroup);
    fBtnGroup->Connect("Pressed(Int_t)", "TGuiBldEditor", fEditor, "UpdateBorder(Int_t)");
-   frame300->Connect("Pressed()", "TGuiBldEditor", fEditor, "UpdateBorder(=4)");
-   frame300->Connect("Released()", "TGuiBldEditor", fEditor, "UpdateBorder(=5)");
+   check->Connect("Pressed()", "TGuiBldEditor", fEditor, "UpdateBorder(=4)");
+   check->Connect("Released()", "TGuiBldEditor", fEditor, "UpdateBorder(=5)");
 /*
    TGCompositeFrame *f = new TGGroupFrame(this,"Palette",kVerticalFrame | kFitWidth);
    TGHorizontalFrame *hf = new TGHorizontalFrame(f ,1, 1);
@@ -191,7 +192,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
 //______________________________________________________________________________
 void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 {
-   //
+   // perform actions when selected frame was changed
 
    if (!frame) {
       return;
@@ -214,7 +215,7 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 //______________________________________________________________________________
 TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
 {
-   //
+   // ctor.
 
    fSelected = 0;
    SetCleanup(kDeepCleanup);
@@ -251,7 +252,7 @@ TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGCompositeFrame(p, 1, 1)
 //______________________________________________________________________________
 TGuiBldEditor::~TGuiBldEditor()
 {
-   //
+   // dtor
 
 }
 
@@ -337,7 +338,7 @@ void TGuiBldEditor::UpdateSelected(TGFrame *frame)
 //______________________________________________________________________________
 void TGuiBldEditor::UpdateBorder(Int_t b)
 {
-   //
+   // update border of  selcted frame
 
    if (!fSelected) return;
 
