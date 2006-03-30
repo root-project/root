@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.8 2006/03/28 13:46:08 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.9 2006/03/28 13:51:42 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1465,7 +1465,8 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
                        const TMatrixT<Element> &a,const TVectorT<Element> &source)
 {
   // Modify addition: target += scalar * A * source.
-  
+  // NOTE: in case scalar=0, do  target = A * source.
+   source
   if (gMatrixCheck) {
     Assert(target.IsValid());
     Assert(a.IsValid());
@@ -1506,6 +1507,14 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
         sum += *sp1++ * *mp++;
       *tp++ += sum;
     }
+ } else if (scalar == 0.0) {
+    while (tp < tp_last) {
+      const Element *sp1 = sp;
+      Element sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++  = sum;
+    }
   } else if (scalar == -1.0) {
     while (tp < tp_last) {
       const Element *sp1 = sp;
@@ -1536,6 +1545,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
                        const TMatrixTSym<Element> &a,const TVectorT<Element> &source)
 {
   // Modify addition: target += A * source.
+  // NOTE: in case scalar=0, do  target = A * source.
   
   if (gMatrixCheck) {
     Assert(target.IsValid());
@@ -1571,6 +1581,14 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
         sum += *sp1++ * *mp++;
       *tp++ += sum;
     }
+ } else if (scalar == 0.0) {
+    while (tp < tp_last) {
+      const Element *sp1 = sp;
+      Element sum = 0;
+      while (sp1 < sp_last)
+        sum += *sp1++ * *mp++;
+      *tp++  = sum;
+    }
   } else if (scalar == -1.0) {
     while (tp < tp_last) {
       const Element *sp1 = sp;
@@ -1600,6 +1618,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
                        const TMatrixTSparse<Element> &a,const TVectorT<Element> &source)
 {
   // Modify addition: target += A * source.
+  // NOTE: in case scalar=0, do  target = A * source.
 
   if (gMatrixCheck) {
     Assert(target.IsValid());
@@ -1635,6 +1654,17 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
         sum += mp[index]*sp[icol];
       }
       tp[irow] += sum;
+    }
+ } else if (scalar == 0.0) {
+    for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
+      const Int_t sIndex = pRowIndex[irow]; 
+      const Int_t eIndex = pRowIndex[irow+1];
+      Element sum = 0.0;
+      for (Int_t index = sIndex; index < eIndex; index++) {
+        const Int_t icol = pColIndex[index];
+        sum += mp[index]*sp[icol];
+      }
+      tp[irow]  = sum;
     }
   } else if (scalar == -1.0) {
     for (Int_t irow = 0; irow < a.GetNrows(); irow++) {

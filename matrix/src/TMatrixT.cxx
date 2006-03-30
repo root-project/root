@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.12 2006/03/23 16:41:25 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.13 2006/03/29 05:16:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -3064,8 +3064,16 @@ TMatrixT<Element> &Add(TMatrixT<Element> &target,Element scalar,const TMatrixT<E
   const Element *sp  = source.GetMatrixArray();
         Element *tp  = target.GetMatrixArray();
   const Element *ftp = tp+target.GetNoElements();
-  while ( tp < ftp )
-    *tp++ += scalar * (*sp++);
+  if (scalar == 0) {
+     while ( tp < ftp )
+       *tp++  = scalar * (*sp++);
+  } else if (scalar == 1.) {
+     while ( tp < ftp )
+       *tp++ = (*sp++);
+  } else {
+     while ( tp < ftp )
+       *tp++ += scalar * (*sp++);
+  }
 
   return target;
 }
