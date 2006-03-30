@@ -376,7 +376,7 @@ int test10() {
   iret |= compare( vU[2], subV[1] ); 
   
   // test constructor from subVectors
-  SMatrix<double,3> C(vU);
+  SMatrix<double,3> C(vU,false);
   SMatrix<double,3> D(vL,true);
 
   std::cout << " C =  " << C << std::endl;
@@ -752,7 +752,7 @@ int test14() {
 
   //this should run assert
   //  sA = A.Sub<SMatrix<double,2,3,MatRepStd<double,2,3> > > (0,2); 
-  //sB = B.Sub<SMatrix<double,2,2,MatRepSym<double,2> > > (0,1);
+  //  sB = B.Sub<SMatrix<double,2,2,MatRepSym<double,2> > > (0,1);
 
 #ifdef TEST_STATIC_CHECK
   sB = A.Sub<SMatrix<double,2,2,MatRepSym<double,2> > > (0,0);
@@ -777,6 +777,71 @@ int test14() {
 
   return iret;
 }
+
+
+
+int test15() { 
+  // test using iterators 
+  int iret = 0; 
+
+  double u[12] = {1,2,3,4,5,6,7,8,9,10,11,12}; 
+  double w[6] = {1,2,3,4,5,6};
+
+  SMatrix<double,3,4> A1(u,12);
+  iret |= compare( A1(0,0),u[0] );
+  iret |= compare( A1(1,2),u[6] );
+  iret |= compare( A1(2,3),u[11] );
+  //cout << A1 << endl;
+
+  SMatrix<double,3,4> A2(w,6,true,true);
+  iret |= compare( A2(0,0),w[0] );
+  iret |= compare( A2(1,0),w[1] );
+  iret |= compare( A2(2,0),w[3] );
+  iret |= compare( A2(2,2),w[5] );
+  //cout << A2 << endl;
+
+  // upper diagonal (needs 9 elements)
+  SMatrix<double,3,4> A3(u,9,true,false);
+  iret |= compare( A3(0,0),u[0] );
+  iret |= compare( A3(0,1),u[1] );
+  iret |= compare( A3(0,2),u[2] );
+  iret |= compare( A3(1,2),u[5] );
+  iret |= compare( A3(2,3),u[8] );
+  //cout << A3 << endl;
+
+
+  //cout << "test sym matrix " << endl;
+  SMatrix<double,3,3,MatRepSym<double,3> > S1(w,6,true); 
+  iret |= compare( S1(0,0),w[0] );
+  iret |= compare( S1(1,0),w[1] );
+  iret |= compare( S1(1,1),w[2] );
+  iret |= compare( S1(2,0),w[3] );
+  iret |= compare( S1(2,1),w[4] );
+  iret |= compare( S1(2,2),w[5] );
+
+  SMatrix<double,3,3,MatRepSym<double,3> > S2(w,6,true,false); 
+  iret |= compare( S2(0,0),w[0] );
+  iret |= compare( S2(1,0),w[1] );
+  iret |= compare( S2(2,0),w[2] );
+  iret |= compare( S2(1,1),w[3] );
+  iret |= compare( S2(2,1),w[4] );
+  iret |= compare( S2(2,2),w[5] );
+
+  // check retrieve
+  double * pA1 = A1.begin();
+  for ( int i = 0; i< 12; ++i) 
+    iret |= compare( pA1[i],u[i] );
+
+  double * pS1 = S1.begin();
+  for ( int i = 0; i< 6; ++i) 
+    iret |= compare( pS1[i],w[i] );
+
+
+
+
+  return iret;
+}
+
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
@@ -803,6 +868,7 @@ int main() {
   TEST(12);
   TEST(13);
   TEST(14);
+  TEST(15);
 
 
 

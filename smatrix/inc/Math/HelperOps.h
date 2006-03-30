@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.5 2006/03/30 08:21:28 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.6 2006/03/30 10:33:44 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps_h 
@@ -316,6 +316,64 @@ namespace ROOT {
     }
 
   }; // struct RetrieveMatrix
+    
+  // for assignment from iterators 
+    template <class T, unsigned int D1, unsigned int D2, class R>  
+    struct AssignItr { 
+      template<class Iterator> 
+      static void Evaluate(SMatrix<T,D1,D2,R>& lhs, Iterator begin, Iterator end, bool triang, bool lower) { 
+	// require size match exactly (better)
+
+	if (triang) { 
+	  Iterator itr = begin; 
+	  if (lower) { 
+	      for (unsigned int i = 0; i < D1; ++i) 
+		for (unsigned int j =0; j <= i; ++j) { 
+		  if (itr != end) 
+		    lhs.fRep[i*D2+j] = *itr++;
+		}
+	      
+	  }
+	  else { // upper 
+	      for (unsigned int i = 0; i < D1; ++i) 
+		for (unsigned int j = i; j <D2; ++j) { 
+		  if (itr != end) 
+		    lhs.fRep[i*D2+j] = *itr++;
+		}
+	  
+	  }
+	}
+	// case of filling the full matrix
+	else { 
+	  assert( begin + R::kSize == end);
+	  // full copy of all D1*D2 elements 
+	  std::copy(begin, end, lhs.fRep.Array() );
+	}
+      }
+	
+    }; // struct AssignItr
+
+    // for assignment from iterators for symmetric matrices
+    template <class T, unsigned int D1, unsigned int D2>  
+    struct AssignItr<T, D1, D2, MatRepSym<T,D1> >  { 
+      template<class Iterator> 
+      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs, Iterator begin, Iterator end, bool , bool lower) { 
+
+	const int size =  MatRepSym<T,D1>::kSize; 
+	assert( begin + size == end);
+	if (lower) { 
+	  // full copy of all D1*D2 elements 
+	  std::copy(begin, end, lhs.fRep.Array() );
+	}
+	else { 
+	  Iterator itr = begin; 
+	  for (unsigned int i = 0; i < D1; ++i) 
+	    for (unsigned int j = i; j <D2; ++j)
+		lhs(i,j) = *itr++;
+	  }
+      }
+
+    }; // struct AssignItr
     
 
   }  // namespace Math

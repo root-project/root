@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.17 2006/03/30 08:21:28 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.18 2006/03/30 10:33:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -101,19 +101,16 @@ SMatrix<T,D1,D2,R>::SMatrix(const Expr<A,T,D1,D2,R2>& rhs) {
 //=============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
-SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, InputIterator end) {
-  // std::distance does not work on Solaris
-  //assert( std::distance(begin,end) <= kSize);
-  // require size match exactly (better)
-  assert( begin + R::kSize == end);
-  std::copy(begin, end, fRep.Array() );
+SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, InputIterator end, bool triang, bool lower) {
+  for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
+  AssignItr<T,D1,D2,R>::Evaluate(*this,begin,end,triang,lower); 
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
-SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, unsigned int size) {
-  assert( size ==  R::kSize);
-  std::copy(begin, begin+size, fRep.Array() );
+SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, unsigned int size, bool triang, bool lower) {
+  for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
+  AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower); 
 }
 
 
