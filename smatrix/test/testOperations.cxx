@@ -98,6 +98,7 @@ int test_smatrix_op() {
     MnVectorN v;
     MnVectorM p;
 
+
     TStopwatch w; 
     {       
       //seal::SealTimer t(init,false);
@@ -130,6 +131,9 @@ int test_smatrix_op() {
 #endif
 
     w.Start(); 
+
+
+
 	        
     MnVectorN   v1;  testMV(A,v,t_mv,v1);
     //if (k == 0) v1.Print(std::cout);
@@ -156,6 +160,7 @@ int test_smatrix_op() {
 #endif
 
     r1 = testDot_S(v3,v5,t_dot);
+
     r2 = testInnerProd_S(C6,v5,t_prd);
 
   
@@ -319,6 +324,7 @@ int test_tmatrix_op() {
     MnVector   v(NDIM1);
     MnVector   p(NDIM2);
 
+
     TStopwatch w; 
     { 
       // fill matrices with random data
@@ -329,6 +335,7 @@ int test_tmatrix_op() {
 
       fillRandomVec(r,v,first);
       fillRandomVec(r,p,second);
+
     }
      
 #ifdef DEBUG
@@ -365,6 +372,7 @@ int test_tmatrix_op() {
 #endif
 
     r1 = testDot_T(v3,v5,t_dot);
+
     r2 = testInnerProd_T(C6,v5,t_prd);
 
     //MnMatrix C2b(NDIM1,NDIM1); testInv_T2(C1,t_inv2,C2b);
@@ -612,7 +620,6 @@ int test_hepmatrix_sym_op() {
       fillRandomSym(r,A,first,1);
       fillRandomSym(r,B,first,1);
       fillRandomMat(r,C,first,first,1);
-
       fillRandomVec(r,v,first);
 
     }
@@ -623,6 +630,7 @@ int test_hepmatrix_sym_op() {
     if (k == 0) { 
     }
 #endif
+    
 	        
     MnVector   v1(N);  testMV(A,v,t_mv,v1);
     MnVector   v2(N);  testGMV(A,v,v1,t_gmv,v2);
@@ -723,6 +731,7 @@ void ROOT::Math::test::reportTime(std::string s, double time) {
 
 int main(int argc , char *argv[] ) { 
 
+
   std::string fname = "testOperations"; 
   if (argc > 1) { 
     std::string platf(argv[1]); 
@@ -743,9 +752,16 @@ int main(int argc , char *argv[] ) {
 
 #ifndef TEST_ALL_MATRIX_SIZES
   NLOOP = 1000*NLOOP_MIN 
+  initValues();
+
+
   TEST(5)
 #else
-  NLOOP = 10000*NLOOP_MIN; 
+  NLOOP = 5000*NLOOP_MIN; 
+  initValues();
+
+
+
   TEST(2);
   TEST(3);
   TEST(4);

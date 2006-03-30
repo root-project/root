@@ -11,24 +11,42 @@
 //#endif
 using namespace ROOT::Math;
 
+std::vector<float> gV; 
+
+void initValues() { 
+  gV.reserve(10*NLOOP); 
+  TRandom3 r; 
+  std::cout << "init smearing vector ";
+  for (int l = 0; l < 10*NLOOP; l++) 	
+    {
+      gV.push_back( r.Rndm() );  
+    } 
+  std::cout << " with size  " << gV.size() << std::endl;
+
+}
+
 
 // vector assignment
 template<class V> 
 void testVeq(const V & v, double & time, V & result) {  
+  V vtmp = v; 
   test::Timer t(time,"V=V ");
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result = v;  
+      vtmp[0] = gV[l];
+      result = vtmp;  
     }
 }
 
 // matrix assignmnent
 template<class M> 
 void testMeq(const M & m, double & time, M & result) {  
+  M mtmp = m;
   test::Timer t(time,"M=M ");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = m;  
+      mtmp(0,0) = gV[l];
+      result = mtmp;  
     }
 }
 
@@ -37,31 +55,36 @@ void testMeq(const M & m, double & time, M & result) {
 // vector sum 
 template<class V> 
 void testVad(const V & v1, const V & v2, double & time, V & result) {  
-  test::Timer t(time,"V+V ");;
+  V vtmp = v2; 
+  test::Timer t(time,"V+V ");
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result = v1 + v2;  
+      vtmp[0] = gV[l]; 
+      result = v1 + vtmp;  
     }
 }
 
 // matrix sum 
 template<class M> 
 void testMad(const M & m1, const M & m2, double & time, M & result) {  
+  M mtmp = m2;
   test::Timer t(time,"M+M ");;
   for (int l = 0; l < NLOOP; l++) 	
     {
-      //result = m1 + m2;  
-      result = m1; result += m2;  
+      mtmp(0,0) = gV[l]; 
+      result = m1; result += mtmp;  
     }
 }
 
 // vector * constant
 template<class V> 
 void testVscale(const V & v1, double a, double & time, V & result) {  
+  V vtmp = v1; 
   test::Timer t(time,"a*V ");;
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = a * v1;   // v1 * a does not exist in ROOT   
+      vtmp[0] = gV[l];
+      result = a * vtmp;   // v1 * a does not exist in ROOT   
     }
 }
 
@@ -69,10 +92,12 @@ void testVscale(const V & v1, double a, double & time, V & result) {
 // matrix * constant
 template<class M> 
 void testMscale(const M & m1, double a, double & time, M & result) {  
+  M mtmp = m1;
   test::Timer t(time,"a*M ");;
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = m1 * a;  
+      mtmp(0,0) = gV[l];
+      result = mtmp * a;  
     }
 }
 
@@ -80,30 +105,36 @@ void testMscale(const M & m1, double a, double & time, M & result) {
 // simple Matrix vector op
 template<class M, class V> 
 void testMV(const M & mat, const V & v, double & time, V & result) {  
+  V vtmp = v; 
   test::Timer t(time,"M*V ");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = mat * v;  
+      vtmp[0] = gV[l];
+      result = mat * vtmp;  
     }
 }
 
 // general matrix vector op
 template<class M, class V> 
 void testGMV(const M & mat, const V & v1, const V & v2, double & time, V & result) {  
+  V vtmp = v1; 
   test::Timer t(time,"M*V+");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = mat * v1 + v2; 
+      vtmp[0] = gV[l];
+      result = mat * vtmp + v2; 
     }
 }
 
 // general matrix matrix op 
 template<class A, class B, class C> 
 void testMM(const A & a, const B & b, const C & c, double & time, C & result) {  
+  B btmp = b; 
   test::Timer t(time,"M*M ");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = a * b + c;
+      btmp(0,0) = gV[l];
+      result = a * btmp + c;
     }
 }
 
@@ -115,40 +146,53 @@ void testMM(const A & a, const B & b, const C & c, double & time, C & result) {
 //smatrix
 template<class V> 
 double testDot_S(const V & v1, const V & v2, double & time) {  
+  V vtmp = v2; 
   test::Timer t(time,"dot ");
   double result=0; 
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result += Dot(v1,v2);  
+      vtmp[0] = gV[l];
+      result = Dot(v1,vtmp);  
     }
   return result; 
 }
 
+
+// double testDot_S(const std::vector<V*> & w1, const std::vector<V*> & w2, double & time) {  
+//   test::Timer t(time,"dot ");
+//   double result=0; 
+//   for (int l = 0; l < NLOOP; l++) 	
+//     {
+//       V & v1 = *w1[l]; 
+//       V & v2 = *w2[l]; 
+//       result = Dot(v1,v2);  
+//     }
+//   return result; 
+// }
+
 template<class M, class V> 
 double testInnerProd_S(const M & a, const V & v, double & time) {  
+  V vtmp = v; 
   test::Timer t(time,"prod");
   double result=0; 
   for (int l = 0; l < NLOOP; l++) 	
     {
-      //#ifndef WIN32
-      result += Similarity(v,a);  
-// #else 
-//       // cannot instantiate on Windows (don't know why? )
-//       V tmp = a*v; 
-//       result = Dot(v,tmp);
-// #endif
+      vtmp[0] =  gV[l];
+      result = Similarity(vtmp,a);  
     }
   return result; 
 }
 
 //inversion
 template<class M> 
-void  testInv_S( const M & a,  double & time, M& result){ 
+void  testInv_S( const M & m,  double & time, M& result){
+  M mtmp = m;
   test::Timer t(time,"inv ");
   int ifail = 0;
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = a.Inverse(ifail);
+      mtmp(0,0) = gV[l]; 
+      result = mtmp.Inverse(ifail);
       // assert(ifail == 0);
     }
 }
@@ -157,13 +201,15 @@ void  testInv_S( const M & a,  double & time, M& result){
 // general matrix matrix op
 template<class A, class B, class C> 
 void testATBA_S(const A & a, const B & b, double & time, C & result) {  
+  B btmp = b;
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) 	
     {
       //result = Transpose(a) * b * a;  
       //result = a * b * Transpose(a);  
       //result = a * b * a;  
-      C tmp = b * Transpose(a);
+      btmp(0,0) = gV[l]; 
+      C tmp = btmp * Transpose(a);
       result = a * tmp; 
     }
 }
@@ -171,12 +217,14 @@ void testATBA_S(const A & a, const B & b, double & time, C & result) {
 // general matrix matrix op
 template<class A, class B, class C> 
 void testATBA_S2(const A & a, const B & b, double & time, C & result) {  
+  B btmp = b;
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) 	
     {
       //result = Transpose(a) * b * a;  
       //result = a * b * Transpose(a);  
       //result = a * b * a;  
+      btmp(0,0) = gV[l];
       result  = SimilarityT(a,b);
       //result = a * result; 
     }
@@ -184,50 +232,56 @@ void testATBA_S2(const A & a, const B & b, double & time, C & result) {
 
 template<class A, class C> 
 void testMT_S(const A & a, double & time, C & result) {  
+  A atmp = a;
   test::Timer t(time,"Transp");
   for (int l = 0; l < NLOOP; l++) 	
     {
       //result = Transpose(a) * b * a;  
       //result = a * b * Transpose(a);  
       //result = a * b * a;  
+      atmp(0,0) = gV[l];
       result  = Transpose(a);
     }
 }
 
-
+/////////////////////////////////////
 // for root
-
+//////////////////////////////////
 
 // simple Matrix vector op
 template<class M, class V> 
 void testMV_T(const M & mat, const V & v, double & time, V & result) {
+  V vtmp = v; 
   test::Timer t(time,"M*V ");
   for (int l = 0; l < NLOOP; l++)
     {
-      // result = mat * v;
-      Add(result,0.0,mat,v);
+      vtmp[0] = gV[l];
+      Add(result,0.0,mat,vtmp);
     }
 } 
   
 // general matrix vector op
 template<class M, class V> 
 void testGMV_T(const M & mat, const V & v1, const V & v2, double & time, V & result) {
+  V vtmp = v1;
   test::Timer t(time,"M*V+");
   for (int l = 0; l < NLOOP; l++)
     {
-      //result = mat * v1 + v2; 
+      vtmp[0] = gV[l];
       memcpy(result.GetMatrixArray(),v2.GetMatrixArray(),v2.GetNoElements()*sizeof(Double_t));
-      Add(result,1.0,mat,v1);
+      Add(result,1.0,mat,vtmp);
     }
 }
 
 // general matrix matrix op
 template<class A, class B, class C> 
 void testMM_T(const A & a, const B & b, const C & c, double & time, C & result) {
+  B btmp = b; 
   test::Timer t(time,"M*M ");
   for (int l = 0; l < NLOOP; l++)
     {
-      result.AMultB(a,b);
+      btmp(0,0) = gV[l];
+      result.AMultB(a,btmp);
       result += c;
     }
 } 
@@ -235,61 +289,73 @@ void testMM_T(const A & a, const B & b, const C & c, double & time, C & result) 
 // matrix sum
 template<class M> 
 void testMad_T(const M & m1, const M & m2, double & time, M & result) {
-  test::Timer t(time,"M+M ");;
+  M mtmp = m2;
+  test::Timer t(time,"M+M ");
   for (int l = 0; l < NLOOP; l++)
     {
-      result.APlusB(m1,m2);
+      mtmp(0,0) = gV[l];
+      result.APlusB(m1,mtmp);
     }
 }
 
 template<class A, class B, class C> 
 void testATBA_T(const A & a, const B & b, double & time, C & result) {
+  B btmp = b;
   test::Timer t(time,"At*M*A");
   C tmp = a;
   for (int l = 0; l < NLOOP; l++)
     {
-      tmp.AMultB(a,b);
+      btmp(0,0) = gV[l]; 
+      tmp.AMultB(a,btmp);
       result.AMultBt(tmp,a);
     }
 }
 
 template<class V> 
 double testDot_T(const V & v1, const V & v2, double & time) {  
+  V vtmp = v2;
   test::Timer t(time,"dot ");
   double result=0; 
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result += v1*v2;
+      vtmp[0] = gV[l];
+      result = v1*vtmp;
     }
   return result; 
 }
 
 template<class M, class V> 
 double testInnerProd_T(const M & a, const V & v, double & time) {  
+  V vtmp = v; 
   test::Timer t(time,"prod");
   double result=0; 
-  for (int l = 0; l < NLOOP; l++) 	
-    result += a.Similarity(v);
+  for (int l = 0; l < NLOOP; l++) { 
+    vtmp[0] =  gV[l];
+    result = a.Similarity(vtmp);
+  }
   return result; 
 }
 
 //inversion 
 template<class M> 
-void  testInv_T(const M & a,  double & time, M& result){ 
+void  testInv_T(const M & m,  double & time, M& result){ 
+  M mtmp = m;
   test::Timer t(time,"inv ");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      memcpy(result.GetMatrixArray(),a.GetMatrixArray(),a.GetNoElements()*sizeof(Double_t));
+      mtmp(0,0) = gV[l]; 
+      memcpy(result.GetMatrixArray(),mtmp.GetMatrixArray(),mtmp.GetNoElements()*sizeof(Double_t));
       result.InvertFast(); 
     }
 }
 
 template<class M> 
-void  testInv_T2(const M & a,  double & time, M& result){ 
+void  testInv_T2(const M & m,  double & time, M& result){ 
+  M mtmp = m;
   test::Timer t(time,"inv2");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      memcpy(result.GetMatrixArray(),a.GetMatrixArray(),a.GetNoElements()*sizeof(Double_t));
+      memcpy(result.GetMatrixArray(),mtmp.GetMatrixArray(),mtmp.GetNoElements()*sizeof(Double_t));
       result.InvertFast();  
     }
 }
@@ -298,32 +364,38 @@ void  testInv_T2(const M & a,  double & time, M& result){
 // vector sum
 template<class V> 
 void testVad_T(const V & v1, const V & v2, double & time, V & result) {
+  V vtmp = v2; 
   test::Timer t(time,"V+V ");;
   for (int l = 0; l < 10*NLOOP; l++)
     {
-      result.Add(v1,v2);
+      vtmp[0] = gV[l];
+      result.Add(v1,vtmp);
     }
 }
 
 // vector * constant
 template<class V> 
 void testVscale_T(const V & v1, double a, double & time, V & result) {
+  V vtmp = v1; 
   test::Timer t(time,"a*V ");;
   for (int l = 0; l < NLOOP; l++)
     {
       // result = a * v1;
       result.Zero();
-      Add(result,a,v1);
+      vtmp[0] = gV[l];
+      Add(result,a,vtmp);
     }
 }
 
 // general matrix matrix op
 template<class A, class B, class C> 
 void testATBA_T2(const A & a, const B & b, double & time, C & result) {  
+  B btmp = b;
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      memcpy(result.GetMatrixArray(),b.GetMatrixArray(),b.GetNoElements()*sizeof(Double_t));
+      btmp(0,0) = gV[l]; 
+      memcpy(result.GetMatrixArray(),btmp.GetMatrixArray(),btmp.GetNoElements()*sizeof(Double_t));
       result.Similarity(a); 
     }
 }
@@ -331,27 +403,31 @@ void testATBA_T2(const A & a, const B & b, double & time, C & result) {
 // matrix * constant
 template<class M>
 void testMscale_T(const M & m1, double a, double & time, M & result) {
+  M mtmp = m1;
   test::Timer t(time,"a*M ");;
   for (int l = 0; l < NLOOP; l++)
     {
       //result = a * m1;
       result.Zero();
-      Add(result,a,m1);
+      mtmp(0,0) = gV[l];
+      Add(result,a,mtmp);
     }
 }
 
 template<class A, class C> 
 void testMT_T(const A & a, double & time, C & result) {  
+  A atmp = a;
   test::Timer t(time,"Transp");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result.Transpose(a);
+      atmp(0,0) = gV[l];
+      result.Transpose(atmp);
     }
 }
 
- 
+//////////////////////////////////////////// 
 // for clhep
-
+////////////////////////////////////////////
 
 //smatrix
 template<class V> 
