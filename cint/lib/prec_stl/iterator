@@ -148,7 +148,7 @@ class reverse_iterator
 #else
 template <class Iterator>
 class reverse_iterator 
-#if defined(G__KCC)
+#if defined(G__KCC) || defined(G__INTEL_COMPILER)
   : public iterator<iterator_traits<Iterator>::iterator_category,
                     iterator_traits<Iterator>::value_type,
                     iterator_traits<Iterator>::difference_type,
@@ -163,7 +163,7 @@ class reverse_iterator
 #endif
  public:
 
-#if defined(G__KCC) 
+#if defined(G__KCC)  || defined(G__INTEL_COMPILER)
    typedef Iterator iterator_type;
    typedef typename iterator_traits<Iterator>::difference_type difference_type;
    typedef typename iterator_traits<Iterator>::reference reference;

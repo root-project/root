@@ -6424,7 +6424,7 @@ int G__asm_optimize3(int *start)
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
-      if(isprint(G__asm_inst[pc+1])) {
+      if(G__asm_inst[pc+1]<256 && isprint(G__asm_inst[pc+1])) {
         if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP2 '%c'%d \n" ,pc
                 ,G__asm_inst[pc+1],G__asm_inst[pc+1]);
       }
@@ -6806,7 +6806,7 @@ int G__asm_optimize3(int *start)
       * sp    G__null     <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(isprint(G__asm_inst[pc+1])){
+      if(G__asm_inst[pc+1]<256 && isprint(G__asm_inst[pc+1])){
         if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: OP1 '%c'%d\n",pc
                 ,G__asm_inst[pc+1],G__asm_inst[pc+1] );
       }
@@ -8200,7 +8200,7 @@ int G__dasm(FILE *fout,int isthrow)
       * sp
       ***************************************/
       if(0==isthrow) {
-        if(isprint(G__asm_inst[pc+1]))
+        if(G__asm_inst[pc+1]<256 && isprint(G__asm_inst[pc+1]))
           fprintf(fout,"%3x: OP2 '%c'%ld \n" ,pc
                   ,(char)G__asm_inst[pc+1],G__asm_inst[pc+1]);
         else
@@ -8488,7 +8488,7 @@ int G__dasm(FILE *fout,int isthrow)
       * sp    G__null     <-
       ***************************************/
       if(0==isthrow) {
-        if(isprint(G__asm_inst[pc+1]))
+        if(G__asm_inst[pc+1]<256 && isprint(G__asm_inst[pc+1]))
           fprintf(fout,"%3x: OP1 '%c'%ld\n",pc
                   ,(char)G__asm_inst[pc+1],G__asm_inst[pc+1] );
         else

@@ -575,6 +575,25 @@ static void G__delete_string(char *str,char *del)
   }
 }
 /**************************************************************************
+* G__delete_end_string
+* Remove the last occurence of 'del' (if any)
+*
+**************************************************************************/
+static void G__delete_end_string(char *str,char *del)
+{
+  char *e;
+  char *p = strstr(str,del);
+  char *t = 0;
+  while ( p && (t = strstr(p+1,del)) ) {
+     p = t;
+  }
+  if(p) {
+    e = p + strlen(del);
+    while(*e) *(p++) = *(e++);
+    *p=0;
+  }
+}
+/**************************************************************************
 * G__modify_callpara()
 *
 **************************************************************************/
@@ -594,10 +613,10 @@ static void G__modify_callpara(G__Templatearg *spec_arg
       char buf[10];
       for(i=0;i<n;i++) buf[i]='*';
       buf[n]=0;
-      G__delete_string(pcall_para->string,buf);
+      G__delete_end_string(pcall_para->string,buf);
     }
     if(spec_r && spec_r == call_r) {
-      G__delete_string(pcall_para->string,"&");
+      G__delete_end_string(pcall_para->string,"&");
     }
     if(spec_c && spec_c == call_c) {
       G__delete_string(pcall_para->string,"const ");

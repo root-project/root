@@ -5622,7 +5622,7 @@ G__value G__allocvariable( /* G__value expression, */
     var = var->next;
     
     /***************************************
-     * Initialize the new varaible array
+     * Initialize the new variable array
      ***************************************/
     var->varlabel[0][0]=0;
     var->paran[0]=0;
@@ -5633,6 +5633,7 @@ G__value G__allocvariable( /* G__value expression, */
       for(ix=0;ix<G__MEMDEPTH;ix++) {
         var->varnamebuf[ix]=(char*)NULL;
         var->p[ix] = 0;
+        var->hash[ix] = 0;
       }
     }
     ig15=0;
@@ -6024,7 +6025,6 @@ G__value G__allocvariable( /* G__value expression, */
      !G__macro_defining) { /* in case of enumerater */
     G__var_type='i';
   }
-
   if('u'!=tolower(var->type[ig15])&&'u'==result.type&&-1!=result.tagnum) {
     int store_decl = G__decl;
     G__decl=0;

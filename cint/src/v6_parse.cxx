@@ -1092,12 +1092,11 @@ int G__pp_command()
     if('\n'!=c && '\r'!=c) G__fignoreline();
     G__ifile.line_number=atoi(condition);
   }
-  else if(strcmp(condition,"else")==0||
-          strcmp(condition,"elif")==0)   G__pp_skip(1);
-  else if(strcmp(condition,"if")==0)     G__pp_if();
-  else if(strcmp(condition,"ifdef")==0)  G__pp_ifdef(1);
-  else if(strcmp(condition,"ifndef")==0) G__pp_ifdef(0);
-  else if('\n'!=c && '\r'!=c)            G__fignoreline();
+  else if(strncmp(condition,"el",2)==0)     G__pp_skip(1);
+  else if(strncmp(condition,"ifdef",5)==0)  G__pp_ifdef(1);
+  else if(strncmp(condition,"ifndef",6)==0) G__pp_ifdef(0);
+  else if(strncmp(condition,"if",2)==0)     G__pp_if();
+  else if('\n'!=c && '\r'!=c)               G__fignoreline();
   return(0);
 }
 
@@ -1156,63 +1155,26 @@ void G__pp_skip(int elifskip)
      ************************************************/
     ++G__ifile.line_number;
     
-    if(argn>0) {
-      if(strcmp(arg[1],"#")==0
+    if(argn>0 && arg[1][0]=='#') {
+      const char* directive = arg[1]+1; // with "#if" directive will point to "if"
+      int directiveArgI = 1;
+      if(arg[1][1]==0
          || strcmp(arg[1],"#pragma")==0
          ) {
-        if(strcmp(arg[2],"if")==0 ||
-           strcmp(arg[2],"ifdef")==0 ||
-           strcmp(arg[2],"ifndef")==0) {
-          ++nest;
-        }
-        else if(strcmp(arg[2],"else")==0) {
-          if(nest==1 && elifskip==0) nest=0;
-        }
-        else if(strcmp(arg[2],"endif")==0) {
-          --nest;
-        }
-        else if(strcmp(arg[2],"elif")==0) {
-          if(nest==1 && elifskip==0) {
-            int store_no_exec_compile=G__no_exec_compile;
-            int store_asm_wholefunction=G__asm_wholefunction;
-            int store_asm_noverflow=G__asm_noverflow;
-            G__no_exec_compile=0;
-            G__asm_wholefunction=0;
-            G__abortbytecode();
-            strcpy(condition,"");
-            for(i=3;i<=argn;i++) {
-              sprintf(temp ,"%s%s" ,condition ,arg[i]);
-              strcpy(condition,temp);
-            }
-            G__noerr_defined=1;
-            if(G__test(condition)) {
-              nest=0;
-            }
-            G__no_exec_compile=store_no_exec_compile;
-            G__asm_wholefunction=store_asm_wholefunction;
-            G__asm_noverflow=store_asm_noverflow;
-            G__noerr_defined=0;
-          }
-        }
+         directive = arg[2];
+         directiveArgI = 2;
       }
-      else if(strcmp(arg[1],"#if")==0 ||
-              strcmp(arg[1],"#ifdef")==0 ||
-              strcmp(arg[1],"#ifndef")==0) {
+
+      if(strncmp(directive,"if",2)==0) {
         ++nest;
       }
-      else if(strcmp(arg[1],"#else")==0
-              || strncmp(arg[1],"#else/*",7)==0
-              || strncmp(arg[1],"#else//",7)==0
-              ) {
+      else if(strncmp(directive,"else",4)==0) {
         if(nest==1 && elifskip==0) nest=0;
       }
-      else if(strcmp(arg[1],"#endif")==0
-              || strncmp(arg[1],"#endif/*",8)==0
-              || strncmp(arg[1],"#endif//",8)==0
-              ) {
+      else if(strncmp(directive,"endif",5)==0) {
         --nest;
       }
-      else if(strcmp(arg[1],"#elif")==0) {
+      else if(strncmp(directive,"elif",4)==0) {
         if(nest==1 && elifskip==0) {
           int store_no_exec_compile=G__no_exec_compile;
           int store_asm_wholefunction=G__asm_wholefunction;
@@ -1221,10 +1183,8 @@ void G__pp_skip(int elifskip)
           G__asm_wholefunction=0;
           G__abortbytecode();
           strcpy(condition,"");
-          for(i=2;i<=argn;i++) {
-            sprintf(temp ,"%s%s" ,condition ,arg[i]);
-            strcpy(condition,temp);
-          }
+          for(i=directiveArgI+1;i<=argn;i++) 
+            strcat(condition, arg[i]);
           i = strlen (oneline) - 1;
           while (i >= 0 && (oneline[i] == '\n' || oneline[i] == '\r'))
             --i;
@@ -1243,6 +1203,39 @@ void G__pp_skip(int elifskip)
               if (condition[len] != '\\') break;
             }
           }
+
+          /* remove comments */
+          char* posComment = strstr(condition, "/*");
+          if (!posComment) posComment = strstr(condition, "//");
+          while (posComment) {
+             if (posComment[1]=='*') {
+                char* posCXXComment = strstr(condition, "//");
+                if (posCXXComment && posCXXComment < posComment)
+                   posComment = posCXXComment;
+             }
+             if (posComment[1]=='*') {
+                const char* posCommentEnd = strstr(posComment+2,"*/");
+                // we can have
+                // #if A /*
+                //   comment */ || B
+                // #endif
+                if (!posCommentEnd) {
+                  if (G__skip_comment()) 
+                     break;
+                  if (G__fgetstream (posComment, "\r\n") == EOF)
+                     break;
+                } else {
+                   strcpy(temp, posCommentEnd+2);
+                   strcpy(posComment, temp);
+                }
+                posComment = strstr(posComment, "/*");
+                if (!posComment) posComment = strstr(condition, "//");
+             } else {
+                posComment[0]=0;
+                posComment=0;
+             }
+          }
+
           G__noerr_defined=1;
           if(G__test(condition)) {
             nest=0;

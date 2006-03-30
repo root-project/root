@@ -296,7 +296,7 @@ void G__createmacro(char *new_name,char *initvalue)
   int c;
   char *p,*null_fgets;
   fpos_t pos;
-  G__value evalval;
+  G__value evalval = G__null;
 
   /* Set flag that there is a macro or template in the source file,
    * so that this file won't be closed even with -cN option */

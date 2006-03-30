@@ -1187,6 +1187,9 @@ G__value G__getfunction_libp(char *item,char *funcname
     G__exec_memberfunc=1;
     G__memberfunc_tagnum = G__tagnum;
     break;
+  default:
+     G__hash(funcname,hash,i);
+     break;
   }
   
 #ifdef G__DUMPFILE

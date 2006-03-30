@@ -2995,6 +2995,9 @@ void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
            (param_reftype<=G__PARAREFERENCE &&
             formal_reftype<=G__PARAREFERENCE)) {
           funclist->p_rate[i] = G__EXACTMATCH;
+        } else if ( (formal_reftype>G__PARAREF && formal_reftype==param_reftype+G__PARAREF)
+           || (param_reftype>G__PARAREF && param_reftype==formal_reftype+G__PARAREF) ) {
+          funclist->p_rate[i] = G__STDCONVMATCH;
         }
       }
       else if('i'==param_type && (formal_tagnum!=param_tagnum)) {
