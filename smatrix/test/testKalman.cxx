@@ -248,7 +248,6 @@ int test_smatrix_sym_kalman() {
       MnSymMatrixMM Ctmp; 
       MnVectorN vtmp1; 
       MnVectorN vtmp; 
-      MnVectorN2 vtmp2; 
 #define OPTIMIZED_SMATRIX_SYM
 #ifdef OPTIMIZED_SMATRIX_SYM
       MnMatrixMN tmp;   
