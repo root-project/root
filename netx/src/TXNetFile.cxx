@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.20 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.22 2006/03/27 14:33:48 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -178,7 +178,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
    //
    // Open file
    if (!fClient->IsOpen()) {
-      if (fClient->IsOpen_wait()) {
+      if (!fClient->IsOpen_wait()) {
          if (gDebug > 1)
             Info("CreateXClient", "remote file could not be open");
 
