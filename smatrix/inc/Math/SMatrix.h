@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.15 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.18 2006/03/30 16:18:05 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -85,6 +85,8 @@ public:
   ///
   typedef T  value_type;
 
+  typedef R  rep_type;
+
   /** STL iterator interface. */
   typedef T*  iterator;
 
@@ -127,17 +129,34 @@ public:
   // new constructs using STL iterator interface
   /**
    * Constructor with STL iterator interface. The data will be copied into the matrix
-   * Size of the matrix must match size of the iterators
+   * \param triang if true only the triangular lower/upper part of the matrix is filled from the iterators 
+   * \param lower if true the lower triangular part is filled 
+   * 
+   * Size of the matrix must match size of the iterators if triang is false, otherwise the size of the 
+   * triangular block 
+   * In the case of symmetric matrices triang is considered always to be true (what-ever the user specifies) and 
+   * the size of the iterators must be equal to the size of the symmetric representation (number of independent 
+   * elements), N*(N+1)/2 
+   * 
+   * 
    */
   template<class InputIterator>
-  SMatrix(InputIterator begin, InputIterator end);
+  SMatrix(InputIterator begin, InputIterator end, bool triang = false, bool lower = true);
 
   /**
    * Constructor with STL iterator interface. The data will be copied into the matrix
-   * In this case the value passed size must be equal to the matrix size (D1*D2)
+   * \param triang if true only the triangular lower/upper part of the matrix is filled from the iterators 
+   * \param lower if true the lower triangular part is filled 
+   * 
+   * Size of the matrix must match size of the iterators if triang is false, otherwise the size of the 
+   * triangular block 
+   * In the case of symmetric matrices triang is considered always to be true (what-ever the user specifies) and 
+   * the size of the iterators must be equal to the size of the symmetric representation (number of independent 
+   * elements), N*(N+1)/2 
+   * 
    */
   template<class InputIterator>
-  SMatrix(InputIterator begin, unsigned int size);
+  SMatrix(InputIterator begin, unsigned int size, bool triang = false, bool lower = true);
 
   // skip this methods (they are too ambigous)
 #ifdef OLD_IMPL
@@ -162,14 +181,14 @@ public:
 #endif
 
   /**
-      construct a symmetric matrix from a SVector containing the upper(lower)
+      construct a symmetric matrix from a SVector containing the lower (upper)
       part of a triangular matrix
   */
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
-  SMatrix(const SVector<T, D1*(D2+1)/2> & v, bool lower = false );
+  SMatrix(const SVector<T, D1*(D2+1)/2> & v, bool lower = true );
 #else
   template<unsigned int N>
-  SMatrix(const SVector<T,N> & v, bool lower = false );
+  SMatrix(const SVector<T,N> & v, bool lower = true );
 #endif
 
   ///
@@ -376,8 +395,8 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
 				 unsigned int row,
 				 unsigned int col);
   /// place a matrix in this matrix
-  template <unsigned int D3, unsigned int D4>
-  SMatrix<T,D1,D2,R>& Place_at(const SMatrix<T,D3,D4>& rhs,
+  template <unsigned int D3, unsigned int D4, class R2>
+  SMatrix<T,D1,D2,R>& Place_at(const SMatrix<T,D3,D4,R2>& rhs,
 			     unsigned int row,
 			     unsigned int col);
   /// place a matrix expression in this matrix
@@ -425,6 +444,14 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
      It works only for squared matrices D1 == D2, otherwise it will produce a compile error
    */
   SVector<T,D1> Diagonal() const;
+
+  /**
+     Set the diagonal elements from a Vector
+     Require that vector implements ::kSize since a check (statically) is done on 
+     diagonal size == vector size
+   */
+  template <class Vector> 
+  void SetDiagonal(const Vector & v);
 
   /**
      return the upper Triangular block of the matrices (including the diagonal) as
