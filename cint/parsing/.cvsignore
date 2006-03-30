@@ -1,5 +1,6 @@
 *.log
  *.dll *.def *.exp *.lib *.pdb *.log *.d 
 *Dict.*
+*Dict2.*
 *.manifest
 *.manifest

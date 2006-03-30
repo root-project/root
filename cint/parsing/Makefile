@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) scopeDict.cxx scopeDict2.cxx
+CLEAN_TARGETS += *.log $(ALL_LIBRARIES) scopeDict.* scopeDict2.*
 
 #Set the list of target to make while testing
 TEST_TARGETS += lessThan operatorLessThanTemplate testTable scopeTest multiScope

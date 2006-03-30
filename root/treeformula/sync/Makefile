@@ -1,4 +1,6 @@
-CLEAN_TARGETS += main *Dict* Event.root *~ Event$(ExeSuf) createfile.out readfile.out libEvent.$(DllSuf) Event.h $(ALL_LIBRARIES) *.manifest
+CLEAN_TARGETS += main *Dict* Event.root *~ Event$(ExeSuf) \
+	createfile.out readfile.out libEvent.$(DllSuf)\
+	Event.cxx Event.h EventLinkDef.h $(ALL_LIBRARIES) *.manifest
 TEST_TARGETS += load Simple
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
