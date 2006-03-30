@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.7 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -340,8 +340,15 @@ void TRefTable::ReadBuffer(TBuffer &b)
       // old format, only one PID
       numIids = 1;
 
-      // the last file's PID is the relevant one, all others might have their tables overwritten
       TFile *file = dynamic_cast<TFile*>(b.GetParent());
+      // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
+      if (file && !TestBit(kHaveWarnedReadingOld) && file->GetNProcessIDs()>1) {
+         Warning("ReadBuffer", "The file was written during several processes with an "
+            "older ROOT version; the TRefTable entries might be inconsistent.");
+         SetBit(kHaveWarnedReadingOld);
+      }
+
+      // the file's last PID is the relevant one, all others might have their tables overwritten
       TProcessID *fileProcessID = TProcessID::GetProcessID(0);
       if (file && file->GetNProcessIDs() > 0)
          fileProcessID = (TProcessID *) file->GetListOfProcessIDs()->UncheckedAt(file->GetNProcessIDs() - 1);

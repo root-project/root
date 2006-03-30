@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.5 2005/11/16 20:04:47 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.6 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun   17/08/2004
 
 /*************************************************************************
@@ -58,6 +58,10 @@ protected:
    Int_t              FindPIDGUID(const char* guid) const;
    Int_t              GetInternalIdxForPID(TProcessID* procid) const;
    Int_t              GetInternalIdxForPID(Int_t pid) const;
+
+   enum {
+      kHaveWarnedReadingOld = BIT(14)
+   };
 
 public:
 
