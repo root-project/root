@@ -205,8 +205,7 @@ void testMV_T(const M & mat, const V & v, double & time, V & result) {
   for (int l = 0; l < NLOOP; l++)
     {
       // result = mat * v;
-      result.Zero();
-      Add(result,1.0,mat,v);
+      Add(result,0.0,mat,v);
     }
 } 
   
@@ -312,6 +311,7 @@ void testVscale_T(const V & v1, double a, double & time, V & result) {
   test::Timer t(time,"a*V ");;
   for (int l = 0; l < NLOOP; l++)
     {
+      // result = a * v1;
       result.Zero();
       Add(result,a,v1);
     }
@@ -334,6 +334,7 @@ void testMscale_T(const M & m1, double a, double & time, M & result) {
   test::Timer t(time,"a*M ");;
   for (int l = 0; l < NLOOP; l++)
     {
+      //result = a * m1;
       result.Zero();
       Add(result,a,m1);
     }
