@@ -763,8 +763,8 @@ int test14() {
 
   // test setDiagonal
   
-  SVector<double,3> w(-1,-2,3);
 #ifdef TEST_STATIC_CHECK
+  SVector<double,3> w(-1,-2,3);
   sA.SetDiagonal(w);
   sB.SetDiagonal(w);
 #endif
