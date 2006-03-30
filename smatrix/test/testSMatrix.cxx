@@ -684,13 +684,15 @@ int test14() {
   iret |= compare( B(1,1),-S(1,1) );
 
 
-  //this should assert
+  //this should assert at run time
   //B.Place_at(S,1,0); 
   //B.Place_at(2*S,1,0); 
 
   //place general in symmetric should fail to compiler
-  //B.Place_at(U,0,0);
-  //B.Place_at(-U,0,0);
+#ifdef TEST_STATIC_CHECK
+  B.Place_at(U,0,0);
+  B.Place_at(-U,0,0);
+#endif
 
   // test place vector in matrices
   SVector<double,2> v(1,2);
@@ -741,6 +743,36 @@ int test14() {
   iret |= compare( sA(1,1),A(2,1) );
   iret |= compare( sA(1,2),A(2,2) );
 
+  sA = B.Sub<SMatrix<double,2,3,MatRepStd<double,2,3> > > (0,0); 
+  iret |= compare( sA(0,0),B(0,0) );
+  iret |= compare( sA(1,0),B(1,0) );
+  iret |= compare( sA(0,1),B(0,1) );
+  iret |= compare( sA(1,1),B(1,1) );
+  iret |= compare( sA(1,2),B(1,2) );
+
+  //this should run assert
+  //  sA = A.Sub<SMatrix<double,2,3,MatRepStd<double,2,3> > > (0,2); 
+  //sB = B.Sub<SMatrix<double,2,2,MatRepSym<double,2> > > (0,1);
+
+#ifdef TEST_STATIC_CHECK
+  sB = A.Sub<SMatrix<double,2,2,MatRepSym<double,2> > > (0,0);
+  SMatrix<double,5,2> tmp1 = A.Sub<SMatrix<double,5,2> >(0,0); 
+  SMatrix<double,2,5> tmp2 = A.Sub<SMatrix<double,2,5> >(0,0); 
+#endif
+
+
+  // test setDiagonal
+  
+  SVector<double,3> w(-1,-2,3);
+#ifdef TEST_STATIC_CHECK
+  sA.SetDiagonal(w);
+  sB.SetDiagonal(w);
+#endif
+
+  sA.SetDiagonal(v);
+  iret |= compare( sA(1,1),v[1] );
+  sB.SetDiagonal(v);
+  iret |= compare( sB(0,0),v[0] );
 
 
   return iret;
