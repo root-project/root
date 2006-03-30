@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.9 2006/03/28 13:51:42 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.10 2006/03/30 09:30:33 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1466,7 +1466,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
 {
   // Modify addition: target += scalar * A * source.
   // NOTE: in case scalar=0, do  target = A * source.
-   source
+
   if (gMatrixCheck) {
     Assert(target.IsValid());
     Assert(a.IsValid());
