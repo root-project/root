@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.5 2006/03/16 09:08:08 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.6 2006/03/20 21:43:43 pcanal Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -333,8 +333,7 @@ void* TXNetSystem::OpenDirectory(const char* dir)
       fClientAdmin->ExistDirs(dirs,existDirs);
       if (existDirs.GetSize()>0 && existDirs[0])
          return fDirp;
-      else
-         return 0;
+      return 0;
    }
 
    if (gDebug > 1)
@@ -349,8 +348,8 @@ void TXNetSystem::FreeDirectory(void *dirp)
 
    if (fIsXRootd) {
       if (dirp != fDirp) {
-	 Error("FreeDirectory","invalid directory pointer (%p, %p)", dirp, fDirp);
-	 return;
+	      Error("FreeDirectory","invalid directory pointer (%p, %p)", dirp, fDirp);
+	      return;
       }
       fDir = "";
       fDirp = 0;
@@ -386,22 +385,23 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
 
    if (fIsXRootd) {
       if (dirp != fDirp) {
-	 Error("GetDirEntry","invalid directory pointer");
-	 return 0;
+	      Error("GetDirEntry","invalid directory pointer");
+	      return 0;
       }
 
       // Only request new directory listing the first time called
       if (!fDirListValid) {
-	 Bool_t ok = fClientAdmin->DirList(fDir,fDirList);
-	 if (ok)
+	      Bool_t ok = fClientAdmin->DirList(fDir,fDirList);
+	      if (ok)
             fDirListValid = kTRUE;
-	 else
+	      else
             return 0;
       }
 
       // Return entries one by one with each call of method
-      if (fDirList.GetSize()>0) return fDirList.Pop_back().c_str();
-      else return 0;   // until all of them have been returned
+      if (fDirList.GetSize() > 0)
+         return fDirList.Pop_back().c_str();
+      return 0;   // until all of them have been returned
    }
 
    if (gDebug > 1) Info("GetDirEntry","Calling TNetSystem::GetDirEntry");
@@ -429,22 +429,22 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
       Bool_t ok = fClientAdmin->Stat(edir,id,size,flags,modtime);
 
       if (ok) {
-	 buf.fDev = (id >> 24);
-	 buf.fIno = (id && 0x00FFFFFF);
-	 buf.fUid = -1;       // not all information available in xrootd
-	 buf.fGid = -1;       // not available
-	 buf.fSize = size;
-	 buf.fMtime = modtime;
+	      buf.fDev = (id >> 24);
+	      buf.fIno = (id && 0x00FFFFFF);
+	      buf.fUid = -1;       // not all information available in xrootd
+	      buf.fGid = -1;       // not available
+	      buf.fSize = size;
+	      buf.fMtime = modtime;
 
-	 if (flags == 0) buf.fMode = kS_IFREG;
-	 if (flags & 1) buf.fMode = (kS_IFREG|kS_IXUSR|kS_IXGRP|kS_IXOTH);
-	 if (flags & 2) buf.fMode = kS_IFDIR;
-	 if (flags & 4) buf.fMode = kS_IFSOCK;
+	      if (flags == 0) buf.fMode = kS_IFREG;
+	      if (flags & 1) buf.fMode = (kS_IFREG|kS_IXUSR|kS_IXGRP|kS_IXOTH);
+	      if (flags & 2) buf.fMode = kS_IFDIR;
+	      if (flags & 4) buf.fMode = kS_IFSOCK;
 
-	 buf.fIsLink = 0;     // not available
-	 return 0;
+	      buf.fIsLink = 0;     // not available
+	      return 0;
       }
-      else return 1;
+      return 1;
    }
 
    if (gDebug > 1)
@@ -476,7 +476,7 @@ Bool_t TXNetSystem::AccessPathName(const char *path, EAccessMode mode)
       // Check only if the file or directory exists and
       FileStat_t buf;
       if (GetPathInfo(path, buf) == 0)
-	 if (buf.fMode != kS_IFSOCK)
+	      if (buf.fMode != kS_IFSOCK)
             return kFALSE;
       // The file could not be stated
       return kTRUE;
