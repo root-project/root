@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.19 2006/03/29 15:44:57 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.20 2006/03/30 09:58:48 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -111,24 +111,32 @@
 
 
 const char gHelpBuilder[] = "\
- o Press Ctrl-Double-Click to start/stop edit mode\n\
- o Press Double-Click to activate quick edit action (defined in root.mimes)\n\
-\n\
-               Selection, grabbing, dropping\n\
+               Start/Stop Edit Mode\n\
      ************************************************\n\
-  It is possible to select, drag any frame and drop to any frame\n\
+ o Select File menu / Edit\n\
+ o Select Start Edit button on the toolbar\n\
+ o Ctrl-Double-Click on the project frame\n\
+ o Double-Click to activate quick edit action (defined in root.mimes)\n\
 \n\
- o Press left mouse button Click or Ctrl-Click to select an object to edit.\n\
+               Select, Grab, Drop\n\
+     ************************************************\n\
+  It is possible to select & drag any frame and drop it to another frame\n\
+\n\
+ o Press left mouse button Click or Ctrl-Click to select an object.\n\
  o Press right mouse button to activate context menu\n\
- o Mutiple selection (grabbing):\n\
+ o Mutiple selection can be done in two ways (grabbing):\n\
       - draw lasso and press Return key\n\
       - press Shift key and draw lasso\n\
  o Dropping:\n\
       - select frame and press Ctrl-Return key\n\
- o Changing layout order:\n\
-      - select frame and use arrow keys to change layout order\n\
+ o Changing layout order of widgets:\n\
+      - set broken layout mode via toolbar button or check button\n\
+        \'Layout subframes\' in tab \'Layout\'\n\
+      - select a widget and use arrow keys to change the layout order\n\
  o Alignment:\n\
-      - draw lasso and press arrow keys (or Shift-Arrow key) to align frames\n\
+      - remove the selection (if any) by using the space bar\n\
+      - draw lasso and use the four toolbar buttons for widget alignment\n\
+      - arrow keys align the frames too, if you prefer the keyboard\n\
 \n\
                     Key shortcuts\n\
      ************************************************\n\
@@ -236,7 +244,7 @@ public:
 TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
              TGMainFrame(p ? p : gClient->GetDefaultRoot(), 1, 1)
 {
-   // ctor
+   // Create GUI builder application.
 
    SetCleanup(kDeepCleanup);
    fEditDisabled = kEditDisable;
@@ -466,10 +474,10 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    MapSubwindows();
 	
    Int_t qq; 
-	UInt_t ww; 
-	UInt_t hh;
-	gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), qq, qq, ww, hh);
-	Resize(ww - 100, hh - 100);
+   UInt_t ww; 
+   UInt_t hh;
+   gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), qq, qq, ww, hh);
+   Resize(ww - 100, hh - 100);
 
    SetWindowName("ROOT GuiBuilder");
    SetIconName("ROOT GuiBuilder");
@@ -496,7 +504,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 //______________________________________________________________________________
 TRootGuiBuilder::~TRootGuiBuilder()
 {
-   // destructor
+   // Destructor.
 
    if (fIconPic) gClient->FreePicture(fIconPic);
    delete fMenuFile;
@@ -508,7 +516,7 @@ TRootGuiBuilder::~TRootGuiBuilder()
 //______________________________________________________________________________
 void TRootGuiBuilder::CloseWindow()
 {
-   // close GUI builder via "Close" button
+   // Close GUI builder via window manager "Close" button.
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    if (root) root->SetEditable(kFALSE);
@@ -532,7 +540,7 @@ void TRootGuiBuilder::CloseWindow()
 //______________________________________________________________________________
 void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 {
-   // add new action to widget palette
+   // Add new action to widget palette.
 
    if (!act || !sect) return;
 
@@ -572,7 +580,7 @@ void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 //______________________________________________________________________________
 void TRootGuiBuilder::AddSection(const char *sect)
 {
-   //
+   // Add new shutter item.
 
    static int id = 10000;
    TGShutterItem *item = new TGShutterItem(fShutter, new TGHotString(sect), id++);
@@ -582,7 +590,7 @@ void TRootGuiBuilder::AddSection(const char *sect)
 //______________________________________________________________________________
 void TRootGuiBuilder::HandleButtons()
 {
-   //
+   // Handle buttons in in the GUI builder.
 
    TGFrame *parent;
 
@@ -611,7 +619,7 @@ void TRootGuiBuilder::HandleButtons()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::ExecuteAction()
 {
-   //
+   // Execute an action.
 
    if (!fAction || fAction->fAct.IsNull()) return 0;
 
@@ -640,7 +648,7 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
 //______________________________________________________________________________
 void TRootGuiBuilder::InitMenu()
 {
-   // inititiate Gui Builder menu
+   // Inititiate GUI Builder menus.
 
    fMenuBar->SetEditDisabled(1);
 
@@ -690,7 +698,7 @@ void TRootGuiBuilder::InitMenu()
 //______________________________________________________________________________
 void TRootGuiBuilder::ChangeSelected(TGFrame *f)
 {
-   //
+   // Set selected frame.
 
    fSelected = f;
    Update();
@@ -699,7 +707,7 @@ void TRootGuiBuilder::ChangeSelected(TGFrame *f)
 //______________________________________________________________________________
 void TRootGuiBuilder::EnableLassoButtons(Bool_t on)
 {
-   //
+   // Enable toolbar buttons for alignment.
 
    TGButton *btn = 0;
 
@@ -732,7 +740,7 @@ void TRootGuiBuilder::EnableLassoButtons(Bool_t on)
 //______________________________________________________________________________
 void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 {
-   //
+   // Enable/disable toolbar buttons according to the selected frame.
 
    fSelected = fManager->GetSelected();
 
@@ -790,7 +798,7 @@ void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 //______________________________________________________________________________
 void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 {
-   //
+   // Enable/disable toolbar buttons according to the selected frame.
 
    TGButton *btn = 0;
 
@@ -838,7 +846,7 @@ void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 //______________________________________________________________________________
 void TRootGuiBuilder::Update()
 {
-   // update gui builder
+   // Update gui builder.
 
    if (!fManager) {
       return;
@@ -873,7 +881,7 @@ void TRootGuiBuilder::Update()
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::IsSelectMode() const
 {
-   //
+   // Return the status of the selected mode.
 
    TGButton *btn = 0;
    btn = fToolBar->GetButton(kSelectAct);
@@ -886,7 +894,7 @@ Bool_t TRootGuiBuilder::IsSelectMode() const
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::IsGrabButtonDown() const
 {
-   //
+   // Return the status of the grab mode.
 
    TGButton *btn = fToolBar->GetButton(kGrabAct);
 
@@ -910,7 +918,7 @@ static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
 {
-   // keys handling
+   // Handle keys.
 
    if (event->fType == kGKeyPress) {
       UInt_t keysym;
@@ -939,7 +947,7 @@ Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::NewProject(Event_t *)
 {
-   // create a new project
+   // Create a new project.
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
 
@@ -963,7 +971,7 @@ Bool_t TRootGuiBuilder::NewProject(Event_t *)
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 {
-   // open new gui builder project
+   // Open new gui builder project.
 
    TGFileInfo fi;
    static TString dir(".");
@@ -1012,7 +1020,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 //______________________________________________________________________________
 Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 {
-   //
+   // Save selected project.
 
    TGMdiFrame *savfr = fMain->GetCurrent();
    if (!savfr) return kFALSE;
@@ -1072,7 +1080,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 //______________________________________________________________________________
 TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
 {
-   //
+   // Find the editable frame.
 
    const TGWindow *parent = win;
 
@@ -1089,7 +1097,7 @@ TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
 //______________________________________________________________________________
 void TRootGuiBuilder::SwitchToolbarButton()
 {
-   //
+   // Switch image of toolbar edit button according to the current state.
 
    static const TGPicture *start = fClient->GetPicture("bld_edit.xpm");
    static const TGPicture *stop = fClient->GetPicture("bld_stop.xpm");
@@ -1228,7 +1236,7 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
 //______________________________________________________________________________
 void TRootGuiBuilder::HandleWindowClosed(Int_t )
 {
-   // handler for closed MDI frame
+   // Handler for closed MDI frame.
 
    fEditable = 0;
 
@@ -1254,7 +1262,7 @@ void TRootGuiBuilder::HandleWindowClosed(Int_t )
 //______________________________________________________________________________
 void TRootGuiBuilder::UpdateStatusBar(const char *txt)
 {
-   // update information shown on the status bar
+   // Update information shown on the status bar.
 
    if (!fStatusBar) return;
 
@@ -1276,7 +1284,7 @@ void TRootGuiBuilder::UpdateStatusBar(const char *txt)
 //______________________________________________________________________________
 void TRootGuiBuilder::EraseStatusBar()
 {
-   // clear information shown in the status bar 
+   // Clear information shown in the status bar. 
 
    if (!fStatusBar) return;
 
@@ -1286,7 +1294,7 @@ void TRootGuiBuilder::EraseStatusBar()
 //______________________________________________________________________________
 void TRootGuiBuilder::BindKeys()
 {
-   // keyborad key bind
+   // Keyborad key binding.
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_a),
                       kKeyControlMask, kTRUE);
@@ -1382,7 +1390,7 @@ void TRootGuiBuilder::BindKeys()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::VSplitter()
 {
-   // creates new TGVSplitter
+   // Create new vertical splitter (TGVSplitter).
 
    TGHorizontalFrame *ret = new TGHorizontalFrame();
    ret->SetCleanup(kDeepCleanup);
@@ -1405,7 +1413,7 @@ TGFrame *TRootGuiBuilder::VSplitter()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::HSplitter()
 {
-   //  creates new TGHSplitter
+   //  Creates new horizontal splitter (TGHSplitter).
 
    TGVerticalFrame *ret = new TGVerticalFrame();
    ret->SetCleanup(kDeepCleanup);
@@ -1428,7 +1436,7 @@ TGFrame *TRootGuiBuilder::HSplitter()
 //______________________________________________________________________________
 void TRootGuiBuilder::Hide()
 {
-   // cleanup and hide gui builder
+   // Hide the GUI builder.
 
    //fMain->CloseAll();
    UnmapWindow();
