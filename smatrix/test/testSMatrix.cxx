@@ -15,9 +15,12 @@ using std::endl;
 
 #define XXX
 
-int compare( double a, double b) { 
+int compare( double a, double b, const std::string & s="") { 
   if (a == b) return 0; 
-  std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
+  if ( s != "") 
+    std::cout << "\nFailure " << a << " diffent than " << b << std::endl;
+  else 
+    std::cout << "\n" << s << " : Failure " << a << " diffent than " << b << std::endl;
   return 1;
 }
 
@@ -476,6 +479,7 @@ int test13() {
   int a = 2;
   float b = 3;
 
+
   SVector<double,2> v(1,2); 
   SVector<double,2> v2= v + a; 
   iret |= compare( v2[1], v[1]+a ); 
@@ -510,6 +514,8 @@ int test13() {
   iret |= compare( v3[1], b*v[1] ); 
   v2 = (p+q)/b;
   iret |= compare( v2[1], v[1]/b ); 
+
+  //std::cout << "tested vector -constant operations : v2 = " << v2 << " v3 = " << v3 << std::endl;
 
   // now test the matrix (normal)
 
@@ -555,6 +561,7 @@ int test13() {
   m2 = (u+w)/b;
   iret |= compare( m2(1,0), m(1,0)/b ); 
   
+  //std::cout << "tested general matrix -constant operations :\nm2 =\n" << m2 << "\nm3 =\n" << m3 << std::endl;
 
   // now test the symmetric matrix 
 
@@ -574,6 +581,7 @@ int test13() {
   s3 = a - s; 
   iret |= compare( s3(1,0), a - s(1,0) ); 
 
+
   // test now with expression
   s2 = b*s + a; 
   iret |= compare( s2(1,0), b*s(1,0)+a ); 
@@ -587,23 +595,154 @@ int test13() {
   s2 = a * s/b; 
   iret |= compare( s2(1,0), a*s(1,0)/b ); 
 
+
   SMatrix<double,2,2,MatRepSym<double,2> > r = s; 
   SMatrix<double,2,2,MatRepSym<double,2> > t; 
   t(0,0) = 4; t(0,1) = 5; t(1,1) = 6;
 
   s = r+t; 
   s2 = a*(r+t);
-  iret |= compare( s2(1,0), a*s(1,0) ); 
+  iret |= compare( s2(1,0), a*s(1,0),"a*(r+t)" ); 
   s3 = (t+r)*b;
-  iret |= compare( s2(1,0), b*s(1,0) ); 
+  iret |= compare( s3(1,0), b*s(1,0), "(t+r)*b" ); 
   s2 = (r+t)/b;
-  iret |= compare( s2(1,0), s(1,0)/b ); 
+  iret |= compare( s2(1,0), s(1,0)/b, "(r+t)/b" ); 
 
+  //std::cout << "tested sym matrix -constant operations :\ns2 =\n" << s2 << "\ns3 =\n" << s3 << std::endl;
 
 
   return iret; 
 }
 
+
+int test14() { 
+  // test place_at (insertion) of all type of matrices
+
+  int iret = 0; 
+
+  // test place at with sym matrices 
+
+  SMatrix<double,2,2,MatRepSym<double,2> >  S; 
+  S(0,0) = 1;
+  S(0,1) = 2; 
+  S(1,1) = 3; 
+
+  double u[6] = {1,2,3,4,5,6};
+  SMatrix<double,2,3,MatRepStd<double,2,3> >  U(u,u+6); 
+
+  //place general matrix in general matrix  
+  SMatrix<double,4,4> A; 
+  A.Place_at(U,1,0); 
+  //std::cout << "Test general matrix placed in general at 1,0 :\nA=\n" << A << std::endl; 
+  iret |= compare( A(1,0),U(0,0) );
+  iret |= compare( A(1,1),U(0,1) );
+  iret |= compare( A(2,1),U(1,1) );
+  iret |= compare( A(2,2),U(1,2) );
+
+  A.Place_at(-2*U,1,0);
+  iret |= compare( A(1,0),-2*U(0,0) );
+  iret |= compare( A(1,1),-2*U(0,1) );
+  iret |= compare( A(2,1),-2*U(1,1) );
+  iret |= compare( A(2,2),-2*U(1,2) );
+
+
+  //place symmetric in general (should work always)
+  A.Place_at(S,0,0); 
+  //std::cout << "Test symmetric matrix placed in general at 0,0:\nA=\n" << A << std::endl; 
+  iret |= compare( A(0,0),S(0,0) );
+  iret |= compare( A(1,0),S(0,1) );
+  iret |= compare( A(1,1),S(1,1) );
+
+  A.Place_at(2*S,0,0); 
+  iret |= compare( A(0,0),2*S(0,0) );
+  iret |= compare( A(1,0),2*S(0,1) );
+  iret |= compare( A(1,1),2*S(1,1) );
+
+
+  A.Place_at(S,2,0); 
+  //std::cout << "A=\n" << A << std::endl; 
+  iret |= compare( A(2,0),S(0,0) );
+  iret |= compare( A(3,0),S(0,1) );
+  iret |= compare( A(3,1),S(1,1) );
+
+
+  SMatrix<double,3,3,MatRepSym<double,3> >  B; 
+
+  //place symmetric in symmetric (OK for col=row) 
+  B.Place_at(S,1,1);
+  //std::cout << "Test symmetric matrix placed in symmetric at 1,1:\nB=\n" << B << std::endl; 
+  iret |= compare( B(1,1),S(0,0) );
+  iret |= compare( B(2,1),S(0,1) );
+  iret |= compare( B(2,2),S(1,1) );
+
+  B.Place_at(-S,0,0);
+  //std::cout << "B=\n" << B << std::endl; 
+  iret |= compare( B(0,0),-S(0,0) );
+  iret |= compare( B(1,0),-S(0,1) );
+  iret |= compare( B(1,1),-S(1,1) );
+
+
+  //this should assert
+  //B.Place_at(S,1,0); 
+  //B.Place_at(2*S,1,0); 
+
+  //place general in symmetric should fail to compiler
+  //B.Place_at(U,0,0);
+  //B.Place_at(-U,0,0);
+
+  // test place vector in matrices
+  SVector<double,2> v(1,2);
+
+  A.Place_in_row(v,1,1); 
+  iret |= compare( A(1,1),v[0] );
+  iret |= compare( A(1,2),v[1] );
+  A.Place_in_row(2*v,1,1); 
+  iret |= compare( A(1,1),2*v[0] );
+  iret |= compare( A(1,2),2*v[1] );
+
+  A.Place_in_col(v,1,1); 
+  iret |= compare( A(1,1),v[0] );
+  iret |= compare( A(2,1),v[1] );
+  A.Place_in_col(2*v,1,1); 
+  iret |= compare( A(1,1),2*v[0] );
+  iret |= compare( A(2,1),2*v[1] );
+  
+  //place vector in sym matrices  
+  B.Place_in_row(v,0,1); 
+  //std::cout << "B=\n" << B << std::endl;
+  iret |= compare( B(0,1),v[0] );
+  iret |= compare( B(1,0),v[0] );
+  iret |= compare( B(2,0),v[1] );
+  B.Place_in_row(2*v,1,1); 
+  iret |= compare( B(1,1),2*v[0] );
+  iret |= compare( B(2,1),2*v[1] );
+
+  B.Place_in_col(v,1,0); 
+  //std::cout << "B=\n" << B << std::endl;
+  iret |= compare( B(0,1),v[0] );
+  iret |= compare( B(1,0),v[0] );
+  iret |= compare( B(0,2),v[1] );
+  B.Place_in_col(2*v,1,1); 
+  iret |= compare( B(1,1),2*v[0] );
+  iret |= compare( B(1,2),2*v[1] );
+
+
+  // test Sub 
+  SMatrix<double,2,2,MatRepSym<double,2> > sB = B.Sub<SMatrix<double,2,2,MatRepSym<double,2> > > (1,1); 
+  iret |= compare( sB(0,0),B(1,1) );
+  iret |= compare( sB(1,0),B(1,2) );
+  iret |= compare( sB(1,1),B(2,2) );
+
+  SMatrix<double,2,3,MatRepStd<double,2,3> > sA = A.Sub<SMatrix<double,2,3,MatRepStd<double,2,3> > > (1,0); 
+  iret |= compare( sA(0,0),A(1,0) );
+  iret |= compare( sA(1,0),A(2,0) );
+  iret |= compare( sA(1,1),A(2,1) );
+  iret |= compare( sA(1,2),A(2,2) );
+
+
+
+  return iret;
+}
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
@@ -628,6 +767,8 @@ int main() {
   TEST(10);
   TEST(11);
   TEST(12);
+  TEST(13);
+  TEST(14);
 
 
 
