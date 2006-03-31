@@ -51,7 +51,22 @@ EOF
 	    *pythia5)	echo "BuildRequires: pythia5-devel"		;;
 	    *pythia6)	echo "BuildRequires: pythia6-devel"		;;
 	    *python)	echo "BuildRequires: python-devel >= 2.1"	;;
-	    *qt)	echo "BuildRequires: qt-devel >= 3.3.3"		;;
+# this is kinda special 
+	    *qt)	
+		cat <<EOF
+%if %{?_vendor} 
+%if %{_vendor} == "MandrakeSoft"
+BuildRequires: libqt3-devel
+%else
+%if %{_vendor} == "suse"
+BuildRequires: qt3-devel
+%endif
+%endif
+%else
+BuildRequires: qt-devel
+%endif
+EOF
+;;
 	    *quadp)							;;
 	    *roofit)							;;
 	    *ruby)	echo "BuildRequires: ruby-devel >= 1.8"		;;

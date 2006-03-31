@@ -1,1 +1,1 @@
-etc/rootd.xinetd
+etc/daemons/rootd.xinetd

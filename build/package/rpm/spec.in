@@ -125,9 +125,10 @@ done
 
 # Prepare SYSV init scripts 
 mkdir -p ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d
-sed -e "s,/usr/local,%_prefix,g" \
-    < rootd/misc/rootd.rc.d > \
+cp -a etc/daemons/rootd.rc.d \
     ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/rootd
+cp -a etc/daemons/proofd.rc.d \
+    ${RPM_BUILD_ROOT}/%{_sysconfdir}/rc.d/init.d/proofd
 
 # Make the empty proof log file 
 mkdir -p ${RPM_BUILD_ROOT}/%{_prefix}/share/root/proof/log
@@ -139,6 +140,8 @@ build/package/lib/makelists.sh rpm ${RPM_BUILD_ROOT} \
     %ver %_prefix %_sysconfdir %_defaultdocdir
 echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
     >> rpm/root-rootd.install
+echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/proofd" \
+    >> rpm/root-proofd.install
 
 
 # This is to discover weather the man pages are compressed before they

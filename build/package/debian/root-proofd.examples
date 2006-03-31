@@ -1,2 +1,2 @@
-etc/proofd.xinetd
-proof/etc/*.sample
+etc/daemons/proofd.xinetd
+etc/proof/*.sample

@@ -332,6 +332,7 @@ install-arch:
 	rm -rf $(DTMP)/$(PREFIX)/share/doc/root/INSTALL 
 	rm -rf $(DTMP)/$(PREFIX)/share/doc/root/LICENSE
 	rm -rf $(DTMP)/$(PREFIX)/share/root/fonts/LICENSE
+	rm -rf $(DTMP)/$(PREFIX)/lib/root/$(SOVERS)/cint/lib/posix/a.out
 
 	# Remove MacOSX service descriptions 
 	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.plist
