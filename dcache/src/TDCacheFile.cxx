@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.25 2005/12/09 09:35:28 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.27 2006/03/28 23:58:12 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -71,6 +71,8 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    // see the TFile ctor. The preferred interface to this constructor is
    // via TFile::Open().
 
+   SetName(path);
+
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
 
@@ -106,8 +108,8 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
          stmp2 = DCAP_PREFIX;
          stmp2 += tname;
          delete [] tname;
-         fname = stmp.Data();
-         fnameWithPrefix = stmp2.Data();
+         fname = stmp;
+         fnameWithPrefix = stmp2;
       } else {
          Error("TDCacheFile", "error expanding path %s", path);
          goto zombie;
@@ -439,7 +441,7 @@ Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
       TString pathString = GetDcapPath(path);
       path = pathString.Data();
 
-      if ((path != NULL) && (dc_stat64(path, &statbuf) >= 0)) {
+      if (path && (dc_stat64(path, &statbuf) >= 0)) {
          fStatCached = kTRUE;
       }
    }
@@ -533,7 +535,6 @@ void *TDCacheSystem::OpenDirectory(const char *path)
 
    dc_errno = 0;
    TString pathString = TDCacheFile::GetDcapPath(path);
-
    path = pathString.Data();
 
    fDirp = dc_opendir(path);
@@ -577,7 +578,7 @@ const char *TDCacheSystem::GetDirEntry(void * dirp)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
    }
 
-   return ent == NULL ? NULL : ent->d_name;
+   return !ent ? 0 : ent->d_name;
 }
 
 //______________________________________________________________________________
@@ -606,7 +607,7 @@ int TDCacheSystem::GetPathInfo(const char *path, FileStat_t &buf)
 
    struct stat64 sbuf;
 
-   if ( (path != NULL)  && (dc_stat64(path, &sbuf) >= 0) ) {
+   if (path && (dc_stat64(path, &sbuf) >= 0)) {
 
       buf.fDev    = sbuf.st_dev;
       buf.fIno    = sbuf.st_ino;

@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.128 2006/02/21 16:57:12 brun Exp $
+# @(#)root/config:$Name: v5-10-00 $:$Id: rootrc.in,v 1.129 2006/03/02 08:34:54 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -349,7 +349,7 @@ RSA.KeyType:  1
 # In case the file namespace descriptor ends with - the namespace
 # is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
-Url.Special:         file: rfio: hpss: castor: dcache: dcap: gfal:
+Url.Special:         file: rfio: hpss: castor: gfal:
 +Url.Special:        /alien/- /castor/
 
 # The following env vars are handled by TXNetFile and related classes
