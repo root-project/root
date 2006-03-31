@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.120 2006/03/29 08:09:43 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.121 2006/03/30 08:50:28 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -268,10 +268,12 @@ void TGFrame::ChangeOptions(UInt_t options)
 
    if ((options & (kDoubleBorder | kSunkenFrame | kRaisedFrame)) !=
       (fOptions & (kDoubleBorder | kSunkenFrame | kRaisedFrame))) {
-      if (options & (kSunkenFrame | kRaisedFrame))
-         fBorderWidth = (options & kDoubleBorder) ? 2 : 1;
-      else
-         fBorderWidth = 0;
+      if (!InheritsFrom(TGGroupFrame::Class())) {
+         if (options & (kSunkenFrame | kRaisedFrame))
+            fBorderWidth = (options & kDoubleBorder) ? 2 : 1;
+         else
+            fBorderWidth = 0;
+	  }
    }
 
    fOptions = options;
@@ -1827,14 +1829,6 @@ TGGroupFrame::~TGGroupFrame()
    // Delete a group frame.
 
    delete fText;
-}
-
-//______________________________________________________________________________
-void TGGroupFrame::ChangeOptions(UInt_t options)
-{
-   // Change frame options. Options is an OR of the EFrameTypes.
-
-   fOptions = options;
 }
 
 //______________________________________________________________________________
