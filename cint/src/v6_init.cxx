@@ -1135,9 +1135,15 @@ int G__main(int argc,char **argv)
     }
   }
 
-  if(G__cintv6) sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION_V6); 
-  else          sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION_V5); 
-  G__add_macro(temp);
+  { 
+     int oldglobalcomp = G__globalcomp;
+     G__globalcomp=G__NOLINK;
+     if(G__cintv6) sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION_V6); 
+     else          sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION_V5); 
+     G__add_macro(temp);
+     G__globalcomp=oldglobalcomp;
+  }
+
 
   /*************************************************************
    * Signal handling
