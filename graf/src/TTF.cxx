@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.10 2006/02/28 16:48:17 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.11 2006/03/06 14:30:00 rdm Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -323,8 +323,6 @@ Int_t TTF::SetTextFont(const char *fontname)
    for (i = 0; i < fgFontCount; i++) {
       if (!strcmp(fgFontName[i], basename)) {
          fgCurFontIdx = i;
-         //if (basename)
-         //   delete [] basename;
          return 0;
       }
    }
@@ -335,8 +333,6 @@ Int_t TTF::SetTextFont(const char *fontname)
             kTTMaxFonts);
       Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
       fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
-      //if (basename)
-      //   delete [] basename;
       return 0;
    }
 
@@ -352,8 +348,6 @@ Int_t TTF::SetTextFont(const char *fontname)
 
    if (!ttfont) {
       Error("TTF::SetTextFont", "font file %s not found in path", fontname);
-      //if (basename)
-      //   delete [] basename;
       if (fgFontCount) {
          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
          fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
@@ -368,8 +362,6 @@ Int_t TTF::SetTextFont(const char *fontname)
    if (FT_New_Face(fgLibrary, ttfont, 0, &tface)) {
       Error("TTF::SetTextFont", "error loading font %s", ttfont);
       delete [] ttfont;
-      //if (basename)
-      //   delete [] basename;
       if (tface) FT_Done_Face(tface);
       if (fgFontCount) {
          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
@@ -387,8 +379,6 @@ Int_t TTF::SetTextFont(const char *fontname)
    fgFace[fgCurFontIdx]    = tface;
    fgCharMap[fgCurFontIdx] = 0;
    fgFontCount++;
-   //if (basename)
-   //   delete [] basename;
 
    return 0;
 }
@@ -437,23 +427,30 @@ void TTF::SetTextFont(Font_t fontnumber)
       /*14 */ { "wingding.ttf",  "opens___.ttf"            }
    };
 
+   static int fontset = -1;
+
    int fontid = fontnumber / 10;
    if (fontid < 0 || fontid > 14) fontid = 0;
-   // try to load font (font must be in Root.TTFontPath resource)
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+
+   if (fontset == -1) {
+      // try to load font (font must be in Root.TTFontPath resource)
+      // to see which fontset we have available
+      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 #ifdef TTFFONTDIR
-                                       TTFFONTDIR);
+                                          TTFFONTDIR);
 #else
-                                       "$(ROOTSYS)/fonts");
+                                          "$(ROOTSYS)/fonts");
 #endif
-   char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
-   if (ttfont) {
-      delete [] ttfont;
-      SetTextFont(fonttable[fontid][0]);
-   } else {
-      // try backup free font
-      SetTextFont(fonttable[fontid][1]);
+      char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
+      if (ttfont) {
+         delete [] ttfont;
+         fontset = 0;
+      } else {
+         // try backup free font
+         fontset = 1;
+      }
    }
+   SetTextFont(fonttable[fontid][fontset]);
 }
 
 //______________________________________________________________________________
