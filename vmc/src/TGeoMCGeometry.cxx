@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.6 2005/09/04 09:25:01 brun Exp $
+// @(#)root/mc:$Name: v5-10-00 $:$Id: TGeoMCGeometry.cxx,v 1.7 2005/11/18 21:20:15 brun Exp $
 // Authors: ... 25/06/2002
 
 //______________________________________________________________________________
@@ -107,6 +107,7 @@ void TGeoMCGeometry::Vname(const char *name, char *vname) const
   }
   else {
     Int_t l = strlen(name);
+    if ( l>=79 ) l = 79;
     for (Int_t i=0;i<l;i++) vname[i] = name[i];
     vname[l] = 0;
   }
@@ -344,7 +345,7 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
   //  It creates a new volume in the JVOLUM data structure.
   //  
 
-  char vname[5];
+  char vname[80];
   Vname(name,vname);
   char vshape[5];
   Vname(shape,vshape);
@@ -368,9 +369,9 @@ void  TGeoMCGeometry::Gsdvn(const char *name, const char *mother, Int_t ndiv,
   //  X,Y,Z of CAXIS will be translated to 1,2,3 for IAXIS.
   //  It divides a previously defined volume.
   //  
-  char vname[5];
+  char vname[80];
   Vname(name,vname);
-  char vmother[5];
+  char vmother[80];
   Vname(mother,vmother);
  
   gGeoManager->Division(vname, vmother, iaxis, ndiv, 0, 0, 0, "n");
@@ -387,9 +388,9 @@ void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
   // along axis iaxis starting at coordinate value c0.
   // the new volume created will be medium number numed.
   //
-  char vname[5];
+  char vname[80];
   Vname(name,vname);
-  char vmother[5];
+  char vmother[80];
   Vname(mother,vmother);
   
   gGeoManager->Division(vname, vmother, iaxis, ndiv, c0i, 0, numed, "nx");
@@ -409,9 +410,9 @@ void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
   //       NDVMX is the expected maximum number of divisions
   //          (If 0, no protection tests are performed) 
   //
-  char vname[5];
+  char vname[80];
   Vname(name,vname);
-  char vmother[5];
+  char vmother[80];
   Vname(mother,vmother);
   
   gGeoManager->Division(vname, vmother, iaxis, 0, 0, step, numed, "s");
@@ -432,9 +433,9 @@ void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step
   //           NDVMX is the expected maximum number of divisions        
   //             (If 0, no protection tests are performed)              
   //
-  char vname[5];
+  char vname[80];
   Vname(name,vname);
-  char vmother[5];
+  char vmother[80];
   Vname(mother,vmother);
   
   gGeoManager->Division(vname, vmother, iaxis, 0, c0, step, numed, "sx");
@@ -484,9 +485,9 @@ void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Doub
   only.ToLower();
   Bool_t isOnly = kFALSE;
   if (only.Contains("only")) isOnly = kTRUE;
-  char vname[5];
+  char vname[80];
   Vname(name,vname);
-  char vmother[5];
+  char vmother[80];
   Vname(mother,vmother);
   
   Double_t *upar=0;
@@ -522,9 +523,9 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
   only.ToLower();
   Bool_t isOnly = kFALSE;
   if (only.Contains("only")) isOnly = kTRUE;
-  char vname[5];
+  char vname[80];
   Vname(name,vname);
-  char vmother[5];
+  char vmother[80];
   Vname(mother,vmother);
 
   gGeoManager->Node(vname,nr,vmother, x,y,z,irot,isOnly,upar,np);
