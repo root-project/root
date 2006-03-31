@@ -24,7 +24,6 @@ MANDIR         := @mandir@
 DATADIR        := @datadir@
 ELISPDIR       := @elispdir@
 TTFFONTDIR     := @ttffontdir@
-PROOFDATADIR   := @proofdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@

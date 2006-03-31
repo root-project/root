@@ -719,13 +719,13 @@ MIMEUNIXIN=config/mimes.unix.in
 MIMEWIN32IN=config/mimes.win32.in
 MIMEOUT=etc/root.mimes
 ROOTDIN=config/rootd.in
-ROOTDOUT=etc/rootd
+ROOTDOUT=etc/daemons/rootd.rc.d
 ROOTDXINETDIN=config/rootd.xinetd.in
-ROOTDXINETDOUT=etc/rootd.xinetd
+ROOTDXINETDOUT=etc/daemons/rootd.xinetd
 PROOFDIN=config/proofd.in
-PROOFDOUT=etc/proofd
+PROOFDOUT=etc/daemons/proofd.rc.d
 PROOFDXINETDIN=config/proofd.xinetd.in
-PROOFDXINETDOUT=etc/proofd.xinetd
+PROOFDXINETDOUT=etc/daemons/proofd.xinetd
 ROOTHELPIN=config/root-help.el.in
 ROOTHELPOUT=build/misc/root-help.el
 HTMLIN=config/html.C.in
@@ -781,13 +781,12 @@ FIRST argument one of the architecures given at the end of this message.
    --mandir        Manpages installation dir (<prefix>/share/man/man1)
    --no-create     Do not create output files, dry run
    --prefix        Installation prefix       (/usr/local)
-   --proofdir      PROOF utils dir           (<datadir>/proof)
    --srcdir        Sources installation dir  (<datadir>/src)
    --testdir       Tests                     (<docdir>/test)
    --tutdir        Tutorials                 (<docdir>/tutorial)
 
 If any of the flags --cintincdir, --datadir, --docdir, --etcdir, --iconpath
---incdir, --libdir, --macrodir, --mandir, --prefix, or --proofdir is given,
+--incdir, --libdir, --macrodir, --mandir, or --prefix is given,
 ROOT will be compiled with static directory names, and you should not set
 the ROOTSYS environment variable.
 
@@ -1116,7 +1115,6 @@ if test $# -gt 0 ; then
       --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
       --pkglist*)     show_pkglist="yes"       ; noact="yes"         ;;
       --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
-      --proofdir=*)   haveconfig=-DHAVE_CONFIG ; proofdir=$optarg    ;;
       --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
       --testdir=*)    haveconfig=-DHAVE_CONFIG ; testdir=$optarg     ;;
       --tutdir=*)     haveconfig=-DHAVE_CONFIG ; tutdir=$optarg      ;;
@@ -3460,7 +3458,6 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$etcdir" = "x";       then etcdir=/etc/root; fi
     if test "x$mandir" = "x";       then mandir=$prefix/share/man/man1; fi
     if test "x$datadir" = "x";      then datadir=$prefix/share/root; fi
-    if test "x$proofdir" = "x";     then proofdir=$datadir/proof; fi
     if test "x$macrodir" = "x";     then macrodir=$datadir/macros; fi
     if test "x$cintincdir" = "x";   then cintincdir=$libdir/cint; fi
     if test "x$iconpath" = "x";     then iconpath=$datadir/icons; fi
@@ -3504,7 +3501,6 @@ else
     etcdir=\$\(ROOTSYS\)/etc
     datadir=\$\(ROOTSYS\)
     mandir=\$\(ROOTSYS\)/man/man1
-    proofdir=\$\(ROOTSYS\)/proof
     macrodir=\$\(ROOTSYS\)/macros
     cintincdir=\$\(ROOTSYS\)/cint
     iconpath=\$\(ROOTSYS\)/icons
@@ -3641,7 +3637,6 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@pgsqlincdir@|$pgsqlincdir|"          \
     -e "s|@pgsqllib@|$pgsqllib|"                \
     -e "s|@pgsqllibdir@|$pgsqllibdir|"          \
-    -e "s|@proofdir@|$proofdir|"                \
     -e "s|@pythia6lib@|$pythia6lib|"            \
     -e "s|@pythia6libdir@|$pythia6libdir|"      \
     -e "s|@pythia6cppflags@|$pythia6cppflags|"  \
@@ -3851,7 +3846,7 @@ fi
 result "done"
 
 #---------------------------------------------------------------------
-# etc/rootd
+# etc/daemons/rootd.rc.d
 #
 message "Writing $ROOTDOUT"
 sed -e "s|@bindir@|$bindir|" \
@@ -3861,7 +3856,7 @@ rm -f rootd.tmp
 result "done"
 
 #---------------------------------------------------------------------
-# etc/rootd.xinetd
+# etc/daemons/rootd.xinetd
 #
 message "Writing $ROOTDXINETDOUT"
 sed -e "s|@bindir@|$bindir|" \
@@ -3871,7 +3866,7 @@ rm -f rootd.xinetd.tmp
 result "done"
 
 #---------------------------------------------------------------------
-# etc/proofd
+# etc/daemons/proofd.rc.d
 #
 message "Writing $PROOFDOUT"
 sed -e "s|@bindir@|$bindir|" \
@@ -3881,7 +3876,7 @@ rm -f proofd.tmp
 result "done"
 
 #---------------------------------------------------------------------
-# etc/proofd.xinetd
+# etc/daemons/proofd.xinetd
 #
 message "Writing $PROOFDXINETDOUT"
 sed -e "s|@bindir@|$bindir|" \

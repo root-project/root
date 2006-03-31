@@ -686,16 +686,16 @@ endif
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	@$(MAKECINTDLLS) clean
-	-@mv -f rootd/misc/rootd.rc.d rootd/misc/rootd.rc.dd
-	@(find . -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
-	-@mv -f rootd/misc/rootd.rc.dd rootd/misc/rootd.rc.d
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
 	   etc/root.mimes build/misc/root-help.el \
+	   etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd \
+	   etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd \
 	   rootd/misc/rootd.rc.d build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
@@ -778,12 +778,6 @@ install: all
 	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
 	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   echo "Installing PROOF files in $(DESTDIR)$(PROOFDATADIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(PROOFDATADIR); \
-	   $(INSTALLDATA) proof/etc             $(DESTDIR)$(PROOFDATADIR); \
-	   $(INSTALLDATA) proof/utils           $(DESTDIR)$(PROOFDATADIR); \
-	   rm -rf $(DESTDIR)$(PROOFDATADIR)/etc/CVS; \
-	   rm -rf $(DESTDIR)$(PROOFDATADIR)/utils/CVS; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
@@ -815,7 +809,7 @@ install: all
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
-	   rm -rf $(DESTDIR)$(ETCDIR)/CVS; \
+	   find $(DESTDIR)$(ETCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
 	   $(INSTALLDATA) build/misc/root.m4    $(DESTDIR)$(ACLOCALDIR); \
@@ -865,7 +859,6 @@ uninstall:
 	   fi ; \
 	   rm -f $(DESTDIR)$(INCDIR)/rmain.cxx; \
 	   rm -rf $(DESTDIR)$(CINTINCDIR); \
-	   rm -rf $(DESTDIR)$(PROOFDATADIR); \
 	   for i in icons/*.xpm ; do \
 	      rm -fr $(DESTDIR)$(ICONPATH)/`basename $$i`; \
 	   done; \
@@ -886,14 +879,14 @@ uninstall:
 	      rm -rf $(DESTDIR)$(MANDIR); \
 	   fi ; \
 	   for i in etc/* ; do \
-	      rm -fr $(DESTDIR)$(ETCDIR)/`basename $$i`; \
+	      rm -rf $(DESTDIR)$(ETCDIR)/`basename $$i`; \
 	   done; \
 	   if test -d $(DESTDIR)$(ETCDIR) && \
 	      test "x`ls $(DESTDIR)$(ETCDIR)`" = "x" ; then \
 	      rm -rf $(DESTDIR)$(ETCDIR); \
 	   fi ; \
 	   for i in build/misc/* ; do \
-	      rm -fr $(DESTDIR)$(DATADIR)/`basename $$i`; \
+	      rm -rf $(DESTDIR)$(DATADIR)/`basename $$i`; \
 	   done; \
 	   if test -d $(DESTDIR)$(DATADIR) && \
 	      test "x`ls $(DESTDIR)$(DATADIR)`" = "x" ; then \
