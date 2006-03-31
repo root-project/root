@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.114 2006/03/21 15:07:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.115 2006/03/27 06:07:02 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -495,8 +495,8 @@ TProofServ::~TProofServ()
 //______________________________________________________________________________
 Int_t TProofServ::CatMotd()
 {
-   // Print message of the day (in fConfDir/proof/etc/motd). The motd
-   // is not shown more than once a dat. If the file fConfDir/proof/etc/noproof
+   // Print message of the day (in fConfDir/etc/proof/motd). The motd
+   // is not shown more than once a dat. If the file fConfDir/etc/proof/noproof
    // exists, show its contents and close the connection.
 
    TString motdname;
@@ -504,7 +504,7 @@ Int_t TProofServ::CatMotd()
    FILE   *motd;
    Bool_t  show = kFALSE;
 
-   motdname = fConfDir + "/proof/etc/noproof";
+   motdname = fConfDir + "/etc/proof/noproof";
    if ((motd = fopen(motdname, "r"))) {
       Int_t c;
       printf("\n");
@@ -528,7 +528,7 @@ Int_t TProofServ::CatMotd()
    if (time(0) - lasttime > (time_t)86400)
       show = kTRUE;
 
-   motdname = fConfDir + "/proof/etc/motd";
+   motdname = fConfDir + "/etc/proof/motd";
    if (gSystem->GetPathInfo(motdname, &id, &size, &flags, &modtime) == 0) {
       if (modtime > lasttime || show) {
          if ((motd = fopen(motdname, "r"))) {

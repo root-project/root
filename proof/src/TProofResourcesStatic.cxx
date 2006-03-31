@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.4 2006/01/17 13:23:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.5 2006/03/16 08:49:28 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -150,7 +150,7 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
       PDB(kGlobal,2)
          Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
       if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-         fFileName.Form("%s/proof/etc/%s", confDir, fileName);
+         fFileName.Form("%s/etc/proof/%s", confDir, fileName);
          PDB(kGlobal,2)
             Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
          if (gSystem->AccessPathName(fFileName, kReadPermission)) {

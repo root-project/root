@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.135 2006/03/21 16:54:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.136 2006/03/27 06:07:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -233,7 +233,7 @@ TSemaphore    *TProof::fgSemaphore = 0;
 
 //______________________________________________________________________________
 TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
-               Int_t loglevel, const char *alias): fUrl(masterurl)
+               Int_t loglevel, const char *alias) : fUrl(masterurl)
 {
    // Create a PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
@@ -4650,7 +4650,7 @@ Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
    if (f.is_open()) {
       while (f.good()) {
          TString line;
-         line.ReadToDelim(f); 
+         line.ReadToDelim(f);
          if (fileCount == 0) {
             // when uploading the first file user may have to decide
             fileCount += UploadDataSet(line, dest, dataset, opt);
