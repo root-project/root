@@ -10,46 +10,59 @@ if test "x$1" = "xrpm" ; then
 	    root-bin)							;;
 	    root-cint)							;;
 	    root-doc)							;;
-	    *alien)	echo -n ", AliEn-Client" 			;;
+	    *alien)	echo "BuildRequires: AliEn-Client" 		;;
 # Build dependency on AfterStep-devel temporarily commented out 
 # until such a time when ROOT can use the normal libAfterImage.
 # Input the build dependencies of the libafterimage-dev package
 #	    *asimage)	echo -n ", AfterStep-devel"			;;
 	    *asimage)							;;
-	    *castor)	echo -n ", CASTOR-client"			;;
+	    *castor)	echo "BuildRequires: CASTOR-client"		;;
 	    *chirp)							;;
 	    *clarens)							;;
 	    *dcache)							;;
 	    *fumili)							;;
 	    *gl)							;;
-	    *globus)	echo -n ", globus"				;;
-	    *hbook)	echo -n ", gcc-g77"				;;
-	    *krb5)	echo -n ", krb5-devel"				;;
-	    *ldap)	echo -n ", openldap-devel"			;;
+	    *globus)	echo "BuildRequires: globus"			;;
+	    *hbook)	echo "BuildRequires: gcc-g77"			;;
+	    *krb5)	echo "BuildRequires: krb5-devel"		;;
+	    *ldap)	echo "BuildRequires: openldap-devel"		;;
 	    *minuit)							;;
 	    *minuit2)							;;
 	    *mlp)							;;
-	    *mysql)	echo -n ", mysql-devel"				;;
+# This is kinda special 
+	    *mysql)	
+		cat <<EOF
+%if %{?_vendor} 
+%if %{_vendor} == "MandrakeSoft"
+BuildRequires: MySQL-devel
+%else
+BuildRequires: mysql-devel
+%endif
+%else
+BuildRequires: mysql-devel
+%endif
+EOF
+		;;
 	    *netx)							;;
-	    *oracle)    echo -n ", oracle-instantclient-devel"		;;
+	    *oracle)    echo "BuildRequires: oracle-instantclient-devel";;
 	    *peac)							;;
-	    *pgsql)	echo -n ", postgresql-devel"			;;
+	    *pgsql)	echo "BuildRequires: postgresql-devel"		;;
 	    *proof)							;;
-	    *pythia5)	echo -n ", pythia5-devel"			;;
-	    *pythia6)	echo -n ", pythia6-devel"			;;
-	    *python)	echo -n ", python-devel >= 2.1"			;;
-	    *qt)	echo -n ", qt-devel >= 3.3.3"			;;
+	    *pythia5)	echo "BuildRequires: pythia5-devel"		;;
+	    *pythia6)	echo "BuildRequires: pythia6-devel"		;;
+	    *python)	echo "BuildRequires: python-devel >= 2.1"	;;
+	    *qt)	echo "BuildRequires: qt-devel >= 3.3.3"		;;
 	    *quadp)							;;
 	    *roofit)							;;
-	    *ruby)	echo -n ", ruby-devel >= 1.8"			;;
-	    *maxdb)	echo -n ", libsqlod75-dev"			;;
+	    *ruby)	echo "BuildRequires: ruby-devel >= 1.8"		;;
+	    *maxdb)	echo "BuildRequires: libsqlod75-dev"		;;
 	    *sql)							;;
 	    *srp)							;;
 	    *venus)							;;
-	    *xml)	echo -n ", libxml2-devel"			;;
+	    *xml)	echo "BuildRequires: libxml2-devel"		;;
 	    root-proofd)						;;
 	    root-rootd)							;;
-	    root-xrootd) echo -n ", krb5-devel"				;;
+	    root-xrootd) echo "BuildRequires: krb5-devel"		;;
 	    ttf-root*)							;;
 	    root-common)						;;
 	    *) 

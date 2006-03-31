@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.11 2005/10/12 22:23:47 rdm Exp $
+# $Id: makerpmspec.sh,v 1.12 2006/02/28 16:38:23 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -21,6 +21,7 @@ pkglist=`./configure --pkglist					\
 		  --enable-explicitlink				\
 		  --disable-rpath				\
 		  --disable-afs					\
+		  --disable-gfal					\
 		  --disable-srp					\
 		  --disable-builtin-freetype			\
 		  --disable-builtin-afterimage			\
@@ -34,12 +35,17 @@ version=`cat build/version_number | tr '/' '.'`
 major=`echo $version | cut -f1 -d.`
 ### echo %%% make sure we've got a fresh file 
 rm -f root.spec
-
+csplit -f root.spec. build/package/rpm/spec.in '/@builddepends@/'
+cat root.spec.00     >  root.spec.in
+echo "$builddepends" >> root.spec.in
+sed '/@builddepends/d' < root.spec.01 >> root.spec.in
+rm -f root.spec.00 root.spec.01
 ### echo %%% Write header stuff 
 sed -e "s/@version@/${version}/" \
-    -e "s/@builddepends@/${builddepends}/" \
     -e "s/@pkglist@/${dpkglist}/" \
-    < build/package/rpm/spec.in > root.spec
+    < root.spec.in > root.spec
+rm -f root.spec.in
+#    -e "s/@builddepends@/${builddepends}/" \
 
 # Write out sub-package information 
 for p in $pkglist ; do 

@@ -1,3 +1,21 @@
+root (5.11.01-2) unstable; urgency=low
+
+  *  Some fixes upstream
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 22 Mar 2006 15:11:49 +0100
+
+root (5.11.01-1) unstable; urgency=low
+
+  * New upstream version.  No changes to the debian part.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 21 Mar 2006 01:59:33 +0100
+
+root (5.10.00-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu,  2 Mar 2006 10:09:35 +0100
+
 root (5.09.01-10) unstable; urgency=low
 
   * Removed dangling code directory in `minuit2/src' 

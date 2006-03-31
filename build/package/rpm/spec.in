@@ -27,7 +27,8 @@ Source:       ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
 Group:        Applications/Physics
 BuildRoot:    /tmp/rootrpm
 Summary:      Numerical data analysis framework (OO)
-BuildRequires: xorg-x11-devel@builddepends@
+BuildRequires: XFree86-devel
+@builddepends@
 Requires:     @pkglist@
 #
 # Over all description - not used, but required
@@ -140,15 +141,20 @@ echo "%attr(0755, root, root) %{_sysconfdir}/rc.d/init.d/rootd" \
     >> rpm/root-rootd.install
 
 
-# This is for older version of Red Hat.  In Red Hat Enterprise 4, RPM 
-# does not compress the files before installing into package specific 
-# directories. 
-# EXT=$(grep -e '^[[:space:]]*COMPRESS_EXT=' /usr/lib/rpm/brp-compress  | sed 's/^\([[:space:]]*COMPRESS_EXT=\)\(.*\)/\.1\2/')
-EXT=.1
+# This is to discover weather the man pages are compressed before they
+# are moved into the packages - ugly hack, but there's no 2 ways about it
+EXT=
+comp=$(echo "%{__os_install_post}" | sed -n 's/[[:space:]]*\([^[:space:]]*compress[^[:space:]]*\).*/\1/p')
+if test "x$comp" = "x" ; then 
+    :
+else
+    EXT=$(grep -e '^[[:space:]]*COMPRESS_EXT=' $comp  | sed 's/^\([[:space:]]*COMPRESS_EXT=\)\(.*\)/\2/')
+fi
+# Now fix up the file lists
 for i in rpm/*.install ; do 
     if test ! -f $i ; then continue ; fi
     echo "Fixing $i"
-    sed -e "s/\.1$/${EXT}/g" \
+    sed -e "s/\.1$/.1${EXT}/g" \
 	-e "s,%_sysconfdir,%config %_sysconfdir," \
 	-e "s,%_defaultdocdir,%doc %_defaultdocdir," \
 	< $i > $i.tmp
