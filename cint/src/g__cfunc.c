@@ -65,6 +65,10 @@ int memcmp();
 int memcmp();
 void* memcpy();
 #endif
+#if !defined(G__NOMATHLIB) && !defined(floor) \
+   && defined(G__FUNCPOINTER) && (_MSC_VER == 1400)
+   double G__floor_MSVC8(double f) {return floor(f);}
+#endif
 
 /*************************************************
 * function prototype for standard C
@@ -223,10 +227,14 @@ G__COMPLETIONLIST G__completionlist[] = {
 	{"fgets",(void (*)())fgets},
 #endif
 #ifndef G__NOMATHLIB
-#if defined(floor) || !defined(G__FUNCPOINTER) || (_MSC_VER == 1400)
+#if defined(floor) || !defined(G__FUNCPOINTER)
 	{"floor",NULL},
 #else
+#if _MSC_VER == 1400
+	{"floor",(void (*)())G__floor_MSVC8},
+#else
 	{"floor",(void (*)())floor},
+#endif /* MSVC 1400 */
 #endif
 #if defined(fmod) || !defined(G__FUNCPOINTER)
 	{"fmod",NULL},
