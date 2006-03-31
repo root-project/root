@@ -45,6 +45,7 @@ void importdir(const char *dirname) {
          importdir(afile);
      }
   }
+  gSystem->FreeDirectory(dirp);
   savdir->cd();
 }
 void importCode() {
