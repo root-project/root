@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.13 2006/03/29 20:17:12 pcanal Exp $
+# $Id: Module.mk,v 1.14 2006/03/29 23:32:54 pcanal Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -39,7 +39,7 @@ GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
 
-GQTCXXFLAGS   := -DQT_DLL -DQT_THREAD_SUPPORT -I. $(QTINCDIR:%=-I%)
+GQTCXXFLAGS   := -DQT_DLL  -DQT_NO_DEBUG -DQT_SHARED -DQT_THREAD_SUPPORT -I$(QTDIR)/mkspecs/default -I. $(QTINCDIR:%=-I%)
 
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 
