@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.25 2005/07/27 11:26:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.26 2005/11/18 16:55:07 couet Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -559,6 +559,9 @@ void TLegend::SavePrimitive( ofstream &out, Option_t* )
    out << "leg = new TLegend("<<GetX1NDC()<<","<<GetY1NDC()<<","
        <<GetX2NDC()<<","<<GetY2NDC()<<","
        << "NULL" << "," <<quote<< fOption <<quote<<");" << endl;
+   if (fBorderSize != 4) {
+      out<<"   leg->SetBorderSize("<<fBorderSize<<");"<<endl;
+   }
    SaveTextAttributes(out,"leg",12,0,1,42,0);
    SaveLineAttributes(out,"leg",-1,-1,-1);
    SaveFillAttributes(out,"leg",-1,-1);
