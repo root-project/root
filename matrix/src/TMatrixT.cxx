@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.13 2006/03/29 05:16:49 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.14 2006/03/30 09:30:33 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -691,7 +691,7 @@ void TMatrixT<Element>::AMultB(const TMatrixT<Element> &a,const TMatrixT<Element
     arp0 += ncolsa;                             // Set ap to the (i+1)-th row
   }
 
-  Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
+  if (gMatrixCheck) Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
 #endif
 }
 

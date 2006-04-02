@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.10 2006/03/30 09:30:33 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.11 2006/03/30 09:33:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -91,9 +91,11 @@ void TVectorT<Element>::Add(const TVectorT<Element> &v1,const TVectorT<Element> 
 {
   // Set this vector to v1+v2
 
-  if (gMatrixCheck && !AreCompatible(*this,v1) && !AreCompatible(*this,v2)) {
-    Error("Add(TVectorT<Element> &)","vectors not compatible");
-    Invalidate();
+  if (gMatrixCheck) {
+      if ( !AreCompatible(*this,v1) && !AreCompatible(*this,v2)) {
+         Error("Add(TVectorT<Element> &)","vectors not compatible");
+         Invalidate();
+      }
   }
 
   const Element *sv1 = v1.GetMatrixArray();
@@ -1360,9 +1362,11 @@ Element operator*(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
   // Compute the scalar product.
 
-  if (gMatrixCheck && !AreCompatible(v1,v2)) {
-    Error("operator*(const TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
-    return 0.0;
+  if (gMatrixCheck) {
+      if (!AreCompatible(v1,v2)) {
+         Error("operator*(const TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
+         return 0.0;
+      }
   }
 
   const Element *v1p = v1.GetMatrixArray();
@@ -1533,7 +1537,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
     }
   }
 
-  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+  if (gMatrixCheck) Assert(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
   return target;
