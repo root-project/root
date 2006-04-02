@@ -28,5 +28,5 @@
 #pragma link off global Tbl_vScrollBar;
 #pragma link off global Tbl_autoScrollBars;
 #pragma link off global objectDict;
-
+#pragma link off global black;
 #endif

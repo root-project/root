@@ -7,12 +7,13 @@
 #pragma link C++ class QAccel;
 #pragma link C++ class QAction;
 #pragma link C++ class QActionGroup;
-#pragma link C++ class QApplication;
-#pragma link C++ class QAsciiCache;
-#pragma link C++ class QAsciiCacheIterator;
-#pragma link C++ class QAsciiDict;
-#pragma link C++ class QAsciiDictIterator;
-#pragma link C++ class QAsyncIO;
+
+// vf #pragma link C++ class QApplication;
+// vf #pragma link C++ class QAsciiCache;
+// vf #pragma link C++ class QAsciiCacheIterator;
+// vf #pragma link C++ class QAsciiDict;
+// vf #pragma link C++ class QAsciiDictIterator;
+// vf #pragma link C++ class QAsyncIO;
 
 #pragma link C++ class QBitArray;
 #pragma link C++ class QBitmap;
@@ -24,8 +25,9 @@
 #pragma link C++ class QButton;
 #pragma link C++ class QButtonGroup;
 #pragma link C++ class QByteArray;
-#pragma link C++ class QCache;
-#pragma link C++ class QCacheIterator;
+
+// vf #pragma link C++ class QCache;
+// vf #pragma link C++ class QCacheIterator;
 
 #pragma link C++ class QCanvas;
 #pragma link C++ class QCanvasEllipse;
@@ -50,7 +52,7 @@
 #pragma link C++ class QClipboard;
 
 #pragma link C++ class QCloseEvent;
-#pragma link C++ class QCollection;
+// vf #pragma link C++ class QCollection;
 #pragma link C++ class QColor;
 #pragma link C++ class QColorDialog;
 #pragma link C++ class QColorDrag;
@@ -60,7 +62,6 @@
 #pragma link C++ class QConnection;
 #pragma link C++ class QConstString;
 
-#pragma link C++ class QCopChannel;
 #pragma link C++ class QCString;
 #pragma link C++ class QCursor;
 #pragma link C++ class QCustomEvent;
@@ -75,11 +76,11 @@
 #pragma link C++ class QDial;
 
 #pragma link C++ class QDialog;
-#pragma link C++ class QDict;
-#pragma link C++ class QDictIterator;
+// #pragma link C++ class QDict;
+// #pragma link C++ class QDictIterator;
 #pragma link C++ class QDir;
 
-//#pragma link C++ class QDns;
+// #pragma link C++ class QDns;
 
 #pragma link C++ class QDomAttr;
 #pragma link C++ class QDomCDATASection;
@@ -109,9 +110,6 @@
 
 #pragma link C++ class QDropEvent;
 #pragma link C++ class QDropSite;
-
-//#pragma link C++ class QEucJpCodec;
-#pragma link C++ class QEucKrCodec;
 
 #pragma link C++ class QEvent;
 #pragma link C++ class QFile;
@@ -148,7 +146,7 @@
 #pragma link C++ class QGrid;
 #pragma link C++ class QGridLayout;
 #pragma link C++ class QGroupBox;
-#pragma link C++ class QGuardedPtr;
+// vf  #pragma link C++ class QGuardedPtr;
 #pragma link C++ class QGVector;
 
 #pragma link C++ class QHBox;
@@ -174,16 +172,10 @@
 #pragma link C++ class QImageIO;
 
 #pragma link C++ class QInputDialog;
-#pragma link C++ class QIntCache;
-#pragma link C++ class QIntCacheIterator;
-#pragma link C++ class QIntDict;
-#pragma link C++ class QIntDictIterator;
-//#pragma link C++ class QInterlaceStyle;
 #pragma link C++ class QIntValidator;
 #pragma link C++ class QIODevice;
 
 #pragma link C++ class QIODeviceSource;
-//#pragma link C++ class QJisCodec;
 #pragma link C++ class QJpUnicodeConv;
 #pragma link C++ class QKeyEvent;
 #pragma link C++ class QLabel;
@@ -193,12 +185,10 @@
 #pragma link C++ class QLayoutIterator;
 #pragma link C++ class QLCDNumber;
 #pragma link C++ class QLineEdit;
-#pragma link C++ class QList;
 #pragma link C++ class QListBox;
 #pragma link C++ class QListBoxItem;
 #pragma link C++ class QListBoxPixmap;
 #pragma link C++ class QListBoxText;
-#pragma link C++ class QListIterator;
 #pragma link C++ class QListView;
 #pragma link C++ class QListViewItem;
 #pragma link C++ class QListViewItemIterator;
@@ -206,9 +196,6 @@
 
 #pragma link C++ class QLocalFs;
 #pragma link C++ class QMainWindow;
-#pragma link C++ class QMap;
-#pragma link C++ class QMapConstIterator;
-#pragma link C++ class QMapIterator;
 #pragma link C++ class QMenuBar;
 #pragma link C++ class QMenuData;
 #pragma link C++ class QMessageBox;
@@ -226,10 +213,6 @@
 #pragma link C++ class QMutex;
 #pragma link C++ class QNetworkOperation;
 #pragma link C++ class QNetworkProtocol;
-#pragma link C++ class QNPInstance*;
-#pragma link C++ class QNPlugin*;
-#pragma link C++ class QNPStream*;
-#pragma link C++ class QNPWidget*;
 #pragma link C++ class QObject;
 #pragma link C++ class QPaintDevice;
 #pragma link C++ class QPaintDeviceMetrics;
@@ -248,18 +231,14 @@
 #pragma link C++ class QPrinter;
 #pragma link C++ class QProgressBar;
 #pragma link C++ class QProgressDialog;
-#pragma link C++ class QPtrDict;
-#pragma link C++ class QPtrDictIterator;
 #pragma link C++ class QPushButton;
 
-#pragma link C++ class QQueue;
 #pragma link C++ class QRadioButton;
 #pragma link C++ class QRangeControl;
 #pragma link C++ class QRect;
 #pragma link C++ class QRegExp;
 #pragma link C++ class QRegion;
 #pragma link C++ class QResizeEvent;
-#pragma link C++ class QScreenCursor;
 #pragma link C++ class QScrollBar;
 #pragma link C++ class QScrollView;
 #pragma link C++ class QSemaphore;
@@ -269,23 +248,19 @@
 #pragma link C++ class QSGIStyle;
 #pragma link C++ class QShared;
 #pragma link C++ class QShowEvent;
-//#pragma link C++ class QSignal;
 #pragma link C++ class QSignalMapper;
 #pragma link C++ class QSimpleRichText;
 #pragma link C++ class QSize;
 #pragma link C++ class QSizeGrip;
 #pragma link C++ class QSizePolicy;
-//#pragma link C++ class QSjisCodec;
 #pragma link C++ class QSlider;
 #pragma link C++ class QSocket;
 #pragma link C++ class QSocketDevice;
 #pragma link C++ class QSocketNotifier;
-#pragma link C++ class QSortedList;
 #pragma link C++ class QSound;
 #pragma link C++ class QSpacerItem;
 #pragma link C++ class QSpinBox;
 #pragma link C++ class QSplitter;
-#pragma link C++ class QStack;
 #pragma link C++ class QStatusBar;
 #pragma link C++ class QStoredDrag;
 #pragma link C++ class QStrIList;
@@ -293,7 +268,7 @@
 #pragma link C++ class QStringList;
 #pragma link C++ class QStrList;
 #pragma link C++ class QStrListIterator;
-//#pragma link C++ class QStyle;
+#pragma link C++ class QStyle;
 #pragma link C++ class QStyleSheet;
 #pragma link C++ class QStyleSheetItem;
 
@@ -305,7 +280,6 @@
 #pragma link C++ class QTable;
 #pragma link C++ class QTableItem;
 #pragma link C++ class QTableSelection;
-#pragma link C++ class QTableView;
 #pragma link C++ class QTabWidget;
 #pragma link C++ class QTextBrowser;
 #pragma link C++ class QTextCodec;
@@ -326,22 +300,20 @@
 #pragma link C++ class QToolTipGroup;
 #pragma link C++ class QTranslator;
 #pragma link C++ class QTranslatorMessage;
-#pragma link C++ class QTsciiCodec;
 
 #pragma link C++ class QUriDrag;
 #pragma link C++ class QUrl;
 #pragma link C++ class QUrlInfo;
 #pragma link C++ class QUrlOperator;
 #pragma link C++ class QValidator;
-#pragma link C++ class QValueList;
-#pragma link C++ class QValueListConstIterator;
-#pragma link C++ class QValueListIterator;
-#pragma link C++ class QValueStack;
+// vf #pragma link C++ class QValueList;
+// vf #pragma link C++ class QValueListConstIterator;
+// vf #pragma link C++ class QValueListIterator;
+// vf #pragma link C++ class QValueStack;
 #pragma link C++ class QVariant;
 #pragma link C++ class QVBox;
 #pragma link C++ class QVBoxLayout;
 #pragma link C++ class QVButtonGroup;
-#pragma link C++ class QVector;
 #pragma link C++ class QVGroupBox;
 
 #pragma link C++ class QWaitCondition;
@@ -354,11 +326,6 @@
 #pragma link C++ class QWizard;
 #pragma link C++ class QWMatrix;
 #pragma link C++ class QWorkspace;
-#pragma link C++ class QWSDecoration;
-#pragma link C++ class QWSKeyboardHandler;
-#pragma link C++ class QWSMouseHandler;
-#pragma link C++ class QWSServer;
-#pragma link C++ class QWSWindow;
 
 #pragma link C++ class QXmlAttributes;
 #pragma link C++ class QXmlContentHandler;
@@ -374,8 +341,6 @@
 #pragma link C++ class QXmlParseException;
 #pragma link C++ class QXmlReader;
 #pragma link C++ class QXmlSimpleReader;
-#pragma link C++ class QXtApplication*;
-#pragma link C++ class QXtWidget*;
 
 #if 0
 #endif // 0
