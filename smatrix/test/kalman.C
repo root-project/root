@@ -26,7 +26,9 @@ void kalman(std::string machine = "kalman",int sym=1,int cut =6) {
 
 int read_data(const char *  machine, double * s, double * ss, double * t) { 
 
-  TFile * file = new TFile(Form("%s.root",machine)); 
+  char filename[100];
+  sprintf(filename,"%s.root",machine);
+  TFile * file = new TFile(filename,machine); 
   if (file == 0) return -1; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *ms; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *mss; 

@@ -345,6 +345,7 @@ int test_tmatrix_kalman() {
    
   int npass = NITER; 
   TRandom3 r(111);
+  gMatrixCheck = 0;
   double x2sum = 0,c2sum = 0;
 
   for (int k = 0; k < npass; k++) 
