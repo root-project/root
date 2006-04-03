@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.121 2006/03/30 08:50:28 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.122 2006/03/31 12:47:15 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -273,7 +273,7 @@ void TGFrame::ChangeOptions(UInt_t options)
             fBorderWidth = (options & kDoubleBorder) ? 2 : 1;
          else
             fBorderWidth = 0;
-	  }
+      }
    }
 
    fOptions = options;
