@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.116 2006/01/30 09:01:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.117 2006/02/16 19:07:28 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -947,31 +947,51 @@ Int_t TCint::LoadLibraryMap()
    if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
 
-      // load all rootmap files in the dynamic load path (LD_LIBRARY_PATH, etc.)
+      if (!fMapfile->GetTable()->GetEntries())
+         Error("LoadLibraryMap", "library map empty, no system.rootmap file\n"
+               "found. ROOT not properly installed (run \"make install\").");
+
+      // Load all rootmap files in the dynamic load path (LD_LIBRARY_PATH, etc.).
+      // A rootmap file must start with the string "rootmap" and may be followed
+      // by any extension, like rootmap_ModuleX, rootmap-Module-Y.
       TString ldpath = gSystem->GetDynamicPath();
 #ifdef WIN32
       TObjArray *a = ldpath.Tokenize(";");
-#else 
+#else
       TObjArray *a = ldpath.Tokenize(":");
 #endif
       a->Sort();
-      TString p;
+
+      TString d;
       for (Int_t i = 0; i < a->GetEntries(); i++) {
-         if (p == ((TObjString*)a->At(i))->GetString() + "/rootmap")
+         if (d == ((TObjString*)a->At(i))->GetString())
             continue;  // skip already seen directories
-         p = ((TObjString*)a->At(i))->GetString() + "/rootmap";
-         if (!gSystem->AccessPathName(p, kReadPermission)) {
-            if (gDebug > 1)
-               Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
-            fMapfile->ReadFile(p, kEnvGlobal);
+         d = ((TObjString*)a->At(i))->GetString();
+
+         void *dirp = gSystem->OpenDirectory(d);
+         if (dirp) {
+            const char *f;
+            Bool_t gotrm = kFALSE;
+            while ((f = gSystem->GetDirEntry(dirp))) {
+               if (!strncasecmp(f, "rootmap", 7)) {
+                  TString p;
+                  p = d + "/" + f;
+                  if (!gSystem->AccessPathName(p, kReadPermission)) {
+                     if (gDebug > 1)
+                        Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
+                     fMapfile->ReadFile(p, kEnvGlobal);
+                  }
+                  gotrm = kTRUE;
+               } else if (gotrm) {
+                  break;  // no need to continue after last rootmap file
+               }
+            }
          }
+         gSystem->FreeDirectory(dirp);
       }
 
-      if (!fMapfile->GetTable()->GetEntries()) {
-         Error("LoadLibraryMap", "library map empty, no system.rootmap file\n"
-               "found. ROOT not properly installed (run \"make install\").");
+      if (!fMapfile->GetTable()->GetEntries())
          return -1;
-      }
    }
 
    TEnvRec *rec;
@@ -990,8 +1010,8 @@ Int_t TCint::LoadLibraryMap()
          // considers "::" a terminator
          cls.Remove(0,8);
          cls.ReplaceAll("@@", "::");
-         // convert "-" to " ", since class names may have 
-         // blanks and TEnv considers a blank a terminator 
+         // convert "-" to " ", since class names may have
+         // blanks and TEnv considers a blank a terminator
          cls.ReplaceAll("-", " ");
          if (cls.Contains(":")) {
             // We have a namespace and we have to check it first
