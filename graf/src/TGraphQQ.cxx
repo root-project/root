@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.1 2005/11/18 20:40:52 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.2 2005/11/21 09:27:11 brun Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -144,6 +144,7 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
       if (nx==ny){
          for (Int_t i=0; i<fNpoints; i++)
             fX[i] = y[index[i]];
+         fY0 = 0;
          Quartiles();
       } else {
          fNy0 = ny;
