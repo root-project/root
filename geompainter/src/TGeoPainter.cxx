@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.80 2006/03/27 10:22:56 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.81 2006/03/28 12:47:19 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -1345,7 +1345,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    TGeoVolume *nextvol;
    Int_t up;
    for (px=pxmin; px<pxmax; px++) {
-      for (py=pymin; py<pymax; py++) {         
+      for (py=pymin; py<pymax; py++) {
          base_color = 1;
          steptot = 0;
          inclip = inclipst;
@@ -1406,12 +1406,10 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   stemax = fClippingShape->DistFromOutside(point,dir,3);
                }
             }              
-//            nextnode = fGeoManager->FindNextBoundary();
             nextnode = fGeoManager->FindNextBoundaryAndStep();
             step = fGeoManager->GetStep();
             if (step>1E10) break;
             steptot += step;
-//            next = fGeoManager->Step();
             next = nextnode;
             // Check the step
             if (fClippingShape) {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.21 2006/02/08 11:03:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.22 2006/02/23 13:23:07 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -115,7 +115,7 @@ public:
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(const TGeoVolume *volume) {fVolume = (TGeoVolume*)volume;}
    void              SetNumber(Int_t number)             {fNumber=number;}
-   void              SetOverlapping()                    {TObject::SetBit(kGeoNodeOverlap, kTRUE);}
+   void              SetOverlapping(Bool_t flag=kTRUE)   {TObject::SetBit(kGeoNodeOverlap, flag);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
    void              SetVisibility(Bool_t vis=kTRUE); // *MENU*
    void              SetInvisible()                      {SetVisibility(kFALSE);} // *MENU*

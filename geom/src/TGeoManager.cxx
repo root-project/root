@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.143 2006/03/24 15:11:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.144 2006/03/27 09:28:10 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -940,6 +940,10 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
                if (mnew && mnew->GetId()!=morig->GetId()) ierr++;
             }
             nref++;
+            if (node->IsOverlapping()) {
+               node->SetOverlapping(kFALSE);
+               Info("ReplaceVolume","%s replaced with assembly and declared NON-OVERLAPPING!",node->GetName());
+            }   
             node->SetVolume(vnew);
             voxels = node->GetMotherVolume()->GetVoxels();
             if (voxels) voxels->SetNeedRebuild();
@@ -947,6 +951,10 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
             if (node->GetMotherVolume() == vorig) {
                nref++;
                node->SetMotherVolume(vnew);
+               if (node->IsOverlapping()) {
+                  node->SetOverlapping(kFALSE);
+                  Info("ReplaceVolume","%s inside substitute assembly %s declared NON-OVERLAPPING!",node->GetName(),vnew->GetName());
+               }   
             }
          }      
       }
@@ -3313,15 +3321,16 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
 //      }   
       return CrossBoundaryAndLocate(kFALSE, skip);
    }   
-      
+   current = fCurrentNode;   
    CdDown(icrossed);
    nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
    while (nextindex>=0) {
+      current = fCurrentNode;
       CdDown(nextindex);
       nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
    }   
 
-   return CrossBoundaryAndLocate(kTRUE, fCurrentNode);
+   return CrossBoundaryAndLocate(kTRUE, current);
 }   
 
 //_____________________________________________________________________________
@@ -3339,6 +3348,30 @@ TGeoNode *TGeoManager::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipno
    fPoint[0] -= extra*fDirection[0];
    fPoint[1] -= extra*fDirection[1];
    fPoint[2] -= extra*fDirection[2];
+   if (!current) return 0;
+   if (downwards) {
+      Int_t nextindex = current->GetVolume()->GetNextNodeIndex();
+      while (nextindex>=0) {
+         CdDown(nextindex);
+         current = fCurrentNode;
+         nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+      }
+      return current;   
+   }   
+     
+   if ((skipnode && current == skipnode) || current->GetVolume()->IsAssembly()) {
+      if (!fLevel) {
+         fIsOutside = kTRUE;
+         return fTopNode;
+      }
+      CdUp();
+      while (fLevel && fCurrentNode->GetVolume()->IsAssembly()) CdUp();
+      if (!fLevel && fCurrentNode->GetVolume()->IsAssembly()) {
+         fIsOutside = kTRUE;
+         return fTopNode;
+      }
+      return fTopNode;   
+   }
    return current;
 }   
 

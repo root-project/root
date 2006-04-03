@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.78 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.79 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -736,10 +736,15 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
+void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 // Add a TGeoNode to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
+   if (vol->IsAssembly()) {
+      Warning("AddNodeOverlap", "Declaring assembly %s as possibly overlapping inside %s not allowed. Using AddNode instead !",vol->GetName(),GetName());
+      AddNode(vol, copy_no, mat, option);
+      return;
+   }   
    TGeoMatrix *matrix = mat;
    if (matrix==0) matrix = gGeoIdentity;
    else           matrix->RegisterYourself();
@@ -1097,13 +1102,18 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
    if (!strcmp(option, "s")) {
       // create the shape for this volume
       if (TestAttBit(TGeoAtt::kSavePrimitiveAtt)) return;
-      fShape->SavePrimitive(out,option);
-      out << "   // Volume: " << GetName() << endl;
-      out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << endl;
+      if (!IsAssembly()) {
+         fShape->SavePrimitive(out,option);      
+         out << "   // Volume: " << GetName() << endl;
+         out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << endl;
+      } else {
+         out << "   // Assembly: " << GetName() << endl;
+         out << "   " << GetPointerName() << " = new TGeoVolumeAssembly(\"" << GetName() << "\"" << ");" << endl;
+      }           
       if (fLineColor != 1) out << "   " << GetPointerName() << "->SetLineColor(" << fLineColor << ");" << endl;
       if (fLineWidth != 1) out << "   " << GetPointerName() << "->SetLineWidth(" << fLineWidth << ");" << endl;
       if (fLineStyle != 1) out << "   " << GetPointerName() << "->SetLineStyle(" << fLineStyle << ");" << endl;
-      if (!IsVisible()) out << "   " << GetPointerName() << "->SetVisibility(kFALSE);" << endl;
+      if (!IsVisible() && !IsAssembly()) out << "   " << GetPointerName() << "->SetVisibility(kFALSE);" << endl;
       if (!IsVisibleDaughters()) out << "   " << GetPointerName() << "->VisibleDaughters(kFALSE);" << endl;
       SetAttBit(TGeoAtt::kSavePrimitiveAtt);
    }   
@@ -2092,10 +2102,11 @@ void TGeoVolumeAssembly::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatri
 }   
 
 //_____________________________________________________________________________
-void TGeoVolumeAssembly::AddNodeOverlap(const TGeoVolume *, Int_t, TGeoMatrix *, Option_t *)
+void TGeoVolumeAssembly::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 // Add an overlapping node - not allowed for assemblies.
-   Error("AddNodeOverlap","Overlapping nodes not supported in assemblies");
+   Warning("AddNodeOverlap", "Declaring assembly %s as possibly overlapping inside %s not allowed. Using AddNode instead !",vol->GetName(),GetName());
+   AddNode(vol, copy_no, mat, option);
 }   
 
 //_____________________________________________________________________________
@@ -2181,4 +2192,3 @@ TGeoVolumeAssembly *TGeoVolumeAssembly::MakeAssemblyFromVolume(TGeoVolume *volor
    vol->SetNtotal(volorig->GetNtotal());
    return vol;
 }   
-

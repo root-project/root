@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.11 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.12 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -120,7 +120,7 @@ TGeoNode *TGeoPatternX::FindNode(Double_t *point)
 {
 // get the node division containing the query point
    TGeoNode *node = 0;
-   Int_t ind = (Int_t)((point[0]-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((point[0]-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -191,7 +191,7 @@ TGeoNode *TGeoPatternY::FindNode(Double_t *point)
 {
 // find the node containing the query point
    TGeoNode *node = 0;
-   Int_t ind = (Int_t)((point[1]-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((point[1]-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -262,15 +262,11 @@ TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
 {
 // find the node containing the query point
    TGeoNode *node = 0;
-   Int_t ind = (Int_t)((point[2]-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((point[2]-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
-   //node = GetNodeOffset(ind);
-   //node = fVolume->GetNode(fDivIndex+ind);
-   //cd(ind);
-   node = (TGeoNode*)fVolume->GetNodes()->UncheckedAt(fDivIndex+ind);
-   fCurrent = ind;
-   ((TGeoTranslation*)fMatrix)->SetDz(fStart+ind*fStep+fStep/2);
+   cd(ind);
    return node;
+
 }
 
 //______________________________________________________________________________
@@ -341,7 +337,7 @@ TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
    Double_t txz = ((TGeoPara*)fVolume->GetShape())->GetTxz();
    Double_t tyz = ((TGeoPara*)fVolume->GetShape())->GetTyz();
    Double_t xt = point[0]-txz*point[2]-txy*(point[1]-tyz*point[2]);
-   Int_t ind = (Int_t)((xt-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((xt-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -415,7 +411,7 @@ TGeoPatternParaY::~TGeoPatternParaY()
 void TGeoPatternParaY::cd(Int_t idiv)
 {
    fCurrent = idiv;
-   Double_t dy = fStart+idiv*fStep+fStep/2;
+   Double_t dy = fStart+idiv*fStep+0.5*fStep;
    ((TGeoTranslation*)fMatrix)->SetDx(fTxy*dy);
    ((TGeoTranslation*)fMatrix)->SetDy(dy);
 }
@@ -426,7 +422,7 @@ TGeoNode *TGeoPatternParaY::FindNode(Double_t *point)
    TGeoNode *node = 0;
    Double_t tyz = ((TGeoPara*)fVolume->GetShape())->GetTyz();
    Double_t yt = point[1]-tyz*point[2];
-   Int_t ind = (Int_t)((yt-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((yt-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -504,7 +500,7 @@ TGeoPatternParaZ::~TGeoPatternParaZ()
 void TGeoPatternParaZ::cd(Int_t idiv)
 {
    fCurrent = idiv;
-   Double_t dz = fStart+idiv*fStep+fStep/2;
+   Double_t dz = fStart+idiv*fStep+0.5*fStep;
    ((TGeoTranslation*)fMatrix)->SetDx(fTxz*dz);
    ((TGeoTranslation*)fMatrix)->SetDy(fTyz*dz);
    ((TGeoTranslation*)fMatrix)->SetDz(dz);
@@ -515,7 +511,7 @@ TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point)
 // get the node division containing the query point
    TGeoNode *node = 0;
    Double_t zt = point[2];
-   Int_t ind = (Int_t)((zt-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((zt-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -599,7 +595,7 @@ TGeoPatternTrapZ::~TGeoPatternTrapZ()
 void TGeoPatternTrapZ::cd(Int_t idiv)
 {
    fCurrent = idiv;
-   Double_t dz = fStart+idiv*fStep+fStep/2;
+   Double_t dz = fStart+idiv*fStep+0.5*fStep;
    ((TGeoTranslation*)fMatrix)->SetDx(fTxz*dz);
    ((TGeoTranslation*)fMatrix)->SetDy(fTyz*dz);
    ((TGeoTranslation*)fMatrix)->SetDz(dz);
@@ -610,7 +606,7 @@ TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point)
 // get the node division containing the query point
    TGeoNode *node = 0;
    Double_t zt = point[2];
-   Int_t ind = (Int_t)((zt-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((zt-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -678,7 +674,7 @@ TGeoNode *TGeoPatternCylR::FindNode(Double_t *point)
    if (!fMatrix) fMatrix = gGeoIdentity;
    TGeoNode *node = 0;
    Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Int_t ind = (Int_t)((r-fStart+fStep)/fStep)-1;
+   Int_t ind = (Int_t)((r-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -744,8 +740,8 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
    fMatrix->RegisterYourself();
    fSinCos     = new Double_t[2*ndivisions];
    for (Int_t idiv = 0; idiv<ndivisions; idiv++) {
-      fSinCos[2*idiv] = TMath::Sin(TMath::DegToRad()*(start+fStep/2+idiv*fStep));
-      fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(start+fStep/2+idiv*fStep));
+      fSinCos[2*idiv] = TMath::Sin(TMath::DegToRad()*(start+0.5*fStep+idiv*fStep));
+      fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(start+0.5*fStep+idiv*fStep));
    }
 }
 //-----------------------------------------------------------------------------
@@ -761,8 +757,8 @@ void TGeoPatternCylPhi::cd(Int_t idiv)
    if (!fSinCos) {
       fSinCos     = new Double_t[2*fNdivisions];
       for (Int_t i = 0; i<fNdivisions; i++) {
-         fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+fStep/2+i*fStep));
-         fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+fStep/2+i*fStep));
+         fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
+         fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
       }
    }   
    
@@ -779,7 +775,7 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
    Double_t ddp = phi - fStart;
    if (ddp<0) ddp+=360;
 //   if (ddp>360) ddp-=360;
-   Int_t ind = (Int_t)((ddp+fStep)/fStep)-1;
+   Int_t ind = (Int_t)(ddp/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.10 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.11 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
    virtual ~TGeoPatternX();
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
-                           ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+fStep/2);}
+                           ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+0.5*fStep);}
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
@@ -111,7 +111,7 @@ public:
    // destructor
    virtual ~TGeoPatternY();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; ((TGeoTranslation*)fMatrix)->SetDy(fStart+idiv*fStep+fStep/2);}
+   virtual void        cd(Int_t idiv) {fCurrent=idiv; ((TGeoTranslation*)fMatrix)->SetDy(fStart+idiv*fStep+0.5*fStep);}
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
@@ -134,7 +134,7 @@ public:
    // destructor
    virtual ~TGeoPatternZ();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; ((TGeoTranslation*)fMatrix)->SetDz(fStart+idiv*fStep+fStep/2);}
+   virtual void        cd(Int_t idiv) {fCurrent=idiv; ((TGeoTranslation*)fMatrix)->SetDz(fStart+idiv*fStep+0.5*fStep);}
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 
@@ -159,7 +159,7 @@ public:
    virtual ~TGeoPatternParaX();
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv; 
-                           ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+fStep/2);}
+                           ((TGeoTranslation*)fMatrix)->SetDx(fStart+idiv*fStep+0.5*fStep);}
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
 

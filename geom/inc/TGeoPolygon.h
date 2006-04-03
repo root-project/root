@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.4 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.5 2005/11/18 16:07:58 brun Exp $
 // Author: Mihaela Gheata   05/01/04
 
 /*************************************************************************
@@ -32,7 +32,8 @@ class TGeoPolygon : public TObject
 public:
   enum {
       kGeoConvex        = BIT(9),
-      kGeoFinishPolygon = BIT(10)
+      kGeoFinishPolygon = BIT(10),
+      kGeoACW           = BIT(11)
    };
 protected :
 // data members
@@ -61,6 +62,7 @@ public:
    Int_t               GetNvert() const {return fNvert;}
    Double_t           *GetX() {return fX;}
    Double_t           *GetY() {return fY;}
+   Bool_t              IsClockwise() const {return !TObject::TestBit(kGeoACW);}
    Bool_t              IsConvex() const {return TObject::TestBit(kGeoConvex);}
    Bool_t              IsFinished() const {return TObject::TestBit(kGeoFinishPolygon);}
    Double_t            Safety(Double_t *point, Int_t &isegment) const;

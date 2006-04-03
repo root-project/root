@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.29 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.30 2006/03/20 21:43:42 pcanal Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -236,6 +236,7 @@ Bool_t TGeoXtru::Contains(Double_t *point) const
    if (point[2]>fZ[fNz-1]) return kFALSE; 
    Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
    if (point[2]==fZ[iz]) {
+      xtru->SetIz(-1);
       xtru->SetCurrentVertices(fX0[iz],fY0[iz], fScale[iz]);
       if (fPoly->Contains(point)) return kTRUE;
       if (iz>1 && fZ[iz]==fZ[iz-1]) {
@@ -247,6 +248,8 @@ Bool_t TGeoXtru::Contains(Double_t *point) const
       }      
    }      
    xtru->SetCurrentZ(point[2], iz);
+   if (TMath::Abs(point[2]-fZ[iz])<1.e-8 ||
+       TMath::Abs(fZ[iz+1]-point[2])<1.e-8)  xtru->SetIz(-1);
    // Now fXc,fYc represent the vertices of the section at point[2]
    return fPoly->Contains(point);
 }
@@ -616,26 +619,49 @@ void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
    Int_t icrt = 0;
    z1 = fZ[iz];
    z2 = fZ[iz+1];
-   x = fX[ivert]*fScale[iz]+fX0[iz];
-   y = fY[ivert]*fScale[iz]+fY0[iz];
-   vert[icrt++] = x;
-   vert[icrt++] = y;
-   vert[icrt++] = z1;
-   x = fX[iv1]*fScale[iz]+fX0[iz];
-   y = fY[iv1]*fScale[iz]+fY0[iz];
-   vert[icrt++] = x;
-   vert[icrt++] = y;
-   vert[icrt++] = z1;
-   x = fX[iv1]*fScale[iz+1]+fX0[iz+1];
-   y = fY[iv1]*fScale[iz+1]+fY0[iz+1];
-   vert[icrt++] = x;
-   vert[icrt++] = y;
-   vert[icrt++] = z2;
-   x = fX[ivert]*fScale[iz+1]+fX0[iz+1];
-   y = fY[ivert]*fScale[iz+1]+fY0[iz+1];
-   vert[icrt++] = x;
-   vert[icrt++] = y;
-   vert[icrt++] = z2;
+   if (fPoly->IsClockwise()) {
+      x = fX[ivert]*fScale[iz]+fX0[iz];
+      y = fY[ivert]*fScale[iz]+fY0[iz];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z1;
+      x = fX[iv1]*fScale[iz]+fX0[iz];
+      y = fY[iv1]*fScale[iz]+fY0[iz];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z1;
+      x = fX[iv1]*fScale[iz+1]+fX0[iz+1];
+      y = fY[iv1]*fScale[iz+1]+fY0[iz+1];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z2;
+      x = fX[ivert]*fScale[iz+1]+fX0[iz+1];
+      y = fY[ivert]*fScale[iz+1]+fY0[iz+1];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z2;
+   } else {
+      x = fX[iv1]*fScale[iz]+fX0[iz];
+      y = fY[iv1]*fScale[iz]+fY0[iz];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z1;
+      x = fX[ivert]*fScale[iz]+fX0[iz];
+      y = fY[ivert]*fScale[iz]+fY0[iz];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z1;
+      x = fX[ivert]*fScale[iz+1]+fX0[iz+1];
+      y = fY[ivert]*fScale[iz+1]+fY0[iz+1];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z2;
+      x = fX[iv1]*fScale[iz+1]+fX0[iz+1];
+      y = fY[iv1]*fScale[iz+1]+fY0[iz+1];
+      vert[icrt++] = x;
+      vert[icrt++] = y;
+      vert[icrt++] = z2;
+   }
 }
 //_____________________________________________________________________________
 Bool_t TGeoXtru::IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const
@@ -959,11 +985,19 @@ void TGeoXtru::SetPoints(Double_t *points) const
    if (points) {
       for (i = 0; i < fNz; i++) {
          xtru->SetCurrentVertices(fX0[i], fY0[i], fScale[i]);
-         for (j = 0; j < fNvert; j++) {
-            points[indx++] = fXc[j];
-            points[indx++] = fYc[j];
-            points[indx++] = fZ[i];
-         }
+         if (fPoly->IsClockwise()) {
+            for (j = 0; j < fNvert; j++) {
+               points[indx++] = fXc[j];
+               points[indx++] = fYc[j];
+               points[indx++] = fZ[i];
+            }
+         } else {
+            for (j = 0; j < fNvert; j++) {
+               points[indx++] = fXc[fNvert-1-j];
+               points[indx++] = fYc[fNvert-1-j];
+               points[indx++] = fZ[i];
+            }
+         }   
       }
    }
 }
@@ -978,11 +1012,19 @@ void TGeoXtru::SetPoints(Float_t *points) const
    if (points) {
       for (i = 0; i < fNz; i++) {
          xtru->SetCurrentVertices(fX0[i], fY0[i], fScale[i]);
-         for (j = 0; j < fNvert; j++) {
-            points[indx++] = fXc[j];
-            points[indx++] = fYc[j];
-            points[indx++] = fZ[i];
-         }
+         if (fPoly->IsClockwise()) {
+            for (j = 0; j < fNvert; j++) {
+               points[indx++] = fXc[j];
+               points[indx++] = fYc[j];
+               points[indx++] = fZ[i];
+            }
+         } else {
+            for (j = 0; j < fNvert; j++) {
+               points[indx++] = fXc[fNvert-1-j];
+               points[indx++] = fYc[fNvert-1-j];
+               points[indx++] = fZ[i];
+            }
+         }   
       }
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.33 2006/02/23 13:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.34 2006/03/13 11:03:36 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -1017,6 +1017,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
 void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
 {
 // get the list in the next voxel crossed by a ray
+   if (NeedRebuild()) {
+      TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
+      vox->Voxelize();
+      fVolume->FindOverlaps();
+   }   
    fCurrentVoxel = 0;
 //   printf("###Sort crossed voxels for %s\n", fVolume->GetName());
    fNcandidates = 0;

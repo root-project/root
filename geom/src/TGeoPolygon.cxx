@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.5 2005/11/17 13:17:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.6 2005/11/18 16:07:58 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************
@@ -79,7 +79,6 @@ TGeoPolygon::TGeoPolygon(Int_t nvert)
    SetConvex(kFALSE);
    TObject::SetBit(kGeoFinishPolygon, kFALSE);
    SetNextIndex();
-//   printf("=== Polygon with %i vertices\n", fNvert);
 }
 
 //_____________________________________________________________________________
@@ -169,9 +168,6 @@ void TGeoPolygon::FinishPolygon()
       return;
    }   
 //   printf(" -> polygon NOT convex\n");
-//   printf("Convex indices:\n");
-//   for (Int_t i=0; i<fNconvex; i++) printf(" %i ",fInd[fIndc[i]]);
-//   printf("\n");
    // make daughters if necessary
    if (IsConvex()) return;
    // ... algorithm here
@@ -189,7 +185,6 @@ void TGeoPolygon::FinishPolygon()
          continue;
       }
       // gap -> make polygon
-//      printf(" making daughter with %i vertices\n", nskip+1);
       poly = new TGeoPolygon(nskip+1);
       poly->SetXY(fX,fY);
       poly->SetNextIndex(fInd[fIndc[indconv]]);   
@@ -214,6 +209,7 @@ Bool_t TGeoPolygon::IsRightSided(Double_t *point, Int_t ind1, Int_t ind2) const
 // Check if POINT is right-sided with respect to the segment defined by IND1 and IND2.
    Double_t dot = (point[0]-fX[ind1])*(fY[ind2]-fY[ind1]) -
                   (point[1]-fY[ind1])*(fX[ind2]-fX[ind1]);
+   if (!IsClockwise()) dot = -dot;
    if (dot<0) return kFALSE;
    return kTRUE;
 }
@@ -340,8 +336,9 @@ void TGeoPolygon::SetNextIndex(Int_t index)
 {
 // Sets the next polygone index. If index<0 sets all indices consecutive
 // in increasing order.
+   Int_t i;
    if (index <0) {
-      for (Int_t i=0; i<fNvert; i++) fInd[i] = i;
+      for (i=0; i<fNvert; i++) fInd[i] = i;
       return;
    }
    if (fNconvex >= fNvert) {
@@ -349,20 +346,31 @@ void TGeoPolygon::SetNextIndex(Int_t index)
       return;
    }
    fInd[fNconvex++] = index;  
-//   printf(" %i ", index);
-//   if (fNconvex == fNvert) printf ("\n");   
+   if (fNconvex == fNvert) {
+      if (!fX || !fY) return;
+      Double_t area = 0.0;
+      for (i=0; i<fNvert; i++) area += fX[fInd[i]]*fY[fInd[(i+1)%fNvert]]-fX[fInd[(i+1)%fNvert]]*fY[fInd[i]];
+      if (area<0) TObject::SetBit(kGeoACW, kFALSE);
+      else        TObject::SetBit(kGeoACW, kTRUE);
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoPolygon::SetXY(Double_t *x, Double_t *y)
 {
 // Set X/Y array pointer for the polygon and daughters.
+   Int_t i;
    fX = x;
    fY = y;
+   Double_t area = 0.0;
+   for (i=0; i<fNvert; i++) area += fX[fInd[i]]*fY[fInd[(i+1)%fNvert]]-fX[fInd[(i+1)%fNvert]]*fY[fInd[i]];
+   if (area<0) TObject::SetBit(kGeoACW, kFALSE);
+   else        TObject::SetBit(kGeoACW, kTRUE);
+   
    if (!fDaughters) return;
    TGeoPolygon *poly;
    Int_t nd = fDaughters->GetEntriesFast();
-   for (Int_t i=0; i<nd; i++) {
+   for (i=0; i<nd; i++) {
       poly = (TGeoPolygon*)fDaughters->At(i);
       if (poly) poly->SetXY(x,y);
    }
