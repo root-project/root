@@ -13,3 +13,4 @@ configure-stamp
 debian
 log
 semantic.cache
+.gdb_history
