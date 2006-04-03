@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.6 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.7 2006/03/30 16:40:05 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientEnv.hh"
+#include "XProtocol/XProtocol.hh"
 
 
 ClassImp(TXNetSystem);
@@ -428,21 +429,26 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
       TString edir = TUrl(path).GetFile();
       Bool_t ok = fClientAdmin->Stat(edir,id,size,flags,modtime);
 
+      // Count offline files as inexistent 
+      ok &= !(flags & kXR_offline);
+
       if (ok) {
-	      buf.fDev = (id >> 24);
-	      buf.fIno = (id && 0x00FFFFFF);
-	      buf.fUid = -1;       // not all information available in xrootd
-	      buf.fGid = -1;       // not available
-	      buf.fSize = size;
-	      buf.fMtime = modtime;
+         buf.fDev = (id >> 24);
+         buf.fIno = (id && 0x00FFFFFF);
+         buf.fUid = -1;       // not all information available in xrootd
+         buf.fGid = -1;       // not available
+         buf.fSize = size;
+         buf.fMtime = modtime;
 
-	      if (flags == 0) buf.fMode = kS_IFREG;
-	      if (flags & 1) buf.fMode = (kS_IFREG|kS_IXUSR|kS_IXGRP|kS_IXOTH);
-	      if (flags & 2) buf.fMode = kS_IFDIR;
-	      if (flags & 4) buf.fMode = kS_IFSOCK;
+         if (flags == 0) buf.fMode = kS_IFREG;
+         if (flags & kXR_xset) buf.fMode = (kS_IFREG|kS_IXUSR|kS_IXGRP|kS_IXOTH);
+         if (flags & kXR_isDir) buf.fMode = kS_IFDIR;
+         if (flags & kXR_other) buf.fMode = kS_IFSOCK;
+         if (flags & kXR_readable) buf.fMode |= kS_IRUSR;
+         if (flags & kXR_writable) buf.fMode |= kS_IWUSR;
 
-	      buf.fIsLink = 0;     // not available
-	      return 0;
+         buf.fIsLink = 0;     // not available
+         return 0;
       }
       return 1;
    }
