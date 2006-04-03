@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.h,v 1.3 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.h,v 1.4 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -24,9 +24,11 @@
 #include "TGFrame.h"
 #endif
 
-class TGTextEntry;
-class TGTextButton;
+#ifndef ROOT_TGTextEntry
+#include "TGTextEntry.h"
+#endif
 
+class TGTextButton;
 
 class TGuiBldTextDialog : public TGTransientFrame {
 
@@ -44,6 +46,7 @@ public:
    void  DoCancel();
    void  DoOK();
    void  CloseWindow();
+   virtual void RequestFocus() { fEntry->RequestFocus(); }
 
    ClassDef(TGuiBldTextDialog,0) // text entry dialog
 };

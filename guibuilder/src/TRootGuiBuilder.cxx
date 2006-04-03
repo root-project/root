@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.20 2006/03/30 09:58:48 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.21 2006/03/30 16:13:08 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -211,20 +211,6 @@ ClassImp(TRootGuiBuilder)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-class TRootGuiBuilderContainer : public TGMdiContainer {
-
-public:
-   TRootGuiBuilderContainer(const TGMdiMainFrame *p) :
-         TGMdiContainer(p, 10, 10, kOwnBackground) {
-      const TGPicture *pbg = fClient->GetPicture("bld_bg.xpm");
-      if (pbg) SetBackgroundPixmap(pbg->GetPicture());
-   }
-   virtual ~TRootGuiBuilderContainer() {}
-   void SetEditable(Bool_t) {}
-   Bool_t HandleEvent(Event_t*) { return kFALSE; }
-};
-
-////////////////////////////////////////////////////////////////////////////////
 class TRootGuiBldMain : public TGMdiMainFrame {
 public:
    TRootGuiBuilder *fBuilder;
@@ -330,10 +316,9 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fMain = new TRootGuiBldMain(this, cf, fMenuBar);
    cf->AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-   TGFrame *mdicont = fMain->GetContainer();
-   fMain->GetViewPort()->RemoveFrame(mdicont);
-   delete mdicont;
-   fMain->SetContainer(new TRootGuiBuilderContainer(fMain));
+   const TGPicture *pbg = fClient->GetPicture("bld_bg.xpm");
+   if (pbg)
+      fMain->GetContainer()->SetBackgroundPixmap(pbg->GetPicture());
 
    if (fManager) {
       fEditor = new TGuiBldEditor(cf);
@@ -993,9 +978,9 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
       return kFALSE;
    }
 
-   dir = fi.fIniDir;
+   dir    = fi.fIniDir;
    overwr = fi.fOverwrite;
-   fname = gSystem->UnixPathName(fi.fFilename);
+   fname  = fi.fFilename;
 
    if (strstr(fname, ".C")) {
       NewProject();
