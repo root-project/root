@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.20 2005/10/04 16:13:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.21 2006/01/17 14:23:40 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TEventIter.h"
+#include "TObjectCache.h"
 
 #include "TCollection.h"
 #include "TDSet.h"
@@ -28,9 +29,6 @@
 #include "TVirtualPerfStats.h"
 #include "TEventList.h"
 
-
-TEventIterTree::TFileCache *TEventIterTree::TFileCache::fgInstance = 0;
-TEventIterTree::TDirectoryCache *TEventIterTree::TDirectoryCache::fgInstance = 0;
 
 
 ClassImp(TEventIter)
@@ -300,6 +298,7 @@ TEventIterTree::~TEventIterTree()
 //______________________________________________________________________________
 void TEventIterTree::ReleaseAllTrees() {
    // release all acquired trees.
+   SafeDelete(fTree);
    for (std::list<TTree*>::iterator i = fAcquiredTrees.begin(); i != fAcquiredTrees.end(); ++i) {
       fTreeCache->Release(*i);
    }
@@ -433,153 +432,4 @@ Long64_t TEventIterTree::GetNextEvent()
       fEventListPos++;
       return rv;
    }
-}
-
-//______________________________________________________________________________
-TEventIterTree::TFileCache::ObjectAndBool_t TEventIterTree::TFileCache::Load(const TString &fileName)
-{
-   // Loads a file given its filename. See TObjectCache::Load().
-
-   TDirectory *dirsave = gDirectory;
-
-   Double_t start = 0;
-   if (gPerfStats != 0) start = TTimeStamp();
-
-   TFile* file = TFile::Open(fileName.Data());
-
-   if (gPerfStats != 0) {
-      gPerfStats->FileOpenEvent(file, fileName, double(TTimeStamp())-start);
-   }
-
-   if (dirsave) dirsave->cd();
-
-   if (!file || file->IsZombie() ) {
-      if (file) {
-         ::Error("TEventIterTree::TFileCache::Load","Cannot open file: %s (%s)",
-                 fileName.Data(), strerror(file->GetErrno()) );
-         delete file;
-         file = 0;
-      }
-      else
-         ::Error("TEventIterTree::TFileCache::Load",
-                 "Cannot open file: %s (errno unavailable)", fileName.Data());
-      return std::make_pair((TFile*)0, kFALSE);
-   }
-   PDB(kLoop,2) ::Info("TEventIterTree::TFileCache::Load","Opening file: %s", fileName.Data());
-
-   return std::make_pair(file, kTRUE);
-}
-
-//______________________________________________________________________________
-void TEventIterTree::TFileCache::Unload(TFile* &f)
-{
-   // Deletes the file. See TObjectCache::Load().
-
-   delete f;
-}
-
-//______________________________________________________________________________
-TEventIterTree::TFileCache* TEventIterTree::TFileCache::Instance()
-{
-   // Returns an instance (only one in the system) of the class.
-
-   if (fgInstance == 0)
-      fgInstance = new TFileCache();
-   return fgInstance;
-}
-
-//______________________________________________________________________________
-TEventIterTree::TDirectoryCache::ObjectAndBool_t TEventIterTree::TDirectoryCache::Load(const TCacheKey &k)
-{
-   // Loads a directory given the file name and the directory name.
-   // See TObjectCache::Acquire().
-
-   const TString fileName = k.first;
-   const TString dirName = k.second;
-   using namespace std;
-   TDirectory *dirsave = gDirectory;
-
-   TFile *file = TFileCache::Instance()->Acquire(fileName);
-   if (!file)
-      return make_pair((TDirectory*)0, kFALSE);
-
-   if (!file->cd(dirName)) {
-     :: Error("TEventIterTree::TDirectoryCache::Load","Cannot cd to: %s", dirName.Data() );
-      TFileCache::Instance()->Release(file);
-      return make_pair((TDirectory*)0, kFALSE);
-   }
-   PDB(kLoop,2) ::Info("TEventIterTree::TDirectoryCache::Load","Cd to: %s", dirName.Data() );
-
-   TDirectory *dir = gDirectory;
-   if (dirsave) dirsave->cd();
-   fDirectoryFiles[dir] = file;
-   return make_pair(dir, kTRUE);
-}
-
-//______________________________________________________________________________
-void TEventIterTree::TDirectoryCache::Unload(TDirectory* &dir)
-{
-   // Releases the file in which the directory was stored.
-   // The directory itself is not deleted. It will be deleted when the file
-   // is closed.
-
-   TFileCache::Instance()->Release(fDirectoryFiles[dir]);
-   fDirectoryFiles.erase(dir);
-}
-
-//______________________________________________________________________________
-TEventIterTree::TDirectoryCache* TEventIterTree::TDirectoryCache::Instance()
-{
-   // Returns an instance (only one in the system) of the class.
-
-   if (fgInstance == 0)
-      fgInstance = new TDirectoryCache();
-   return fgInstance;
-}
-
-//______________________________________________________________________________
-void TEventIterTree::TTreeCache::Unload(TTree* &tree)
-{
-   // Deleted the tree. Releases the file in which it was stored.
-
-   delete tree;
-   TDirectoryCache::Instance()->Release(fTreeDirectories[tree]);
-   fTreeDirectories.erase(tree);
-}
-
-//______________________________________________________________________________
-TEventIterTree::TTreeCache::ObjectAndBool_t TEventIterTree::TTreeCache::Load(const TCacheKey &k)
-{
-   // Loads a tree given the file name where it's stored, the directory name in the file
-   // and the tree name. See TObjectCache::Acquire().
-
-   const TString fileName = k.first;
-   const TString dirName = k.second.first;
-   const TString treeName = k.second.second;
-   using namespace std;
-
-   TDirectory *dir = TDirectoryCache::Instance()->Acquire(fileName, dirName);
-   if (!dir)
-      return make_pair((TTree*)0, kFALSE);
-
-   TKey *key = dir->GetKey(treeName);
-
-   if (key == 0) {
-      ::Error("TEventIterTree::TTreeCache::Load","Cannot find tree \"%s\" in %s",
-            treeName.Data(), fileName.Data());
-      TDirectoryCache::Instance()->Release(dir);
-      return make_pair((TTree*)0, kFALSE);
-   }
-
-   PDB(kLoop,2) ::Info("TEventIterTree::TTreeCache::Load","Reading: %s", treeName.Data() );
-   TDirectory *dirsave = gDirectory;
-   dir->cd();
-   TTree *tree = dynamic_cast<TTree*> (key->ReadObj());
-   if (dirsave) dirsave->cd();
-   if (tree == 0) {
-      TDirectoryCache::Instance()->Release(dir);
-      return make_pair((TTree*)0, kFALSE);
-   }
-   fTreeDirectories[tree] = dir;
-   return make_pair(tree, kTRUE);
 }
