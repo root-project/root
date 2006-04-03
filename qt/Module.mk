@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.14 2006/03/29 23:32:54 pcanal Exp $
+# $Id: Module.mk,v 1.15 2006/04/01 03:23:47 pcanal Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -17,7 +17,7 @@ GQTL          := $(MODDIRI)/LinkDef.h
 GQTDS         := $(MODDIRS)/G__GQt.cxx
 GQTDO         := $(GQTDS:.cxx=.o)
 GQTDH         := $(GQTDS:.cxx=.h)
-                 
+
 GQTH1         := $(GQTDIRI)/TGQt.h  $(GQTDIRI)/TQtTimer.h              \
                  $(GQTDIRI)/TQtApplication.h $(GQTDIRI)/TQtBrush.h     \
                  $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h \
@@ -32,7 +32,6 @@ GQTO          := $(GQTS:.cxx=.o)
 GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h           \
                  $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h       \
                  $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h
-                
 
 GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))) 
 GQTMOCO       := $(GQTMOC:.cxx=.o)
@@ -64,7 +63,7 @@ include/%.h:    $(GQTDIRI)/%.h
 
 include/%.cw:    $(GQTDIRI)/%.cw
 		cp $< $@
-      
+
 include/%.pri:    $(GQTDIRI)/%.pri
 		cp $< $@
 
@@ -108,6 +107,8 @@ $(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 	$(QTMOCEXE) $< -o $@
 
 ##### cintdlls ######
+
+cintdlls: $(CINTDIRDLLS)/qtcint.dll
 
 $(CINTDIRDLLS)/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
                            cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h \
