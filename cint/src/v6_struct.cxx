@@ -1904,7 +1904,7 @@ int G__calldtor(void *p,int tagnum,int isheap)
 
   if(isheap && -1!=ifunc->pentry[ifn]->size) {
     /* interpreted class */
-    free((void*)p);
+    delete[] (char*) p;
   }
 
   return(stat);
