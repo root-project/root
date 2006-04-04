@@ -205,7 +205,7 @@ ifeq ($(MACOSX_MINOR),)
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
 ifeq ($(MACOSX_MINOR),4)
-UNDEF\OPT      = dynamic_lookup
+UNDEFOPT      = dynamic_lookup
 LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
 else
 ifeq ($(MACOSX_MINOR),3)
