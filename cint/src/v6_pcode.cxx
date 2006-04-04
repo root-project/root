@@ -74,11 +74,26 @@ int G__asm_step=0;
 #ifdef G__ALWAYS
 double G__doubleM(G__value *buf)
 {
+#ifdef __SUNPRO_CC
+   switch(buf->type) {
+     case 'f':
+     case 'd': return buf->obj.d;
+     case 'k':
+     case 'h': return (double)(buf->obj.ulo);
+     case 'm': return (double)(G__int64)(buf->obj.ull);
+     case 'n': return (double)(buf->obj.ll);
+     case 'i': return (double)(buf->obj.i);
+   }
+   return (double)(buf->obj.i); 
+#else
+  // Because of branch prediction optimization in x86,
+  // the following is actually faster than a switch. 
   return (('f'==buf->type||'d'==buf->type) ? buf->obj.d :
           ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :
           ('m'==buf->type) ? (double)(G__int64)(buf->obj.ull) :
           ('n'==buf->type) ? (double)(buf->obj.ll) :
           (double)(buf->obj.i) );
+#endif
 }
 #else
 #define G__doubleM(buf)                                                \
