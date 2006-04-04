@@ -29,6 +29,10 @@ for i in include/precompile.*; do
    fi
 done
 
+for i in lib/*.dll; do
+   EXCLUDE="--exclude $i "$EXCLUDE
+done
+
 cp -f main/src/rmain.cxx include/
 pwd=`pwd`
 dir=`basename $pwd`
