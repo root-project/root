@@ -14,9 +14,10 @@ MATHMOREDIRI := $(MATHMOREDIR)/inc
 GSLVERS      := gsl-1.5
 GSLSRCS      := $(MODDIRS)/$(GSLVERS).tar.gz
 GSLDIRS      := $(MODDIRS)/$(GSLVERS)
-GSLDIRI      := -I$(MODDIRS)/$(GSLVERS)
 
 ##### libgsl #####
+ifeq ($(BUILDGSL),yes)
+GSLDIRI      := -I$(MODDIRS)/$(GSLVERS)
 ifeq ($(PLATFORM),win32)
 GSLLIBA      := $(GSLDIRS)/libgsl.lib
 #GSLLIB       := $(LPATH)/libgsl.lib
@@ -34,6 +35,12 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 GSLDBG        = "--enable-gdb"
 else
 GSLDBG        =
+endif
+else
+GSLDIRI      := $(GSLFLAGS)
+GSLLIBA      := $(GSLLIBS)
+GSLDEP       :=
+GSLDBG       :=
 endif
 
 ##### libMathMore #####
@@ -88,6 +95,7 @@ include/Math/%.h: $(MATHMOREDIRI)/Math/%.h
 #$(GSLLIB):      $(GSLLIBA)
 #		cp $< $@
 
+ifeq ($(BUILDGSL),yes)
 $(GSLLIBA):     $(GSLSRCS)
 ifeq ($(PLATFORM),win32)
 		@(if [ -d $(GSLDIRS) ]; then \
@@ -142,6 +150,7 @@ else
 		fi; \
 		$(MAKE))
 endif
+endif
 
 $(MATHMORELIB): $(GSLDEP) $(MATHMOREO) $(MATHMOREDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
@@ -163,6 +172,7 @@ map::           map-mathmore
 
 clean-mathmore:
 		@rm -f $(MATHMOREO) $(MATHMOREDO)
+ifeq ($(BUILDGSL),yes)
 ifeq ($(PLATFORM),win32)
 		-@(if [ -d $(GSLDIRS) ]; then \
 			cd $(GSLDIRS); \
@@ -175,6 +185,7 @@ else
 			cd $(GSLDIRS); \
 			$(MAKE) clean; \
 		fi)
+endif
 endif
 
 clean::         clean-mathmore

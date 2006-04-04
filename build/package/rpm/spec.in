@@ -27,7 +27,7 @@ Source:       ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
 Group:        Applications/Physics
 BuildRoot:    /tmp/rootrpm
 Summary:      Numerical data analysis framework (OO)
-BuildRequires: XFree86-devel
+BuildRequires: XFree86-devel, pcre-devel, freetype-devel, openssl-devel
 @builddepends@
 Requires:     @pkglist@
 #
@@ -68,11 +68,15 @@ sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 	    --enable-shared				\
 	    --enable-soversion				\
 	    --enable-explicitlink			\
+    	    --enable-mathmore				\
+            --enable-mathcore                           \
+            --enable-minuit2                            \
 	    --disable-rpath				\
 	    --disable-afs				\
 	    --disable-srp				\
 	    --disable-builtin-freetype			\
 	    --disable-builtin-pcre			\
+	    --disable-builtin-gsl			\
 	    --prefix=%_prefix 				\
 	    --libdir=%_prefix/lib/root/${sovers}	\
 	    --mandir=%_prefix/share/man/man1		\

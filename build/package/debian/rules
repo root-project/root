@@ -48,6 +48,8 @@ CONFOPTIONS	:=--enable-table				\
 		  --enable-roofit				\
 		  --enable-ruby					\
 		  --enable-qt					\
+		  --enable-mathcore				\
+		  --enable-mathmore				\
 		  --enable-minuit2				\
 		  --enable-xrootd				\
 		  --enable-shared				\
@@ -59,6 +61,7 @@ CONFOPTIONS	:=--enable-table				\
 		  --disable-builtin-freetype			\
 		  --disable-builtin-afterimage			\
 		  --disable-builtin-pcre			\
+		  --disable-builtin-gsl				\
 		  --disable-alien				\
 		  --disable-rfio				\
 		  --disable-chirp				\
@@ -104,6 +107,7 @@ PLUGINS		:= root-plugin-asimage 		\
 		   root-plugin-netx 		\
 		   root-xrootd 			\
 		   root-plugin-fumili 		\
+		   libroot-mathmore 		\
 		   libroot-minuit 		\
 		   libroot-mlp	 		\
 		   root-plugin-proof 		\

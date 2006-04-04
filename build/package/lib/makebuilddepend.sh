@@ -28,6 +28,7 @@ if test "x$1" = "xrpm" ; then
 	    *ldap)	echo "BuildRequires: openldap-devel"		;;
 	    *minuit)							;;
 	    *minuit2)							;;
+	    *mathmore)	echo "BuildRequires: gsl-devel"			;;
 	    *mlp)							;;
 # This is kinda special 
 	    *mysql)	
@@ -116,6 +117,7 @@ for i in $* ; do
 	*krb5)		echo -n ", libkrb5-dev|heimdal-dev"		;;
 	*ldap)		echo -n ", libldap2-dev | libldap-dev"		;;
 	*oracle)    	echo -n ", oracle-instantclient-devel"		;;
+	*mathmore)    	echo -n ", libgsl0-dev"				;;
 	*minuit)							;;
 	*minuit2)							;;
 	*mlp)								;;

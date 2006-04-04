@@ -1,3 +1,10 @@
+root (5.11.01-4) unstable; urgency=low
+
+  * Added packages libroot-mathmore5.11 and libroot-mathmore-dev.
+  * Also build libMathCore.  This is put in libroot5.11 and libroot-dev. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun,  2 Apr 2006 15:15:16 +0200
+
 root (5.11.01-3) unstable; urgency=low
 
   * Fixed installation of PROOF configuration examples to new location. 

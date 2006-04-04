@@ -30,6 +30,7 @@ options="                    \
    enable_builtin_afterimage \
    enable_builtin_freetype   \
    enable_builtin_pcre       \
+   enable_builtin_gsl        \
    enable_cern               \
    enable_chirp              \
    enable_cintex             \
@@ -798,6 +799,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
   builtin-freetype   Built included libfreetype, or use system libfreetype
   builtin-pcre       Built included libpcre, or use system libpcre
+  builtin-gsl        Built included libgsl, or use system libgsl
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
   cintex             Build the libCintex Reflex interface library
@@ -1313,7 +1315,7 @@ if test "x$enable_builtin_freetype" = "x" || \
          enable_builtin_freetype="no"
       fi
    else
-      enable_builtin_freetype="no"
+      enable_builtin_freetype="yes"
       result "not found"
    fi
 fi
@@ -1347,7 +1349,7 @@ if test "x$enable_builtin_pcre" = "x" || \
          enable_builtin_pcre="no"
       fi
    else
-      enable_builtin_pcre="no"
+      enable_builtin_pcre="yes"
       echo "not found"
    fi
 fi
@@ -3124,6 +3126,23 @@ if test "x$enable_mathmore" = "xyes" || test ! "x$MATHMORE" = "x"; then
     enable_mathmore="yes"
     hasmathmore="define"
     result "yes"
+    if test "x$enable_builtin_gsl" = "x" || \
+       test "x$enable_builtin_gsl" = "xno" ; then
+	checking_msg "gsl-config"
+	if `which gsl-config > /dev/null 2>&1` ; then
+	    which gsl-config
+	    # We've found `gsl-config' - use that to get the compiler
+	    # and linker flags
+	    gslflags=`gsl-config --cflags`
+	    gsllibs=`gsl-config --libs`
+	    enable_builtin_gsl="no"
+	else
+	    result "not found"
+	    enable_builtin_gsl="yes"
+	fi
+    fi
+    message "Checking whether to build included libgsl"
+    result "$enable_builtin_gsl"
 else
     enable_mathmore=""
     hasmathmore="undef"
@@ -3314,6 +3333,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
     test "x$enable_ldap"    = "xyes" && pkglist="$pkglist libroot-ldap"
     test "x$enable_minuit2" = "xyes" && pkglist="$pkglist root-plugin-minuit2"
+    test "x$enable_mathmore" = "xyes" && pkglist="$pkglist libroot-mathmore"
     test "x$enable_monalisa" = "xyes" && pkglist="$pkglist root-plugin-monalisa"
     test "x$enable_mysql"   = "xyes" && pkglist="$pkglist root-plugin-mysql"
     test "x$enable_opengl"  = "xyes" && pkglist="$pkglist root-plugin-gl"
@@ -3583,6 +3603,9 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@elispdir@|$elispdir|"                \
     -e "s|@buildmathcore@|$enable_mathcore|"    \
     -e "s|@buildmathmore@|$enable_mathmore|"    \
+    -e "s|@builtingsl@|$enable_builtin_gsl|"    \
+    -e "s|@gslflags@|$gslflags|"    		\
+    -e "s|@gsllibs@|$gsllibs|"    		\
     -e "s|@buildcintex@|$enable_cintex|"        \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \

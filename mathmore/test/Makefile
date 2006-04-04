@@ -6,14 +6,16 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+
+include $(ROOTSYS)/config/Makefile.config
 include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = $(ROOTSYS)/lib/libMathMore.lib $(ROOTSYS)/lib/libMathCore.lib
+EXTRALIBS        = $(ROOTSYS)/lib/libMathMore.lib $(ROOTSYS)/lib/libMathCore.lib $(GSLLIBS)
 else
-EXTRALIBS        = -lMathMore -lMathCore
+EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBS)
 endif
 
 CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)

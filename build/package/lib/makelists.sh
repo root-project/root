@@ -40,7 +40,7 @@ for d in * ; do
 	    	    extra="ALLLIBS=/usr/lib/root/libCint.so" ;;  	
 	clib|cont|eg|foam|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	matrix|meta*|net|newdelete|physics|postscript|rint)
+	mathcore|matrix|meta*|net|newdelete|physics|postscript|rint)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	table|thread|tree*|unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
@@ -59,7 +59,7 @@ for d in * ; do
 	            xrdlibs=
 	    	    extra="ALLLIBS= NOVERS=1" ;;     
 	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;;  
-	clarens|ldap|mlp|quadp|roofit|ruby|minuit)
+	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit)
 	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
 	build|freetype|win*|main) continue ;; 			
 	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  
