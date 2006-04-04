@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.9 2006/03/23 16:41:25 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.10 2006/03/29 05:16:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -135,7 +135,8 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Elemen
     }
 
     case kAtA:
-      AtMultA(prototype,1);
+      Allocate(prototype.GetNcols(),prototype.GetNcols(),prototype.GetColLwb(),prototype.GetColLwb(),1);
+      TMult(prototype);
       break;
 
     default:
@@ -155,7 +156,8 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixT<Element> 
 
   switch(op) {
     case kAtA:
-      AtMultA(prototype,1);
+      Allocate(prototype.GetNcols(),prototype.GetNcols(),prototype.GetColLwb(),prototype.GetColLwb(),1);
+      TMult(prototype);
       break;
 
     default:
@@ -176,13 +178,13 @@ TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSym<Element> &a,EMatrixCreatorsO
   switch(op) {
     case kPlus:
     {
-      APlusB(a,b,1);
+      Plus(a,b);
       break;
     }
 
     case kMinus:
     {
-      AMinusB(a,b,1);
+      Minus(a,b);
       break;
     }
 
@@ -297,32 +299,28 @@ void TMatrixTSym<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,In
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixTSym<Element>::APlusB(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+void TMatrixTSym<Element>::Plus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
 {
   // Symmetric matrix summation. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     if (!AreCompatible(a,b)) {
-      Error("APlusB","matrices not compatible");
+      Error("Plus","matrices not compatible");
       return;
     }
 
     if (this == &a) {
-      Error("APlusB","this == &a");
+      Error("Plus","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("APlusB","this == &b");
+      Error("Plus","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
 
   const Element *       ap      = a.GetMatrixArray();
   const Element *       bp      = b.GetMatrixArray();
@@ -337,33 +335,29 @@ void TMatrixTSym<Element>::APlusB(const TMatrixTSym<Element> &a,const TMatrixTSy
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixTSym<Element>::AMinusB(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+void TMatrixTSym<Element>::Minus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
 {   
   // Symmetric matrix summation. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
   
   if (gMatrixCheck) {
     if (!AreCompatible(a,b)) {
-      Error("AMinusB","matrices not compatible");
+      Error("Minus","matrices not compatible");
       return; 
     }
 
     if (this == &a) {
-      Error("AMinusB","this == &a");
+      Error("Minus","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("AMinusB","this == &b");
+      Error("Minus","this == &b");
       this->Invalidate();
       return;
     }
   }
   
-  if (constr)
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
-    
   const Element *       ap      = a.GetMatrixArray();
   const Element *       bp      = b.GetMatrixArray();
         Element *       cp      = this->GetMatrixArray();
@@ -377,15 +371,12 @@ void TMatrixTSym<Element>::AMinusB(const TMatrixTSym<Element> &a,const TMatrixTS
 
 //______________________________________________________________________________
 template<class Element> 
-void TMatrixTSym<Element>::AtMultA(const TMatrixT<Element> &a,Int_t constr)
+void TMatrixTSym<Element>::TMult(const TMatrixT<Element> &a)
 {
   // Create a matrix C such that C = A' * A. In other words,
-  // c[i,j] = SUM{ a[k,i] * a[k,j] }. Note, matrix C is allocated for constr=1.
+  // c[i,j] = SUM{ a[k,i] * a[k,j] }.
 
   Assert(a.IsValid());
-
-  if (constr)
-    Allocate(a.GetNcols(),a.GetNcols(),a.GetColLwb(),a.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -397,7 +388,7 @@ void TMatrixTSym<Element>::AtMultA(const TMatrixT<Element> &a,Int_t constr)
     cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                  1.0,ap,a.GetNcols(),ap,a.GetNcols(),1.0,cp,fNcols); 
   else
-    Error("AtMultA","type %s not implemented in BLAS library",typeid(Element));
+    Error("TMult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t nb     = a.GetNoElements();
   const Int_t ncolsa = a.GetNcols();
@@ -428,16 +419,12 @@ void TMatrixTSym<Element>::AtMultA(const TMatrixT<Element> &a,Int_t constr)
 
 //______________________________________________________________________________
 template<class Element> 
-void TMatrixTSym<Element>::AtMultA(const TMatrixTSym<Element> &a,Int_t constr)
+void TMatrixTSym<Element>::TMult(const TMatrixTSym<Element> &a)
 {
   // Matrix multiplication, with A symmetric
   // Create a matrix C such that C = A' * A = A * A = A * A'
-  // Note, matrix C is allocated for constr=1.
 
   Assert(a.IsValid());
-
-  if (constr)
-    Allocate(a.GetNcols(),a.GetNcols(),a.GetColLwb(),a.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -449,7 +436,7 @@ void TMatrixTSym<Element>::AtMultA(const TMatrixTSym<Element> &a,Int_t constr)
     cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                  ap1,a.GetNcols(),ap,a.GetNcols(),0.0,cp,fNcols);
   else
-    Error("AtMultA","type %s not implemented in BLAS library",typeid(Element));
+    Error("TMult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t nb     = a.GetNoElements();
   const Int_t ncolsa = a.GetNcols();
@@ -1123,8 +1110,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
     }
   }
 
-  const Int_t nrowsb = b.GetNrows();
-  const Int_t ncolsa = this->fNcols;
+  const Int_t ncolsa  = this->fNcols;
+  const Int_t nb      = b.GetNoElements();
+  const Int_t nrowsb  = b.GetNrows();
+  const Int_t ncolsb  = b.GetNcols();
+
+  const Element * const bp = b.GetMatrixArray();
 
   Element work[kWorkMax];
   Bool_t isAllocated = kFALSE;
@@ -1134,14 +1125,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
     bap = new Element[nrowsb*ncolsa];
   }
 
-  TMatrixT<Element> ba; ba.Use(nrowsb,ncolsa,bap);
-  ba.AMultB(b,*this);
+  AMultB(bp,nb,ncolsb,this->fElements,this->fNelems,this->fNcols,bap);
 
   if (nrowsb != this->fNrows)
     this->ResizeTo(nrowsb,nrowsb);
 
 #ifdef CBLAS
-  const Element *bp = b.GetMatrixArray();
         Element *cp = this->GetMatrixArray();
   if (typeid(Element) == typeid(Double_t))
     cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasTrans,this->fNrows,this->fNcols,ba.GetNcols(),
@@ -1152,11 +1141,8 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
   else
     Error("Similarity","type %s not implemented in BLAS library",typeid(Element));
 #else
-  const Int_t nba     = ba.GetNoElements();
-  const Int_t nb      = b.GetNoElements();
-  const Int_t ncolsba = ba.GetNcols();
-  const Int_t ncolsb  = b.GetNcols();
-  const Element * const bp   = b.GetMatrixArray();
+  const Int_t nba     = nrowsb*ncolsa;
+  const Int_t ncolsba = ncolsa;
   const Element *       bi1p = bp;
         Element *       cp   = this->GetMatrixArray();
         Element * const cp0  = cp;
@@ -1244,8 +1230,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
   if (isAllocated)
     delete [] abtp;
 #else
-  const Int_t nrowsb = b.GetNrows();
   const Int_t ncolsa = this->GetNcols();
+  const Int_t nb     = b.GetNoElements();
+  const Int_t nrowsb = b.GetNrows();
+  const Int_t ncolsb = b.GetNcols();
+
+  const Element * const bp = b.GetMatrixArray();
 
   Element work[kWorkMax];
   Bool_t isAllocated = kFALSE;
@@ -1255,14 +1245,10 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
     bap = new Element[nrowsb*ncolsa];
   }
 
-  TMatrixT<Element> ba; ba.Use(nrowsb,ncolsa,bap);
-  ba.AMultB(b,*this);
+  AMultB(bp,nb,ncolsb,this->fElements,this->fNelems,this->fNcols,bap);
 
-  const Int_t nba     = ba.GetNoElements();
-  const Int_t nb      = b.GetNoElements();
-  const Int_t ncolsba = ba.GetNcols();
-  const Int_t ncolsb  = b.GetNcols();
-  const Element * const bp   = b.GetMatrixArray();
+  const Int_t nba     = nrowsb*ncolsa;
+  const Int_t ncolsba = ncolsa;
   const Element *       bi1p = bp;
         Element *       cp   = this->GetMatrixArray();
         Element * const cp0  = cp;
@@ -1366,7 +1352,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SimilarityT(const TMatrixT<Element> 
   }
 
   TMatrixT<Element> bta; bta.Use(ncolsb,ncolsa,btap);
-  bta.AtMultB(b,*this);
+  bta.TMult(b,*this);
 
   if (ncolsb != this->fNcols)
     this->ResizeTo(ncolsb,ncolsb);

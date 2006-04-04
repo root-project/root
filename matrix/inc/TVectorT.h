@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.4 2006/01/26 16:31:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.5 2006/03/28 10:00:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -214,6 +214,7 @@ template<class Element> TVectorT<Element>  operator*    (const TMatrixT      <El
 template<class Element> TVectorT<Element>  operator*    (const TMatrixTSym   <Element>  &a,      const TVectorT      <Element>  &source);
 template<class Element> TVectorT<Element>  operator*    (const TMatrixTSparse<Element>  &a,      const TVectorT      <Element>  &source);
 template<class Element> TVectorT<Element>  operator*    (      Element                   val,    const TVectorT      <Element>  &source);
+template<class Element> Element            Dot          (const TVectorT      <Element>  &source1,const TVectorT      <Element> &source2);
 template<class Element> TVectorT<Element> &Add          (      TVectorT      <Element>  &target,       Element                   scalar, const TVectorT<Element> &source);
 template<class Element> TVectorT<Element> &Add          (      TVectorT      <Element>  &target,       Element                         , const TMatrixT      <Element>  &a,
                                                          const TVectorT<Element> &source);

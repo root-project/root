@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.14 2006/03/30 09:30:33 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.15 2006/04/02 08:38:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -143,7 +143,8 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &proto
     }
 
     case kAtA:
-      AtMultB(prototype,prototype,1);
+      Allocate(prototype.GetNcols(),prototype.GetNcols(),prototype.GetColLwb(),prototype.GetColLwb(),1);
+      TMult(prototype,prototype);
       break;
 
     default:
@@ -166,15 +167,18 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
   switch(op) {
     case kMult:
-      AMultB(a,b,1);
+      Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
+      Mult(a,b);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b,1);
+      Allocate(a.GetNcols(),b.GetNcols(),a.GetColLwb(),b.GetColLwb(),1);
+      TMult(a,b);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b,1);
+      Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
+      MultT(a,b);
       break;
 
     case kInvMult:
@@ -191,13 +195,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
     case kPlus:
     {
-      APlusB(a,b,1);
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Plus(a,b);
       break;
     }
 
     case kMinus:
     {
-      AMinusB(a,b,1);
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Minus(a,b);
       break;
     }
 
@@ -217,15 +223,18 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
   switch(op) {
     case kMult:
-      AMultB(a,b,1);
+      Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
+      Mult(a,b);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b,1);
+      Allocate(a.GetNcols(),b.GetNcols(),a.GetColLwb(),b.GetColLwb(),1);
+      TMult(a,b);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b,1);
+      Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
+      MultT(a,b);
       break;
 
     case kInvMult:
@@ -242,13 +251,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
     case kPlus:
     {
-      APlusB(a,b,1);
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Plus(a,b);
       break; 
     }
 
     case kMinus:
     {
-      AMinusB(a,b,1);
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Minus(a,b);
       break;
     }
 
@@ -268,15 +279,18 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 
   switch(op) {
     case kMult:
-      AMultB(a,b,1);
+      Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
+      Mult(a,b);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b,1);
+      Allocate(a.GetNcols(),b.GetNcols(),a.GetColLwb(),b.GetColLwb(),1);
+      TMult(a,b);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b,1);
+      Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
+      MultT(a,b);
       break;
 
     case kInvMult:
@@ -293,13 +307,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 
     case kPlus:
     {
-      APlusB(a,b,1);
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Plus(a,b);
       break; 
     }
 
     case kMinus:
     {
-      AMinusB(a,b,1);
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Minus(a,b);
       break;
     }
 
@@ -319,21 +335,23 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 
   switch(op) {
     case kMult:
-      AMultB(a,b,1);
+      Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
+      Mult(a,b);
       break;
 
     case kTransposeMult:
-      AtMultB(a,b,1);
+      Allocate(a.GetNcols(),b.GetNcols(),a.GetColLwb(),b.GetColLwb(),1);
+      TMult(a,b);
       break;
 
     case kMultTranspose:
-      AMultBt(a,b,1);
+      Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
+      MultT(a,b);
       break;
 
     case kInvMult:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
       *this = a;
       const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
       this->Invert();
@@ -344,19 +362,15 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 
     case kPlus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this += b;
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Plus(*dynamic_cast<const TMatrixT<Element> *>(&a),b);
       break; 
     }
 
     case kMinus:
     {
-      Allocate(a.GetNrows(),a.GetNcols(),
-               a.GetRowLwb(),a.GetColLwb(),1);
-      *this = a;
-      *this -= b;
+      Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
+      Minus(*dynamic_cast<const TMatrixT<Element> *>(&a),b);
       break;
     }
 
@@ -467,32 +481,28 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::APlusB(const TMatrixT<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
   // General matrix summation. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     if (!AreCompatible(a,b)) {
-      Error("APlusB","matrices not compatible");
+      Error("Plus","matrices not compatible");
       return;
     }
 
     if (this == &a) {
-      Error("APlusB","this == &a");
+      Error("Plus","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("APlusB","this == &b");
+      Error("Plus","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
 
   const Element *       ap      = a.GetMatrixArray();
   const Element *       bp      = b.GetMatrixArray();
@@ -507,32 +517,28 @@ void TMatrixT<Element>::APlusB(const TMatrixT<Element> &a,const TMatrixT<Element
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::APlusB(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
   // General matrix summation. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     if (!AreCompatible(a,b)) {
-      Error("APlusB","matrices not compatible");
+      Error("Plus","matrices not compatible");
       return;
     }
 
     if (this == &a) {
-      Error("APlusB","this == &a");
+      Error("Plus","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-      Error("APlusB","this == &b");
+      Error("Plus","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
 
   const Element *       ap      = a.GetMatrixArray();
   const Element *       bp      = b.GetMatrixArray();
@@ -547,32 +553,28 @@ void TMatrixT<Element>::APlusB(const TMatrixT<Element> &a,const TMatrixTSym<Elem
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
   // General matrix summation. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     if (!AreCompatible(a,b)) {
-      Error("AMinusB","matrices not compatible");
+      Error("Minus","matrices not compatible");
       return;
     }
 
     if (this == &a) {
-      Error("AMinusB","this == &a");
+      Error("Minus","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("AMinusB","this == &b");
+      Error("Minus","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
 
   const Element *       ap      = a.GetMatrixArray();
   const Element *       bp      = b.GetMatrixArray();
@@ -587,32 +589,28 @@ void TMatrixT<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixT<Elemen
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
   // General matrix summation. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     if (!AreCompatible(a,b)) {
-      Error("AMinusB","matrices not compatible");
+      Error("Minus","matrices not compatible");
       return;
     }
 
     if (this == &a) {
-      Error("AMinusB","this == &a");
+      Error("Minus","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-      Error("AMinusB","this == &b");
+      Error("Minus","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
 
   const Element *       ap      = a.GetMatrixArray();
   const Element *       bp      = b.GetMatrixArray();
@@ -627,33 +625,29 @@ void TMatrixT<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTSym<Ele
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMultB(const TMatrixT<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
   // General matrix multiplication. Create a matrix C such that C = A * B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
-      Error("AMultB","A rows and B columns incompatible");
+      Error("Mult","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == &a) {
-      Error("AMultB","this == &a");
+      Error("Mult","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("AMultB","this == &b");
+      Error("Mult","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -666,7 +660,7 @@ void TMatrixT<Element>::AMultB(const TMatrixT<Element> &a,const TMatrixT<Element
     cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,fNrows,fNcols,a.GetNcols(),
                  1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
   else
-    Error("AMultB","type %s not implemented in BLAS library",typeid(Element));
+    Error("Mult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t na     = a.GetNoElements();
   const Int_t nb     = b.GetNoElements();
@@ -676,57 +670,38 @@ void TMatrixT<Element>::AMultB(const TMatrixT<Element> &a,const TMatrixT<Element
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *arp0 = ap;                     // Pointer to  A[i,0];
-  while (arp0 < ap+na) {
-    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
-      const Element *arp = arp0;                       // Pointer to the i-th row of A, reset to A[i,0]
-      Element cij = 0;
-      while (bcp < bp+nb) {                     // Scan the i-th row of A and
-        cij += *arp++ * *bcp;                   // the j-th col of B
-        bcp += ncolsb;
-      }
-      *cp++ = cij;
-      bcp -= nb-1;                              // Set bcp to the (j+1)-th col
-    }
-    arp0 += ncolsa;                             // Set ap to the (i+1)-th row
-  }
-
-  if (gMatrixCheck) Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
 #endif
 }
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMultB(const TMatrixTSym<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixT<Element> &b)
 {
   // Matrix multiplication, with A symmetric and B general.
   // Create a matrix C such that C = A * B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     Assert(a.IsValid());
     Assert(b.IsValid());
     if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
-      Error("AMultB","A rows and B columns incompatible");
+      Error("Mult","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&a)) {
-      Error("AMultB","this == &a");
+      Error("Mult","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("AMultB","this == &b");
+      Error("Mult","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -739,7 +714,7 @@ void TMatrixT<Element>::AMultB(const TMatrixTSym<Element> &a,const TMatrixT<Elem
     cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                  ap,a.GetNcols(),bp,b.GetNcols(),0.0,cp,fNcols);
   else
-    Error("AMultB","type %s not implemented in BLAS library",typeid(Element));
+    Error("Mult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t na     = a.GetNoElements();
   const Int_t nb     = b.GetNoElements();
@@ -749,57 +724,39 @@ void TMatrixT<Element>::AMultB(const TMatrixTSym<Element> &a,const TMatrixT<Elem
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *arp0 = ap;                     // Pointer to  A[i,0];
-  while (arp0 < ap+na) {
-    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
-      const Element *arp = arp0;                       // Pointer to the i-th row of A, reset to A[i,0]
-      Element cij = 0;
-      while (bcp < bp+nb) {                     // Scan the i-th row of A and
-        cij += *arp++ * *bcp;                   // the j-th col of B
-        bcp += ncolsb;
-      }
-      *cp++ = cij;
-      bcp -= nb-1;                              // Set bcp to the (j+1)-th col
-    }
-    arp0 += ncolsa;                             // Set ap to the (i+1)-th row
-  }
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
 
-  Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
 #endif
 }
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMultB(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
   // Matrix multiplication, with A general and B symmetric.
   // Create a matrix C such that C = A * B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     Assert(a.IsValid());
     Assert(b.IsValid());
     if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
-      Error("AMultB","A rows and B columns incompatible");
+      Error("Mult","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == &a) {
-      Error("AMultB","this == &a");
+      Error("Mult","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-      Error("AMultB","this == &b");
+      Error("Mult","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -812,7 +769,7 @@ void TMatrixT<Element>::AMultB(const TMatrixT<Element> &a,const TMatrixTSym<Elem
     cblas_ssymm (CblasRowMajor,CblasRight,CblasUpper,fNrows,fNcols,1.0,
                  bp,b.GetNcols(),ap,a.GetNcols(),0.0,cp,fNcols);
   else
-    Error("AMultB","type %s not implemented in BLAS library",typeid(Element));
+    Error("Mult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t na     = a.GetNoElements();
   const Int_t nb     = b.GetNoElements();
@@ -822,58 +779,39 @@ void TMatrixT<Element>::AMultB(const TMatrixT<Element> &a,const TMatrixTSym<Elem
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *arp0 = ap;                     // Pointer to  A[i,0];
-  while (arp0 < ap+na) {
-    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
-      const Element *arp = arp0;                       // Pointer to the i-th row of A, reset to A[i,0]
-      Element cij = 0;
-      while (bcp < bp+nb) {                     // Scan the i-th row of A and
-        cij += *arp++ * *bcp;                   // the j-th col of B
-        bcp += ncolsb;
-      }
-      *cp++ = cij;
-      bcp -= nb-1;                              // Set bcp to the (j+1)-th col
-    }
-    arp0 += ncolsa;                             // Set ap to the (i+1)-th row
-  }
-
-  Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
 #endif
 }
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMultB(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
 {
   // Matrix multiplication, with A symmetric and B symmetric.
   // (Actually copied for the moment routine for B general)
   // Create a matrix C such that C = A * B.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     Assert(a.IsValid());
     Assert(b.IsValid());
     if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
-      Error("AMultB","A rows and B columns incompatible");
+      Error("Mult","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&a)) {
-      Error("AMultB","this == &a");
+      Error("Mult","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-      Error("AMultB","this == &b");
+      Error("Mult","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -886,7 +824,7 @@ void TMatrixT<Element>::AMultB(const TMatrixTSym<Element> &a,const TMatrixTSym<E
     cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                  ap,a.GetNcols(),bp,b.GetNcols(),0.0,cp,fNcols);
   else
-    Error("AMultB","type %s not implemented in BLAS library",typeid(Element));
+    Error("Mult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t na     = a.GetNoElements();
   const Int_t nb     = b.GetNoElements();
@@ -896,56 +834,38 @@ void TMatrixT<Element>::AMultB(const TMatrixTSym<Element> &a,const TMatrixTSym<E
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *arp0 = ap;                     // Pointer to  A[i,0];
-  while (arp0 < ap+na) {
-    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
-      const Element *arp = arp0;                       // Pointer to the i-th row of A, reset to A[i,0]
-      Element cij = 0;
-      while (bcp < bp+nb) {                     // Scan the i-th row of A and
-        cij += *arp++ * *bcp;                   // the j-th col of B
-        bcp += ncolsb;
-      }
-      *cp++ = cij;
-      bcp -= nb-1;                              // Set bcp to the (j+1)-th col
-    }
-    arp0 += ncolsa;                             // Set ap to the (i+1)-th row
-  }
-
-  Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
 #endif
 }
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AtMultB(const TMatrixT<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
   // Create a matrix C such that C = A' * B. In other words,
-  // c[i,j] = SUM{ a[k,i] * b[k,j] }. Note, matrix C is allocated for constr=1.
+  // c[i,j] = SUM{ a[k,i] * b[k,j] }.
 
   if (gMatrixCheck) {
     Assert(a.IsValid());
     Assert(b.IsValid());
     if (a.GetNrows() != b.GetNrows() || a.GetRowLwb() != b.GetRowLwb()) {
-      Error("AtMultB","A rows and B columns incompatible");
+      Error("TMult","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == &a) {
-      Error("AtMultB","this == &a");
+      Error("TMult","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("AtMultB","this == &b");
+      Error("TMult","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNcols(),b.GetNcols(),a.GetColLwb(),b.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -958,7 +878,7 @@ void TMatrixT<Element>::AtMultB(const TMatrixT<Element> &a,const TMatrixT<Elemen
     cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                  1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
   else
-    Error("AtMultB","type %s not implemented in BLAS library",typeid(Element));
+    Error("TMult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t nb     = b.GetNoElements();
   const Int_t ncolsa = a.GetNcols();
@@ -967,57 +887,38 @@ void TMatrixT<Element>::AtMultB(const TMatrixT<Element> &a,const TMatrixT<Elemen
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *acp0 = ap;           // Pointer to  A[i,0];
-  while (acp0 < ap+ncolsa) {
-    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
-      const Element *acp = acp0;                       // Pointer to the i-th column of A, reset to A[0,i]
-      Element cij = 0;
-      while (bcp < bp+nb) {           // Scan the i-th column of A and
-        cij += *acp * *bcp;           // the j-th col of B
-        acp += ncolsa;
-        bcp += ncolsb;
-      }
-      *cp++ = cij;
-      bcp -= nb-1;                    // Set bcp to the (j+1)-th col
-    }
-    acp0++;                           // Set acp0 to the (i+1)-th col
-  }
-
-  Assert(cp == this->GetMatrixArray()+this->fNelems && acp0 == ap+ncolsa);
+  AtMultB(ap,ncolsa,bp,nb,ncolsb,cp);
 #endif
 }
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AtMultB(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b,Int_t constr)
+void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
   // Create a matrix C such that C = A' * B. In other words,
-  // c[i,j] = SUM{ a[k,i] * b[k,j] }. Note, matrix C is allocated for constr=1.
+  // c[i,j] = SUM{ a[k,i] * b[k,j] }.
 
   if (gMatrixCheck) {
     Assert(a.IsValid());
     Assert(b.IsValid());
     if (a.GetNrows() != b.GetNrows() || a.GetRowLwb() != b.GetRowLwb()) {
-      Error("AtMultB","A rows and B columns incompatible");
+      Error("TMult","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == &a) {
-      Error("AtMultB","this == &a");
+      Error("TMult","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&b)) {
-      Error("AtMultB","this == &b");
+      Error("TMult","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNcols(),b.GetNcols(),a.GetColLwb(),b.GetColLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -1030,7 +931,7 @@ void TMatrixT<Element>::AtMultB(const TMatrixT<Element> &a,const TMatrixTSym<Ele
     cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                  1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
   else
-    Error("AtMultB","type %s not implemented in BLAS library",typeid(Element));
+    Error("TMult","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t nb     = b.GetNoElements();
   const Int_t ncolsa = a.GetNcols();
@@ -1039,58 +940,38 @@ void TMatrixT<Element>::AtMultB(const TMatrixT<Element> &a,const TMatrixTSym<Ele
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *acp0 = ap;           // Pointer to  A[i,0];
-  while (acp0 < ap+ncolsa) {
-    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
-      const Element *acp = acp0;                       // Pointer to the i-th column of A, reset to A[0,i]
-      Element cij = 0;
-      while (bcp < bp+nb) {           // Scan the i-th column of A and
-        cij += *acp * *bcp;           // the j-th col of B
-        acp += ncolsa;
-        bcp += ncolsb;
-      }
-      *cp++ = cij;
-      bcp -= nb-1;                    // Set bcp to the (j+1)-th col
-    }
-    acp0++;                           // Set acp0 to the (i+1)-th col
-  }
-
-  Assert(cp == this->GetMatrixArray()+this->fNelems && acp0 == ap+ncolsa);
+  AtMultB(ap,ncolsa,bp,nb,ncolsb,cp);
 #endif
 }
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+void TMatrixT<Element>::MultT(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
   // General matrix multiplication. Create a matrix C such that C = A * B^T.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     Assert(a.IsValid());
     Assert(b.IsValid());
 
     if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
-      Error("AMultBt","A rows and B columns incompatible");
+      Error("MultT","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == &a) {
-      Error("AMultBt","this == &a");
+      Error("MultT","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("AMultBt","this == &b");
+      Error("MultT","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -1103,7 +984,7 @@ void TMatrixT<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixT<Elemen
     cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasTrans,fNrows,fNcols,a.GetNcols(),
                  1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
   else
-    Error("AMultBt","type %s not implemented in BLAS library",typeid(Element));
+    Error("MultT","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t na     = a.GetNoElements();
   const Int_t nb     = b.GetNoElements();
@@ -1113,57 +994,38 @@ void TMatrixT<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixT<Elemen
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *arp0 = ap;                    // Pointer to  A[i,0];
-  while (arp0 < ap+na) {
-    const Element *brp0 = bp;                  // Pointer to  B[j,0];
-    while (brp0 < bp+nb) {
-      const Element *arp = arp0;               // Pointer to the i-th row of A, reset to A[i,0]
-      const Element *brp = brp0;               // Pointer to the j-th row of B, reset to B[j,0]
-      Element cij = 0;
-      while (brp < brp0+ncolsb)                 // Scan the i-th row of A and
-        cij += *arp++ * *brp++;                 // the j-th row of B
-      *cp++ = cij;
-      brp0 += ncolsb;                           // Set brp0 to the (j+1)-th row
-    }
-    arp0 += ncolsa;                             // Set arp0 to the (i+1)-th row
-  }
-
-  Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
+  AMultBt(ap,na,ncolsa,bp,nb,ncolsb,cp);
 #endif
 }
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixT<Element>::AMultBt(const TMatrixTSym<Element> &a,const TMatrixT<Element> &b,Int_t constr)
+void TMatrixT<Element>::MultT(const TMatrixTSym<Element> &a,const TMatrixT<Element> &b)
 {
   // Matrix multiplication, with A symmetric and B general.
   // Create a matrix C such that C = A * B^T.
-  // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
     Assert(a.IsValid());
     Assert(b.IsValid());
     if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
-      Error("AMultBt","A rows and B columns incompatible");
+      Error("MultT","A rows and B columns incompatible");
       this->Invalidate();
       return;
     }
 
     if (this == dynamic_cast<const TMatrixT<Element> *>(&a)) {
-      Error("AMultBt","this == &a");
+      Error("MultT","this == &a");
       this->Invalidate();
       return;
     }
 
     if (this == &b) {
-      Error("AMultBt","this == &b");
+      Error("MultT","this == &b");
       this->Invalidate();
       return;
     }
   }
-
-  if (constr)
-    Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -1176,7 +1038,7 @@ void TMatrixT<Element>::AMultBt(const TMatrixTSym<Element> &a,const TMatrixT<Ele
     cblas_sgemm (CblasRowMajor,CblasNoTrans,CblasTrans,fNrows,fNcols,a.GetNcols(),
                  1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
   else
-    Error("AMultBt","type %s not implemented in BLAS library",typeid(Element));
+    Error("MultT","type %s not implemented in BLAS library",typeid(Element));
 #else
   const Int_t na     = a.GetNoElements();
   const Int_t nb     = b.GetNoElements();
@@ -1186,22 +1048,7 @@ void TMatrixT<Element>::AMultBt(const TMatrixTSym<Element> &a,const TMatrixT<Ele
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  const Element *arp0 = ap;                    // Pointer to  A[i,0];
-  while (arp0 < ap+na) {
-    const Element *brp0 = bp;                  // Pointer to  B[j,0];
-    while (brp0 < bp+nb) {
-      const Element *arp = arp0;               // Pointer to the i-th row of A, reset to A[i,0]
-      const Element *brp = brp0;               // Pointer to the j-th row of B, reset to B[j,0]
-      Element cij = 0;
-      while (brp < brp0+ncolsb)                 // Scan the i-th row of A and
-        cij += *arp++ * *brp++;                 // the j-th row of B
-      *cp++ = cij;
-      brp0 += ncolsb;                           // Set brp0 to the (j+1)-th row
-    }
-    arp0 += ncolsa;                             // Set arp0 to the (i+1)-th row
-  }
-
-  Assert(cp == this->GetMatrixArray()+this->fNelems && arp0 == ap+na);
+  AMultBt(ap,na,ncolsa,bp,nb,ncolsb,cp);
 #endif
 }
 
@@ -3189,6 +3036,70 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixTSym<Elemen
 
 //______________________________________________________________________________
 template<class Element>
+void AMultB(const Element * const ap,Int_t na,Int_t ncolsa,
+            const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp) 
+{
+  const Element *arp0 = ap;                     // Pointer to  A[i,0];
+  while (arp0 < ap+na) {
+    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
+      const Element *arp = arp0;                       // Pointer to the i-th row of A, reset to A[i,0]
+      Element cij = 0;
+      while (bcp < bp+nb) {                     // Scan the i-th row of A and
+        cij += *arp++ * *bcp;                   // the j-th col of B
+        bcp += ncolsb;
+      }
+      *cp++ = cij;
+      bcp -= nb-1;                              // Set bcp to the (j+1)-th col
+    }
+    arp0 += ncolsa;                             // Set ap to the (i+1)-th row
+  }
+}
+
+//______________________________________________________________________________
+template<class Element>                                     
+void AtMultB(const Element * const ap,Int_t ncolsa,
+             const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp)
+{ 
+  const Element *acp0 = ap;           // Pointer to  A[i,0];
+  while (acp0 < ap+ncolsa) {
+    for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
+      const Element *acp = acp0;                       // Pointer to the i-th column of A, reset to A[0,i]
+      Element cij = 0;
+      while (bcp < bp+nb) {           // Scan the i-th column of A and
+        cij += *acp * *bcp;           // the j-th col of B
+        acp += ncolsa;
+        bcp += ncolsb;
+      }
+      *cp++ = cij;
+      bcp -= nb-1;                    // Set bcp to the (j+1)-th col
+    }
+    acp0++;                           // Set acp0 to the (i+1)-th col
+  } 
+}     
+
+//______________________________________________________________________________
+template<class Element>
+void AMultBt(const Element * const ap,Int_t na,Int_t ncolsa,
+             const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp)
+{
+  const Element *arp0 = ap;                    // Pointer to  A[i,0];
+  while (arp0 < ap+na) {
+    const Element *brp0 = bp;                  // Pointer to  B[j,0];
+    while (brp0 < bp+nb) {
+      const Element *arp = arp0;               // Pointer to the i-th row of A, reset to A[i,0]
+      const Element *brp = brp0;               // Pointer to the j-th row of B, reset to B[j,0]
+      Element cij = 0;
+      while (brp < brp0+ncolsb)                 // Scan the i-th row of A and
+        cij += *arp++ * *brp++;                 // the j-th row of B
+      *cp++ = cij;
+      brp0 += ncolsb;                           // Set brp0 to the (j+1)-th row
+    }
+    arp0 += ncolsa;                             // Set arp0 to the (i+1)-th row
+  }
+}
+
+//______________________________________________________________________________
+template<class Element>
 void TMatrixT<Element>::Streamer(TBuffer &R__b)
 {
   // Stream an object of class TMatrixT.
@@ -3305,6 +3216,13 @@ template TMatrixF &ElementMult<Float_t>(TMatrixF &target,const TMatrixFSym &sour
 template TMatrixF &ElementDiv <Float_t>(TMatrixF &target,const TMatrixF    &source);
 template TMatrixF &ElementDiv <Float_t>(TMatrixF &target,const TMatrixFSym &source);
 
+template void AMultB <Float_t>(const Float_t * const ap,Int_t na,Int_t ncolsa,
+                               const Float_t * const bp,Int_t nb,Int_t ncolsb,Float_t *cp);
+template void AtMultB<Float_t>(const Float_t * const ap,Int_t ncolsa,
+                               const Float_t * const bp,Int_t nb,Int_t ncolsb,Float_t *cp);
+template void AMultBt<Float_t>(const Float_t * const ap,Int_t na,Int_t ncolsa,
+                               const Float_t * const bp,Int_t nb,Int_t ncolsb,Float_t *cp);
+
 #ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
 #endif
@@ -3358,3 +3276,10 @@ template TMatrixD &ElementMult<Double_t>(TMatrixD &target,const TMatrixD    &sou
 template TMatrixD &ElementMult<Double_t>(TMatrixD &target,const TMatrixDSym &source);
 template TMatrixD &ElementDiv <Double_t>(TMatrixD &target,const TMatrixD    &source);
 template TMatrixD &ElementDiv <Double_t>(TMatrixD &target,const TMatrixDSym &source);
+
+template void AMultB <Double_t>(const Double_t * const ap,Int_t na,Int_t ncolsa,
+                                const Double_t * const bp,Int_t nb,Int_t ncolsb,Double_t *cp);
+template void AtMultB<Double_t>(const Double_t * const ap,Int_t ncolsa,
+                                const Double_t * const bp,Int_t nb,Int_t ncolsb,Double_t *cp);
+template void AMultBt<Double_t>(const Double_t * const ap,Int_t na,Int_t ncolsa,
+                                const Double_t * const bp,Int_t nb,Int_t ncolsb,Double_t *cp);

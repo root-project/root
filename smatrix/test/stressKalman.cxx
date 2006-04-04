@@ -721,16 +721,15 @@ int TestRunner<NDIM1,NDIM2>::test_tmatrix_kalman() {
       {
         tmp1 = m; Add(tmp1,-1.0,H,xp);
         x = xp; Add(x,+1.0,K0,tmp1);
-	tmp2.AMultBt(Cp,H,0);
-	Rtmp.AMultB(H,tmp2,0);
-        Rinv = V ;    Rinv += Rtmp;
-        RinvSym.Use(first,Rinv.GetMatrixArray()); 
-	RinvSym.InvertFast();
-	K.AMultB(tmp2,Rinv,0);
-	Ctmp.AMultBt(K,tmp2,0);
-        C = Cp; C -= Ctmp;
+        tmp2.MultT(Cp,H);
+        Rtmp.Mult(H,tmp2);
+        Rinv.Plus(V,Rtmp);
+        RinvSym.Use(first,Rinv.GetMatrixArray());
+        RinvSym.InvertFast();
+        K.Mult(tmp2,Rinv);
+        Ctmp.MultT(K,tmp2);
+        C.Minus(Cp,Ctmp);
         x2 = RinvSym.Similarity(tmp1);
-
 
 #ifdef DEBUG 
 	if (l == 0) { 

@@ -281,7 +281,7 @@ void testMM_T(const A & a, const B & b, const C & c, double & time, C & result) 
   for (int l = 0; l < NLOOP; l++)
     {
       btmp(0,0) = gV[l];
-      result.AMultB(a,btmp);
+      result.Mult(a,btmp);
       result += c;
     }
 } 
@@ -294,7 +294,7 @@ void testMad_T(const M & m1, const M & m2, double & time, M & result) {
   for (int l = 0; l < NLOOP; l++)
     {
       mtmp(0,0) = gV[l];
-      result.APlusB(m1,mtmp);
+      result.Plus(m1,mtmp);
     }
 }
 
@@ -306,8 +306,8 @@ void testATBA_T(const A & a, const B & b, double & time, C & result) {
   for (int l = 0; l < NLOOP; l++)
     {
       btmp(0,0) = gV[l]; 
-      tmp.AMultB(a,btmp);
-      result.AMultBt(tmp,a);
+      tmp.Mult(a,btmp);
+      result.MultT(tmp,a);
     }
 }
 
@@ -319,7 +319,7 @@ double testDot_T(const V & v1, const V & v2, double & time) {
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
       vtmp[0] = gV[l];
-      result = v1*vtmp;
+      result = Dot(v1,vtmp);
     }
   return result; 
 }

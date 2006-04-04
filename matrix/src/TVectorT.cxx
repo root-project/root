@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.11 2006/03/30 09:33:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.12 2006/04/02 08:38:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1369,15 +1369,7 @@ Element operator*(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
       }
   }
 
-  const Element *v1p = v1.GetMatrixArray();
-  const Element *v2p = v2.GetMatrixArray();
-
-  Element sum = 0.0;
-  const Element * const fv1p = v1p+v1.GetNrows();
-  while (v1p < fv1p)
-    sum += *v1p++ * *v2p++;
-
-  return sum;
+  return Dot(v1,v2);
 }
 
 //______________________________________________________________________________
@@ -1432,6 +1424,20 @@ TVectorT<Element> operator*(Element val,const TVectorT<Element> &source)
   TVectorT<Element> target = source;
   target *= val;
   return target;
+}
+
+//______________________________________________________________________________
+template<class Element>
+Element Dot(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
+{
+  const Element *v1p = v1.GetMatrixArray();
+  const Element *v2p = v2.GetMatrixArray();
+  Element sum = 0.0;
+  const Element * const fv1p = v1p+v1.GetNrows();
+  while (v1p < fv1p)
+    sum += *v1p++ * *v2p++;
+
+  return sum;
 }
 
 //______________________________________________________________________________
@@ -2140,6 +2146,7 @@ template TVectorF  operator*           <Float_t>(const TMatrixF       &a,      c
 template TVectorF  operator*           <Float_t>(const TMatrixFSym    &a,      const TVectorF &source);
 template TVectorF  operator*           <Float_t>(const TMatrixFSparse &a,      const TVectorF &source);
 template TVectorF  operator*           <Float_t>(      Float_t         val,    const TVectorF &source);
+template Float_t   Dot                 <Float_t>(const TVectorF       &v1,     const TVectorF &v2);
 template TVectorF &Add                 <Float_t>(      TVectorF       &target,       Float_t   scalar, const TVectorF &source);
 template TVectorF &Add                 <Float_t>(      TVectorF       &target,       Float_t   scalar, const TMatrixF       &a,
                                                                                const TVectorF &source);
@@ -2189,6 +2196,7 @@ template TVectorD  operator*           <Double_t>(const TMatrixD       &a,      
 template TVectorD  operator*           <Double_t>(const TMatrixDSym    &a,      const TVectorD &source);
 template TVectorD  operator*           <Double_t>(const TMatrixDSparse &a,      const TVectorD &source);
 template TVectorD  operator*           <Double_t>(      Double_t        val,    const TVectorD &source);
+template Double_t  Dot                 <Double_t>(const TVectorD       &v1,     const TVectorD &v2);
 template TVectorD &Add                 <Double_t>(      TVectorD       &target,       Double_t  scalar, const TVectorD &source);
 template TVectorD &Add                 <Double_t>(      TVectorD       &target,       Double_t  scalar, const TMatrixD       &a,
                                                                                 const TVectorD &source);

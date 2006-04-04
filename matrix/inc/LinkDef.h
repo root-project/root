@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.24 2006/01/26 15:16:11 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.25 2006/03/23 11:23:14 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -150,6 +150,7 @@
 #pragma link C++ function operator*           (const TMatrixFSym    &,const TVectorF &);
 #pragma link C++ function operator*           (const TMatrixFSparse &,const TVectorF &);
 #pragma link C++ function operator*           (      Float_t         ,const TVectorF &);
+#pragma link C++ function Dot                 (const TVectorF       &,const TVectorF &)
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TVectorF &);
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TMatrixF       &,const TVectorF &);
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TMatrixFSym    &,const TVectorF &);
@@ -277,6 +278,7 @@
 #pragma link C++ function operator*           (const TMatrixDSym    &,const TVectorD &);
 #pragma link C++ function operator*           (const TMatrixDSparse &,const TVectorD &);
 #pragma link C++ function operator*           (      Double_t        ,const TVectorD &);
+#pragma link C++ function Dot                 (const TVectorD       &,const TVectorD &)
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TVectorD &);
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TMatrixD       &,const TVectorD &);
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TMatrixDSym    &,const TVectorD &);

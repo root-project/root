@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.4 2006/03/22 15:16:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.5 2006/03/29 05:16:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -76,12 +76,12 @@ public:
   virtual ~TMatrixTSym() { Clear(); }
 
  // Elementary constructors
-  void AtMultA(const TMatrixT   <Element> &a,Int_t constr=0);
-  void AtMultA(const TMatrixTSym<Element> &a,Int_t constr=0);
-  void AMultA (const TMatrixTSym<Element> &a,Int_t constr=0) { AtMultA(a,constr); }
+  void TMult(const TMatrixT   <Element> &a);
+  void TMult(const TMatrixTSym<Element> &a);
+  void Mult (const TMatrixTSym<Element> &a) { TMult(a); }
 
-  void APlusB (const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=0);
-  void AMinusB(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b,Int_t constr=0);
+  void Plus (const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b);
+  void Minus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b);
 
   virtual const Element *GetMatrixArray  () const;
   virtual       Element *GetMatrixArray  ();
