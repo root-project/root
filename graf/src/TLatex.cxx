@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.55 2006/02/20 14:27:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.56 2006/03/20 21:43:42 pcanal Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1407,12 +1407,6 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       text[leng] = 0 ;
 
-      GetTextExtent(w,h,text);
-      Double_t width = w;
-      UInt_t a,d;
-      GetTextAscentDescent(a, d, text);
-      fs1.Set(width,a,d);
-
       if (fShow) {
          // paint the Latex sub-expression per sub-expression
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1421,6 +1415,12 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
          gPad->PaintText(xx,yy,text);
+      } else {
+         GetTextExtent(w,h,text);
+         Double_t width = w;
+         UInt_t a,d;
+         GetTextAscentDescent(a, d, text);
+         fs1.Set(width,a,d);
       }
 
       result = fs1;
