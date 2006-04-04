@@ -52,7 +52,7 @@ $TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
    $dir/test/RootShower/*.rc $dir/test/RootShower/*.ico \
    $dir/test/RootShower/*.png $dir/test/RootShower/Makefile \
    $dir/test/RootShower/anim $dir/test/RootShower/icons $dir/test/ProofBench \
-   $dir/macros $dir/icons $dir/fonts $dir/etc $dir/proof/etc $dir/proof/utils
+   $dir/macros $dir/icons $dir/fonts $dir/etc
 if [ "$TAR" = '' ] || [ $stat = 0 ]; then
    gzip $TARFILE
 fi
