@@ -137,7 +137,9 @@ GetSZStorageClass(BYTE storageClass)
       return "???";
 }
 
-void AddHex(std::string& buf, long val, bool caps=false) {
+void AddHex(std::string& buf, long val, bool caps=false)
+{
+   buf += "0x";
    int len=buf.length();
    while (val) {
       char hex = val & 16;
@@ -334,7 +336,7 @@ DumpExternals(PIMAGE_SYMBOL pSymbolTable, FILE *fout, unsigned cSymbols)
 *----------------------------------------------------------------------
 */
 void
-DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionHeaders, 
+DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionHeaders,
                      FILE *fout, unsigned cSymbols, int fort)
 {
    unsigned i;
@@ -385,7 +387,7 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
             */
             const char *scalarPrefix = "??_G";
             const char *vectorPrefix = "??_E";
-            if (symbol.compare(0, 4, scalarPrefix) && 
+            if (symbol.compare(0, 4, scalarPrefix) &&
                symbol.compare(0, 4, vectorPrefix) &&
                symbol.find("real@") == std::string::npos)
             {
