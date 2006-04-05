@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.56 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.57 2005/11/23 14:13:27 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -108,7 +108,7 @@ Double_t TGeoPgon::Capacity() const
    Double_t tphi2 = TMath::Tan(0.5*dphi*TMath::DegToRad());
    for (ipl=0; ipl<fNz-1; ipl++) {
       dz    = fZ[ipl+1]-fZ[ipl];
-      if (dz == 0) continue;
+      if (dz < TGeoShape::Tolerance()) continue;
       rmin1 = fRmin[ipl];
       rmax1 = fRmax[ipl];
       rmin2 = fRmin[ipl+1];
@@ -163,12 +163,12 @@ void TGeoPgon::ComputeBBox()
    ddp = 270-phi1;
    if (ddp<0) ddp+= 360;
    if (ddp<=fDphi) ymin = -rmax;
-   fOrigin[0] = (xmax+xmin)/2;
-   fOrigin[1] = (ymax+ymin)/2;
-   fOrigin[2] = (zmax+zmin)/2;
-   fDX = (xmax-xmin)/2;
-   fDY = (ymax-ymin)/2;
-   fDZ = (zmax-zmin)/2;
+   fOrigin[0] = 0.5*(xmax+xmin);
+   fOrigin[1] = 0.5*(ymax+ymin);
+   fOrigin[2] = 0.5*(zmax+zmin);
+   fDX = 0.5*(xmax-xmin);
+   fDY = 0.5*(ymax-ymin);
+   fDZ = 0.5*(zmax-zmin);
    SetShapeBit(kGeoClosedShape);
 }
 
@@ -367,7 +367,7 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    if (fZ[ipl]==fZ[ipl+1]) {
       ipln = ipl;
    } else {   
-      if (ipl<fNz-3 && fZ[ipl+1]==fZ[ipl+2] && TMath::Abs(point[2]-fZ[ipl+1])<TGeoShape::Tolerance()) {
+      if (fNz>3 && ipl>0 && ipl<fNz-3 && fZ[ipl+1]==fZ[ipl+2] && TMath::Abs(point[2]-fZ[ipl+1])<TGeoShape::Tolerance()) {
          ipln = ipl+1;
       } else {
          if (ipl>1 && fZ[ipl]==fZ[ipl-1] && TMath::Abs(point[2]-fZ[ipl])<TGeoShape::Tolerance()) ipln = ipl-1;
@@ -695,7 +695,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
          distz = (fZ[ipl+((1+incseg)>>1)]-pt[2])*invdir;
          // length of current segment
          dz = fZ[ipl+1] - fZ[ipl];
-         if (dz == 0) {
+         if (dz < TGeoShape::Tolerance()) {
             rnew = apr+bpr*fZ[ipl];
             rpg = (rnew-fRmin[ipl])*(rnew-fRmin[ipl+1]);
             if (rpg<=0) din=distz;
@@ -746,7 +746,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
             snext = 0.0;
             break;
          }   
-         if (distr<=distz) {
+         if (distr<=distz+TGeoShape::Tolerance()) {
             step += distr;
             snext = step;
             return (step>stepmax)?kFALSE:kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.34 2006/03/13 11:03:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.35 2006/04/03 16:19:31 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -2561,7 +2561,7 @@ Int_t TGeoCylVoxels::IntersectIntervals(Double_t vox1, Double_t vox2, Double_t p
    // both intervals are in range (0, 360)   
    Double_t d22 = phi2-vox2;
    if (TMath::Abs(d22)<1E-8) d22=0;
-   if ((d11==0.) && (d22==0.)) return 2;
+   if ((TMath::Abs(d11)<TGeoShape::Tolerance()) && (TMath::Abs(d22)<TGeoShape::Tolerance())) return 2;
    if (d11>=0) {
       if (d12<0) return 1;
       return 0;
