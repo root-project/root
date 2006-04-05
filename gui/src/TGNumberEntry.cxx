@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.17 2005/12/12 17:54:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.18 2006/03/23 15:56:03 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -2072,6 +2072,8 @@ void TGNumberEntry::SavePrimitive(ofstream &out, Option_t *)
 {
    // Save a number entry widget as a C++ statement(s) on output stream out.
 
+   char quote = '"';
+
    // to calculate the digits parameter
    Int_t w = fNumericEntry->GetWidth();
    Int_t h = fNumericEntry->GetHeight();
@@ -2170,4 +2172,11 @@ void TGNumberEntry::SavePrimitive(ofstream &out, Option_t *)
    }
    if (fButtonDown->GetState() == kButtonDisabled)
       out << "   " << GetName() << "->SetState(kFALSE);" << endl;
+
+   TGToolTip *tip = GetNumberEntry()->GetToolTip();
+   if (tip) {
+      out << "   ";
+      out << GetName() << "->GetNumberEntry()->SetToolTipText(" << quote
+          << tip->GetText()->GetString() << quote << ");"  << endl;
+   }   
 }

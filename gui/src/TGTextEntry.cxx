@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.35 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.36 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1781,4 +1781,10 @@ void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
 
    out << "   " << GetName() << "->Resize("<< GetWidth() << "," << GetName()
        << "->GetDefaultHeight());" << endl;
+
+   if (fTip) {
+      out << "   ";
+      out << GetName() << "->SetToolTipText(" << quote
+          << fTip->GetText()->GetString() << quote << ");"  << endl;
+   }
 }
