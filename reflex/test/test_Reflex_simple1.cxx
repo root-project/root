@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.2 2005/12/09 07:09:57 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -92,7 +92,7 @@ void ReflexSimple1Test::testBase() {
 }
   
 void ReflexSimple1Test::testTypeCount() {
-  CPPUNIT_ASSERT( (int(Type::TypeSize()) > 200) && (int(Type::TypeSize()) < 400) );
+  CPPUNIT_ASSERT( (int(Type::TypeSize()) > 500) && (int(Type::TypeSize()) < 1000) );
 }
 
 

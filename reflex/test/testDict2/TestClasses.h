@@ -3,7 +3,17 @@ namespace {
   class ForwardedUnnamedType;
 }
 
+namespace xmlTypedefSelection {
+
+  class RealXmlSelClass {};
+  
+  typedef RealXmlSelClass TypedefXmlSelClass;
+  typedef TypedefXmlSelClass TypedefXmlSelClass2;
+
+} // ns xmlTypedefSelection
+
 namespace testclasses {
+
   
   class UnnamedTypes {
     
@@ -25,10 +35,6 @@ namespace testclasses {
     };
     
   };
-
-  namespace {
-    void foo() {}
-  }
 
   struct PrivateConstructors {
     int i;

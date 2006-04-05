@@ -22,6 +22,8 @@
 
   <class pattern="testclasses::*"/>
 
+  <class name="xmlTypedefSelection::TypedefXmlSelClass2"/>
+
   <exclusion>
     <class name="TT::Outer<TT::A<unsigned long> >">
       <method name="unwantedFunction"/>

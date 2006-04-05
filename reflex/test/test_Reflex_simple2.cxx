@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.9 2006/03/05 21:49:48 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.10 2006/03/20 15:31:41 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -165,6 +165,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testFreeFunctions );
   CPPUNIT_TEST( testDiamond );
   CPPUNIT_TEST( testOperators );
+  CPPUNIT_TEST (testTypedefSelection );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -182,6 +183,7 @@ public:
   void testFreeFunctions();
   void testDiamond();
   void testOperators();
+  void testTypedefSelection();
 
   void tearDown() {}
 
@@ -343,8 +345,9 @@ void ReflexSimple2Test::fooBarZot() {
 
   // get meta information for class foo
   Type t = Type::ByName("zot::foo");
+  CPPUNIT_ASSERT(t);
   // generate declarations for foo
-  if (t) generate_class(t);
+  //if (t) generate_class(t);
 
 
   // get meta information of type Foo
@@ -790,6 +793,25 @@ void ReflexSimple2Test::testOperators() {
    Type t7 = Type::ByName("testclasses::OverloadedOperators::PlOpAOpANew");
    CPPUNIT_ASSERT(t7);
    CPPUNIT_ASSERT_EQUAL(2,countNewOperators(t7));
+
+}
+
+
+void ReflexSimple2Test::testTypedefSelection() {
+
+  Type t = Type::ByName("xmlTypedefSelection::TypedefXmlSelClass2");
+  CPPUNIT_ASSERT(t);
+  CPPUNIT_ASSERT(t.IsTypedef());
+  
+  Type t2 = t.ToType();
+  CPPUNIT_ASSERT(t2);
+  CPPUNIT_ASSERT(t2.IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("TypedefXmlSelClass"), t2.Name());
+
+  Type t3 = t2.ToType();
+  CPPUNIT_ASSERT(t3);
+  CPPUNIT_ASSERT(t3.IsClass());
+  CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t3.Name());
 
 }
 
