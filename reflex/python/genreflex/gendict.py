@@ -187,6 +187,16 @@ class genDictionary(object) :
         if match[0] and not match[1] :
           c['extra'] = match[0]
           selec.append(c)
+      for t in self.typedefs:
+        match = self.selector.matchclass( self.genTypeName(t['id']), self.files[t['file']]['name'])
+        if match[0] and not match[1] :
+          c = self.xref[t['type']]
+          while c['elem'] == 'Typedef': c = self.xref[c['attrs']['type']]
+          if c['elem'] in ('Class','Struct'):
+            self.genTypeID(t['id'])
+            catt = c['attrs']
+            catt['extra'] = match[0]
+            if catt not in selec : selec.append(catt)
       return self.autosel (selec)
     else : self.selector = None
     local = filter(self.filefilter, self.classes)
