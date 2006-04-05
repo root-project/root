@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.10 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.11 2006/03/29 15:37:45 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -566,19 +566,23 @@ void TGColorSelect::SavePrimitive(ofstream &out, Option_t *)
     // Save a color select widget as a C++ statement(s) on output stream out
 
    char quote = '"';
+   static Int_t nn = 1;
+   TString cvar = Form("ColPar%d",nn);
+
    ULong_t color = GetColor();
    const char *colorname = TColor::PixelAsHexString(color);
    gClient->GetColorByName(colorname, color);
 
    out << endl << "   // color select widget" << endl;
-   out << "   ULong_t ColPar;" << endl;
+   out << "   ULong_t " << cvar.Data() << ";" << endl;
    out << "   gClient->GetColorByName(" << quote << colorname << quote
-       << ", ColPar);" << endl;
+       << ", " << cvar.Data() << ");" << endl;
 
    out <<"   TGColorSelect *";
    out << GetName() << " = new TGColorSelect(" << fParent->GetName()
-       << ", ColPar, " << WidgetId() << ");" << endl;
-
+       << ", " << cvar.Data() << ", " << WidgetId() << ");" << endl;
+   nn++;
+   
    if (!IsEnabled()) {
       out << "   " << GetName() << "->Disable();" << endl;
    }
