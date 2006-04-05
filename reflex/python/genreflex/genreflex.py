@@ -164,10 +164,10 @@ class genreflex:
     if self.files :
       for f in self.files :
         if not os.path.exists(f) : 
-          print '--->>ERROR: C++ file "' + f + '" not found'
+          print '--->> genreflex: ERROR: C++ file "' + f + '" not found'
           self.usage()
     else :
-      print '--->>ERROR: No input file specified'
+      print '--->> genreflex: ERROR: No input file specified'
       self.usage()
     #---Check existance of output directory----------------
     if os.path.isdir(self.output) :
@@ -176,13 +176,13 @@ class genreflex:
     else :
       self.outputDir, self.outputFile = os.path.split(self.output)
     if self.outputDir and not os.path.isdir(self.outputDir) :
-      print '--->>ERROR: Output directory ', self.outputDir, ' not found'
+      print '--->> genreflex: ERROR: Output directory ', self.outputDir, ' not found'
       self.usage()
     #---Hande selection class file-------------------------
     classes = []
     if self.select :
       if not os.path.exists(self.select) :
-        print '--->>ERROR: Class selection file "' + self.select + '" not found'
+        print '--->> genreflex: ERROR: Class selection file "' + self.select + '" not found'
         self.usage()
       for l in open(self.select).readlines() : classes.append(l[:-1])
     #----------GCCXML command------------------------------
@@ -262,7 +262,7 @@ class genreflex:
        os.remove(xmlfile)
     #------------Exit with status if warnings --------------
     if warnings and self.opts.get('fail_on_warnings',False) : 
-      print '--->>ERROR: Exiting with error due to %d warnings ( --fail_on_warnings enabled )' % warnings
+      print '--->> genreflex: ERROR: Exiting with error due to %d warnings ( --fail_on_warnings enabled )' % warnings
       sys.exit(1)
 #---------------------------------------------------------------------
   def which(self, name) :

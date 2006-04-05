@@ -44,8 +44,8 @@ class selClass :
       if c == "'" : q2 = not q2
     try : p.Parse(nxml)
     except xml.parsers.expat.ExpatError, e :
-      print 'genreflex: Error parsing selection file ',self.file
-      print 'genreflex: Error is:', e
+      print '--->> genreflex: ERROR: parsing selection file ',self.file
+      print '--->> genreflex: ERROR: Error is:', e
       raise 
     f.close()
 #----------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ class selClass :
     warnings = 0
     for c in self.sel_classes :
       if 'name' in c['attrs'] and 'used' not in c :
-         print '--->>genreflex WARNING. Class %s in selection file %s not generated.' % (c['attrs']['name'] , self.file )
+         print '--->> genreflex: WARNING: Class %s in selection file %s not generated.' % (c['attrs']['name'] , self.file )
          warnings += 1
     return warnings
 #-----------------------------------------------------------------------------------

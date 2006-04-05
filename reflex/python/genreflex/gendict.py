@@ -39,10 +39,10 @@ class genDictionary(object) :
     self.no_membertypedefs  = opts.get('no_membertypedefs', False)
     self.generated_shadow_classes = []
     self.selectionname      = 'ROOT::Reflex::Selection'
+    self.unnamedNamespaces = []
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
-    self.unnamedNamespaces = []
 #----------------------------------------------------------------------------------
   def start_element(self, name, attrs):
     if 'id' in attrs :
@@ -94,9 +94,9 @@ class genDictionary(object) :
       cname = self.genTypeName(c['id'])
       self.xrefinv[cname] = c['id']
       if (c.has_key('context') and (self.genTypeName(c['context'])[:len(self.selectionname)] == self.selectionname)):
-	self.cppselect[cname[len(self.selectionname)+2:]] = c['id']
+        self.cppselect[cname[len(self.selectionname)+2:]] = c['id']
     for c in self.classes: self.try_selection(c)
-    self.unnamedNamespace = self.findUnnamedNamespace()
+    self.findUnnamedNamespace()
 #----------------------------------------------------------------------------------
   def try_selection (self, c):
     id = self.cppselect.get(self.genTypeName(c['id'],alltempl=True))
@@ -124,7 +124,7 @@ class genDictionary(object) :
           transient_fields.remove (fname)
 
     if transient_fields:
-      print "--->>WARNING: Transient fields declared in selection " +\
+      print "--->> genreflex: WARNING: Transient fields declared in selection " +\
             "not present in class:", \
             self.xref[selection['id']]['attrs']['name'], transient_fields
       self.warnings += 1
@@ -147,7 +147,7 @@ class genDictionary(object) :
 		if fattrs.has_key('extra') : fattrs['extra']['autoselect'] = 'true'
 		else                       : fattrs['extra'] = {'autoselect':'true'}
 	      else :
-	        print '--->>WARNING: AUTOSELECT selection functionality for %s not implemented yet' % m['elem']
+	        print '--->> genreflex: WARNING: AUTOSELECT selection functionality for %s not implemented yet' % m['elem']
 	        self.warnings += 1
     return
 #----------------------------------------------------------------------------------
@@ -921,11 +921,11 @@ class genDictionary(object) :
         if firstMember : name = self.xref[firstMember]['attrs']['name']
         else           : return ''       # then this must be an unnamed union without members
     if type[-1] == '&' :
-      print '--->>WARNING: References are not supported as data members (%s %s::%s)' % ( type, cls, name )
+      print '--->> genreflex: WARNING: References are not supported as data members (%s %s::%s)' % ( type, cls, name )
       self.warnings += 1
       return ''
     if 'bits' in attrs:
-      print '--->>WARNING: Bit-fields are not supported as data members (%s %s::%s:%s)' % ( type, cls, name, attrs['bits'] )
+      print '--->> genreflex: WARNING: Bit-fields are not supported as data members (%s %s::%s:%s)' % ( type, cls, name, attrs['bits'] )
       self.warnings += 1
       return ''
     if self.selector : xattrs = self.selector.selfield( cls,name)
@@ -1014,7 +1014,6 @@ class genDictionary(object) :
     # will contain TDF_<attrs['id']>
     tdfname = 'TDF%s'%attrs['id']
     if name.find(tdfname) != -1 :
-      print name
       s += '  typedef %s;\n'%name
       name = 'operator ' + tdfname
       returns = tdfname
