@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.45 2006/02/28 10:08:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.46 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1378,7 +1378,6 @@ Long64_t TProfile2D::Merge(TCollection *li)
    }
 
    //merge bin contents and errors
-   const Int_t kNstat = 7;
    Double_t stats[kNstat], totstats[kNstat];
    for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
