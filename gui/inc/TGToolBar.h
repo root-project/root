@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.12 2004/09/15 19:21:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.13 2006/03/28 17:04:31 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #endif
 
 class TGButton;
+class TGPictureButton;
 class TList;
 class TMap;
 
@@ -42,10 +43,10 @@ struct ToolBarData_t {
 
 class TGToolBar : public TGCompositeFrame {
 
-private:
-   TList   *fPictures;    // list of pictures that should be freed
-   TList   *fTrash;       // list of buttons and layout hints to be deleted
-   TMap   *fMapOfButtons;    // map of button/id pairs in this group
+protected:
+   TList   *fPictures;      // list of pictures that should be freed
+   TList   *fTrash;         // list of buttons and layout hints to be deleted
+   TMap    *fMapOfButtons;  // map of button/id pairs in this group
 
 public:
    TGToolBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
@@ -54,6 +55,7 @@ public:
    virtual ~TGToolBar();
 
    virtual TGButton *AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing = 0);
+   virtual TGButton *AddButton(const TGWindow *w, TGPictureButton *button, Int_t spacing = 0);
 
    virtual void ChangeIcon(ToolBarData_t *button, const char *new_icon);
    virtual void Cleanup();

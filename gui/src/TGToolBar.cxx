@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.17 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.18 2006/03/28 17:04:31 antcheva Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -112,6 +112,32 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t s
    fTrash->Add(layout);
 
    fMapOfButtons->Add(pbut, (TObject*)((Long_t)button->fId));
+
+   Connect(pbut, "Pressed()" , "TGToolBar", this, "ButtonPressed()");
+   Connect(pbut, "Released()", "TGToolBar", this, "ButtonReleased()");
+   Connect(pbut, "Clicked()" , "TGToolBar", this, "ButtonClicked()");
+
+   return pbut;
+}
+
+//______________________________________________________________________________
+TGButton *TGToolBar::AddButton(const TGWindow *w, TGPictureButton *pbut, Int_t spacing)
+{
+   // Add button to toolbar. All buttons added via this method will be deleted
+   // by the toolbar, w is the window to which the button messages will be send.
+
+   const TGPicture *pic = pbut->GetPicture();
+   fPictures->Add((TObject*)pic);
+
+   TGLayoutHints   *layout;
+   layout = new TGLayoutHints(kLHintsTop | kLHintsLeft, spacing, 0, 2, 2);
+   AddFrame(pbut, layout);
+   pbut->Associate(w);
+
+   fTrash->Add(pbut);
+   fTrash->Add(layout);
+
+   fMapOfButtons->Add(pbut, (TObject*)((Long_t)pbut->WidgetId()));
 
    Connect(pbut, "Pressed()" , "TGToolBar", this, "ButtonPressed()");
    Connect(pbut, "Released()", "TGToolBar", this, "ButtonReleased()");
