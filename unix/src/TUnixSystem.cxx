@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.148 2006/04/06 16:34:36 pcanal Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.149 2006/04/06 16:42:20 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -633,7 +633,7 @@ Int_t TUnixSystem::GetFPEMask()
    // clear pending exceptions so feenableexcept does not trigger them
    feclearexcept(FE_ALL_EXCEPT);
    Int_t oldmask = feenableexcept(0);
-   
+
 #else
    fenv_t oldenv;
    fegetenv(&oldenv);
@@ -705,7 +705,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    cur.__control_word &= ~newm;
  #endif
    fesetenv(&cur);
-   
+
 #endif
 #endif
 #endif
@@ -2185,21 +2185,25 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
 
    static char stdoutsav[128] = {0};
    static char stderrsav[128] = {0};
-   static int stdoutdup = -1;
-   static int stderrdup = -1;
+   static Int_t stdoutdup = -1;
+   static Int_t stderrdup = -1;
    Int_t rc = 0;
 
    if (file) {
       // Save the paths
       if (!strlen(stdoutsav)) {
          const char *tty = ttyname(STDOUT_FILENO);
-         if (tty) strcpy(stdoutsav,tty);
-         else stdoutdup = dup(STDOUT_FILENO);
+         if (tty)
+            strcpy(stdoutsav, tty);
+         else
+            stdoutdup = dup(STDOUT_FILENO);
       }
       if (!strlen(stderrsav)) {
          const char *tty = ttyname(STDERR_FILENO);
-         if (tty) strcpy(stderrsav,tty);
-         else stderrdup = dup(STDERR_FILENO);
+         if (tty)
+            strcpy(stderrsav, tty);
+         else
+            stderrdup = dup(STDERR_FILENO);
       }
 
       // Make sure mode makes sense; default "a"
@@ -2223,7 +2227,7 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
             rc = -1;
          }
       } else {
-         if (dup2(stdoutdup,STDOUT_FILENO)<0) {
+         if (dup2(stdoutdup, STDOUT_FILENO) < 0) {
             SysError("RedirectOutput", "could not restore stdout (back to original redirected file)");
             rc = -1;
          }
@@ -2235,7 +2239,7 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
             rc = -1;
          }
       } else {
-         if (dup2(stderrdup,STDERR_FILENO)<0) {
+         if (dup2(stderrdup, STDERR_FILENO) < 0) {
             SysError("RedirectOutput", "could not restore stderr (back to original redirected file)");
             rc = -1;
          }
