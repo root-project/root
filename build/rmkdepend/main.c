@@ -165,6 +165,9 @@ int main_orig(argc, argv)
 	char *defincdir = NULL;
 	char **undeflist = NULL;
 	int numundefs = 0, i;
+        char *currentFileInc = 0;
+        int bufLenCurrentFileInc = 0;
+        char *posEndPath = 0;
 
 	ProgramName = argv[0];
 
@@ -470,13 +473,30 @@ int main_orig(argc, argv)
 	 * now peruse through the list of files.
 	 */
 	for(fp=filelist; *fp; fp++) {
-		filecontent = getfile(*fp);
-		ip = newinclude(*fp, (char *)NULL);
+           posEndPath = 0;
+           if (incp < includedirs + MAXDIRS) {
+              /* -I dirname(sourcefile) */
+              posEndPath = strrchr(*fp, '/');
+              if (posEndPath) {
+                 if (posEndPath - *fp >= bufLenCurrentFileInc) {
+                    if (currentFileInc) free(currentFileInc);
+                    bufLenCurrentFileInc = (posEndPath - *fp)*2;
+                    currentFileInc = malloc(bufLenCurrentFileInc);
+                 }
+                 memcpy(currentFileInc, *fp, posEndPath - *fp);
+                 currentFileInc[posEndPath - *fp] = 0;
+                 *incp++ = currentFileInc;
+              }
+           }
 
-		find_includes(filecontent, ip, ip, 0, FALSE);
-		freefile(filecontent);
-		recursive_pr_include(ip, ip->i_file, base_name(*fp));
-		inc_clean();
+           filecontent = getfile(*fp);
+           ip = newinclude(*fp, (char *)NULL);
+
+           find_includes(filecontent, ip, ip, 0, FALSE);
+           freefile(filecontent);
+           recursive_pr_include(ip, ip->i_file, base_name(*fp));
+           inc_clean();
+           if (posEndPath) --incp;
 	}
         if (!rootBuild) {
 	   if (printed)
