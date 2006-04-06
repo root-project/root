@@ -474,49 +474,51 @@ int G__defined_tagname(const char *tagname,int noerror)
     return(-1);
   }
 
-  /* handles X<X<int>> as X<X<int> > */
-  while((char*)NULL!=(p=(char*)strstr(tagname,">>"))) {
-    ++p;
-    strcpy(temp,p);
-    *p = ' ';
-    ++p;
-    strcpy(p,temp);
-  }
-
-  /* handles X<int > as X<int> */
-  p = (char*)tagname;
-  while((char*)NULL!=(p=(char*)strstr(p," >"))) {
-    if('>' != *(p-1)) {
-      strcpy(temp,p+1);
+  if (strchr(tagname, '>')) {
+    /* handles X<X<int>> as X<X<int> > */
+    while((char*)NULL!=(p=(char*)strstr(tagname,">>"))) {
+      ++p;
+      strcpy(temp,p);
+      *p = ' ';
+      ++p;
       strcpy(p,temp);
     }
-    ++p;
-  }
-  /* handles X <int> as X<int> */
-  p = (char*)tagname;
-  while((char*)NULL!=(p=strstr(p," <"))) {
-    strcpy(temp,p+1);
-    strcpy(p,temp);
-    ++p;
-  }
-  /* handles X<int>  as X<int> */
-  p = (char*)tagname;
-  while((char*)NULL!=(p=strstr(p,"> "))) {
-    if(strncmp(p,"> >",3)==0) {
-      p+=2;
+
+    /* handles X<int > as X<int> */
+    p = (char*)tagname;
+    while((char*)NULL!=(p=(char*)strstr(p," >"))) {
+      if('>' != *(p-1)) {
+        strcpy(temp,p+1);
+        strcpy(p,temp);
+      }
+      ++p;
     }
-    else {
+    /* handles X <int> as X<int> */
+    p = (char*)tagname;
+    while((char*)NULL!=(p=strstr(p," <"))) {
+      strcpy(temp,p+1);
+      strcpy(p,temp);
+      ++p;
+    }
+    /* handles X<int>  as X<int> */
+    p = (char*)tagname;
+    while((char*)NULL!=(p=strstr(p,"> "))) {
+      if(strncmp(p,"> >",3)==0) {
+        p+=2;
+      }
+      else {
+        strcpy(temp,p+2);
+        strcpy(p+1,temp);
+        ++p;
+      }
+    }
+    /* handles X< int> as X<int> */
+    p = (char*)tagname;
+    while((char*)NULL!=(p=strstr(p,"< "))) {
       strcpy(temp,p+2);
       strcpy(p+1,temp);
       ++p;
     }
-  }
-  /* handles X< int> as X<int> */
-  p = (char*)tagname;
-  while((char*)NULL!=(p=strstr(p,"< "))) {
-    strcpy(temp,p+2);
-    strcpy(p+1,temp);
-    ++p;
   }
 
   /* handle X<const const Y> */
@@ -558,27 +560,19 @@ int G__defined_tagname(const char *tagname,int noerror)
 
   /* Search for old tagname */
   len=strlen(atom_tagname);
+  int candidateTag = -1;
+     
  try_again:
 
   for(i=G__struct.alltag-1;i>=0;i--) {
-    if(len==G__struct.hash[i]&&strcmp(atom_tagname,G__struct.name[i])==0&&
-       (((char*)NULL==p&&-1==G__struct.parent_tagnum[i])||
-        env_tagnum==G__struct.parent_tagnum[i])) {
-      G__class_autoloading(i);
-      return(i);
-    }
-  }
-
-  if(0==len) {
-    strcpy(atom_tagname,"$");
-    len=1;
-    goto try_again;
-  }
-
-  for(i=G__struct.alltag-1;i>=0;i--) {
-    if(len==G__struct.hash[i]&&strcmp(atom_tagname,G__struct.name[i])==0&&
-       (((char*)NULL==p&&-1==G__struct.parent_tagnum[i])||
-        env_tagnum==G__struct.parent_tagnum[i]||
+     if(len==G__struct.hash[i]&&strcmp(atom_tagname,G__struct.name[i])==0) {
+        if ((char*)NULL==p&&-1==G__struct.parent_tagnum[i]||
+            env_tagnum==G__struct.parent_tagnum[i]) {
+           G__class_autoloading(i);
+           return(i);
+        }
+        
+        if ( candidateTag == -1 &&(
 #ifdef G__VIRTUALBASE
         -1!=G__isanybase(G__struct.parent_tagnum[i],env_tagnum
                          ,G__STATICRESOLUTION)||
@@ -596,10 +590,20 @@ int G__defined_tagname(const char *tagname,int noerror)
 #endif
         ||G__isenclosingclass(G__struct.parent_tagnum[i],G__tmplt_def_tagnum)
         ||G__isenclosingclassbase(G__struct.parent_tagnum[i],G__tmplt_def_tagnum)
-        )) {
-      G__class_autoloading(i);
-      return(i);
-    }
+        ))
+           candidateTag = i;
+     }
+  }
+
+  if(0==len) {
+    strcpy(atom_tagname,"$");
+    len=1;
+    goto try_again;
+  }
+
+  if (candidateTag != -1) {
+     G__class_autoloading(candidateTag);
+     return(candidateTag);
   }
 
   /* if tagname not found, try instantiating class template */
