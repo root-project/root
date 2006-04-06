@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.11 2004/09/20 19:11:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -298,6 +298,14 @@ void TGToolTip::SetText(const char *new_text)
 
    fLabel->SetText(new TGString(new_text));
    Resize(GetDefaultSize());
+}
+
+//______________________________________________________________________________
+void TGToolTip::SetDelay(Long_t delayms)
+{
+   // Set delay in milliseconds.
+
+   fDelay->SetTime(delayms);
 }
 
 //______________________________________________________________________________
