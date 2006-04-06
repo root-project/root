@@ -49,6 +49,7 @@
 #define G__BIT_ISCONSTANT        0x00100000
 #define G__BIT_ISVIRTUALBASE     0x00200000
 #define G__BIT_ISPCONSTANT       0x00400000
+#define G__BIT_ISMETHCONSTANT    0x10000000 // method is const
 
 #define G__BIT_ISGLOBALVAR       0x00800000
 #define G__BIT_ISLOCALVAR        0x01000000

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.7 2005/11/16 20:10:45 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.8 2006/02/03 21:55:39 pcanal Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -135,7 +135,7 @@ void TMethod::CreateSignature()
 
    TFunction::CreateSignature();
 
-   if (Property() & kIsConstant) fSignature += " const";
+   if (Property() & kIsMethConst) fSignature += " const";
 }
 
 //______________________________________________________________________________

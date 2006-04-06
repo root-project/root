@@ -195,7 +195,7 @@ long G__MethodInfo::Property()
     case G__PROTECTED: property|=G__BIT_ISPROTECTED; break;
     case G__PRIVATE: property|=G__BIT_ISPRIVATE; break;
     }
-    if(ifunc->isconst[index]&G__CONSTFUNC) property|=G__BIT_ISCONSTANT; 
+    if(ifunc->isconst[index]&G__CONSTFUNC) property|=G__BIT_ISCONSTANT | G__BIT_ISMETHCONSTANT; 
     if(ifunc->isconst[index]&G__CONSTVAR) property|=G__BIT_ISCONSTANT;
     if(ifunc->isconst[index]&G__PCONSTVAR) property|=G__BIT_ISPCONSTANT;
     if(isupper(ifunc->type[index])) property|=G__BIT_ISPOINTER;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.6 2002/08/09 19:26:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.7 2002/11/26 10:24:09 brun Exp $
 // Author: Fons Rademakers   20/06/96
 
 /*************************************************************************
@@ -67,7 +67,8 @@ enum EProperty {
    kIsDefault      = G__BIT_ISDEFAULT,
    kIsReference    = G__BIT_ISREFERENCE,
    kIsConstant     = G__BIT_ISCONSTANT,
-   kIsConstPointer = G__BIT_ISPCONSTANT
+   kIsConstPointer = G__BIT_ISPCONSTANT,
+   kIsMethConst    = G__BIT_ISMETHCONSTANT
 };
 
 
