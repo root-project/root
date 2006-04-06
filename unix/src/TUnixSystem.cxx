@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.146 2006/01/25 15:08:26 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.147 2006/03/20 21:43:44 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2185,14 +2185,23 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
 
    static char stdoutsav[128] = {0};
    static char stderrsav[128] = {0};
+   static int stdoutdup = -1;
+   static int stderrdup = -1;
    Int_t rc = 0;
 
    if (file) {
       // Save the paths
-      if (!strlen(stdoutsav))
-         strcpy(stdoutsav,ttyname(STDOUT_FILENO));
-      if (!strlen(stderrsav))
-         strcpy(stderrsav,ttyname(STDERR_FILENO));
+      if (!strlen(stdoutsav)) {
+         const char *tty = ttyname(STDOUT_FILENO);
+         if (tty) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+         else stdoutdup = dup(STDOUT_FILENO);
+      }
+      if (!strlen(stderrsav)) {
+         const char *tty = ttyname(STDERR_FILENO);
+         if (tty) strcpy(stderrsav,ttyname(STDERR_FILENO));
+         else stderrdup = dup(STDERR_FILENO);
+      }
+
       // Make sure mode makes sense; default "a"
       const char *m = (mode[0] == 'a' || mode[0] == 'w') ? mode : "a";
       // Redirect stdout & stderr
@@ -2208,14 +2217,28 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
    } else {
       // Restore stdout & stderr
       fflush(stdout);
-      if (freopen(stdoutsav, "a", stdout) == 0) {
-         SysError("RedirectOutput", "could not restore stdout");
-         rc = -1;
+      if (stdoutsav[0]) {
+         if (freopen(stdoutsav, "a", stdout) == 0) {
+            SysError("RedirectOutput", "could not restore stdout");
+            rc = -1;
+         }
+      } else {
+         if (dup2(stdoutdup,STDOUT_FILENO)<0) {
+            SysError("RedirectOutput", "could not restore stdout (back to original redirected file)");
+            rc = -1;
+         }
       }
       fflush(stderr);
-      if (freopen(stderrsav, "a", stderr) == 0) {
-         SysError("RedirectOutput", "could not restore stderr");
-         rc = -1;
+      if (stderrsav[0]) {
+         if (freopen(stderrsav, "a", stderr) == 0) {
+            SysError("RedirectOutput", "could not restore stderr");
+            rc = -1;
+         }
+      } else {
+         if (dup2(stderrdup,STDERR_FILENO)<0) {
+            SysError("RedirectOutput", "could not restore stderr (back to original redirected file)");
+            rc = -1;
+         }
       }
    }
    return rc;
