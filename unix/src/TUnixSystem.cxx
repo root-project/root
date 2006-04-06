@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.147 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.148 2006/04/06 16:34:36 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2193,12 +2193,12 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
       // Save the paths
       if (!strlen(stdoutsav)) {
          const char *tty = ttyname(STDOUT_FILENO);
-         if (tty) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+         if (tty) strcpy(stdoutsav,tty);
          else stdoutdup = dup(STDOUT_FILENO);
       }
       if (!strlen(stderrsav)) {
          const char *tty = ttyname(STDERR_FILENO);
-         if (tty) strcpy(stderrsav,ttyname(STDERR_FILENO));
+         if (tty) strcpy(stderrsav,tty);
          else stderrdup = dup(STDERR_FILENO);
       }
 
