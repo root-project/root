@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.10 2005/04/26 16:36:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.11 2005/08/29 08:24:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -161,15 +161,16 @@ void TAttLine::Modify()
 //*-*                ===========================================
 
    if (!gPad) return;
+   Int_t lineWidth = TMath::Abs(fLineWidth%100);
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineColor(fLineColor);
       if (fLineStyle > 0 && fLineStyle < 30) gVirtualX->SetLineStyle(fLineStyle);
       else                                   gVirtualX->SetLineStyle(1);
-      gVirtualX->SetLineWidth(fLineWidth);
+      gVirtualX->SetLineWidth(lineWidth);
    }
 
-   if (fLineStyle > 0 && fLineStyle < 30) gPad->SetAttLinePS(fLineColor,fLineStyle,fLineWidth);
-   else                                   gPad->SetAttLinePS(fLineColor,1,fLineWidth);
+   if (fLineStyle > 0 && fLineStyle < 30) gPad->SetAttLinePS(fLineColor,fLineStyle,lineWidth);
+   else                                   gPad->SetAttLinePS(fLineColor,1,lineWidth);
 }
 
 //______________________________________________________________________________
