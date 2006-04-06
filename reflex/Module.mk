@@ -42,13 +42,23 @@ ifneq ($(BUILDPYTHON),no)
 RFLX_GRFLXPYC := $(subst .py,.pyc,$(RFLX_GRFLXPY))
 endif
 
+ifeq ($(ROOTSYS)/lib,$(LIBDIR))
+ifeq ($(PLATFORM),win32)
+RFLX_LIBDIR = %~d0%~p0\..\lib
+else
+RFLX_LIBDIR = `dirname $$0`/../lib
+endif
+else
+RFLX_LIBDIR = $(LIBDIR)
+endif
+
 ifeq ($(PLATFORM),win32)
 RFLX_GENREFLEX = bin/genreflex.bat
 RFLX_GNRFLX_L1 = "@echo off"
-RFLX_GNRFLX_L2 = "python  %~d0%~p0\..\lib\python\genreflex\genreflex.py %*"
+RFLX_GNRFLX_L2 = "python  $(RFLX_LIBDIR)\python\genreflex\genreflex.py %*"
 RFLX_GENRFLXRC = bin/genreflex-rootcint.bat
 RFLX_GRFLXRC_L1 = "@echo off"
-RFLX_GRFLXRC_L2 = "python %~d0%~p0\..\lib\python\genreflex\genreflex-rootcint.py %*"
+RFLX_GRFLXRC_L2 = "python $(RFLX_LIBDIR)\python\genreflex\genreflex-rootcint.py %*"
 # test suite
 RFLX_CPPUNITI   = $(shell cygpath -w "$(CPPUNIT)/include")
 RFLX_CPPUNITLL  = $(shell cygpath -w "$(CPPUNIT)/lib/cppunit.lib")
@@ -56,10 +66,10 @@ RFLX_REFLEXLL   = lib/libReflex.lib
 else
 RFLX_GENREFLEX = bin/genreflex
 RFLX_GNRFLX_L1 = "\#!/bin/sh"
-RFLX_GNRFLX_L2 = 'eval "python `dirname $$0`/../lib/python/genreflex/genreflex.py $$*"'
+RFLX_GNRFLX_L2 = 'eval "python $(RFLX_LIBDIR)/python/genreflex/genreflex.py $$*"'
 RFLX_GENRFLXRC = bin/genreflex-rootcint
 RFLX_GRFLXRC_L1 = "\#!/bin/sh"
-RFLX_GRFLXRC_L2 = 'eval "python `dirname $$0`/../lib/python/genreflex/genreflex-rootcint.py $$*"'
+RFLX_GRFLXRC_L2 = 'eval "python $(RFLX_LIBDIR)/python/genreflex/genreflex-rootcint.py $$*"'
 # test suite
 RFLX_CPPUNITI   = $(CPPUNIT)/include
 RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
