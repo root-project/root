@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.122 2006/03/31 12:47:15 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.123 2006/04/03 07:09:14 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1248,10 +1248,16 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 {
    // Handle drag enter event.
 
-   if (fClient && fClient->IsEditable() &&
+   if (fClient && fClient->IsEditable() && 
        (fId != fClient->GetRoot()->GetId())) {
 
+      // the dragged frame cannot be droppped 
       if (fEditDisabled & (kEditDisable | kEditDisableLayout)) return kFALSE;
+
+      // 
+      if (IsEditable()) {
+         return kTRUE;
+      }
 
       Float_t r, g, b;
       TColor::Pixel2RGB(fBackground, r, g, b);
@@ -1260,6 +1266,7 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
       b *= 1.07;
       Pixel_t back = TColor::RGB2Pixel(r, g, b);
       gVirtualX->SetWindowBackground(fId, back);
+      DoRedraw();
       return kTRUE;
    }
 
@@ -1277,6 +1284,7 @@ Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
       if (fEditDisabled & (kEditDisable | kEditDisableLayout)) return kFALSE;
 
       gVirtualX->SetWindowBackground(fId, fBackground);
+      DoRedraw();
       return kTRUE;
    }
 
