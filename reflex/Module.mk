@@ -66,6 +66,8 @@ RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
 RFLX_REFLEXLL   = -Llib -lReflex -ldl
 endif
 
+ALLEXECS += $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC)
+
 RFLX_GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py 
 
 RFLX_TESTD      = $(REFLEXDIR)/test
