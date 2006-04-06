@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.10 2004/12/27 17:16:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.11 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -139,11 +139,6 @@ void TAttFill::Modify()
    }
 
    gPad->SetAttFillPS(fFillColor,fFillStyle);
-
-   if (fFillStyle >= 3100 && fFillStyle <4000) {
-      gVirtualX->SetLineColor(fFillColor);
-      gPad->SetAttLinePS(fFillColor,1,1);
-   }
 }
 
 //______________________________________________________________________________
