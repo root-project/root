@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.149 2006/02/01 18:54:51 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.150 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -80,6 +80,9 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
    fArchiveOffset = 0;
    fIsRootFile    = kTRUE;
    fIsArchive     = kFALSE;
+   fInitDone      = kFALSE;
+   fAsyncHandle   = 0;
+   fAsyncOpenStatus   = kAOSNotAsync;
 
    if (gDebug)
       Info("TFile", "default ctor");
@@ -225,6 +228,12 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fIsRootFile = kTRUE;
    if (strstr(url.GetOptions(), "filetype=raw"))
       fIsRootFile = kFALSE;
+
+   // Init initialization control flag
+   fInitDone   = kFALSE;
+   // We are doing synchronously
+   fAsyncHandle = 0;
+   fAsyncOpenStatus = kAOSNotAsync;
 
    gDirectory = 0;
    SetName(fname1);
@@ -401,6 +410,7 @@ TFile::~TFile()
    SafeDelete(fCache);
    SafeDelete(fArchive);
    SafeDelete(fInfoCache);
+   SafeDelete(fAsyncHandle);
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
@@ -414,6 +424,14 @@ TFile::~TFile()
 void TFile::Init(Bool_t create)
 {
    // Initialize a TFile object.
+   // TFile implementations providing asynchronous open functionality need to
+   // override this method to run the appropriate checks before calling this
+   // standard initialization part. See TXNetFile::Init for an example.
+
+   if (fInitDone)
+      // Already called once
+      return;
+   fInitDone = kTRUE;
 
    if (!fIsRootFile) {
       gDirectory = gROOT;
@@ -1198,6 +1216,7 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 
       Double_t start = 0;
       if (gPerfStats != 0) start = TTimeStamp();
+
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -2001,9 +2020,9 @@ void TFile::ReadStreamerInfo()
       MakeZombie();
       return;
    }
-   
+
    list->SetOwner(kFALSE);
-   
+
    if (gDebug > 0) Info("ReadStreamerInfo", "called for file %s",GetName());
 
    // loop on all TStreamerInfo classes
@@ -2125,83 +2144,159 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TUrl urlname(name, kTRUE);
    name = urlname.GetUrl();
 
-   TRegexp re("^root.*:");
-   TString sname = name;
-   if (sname.Index(re) != kNPOS) {
-      // If the url points to the localhost and the file will be opened in
-      // readonly mode and the current user has read access or the specified
-      // user is equal to the current user then open local TFile.
-      const char *lfname = 0;
-      Bool_t localFile = kFALSE;
-      TUrl url(name);
-      Bool_t forceRemote = gEnv->GetValue("TFile.ForceRemote",0);
-      if (!forceRemote) {
-         TInetAddress a(gSystem->GetHostByName(url.GetHost()));
-         TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-         if (!strcmp(a.GetHostName(), b.GetHostName())) {
-            Bool_t read = kFALSE;
-            TString opt = option;
-            opt.ToUpper();
-            if (opt == "" || opt == "READ") read = kTRUE;
-            const char *fname = url.GetFile();
-            if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
-               lfname = &fname[1];
-            else
-               lfname = Form("%s%s", gSystem->HomeDirectory(), fname);
-            if (read) {
-               char *fn;
-               if ((fn = gSystem->ExpandPathName(lfname))) {
-                  if (gSystem->AccessPathName(fn, kReadPermission))
-                     read = kFALSE;
-                  delete [] fn;
-               }
-            }
-            Bool_t sameUser = kFALSE;
-            UserGroup_t *u = gSystem->GetUserInfo();
-            if (u && !strcmp(u->fUser, url.GetUser()))
-               sameUser = kTRUE;
-            delete u;
-            if (read || sameUser)
-               localFile = kTRUE;
-         }
-      }
-      if (!localFile) {
-         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-             h->LoadPlugin() == 0)
-            f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
-         else
-            f = new TNetFile(name, option, ftitle, compress, netopt);
-      } else {
-         f = new TFile(lfname, option, ftitle, compress);
-      }
-   } else if (!strncmp(name, "http:", 5)) {
+   // Resolve the file type; this also adjusts names
+   EFileType type = GetType(name, option);
+
+   if (type == kLocal) {
+
+      // Local files
+      f = new TFile(urlname.GetFile(), option, ftitle, compress);
+
+   } else if (type == kNet) {
+
+      // Network files
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+           h->LoadPlugin() == 0)
+         f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
+      else
+         f = new TNetFile(name, option, ftitle, compress, netopt);
+
+   } else if (type == kWeb) {
+
+      // Web files
       if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
           h->LoadPlugin() == 0)
          f = (TFile*) h->ExecPlugin(1, name);
       else
          f = new TWebFile(name);
-   } else if (!strncmp(name, "file:", 5)) {
+
+   } else if (type == kFile) {
+
+      // 'file:' protocol
       if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
           h->LoadPlugin() == 0)
          f = (TFile*) h->ExecPlugin(4, name+5, option, ftitle, compress);
       else
          f = new TFile(name, option, ftitle, compress);
-   } else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-      if (h->LoadPlugin() == -1)
-         return 0;
-      TClass *cl = gROOT->GetClass(h->GetClass());
-      if (cl && cl->InheritsFrom("TNetFile"))
-         f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
-      else
-         f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
-   } else
-      f = new TFile(name, option, ftitle, compress);
+
+   } else {
+
+      // no recognized specification: try the plugin manager
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
+         TClass *cl = gROOT->GetClass(h->GetClass());
+         if (cl && cl->InheritsFrom("TNetFile"))
+            f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
+         else
+            f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
+      } else
+         // just try to open it locally
+         f = new TFile(name, option, ftitle, compress);
+   }
 
    if (f && f->IsZombie()) {
       delete f;
       f = 0;
    }
 
+   return f;
+}
+
+//______________________________________________________________________________
+TFileOpenHandle *TFile::AsyncOpen(const char *name, Option_t *option,
+                                  const char *ftitle, Int_t compress,
+                                  Int_t netopt)
+{
+   // Static member function to submit an open request. The request will be
+   // processed asynchronously. See TFile::Open(const char *, ...) for an
+   // explanation of the arguments. A handler is returned which is to be passed
+   // to TFile::Open(TFileOpenHandle *) to get the real TFile instance once
+   // the file is open.
+   // This call never blocks and it is provided to allow parallel submission
+   // of file opening operations expected to take a long time.
+   // TFile::Open(TFileOpenHandle *) may block if the file is not yet ready.
+   // The sequence
+   //    TFile::Open(TFile::AsyncOpen(const char *, ...))
+   // is equivalent to
+   //    TFile::Open(const char *, ...) .
+   // To be effective, the underlying TFile implementation must be able to
+   // support asynchronous open functionality. Currently, only TXNetFile
+   // supports it. If the functionality is not implemented, this call acts
+   // transparently by returning an handle with the arguments for the
+   // standard synchronous open run by TFile::Open(TFileOpenHandle *).
+   // The retuned handle will be adopted by TFile after opening completion
+   // in TFile::Open(TFileOpenHandle *); if opening is not finalized the
+   // handle must be deleted by the caller.
+
+   TFileOpenHandle *fh = 0;
+   TPluginHandler *h;
+   TFile *f = 0;
+   Bool_t notfound = kTRUE;
+
+   // change names from e.g. /castor/cern.ch/alice/file.root to
+   // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
+   TUrl urlname(name, kTRUE);
+   name = urlname.GetUrl();
+
+   // Resolve the file type; this also adjusts names
+   EFileType type = GetType(name, option);
+
+   // Here we send the asynchronous request if the functionality is implemented
+   if (type == kNet) {
+      // Network files
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+           !strcmp(h->GetClass(),"TXNetFile") && h->LoadPlugin() == 0) {
+         f = (TFile*) h->ExecPlugin(6, name, option, ftitle, compress, netopt, kTRUE);
+         notfound = kFALSE;
+      }
+   }
+
+   // Make sure that no error occured
+   if (notfound) {
+      SafeDelete(f);
+      // Save the arguments in the handler, so that a standard open can be
+      // attempted later on
+      fh = new TFileOpenHandle(name, option, ftitle, compress, netopt);
+   } else if (f) {
+      // Fill the opaque handler to be use to attach the file later on
+      fh = new TFileOpenHandle(f);
+   }
+
+   // We are done
+   return fh;
+}
+
+//______________________________________________________________________________
+TFile *TFile::Open(TFileOpenHandle *fh)
+{
+   // Waits for the completion of an asynchronous open request.
+   // Returns the associated TFile, transferring ownership of the
+   // handle to the TFile instance.
+
+   TFile *f = 0;
+
+   // Note that the request may have failed
+   if (fh) {
+      // Was asynchronous open functionality implemented?
+      if ((f = fh->GetFile()) && !(f->IsZombie())) {
+         // Yes: wait for the completion of the open phase, if needed
+         Bool_t cr = (!strcmp(f->GetOption(),"CREATE") ||
+                      !strcmp(f->GetOption(),"RECREATE") ||
+                      !strcmp(f->GetOption(),"NEW")) ? kTRUE : kFALSE;
+         f->Init(cr);
+      } else {
+         // No: process a standard open
+         f = TFile::Open(fh->GetName(), fh->GetOpt(), fh->GetTitle(),
+                         fh->GetCompress(), fh->GetNetOpt());
+      }
+
+      // Adopt the handle instance in the TFile instance so that it gets
+      // automatically cleaned up
+      f->fAsyncHandle = fh;
+   }
+
+   // We are done
    return f;
 }
 
@@ -2297,3 +2392,88 @@ void TFile::SetFileBytesRead(Long64_t bytes){ fgBytesRead = bytes; }
 
 //______________________________________________________________________________
 void TFile::SetFileBytesWritten(Long64_t bytes){ fgBytesWrite = bytes; }
+
+//______________________________________________________________________________
+TFile::EFileType TFile::GetType(const char *name, Option_t *option)
+{
+   // Resolve the file type as a function of the protocol field in 'name'
+
+   EFileType type = kDefault;
+
+   TRegexp re("^root.*:");
+   TString sname = name;
+   if (sname.Index(re) != kNPOS) {
+      //
+      // Should be a network file ...
+      type = kNet;
+      // ... but make sure that is not local or that a remote-like connection
+      // is forced. Treat it as local if:
+      //    i)  the url points to the localhost, the file will be opened in
+      //        readonly mode and the current user has read access;
+      //    ii) the specified user is equal to the current user then open local
+      //        TFile.
+      const char *lfname = 0;
+      Bool_t localFile = kFALSE;
+      TUrl url(name);
+      Bool_t forceRemote = gEnv->GetValue("TFile.ForceRemote",0);
+      if (!forceRemote) {
+         TInetAddress a(gSystem->GetHostByName(url.GetHost()));
+         TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
+         if (!strcmp(a.GetHostName(), b.GetHostName())) {
+            Bool_t read = kFALSE;
+            TString opt = option;
+            opt.ToUpper();
+            if (opt == "" || opt == "READ") read = kTRUE;
+            const char *fname = url.GetFile();
+            if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
+               lfname = &fname[1];
+            else
+               lfname = Form("%s%s", gSystem->HomeDirectory(), fname);
+            if (read) {
+               char *fn;
+               if ((fn = gSystem->ExpandPathName(lfname))) {
+                  if (gSystem->AccessPathName(fn, kReadPermission))
+                     read = kFALSE;
+                  delete [] fn;
+               }
+            }
+            Bool_t sameUser = kFALSE;
+            UserGroup_t *u = gSystem->GetUserInfo();
+            if (u && !strcmp(u->fUser, url.GetUser()))
+               sameUser = kTRUE;
+            delete u;
+            if (read || sameUser)
+               localFile = kTRUE;
+         }
+      }
+      //
+      // Adjust the type according to findings
+      type = (localFile) ? kLocal : type;
+   } else if (!strncmp(name, "http:", 5)) {
+      //
+      // Web file
+      type = kWeb;
+   } else if (!strncmp(name, "file:", 5)) {
+      //
+      // 'file' protocol
+      type = kFile;
+   }
+
+   // We are done
+   return type;
+}
+
+//______________________________________________________________________________
+TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(TFileOpenHandle *handle)
+{
+   // Get status of the async open request related to 'handle'.
+
+   if (handle && handle->fFile)
+      if (!handle->fFile->IsZombie())
+         return handle->fFile->GetAsyncOpenStatus();
+      else
+         return TFile::kAOSFailure;
+
+   // Default is synchronous mode
+   return TFile::kAOSNotAsync;
+}

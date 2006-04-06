@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.5 2005/10/27 16:36:38 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.6 2006/03/27 14:33:48 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -56,6 +56,7 @@
 
 class TSocket;
 class XrdClient;
+class XrdOucRecMutex;
 
 class TXNetFile : public TNetFile {
 
@@ -72,9 +73,14 @@ private:
    static Bool_t  fgInitDone;    // Avoid initializing more than once
    static Bool_t  fgRootdBC;     // Control rootd backward compatibility 
 
+   XrdOucRecMutex *fInitMtx;     // Protects fInitDone, serializes the
+                                 // attempts to Init() for this object only
+
    // Methods
-   void    CreateXClient(const char *url, Option_t *option, Int_t netopt);
-   void    Open(Option_t *option);
+   void    CreateXClient(const char *url, Option_t *option, Int_t netopt,
+                         Bool_t parallelopen);
+   void    Init(Bool_t create);
+   Bool_t  Open(Option_t *option, Bool_t parallelopen);
    void    SetEnv();
    Int_t   SysStat(Int_t fd, Long_t* id, Long64_t* size, Long_t* flags,
                    Long_t* modtime);
@@ -86,13 +92,15 @@ private:
    static Int_t GetRootdProtocol(TSocket *s);
 
 public:
-   TXNetFile() : TNetFile() { fClient = 0; fSize = 0; fIsRootd = 0; }
+   TXNetFile() : TNetFile() { fClient = 0; fSize = 0; fIsRootd = 0;
+                              fInitMtx = 0; }
    TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "",
-              Int_t compress = 1, Int_t netopt = -1);
+             Int_t compress = 1, Int_t netopt = -1, Bool_t parallelopen = kFALSE);
    virtual ~TXNetFile();
 
    virtual void   Close(const Option_t *opt ="");
    virtual void   Flush();
+   TFile::EAsyncOpenStatus GetAsyncOpenStatus();
    virtual Bool_t IsOpen() const;
    virtual Bool_t ReadBuffer(char *buf, Int_t len);
    virtual Int_t  ReOpen(const Option_t *mode);

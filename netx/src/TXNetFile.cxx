@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.22 2006/03/27 14:33:48 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.23 2006/03/30 16:39:10 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
+#include <XrdOuc/XrdOucPthread.hh>
 #include <XProtocol/XProtocol.hh>
 
 ClassImp(TXNetFile);
@@ -60,7 +61,7 @@ Bool_t TXNetFile::fgRootdBC = kTRUE;
 
 //_____________________________________________________________________________
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
-                     Int_t compress, Int_t netopt) :
+                     Int_t compress, Int_t netopt, Bool_t parallelopen) :
                      TNetFile(url, ftitle, compress, kFALSE)
 {
    // Create a TXNetFile object. A TXNetFile object is the same as a TNetFile
@@ -104,8 +105,11 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    // Remove anchors from the URL!
    urlnoanchor.SetAnchor("");
 
+   // Init mutex used in the asynchronous open machinery
+   fInitMtx = new XrdOucRecMutex();
+
    // Create an instance
-   CreateXClient(urlnoanchor.GetUrl(), option, netopt);
+   CreateXClient(urlnoanchor.GetUrl(), option, netopt, parallelopen);
 }
 
 //_____________________________________________________________________________
@@ -116,9 +120,8 @@ TXNetFile::~TXNetFile()
    if (IsOpen())
       Close(0);
 
-   if (fClient)
-      delete fClient;
-   fClient = 0;
+   SafeDelete(fInitMtx);
+   SafeDelete(fClient);
 }
 
 //_____________________________________________________________________________
@@ -151,18 +154,26 @@ void TXNetFile::FormUrl(TUrl uu, TString &uus)
 }
 
 //_____________________________________________________________________________
-void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
+void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
+                              Bool_t parallelopen)
 {
    // The real creation work is done here.
 
    // Init members
    fSize = 0;
    fIsRootd = kFALSE;
+
+   // The parallel open can be forced to true in the config
+   if (gEnv->GetValue("XNet.ForceParallelOpen", 0))
+      parallelopen = kTRUE;
+   fAsyncOpenStatus = (parallelopen) ? kAOSInProgress : fAsyncOpenStatus ;
+
    Bool_t isRootd = kFALSE;
    //
    // Setup a client instance
    fClient = new XrdClient(url);
    if (!fClient) {
+      fAsyncOpenStatus = (parallelopen) ? kAOSFailure : fAsyncOpenStatus ;
       Error("CreateXClient","fatal error: new object creation failed -"
             " out of system resources.");
       gSystem->Abort();
@@ -171,13 +182,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
 
    //
    // Now try opening the file
-   // Cycling through the different urls and handling of
-   // redirections is done internally
-   Open(option);
-
-   //
-   // Open file
-   if (!fClient->IsOpen()) {
+   if (!Open(option, parallelopen)) {
       if (!fClient->IsOpen_wait()) {
          if (gDebug > 1)
             Info("CreateXClient", "remote file could not be open");
@@ -186,67 +191,68 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt)
          isRootd = (fClient->GetClientConn()->GetServerType() ==
                     XrdClientConn::kSTRootd);
 
-         if (isRootd && fgRootdBC) {
+         if (isRootd) {
+            if (fgRootdBC) {
 
-            Int_t sd = fClient->GetClientConn()->GetOpenSockFD();
-            if (sd > -1) {
-               //
-               // Create a TSocket on the open connection
-               TSocket *s = new TSocket(sd);
+               Int_t sd = fClient->GetClientConn()->GetOpenSockFD();
+               if (sd > -1) {
+                  //
+                  // Create a TSocket on the open connection
+                  TSocket *s = new TSocket(sd);
 
-               s->SetOption(kNoBlock, 0);
+                  s->SetOption(kNoBlock, 0);
 
-               // Find out the remote protocol (send the client protocol first)
-               Int_t rproto = GetRootdProtocol(s);
-               if (rproto < 0) {
-                  Error("CreateXClient", "getting rootd server protocol");
+                  // Find out the remote protocol (send the client protocol first)
+                  Int_t rproto = GetRootdProtocol(s);
+                  if (rproto < 0) {
+                     Error("CreateXClient", "getting rootd server protocol");
+                     goto zombie;
+                  }
+
+                  // Finalize TSocket initialization
+                  s->SetRemoteProtocol(rproto);
+                  TUrl uut((fClient->GetClientConn()
+                                   ->GetCurrentUrl()).GetUrl().c_str());
+                  TString uu;
+                  FormUrl(uut,uu);
+
+                  if (gDebug > 2)
+                     Info("CreateXClient"," url: %s",uu.Data());
+                  s->SetUrl(uu.Data());
+                  s->SetService("rootd");
+                  s->SetServType(TSocket::kROOTD);
+                  //
+                  // Set rootd flag
+                  fIsRootd = kTRUE;
+                  //
+                  // Now we can check if we can create a TNetFile on the
+                  // open connection
+                  if (rproto > 13) {
+                     //
+                     // Remote support for reuse of open connection
+                     TNetFile::Create(s, option, netopt);
+                  } else {
+                     //
+                     // Open connection has been closed because could
+                     // not be reused; TNetFile will open a new connection
+                     TNetFile::Create(uu.Data(), option, netopt);
+                  }
+
+                  return;
+               } else {
+                  Error("CreateXClient", "rootd: underlying socket undefined");
                   goto zombie;
                }
-
-               // Finalize TSocket initialization
-               s->SetRemoteProtocol(rproto);
-               TUrl uut((fClient->GetClientConn()
-                                ->GetCurrentUrl()).GetUrl().c_str());
-               TString uu;
-               FormUrl(uut,uu);
-
-               if (gDebug > 2)
-                  Info("CreateXClient"," url: %s",uu.Data());
-               s->SetUrl(uu.Data());
-               s->SetService("rootd");
-               s->SetServType(TSocket::kROOTD);
-               //
-               // Set rootd flag
-               fIsRootd = kTRUE;
-               //
-               // Now we can check if we can create a TNetFile on the
-               // open connection
-               if (rproto > 13) {
-                  //
-                  // Remote support for reuse of open connection
-                  TNetFile::Create(s, option, netopt);
-               } else {
-                  //
-                  // Open connection has been closed because could
-                  // not be reused; TNetFile will open a new connection
-                  TNetFile::Create(uu.Data(), option, netopt);
-               }
-
-               return;
             } else {
-               Error("CreateXClient", "rootd: underlying socket undefined");
+               if (gDebug > 0)
+                  Info("CreateXClient", "rootd: fall back not enabled - closing");
                goto zombie;
             }
          } else {
-            if (isRootd)
-               if (gDebug > 0)
-                  Info("CreateXClient", "rootd: fall back not enabled - closing");
+            if (gDebug > 0)
+               Info("CreateXClient", "open attempt failed");
             goto zombie;
          }
-      } else {
-         if (gDebug > 0)
-            Info("CreateXClient", "open attempt failed");
-         goto zombie;
       }
    }
    // set the Endpoint Url we are now connected to
@@ -317,7 +323,7 @@ Int_t TXNetFile::GetRootdProtocol(TSocket *s)
 }
 
 //_____________________________________________________________________________
-void TXNetFile::Open(Option_t *option)
+Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
 {
    // The real creation work is done here.
 
@@ -369,7 +375,8 @@ void TXNetFile::Open(Option_t *option)
          if (gSystem->AccessPathName(fUrl.GetUrl(), kWritePermission)) {
             Error("Open", "no write permission, could not open file %s",
                           fUrl.GetUrl());
-            return;
+            fAsyncOpenStatus = (doitparallel) ? kAOSFailure : fAsyncOpenStatus ;
+            return kFALSE;
          }
          openOpt |= kXR_open_updt;
       }
@@ -393,22 +400,33 @@ void TXNetFile::Open(Option_t *option)
 
    //
    // Open file (FileOpenerThread disabled for the time being)
-   if (!fClient->Open(openMode, openOpt, false)) {
+   if (!fClient->Open(openMode, openOpt, doitparallel)) {
       if (gDebug > 1)
          Info("Open", "remote file could not be open");
+      fAsyncOpenStatus = (doitparallel) ? kAOSFailure : fAsyncOpenStatus ;
+      return kFALSE;
    } else {
       // Initialize the file
-      Init(create);
-      // If initialization failed close everything
-      if (TFile::IsZombie()) {
-         fClient->Close();
-         // To avoid problems in final deletion of object not completely
-         // initialized
-         fWritable = 0;
+      // If we are using the parallel open, the init phase is
+      // performed later. In checking for the IsOpen or
+      // asynchronously in a callback func
+      if (!doitparallel) {
+         // Mutex serialization is done inside
+         Init(create);
+         // If initialization failed close everything
+         if (TFile::IsZombie()) {
+            fClient->Close();
+            // To avoid problems in final deletion of object not completely
+            // initialized
+            fWritable = 0;
+            // Notify failure
+            return kFALSE;
+         }
       }
-  }
+   }
 
-   return;
+   // We are done
+   return kTRUE;
 }
 
 //_____________________________________________________________________________
@@ -526,6 +544,45 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
 }
 
 //_____________________________________________________________________________
+void TXNetFile::Init(Bool_t create)
+{
+   // Initialize the file. Makes sure that the file is really open before
+   // calling TFile::Init. It may block.
+
+   if (fInitDone) {
+      // TFile::Init already called once
+      if (gDebug > 1)
+         Info("Init","TFile::Init already called once");
+      return;
+   }
+
+   if (fIsRootd) {
+      if (gDebug > 1)
+         Info("Init","rootd: calling directly TFile::Init");
+      return TFile::Init(create);
+   }
+
+   if (fClient) {
+      // A mutex serializes this very delicate section
+      XrdOucMutexHelper m(fInitMtx);
+
+      // To safely perform the Init() we must make sure that
+      // the file is successfully open; this call may block
+      if (fClient->IsOpen_wait()) {
+         // Avoid big transfers at this level
+         bool usecachesave = fClient->UseCache(0);
+         // Note that Init will trigger recursive calls
+         TFile::Init(create);
+         // Restor requested behaviour
+         fClient->UseCache(usecachesave);
+      } else
+         if (gDebug > 0)
+            Info("Init","open request failed!");
+
+   }
+}
+
+//_____________________________________________________________________________
 Bool_t TXNetFile::IsOpen() const
 {
    // Return kTRUE if the file is open, kFALSE otherwise.
@@ -536,7 +593,31 @@ Bool_t TXNetFile::IsOpen() const
       return TNetFile::IsOpen();
    }
 
-   return (fClient ? fClient->IsOpen() : 0);
+   if (!fClient)
+      return kFALSE;
+
+   // We are done
+   return ((fClient && fInitDone) ? fClient->IsOpen() : kFALSE);
+}
+
+//_____________________________________________________________________________
+TFile::EAsyncOpenStatus TXNetFile::GetAsyncOpenStatus()
+{
+   // Return status of asynchronous request
+
+   if (fAsyncOpenStatus != TFile::kAOSNotAsync) {
+      if (fClient->IsOpen_inprogress()) {
+         return TFile::kAOSInProgress;
+      } else {
+         if (fClient->IsOpen())
+            return TFile::kAOSSuccess;
+         else
+            return TFile::kAOSFailure;
+      }
+   }
+
+   // Not asynchronous
+   return TFile::kAOSNotAsync;
 }
 
 //_____________________________________________________________________________
@@ -699,7 +780,7 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
 
    // url is not needed because already stored
    // fOption is set in TFile::ReOpen
-   Open(fOption.Data());
+   Open(fOption.Data(), kFALSE);
 
    // If not successful, flag it
    if (!IsOpen())
@@ -778,6 +859,11 @@ void TXNetFile::SetEnv()
    // Whether to use a separate thread for reading
    Int_t goAsync = gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC);
    EnvPutInt(NAME_GOASYNC, goAsync);
+
+   // Read ahead switch
+   Int_t rAhead = gEnv->GetValue("XNet.ReadAhead",
+                                  DFLT_READAHEADTYPE);
+   EnvPutInt(NAME_READAHEADTYPE, rAhead);
 
    // Read ahead size
    Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",

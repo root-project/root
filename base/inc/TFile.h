@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.41 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.42 2006/02/01 18:54:51 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -32,8 +32,15 @@ class TUrl;
 class TFree;
 class TArrayC;
 class TArchiveFile;
+class TFileOpenHandle;
+
 
 class TFile : public TDirectory {
+
+public:
+   // Asynchronous open request status
+   enum EAsyncOpenStatus { kAOSNotAsync = -1,  kAOSFailure = 0,
+                           kAOSInProgress = 1, kAOSSuccess = 2 };
 
 protected:
    Double_t      fSumBuffer;      //Sum of buffer sizes of objects written so far
@@ -63,13 +70,17 @@ protected:
    Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t        fIsArchive;      //!True if this is a pure archive file
    Bool_t        fIsRootFile;     //!True is this is a ROOT file
+   Bool_t        fInitDone;       //!True if the file has been initialized
+   TFileOpenHandle *fAsyncHandle; //!For proper automatic cleanup
+   EAsyncOpenStatus fAsyncOpenStatus; //!Status of an asynchronous open request
 
    TList        *fInfoCache;      //!Cached list of the streamer infos in this file
 
    static Long64_t fgBytesWrite;  //Number of bytes written by all TFile objects
    static Long64_t fgBytesRead;   //Number of bytes read by all TFile objects
 
-   void     Init(Bool_t create);
+   virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
+   virtual void  Init(Bool_t create);
    Long64_t GetRelOffset() const { return fOffset - fArchiveOffset; }
    Int_t    ReadBufferViaCache(char *buf, Int_t len);
    Int_t    WriteBufferViaCache(const char *buf, Int_t len);
@@ -86,6 +97,10 @@ protected:
 private:
    TFile(const TFile &);            //Files cannot be copied
    void operator=(const TFile &);
+
+   // File type
+   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4};
+   static EFileType GetType(const char *name, Option_t *option = "");
 
 public:
    // TFile status bits
@@ -165,9 +180,16 @@ public:
    virtual void        WriteHeader();
    virtual void        WriteStreamerInfo();
 
+   static TFileOpenHandle
+                      *AsyncOpen(const char *name, Option_t *option = "",
+                                 const char *ftitle = "", Int_t compress = 1,
+                                 Int_t netopt = 0);
    static TFile       *Open(const char *name, Option_t *option = "",
                             const char *ftitle = "", Int_t compress = 1,
                             Int_t netopt = 0);
+   static TFile       *Open(TFileOpenHandle *handle);
+
+   static EAsyncOpenStatus GetAsyncOpenStatus(TFileOpenHandle *handle);
 
    static Long64_t     GetFileBytesRead();
    static Long64_t     GetFileBytesWritten();
@@ -176,6 +198,39 @@ public:
    static void         SetFileBytesWritten(Long64_t bytes = 0);
 
    ClassDef(TFile,7)  //ROOT file
+};
+
+
+//
+// Class containing info about the file being opened via TFile::AsyncOpen()
+//
+class TFileOpenHandle {
+
+friend class TFile;
+
+private:
+   TString  fName;       // File name
+   TString  fOpt;        // Options
+   TString  fTitle;      // File title
+   Int_t    fCompress;   // Compression factor
+   Int_t    fNetOpt;     // Network options
+   TFile   *fFile;       // TFile instance of the file being opened
+
+   TFileOpenHandle(TFile *f) : fCompress(1), fNetOpt(0), fFile(f) { }
+   TFileOpenHandle(const char *n, const char *o, const char *t, Int_t cmp,
+                   Int_t no) : fName(n), fOpt(o), fTitle(t), fCompress(cmp),
+                               fNetOpt(no), fFile(0) { }
+
+   TFile *GetFile() const { return fFile; }
+
+ public:
+   ~TFileOpenHandle() { }
+
+   const char *GetName() const { return fName; }
+   const char *GetOpt() const { return fOpt; }
+   const char *GetTitle() const { return fTitle; }
+   Int_t       GetCompress() const { return fCompress; }
+   Int_t       GetNetOpt() const { return fNetOpt; }
 };
 
 R__EXTERN TFile   *gFile;
