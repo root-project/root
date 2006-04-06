@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.180 2006/02/13 09:52:33 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.181 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2125,9 +2125,19 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    //  chopt='X+' : The X-axis is drawn on the top side of the plot.
    //
    //  chopt='Y+' : The Y-axis is drawn on the right side of the plot.
+   //
+   // When a graph is painted with the option "C" or "L" it is possible to draw
+   // a filled area on one side of the line. This is useful to show exclusion
+   // zones. This drawing mode is activated when the absolute value of the
+   // graph line width (set thanks to SetLineWidth) is greater than 99. In that
+   // case the line width number is interpreted as 100*ff+ll = ffll . The two
+   // digits number "ll" represent the normal line width whereas "ff" is the
+   // filled area width. The sign of "ffll" allows to flip the filled area
+   // from one side of the line to the other. The current fill area attributes
+   // are used to draw the hatched zone.
 
 
-   Int_t optionLine , optionAxis , optionCurve, optionStar ,optionMark;
+   Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
    Int_t optionBar  , optionR    , optionOne  , optionE;
    Int_t optionFill , optionZ    , optionCurveFill;
    Int_t i, npt, nloop;
@@ -2338,15 +2348,19 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
                if (optionFill) {
                   gPad->PaintFillArea(npt,gyworkl,gxworkl);
                   if (bord) gPad->PaintPolyLine(npt,gyworkl,gxworkl);
+               } else {
+                  if (TMath::Abs(fLineWidth)>99) PaintPolyLineHatches(npt, gyworkl, gxworkl);
+                  gPad->PaintPolyLine(npt,gyworkl,gxworkl);
                }
-               else         gPad->PaintPolyLine(npt,gyworkl,gxworkl);
             }
             else {
                if (optionFill) {
                   gPad->PaintFillArea(npt,gxworkl,gyworkl);
                   if (bord) gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+               } else {
+                  if (TMath::Abs(fLineWidth)>99) PaintPolyLineHatches(npt, gxworkl, gyworkl);
+                  gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                }
-               else         gPad->PaintPolyLine(npt,gxworkl,gyworkl);
             }
             gxwork[0] = gxwork[npt-1];  gywork[0] = gywork[npt-1];
             npt      = 1;
@@ -3382,6 +3396,162 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
 
 //______________________________________________________________________________
+void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
+{
+   // Draws a polyline with hatches on one side showing an exclusion
+   // zone. x and y are the the vectors holding the polyline and n the
+   // number of points in the polyline and w the width of the hatches.
+   // w can be negative.
+   // This method is not meant to be used directly. It is called 
+   // automatically according to the line style convention.
+
+   Int_t i,j,nf;
+   Double_t w = (fLineWidth/100)*0.005;
+
+   Double_t *xf = new Double_t[2*n];
+   Double_t *yf = new Double_t[2*n];
+   Double_t *xt = new Double_t[n];
+   Double_t *yt = new Double_t[n];
+   Double_t x1, x2, y1, y2, x3, y3, xm, ym, a, a1, a2, a3;
+
+   // Compute the gPad coordinates in TRUE normalized space (NDC)
+   Int_t ix1,iy1,ix2,iy2;
+   Int_t iw = gPad->GetWw();
+   Int_t ih = gPad->GetWh();
+   Double_t x1p,y1p,x2p,y2p;
+   gPad->GetPadPar(x1p,y1p,x2p,y2p);
+   ix1 = (Int_t)(iw*x1p);
+   iy1 = (Int_t)(ih*y1p);
+   ix2 = (Int_t)(iw*x2p);
+   iy2 = (Int_t)(ih*y2p);
+   Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
+   Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
+   Double_t rh    = hndc/(Double_t)ih;
+   Double_t rw    = wndc/(Double_t)iw;
+   Double_t x1ndc = (Double_t)ix1*rw;
+   Double_t y1ndc = (Double_t)iy1*rh;
+   Double_t x2ndc = (Double_t)ix2*rw;
+   Double_t y2ndc = (Double_t)iy2*rh;
+
+   // Ratios to convert user space in TRUE normalized space (NDC)
+   Double_t rx1,ry1,rx2,ry2;
+   gPad->GetRange(rx1,ry1,rx2,ry2);
+   Double_t rx = (x2ndc-x1ndc)/(rx2-rx1);
+   Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
+
+   for (i=0; i<n; i++) {
+      xf[i] = rx*(x[i]-rx1)+x1ndc;
+      yf[i] = ry*(y[i]-ry1)+y1ndc;
+   }
+   nf = n-1;
+
+   a     = TMath::ATan((y[1]-y[0])/(x[1]-x[0]));
+   xt[0] = rx*(x[0]-rx1)+x1ndc-w*TMath::Sin(a);
+   yt[0] = ry*(y[0]-ry1)+y1ndc+w*TMath::Cos(a); 
+
+   a       = TMath::ATan((y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
+   xt[n-1] = rx*(x[n-1]-rx1)+x1ndc-w*TMath::Sin(a);
+   yt[n-1] = ry*(y[n-1]-ry1)+y1ndc+w*TMath::Cos(a); 
+
+   Double_t xi0,yi0,xi1,yi1,xi2,yi2;
+   for (i=1; i<n-1; i++) {
+      xi0 = rx*(x[i]-rx1)+x1ndc;
+      yi0 = ry*(y[i]-ry1)+y1ndc;
+      xi1 = rx*(x[i+1]-rx1)+x1ndc;
+      yi1 = ry*(y[i+1]-ry1)+y1ndc;
+      xi2 = rx*(x[i-1]-rx1)+x1ndc;
+      yi2 = ry*(y[i-1]-ry1)+y1ndc;
+      a1  = TMath::ATan((yi1-yi0)/(xi1-xi0));
+      a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
+      if (xi1<xi0) a1 = a1+3.14159;
+      if (xi0<xi2) a2 = a2+3.14159;
+      x1 = xi0-w*TMath::Sin(a1);
+      y1 = yi0+w*TMath::Cos(a1); 
+      x2 = xi0-w*TMath::Sin(a2);
+      y2 = yi0+w*TMath::Cos(a2); 
+      xm = (x1+x2)*0.5;
+      ym = (y1+y2)*0.5;
+      a3 = TMath::ATan((ym-yi0)/(xm-xi0));
+      x3 = xi0-w*TMath::Sin(a3+1.57079);
+      y3 = yi0+w*TMath::Cos(a3+1.57079);
+      if (w>0) {
+         if(x3<TMath::Min(x1,x2) || y3<TMath::Min(y1,y2)) {
+            x3 = xi0-w*TMath::Sin(a3-1.57079);
+            y3 = yi0+w*TMath::Cos(a3-1.57079);
+         }
+         if (x3>TMath::Max(x1,x2)) {
+            x3 = xi0-w*TMath::Sin(a3+1.57079);
+            y3 = yi0+w*TMath::Cos(a3+1.57079);
+         }
+      } else {
+         if (x3>TMath::Max(x1,x2) || y3>TMath::Max(y1,y2)) {
+            x3 = xi0+w*TMath::Sin(a3+1.57079);
+            y3 = yi0-w*TMath::Cos(a3+1.57079);
+         }
+         if (x3<TMath::Min(x1,x2)) {
+            x3 = xi0-w*TMath::Sin(a3+1.57079);
+            y3 = yi0+w*TMath::Cos(a3+1.57079);
+         }
+      }
+      xt[i] = x3;
+      yt[i] = y3;
+   }
+
+   // Find the crossing segments and remove the useless ones
+   Double_t xc, yc, c1, b1, c2, b2;
+   Bool_t cross = kFALSE;
+   for (i=n-1; i>0; i--) {
+      for (j=i-1; j>0; j--) {
+         if(xt[i-1]==xt[i] || xt[j-1]==xt[j]) continue;
+         c1  = (yt[i-1]-yt[i])/(xt[i-1]-xt[i]);
+         b1  = yt[i]-c1*xt[i];
+         c2  = (yt[j-1]-yt[j])/(xt[j-1]-xt[j]);
+         b2  = yt[j]-c2*xt[j];
+         if (c1 != c2) {
+            xc = (b2-b1)/(c1-c2);
+            yc = c1*xc+b1;
+            if (xc>TMath::Min(xt[i],xt[i-1]) && xc<TMath::Max(xt[i],xt[i-1]) && 
+                xc>TMath::Min(xt[j],xt[j-1]) && xc<TMath::Max(xt[j],xt[j-1]) &&
+                yc>TMath::Min(yt[i],yt[i-1]) && yc<TMath::Max(yt[i],yt[i-1]) && 
+                yc>TMath::Min(yt[j],yt[j-1]) && yc<TMath::Max(yt[j],yt[j-1])) {
+               nf++; xf[nf] = xt[i]; yf[nf] = yt[i];
+               nf++; xf[nf] = xc   ; yf[nf] = yc;
+               i = j;
+               cross = kTRUE;
+               break;
+            } else {
+               continue;
+            }
+         } else {
+            continue;
+         }
+      }
+      if (!cross) {
+         nf++;
+         xf[nf] = xt[i];
+         yf[nf] = yt[i];
+      }
+      cross = kFALSE;
+   }
+   nf++; xf[nf] = xt[0]; yf[nf] = yt[0];
+
+   // NDC to user coordinates
+   for (i=0; i<nf+1; i++) {
+      xf[i] = (1/rx)*(xf[i]-x1ndc)+rx1;
+      yf[i] = (1/ry)*(yf[i]-y1ndc)+ry1;
+   }
+
+   // Draw filled area
+   gPad->PaintFillArea(nf+1,xf,yf);
+   TAttLine::Modify(); // In case of PaintFillAreaHatches
+
+   delete [] xf;
+   delete [] yf;
+   delete [] xt;
+   delete [] yt;
+}
+
+//______________________________________________________________________________
 void TGraph::ComputeLogs(Int_t npoints, Int_t opt)
 {
    // Convert WC from Log scales.
@@ -3690,7 +3860,6 @@ void TGraph::Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
    //  chopt of IGHIST.
    //  ('S', 'SA', 'SA1' ,'XS', 'XSA', or 'XSA1')
 
-   //if (drawtype >= 1000) drawtype -= 1000;
    loptx = kFALSE;
    jtype  = (drawtype%1000)-10;
    if (jtype > 0) { ktype = jtype; loptx = kTRUE; }
@@ -4090,6 +4259,7 @@ L310:
          }
          gPad->PaintFillArea(npt+2,qlx,qly);
       }
+      if (TMath::Abs(fLineWidth)>99) PaintPolyLineHatches(npt, qlx, qly);
       gPad->PaintPolyLine(npt,qlx,qly);
    }
    npt = 1;
