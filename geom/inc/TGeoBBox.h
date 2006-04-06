@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.19 2005/11/17 13:17:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.20 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -44,6 +44,7 @@ public:
    // destructor
    virtual ~TGeoBBox();
    // methods
+   static  Bool_t        AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, const TGeoBBox *box2, const TGeoMatrix *mat2);
    virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);

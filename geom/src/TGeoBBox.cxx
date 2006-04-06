@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.47 2005/11/17 13:17:54 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.48 2005/11/18 16:07:58 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -128,6 +128,60 @@ TGeoBBox::TGeoBBox(Double_t *param)
 TGeoBBox::~TGeoBBox()
 {
 // Destructor
+}
+
+//_____________________________________________________________________________
+Bool_t TGeoBBox::AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, const TGeoBBox *box2, const TGeoMatrix *mat2)
+{
+// Check if 2 positioned boxes overlap.
+   Double_t master[3];
+   Double_t local[24];
+   const Double_t *o1 = box1->GetOrigin();
+   const Double_t *o2 = box2->GetOrigin();
+   Int_t i,j;
+   // Compute distance between box centers and compare with max value
+   Double_t rmaxsq = (box1->GetDX()+box2->GetDX())*(box1->GetDX()+box2->GetDX()) +
+                     (box1->GetDY()+box2->GetDY())*(box1->GetDY()+box2->GetDY()) +
+                     (box1->GetDZ()+box2->GetDZ())*(box1->GetDZ()+box2->GetDZ());
+   mat1->LocalToMaster(o1, master);
+   mat2->MasterToLocal(master, local);
+   Double_t distsq = (local[0]-o2[0])*(local[0]-o2[0]) +
+                     (local[1]-o2[1])*(local[1]-o2[1]) +
+                     (local[2]-o2[2])*(local[2]-o2[2]);
+   if (distsq > rmaxsq + TGeoShape::Tolerance()) return kFALSE;
+   Double_t rmin1 = TMath::Min(box1->GetDX(), box1->GetDY());
+   rmin1 = TMath::Min(rmin1, box1->GetDZ());
+   Double_t rmin2 = TMath::Min(box2->GetDX(), box2->GetDY());
+   rmin2 = TMath::Min(rmin2, box2->GetDZ());
+   Double_t rminsq = (rmin1+rmin2)*(rmin1+rmin2);
+   if (distsq < rminsq - TGeoShape::Tolerance()) return kTRUE;
+   box1->SetBoxPoints(local);
+   for (i=0; i<8; i++) {
+      j = 3*i;
+      if (local[j]-o1[0]>0) local[j] -= 1.e-10;
+      else                  local[j] += 1.e-10;
+      if (local[j+1]-o1[1]>0) local[j+1] -= 1.e-10;
+      else                    local[j+1] += 1.e-10;
+      if (local[j+2]-o1[2]>0) local[j+2] -= 1.e-10;
+      else                    local[j+2] += 1.e-10;
+      mat1->LocalToMaster(&local[j], master);
+      mat2->MasterToLocal(master, &local[j]);
+      if (box2->Contains(&local[j])) return kTRUE;
+   }
+   box2->SetBoxPoints(local);
+   for (i=0; i<8; i++) {
+      j = 3*i;
+      if (local[j]-o2[0]>0) local[j] -= 1.e-10;
+      else                  local[j] += 1.e-10;
+      if (local[j+1]-o2[1]>0) local[j+1] -= 1.e-10;
+      else                    local[j+1] += 1.e-10;
+      if (local[j+2]-o2[2]>0) local[j+2] -= 1.e-10;
+      else                    local[j+2] += 1.e-10;
+      mat2->LocalToMaster(&local[j], master);
+      mat1->MasterToLocal(master, &local[j]);
+      if (box1->Contains(&local[j])) return kTRUE;
+   }
+   return kFALSE;
 }
 
 //_____________________________________________________________________________

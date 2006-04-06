@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.43 2006/02/28 10:57:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.44 2006/03/22 11:18:13 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -538,6 +538,9 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          if (io<=id) continue;
          node02 = vol->GetNode(io);
          if (node02->IsOverlapping()) continue;        
+         // Try to fasten-up things...
+         if (!TGeoBBox::AreOverlapping((TGeoBBox*)node01->GetVolume()->GetShape(), node01->GetMatrix(),
+                                       (TGeoBBox*)node02->GetVolume()->GetShape(), node02->GetMatrix())) continue;
          next2.SetTopName(node02->GetName());
          path1 = node02->GetName();
         
