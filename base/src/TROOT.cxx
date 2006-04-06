@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.173 2006/01/23 18:06:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.174 2006/03/20 21:39:11 pcanal Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -341,7 +341,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBuiltDate       = IDATQQ(__DATE__);
    fBuiltTime       = ITIMQQ(__TIME__);
 
-   fClasses         = new THashList(800,3);
+   fClasses         = new THashTable(800,3);
    fIdMap           = new IdMap_t;
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
@@ -1233,7 +1233,7 @@ TObject *TROOT::GetGeometry(const char *name) const
 }
 
 //______________________________________________________________________________
-TSeqCollection *TROOT::GetListOfGlobals(Bool_t load)
+TCollection *TROOT::GetListOfGlobals(Bool_t load)
 {
    // Return list containing the TGlobals currently defined.
    // Since globals are created and deleted during execution of the
@@ -1243,7 +1243,7 @@ TSeqCollection *TROOT::GetListOfGlobals(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobals) {
-      fGlobals = new THashList(100, 3);
+      fGlobals = new THashTable(100, 3);
       load = kTRUE;
    }
 
@@ -1257,7 +1257,7 @@ TSeqCollection *TROOT::GetListOfGlobals(Bool_t load)
 }
 
 //______________________________________________________________________________
-TSeqCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
+TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 {
    // Return list containing the TFunctions currently defined.
    // Since functions are created and deleted during execution of the
@@ -1267,7 +1267,7 @@ TSeqCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobalFunctions) {
-      fGlobalFunctions = new THashList(100, 3);
+      fGlobalFunctions = new THashTable(100, 3);
       load = kTRUE;
    }
 
@@ -1281,7 +1281,7 @@ TSeqCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 }
 
 //______________________________________________________________________________
-TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
+TCollection *TROOT::GetListOfTypes(Bool_t load)
 {
    // Return list containing all TDataTypes (typedefs) currently defined.
    // Since types can be added and removed during execution of the
@@ -1291,7 +1291,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fTypes) {
-      fTypes = new THashList(100, 3);
+      fTypes = new THashTable(100, 3);
       load = kTRUE;
 
       // Add also basic types (like a identity typedef "typedef int int")

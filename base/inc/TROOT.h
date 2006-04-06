@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.50 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.51 2005/11/21 11:17:18 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -92,17 +92,17 @@ protected:
    Int_t           fEditorMode;           //Current Editor mode
    TObject         *fPrimitive;           //Currently selected primitive
    TVirtualPad     *fSelectPad;           //Currently selected pad
-   TSeqCollection  *fClasses;             //List of classes definition
+   TCollection     *fClasses;             //List of classes definition
    IdMap_t         *fIdMap;               //Map from typeid to TClass pointer
-   TSeqCollection  *fTypes;               //List of data types definition
-   TSeqCollection  *fGlobals;             //List of global variables
-   TSeqCollection  *fGlobalFunctions;     //List of global functions
+   TCollection     *fTypes;               //List of data types definition
+   TCollection     *fGlobals;             //List of global variables
+   TCollection     *fGlobalFunctions;     //List of global functions
    TSeqCollection  *fFiles;               //List of files
    TSeqCollection  *fMappedFiles;         //List of memory mapped files
    TSeqCollection  *fSockets;             //List of network sockets
    TSeqCollection  *fCanvases;            //List of canvases
    TSeqCollection  *fStyles;              //List of styles
-   TSeqCollection  *fFunctions;           //List of analytic functions
+   TCollection     *fFunctions;           //List of analytic functions
    TSeqCollection  *fTasks;               //List of tasks
    TSeqCollection  *fColors;              //List of colors
    TSeqCollection  *fGeometries;          //List of geometries
@@ -111,7 +111,7 @@ protected:
    TSeqCollection  *fCleanups;            //List of recursiveRemove collections
    TSeqCollection  *fMessageHandlers;     //List of message handlers
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
-   TSeqCollection  *fClassGenerators;     //List of user defined class generators;
+   TCollection     *fClassGenerators;     //List of user defined class generators;
    TSeqCollection  *fSecContexts;         //List of security contexts (TSecContext)
    TSeqCollection  *fProofs;              //List of proof sessions
    TSeqCollection  *fClipboard;           //List of clipbard objects
@@ -166,17 +166,17 @@ public:
    Int_t             GetVersionTime() const { return fVersionTime; }
    Int_t             GetVersionInt() const { return fVersionInt; }
    const char       *GetVersion() const { return fVersion; }
-   TSeqCollection   *GetListOfClasses() const { return fClasses; }
+   TCollection      *GetListOfClasses() const { return fClasses; }
    TSeqCollection   *GetListOfColors() const { return fColors; }
-   TSeqCollection   *GetListOfTypes(Bool_t load = kFALSE);
-   TSeqCollection   *GetListOfGlobals(Bool_t load = kFALSE);
-   TSeqCollection   *GetListOfGlobalFunctions(Bool_t load = kFALSE);
+   TCollection      *GetListOfTypes(Bool_t load = kFALSE);
+   TCollection      *GetListOfGlobals(Bool_t load = kFALSE);
+   TCollection      *GetListOfGlobalFunctions(Bool_t load = kFALSE);
    TSeqCollection   *GetListOfFiles() const       { return fFiles; }
    TSeqCollection   *GetListOfMappedFiles() const { return fMappedFiles; }
    TSeqCollection   *GetListOfSockets() const     { return fSockets; }
    TSeqCollection   *GetListOfCanvases() const    { return fCanvases; }
    TSeqCollection   *GetListOfStyles() const      { return fStyles; }
-   TSeqCollection   *GetListOfFunctions() const   { return fFunctions; }
+   TCollection      *GetListOfFunctions() const   { return fFunctions; }
    TSeqCollection   *GetListOfGeometries() const  { return fGeometries; }
    TSeqCollection   *GetListOfBrowsers() const    { return fBrowsers; }
    TSeqCollection   *GetListOfSpecials() const    { return fSpecials; }
@@ -184,7 +184,7 @@ public:
    TSeqCollection   *GetListOfCleanups() const    { return fCleanups; }
    TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
-   TSeqCollection   *GetListOfClassGenerators() const { return fClassGenerators; }
+   TCollection      *GetListOfClassGenerators() const { return fClassGenerators; }
    TSeqCollection   *GetListOfSecContexts() const { return fSecContexts; }
    TSeqCollection   *GetListOfProofs() const { return fProofs; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }

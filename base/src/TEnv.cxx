@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.27 2006/03/03 09:48:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.28 2006/03/27 09:53:44 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -117,7 +117,9 @@ void TEnvParser::Parse()
    // Parse a line of the env file and create an entry in the resource
    // dictionary (i.e. add a KeyValue pair).
 
-   TString name, type, value;
+   TString name(1024);
+   TString type(1024);
+   TString value(1024);
    int c, state = 0;
 
    while ((c = fgetc(fIfp)) != EOF) {
