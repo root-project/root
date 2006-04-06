@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.222 2006/03/13 15:04:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.223 2006/03/28 16:43:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3051,16 +3051,50 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t iAng1 = fasi%10;
    Double_t dy = 0.003*(Double_t)(idSPA)*gStyle->GetHatchesSpacing();
    Int_t lw = gStyle->GetHatchesLineWidth();
+   Short_t lws = 0;
+   Int_t   lss = 0;
+   Int_t   lcs = 0;
+
+   // Save the current line attributes
+   if (!gPad->IsBatch()) {
+      lws = gVirtualX->GetLineWidth();
+      lss = gVirtualX->GetLineStyle();
+      lcs = gVirtualX->GetLineColor();
+   } else {
+      if (gVirtualPS) {
+         lws = gVirtualPS->GetLineWidth();
+         lss = gVirtualPS->GetLineStyle();
+         lcs = gVirtualPS->GetLineColor();
+      }
+   }
+
+   // Change the current line attributes to draw the hatches
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineStyle(1);
       gVirtualX->SetLineWidth(Short_t(lw));
+      gVirtualX->SetLineColor(gVirtualX->GetFillColor());
    }
    if (gVirtualPS) {
       gVirtualPS->SetLineStyle(1);
       gVirtualPS->SetLineWidth(Short_t(lw));
+      gVirtualPS->SetLineColor(gVirtualPS->GetFillColor());
    }
+
+   // Draw the hatches
    if (ang1[iAng1] != 5.) PaintHatches(dy, ang1[iAng1], nn, xx, yy);
    if (ang2[iAng2] != 5.) PaintHatches(dy, ang2[iAng2], nn, xx, yy);
+
+   // Restore the line attributes
+   if (!gPad->IsBatch()) {
+      gVirtualX->SetLineStyle(lss);
+      gVirtualX->SetLineWidth(lws);
+      gVirtualX->SetLineColor(lcs);
+   }
+   if (gVirtualPS) {
+      gVirtualPS->SetLineStyle(lss);
+      gVirtualPS->SetLineWidth(lws);
+      gVirtualPS->SetLineColor(lcs);
+   }
 }
 
 
