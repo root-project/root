@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.29 2005/10/07 13:00:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.30 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -101,6 +101,12 @@ public:
    EMenuEntryType GetType() const { return fType; }
    TGPopupMenu   *GetPopup() const { return fPopup; }
    TGHotString   *GetLabel() const  { return fLabel; }
+   Int_t          GetEx() const { return fEx; } 
+   Int_t          GetEy() const { return fEy; }
+   UInt_t         GetEw() const { return fEw; }
+   UInt_t         GetEh() const { return fEh; }
+   const TGPicture *GetPic() const { return fPic; }
+   void          *GetUserData() const { return fUserData; } 
 
    ClassDef(TGMenuEntry,0);  // Menu entry class
 };
@@ -305,6 +311,7 @@ public:
                          TGPopupMenu *before = 0);
    virtual TGPopupMenu *AddPopup(const TString &s, Int_t padleft = 4, Int_t padright = 0,
                                  Int_t padtop = 0, Int_t padbottom = 0);
+   virtual void AddTitle(TGMenuTitle *title, TGLayoutHints *l, TGPopupMenu *before = 0);
 
    virtual TGPopupMenu *GetPopup(const char *s);
    virtual TGPopupMenu *RemovePopup(const char *s);

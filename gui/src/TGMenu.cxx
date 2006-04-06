@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.57 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.58 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -200,6 +200,21 @@ void TGMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l,
    fTitles->Add(t);  // keep track of menu titles for later cleanup in dtor
 
    if ((keycode = t->GetHotKeyCode()) != 0) {
+      BindHotKey(keycode, kTRUE);
+   }
+}
+
+//______________________________________________________________________________
+void TGMenuBar::AddTitle(TGMenuTitle *title, TGLayoutHints *l, TGPopupMenu *before)
+{
+   // Add popup via created before menu title.
+
+   Int_t keycode;
+
+   AddFrameBefore(title, l, before);
+   fTitles->Add(title);  // keep track of menu titles for later cleanup in dtor
+
+   if ((keycode = title->GetHotKeyCode()) != 0) {
       BindHotKey(keycode, kTRUE);
    }
 }
