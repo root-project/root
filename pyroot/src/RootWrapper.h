@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.8 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.9 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_ROOTWRAPPER_H
@@ -25,7 +25,7 @@ namespace PyROOT {
 
 // construct a Python shadow class for the named ROOT class
    PyObject* MakeRootClass( PyObject*, PyObject* args );
-   PyObject* MakeRootClassFromString( std::string name, PyObject* scope = 0 );
+   PyObject* MakeRootClassFromString( const std::string& name, PyObject* scope = 0 );
 
 // convenience function to retrieve global variables and enums
    PyObject* GetRootGlobal( PyObject*, PyObject* args );

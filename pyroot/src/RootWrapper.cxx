@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.41 2006/03/16 06:07:32 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.42 2006/03/23 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -41,6 +41,14 @@
 
 //- data _______________________________________________________________________
 R__EXTERN PyObject* gRootModule;
+
+namespace {
+
+// to prevent having to walk scopes, track python classes by full name
+   typedef std::map< std::string, PyObject* > PyClassMap_t;
+   PyClassMap_t gPyClasses;
+
+} // unnamed namespace
 
 
 //- helpers --------------------------------------------------------------------
@@ -329,10 +337,23 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
+PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
 {
+// locate class by full name, if possible to prevent parsing scopes/templates anew
+   PyClassMap_t::iterator pci = gPyClasses.find( fullname );
+   if ( pci != gPyClasses.end() ) {
+      PyObject* pyclass = PyWeakref_GetObject( pci->second );
+      if ( pyclass ) {
+         Py_INCREF( pyclass );
+         return pyclass;
+      }
+   }
+
 // force building of the class if a scope is specified
    Bool_t force = scope != 0;
+
+// working copy
+   std::string name = fullname;
 
 // determine scope name, if a python scope has been given
    std::string scName = "";
@@ -474,6 +495,9 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
       }
    }
 
+// store a reference from the full name to this class
+   gPyClasses[ fullname ] = PyWeakref_NewRef( pyclass, NULL );
+
 // all done
    return pyclass;
 }
@@ -592,11 +616,10 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
    }
 
 // obtain pointer to TObject base class (if possible) for memory mgmt
-   TObject* object = (TObject*)( isRef ? *((void**)address) : address );
-   if ( klass != TObject::Class() )
-      object = (TObject*) klass->DynamicCast( TObject::Class(), object );
+   TObject* object = klass->IsTObject() ? ((TObject*)( isRef ? *((void**)address) : address )) : 0;
+   if ( ! isRef && object ) {
+      object = (TObject*)klass->DynamicCast( TObject::Class(), object );
 
-   if ( ! isRef ) {
    // use the old reference if the object already exists
       PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object );
       if ( oldPyObject )
@@ -606,8 +629,9 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 // actual binding
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( address, klass, isRef );
 
-// memory management
-   TMemoryRegulator::RegisterObject( pyobj, object );
+// memory management, for TObject's only
+   if ( object )
+      TMemoryRegulator::RegisterObject( pyobj, object );
 
 // completion (returned object may be zero w/ a python exception set)
    return (PyObject*)pyobj;
