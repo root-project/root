@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.117 2006/02/16 19:07:28 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.118 2006/04/03 16:14:37 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TVirtualMutex.h"
 #include "TError.h"
 #include "TEnv.h"
+#include "THashTable.h"
 
 #ifdef R__WIN32
 #  ifndef ROOT_TGWin32Command
@@ -474,23 +475,38 @@ void TCint::UpdateListOfGlobalFunctions()
 
    R__LOCKGUARD2(gCINTMutex);
    G__MethodInfo t, *a;
+   void* vt =0;
+   
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
+         Bool_t needToAdd = kTRUE;
          // first remove if already in list
-         TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(t.Name());
-         if (f) {
-            void* vt=(void*)t.InterfaceMethod();
-            if (vt && vt==f->InterfaceMethod() ) {
-               TString mangled = f->GetMangledName();
-               if (mangled==t.GetMangledName()) {
-                  gROOT->fGlobalFunctions->Remove(f);
-                  delete f;
+         TList* listFuncs = ((THashTable*)(gROOT->fGlobalFunctions))->GetListForObject(t.Name());
+         if (listFuncs && (vt = (void*)t.InterfaceMethod())) {
+            Int_t prop = -1;
+            TIter iFunc(listFuncs);
+            TFunction* f = 0;
+            Bool_t foundStart = kFALSE;
+            while (needToAdd && (f = (TFunction*)iFunc())) {
+               if (strcmp(f->GetName(),t.Name())) {
+                  if (foundStart) break;
+                  continue;
+               }
+               foundStart = kTRUE;
+               if (vt == f->InterfaceMethod()) {
+                  if (prop == -1) 
+                     prop = t.Property();
+                  needToAdd = !((prop & G__BIT_ISCOMPILED)
+                                || t.GetMangledName() == f->GetMangledName());
                }
             }
          }
-         a = new G__MethodInfo(t);
-         gROOT->fGlobalFunctions->Add(new TFunction(a));
+         
+         if (needToAdd) {
+            a = new G__MethodInfo(t);
+            gROOT->fGlobalFunctions->Add(new TFunction(a));
+         }
       }
    }
 }
