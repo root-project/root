@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.4 2004/03/12 16:07:34 rdm Exp $ */
+/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.5 2004/06/11 15:38:32 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,7 +32,7 @@ typedef struct {
 
 COMMON_BLOCK_DEF(HEPEVT_DEF,HEPEVT);
 
-#ifndef __APPLE__
+#ifndef __powerpc__
 HEPEVT_DEF HEPEVT;
 #endif
 
