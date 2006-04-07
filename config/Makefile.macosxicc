@@ -76,7 +76,9 @@ LIBFRTBEGIN  := $(shell g77 -print-file-name=libfrtbegin.a)
 endif
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
-                -lifcore
+                -lifcore -lirc -limf -lifport
+FPYTHIA6LIB       = -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
+                -lifcore -lirc -limf -lifport
 
 # Precompiled headers:
 PCHSUPPORTED := $(ENABLEPCH)
