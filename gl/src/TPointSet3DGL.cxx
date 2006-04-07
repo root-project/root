@@ -1,4 +1,4 @@
-// $Header: /user/cvs/root/gl/src/TPointSet3DGL.cxx,v 1.1 2006/04/07 08:43:59 brun Exp $
+// $Header: /user/cvs/root/gl/src/TPointSet3DGL.cxx,v 1.2 2006/04/07 09:03:36 brun Exp $
 
 #ifdef WIN32
 #include <Windows4root.h>
@@ -34,7 +34,7 @@ void TPointSet3DGL::SetBBox()
 
 /**************************************************************************/
 
-void TPointSet3DGL::DirectDraw(const TGLDrawFlags & flags) const
+void TPointSet3DGL::DirectDraw(const TGLDrawFlags & /*flags*/) const
 {
    // printf("TPointSet3DGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
 
