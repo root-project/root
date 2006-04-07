@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.4 2006/02/26 16:09:24 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.5 2006/03/03 15:42:37 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -304,6 +304,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    // Remember that we are in a separate thread, since unsolicited
    // responses are asynchronous by nature.
    UnsolRespProcResult rc = kUNSOL_KEEP;
+
+   // From now on make sure is for us
+   if (!m->MatchStreamid(fConn->fStreamid))
+      return kUNSOL_CONTINUE;
 
    if (gDebug > 2)
       Info("TXSocket::ProcessUnsolicitedMsg", "Processing unsolicited response");
@@ -816,10 +820,14 @@ Int_t TXSocket::PickUpReady()
    fBufCur = 0;
    fByteLeft = 0;
    fByteCur = 0;
+   if (gDebug > 2)
+      Info("RecvRaw","%p: going to sleep", this);
    if (fASem.Wait() != 0) {
       Error("RecvRaw","error waiting at semaphore");
       return -1;
    }
+   if (gDebug > 2)
+      Info("RecvRaw","%p: waken up", this);
 
    R__LOCKGUARD(fAMtx);
 
@@ -834,6 +842,9 @@ Int_t TXSocket::PickUpReady()
    // Set number of available bytes
    if (fBufCur)
       fByteLeft = fBufCur->fLen;
+
+   if (gDebug > 2)
+      Info("RecvRaw","%p: got message (%d bytes)", this, (Int_t)(fBufCur ? fBufCur->fLen : 0));
 
    // Update counters
    fBytesRecv += fBufCur->fLen;
