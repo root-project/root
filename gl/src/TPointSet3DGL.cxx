@@ -1,4 +1,8 @@
-// $Header$
+// $Header: /user/cvs/root/gl/src/TPointSet3DGL.cxx,v 1.1 2006/04/07 08:43:59 brun Exp $
+
+#ifdef WIN32
+#include <Windows4root.h>
+#endif
 
 #include <TPointSet3DGL.h>
 #include <TPointSet3D.h>
