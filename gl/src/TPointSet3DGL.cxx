@@ -1,11 +1,20 @@
-// $Header: /user/cvs/root/gl/src/TPointSet3DGL.cxx,v 1.2 2006/04/07 09:03:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// Author: Matevz Tadel  7/4/2006
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifdef WIN32
-#include <Windows4root.h>
+#include "Windows4root.h"
 #endif
 
-#include <TPointSet3DGL.h>
-#include <TPointSet3D.h>
+#include "TPointSet3DGL.h"
+#include "TPointSet3D.h"
 
 #include <GL/gl.h>
 
@@ -15,9 +24,11 @@
 
 ClassImp(TPointSet3DGL)
 
+//______________________________________________________________________________
 TPointSet3DGL::TPointSet3DGL() : TGLObject()
 {}
 
+//______________________________________________________________________________
 Bool_t TPointSet3DGL::SetModel(TObject* obj)
 {
    Bool_t is_class = set_model(obj, "TPointSet3D");
@@ -27,13 +38,13 @@ Bool_t TPointSet3DGL::SetModel(TObject* obj)
    return is_class;
 }
 
+//______________________________________________________________________________
 void TPointSet3DGL::SetBBox()
 {
   set_axis_aligned_bbox(((TPointSet3D*)fExternalObj)->AssertBBox());
 }
 
-/**************************************************************************/
-
+//______________________________________________________________________________
 void TPointSet3DGL::DirectDraw(const TGLDrawFlags & /*flags*/) const
 {
    // printf("TPointSet3DGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());

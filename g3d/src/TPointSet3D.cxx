@@ -1,4 +1,14 @@
-// $Header$
+// @(#)root/g3d:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// Author: Matevz Tadel  7/4/2006
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #include "TPointSet3D.h"
 
@@ -14,6 +24,7 @@
 
 ClassImp(TPointSet3D)
 
+//______________________________________________________________________________
 void TPointSet3D::ComputeBBox()
 {
    if (fN > 0) {
@@ -21,8 +32,8 @@ void TPointSet3D::ComputeBBox()
       Float_t* p = fP;
       bbox_init();
       while (n--) {
-	 bbox_check_point(p);
-	 p += 3;
+         bbox_check_point(p);
+         p += 3;
       }
    } else {
       bbox_zero();

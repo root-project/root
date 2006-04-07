@@ -1,10 +1,20 @@
-// $Header$
+// @(#)root/gl:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// Author: Matevz Tadel  7/4/2006
 
-#include <TGLObject.h>
-#include <TObject.h>
-#include <TString.h>
-#include <TAtt3D.h>
-#include <TAttBBox.h>
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+
+#include "TGLObject.h"
+#include "TObject.h"
+#include "TString.h"
+#include "TAtt3D.h"
+#include "TAttBBox.h"
 
 //______________________________________________________________________
 // TGLObject
@@ -20,6 +30,7 @@
 
 ClassImp(TGLObject)
 
+//______________________________________________________________________________
 Bool_t TGLObject::set_model(TObject* obj, const Text_t* classname)
 {
    if(obj->InheritsFrom(classname) == false) {
@@ -32,14 +43,16 @@ Bool_t TGLObject::set_model(TObject* obj, const Text_t* classname)
    return true;
 }
 
+//______________________________________________________________________________
 void TGLObject::set_axis_aligned_bbox(Float_t xmin, Float_t xmax,
-				      Float_t ymin, Float_t ymax,
-				      Float_t zmin, Float_t zmax)
+                                      Float_t ymin, Float_t ymax,
+                                      Float_t zmin, Float_t zmax)
 {
    fBoundingBox.SetAligned(TGLVertex3(xmin, ymin, zmin),
-			   TGLVertex3(xmax, ymax, zmax));
+                           TGLVertex3(xmax, ymax, zmax));
 }
 
+//______________________________________________________________________________
 void TGLObject::set_axis_aligned_bbox(const Float_t* p)
 {
    set_axis_aligned_bbox(p[0], p[1], p[2], p[3], p[4], p[5]);

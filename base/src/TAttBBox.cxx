@@ -1,4 +1,14 @@
-// $Header$
+// @(#)root/base:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// Author: Matevz Tadel  7/4/2006
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #include "TAttBBox.h"
 
@@ -12,6 +22,7 @@
 
 ClassImp(TAttBBox)
 
+//______________________________________________________________________________
 void TAttBBox::bbox_init(Float_t infinity)
 {
    // Allocate and prepare for incremental filling.
@@ -20,9 +31,10 @@ void TAttBBox::bbox_init(Float_t infinity)
 
    fBBox[0] =  infinity;   fBBox[1] = -infinity;
    fBBox[2] =  infinity;   fBBox[3] = -infinity;
-   fBBox[4] =  infinity;   fBBox[5] = -infinity;  
+   fBBox[4] =  infinity;   fBBox[5] = -infinity;
 }
 
+//______________________________________________________________________________
 void TAttBBox::bbox_zero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
 {
    // Create cube of volume (2*epsiolon)^3 at (x,y,z).
@@ -35,6 +47,7 @@ void TAttBBox::bbox_zero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
    fBBox[4] = z - epsilon;   fBBox[5] = z + epsilon;
 }
 
+//______________________________________________________________________________
 void TAttBBox::bbox_clear()
 {
    delete [] fBBox; fBBox = 0;

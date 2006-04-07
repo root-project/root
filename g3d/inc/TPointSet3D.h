@@ -1,4 +1,14 @@
-// $Header$
+// @(#)root/g3d:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// Author: Matevz Tadel  7/4/2006
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #ifndef ROOT_TPointSet3D
 #define ROOT_TPointSet3D

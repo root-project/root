@@ -1,9 +1,22 @@
-// $Header: /user/cvs/root/gl/inc/TPointSet3DGL.h,v 1.1 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// Author: Matevz Tadel  7/4/2006
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #ifndef ROOT_TPointSet3DGL
 #define ROOT_TPointSet3DGL
 
-#include <TGLObject.h>
+#ifndef ROOT_TGLObject
+#include "TGLObject.h"
+#endif
+
 
 class TPointSet3DGL : public TGLObject
 {
@@ -18,7 +31,7 @@ public:
 
    virtual Bool_t ShouldCache(const TGLDrawFlags & /*flags*/) const { return false; }
 
-  ClassDef(TPointSet3DGL,1)
-}; // endclass TPointSet3DGL
+  ClassDef(TPointSet3DGL,1)  // Sets of 3D points
+};
 
 #endif

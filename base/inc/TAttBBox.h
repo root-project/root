@@ -1,4 +1,13 @@
-// $Header$
+// @(#)root/base:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// Author: Matevz Tadel  7/4/2006
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TAttBBox
 #define ROOT_TAttBBox
@@ -40,7 +49,7 @@ inline void TAttBBox::bbox_check_point(Float_t x, Float_t y, Float_t z)
 {
    if(x < fBBox[0]) fBBox[0] = x;   if(x > fBBox[1]) fBBox[1] = x;
    if(y < fBBox[2]) fBBox[2] = y;   if(y > fBBox[3]) fBBox[3] = y;
-   if(z < fBBox[4]) fBBox[4] = z;   if(z > fBBox[5]) fBBox[5] = z;	 
+   if(z < fBBox[4]) fBBox[4] = z;   if(z > fBBox[5]) fBBox[5] = z;
 }
 
 inline void TAttBBox::bbox_check_point(const Float_t* p)

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.39 2006/03/09 16:53:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.40 2006/04/07 08:43:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -48,10 +48,10 @@
 //                                                                      //
 // The scene maintains a lazy calculated bounding box for the total     //
 // scene extents, axis aligned round TGLPhysicalShape shapes.           //
-//                                                                      // 
+//                                                                      //
 // Currently a scene is owned exclusively by one viewer - however it is //
 // intended that it could easily be shared by multiple viewers - for    //
-// efficiency and syncronisation reasons. Hence viewer variant objects  // 
+// efficiency and syncronisation reasons. Hence viewer variant objects  //
 // camera, clips etc being owned by viewer and passed at draw/select    //
 //////////////////////////////////////////////////////////////////////////
 
@@ -59,10 +59,10 @@ ClassImp(TGLScene)
 
 //______________________________________________________________________________
 TGLScene::TGLScene() :
-   fLock(kUnlocked), fDrawList(1000), 
+   fLock(kUnlocked), fDrawList(1000),
    fDrawListValid(kFALSE),
    fInSmartRefresh(kFALSE),
-   fBoundingBox(), fBoundingBoxValid(kFALSE), 
+   fBoundingBox(), fBoundingBoxValid(kFALSE),
    fSelectedPhysical(0),
    fClipPlane(0), fClipBox(0), fCurrentClip(0),
    fTransManip(), fScaleManip(), fRotateManip()
@@ -94,8 +94,8 @@ TGLScene::~TGLScene()
 //______________________________________________________________________________
 void TGLScene::AdoptLogical(TGLLogicalShape & shape)
 {
-   // Adopt dynamically created logical 'shape' - add to internal map and take 
-   // responsibility for deleting  
+   // Adopt dynamically created logical 'shape' - add to internal map and take
+   // responsibility for deleting
    if (fLock != kModifyLock) {
       Error("TGLScene::AdoptLogical", "expected ModifyLock");
       return;
@@ -185,16 +185,16 @@ TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
       return 0;
    }
 
-   // Find and return logical shape identified by unqiue 'ID' 
+   // Find and return logical shape identified by unqiue 'ID'
    // Returns 0 if not found
    LogicalShapeMapCIt_t it = fLogicalShapes.find(ID);
    if (it != fLogicalShapes.end()) {
       return it->second;
    } else {
       if (fInSmartRefresh)
-	 return FindLogicalSmartRefresh(ID);
+         return FindLogicalSmartRefresh(ID);
       else
-	 return 0;
+         return 0;
    }
 }
 
@@ -202,8 +202,8 @@ TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
 //______________________________________________________________________________
 void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
 {
-   // Adopt dynamically created physical 'shape' - add to internal map and take 
-   // responsibility for deleting  
+   // Adopt dynamically created physical 'shape' - add to internal map and take
+   // responsibility for deleting
    if (fLock != kModifyLock) {
       Error("TGLScene::AdoptPhysical", "expected ModifyLock");
       return;
@@ -233,13 +233,13 @@ Bool_t TGLScene::DestroyPhysical(ULong_t ID)
       TGLPhysicalShape * physical = physicalIt->second;
       if (fSelectedPhysical == physical) {
          if (fCurrentManip->GetAttached() == fSelectedPhysical) {
-            fCurrentManip->Attach(0);			
+            fCurrentManip->Attach(0);
          }
          fSelectedPhysical = 0;
       }
       fPhysicalShapes.erase(physicalIt);
       fBoundingBoxValid = kFALSE;
-  
+
       // Zero the draw list entry - will be erased as part of sorting
       DrawListIt_t drawIt = find(fDrawList.begin(), fDrawList.end(), physical);
       if (drawIt != fDrawList.end()) {
@@ -291,7 +291,7 @@ UInt_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera * camera)
                // Ensure if selected object this is cleared
                if (fSelectedPhysical == physical) {
                   if (fCurrentManip->GetAttached() == fSelectedPhysical) {
-                     fCurrentManip->Attach(0);			
+                     fCurrentManip->Attach(0);
                   }
                   fSelectedPhysical = 0;
                }
@@ -319,7 +319,7 @@ UInt_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera * camera)
 //______________________________________________________________________________
 TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 {
-   // Find and return physical shape identified by unqiue 'ID' 
+   // Find and return physical shape identified by unqiue 'ID'
    // Returns 0 if not found
    PhysicalShapeMapCIt_t it = fPhysicalShapes.find(ID);
    if (it != fPhysicalShapes.end()) {
@@ -339,8 +339,8 @@ void TGLScene::BeginSmartRefresh()
    LogicalShapeMapIt_t i = fSmartRefreshCache.begin();
    while (i != fSmartRefreshCache.end()) {
       if (i->second->KeepDuringSmartRefresh() == false) {
-	 delete i->second;
-	 fSmartRefreshCache.erase(i);
+         delete i->second;
+         fSmartRefreshCache.erase(i);
       }
       ++i;
    }
@@ -381,12 +381,12 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(ULong_t ID) const
 }
 
 //______________________________________________________________________________
-void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags, 
+void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
                     Double_t timeout, Int_t axesType, const TGLVertex3 * reference,
                     Bool_t forSelect)
 {
    // Draw out scene into current GL context, using passed arguments:
-   // 
+   //
    // 'camera' - used for for object culling, manip scalling
    // 'sceneFlags'  - draw flags for scene - see TGLDrawFlags
    // 'timeout'- timeout for scene draw (in milliseconds) - if 0.0 unlimited
@@ -394,7 +394,7 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
    // 'reference' - position of reference marker (or none if null)
    // 'forSelect' - is draw for select? If kTRUE clip and manip objects (which
    //            cannot be selected) are not drawn
-   
+
    // NOTE: We assume the following (set by calling TGLViewer)
    //
    // Suitible projection / modelview matricies - camera.Apply() called
@@ -417,7 +417,7 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
    // Setup GL light model and face culling depending on clip
    if (fCurrentClip) {
    } else {
-   }        
+   }
 
    // Setup GL for current draw style - fill, wireframe, outline
    // TODO: Could detect change and only mod if changed for speed
@@ -466,8 +466,8 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
             // Second pass - outline (wireframe)
             glDisable(GL_POLYGON_OFFSET_FILL);
             glDisable(GL_LIGHTING);
-            
-            // We are only showing back faces with clipping as a 
+
+            // We are only showing back faces with clipping as a
             // better solution than completely invisible faces.
             // *Could* cull back faces and only outline on front like this:
             //    glEnable(GL_CULL_FACE);
@@ -568,7 +568,7 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
          TGLDrawFlags clipSceneFlags(TGLDrawFlags::kFill, sceneFlags.LOD());
          fCurrentClip->Draw(fCurrentClip->CalcDrawFlags(camera, clipSceneFlags));
       }
-   
+
       // Draw the current manipulator - we want it depth buffer clipped against itself
       // but not the rest of the scene (so it appears over them)
       glClear(GL_DEPTH_BUFFER_BIT);
@@ -576,7 +576,7 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
 
       // Draw selected object bounding box
       if (fSelectedPhysical) {
-         if (sceneFlags.Style() == TGLDrawFlags::kFill || 
+         if (sceneFlags.Style() == TGLDrawFlags::kFill ||
              sceneFlags.Style() == TGLDrawFlags::kWireFrame) {
             // White for wireframe and fill style,
             glColor3d(1.0, 1.0, 1.0);
@@ -584,12 +584,12 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
             // Red for outlines
             glColor3d(1.0, 0.0, 0.0);
          }
-         if (sceneFlags.Style() == TGLDrawFlags::kFill || 
+         if (sceneFlags.Style() == TGLDrawFlags::kFill ||
              sceneFlags.Style() == TGLDrawFlags::kOutline) {
             glDisable(GL_LIGHTING);
          }
          fSelectedPhysical->BoundingBox().Draw();
-         if (sceneFlags.Style() == TGLDrawFlags::kFill || 
+         if (sceneFlags.Style() == TGLDrawFlags::kFill ||
              sceneFlags.Style() == TGLDrawFlags::kOutline) {
             glEnable(GL_LIGHTING);
          }
@@ -601,12 +601,12 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
 }
 
 //______________________________________________________________________________
-void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlags, 
+void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlags,
                         Double_t timeout, const std::vector<TGLPlane> * clipPlanes)
 {
    // Perform a internal draw pass - multiple passes are required for some
    // clip shapes
-   
+
    // 'camera' - used for for object culling
    // 'style'  - draw style kFill (filled polygons) kOutline (polygons + outlines)
    //            kWireFrame
@@ -616,18 +616,18 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    // 'timeout'- timeout for pass (in milliseconds) - if 0.0 unlimited
    // 'clipPlanes' - collection of active clip planes - used for further culling
    //
-   
+
    // NOTE: We do not apply clip planes (at GL level) in this function - this is
    // already done in Draw(). The clipPlanes is passed only for shape culling
    // before the camera cull is done
-   
+
    // Set stopwatch running
    TGLStopwatch stopwatch;
    if (timeout > 0.0 || gDebug > 2) {
       stopwatch.Start();
    }
 
-   // Step 1: Loop through the main sorted draw list 
+   // Step 1: Loop through the main sorted draw list
    Bool_t                   run = kTRUE;
    const TGLPhysicalShape * drawShape;
    Bool_t                   doSelected = (fSelectedPhysical != 0);
@@ -658,14 +658,14 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
          continue;
       }
 
-      // Selected physical should always be drawn (and only once) if visible, 
+      // Selected physical should always be drawn (and only once) if visible,
       // regardless of time limited draws
       if (drawShape == fSelectedPhysical) {
          doSelected = kFALSE;
       }
 
       // TODO: Do small skipping first? Probably cheaper than frustum check
-      // Profile relative costs? The frustum check could be done implictly 
+      // Profile relative costs? The frustum check could be done implictly
       // from the LOD as we project all 8 verticies of the BB onto viewport
 
       // Work out if we need to draw this shape - assume we do first
@@ -712,7 +712,7 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
                                        static_cast<Double_t>(transDrawList.size() + fDrawStats.fOpaque);
          if (stopwatch.Lap() > (timeout * opaqueTimeFraction)) {
             run = kFALSE;
-         }   
+         }
       }
    }
 
@@ -755,10 +755,10 @@ void TGLScene::DrawPass(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
 //______________________________________________________________________________
 void TGLScene::SortDrawList()
 {
-   // Sort the TGLPhysical draw list by shape bounding box volume, from 
+   // Sort the TGLPhysical draw list by shape bounding box volume, from
    // large to small. This makes dropout of shapes with time limited
-   // Draw() calls must less noticable. As this does not use projected 
-   // size it only needs to be done after a scene content change - not 
+   // Draw() calls must less noticable. As this does not use projected
+   // size it only needs to be done after a scene content change - not
    // everytime scene drawn (potential camera/projection change).
    assert(!fDrawListValid);
 
@@ -772,7 +772,7 @@ void TGLScene::SortDrawList()
 
    // Delete all zero (to-be-deleted) objects
    fDrawList.erase(remove(fDrawList.begin(), fDrawList.end(), static_cast<const TGLPhysicalShape *>(0)), fDrawList.end());
-   
+
    assert(fDrawList.size() == fPhysicalShapes.size());
 
    //TODO: partition the selected to front
@@ -790,9 +790,9 @@ void TGLScene::SortDrawList()
 //______________________________________________________________________________
 Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const TGLPhysicalShape * shape2)
 {
-   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if 
+   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
    // 'shape1' bigger than 'shape2'
-   
+
    // TODO: Move this to TGLBoundingBox > operator?
    return (shape1->BoundingBox().Volume() > shape2->BoundingBox().Volume());
 }
@@ -826,18 +826,18 @@ void TGLScene::DrawGuides(const TGLCamera & camera, Int_t axesType, const TGLVer
       return;
    }
 
-   const Float_t axesColors[][4] = {{0.5, 0.0, 0.0, 1.0},  // -ive X axis light red 
+   const Float_t axesColors[][4] = {{0.5, 0.0, 0.0, 1.0},  // -ive X axis light red
                                     {1.0, 0.0, 0.0, 1.0},  // +ive X axis deep red
-                                    {0.0, 0.5, 0.0, 1.0},  // -ive Y axis light green 
+                                    {0.0, 0.5, 0.0, 1.0},  // -ive Y axis light green
                                     {0.0, 1.0, 0.0, 1.0},  // +ive Y axis deep green
-                                    {0.0, 0.0, 0.5, 1.0},  // -ive Z axis light blue 
+                                    {0.0, 0.0, 0.5, 1.0},  // -ive Z axis light blue
                                     {0.0, 0.0, 1.0, 1.0}}; // +ive Z axis deep blue
-   
+
 
    // Axes draw at fixed screen size - back project to world
    TGLVector3 pixelVector = camera.ViewportDeltaToWorld(BoundingBox().Center(), 1, 1);
    Double_t pixelSize = pixelVector.Mag();
-   
+
    // Find x/y/z min/max values
    Double_t min[3] = { BoundingBox().XMin(), BoundingBox().YMin(), BoundingBox().ZMin() };
    Double_t max[3] = { BoundingBox().XMax(), BoundingBox().YMax(), BoundingBox().ZMax() };
@@ -845,7 +845,7 @@ void TGLScene::DrawGuides(const TGLCamera & camera, Int_t axesType, const TGLVer
    for (UInt_t i = 0; i < 3; i++) {
       TGLVertex3 start;
       TGLVector3 vector;
-   
+
       if (axesType == TGLViewer::kAxesOrigin) {
          // Through origin axes
          start[(i+1)%3] = 0.0;
@@ -888,12 +888,12 @@ void TGLScene::DrawGuides(const TGLCamera & camera, Int_t axesType, const TGLVer
    if (axesType == TGLViewer::kAxesOrigin) {
       // Single white origin sphere at 0, 0, 0
       Float_t white[4] = { 1.0, 1.0, 1.0, 1.0 };
-      TGLUtil::DrawSphere(TGLVertex3(0.0, 0.0, 0.0), pixelSize*2.0, white);  
+      TGLUtil::DrawSphere(TGLVertex3(0.0, 0.0, 0.0), pixelSize*2.0, white);
    } else {
       for (UInt_t j = 0; j < 3; j++) {
          if (min[j] <= 0.0 && max[j] >= 0.0) {
             TGLVertex3 zero;
-            zero[j] = 0.0; 
+            zero[j] = 0.0;
             zero[(j+1)%3] = min[(j+1)%3];
             zero[(j+2)%3] = min[(j+2)%3];
             TGLUtil::DrawSphere(zero, pixelSize*2.0, axesColors[j*2 + 1]);
@@ -930,11 +930,11 @@ void TGLScene::DrawGuides(const TGLCamera & camera, Int_t axesType, const TGLVer
 
       // Skip drawning if viewport projection of axis very small - labels will overlap
       // Occurs with orthographic cameras
-      if (axisViewport.Mag() < 1) { 
+      if (axisViewport.Mag() < 1) {
          continue;
       }
 
-      minPos -= camera.ViewportDeltaToWorld(minPos, padPixels*axisViewport.X()/axisViewport.Mag(), 
+      minPos -= camera.ViewportDeltaToWorld(minPos, padPixels*axisViewport.X()/axisViewport.Mag(),
                                                     padPixels*axisViewport.Y()/axisViewport.Mag());
       axisViewport = camera.WorldDeltaToViewport(maxPos, -axis);
       maxPos -= camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
@@ -942,9 +942,9 @@ void TGLScene::DrawGuides(const TGLCamera & camera, Int_t axesType, const TGLVer
 
       DrawNumber(min[k], minPos);        // Min value
       DrawNumber(max[k], maxPos);        // Max value
-   
+
       // Axis name beside max value
-      TGLVertex3 namePos = maxPos - 
+      TGLVertex3 namePos = maxPos -
          camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
                                      padPixels*axisViewport.Y()/axisViewport.Mag());
       glRasterPos3dv(namePos.CArr());
@@ -1002,7 +1002,7 @@ Bool_t TGLScene::Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    //
    // Arguments are passed on to Draw(), with unlimted time
    //
-   // Returns kTRUE if selection changed, kFALSE if not 
+   // Returns kTRUE if selection changed, kFALSE if not
    Bool_t changed = kFALSE;
    if (fLock != kSelectLock) {
       Error("TGLScene::Select", "expected SelectLock");
@@ -1020,7 +1020,7 @@ Bool_t TGLScene::Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
    glInitNames();
    glPushName(0);
 
-   // Draw out scene at best quality, no timelimit, no axes/reference 
+   // Draw out scene at best quality, no timelimit, no axes/reference
    Draw(camera, sceneFlags, 0.0, TGLViewer::kAxesNone, 0, kTRUE); // Select draw
 
    // Retrieve the hit count and return to render
@@ -1100,7 +1100,7 @@ Bool_t TGLScene::Select(const TGLCamera & camera, const TGLDrawFlags & sceneFlag
 //______________________________________________________________________________
 Bool_t TGLScene::SetSelectedColor(const Float_t color[17])
 {
-   // Set full color attributes on current selected physical shape: 
+   // Set full color attributes on current selected physical shape:
    //
    // 0...3  - diffuse
    // 4...7  - ambient
@@ -1173,15 +1173,15 @@ Bool_t TGLScene::SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & sc
 }
 
 //______________________________________________________________________________
-void TGLScene::SetupClips() 
+void TGLScene::SetupClips()
 {
    // Setup clipping objects for current scene bounding box
-   
+
    // Clear out any previous clips
    ClearClips();
 
-   fClipPlane = new TGLClipPlane(TGLVector3(0.0,-1.0,0.0), 
-                                 BoundingBox().Center(), 
+   fClipPlane = new TGLClipPlane(TGLVector3(0.0,-1.0,0.0),
+                                 BoundingBox().Center(),
                                  BoundingBox().Extents().Mag()*5.0);
 
    TGLVector3 halfLengths = BoundingBox().Extents() * 0.2501;
@@ -1323,7 +1323,7 @@ void TGLScene::SetCurrentClip(EClipType type, Bool_t edit)
          break;
       }
    }
-    
+
    // If editing clip, it is attached to manipulator
    if (edit) {
       fCurrentManip->Attach(fCurrentClip);
@@ -1454,7 +1454,7 @@ void TGLScene::ResetDrawStats(const TGLDrawFlags & flags)
 void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape, const TGLDrawFlags & flags)
 {
    // Update draw stats, for newly drawn 'shape'
-   
+
    // Update opaque/transparent draw count
    if (shape.IsTransparent()) {
       ++fDrawStats.fTrans;
@@ -1468,7 +1468,7 @@ void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape, const TGLDrawFlag
 
    // By type only needed for debug currently
    if (gDebug>3) {
-      // Update the stats 
+      // Update the stats
       std::string shapeType = shape.GetLogical().IsA()->GetName();
       typedef std::map<std::string, UInt_t>::iterator MapIt_t;
       MapIt_t statIt = fDrawStats.fByShape.find(shapeType);
@@ -1478,10 +1478,10 @@ void TGLScene::UpdateDrawStats(const TGLPhysicalShape & shape, const TGLDrawFlag
          statIt = fDrawStats.fByShape.insert(std::make_pair(shapeType, 0u)).first;
       }
 
-      statIt->second++;   
+      statIt->second++;
    }
 }
- 
+
 //______________________________________________________________________________
 void TGLScene::DumpDrawStats()
 {
@@ -1504,11 +1504,11 @@ void TGLScene::DumpDrawStats()
             break;
          }
       }
-      Info("TGLScene::DumpDrawStats()", "Drew scene (%s / %i LOD) - %i (Op %i Trans %i) %i pixel", 
+      Info("TGLScene::DumpDrawStats()", "Drew scene (%s / %i LOD) - %i (Op %i Trans %i) %i pixel",
          style.c_str(),
          fDrawStats.fFlags.LOD(),
          fDrawStats.fOpaque + fDrawStats.fTrans,
-         fDrawStats.fOpaque, 
+         fDrawStats.fOpaque,
          fDrawStats.fTrans,
          fDrawStats.fPixelLOD);
    }
