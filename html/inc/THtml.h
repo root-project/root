@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.12 2004/01/28 22:31:11 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.13 2005/09/04 10:47:08 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -422,7 +422,12 @@ protected:
         TMap    *fMapDocElements;  // map of <TDictionary*, TDocElement*> for all objects for which doc was parsed
         static   THashList fgLocalTypes; // list of types that are not in TROOT::GetClass
         TList    fFilesParsed;     // list of files on which ExtractDocumentatoin was run
-        Int_t    fHierarchyLines; // counter for no. lines in hierarchy
+        Int_t    fHierarchyLines;  // counter for no. lines in hierarchy
+        Int_t    fNumberOfClasses; // Number of known classes
+  const char   **fClassNames;      // Names of known classes
+        Int_t    fMaxLenClassName; // Maximum length of class names
+        Int_t    fNumberOfFileNames;// Number of names of files for known classes
+        char   **fFileNames;       // Names of files for known classes
     
         enum ETraverse {
           kUp, kDown, kBoth        // direction to traverse class tree in ClassHtmlTree()
@@ -437,18 +442,19 @@ protected:
         void    CreateIndexByTopic(char **filenames, Int_t numberOfNames, Int_t maxLen);
         void    CreateHierarchy(const char **classNames, Int_t numberOfClasses);
         void    CreateListOfTypes();
+        void    CreateListOfClasses(const char* filter);
         void    DescendHierarchy(ofstream &out, TClass* basePtr, 
                   const char **classNames, Int_t numberOfClasses, 
                   Int_t maxLines=0, Int_t depth=1);
         void    ExpandKeywords(ofstream &out, char *text, TClass *ptr2class, Bool_t &flag, const char *dir="");
         void    ExpandPpLine(ofstream &out, char *line);
-      TClass   *GetClass(const char *name, Bool_t load=kTRUE);
+      TClass   *GetClass(const char *name, Bool_t load=kFALSE);
   const char   *GetFileName(const char *filename);
         char   *GetSourceFileName(const char *filename);
         char   *GetHtmlFileName(TClass *classPtr);
         Bool_t  IsModified(TClass *classPtr, const Int_t type);
- static Bool_t  IsName(Int_t c);
- static Bool_t  IsWord(Int_t c);
+ static Bool_t  IsName(UChar_t c);
+ static Bool_t  IsWord(UChar_t c);
         void    NameSpace2FileName(char *name);
         void    ReplaceSpecialChars(ofstream &out, const char c);
         void    ReplaceSpecialChars(ofstream &out, const char *string);

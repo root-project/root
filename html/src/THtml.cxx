@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.82 2005/12/01 12:11:16 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.83 2006/03/06 11:09:35 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -307,6 +307,8 @@ fMapDocElements(0)
    for (Int_t i = 0; i < 6; i++)
       fCounter[i] = 0;
    fEscFlag = kFALSE;
+   fClassNames = 0;
+   fFileNames = 0;
    SetEscape();
 
    // get prefix for source directory
@@ -368,6 +370,8 @@ THtml::~THtml()
       delete[]fLine;
    if (fCounter)
       delete[]fCounter;
+   delete []fClassNames;
+   delete []fFileNames;
 
    gROOT->GetListOfSpecials()->Remove(gHtml);
 
@@ -1117,11 +1121,11 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
             if (endOfLine<startOfLine) endOfLine = startOfLine;
 
             // remove leading spaces
-            while (isspace(*startOfLine))
+            while (isspace((UChar_t)*startOfLine))
                startOfLine++;
 
             // remove trailing spaces
-            while (endOfLine>startOfLine&&isspace(*endOfLine))
+            while (endOfLine>startOfLine&&isspace((UChar_t)*endOfLine))
                endOfLine--;
             if (*startOfLine == '#' && !tempFlag)
                thisLineIsPpLine = kTRUE;
@@ -1234,7 +1238,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                         tmpNameSpace++;
                }
 
-               while (*funcName && isspace(*funcName))
+               while (*funcName && isspace((UChar_t)*funcName))
                   funcName++;
                char *nameEndPtr = funcName;
 
@@ -1252,7 +1256,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                params = nameEndPtr;
                paramsEnd = 0;
 
-               while (*params && isspace(*params))
+               while (*params && isspace((UChar_t)*params))
                   params++;
                if (*params != '(')
                   params = 0;
@@ -1304,7 +1308,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                      if (key!=fLine) {
                         typeEnd = key - 1;
                         while ((typeEnd > fLine)
-                              && (isspace(*typeEnd) || *typeEnd == '*'
+                              && (isspace((UChar_t)*typeEnd) || *typeEnd == '*'
                                  || *typeEnd == '&'))
                            typeEnd--;
                         typeEnd++;
@@ -1324,7 +1328,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                         }
                         if (!IsWord(*type))
                            type++;
-                        while ((type > fLine) && isspace(*(type - 1)))
+                        while ((type > fLine) && isspace((UChar_t)*(type - 1)))
                            type--;
                      }
 
@@ -1698,36 +1702,10 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
 
       // 1. make a list of class names 
       // 2. use DescendHierarchy  
-        
-      // get total number of classes
-      Int_t numberOfClasses = gClassTable->Classes();
-
-      // allocate memory
-      const char **classNames = new const char *[numberOfClasses];
-
-      // start from begining
-      gClassTable->Init();
-
-      Int_t nOK = 0;
-
-      Int_t i;
-      for (i = 0; i < numberOfClasses; i++) {
-
-        // get class name
-        const char *cname = gClassTable->Next();
-        if (GetClass(cname)) {
-           classNames[nOK] = cname;
-           nOK++;
-        }
-      }
-      for (i=nOK; i < numberOfClasses; i++) classNames[i] = 0;
-
-      // quick sort
-      SortNames(classNames, nOK);
 
       out << "<td><table><tr>" << endl;
       fHierarchyLines = 0;      
-      DescendHierarchy(out,classPtr,classNames,numberOfClasses,10);  
+      DescendHierarchy(out,classPtr,fClassNames,fNumberOfClasses,10);  
 
       out << "</tr></table>";
       if (dir==kBoth && fHierarchyLines>=10)
@@ -1735,7 +1713,6 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       out<<"</td>" << endl;
 
       // free allocated memory
-      delete [] classNames;
     }   
     
     out << "</tr></table>" << endl;
@@ -1869,7 +1846,7 @@ void THtml::Convert(const char *filename, const char *title,
 
                   // remove leading spaces
                   ptr = fLine;
-                  while (isspace(*ptr))
+                  while (isspace((UChar_t)*ptr))
                      ptr++;
 
 
@@ -2028,7 +2005,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
 //        numberOfClasses - number of elements
 //
 
-   Int_t i, len, maxLen = 0;
+   Int_t i, len = 0;
 
    char *tmp1 =
        gSystem->ConcatFileName(gSystem->ExpandPathName(fOutputDir),
@@ -2042,11 +2019,6 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
    // open indexFile file
 ofstream indexFile;
    indexFile.open(filename, ios::out);
-
-   for (i = 0; i < numberOfClasses; i++) {
-      len = strlen(classNames[i]);
-      maxLen = maxLen > len ? maxLen : len;
-   }
 
    if (indexFile.good()) {
 
@@ -2100,7 +2072,7 @@ ofstream indexFile;
 
          // write title
          len = strlen(classNames[i]);
-         for (Int_t w = 0; w < (maxLen - len + 2); w++)
+         for (Int_t w = 0; w < (fMaxLenClassName - len + 2); w++)
             indexFile << ".";
          indexFile << " ";
 
@@ -2218,7 +2190,7 @@ ofstream outputFile;
 
          // write title
          Int_t len = strlen(classPtr->GetName());
-         for (Int_t w = 0; w < maxLen - len; w++)
+         for (Int_t w = 0; w < fMaxLenClassName - len; w++)
             outputFile << ".";
          outputFile << " ";
 
@@ -2294,7 +2266,7 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
 //
    Int_t i=0; 
    Int_t len=0;
-   Int_t maxLen=0;
+   Int_t maxLen=fMaxLenClassName;
 
    char *filename =
        gSystem->ConcatFileName(gSystem->ExpandPathName(fOutputDir),
@@ -2303,11 +2275,6 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
    // open out file
    ofstream out;
    out.open(filename, ios::out);
-
-   for (i = 0; i < numberOfClasses; i++) {
-      len = strlen(classNames[i]);
-      maxLen = maxLen > len ? maxLen : len;
-   }
 
    if (out.good()) {
 
@@ -2463,6 +2430,99 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
 } 
 
 
+//______________________________________________________________________________
+void THtml::CreateListOfClasses(const char* filter)
+{
+// Create the list of all known classes
+
+   // get total number of classes
+   Int_t totalNumberOfClasses = gClassTable->Classes();
+
+   // allocate memory
+   if (fClassNames) delete [] fClassNames;
+   if (fFileNames) delete [] fFileNames;
+   fClassNames = new const char *[totalNumberOfClasses];
+   fFileNames = new char *[totalNumberOfClasses];
+
+   // start from begining
+   gClassTable->Init();
+
+   // get class names
+   Int_t len = 0;
+   fNumberOfClasses = 0;
+   fMaxLenClassName = 0;
+   fNumberOfFileNames = 0;
+
+   TString reg = filter;
+   TRegexp re(reg, kTRUE);
+
+   for (Int_t i = 0; i < totalNumberOfClasses; i++) {
+
+      // get class name
+      const char *cname = gClassTable->Next();
+      TString s = cname;
+      if (s.Index(re) == kNPOS)
+         continue;
+      fClassNames[fNumberOfClasses] = cname;
+      len = strlen(fClassNames[fNumberOfClasses]);
+      fMaxLenClassName = fMaxLenClassName > len ? fMaxLenClassName : len;
+
+      // get class & filename
+      TClass *classPtr = GetClass((const char *) fClassNames[fNumberOfClasses], kTRUE);
+      if (!classPtr) continue;
+      //if (cname[0] == 'T' && classPtr->GetClassVersion() > 0) classPtr->BuildRealData();
+            
+      const char *impname=0;
+      if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
+         impname = classPtr->GetImplFileName();
+      else 
+         impname = classPtr->GetDeclFileName();
+
+      if (impname && strlen(impname)) {
+         fFileNames[fNumberOfFileNames] = StrDup(impname, 64);
+
+         // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
+         char *srcdir = strstr(fFileNames[fNumberOfFileNames], "/src/T");
+
+         // if impl is unset, check for decl and see if it matches 
+         // format "base/inc/TROOT.h" - in which case it's not a USER
+         // class, but a BASE class.
+         if (!srcdir) 
+            srcdir=strstr(fFileNames[fNumberOfFileNames],"/inc/T");
+         // ROOT's non-classes (e.g. enums) don't start with T, but end with _t
+         if (!srcdir && !(classPtr->Property()&kIsClass)) {
+            const char* undert=classPtr->GetName()+strlen(classPtr->GetName())-2;
+            if (!strcmp(undert,"_t"))
+               srcdir=strstr(fFileNames[fNumberOfFileNames],"/inc/");
+         };
+
+         // there can be no sub-path in the class name, 
+         // and impl file names don't have absolute paths
+         if (srcdir && (!strchr(srcdir + 5, '/')) 
+             && fFileNames[fNumberOfFileNames][0]!='/') {
+            strcpy(srcdir, "_");
+            for (char *t = fFileNames[fNumberOfFileNames];
+                 (t[0] = toupper(t[0])); t++);
+            strcat(srcdir, fClassNames[fNumberOfClasses]);
+         } else {
+            strcpy(fFileNames[fNumberOfFileNames], "USER_");
+            strcat(fFileNames[fNumberOfFileNames], fClassNames[fNumberOfClasses]);
+         }
+         fNumberOfFileNames++;
+      } else
+         cout << "WARNING class:" << fClassNames[i] <<
+             " has no implementation file name !" << endl;
+
+      fNumberOfClasses++;
+   }
+   fMaxLenClassName += kSpaceNum;
+
+   // quick sort
+   SortNames(fClassNames, fNumberOfClasses);
+   SortNames((const char **) fFileNames, fNumberOfFileNames);
+
+}
+
 
 //______________________________________________________________________________
 void THtml::CreateListOfTypes()
@@ -2581,8 +2641,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
    Bool_t hide;
    Bool_t mmf = 0;
-   Bool_t forceLoad = kTRUE;
-   if (strstr(text,"TClassEdit")) forceLoad= kFALSE;
+   Bool_t forceLoad = kFALSE;
+   //if (strstr(text,"TClassEdit")) forceLoad= kFALSE;
    
    static Bool_t pre_is_open = kFALSE;
 
@@ -2677,7 +2737,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             tempEndPtr = end;
 
             // skip leading spaces
-            while (*tempEndPtr && isspace(*tempEndPtr))
+            while (*tempEndPtr && isspace((UChar_t)*tempEndPtr))
                tempEndPtr++;
 
 
@@ -2705,7 +2765,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                funcName = tempEndPtr;
 
                // skip leading spaces
-               while (isspace(*funcName))
+               while (isspace((UChar_t)*funcName))
                   funcName++;
 
                // check if we have a '.' or '->'
@@ -2720,7 +2780,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                   mmf = kFALSE;
 
                // skip leading spaces
-               while (*funcName && isspace(*funcName))
+               while (*funcName && isspace((UChar_t)*funcName))
                   funcName++;
 
                // get the end of the word
@@ -2740,7 +2800,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                      funcSig = funcNameEnd;
 
                      // skip leading spaces
-                     while (*funcSig && isspace(*funcSig))
+                     while (*funcSig && isspace((UChar_t)*funcSig))
                         funcSig++;
                      if (*funcSig != '(')
                         funcSig = 0;
@@ -2842,7 +2902,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                                 || c == '(') ? kTRUE : kFALSE;
                if (!isfunc && *tempEndPtr) {
                   char *bptr = tempEndPtr + 1;
-                  while (*bptr && isspace(*bptr))
+                  while (*bptr && isspace((UChar_t)*bptr))
                      bptr++;
                   if (*bptr == '(')
                      isfunc = kTRUE;
@@ -3294,7 +3354,7 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
 
 
 //______________________________________________________________________________
-Bool_t THtml::IsName(Int_t c)
+Bool_t THtml::IsName(UChar_t c)
 {
 // Check if c is a valid C++ name character
 //
@@ -3317,7 +3377,7 @@ Bool_t THtml::IsName(Int_t c)
 
 
 //______________________________________________________________________________
-Bool_t THtml::IsWord(Int_t c)
+Bool_t THtml::IsWord(UChar_t c)
 {
 // Check if c is a valid first character for C++ name
 //
@@ -3354,34 +3414,16 @@ void THtml::MakeAll(Bool_t force, const char *filter)
 
    TString reg = filter;
    TRegexp re(reg, kTRUE);
-   Int_t nOK = 0;
 
    MakeIndex(filter);
 
-   Int_t numberOfClasses = gClassTable->Classes();
-   const char **className = new const char *[numberOfClasses];
-
-   // start from begining
-   gClassTable->Init();
-
-
-   for (i = 0; i < numberOfClasses; i++) {
-      const char *cname = gClassTable->Next();
-      TString s = cname;
-      if (s.Index(re) == kNPOS)
-         continue;
-      className[nOK] = cname;
-      nOK++;
-   }
-
-   for (i = 0; i < nOK; i++) {
-      sprintf(fCounter, "%5d", nOK - i);
-      MakeClass((char *) className[i], force);
+   // CreateListOfClasses(filter); already done by MakeIndex
+   for (i = 0; i < fNumberOfClasses; i++) {
+      sprintf(fCounter, "%5d", fNumberOfClasses - i);
+      MakeClass((char *) fClassNames[i], force);
    }
 
    *fCounter = 0;
-
-   delete[]className;
 }
 
 
@@ -3394,6 +3436,7 @@ void THtml::MakeClass(const char *className, Bool_t force)
 // Input: className - name of the class to process
 //
 
+   if (!fClassNames) CreateListOfClasses("*"); // calls gROOT->GetClass(...,true) for each available class
    TClass *classPtr = GetClass(className);
 
    if (classPtr) {
@@ -3430,101 +3473,14 @@ void THtml::MakeIndex(const char *filter)
    //    html.MakeIndex("XX*");
 
    CreateListOfTypes();
-
-   // get total number of classes
-   Int_t numberOfClasses = gClassTable->Classes();
-
-   // allocate memory
-   const char **classNames = new const char *[numberOfClasses];
-   char **fileNames = new char *[numberOfClasses];
-
-   // start from begining
-   gClassTable->Init();
-
-   // get class names
-   Int_t len = 0;
-   Int_t maxLen = 0;
-   Int_t numberOfImpFiles = 0;
-
-   TString reg = filter;
-   TRegexp re(reg, kTRUE);
-   Int_t nOK = 0;
-
-   for (Int_t i = 0; i < numberOfClasses; i++) {
-
-      // get class name
-      const char *cname = gClassTable->Next();
-      TString s = cname;
-      if (s.Index(re) == kNPOS)
-         continue;
-      classNames[nOK] = cname;
-      len = strlen(classNames[nOK]);
-      maxLen = maxLen > len ? maxLen : len;
-
-      // get class & filename
-      TClass *classPtr = GetClass((const char *) classNames[nOK]);
-      if (!classPtr) continue;
-      //if (cname[0] == 'T' && classPtr->GetClassVersion() > 0) classPtr->BuildRealData();
-            
-      const char *impname=0;
-      if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
-         impname = classPtr->GetImplFileName();
-      else 
-         impname = classPtr->GetDeclFileName();
-
-      if (impname && strlen(impname)) {
-         fileNames[numberOfImpFiles] = StrDup(impname, 64);
-
-         // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
-         char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/T");
-
-         // if impl is unset, check for decl and see if it matches 
-         // format "base/inc/TROOT.h" - in which case it's not a USER
-         // class, but a BASE class.
-         if (!srcdir) 
-            srcdir=strstr(fileNames[numberOfImpFiles],"/inc/T");
-         // ROOT's non-classes (e.g. enums) don't start with T, but end with _t
-         if (!srcdir && !(classPtr->Property()&kIsClass)) {
-            const char* undert=classPtr->GetName()+strlen(classPtr->GetName())-2;
-            if (!strcmp(undert,"_t"))
-               srcdir=strstr(fileNames[numberOfImpFiles],"/inc/");
-         };
-
-         // there can be no sub-path in the class name, 
-         // and impl file names don't have absolute paths
-         if (srcdir && (!strchr(srcdir + 5, '/')) 
-             && fileNames[numberOfImpFiles][0]!='/') {
-            strcpy(srcdir, "_");
-            for (char *t = fileNames[numberOfImpFiles];
-                 (t[0] = toupper(t[0])); t++);
-            strcat(srcdir, classNames[nOK]);
-         } else {
-            strcpy(fileNames[numberOfImpFiles], "USER_");
-            strcat(fileNames[numberOfImpFiles], classNames[nOK]);
-         }
-         numberOfImpFiles++;
-      } else
-         cout << "WARNING class:" << classNames[i] <<
-             " has no implementation file name !" << endl;
-
-      nOK++;
-   }
-   maxLen += kSpaceNum;
-
-   // quick sort
-   SortNames(classNames, nOK);
-   SortNames((const char **) fileNames, numberOfImpFiles);
+   CreateListOfClasses(filter);
 
    // create an index
-   CreateIndex(classNames, nOK);
-   CreateIndexByTopic(fileNames, nOK, maxLen);
+   CreateIndex(fClassNames, fNumberOfClasses);
+   CreateIndexByTopic(fFileNames, fNumberOfFileNames, fMaxLenClassName);
    
    // create a class hierarchy
-   CreateHierarchy(classNames, nOK);
-
-   // free allocated memory
-   delete[]classNames;
-   delete[]fileNames;
+   CreateHierarchy(fClassNames, fNumberOfClasses);
 }
 
 
@@ -3960,7 +3916,7 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
             char *cLink = 0;
 
             // remove leading spaces
-            while (*ptr && isspace(*ptr))
+            while (*ptr && isspace((UChar_t)*ptr))
                ptr++;
 
             if (!firstAuthor)
@@ -3988,11 +3944,11 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
                         out << "Faine";
                         ptr += 4;
                      }
-                     while (*ptr && !isspace(*ptr))
+                     while (*ptr && !isspace((UChar_t)*ptr))
                         out << *ptr++;
 
-                     if (isspace(*ptr)) {
-                        while (*ptr && isspace(*ptr))
+                     if (isspace((UChar_t)*ptr)) {
+                        while (*ptr && isspace((UChar_t)*ptr))
                            ptr++;
                         if (isalpha(*ptr))
                            out << '+';
@@ -4386,10 +4342,10 @@ void THtml::ExtractDocumentation(const char* cFileName, TList* listClassesFound)
                inClassDoc=kFALSE;
                inMethodDoc=kFALSE;
                char* d=c;
-               while (isspace(*(++d)));
+               while (isspace((UChar_t)*(++d)));
                if (!strncmp(d, "include", 7)) {
                   d+=6;
-                  while (isspace(*(++d)));
+                  while (isspace((UChar_t)*(++d)));
                   TString strIncludeFile;
                   Int_t d_;
                   if (strchr("<\"", *d))
@@ -5003,7 +4959,7 @@ printf("ADDED DOCELEMENT: %s, doc: \n%s\n", dict->GetName(), strDoc.Data());
 Bool_t THtml::ParseWord(const char* begin, Int_t &step, 
                         TString& strWord, const char* allowedChars /*=0*/) {
    const char* end=begin;
-   while (isspace(*end)) end++;
+   while (isspace((UChar_t)*end)) end++;
    step=end-begin;
    begin=end;
    const char* endAllowed=(allowedChars ? &allowedChars[strlen(allowedChars)] : 0);
@@ -5012,14 +4968,14 @@ Bool_t THtml::ParseWord(const char* begin, Int_t &step,
       && 0!=(cFound=strchr(allowedChars, *end)) && cFound!=endAllowed)
       strWord+=*(end++);
    Bool_t bGotSomething=!(end==begin);
-   while (isspace(*end)) end++;
+   while (isspace((UChar_t)*end)) end++;
    step+=end-begin;
    return bGotSomething;
 }
 Bool_t THtml::ParseWord(const char* begin, Int_t &step, 
                         const char* allowedChars /*=0*/) {
    const char* end=begin;
-   while (isspace(*end))
+   while (isspace((UChar_t)*end))
       end++;
    step=end-begin;
    begin=end;
@@ -5029,7 +4985,7 @@ Bool_t THtml::ParseWord(const char* begin, Int_t &step,
       && 0!=(cFound=strchr(allowedChars, *end)) && cFound!=endAllowed)
       end++;
    Bool_t bGotSomething=!(end==begin);
-   while (isspace(*end)) end++;
+   while (isspace((UChar_t)*end)) end++;
    step+=end-begin;
    return bGotSomething;
 }
@@ -5114,7 +5070,7 @@ printf("Parsing meth %s ... ",strMethFullName.Data());
             break;
          } else
             strThisArg.Remove(iPos, strArgPart.Length());
-         while (isspace(*endArg)) endArg++;
+         while (isspace((UChar_t)*endArg)) endArg++;
       }
 
       // if the meth has already been removed go to next method in list
