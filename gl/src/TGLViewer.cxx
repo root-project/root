@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.46 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.47 2006/04/07 09:20:43 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -102,6 +102,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fReferenceOn(kFALSE),
    fReferencePos(0.0, 0.0, 0.0),
    fInitGL(kFALSE),
+   fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fAcceptedPhysicals(0),
    fRejectedPhysicals(0),
