@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.7 2005/11/25 09:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TAttLine.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
+#include "TGraph.h"
 
 ClassImp(TAttLineEditor)
 
@@ -124,7 +125,12 @@ void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fAttLine = dynamic_cast<TAttLine *>(fModel);
 
    fStyleCombo->Select(fAttLine->GetLineStyle());
-   fWidthCombo->Select(fAttLine->GetLineWidth());
+
+   if (fModel->InheritsFrom(TGraph::Class())) {
+      fWidthCombo->Select(TMath::Abs(fAttLine->GetLineWidth()%100));
+   } else {
+      fWidthCombo->Select(fAttLine->GetLineWidth());
+   }
 
    Color_t c = fAttLine->GetLineColor();
    Pixel_t p = TColor::Number2Pixel(c);
@@ -159,6 +165,15 @@ void TAttLineEditor::DoLineWidth(Int_t width)
 {
    // Slot connected to the line width.
 
-   fAttLine->SetLineWidth(width);
+   if (fModel->InheritsFrom(TGraph::Class())) {
+      Int_t graphLineWidth = 100*Int_t(fAttLine->GetLineWidth()/100);
+      if (graphLineWidth >= 0) {
+         fAttLine->SetLineWidth(graphLineWidth+width);
+      } else {
+         fAttLine->SetLineWidth(-(TMath::Abs(graphLineWidth)+width));
+      }
+   } else {
+      fAttLine->SetLineWidth(width);
+   }
    Update();
 }
