@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.20 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.21 2006/04/07 08:43:59 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -110,6 +110,14 @@ public:
 
 class TGListTree : public TGContainer {
 
+public:
+   //---- color markup mode of tree items
+   enum EColorMarkupMode {
+      kDefault        = 0,
+      kColorUnderline = BIT(0),
+      kColorBox       = BIT(1)
+   };
+
 protected:
    TGListTreeItem  *fFirst;          // pointer to first item in list
    TGListTreeItem  *fSelected;       // pointer to selected item in list
@@ -132,7 +140,7 @@ protected:
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
    Bool_t           fDisableOpen;    // disable branch opening on double-clicks
 
-   Short_t          fColorMode;      // if/how to render item's main color
+   EColorMarkupMode fColorMode;      // if/how to render item's main color
    GContext_t       fColorGC;        // drawing context for main item color
 
    static Pixel_t        fgGrayPixel;
@@ -269,8 +277,8 @@ public:
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void Checked(TObject *obj, Bool_t check);  //*SIGNAL*
 
-   Short_t GetColorMode() const { return fColorMode; }
-   void SetColorMode(Short_t color_mode) { fColorMode = color_mode; }
+   EColorMarkupMode GetColorMode() const { return fColorMode; }
+   void SetColorMode(EColorMarkupMode colorMode) { fColorMode = colorMode; }
 
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 

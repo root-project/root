@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.46 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.47 2006/04/07 09:24:11 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -224,15 +224,15 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
 {
    // Create a list tree widget.
 
-   fMsgWindow = p;
-   fCanvas    = 0;
-   fTip       = 0;
-   fTipItem   = 0;
-   fAutoTips  = kFALSE;
+   fMsgWindow   = p;
+   fCanvas      = 0;
+   fTip         = 0;
+   fTipItem     = 0;
+   fAutoTips    = kFALSE;
    fDisableOpen = kFALSE;
 
-   fGrayPixel = GetGrayPixel();
-   fFont      = GetDefaultFontStruct();
+   fGrayPixel   = GetGrayPixel();
+   fFont        = GetDefaultFontStruct();
 
    fDrawGC      = GetDrawGC()();
    fLineGC      = GetLineGC()();
@@ -247,11 +247,11 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fIndent   = 3;  // 0;
    fMargin   = 2;
 
-   fColorMode = 0;
+   fColorMode = kDefault;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask,
-                    kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask,
+                         kNone, kNone);
 
    AddInput(kPointerMotionMask | kEnterWindowMask |
             kLeaveWindowMask | kKeyPressMask);
@@ -264,14 +264,14 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
 {
    // Create a list tree widget.
 
-   fMsgWindow = p;
-   fTip       = 0;
-   fTipItem   = 0;
-   fAutoTips  = kFALSE;
+   fMsgWindow   = p;
+   fTip         = 0;
+   fTipItem     = 0;
+   fAutoTips    = kFALSE;
    fDisableOpen = kFALSE;
 
-   fGrayPixel = GetGrayPixel();
-   fFont      = GetDefaultFontStruct();
+   fGrayPixel   = GetGrayPixel();
+   fFont        = GetDefaultFontStruct();
 
    fDrawGC      = GetDrawGC()();
    fLineGC      = GetLineGC()();
@@ -286,9 +286,11 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fIndent   = 3;  // 0;
    fMargin   = 2;
 
+   fColorMode = kDefault;
+
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask,
-                    kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask,
+                         kNone, kNone);
 
    AddInput(kPointerMotionMask | kEnterWindowMask |
             kLeaveWindowMask | kKeyPressMask);
@@ -1213,11 +1215,11 @@ void TGListTree::DrawItemName(TGListTreeItem *item)
 
    if (fColorMode != 0 && item->fHasColor) {
       gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->fColor));
-      if (fColorMode | 1) {
+      if (fColorMode | kColorUnderline) {
          Int_t y = item->fYtext-pos.fY + FontAscent(fFont) + 2;
          gVirtualX->DrawLine(fId, fColorGC, item->fXtext, y, item->fXtext + width, y);
       }
-      if (fColorMode | 2) {
+      if (fColorMode | kColorBox) {
          Int_t x = item->fXtext + width + 4;
          Int_t y = item->fYtext-pos.fY  + 3;
          Int_t h = FontAscent(fFont)    - 4;
