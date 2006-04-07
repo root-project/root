@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.25 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.26 2006/04/07 08:23:54 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -678,6 +678,10 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
                    << quote << ");" << endl;
 
       cf->SavePrimitiveSubframes(out, option);
+      // setting layout manager
+      out << "   " << cf->GetName() <<"->SetLayoutManager(";
+      cf->GetLayoutManager()->SavePrimitive(out, option);
+      out << ");"<< endl;
 
       if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {
          GetTabTab(i)->SaveUserColor(out, option);
