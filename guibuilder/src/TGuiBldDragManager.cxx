@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.36 2006/03/30 09:58:48 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.37 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1250,6 +1250,22 @@ void TGuiBldDragManager::UngrabFrame()
 }
 
 //______________________________________________________________________________
+static Bool_t IsParentOfGrab(Window_t id, const TGWindow *grab)
+{
+   // helper for IsPointVisible
+
+   const TGWindow *parent = grab;
+
+   while (parent && (parent != gClient->GetDefaultRoot())) {
+      if (parent->GetId() == id) {
+         return kTRUE;
+      }
+      parent = parent->GetParent();
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t TGuiBldDragManager::IsPointVisible(Int_t xi, Int_t yi)
 {
    // helper function for IsSelectedWindow method
@@ -1277,7 +1293,7 @@ printf("IsPointVisible2\n");
       dst = child;
       gVirtualX->TranslateCoordinates(src, dst, x, y, x, y, child);
 
-      if (child == fPimpl->fGrab->GetId()) {
+      if (IsParentOfGrab(child, fPimpl->fGrab)) {
          return kTRUE;
       }
    }
@@ -2261,14 +2277,16 @@ void TGuiBldDragManager::HandleReturn(Bool_t on)
 {
    // Handling of  return/enter key pressing
    //
-   // 1. If Return or Enter key was pressed - Grab Act
+   // If on is kFALSE: 
+   //    If Return or Enter key was pressed - Grab Act
    //    If lasso is  drawn - new composite frame is created and 
    //    all frames inside lasso became it's childrens.
    //
-   // 2. If Return or Enter key was pressed with Control Key - Drop Act,
-   //    The opposite action to Grab Act.
-   //    All frames inside a grabbed frame are "dropped" to
-   //    underlayed frame and grabbed frame is deleted 
+   // If on is kTRUE: 
+   //    If Return or Enter key was pressed with Control Key - Drop Act,
+   //    The opposite action to the Grab Act.
+   //    All frames inside the grabbed frame are "dropped" into
+   //    the underlying frame and the grabbed frame is deleted 
 
    if (fStop) return;
 
@@ -2457,7 +2475,15 @@ printf("HandleAlignment2\n");
 //______________________________________________________________________________
 void TGuiBldDragManager::HandleDelete(Bool_t crop)
 {
-   // handle delete or crop
+   // Handle delete or crop action
+   //
+   // crop is kFALSE - delete action
+   //   - if lasso is drawn -> all frames inside lasso area are deleted
+   //   - if frame is grabbed/selected -> the frame is deleted
+   // crop is kTRUE - crop action
+   //   - if lasso is drawn -> all frames outside of lasso area are deleted
+   //   - if frame is grabbed/selected -> all frames except the grabbed frame are deleted
+   //     In both cases the main frame is shrinked to the size of crop area.
 
    if (fStop) return;
 
@@ -2495,28 +2521,16 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
       }
    }
 
-   if (frame && !fLassoDrawn && crop && 
-       frame->InheritsFrom(TGCompositeFrame::Class())) { // crop grabbed frame
-
-      //!! crop selected/grabbed frame (not working yet)
-      ReparentFrames(comp, (TGCompositeFrame*)frame);
-
-#ifdef DEBUG_LOCAL
-printf("HandleDelete1\n");
-#endif
-
-      gVirtualX->TranslateCoordinates(fClient->GetRoot()->GetId(),
+   // prepare to crop grabbed frame
+   if (frame && !fLassoDrawn && crop) {
+      gVirtualX->TranslateCoordinates(frame->GetId(),
                                       fClient->GetDefaultRoot()->GetId(),
-                                      frame->GetX(),
-                                      frame->GetY(),
+                                      -2, -2,
                                       fPimpl->fX0, fPimpl->fY0, c);
 
-#ifdef DEBUG_LOCAL
-printf("HandleDelete2\n");
-#endif
 
-      fPimpl->fX = fPimpl->fX0 + frame->GetWidth();
-      fPimpl->fY = fPimpl->fY0 + frame->GetHeight();
+      fPimpl->fX = fPimpl->fX0 + frame->GetWidth()+4;
+      fPimpl->fY = fPimpl->fY0 + frame->GetHeight()+4;
       fromGrab = kTRUE;
    }
 
@@ -2596,11 +2610,6 @@ printf("HandleDelete8\n");
             decor->MoveResize(xx, yy, comp->GetWidth() + b,
                               comp->GetHeight() + b + decor->GetTitleBar()->GetDefaultHeight());
          }
-      }
-      if (fromGrab)  {
-         DeleteFrame(frame);
-         UngrabFrame();
-         ChangeSelected(0);   //update editors
       }
    } else { //  no lasso drawn -> delete selected frame
       DeleteFrame(frame);
@@ -2710,7 +2719,6 @@ void TGuiBldDragManager::HandlePaste()
 
    Int_t xp = 0;
    Int_t yp = 0;
-   TGFrame *frame = 0;
 
    if (gSystem->AccessPathName(fPasteFileName.Data())) return;
 
@@ -2720,46 +2728,30 @@ void TGuiBldDragManager::HandlePaste()
    Window_t c;
 
    if (!fPimpl->fReplaceOn) {
+
 #ifdef DEBUG_LOCAL
 printf("HandlePaste1\n");
 #endif
+
       gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                       fClient->GetRoot()->GetId(),
                                       fPimpl->fX0, fPimpl->fY0, xp, yp, c);
 #ifdef DEBUG_LOCAL
 printf("HandlePaste2\n");
 #endif
+
       ToGrid(xp, yp);
    }
 
+   // fPasteFrame is TGMainFrame consisting "the frame to paste" 
+   // into the editable frame (aka fClient->GetRoot())
+
    if (fPasteFrame) {
-      TGCompositeFrame *comp = 0;
-      comp = (TGCompositeFrame*)fPasteFrame;
-
-      TList *list = comp->GetList();
-      TGFrameElement *fe = 0;
-
-      fe = (TGFrameElement*)list->First();
-      comp = (TGCompositeFrame*)fClient->GetRoot();
-
-      if (fe) {
-         frame = fe->fFrame;
-         if (frame) {
-            frame->ReparentWindow(fClient->GetRoot(), xp, yp);
-         }
-         list->Remove(fe);
-         comp->GetList()->Add(fe);
-      }
-
-      comp->RemoveFrame(fPasteFrame);
-      fClient->UnregisterWindow(fPasteFrame);
-      fPasteFrame->DestroyWindow();
-      fPasteFrame = frame;
-
-      if (!fPimpl->fReplaceOn) {
-         SelectFrame(frame);
-      }
+      fPasteFrame->Move(xp, yp);
+      fPimpl->fGrab = fPasteFrame;
+      HandleReturn(1);  // drop
    }
+
    fPasting = kFALSE;
 
    if (fBuilder) {
@@ -3052,7 +3044,6 @@ TGFrame *TGuiBldDragManager::FindMdiFrame(TGFrame *in)
    }
    return 0;
 }
-
 
 //______________________________________________________________________________
 void TGuiBldDragManager::RaiseMdiFrame(TGFrame *comp)
