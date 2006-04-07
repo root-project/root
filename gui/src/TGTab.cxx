@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.26 2006/04/07 08:23:54 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.27 2006/04/07 13:28:07 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -613,6 +613,14 @@ void TGTab::NewTab(const char *text)
    MapSubwindows();
    GetLayoutManager()->Layout();
 }
+
+//______________________________________________________________________________
+void TGTab::SetText(const char *text)
+{
+   // set text to current tab
+
+   GetCurrentTab()->SetText(new TGString(text));
+} 
 
 //______________________________________________________________________________
 void TGTab::SavePrimitive(ofstream &out, Option_t *option)

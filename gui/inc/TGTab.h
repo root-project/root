@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.13 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.14 2006/04/07 08:23:54 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -102,7 +102,8 @@ public:
    TGTabElement     *GetCurrentTab() const { return GetTabTab(fCurrent); }
    UInt_t            GetTabHeight() const { return fTabh; }
    Int_t             GetNumberOfTabs() const;
-   virtual void      SetEnabled(Int_t tabIndex, Bool_t on = kTRUE);
+   virtual void      SetEnabled(Int_t tabIndex, Bool_t on = kTRUE);  //*MENU*
+   virtual void      SetText(const char *text = "tab");              //*MENU*
    Bool_t            IsEnabled(Int_t tabIndex) const;
 
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
