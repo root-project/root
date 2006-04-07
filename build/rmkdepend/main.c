@@ -165,9 +165,6 @@ int main_orig(argc, argv)
 	char *defincdir = NULL;
 	char **undeflist = NULL;
 	int numundefs = 0, i;
-        char *currentFileInc = 0;
-        int bufLenCurrentFileInc = 0;
-        char *posEndPath = 0;
 
 	ProgramName = argv[0];
 
