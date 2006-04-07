@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.66 2006/03/30 08:50:28 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.67 2006/03/31 12:47:14 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -295,6 +295,14 @@ public:
    virtual void Print(Option_t *option="") const;
    void SaveUserColor(ofstream &out, Option_t *);
    virtual void SavePrimitive(ofstream &out, Option_t *option);
+
+   // dummy to remove from context menu
+   virtual void        Delete(Option_t * /*option*/ ="") { }
+   virtual TObject    *DrawClone(Option_t * /*option */="") const { return 0; }
+   virtual void        DrawClass() const { }
+   virtual void        Dump() const { }
+   virtual void        Inspect() const { }
+   virtual void        SetDrawOption(Option_t * /*option*/="") { }
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
