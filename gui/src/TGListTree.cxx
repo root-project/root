@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.45 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.46 2006/04/07 08:43:59 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -133,7 +133,7 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
 
    fUserData = 0;
 
-	fHasColor = false;
+   fHasColor = kFALSE;
    fColor = 0;
 }
 
@@ -159,7 +159,7 @@ void TGListTreeItem::Rename(const char *new_name)
 void TGListTreeItem::SetCheckBox(Bool_t on)
 {
    // Set a check box on the tree node.
-   
+
    fCheckBox = on;
    if (fCheckBox)
       fPicWidth  = TMath::Max(fCheckedPic->GetWidth() + fOpenPic->GetWidth(),
@@ -402,7 +402,7 @@ Bool_t TGListTree::HandleButton(Event_t *event)
                maxx = (item->fXtext - Int_t(item->fPicWidth)) - 8;
                minx = (item->fXtext - Int_t(item->fPicWidth)) - 16;
             }
-            if ((item->HasCheckBox()) && (event->fX < maxxchk) && 
+            if ((item->HasCheckBox()) && (event->fX < maxxchk) &&
                (event->fX > minxchk)) {
                fLastY = event->fY;
                ToggleItem(item);
@@ -1214,15 +1214,15 @@ void TGListTree::DrawItemName(TGListTreeItem *item)
    if (fColorMode != 0 && item->fHasColor) {
       gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->fColor));
       if (fColorMode | 1) {
-	 Int_t y = item->fYtext-pos.fY + FontAscent(fFont) + 2;
-	 gVirtualX->DrawLine(fId, fColorGC, item->fXtext, y, item->fXtext + width, y);
+         Int_t y = item->fYtext-pos.fY + FontAscent(fFont) + 2;
+         gVirtualX->DrawLine(fId, fColorGC, item->fXtext, y, item->fXtext + width, y);
       }
       if (fColorMode | 2) {
-	 Int_t x = item->fXtext + width + 4;
-	 Int_t y = item->fYtext-pos.fY  + 3;
-	 Int_t h = FontAscent(fFont)    - 4;
-	 gVirtualX->FillRectangle(fId, fColorGC, x, y, h, h);			
-	 gVirtualX->DrawRectangle(fId, fDrawGC,  x, y, h, h);
+         Int_t x = item->fXtext + width + 4;
+         Int_t y = item->fYtext-pos.fY  + 3;
+         Int_t h = FontAscent(fFont)    - 4;
+         gVirtualX->FillRectangle(fId, fColorGC, x, y, h, h);
+         gVirtualX->DrawRectangle(fId, fDrawGC,  x, y, h, h);
       }
    }
 }
@@ -1912,7 +1912,7 @@ void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t dep
 Pixel_t TGListTree::GetGrayPixel()
 {
    // Return gray draw color in use.
-   
+
    static Bool_t init = kFALSE;
    if (!init) {
       if (!gClient->GetColorByName("#808080", fgGrayPixel))
@@ -1935,7 +1935,7 @@ FontStruct_t TGListTree::GetDefaultFontStruct()
 //______________________________________________________________________________
 const TGGC &TGListTree::GetDrawGC()
 {
-   // Return default graphics context in use.  
+   // Return default graphics context in use.
 
    if (!fgDrawGC) {
       GCValues_t gcv;
@@ -1958,7 +1958,7 @@ const TGGC &TGListTree::GetDrawGC()
 const TGGC &TGListTree::GetLineGC()
 {
    // Return graphics context in use for line drawing.
-   
+
    if (!fgLineGC) {
       GCValues_t gcv;
 
@@ -2058,7 +2058,7 @@ void TGListTree::SavePrimitive(ofstream &out, Option_t *option)
 void TGListTree::CheckItem(TGListTreeItem *item, Bool_t check)
 {
    // Set check button state for the node 'item'.
-   
+
    item->CheckItem(check);
 }
 
