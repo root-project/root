@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.24 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.25 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -319,7 +319,9 @@ void TGTab::RemoveTab(Int_t tabIndex)
    // Remove container and tab of tab with index tabIndex.
    // Does NOT remove the container contents!
 
-   if (tabIndex < 0) return;
+   if (tabIndex < 0) {
+      tabIndex = fCurrent;
+   }
 
    TGFrameElement *elTab, *elCont;
    Int_t  count = 0;
@@ -598,6 +600,18 @@ const TGGC &TGTab::GetDefaultGC()
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+void TGTab::NewTab(const char *text)
+{
+   // Creates new tab. Used in context menu.
+
+   TString name = text ? text : Form("tab%d", GetNumberOfTabs()+1);
+   AddTab(name.Data());
+
+   MapSubwindows();
+   GetLayoutManager()->Layout();
 }
 
 //______________________________________________________________________________
