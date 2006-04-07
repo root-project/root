@@ -72,4 +72,7 @@
 #pragma link C++ class TX11GLManager;
 #endif
 
+#pragma link C++ class TGLObject+;
+#pragma link C++ class TPointSet3DGL+;
+
 #endif

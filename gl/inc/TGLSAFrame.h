@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.h,v 1.3 2005/11/16 16:41:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.h,v 1.4 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************
@@ -40,6 +40,7 @@ private:
 
 public:
    TGLSAFrame(TGLSAViewer & viewer);
+   TGLSAFrame(TGFrame* parent, TGLSAViewer & viewer);
    virtual ~TGLSAFrame();
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

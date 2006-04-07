@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.44 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.45 2006/03/28 09:47:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
+#include "TGLObject.h"
 #include "TGLStopwatch.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -44,6 +45,8 @@
 
 #include "KeySymbols.h"
 #include "TContextMenu.h"
+
+#include <TBaseClass.h>
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -142,6 +145,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fReferenceOn(kFALSE),
    fReferencePos(0.0, 0.0, 0.0),
    fInitGL(kFALSE),
+   fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fAcceptedPhysicals(0), 
    fRejectedPhysicals(0),
@@ -220,8 +224,11 @@ void TGLViewer::BeginScene()
       // physical shapes - including any modified physicals
       // Physicals must be removed first
       destroyedPhysicals = fScene.DestroyPhysicals(kTRUE); // include modified
-      destroyedLogicals = fScene.DestroyLogicals();
-
+      if (fSmartRefresh) {
+	 fScene.BeginSmartRefresh();
+      } else {
+	 destroyedLogicals = fScene.DestroyLogicals();
+      }
       // Purge out the DL cache - not required once shapes do this themselves properly
       TGLDisplayListCache::Instance().Purge();
    } else {
@@ -253,6 +260,13 @@ void TGLViewer::EndScene()
    // End building of viewer scene
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
    // for description of viewer architecture
+
+   if (!fInternalRebuild) {
+      if (fSmartRefresh) {
+	 fScene.EndSmartRefresh();
+      }
+   }
+
    fScene.ReleaseLock(TGLScene::kModifyLock);
 
    if (fPostSceneBuildSetup) {
@@ -411,6 +425,10 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
    // If we have a valid (non-zero) ID in buffer see if the logical is already cached
    if (buffer.fID) {
       logical = fScene.FindLogical(reinterpret_cast<ULong_t>(buffer.fID));
+      // If not, attempt direct rendering via <ClassName>GL object.
+      if (logical == 0) {
+         logical = AttemptDirectRenderer(buffer.fID);
+      }
    } else if (!fForceAcceptAll) {
       // If client is passing zero fID buffers we need to force accepting of all
       // so scene is never rebuilt (we can't detect cached items). Client
@@ -1983,3 +2001,54 @@ Bool_t TGLViewer::HandleExpose(Event_t *)
    return kTRUE;
 }
 
+//______________________________________________________________________________
+TClass* TGLViewer::FindDirectRendererClass(TClass* cls)
+{
+   TString rnr( cls->GetName() );
+   rnr += "GL";
+   TClass* c = gROOT->GetClass(rnr);
+   if (c != 0)
+      return c;
+
+   TList* bases = cls->GetListOfBases();
+   if (bases == 0 || bases->IsEmpty())
+      return 0;
+
+   TIter  next_base(bases);
+   TBaseClass* bc;
+   while ((bc = (TBaseClass*) next_base()) != 0) {
+      cls = bc->GetClassPointer();
+      if ((c = FindDirectRendererClass(cls)) != 0) {
+         return c;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TGLLogicalShape* TGLViewer::AttemptDirectRenderer(TObject* id)
+{
+   TClass* isa = id->IsA();
+   std::map<TClass*, TClass*>::iterator i = fDirectRendererMap.find(isa);
+   TClass* cls;
+   if (i != fDirectRendererMap.end()) {
+      cls = i->second;
+   } else {
+      cls = FindDirectRendererClass(isa);
+      fDirectRendererMap[isa] = cls;
+   }
+   TGLObject* rnr = 0;
+   if (cls != 0) {
+      rnr = reinterpret_cast<TGLObject*>(cls->New());
+      if (rnr) {
+	 if (rnr->SetModel(id) == false) {
+	    Warning("TGLViewer::AttemptDirectRenderer", "failed initializing direct rendering.");
+	    delete rnr;
+	    return 0;
+	 }
+	 rnr->SetBBox();
+	 fScene.AdoptLogical(*rnr);
+      }
+   }
+   return rnr;
+}

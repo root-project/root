@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.38 2006/02/22 14:26:15 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.39 2006/03/09 16:53:04 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -25,6 +25,7 @@
 #include "TClass.h" // For non-TObject reflection
 #include "TGLViewer.h" // Only here for some draw style enums - remove these
 #include "TColor.h"     // moved to proper class
+#include "TAtt3D.h"
 
 #include <algorithm>
 
@@ -59,7 +60,9 @@ ClassImp(TGLScene)
 //______________________________________________________________________________
 TGLScene::TGLScene() :
    fLock(kUnlocked), fDrawList(1000), 
-   fDrawListValid(kFALSE), fBoundingBox(), fBoundingBoxValid(kFALSE), 
+   fDrawListValid(kFALSE),
+   fInSmartRefresh(kFALSE),
+   fBoundingBox(), fBoundingBoxValid(kFALSE), 
    fSelectedPhysical(0),
    fClipPlane(0), fClipBox(0), fCurrentClip(0),
    fTransManip(), fScaleManip(), fRotateManip()
@@ -188,7 +191,10 @@ TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
    if (it != fLogicalShapes.end()) {
       return it->second;
    } else {
-      return 0;
+      if (fInSmartRefresh)
+	 return FindLogicalSmartRefresh(ID);
+      else
+	 return 0;
    }
 }
 
@@ -318,6 +324,57 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
    PhysicalShapeMapCIt_t it = fPhysicalShapes.find(ID);
    if (it != fPhysicalShapes.end()) {
       return it->second;
+   } else {
+      return 0;
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::BeginSmartRefresh()
+{
+   // Moves logicals to refresh-cache.
+
+   fSmartRefreshCache.swap(fLogicalShapes);
+   // Remove all logicals that don't survive a refresh.
+   LogicalShapeMapIt_t i = fSmartRefreshCache.begin();
+   while (i != fSmartRefreshCache.end()) {
+      if (i->second->KeepDuringSmartRefresh() == false) {
+	 delete i->second;
+	 fSmartRefreshCache.erase(i);
+      }
+      ++i;
+   }
+   fInSmartRefresh = true;
+}
+
+//______________________________________________________________________________
+void TGLScene::EndSmartRefresh()
+{
+   // Wipes logicals in refresh-cache.
+
+   fInSmartRefresh = false;
+
+   LogicalShapeMapIt_t i = fSmartRefreshCache.begin();
+   while (i != fSmartRefreshCache.end()) {
+      delete i->second;
+      ++i;
+   }
+   fSmartRefreshCache.clear();
+}
+
+TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(ULong_t ID) const
+{
+   // Find and return logical shape identified by unqiue 'ID' in refresh-cache.
+   // Returns 0 if not found.
+
+   LogicalShapeMapIt_t it = fSmartRefreshCache.find(ID);
+   if (it != fSmartRefreshCache.end()) {
+      TGLLogicalShape* l_shape = it->second;
+      fSmartRefreshCache.erase(it);
+      // printf("TGLScene::SmartRefresh found cached: %p %s [%s]\n",
+      //    l_shape, l_shape->GetExternal()->GetName(),
+      //    l_shape->GetExternal()->IsA()->GetName());
+      return l_shape;
    } else {
       return 0;
    }

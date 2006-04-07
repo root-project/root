@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.5 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.6 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -133,6 +133,7 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    void    SetColor(Pixel_t color);
+   void    SetColorNoSignal(Pixel_t color);
    Pixel_t GetColor() const { return fColor; }
    void    Enable();
    void    Disable();

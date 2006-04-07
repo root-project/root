@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.10 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.11 2006/03/13 09:33:49 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TGLViewer.h"
 #endif
 
+class TGFrame;
 class TGCompositeFrame;
 class TGPopupMenu;
 class TGLSAFrame;
@@ -84,6 +85,7 @@ protected:
 
 public:
    TGLSAViewer(TVirtualPad * pad);
+   TGLSAViewer(TGFrame * parent, TVirtualPad * pad);
    ~TGLSAViewer();
 
    void   Show();
@@ -92,6 +94,9 @@ public:
    // GUI events - editors, frame etc
    void   ProcessGUIEvent(Int_t id);
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
+
+   TGLSAFrame* GetFrame()     const { return fFrame; }
+   TGTab*      GetEditorTab() const { return fEditorTab; }
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };

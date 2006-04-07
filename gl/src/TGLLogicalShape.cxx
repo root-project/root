@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.8 2006/01/05 15:11:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.9 2006/02/20 11:02:19 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 //////////////////////////////////////////////////////////////////////////
@@ -35,6 +35,7 @@
 #include "TGLDisplayListCache.h"
 #include "TContextMenu.h"
 #include "TBuffer3D.h"
+#include "TAtt3D.h"
 
 ClassImp(TGLLogicalShape)
 
@@ -55,7 +56,7 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    // Use the bounding box in buffer if valid
    if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
       fBoundingBox.Set(buffer.fBBVertex);
-   } else {
+   } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
    // otherwise use the raw points to generate one   
       fBoundingBox.SetAligned(buffer.NbPnts(), buffer.fPnts);
    }

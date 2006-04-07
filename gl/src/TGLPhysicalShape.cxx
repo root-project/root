@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.20 2006/02/21 15:34:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.21 2006/02/23 16:44:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -216,7 +216,10 @@ void TGLPhysicalShape::Draw(const TGLDrawFlags & flags) const
          // transparency of main diffuse color
          if (flags.Style() == TGLDrawFlags::kOutline) {
             glColor4f(0.1, 0.1, 0.1, fColor[3]/2.0);
-         }
+         } else {
+	   // Some objects use point/line graphics. Material mode disabled.
+	   glColor4fv(fColor);
+	 }
 
          // TODO: Scene draws outline style in two passes - for second
          // wireframe overlay one we don't need to set materials

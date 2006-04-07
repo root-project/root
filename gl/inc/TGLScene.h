@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.23 2006/02/09 09:56:20 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.24 2006/02/21 16:39:49 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -103,6 +103,11 @@ private:
    DrawList_t                                      fDrawList;       //! 
    Bool_t                                          fDrawListValid;  //! (do we need this & fBoundingBoxValid)
 
+   // Smart Refresh
+   Bool_t                                          fInSmartRefresh;    //!
+   mutable LogicalShapeMap_t                       fSmartRefreshCache; //!
+
+
    mutable TGLBoundingBox fBoundingBox;      //! bounding box for scene (axis aligned) - lazy update - use BoundingBox() to access
    mutable Bool_t         fBoundingBoxValid; //! bounding box valid?
 //   UInt_t                 fLastDrawLOD;      //! last LOD for the scene draw
@@ -177,6 +182,11 @@ public:
    Bool_t                   DestroyPhysical(ULong_t ID);
    UInt_t                   DestroyPhysicals(Bool_t incModified, const TGLCamera * camera = 0);
    TGLPhysicalShape *       FindPhysical(ULong_t ID) const;
+
+   // SmartRefresh
+   void                     BeginSmartRefresh();
+   void                     EndSmartRefresh();
+   TGLLogicalShape *        FindLogicalSmartRefresh(ULong_t ID) const;
 
    // Selected Object
    const TGLPhysicalShape * GetSelected() const { return fSelectedPhysical; }

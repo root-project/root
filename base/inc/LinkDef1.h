@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.33 2006/01/23 21:50:26 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.34 2006/03/08 21:09:42 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -125,6 +125,7 @@
 #pragma link C++ class TAttAxis-;
 #pragma link C++ class TAttText+;
 #pragma link C++ class TAtt3D+;
+#pragma link C++ class TAttBBox+;
 #pragma link C++ class TBenchmark+;
 #pragma link C++ class TBrowser+;
 #pragma link C++ class TBrowserImp+;

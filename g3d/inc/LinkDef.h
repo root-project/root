@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.6 2004/04/13 14:32:46 rdm Exp $ */
+/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.7 2004/12/06 07:22:55 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -37,6 +37,7 @@
 #pragma link C++ class TPGON+;
 #pragma link C++ class TPolyLine3D-;
 #pragma link C++ class TPolyMarker3D-;
+#pragma link C++ class TPointSet3D+;
 #pragma link C++ class TRotMatrix-;
 #pragma link C++ class TShape-;
 #pragma link C++ class TSPHE-;

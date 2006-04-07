@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.44 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.45 2005/11/21 00:25:37 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -49,6 +49,7 @@
 #include "TGResourcePool.h"
 #include "TGMsgBox.h"
 #include "TError.h"
+#include "TColor.h"
 #include "Riostream.h"
 
 
@@ -57,6 +58,7 @@ const TGFont  *TGListTree::fgDefaultFont = 0;
 TGGC          *TGListTree::fgDrawGC = 0;
 TGGC          *TGListTree::fgLineGC = 0;
 TGGC          *TGListTree::fgHighlightGC = 0;
+TGGC          *TGListTree::fgColorGC = 0;
 
 
 ClassImp(TGListTreeItem)
@@ -130,6 +132,9 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
    fHeight = 0;
 
    fUserData = 0;
+
+	fHasColor = false;
+   fColor = 0;
 }
 
 //______________________________________________________________________________
@@ -232,6 +237,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fDrawGC      = GetDrawGC()();
    fLineGC      = GetLineGC()();
    fHighlightGC = GetHighlightGC()();
+   fColorGC     = GetColorGC()();
 
    fFirst = fSelected = 0;
    fDefw = fDefh = 1;
@@ -240,6 +246,8 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fVspacing = 2;  // 0;
    fIndent   = 3;  // 0;
    fMargin   = 2;
+
+   fColorMode = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                     kButtonPressMask | kButtonReleaseMask,
@@ -268,6 +276,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fDrawGC      = GetDrawGC()();
    fLineGC      = GetLineGC()();
    fHighlightGC = GetHighlightGC()();
+   fColorGC     = GetColorGC()();
 
    fFirst = fSelected = 0;
    fDefw = fDefh = 1;
@@ -1201,6 +1210,21 @@ void TGListTree::DrawItemName(TGListTreeItem *item)
                        item->fXtext, item->fYtext-pos.fY + FontAscent(fFont),
                        item->fText.Data(), item->fText.Length());
    }
+
+   if (fColorMode != 0 && item->fHasColor) {
+      gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->fColor));
+      if (fColorMode | 1) {
+	 Int_t y = item->fYtext-pos.fY + FontAscent(fFont) + 2;
+	 gVirtualX->DrawLine(fId, fColorGC, item->fXtext, y, item->fXtext + width, y);
+      }
+      if (fColorMode | 2) {
+	 Int_t x = item->fXtext + width + 4;
+	 Int_t y = item->fYtext-pos.fY  + 3;
+	 Int_t h = FontAscent(fFont)    - 4;
+	 gVirtualX->FillRectangle(fId, fColorGC, x, y, h, h);			
+	 gVirtualX->DrawRectangle(fId, fDrawGC,  x, y, h, h);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1974,6 +1998,27 @@ const TGGC &TGListTree::GetHighlightGC()
       fgHighlightGC = gClient->GetGC(&gcv, kTRUE);
    }
    return *fgHighlightGC;
+}
+
+//______________________________________________________________________________
+const TGGC &TGListTree::GetColorGC()
+{
+   // Return graphics context for highlighted frame background.
+
+   if (!fgColorGC) {
+      GCValues_t gcv;
+
+      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
+                  kGCForeground | kGCBackground;
+      gcv.fLineStyle  = kLineSolid;
+      gcv.fLineWidth  = 1;
+      gcv.fFillStyle  = kFillSolid;
+      gcv.fBackground = fgDefaultSelectedBackground;
+      gcv.fForeground = fgWhitePixel;
+
+      fgColorGC = gClient->GetGC(&gcv, kTRUE);
+   }
+   return *fgColorGC;
 }
 
 //______________________________________________________________________________

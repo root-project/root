@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.19 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.20 2005/11/21 00:25:37 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -69,6 +69,9 @@ private:
    const TGPicture *fUncheckedPic; // icon for unchecked item
    void            *fUserData;     // pointer to user data structure
 
+   Bool_t           fHasColor;     // true if item has assigned color
+   Color_t          fColor;        // item's color
+
 public:
    TGListTreeItem(TGClient *fClient = gClient, const char *name = 0,
                   const TGPicture *opened = 0, const TGPicture *closed = 0,
@@ -84,6 +87,7 @@ public:
    Bool_t          IsActive() const { return fActive; }
    Bool_t          IsOpen() const { return fOpen; }
    const char     *GetText() const { return fText.Data(); }
+   void            SetTipText(const char *tip) { fTipText = tip; }
    const char     *GetTipText() const { return fTipText.Data(); }
    void            SetUserData(void *userData) { fUserData = userData; }
    void           *GetUserData() const { return fUserData; }
@@ -95,6 +99,10 @@ public:
    void            CheckItem(Bool_t checked = kTRUE) { fChecked = checked; }
    void            Toggle() { fChecked = !fChecked; }
    Bool_t          IsChecked() const { return fChecked; }
+
+   Color_t         GetColor() const { return fColor; }
+   void            SetColor(Color_t color) { fHasColor = true;fColor = color; }
+   void            ClearColor() { fHasColor = false; }
 
    ClassDef(TGListTreeItem,0)  //Item that goes into a TGListTree container
 };
@@ -124,17 +132,22 @@ protected:
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
    Bool_t           fDisableOpen;    // disable branch opening on double-clicks
 
+   Short_t          fColorMode;      // if/how to render item's main color
+   GContext_t       fColorGC;        // drawing context for main item color
+
    static Pixel_t        fgGrayPixel;
    static const TGFont  *fgDefaultFont;
    static TGGC          *fgDrawGC;
    static TGGC          *fgLineGC;
    static TGGC          *fgHighlightGC;
+   static TGGC          *fgColorGC;
 
    static Pixel_t       GetGrayPixel();
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDrawGC();
    static const TGGC   &GetLineGC();
    static const TGGC   &GetHighlightGC();
+   static const TGGC   &GetColorGC();
 
    virtual void DoRedraw();
    void  Draw(Int_t yevent, Int_t hevent);
@@ -255,6 +268,9 @@ public:
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
    virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
    virtual void Checked(TObject *obj, Bool_t check);  //*SIGNAL*
+
+   Short_t GetColorMode() const { return fColorMode; }
+   void SetColorMode(Short_t color_mode) { fColorMode = color_mode; }
 
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 

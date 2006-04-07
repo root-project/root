@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.3 2005/11/10 12:04:21 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAFrame.cxx,v 1.4 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder  10/08/2005
 
 /*************************************************************************
@@ -25,6 +25,14 @@ ClassImp(TGLSAFrame)
 //______________________________________________________________________________
 TGLSAFrame::TGLSAFrame(TGLSAViewer & viewer) :
    TGMainFrame(gClient->GetDefaultRoot()),
+   fViewer(viewer)
+{
+   // Construct GUI frame, bound to passed 'viewer'
+}
+
+//______________________________________________________________________________
+TGLSAFrame::TGLSAFrame(TGFrame* parent, TGLSAViewer & viewer) :
+   TGMainFrame(parent),
    fViewer(viewer)
 {
    // Construct GUI frame, bound to passed 'viewer'

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.17 2005/03/09 18:19:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.18 2005/11/17 14:43:17 couet Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -220,6 +220,7 @@ public:
    virtual void     SetToolTipText(const char *text, Long_t delayms = 1000) = 0;
    virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
    virtual void     SetView(TView *view) = 0;
+   virtual void     SetViewer3D(TVirtualViewer3D * /*viewer3d*/) {}
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;
    virtual Int_t    UtoAbsPixel(Double_t u) const = 0;

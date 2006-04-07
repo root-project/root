@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.11 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.12 2006/02/20 11:02:19 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -42,10 +42,11 @@ class TGLDrawFlags;
 
 class TGLDrawable
 {
-private:
+protected:
    // Fields
    ULong_t fID;        //! unique drawable ID
 
+private:
    // Methods
    // Non-copyable class
    TGLDrawable(const TGLDrawable &);

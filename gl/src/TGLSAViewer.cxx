@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.16 2006/03/13 09:33:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.17 2006/03/20 21:43:42 pcanal Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -21,6 +21,14 @@
 #include "TGLabel.h"
 #include "TGMenu.h"
 #include "TGTab.h"
+#include "TGSplitter.h"
+#include "TColor.h"
+
+#include "TGLEditor.h"
+#include "TGLOutput.h"
+
+#include "TGLPhysicalShape.h"
+#include "TGLClip.h"
 #include "TROOT.h"
 
 #ifdef WIN32
@@ -208,7 +216,7 @@ void TGLSAViewer::CreateMenus()
 void TGLSAViewer::CreateFrames()
 {
    // Internal frames creation
-   TGCompositeFrame *compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
+   TGCompositeFrame* compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
    fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 180, 10, kFixedWidth);
@@ -279,6 +287,48 @@ void TGLSAViewer::CreateFrames()
 
    canvasWindow->SetContainer(fGLWindow);
    rightVerticalFrame->AddFrame(canvasWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+}
+
+//______________________________________________________________________________
+TGLSAViewer::TGLSAViewer(TGFrame * parent, TVirtualPad * pad) :
+   TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
+   fFrame(0),
+   fFileMenu(0),
+   fCameraMenu(0),
+   fHelpMenu(0),
+   fGLArea(0),
+   fLeftVerticalFrame(0),
+   fEditorTab(0),
+   fGLEd(0),
+   fObjEdTab(0)
+{
+   // Construct an embedded standalone viewer, bound to supplied 'pad'.
+   //
+   // Modified version of the previous constructor for embedding the
+   // viewer into another frame (parent).
+   
+   // First create gVirtualGL/kernel - to be replaced with TGLManager
+   if (!gVirtualGL) {
+      if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("TVirtualGLImp")) {
+         if (h->LoadPlugin() == -1)
+            return;// bad, must be exception
+         TVirtualGLImp * imp = (TVirtualGLImp *) h->ExecPlugin(0);
+         new TGLKernel(imp);
+      }
+   }
+
+   fFrame = new TGLSAFrame(parent, *this);
+   fFrame->SetCleanup(kDeepCleanup);
+
+   CreateMenus();
+   CreateFrames();
+
+   fFrame->MapSubwindows();
+   fFrame->Resize(fFrame->GetDefaultSize());
+   fFrame->Resize(fgInitW, fgInitH);
+
+   fLeftVerticalFrame->HideFrame(fObjEdTab);
+   fGLEd->HideClippingGUI();
 }
 
 //______________________________________________________________________________

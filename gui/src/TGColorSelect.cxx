@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.11 2006/03/29 15:37:45 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.12 2006/04/05 09:37:32 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -558,6 +558,15 @@ void TGColorSelect::SetColor(ULong_t color)
    fDrawGC.SetForeground(color);
    gClient->NeedRedraw(this);
    ColorSelected(fColor);   // emit a signal
+}
+
+void TGColorSelect::SetColorNoSignal(ULong_t color)
+{
+   // Set color, don't emit 'ColorSelected'.
+
+   fColor = color;
+   fDrawGC.SetForeground(color);
+   gClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________

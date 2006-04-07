@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.26 2006/03/09 11:18:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.27 2006/03/13 09:33:49 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -152,6 +152,7 @@ private:
    Bool_t         fReferenceOn;    //! reference marker on?
    TGLVertex3     fReferencePos;   //! reference position
    Bool_t         fInitGL;         //! has GL been initialised?
+   Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds, use TAtt3D time-stamp to determine if they are still valid
 
    // Debug tracing (for scene rebuilds)
    Bool_t         fDebugMode;             //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
@@ -193,6 +194,11 @@ protected:
    TGLWindow       *fGLWindow;    //! remove - replace with TGLManager
    Int_t            fGLDevice; //!for embedded gl viewer
    TGLViewerEditor *fPadEditor;
+
+   std::map<TClass*, TClass*> fDirectRendererMap; //!
+   TClass*          FindDirectRendererClass(TClass* cls);
+   TGLLogicalShape* AttemptDirectRenderer(TObject* id);
+
    // Overloadable 
    virtual void PostSceneBuildSetup();
    virtual void SelectionChanged(); // *SIGNAL*
@@ -217,6 +223,8 @@ public:
    virtual void   AddCompositeOp(UInt_t operation);
    
    Int_t   GetDev()const{return fGLDevice;}
+   Bool_t  GetSmartRefresh() const           { return fSmartRefresh; }
+   void    SetSmartRefresh(Bool_t smart_ref) { fSmartRefresh = smart_ref; }
 
    // External GUI component interface
    void SetDrawStyle(TGLDrawFlags::EStyle style);
