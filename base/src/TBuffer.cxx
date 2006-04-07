@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.90 2006/02/15 06:37:17 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.91 2006/02/17 05:20:13 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2570,9 +2570,17 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
          if (vinfo) {
             version = vinfo->GetClassVersion();
          } else {
-            Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
-                   checksum, cl->GetName(), ((TFile*)fParent)->GetName());
-            return 0;
+            // There are some cases (for example when the buffer was stored outside of
+            // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
+            // the one from the current class, we can still assume that we can read 
+            // the data so let use it.
+            if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
+               version = cl->GetClassVersion();
+            } else {
+               Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
+                  checksum, cl->GetName(), ((TFile*)fParent)->GetName());
+               return 0;
+            }
          }
       }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 ) {
          // We could have a file created using a Foreign class before
