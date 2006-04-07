@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.h,v 1.3 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.h,v 1.4 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2003
 
 /*************************************************************************
