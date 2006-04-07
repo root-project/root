@@ -473,22 +473,6 @@ int main_orig(argc, argv)
 	 * now peruse through the list of files.
 	 */
 	for(fp=filelist; *fp; fp++) {
-           posEndPath = 0;
-           if (incp < includedirs + MAXDIRS) {
-              /* -I dirname(sourcefile) */
-              posEndPath = strrchr(*fp, '/');
-              if (posEndPath) {
-                 if (posEndPath - *fp >= bufLenCurrentFileInc) {
-                    if (currentFileInc) free(currentFileInc);
-                    bufLenCurrentFileInc = (posEndPath - *fp)*2;
-                    currentFileInc = malloc(bufLenCurrentFileInc);
-                 }
-                 memcpy(currentFileInc, *fp, posEndPath - *fp);
-                 currentFileInc[posEndPath - *fp] = 0;
-                 *incp++ = currentFileInc;
-              }
-           }
-
            filecontent = getfile(*fp);
            ip = newinclude(*fp, (char *)NULL);
 
@@ -496,7 +480,6 @@ int main_orig(argc, argv)
            freefile(filecontent);
            recursive_pr_include(ip, ip->i_file, base_name(*fp));
            inc_clean();
-           if (posEndPath) --incp;
 	}
         if (!rootBuild) {
 	   if (printed)

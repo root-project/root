@@ -36,8 +36,16 @@ extern char	*notdotdot[ ];
 extern boolean show_where_not;
 extern boolean warn_multiple;
 
-#define RMKDEPEND_STAT_S_IFDIR 0040000
-#define RMKDEPEND_STAT_S_IFREG 0100000
+#ifdef __S_IFDIR
+#define RMKDEPEND_STAT_S_IFDIR __S_IFDIR
+#define RMKDEPEND_STAT_S_IFREG __S_IFREG
+#elif defined (_S_IFDIR)
+#define RMKDEPEND_STAT_S_IFDIR _S_IFDIR
+#define RMKDEPEND_STAT_S_IFREG _S_IFREG
+#else
+#define RMKDEPEND_STAT_S_IFDIR -1
+#define RMKDEPEND_STAT_S_IFREG -1
+#endif
 
 boolean
 isdot(p)
@@ -296,7 +304,7 @@ struct inclist *inc_path(file, include, dot)
 			strcpy(path + (p-file) + 1, include);
 		}
 		remove_dotdot(path);
-		if (stat(path, &st) == 0 && (st.st_mode & RMKDEPEND_STAT_S_IFDIR)) {
+		if (stat(path, &st) == 0 && (st.st_mode & RMKDEPEND_STAT_S_IFREG)) {
 			ip = newinclude(path, include);
 			found = TRUE;
 		}
