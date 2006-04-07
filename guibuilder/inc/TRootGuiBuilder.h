@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.3 2005/08/19 09:46:37 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.4 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -80,6 +80,10 @@ private:
    const TGPicture   *fIconPic;     // icon picture
    TGPictureButton   *fStartButton; // start button
 
+   static TGGC       *fgBgnd;
+   static TGGC       *fgBgndPopup;
+   static TGGC       *fgBgndPopupHlght;
+
    void InitMenu();
    void EnableLassoButtons(Bool_t on = kTRUE);
    void EnableSelectedButtons(Bool_t on = kTRUE);
@@ -117,6 +121,19 @@ public:
    static TGFrame   *VSplitter();
    TGMdiMainFrame   *GetMdiMain() const { return fMain; }  
 
+   static ULong_t    GetBgnd();
+   static TGGC      *GetBgndGC();
+
+   static ULong_t    GetPopupBgnd();
+   static TGGC      *GetPopupBgndGC();
+
+   static ULong_t    GetPopupHlght();
+   static TGGC      *GetPopupHlghtGC();
+
+   static void       SetBgndColor(TGFrame *frame, Pixel_t color);
+
+   static TGPopupMenu *CreatePopup();
+      
    ClassDef(TRootGuiBuilder,0)  // ROOT GUI Builder
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.5 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.6 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -42,7 +42,8 @@ enum EActionType { kNoneAct, kPropertyAct, kEditableAct, kReparentAct,
                    kCloneAct, kSaveAct, kGrabAct, kDeleteAct, kLeftAct,
                    kRightAct, kUpAct, kDownAct, kEndEditAct, kReplaceAct,
                    kGridAct, kBreakLayoutAct, kSwitchLayoutAct, kNewAct,
-                   kOpenAct, kLayoutHAct, kLayoutVAct, kUndoAct, kRedoAct, kSelectAct };
+                   kOpenAct, kLayoutHAct, kLayoutVAct, kUndoAct, kRedoAct, 
+                   kSelectAct, kMethodMenuAct, kToggleMenuAct };
 
 class TGuiBldDragManager : public TVirtualDragManager, public TGFrame {
 
@@ -65,10 +66,11 @@ private:
    Bool_t         fDropStatus;         // kTRUE if drop was successfull
    Bool_t         fStop;               // kTRUE if stopped
 
-   void           Init();
+   void           Reset1();
    void           DrawGrabRectangles(TGWindow *win = 0);
    void           DrawGrabRect(Int_t i, Int_t x, Int_t y);
    TGCompositeFrame *FindLayoutFrame(TGFrame *f);
+   Bool_t         IsPointVisible(Int_t x, Int_t y);
    Bool_t         IsSelectedVisible();
    void           CloseMenus();
    Bool_t         IsEditDisabled(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisable); }
@@ -82,8 +84,11 @@ private:
    TGFrame       *GetEditableParent(TGFrame *f);
    TGFrame       *GetMovableParent(TGWindow *p);
    TGWindow      *GetResizableParent(TGWindow *p);
+   TGFrame       *FindMdiFrame(TGFrame *in);
    void           RaiseMdiFrame(TGFrame *in);
    Bool_t         CheckTargetAtPoint(Int_t x, Int_t y);
+   void           AddClassMenuMethods(TGPopupMenu *menu, TObject *object);
+   void           DeleteMenuDialog();
 
 public:
    TGFrame       *InEditable(Window_t id);
@@ -177,6 +182,12 @@ public:
    Bool_t         CanChangeLayoutOrder(TGWindow *w) const;
    Bool_t         CanCompact(TGWindow *w) const;
    Bool_t         IsStopped() const { return fStop; }
+
+   // hadndling dynamic context menus
+   void           DoClassMenu(Int_t);
+   void           DoDialogOK();
+   void           DoDialogApply();
+   void           DoDialogCancel();
 
    ClassDef(TGuiBldDragManager,0)  // drag and drop manager
 };

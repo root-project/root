@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiNameFrame.cxx,v 1.8 2005/12/08 13:03:57 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.cxx,v 1.1 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -22,6 +22,9 @@
 #include "TGuiBldEditor.h"
 #include "TGLayout.h"
 #include "TG3DLine.h"
+#include "TColor.h"
+#include "TROOT.h"
+#include "TRootGuiBuilder.h"
 
 //______________________________________________________________________________
 TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
@@ -30,11 +33,11 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
    //
 
    fEditor = editor;
-   fEditDisabled = 1;
+   fEditDisabled = kEditDisable;
    SetCleanup(kDeepCleanup);
    TGFrame *frame = fEditor->GetSelected();
 
-   TGCompositeFrame *f = new TGHorizontalFrame(this);
+   TGCompositeFrame *f = fTitleFrame = new TGHorizontalFrame(this);
    f->AddFrame(new TGLabel(f, "Name"), new TGLayoutHints(kLHintsLeft, 0, 1, 0, 0));
    f->AddFrame(new TGHorizontal3DLine(f), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
@@ -56,9 +59,19 @@ TGuiBldNameFrame::TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor) :
 }
 
 //______________________________________________________________________________
+void TGuiBldNameFrame::DoRedraw()
+{
+   // redraw frame (just prototyping)
+
+   //TColor *col = gROOT->GetColor(29);
+   //TRootGuiBuilder::SetBgndColor(fTitleFrame, col->GetPixel());
+   TGCompositeFrame::DoRedraw();
+}
+
+//______________________________________________________________________________
 void TGuiBldNameFrame::Reset()
 {
-   //
+   // reset
 
    fFrameName->SetText("");
    fLabel->SetText("");

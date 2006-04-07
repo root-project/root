@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.6 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.7 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGuiBldQuickHandler.h"
+#include "TRootGuiBuilder.h"
 #include "TGTextEntry.h"
 #include "TGButton.h"
 #include "TGLabel.h"
@@ -37,7 +38,7 @@ static TGuiBldQuickHandler *gQuickHandler = 0;
 TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const char *getter) :
             TGTransientFrame(gClient->GetDefaultRoot(), gClient->GetRoot(), 1, 1)
 {
-   //
+   // ctor
 
    fEditDisabled = kTRUE;
 
@@ -70,6 +71,7 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
 
    TGLabel *label = new TGLabel(this, title.Data());
    AddFrame(label, new TGLayoutHints(kLHintsNormal, 5, 5, 5, 5));
+   TRootGuiBuilder::SetBgndColor(this, TRootGuiBuilder::GetBgnd());
 
    fEntry = new TGTextEntry(this);
    AddFrame(fEntry, new TGLayoutHints(kLHintsNormal | kLHintsExpandX, 5, 5, 5, 5));
@@ -89,6 +91,7 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
    UInt_t w = fOK->GetDefaultWidth();
    w = TMath::Max(w, fCancel->GetDefaultWidth());
    hf->Resize(2 * (w + 10), hf->GetDefaultHeight());
+   TRootGuiBuilder::SetBgndColor(hf, TRootGuiBuilder::GetBgnd());
 
    MapSubwindows();
    Resize();
@@ -105,14 +108,14 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
 //______________________________________________________________________________
 TGuiBldTextDialog::~TGuiBldTextDialog()
 {
-   //
+   // dtor
 
 }
 
 //______________________________________________________________________________
 void TGuiBldTextDialog::DoCancel()
 {
-   //
+   // process Cancel button press event
 
    fEntry->SetText(fSavedText.Data());
 
@@ -123,7 +126,7 @@ void TGuiBldTextDialog::DoCancel()
 //______________________________________________________________________________
 void TGuiBldTextDialog::DoOK()
 {
-   //
+   //  process OK button press event
 
    DeleteWindow();
    if (gQuickHandler) gQuickHandler->fEditor = 0;
@@ -132,7 +135,7 @@ void TGuiBldTextDialog::DoOK()
 //______________________________________________________________________________
 void TGuiBldTextDialog::CloseWindow()
 {
-   //
+   // on window close
 
    DeleteWindow();
    if (gQuickHandler) gQuickHandler->fEditor = 0;
@@ -144,7 +147,7 @@ void TGuiBldTextDialog::CloseWindow()
 //______________________________________________________________________________
 TGuiBldQuickHandler::TGuiBldQuickHandler() :  TObject()
 {
-   //
+   // ctor
 
    fSelected = 0;
    fEditor = 0;
@@ -154,7 +157,7 @@ TGuiBldQuickHandler::TGuiBldQuickHandler() :  TObject()
 //______________________________________________________________________________
 TGuiBldQuickHandler::~TGuiBldQuickHandler()
 {
-   //
+   // dtor
 
    fSelected = 0;
    fEditor = 0;
@@ -164,7 +167,7 @@ TGuiBldQuickHandler::~TGuiBldQuickHandler()
 //______________________________________________________________________________
 Bool_t TGuiBldQuickHandler::HandleEvent(TGWindow *win)
 {
-   //
+   // handle event
 
    if (!win) return kFALSE;
 

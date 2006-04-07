@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.h,v 1.2 2004/09/21 10:09:18 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldNameFrame.h,v 1.1 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -37,6 +37,10 @@ private:
    TGLabel         *fLabel;      // label of frame class name 
    TGTextEntry     *fFrameName;  // name of the frame
    TGuiBldEditor   *fEditor;     // pointer to main editor
+   TGCompositeFrame *fTitleFrame;      // frame saying that it's "Name Frame"
+
+protected:
+   void DoRedraw();
 
 public:
    TGuiBldNameFrame(const TGWindow *p, TGuiBldEditor *editor);

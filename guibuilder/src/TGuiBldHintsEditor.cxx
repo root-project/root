@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.3 2005/12/08 13:03:57 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldHintsEditor.cxx,v 1.4 2006/03/29 15:44:57 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -53,9 +53,9 @@ TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
                                           TGuiBldHintsEditor *hints) : 
                      TGVerticalFrame(p, 1, 1), fEditor(e), fHints(hints)
 {
-   //
+   // ctor
 
-   fEditDisabled = 1;
+   fEditDisabled = kEditDisable;
    SetCleanup(kDeepCleanup);
    fRows = 0;
    fColumns = 0;
@@ -117,7 +117,7 @@ TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
 //______________________________________________________________________________
 void TGuiBldHintsManager::ChangeSelected(TGFrame *frame)
 {
-   //
+   // action whne selcted/grabbed frame was changed
 
    fMatrix = 0;
 

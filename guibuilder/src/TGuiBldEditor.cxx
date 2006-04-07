@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.8 2005/12/08 13:03:57 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.10 2006/03/30 09:58:48 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -295,9 +295,9 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
    fNameFrame->ChangeSelected(fSelected);
 
    Bool_t enable_layout = kFALSE;
-   enable_layout |= !(parent->GetEditDisabled() & kEditDisableLayout);
+   enable_layout |= parent && !(parent->GetEditDisabled() & kEditDisableLayout);
    enable_layout |= !(fSelected->GetEditDisabled() & kEditDisableLayout);
-   enable_layout |= (parent->InheritsFrom(TGCompositeFrame::Class()) &&
+   enable_layout |= parent && (parent->InheritsFrom(TGCompositeFrame::Class()) &&
                      !((TGCompositeFrame*)parent)->IsLayoutBroken());
    enable_layout |= (fSelected->InheritsFrom(TGCompositeFrame::Class()) &&
                      !((TGCompositeFrame*)fSelected)->IsLayoutBroken());
