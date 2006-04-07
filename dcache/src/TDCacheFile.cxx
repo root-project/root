@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.26 2005/12/10 01:07:24 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.27 2006/03/28 23:58:12 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -70,8 +70,6 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    // is accessable. For a description of the option and other arguments
    // see the TFile ctor. The preferred interface to this constructor is
    // via TFile::Open().
-
-   SetName(path);
 
    TString pathString = GetDcapPath(path);
    path = pathString.Data();

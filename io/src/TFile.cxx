@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.150 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.151 2006/04/06 23:01:45 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -220,6 +220,10 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
+   // store original name and title
+   SetName(fname1);
+   SetTitle(ftitle);
+
    // accept also URL like "file:..." syntax
    TUrl url(fname1, kTRUE);
    fname1 = url.GetFile();
@@ -231,13 +235,12 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    // Init initialization control flag
    fInitDone   = kFALSE;
-   // We are doing synchronously
+
+   // We are opening synchronously
    fAsyncHandle = 0;
    fAsyncOpenStatus = kAOSNotAsync;
 
    gDirectory = 0;
-   SetName(fname1);
-   SetTitle(ftitle);
 
    TDirectory::Build(this, 0);
 
