@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.42 2006/01/31 14:13:32 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.43 2006/02/05 11:51:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -333,7 +333,8 @@ public:
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
-   
+   virtual void      SetViewer3D(TVirtualViewer3D *viewer3d) {fViewer3D = viewer3d;}
+
    virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}
 
    
