@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.47 2006/04/07 09:24:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.48 2006/04/07 15:45:53 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1041,7 +1041,7 @@ Int_t TGListTree::DrawChildren(TGListTreeItem *item, Int_t x, Int_t y, Int_t xro
    Int_t  xbranch;
    TGPosition pos = GetPagePosition();
 
-   x += fIndent + (Int_t)item->fPicWidth;
+   x += fIndent + (Int_t)item->fParent->fPicWidth;
    while (item) {
       xbranch = xroot;
 
