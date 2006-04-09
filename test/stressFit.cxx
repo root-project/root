@@ -614,13 +614,13 @@ Int_t stressFit(const char *theFitter)
 
   gBenchmark->Start("StressFit");
 
-  Bool_t okRosenBrock;
-  Bool_t okWood;
-  Bool_t okPowell;
-  Bool_t okFletcher;
-  Bool_t okGoldStein1;
-  Bool_t okGoldStein2;
-  Bool_t okTrigoFletcher;
+  Bool_t okRosenBrock    = kTRUE;
+  Bool_t okWood          = kTRUE;
+  Bool_t okPowell        = kTRUE;
+  Bool_t okFletcher      = kTRUE;
+  Bool_t okGoldStein1    = kTRUE;
+  Bool_t okGoldStein2    = kTRUE;
+  Bool_t okTrigoFletcher = kTRUE;
   Int_t i;
   Int_t N = 2000;
   for (i = 0; i < N; i++)  okWood          = RunWood4();
@@ -661,7 +661,7 @@ Int_t stressFit(const char *theFitter)
 #ifdef __CINT__
   Double_t reftime = 86.34; //macbrun interpreted
 #else
-  Double_t reftime = 12.27; //macbrun compiled
+  Double_t reftime = 12.07; //macbrun compiled
 #endif
   const Double_t rootmarks = 800*reftime/gBenchmark->GetCpuTime("StressFit");
   
