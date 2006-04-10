@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.35 2005/10/27 13:28:51 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.36 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -500,6 +500,21 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
 }
 
 //______________________________________________________________________________
+void TGLineStyleComboBox::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save a line style combo box widget as a C++ statement(s).
+
+   out << endl << "   // line style combo box" << endl;
+   out << "   TGLineStyleComboBox *";
+
+   out << GetName() << " = new TGLineStyleComboBox(" << fParent->GetName() 
+       << "," << fWidgetId << ");" << endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
+       << GetHeight() << ");" << endl;
+   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
+}
+
+//______________________________________________________________________________
 TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
                                          UInt_t options, Pixel_t back)
    : TGComboBox(p, id, options, back)
@@ -517,6 +532,20 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
    SetWindowName();
 }
 
+//______________________________________________________________________________
+void TGLineWidthComboBox::SavePrimitive(ofstream &out, Option_t *)
+{
+   // Save a line width combo box widget as a C++ statement(s).
+
+   out << endl << "   // line width combo box" << endl;
+   out << "   TGLineWidthComboBox *";
+
+   out << GetName() << " = new TGLineWidthComboBox(" << fParent->GetName() 
+       << "," << fWidgetId << ");" << endl;
+   out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
+       << GetHeight() << ");" << endl;
+   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
+}
 
 static const char *gFonts[][2] = {    //   unix name,     name
    { "",                                           ""                         }, //not used

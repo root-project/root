@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.16 2005/07/05 12:36:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.17 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -143,6 +143,8 @@ public:
    TGLineStyleComboBox(const TGWindow *p = 0, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
+
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
       
    ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
     
@@ -164,6 +166,8 @@ public:
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
    
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
+
    ClassDef(TGLineWidthComboBox, 0)  // Line width combobox widget
 
      
