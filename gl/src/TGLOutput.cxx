@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.6 2005/12/01 11:04:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.7 2006/04/10 09:23:31 couet Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -136,6 +136,8 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
 void TGLOutput::StartEmbeddedPS()
 {
    //this function used by gl-in-pad
+   Info("TGLOutput::StartEmbeddedPS", "PS output started ...");   
+
    gVirtualPS->PrintStr("@");
    gVirtualPS->PrintStr("% Start gl2ps EPS@");
    gVirtualPS->PrintStr("newpath gsave save@");
@@ -189,6 +191,8 @@ void TGLOutput::CloseEmbeddedPS()
    gVirtualPS->PrintStr("countdictstack exch sub { end } repeat@");
    gVirtualPS->PrintStr("restore grestore@");
    gVirtualPS->PrintStr("% End gl2ps EPS@");
+
+   Info("TGLOutput::CloseEmbeddedPS", "PS output finished");
 }
 
 //______________________________________________________________________________

@@ -363,7 +363,7 @@ void TGLHistPainter::PrintPlot()
    Int_t gl2psFormat = GL2PS_EPS;
    Int_t gl2psSort = GL2PS_BSP_SORT;
    Int_t buffsize = 0, state = GL2PS_OVERFLOW;
-		                                                                                     
+                                                 
    while (state == GL2PS_OVERFLOW) {
       buffsize += 1024*1024;
       gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
