@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.79 2006/03/24 15:11:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.80 2006/04/03 16:19:31 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1264,10 +1264,11 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 char *TGeoVolume::GetPointerName() const
 {
 // Provide a pointer name containing uid.
-   static char name[20];
-   Int_t uid = GetUniqueID();
-   if (uid) sprintf(name,"p%s_%i", GetName(),uid);
-   else     sprintf(name,"p%s", GetName());
+   static char name[40];
+//   Int_t uid = GetUniqueID();
+//   if (uid) sprintf(name,"p%s_%i", GetName(),uid);
+//   else     sprintf(name,"p%s", GetName());
+   sprintf(name, "p%s_%lx", GetName(), (ULong_t)this);
    return name;
 }
 

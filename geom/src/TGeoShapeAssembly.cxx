@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.4 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.5 2006/03/14 15:16:35 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -163,7 +163,7 @@ Int_t TGeoShapeAssembly::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 Double_t TGeoShapeAssembly::DistFromInside(Double_t * /*point*/, Double_t * /*dir*/, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // Compute distance from inside point to surface of the hyperboloid.
-   Warning("DistFromInside", "Cannot compute distance from inside the assembly (but from a component)");
+   Info("DistFromInside", "Cannot compute distance from inside the assembly (but from a component)"); 
    return TGeoShape::Big();
 }
 

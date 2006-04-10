@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.49 2006/02/23 13:23:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.50 2006/03/22 11:18:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2173,7 +2173,7 @@ void TGeoHMatrix::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rot[3] =" << rot[3] << ";    " << "rot[4] = " << rot[4] << ";    " << "rot[5] = " << rot[5] << ";" << endl; 
    out << "   rot[6] =" << rot[6] << ";    " << "rot[7] = " << rot[7] << ";    " << "rot[8] = " << rot[8] << ";" << endl; 
    char *name = GetPointerName();
-   out << "   TGeoHMatrix *" << name << " = new TGeoHMatrix(\"" << GetName() << "\"" << endl;
+   out << "   TGeoHMatrix *" << name << " = new TGeoHMatrix(\"" << GetName() << "\");" << endl;
    out << "   " << name << "->SetTranslation(tr);" << endl;
    out << "   " << name << "->SetRotation(rot);" << endl;
    if (IsTranslation()) out << "   " << name << "->SetBit(TGeoMatrix::kGeoTranslation);" << endl;

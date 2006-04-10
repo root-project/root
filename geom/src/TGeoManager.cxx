@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.144 2006/03/27 09:28:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.145 2006/04/03 16:19:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3175,7 +3175,8 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
          fCache->MasterToLocal(fPoint, &mothpt[0]);
          fCache->MasterToLocalVect(fDirection, &vecpt[0]);
          // check distance to out
-         snext = mother->GetShape()->DistFromInside(mothpt, vecpt, iact, fStep);
+         snext = TGeoShape::Big();
+         if (!mother->IsAssembly()) snext = mother->GetShape()->DistFromInside(mothpt, vecpt, iact, fStep);
          if (snext<fStep) {
             // exiting mother first (extrusion)
             icrossed = -1;
@@ -3273,7 +3274,8 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
                matrix = GetMotherMatrix(up);
                matrix->MasterToLocal(fPoint,dpt);
                matrix->MasterToLocalVect(fDirection,dvec);
-               snext = mother->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
+               snext = TGeoShape::Big();
+               if (!mother->GetVolume()->IsAssembly()) snext = mother->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
                if (snext<fStep) {
                   fNextNode = mother;
                   *fCurrentMatrix = matrix;
@@ -3491,7 +3493,8 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          fCache->MasterToLocal(fPoint, &mothpt[0]);
          fCache->MasterToLocalVect(fDirection, &vecpt[0]);
          // check distance to out
-         snext = mother->GetShape()->DistFromInside(&mothpt[0], &vecpt[0], iact, fStep, &safe);
+         snext = TGeoShape::Big();
+         if (!mother->IsAssembly()) snext = mother->GetShape()->DistFromInside(&mothpt[0], &vecpt[0], iact, fStep, &safe);
          if (snext<fStep) {
             fIsStepEntering = kFALSE;
             fStep = snext;
@@ -3579,7 +3582,8 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                matrix = GetMotherMatrix(up);
                matrix->MasterToLocal(fPoint,dpt);
                matrix->MasterToLocalVect(fDirection,dvec);
-               snext = mother->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
+               snext = TGeoShape::Big();
+               if (!mother->GetVolume()->IsAssembly()) snext = mother->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
                if (snext<fStep) {
                   fStep = snext;
                   fNextNode = mother;
