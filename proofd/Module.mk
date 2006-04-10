@@ -50,12 +50,6 @@ XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA    += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdNet.a
-XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
-                  $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a
-XPROOFDEXE     := bin/xproofd
-else
-XPROOFDEXELIBS :=
-XPROOFDEXE     :=
 endif
 
 # used in the main Makefile
@@ -63,7 +57,6 @@ ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
 ALLEXECS     += $(PROOFDEXE)
 ifeq ($(BUILDXRD),yes)
 ALLLIBS      += $(XPDLIB)
-ALLEXECS     += $(XPROOFDEXE)
 endif
 
 # include all dependency files
@@ -81,15 +74,12 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
-$(XPROOFDEXE):  $(XPDO) $(XRDPLUGINS)
-		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS)
-
 $(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPLUGINS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO)" \
 		   "$(XPDLIBEXTRA)"
 
-all-proofd:     $(PROOFDEXE) $(XPROOFDEXE) $(XPDLIB)
+all-proofd:     $(PROOFDEXE) $(XPDLIB)
 
 clean-proofd:
 		@rm -f $(PROOFDEXEO) $(XPDO)
@@ -97,14 +87,14 @@ clean-proofd:
 clean::         clean-proofd
 
 distclean-proofd: clean-proofd
-		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPDDEP) $(XPDLIB) \
-		   $(XPROOFDEXE)
+		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPDDEP) $(XPDLIB)
 
 distclean::     distclean-proofd
 
 ##### extra rules ######
-$(PROOFDDIRS)/proofd.o: CXXFLAGS += $(AUTHFLAGS)
+$(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
 
+$(XPDO): $(XRDPLUGINS)
 ifeq ($(ICC_MAJOR),9)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA)
