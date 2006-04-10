@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:$:$Id:$
+// @(#)root/fft:$Name:  $:$Id: TFFTComplex.cxx,v 1.1 2006/04/10 15:37:11 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -96,11 +96,11 @@ void TFFTComplex::Init( Option_t *flags, Int_t sign,const Int_t* /*kind*/)
 //2nd parameter: +1 
 //Argument kind is dummy and doesn't need to be specified
 //Possible flag_options:
-//"E" (from "estimate") - no time in preparing the transform, but probably sub-optimal
-//   performanc
+//"ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
+//   performance
 //"M" (from "measure") - some time spend in finding the optimal way to do the transform
 //"P" (from "patient") - more time spend in finding the optimal way to do the transform
-//"Ex" (from "exhaustive") - the most optimal way is found
+//"EX" (from "exhaustive") - the most optimal way is found
 //This option should be chosen depending on how many transforms of the same size and
 //type are going to be done. Planning is only done once, for the first transform of this
 //size and type.

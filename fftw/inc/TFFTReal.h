@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:$:$Id:$
+// @(#)root/fft:$Name:  $:$Id: TFFTReal.h,v 1.1 2006/04/10 15:37:11 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -67,14 +67,14 @@ class TComplex;
 
 class TFFTReal: public TVirtualFFT{
  protected:
-   void     *fIn;
-   void     *fOut;
-   void     *fPlan;
-   Int_t     fNdim;
-   Int_t     fTotalSize;
-   Int_t    *fN;
-   void     *fKind;
-   Option_t *fFlags;
+   void     *fIn;         //input array
+   void     *fOut;        //output array
+   void     *fPlan;       //fftw plan (the plan how to compute the transform)
+   Int_t     fNdim;       //number of dimensions
+   Int_t     fTotalSize;  //total size of the transform
+   Int_t    *fN;          //transform sizes in each dimension
+   void     *fKind;       //transform kinds in each dimension
+   Option_t *fFlags;      //transform flags
 
    Int_t  MapOptions(const Int_t *kind);
    UInt_t MapFlag(Option_t *flag);
