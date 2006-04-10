@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.22 2006/04/03 15:27:03 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.23 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -181,7 +181,7 @@ static ToolBarData_t gToolBarData[] = {
    { "bld_save.png",   "Save As (Ctrl-S)",   kFALSE, kSaveAct, 0 },
    { "",                 "",               kFALSE, -1, 0 },
 //   { "bld_pointer.xpm",   "Selector (Ctrl-Click)",   kTRUE, kSelectAct, 0 },
-   //{ "bld_grab.xpm",   "Grab Selected Frames (Return)",   kTRUE, kGrabAct, 0 },
+//   { "bld_grab.xpm",   "Grab Selected Frames (Return)",   kTRUE, kGrabAct, 0 },
    { "",                 "",               kFALSE, -1, 0 },
    { "bld_compact.png",   "Compact selected frame (Ctrl-L)",        kFALSE,  kCompactAct, 0 },
    { "bld_break.png",   "Disable/Enable layout (Ctrl-B)",        kFALSE,  kBreakLayoutAct, 0 },
@@ -247,12 +247,12 @@ public:
 //______________________________________________________________________________
 Bool_t TGuiBldMenuTitle::HandleCrossing(Event_t *event)
 {
-   // handle  crossing
+   // Handle  crossing events.
    
    if (event->fType == kEnterNotify) {
       fBgndColor = TRootGuiBuilder::GetPopupHlght();
    } else {
-     fBgndColor = TRootGuiBuilder::GetBgnd();
+      fBgndColor = TRootGuiBuilder::GetBgnd();
    }
    DoRedraw();
    return kTRUE;
@@ -261,7 +261,7 @@ Bool_t TGuiBldMenuTitle::HandleCrossing(Event_t *event)
 //______________________________________________________________________________
 void TGuiBldMenuTitle::DoRedraw()
 {
-   // do redraw
+   // Redraw builder menu title.
 
    TGFrame::DoRedraw();
 
@@ -443,7 +443,7 @@ public:
 //______________________________________________________________________________
 void TGuiBldToolButton::DoRedraw()
 {
-   // do redraw
+   // Redraw tool button.
 
    int x = (fWidth - fTWidth) >> 1;
    int y = (fHeight - fTHeight) >> 1;
@@ -472,7 +472,7 @@ void TGuiBldToolButton::DoRedraw()
 //______________________________________________________________________________
 Bool_t TGuiBldToolButton::HandleCrossing(Event_t *event)
 {
-   // handle crossing
+   // Handle crossing events.
 
    if (fTip) {
       if (event->fType == kEnterNotify) {
@@ -495,7 +495,8 @@ Bool_t TGuiBldToolButton::HandleCrossing(Event_t *event)
 //______________________________________________________________________________
 void TGuiBldToolButton::SetState(EButtonState state, Bool_t emit)
 {
-   // set state
+   // Set state of tool bar button and emit a signal according 
+   // to passed arguments.
 
    Bool_t was = !IsDown();
 
@@ -1738,7 +1739,7 @@ TGFrame *TRootGuiBuilder::HSplitter()
 //______________________________________________________________________________
 void TRootGuiBuilder::Hide()
 {
-   // Hide the GUI builder.
+   // Hide builder.
 
    //fMain->CloseAll();
    UnmapWindow();
@@ -1747,7 +1748,7 @@ void TRootGuiBuilder::Hide()
 //______________________________________________________________________________
 ULong_t TRootGuiBuilder::GetBgnd()
 {
-   // returns default background color
+   // Return default background color.
 
    static ULong_t gPixel = 0;
 
@@ -1766,7 +1767,7 @@ ULong_t TRootGuiBuilder::GetBgnd()
 //______________________________________________________________________________
 TGGC *TRootGuiBuilder::GetBgndGC()
 {
-   // returns background GC
+   // Return background GC.
 
    if (fgBgnd) return fgBgnd;
 
@@ -1782,7 +1783,7 @@ TGGC *TRootGuiBuilder::GetBgndGC()
 //______________________________________________________________________________
 void TRootGuiBuilder::SetBgndColor(TGFrame *frame, Pixel_t color)
 {
-   // sets background color to frame and to all its subframes
+   // Set a background color to frame and all its subframes.
 
    if (!frame) return;
 
@@ -1803,7 +1804,7 @@ void TRootGuiBuilder::SetBgndColor(TGFrame *frame, Pixel_t color)
 //______________________________________________________________________________
 ULong_t TRootGuiBuilder::GetPopupBgnd()
 {
-   // return popups background color
+   // Return background color for popup menus.
 
    static ULong_t gPixel = 0;
 
@@ -1823,7 +1824,7 @@ ULong_t TRootGuiBuilder::GetPopupBgnd()
 //______________________________________________________________________________
 TGGC *TRootGuiBuilder::GetPopupBgndGC()
 {
-   // returns background GC for popup menus
+   // Return background GC for popup menus.
 
    if (fgBgndPopup) return fgBgndPopup;
 
@@ -1839,7 +1840,7 @@ TGGC *TRootGuiBuilder::GetPopupBgndGC()
 //______________________________________________________________________________
 ULong_t TRootGuiBuilder::GetPopupHlght()
 {
-   // return popup entry highlight color
+   // Return highlighted color for popup menu entry.
 
    static ULong_t gPixel = 0;
 
@@ -1859,7 +1860,7 @@ ULong_t TRootGuiBuilder::GetPopupHlght()
 //______________________________________________________________________________
 TGGC *TRootGuiBuilder::GetPopupHlghtGC()
 {
-   // returns background GC for highlighted popup entries
+   // Return background GC for highlighted popup menu entry.
 
    if (fgBgndPopupHlght) return fgBgndPopupHlght;
 
@@ -1875,7 +1876,7 @@ TGGC *TRootGuiBuilder::GetPopupHlghtGC()
 //______________________________________________________________________________
 TGPopupMenu *TRootGuiBuilder::CreatePopup()
 {
-   // returns guibuilder style popup menu
+   // Return style popup menu.
 
    return new TGuiBldPopupMenu();
 }
