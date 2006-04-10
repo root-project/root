@@ -984,10 +984,12 @@ fi
 #
 ### echo %%% Some clean up
 #
-trap "rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
-      rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
-      proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
-      conftest.c conftest; exit 1" 1 2 3 15
+trapcmd="rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
+         rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
+         proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
+         conftest.c conftest"
+trap "$trapcmd; exit 1" 1 2 3 15
+trap "$trapcmd" 0
 
 ######################################################################
 #
