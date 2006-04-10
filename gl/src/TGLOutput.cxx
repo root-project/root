@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.5 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.cxx,v 1.6 2005/12/01 11:04:04 brun Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #include "Riostream.h"
+#include "TVirtualPad.h"
+#include "TVirtualPS.h"
 #include "TGLOutput.h"
 #include "TGLViewer.h"
 #include "TSystem.h" // For gSystem
@@ -128,4 +130,97 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
    }
 
    return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLOutput::StartEmbeddedPS()
+{
+   //this function used by gl-in-pad
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("% Start gl2ps EPS@");
+   gVirtualPS->PrintStr("newpath gsave save@");
+   Double_t xx[2] = {0.}, yy[2] = {0.};
+   xx[0] = gPad->GetUxmin();
+   yy[0] = gPad->GetUymin();
+   xx[1] = gPad->GetUxmax();
+   yy[1] = gPad->GetUymax();
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" add exch");
+   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" add exch translate");
+   gVirtualPS->PrintStr("@");
+   GLint vp[4];
+   glGetIntegerv(GL_VIEWPORT,vp);
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->PrintStr(" exch");
+   xx[0] = xx[1];
+   yy[0] = yy[1];
+   gVirtualPS->DrawPS(0, xx, yy);
+   gVirtualPS->PrintStr(" 4 1 roll exch sub 3 1 roll sub");
+   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" sub exch");
+   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
+   gVirtualPS->PrintStr(" sub exch");
+   gVirtualPS->WriteInteger((Int_t)(vp[3]));
+   gVirtualPS->WriteInteger((Int_t)(vp[2]));
+   gVirtualPS->PrintStr(" 4 1 roll div 3 1 roll exch div exch scale@");
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("countdictstack@");
+   gVirtualPS->PrintStr("mark@");
+   gVirtualPS->PrintStr("/showpage {} def@");
+   
+   // Close the gVirtualPS output stream
+   ofstream *fs = (ofstream*)gVirtualPS->GetStream();
+   fs->close();
+
+}
+
+//______________________________________________________________________________
+void TGLOutput::CloseEmbeddedPS()
+{
+   //this function used by gl-in-pad
+   // Restore the gVirtualPS output stream
+   ofstream *fs = new ofstream(gVirtualPS->GetName(),ios::app);
+   gVirtualPS->SetStream(fs);
+   gVirtualPS->PrintStr("@");
+   gVirtualPS->PrintStr("cleartomark@");
+   gVirtualPS->PrintStr("countdictstack exch sub { end } repeat@");
+   gVirtualPS->PrintStr("restore grestore@");
+   gVirtualPS->PrintStr("% End gl2ps EPS@");
+}
+
+//______________________________________________________________________________
+void TGLOutput::Capture(TGLViewer & viewer)
+{
+   //this function used by gl-viewer, embedded into pad
+   StartEmbeddedPS();
+
+   FILE *output = fopen (gVirtualPS->GetName(), "a");
+   Int_t gl2psFormat = GL2PS_EPS;
+   Int_t gl2psSort = GL2PS_BSP_SORT;
+   Int_t buffsize = 0, state = GL2PS_OVERFLOW;
+   viewer.DoDraw();
+   viewer.fIsPrinting = kTRUE;
+
+   while (state == GL2PS_OVERFLOW) {
+      buffsize += 1024*1024;
+      gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+      gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
+      | GL2PS_POLYGON_OFFSET_FILL | GL2PS_SILENT
+      | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
+      | 0,
+      GL_RGBA, 0, NULL,0, 0, 0,
+      buffsize, output, NULL);
+      viewer.DoDraw();
+      state = gl2psEndPage();
+      std::cout << ".";
+   }
+
+   std::cout << std::endl;
+   fclose (output);
+   viewer.fIsPrinting = kFALSE;
+
+   CloseEmbeddedPS();
 }

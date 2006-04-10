@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOutput.h,v 1.4 2005/10/11 12:41:01 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOutput.h,v 1.5 2005/11/22 18:05:46 brun Exp $
 // Author:  Richard Maunder, Olivier Couet  02/07/2005
 
 /*************************************************************************
@@ -30,6 +30,11 @@ public:
    enum EFormat { kEPS_SIMPLE, kEPS_BSP, kPDF_SIMPLE, kPDF_BSP };
    static Bool_t Capture(TGLViewer & viewer, EFormat format,
                          const char * filePath = 0);
+
+   static void   StartEmbeddedPS();//gl to ps in pad, "embedded" does not mean eps format here
+   static void   CloseEmbeddedPS();
+   static void   Capture(TGLViewer & viewer);
+
    virtual ~TGLOutput() { }
 
 private:

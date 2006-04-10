@@ -374,9 +374,9 @@ void TGLViewerEditor::UpdateReferencePos()
 {
    // Enable/disable reference position (x/y/z) number edits based on 
    // reference check box
-/*   fReferencePosX->SetState(fReferenceOn->IsDown());
+   fReferencePosX->SetState(fReferenceOn->IsDown());
    fReferencePosY->SetState(fReferenceOn->IsDown());
-   fReferencePosZ->SetState(fReferenceOn->IsDown());*/
+   fReferencePosZ->SetState(fReferenceOn->IsDown());
 }
 
 //______________________________________________________________________________

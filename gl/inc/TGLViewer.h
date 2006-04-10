@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.27 2006/03/13 09:33:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.28 2006/04/07 08:43:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -221,6 +221,7 @@ public:
    virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
+   virtual void   PrintObjects();
    
    Int_t   GetDev()const{return fGLDevice;}
    Bool_t  GetSmartRefresh() const           { return fSmartRefresh; }

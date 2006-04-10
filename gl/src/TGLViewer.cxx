@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.47 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.48 2006/04/07 16:39:36 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TGLPolyMarker.h"
 #include "TGLCylinder.h"
 #include "TGLSphere.h"
+#include "TGLOutput.h"
 
 #include "TVirtualPad.h" // Remove when pad removed - use signal
 #include "TVirtualX.h"
@@ -1026,6 +1027,19 @@ void TGLViewer::DoDraw()
    // as scene will likely be rebuilt, requiring camera interest and caching needs to be established
    fCurrentCamera->Apply(fScene.BoundingBox());
 
+   /*if (fGLDevice != -1) {
+      //Clear color must be canvas's background color
+      Color_t ci = gPad->GetFillColor();
+      TColor *color = gROOT->GetColor(ci);
+      Float_t sc[3] = {1.f, 1.f, 1.f};
+
+      if (color)
+         color->GetRGB(sc[0], sc[1], sc[2]);
+
+      glClearColor(sc[0], sc[1], sc[2], 1.);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   }*/
+
    // Something to draw?
    if (!fScene.BoundingBox().IsEmpty()) {
       // Setup total scene draw time
@@ -1100,13 +1114,12 @@ void TGLViewer::DoDraw()
 void TGLViewer::PreDraw()
 {
    // Perform GL work which must be done before each draw of scene
-
+   MakeCurrent();
    // Initialise GL if not done
    if (!fInitGL) {
       InitGL();
    }
 
-   MakeCurrent();
 
    if (fGLDevice != -1) {
       //Clear color must be canvas's background color
@@ -2052,4 +2065,10 @@ TGLLogicalShape* TGLViewer::AttemptDirectRenderer(TObject* id)
       }
    }
    return rnr;
+}
+
+//______________________________________________________________________________
+void TGLViewer::PrintObjects()
+{
+   TGLOutput::Capture(*this);
 }

@@ -9,11 +9,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include "TVirtualPS.h"
-#include "gl2ps.h"
-
 #include "THLimitsFinder.h"
 #include "TVirtualGL.h"
+#include "TVirtualPS.h"
 #include "KeySymbols.h"
 #include "TVirtualX.h"
 #include "TGaxis.h"
@@ -29,6 +27,8 @@
 #include "TF3.h"
 
 #include "TGLHistPainter.h"
+#include "TGLOutput.h"
+#include "gl2ps.h"
 
 ClassImp(TGLHistPainter)
 
@@ -356,52 +356,12 @@ void TGLHistPainter::Paint()
 void TGLHistPainter::PrintPlot()
 {
    // Generate PS using gl2ps
-
-   gVirtualPS->PrintStr("@");
-   gVirtualPS->PrintStr("% Start gl2ps EPS@");
-   gVirtualPS->PrintStr("newpath gsave save@");
-   Double_t xx[2], yy[2];
-   xx[0] = gPad->GetUxmin();
-   yy[0] = gPad->GetUymin();
-   xx[1] = gPad->GetUxmax();
-   yy[1] = gPad->GetUymax();
-   gVirtualPS->PrintStr("@");
-   gVirtualPS->DrawPS(0, xx, yy);
-   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
-   gVirtualPS->PrintStr(" add exch");
-   gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
-   gVirtualPS->PrintStr(" add exch translate");
-   gVirtualPS->PrintStr("@");
-   GLint vp[4];
-   glGetIntegerv(GL_VIEWPORT,vp);
-   gVirtualPS->DrawPS(0, xx, yy);
-   gVirtualPS->PrintStr(" exch");
-   xx[0] = xx[1];
-   yy[0] = yy[1];
-   gVirtualPS->DrawPS(0, xx, yy);
-   gVirtualPS->PrintStr(" 4 1 roll exch sub 3 1 roll sub");
-   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
-   gVirtualPS->PrintStr(" sub exch");
-   gVirtualPS->WriteInteger(2*4*gPad->GetBorderSize());
-   gVirtualPS->PrintStr(" sub exch");
-   gVirtualPS->WriteInteger((Int_t)(vp[3]));
-   gVirtualPS->WriteInteger((Int_t)(vp[2]));
-   gVirtualPS->PrintStr(" 4 1 roll div 3 1 roll exch div exch scale@");
-   gVirtualPS->PrintStr("@");
-   gVirtualPS->PrintStr("countdictstack@");
-   gVirtualPS->PrintStr("mark@");
-   gVirtualPS->PrintStr("/showpage {} def@");
-   
-   // Close the gVirtualPS output stream
-   ofstream *fs = (ofstream*)gVirtualPS->GetStream();
-   fs->close();
+   TGLOutput::StartEmbeddedPS();
 
    // Generate GL view
    FILE *output = fopen (gVirtualPS->GetName(), "a");
-   Int_t gl2psFormat;
-   Int_t gl2psSort;
-   gl2psFormat = GL2PS_EPS;
-   gl2psSort = GL2PS_BSP_SORT;
+   Int_t gl2psFormat = GL2PS_EPS;
+   Int_t gl2psSort = GL2PS_BSP_SORT;
    Int_t buffsize = 0, state = GL2PS_OVERFLOW;
 		                                                                                     
    while (state == GL2PS_OVERFLOW) {
@@ -422,15 +382,8 @@ void TGLHistPainter::PrintPlot()
    }
    
    fclose (output);
-   
-   // Restore the gVirtualPS output stream
-   fs = new ofstream(gVirtualPS->GetName(),ios::app);
-   gVirtualPS->SetStream(fs);
-   gVirtualPS->PrintStr("@");
-   gVirtualPS->PrintStr("cleartomark@");
-   gVirtualPS->PrintStr("countdictstack exch sub { end } repeat@");
-   gVirtualPS->PrintStr("restore grestore@");
-   gVirtualPS->PrintStr("% End gl2ps EPS@");
+
+   TGLOutput::CloseEmbeddedPS();
    
    glFlush();
 }
