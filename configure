@@ -38,6 +38,7 @@ options="                    \
    enable_dcache             \
    enable_exceptions         \
    enable_explicitlink       \
+   enable_fftw3              \
    enable_gfal               \
    enable_globus             \
    enable_krb5               \
@@ -86,6 +87,7 @@ enable_explicitlink=no
 enable_cintex=no
 enable_mathcore=no
 enable_mathmore=no
+enable_fftw3=no
 enable_pythia=no
 enable_qt=no
 enable_reflex=no
@@ -121,6 +123,7 @@ GFAL             \
 CERNLIB          \
 PYTHIA           \
 PYTHIA6          \
+FFTW3            \
 PYTHONDIR        \
 VENUS            \
 DCACHE           \
@@ -807,6 +810,7 @@ enable/disable options, prefix with either --enable- or --disable-
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
+  fftw3              FFTW3 library of fast Fourier transforms support
   gfal               GFAL support, requires libgfal
   globus             Globus authentication support, requires Globus toolkit
   krb5               Kerberos5 support, requires Kerberos libs
@@ -855,6 +859,8 @@ with options, prefix with --with-, enables corresponding support
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
+  fftw3-incdir       FFTW3 support, location of fftw3.h
+  fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
   gfal-incdir        GFAL support, location of gfal_api.h
   gfal-libdir        GFAL support, location of libgfal
   gccxml             Gccxml support, directory of the gccxml installation
@@ -1022,6 +1028,8 @@ if test $# -gt 0 ; then
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dicttype=*)       dicttype=$optarg      ;;
+      --with-fftw3-incdir=*)   fftw3incdir=$optarg   ; enable_fftw3="yes"   ;;
+      --with-fftw3-libdir=*)   fftw3libdir=$optarg   ; enable_fftw3="yes"   ;;
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
       --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
@@ -1744,6 +1752,38 @@ if test ! "x$enable_monalisa" = "xno"; then
 
     if test "x$monalisaincdir" = "x" || test "x$monalisalib" = "x"; then
         enable_monalisa="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% FFTW3 Support - Third party libraries
+#
+# (See http://www.fftw.org)
+#
+#
+#
+#
+
+if test ! "x$enable_fftw3" = "xno"; then
+    # Check for FFTW3 include and library
+    check_header "fftw3.h" "$fftw3incdir" $FFTW3 $FFTW3/include \
+    /usr/local/include /usr/include
+    fftw3inc=$found_hdr
+    fftw3incdir=$found_dir
+
+    if test "x$platform" = "xwin32"; then
+       check_library "libfftw3-3" "$enable_shared" "$fftw3libdir" \
+	    $FFTW3 $FFTW3/lib /usr/local/include /usr/include
+    else
+	check_library "libfftw3" "$enable_shared" "$fftw3libdir" \
+	    $FFTW3 $FFTW3/lib /usr/local/include /usr/include
+    fi
+    fftw3lib=$found_lib
+    fftw3libdir=$found_dir
+
+    if test "x$fftw3incdir" = "x" || test "x$fftw3lib" = "x"; then
+        enable_fftw3="no"
     fi
 fi
 
@@ -3649,6 +3689,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@monalisaincdir@|$monalisaincdir|"    \
     -e "s|@monalisalib@|$monalisalib|"          \
     -e "s|@monalisalibdir@|$monalisalibdir|"    \
+    -e "s|@fftw3incdir@|$fftw3incdir|"           \
+    -e "s|@fftw3lib@|$fftw3lib|"                 \
+    -e "s|@fftw3libdir@|$fftw3libdir|"           \
     -e "s|@mysqlincdir@|$mysqlincdir|"          \
     -e "s|@mysqllib@|$mysqllib|"                \
     -e "s|@mysqllibdir@|$mysqllibdir|"          \
@@ -3735,6 +3778,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@buildpythia@|$enable_pythia|"        \
     -e "s|@buildpythia6@|$enable_pythia6|"      \
+    -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildvenus@|$enable_venus|"          \
     -e "s|@buildpython@|$enable_python|"        \
     -e "s|@buildruby@|$enable_ruby|"            \

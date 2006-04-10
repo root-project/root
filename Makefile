@@ -118,6 +118,9 @@ endif
 ifeq ($(BUILDFPYTHIA6),yes)
 MODULES      += pythia6
 endif
+ifeq ($(BUILDFFTW3), yes)
+MODULES      += fftw
+endif
 ifeq ($(BUILDFVENUS),yes)
 MODULES      += venus
 endif
@@ -200,7 +203,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio thread \
                 rootx rootd proofd proof dcache chirp hbook alien asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot xrootd netx proofx clarens peac oracle xmlparser \
-                mathcore mathmore reflex cintex roofit minuit2 monalisa
+                mathcore mathmore reflex cintex roofit minuit2 monalisa fftw
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -952,6 +955,9 @@ showbuild:
 	@echo "RUBYLIBDIR         = $(RUBYLIBDIR)"
 	@echo "RUBYLIB            = $(RUBYLIB)"
 	@echo "RUBYINCDIR         = $(RUBYINCDIR)"
+	@echo "FFTW3LIBDIR        = $(FFTW3LIBDIR)"
+	@echo "FFTW3LIB           = $(FFTW3LIB)"
+	@echo "FFTW3INCDIR        = $(FFTW3INCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
 	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
 	@echo "SRPINCDIR          = $(SRPINCDIR)"
