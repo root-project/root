@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.250 2006/03/22 16:27:08 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.251 2006/03/28 15:50:10 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "THistPainter.h"
+#include "TH3.h"
 #include "TH2.h"
 #include "TF2.h"
 #include "TF3.h"
@@ -106,8 +107,8 @@ THistPainter::THistPainter()
    fStack = 0;
    fLego  = 0;
    fGraphPainter = 0;
-   fShowProjectionX = kFALSE;
-   fShowProjectionY = kFALSE;
+   fShowProjection = 0;
+   fShowOption = "";
   
    gStringEntries   = gEnv->GetValue("Hist.Stats.Entries",   "Entries");
    gStringMean      = gEnv->GetValue("Hist.Stats.Mean",      "Mean");
@@ -340,7 +341,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    //     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
-   if (view && view->TestBit(kCannotRotate) == 0) {
+   if (!fShowProjection && view && view->TestBit(kCannotRotate) == 0) {
       view->ExecuteRotateView(event, px, py);
       return;
    }
@@ -361,8 +362,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kMouseMotion:
 
-      if (fShowProjectionX) {ShowProjectionX(px,py); break;}
-      if (fShowProjectionY) {ShowProjectionY(px,py); break;}
+      if (fShowProjection) {ShowProjection3(px,py); break;}
      
       if (Hoption.Bar) {
          baroffset = fH->GetBarOffset();
@@ -6165,28 +6165,27 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 }
 
 //______________________________________________________________________________
-void THistPainter::SetShowProjectionX()
+void THistPainter::SetShowProjection(const char *option)
 {
    // Set projection onto X
 
-   if (fShowProjectionX) return;
-   fShowProjectionX = kTRUE;
+   if (fShowProjection) return;
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("x"))  fShowProjection = 1;
+   if (opt.Contains("y"))  fShowProjection = 2;
+   if (opt.Contains("z"))  fShowProjection = 3;
+   if (opt.Contains("xy")) fShowProjection = 4;
+   if (opt.Contains("yx")) fShowProjection = 5;
+   if (opt.Contains("xz")) fShowProjection = 6;
+   if (opt.Contains("zx")) fShowProjection = 7;
+   if (opt.Contains("yz")) fShowProjection = 8;
+   if (opt.Contains("zy")) fShowProjection = 9;
+   if (fShowProjection < 4) fShowOption = option+1;
+   else                     fShowOption = option+2;
    if (!gROOT->GetMakeDefCanvas()) return;
    (gROOT->GetMakeDefCanvas())();
-   gPad->SetName("c_projection_x");
-   gPad->SetGrid();
-}
-
-//______________________________________________________________________________
-void THistPainter::SetShowProjectionY()
-{
-   // Set projection onto Y
-
-   if (fShowProjectionY) return;
-   fShowProjectionY = kTRUE;
-   if (!gROOT->GetMakeDefCanvas()) return;
-   (gROOT->GetMakeDefCanvas())();
-   gPad->SetName("c_projection_y");
+   gPad->SetName(Form("c_projection_%d",fShowProjection));
    gPad->SetGrid();
 }
 
@@ -6212,11 +6211,11 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_x");
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_1");
    if(c) {
       c->Clear();
    } else {
-      fShowProjectionX = kFALSE;
+      fShowProjection = 0;
       return;
    }
    c->cd();
@@ -6228,7 +6227,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    hp->SetTitle(Form("ProjectionX of biny=%d", biny));
    hp->SetXTitle(fH->GetXaxis()->GetTitle());
    hp->SetYTitle("Number of Entries");
-   hp->Draw();
+   hp->Draw(fShowOption.Data());
    c->Update();
    padsav->cd();
 }
@@ -6255,11 +6254,11 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    // Create or set the new canvas proj y
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_y");
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_2");
    if(c) {
       c->Clear();
    } else {
-      fShowProjectionY = kFALSE;
+      fShowProjection = 0;
       return;
    }
    c->cd();
@@ -6271,7 +6270,119 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    hp->SetTitle(Form("ProjectionY of binx=%d", binx));
    hp->SetXTitle(fH->GetYaxis()->GetTitle());
    hp->SetYTitle("Number of Entries");
-   hp->Draw();
+   hp->Draw(fShowOption.Data());
+   c->Update();
+   padsav->cd();
+}
+
+//______________________________________________________________________________
+void THistPainter::ShowProjection3(Int_t px, Int_t py)
+{
+   // Show projection (specified by fShowProjection) of a TH3
+   // The drawing option for the projection is in fShowOption.
+   
+   if (fH->GetDimension() < 3) {
+      if (fShowProjection == 1) {ShowProjectionX(px,py); return;}
+      if (fShowProjection == 2) {ShowProjectionY(px,py); return;}
+   }
+   
+   //printf("Showing projection : %d, DrawOption=%s\n",fShowProjection,fShowOption.Data());
+   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
+   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
+      
+   // Erase old position and draw a line at current position
+   TView *view = gPad->GetView();
+   TH3 *h3 = (TH3*)fH;
+   TAxis *xaxis = h3->GetXaxis();
+   TAxis *yaxis = h3->GetYaxis();
+   TAxis *zaxis = h3->GetZaxis();
+   Double_t u[3],xx[3];
+    
+   static int px1old=0,py1old=0,px2old=0,py2old=0;
+   Double_t uxmin = gPad->GetUxmin();
+   Double_t uxmax = gPad->GetUxmax();
+   Double_t uymin = gPad->GetUymin();
+   Double_t uymax = gPad->GetUymax();
+   int pxmin = gPad->XtoAbsPixel(uxmin);
+   int pxmax = gPad->XtoAbsPixel(uxmax);
+   int pymin = gPad->YtoAbsPixel(uymin);
+   int pymax = gPad->YtoAbsPixel(uymax);
+   Double_t cx    = (pxmax-pxmin)/(uxmax-uxmin);
+   Double_t cy    = (pymax-pymin)/(uymax-uymin);
+   TVirtualPad *padsav = gPad;
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_projection_%d",fShowProjection));
+   if(!c) {
+      fShowProjection = 0;
+      px1old = py1old = px2old = py2old =0;
+      return;
+   }
+   
+   switch (fShowProjection) {
+     case 1:
+        // "x"
+        break;
+
+     case 2:
+        // "y"
+        break;
+
+     case 3:
+        // "z"
+        break;
+
+     case 4:
+        // "xy"
+        {
+           Int_t first = zaxis->GetFirst();
+           Int_t last  = zaxis->GetLast();
+           Int_t binz = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
+           zaxis->SetRange(binz,binz);
+           if( px1old ) gVirtualX->DrawLine(px1old,py1old,px2old,py2old);
+           xx[0] = xaxis->GetXmin();
+           xx[1] = yaxis->GetXmin();
+           xx[2] = zaxis->GetBinCenter(binz);
+           view->WCtoNDC(xx,u);
+           px1old = pxmin + Int_t((u[0]-uxmin)*cx);
+           py1old = pymin + Int_t((u[1]-uymin)*cy);
+           xx[0] = xaxis->GetXmax();
+           view->WCtoNDC(xx,u);
+           px2old = pxmin + Int_t((u[0]-uxmin)*cx);
+           py2old = pymin + Int_t((u[1]-uymin)*cy);
+           gVirtualX->DrawLine(px1old,py1old,px2old,py2old);
+           
+           c->Clear();
+           c->cd();
+           TH2 *hp = (TH2*)h3->Project3D("xy");
+           zaxis->SetRange(first,last);
+           hp->SetFillColor(38);
+           hp->SetTitle(Form("ProjectionXY of binz=%d", binz));
+           hp->SetXTitle(fH->GetYaxis()->GetTitle());
+           hp->SetZTitle("Number of Entries");
+           hp->Draw(fShowOption.Data());
+        }
+        break;
+
+     case 5:
+        // "yx"
+        break;
+
+     case 6:
+        // "xz"
+        break;
+
+     case 7:
+        // "zx"
+        break;
+
+     case 8:
+        // "yz"
+        break;
+
+     case 9:
+        // "zy"
+        break;
+     
+  }
    c->Update();
    padsav->cd();
 }

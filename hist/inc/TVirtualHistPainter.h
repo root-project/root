@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.12 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.13 2006/03/21 15:40:56 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -57,8 +57,7 @@ public:
    virtual void       SetHistogram(TH1 *h) = 0;
    virtual void       SetStack(TList *stack) = 0;
    virtual Int_t      MakeCuts(char *cutsopt) = 0;
-   virtual void       SetShowProjectionX() = 0;
-   virtual void       SetShowProjectionY() = 0;
+   virtual void       SetShowProjection(const char *option) = 0;
 
    static TVirtualHistPainter *HistPainter(TH1 *obj);
    static void                 SetPainter(const char *painter);

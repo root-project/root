@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.33 2005/08/11 09:38:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.34 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -97,7 +97,8 @@ public:
    TProfile2D      *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
    virtual void     Reset(Option_t *option="");
-
+   virtual void     SetShowProjection(const char *option="xy");   // *MENU*
+   
    ClassDef(TH3,5)  //3-Dim histogram base class
 };
 

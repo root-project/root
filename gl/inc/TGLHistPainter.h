@@ -179,8 +179,7 @@ public:
    void           SetHistogram(TH1 *hist);
    void           SetStack(TList *stack);
    Int_t          MakeCuts(char *cutsOpt);
-   void           SetShowProjectionX() {;}
-   void           SetShowProjectionY() {;}
+   void           SetShowProjection(const char * /*option*/) {;}
 
 private:
    EGLPaintOption SetPaintFunction(TString &option);

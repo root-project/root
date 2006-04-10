@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.74 2006/02/21 10:55:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.75 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -2371,6 +2371,34 @@ void TH3C::SetBinContent(Int_t bin, Double_t content)
    if (bin >= fNcells) return;
    fArray[bin] = Char_t (content);
    fEntries++;
+}
+
+
+//______________________________________________________________________________
+void TH3::SetShowProjection(const char *option)
+{
+   // When the mouse is moved in a pad containing a 3-d view of this histogram
+   // a second canvas shows a projection type given as option.
+   // To stop the generation of the projections, delete the canvas
+   // containing the projection.
+   // option may contain a combination of the characters x,y,z,e
+   // option = "x" return the x projection into a TH1D histogram
+   // option = "y" return the y projection into a TH1D histogram
+   // option = "z" return the z projection into a TH1D histogram
+   // option = "xy" return the x versus y projection into a TH2D histogram
+   // option = "yx" return the y versus x projection into a TH2D histogram
+   // option = "xz" return the x versus z projection into a TH2D histogram
+   // option = "zx" return the z versus x projection into a TH2D histogram
+   // option = "yz" return the y versus z projection into a TH2D histogram
+   // option = "zy" return the z versus y projection into a TH2D histogram
+   // option can also include the drawing option for the projection, eg to draw
+   // the xy projection using the draw option "box" do
+   //   myhist.SetShowProjection("xy box");
+   // This function is typically called from the context menu.
+      
+   GetPainter();
+
+   if (fPainter) fPainter->SetShowProjection(option);
 }
 
 //______________________________________________________________________________

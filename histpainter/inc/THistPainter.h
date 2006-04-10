@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.24 2005/11/10 09:16:30 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.25 2006/03/21 15:40:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -53,8 +53,8 @@ protected:
    Int_t                 fCutsOpt[kMaxCuts]; //sign of each cut
    TCutG                *fCuts[kMaxCuts];    //Pointers to graphical cuts
    TList                *fStack;             //Pointer to stack of histograms (if any)
-   Bool_t                fShowProjectionX;   //True if projectionX must be drawn
-   Bool_t                fShowProjectionY;   //True if projectionX must be drawn
+   Int_t                 fShowProjection;    //True if a projection must be drawn
+   TString               fShowOption;        //Option to draw the projection
    
 public:
    THistPainter();
@@ -112,10 +112,10 @@ public:
    virtual void       RecursiveRemove(TObject *) {;}
    virtual void       SetHistogram(TH1 *h);
    virtual void       SetStack(TList *stack) {fStack = stack;}
-   virtual void       SetShowProjectionX();
-   virtual void       SetShowProjectionY();
+   virtual void       SetShowProjection(const char *option);
    virtual void       ShowProjectionX(Int_t px, Int_t py);
    virtual void       ShowProjectionY(Int_t px, Int_t py);
+   virtual void       ShowProjection3(Int_t px, Int_t py);
    virtual Int_t      TableInit();
 
    static const char * GetBestFormat(Double_t v, Double_t e, const char *f);

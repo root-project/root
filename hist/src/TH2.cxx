@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.88 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.89 2006/03/21 15:40:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2218,7 +2218,7 @@ void TH2::SetShowProjectionX()
    
    GetPainter();
 
-   if (fPainter) fPainter->SetShowProjectionX();
+   if (fPainter) fPainter->SetShowProjection("x");
 }
 
 
@@ -2233,7 +2233,7 @@ void TH2::SetShowProjectionY()
    
    GetPainter();
 
-   if (fPainter) fPainter->SetShowProjectionY();
+   if (fPainter) fPainter->SetShowProjection("y");
 }
 
 //______________________________________________________________________________
