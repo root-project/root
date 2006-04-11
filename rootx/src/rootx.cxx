@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.18 2005/09/04 09:13:27 brun Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.19 2005/09/13 13:29:51 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -162,7 +162,8 @@ static void SetDisplay()
          STRUCT_UTMP *utmp_entry = SearchEntry(ReadUtmp(), tty);
          if (utmp_entry) {
             static char display[64];
-            if (utmp_entry->ut_host[0]) {
+            if (utmp_entry->ut_host[0] &&
+                !utmp_entry->ut_host[sizeof(utmp_entry->ut_host)-1]) {
                if (strchr(utmp_entry->ut_host, ':')) {
                   sprintf(display, "DISPLAY=%s", utmp_entry->ut_host);
                   fprintf(stderr, "*** DISPLAY not set, setting it to %s\n",
