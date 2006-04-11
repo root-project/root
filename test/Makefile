@@ -289,9 +289,9 @@ endif
 
 $(STRESSFIT):   $(STRESSFITO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libMinuit2.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lMinuit2 $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
