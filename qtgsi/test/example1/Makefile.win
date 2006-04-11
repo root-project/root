@@ -1,0 +1,89 @@
+#############################################################################
+# Qt ROOT  example Makefile
+# Author: D.Bertini <D.Bertini@gsi.de>
+# Date:06/29/01
+#############################################################################
+
+####### Compiler, tools and options
+
+CC       = cl
+CXX      = cl
+#CFLAGS   = -nologo -Zm200 -W3 -MDd -Zi -Gm  -DUNICODE -DWIN32 -DQT_DLL -DQT_THREAD_SUPPORT
+#CXXFLAGS = -nologo -W3 -EHsc -DUNICODE -DWIN32 -DQT_DLL -DQT_THREAD_SUPPORT -DDEBUG_LEVEL=0 \
+#           -D_CRT_SECURE_NO_DEPRECATE -GR -MDd -DWIN32 -D_WINDOWS -nologo -DVISUAL_CPLUSPLUS -D_X86_=1
+INCPATH  = -I"$(ROOTSYS)\include" -I"$(QTDIR)\include" -I"."
+LINK     = link
+#LFLAGS   = /NOLOGO /DEBUG /LIBPATH:"$(QTDIR)\lib"
+
+!IFNDEF DEBUG
+# Full optimization:
+OPTIMIZE = -Ox -MD
+!ELSE
+# Debugging:
+OPTIMIZE = -Zi -MDd
+LINKDEBUG = /debug
+!ENDIF
+
+CFLAGS = -GR $(OPTIMIZE) -W3 -nologo $(NMCXXFLAGS) -DQT_DLL -DQT_THREAD_SUPPORT
+CXXFLAGS = -GR $(OPTIMIZE) -W3 -nologo $(NMCXXFLAGS) -D_CRT_SECURE_NO_DEPRECATE -DQT_THREAD_SUPPORT
+LFLAGS = /nologo /machine:ix86 $(LINKDEBUG)
+
+LIBS     = "$(GSIQTLIB)" "$(ROOTSYS)\lib\libqtgsi.lib" "$(ROOTSYS)\lib\libCore.lib" "$(ROOTSYS)\lib\libCint.lib" "$(ROOTSYS)\lib\libHist.lib" "$(ROOTSYS)\lib\libGraf.lib" "$(ROOTSYS)\lib\libGpad.lib" "$(ROOTSYS)\lib\libRint.lib" "$(ROOTSYS)\lib\libGui.lib"
+MOC      = $(QTDIR)\bin\moc.exe
+
+####### Files
+
+HEADERS  = qtroot.h guitest.h
+
+SOURCES  = main.cpp qtroot.cpp guitest.cpp 
+
+OBJECTS  = main.obj qtroot.obj guitest.obj
+
+SRCMOC   = moc_qtroot.cpp 
+OBJMOC   = moc_qtroot.obj
+TARGET   = qtroot.exe
+
+####### Implicit rules
+
+.SUFFIXES: .cpp
+
+{.}.cpp{}.obj::
+    $(CXX) -c $(CXXFLAGS) $(INCPATH) -Fo @<<
+    $<
+<<
+
+####### Build rules
+
+all: $(TARGET) 
+
+lib: $(TARGET) 
+
+$(TARGET): $(OBJECTS) $(OBJMOC) 
+    $(LINK) $(LFLAGS) /OUT:$(TARGET) @<< 
+      $(OBJECTS) $(OBJMOC) $(LIBS)
+<<
+
+#$(TARGET1):$(OBJECTS) $(OBJMOC)
+#   $(SYSCONF_LINK_LIB_SHARED)
+
+moc: $(SRCMOC)
+
+tmake:
+    tmake qtroot.pro
+
+clean:
+    -del $(OBJECTS) $(OBJMOC) $(SRCMOC)
+    -del qtroot.exe
+
+####### Compile
+
+main.obj: main.cpp qtroot.h
+
+qtroot.obj: qtroot.cpp qtroot.h
+
+guitest.obj: guitest.cpp guitest.h
+
+moc_qtroot.obj: moc_qtroot.cpp qtroot.h
+
+moc_qtroot.cpp: $(MOC) qtroot.h
+    $(MOC) qtroot.h -o moc_qtroot.cpp
