@@ -17,13 +17,13 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -fPIC $(EXTRA_CFLAGS) $(FINK_CFLAGS) -restrict
-CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
+CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION
-CINTCFLAGS    = -fPIC $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
+CINTCFLAGS    = -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION
@@ -50,7 +50,6 @@ FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 LD            = icpc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 FORCELINK     = no
-NEEDFINK      = no
 ifeq ($(MACOSX_MINOR),4)
 MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.4
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
@@ -59,25 +58,25 @@ endif
 SOEXT         = dylib
 
 # System libraries:
-SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \
+SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(OSTHREADLIBDIR) \
                 $(OSTHREADLIB) -ldl
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
-CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
+CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 
 # Fortran:
 F77           = ifort
 F77FLAGS      =
-ifeq ($(shell find $(FINK_DIR)/bin -name $(F77)),)
-BUILDHBOOK   := no
-else
+ifeq ($(shell find $(FINK_DIR)/bin -name g77),)
 # check for libg2c and libfrtbegin
+ifneq ($(shell g77 -print-file-name=libg2c.so),libg2c.so)
+LIBG2C       := $(shell g77 -print-file-name=libg2c.so)
+else
 LIBG2C       := $(shell g77 -print-file-name=libg2c.a)
+endif
 LIBFRTBEGIN  := $(shell g77 -print-file-name=libfrtbegin.a)
 endif
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
-                -lifcore -lirc -limf -lifport
-FPYTHIA6LIB       = -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore -lirc -limf -lifport
 
 # Precompiled headers:
@@ -95,8 +94,3 @@ INSTALL      := /bin/cp -pPR
 INSTALLDATA  := /bin/cp -pPR
 
 # Extras
-ifeq ($(NEEDFINK),yes)
-FINK_CXXFLAGS = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
-FINK_CFLAGS   = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
-FINK_LDFLAGS  = $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
-endif

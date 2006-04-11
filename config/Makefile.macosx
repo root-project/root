@@ -88,11 +88,6 @@ F77           = g77
 F77LIBS       = -lg2c
 endif
 
-ifeq (ifort,$(findstring ifort,$(ROOTF77)))
-FPYTHIA6LIB       = -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
-                -lifcore -lirc -limf -lifport
-endif
-
 ifeq ($(shell find $(FINK_DIR)/bin -name $(F77)),)
 BUILDHBOOK   := no
 endif
