@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.18 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.19 2006/04/05 14:37:58 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1844,6 +1844,10 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
    const Int_t t0 = 200;
    if (fTip)
       fTip->Hide();
+
+   if (fClient->IsEditable()) {
+      return kTRUE;
+   }
 
    if (fState == kButtonDisabled)
       return kTRUE;
