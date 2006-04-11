@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TObjectCache.h,v 1.1 2006/04/03 14:19:09 rdm Exp $
 // Author: M. Biskup 2/4/06
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
       while (TCacheElem* elem = dynamic_cast<TCacheElem*>(next2())) {
          Unload(elem->fObj);
       }
-      fInUse.SetOwner();  // ~fMRU will delete all the elements
+      fMRU.SetOwner();  // ~fMRU will delete all the elements
    }
 
    TCacheObject Acquire(const TCacheKey &k)

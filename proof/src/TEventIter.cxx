@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.21 2006/01/17 14:23:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.22 2006/04/03 14:19:09 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -269,6 +269,7 @@ Long64_t TEventIterObj::GetNextEvent()
 
 //------------------------------------------------------------------------
 
+TTreeCache *TEventIterTree::fgTreeCache = 0;
 
 ClassImp(TEventIterTree)
 
@@ -286,7 +287,8 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
 {
    fTreeName = dset->GetObjName();
    fTree = 0;
-   fTreeCache = 0;
+   if (!fgTreeCache)
+      fgTreeCache = new TTreeCache();
 }
 
 //______________________________________________________________________________
@@ -298,12 +300,11 @@ TEventIterTree::~TEventIterTree()
 //______________________________________________________________________________
 void TEventIterTree::ReleaseAllTrees() {
    // release all acquired trees.
-   SafeDelete(fTree);
+
    for (std::list<TTree*>::iterator i = fAcquiredTrees.begin(); i != fAcquiredTrees.end(); ++i) {
-      fTreeCache->Release(*i);
+      fgTreeCache->Release(*i);
    }
    fAcquiredTrees.clear();
-   SafeDelete(fTreeCache);
 }
 
 //______________________________________________________________________________
@@ -312,10 +313,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    // Create a Tree for the main TDSetElement and for all the friends.
    // Returns the main tree or 0 in case of an error.
 
-   if (!fTreeCache)
-      fTreeCache = new TTreeCache;
-
-   TTree* main = fTreeCache->Acquire(elem->GetFileName(),
+   TTree* main = fgTreeCache->Acquire(elem->GetFileName(),
                                      elem->GetDirectory(), elem->GetObjName());
    if (!main)
       return 0;
@@ -324,9 +322,9 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    TDSetElement::FriendsList_t* friends = elem->GetListOfFriends();
    for (TDSetElement::FriendsList_t::iterator i = friends->begin();
                 i != friends->end(); ++i) {
-      TTree* friendTree = fTreeCache->Acquire(i->first->GetFileName(),
-                                              i->first->GetDirectory(),
-                                              i->first->GetObjName());
+      TTree* friendTree = fgTreeCache->Acquire(i->first->GetFileName(),
+                                               i->first->GetDirectory(),
+                                               i->first->GetObjName());
       if (friendTree) {
          fAcquiredTrees.push_front(friendTree);
          main->AddFriend(friendTree, i->second);
