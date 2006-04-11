@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.67 2006/03/31 12:47:14 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.68 2006/04/07 07:58:26 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -588,10 +588,11 @@ public:
 
    virtual TGDimension GetDefaultSize() const;
    virtual void DrawBorder();
-   virtual void SetTitlePos(ETitlePos pos = kLeft) { fTitlePos = pos; }
+   virtual void SetTitlePos(ETitlePos pos = kLeft) { fTitlePos = pos; }  //*MENU*
    Int_t        GetTitlePos() const { return fTitlePos; }
    virtual void SetTitle(TGString *title);
    virtual void SetTitle(const char *title);
+           void Rename(const char *title)  { SetTitle(title); } //*MENU*
    virtual const char *GetTitle() const { return fText->GetString(); }
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
