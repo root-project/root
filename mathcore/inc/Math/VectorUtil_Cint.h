@@ -50,18 +50,15 @@ namespace ROOT {
 #if defined (linux) || defined (_WIN32) || defined (__APPLE__)
  
     std::ostream & operator<< (std::ostream & os, const XYZVector & v) { 
-      //return operator<< <char,char_traits<char> > (os,v); 
-      return operator<< (os,v); 
+      return operator<< <char,char_traits<char> > (os,v); 
     }
 
     std::ostream & operator<< (std::ostream & os, const XYZPoint & p) { 
-      //return operator<< <char,char_traits<char> > (os,p); 
-      return operator<< (os,p); 
+      return operator<< <char,char_traits<char> > (os,p); 
     }
     
     std::ostream & operator<< (std::ostream & os, const XYZTVector & q) { 
-      //      return operator<< <char,char_traits<char> > (os,q); 
-      return operator<< (os,q); 
+      return operator<< <char,char_traits<char> > (os,q); 
     }
     
 #endif
