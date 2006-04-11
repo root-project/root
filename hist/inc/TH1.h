@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.72 2005/12/14 16:51:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.73 2006/03/13 10:57:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -72,6 +72,7 @@ class TF1;
 class TH1D;
 class TBrowser;
 class TDirectory;
+class TVirtualFFT;
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -156,6 +157,7 @@ public:
     virtual Int_t    BufferEmpty(Int_t action=0);
     virtual void     Eval(TF1 *f1, Option_t *option="");
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+    virtual TH1     *FFT(TH1* h_output, Option_t *option);
     virtual Int_t    Fill(Double_t x);
     virtual Int_t    Fill(Double_t x, Double_t w);
     virtual Int_t    Fill(const char *name, Double_t w);
@@ -319,6 +321,7 @@ public:
     static  void     StatOverflows(Bool_t flag=kTRUE);
     virtual void     Sumw2();
     void             UseCurrentStyle();
+    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
     ClassDef(TH1,5)  //1-Dim histogram base class
 };

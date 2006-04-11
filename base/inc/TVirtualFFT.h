@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.h,v 1.16 2006/03/20 08:22:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFFT.h,v 1.1 2006/04/10 15:40:00 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 #ifndef ROOT_TVirtualFFT
@@ -125,8 +125,8 @@ class TVirtualFFT: public TObject {
    virtual void       Transform() = 0;
 
 
-   static TVirtualFFT* FFT(Int_t ndim, Int_t *n, Option_t *type, Option_t *flag = "M", Option_t *global_option = "");
-   static TVirtualFFT* SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Option_t *flag = "M", Option_t *global_option = "");
+   static TVirtualFFT* FFT(Int_t ndim, Int_t *n, Option_t *option);
+   static TVirtualFFT* SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Option_t *option);
    static TVirtualFFT* GetCurrentTransform();
 
    static void         SetTransform(TVirtualFFT *fft);

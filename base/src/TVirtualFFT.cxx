@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.16 2006/03/20 08:22:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.1 2006/04/10 15:40:01 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 /*************************************************************************
@@ -28,51 +28,65 @@ TVirtualFFT::~TVirtualFFT()
 }
 
 //_____________________________________________________________________________
-TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *type, Option_t *flag, Option_t *global_option)
+TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
 {
 //Returns a pointer to the FFT of requested size and type.
 //Parameters:
 // -ndim : number of transform dimensions
 // -n    : sizes of each dimension (an array at least ndim long)
-// -type : transform type
-//    Available transform types are:
-//    C2CForward, C2CBackward, C2R, R2C, R2HC, HC2R, DHT - see class description for details
-// -flag : choosing how much time should be spent in planning the transform:
-//      Possible flag_options:
-//     "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
-//                              performance
-//     "M" (from "measure") - some time spend in finding the optimal way to do the transform
-//     "P" (from "patient") - more time spend in finding the optimal way to do the transform
-//     "EX" (from "exhaustive") - the most optimal way is found
-//     This option should be chosen depending on how many transforms of the same size and
-//     type are going to be done. Planning is only done once, for the first transform of 
-//     this size and type. Default is "M".
-// -global_option : Possible global_options:
-//     ""  - default, changes and returns the global fgFFT variable
-//     "O" - without touching the global fgFFT, creates and returns a new TVirtualFFT*. 
-//           user is then responsible for deleting it.
+// -option : consists of 2 parts - flag option and an option to create a new TVirtualFFT
+//         1) transform type option: 
+//           Available transform types are:
+//           C2CForward, C2CBackward, C2R, R2C, R2HC, HC2R, DHT
+//           see class description for details
+//         2) flag option: choosing how much time should be spent in planning the transform:
+//           Possible options:
+//           "ES" (from "estimate") - no time in preparing the transform, 
+//                                  but probably sub-optimal  performance
+//           "M"  (from "measure")  - some time spend in finding the optimal way 
+//                                  to do the transform
+//           "P" (from "patient")   - more time spend in finding the optimal way 
+//                                  to do the transform
+//           "EX" (from "exhaustive") - the most optimal way is found
+//           This option should be chosen depending on how many transforms of the 
+//           same size and type are going to be done. 
+//           Planning is only done once, for the first transform of this size and type.
+//         3) option allowing to choose between the global fgFFT and a new TVirtualFFT object
+//           ""  - default, changes and returns the global fgFFT variable
+//           "K" (from "keep")- without touching the global fgFFT, 
+//           creates and returns a new TVirtualFFT*. User is then responsible for deleting it.
+// Examples of valid options: "R2C ES K", "C2CF M", "DHT P K", etc.
+
 
    Int_t inputtype=0, currenttype=0;
-   TString typeopt = type;
-   typeopt.ToUpper();
-   TString globalopt = global_option;
-   globalopt.ToUpper();
+   TString opt = option;
+   opt.ToUpper();
+   //find the tranform flag
+   Option_t *flag;
+   if (opt.Contains("ES")) flag = "ES";
+   if (opt.Contains("M"))  flag = "M"; 
+   if (opt.Contains("P"))  flag = "P";
+   if (opt.Contains("EX")) flag = "EX";
+   else flag = "ES";
    Int_t ndiff = 0;
 
-   if (!globalopt.Contains("O")){
+   if (!opt.Contains("K")) {
       if (fgFFT){
+         //if the global transform exists, check if it should be changed
          if (fgFFT->GetNdim()!=ndim)
             ndiff++;
          else {
+            Int_t *ncurrent = fgFFT->GetN();
             for (Int_t i=0; i<ndim; i++){
-               if (n[i]!=(fgFFT->GetN())[i])
+               if (n[i]!=ncurrent[i])
                   ndiff++;
             }
          }
-         if (fgFFT->GetType()!=type){
-            if (typeopt.Contains("HC") || typeopt.Contains("DHT"))
+         Option_t *t = fgFFT->GetType();
+         if (!opt.Contains(t)) {
+            if (opt.Contains("HC") || opt.Contains("DHT"))
                inputtype = 1;
-            if (strcmp(fgFFT->GetType(),"R2HC")==0 || strcmp(fgFFT->GetType(),"HC2R")==0 || strcmp(fgFFT->GetType(),"DHT")==0)
+            if (strcmp(t,"R2HC")==0 || strcmp(t,"HC2R")==0 || strcmp(t,"DHT")==0)
                currenttype=1;
             
             if (!(inputtype==1 && currenttype==1))
@@ -86,35 +100,35 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *type, Option_t *fl
    }
            
    Int_t sign = 0;
-   if (typeopt.Contains("C2CB") || typeopt.Contains("C2R"))
+   if (opt.Contains("C2CB") || opt.Contains("C2R"))
       sign = 1; 
-   if (typeopt.Contains("C2CF") || typeopt.Contains("R2C"))
+   if (opt.Contains("C2CF") || opt.Contains("R2C"))
       sign = -1; 
    
    TVirtualFFT *fft = 0;
-   if (globalopt.Contains("O") || !fgFFT){   
+   if (opt.Contains("K") || !fgFFT) {   
       TPluginHandler *h;
       TString pluginname;
       if (fgDefault.Length()==0) fgDefault="fftw";
-      if (strcmp(fgDefault.Data(),"fftw")==0){
-         if (typeopt.Contains("C2C")) pluginname = "fftwc2c";
-         if (typeopt.Contains("C2R")) pluginname = "fftwc2r";
-         if (typeopt.Contains("R2C")) pluginname = "fftwr2c";
-         if (typeopt.Contains("HC") || typeopt.Contains("DHT")) pluginname = "fftwr2r";
+      if (strcmp(fgDefault.Data(),"fftw")==0) {
+         if (opt.Contains("C2C")) pluginname = "fftwc2c";
+         if (opt.Contains("C2R")) pluginname = "fftwc2r";
+         if (opt.Contains("R2C")) pluginname = "fftwr2c";
+         if (opt.Contains("HC") || opt.Contains("DHT")) pluginname = "fftwr2r";
          if ((h=gROOT->GetPluginManager()->FindHandler("TVirtualFFT", pluginname))) {
-            if (h->LoadPlugin()==-1){
+            if (h->LoadPlugin()==-1) {
                printf("handler not found\n");
                return 0;
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
             Int_t *kind = new Int_t[1];
-            if (pluginname=="fftwr2r"){
-               if (typeopt.Contains("R2HC")) kind[0] = 10;
-               if (typeopt.Contains("HC2R")) kind[0] = 11;
-               if (typeopt.Contains("DHT")) kind[0] = 12;
+            if (pluginname=="fftwr2r") { 
+               if (opt.Contains("R2HC")) kind[0] = 10;
+               if (opt.Contains("HC2R")) kind[0] = 11;
+               if (opt.Contains("DHT")) kind[0] = 12;
             }
             fft->Init(flag, sign, kind);
-            if (!globalopt.Contains("O")){
+            if (!opt.Contains("K")) {
                fgFFT = fft;
             }
             delete [] kind;
@@ -126,12 +140,14 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *type, Option_t *fl
          }
       }
    } else {
-      if (fgFFT->GetSign()!=sign || fgFFT->GetTransformFlag()!=flag || fgFFT->GetType()!=type){
+      //if the global transform already exists and just needs to be reinitialised
+      //with different parameters
+      if (fgFFT->GetSign()!=sign || !opt.Contains(fgFFT->GetTransformFlag()) || !opt.Contains(fgFFT->GetType())) {
          Int_t *kind = new Int_t[1];
-         if (inputtype==1){
-            if (typeopt.Contains("R2HC")) kind[0] = 10;
-            if (typeopt.Contains("HC2R")) kind[0] = 11;
-            if (typeopt.Contains("DHT")) kind[0] = 12;
+         if (inputtype==1) {
+            if (opt.Contains("R2HC")) kind[0] = 10;
+            if (opt.Contains("HC2R")) kind[0] = 11;
+            if (opt.Contains("DHT")) kind[0] = 12;
          }
          fgFFT->Init(flag, sign, kind);
          delete [] kind;
@@ -141,63 +157,76 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *type, Option_t *fl
 }
 
 //_____________________________________________________________________________
-TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Option_t *flag, Option_t *global_option)
+TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Option_t *option)
 {
 //Returns a pointer to a sine or cosine transform of requested size and kind
+//
 //Parameters:
 // -ndim    : number of transform dimensions
 // -n       : sizes of each dimension (an array at least ndim long)
 // -r2rkind : transform kind for each dimension
 //     4 different kinds of sine and cosine transforms are available
-//     DCT-I   - kind=0
-//     DCT-II  - kind=1
-//     DCT-III - kind=2
-//     DCT-IV  - kind=3
-//     DST-I   - kind=4
-//     DST-II  - kind=5
-//     DSTIII  - kind=6
-//     DSTIV   - kind=7
-// -flag : choosing how much time should be spent in planning the transform:
-//     Possible flag_options:
-//     "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
-//      performance
-//     "M" (from "measure") - some time spend in finding the optimal way to do the transform
-//     "P" (from "patient") - more time spend in finding the optimal way to do the transform
-//     "EX" (from "exhaustive") - the most optimal way is found
-//     This option should be chosen depending on how many transforms of the same size and
-//     type are going to be done. Planning is only done once, for the first transform of 
-//     this size and type.
-// -global_tion : Possible global options:
-//     ""  - default, changes and returns the global fgFFT variable
-//     "O" - without touching the global fgFFT, creates and returns a new TVirtualFFT*. 
-//           user is then responsible for deleting it.
+//     DCT-I    - kind=0
+//     DCT-II   - kind=1
+//     DCT-III  - kind=2
+//     DCT-IV   - kind=3
+//     DST-I    - kind=4
+//     DST-II   - kind=5
+//     DST-III  - kind=6
+//     DST-IV   - kind=7
+// -option : consists of 2 parts - flag option and an option to create a new TVirtualFFT
+//         - flag option: choosing how much time should be spent in planning the transform:
+//           Possible options:
+//           "ES" (from "estimate") - no time in preparing the transform, 
+//                                  but probably sub-optimal  performance
+//           "M"  (from "measure")  - some time spend in finding the optimal way 
+//                                  to do the transform
+//           "P" (from "patient")   - more time spend in finding the optimal way 
+//                                  to do the transform
+//           "EX" (from "exhaustive") - the most optimal way is found
+//           This option should be chosen depending on how many transforms of the 
+//           same size and type are going to be done. 
+//           Planning is only done once, for the first transform of this size and type.
+//         - option allowing to choose between the global fgFFT and a new TVirtualFFT object
+//           ""  - default, changes and returns the global fgFFT variable
+//           "K" (from "keep")- without touching the global fgFFT, 
+//           creates and returns a new TVirtualFFT*. User is then responsible for deleting it.
+// Examples of valid options: "ES K", "EX", etc
 
-   TString globalopt = global_option;
-   if (!globalopt.Contains("O")){
+   TString opt = option;
+   //find the tranform flag
+   Option_t *flag;
+   if (opt.Contains("ES")) flag = "ES";
+   if (opt.Contains("M"))  flag = "M"; 
+   if (opt.Contains("P"))  flag = "P";
+   if (opt.Contains("EX")) flag = "EX";
+   else flag = "ES";
+
+   if (!opt.Contains("K")) {
       if (fgFFT){
          Int_t ndiff = 0;
          if (fgFFT->GetNdim()!=ndim || strcmp(fgFFT->GetType(),"R2R")!=0)
             ndiff++;
          else {
-            for (Int_t i=0; i<ndim; i++){
-               if (n[i]!=(fgFFT->GetN())[i])
+            Int_t *ncurrent = fgFFT->GetN();
+            for (Int_t i=0; i<ndim; i++) {
+               if (n[i] != ncurrent[i])
                   ndiff++;
             }
             
          }
-         if (ndiff>0){
+         if (ndiff>0) {
             delete fgFFT;
             fgFFT = 0;
          }
       }
    }
    TVirtualFFT *fft = 0;
-   if (!fgFFT || globalopt.Contains("O")){   
+   if (!fgFFT || opt.Contains("K")) {   
       TPluginHandler *h;
       TString pluginname;
-      //TVirtualFFT *fft=0;
       if (fgDefault.Length()==0) fgDefault="fftw";
-      if (strcmp(fgDefault.Data(),"fftw")==0){
+      if (strcmp(fgDefault.Data(),"fftw")==0) {
          pluginname = "fftwr2r";
          if ((h=gROOT->GetPluginManager()->FindHandler("TVirtualFFT", pluginname))) {
             if (h->LoadPlugin()==-1){
@@ -206,7 +235,7 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
             fft->Init(flag, 0, r2rkind);
-            if (!globalopt.Contains("O"))
+            if (!opt.Contains("K"))
                fgFFT = fft;
             return fft;
          } else {

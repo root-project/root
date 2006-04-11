@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.281 2006/03/20 19:42:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.282 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TBrowser.h"
 #include "TObjString.h"
 #include "TError.h"
+#include "TVirtualFFT.h"
 
 //______________________________________________________________________________
 //                     The H I S T O G R A M   Classes
@@ -1166,6 +1167,7 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
       return 0;
    }
 
+
    Double_t bin1, bin2, err1, err2, temp;
    for (i=i_start; i<=i_end; i++){
       bin1 = this->GetBinContent(i)/sum1;
@@ -1192,6 +1194,7 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
    Double_t prob = TMath::Prob(chi2, ndf);
 
    return prob;
+
 }
 
 //______________________________________________________________________________
@@ -1786,6 +1789,96 @@ void TH1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (fPainter) fPainter->ExecuteEvent(event, px, py);
 }
 
+//______________________________________________________________________________
+TH1* TH1::FFT(TH1* h_output, Option_t *option)
+{
+// This function allows to do discrete Fourier transforms of TH1 and TH2. 
+// Available transform types and flags are described below. 
+//
+// To extract more information about the transform, use the function
+//  TVirtualFFT::GetCurrentTransform() to get a pointer to the current 
+//  transform object. 
+//
+// Parameters:
+//  1st - histogram for the output. If a null pointer is passed, a new histogram is created
+//  and returned, otherwise, the provided histogram is used and should be big enough
+//
+//  Options: option parameters consists of 3 parts:
+//    - option on what to return
+//   "RE" - returns a histogram of the real part of the output
+//   "IM" - returns a histogram of the imaginary part of the output
+//   "MAG"- returns a histogram of the magnitude of the output
+//   "PH" - returns a histogram of the phase of the output
+//
+//    - option of transform type
+//   "R2C"  - real to complex transforms - default
+//   "R2HC" - real to halfcomplex (special format of storing output data, 
+//          results the same as for R2C)
+//   "DHT" - discrete Hartley transform
+//         real to real transforms (sine and cosine):
+//   "R2R_0", "R2R_1", "R2R_2", "R2R_3" - discrete cosine transforms of types I-IV
+//   "R2R_4", "R2R_5", "R2R_6", "R2R_7" - discrete sine transforms of types I-IV
+//    To specify the type of each dimension of a 2-dimensional real to real 
+//    transform, use options of form "R2R_XX", for example, "R2R_02" for a transform, 
+//    which is of type "R2R_0" in 1st dimension and  "R2R_2" in the 2nd.
+//
+//    - option of transform flag
+//    "ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
+//       performance
+//    "M" (from "measure")   - some time spend in finding the optimal way to do the transform
+//    "P" (from "patient")   - more time spend in finding the optimal way to do the transform
+//    "EX" (from "exhaustive") - the most optimal way is found
+//     This option should be chosen depending on how many transforms of the same size and
+//     type are going to be done. Planning is only done once, for the first transform of this
+//     size and type. Default is "ES".
+//   Examples of valid options: "Mag R2C M" "Re R2R_11" "Im R2C ES" "PH R2HC EX" 
+
+
+   Int_t ndim[3];
+   ndim[0] = this->GetNbinsX();
+   ndim[1] = this->GetNbinsY();
+   ndim[2] = this->GetNbinsZ();
+
+   TVirtualFFT *fft;
+   TString opt = option;
+   opt.ToUpper();
+   if (!opt.Contains("2R")){
+      if (!opt.Contains("2C") && !opt.Contains("2HC") && !opt.Contains("DHT")) {
+         //no type specified, "R2C" by default
+         opt.Append("R2C");
+      }
+      fft = TVirtualFFT::FFT(this->GetDimension(), ndim, opt.Data());
+   }
+   else {
+      //find the kind of transform
+      Int_t ind = opt.Index("R2R", 3);
+      Int_t *kind = new Int_t[2];
+      char t;
+      t = opt[ind+4];
+      kind[0] = atoi(&t);
+      if (h_output->GetDimension()>1) {
+         t = opt[ind+5];
+         kind[1] = atoi(&t);
+      }
+      fft = TVirtualFFT::SineCosine(this->GetDimension(), ndim, kind, option);
+      delete [] kind;
+   }
+
+   if (!fft) return 0;
+   Int_t in=0;
+   for (Int_t binx = 1; binx<=ndim[0]; binx++) {
+      for (Int_t biny=1; biny<=ndim[1]; biny++) {
+         for (Int_t binz=1; binz<=ndim[2]; binz++) {
+            fft->SetPoint(in, this->GetBinContent(binx, biny, binz));
+            in++;
+         }
+      }
+   }
+   fft->Transform();
+   h_output = TransformHisto(fft, h_output, option);
+   return h_output;
+}
+  
 //______________________________________________________________________________
 Int_t TH1::Fill(Double_t x)
 {
@@ -6490,6 +6583,113 @@ void TH1::SetBinContent(Int_t, Double_t)
    AbstractMethod("SetBinContent");
 }
 
+//______________________________________________________________________________
+TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
+{
+//For a given transform (first parameter), fills the histogram (second parameter)
+//with the transform output data, specified in the third parameter
+//If the 2nd parameter h_output is empty, a new histogram (TH1D or TH2D) is created
+//and the user is responsible for deleting it.
+// Available options:
+//   "RE" - real part of the output
+//   "IM" - imaginary part of the output
+//   "MAG" - magnitude of the output
+//   "PH"  - phase of the output
+
+   if (fft->GetNdim()>2){
+      printf("Only 1d and 2d\n");
+      return 0;
+   }
+   Int_t binx,biny;
+   TString opt = option;
+   opt.ToUpper();
+   Int_t *n = fft->GetN();
+   TH1 *hout;
+   if (h_output) hout = h_output;
+   else {
+      char name[10];
+      sprintf(name, "out_%s", opt.Data());
+      if (fft->GetNdim()==1)
+         hout = new TH1D(name, name,n[0], 0, n[0]);
+      else if (fft->GetNdim()==2)
+         hout = new TH2D(name, name, n[0], 0, n[0], n[1], 0, n[1]);
+   }
+   TString type=fft->GetType();
+   Int_t ind[2];
+   if (opt.Contains("RE")){
+      if (type.Contains("2C") || type.Contains("2HC")) {
+         Double_t re, im;
+         for (binx = 1; binx<=hout->GetNbinsX(); binx++) {
+            for (biny=1; biny<=hout->GetNbinsY(); biny++) {
+               ind[0] = binx-1; ind[1] = biny-1;
+               fft->GetPointComplex(ind, re, im);
+               hout->SetBinContent(binx, biny, re);
+            }
+         }
+      } else {        
+         for (binx = 1; binx<=hout->GetNbinsX(); binx++) {
+            for (biny=1; biny<=hout->GetNbinsY(); biny++) {
+               ind[0] = binx-1; ind[1] = biny-1;
+               hout->SetBinContent(binx, biny, fft->GetPointReal(ind));
+            }
+         }
+      }
+   }
+   if (opt.Contains("IM")) {
+      if (type.Contains("2C") || type.Contains("2HC")) {
+         Double_t re, im;
+         for (binx = 1; binx<=hout->GetNbinsX(); binx++) {
+            for (biny=1; biny<=hout->GetNbinsY(); biny++) {
+               ind[0] = binx-1; ind[1] = biny-1;
+               fft->GetPointComplex(ind, re, im);
+               hout->SetBinContent(binx, biny, im);
+            }
+         }
+      } else {
+         printf("No complex numbers in the output");
+         return 0;
+      }
+   }
+   if (opt.Contains("MA")) {
+      if (type.Contains("2C") || type.Contains("2HC")) {
+         Double_t re, im;
+         for (binx = 1; binx<=hout->GetNbinsX(); binx++) {
+            for (biny=1; biny<=hout->GetNbinsY(); biny++) {
+               ind[0] = binx-1; ind[1] = biny-1;
+               fft->GetPointComplex(ind, re, im);
+               hout->SetBinContent(binx, biny, TMath::Sqrt(re*re + im*im));
+            }
+         }
+      } else {
+         for (binx = 1; binx<=hout->GetNbinsX(); binx++) {
+            for (biny=1; biny<=hout->GetNbinsY(); biny++) {
+               ind[0] = binx-1; ind[1] = biny-1;
+               hout->SetBinContent(binx, biny, TMath::Abs(fft->GetPointReal(ind)));
+            }
+         }
+      }
+   }
+   if (opt.Contains("PH")) {
+      if (type.Contains("2C") || type.Contains("2HC")){
+         Double_t re, im;
+         for (binx = 1; binx<=hout->GetNbinsX(); binx++){
+            for (biny=1; biny<=hout->GetNbinsY(); biny++){
+               ind[0] = binx-1; ind[1] = biny-1;
+               fft->GetPointComplex(ind, re, im);
+               if (re!=0)
+                  hout->SetBinContent(binx, biny, TMath::ATan(im/re));
+            }
+         }
+      } else {
+         printf("Pure real output, no phase");
+         return 0;
+      }
+   }
+
+   return hout;
+}
+
+
 ClassImp(TH1C)
 
 //______________________________________________________________________________
@@ -7537,5 +7737,4 @@ TH1 *R__H(const char * hname)
 
    return (TH1*)gDirectory->Get(hname);
 }
-
 
