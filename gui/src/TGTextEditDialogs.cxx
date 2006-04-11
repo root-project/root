@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.12 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -65,6 +65,7 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    }
    fRetCode = ret_code;
    fType = sstruct;
+   fEditDisabled = kEditDisable;
 
    ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
@@ -303,6 +304,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fPrinter      = printerName;
    fPrintCommand = printProg;
    fRetCode      = ret_code;
+   fEditDisabled = kEditDisable;
 
    ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
@@ -475,6 +477,7 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
       return;
    }
    fRetCode = ret_code;
+   fEditDisabled = kEditDisable;
 
    ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
