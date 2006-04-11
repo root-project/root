@@ -87,7 +87,6 @@ enable_explicitlink=no
 enable_cintex=no
 enable_mathcore=no
 enable_mathmore=no
-enable_fftw3=no
 enable_pythia=no
 enable_qt=no
 enable_reflex=no
@@ -810,7 +809,7 @@ enable/disable options, prefix with either --enable- or --disable-
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
-  fftw3              FFTW3 library of fast Fourier transforms support
+  fftw3              Fast Fourier Transform support, requires libfftw3
   gfal               GFAL support, requires libgfal
   globus             Globus authentication support, requires Globus toolkit
   krb5               Kerberos5 support, requires Kerberos libs
@@ -1761,24 +1760,18 @@ fi
 #
 # (See http://www.fftw.org)
 #
+# If the user has set the flags "--disable-fftw3", we don't check for
+# FFTW3 at all.
 #
-#
-#
-
 if test ! "x$enable_fftw3" = "xno"; then
     # Check for FFTW3 include and library
     check_header "fftw3.h" "$fftw3incdir" $FFTW3 $FFTW3/include \
-    /usr/local/include /usr/include
+	$FFTW3/api /usr/local/include /usr/include /opt/fftw3/include
     fftw3inc=$found_hdr
     fftw3incdir=$found_dir
 
-    if test "x$platform" = "xwin32"; then
-       check_library "libfftw3-3" "$enable_shared" "$fftw3libdir" \
-	    $FFTW3 $FFTW3/lib /usr/local/include /usr/include
-    else
-	check_library "libfftw3" "$enable_shared" "$fftw3libdir" \
-	    $FFTW3 $FFTW3/lib /usr/local/include /usr/include
-    fi
+    check_library "libfftw3 libfftw3-3" "$enable_shared" "$fftw3libdir" \
+	$FFTW3 $FFTW3/lib $FFTW3/.libs /usr/local/lib /usr/lib /opt/fftw3/lib
     fftw3lib=$found_lib
     fftw3libdir=$found_dir
 
@@ -3695,9 +3688,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@monalisaincdir@|$monalisaincdir|"    \
     -e "s|@monalisalib@|$monalisalib|"          \
     -e "s|@monalisalibdir@|$monalisalibdir|"    \
-    -e "s|@fftw3incdir@|$fftw3incdir|"           \
-    -e "s|@fftw3lib@|$fftw3lib|"                 \
-    -e "s|@fftw3libdir@|$fftw3libdir|"           \
+    -e "s|@fftw3incdir@|$fftw3incdir|"          \
+    -e "s|@fftw3lib@|$fftw3lib|"                \
+    -e "s|@fftw3libdir@|$fftw3libdir|"          \
     -e "s|@mysqlincdir@|$mysqlincdir|"          \
     -e "s|@mysqllib@|$mysqllib|"                \
     -e "s|@mysqllibdir@|$mysqllibdir|"          \
@@ -3778,13 +3771,13 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildqt@|$enable_qt|"                \
     -e "s|@buildshift@|$enable_rfio|"           \
     -e "s|@builddcap@|$enable_dcache|"          \
+    -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildgfal@|$enable_gfal|"            \
     -e "s|@buildchirp@|$enable_chirp|"          \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@buildpythia@|$enable_pythia|"        \
     -e "s|@buildpythia6@|$enable_pythia6|"      \
-    -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildvenus@|$enable_venus|"          \
     -e "s|@buildpython@|$enable_python|"        \
     -e "s|@buildruby@|$enable_ruby|"            \
