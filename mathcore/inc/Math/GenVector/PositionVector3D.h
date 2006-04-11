@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.2 2005/11/02 14:08:46 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.4 2005/12/05 08:40:34 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,13 +12,14 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.2 2005/11/02 14:08:46 marafino Exp $
+// Last update: $Id: PositionVector3D.h,v 1.4 2005/12/05 08:40:34 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1
 
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/GenVectorIO.h"
+#include "Math/GenVector/CoordinateSystemTags.h"
 
 #include <cassert>
 
@@ -37,13 +38,14 @@ namespace ROOT {
 	      @ingroup GenVector
     */
 
-    template <class CoordSystem>
+    template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
     class PositionVector3D {
 
     public:
 
       typedef typename CoordSystem::Scalar Scalar;
       typedef CoordSystem CoordinateType;
+      typedef Tag  CoordinateSystemTag;
 
       // ------ ctors ------
 
@@ -66,14 +68,14 @@ namespace ROOT {
           coordinates, or using a different Scalar type
       */
       template <class T>
-      explicit PositionVector3D( const PositionVector3D<T> & v) :
+      explicit PositionVector3D( const PositionVector3D<T,Tag> & v) :
         fCoordinates ( v.Coordinates() ) { }
 
      /**
           Construct from an arbitrary displacement vector
       */
       template <class T>
-      explicit PositionVector3D( const DisplacementVector3D<T> & p) :
+      explicit PositionVector3D( const DisplacementVector3D<T,Tag> & p) :
         fCoordinates ( p.Coordinates() ) { }
 
       /**
@@ -108,7 +110,7 @@ namespace ROOT {
       */
       template <class OtherCoords>
       PositionVector3D & operator=
-                        ( const PositionVector3D<OtherCoords> & v) {
+                        ( const PositionVector3D<OtherCoords,Tag> & v) {
         fCoordinates = v.Coordinates();
         return *this;
       }
@@ -118,7 +120,7 @@ namespace ROOT {
       */
       template <class OtherCoords>
       PositionVector3D & operator=
-                        ( const DisplacementVector3D<OtherCoords> & v) {
+                        ( const DisplacementVector3D<OtherCoords,Tag> & v) {
         fCoordinates = v.Coordinates();
         return *this;
       }
@@ -320,12 +322,14 @@ namespace ROOT {
       void SetEta (Scalar eta) { fCoordinates.SetEta(eta); }
 
       // ------ Operations combining two vectors ------
+      // need to specialize to exclude those with a different tags 
 
      /**
-          Return the scalar (Dot) product of this with a displacement vector.
+          Return the scalar (Dot) product of this with a displacement vector in 
+	  any coordinate system, but with the same tag
       */
-      template< class OtherVector >
-      Scalar Dot( const  OtherVector & v) const {
+      template< class OtherCoords >
+      Scalar Dot( const  DisplacementVector3D<OtherCoords,Tag> & v) const {
         return X()*v.x() + Y()*v.y() + Z()*v.z();
       }
 
@@ -334,9 +338,9 @@ namespace ROOT {
          Return vector (Cross) product of this point with a displacement, as a
          point vector in this coordinate system of the first.
       */
-      template< class OtherVector >
-      PositionVector3D Cross( const OtherVector & v) const  {
-        PositionVector3D <CoordinateType> result;
+      template< class OtherCoords >
+      PositionVector3D Cross( const DisplacementVector3D<OtherCoords,Tag> & v) const  {
+        PositionVector3D  result;
         result.SetXYZ (  Y()*v.z() - v.y()*Z(),
                          Z()*v.x() - v.z()*X(),
                          X()*v.y() - v.x()*Y() );
@@ -353,13 +357,13 @@ namespace ROOT {
       /**
           Self Addition with a displacement vector.
       */
-#ifndef __CINT__
-      template <class CoordSystem2>
-      PositionVector3D & operator+= (const  DisplacementVector3D<CoordSystem2> & v)
-#else
-      template <class V>
-      PositionVector3D & operator+= (const  V & v)
-#endif
+      //#ifndef __CINT__
+      template <class OtherCoords>
+      PositionVector3D & operator+= (const  DisplacementVector3D<OtherCoords,Tag> & v)
+// #else
+//       template <class V>
+//       PositionVector3D & operator+= (const  V & v)
+// #endif
       {
         SetXYZ( X() + v.X(), Y() + v.Y(), Z() + v.Z() );
         return *this;
@@ -368,13 +372,13 @@ namespace ROOT {
       /**
           Self Difference with a displacement vector.
       */
-#ifndef __CINT__
-      template <class CoordSystem2>
-      PositionVector3D & operator-= (const  DisplacementVector3D<CoordSystem2> & v)
-#else
-      template <class V>
-      PositionVector3D & operator-= (const  V & v)
-#endif
+      //#ifndef __CINT__
+      template <class OtherCoords>
+      PositionVector3D & operator-= (const  DisplacementVector3D<OtherCoords,Tag> & v)
+// #else
+//       template <class V>
+//       PositionVector3D & operator-= (const  V & v)
+// #endif
       {
         SetXYZ(  X() - v.X(), Y() - v.Y(), Z() - v.Z() );
         return *this;
@@ -434,17 +438,40 @@ namespace ROOT {
       CoordSystem fCoordinates;
 
       // Prohibited methods
-      /**
-         Dot product of two position vectors is inappropriate
-      */
-      template <class T2>
-      PositionVector3D Dot( const PositionVector3D<T2> & v) const;
 
-      /**
-         Cross product of two position vectors is inappropriate
-      */
-      template <class T2>
-      PositionVector3D Cross( const PositionVector3D<T2> & v) const;
+      // this should not compile (if from a vector or points with different tag
+
+      template <class OtherCoords, class OtherTag>
+      explicit PositionVector3D( const PositionVector3D<OtherCoords, OtherTag> & );
+
+      template <class OtherCoords, class OtherTag>
+      explicit PositionVector3D( const DisplacementVector3D<OtherCoords, OtherTag> & );
+
+      template <class OtherCoords, class OtherTag>
+      PositionVector3D & operator=( const PositionVector3D<OtherCoords, OtherTag> & );
+
+      template <class OtherCoords, class OtherTag>
+      PositionVector3D & operator=( const DisplacementVector3D<OtherCoords, OtherTag> & );
+      
+      template <class OtherCoords, class OtherTag>
+      PositionVector3D & operator+=(const  DisplacementVector3D<OtherCoords, OtherTag> & );
+
+      template <class OtherCoords, class OtherTag>
+      PositionVector3D & operator-=(const  DisplacementVector3D<OtherCoords, OtherTag> & );
+
+//       /**
+//          Dot product of two position vectors is inappropriate
+//       */
+//       template <class T2, class U>
+//       PositionVector3D Dot( const PositionVector3D<T2,U> & v) const;
+
+//       /**
+//          Cross product of two position vectors is inappropriate
+//       */
+//       template <class T2, class U>
+//       PositionVector3D Cross( const PositionVector3D<T2,U> & v) const;
+
+
 
     };
 
@@ -454,11 +481,11 @@ namespace ROOT {
     /**
        Multiplication of a position vector by real number  a*v
     */
-    template <class CoordSystem>
+    template <class CoordSystem, class U>
     inline
     PositionVector3D<CoordSystem>
-    operator * ( typename PositionVector3D<CoordSystem>::Scalar a,
-                 PositionVector3D<CoordSystem> v) {
+    operator * ( typename PositionVector3D<CoordSystem,U>::Scalar a,
+                 PositionVector3D<CoordSystem,U> v) {
       return v *= a;
       // Note - passing v by value and using operator *= may save one
       // copy relative to passing v by const ref and creating a temporary.
@@ -471,12 +498,12 @@ namespace ROOT {
         be identical to that of the first position vector.
     */
 
-    template <class CoordSystem1, class CoordSystem2>
+    template <class CoordSystem1, class CoordSystem2, class U>
     inline
-    DisplacementVector3D<CoordSystem1>
-    operator-( const PositionVector3D<CoordSystem1> & v1,
-               const PositionVector3D<CoordSystem2> & v2) {
-      return DisplacementVector3D<CoordSystem1>( Cartesian3D<typename CoordSystem1::Scalar>(
+    DisplacementVector3D<CoordSystem1,U>
+    operator-( const PositionVector3D<CoordSystem1,U> & v1,
+               const PositionVector3D<CoordSystem2,U> & v2) {
+      return DisplacementVector3D<CoordSystem1,U>( Cartesian3D<typename CoordSystem1::Scalar>(
                                                                                v1.X()-v2.X(), v1.Y()-v2.Y(),v1.Z()-v2.Z() )
                                              );
     }
@@ -486,11 +513,11 @@ namespace ROOT {
         The return type is a PositionVector3D,
         of the same (coordinate system) type as the input PositionVector3D.
     */
-    template <class CoordSystem1, class CoordSystem2>
+    template <class CoordSystem1, class CoordSystem2, class U>
     inline
-    PositionVector3D<CoordSystem2>
-    operator+( PositionVector3D<CoordSystem2> p1,
-               const DisplacementVector3D<CoordSystem1>  & v2)        {
+    PositionVector3D<CoordSystem2,U>
+    operator+( PositionVector3D<CoordSystem2,U> p1,
+               const DisplacementVector3D<CoordSystem1,U>  & v2)        {
       return p1 += v2;
     }
 
@@ -499,11 +526,11 @@ namespace ROOT {
         The return type is a PositionVector3D,
         of the same (coordinate system) type as the input PositionVector3D.
     */
-    template <class CoordSystem1, class CoordSystem2>
+    template <class CoordSystem1, class CoordSystem2, class U>
     inline
-    PositionVector3D<CoordSystem2>
-    operator+( DisplacementVector3D<CoordSystem1> const & v1,
-               PositionVector3D<CoordSystem2> p2)        {
+    PositionVector3D<CoordSystem2,U>
+    operator+( DisplacementVector3D<CoordSystem1,U> const & v1,
+               PositionVector3D<CoordSystem2,U> p2)        {
       return p2 += v1;
     }
 
@@ -512,11 +539,11 @@ namespace ROOT {
         The return type is a PositionVector3D,
         of the same (coordinate system) type as the input PositionVector3D.
     */
-    template <class CoordSystem1, class CoordSystem2>
+    template <class CoordSystem1, class CoordSystem2, class U>
     inline
-    PositionVector3D<CoordSystem2>
-    operator-( PositionVector3D<CoordSystem2> p1,
-               DisplacementVector3D<CoordSystem1> const & v2)        {
+    PositionVector3D<CoordSystem2,U>
+    operator-( PositionVector3D<CoordSystem2,U> p1,
+               DisplacementVector3D<CoordSystem1,U> const & v2)        {
       return p1 -= v2;
     }
 
@@ -524,11 +551,11 @@ namespace ROOT {
 
     // ------------- I/O to/from streams -------------
 
-    template< class char_t, class traits_t, class T >
+    template< class char_t, class traits_t, class T, class U >
       inline
       std::basic_ostream<char_t,traits_t> &
       operator << ( std::basic_ostream<char_t,traits_t> & os
-                  , PositionVector3D<T> const & v
+                  , PositionVector3D<T,U> const & v
                   )
     {
       if( !os )  return os;
@@ -555,11 +582,11 @@ namespace ROOT {
     }  // op<< <>()
 
 
-    template< class char_t, class traits_t, class T >
+    template< class char_t, class traits_t, class T, class U >
       inline
       std::basic_istream<char_t,traits_t> &
       operator >> ( std::basic_istream<char_t,traits_t> & is
-                  , PositionVector3D<T> & v
+                  , PositionVector3D<T,U> & v
                   )
     {
       if( !is )  return is;

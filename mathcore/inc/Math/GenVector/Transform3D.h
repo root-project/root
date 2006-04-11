@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.9 2005/12/07 09:31:27 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.10 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -49,13 +49,18 @@ namespace ROOT {
 
   /** 
      Basic 3D Transformation class describing  a rotation and then a translation
-     The internal data are a rotation data and a vector and cabe represented 
-     like a 4x4 matrix
+     The internal data are a rotation data and a 3D vector data and they can be represented 
+     like a 3x4 matrix
+     The class has a template parameter the coordinate system tag of the reference system 
+     to which the transformatioon will be applied. For example for transforming from 
+     global to local coordinate systems, the transfrom3D has to be instantiated with the 
+     coordinate of the traget system
 
      @ingroup GenVector
 
   */ 
 
+  //template <class Tag2=DefaultCoordinateSystemTag> 
   class Transform3D { 
     
 
@@ -134,9 +139,9 @@ namespace ROOT {
        Construct from a translation only, represented by any DisplacementVector3D 
        and with an identity rotation
     */
-    template<class CoordSystem>
-    explicit Transform3D( const DisplacementVector3D<CoordSystem> & v) { 
-      AssignFrom(XYZVector(v));
+    template<class CoordSystem, class Tag>
+    explicit Transform3D( const DisplacementVector3D<CoordSystem,Tag> & v) { 
+      AssignFrom(XYZVector(v.X(),v.Y(),v.Z()));
     }
     /**
        Construct from a translation only, represented by a Cartesian 3D Vector,  
@@ -156,10 +161,10 @@ namespace ROOT {
        Rotation3D class and in a XYZVector
     */
     // to do : change to displacement vector3D
-    template <class ARotation, class CoordSystem>
-    Transform3D( const ARotation & r, const DisplacementVector3D<CoordSystem> & v) 
+    template <class ARotation, class CoordSystem, class Tag>
+    Transform3D( const ARotation & r, const DisplacementVector3D<CoordSystem,Tag> & v) 
     {
-      AssignFrom( Rotation3D(r), XYZVector (v) ); 
+      AssignFrom( Rotation3D(r), XYZVector (v.X(),v.Y(),v.Z()) ); 
     }
     /**
        Construct from a translation (using any type of DisplacementVector ) 
@@ -167,12 +172,12 @@ namespace ROOT {
        Requirement on the rotation and vector objects are that they can be transformed in a 
        Rotation3D class and in a XYZVector 
     */
-    template <class ARotation, class CoordSystem>
-    Transform3D(const DisplacementVector3D<CoordSystem> & v , const ARotation & r) 
+    template <class ARotation, class CoordSystem, class Tag>
+    Transform3D(const DisplacementVector3D<CoordSystem,Tag> & v , const ARotation & r) 
     {
       // is equivalent from having first the rotation and then the translation vector rotated
       Rotation3D r3d(r);
-      AssignFrom( r3d, r3d( XYZVector(v) ) ); 
+      AssignFrom( r3d, r3d( XYZVector(v.X(),v.Y(),v.Z()) ) ); 
     }
 
     //#endif
@@ -346,6 +351,25 @@ namespace ROOT {
     DisplacementVector3D<CoordSystem> operator() (const DisplacementVector3D <CoordSystem> & v) const { 
       XYZVector xyzNew = operator() ( XYZVector(v) );
       return  DisplacementVector3D<CoordSystem> (xyzNew);
+    }
+
+    /**
+       Transformation operation for points between different coordinate system tags 
+    */
+    template<class CoordSystem, class Tag1, class Tag2 > 
+    void Transform (const PositionVector3D <CoordSystem,Tag1> & p1, PositionVector3D <CoordSystem,Tag2> & p2  ) const { 
+      XYZPoint xyzNew = operator() ( XYZPoint(p1.X(), p1.Y(), p1.Z()) );
+      p2.SetXYZ( xyzNew.X(), xyzNew.Y(), xyzNew.Z() ); 
+    }
+
+
+    /**
+       Transformation operation for Displacement Vector of different coordinate systems 
+    */
+    template<class CoordSystem,  class Tag1, class Tag2 > 
+    void Transform (const DisplacementVector3D <CoordSystem,Tag1> & v1, DisplacementVector3D <CoordSystem,Tag2> & v2  ) const { 
+      XYZVector xyzNew = operator() ( XYZVector(v1.X(), v1.Y(), v1.Z() ) );
+      v2.SetXYZ( xyzNew.X(), xyzNew.Y(), xyzNew.Z() ); 
     }
 
     /**

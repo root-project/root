@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3Dfwd.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3Dfwd.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3Dfwd 
@@ -11,8 +11,8 @@ namespace ROOT {
     /**
         Class template describing a 3D displacement vector
      */
-    template< class CoordSystem >
-      class DisplacementVector3D;
+    template< class CoordSystem, class Tag  >
+    class DisplacementVector3D;
 
   }  // namespace Math
 }  // namespace ROOT

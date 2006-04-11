@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.5 2006/02/26 15:23:32 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.6 2006/02/26 17:20:11 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -102,15 +102,15 @@ Rotation3D::Rectify()
 
 // ========== Operations =====================
 
-DisplacementVector3D< Cartesian3D<double> >
-Rotation3D::
-operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
-{
-  return  DisplacementVector3D< Cartesian3D<double> >  (
-      fM[XX] * v.X() + fM[XY] * v.Y() + fM[XZ] * v.Z()
-    , fM[YX] * v.X() + fM[YY] * v.Y() + fM[YZ] * v.Z()
-    , fM[ZX] * v.X() + fM[ZY] * v.Y() + fM[ZZ] * v.Z() );
-}
+// DisplacementVector3D< Cartesian3D<double> >
+// Rotation3D::
+// operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
+// {
+//   return  DisplacementVector3D< Cartesian3D<double> >  (
+//       fM[XX] * v.X() + fM[XY] * v.Y() + fM[XZ] * v.Z()
+//     , fM[YX] * v.X() + fM[YY] * v.Y() + fM[YZ] * v.Z()
+//     , fM[ZX] * v.X() + fM[ZY] * v.Y() + fM[ZZ] * v.Z() );
+// }
 
 static inline void swap(double & a, double & b) { double t=b; b=a; a=t; }
 

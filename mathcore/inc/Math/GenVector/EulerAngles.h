@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.4 2006/02/06 16:47:45 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.6 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -199,32 +199,25 @@ public:
 
   // =========== operations ==============
 
-  /**
-     Rotation operation on a cartesian vector
-   */
-  DisplacementVector3D< ROOT::Math::Cartesian3D<double> >
-  operator() (const DisplacementVector3D< ROOT::Math::Cartesian3D<double> > & v) const;
 
   /**
-     Rotation operation on a displacement vector in any coordinate system
+     Rotation operation on a displacement vector in any coordinate system and tag
    */
-  template <class CoordSystem>
-  DisplacementVector3D<CoordSystem>
-  operator() (const DisplacementVector3D<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
-    return DisplacementVector3D<CoordSystem> ( Rxyz );
+  template <class CoordSystem, class U>
+  DisplacementVector3D<CoordSystem,U>
+  operator() (const DisplacementVector3D<CoordSystem,U> & v) const {
+    return Rotation3D(*this) ( v );
   }
 
   /**
      Rotation operation on a position vector in any coordinate system
    */
-  template <class CoordSystem>
-  PositionVector3D<CoordSystem>
-  operator() (const PositionVector3D<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem> ( Rxyz );
+  template <class CoordSystem, class U>
+  PositionVector3D<CoordSystem, U>
+  operator() (const PositionVector3D<CoordSystem,U> & v) const {
+    DisplacementVector3D< Cartesian3D<double>,U > xyz(v);
+    DisplacementVector3D< Cartesian3D<double>,U > Rxyz = operator()(xyz);
+    return PositionVector3D<CoordSystem,U> ( Rxyz );
   }
 
   /**
@@ -265,12 +258,19 @@ public:
   /**
       Invert a rotation in place
    */
-  void Invert() {Scalar tmp = -fPhi; fPhi = -fPsi; fTheta = -fTheta; fPsi=tmp;}
+  // theta stays the same and negative rotation in Theta is done via a rotation 
+  // of + PI in pohi and Psi 
+  void Invert() {
+    Scalar tmp = -fPhi; 
+    fPhi = -fPsi + Pi(); 
+    fTheta = fTheta; 
+    fPsi=tmp + Pi();
+  }
 
   /**
       Return inverse of a rotation
    */
-  EulerAngles Inverse() const { return EulerAngles(-fPsi, -fTheta, -fPhi); }
+  EulerAngles Inverse() const { return EulerAngles(-fPsi + Pi(), fTheta, -fPhi + Pi()); }
 
   // ========= Multi-Rotation Operations ===============
 

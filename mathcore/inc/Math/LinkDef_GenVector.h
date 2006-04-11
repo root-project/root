@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.5 2005/12/02 21:35:19 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.6 2005/12/06 17:17:48 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -17,6 +17,8 @@
 #pragma link C++ class ROOT::Math::Polar3D<double>+;
 #pragma link C++ class ROOT::Math::Cylindrical3D<double>+;
 #pragma link C++ class ROOT::Math::CylindricalEta3D<double>+;
+
+#pragma link C++ class ROOT::Math::DefaultCoordinateSystemTag+; 
 
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<double> >+;
@@ -41,6 +43,8 @@
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >+;
 
 // rotations
+//#ifdef LATER
+
 #pragma link C++ class ROOT::Math::Rotation3D+;
 #pragma link C++ class ROOT::Math::AxisAngle+;
 #pragma link C++ class ROOT::Math::EulerAngles+;
@@ -58,6 +62,7 @@
 #pragma link C++ class ROOT::Math::Transform3D+;
 #pragma link C++ class ROOT::Math::Plane3D+;
 
+//#endif
 
 
 #pragma link C++ typedef ROOT::Math::XYZVector;
@@ -122,8 +127,13 @@
 #pragma link C++ class vector<ROOT::Math::XYZTVector >+;
 #endif
 #pragma link C++ class vector<ROOT::Math::XYZVector >+;
-#pragma link C++ class vector<ROOT::Math::Polar3DVector >+;
 #pragma link C++ class vector<ROOT::Math::XYZPoint >+;
+
+
+// exclude this (they make loibrary  too big and are not used in tests in CVS)
+#ifdef TEST_LATER
+
+#pragma link C++ class vector<ROOT::Math::Polar3DVector >+;
 #pragma link C++ class vector<ROOT::Math::Polar3DPoint >+;
 
 //too long names in Windows - skip this dictionary
@@ -133,6 +143,7 @@
 #endif
 #pragma link C++ class vector<ROOT::Math::RhoEtaPhiVector >+;
 #pragma link C++ class vector<ROOT::Math::RhoEtaPhiPoint >+;
+
 #endif
 
 

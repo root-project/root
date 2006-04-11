@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.1 2005/12/02 21:35:19 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.2 2005/12/14 15:59:14 moneta Exp $
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by:    moneta   at Fri Dec 02   2005
 //
-// Last update: $Id: Plane3D.h,v 1.1 2005/12/02 21:35:19 moneta Exp $
+// Last update: $Id: Plane3D.h,v 1.2 2005/12/14 15:59:14 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1
@@ -82,9 +82,9 @@ namespace ROOT {
 	 \param n normal expressed as a generic ROOT::Math::DisplacementVector3D
 	 \param p point  expressed as a generic ROOT::Math::PositionVector3D
       */
-      template<class T1, class T2>
-      Plane3D( const  DisplacementVector3D<T1> & n, const  PositionVector3D<T2> & p) : 
-	Plane3D( XYZVector(n), XYZPoint(p) ) 
+      template<class T1, class T2, class U>
+      Plane3D( const  DisplacementVector3D<T1,U> & n, const  PositionVector3D<T2,U> & p) : 
+	Plane3D( XYZVector(n.X(), n.Y(), n.Z()), XYZPoint(p.X(), p.Y(), p.Z()) ) 
       {}
 
       /**
@@ -102,9 +102,11 @@ namespace ROOT {
 	 \param p2 point2 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
 	 \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
       */
-      template <class T1, class T2, class T3>
-      Plane3D(const  PositionVector3D<T1> & p1, const  PositionVector3D<T2> & p2, const  PositionVector3D<T3> & p3  ) : 
-	Plane3D (  XYZPoint(p1),  XYZPoint(p2),  XYZPoint(p3) ) 
+      template <class T1, class T2, class T3, class U>
+      Plane3D(const  PositionVector3D<T1,U> & p1, const  PositionVector3D<T2,U> & p2, const  PositionVector3D<T3,U> & p3  ) : 
+	Plane3D (  XYZPoint(p1.X(), p1.Y(), p1.Z()),  
+		   XYZPoint(p2.X(), p2.Y(), p2.Z()),  
+		   XYZPoint(p3.X(), p3.Y(), p3.Z()) ) 
       {} 
 
 
@@ -153,9 +155,9 @@ namespace ROOT {
 	 Return the distance to a Point described with generic coordinates
 	 \param p Point expressed as generic ROOT::Math::PositionVector3D 
        */
-      template <class T> 
-      Scalar Distance(const PositionVector3D<T> & p) const { 
-	return Distance( XYZPoint(p) );
+      template <class T, class U> 
+      Scalar Distance(const PositionVector3D<T,U> & p) const { 
+	return Distance( XYZPoint(p.X(), p.Y(), p.Z() ) );
       }
 
       /**
@@ -168,9 +170,12 @@ namespace ROOT {
 	 Return the projection of a point to a plane
 	 \param p Point expressed as generic ROOT::Math::PositionVector3D
       */
-      template <class T> 
-      PositionVector3D<T> ProjectOntoPlane(const PositionVector3D<T> & p) const { 
-	return PositionVector3D<T> (  ProjectOntoPlane(XYZPoint(p) ) );
+      template <class T, class U> 
+      PositionVector3D<T,U> ProjectOntoPlane(const PositionVector3D<T,U> & p) const { 
+	XYZPoint pxyz = ProjectOntoPlane(XYZPoint(p.X(), p.Y(), p.Z() ) );
+	PositionVector3D<T,U> p2;
+	p2.SetXYZ( pxyz.X(), pxyz.Y(), pxyz.Z() );  
+	return p2;
       }
 
 

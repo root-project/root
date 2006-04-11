@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.1 2005/11/24 14:45:50 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.2 2005/12/08 15:52:41 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.1 2005/11/24 14:45:50 moneta Exp $
+// Last update: $Id: Boost.h,v 1.2 2005/12/08 15:52:41 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -160,7 +160,8 @@ public:
   /**
      The beta vector for this boost
    */
-  DisplacementVector3D< ROOT::Math::Cartesian3D<double> > BetaVector() const;
+  typedef  DisplacementVector3D<Cartesian3D<double> > XYZVector; 
+  XYZVector BetaVector() const;
 
   /**
      Get elements of internal 4x4 symmetric representation, into a data

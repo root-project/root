@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.3 2005/12/06 20:31:51 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Point3Dfwd.h,v 1.4 2005/12/08 15:57:00 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -23,53 +23,54 @@ namespace ROOT {
 
   namespace Math { 
 
-    template<class CoordSystem> class PositionVector3D; 
+    template<class CoordSystem, class Tag> class PositionVector3D; 
 
     template<typename T> class Cartesian3D;  
     template<typename T> class Cylindrical3D;  
     template<typename T> class CylindricalEta3D;  
     template<typename T> class Polar3D;  
 
+    class DefaultCoordinateSystemTag; 
  
     /**
        3D Point based on the cartesian coordinates x,y,z in double precision
     */
-    typedef PositionVector3D< Cartesian3D<double> > XYZPoint; 
+    typedef PositionVector3D< Cartesian3D<double>, DefaultCoordinateSystemTag > XYZPoint; 
 
     /**
        3D Point based on the cartesian corrdinates x,y,z in single precision
     */
-    typedef PositionVector3D< Cartesian3D<float> > XYZPointF; 
+    typedef PositionVector3D< Cartesian3D<float>, DefaultCoordinateSystemTag > XYZPointF; 
     typedef XYZPoint XYZPointD; 
     
     /**
        3D Point based on the eta based cylindrical coordinates rho, eta, phi in double precision. 
     */
-    typedef PositionVector3D< CylindricalEta3D<double> > RhoEtaPhiPoint; 
+    typedef PositionVector3D< CylindricalEta3D<double>, DefaultCoordinateSystemTag > RhoEtaPhiPoint; 
     /**
        3D Point based on the eta based cylindrical coordinates rho, eta, phi in single precision. 
     */
-    typedef PositionVector3D< CylindricalEta3D<float> > RhoEtaPhiPointF; 
+    typedef PositionVector3D< CylindricalEta3D<float>, DefaultCoordinateSystemTag > RhoEtaPhiPointF; 
     typedef RhoEtaPhiPoint RhoEtaPhiPointD; 
 
     /**
        3D Point based on the polar coordinates rho, theta, phi in double precision. 
     */
-    typedef PositionVector3D< Polar3D<double> > Polar3DPoint; 
+    typedef PositionVector3D< Polar3D<double>, DefaultCoordinateSystemTag > Polar3DPoint; 
     /**
      3D Point based on the polar coordinates rho, theta, phi in single precision. 
     */
-    typedef PositionVector3D< Polar3D<float> > Polar3DPointF; 
+    typedef PositionVector3D< Polar3D<float>, DefaultCoordinateSystemTag > Polar3DPointF; 
     typedef Polar3DPoint Polar3DPointD; 
 
     /**
        3D Point based on the cylindrical coordinates rho, z, phi in double precision. 
     */
-    typedef PositionVector3D< Cylindrical3D<double> > RhoZPhiPoint; 
+    typedef PositionVector3D< Cylindrical3D<double>, DefaultCoordinateSystemTag > RhoZPhiPoint; 
     /**
        3D Point based on the cylindrical coordinates rho, z, phi in single precision. 
     */
-    typedef PositionVector3D< Cylindrical3D<float> > RhoZPhiPointF; 
+    typedef PositionVector3D< Cylindrical3D<float>, DefaultCoordinateSystemTag > RhoZPhiPointF; 
     typedef RhoZPhiPoint RhoZPhiPointD; 
 
 

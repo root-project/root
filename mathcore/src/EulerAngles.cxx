@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.cpp,v 1.5 2006/01/31 17:23:00 marafino Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.cxx,v 1.3 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: EulerAngles.cpp,v 1.5 2006/01/31 17:23:00 marafino Exp $
+// Last update: $Id: EulerAngles.cxx,v 1.3 2006/02/06 17:22:03 moneta Exp $
 //
 #include "Math/GenVector/EulerAngles.h"
 
@@ -44,8 +44,8 @@ EulerAngles::Rectify()
       fTheta = t;
     } else {
       fTheta = 2*Pi() - t;
-      fPhi = - fPhi;
-      fPsi = - fPsi;
+      fPhi =  fPhi + Pi();
+      fPsi =  fPsi + Pi();
     }
   }
 
@@ -62,12 +62,13 @@ EulerAngles::Rectify()
 
 // ========== Operations =====================
 
-DisplacementVector3D< Cartesian3D<double> >
-EulerAngles::
-operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
-{
-  return Rotation3D(*this)(v);
-}
+// DisplacementVector3D< Cartesian3D<double> >
+// EulerAngles::
+// operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
+// {
+//   return Rotation3D(*this)(v);
+// }
+
 
 EulerAngles
 EulerAngles::

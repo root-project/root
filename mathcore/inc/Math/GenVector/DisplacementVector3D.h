@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.5 2005/10/27 18:00:01 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.6 2005/12/05 08:40:34 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.5 2005/10/27 18:00:01 moneta Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.6 2005/12/05 08:40:34 moneta Exp $
 //
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
@@ -25,6 +25,7 @@
 #include "Math/GenVector/PositionVector3Dfwd.h"
 #include "Math/GenVector/GenVectorIO.h"
 #include "Math/GenVector/BitReproducible.h"
+#include "Math/GenVector/CoordinateSystemTags.h"
 
 #include <cassert>
 
@@ -34,9 +35,12 @@
  */
 
 
+
+
 namespace ROOT {
 
   namespace Math {
+
 
 
     /**
@@ -49,13 +53,14 @@ namespace ROOT {
 	      @ingroup GenVector
     */
 
-    template <class CoordSystem>
+    template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
     class DisplacementVector3D {
 
     public:
 
       typedef typename CoordSystem::Scalar Scalar;
       typedef CoordSystem CoordinateType;
+      typedef Tag  CoordinateSystemTag;
 
       // ------ ctors ------
 
@@ -63,6 +68,7 @@ namespace ROOT {
           Default constructor. Construct an empty object with zero values
       */
       DisplacementVector3D ( ) :   fCoordinates()  { }
+
 
       /**
          Construct from three values of type <em>Scalar</em>.
@@ -74,11 +80,21 @@ namespace ROOT {
 
      /**
           Construct from a displacement vector expressed in different
-          coordinates, or using a different Scalar type
+          coordinates, or using a different Scalar type, but with same coordinate system tag
       */
-      template <class T>
-      explicit DisplacementVector3D( const DisplacementVector3D<T> & v) :
+      template <class OtherCoords>
+      explicit DisplacementVector3D( const DisplacementVector3D<OtherCoords, Tag> & v) :
         fCoordinates ( v.Coordinates() ) { }
+
+
+      /**
+         Construct from a position vector expressed in different coordinates
+         but with the same coordinate system tag
+      */
+      template <class OtherCoords>
+      explicit DisplacementVector3D( const PositionVector3D<OtherCoords,Tag> & p) : 
+        fCoordinates ( p.Coordinates() ) { }
+
 
       /**
           Construct from a foreign 3D vector type, for example, Hep3Vector
@@ -113,7 +129,7 @@ namespace ROOT {
       */
       template <class OtherCoords>
       DisplacementVector3D & operator=
-                        ( const DisplacementVector3D<OtherCoords> & v) {
+                        ( const DisplacementVector3D<OtherCoords, Tag> & v) {
         fCoordinates = v.Coordinates();
         return *this;
       }
@@ -124,10 +140,11 @@ namespace ROOT {
       */
       template <class OtherCoords>
       DisplacementVector3D & operator=
-                        ( const PositionVector3D<OtherCoords> & rhs) {
+                        ( const PositionVector3D<OtherCoords,Tag> & rhs) {
         SetXYZ(rhs.x(), rhs.y(), rhs.z());
 	return *this;
       }
+
 
       /**
           Assignment from a foreign 3D vector type, for example, Hep3Vector
@@ -336,11 +353,21 @@ namespace ROOT {
 
 
       // ------ Operations combining two vectors ------
+      // -- need to have the specialized version in order to avoid 
 
+      /**
+          Return the scalar (dot) product of two displacement vectors.
+          It is possible to perform the product for any type of vector coordinates, 
+	  but they must have the same coordinate system tag
+      */
+      template< class OtherCoords >
+      Scalar Dot( const  DisplacementVector3D<OtherCoords,Tag>  & v) const {
+        return X()*v.X() + Y()*v.Y() + Z()*v.Z();
+      }
       /**
           Return the scalar (dot) product of two vectors.
           It is possible to perform the product for any classes
-          implementing X(), Y() and Z() member functions
+          implementing x(), y() and z() member functions
       */
       template< class OtherVector >
       Scalar Dot( const  OtherVector & v) const {
@@ -350,6 +377,22 @@ namespace ROOT {
       /**
          Return vector (cross) product of two displacement vectors,
          as a vector in the coordinate system of this class.
+          It is possible to perform the product for any type of vector coordinates, 
+	  but they must have the same coordinate system tag
+      */
+      template <class OtherCoords>
+      DisplacementVector3D Cross( const DisplacementVector3D<OtherCoords,Tag>  & v) const {
+        DisplacementVector3D  result;
+        result.SetXYZ (  Y()*v.Z() - v.Y()*Z(),
+                         Z()*v.X() - v.Z()*X(),
+                         X()*v.Y() - v.X()*Y() );
+        return result;
+      }
+      /**
+         Return vector (cross) product of two  vectors,
+         as a vector in the coordinate system of this class.
+          It is possible to perform the product for any classes
+          implementing X(), Y() and Z() member functions
       */
       template <class OtherVector>
       DisplacementVector3D Cross( const OtherVector & v) const {
@@ -361,14 +404,13 @@ namespace ROOT {
       }
 
 
-      //#ifndef __CINT__
 
       /**
           Self Addition with a displacement vector.
       */
       template <class OtherCoords>
       DisplacementVector3D & operator+=
-                        (const  DisplacementVector3D<OtherCoords> & v) {
+                        (const  DisplacementVector3D<OtherCoords,Tag> & v) {
         SetXYZ(  X() + v.X(), Y() + v.Y(), Z() + v.Z() );
         return *this;
       }
@@ -378,68 +420,11 @@ namespace ROOT {
       */
       template <class OtherCoords>
       DisplacementVector3D & operator-=
-                        (const  DisplacementVector3D<OtherCoords> & v) {
+                        (const  DisplacementVector3D<OtherCoords,Tag> & v) {
         SetXYZ(  x() - v.x(), y() - v.y(), z() - v.z() );
         return *this;
       }
 
-      //#endif //not CINT
-#ifdef OLDCINT
-
-      /**
-          Self Addition with a displacement vector.
-          Careful - if a position vector is added in this way,
-          the result should be a position vector, but in CINT this
-          operation will succeed and modify this displacement vector.
-       */
-      template<class V>
-      DisplacementVector3D & operator+= (const  V & v) {
-        SetXYZ(  x() + v.x(), y() + v.y(), z() + v.z() );
-        return *this;
-      }
-
-      /**
-          Self Difference with a displacement vector.
-          Careful - if a position vector is subtracted in this way,
-          in CINT this operation (which is phsyically meaningless)
-          will not be caught as an error.
-       */
-      template<class V>
-      DisplacementVector3D & operator-= (const  V & v) {
-        SetXYZ(  x() - v.x(), y() - v.y(), z() - v.z() );
-        return *this;
-      }
-      //#endif
-      //#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-
-      /**
-          Addition of DisplacementVector3D vectors.
-          The (coordinate system) type of the returned vector is defined to
-          be identical to that of the first vector, which is passed by value.
-          Careful - if a position vector is added in this way,
-          the result should be a position vector, but in CINT this
-          operation will return a displacement vector.
-
-       */
-      template <class V2>
-      DisplacementVector3D operator+(const V2  & v2) const{
-        DisplacementVector3D tmp(*this);
-        return tmp += v2;
-      }
-
-      /**
-          Difference between two DisplacementVector3D vectors.
-          Careful - if a position vector is subtracted in this way,
-          in CINT this operation (which is phsyically meaningless)
-          will not be caught as an error.
-      */
-      template <class V2>
-      DisplacementVector3D operator-(const V2  & v2) const {
-        DisplacementVector3D tmp(*this);
-        return tmp -= v2;
-      }
-
-#endif //  G_DICTIONARY
 
       /**
          multiply this vector by a scalar quantity
@@ -503,6 +488,7 @@ namespace ROOT {
       Scalar perp2() const { return Perp2(); }
       DisplacementVector3D unit() const {return Unit();}
 
+
     private:
 
       CoordSystem fCoordinates;
@@ -515,12 +501,41 @@ namespace ROOT {
       DisplacementVector3D Cross( const PositionVector3D<T2> & ) const;
 #endif
 
+      // the following methods should not compile
+
+      // this should not compile (if from a vector or points with different tag
+      template <class OtherCoords, class OtherTag>
+      explicit DisplacementVector3D( const DisplacementVector3D<OtherCoords, OtherTag> & ) {}
+
+      template <class OtherCoords, class OtherTag>
+      explicit DisplacementVector3D( const PositionVector3D<OtherCoords, OtherTag> & ) {}
+
+      template <class OtherCoords, class OtherTag>
+      DisplacementVector3D & operator=( const DisplacementVector3D<OtherCoords, OtherTag> & );
+      
+
+      template <class OtherCoords, class OtherTag>
+      DisplacementVector3D & operator=( const PositionVector3D<OtherCoords, OtherTag> & );
+
+      template <class OtherCoords, class OtherTag>
+      DisplacementVector3D & operator+=(const  DisplacementVector3D<OtherCoords, OtherTag> & );
+
+      template <class OtherCoords, class OtherTag>
+      DisplacementVector3D & operator-=(const  DisplacementVector3D<OtherCoords, OtherTag> & );
+
+      template<class OtherCoords, class OtherTag >
+      Scalar Dot( const  DisplacementVector3D<OtherCoords, OtherTag> &  ) const;
+
+      template<class OtherCoords, class OtherTag >
+      DisplacementVector3D Cross( const  DisplacementVector3D<OtherCoords, OtherTag> &  ) const;
+
+
     };
 
 // ---------- DisplacementVector3D class template ends here ------------
 // ---------------------------------------------------------------------
 
-//#ifndef __CINT__
+//add this
 
 
    /**
@@ -528,11 +543,11 @@ namespace ROOT {
         The (coordinate system) type of the returned vector is defined to
         be identical to that of the first vector, which is passed by value
     */
-    template <class CoordSystem1, class CoordSystem2>
+    template <class CoordSystem1, class CoordSystem2, class U>
     inline
-    DisplacementVector3D<CoordSystem1>
-    operator+(       DisplacementVector3D<CoordSystem1> v1,
-               const DisplacementVector3D<CoordSystem2>  & v2) {
+    DisplacementVector3D<CoordSystem1,U>
+    operator+(       DisplacementVector3D<CoordSystem1,U> v1,
+               const DisplacementVector3D<CoordSystem2,U>  & v2) {
       return v1 += v2;
     }
 
@@ -541,11 +556,11 @@ namespace ROOT {
         The (coordinate system) type of the returned vector is defined to
         be identical to that of the first vector.
     */
-    template <class CoordSystem1, class CoordSystem2>
+    template <class CoordSystem1, class CoordSystem2, class U>
     inline
-    DisplacementVector3D<CoordSystem1>
-    operator-( DisplacementVector3D<CoordSystem1> v1,
-               DisplacementVector3D<CoordSystem2> const & v2) {
+    DisplacementVector3D<CoordSystem1,U>
+    operator-( DisplacementVector3D<CoordSystem1,U> v1,
+               DisplacementVector3D<CoordSystem2,U> const & v2) {
       return v1 -= v2;
     }
 
@@ -554,11 +569,11 @@ namespace ROOT {
     /**
        Multiplication of a displacement vector by real number  a*v
     */
-    template <class CoordSystem>
+    template <class CoordSystem, class U>
     inline
-    DisplacementVector3D<CoordSystem>
-    operator * ( typename DisplacementVector3D<CoordSystem>::Scalar a,
-                 DisplacementVector3D<CoordSystem> v) {
+    DisplacementVector3D<CoordSystem,U>
+    operator * ( typename DisplacementVector3D<CoordSystem,U>::Scalar a,
+                 DisplacementVector3D<CoordSystem,U> v) {
       return v *= a;
       // Note - passing v by value and using operator *= may save one
       // copy relative to passing v by const ref and creating a temporary.
@@ -572,11 +587,11 @@ namespace ROOT {
 
     // ------------- I/O to/from streams -------------
 
-    template< class char_t, class traits_t, class T >
+    template< class char_t, class traits_t, class T, class U >
       inline
       std::basic_ostream<char_t,traits_t> &
       operator << ( std::basic_ostream<char_t,traits_t> & os
-                  , DisplacementVector3D<T> const & v
+                  , DisplacementVector3D<T,U> const & v
                   )
     {
       if( !os )  return os;
@@ -603,11 +618,11 @@ namespace ROOT {
     }  // op<< <>()
 
 
-    template< class char_t, class traits_t, class T >
+    template< class char_t, class traits_t, class T, class U >
       inline
       std::basic_istream<char_t,traits_t> &
       operator >> ( std::basic_istream<char_t,traits_t> & is
-                  , DisplacementVector3D<T> & v
+                  , DisplacementVector3D<T,U> & v
                   )
     {
       if( !is )  return is;
@@ -633,7 +648,6 @@ namespace ROOT {
       return is;
 
     }  // op>> <>()
-
 
 
 

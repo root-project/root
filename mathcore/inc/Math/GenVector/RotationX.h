@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: RotationX.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: RotationX.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Mon July 18  2005
 //
-// Last update: $Id: RotationX.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: RotationX.h,v 1.3 2005/10/27 18:00:01 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_RotationX 
 #define ROOT_Math_GenVector_RotationX  1
@@ -107,31 +107,32 @@ public:
   /**
      Rotation operation on a cartesian vector
    */
-  typedef  DisplacementVector3D< Cartesian3D<double> > XYZVector; 
-  XYZVector operator() (const XYZVector & v) const {
-    return XYZVector ( v.x(), fCos*v.y()-fSin*v.z(), fCos*v.z()+fSin*v.y() );
-  }
+//   typedef  DisplacementVector3D< Cartesian3D<double> > XYZVector; 
+//   XYZVector operator() (const XYZVector & v) const {
+//     return XYZVector ( v.x(), fCos*v.y()-fSin*v.z(), fCos*v.z()+fSin*v.y() );
+//   }
+  
 
   /**
      Rotation operation on a displacement vector in any coordinate system
    */
-  template <class CoordSystem>
-  DisplacementVector3D<CoordSystem>
-  operator() (const DisplacementVector3D<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
-    return DisplacementVector3D<CoordSystem> ( Rxyz );
+  template <class CoordSystem, class U>
+  DisplacementVector3D<CoordSystem,U>
+  operator() (const DisplacementVector3D<CoordSystem,U> & v) const {
+    DisplacementVector3D< Cartesian3D<double>,U > xyz;
+    xyz.SetXYZ( v.X(), fCos*v.Y()-fSin*v.Z(), fCos*v.Z()+fSin*v.Y() );
+    return DisplacementVector3D<CoordSystem,U>(xyz);
   }
 
   /**
      Rotation operation on a position vector in any coordinate system
    */
-  template <class CoordSystem>
-  PositionVector3D<CoordSystem>
-  operator() (const PositionVector3D<CoordSystem> & v) const {
-    DisplacementVector3D< Cartesian3D<double> > xyz(v);
-    DisplacementVector3D< Cartesian3D<double> > Rxyz = operator()(xyz);
-    return PositionVector3D<CoordSystem> ( Rxyz );
+  template <class CoordSystem, class U>
+  PositionVector3D<CoordSystem, U>
+  operator() (const PositionVector3D<CoordSystem,U> & v) const {
+    DisplacementVector3D< Cartesian3D<double>,U > xyz(v);
+    DisplacementVector3D< Cartesian3D<double>,U > Rxyz = operator()(xyz);
+    return PositionVector3D<CoordSystem,U> ( Rxyz );
   }
 
   /**

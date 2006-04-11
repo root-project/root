@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.3 2005/12/05 08:40:34 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.4 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -344,10 +344,10 @@ namespace ROOT {
 	Multiplications of a generic matrices with a  DisplacementVector3D of any coordinate system. 
 	Assume that the matrix implements the operator( i,j) and that it has at least         3 columns and 3 rows. There is no check on the matrix size !!
     */ 
-    template<class Matrix, class CoordSystem> 
+    template<class Matrix, class CoordSystem, class U> 
     inline
-    DisplacementVector3D<CoordSystem> Mult (const Matrix & m, const DisplacementVector3D<CoordSystem> & v) { 
-      DisplacementVector3D<CoordSystem> vret; 
+    DisplacementVector3D<CoordSystem,U> Mult (const Matrix & m, const DisplacementVector3D<CoordSystem,U> & v) { 
+      DisplacementVector3D<CoordSystem,U> vret; 
       vret.SetXYZ( m(0,0) * v.x() + m(0,1) * v.y() + m(0,2) * v.z() , 
 		   m(1,0) * v.x() + m(1,1) * v.y() + m(1,2) * v.z() , 
 		   m(2,0) * v.x() + m(2,1) * v.y() + m(2,2) * v.z() ); 
@@ -359,10 +359,10 @@ namespace ROOT {
 	Multiplications of a generic matrices with a generic PositionVector 
 	Assume that the matrix implements the operator( i,j) and that it has at least         3 columns and 3 rows. There is no check on the matrix size !!
     */ 
-    template<class Matrix, class CoordSystem> 
+    template<class Matrix, class CoordSystem, class U> 
     inline
-    PositionVector3D<CoordSystem> Mult (const Matrix & m, const PositionVector3D<CoordSystem> & p) { 
-      DisplacementVector3D<CoordSystem> pret; 
+    PositionVector3D<CoordSystem,U> Mult (const Matrix & m, const PositionVector3D<CoordSystem,U> & p) { 
+      DisplacementVector3D<CoordSystem,U> pret; 
       pret.SetXYZ( m(0,0) * p.x() + m(0,1) * p.y() + m(0,2) * p.z() , 
 		   m(1,0) * p.x() + m(1,1) * p.y() + m(1,2) * p.z() , 
 		   m(2,0) * p.x() + m(2,1) * p.y() + m(2,2) * p.z() ); 

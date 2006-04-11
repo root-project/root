@@ -32,11 +32,15 @@ BOOSTOBJ     = testBoost.$(ObjSuf)
 BOOSTSRC     = testBoost.$(SrcSuf)
 BOOST        = testBoost$(ExeSuf)
 
+GENVECTOROBJ     = testGenVector.$(ObjSuf)
+GENVECTORSRC     = testGenVector.$(SrcSuf)
+GENVECTOR        = testGenVector$(ExeSuf)
 
-OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) 
+
+OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ)
 
 
-PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST)
+PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR)
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -58,6 +62,10 @@ $(ROTATION):        $(ROTATIONOBJ)
 		    @echo "$@ done"
 
 $(BOOST):           $(BOOSTOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(GENVECTOR):     $(GENVECTOROBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
