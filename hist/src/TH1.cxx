@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.282 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.283 2006/04/11 16:17:37 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -6604,7 +6604,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    TString opt = option;
    opt.ToUpper();
    Int_t *n = fft->GetN();
-   TH1 *hout;
+   TH1 *hout=0;
    if (h_output) hout = h_output;
    else {
       char name[10];
