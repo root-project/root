@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.23 2006/04/07 10:05:09 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.24 2006/04/10 12:56:15 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -297,6 +297,8 @@ public:
       TGPopupMenu(gClient->GetDefaultRoot()) {
       fEditDisabled = kEditDisable;
       SetBackgroundColor(TRootGuiBuilder::GetPopupBgnd());
+      fEntrySep = 8;
+
    }
    void DrawEntry(TGMenuEntry *entry); 
 };
@@ -322,7 +324,7 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
       font = fFontStruct;
    }
 
-   UInt_t sep = 3;
+   UInt_t sep = fEntrySep;
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(font, max_ascent, max_descent);
 
@@ -337,7 +339,9 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             if (entry->GetStatus() & kMenuEnableMask) {
                gVirtualX->FillRectangle(fId, TRootGuiBuilder::GetPopupHlghtGC()->GetGC(), 
                                        entry->GetEx()+1, entry->GetEy(),
-                                       fMenuWidth-6, max_ascent + max_descent + 2);
+                                       fMenuWidth-6, max_ascent + max_descent + sep - 1);
+               gVirtualX->DrawRectangle(fId,  TGFrame::GetBlackGC()(), entry->GetEx()+ 1, entry->GetEy()-1,
+                                        fMenuWidth - entry->GetEx()- 6, max_ascent + max_descent + sep - 1);
             }
 
             if (entry->GetType() == kMenuPopup) {
@@ -346,11 +350,11 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             }
 
             if (entry->GetStatus() & kMenuCheckedMask) {
-               DrawCheckMark(fSelGC, 6, entry->GetEy()+3, 14, entry->GetEy()+11);
+               DrawCheckMark(fSelGC, 6, entry->GetEy()+sep, 14, entry->GetEy()+11);
             }
 
             if (entry->GetStatus() & kMenuRadioMask) {
-               DrawRCheckMark(fSelGC, 6, entry->GetEy()+3, 14, entry->GetEy()+11);
+               DrawRCheckMark(fSelGC, 6, entry->GetEy()+sep, 14, entry->GetEy()+11);
             }
 
             if (entry->GetPic() != 0) {
@@ -364,28 +368,28 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             if ( entry->GetType() != kMenuLabel) {
                gVirtualX->FillRectangle(fId, TRootGuiBuilder::GetBgndGC()->GetGC(),
                                        entry->GetEx()+1, entry->GetEy()-1,
-                                       tx-4, max_ascent + max_descent + 3);
+                                       tx-4, max_ascent + max_descent + sep);
 
                gVirtualX->FillRectangle(fId, TRootGuiBuilder::GetPopupBgndGC()->GetGC(),
                                        tx-1, entry->GetEy()-1,
-                                       fMenuWidth-tx-1, max_ascent + max_descent + 3);
+                                       fMenuWidth-tx-1, max_ascent + max_descent + sep);
             } else { // we need some special background for labels
                gVirtualX->FillRectangle(fId, TGFrame::GetBckgndGC()(),
                                        entry->GetEx()+1, entry->GetEy()-1,
-                                       fMenuWidth - entry->GetEx()- 3, max_ascent + max_descent + 3);
+                                       fMenuWidth - entry->GetEx()- sep, max_ascent + max_descent + sep);
             }
 
             if (entry->GetType() == kMenuPopup) {
-               DrawTrianglePattern(fNormGC, fMenuWidth-10, entry->GetEy()+3,
+               DrawTrianglePattern(fNormGC, fMenuWidth-10, entry->GetEy()+sep,
                                    fMenuWidth-6, entry->GetEy()+11);
             }
 
             if (entry->GetStatus() & kMenuCheckedMask) {
-               DrawCheckMark(fNormGC, 6, entry->GetEy()+3, 14, entry->GetEy()+11);
+               DrawCheckMark(fNormGC, 6, entry->GetEy()+sep, 14, entry->GetEy()+11);
             }
 
             if (entry->GetStatus() & kMenuRadioMask) {
-               DrawRCheckMark(fNormGC, 6, entry->GetEy()+3, 14, entry->GetEy()+11);
+               DrawRCheckMark(fNormGC, 6, entry->GetEy()+sep, 14, entry->GetEy()+11);
             }
 
             if (entry->GetPic() != 0) {
@@ -406,10 +410,10 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
                                      entry->GetEx()+1, entry->GetEy()-1,
                                      tx-4, 4);
          gVirtualX->DrawLine(fId, TGFrame::GetBlackGC()(), tx+1, entry->GetEy()+1,
-                             fMenuWidth-3, entry->GetEy()+1);
+                             fMenuWidth-sep, entry->GetEy()+1);
          break;
    }
-
+   
    // restore font
    if (entry->GetStatus() & kMenuDefaultMask) {
       gcval.fFont = gVirtualX->GetFontHandle(fFontStruct);
@@ -464,6 +468,7 @@ void TGuiBldToolButton::DoRedraw()
       pic = fPicD ? fPicD : fPic;
    }
    if (fBgndColor == TRootGuiBuilder::GetPopupHlght()) {
+      x--; y--;
       gVirtualX->DrawRectangle(fId, TGFrame::GetBlackGC()(), 0, 0, w, h);
    }
    pic->Draw(fId, fNormGC, x, y);

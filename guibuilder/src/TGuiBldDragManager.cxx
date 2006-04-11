@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.37 2006/04/07 10:05:09 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.38 2006/04/07 14:36:56 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -4554,11 +4554,6 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
 
    if (fStop) return;
 
-   if (fBuilder && (frame == fBuilder->GetMdiMain()->GetCurrent())) {
-      // will be added later
-      return;
-   }
-
    fPimpl->fSaveGrab = fPimpl->fGrab;
    fPimpl->fX0 = x;
    fPimpl->fY0 = y;
@@ -4591,21 +4586,41 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
    fFrameMenu->AddLabel(title.Data());
    fFrameMenu->AddSeparator();
 
+   // special case - menu for editable Mdi frame
+   if (fBuilder && (frame == fBuilder->GetMdiMain()->GetCurrent())) {
+      if (!gSystem->AccessPathName(fPasteFileName.Data())) {
+         fFrameMenu->AddEntry("Paste               Ctrl+V", kPasteAct,
+                               0, fClient->GetPicture("bld_paste.png"));
+      }
+      fFrameMenu->AddEntry("Compact          Ctrl+L", kCompactAct,
+                               0, fClient->GetPicture("bld_compact.png"));
+      fFrameMenu->AddEntry("Grid On/Off       Ctrl+G", kGridAct,
+                              0, fClient->GetPicture("bld_grid.png"));
+      fFrameMenu->AddEntry("Save As ...        Ctrl+S", kSaveAct,
+                              0, fClient->GetPicture("bld_save.png"));
+      fFrameMenu->AddEntry("End Edit         Ctrl+DblClick", kEndEditAct,
+                              0, fClient->GetPicture("bld_stop.png"));
+      goto out;
+   }
+
    AddClassMenuMethods(fFrameMenu, frame);
 
    if (!fBuilder) {
       fFrameMenu->AddEntry("Gui Builder", kPropertyAct);
       fFrameMenu->AddSeparator();
    }
-
+/*
    if (!frame->IsEditable() && !InEditable(frame->GetId())) {
       fPimpl->fSaveGrab = frame;
       goto out;
    }
-
-   if (!frame->IsEditable() && !IsEditDisabled(cfrp)) {
-      if (composite && !IsFixedLayout(frame)) fFrameMenu->AddEntry("Drop               Ctrl+Return", kDropAct);
+*/
+   if (!IsEditDisabled(cfrp)) {
       fFrameMenu->AddSeparator();
+
+      if (composite && !IsFixedLayout(frame)) {
+         fFrameMenu->AddEntry("Drop               Ctrl+Return", kDropAct);
+      }
 
       if (!IsFixedLayout(cfrp)) {
          fFrameMenu->AddEntry("Cut                 Ctrl+X", kCutAct,
@@ -4619,13 +4634,14 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
                               0, fClient->GetPicture("bld_delete.png"));
       }
 
-      if (composite) {
+      if (!IsFixedLayout(cfrp)) {
          fFrameMenu->AddEntry("Crop               Shift+Del", kCropAct,
                                0, fClient->GetPicture("bld_crop.png"));
       }
+
       if (!IsFixedLayout(cfrp) && !gSystem->AccessPathName(fPasteFileName.Data())) {
          fFrameMenu->AddEntry("Replace          Ctrl+R", kReplaceAct, 
-                               0, fClient->GetPicture("bld_repalce.png"));
+                               0, fClient->GetPicture("bld_replace.png"));
       }
       fFrameMenu->AddSeparator();
    } else {
