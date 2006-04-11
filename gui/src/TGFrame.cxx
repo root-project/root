@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.123 2006/04/03 07:09:14 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.124 2006/04/06 10:39:51 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -82,6 +82,7 @@
 #include "TSystem.h"
 #include "TVirtualDragManager.h"
 #include "TGuiBuilder.h"
+#include "TQConnection.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -2189,7 +2190,14 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
 
    if (!fList) return;
 
+   char quote = '"';
+
    TGFrameElement *el;
+   TList *signalslist;
+   TList *connlist;
+   TQConnection *conn;
+   TString signal_name, slot_name;
+
    TIter next(fList);
 
    while ((el = (TGFrameElement *) next())) {
@@ -2206,6 +2214,26 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
 
       if (!el->fState & kIsVisible) {
          gListOfHiddenFrames->Add(el->fFrame);
+      }
+      
+      // saving signals/slots
+      signalslist = (TList*)el->fFrame->GetListOfSignals();
+      if (!signalslist)  continue;
+      connlist = (TList*)signalslist->Last();
+      if (connlist) {
+         conn = (TQConnection*)connlist->Last();
+         signal_name = connlist->GetName();
+         slot_name = conn->GetName();
+         
+         out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name 
+             << quote << ", 0, 0, " << quote << slot_name << quote << ");" << endl;
+
+         TList *lsl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
+         if (lsl) {
+            TObjString *slotel = (TObjString *)lsl->FindObject(slot_name);
+            if (!slotel) 
+               lsl->Add(new TObjString(slot_name));
+         }
       }
    }
    out << endl;
@@ -2368,8 +2396,9 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
             out << "#endif" << endl;
          }
    }
+   out << endl << "#include " << quote << "Riostream.h" << quote << endl;
    out << endl << "#endif" << endl;
-   //    deletes created ListOfIncludes
+   // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
    delete ilist;
@@ -2382,6 +2411,12 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    delete [] sname;
 
    gListOfHiddenFrames->Clear();
+
+   // saivng slots
+   TList *lSlots = new TList;
+   lSlots->SetName("ListOfSlots");
+   gROOT->GetListOfSpecials()->Add(lSlots);
+
    TGMainFrame::SavePrimitive(out, option);
 
    GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
@@ -2442,6 +2477,54 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
 
    out << "}  " << endl;
+
+   // writing slots
+   TList *sl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
+   if (sl) {
+      TIter nextsl(sl);
+      TObjString *slobj;
+      Int_t pnumber = 1;
+      
+      while ((slobj = (TObjString*) nextsl())) {
+         TString s = slobj->GetString();
+         TString p = "";
+         Int_t lb, rb, eq;
+         lb = s.First('(');
+         rb = s.First(')');
+         eq = s.First('=');
+         out << endl;
+
+         if (rb - lb > 1 && eq == -1) {
+            p = Form(" par%d", pnumber);
+            s.Insert(rb, p);
+            pnumber++;
+            out << "void " << s << endl;
+            out << "{" << endl;
+            s = slobj->GetString();
+            s[rb] = ' ';
+            out << "   cout << " << quote << "Slot " << s  << quote 
+                << " <<" << p << " << " << quote << ")" << quote  
+                << " << endl; " << endl;
+            } else {
+               if (eq != -1) {
+                  s.Remove(eq, rb-eq);
+                  out << "void " << s << endl;
+                  out << "{" << endl;
+                  out << "   cout << " << quote << "Slot " << s  
+                      << quote << " << endl; " << endl;
+               } else {
+                  out << "void " << slobj->GetString() << endl;
+                  out << "{" << endl;
+                  out << "   cout << " << quote << "Slot " << slobj->GetString()  
+                      << quote << " << endl; " << endl;
+               }
+            }
+         out << "}" << endl;
+      }
+   }
+   gROOT->GetListOfSpecials()->Remove(sl);
+   sl->Delete();
+   delete sl;
 
    out.close();
 
@@ -2764,6 +2847,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          out <<"#endif" << endl;
       }
    }
+   out << endl << "#include " << quote << "Riostream.h" << quote << endl;
    out << endl << "#endif" << endl;
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
@@ -2780,8 +2864,13 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out <<"{"<< endl;
 
    gListOfHiddenFrames->Clear();
-   TGTransientFrame::SavePrimitive(out, option);
 
+   // saivng slots
+   TList *lSlots = new TList;
+   lSlots->SetName("ListOfSlots");
+   gROOT->GetListOfSpecials()->Add(lSlots);
+
+   TGTransientFrame::SavePrimitive(out, option);
 
    GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
    if (strlen(fClassName) || strlen(fResourceName)) {
@@ -2839,6 +2928,54 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
    out << "   " <<GetName()<< "->Resize();" << endl;
    out << "}  " << endl;
+
+   // writing slots
+   TList *sl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
+   if (sl) {
+      TIter nextsl(sl);
+      TObjString *slobj;
+      Int_t pnumber = 1;
+      
+      while ((slobj = (TObjString*) nextsl())) {
+         TString s = slobj->GetString();
+         TString p = "";
+         Int_t lb, rb, eq;
+         lb = s.First('(');
+         rb = s.First(')');
+         eq = s.First('=');
+         out << endl;
+
+         if (rb - lb > 1 && eq == -1) {
+            p = Form(" par%d", pnumber);
+            s.Insert(rb, p);
+            pnumber++;
+            out << "void " << s << endl;
+            out << "{" << endl;
+            s = slobj->GetString();
+            s[rb] = ' ';
+            out << "   cout << " << quote << "Slot " << s  << quote 
+                << " <<" << p << " << " << quote << ")" << quote  
+                << " << endl; " << endl;
+            } else {
+               if (eq != -1) {
+                  s.Remove(eq, rb-eq);
+                  out << "void " << s << endl;
+                  out << "{" << endl;
+                  out << "   cout << " << quote << "Slot " << s  
+                      << quote << " << endl; " << endl;
+               } else {
+                  out << "void " << slobj->GetString() << endl;
+                  out << "{" << endl;
+                  out << "   cout << " << quote << "Slot " << slobj->GetString()  
+                      << quote << " << endl; " << endl;
+               }
+            }
+         out << "}" << endl;
+      }
+   }
+   gROOT->GetListOfSpecials()->Remove(sl);
+   sl->Delete();
+   delete sl;
 
    out.close();
 
