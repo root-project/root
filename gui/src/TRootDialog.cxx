@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.5 2004/04/14 14:50:18 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.6 2004/09/13 09:10:56 rdm Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -52,6 +52,7 @@ TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
 
    SetWindowName(title);
    SetIconName(title);
+   SetEditDisabled(kEditDisable);
 }
 
 //______________________________________________________________________________
