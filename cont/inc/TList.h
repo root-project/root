@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.10 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.11 2005/11/01 21:16:13 pcanal Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -55,8 +55,8 @@ protected:
    virtual void       DeleteLink(TObjLink *lnk);
 
 public:
-   TList() { fFirst = fLast = fCache = 0; }
-   TList(TObject *) { fFirst = fLast = fCache = 0; } // for backward compatibility, don't use
+   TList() { fFirst = fLast = fCache = 0; fAscending = kTRUE; }
+   TList(TObject *) { fFirst = fLast = fCache = 0; fAscending = kTRUE; } // for backward compatibility, don't use
    virtual           ~TList();
    virtual void      Clear(Option_t *option="");
    virtual void      Delete(Option_t *option="");
