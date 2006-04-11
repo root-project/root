@@ -81,7 +81,7 @@ int testVector3D() {
 
   GlobalPolar3DVector vpg(vg);
 
-  iret |= compare(vpg.R(), vg.R() );
+  iret |= compare(vpg.R(), vg2.R() );
  
 //   std::cout << vg2 << std::endl;
 
@@ -96,7 +96,7 @@ int testVector3D() {
 
 
   
-  LocalXYZVector vl;
+ 
 
   GlobalXYZVector vg3 = vg + vpg;  
   iret |= compare(vg3.R(), 2*vg.R() );
@@ -107,7 +107,7 @@ int testVector3D() {
 
 
 #ifdef TEST_COMPILE_ERROR
-  vl = vg; 
+   LocalXYZVector vl; vl = vg; 
   LocalXYZVector vl2(vg2);
   LocalXYZVector vl3(vpg);
   vg.Dot(vl);
@@ -139,10 +139,10 @@ int testPoint3D() {
 
   GlobalPolar3DPoint ppg(pg);
 
-  iret |= compare(ppg.R(), pg.R() );
+  iret |= compare(ppg.R(), pg2.R() );
   //std::cout << pg2 << std::endl;
   
-  LocalXYZPoint pl;
+
 
 
   GlobalXYZVector vg(pg);
@@ -162,7 +162,7 @@ int testPoint3D() {
 
 
 #ifdef TEST_COMPILE_ERROR
-  pl = pg; 
+  LocalXYZPoint pl; pl = pg; 
   LocalXYZVector pl2(pg2);
   LocalXYZVector pl3(ppg);
   pl.Dot(vg);
@@ -243,7 +243,7 @@ int testRotations3D() {
 
 
   if (iret == 0) std::cout << "\tOK\n"; 
-  else std::cout << "\t\FAILED\n";
+  else std::cout << "\t FAILED\n";
 
   return iret; 
 }
