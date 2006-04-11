@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.58 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.59 2006/04/06 12:48:33 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -713,6 +713,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fHasGrab     = kFALSE;
    fPoppedUp    = kFALSE;
    fMenuBar     = 0;
+   fEntrySep    = 3;
 
    SetWindowAttributes_t wattr;
    wattr.fMask             = kWAOverrideRedirect | kWASaveUnder;
@@ -771,7 +772,7 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
    nw->fEw = tw + pw /*+8*/+18+12;
    fMenuWidth = TMath::Max(fMenuWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
-   nw->fEh = max_ascent + max_descent + 3;
+   nw->fEh = max_ascent + max_descent + fEntrySep;
    fMenuHeight += nw->fEh;
 
    if (before)
@@ -860,7 +861,7 @@ void TGPopupMenu::AddLabel(TGHotString *s, const TGPicture *p,
    nw->fEw = tw + pw /*+8*/+18+12;
    fMenuWidth = TMath::Max(fMenuWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
-   nw->fEh = max_ascent + max_descent + 3;
+   nw->fEh = max_ascent + max_descent + fEntrySep;
    fMenuHeight += nw->fEh;
 
    if (before)
@@ -911,7 +912,7 @@ void TGPopupMenu::AddPopup(TGHotString *s, TGPopupMenu *popup,
    nw->fEw = tw +8+18+12;
    fMenuWidth = TMath::Max(fMenuWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
-   nw->fEh = max_ascent + max_descent + 3;
+   nw->fEh = max_ascent + max_descent + fEntrySep;
    fMenuHeight += nw->fEh;
 
    if (before)
@@ -1238,13 +1239,13 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
       case kMenuEntry:
          if ((entry->fStatus & kMenuActiveMask) && entry->fType != kMenuLabel) {
             gVirtualX->FillRectangle(fId, fSelbackGC, entry->fEx+1, entry->fEy-1,
-                                     fMenuWidth-6, max_ascent + max_descent + 3);
+                                     fMenuWidth-6, max_ascent + max_descent + fEntrySep);
             if (entry->fType == kMenuPopup)
-               DrawTrianglePattern(fSelGC, fMenuWidth-10, entry->fEy+3, fMenuWidth-6, entry->fEy+11);
+               DrawTrianglePattern(fSelGC, fMenuWidth-10, entry->fEy+fEntrySep, fMenuWidth-6, entry->fEy+11);
             if (entry->fStatus & kMenuCheckedMask)
-               DrawCheckMark(fSelGC, 6, entry->fEy+3, 14, entry->fEy+11);
+               DrawCheckMark(fSelGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
             if (entry->fStatus & kMenuRadioMask)
-               DrawRCheckMark(fSelGC, 6, entry->fEy+3, 14, entry->fEy+11);
+               DrawRCheckMark(fSelGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
             if (entry->fPic != 0)
                entry->fPic->Draw(fId, fSelGC, 8, entry->fEy+1);
             entry->fLabel->Draw(fId,
@@ -1252,13 +1253,13 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
                            tx, ty);
          } else {
             gVirtualX->FillRectangle(fId, GetBckgndGC()(), entry->fEx+1, entry->fEy-1,
-                                     fMenuWidth-6, max_ascent + max_descent + 3);
+                                     fMenuWidth-6, max_ascent + max_descent + fEntrySep);
             if (entry->fType == kMenuPopup)
-               DrawTrianglePattern(fNormGC, fMenuWidth-10, entry->fEy+3, fMenuWidth-6, entry->fEy+11);
+               DrawTrianglePattern(fNormGC, fMenuWidth-10, entry->fEy+fEntrySep, fMenuWidth-6, entry->fEy+11);
             if (entry->fStatus & kMenuCheckedMask)
-               DrawCheckMark(fNormGC, 6, entry->fEy+3, 14, entry->fEy+11);
+               DrawCheckMark(fNormGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
             if (entry->fStatus & kMenuRadioMask)
-               DrawRCheckMark(fNormGC, 6, entry->fEy+3, 14, entry->fEy+11);
+               DrawRCheckMark(fNormGC, 6, entry->fEy+fEntrySep, 14, entry->fEy+11);
             if (entry->fPic != 0)
                entry->fPic->Draw(fId, fNormGC, 8, entry->fEy+1);
             if (entry->fStatus & kMenuEnableMask) {
@@ -1271,8 +1272,8 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
          break;
 
       case kMenuSeparator:
-         gVirtualX->DrawLine(fId, GetShadowGC()(),  2, entry->fEy, fMenuWidth-3, entry->fEy);
-         gVirtualX->DrawLine(fId, GetHilightGC()(), 2, entry->fEy+1, fMenuWidth-3, entry->fEy+1);
+         gVirtualX->DrawLine(fId, GetShadowGC()(),  2, entry->fEy, fMenuWidth-fEntrySep, entry->fEy);
+         gVirtualX->DrawLine(fId, GetHilightGC()(), 2, entry->fEy+1, fMenuWidth-fEntrySep, entry->fEy+1);
          break;
    }
 
@@ -1291,8 +1292,8 @@ void TGPopupMenu::DrawBorder()
 
    gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fMenuWidth-2, 0);
    gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fMenuHeight-2);
-   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fMenuWidth-3, 1);
-   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fMenuHeight-3);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, fMenuWidth-fEntrySep, 1);
+   gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 1, 1, fMenuHeight-fEntrySep);
 
    gVirtualX->DrawLine(fId, GetShadowGC()(),  1, fMenuHeight-2, fMenuWidth-2, fMenuHeight-2);
    gVirtualX->DrawLine(fId, GetShadowGC()(),  fMenuWidth-2, fMenuHeight-2, fMenuWidth-2, 1);

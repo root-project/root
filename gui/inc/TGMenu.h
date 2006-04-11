@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.30 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.31 2006/04/06 12:48:33 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -144,6 +144,7 @@ protected:
    Cursor_t           fDefaultCursor; // right pointing cursor
    const TGWindow    *fMsgWindow;     // window which handles menu events
    TGMenuBar         *fMenuBar;       // menu bar (if any)
+   UInt_t             fEntrySep;      // separation distance between ebtris   
 
    static const TGFont *fgDefaultFont;
    static const TGFont *fgHilightFont;
@@ -218,6 +219,9 @@ public:
    virtual void Activate(Bool_t) { }
    virtual void Activate(TGMenuEntry *entry);
    virtual void SavePrimitive(ofstream &out, Option_t *option);
+
+   UInt_t GetEntrySep()  const { return fEntrySep; }
+   virtual void SetEntrySep(UInt_t sep)  { fEntrySep = sep; }
 
    ClassDef(TGPopupMenu,0)  // Popup menu
 };
