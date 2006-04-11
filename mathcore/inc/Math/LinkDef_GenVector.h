@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.6 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -126,9 +126,11 @@
 #ifndef __sun      
 #pragma link C++ class vector<ROOT::Math::XYZTVector >+;
 #endif
+// problem on Windows: CINT cannot deal with  too long class name
+#ifndef _WIN32   
 #pragma link C++ class vector<ROOT::Math::XYZVector >+;
 #pragma link C++ class vector<ROOT::Math::XYZPoint >+;
-
+#endif
 
 // exclude this (they make loibrary  too big and are not used in tests in CVS)
 #ifdef TEST_LATER

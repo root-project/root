@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.3 2005/10/28 13:35:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil_Cint.h,v 1.4 2005/12/05 08:40:34 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -50,15 +50,18 @@ namespace ROOT {
 #if defined (linux) || defined (_WIN32) || defined (__APPLE__)
  
     std::ostream & operator<< (std::ostream & os, const XYZVector & v) { 
-      return operator<< <char,char_traits<char> > (os,v); 
+      //return operator<< <char,char_traits<char> > (os,v); 
+      return operator<< (os,v); 
     }
 
     std::ostream & operator<< (std::ostream & os, const XYZPoint & p) { 
-      return operator<< <char,char_traits<char> > (os,p); 
+      //return operator<< <char,char_traits<char> > (os,p); 
+      return operator<< (os,p); 
     }
     
     std::ostream & operator<< (std::ostream & os, const XYZTVector & q) { 
-      return operator<< <char,char_traits<char> > (os,q); 
+      //      return operator<< <char,char_traits<char> > (os,q); 
+      return operator<< (os,q); 
     }
     
 #endif
