@@ -115,6 +115,8 @@ CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = lib/libReflex.lib
 KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
 KRB5AUTHLIBEXTRA    = lib/libRootAuth.lib
+QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
+QTGSILIBEXTRA       = lib/libGui.lib lib/libGpad.lib
 
 else
 
@@ -220,5 +222,7 @@ CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = -Llib -lReflex
 KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
 KRB5AUTHLIBEXTRA    = -Llib -lRootAuth
+QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
+QTGSILIBEXTRA       = -Llib -lGui -lGpad
 
 endif

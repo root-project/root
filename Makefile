@@ -136,6 +136,9 @@ endif
 ifeq ($(BUILDQT),yes)
 MODULES      += qt qtroot
 endif
+ifeq ($(BUILDQTGSI),yes)
+MODULES      += qtgsi
+endif
 ifeq ($(BUILDMATHCORE),yes)
 MODULES      += mathcore
 endif
@@ -202,8 +205,9 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd proof dcache chirp hbook alien asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
-                qt qtroot xrootd netx proofx clarens peac oracle xmlparser \
-                mathcore mathmore reflex cintex roofit minuit2 monalisa fftw
+                qt qtroot qtgsi xrootd netx proofx clarens peac oracle \
+                xmlparser mathcore mathmore reflex cintex roofit minuit2 \
+                monalisa fftw
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

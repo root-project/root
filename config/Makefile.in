@@ -85,6 +85,7 @@ SAPDBCLILIB    := @sapdblib@
 SAPDBINCDIR    := $(filter-out /usr/include, @sapdbincdir@)
 
 BUILDQT        := @buildqt@
+BUILDQTGSI     := @buildqtgsi@
 QTLIBDIR       := @qtlibdir@
 QTLIB          := @qtlib@
 QTINCDIR       := $(filter-out /usr/include, @qtincdir@)

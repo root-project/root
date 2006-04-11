@@ -56,6 +56,7 @@ options="                    \
    enable_pythia6            \
    enable_python             \
    enable_qt                 \
+   enable_qtgsi              \
    enable_reflex             \
    enable_roofit             \
    enable_minuit2            \
@@ -89,6 +90,7 @@ enable_mathcore=no
 enable_mathmore=no
 enable_pythia=no
 enable_qt=no
+enable_qtgsi=no
 enable_reflex=no
 enable_roofit=no
 enable_minuit2=no
@@ -828,6 +830,7 @@ enable/disable options, prefix with either --enable- or --disable-
   pythia6            Pythia6 EG support, requires libPythia6
   python             Python ROOT bindings, requires python >= 2.1
   qt                 Qt graphics backend, requires libqt >= 3
+  qtgsi              GSI's Qt integration, requires libqt >= 3
   reflex             Build the libReflex dictionary library
   rfio               CASTOR support, requires libshift from CASTOR >= 1.5.2
   roofit             Build the libRooFit advanced fitting package
@@ -1616,6 +1619,62 @@ if test ! "x$enable_qt" = "xno"; then
         if test $? -ne 0 ; then
             result "no"
             enable_qt="no"
+        else
+            result "yes"
+        fi
+    fi
+fi
+
+######################################################################
+#
+### echo %%% Qt Support - Optional alternative graphics backend
+#
+# If the user has set the flags "--disable-qtgsi", we don't check for
+# Qt at all.
+#
+if test ! "x$enable_qtgsi" = "xno"; then
+    # Check for Qt include and library
+    check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
+        /usr/local/include  /usr/local/qt/include /usr/include \
+        /usr/include/qt /usr/include/qt3
+    qtinc=$found_hdr
+    qtincdir=$found_dir
+
+    check_library "libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt" "$enable_shared" \
+        "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
+        /usr/lib /usr/qt/lib
+    qtlib=$found_lib
+    qtlibdir=$found_dir
+
+    message "Checking for moc or moc.exe"
+    qtmocexe=`which moc`
+    if test $? -ne 0 ; then
+       for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
+           /usr/qt3/bin /usr/share/qt3/bin ; do
+	  logmsg "Checking for $qtmocexe in $i"
+	  if test -x $i/moc ; then
+	      qtmocexe=$i/moc
+	      logmsg "$qtmocexe is executable"
+	      break
+	  elif  test -x $i/moc.exe ; then
+	      qtmocexe=$i/moc.exe
+	      logmsg "$qtmocexe is executable"
+	      break
+	  fi
+       done
+    fi
+    result "$qtmocexe"
+
+    if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
+	test "x$qtmocexe" = "x"; then
+        enable_qtgsi="no"
+    else
+        message "Checking whether Qt version = 3.xx"
+	logmsg "grep 'QT_VERSION 0x03' $qtincdir/qglobal.h"
+        grep "QT_VERSION 0x03" $qtincdir/qglobal.h >> $logfile 2>&1
+        if test $? -ne 0 ; then
+            result "no"
+            enable_qtgsi="no"
         else
             result "yes"
         fi
@@ -3369,6 +3428,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
     test "x$enable_clarens" = "xyes" && pkglist="$pkglist libroot-clarens"
     test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
+    test "x$enable_fftw3"   = "xyes" && pkglist="$pkglist root-plugin-fftw3"
     test "x$enable_gfal"    = "xyes" && pkglist="$pkglist root-plugin-gfal"
     test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
@@ -3385,6 +3445,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-plugin-pythia6"
     test "x$enable_python"  = "xyes" && pkglist="$pkglist libroot-python"
     test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
+    test "x$enable_qtgsi"   = "xyes" && pkglist="$pkglist root-plugin-qtgsi"
     test "x$enable_roofit"  = "xyes" && pkglist="$pkglist libroot-roofit"
     test "x$enable_ruby"    = "xyes" && pkglist="$pkglist libroot-ruby"
     test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-castor"
@@ -3769,6 +3830,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildoracle@|$enable_oracle|"        \
     -e "s|@buildsapdb@|$enable_sapdb|"          \
     -e "s|@buildqt@|$enable_qt|"                \
+    -e "s|@buildqtgsi@|$enable_qtgsi|"          \
     -e "s|@buildshift@|$enable_rfio|"           \
     -e "s|@builddcap@|$enable_dcache|"          \
     -e "s|@buildfftw3@|$enable_fftw3|"          \
