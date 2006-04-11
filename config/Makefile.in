@@ -137,10 +137,10 @@ FPYTHIA6LIBDIR   := @pythia6libdir@
 FPYTHIA6LIB      := @pythia6lib@
 FPYTHIA6CPPFLAGS := @pythia6cppflags@
 
-BUILDFFTW3      := @buildfftw3@
-FFTW3LIBDIR     := @fftw3libdir@
-FFTW3LIB        := @fftw3lib@
-FFTW3INCDIR     := $(filter-out /usr/include, @fftw3incdir@)
+BUILDFFTW3     := @buildfftw3@
+FFTW3LIBDIR    := @fftw3libdir@
+FFTW3LIB       := @fftw3lib@
+FFTW3INCDIR    := $(filter-out /usr/include, @fftw3incdir@)
 
 BUILDFVENUS    := @buildvenus@
 FVENUSLIBDIR   := @venuslibdir@

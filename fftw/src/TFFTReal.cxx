@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTReal.cxx,v 1.1 2006/04/10 15:37:11 brun Exp $
+// @(#)root/fft:$Name:  $:$Id: TFFTReal.cxx,v 1.2 2006/04/10 16:03:19 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -20,7 +20,7 @@ TFFTReal::TFFTReal()
 //default
 
    fIn    = 0;
-   fOut   = 0; 
+   fOut   = 0;
    fPlan  = 0;
    fN     = 0;
    fKind  = 0;
@@ -142,7 +142,7 @@ void TFFTReal::Transform()
       return;
    }
 }
-    
+
 //_____________________________________________________________________________
 Option_t *TFFTReal::GetType() const
 {
@@ -197,7 +197,7 @@ Double_t TFFTReal::GetPointReal(const Int_t *ipoint, Bool_t fromInput) const
    Int_t ireal = ipoint[0];
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
-   
+
    if (fromInput)
       return ((Double_t*)fIn)[ireal];
    else
@@ -218,7 +218,7 @@ void TFFTReal::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t 
             re = ((Double_t*)fOut)[fN[0]-ipoint];
             im = -((Double_t*)fOut)[ipoint];
          }
-         if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0; 
+         if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0;
       } else {
          if (ipoint<fN[0]/2+1){
             re = ((Double_t*)fIn)[ipoint];
@@ -227,7 +227,7 @@ void TFFTReal::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t 
             re = ((Double_t*)fIn)[fN[0]-ipoint];
             im = -((Double_t*)fIn)[ipoint];
          }
-         if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0; 
+         if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0;
       }
    }
    if (((fftw_r2r_kind*)fKind)[0]==FFTW_HC2R && fromInput){
@@ -238,9 +238,9 @@ void TFFTReal::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t 
          re = ((Double_t*)fIn)[fN[0]-ipoint];
          im = -((Double_t*)fIn)[ipoint];
       }
-      if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0; 
+      if ((fN[0]%2)==0 && ipoint==fN[0]/2) im = 0;
    }
-   
+
 }
 //_____________________________________________________________________________
 void TFFTReal::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
@@ -275,15 +275,15 @@ void TFFTReal::SetPoint(Int_t ipoint, Double_t re, Double_t im)
          ((Double_t*)fIn)[ipoint] = re;
          ((Double_t*)fIn)[fN[0]-ipoint]=im;
       }
-   } 
-   else 
+   }
+   else
       ((Double_t*)fIn)[ipoint]=re;
 }
 
 //_____________________________________________________________________________
 void TFFTReal::SetPoint(const Int_t *ipoint, Double_t re, Double_t /*im*/)
 {
-//Since multidimensional R2HC and HC2R transforms are not supported, 
+//Since multidimensional R2HC and HC2R transforms are not supported,
 //third parameter is dummy
 
    Int_t ireal = ipoint[0];
@@ -348,7 +348,7 @@ Int_t TFFTReal::MapOptions(const Int_t *kind)
 }
 
 //_____________________________________________________________________________
-UInt_t TFFTReal::MapFlag(Option_t *flag) 
+UInt_t TFFTReal::MapFlag(Option_t *flag)
 {
 //allowed options:
 //"ES" - FFTW_ESTIMATE

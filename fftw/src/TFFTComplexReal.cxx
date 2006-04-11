@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTComplexReal.cxx,v 1.1 2006/04/10 15:37:11 brun Exp $
+// @(#)root/fft:$Name:  $:$Id: TFFTComplexReal.cxx,v 1.2 2006/04/10 16:03:19 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -11,10 +11,8 @@
 
 #include "TFFTComplexReal.h"
 #include "fftw3.h"
-
-#ifndef ROOT_TComplex
 #include "TComplex.h"
-#endif
+
 
 ClassImp(TFFTComplexReal)
 
@@ -148,7 +146,7 @@ void TFFTComplexReal::GetPoints(Double_t *data, Bool_t fromInput) const
    }
    else{
       for (Int_t i=0; i<fTotalSize; i++)
-         data[i] = ((Double_t*)fOut)[i];  
+         data[i] = ((Double_t*)fOut)[i];
    }
 }
 
@@ -229,7 +227,7 @@ void TFFTComplexReal::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_
    }
 }
 //_____________________________________________________________________________
-Double_t* TFFTComplexReal::GetPointsReal(Bool_t fromInput) const 
+Double_t* TFFTComplexReal::GetPointsReal(Bool_t fromInput) const
 {
 //Returns the array of computed transform
 
@@ -301,12 +299,12 @@ void TFFTComplexReal::SetPoint(Int_t ipoint, Double_t re, Double_t im)
       ((fftw_complex*)fOut)[2*(fN[0]/2)-ipoint][1] = -im;
    }
 }
- 
+
 //_____________________________________________________________________________
 void TFFTComplexReal::SetPoint(const Int_t *ipoint, Double_t re, Double_t im)
 {
-//Set the point #ipoint. Since the input is Hermitian, only the first (roughly)half of 
-//the points have to be set. 
+//Set the point #ipoint. Since the input is Hermitian, only the first (roughly)half of
+//the points have to be set.
 
    Int_t ireal = ipoint[0];
    for (Int_t i=0; i<fNdim-1; i++)

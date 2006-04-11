@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTRealComplex.cxx,v 1.1 2006/04/10 15:37:11 brun Exp $
+// @(#)root/fft:$Name:  $:$Id: TFFTRealComplex.cxx,v 1.2 2006/04/10 16:03:19 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -11,10 +11,8 @@
 
 #include "TFFTRealComplex.h"
 #include "fftw3.h"
-
-#ifndef ROOT_TComplex
 #include "TComplex.h"
-#endif
+
 
 ClassImp(TFFTRealComplex)
 
@@ -138,8 +136,8 @@ void TFFTRealComplex::Transform()
 //_____________________________________________________________________________
 void TFFTRealComplex::GetPoints(Double_t *data, Bool_t fromInput) const
 {
-//Fills the array data with the computed transform. 
-//Only (roughly) a half of the transform is copied (exactly the output of FFTW), 
+//Fills the array data with the computed transform.
+//Only (roughly) a half of the transform is copied (exactly the output of FFTW),
 //the rest being Hermitian symmetric with the first half
 
    if (fromInput){
@@ -179,7 +177,7 @@ Double_t TFFTRealComplex::GetPointReal(const Int_t *ipoint, Bool_t fromInput) co
 {
 //Returns the real part of the point #ipoint from the output or the point #ipoint
 //from the input
-   
+
    Int_t ireal = ipoint[0];
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
@@ -191,12 +189,12 @@ Double_t TFFTRealComplex::GetPointReal(const Int_t *ipoint, Bool_t fromInput) co
    else
       return ((Double_t*)fIn)[ireal];
 }
-  
+
 
 //_____________________________________________________________________________
 void TFFTRealComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {
-//Returns the point #ipoint. 
+//Returns the point #ipoint.
 //For 1d, if ipoint > fN/2+1 (the point is in the Hermitian symmetric part), it is still
 //returned. For >1d, only the first (roughly)half of points can be returned
 //For 2d, see function GetPointComplex(Int_t *ipoint,...)
@@ -238,12 +236,12 @@ void TFFTRealComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, 
          }
       }
    }
-}   
+}
 //_____________________________________________________________________________
 void TFFTRealComplex::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {
 //For multidimensional transforms. Returns the point #ipoint.
-//In case of transforms of more than 2 dimensions, 
+//In case of transforms of more than 2 dimensions,
 //only points from the first (roughly)half are returned, the rest being Hermitian symmetric
 
 
@@ -302,7 +300,7 @@ void TFFTRealComplex::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_
          }
       }
       else {
-         
+
          if (fOut){
             re = ((fftw_complex*)fOut)[ireal][0];
             im = ((fftw_complex*)fOut)[ireal][1];
@@ -315,7 +313,7 @@ void TFFTRealComplex::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_
 }
 
 //_____________________________________________________________________________
-Double_t* TFFTRealComplex::GetPointsReal(Bool_t fromInput) const 
+Double_t* TFFTRealComplex::GetPointsReal(Bool_t fromInput) const
 {
 //Returns the input array// One of the interface classes to the FFTW package, can be used directly
 // or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
@@ -330,7 +328,7 @@ Double_t* TFFTRealComplex::GetPointsReal(Bool_t fromInput) const
 //_____________________________________________________________________________
 void TFFTRealComplex::GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromInput) const
 {
-//Fills the argument arrays with the real and imaginary parts of the computed transform. 
+//Fills the argument arrays with the real and imaginary parts of the computed transform.
 //Only (roughly) a half of the transform is copied, the rest being Hermitian
 //symmetric with the first half
 
@@ -359,7 +357,7 @@ void TFFTRealComplex::GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromIn
 //_____________________________________________________________________________
 void TFFTRealComplex::GetPointsComplex(Double_t *data, Bool_t fromInput) const
 {
-//Fills the argument arrays with the real and imaginary parts of the computed transform. 
+//Fills the argument arrays with the real and imaginary parts of the computed transform.
 //Only (roughly) a half of the transform is copied, the rest being Hermitian
 //symmetric with the first half
 
@@ -367,7 +365,7 @@ void TFFTRealComplex::GetPointsComplex(Double_t *data, Bool_t fromInput) const
 
    if (fOut && !fromInput){
       nreal = fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
- 
+
       for (Int_t i=0; i<nreal; i+=2){
          data[i] = ((fftw_complex*)fOut)[i/2][0];
          data[i+1] = ((fftw_complex*)fOut)[i/2][1];

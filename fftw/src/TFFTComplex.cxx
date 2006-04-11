@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTComplex.cxx,v 1.1 2006/04/10 15:37:11 brun Exp $
+// @(#)root/fft:$Name:  $:$Id: TFFTComplex.cxx,v 1.2 2006/04/10 16:03:19 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -11,10 +11,8 @@
 
 #include "TFFTComplex.h"
 #include "fftw3.h"
-
-#ifndef ROOT_TComplex
 #include "TComplex.h"
-#endif
+
 
 ClassImp(TFFTComplex)
 
@@ -34,7 +32,7 @@ TFFTComplex::TFFTComplex(Int_t n, Bool_t inPlace)
 {
 //For 1d transforms
 //Allocates memory for the input array, and, if inPlace = kFALSE, for the output array
- 
+
    fIn = fftw_malloc(sizeof(fftw_complex) *n);
    if (!inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex) * n);
@@ -63,7 +61,7 @@ TFFTComplex::TFFTComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
    fIn = fftw_malloc(sizeof(fftw_complex)*fTotalSize);
    if (!inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex) * fTotalSize);
-   else 
+   else
       fOut = 0;
    fPlan = 0;
 
@@ -93,7 +91,7 @@ void TFFTComplex::Init( Option_t *flags, Int_t sign,const Int_t* /*kind*/)
 //NOTE:  input and output arrays are overwritten during initialisation,
 //       so don't set any points, before running this function!!!!!
 //
-//2nd parameter: +1 
+//2nd parameter: +1
 //Argument kind is dummy and doesn't need to be specified
 //Possible flag_options:
 //"ES" (from "estimate") - no time in preparing the transform, but probably sub-optimal
