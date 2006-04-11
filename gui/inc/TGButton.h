@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.36 2005/09/27 16:09:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.37 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -102,7 +102,7 @@ public:
    virtual Bool_t       HandleCrossing(Event_t *event);
    virtual void         SetUserData(void *userData) { fUserData = userData; }
    virtual void        *GetUserData() const { return fUserData; }
-   virtual void         SetToolTipText(const char *text, Long_t delayms = 1000);
+   virtual void         SetToolTipText(const char *text, Long_t delayms = 400);  //*MENU*
    virtual TGToolTip   *GetToolTip() const { return fTip; }
    virtual void         SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual EButtonState GetState() const { return fState; }
@@ -111,13 +111,13 @@ public:
    TGButtonGroup       *GetGroup() const { return fGroup; }
 
    virtual Bool_t       IsDown() const { return !(fOptions & kRaisedFrame); }
-   virtual void         SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE);
+   virtual void         SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE);  //*MENU*
    virtual Bool_t       IsOn() const { return IsDown(); }
    virtual void         SetOn(Bool_t on = kTRUE,  Bool_t emit = kFALSE) { SetDown(on, emit); }
    virtual Bool_t       IsToggleButton() const { return kFALSE; }
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
    virtual void         Toggle(Bool_t emit = kFALSE) { SetDown(IsDown() ? kFALSE : kTRUE, emit); }
-   virtual void         SetEnabled(Bool_t e = kTRUE) { SetState(e ? kButtonUp : kButtonDisabled); }
+   virtual void         SetEnabled(Bool_t e = kTRUE) { SetState(e ? kButtonUp : kButtonDisabled); } //*MENU*
    virtual void         SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Pressed()  { Emit("Pressed()"); }   // *SIGNAL*
@@ -171,8 +171,9 @@ public:
    virtual void       SetText(TGHotString *new_label);
    virtual void       SetText(const TString &new_label);
    virtual void       SetTitle(const char *label) { SetText(label); }
+           void       Rename(const char *title)  { SetTitle(title); } //*MENU*
    virtual void       SetFont(FontStruct_t font, Bool_t global = kFALSE);
-   virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);
+   virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);  //*MENU*
    virtual void       SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void       SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
 
