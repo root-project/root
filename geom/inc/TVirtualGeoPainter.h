@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.31 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.32 2006/03/24 15:11:23 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -74,6 +74,7 @@ public:
    virtual void       DefaultColors() = 0;
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py) = 0;
    virtual void       Draw(Option_t *option="") = 0;
+   virtual void       DrawShape(TGeoShape *shape, Option_t *option="") = 0;
    virtual void       DrawOnly(Option_t *option="") = 0;
    virtual void       DrawOverlap(void *ovlp, Option_t *option="") = 0;
    virtual void       DrawCurrentPoint(Int_t color) = 0;
@@ -81,6 +82,7 @@ public:
    virtual void       DrawPath(const char *path) = 0;
    virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="") = 0;
    virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {;}
+   virtual void       ExecuteShapeEvent(TGeoShape *shape, Int_t event, Int_t px, Int_t py) = 0;
    virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py) = 0;
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
    virtual Int_t      GetColor(Int_t base, Float_t light) const = 0;
@@ -96,6 +98,7 @@ public:
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
    virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) =0;
    virtual Double_t  *GetViewBox() = 0;
+   virtual Bool_t     IsPaintingShape() const = 0;
    virtual Bool_t     IsRaytracing() const = 0;
    virtual Bool_t     IsExplodedView() const = 0;
    virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
@@ -104,6 +107,7 @@ public:
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
+   virtual void       PaintShape(TGeoShape *shape, Option_t *option="") = 0;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;
    virtual void       PrintOverlaps() const = 0;
    virtual void       PaintVolume(TGeoVolume *vol, Option_t *option="") = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.36 2006/03/20 10:09:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.37 2006/03/22 11:18:13 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -142,6 +142,7 @@
 //End_Html
 
 #include "TObjArray.h"
+#include "TEnv.h"
 
 #include "TGeoMatrix.h"
 #include "TGeoManager.h"
@@ -439,6 +440,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
          return; 
       }
       const TGeoVolume * paintVolume = gGeoManager->GetPaintVolume();
+      if (!paintVolume) paintVolume = gGeoManager->GetTopVolume();
       if (!paintVolume) { 
          assert(kFALSE); 
          return; 
@@ -518,3 +520,35 @@ char *TGeoShape::GetPointerName() const
    return name;
 }
 
+//_____________________________________________________________________________
+void TGeoShape::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+// Execute mouse actions on this shape.
+   if (!gGeoManager) return;
+   TVirtualGeoPainter *painter = gGeoManager->GetPainter();
+   painter->ExecuteShapeEvent(this, event, px, py);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::Draw(Option_t *option)
+{
+// Draw this shape.
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (option && strlen(option) > 0) {
+      painter->DrawShape(this, option); 
+   } else {
+      painter->DrawShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
+   }  
+}
+
+//_____________________________________________________________________________
+void TGeoShape::Paint(Option_t *option)
+{
+// Paint this shape.
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (option && strlen(option) > 0) {
+      painter->PaintShape(this, option); 
+   } else {
+      painter->PaintShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
+   }  
+}

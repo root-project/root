@@ -55,6 +55,7 @@ private:
    Bool_t             fTopVisible;       // set top volume visible
    Bool_t             fPaintingOverlaps; // lock overlaps painting
    Bool_t             fIsRaytracing;     // raytracing flag
+   Bool_t             fIsPaintingShape;  // flag for shape painting
    TString            fVisBranch;        // drawn branch
    TString            fVolInfo;          // volume info
    TGeoNode          *fCheckedNode;      // checked node
@@ -95,9 +96,11 @@ public:
    virtual void       DrawOnly(Option_t *option="");
    virtual void       DrawPanel();
    virtual void       DrawPath(const char *path);
+   virtual void       DrawShape(TGeoShape *shape, Option_t *option="");
    virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="");
    virtual void       EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end);
    virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py);
+   virtual void       ExecuteShapeEvent(TGeoShape *shape, Int_t event, Int_t px, Int_t py);
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py);
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
@@ -117,6 +120,7 @@ public:
    virtual void       GetViewAngles(Double_t &longitude, Double_t &latitude, Double_t &psi);
    virtual Bool_t     IsExplodedView() const {return ((fExplodedView==kGeoVisDefault)?kFALSE:kTRUE);}
    virtual Bool_t     IsRaytracing() const {return fIsRaytracing;}
+   virtual Bool_t     IsPaintingShape() const  {return fIsPaintingShape;}
    TH2F              *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
@@ -124,6 +128,7 @@ public:
    virtual void       Paint(Option_t *option="");
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    Bool_t             PaintShape(const TGeoShape & shape, Option_t * option) const;
+   virtual void       PaintShape(TGeoShape *shape, Option_t *option="");
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");
    virtual void       PaintVolume(TGeoVolume *vol, Option_t *option="");
    virtual void       PrintOverlaps() const;

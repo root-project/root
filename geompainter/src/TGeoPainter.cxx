@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.81 2006/03/28 12:47:19 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.82 2006/04/03 16:19:32 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -74,6 +74,7 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    fClippingShape = 0;
    fLastVolume = 0;
    fTopVolume = 0;
+   fIsPaintingShape = kFALSE;
    memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
    
    fCheckedNode = fGeoManager->GetTopNode();
@@ -589,6 +590,7 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
 // Draw method.
    fTopVolume = vol;
    fLastVolume = 0;
+   fIsPaintingShape = kFALSE;
 //   if (fVisOption==kGeoVisOnly ||
 //       fVisOption==kGeoVisBranch) fGeoManager->SetVisOption(kGeoVisLeaves);
    CountVisibleNodes();         
@@ -632,10 +634,45 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
 }
 
 //______________________________________________________________________________
+void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
+{
+// Draw a shape.
+   TString opt = option;
+   opt.ToLower();
+   fPaintingOverlaps = kFALSE;
+   fOverlap = 0;
+   fIsPaintingShape = kTRUE;
+   
+   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
+   // Clear pad if option "same" not given
+   if (!gPad) {
+      if (!gROOT->GetMakeDefCanvas()) return;
+      (gROOT->GetMakeDefCanvas())();
+   }
+   if (!opt.Contains("same")) gPad->Clear();
+   // append this shape to pad
+   shape->AppendPad(option);
+
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      // Set the view to perform a first autorange (frame) draw. 
+      // TViewer3DPad will revert view to normal painting after this
+      view->SetAutoRange(kTRUE);
+      if (has_pad) gPad->Update();
+   }
+         
+   // Create a 3D viewer to paint us
+   gPad->GetViewer3D(option);
+}
+
+//______________________________________________________________________________
 void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
 {
 // Draw an overlap.
    TString opt = option;
+   fIsPaintingShape = kFALSE;
    TGeoOverlap *overlap = (TGeoOverlap*)ovlp;
    if (!overlap) return;
    
@@ -688,6 +725,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
       fVisLock = kFALSE;
    }   
    fPaintingOverlaps = kFALSE;
+   fIsPaintingShape = kFALSE;
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
@@ -742,6 +780,7 @@ void TGeoPainter::DrawPath(const char *path)
 // Draw all volumes for a given path.
    fVisOption=kGeoVisBranch;
    fVisBranch=path; 
+   fIsPaintingShape = kFALSE;
    fTopVolume = fGeoManager->GetTopVolume();
    fTopVolume->SetVisRaytrace(kFALSE);
    DrawVolume(fTopVolume,"");   
@@ -785,6 +824,14 @@ void TGeoPainter::ExecuteManagerEvent(TGeoManager * /*geom*/, Int_t /*event*/, I
    gPad->SetCursor(kPointer);
 }
    
+//______________________________________________________________________________
+void TGeoPainter::ExecuteShapeEvent(TGeoShape */*shape*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+{
+// Execute mouse actions on a given shape.
+   if (!gPad) return;
+   gPad->SetCursor(kHand);
+}
+
 //______________________________________________________________________________
 void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px*/, Int_t /*py*/)
 {
@@ -1186,6 +1233,16 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
 }
 
 //______________________________________________________________________________
+void TGeoPainter::PaintShape(TGeoShape *shape, Option_t *option)
+{
+// Paint an overlap.
+   TGeoShape::SetTransform(fGlobal);
+   fGlobal->Clear();
+   fGeoManager->SetPaintVolume(0);
+   PaintShape(*shape,option);
+}
+
+//______________________________________________________________________________
 void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
 {
 // Paints a physical node associated with a path.
@@ -1584,10 +1641,32 @@ void TGeoPainter::SetVisOption(Int_t option) {
 Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const   
 {   
 //  Returns distance between point px,py on the pad an a shape.
-   Int_t dist = 9999;
+   const Int_t inaxis = 7;
+   const Int_t maxdist = 5;
+   const Int_t big = 9999;
+   Int_t dist = big;
+   if (!gPad) return dist;
    TView *view = gPad->GetView();
    if (!(numpoints && view)) return dist;
    if (shape->IsA()==TGeoShapeAssembly::Class()) return dist;
+
+   if (fIsPaintingShape) {
+      Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
+      Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
+      Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
+      Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
+      // return if point not in user area
+      if (px < puxmin - inaxis) return big;
+      if (py > puymin + inaxis) return big;
+      if (px > puxmax + inaxis) return big;
+      if (py < puymax - inaxis) return big;
+      if ((puxmax+inaxis-px) < 40) {
+         // when the mouse points to the (40 pix) right edge of the pad, the manager class is selected
+         gPad->SetSelected(fGeoManager);
+         return 0;
+      }
+   }
+
    fBuffer->SetRawSizes(numpoints, 3*numpoints, 0, 0, 0, 0);
    Double_t *points = fBuffer->fPnts;
    shape->SetPoints(points);
@@ -1605,7 +1684,9 @@ Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoi
       if (dpoint2 < dist) dist=(Int_t)dpoint2;
    }
    if (dist > 100) return dist;
-   return Int_t(TMath::Sqrt(Double_t(dist)));
+   dist = Int_t(TMath::Sqrt(Double_t(dist)));
+   if (dist<maxdist && fIsPaintingShape) gPad->SetSelected((TObject*)shape);
+   return dist;
 }
 
 //______________________________________________________________________________

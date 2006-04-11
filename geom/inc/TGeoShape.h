@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.37 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.38 2006/03/20 10:09:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -109,6 +109,8 @@ public:
                                       Double_t sm, Double_t cm, Bool_t in=kTRUE);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step)   = 0; 
+   virtual void          Draw(Option_t *option=""); // *MENU*
+   virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual const char   *GetAxisName(Int_t iaxis) const = 0;
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const = 0;
    virtual void          GetBoundingCylinder(Double_t *param) const = 0;
@@ -131,6 +133,7 @@ public:
    virtual void          InspectShape() const                    = 0;
    virtual TBuffer3D    *MakeBuffer3D() const {return 0;}
    static void           NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
+   virtual void          Paint(Option_t *option="");
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param)          = 0;

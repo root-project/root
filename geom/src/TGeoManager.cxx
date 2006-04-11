@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.145 2006/04/03 16:19:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.146 2006/04/10 08:38:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1829,7 +1829,7 @@ Bool_t TGeoManager::cd(const char *path)
          node = vol->GetNode(name.Data());
       } else node = 0;
       if (!node) {
-         Error("cd", "path not valid");
+         Error("cd", "Path %s not valid", path);
          return kFALSE;
       }
       CdDown(fCurrentNode->GetVolume()->GetIndex(node));
