@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.95 2006/03/20 12:31:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.96 2006/03/23 15:49:16 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -253,7 +253,7 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
-   fEditDisabled = kTRUE;
+   fEditDisabled = kEditDisable;
 }
 
 //______________________________________________________________________________
@@ -289,7 +289,7 @@ ClassImp(TRootCanvas)
 
 //______________________________________________________________________________
 TRootCanvas::TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetRoot(), width, height), TCanvasImp(c)
+   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TCanvasImp(c)
 {
    // Create a basic ROOT canvas.
 
@@ -303,7 +303,7 @@ TRootCanvas::TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t heig
 
 //______________________________________________________________________________
 TRootCanvas::TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetRoot(), width, height), TCanvasImp(c)
+   : TGMainFrame(gClient->GetDefaultRoot(), width, height), TCanvasImp(c)
 {
    // Create a basic ROOT canvas.
 
@@ -324,6 +324,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fButton    = 0;
    fAutoFit   = kTRUE;   // check also menu entry
    fEditor    = 0;
+   fEditDisabled = kEditDisable;
 
    // Create menus
    fFileSaveMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -1371,6 +1372,10 @@ void TRootCanvas::CreateEditor()
    if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0) {
          TVirtualPadEditor::HideEditor();
    }
+   if (fClient->IsEditable()) {
+      ((TGWindow*)fClient->GetRoot())->SetEditable(kFALSE);
+   }
+   SetEditDisabled(kEditEnable);
    fEditorFrame->SetEditable();
    gPad = Canvas();
    // next two lines are related to the old editor
@@ -1379,6 +1384,8 @@ void TRootCanvas::CreateEditor()
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditor->SetGlobal(kFALSE);
    fEditorFrame->SetEditable(0);
+   SetEditDisabled(kEditDisable);
+
    // next line is related to the old editor
    if (show == "false") gEnv->SetValue("Canvas.ShowEditor","false");
 }
