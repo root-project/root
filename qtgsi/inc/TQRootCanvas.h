@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.2 2006/04/12 10:07:21 brun Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -72,7 +72,9 @@ public:
    virtual void dragEnterEvent( QDragEnterEvent *e );
 
 signals:
+#ifndef __CINT__
    void SelectedPadChanged(TPad *);
+#endif
 public slots:
    void              cd(Int_t subpadnumber=0);
    virtual void      Browse(TBrowser *b);
