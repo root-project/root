@@ -1055,8 +1055,8 @@ if test $# -gt 0 ; then
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
       --with-python-incdir=*)  pythonincdir=$optarg  ; enable_python="yes"  ;;
       --with-python-libdir=*)  pythonlibdir=$optarg  ; enable_python="yes"  ;;
-      --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"      ;;
-      --with-qt-libdir=*)      qtlibdir=$optarg      ; enable_qt="yes"      ;;
+      --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"; enable_qtgsi="yes" ;;
+      --with-qt-libdir=*)      qtlibdir=$optarg      ; enable_qt="yes"; enable_qtgsi="yes" ;;
       --with-ruby-incdir=*)    rubyincdir=$optarg    ; enable_ruby="yes"    ;;
       --with-ruby-libdir=*)    rubylibdir=$optarg    ; enable_ruby="yes"    ;;
       --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
@@ -1585,7 +1585,7 @@ if test ! "x$enable_qt" = "xno" || \
     qtinc=$found_hdr
     qtincdir=$found_dir
 
-    check_library "libqt-mt libqt qt-mt* qt" "$enable_shared" \
+    check_library "libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt" "$enable_shared" \
         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
         /usr/lib /usr/qt/lib
     qtlib=$found_lib
