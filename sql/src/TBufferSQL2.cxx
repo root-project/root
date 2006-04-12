@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.8 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.9 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -50,13 +50,8 @@
 #define FLong64    "%I64d"
 #define FULong64   "%I64u"
 #else
-#ifdef R__B64
-#define FLong64    "%ld"
-#define FULong64   "%lu"
-#else
 #define FLong64    "%lld"
 #define FULong64   "%llu"
-#endif
 #endif
 
 ClassImp(TBufferSQL2);
