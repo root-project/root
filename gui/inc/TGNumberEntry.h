@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.7 2005/12/12 17:54:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.8 2006/03/23 15:56:03 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -157,6 +157,7 @@ public:
 };
 
 
+
 class TGNumberEntry : public TGCompositeFrame, public TGWidget,
    public TGNumberFormat {
 
@@ -218,14 +219,14 @@ public:
                                Int_t sign = 1, Bool_t logstep = kFALSE) {
       // Increase the number value
       fNumericEntry->IncreaseNumber(step, sign, logstep); }
-   virtual void SetFormat(EStyle style, EAttribute attr = kNEAAnyNumber) {
+   virtual void SetFormat(EStyle style, EAttribute attr = TGNumberFormat::kNEAAnyNumber) {
       // Set the numerical format
-      fNumericEntry->SetFormat(style, attr); }
-   virtual void SetLimits(ELimit limits = kNELNoLimits,
+      fNumericEntry->SetFormat(style, attr); }   //*MENU*
+   virtual void SetLimits(ELimit limits = TGNumberFormat::kNELNoLimits,
                           Double_t min = 0, Double_t max = 1) {
       // Set the numerical limits.
-      fNumericEntry->SetLimits(limits, min, max); }
-   virtual void SetLogStep(Bool_t on = kTRUE);
+      fNumericEntry->SetLimits(limits, min, max); }   //*MENU*
+   virtual void SetLogStep(Bool_t on = kTRUE);   //*MENU*
    virtual EStyle GetNumStyle() const {
       // Get the numerical style
       return fNumericEntry->GetNumStyle(); }
@@ -265,8 +266,23 @@ public:
 
    UInt_t GetDefaultHeight() const { return fNumericEntry->GetDefaultHeight(); }
    virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual TGLayoutManager *GetLayoutManager() const;
 
    ClassDef(TGNumberEntry,0)  // Entry field widget for several numeric formats
 };
+
+
+class TGNumberEntryLayout : public TGLayoutManager {
+protected:
+   TGNumberEntry *fBox;        // pointer to numeric control box
+
+public:
+   TGNumberEntryLayout(TGNumberEntry *box) { fBox = box; }
+   virtual void Layout();
+   virtual TGDimension GetDefaultSize() const;
+
+   ClassDef(TGNumberEntryLayout,0)  // Layout manager for number entry widget 
+};
+
 
 #endif

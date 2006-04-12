@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.27 2006/04/07 13:28:07 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.28 2006/04/07 14:22:34 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -267,10 +267,10 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
                        kVerticalFrame | kRaisedFrame | kDoubleBorder);
    AddFrame(fContainer, 0);
 
-   fEditDisabled = 1 | kEditDisableLayout;
-   fContainer->SetEditDisabled(1 |  kEditDisableGrab);
+   fEditDisabled = kEditDisable | kEditDisableLayout;
+   fContainer->SetEditDisabled(kEditDisable |  kEditDisableGrab);
 
-   if (!p) {  // defauld used in the GUI builder
+   if (!p && fClient->IsEditable()) {  // default ctor used in the GUI builder
       AddTab("Tab1");
       AddTab("Tab2");
       MapSubwindows();
@@ -349,12 +349,14 @@ void TGTab::RemoveTab(Int_t tabIndex)
       }
       count++;
    }
+
+   GetLayoutManager()->Layout();
 }
 
 //______________________________________________________________________________
 void TGTab::SetEnabled(Int_t tabIndex, Bool_t on)
 {
-   // Enabled or disable tab.
+   // Enable or disable tab.
 
    TGTabElement *te = GetTabTab(tabIndex);
    if (te) {
@@ -473,7 +475,7 @@ Bool_t TGTab::SetTab(const char *name)
 TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 {
    // Return container of tab with index tabIndex.
-   // Returns 0 in case tabIndex is out of range.
+   // Return 0 in case tabIndex is out of range.
 
    if (tabIndex < 0) return 0;
 
@@ -605,11 +607,10 @@ const TGGC &TGTab::GetDefaultGC()
 //______________________________________________________________________________
 void TGTab::NewTab(const char *text)
 {
-   // Creates new tab. Used in context menu.
+   // Create new tab. Used in context menu.
 
    TString name = text ? text : Form("tab%d", GetNumberOfTabs()+1);
    AddTab(name.Data());
-
    MapSubwindows();
    GetLayoutManager()->Layout();
 }
@@ -617,10 +618,25 @@ void TGTab::NewTab(const char *text)
 //______________________________________________________________________________
 void TGTab::SetText(const char *text)
 {
-   // set text to current tab
+   // Set text to current tab.
 
    GetCurrentTab()->SetText(new TGString(text));
+   GetLayoutManager()->Layout();
 } 
+
+//______________________________________________________________________________
+TGLayoutManager *TGTab::GetLayoutManager() const
+{
+   // Return layout manager.
+
+   TGTab *tab = (TGTab*)this;
+
+   if (tab->fLayoutManager->IsA() != TGTabLayout::Class()) {
+      tab->SetLayoutManager(new TGTabLayout(tab));
+   }
+
+   return tab->fLayoutManager;
+}
 
 //______________________________________________________________________________
 void TGTab::SavePrimitive(ofstream &out, Option_t *option)

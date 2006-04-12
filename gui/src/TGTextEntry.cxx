@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.36 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.37 2006/04/05 14:37:58 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1542,7 +1542,7 @@ void TGTextEntry::SetToolTipText(const char *text, Long_t delayms)
 //______________________________________________________________________________
 void TGTextEntry::SetFocus()
 {
-   // sets focus
+   // Set focus to this text entry.
 
    if (gBlinkingEntry && (gBlinkingEntry != this)) {
       gBlinkingEntry->fCurBlink->Remove();
@@ -1619,7 +1619,7 @@ void TGTextEntry::SetFont(FontStruct_t font, Bool_t local)
 void TGTextEntry::SetFont(const char *fontName, Bool_t local)
 {
    // Changes text font specified by name.
-   // If global is true font is changed locally.
+   // If local is kTRUE font is changed locally.
 
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
@@ -1631,7 +1631,7 @@ void TGTextEntry::SetFont(const char *fontName, Bool_t local)
 void TGTextEntry::SetFont(TGFont *font, Bool_t local)
 {
    // Changes text font specified by pointer to TGFont object.
-   // If global is true font is changed locally.
+   // If local is kTRUE font is changed locally.
 
    if (font) {
       SetFont(font->GetFontStruct(), local);
@@ -1642,7 +1642,7 @@ void TGTextEntry::SetFont(TGFont *font, Bool_t local)
 void TGTextEntry::SetTextColor(Pixel_t color, Bool_t local)
 {
    // Changes text color.
-   // If local is true color is changed locally
+   // If local is true color is changed locally.
 
    if (local) {
       TGGC *gc = new TGGC(fNormGC); // copy
@@ -1655,13 +1655,25 @@ void TGTextEntry::SetTextColor(Pixel_t color, Bool_t local)
 }
 
 //______________________________________________________________________________
-void TGTextEntry::SetTextColor(TColor *color, Bool_t global)
+void TGTextEntry::SetTextColor(TColor *color, Bool_t local)
 {
    // Changes text color.
-   // If global is true color is changed globally
+   // If local is true color is changed locally.
 
    if (color) {
-      SetTextColor(color->GetPixel(), global);
+      SetTextColor(color->GetPixel(), local);
+   }
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SetTextColor(const char *hexvalue)
+{
+   // Set text color given as hexvalue in format #00FF00. 
+
+   Pixel_t pixel;
+
+   if (fClient->GetColorByName(hexvalue, pixel)) {
+      SetTextColor(pixel, kTRUE);
    }
 }
 
@@ -1708,7 +1720,7 @@ const TGGC &TGTextEntry::GetDefaultSelectedBackgroundGC()
 //______________________________________________________________________________
 void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
 {
-   // Save a text entry widget as a C++ statement(s) on output stream out
+   // Save a text entry widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 

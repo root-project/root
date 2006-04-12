@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.19 2006/04/05 14:37:58 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.20 2006/04/11 06:23:44 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -88,6 +88,7 @@
 
 ClassImp(TGNumberFormat);
 ClassImp(TGNumberEntryField);
+ClassImp(TGNumberEntryLayout);
 ClassImp(TGNumberEntry);
 
 
@@ -99,29 +100,22 @@ ClassImp(TGNumberEntry);
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-enum ERealStyle {               // Style of real
-   kRSInt = 0,                  // Integer
-   kRSFrac = 1,                 // Fraction only
-   kRSExpo = 2,                 // Exponent only
-   kRSFracExpo = 3              // Fraction and Exponent
+enum ERealStyle {         // Style of real
+   kRSInt = 0,            // Integer
+   kRSFrac = 1,           // Fraction only
+   kRSExpo = 2,           // Exponent only
+   kRSFracExpo = 3        // Fraction and Exponent
 };
 
 //______________________________________________________________________________
 struct RealInfo_t {
-   // Style of real
-   ERealStyle fStyle;
-   // Number of fractional digits
-   Int_t fFracDigits;
-   // Base of fractional digits
-   Int_t fFracBase;
-   // Integer number
-   Int_t fIntNum;
-   // Fraction
-   Int_t fFracNum;
-   // Exponent
-   Int_t fExpoNum;
-   // Sign
-   Int_t fSign;
+   ERealStyle fStyle;     // Style of real
+   Int_t fFracDigits;     // Number of fractional digits
+   Int_t fFracBase;       // Base of fractional digits
+   Int_t fIntNum;         // Integer number
+   Int_t fFracNum;        // Fraction
+   Int_t fExpoNum;        // Exponent
+   Int_t fSign;           // Sign
 };
 
 //______________________________________________________________________________
@@ -1068,7 +1062,7 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * p, Int_t id,
    fStepLog = kFALSE;
    SetAlignment(kTextRight);
    SetNumber(val);
-   fEditDisabled = 1 | kEditDisableGrab;
+   fEditDisabled = kEditDisable | kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -1085,7 +1079,7 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * parent,
    fStepLog = kFALSE;
    SetAlignment(kTextRight);
    SetNumber(val);
-   fEditDisabled = 1 | kEditDisableGrab;
+   fEditDisabled = kEditDisable | kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -1725,8 +1719,6 @@ void TGNumberEntryField::Layout()
    }
 }
 
-
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TGNumberEntryLayout                                                  //
@@ -1735,16 +1727,6 @@ void TGNumberEntryField::Layout()
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
-class TGNumberEntryLayout : public TGLayoutManager {
-protected:
-   TGNumberEntry *fBox;        // pointer to numeric control box
-
-public:
-   TGNumberEntryLayout(TGNumberEntry *box) { fBox = box; }
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-};
 
 //______________________________________________________________________________
 void TGNumberEntryLayout::Layout()
@@ -1797,7 +1779,7 @@ class TGRepeatFireButton;
 //______________________________________________________________________________
 class TRepeatTimer : public TTimer {
 private:
-   TGRepeatFireButton *fButton;	// Fire button
+   TGRepeatFireButton *fButton;  // Fire button
 
 public:
    TRepeatTimer(TGRepeatFireButton * button, Long_t ms)
@@ -1824,6 +1806,8 @@ protected:
    Bool_t                    fStepLog;         // logarithmic step flag
    Bool_t                    fDoLogStep;       // flag for using logarithmic step
 
+   Bool_t IsEditableParent();
+
 public:
    TGRepeatFireButton(const TGWindow *p, const TGPicture *pic,
                       Int_t id, Bool_t logstep)
@@ -1832,9 +1816,25 @@ public:
    virtual ~TGRepeatFireButton() { delete fTimer; }
 
    virtual Bool_t HandleButton(Event_t *event);
-   void FireButton();
-   virtual void SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
+           void   FireButton();
+   virtual void   SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
 };
+
+//______________________________________________________________________________
+Bool_t TGRepeatFireButton::IsEditableParent()
+{
+   // Return kTRUE if one of the parents is in edit mode.
+
+   TGWindow *parent = (TGWindow*)GetParent();
+
+   while (parent && (parent != fClient->GetDefaultRoot())) {
+      if (parent->IsEditable()) {
+         return kTRUE;
+      }
+      parent = (TGWindow*)parent->GetParent();
+   }
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
@@ -1845,7 +1845,7 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
    if (fTip)
       fTip->Hide();
 
-   if (fClient->IsEditable()) {
+   if (IsEditableParent()) {
       return kTRUE;
    }
 
@@ -2045,6 +2045,21 @@ Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       }
    }
    return kTRUE;
+}
+
+
+//______________________________________________________________________________
+TGLayoutManager *TGNumberEntry::GetLayoutManager() const
+{
+   // Return layout manager.
+
+   TGNumberEntry *entry = (TGNumberEntry*)this;
+
+   if (entry->fLayoutManager->IsA() != TGNumberEntryLayout::Class()) {
+      entry->SetLayoutManager(new TGNumberEntryLayout(entry));
+   }
+
+   return entry->fLayoutManager;
 }
 
 //______________________________________________________________________________

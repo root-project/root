@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.14 2006/04/07 08:23:54 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.15 2006/04/07 14:22:33 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -103,12 +103,13 @@ public:
    UInt_t            GetTabHeight() const { return fTabh; }
    Int_t             GetNumberOfTabs() const;
    virtual void      SetEnabled(Int_t tabIndex, Bool_t on = kTRUE);  //*MENU*
-   virtual void      SetText(const char *text = "tab");              //*MENU*
+   virtual void      SetText(const char *text = "tab");              //*MENU*bld_rename.png*
    Bool_t            IsEnabled(Int_t tabIndex) const;
 
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
+   virtual TGLayoutManager *GetLayoutManager() const;
 
    ClassDef(TGTab,0)  // Tab widget
 };

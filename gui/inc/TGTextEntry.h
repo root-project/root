@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.23 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.24 2006/04/05 14:37:58 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -144,25 +144,32 @@ public:
             void        NewMark(Int_t pos);
             void        Remove();
    virtual  void        RemoveText(Int_t start, Int_t end);
-            void        SelectAll();
-   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);
-   virtual  void        SetCursorPosition(Int_t pos);
-   virtual  void        SetEchoMode(EEchoMode mode = kNormal);
-            void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
-            void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }
-   virtual  void        SetFocus();
-   virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
-   virtual  void        SetInsertMode(EInsertMode mode = kInsert);
-   virtual  void        SetMaxLength(Int_t maxlen);
-   virtual  void        SetState(Bool_t state);
-   virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000);
-   virtual  void        SetText(const char *text);
-   virtual  void        SetTitle(const char *label) { SetText(label); }
    virtual  void        SetFont(TGFont *font, Bool_t local = kFALSE);
    virtual  void        SetFont(FontStruct_t font, Bool_t local = kFALSE);
    virtual  void        SetFont(const char *fontName, Bool_t local = kFALSE);
    virtual  void        SetTextColor(Pixel_t color, Bool_t local = kFALSE);
    virtual  void        SetTextColor(TColor *color, Bool_t local = kFALSE);
+   virtual  void        SetText(const char *text);                               //*MENU*bld_rename.png*
+   virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000); //*MENU*
+            void        SetTextColor(const char *hexvalue = "#000000");          //*MENU*
+   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);
+            void        Alignment(Int_t mode = kTextLeft) 
+                           { SetAlignment((ETextJustification)mode); }           //*MENU*
+   virtual  void        SetInsertMode(EInsertMode mode = kInsert);
+            void        InsertMode(Int_t mode = TGTextEntry::kInsert) 
+                           { SetInsertMode((EInsertMode)mode); }                 //*MENU*
+   virtual  void        SetCursorPosition(Int_t pos);
+   virtual  void        SetEchoMode(EEchoMode mode = kNormal);
+            void        EchoMode(Int_t mode =  TGTextEntry::kNormal) 
+                           { SetEchoMode((EEchoMode)mode); }                     //*MENU*
+            void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
+            void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }    //*MENU*
+   virtual  void        SetFocus();
+   virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
+   virtual  void        SetMaxLength(Int_t maxlen);                              //*MENU*
+   virtual  void        SelectAll();                                             //*MENU*
+   virtual  void        SetState(Bool_t state);
+   virtual  void        SetTitle(const char *label) { SetText(label); }
    virtual  void        SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
    Pixel_t              GetForeground() const { return fNormGC.GetForeground(); }
    Bool_t               HasOwnFont() const { return fHasOwnFont; }

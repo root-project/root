@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.8 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.9 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -71,13 +71,13 @@ public:
                  UInt_t options = kDoubleBorder | kSunkenFrame);
    virtual ~TGProgressBar() { }
 
-   void         SetRange(Float_t min, Float_t max);
-   void         SetPosition(Float_t pos);
+   void         SetRange(Float_t min, Float_t max);   //*MENU*
+   void         SetPosition(Float_t pos);             //*MENU*
    void         Increment(Float_t inc);
-   void         Reset();
-   void         SetFillType(EFillType type);
+   void         Reset();                              //*MENU*
+   void         SetFillType(EFillType type);          //*MENU*
    void         SetBarColor(Pixel_t color);
-   void         SetBarColor(const char *color);
+   void         SetBarColor(const char *color);       //*MENU*
    Float_t      GetMin() const { return fMin; }
    Float_t      GetMax() const { return fMax; }
    Float_t      GetPosition() const { return fPos; }
@@ -113,7 +113,7 @@ public:
                      { return TGDimension(fWidth, fBarWidth); }
 
    void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
-                     const char *format = "%.2f");
+                     const char *format = "%.2f");          //*MENU*
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHProgressBar,0)  // Horizontal progress bar widget
