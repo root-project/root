@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.cxx,v 1.4 2006/04/07 09:20:43 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -31,17 +31,13 @@ TPointSet3DGL::TPointSet3DGL() : TGLObject()
 //______________________________________________________________________________
 Bool_t TPointSet3DGL::SetModel(TObject* obj)
 {
-   Bool_t is_class = set_model(obj, "TPointSet3D");
-   if (is_class) {
-      set_axis_aligned_bbox(((TPointSet3D*)fExternalObj)->AssertBBox());
-   }
-   return is_class;
+   return set_model(obj, "TPointSet3D");
 }
 
 //______________________________________________________________________________
 void TPointSet3DGL::SetBBox()
 {
-  set_axis_aligned_bbox(((TPointSet3D*)fExternalObj)->AssertBBox());
+   set_axis_aligned_bbox(((TPointSet3D*)fExternalObj)->AssertBBox());
 }
 
 //______________________________________________________________________________
