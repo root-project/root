@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.8 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -235,7 +235,7 @@ bool ROOT::Reflex::Class::HasBase( const Type & cl,
 //-------------------------------------------------------------------------------
    for ( size_t i = 0; i < BaseSize(); ++i ) {
       // is the final BaseAt class one of the current class ?
-      if ( BaseAt( i ).ToType().Id() == cl.Id() ) { 
+      if ( BaseAt( i ).ToType( FINAL ).Id() == cl.Id() ) { 
          // remember the path to this class
          path.push_back( BaseAt( i )); 
          return true; 
@@ -263,7 +263,7 @@ bool ROOT::Reflex::Class::IsComplete() const {
 bool ROOT::Reflex::Class::IsComplete2() const {
 //-------------------------------------------------------------------------------
    for (size_t i = 0; i < BaseSize(); ++i) {
-      Type baseType = BaseAt( i ).ToType();
+      Type baseType = BaseAt( i ).ToType( FINAL );
       if ( ! baseType )  return false;
       if ( ! baseType.IsComplete()) return false;
    }
@@ -342,7 +342,7 @@ void ROOT::Reflex::Class::UpdateMembers2( Members & members,
 //-------------------------------------------------------------------------------
    std::vector < Base >::const_iterator bIter;
    for ( bIter = fBases.begin(); bIter != fBases.end(); ++bIter ) {
-      Type bType = bIter->ToType();
+      Type bType = bIter->ToType( FINAL );
       basePath.push_back( bIter->OffsetFP());
       if ( bType ) {
          pathsToBase[ (dynamic_cast<const Class*>(bType.ToTypeBase()))->ThisScope().Id() ] = new std::vector < OffsetFunction >( basePath );

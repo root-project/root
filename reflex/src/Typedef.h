@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.5 2006/03/05 21:48:24 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -355,7 +355,7 @@ namespace ROOT {
           * typedefType will return a pointer to the At of the typedef.
           * @return pointer to Type of MemberAt et. al.
           */
-         virtual Type ToType() const;
+         virtual Type ToType( unsigned int mod ) const;
 
       private:  
 
@@ -743,7 +743,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::FunctionParame
 //-------------------------------------------------------------------------------
 inline std::string ROOT::Reflex::Typedef::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-   if ( 0 != ( mod & ( FINAL | F ))) return ToType().Name( mod );
+   if ( 0 != ( mod & ( FINAL | F ))) return ToType( mod ).Name( mod );
    else                              return TypeBase::Name( mod );
 }
 
@@ -951,14 +951,18 @@ inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::Typedef::SubTyp
 //-------------------------------------------------------------------------------
 inline const std::type_info & ROOT::Reflex::Typedef::TypeInfo() const {
 //-------------------------------------------------------------------------------
-   return ToType().TypeInfo();
+   return ToType( FINAL ).TypeInfo();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType() const {
+inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-   return fTypedefType;
+  Type finalType = fTypedefType;
+  if ( 0 != ( mod & ( FINAL | F ))) {
+    while (finalType.TypeType() == TYPEDEF) finalType = finalType.ToType();
+  }
+  return finalType;
 }
 
 

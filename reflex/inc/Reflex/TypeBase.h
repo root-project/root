@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.6 2006/03/06 12:51:46 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -512,7 +512,7 @@ namespace ROOT {
           * arrayType will return a pointer to the At of the array.
           * @return pointer to Type of MemberAt et. al.
           */
-         virtual Type ToType() const;
+         virtual Type ToType( unsigned int mod = 0 ) const;
 
 
          /** 
