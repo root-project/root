@@ -12,9 +12,8 @@ GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
 GPADLIBEXTRA        = lib/libGraf.lib lib/libHist.lib
 G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
 G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
-WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB) $(GDKDLLS) $(GDKLIBS)
-WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib $(GDKLIBS) Glu32.lib \
-                      Opengl32.lib
+WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB)
+WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib
 ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 ASIMAGELIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib
 ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
