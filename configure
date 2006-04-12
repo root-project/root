@@ -1573,10 +1573,11 @@ fi
 #
 ### echo %%% Qt Support - Optional alternative graphics backend
 #
-# If the user has set the flags "--disable-qt", we don't check for
-# Qt at all.
+# If the user has not set the flags "--enable-qt" or "--enable-qtgsi",
+# we don't check for Qt at all.
 #
-if test ! "x$enable_qt" = "xno"; then
+if test ! "x$enable_qt" = "xno" || \
+   test ! "x$enable_qtgsi" = "xno"; then
     # Check for Qt include and library
     check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
         /usr/local/include  /usr/local/qt/include /usr/include \
@@ -1600,7 +1601,7 @@ if test ! "x$enable_qt" = "xno"; then
 	      qtmocexe=$i/moc
 	      logmsg "$qtmocexe is executable"
 	      break
-	  elif  test -x $i/moc.exe ; then
+	  elif test -x $i/moc.exe ; then
 	      qtmocexe=$i/moc.exe
 	      logmsg "$qtmocexe is executable"
 	      break
@@ -1612,61 +1613,6 @@ if test ! "x$enable_qt" = "xno"; then
     if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
 	test "x$qtmocexe" = "x"; then
         enable_qt="no"
-    else
-        message "Checking whether Qt version = 3.xx"
-	logmsg "grep 'QT_VERSION 0x03' $qtincdir/qglobal.h"
-        grep "QT_VERSION 0x03" $qtincdir/qglobal.h >> $logfile 2>&1
-        if test $? -ne 0 ; then
-            result "no"
-            enable_qt="no"
-        else
-            result "yes"
-        fi
-    fi
-fi
-
-######################################################################
-#
-### echo %%% Qt Support - Optional alternative graphics backend
-#
-# If the user has set the flags "--disable-qtgsi", we don't check for
-# Qt at all.
-#
-if test ! "x$enable_qtgsi" = "xno"; then
-    # Check for Qt include and library
-    check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
-        /usr/local/include  /usr/local/qt/include /usr/include \
-        /usr/include/qt /usr/include/qt3
-    qtinc=$found_hdr
-    qtincdir=$found_dir
-
-    check_library "libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt" "$enable_shared" \
-        "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
-        /usr/lib /usr/qt/lib
-    qtlib=$found_lib
-    qtlibdir=$found_dir
-
-    message "Checking for moc or moc.exe"
-    qtmocexe=`which moc`
-    if test $? -ne 0 ; then
-       for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
-           /usr/qt3/bin /usr/share/qt3/bin ; do
-	  logmsg "Checking for $qtmocexe in $i"
-	  if test -x $i/moc ; then
-	      qtmocexe=$i/moc
-	      logmsg "$qtmocexe is executable"
-	      break
-	  elif  test -x $i/moc.exe ; then
-	      qtmocexe=$i/moc.exe
-	      logmsg "$qtmocexe is executable"
-	      break
-	  fi
-       done
-    fi
-    result "$qtmocexe"
-
-    if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
-	test "x$qtmocexe" = "x"; then
         enable_qtgsi="no"
     else
         message "Checking whether Qt version = 3.xx"
@@ -1674,6 +1620,7 @@ if test ! "x$enable_qtgsi" = "xno"; then
         grep "QT_VERSION 0x03" $qtincdir/qglobal.h >> $logfile 2>&1
         if test $? -ne 0 ; then
             result "no"
+            enable_qt="no"
             enable_qtgsi="no"
         else
             result "yes"
