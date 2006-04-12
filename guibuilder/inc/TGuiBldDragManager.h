@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.6 2006/03/29 15:44:57 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.7 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -182,6 +182,7 @@ public:
    Bool_t         CanChangeLayoutOrder(TGWindow *w) const;
    Bool_t         CanCompact(TGWindow *w) const;
    Bool_t         IsStopped() const { return fStop; }
+   Bool_t         IsPasteFrameExist();
 
    // hadndling dynamic context menus
    void           DoClassMenu(Int_t);

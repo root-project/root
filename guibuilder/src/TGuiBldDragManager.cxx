@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.38 2006/04/07 14:36:56 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.39 2006/04/11 07:17:53 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1005,6 +1005,7 @@ void TGuiBldDragManager::DoRedraw()
    if (fStop || !fClient || !fClient->IsEditable()) return;
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
+
    fClient->NeedRedraw(root, kTRUE);
 
    if (fBuilder) {
@@ -2528,26 +2529,17 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
                                       -2, -2,
                                       fPimpl->fX0, fPimpl->fY0, c);
 
-
       fPimpl->fX = fPimpl->fX0 + frame->GetWidth()+4;
       fPimpl->fY = fPimpl->fY0 + frame->GetHeight()+4;
       fromGrab = kTRUE;
    }
 
-#ifdef DEBUG_LOCAL
-printf("HandleDelete3\n");
-#endif
-
    gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
-                                   fClient->GetRoot()->GetId(),
+                                   comp->GetId(),
                                    fPimpl->fX, fPimpl->fY, x, y, c);
    gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
-                                   fClient->GetRoot()->GetId(),
+                                   comp->GetId(),
                                    fPimpl->fX0, fPimpl->fY0, x0, y0, c);
-
-#ifdef DEBUG_LOCAL
-printf("HandleDelete4\n");
-#endif
 
    xx = x0; yy = y0;
    x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
@@ -2577,17 +2569,8 @@ printf("HandleDelete4\n");
          }
       }
       if (crop && comp) {
-
-#ifdef DEBUG_LOCAL
-printf("HandleDelete5\n");
-#endif
-
          gVirtualX->TranslateCoordinates(comp->GetId(), comp->GetParent()->GetId(),
                                           x0, y0, xx, yy, c);
-
-#ifdef DEBUG_LOCAL
-printf("HandleDelete6\n");
-#endif
 
          comp->MoveResize(xx, yy, w, h);
 
@@ -2595,16 +2578,8 @@ printf("HandleDelete6\n");
             TGMdiDecorFrame *decor = (TGMdiDecorFrame *)comp->GetParent();
 
 
-#ifdef DEBUG_LOCAL
-printf("HandleDelete7\n");
-#endif
-
             gVirtualX->TranslateCoordinates(decor->GetId(), decor->GetParent()->GetId(),
                                             xx, yy, xx, yy, c);
-
-#ifdef DEBUG_LOCAL
-printf("HandleDelete8\n");
-#endif
 
             Int_t b = 2 * decor->GetBorderWidth();
             decor->MoveResize(xx, yy, comp->GetWidth() + b,
@@ -2728,28 +2703,19 @@ void TGuiBldDragManager::HandlePaste()
    Window_t c;
 
    if (!fPimpl->fReplaceOn) {
-
-#ifdef DEBUG_LOCAL
-printf("HandlePaste1\n");
-#endif
-
       gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                       fClient->GetRoot()->GetId(),
                                       fPimpl->fX0, fPimpl->fY0, xp, yp, c);
-#ifdef DEBUG_LOCAL
-printf("HandlePaste2\n");
-#endif
-
       ToGrid(xp, yp);
-   }
 
-   // fPasteFrame is TGMainFrame consisting "the frame to paste" 
-   // into the editable frame (aka fClient->GetRoot())
+      // fPasteFrame is a TGMainFrame consisting "the frame to paste" 
+      // into the editable frame (aka fClient->GetRoot())
 
-   if (fPasteFrame) {
-      fPasteFrame->Move(xp, yp);
-      fPimpl->fGrab = fPasteFrame;
-      HandleReturn(1);  // drop
+      if (fPasteFrame) {
+         fPasteFrame->Move(xp, yp);
+         fPimpl->fGrab = fPasteFrame;
+         HandleReturn(1);  // drop
+      }
    }
 
    fPasting = kFALSE;
@@ -2762,9 +2728,11 @@ printf("HandlePaste2\n");
 //______________________________________________________________________________
 void TGuiBldDragManager::DoReplace(TGFrame *frame)
 {
-   // replace frame
+   // replace frame (doesn't work yet properly)
 
-   if (fStop || !frame || !fPimpl->fGrab || !fPimpl->fReplaceOn) return;
+   if (fStop || !frame || !fPimpl->fGrab || !fPimpl->fReplaceOn) {
+      return;
+   }
 
    Int_t w = fPimpl->fGrab->GetWidth();
    Int_t h = fPimpl->fGrab->GetHeight();
@@ -2928,15 +2896,8 @@ void TGuiBldDragManager::DoResize()
    UInt_t w = 0;
    UInt_t h = 0;
 
-#ifdef DEBUG_LOCAL
-printf("DoResize1\n");
-#endif
-
    gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                    fr->GetId(), x, y, x, y, c);
-#ifdef DEBUG_LOCAL
-printf("DoResize3\n");
-#endif
 
    ToGrid(x, y);
 
@@ -3930,10 +3891,17 @@ void TGuiBldDragManager::HandleAction(Int_t act)
    }
 
    fPimpl->fPlacePopup = kFALSE;
+
    if (fBuilder) {
       fBuilder->SetAction(0);
       fBuilder->Update();
    }
+
+   if (fPimpl->fSaveGrab) {
+     fClient->NeedRedraw(fPimpl->fSaveGrab, kTRUE);
+   }
+
+   DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -4140,6 +4108,9 @@ void TGuiBldDragManager::HandleUpdateSelected(TGFrame *f)
         (parent->GetHeight() < parent->GetDefaultHeight())) {
       parent->Resize(parent->GetDefaultSize());
    } else {
+      if (f->InheritsFrom(TGCompositeFrame::Class())) {
+         ((TGCompositeFrame*)f)->GetLayoutManager()->Layout();
+      }
       parent->Layout();
    }
    fClient->NeedRedraw(parent, kTRUE);
@@ -4303,7 +4274,7 @@ void TGuiBldDragManager::SwitchLayout()
    }
 
    comp->ChangeOptions(opt);
-   comp->Resize();
+   if (!IsFixedSize(comp)) comp->Resize();
    SelectFrame(comp);
 }
 
@@ -4629,6 +4600,12 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
       fFrameMenu->AddEntry("Copy              Ctrl+C", kCopyAct,
                             0, fClient->GetPicture("bld_copy.png"));
 
+      if (frame->IsEditable() && !IsFixedLayout(frame) && 
+          !gSystem->AccessPathName(fPasteFileName.Data())) {
+         fFrameMenu->AddEntry("Paste              Ctrl+V", kPasteAct,
+                               0, fClient->GetPicture("bld_paste.png"));
+      }
+
       if (!IsFixedLayout(cfrp)) {
          fFrameMenu->AddEntry("Delete             Del", kDeleteAct,
                               0, fClient->GetPicture("bld_delete.png"));
@@ -4639,10 +4616,11 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
                                0, fClient->GetPicture("bld_crop.png"));
       }
 
-      if (!IsFixedLayout(cfrp) && !gSystem->AccessPathName(fPasteFileName.Data())) {
-         fFrameMenu->AddEntry("Replace          Ctrl+R", kReplaceAct, 
-                               0, fClient->GetPicture("bld_replace.png"));
-      }
+//      if (!IsFixedLayout(cfrp) && !gSystem->AccessPathName(fPasteFileName.Data())) {
+//         fFrameMenu->AddEntry("Replace          Ctrl+R", kReplaceAct, 
+//                               0, fClient->GetPicture("bld_paste_into.png"));
+//      }
+
       fFrameMenu->AddSeparator();
    } else {
       if (!gSystem->AccessPathName(fPasteFileName.Data())) {
@@ -4745,3 +4723,12 @@ void TGuiBldDragManager::Menu4Lasso(Int_t x, Int_t y)
    fPimpl->fPlacePopup = kTRUE;
    fLassoMenu->PlaceMenu(x, y, kFALSE, kTRUE);
 }
+
+//______________________________________________________________________________
+Bool_t TGuiBldDragManager::IsPasteFrameExist()
+{
+   // returns kTRUE if paste frame exist
+
+   return !gSystem->AccessPathName(fPasteFileName.Data());
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.24 2006/04/10 12:56:15 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.25 2006/04/11 07:17:53 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -92,7 +92,6 @@
 //   o Ctrl-X    - cut action
 //   o Ctrl-C    - copy action
 //   o Ctrl-V    - paste frame into the last clicked position
-//   o Ctrl-R    - paste with repalcing of selected frame
 //   o Ctrl-L    - compact
 //   o Ctrl-B    - enable/disable layout 
 //   o Ctrl-H    - switch horizontal-vertical layout
@@ -147,7 +146,6 @@ const char gHelpBuilder[] = "\
  o Ctrl-X    - cut\n\
  o Ctrl-C    - copy\n\
  o Ctrl-V    - paste frame into the last clicked position\n\
- o Ctrl-R    - paste with repalcing of selected frame\n\
  o Ctrl-L    - compact frame\n\
  o Ctrl-B    - enable/disable layout\n\
  o Ctrl-H    - switch Horizontal-Vertical layout\n\
@@ -197,7 +195,7 @@ static ToolBarData_t gToolBarData[] = {
    { "bld_cut.png",   "Cut (Ctrl-X)",        kFALSE,  kCutAct, 0 },
    { "bld_copy.png",   "Copy (Ctrl-C)",        kFALSE,  kCopyAct, 0 },
    { "bld_paste.png",   "Paste frame into the last clicked position (Ctrl-V)",        kFALSE,  kPasteAct, 0 },
-   { "bld_paste_into.png",   "Paste with repalcing of selected frame (Ctrl-R)",        kFALSE,  kReplaceAct, 0 },
+//   { "bld_paste_into.png",   "Paste with replacing of selected frame (Ctrl-R)",        kFALSE,  kReplaceAct, 0 },
    { "bld_delete.png",   "Delete (Del/Backspace)",        kFALSE,  kDeleteAct, 0 },
    { "bld_crop.png",   "Crop (Shift-Del)",        kFALSE,  kCropAct, 0 },
 //   { "",                 "",               kFALSE, -1, 0 },
@@ -442,6 +440,7 @@ public:
    Bool_t IsDown() const { return (fOptions & kSunkenFrame); }
    void SetState(EButtonState state, Bool_t emit = kTRUE);
    Bool_t HandleCrossing(Event_t *event);
+   void SetBackgroundColor(Pixel_t bgnd) { fBgndColor = bgnd; TGFrame::SetBackgroundColor(bgnd); }
 };
 
 //______________________________________________________________________________
@@ -454,7 +453,7 @@ void TGuiBldToolButton::DoRedraw()
    UInt_t w = GetWidth() - 1;
    UInt_t h = GetHeight()- 1;
 
-   SetBackgroundColor(fBgndColor);
+   TGFrame::SetBackgroundColor(fBgndColor);
 
    TGFrame::DoRedraw();
    if (fState == kButtonDown || fState == kButtonEngaged) {
@@ -1101,6 +1100,8 @@ void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 
    TGButton *btn = 0;
 
+   Bool_t lasso = fManager->IsLassoDrawn() && on;
+
    btn = fToolBar->GetButton(kReplaceAct);
    if (btn) {
       btn->SetState(!on ? kButtonDisabled : kButtonUp);
@@ -1108,27 +1109,27 @@ void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 
    btn = fToolBar->GetButton(kGridAct);
    if (btn) {
-      btn->SetState(!on ? kButtonDisabled : kButtonUp);
+      btn->SetState(!fClient->IsEditable() ? kButtonDisabled : kButtonUp);
    }
 
    btn = fToolBar->GetButton(kCutAct);
    if (btn) {
-      btn->SetState(!on ? kButtonDisabled : kButtonUp);
+      btn->SetState(!on || lasso ? kButtonDisabled : kButtonUp);
    }
 
    btn = fToolBar->GetButton(kDropAct);
    if (btn) {
-      btn->SetState(!on ? kButtonDisabled : kButtonUp);
+      btn->SetState(!on || lasso ? kButtonDisabled : kButtonUp);
    }
 
    btn = fToolBar->GetButton(kCopyAct);
    if (btn) {
-      btn->SetState(!on ? kButtonDisabled : kButtonUp);
+      btn->SetState(!on || lasso ? kButtonDisabled : kButtonUp);
    }
 
    btn = fToolBar->GetButton(kPasteAct);
    if (btn) {
-      btn->SetState(!on ? kButtonDisabled : kButtonUp);
+      btn->SetState(!on || !fManager->IsPasteFrameExist() ? kButtonDisabled : kButtonUp);
    }
 
    btn = fToolBar->GetButton(kCropAct);
@@ -1154,7 +1155,9 @@ void TRootGuiBuilder::Update()
    EnableLassoButtons(fManager->IsLassoDrawn());
    fSelected = fManager->GetSelected();
    EnableSelectedButtons(fSelected);
-   EnableEditButtons(fClient->IsEditable());
+   EnableEditButtons(fClient->IsEditable() && (fManager->IsLassoDrawn() || fManager->GetSelected() || 
+                     fManager->IsPasteFrameExist()));
+
 
    if (fActionButton) {
       TGFrame *parent = (TGFrame*)fActionButton->GetParent();
@@ -1273,6 +1276,13 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 {
    // Open new gui builder project.
 
+
+   TGButton *btn = fToolBar->GetButton(kOpenAct);
+   if (btn) {
+      btn->SetBackgroundColor(GetBgnd());
+      fClient->NeedRedraw(btn, kTRUE);
+   }
+
    TGFileInfo fi;
    static TString dir(".");
    static Bool_t overwr = kFALSE;
@@ -1320,6 +1330,13 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 {
    // Save selected project.
+
+
+   TGButton *btn = fToolBar->GetButton(kSaveAct);
+   if (btn) {
+      btn->SetBackgroundColor(GetBgnd());
+      fClient->NeedRedraw(btn, kTRUE);
+   }
 
    TGMdiFrame *savfr = fMain->GetCurrent();
    if (!savfr) return kFALSE;
