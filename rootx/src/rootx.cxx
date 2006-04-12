@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.19 2005/09/13 13:29:51 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.20 2006/04/11 17:29:30 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -161,19 +161,21 @@ static void SetDisplay()
          tty += 5;             // remove "/dev/"
          STRUCT_UTMP *utmp_entry = SearchEntry(ReadUtmp(), tty);
          if (utmp_entry) {
-            static char display[64];
-            if (utmp_entry->ut_host[0] &&
-                !utmp_entry->ut_host[sizeof(utmp_entry->ut_host)-1]) {
-               if (strchr(utmp_entry->ut_host, ':')) {
-                  sprintf(display, "DISPLAY=%s", utmp_entry->ut_host);
+            char *display = new char[sizeof(utmp_entry->ut_host) + 15];
+            char *host = new char[sizeof(utmp_entry->ut_host) + 1];
+            strncpy(host, utmp_entry->ut_host, sizeof(utmp_entry->ut_host));
+            host[sizeof(utmp_entry->ut_host)] = 0;
+            if (host[0]) {
+               if (strchr(host, ':')) {
+                  sprintf(display, "DISPLAY=%s", host);
                   fprintf(stderr, "*** DISPLAY not set, setting it to %s\n",
-                          utmp_entry->ut_host);
+                          host);
                } else {
-                  sprintf(display, "DISPLAY=%s:0.0", utmp_entry->ut_host);
+                  sprintf(display, "DISPLAY=%s:0.0", host);
                   fprintf(stderr, "*** DISPLAY not set, setting it to %s:0.0\n",
-                          utmp_entry->ut_host);
+                          host);
                }
-               putenv((char *)display);
+               putenv(display);
 #ifndef UTMP_NO_ADDR
             } else if (utmp_entry->ut_addr) {
                struct hostent *he;
@@ -182,10 +184,12 @@ static void SetDisplay()
                   sprintf(display, "DISPLAY=%s:0.0", he->h_name);
                   fprintf(stderr, "*** DISPLAY not set, setting it to %s:0.0\n",
                           he->h_name);
-                  putenv((char *)display);
+                  putenv(display);
                }
 #endif
             }
+            delete [] host;
+            // display cannot be deleted otherwise the env var is deleted too
          }
          free(gUtmpContents);
       }
