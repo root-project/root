@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name: v4-00-08 $:$Id: TOracleServer.h,v 1.0 2004/12/04 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleServer.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -26,7 +26,6 @@ using namespace oracle::occi;
 #else
 class Environment;
 class Connection;
-class Statement;
 #endif
 
 
@@ -35,7 +34,6 @@ class TOracleServer : public TSQLServer {
 private:
    Environment  *fEnv;    // environment of Oracle access
    Connection   *fConn;   // connection to Oracle server
-   Statement    *fStmt;   // resusable statement object
 
 public:
    TOracleServer(const char *db, const char *uid, const char *pw);
@@ -43,6 +41,7 @@ public:
 
    void        Close(Option_t *opt="");
    TSQLResult *Query(const char *sql);
+   TSQLStatement *Statement(const char *sql, Int_t niter = 100);
    Int_t       SelectDataBase(const char *dbname);
    TSQLResult *GetDataBases(const char *wild = 0);
    TSQLResult *GetTables(const char *dbname, const char *wild = 0);

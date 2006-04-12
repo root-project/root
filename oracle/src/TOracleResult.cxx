@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.4 2005/04/25 17:21:11 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.5 2006/02/01 14:33:02 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -11,32 +11,13 @@
 
 #include "TOracleResult.h"
 #include "TOracleRow.h"
-
-#include <Riostream.h>
+#include "Riostream.h"
+#include "TList.h"
 
 using namespace std;
 
 
 ClassImp(TOracleResult)
-
-//______________________________________________________________________________
-void TOracleResult::GetMetaDataInfo()
-{
-   // Set fFieldInfo, fFieldCount, and fRowCount.
-
-   if (!fResult)
-      return;
-
-   try {
-      fFieldInfo = new vector<MetaData>(fResult->getColumnListMetaData());
-   } catch (SQLException &oraex) {
-      Error("GetMetaDataInfo()", (oraex.getMessage()).c_str());
-      MakeZombie();
-   }
-
-   fFieldCount = fFieldInfo->size();
-   fRowCount = -1; //doesn't provide row count
-}
 
 //______________________________________________________________________________
 void TOracleResult::initResultSet(Statement *stmt)
@@ -45,25 +26,20 @@ void TOracleResult::initResultSet(Statement *stmt)
 
    if (!stmt) {
       Error("initResultSet()", "construction: empty statement");
-      fResultType = -1;
    } else {
       try {
          fStmt = stmt;
          if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
             fResultType  = 1;
             fResult      = stmt->getResultSet();
-            GetMetaDataInfo();
-            fUpdateCount = 0;
-            //printf("type:%d columnsize:%d \n", fResultType, fFieldCount);
+            fFieldInfo   = (fResult==0) ? 0 : new vector<MetaData>(fResult->getColumnListMetaData());
+            fFieldCount  = (fFieldInfo==0) ? 0 : fFieldInfo->size();
          } else if (stmt->status() == Statement::UPDATE_COUNT_AVAILABLE) {
-            fResultType  = 0;
+            fResultType  = 3; // this is update_count_available
             fResult      = 0;
-            fRowCount    = 0;
             fFieldInfo   = 0;
             fFieldCount  = 0;
             fUpdateCount = stmt->getUpdateCount();
-         } else {
-            fResultType = -1;
          }
       } catch (SQLException &oraex) {
          Error("initResultSet()", (oraex.getMessage()).c_str());
@@ -73,17 +49,20 @@ void TOracleResult::initResultSet(Statement *stmt)
 }
 
 //______________________________________________________________________________
-TOracleResult::TOracleResult(Statement *stmt)
+TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 {
+   fConn        = conn;
+   fResult      = 0;
+   fStmt        = 0;
+   fPool        = 0;
+   fRowCount    = 0;
+   fFieldInfo   = 0;
+   fResultType  = 0;
+   fUpdateCount = 0;
+   
    initResultSet(stmt);
-}
-
-//______________________________________________________________________________
-TOracleResult::TOracleResult(Statement *stmt, int row_count)
-{
-   initResultSet(stmt);
-   // override fRowCount set by initResultSet()
-   fRowCount = (row_count==-1) ? 0 : row_count;
+   
+   if (fResult) ProducePool();
 }
 
 //______________________________________________________________________________
@@ -91,17 +70,22 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
 {
    // This construction func is only used to get table metainfo.
 
+   fResult      = 0;
+   fStmt        = 0;
+   fConn        = 0;
+   fPool        = 0;
+   fRowCount    = 0;
+   fFieldInfo   = 0;
+   fResultType  = 0;
+   fUpdateCount = 0;
+   
    if (!tableName || !conn) {
       Error("TOracleResult", "construction: empty input parameter");
-      fResultType = -1;
    } else {
       MetaData connMD = conn->getMetaData(tableName, MetaData::PTYPE_TABLE);
       fFieldInfo   = new vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
       fFieldCount  = fFieldInfo->size();
-      fRowCount    = 0;
-      fResult      = 0;
-      fUpdateCount = 0;
-      fResultType  = 1;
+      fResultType  = 2; // indicates that this is just an table metainfo
    }
 }
 
@@ -110,8 +94,7 @@ TOracleResult::~TOracleResult()
 {
    // Cleanup Oracle query result.
 
-   if (fResult)
-      Close();
+   Close();
 }
 
 //______________________________________________________________________________
@@ -119,14 +102,25 @@ void TOracleResult::Close(Option_t *)
 {
    // Close query result.
 
-   if (!fResult || !fStmt)
-      return;
-   fResultType = -1;
-   fStmt->closeResultSet(fResult);
-   fResult    = 0;
+   if (fConn && fStmt) {
+      if (fResult) fStmt->closeResultSet(fResult);
+      fConn->terminateStatement(fStmt);
+   }
+   
+   if (fPool) {
+      fPool->Delete();
+      delete fPool;   
+   }
+
    if (fFieldInfo)
       delete fFieldInfo;
-   fRowCount  = 0;
+
+   fResultType = 0;
+   
+   fStmt = 0;
+   fResult = 0;
+   fFieldInfo = 0;
+   fPool = 0;
 }
 
 //______________________________________________________________________________
@@ -156,8 +150,8 @@ const char *TOracleResult::GetFieldName(Int_t field)
 
    if (!IsValid(field))
       return 0;
-   string s = (*fFieldInfo)[field].getString(MetaData::ATTR_NAME);
-   return (const char *)s.c_str();
+   fNameBuffer = (*fFieldInfo)[field].getString(MetaData::ATTR_NAME);
+   return fNameBuffer.c_str();
 }
 
 //______________________________________________________________________________
@@ -166,19 +160,18 @@ TSQLRow *TOracleResult::Next()
    // Get next query result row. The returned object must be
    // deleted by the user.
 
-   if (fResultType == -1) {
-      Error("Next", "result set closed");
-      return 0;
-   }
-
-   if (fResultType == 0) {
-      // if dml query, ...
-      return new TOracleRow(fUpdateCount);
+   if (!fResult || (fResultType!=1)) return 0;
+   
+   if (fPool!=0) {
+      TSQLRow* row = (TSQLRow*) fPool->First();
+      if (row!=0) fPool->Remove(row);
+      return row;
    }
 
    // if select query,
    try {
       if (fResult->next()) {
+         fRowCount++; 
          return new TOracleRow(fResult, fFieldInfo);
       } else
          return 0;
@@ -187,4 +180,28 @@ TSQLRow *TOracleResult::Next()
       MakeZombie();
    }
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TOracleResult::GetRowCount() const
+{
+   if (!fResult) return 0;
+   
+   if (fPool==0) ((TOracleResult*) this)->ProducePool();
+   
+   return fRowCount; 
+}
+
+//______________________________________________________________________________
+void TOracleResult::ProducePool()
+{
+   if (fPool!=0) return;
+   
+   TList* pool = new TList;
+   TSQLRow* res = 0;
+   while ((res = Next()) !=0) {
+      pool->Add(res);
+   } 
+       
+   fPool = pool;
 }

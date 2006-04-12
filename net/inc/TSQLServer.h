@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -37,7 +37,8 @@
 #include "TString.h"
 #endif
 
-class  TSQLResult;
+class TSQLResult;
+class TSQLStatement;
 
 
 class TSQLServer : public TObject {
@@ -55,6 +56,8 @@ public:
 
    virtual void        Close(Option_t *option="") = 0;
    virtual TSQLResult *Query(const char *sql) = 0;
+   virtual TSQLStatement *Statement(const char*, Int_t = 100)
+                           { AbstractMethod("Statement"); return 0; }
    virtual Int_t       SelectDataBase(const char *dbname) = 0;
    virtual TSQLResult *GetDataBases(const char *wild = 0) = 0;
    virtual TSQLResult *GetTables(const char *dbname, const char *wild = 0) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.6 2004/09/22 10:26:07 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.7 2005/02/17 14:35:37 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TMySQLServer.h"
 #include "TMySQLResult.h"
+#include "TMySQLStatement.h"
 #include "TUrl.h"
 
 
@@ -256,3 +257,32 @@ const char *TMySQLServer::ServerInfo()
    }
    return mysql_get_server_info(fMySQL);
 }
+
+
+//______________________________________________________________________________
+TSQLStatement *TMySQLServer::Statement(const char *sql, Int_t)
+{
+   if (!IsConnected()) {
+      Error("Statement", "not connected");
+      return 0;
+   }
+   if (!sql || !*sql) {
+      Error("Statement", "no query string specified");
+      return 0;
+   }
+
+   MYSQL_STMT *stmt = mysql_stmt_init(fMySQL);
+   if (!stmt) {
+      Error("Statement", " mysql_stmt_init(), out of memory");
+      return 0;
+    }
+    
+   if (mysql_stmt_prepare(stmt, sql, strlen(sql))) {
+      Error("Statement", " mysql_stmt_prepare() failed");
+      mysql_stmt_close(stmt);
+      return 0;
+   }
+
+   return new TMySQLStatement(stmt);
+}
+

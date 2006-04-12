@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name: v4-00-08 $:$Id: LinkDef.h,v 1.0 2004/12/04 17:00:45 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: LinkDef.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -18,5 +18,6 @@
 #pragma link C++ class TOracleServer;
 #pragma link C++ class TOracleResult;
 #pragma link C++ class TOracleRow;
+#pragma link C++ class TOracleStatement;
 
 #endif

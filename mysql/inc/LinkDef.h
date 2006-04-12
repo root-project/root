@@ -7,5 +7,6 @@
 #pragma link C++ class TMySQLServer;
 #pragma link C++ class TMySQLResult;
 #pragma link C++ class TMySQLRow;
+#pragma link C++ class TMySQLStatement;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.4 2005/04/25 17:21:11 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -29,33 +29,39 @@ class ResultSet;
 class MetaData;
 #endif
 
+class TList;
 
 class TOracleResult : public TSQLResult {
 
 private:
-   Statement             *fStmt;
+   Connection            *fConn;        // connection to Oracle 
+   Statement             *fStmt;        // executed statement
    ResultSet             *fResult;      // query result (rows)
    std::vector<MetaData> *fFieldInfo;   // info for each field in the row
    Int_t                  fFieldCount;  // num of fields in resultset
    UInt_t                 fUpdateCount; // for dml query, mutual exclusive with above
-   Int_t                  fResultType;  // 0 - Update(dml); 1 - Select; -1 - empty
+   Int_t                  fResultType;  // 0 - nothing; 1 - Select; 2 - table metainfo, 3 - update counter
+   TList                 *fPool;        // array of results, produced when number of rows are requested 
+   std::string           fNameBuffer; // buffer for GetFieldName() argument
 
    Bool_t  IsValid(Int_t field);
 
 protected:
    void    initResultSet(Statement *stmt);
-   void    GetMetaDataInfo();
+   void    ProducePool();
 
 public:
-   TOracleResult(Statement *stmt);
-   TOracleResult(Statement *stmt, int row_count);
+   TOracleResult(Connection *conn, Statement *stmt);
    TOracleResult(Connection *conn, const char *tableName);
    ~TOracleResult();
 
    void        Close(Option_t *opt="");
    Int_t       GetFieldCount();
    const char *GetFieldName(Int_t field);
+   virtual Int_t GetRowCount() const;
    TSQLRow    *Next();
+   
+   Int_t       GetUpdateCount() { return fUpdateCount; }
 
    ClassDef(TOracleResult,0)  // Oracle query result
 };

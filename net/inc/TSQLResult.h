@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TSQLResult.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    virtual void        Close(Option_t *option="") = 0;
    virtual Int_t       GetFieldCount() = 0;
    virtual const char *GetFieldName(Int_t field) = 0;
-   Int_t               GetRowCount() const { return fRowCount; }
+   virtual Int_t       GetRowCount() const { return fRowCount; }
    virtual TSQLRow    *Next() = 0;
 
    ClassDef(TSQLResult,0)  // SQL query result

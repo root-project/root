@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.6 2005/06/01 16:12:16 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.7 2006/02/07 19:48:00 pcanal Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -11,8 +11,8 @@
 
 #include "TOracleServer.h"
 #include "TOracleResult.h"
+#include "TOracleStatement.h"
 #include "TUrl.h"
-
 
 ClassImp(TOracleServer)
 
@@ -26,7 +26,6 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
 
    fEnv = 0;
    fConn = 0;
-   fStmt = 0;
 
    TUrl url(db);
 
@@ -77,8 +76,6 @@ void TOracleServer::Close(Option_t *)
    // Close connection to Oracle DB server.
 
    try {
-      if (fStmt)
-         fConn->terminateStatement(fStmt);
       if (fConn)
          fEnv->terminateConnection(fConn);
       if (fEnv)
@@ -91,12 +88,37 @@ void TOracleServer::Close(Option_t *)
    fPort = -1;
 }
 
+
+
+//______________________________________________________________________________
+TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
+{
+   if (!IsConnected()) {
+      Error("Statement", "not connected");
+      return 0;
+   }
+   if (!sql || !*sql) {
+      Error("Statement", "no query string specified");
+      return 0;
+   }
+
+   try {
+      oracle::occi::Statement *stmt = fConn->createStatement(sql);
+
+      return new TOracleStatement(fConn, stmt, niter);
+
+   } catch (SQLException &oraex)  {
+      Error("Statement", "query failed: (error: %s)", (oraex.getMessage()).c_str());
+   }
+
+   return 0;
+}
+
 //______________________________________________________________________________
 TSQLResult *TOracleServer::Query(const char *sql)
 {
    // Execute SQL command. Result object must be deleted by the user.
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
-   // The result object must be deleted by the user.
 
    if (!IsConnected()) {
       Error("Query", "not connected");
@@ -108,61 +130,23 @@ TSQLResult *TOracleServer::Query(const char *sql)
    }
 
    try {
-      if (!fStmt) {
-         fStmt = fConn->createStatement();
-         fStmt->setPrefetchRowCount(1000);
-         fStmt->setPrefetchMemorySize(1024*1024);
-      }
+      oracle::occi::Statement *stmt = fConn->createStatement();
 
-      // count the number of rows of the resultset of this select
-      // NOTE: Oracle doesn't provide a way through OCI or OCCI to count
-      //       the number of rows. The reason is the memory concern of client
-      //       application. Consider a select statment with 1 million rows
-      //       returned. In Oracle, user can set prefetch size to repeatedly
-      //       retrieve all rows by calling next(#rows_to_fetch). By default,
-      //       prefetch size is set to 1, meaning client only fetch 1 row each
-      //       time it contacts db server.
-      // The best-so-far way to count the number of rows is to traverse the
-      // resultset (count(query)). This method is neither efficient, fast
-      // nor 100% accurate. Please see OCI/OCCI discussion forum for details
-      // So the only purpose to count rows is follow TSQL specification.
+      // NOTE: before special COUNT query was executed to define number of 
+      // rows in result set. Now it is not requried, while TOracleResult class
+      // will automatically fetch all rows from resultset when 
+      // GetRowCount() will be called first time. 
+      // It is better do not use GetRowCount() to avoid unnecessary memory usage.
+      
+      stmt->setSQL(sql);
+      stmt->setPrefetchRowCount(1000);
+      stmt->setPrefetchMemorySize(1000000);
+      stmt->execute();
 
-      // TODO: We should change TSQL spec on GetRowCount(). Not every db server
-      // provides natural way to do so like mysql. User can loop over resultset
-      // and get the count after the last next() unless he must know the count
-      // before next()
-
-      // NOTE: sql should not end with ";" !!!
-      int row_count = -1;
-      char *str, *sql_chars = new char[strlen(sql)+1];
-      strcpy(sql_chars, sql);
-      str = sql_chars;
-      // skip space and newline chars
-      while ( *str == '\n' || *str == '\t' || *str == ' ' || *str == '\r' )
-         str ++;
-      string sql_string = sql;
-      if (strncasecmp(str, "SELECT",6)==0) {
-         string count_sql = "select COUNT(*) from ( " + sql_string + " )";
-         fStmt->setSQL(count_sql.c_str());
-         fStmt->execute();
-
-         if (fStmt->status() == Statement::RESULT_SET_AVAILABLE) {
-            ResultSet *count_rs = fStmt->getResultSet();
-            if (count_rs->next())
-               row_count = count_rs->getInt(1);
-            fStmt->closeResultSet(count_rs);
-         }
-      }
-      // NOTE: between above and below execute(), if there is any DDL operated
-      // on target tables, the row_count may not be accurate
-      fStmt->setSQL(sql);
-      fStmt->execute();
-
-      TOracleResult *res = new TOracleResult(fStmt, row_count);
-      delete [] sql_chars;
+      TOracleResult *res = new TOracleResult(fConn, stmt);
       return res;
    } catch (SQLException &oraex)  {
-      Error("TOracleServer", "query failed: (error: %s)", (oraex.getMessage()).c_str());
+      Error("Query", "query failed: (error: %s)", (oraex.getMessage()).c_str());
    }
 
    return 0;

@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.2 2001/08/24 16:34:18 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.3 2001/12/11 14:19:51 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -38,6 +38,7 @@ public:
 
    void        Close(Option_t *opt="");
    TSQLResult *Query(const char *sql);
+   TSQLStatement *Statement(const char *sql, Int_t = 100);
    Int_t       SelectDataBase(const char *dbname);
    TSQLResult *GetDataBases(const char *wild = 0);
    TSQLResult *GetTables(const char *dbname, const char *wild = 0);
