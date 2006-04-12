@@ -65,9 +65,6 @@ $(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTGSIH) $(QTGSIL)
 
-$(QTGSIDO):     $(QTGSIDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(QTGSICXXFLAGS) -o $@ -c $<
-
 all-qtgsi:      $(QTGSILIB)
 
 test-qtgsi: 	$(QTGSILIB)
@@ -92,6 +89,7 @@ distclean::     distclean-qtgsi
 
 ##### extra rules ######
 $(sort $(QTGSIMOCO) $(QTGSIO)): CXXFLAGS += $(QTGSICXXFLAGS)
+$(QTGSIDO): CXXFLAGS += $(QTGSICXXFLAGS)
 
 $(QTGSIMOC): $(QTGSIDIRS)/moc_%.cxx: $(QTGSIDIRI)/%.h
 	$(QTMOCEXE) $< -o $@
