@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.36 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.37 2006/04/10 13:03:17 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -269,9 +269,10 @@ void TGComboBox::SetTopEntry(TGLBEntry *e, TGLayoutHints *lh)
 }
 
 //______________________________________________________________________________
-void TGComboBox::Select(Int_t id)
+void TGComboBox::Select(Int_t id, Bool_t emit)
 {
-   // Make the selected item visible in the combo box window.
+   // Make the selected item visible in the combo box window
+   // and emit signals according to the second parameter.
 
    if (id!=GetSelected()) {
       TGLBEntry *e;
@@ -280,8 +281,10 @@ void TGComboBox::Select(Int_t id)
          if (fSelEntry) {
             fSelEntry->Update(e);
             Layout();
-            Selected(fWidgetId, id);
-            Selected(id);
+            if (emit) {
+               Selected(fWidgetId, id);
+               Selected(id);
+            }
          }
       }
    }

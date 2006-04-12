@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.17 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.18 2006/04/10 13:03:17 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -113,7 +113,7 @@ public:
    virtual TGListBox    *GetListBox() const { return fListBox; }
    virtual TGTextEntry  *GetTextEntry() const { return fTextEntry; }
    virtual TGLBEntry    *FindEntry(const char *s) const { return fListBox->FindEntry(s); }
-   virtual void  Select(Int_t id);
+   virtual void  Select(Int_t id, Bool_t emit = kTRUE);
    virtual Int_t GetSelected() const { return fListBox->GetSelected(); }
    virtual TGLBEntry *GetSelectedEntry() const
                         { return fListBox->GetSelectedEntry(); }
