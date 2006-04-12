@@ -1493,7 +1493,8 @@ if test ! "x$enable_oracle" = "xno"; then
        $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib
     oraclelib="$oraclelib $found_lib"
 
-    if test "x$oracleincdir" = "x" || test "x$oraclelib" = "x"; then
+    # space in "x " is intentional
+    if test "x$oracleincdir" = "x" || test "x$oraclelib" = "x "; then
         enable_oracle="no"
     fi
 fi
