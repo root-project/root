@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.15 2006/04/01 03:23:47 pcanal Exp $
+# $Id: Module.mk,v 1.16 2006/04/03 18:41:19 pcanal Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -108,9 +108,12 @@ $(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 
 ##### cintdlls ######
 
-cintdlls: $(CINTDIRDLLS)/qtcint.dll
+# qtcint is not longer part of the cintdlls
+# cintdlls: $(CINTDIRDLLS)/qtcint.dll
 
-$(CINTDIRDLLS)/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
+qtcint: lib/qtcint.dll
+
+lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
                            cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h \
 			   cint/lib/qt/qtfunctions.h
 	$(MAKECINTDLL) $(PLATFORM) C++ qtcint qt \
