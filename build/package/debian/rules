@@ -45,6 +45,7 @@ SYSCONFDIR	= /etc
 PKGDOCDIR	= $(PREFIX)/share/doc/root
 CINTDIR		= $(PREFIX)/lib/root/$(SOVERS)/cint
 CONFOPTIONS	:=--enable-table				\
+		  --enable-fftw3				\
 		  --enable-roofit				\
 		  --enable-ruby					\
 		  --enable-qt					\
@@ -99,6 +100,7 @@ PLUGINS		:= root-plugin-asimage 		\
 		   root-plugin-hbook 		\
 		   root-plugin-krb5 		\
 		   libroot-ldap 		\
+		   libroot-fftw 		\
 		   root-plugin-minuit2 		\
 		   root-plugin-gl 		\
 		   root-plugin-qt 		\
@@ -254,19 +256,20 @@ clean:  $(TEMPLATES:%.in=%)
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean 
 	build/unix/makecintdlls.sh clean
-	rm -rf bin lib include 		\
-		system.rootrc 		\
-		config/Makefile.config 	\
-		README/Changelog 	\
-		etc/system.rootrc 	\
-		etc/system.rootauthrc 	\
-		etc/system.rootdaemonrc \
-		etc/root.mimes 		\
-	   	build/misc/root-help.el	\
-		debian/*.files 		\
-		debian/*.install	\
-		debian/shlibs.local	\
-		freetype/src/freetype-2.1.3
+	rm -rf bin lib include 			\
+		system.rootrc 			\
+		config/Makefile.config 		\
+		README/Changelog 		\
+		etc/system.rootrc 		\
+		etc/system.rootauthrc 		\
+		etc/system.rootdaemonrc 	\
+		etc/root.mimes 			\
+	   	build/misc/root-help.el		\
+		debian/*.files 			\
+		debian/*.install		\
+		debian/shlibs.local		\
+		freetype/src/freetype-2.1.3	\
+		cint/lib/posix/a.out
 	dh_clean 
 
 pkglists:

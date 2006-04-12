@@ -3375,7 +3375,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
     test "x$enable_clarens" = "xyes" && pkglist="$pkglist libroot-clarens"
     test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
-    test "x$enable_fftw3"   = "xyes" && pkglist="$pkglist root-plugin-fftw3"
+    test "x$enable_fftw3"   = "xyes" && pkglist="$pkglist libroot-fftw"
     test "x$enable_gfal"    = "xyes" && pkglist="$pkglist root-plugin-gfal"
     test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"

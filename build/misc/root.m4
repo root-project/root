@@ -1,8 +1,8 @@
 dnl -*- mode: autoconf -*- 
 dnl
-dnl $Id: root.m4,v 1.2 2002/07/31 20:45:09 rdm Exp $
+dnl $Id: root.m4,v 1.3 2005/03/21 21:42:21 rdm Exp $
 dnl $Author: rdm $
-dnl $Date: 2002/07/31 20:45:09 $
+dnl $Date: 2005/03/21 21:42:21 $
 dnl
 dnl Autoconf macro to check for existence or ROOT on the system
 dnl Synopsis:
@@ -12,7 +12,7 @@ dnl
 dnl Some examples: 
 dnl 
 dnl    ROOT_PATH(3.03/05, , AC_MSG_ERROR(Your ROOT version is too old))
-dnl    ROOT_PATH(, AC_DEFUN(HAVE_ROOT))
+dnl    ROOT_PATH(, AC_DEFINE([HAVE_ROOT]))
 dnl 
 dnl The macro defines the following substitution variables
 dnl
@@ -61,6 +61,8 @@ AC_DEFUN([ROOT_PATH],
     ROOTAUXCFLAGS=`$ROOTCONF --auxcflags`
     ROOTAUXLIBS=`$ROOTCONF --auxlibs`
     ROOTRPATH=$ROOTLIBDIR
+    ROOTVERSION=`$ROOTCONF --version`
+    ROOTSOVERSION=`dirname $ROOTVERSION`
 	
     if test $1 ; then 
       AC_MSG_CHECKING(wether ROOT version >= [$1])
@@ -86,6 +88,8 @@ AC_DEFUN([ROOT_PATH],
   AC_SUBST(ROOTAUXLIBS)
   AC_SUBST(ROOTAUXCFLAGS)
   AC_SUBST(ROOTRPATH)
+  AC_SUBST(ROOTVERSION)
+  AC_SUBST(ROOTSOVERSION)
 
   if test "x$no_root" = "x" ; then 
     ifelse([$2], , :, [$2])     
@@ -94,6 +98,26 @@ AC_DEFUN([ROOT_PATH],
   fi
 ])
 
+#
+# Macro to check if ROOT has a specific feature:
+#
+#   ROOT_FEATURE(FEATURE,[ACTION_IF_HAVE,[ACTION_IF_NOT]])
+#
+# For example 
+#
+#   ROOT_FEATURE([ldap],[AC_DEFINE([HAVE_ROOT_LDAP])])
+# 
+AC_DEFUN([ROOT_FEATURE],
+[
+  AC_REQUIRE([ROOT_PATH])
+  feat=$1
+  res=`$ROOTCONF --has-$feat` 
+  if test "x$res" = "xyes" ; then 
+    ifelse([$2], , :, [$2])     
+  else 
+    ifelse([$3], , :, [$3])     
+  fi
+])
 
 #
 # EOF

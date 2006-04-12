@@ -1,3 +1,10 @@
+root (5.11.01-5) unstable; urgency=low
+
+  * Added new package libroot-fftw, and libroot-fftw-dev.   Extension 
+    packages with libraries to interface FFTw.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 11 Apr 2006 18:01:26 +0200
+
 root (5.11.01-4) unstable; urgency=low
 
   * Added packages libroot-mathmore5.11 and libroot-mathmore-dev.

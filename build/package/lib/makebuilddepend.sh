@@ -110,6 +110,7 @@ for i in $* ; do
 	*chirp)		echo -n ", libchirp-dev"			;;
 	*clarens)	echo -n ", libxmlrpc-c3-dev | libxmlrpc-c-dev"	;;
 	*dcache)	echo -n ", libdcap-dev"				;;
+	*fftw)		echo -n ", fftw3-dev"				;;
 	*fumili)							;;
 	*gl)		echo -n ", libglu1-xorg-dev | xlibmesa-glu-dev |  libglu-dev"	;;
 	*globus)	echo -n ", globus"				;;
