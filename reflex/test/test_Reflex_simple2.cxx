@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.10 2006/03/20 15:31:41 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.11 2006/04/05 15:39:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -165,7 +165,9 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testFreeFunctions );
   CPPUNIT_TEST( testDiamond );
   CPPUNIT_TEST( testOperators );
-  CPPUNIT_TEST (testTypedefSelection );
+  CPPUNIT_TEST( testTypedefSelection );
+  CPPUNIT_TEST( testTypedef );
+  CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -184,22 +186,24 @@ public:
   void testDiamond();
   void testOperators();
   void testTypedefSelection();
+  void testTypedef();
+  void unloadLibrary();
 
   void tearDown() {}
 
 }; // class ReflexSimple2Test
 
+static void * s_libInstance = 0;
 
 // loading the dictionary library
 void ReflexSimple2Test::loadLibrary() {
   //Reflex::accessArtificialMembers() = true;
-  void* libInstance = 0;  
 #if defined (_WIN32)
-  libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
+  s_libInstance = LoadLibrary("libtest_Class2DictRflx.dll");
 #else
-  libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_LAZY);
+  s_libInstance = dlopen("libtest_Class2DictRflx.so", RTLD_NOW);
 #endif
-  CPPUNIT_ASSERT(libInstance);
+  CPPUNIT_ASSERT( s_libInstance );
 }
 
 void ReflexSimple2Test::testTemplateClass() {
@@ -814,6 +818,36 @@ void ReflexSimple2Test::testTypedefSelection() {
   CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t3.Name());
 
 }
+
+
+void ReflexSimple2Test::testTypedef() {
+  Type t = Type::ByName("xmlTypedefSelection::TypedefXmlSelClass2");
+  CPPUNIT_ASSERT(t);
+  CPPUNIT_ASSERT_EQUAL(std::string("TypedefXmlSelClass"), t.ToType().Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.ToType().ToType().Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.ToType(FINAL).Name());
+}
+
+
+void ReflexSimple2Test::unloadLibrary() {
+#if defined (_WIN32)
+  int ret = FreeLibrary(s_libInstance);
+  if (ret == 0) std::cout << "Unload of dictionary library failed. Reason: " << GetLastError() << std::endl;
+  CPPUNIT_ASSERT(ret);
+#else
+  int ret = dlclose(s_libInstance);
+  if (ret == -1) std::cout << "Unload of dictionary library failed. Reason: " << dlerror() << std::endl;
+  CPPUNIT_ASSERT(!ret);
+#endif
+
+  Type t = Type::ByName("ClassH");
+  //CPPUNIT_ASSERT(!t);
+  
+  //std::cout << "Endless" << std::endl;
+  //while (true) {}
+
+}
+
 
 // Class registration on cppunit framework
 CPPUNIT_TEST_SUITE_REGISTRATION(ReflexSimple2Test);

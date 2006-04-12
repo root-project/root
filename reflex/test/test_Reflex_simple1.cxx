@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.4 2006/04/05 15:39:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -27,12 +27,15 @@ using namespace ROOT::Reflex;
 class ReflexSimple1Test : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE( ReflexSimple1Test );
+
   CPPUNIT_TEST( loadLibrary );
   CPPUNIT_TEST( testSizeT );
   CPPUNIT_TEST( testBase );
   CPPUNIT_TEST( testTypeCount );
   CPPUNIT_TEST( testMembers );
   CPPUNIT_TEST( testVirtual );
+  CPPUNIT_TEST( unloadLibrary );
+
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -45,21 +48,21 @@ public:
   void testTypeCount();
   void testMembers();
   void testVirtual();
+  void unloadLibrary();
 
   void tearDown() {}
 
 }; // class ReflesSimple1Test
 
-
+static void * s_libInstance = 0;
 
 void ReflexSimple1Test::loadLibrary() {
- void * libInstance = 0;
- #if defined (_WIN32)
-   libInstance = LoadLibrary("libtest_ReflexRflx.dll");
- #else
-   libInstance = dlopen("libtest_ReflexRflx.so", RTLD_LAZY);
- #endif
-   CPPUNIT_ASSERT(libInstance);
+#if defined (_WIN32)
+  s_libInstance = LoadLibrary("libtest_ReflexRflx.dll");
+#else
+  s_libInstance = dlopen("libtest_ReflexRflx.so", RTLD_NOW);
+#endif
+  CPPUNIT_ASSERT( s_libInstance );
 }
 
 void ReflexSimple1Test::testSizeT() {
@@ -245,6 +248,24 @@ void ReflexSimple1Test::testVirtual() {
   CPPUNIT_ASSERT(t2.IsVirtual());
 
 }
+
+
+void ReflexSimple1Test::unloadLibrary() {
+#if defined (_WIN32)
+  int ret = FreeLibrary(s_libInstance);
+  if (ret == 0) std::cout << "Unload of dictionary library failed. Reason: " << GetLastError() << std::endl;
+  CPPUNIT_ASSERT(ret);
+#else
+  int ret = dlclose(s_libInstance);
+  if (ret == -1) std::cout << "Unload of dictionary library failed. Reason: " << dlerror() << std::endl;
+  CPPUNIT_ASSERT(!ret);
+#endif
+  
+  //std::cout << "Endless" << std::endl;
+  //while (true) {}
+
+}
+
 
 // Class registration on cppunit framework
 CPPUNIT_TEST_SUITE_REGISTRATION(ReflexSimple1Test);
