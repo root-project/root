@@ -65,7 +65,7 @@ clean-qtgsi:
 
 clean::         clean-qtgsi
 
-distclean-qtgsi:   clean-qtgsi
+distclean-qtgsi: clean-qtgsi
 		@rm -f $(QTGSIDEP) $(QTGSIMOC) $(QTGSILIB)
 
 distclean::     distclean-qtgsi

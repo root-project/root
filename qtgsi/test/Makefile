@@ -7,7 +7,7 @@ lib: $(SUBDIRS)
 all: lib
 
 clean:
-	for dir in $(SUBDIRS); do cd $$dir ; $(MAKE) clean ; cd .. ; done
+	@for dir in $(SUBDIRS); do cd $$dir ; $(MAKE) clean ; cd .. ; done
 
 $(SUBDIRS):
 	@cd $@; $(MAKE) all "QTLINKLIB=$(GSIQTLIBI)"

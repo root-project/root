@@ -6,7 +6,4 @@ all:
 lib: all
 
 clean: 
-	qmake qtrootexample.pro -o Makefile.qt;
-	make -f Makefile.qt clean
-	rm -f Makefile.qt
-
+	@rm -f Makefile.qt *.o core

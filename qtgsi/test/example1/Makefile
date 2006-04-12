@@ -172,8 +172,8 @@ tmake:
 	tmake qtroot.pro
 
 clean:
-	-rm -f $(OBJECTS) $(OBJMOC) $(SRCMOC)
-	-rm -f *~ core qtroot
+	-@rm -f $(OBJECTS) $(OBJMOC) $(SRCMOC)
+	-@rm -f *~ core qtroot
 
 #depend:
 #	touch Make-depend
