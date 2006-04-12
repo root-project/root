@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.1 2006/02/6 10:00:44 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLStatement.h,v 1.1 2006/04/12 20:53:45 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -17,11 +17,14 @@
 #endif
 
 #if !defined(__CINT__)
+#ifndef R__WIN32
+#include <sys/time.h>
+#endif
 #include <mysql.h>
 #else
-typedef int MYSQL_STMT;
-typedef int MYSQL_BIND;
-typedef bool my_bool;
+struct MYSQL_STMT;
+struct MYSQL_BIND;
+typedef char my_bool;
 #endif
 
 class TMySQLStatement : public TSQLStatement {
