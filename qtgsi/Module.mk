@@ -16,6 +16,7 @@ QTGSIL        := $(MODDIRI)/LinkDef.h
 QTGSIDS       := $(MODDIRS)/G__QtGSI.cxx
 QTGSIDO       := $(QTGSIDS:.cxx=.o)
 QTGSIDH       := $(QTGSIDS:.cxx=.h)
+
 QTGSIH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 QTGSIS        := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
@@ -55,7 +56,8 @@ include/%.h:    $(QTGSIDIRI)/%.h
 
 $(QTGSILIB):    $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO) $(ORDER_) $(MAINLIBS) $(QTGSILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libQtGSI.$(SOEXT) $@ "$(QTGSIO) $(QTGSIDO) $(QTGSIMOCO)" \
+		   "$(SOFLAGS)" libQtGSI.$(SOEXT) $@ \
+		   "$(QTGSIO) $(QTGSIDO) $(QTGSIMOCO)" \
 		   "$(QTGSILIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
 
@@ -70,6 +72,12 @@ all-qtgsi:      $(QTGSILIB)
 
 test-qtgsi: 	$(QTGSILIB)
 		cd $(QTGSIDIR)/test; make $(QTTESTOPTS)
+
+map-qtgsi:      $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(QTGSILIB) \
+		   -d $(QTGSILIBDEP) -c $(QTGSIL)
+
+map::           map-qtgsi
 
 clean-qtgsi:
 		@rm -f $(QTGSIO) $(QTGSIMOCO)
