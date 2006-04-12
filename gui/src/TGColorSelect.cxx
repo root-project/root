@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.12 2006/04/05 09:37:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.13 2006/04/07 08:43:59 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -204,7 +204,7 @@ TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) 
                     GetDefaultFrameBackground())
 {
    // TGColorPopup constructor.
-   // The TGColorPopup is a popup containing a TG16ColorSelector and a "More..." 
+   // The TGColorPopup is a popup containing a TG16ColorSelector and a "More..."
    // button which popups up a TGColorDialog allowing custom color selection.
 
    fMsgWindow = m;
@@ -354,8 +354,8 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    TGCheckButton(p, "", id)
 {
    // TGColorSelect constructor.
-   // The TGColorSelect widget is like a checkbutton but instead of the check 
-   // mark there is color area with a little down arrow. 
+   // The TGColorSelect widget is like a checkbutton but instead of the check
+   // mark there is color area with a little down arrow.
    // When clicked on the arrow the TGColorPopup pops up.
 
    fColor = color;
@@ -550,23 +550,15 @@ void TGColorSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
 }
 
 //________________________________________________________________________________
-void TGColorSelect::SetColor(ULong_t color)
+void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
 {
    // Set color.
 
    fColor = color;
    fDrawGC.SetForeground(color);
    gClient->NeedRedraw(this);
-   ColorSelected(fColor);   // emit a signal
-}
-
-void TGColorSelect::SetColorNoSignal(ULong_t color)
-{
-   // Set color, don't emit 'ColorSelected'.
-
-   fColor = color;
-   fDrawGC.SetForeground(color);
-   gClient->NeedRedraw(this);
+   if (emit)
+      ColorSelected(fColor);   // emit a signal
 }
 
 //______________________________________________________________________________
@@ -591,7 +583,7 @@ void TGColorSelect::SavePrimitive(ofstream &out, Option_t *)
    out << GetName() << " = new TGColorSelect(" << fParent->GetName()
        << ", " << cvar.Data() << ", " << WidgetId() << ");" << endl;
    nn++;
-   
+
    if (!IsEnabled()) {
       out << "   " << GetName() << "->Disable();" << endl;
    }

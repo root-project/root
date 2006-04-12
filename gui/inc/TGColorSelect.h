@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.6 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.7 2006/04/07 08:43:59 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -132,8 +132,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   void    SetColor(Pixel_t color);
-   void    SetColorNoSignal(Pixel_t color);
+   void    SetColor(Pixel_t color, Bool_t emit = kTRUE);
    Pixel_t GetColor() const { return fColor; }
    void    Enable();
    void    Disable();
@@ -141,7 +140,7 @@ public:
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
-   virtual void ColorSelected(Pixel_t color = 0) 
+   virtual void ColorSelected(Pixel_t color = 0)
             { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*
 
    ClassDef(TGColorSelect,0)  // Color selection checkbutton
