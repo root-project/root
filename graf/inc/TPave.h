@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.6 2005/11/11 17:31:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.h,v 1.7 2006/01/23 21:15:57 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    virtual ~TPave();
    void  Copy(TObject &pave) const;
    virtual void  ConvertNDCtoPad();
+   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  Draw(Option_t *option="");
    virtual void  DrawPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                           Int_t bordersize=4 ,Option_t *option="br");

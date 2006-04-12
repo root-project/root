@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.18 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.19 2006/01/23 21:15:57 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -168,6 +168,49 @@ void TPave::Copy(TObject &obj) const
    ((TPave&)obj).fName        = fName;
    ((TPave&)obj).fCornerRadius= fCornerRadius;
 }
+
+//______________________________________________________________________________
+Int_t TPave::DistancetoPrimitive(Int_t px, Int_t py)
+{
+   // Compute distance from point px,py to a pave.
+   //
+   // Compute the closest distance of approach from point px,py to the
+   // edges of this pave.
+   // The distance is computed in pixels units.
+
+   Int_t pxl, pyl, pxt, pyt;
+   Int_t px1 = gPad->XtoAbsPixel(fX1);
+   Int_t py1 = gPad->YtoAbsPixel(fY1);
+   Int_t px2 = gPad->XtoAbsPixel(fX2);
+   Int_t py2 = gPad->YtoAbsPixel(fY2);
+   if (px1 < px2) {pxl = px1; pxt = px2;}
+   else           {pxl = px2; pxt = px1;}
+   if (py1 < py2) {pyl = py1; pyt = py2;}
+   else           {pyl = py2; pyt = py1;}
+
+   // Are we inside the box?
+   //if (GetFillStyle()) {
+      if ( (px >= pxl && px <= pxt) && (py >= pyl && py <= pyt) ) return 0;
+      else return 9999;
+   //}
+
+   // Are we on the edges?
+   Int_t dxl = TMath::Abs(px - pxl);
+   if (py < pyl) dxl += pyl - py; if (py > pyt) dxl += py - pyt;
+   Int_t dxt = TMath::Abs(px - pxt);
+   if (py < pyl) dxt += pyl - py; if (py > pyt) dxt += py - pyt;
+   Int_t dyl = TMath::Abs(py - pyl);
+   if (px < pxl) dyl += pxl - px; if (px > pxt) dyl += px - pxt;
+   Int_t dyt = TMath::Abs(py - pyt);
+   if (px < pxl) dyt += pxl - px; if (px > pxt) dyt += px - pxt;
+
+   Int_t distance = dxl;
+   if (dxt < distance) distance = dxt;
+   if (dyl < distance) distance = dyl;
+   if (dyt < distance) distance = dyt;
+   return distance - Int_t(0.5*fLineWidth);
+}
+
 
 
 //______________________________________________________________________________
