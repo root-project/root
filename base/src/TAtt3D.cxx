@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAtt3D.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAtt3D.cxx,v 1.2 2006/04/07 08:43:59 brun Exp $
 // Author: Fons Rademakers   08/09/99
 
 /*************************************************************************
@@ -14,10 +14,7 @@
 // TAtt3D                                                               //
 //                                                                      //
 // Use this attribute class when an object should have 3D capabilities. //
-//                 
-// VisualTimestamp can be used by 3D viewers to determine if an object  //
-// has  changed between two scene paints.                               //
-// ResetVisualTimestamp must be called to activate the mechanism.       //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TAtt3D.h"
