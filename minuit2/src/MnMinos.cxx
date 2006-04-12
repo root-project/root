@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cpp,v 1.10.2.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -98,6 +98,7 @@ MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
 
 //   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
 
+#ifdef WARNINGMSG
   if(aopt.AtLimit()) 
     std::cout<<"MnMinos Parameter "<<par<<" is at Upper limit."<<std::endl;
   if(aopt.AtMaxFcn())
@@ -106,6 +107,7 @@ MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
     std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
   if(!aopt.IsValid()) 
     std::cout<<"MnMinos could not find Upper Value for Parameter "<<par<<"."<<std::endl;
+#endif
 
   return aopt;
 }
@@ -148,6 +150,7 @@ MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
 
 //   std::cout<<"aopt= "<<aopt.Value()<<std::endl;
 
+#ifdef WARNINGMSG
   if(aopt.AtLimit()) 
     std::cout<<"MnMinos Parameter "<<par<<" is at Lower limit."<<std::endl;
   if(aopt.AtMaxFcn())
@@ -156,8 +159,10 @@ MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
     std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
   if(!aopt.IsValid()) 
     std::cout<<"MnMinos could not find Lower Value for Parameter "<<par<<"."<<std::endl;
+#endif
 
   return aopt;
+
 }
 
 

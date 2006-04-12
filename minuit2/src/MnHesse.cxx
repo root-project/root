@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cxx,v 1.2 2006/01/25 12:20:49 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -116,8 +116,10 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
       }
       
 L26:  
+#ifdef WARNINGMSG
       std::cout<<"MnHesse: 2nd derivative zero for Parameter "<<i<<std::endl;
       std::cout<<"MnHesse fails and will return diagonal matrix "<<std::endl;
+#endif
 
       for(unsigned int j = 0; j < n; j++) {
 	double tmp = g2(j) < prec.Eps2() ? 1. : 1./g2(j);
@@ -147,8 +149,12 @@ L30:
     vhmat(i,i) = g2(i);
     if(mfcn.NumOfCalls()  > maxcalls) {
       //std::cout<<"maxcalls " << maxcalls << " " << mfcn.NumOfCalls() << "  " <<   st.NFcn() << std::endl;
+
+#ifdef WARNINGMSG
       std::cout<<"MnHesse: maximum number of allowed function calls exhausted."<<std::endl;  
       std::cout<<"MnHesse fails and will return diagonal matrix "<<std::endl;
+#endif
+
       for(unsigned int j = 0; j < n; j++) {
 	double tmp = g2(j) < prec.Eps2() ? 1. : 1./g2(j);
 	vhmat(j,j) = tmp < prec.Eps2() ? 1. : tmp;
@@ -184,8 +190,11 @@ L30:
   vhmat = tmp.InvHessian();
   int ifail = Invert(vhmat);
   if(ifail != 0) {
+
+#ifdef WARNINGMSG
     std::cout<<"MnHesse: matrix inversion fails!"<<std::endl;
     std::cout<<"MnHesse fails and will return diagonal matrix."<<std::endl;
+#endif
 
     MnAlgebraicSymMatrix tmpsym(vhmat.Nrow());
     for(unsigned int j = 0; j < n; j++) {

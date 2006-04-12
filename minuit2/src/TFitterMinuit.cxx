@@ -238,6 +238,33 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
     fMinosErrors.clear();
     for(unsigned int i = 0; i < State().VariableParameters(); i++) {
       MinosError me = minos.Minos(State().ExtOfInt(i));
+      // print error message in Minos
+      if (fDebug == 0) {
+	if (me.IsValid() )  
+	  std::cout << "Error running Minos for parameter " << i << std::endl; 
+      }
+      if (fDebug >= 1) {
+	if (!me.LowerValid() )  
+	  std::cout << "Minos:  Invalid lower error for parameter " << i << std::endl; 
+	if(me.AtLowerLimit()) 
+	  std::cout << "Minos:  Parameter  is at Lower limit."<<std::endl;
+	if(me.AtLowerMaxFcn())
+	  std::cout << "Minos:  Maximum number of function calls exceeded when running for lower error" <<std::endl;   
+	if(me.LowerNewMin() )
+	  std::cout << "Minos:  New Minimum found while running Minos for lower error" <<std::endl;     
+
+	if (!me.UpperValid() )  
+	  std::cout << "Minos:  Invalid upper error for parameter " << i << std::endl; 
+	if(me.AtUpperLimit()) 
+	  std::cout << "Minos:  Parameter  is at Upper limit."<<std::endl;
+	if(me.AtUpperMaxFcn())
+	  std::cout << "Minos:  Maximum number of function calls exceeded when running for upper error" <<std::endl;   
+	if(me.UpperNewMin() )
+	  std::cout << "Minos:  New Minimum found while running Minos for upper error" <<std::endl;     
+
+      }
+      
+
       fMinosErrors.push_back(me);
     }
     if (fDebug >= 3) {

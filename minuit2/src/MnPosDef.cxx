@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnPosDef.cpp,v 1.13.2.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnPosDef.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -47,7 +47,9 @@ MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecisio
   double dgmin = err(0,0);
 
   for(unsigned int i = 0; i < err.Nrow(); i++) {
+#ifdef WARNINGMSG
     if(err(i,i) < prec.Eps2()) std::cout<<"negative or zero diagonal element "<<i<<" in covariance matrix"<<std::endl;
+#endif
     if(err(i,i) < dgmin) dgmin = err(i,i);
   }
   double dg = 0.;
@@ -55,7 +57,9 @@ MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecisio
     //dg = 1. + epspdf - dgmin; 
     dg = 0.5 + epspdf - dgmin; 
 //     dg = 0.5*(1. + epspdf - dgmin); 
+#ifdef WARNINGMSG
     std::cout<<"added "<<dg<<" to diagonal of Error matrix"<<std::endl;
+#endif
     //std::cout << "Error matrix " << err << std::endl;
   }
 
@@ -79,14 +83,19 @@ MinimumError MnPosDef::operator()(const MinimumError& e, const MnMachinePrecisio
   if(pmin > epspdf*pmax) return MinimumError(err, e.Dcovar());
   
   double padd = 0.001*pmax - pmin;
+#ifdef DEBUG
   std::cout<<"eigenvalues: "<<std::endl;
+#endif
   for(unsigned int i = 0; i < err.Nrow(); i++) {
     err(i,i) *= (1. + padd);
+#ifdef DEBUG
     std::cout<<eval(i)<<std::endl;
+#endif
   }
 //   std::cout<<"MnPosDef final matrix: "<<err<<std::endl;
+#ifdef WARNINGMSG
   std::cout<<"matrix forced pos-def by adding "<<padd<<" to diagonal"<<std::endl;
-//   std::cout<<"eigenvalues: "<<eval<<std::endl;
+#endif
   return MinimumError(err, MinimumError::MnMadePosDef());
 }
 
