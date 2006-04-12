@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleRow.cxx,v 1.3 2006/02/07 19:48:00 pcanal Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleRow.cxx,v 1.4 2006/04/12 20:53:45 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -100,7 +100,7 @@ void TOracleRow::GetRowData()
 {
    if (!fResult || !fFieldInfo || (fFieldCount<=0)) return;
    
-   fFieldsBuffer = new (char*) [fFieldCount];
+   fFieldsBuffer = new char* [fFieldCount];
    for (int n=0;n<fFieldCount;n++)
      fFieldsBuffer[n] = 0;
 
