@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.10 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGSplitter.h"
+#include "TGPicture.h"
 #include "Riostream.h"
 
 
@@ -46,6 +47,10 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    // Create a vertical splitter.
 
    fSplitCursor = kNone;
+   fSplitterPic = fClient->GetPicture("splitterv.xpm");
+
+   if (!fSplitterPic)
+      Error("TGVSplitter", "splitterv.xpm not found");
 
    if (p && !p->InheritsFrom(TGCompositeFrame::Class())) {
       Error("TGVSplitter", "parent must inherit from a TGCompositeFrame");
@@ -64,6 +69,14 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
                          kPointerMotionMask, kNone, kNone);
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
+}
+
+//______________________________________________________________________________
+TGVSplitter::~TGVSplitter()
+{
+   // Delete vertical slider widget.
+
+   if (fSplitterPic) fClient->FreePicture(fSplitterPic);
 }
 
 //______________________________________________________________________________
@@ -111,7 +124,7 @@ Bool_t TGVSplitter::HandleButton(Event_t *event)
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, fSplitCursor, 
+                             kPointerMotionMask, kNone, fSplitCursor,
                              kTRUE, kFALSE);
    } else {
       fDragging = kFALSE;
@@ -167,8 +180,11 @@ void TGVSplitter::DrawBorder()
 {
    // Draw vertical splitter.
 
-   // Currently no special graphical representation except for cursor change
-   // when crossing a splitter
+   if (fSplitterPic) {
+      Int_t posx = (fWidth/2)-(fSplitterPic->GetWidth()/2);
+      Int_t posy = (fHeight/2)-(fSplitterPic->GetHeight()/2);
+      fSplitterPic->Draw(fId, GetBckgndGC()(), posx, posy);
+   }
 }
 
 
@@ -179,6 +195,11 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    // Create a horizontal splitter.
 
    fSplitCursor = kNone;
+
+   fSplitterPic = fClient->GetPicture("splitterh.xpm");
+
+   if (!fSplitterPic)
+      Error("TGVSplitter", "splitterh.xpm not found");
 
    if (p && !p->InheritsFrom(TGCompositeFrame::Class())) {
       Error("TGHSplitter", "parent must inherit from a TGCompositeFrame");
@@ -197,6 +218,14 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
                          kPointerMotionMask, kNone, kNone);
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
+}
+
+//______________________________________________________________________________
+TGHSplitter::~TGHSplitter()
+{
+   // Delete vertical slider widget.
+
+   if (fSplitterPic) fClient->FreePicture(fSplitterPic);
 }
 
 //______________________________________________________________________________
@@ -244,7 +273,7 @@ Bool_t TGHSplitter::HandleButton(Event_t *event)
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, fSplitCursor, 
+                             kPointerMotionMask, kNone, fSplitCursor,
                              kTRUE, kFALSE);
    } else {
       fDragging = kFALSE;
@@ -300,8 +329,11 @@ void TGHSplitter::DrawBorder()
 {
    // Draw horizontal splitter.
 
-   // Currently no special graphical representation except for cursor change
-   // when crossing a splitter
+   if (fSplitterPic) {
+      Int_t posx = (fWidth/2)-(fSplitterPic->GetWidth()/2);
+      Int_t posy = (fHeight/2)-(fSplitterPic->GetHeight()/2);
+      fSplitterPic->Draw(fId, GetBckgndGC()(), posx, posy);
+   }
 }
 
 //______________________________________________________________________________

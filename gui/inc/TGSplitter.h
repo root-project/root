@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.10 2004/09/08 09:03:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.11 2004/09/20 19:11:54 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -33,6 +33,7 @@ class TGSplitter : public TGFrame {
 protected:
    Cursor_t    fSplitCursor;      // split cursor
    Bool_t      fDragging;         // true if in dragging mode
+   const TGPicture *fSplitterPic; // picture to draw splitter
 
 public:
    TGSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
@@ -60,10 +61,10 @@ protected:
    Bool_t      fLeft;           // true if frame is on the left of splitter
 
 public:
-   TGVSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
+   TGVSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGVSplitter() { }
+   virtual ~TGVSplitter();
 
    virtual void   DrawBorder();
    virtual void   SetFrame(TGFrame *frame, Bool_t left);
@@ -92,10 +93,10 @@ protected:
    Bool_t      fAbove;          // true if frame is above the splitter
 
 public:
-   TGHSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 2,
+   TGHSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGHSplitter() { }
+   virtual ~TGHSplitter();
 
    virtual void   DrawBorder();
    virtual void   SetFrame(TGFrame *frame, Bool_t above);
