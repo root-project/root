@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasImp.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -18,9 +18,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TQCanvasImp.h"
-#include "TClass.h"
-#include "TRootCanvas.h"
 #include "TQRootCanvas.h"
+
+ClassImp(TQCanvasImp)
 
 //______________________________________________________________________________
 TQCanvasImp::TQCanvasImp(TCanvas *c, const char *name, UInt_t width, UInt_t height)

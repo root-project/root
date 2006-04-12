@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootDialog.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TQRootDialog.h"
 #include "qevent.h"
 #include "qdialog.h"
 #include "qpushbutton.h"
@@ -17,14 +16,13 @@
 #include "qobject.h"
 #include "qlineedit.h"
 
+#include "TQRootDialog.h"
 #include "TMethod.h"
-#include "TPad.h"
-#include "TList.h"
-#include "TObject.h"
+#include "TCanvas.h"
 #include "TROOT.h"
-#include "TString.h"
-#include "TObjArray.h"
 #include "TObjString.h"
+
+ClassImp(TQRootDialog)
 
 //______________________________________________________________________________
 TQRootDialog::TQRootDialog(QWidget *parent, const char *name, WFlags f,

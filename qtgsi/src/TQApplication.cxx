@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQApplication.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -22,14 +22,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TROOT.h"
-#include "TApplication.h"
-#include "TSystem.h"
 #include "TQApplication.h"
 #include "TQRootGuiFactory.h"
-#include "TVirtualX.h"
-#include "TQRootApplication.h"
-#include "Riostream.h"
 
+ClassImp(TQApplication)
 
 //______________________________________________________________________________
 TQApplication::TQApplication()

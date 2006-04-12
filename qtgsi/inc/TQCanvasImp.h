@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasImp.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini  01/11/2000
 
 /*************************************************************************
@@ -24,9 +24,8 @@
 #ifndef ROOT_TCanvasImp
 #include "TCanvasImp.h"
 #endif
-#ifndef ROOT_TQRootCanvas
-#include "TQRootCanvas.h"
-#endif
+
+class TQRootCanvas;
 
 class TQCanvasImp :  public TCanvasImp {
 protected:
@@ -37,6 +36,8 @@ public:
    TQCanvasImp(TCanvas *c, const char *name, UInt_t width, UInt_t height);
    TQCanvasImp(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TQCanvasImp();
+   
+   ClassDef(TQCanvasImp,1)  //ABC describing Qt GUI independent main window
 };
 
 #endif

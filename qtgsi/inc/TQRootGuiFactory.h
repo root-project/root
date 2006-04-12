@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootGuiFactory.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini  01/11/2000
 
 /*************************************************************************
@@ -32,16 +32,11 @@
 //@li Creates a specific Canvas Implementation QCanvasImp
 ////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGuiFactory
-#include "TGuiFactory.h"
-#endif
 #ifndef ROOT_TRootGuiFactory
 #include "TRootGuiFactory.h"
 #endif
-#ifndef ROOT_TQCanvasImp
-#include "TQCanvasImp.h"
-#endif
 
+class TCanvasImp;
 
 class TQRootGuiFactory : public TRootGuiFactory {
 
@@ -50,10 +45,12 @@ private:
 public:
 
    TQRootGuiFactory(const char *name = "QRoot", const char *title = "Qt/ROOT GUI Factory");
-   ~TQRootGuiFactory();
+   virtual ~TQRootGuiFactory();
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    void SetCustomFlag(Bool_t custom) { fCustom=custom; }
+   
+   ClassDef(TQRootGuiFactory,1)  //Qt ROOT Gui factory
 
 };
 

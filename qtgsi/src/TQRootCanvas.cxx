@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -10,26 +10,17 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TQRootCanvas.h"
 #include "qevent.h"
 #include "qdialog.h"
 #include "qpushbutton.h"
 #include "qlabel.h"
 #include "qpainter.h"
 
-#include "TPad.h"
-#include "TObject.h"
-#include "TROOT.h"
-#include "TString.h"
-#include "TH1.h"
-#include "TList.h"
-#include "TIterator.h"
-#include "TMethod.h"
+#include "TQRootCanvas.h"
 #include "TCanvas.h"
-#include "TDataType.h"
-#include "TMethodCall.h"
-#include "TObjArray.h"
+#include "TQCanvasMenu.h"
 
+ClassImp(TQRootCanvas)
 
 //______________________________________________________________________________
 TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )

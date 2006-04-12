@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -22,19 +22,25 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Riostream
-#include "Riostream.h"
-#endif
+#ifndef __CINT__
 #include "qapplication.h"
 #include "qobject.h"
 #include "qtimer.h"
-#ifndef ROOT_TTimer
-#include "TTimer.h"
 #endif
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
+class TTimer;
+class QApplication;
+class QTimer;
+
 class TQRootApplication : public QApplication {
+#ifndef __CINT__
    Q_OBJECT
-protected:
+#endif
+   protected:
    QTimer *fQTimer;                    // Qt timer that poll the event loop of ROOT
    TTimer *fRTimer;                    // Root timer
 public:
@@ -47,6 +53,9 @@ public:
 public slots:
    void Execute();
    void Quit();
+   
+public:
+   ClassDef(TQRootApplication,1)  //creates Qt environement interface with the ROOT windowing system
 };
 
 #endif

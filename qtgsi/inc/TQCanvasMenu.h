@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasMenu.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -22,34 +22,35 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef __CINT__
 #include "qobject.h"
+#endif
+
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
-#ifndef ROOT_TMethodArg
-#include "TMethodArg.h"
-#endif
-#ifndef ROOT_TQRootDialog
-#include "TQRootDialog.h"
-#endif
 
+class TCanvas;
+class TObject;
+class TMethodArg;
+class TQRootDialog;
+
+class QObject;
 class QPopupMenu;
 class QAction;
 class QMouseEvent;
 class QResizeEvent;
 class QPaintEvent;
-class TCanvas;
-class TObject;
 class QWidget;
-class TMethod;
-
 
 class TQCanvasMenu : public QObject {
+#ifndef __CINT__
    Q_OBJECT
+#endif
 public:
    TQCanvasMenu(QWidget* parent = 0, TCanvas *canvas = 0);
    TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas) ;
-   ~TQCanvasMenu();
+   virtual ~TQCanvasMenu();
    void Popup(TObject *obj, double x, double y, QMouseEvent *e);
    void Dialog(TObject *obj, TMethod* method);
    char* CreateDialogTitle( TObject *object, TMethod *method );
@@ -68,6 +69,8 @@ protected:
    QWidget *fParent,*fTabWin; //parents widgets
    double fMousePosX;         // mouse position in user coordinate
    double fMousePosY;         // mouse position in user coordinate
-};
 
+   ClassDef(TQCanvasMenu,1)  //interface to Qt based context sensitive popup menus
+};
+   
 #endif

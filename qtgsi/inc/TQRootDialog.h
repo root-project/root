@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootDialog.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -23,20 +23,31 @@
 //	   M. AL-Turany  <m.al-turany@gsi.de>
 ////////////////////////////////////////////////////////////////////////////
 
+#ifndef __CINT__
 #include "qvbox.h"
 #include "qlist.h"
-#ifndef ROOT_TCanvas
-#include "TCanvas.h"
+#include "qlineedit.h"
 #endif
 
-class QLineEdit;
-class TMethod;
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
 
+class TMethod;
+class TCanvas;
+
+class QLineEdit;
+class QVBox;
+class QWidget;
+#ifdef __CINT__
+class QList<QLineEdit>;
+#endif
 
 class TQRootDialog: public QVBox
 {
+#ifndef __CINT__
    Q_OBJECT
-
+#endif
 public:
    TQRootDialog(QWidget *parent, const char *name, WFlags f=0,
                 TObject *obj=0,TMethod *meth=0);
@@ -53,11 +64,13 @@ protected:
    void closeEvent( QCloseEvent* ce);
    QVBox *fArgBox;         // Box layout
    QLineEdit *fLineEdit;   // LineEdit widget for arguments
-   QList<QLineEdit> fList; // list of widget corresponding to the number of arguments
    TObject *fCurObj;       // Selected object
    TMethod *fCurMethod;    // method to be executed
    TCanvas* fCurCanvas;    // current canvas
    QWidget* fParent;       // parent widget
+   QList<QLineEdit> fList; // list of widget corresponding to the number of arguments
+      
+   ClassDef(TQRootDialog,1)  //prompt for the arguments of an object's member function
 };
 
 #endif

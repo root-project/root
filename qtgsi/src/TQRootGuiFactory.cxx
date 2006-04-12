@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootGuiFactory.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  *************************************************************************/
 
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TQRootGuiFactory                                                     //
@@ -20,11 +19,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
 #include "TQRootGuiFactory.h"
 #include "TRootCanvas.h"
 #include "TQCanvasImp.h"
 
+ClassImp(TQRootGuiFactory)
 
 //______________________________________________________________________________
 TQRootGuiFactory::TQRootGuiFactory(const char *name, const char *title)

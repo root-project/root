@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -10,15 +10,14 @@
  *************************************************************************/
 
 
-#include "Riostream.h"
 #include "TQRootApplication.h"
 #include "TSystem.h"
-#include "TApplication.h"
-#include "TVirtualX.h"
 
 bool TQRootApplication::fgDebug=kFALSE;
 bool TQRootApplication::fgWarning=kFALSE;
 
+ClassImp(TQRootApplication)
+   
 //______________________________________________________________________________
 void qMessageOutput( QtMsgType type, const char *msg )
 {

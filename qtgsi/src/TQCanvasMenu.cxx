@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasMenu.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "Riostream.h"
 #include "snprintf.h"
-#include "TQCanvasMenu.h"
 #include "qevent.h"
 #include "qdialog.h"
 #include "qpushbutton.h"
@@ -19,17 +18,16 @@
 #include "qpainter.h"
 #include "qpopupmenu.h"
 
-#include "TPad.h"
-#include "TObject.h"
+#include "TQCanvasMenu.h"
 #include "TROOT.h"
-#include "TString.h"
-#include "TList.h"
-#include "TIterator.h"
 #include "TMethod.h"
+#include "TMethodCall.h"
+#include "TMethodArg.h"
 #include "TCanvas.h"
 #include "TDataType.h"
-#include "TMethodCall.h"
-#include "TObjArray.h"
+#include "TQRootDialog.h"
+
+ClassImp(TQCanvasMenu)
 
 //______________________________________________________________________________
 TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)

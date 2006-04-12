@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -25,21 +25,15 @@
 //version 2.0
 //////////////////////////////////////////////////////////////////////
 
+#ifndef __CINT__
 #include "qwidget.h"
 #include "qstring.h"
-#ifndef ROOT_TQCanvasMenu
-#include "TQCanvasMenu.h"
+#include "qdragobject.h"
 #endif
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
-#endif
+
 #ifndef ROOT_TPad
 #include "TPad.h"
 #endif
-#include "qdragobject.h"
 
 
 class QAction;
@@ -49,15 +43,24 @@ class QPaintEvent;
 
 class TContextMenu;
 class TControlBar;
+class TCanvas;
+class TQCanvasMenu;
+class TBrowser;
+class QWidget;
+class QDropEvent;
+class QDragEnterEvent;
+class QCloseEvent;
+class QEvent;
 
 class TQRootCanvas : public QWidget
 {
+#ifndef __CINT__
    Q_OBJECT
-
+#endif
 public:
 
    TQRootCanvas( QWidget *parent = 0, const char *name = 0 ,TCanvas *c=0);
-   TQRootCanvas( QWidget *parent = 0, QWidget* tabWin = 0 , const char *name = 0 ,TCanvas *c=0);
+   TQRootCanvas( QWidget *parent, QWidget* tabWin , const char *name = 0 ,TCanvas *c=0);
    virtual ~TQRootCanvas();
 
    TCanvas* GetCanvas() { return fCanvas;}
@@ -161,6 +164,8 @@ protected:
    Bool_t fNeedResize;           // Resize flag
    Bool_t fIsCanvasOwned;        // Ownership flag
    QWidget *fParent,*fTabWin;    // parent widgets
+   
+   ClassDef(TQRootCanvas,1)  //interface to Qt eventloop to handle user input
 };
 
 #endif

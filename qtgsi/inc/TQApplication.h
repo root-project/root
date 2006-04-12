@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:$:$Id:$
+// @(#)root/qtgsi:$Name:  $:$Id: TQApplication.h,v 1.1 2006/04/11 16:33:45 rdm Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -26,12 +26,6 @@
 #ifndef ROOT_TApplication
 #include "TApplication.h"
 #endif
-#ifndef ROOT_TTimer
-#include "TTimer.h"
-#endif
-#ifndef ROOT_TQRootGuiFactory
-#include "TQRootGuiFactory.h"
-#endif
 
 class TQApplication : public TApplication {
 
@@ -44,6 +38,8 @@ public:
    virtual ~TQApplication();
    virtual void LoadGraphicsLibs();
    void SetCustomized();
+   
+   ClassDef(TQApplication,0) //creates ROOT environement with the Qt windowing system
 };
 
 #endif

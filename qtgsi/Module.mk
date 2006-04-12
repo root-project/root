@@ -12,6 +12,10 @@ QTGSIDIRS    := $(QTGSIDIR)/src
 QTGSIDIRI    := $(QTGSIDIR)/inc
 
 ##### libQtGSI #####
+QTGSIL        := $(MODDIRI)/LinkDef.h
+QTGSIDS       := $(MODDIRS)/G__QtGSI.cxx
+QTGSIDO       := $(QTGSIDS:.cxx=.o)
+QTGSIDH       := $(QTGSIDS:.cxx=.h)
 QTGSIH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 QTGSIS        := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
@@ -20,7 +24,7 @@ QTGSIO        := $(QTGSIS:.cxx=.o)
 QTGSIMOC      := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(QTGSIH)))
 QTGSIMOCO     := $(QTGSIMOC:.cxx=.o)
 
-QTGSIDEP      := $(QTGSIO:.o=.d) $(QTGSIMOCO:.o=.d)
+QTGSIDEP      := $(QTGSIO:.o=.d) $(QTGSIDO:.o=.d) $(QTGSIMOCO:.o=.d)
 
 QTGSICXXFLAGS := -DQT_DLL -DQT_THREAD_SUPPORT -I. $(QTINCDIR:%=-I%)
 
@@ -49,10 +53,18 @@ INCLUDEFILES  += $(QTGSIDEP)
 include/%.h:    $(QTGSIDIRI)/%.h
 		cp $< $@
 
-$(QTGSILIB):    $(QTGSIO) $(QTGSIMOCO) $(ORDER_) $(MAINLIBS) $(QTGSILIBDEP)
+$(QTGSILIB):    $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO) $(ORDER_) $(MAINLIBS) $(QTGSILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libQtGSI.$(SOEXT) $@ "$(QTGSIO) $(QTGSIMOCO)" \
+		   "$(SOFLAGS)" libQtGSI.$(SOEXT) $@ "$(QTGSIO) $(QTGSIDO) $(QTGSIMOCO)" \
 		   "$(QTGSILIBEXTRA) $(QTLIBDIR) $(QTLIB)"
+
+
+$(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPEXE)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(QTGSIH) $(QTGSIL)
+
+$(QTGSIDO):     $(QTGSIDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(QTGSICXXFLAGS) -o $@ -c $<
 
 all-qtgsi:      $(QTGSILIB)
 
