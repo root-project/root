@@ -66,7 +66,7 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 # Fortran:
 F77           = ifort
 F77FLAGS      =
-ifeq ($(shell find $(FINK_DIR)/bin -name g77),)
+ifneq ($(shell find $(FINK_DIR)/bin -name g77),)
 # check for libg2c and libfrtbegin
 ifneq ($(shell g77 -print-file-name=libg2c.so),libg2c.so)
 LIBG2C       := $(shell g77 -print-file-name=libg2c.so)
