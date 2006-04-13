@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.49 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.50 2006/01/20 08:52:26 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -327,7 +327,7 @@ void TGLineLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    // Draw copy on window/pixmap.
 
    TGTextLBEntry::DrawCopy(id, x, y);
-
+   if (!strcmp(TGTextLBEntry::GetTitle(),"None")) return;
    if (fActive) {
       gVirtualX->SetForeground(fLineGC->GetGC(),
                                fClient->GetResourcePool()->GetSelectedFgndColor());

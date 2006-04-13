@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.18 2006/04/10 13:03:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.19 2006/04/12 15:28:31 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -164,7 +164,7 @@ class TGLineWidthComboBox : public TGComboBox {
 public:
    TGLineWidthComboBox(const TGWindow *p = 0, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
-              Pixel_t back = GetWhitePixel());
+              Pixel_t back = GetWhitePixel(), Bool_t none=kFALSE);
    
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 

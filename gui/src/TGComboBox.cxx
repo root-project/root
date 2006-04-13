@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.37 2006/04/10 13:03:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.38 2006/04/12 15:28:31 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -519,14 +519,20 @@ void TGLineStyleComboBox::SavePrimitive(ofstream &out, Option_t *)
 
 //______________________________________________________________________________
 TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
-                                         UInt_t options, Pixel_t back)
+                                         UInt_t options, Pixel_t back, Bool_t none)
    : TGComboBox(p, id, options, back)
 {
    // Create a line width combo box.
+   // If "none" is equal to kTRUE the first entry is "None".
 
    SetTopEntry(new TGLineLBEntry(this,0),
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
+
+   if (none) {
+      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), 0, "None", 0, 0),
+               new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+   }
 
    for (Int_t i = 1; i < 16; i++)
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), i, 0),
