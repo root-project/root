@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.74 2006/03/21 15:07:22 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.75 2006/03/21 16:54:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -454,11 +454,13 @@ public:
    Int_t       UploadDataSet(const char *files,
                              const char *dest,
                              const char *dataset,
-                             Int_t opt = kAskUser);
+                             Int_t opt = kAskUser,
+                             TList *skippedFiles = NULL);
    Int_t       UploadDataSetFromFile(const char *file,
                                      const char *dest,
                                      const char *dataset,
                                      Int_t opt = kAskUser);
+   TList      *GetDataSets();                                  
    void        ShowDataSets();
    void        ShowDataSet(const char *dataset);
    Int_t       RemoveDataSet(const char *dateset);

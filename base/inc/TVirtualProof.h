@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.25 2006/01/17 09:55:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.26 2006/03/21 16:54:19 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -61,6 +61,10 @@ public:
       kOverwriteAllFiles  = 0x8,
       kOverwriteNoFiles   = 0x10,
       kAskUser            = 0x0
+   };
+   enum EUploadDataSetAnswer {
+      kError = -1,
+      kDataSetExists = -2,
    };
 
 protected:
@@ -128,11 +132,14 @@ public:
    virtual Int_t       UploadDataSet(const char *files,
                                      const char *dest,
                                      const char *dataset,
-                                     Int_t opt = kAskUser) = 0;
+                                     Int_t opt = kAskUser,
+                                     TList *skippedFiles = NULL) = 0;
+                                     
    virtual Int_t       UploadDataSetFromFile(const char *file,
                                              const char *dest,
                                              const char *dataset,
                                              Int_t opt = kAskUser) = 0;
+   virtual TList      *GetDataSets() = 0;
    virtual void        ShowDataSets() = 0;
    virtual void        ShowDataSet(const char *dataset) = 0;
    virtual Int_t       RemoveDataSet(const char *dateset) = 0;

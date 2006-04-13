@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.115 2006/03/27 06:07:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.116 2006/03/31 07:42:20 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1470,13 +1470,14 @@ void TProofServ::HandleSocketInput()
             else if (kind != kMESS_NOTOK)
                Error("HandleSocketInput", "Wrong message type (%d)", kind);
 
-            if (goodName) {
-               //if the fileName had existed user agreed to overwrite
+            if (goodName && kind != kMESS_NOTOK) {
+               // The fileName had existed user agreed to overwrite
+               // and some TList was sent.
                TList *fileList =
                    (TList *) (retMess->ReadObject(TList::Class()));
                // (re)create file and save dataset in its current status
                if (retMess->What() == kPROOF_APPEND_DATASET) {
-                  TList *oldFileList = GetDataSet(fileListName);
+                  TList *oldFileList = GetDataSet(fileListName.Data());
                   TIter nextOldFile(oldFileList);
                   while (TFileInfo *obj = (TFileInfo*)nextOldFile())
                      fileList->Add(obj);
@@ -1546,9 +1547,10 @@ void TProofServ::HandleSocketInput()
          {
             TString name;
             (*mess) >> name;
-            if (TList *fileList = GetDataSet(name))
+            if (TList *fileList = GetDataSet(name.Data())) {
                fSocket->SendObject(fileList, kMESS_OK);
-            else                   // no such dataset
+               delete fileList; 
+            } else                   // no such dataset
                fSocket->Send(kMESS_NOTOK);
             SendLogFile();
          }
@@ -1562,21 +1564,24 @@ void TProofServ::HandleSocketInput()
                                             ExpandPathName(kPROOF_WorkDir),
                                             kPROOF_DataSetDir, name.Data());
             if (gSystem->AccessPathName(fileListPath, kFileExists) == kFALSE) {
-               gSystem->Unlink(fileListPath);
-               fSocket->Send("", kMESS_OK);
+               if (gSystem->Unlink(fileListPath)) {
+                  Printf("Error removing dataset %s", name.Data());
+                  fSocket->Send(kMESS_NOTOK);
+                  SendLogFile();
+               } else
+                  fSocket->Send(kMESS_OK);
             } else {
-               TMessage errorMess(kMESS_NOTOK);
-               errorMess << TString("The dataset does not exist");
-               fSocket->Send(errorMess);
+               Printf("The dataset does not exist");
+               fSocket->Send(kMESS_NOTOK);
+               SendLogFile();
             }
-            SendLogFile();
          }
          break;
       case kPROOF_VERIFY_DATASET:
          {
             TString name;
             (*mess) >> name;
-            if (TList *fileList = GetDataSet(name)) {
+            if (TList *fileList = GetDataSet(name.Data())) {
                TList *missingFileList = new TList();
                TIter next(fileList);
                TFileInfo *fileInfo;
