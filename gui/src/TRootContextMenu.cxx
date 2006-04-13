@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.13 2005/06/21 17:09:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.14 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -84,6 +84,8 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 {
    // Display context popup menu for currently selected object.
 
+   if (fClient->IsEditable()) return;
+
    // delete menu items releated to previous object and reset menu size
    if (fEntryList) fEntryList->Delete();
    if (fTrash)   fTrash->Delete();
@@ -116,6 +118,8 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 void TRootContextMenu::CreateMenu(TObject *object)
 {
    // Create the context menu depending on the selected object.
+
+   if (fClient->IsEditable()) return;
 
    int entry = 0, toggle = kToggleStart, togglelist = kToggleListStart;
    int userfunction = kUserFunctionStart;

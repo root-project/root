@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.23 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.24 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -59,7 +59,8 @@ public:
       kEditDisableLayout = BIT(3),    // window layout cannot be edited 
       kEditDisableResize = BIT(4),    // window size cannot be edited 
       kEditDisableHeight = BIT(5),    // window height cannot be edited 
-      kEditDisableWidth  = BIT(6)     // window width cannon be edited
+      kEditDisableWidth  = BIT(6),    // window width cannot be edited
+      kEditDisableBtnEnable  = BIT(7) // window cannot be edited but can handle mouse button events
    };
 
    TGWindow(const TGWindow *p = 0, Int_t x = 0, Int_t y = 0,
@@ -105,9 +106,9 @@ public:
    virtual Bool_t IsMapped();
    virtual Bool_t IsEditable() const { return (fClient->GetRoot() == this); }
    virtual UInt_t GetEditDisabled() const { return fEditDisabled; }
-   virtual void   SetEditDisabled(UInt_t on = 1) { fEditDisabled = on; }
+   virtual void   SetEditDisabled(UInt_t on = kEditDisable) { fEditDisabled = on; }
    virtual void   SetEditable(Bool_t on = kTRUE) 
-                  { if (!fEditDisabled) fClient->SetRoot(on ? this : 0); }
+                  { if (!(fEditDisabled & kEditDisable)) fClient->SetRoot(on ? this : 0); }
    virtual Int_t  MustCleanup() const { return 0; }
    virtual void   Print(Option_t *option="") const;
 

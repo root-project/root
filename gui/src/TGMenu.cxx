@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.59 2006/04/06 12:48:33 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.60 2006/04/11 06:58:23 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1463,6 +1463,19 @@ void TGPopupMenu::CheckEntry(Int_t id)
 
    while ((ptr = (TGMenuEntry *) next()))
       if (ptr->fEntryId == id) { ptr->fStatus |= kMenuCheckedMask; break; }
+}
+
+//______________________________________________________________________________
+void TGPopupMenu::CheckEntryByData(void *user_data)
+{
+   // Check a menu entry (i.e. add a check mark in front of it).
+   // The input argument is user data associated with entry
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next()))
+      if (ptr->fUserData == user_data) { ptr->fStatus |= kMenuCheckedMask; break; }
 }
 
 //______________________________________________________________________________

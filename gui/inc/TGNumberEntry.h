@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.8 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.9 2006/04/12 12:56:32 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -161,6 +161,11 @@ public:
 class TGNumberEntry : public TGCompositeFrame, public TGWidget,
    public TGNumberFormat {
 
+   // dummy data members - just to say about options for context menu
+   EStyle fNumStyle;//*OPTION={GetMethod="GetNumStyle";SetMethod="SetNumStyle";Items=(TGNumberFormat::kNESInteger="Int",TGNumberFormat::kNESReal="Real",TGNumberFormat::kNESDegree="Degree")}*
+   EAttribute fNumAttr; // *OPTION={GetMethod="GetNumAttr";SetMethod="SetNumAttr";Items=(TGNumberFormat::kNEAAnyNumber="&AnyNumber",TGNumberFormat::kNEAPositive="&Positive")}*
+   ELimit fNumLimits; // *OPTION={GetMethod="GetNumLimits";SetMethod="SetNumLimits";Items=(TGNumberFormat::kNELNoLimits="&NoLimits",TGNumberFormat::kNELLimitMinMax="Upper&AndLower")}*
+
 private:
    const TGPicture  *fPicUp;      // Up arrow
    const TGPicture  *fPicDown;    // Down arrow
@@ -221,12 +226,12 @@ public:
       fNumericEntry->IncreaseNumber(step, sign, logstep); }
    virtual void SetFormat(EStyle style, EAttribute attr = TGNumberFormat::kNEAAnyNumber) {
       // Set the numerical format
-      fNumericEntry->SetFormat(style, attr); }   //*MENU*
+      fNumericEntry->SetFormat(style, attr); }
    virtual void SetLimits(ELimit limits = TGNumberFormat::kNELNoLimits,
                           Double_t min = 0, Double_t max = 1) {
       // Set the numerical limits.
-      fNumericEntry->SetLimits(limits, min, max); }   //*MENU*
-   virtual void SetLogStep(Bool_t on = kTRUE);   //*MENU*
+      fNumericEntry->SetLimits(limits, min, max); }
+
    virtual EStyle GetNumStyle() const {
       // Get the numerical style
       return fNumericEntry->GetNumStyle(); }
@@ -247,10 +252,20 @@ public:
       return fNumericEntry->IsLogStep(); }
    virtual void   SetButtonToNum(Bool_t state);
 
+   void SetNumStyle(EStyle style) {
+         SetFormat(style, GetNumAttr()); }                  //*SUBMENU*
+   void SetNumAttr(EAttribute attr = kNEAAnyNumber) {
+         SetFormat(GetNumStyle(), attr); }                  //*SUBMENU*
+   void SetNumLimits(ELimit limits = kNELNoLimits) {
+         SetLimits(limits, GetNumMin(), GetNumMax());  }    //*SUBMENU*
+   void SetLimitValues(Double_t min = 0, Double_t max = 1) {
+         SetLimits(GetNumLimits(), min, max);  }            //*MENU*
+   virtual void SetLogStep(Bool_t on = kTRUE);              //*TOGGLE* *GETTER=IsLogStep
+
    virtual void   Associate(const TGWindow *w);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void   ValueChanged(Long_t val);    //*SIGNAL*
-   virtual void   ValueSet(Long_t val);    //*SIGNAL*
+   virtual void   ValueChanged(Long_t val);     //*SIGNAL*
+   virtual void   ValueSet(Long_t val);         //*SIGNAL*
 
    TGNumberEntryField *GetNumberEntry() const {
       // Get the number entry field

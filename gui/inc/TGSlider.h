@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.8 2004/09/15 10:08:49 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.9 2004/10/19 17:13:27 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -92,12 +92,13 @@ public:
    virtual Bool_t HandleButton(Event_t *event) = 0;
    virtual Bool_t HandleMotion(Event_t *event) = 0;
 
-   virtual void  SetScale(Int_t scale) { fScale = scale; }
-   virtual void  SetRange(Int_t min, Int_t max) { fVmin = min; fVmax = max; }
-   virtual void  SetPosition(Int_t pos) { fPos = pos; fClient->NeedRedraw(this); }
+   virtual void  SetScale(Int_t scale) { fScale = scale; }                          //*MENU*
+   virtual void  SetRange(Int_t min, Int_t max) { fVmin = min; fVmax = max; }       //*MENU*
+   virtual void  SetPosition(Int_t pos) { fPos = pos; fClient->NeedRedraw(this); }  //*MENU*
    virtual Int_t GetPosition() const { return fPos; }
    virtual Int_t GetMinPosition() const { return fVmin; }
-   virtual Int_t GetMaxPosition() const { return fVmax; }   
+   virtual Int_t GetMaxPosition() const { return fVmax; }
+   virtual Int_t GetScale() const { return fScale; }   
    virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
 
    virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } // *SIGNAL*
@@ -126,7 +127,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kSliderWidth, fHeight); }
-   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w, h+16); }
+   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w, h ? h+16 : fHeight + 16); }
    virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
@@ -152,7 +153,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kSliderHeight); }
-   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w+16, h); }
+   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w ? w+16 : fWidth + 16, h); }
    virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 

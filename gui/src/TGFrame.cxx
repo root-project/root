@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.124 2006/04/06 10:39:51 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.125 2006/04/11 17:08:43 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -242,6 +242,19 @@ void TGFrame::ChangeBackground(Pixel_t back)
 
    fBackground = back;
    gVirtualX->SetWindowBackground(fId, back);
+}
+
+//______________________________________________________________________________
+void TGFrame::SetBgndColor(const char *hexvalue)
+{
+   // change background color via context menu.  hexvalue is in format #00FF00
+
+   Pixel_t pixel;
+
+   if (fClient->GetColorByName(hexvalue, pixel)) {
+      SetBackgroundColor(pixel);
+      fClient->NeedRedraw(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -1185,6 +1198,28 @@ void TGCompositeFrame::Print(Option_t *option) const
    while ((el = (TGFrameElement*)next())) {
       el->fFrame->Print(tab.Data());
    }
+}
+
+//______________________________________________________________________________
+void TGCompositeFrame::SetBgndColor(const char *hexvalue)
+{
+   // change background color via context menu for this frame and all subframes.
+   // hexvalue is in format #00FF00
+
+   Pixel_t pixel;
+
+   if (!fClient->GetColorByName(hexvalue, pixel)) return;
+
+   SetBackgroundColor(pixel);
+   TGFrameElement *el;
+
+   TIter next(fList);
+ 
+   while ((el = (TGFrameElement*)next())) {
+      el->fFrame->SetBgndColor(hexvalue);
+      fClient->NeedRedraw(el->fFrame);
+   }
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________

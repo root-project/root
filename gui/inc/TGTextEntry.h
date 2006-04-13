@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.24 2006/04/05 14:37:58 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.25 2006/04/12 12:56:32 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -69,9 +69,9 @@ protected:
    Int_t             fMaxLen;            // maximum length of text
    Bool_t            fEdited;            // kFALSE, if the line edit's contents have not been changed since the construction
    Bool_t            fFrameDrawn;        // kTRUE draw itself inside a two-pixel frame, kFALSE draw without any frame
-   EEchoMode         fEchoMode;          // echo mode (kNormal(default), kNoEcho, kPassword)
-   EInsertMode       fInsertMode;        // text insertion mode (kInsert(default) , kReplace)
-   ETextJustification fAlignment;        // alignment mode available (kTextLeft(default), kTextRight, kTextCenterX defined in TGWidget.h)
+   EEchoMode         fEchoMode;          // *OPTION={GetMethod="GetEchoMode";SetMethod="SetEchoMode";Items=(kNormal="Normal",kNoEcho="No Echo",kPassword="Password")}*
+   EInsertMode       fInsertMode;        // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="Insert",kReplace="Replace")}*
+   ETextJustification fAlignment;        // *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
    Bool_t            fHasOwnFont;        // kTRUE - font defined locally,  kFALSE - globally
 
             void        CopyText() const;
@@ -149,25 +149,19 @@ public:
    virtual  void        SetFont(const char *fontName, Bool_t local = kFALSE);
    virtual  void        SetTextColor(Pixel_t color, Bool_t local = kFALSE);
    virtual  void        SetTextColor(TColor *color, Bool_t local = kFALSE);
-   virtual  void        SetText(const char *text);                               //*MENU*bld_rename.png*
+   virtual  void        SetText(const char *text);                               //*MENU*
    virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000); //*MENU*
             void        SetTextColor(const char *hexvalue = "#000000");          //*MENU*
-   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);
-            void        Alignment(Int_t mode = kTextLeft) 
-                           { SetAlignment((ETextJustification)mode); }           //*MENU*
-   virtual  void        SetInsertMode(EInsertMode mode = kInsert);
-            void        InsertMode(Int_t mode = TGTextEntry::kInsert) 
-                           { SetInsertMode((EInsertMode)mode); }                 //*MENU*
-   virtual  void        SetCursorPosition(Int_t pos);
-   virtual  void        SetEchoMode(EEchoMode mode = kNormal);
-            void        EchoMode(Int_t mode =  TGTextEntry::kNormal) 
-                           { SetEchoMode((EEchoMode)mode); }                     //*MENU*
-            void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
-            void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }    //*MENU*
-   virtual  void        SetFocus();
-   virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
    virtual  void        SetMaxLength(Int_t maxlen);                              //*MENU*
    virtual  void        SelectAll();                                             //*MENU*
+   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);       //*SUBMENU*         
+   virtual  void        SetInsertMode(EInsertMode mode = kInsert);               //*SUBMENU*               
+   virtual  void        SetEchoMode(EEchoMode mode = kNormal);                   //*SUBMENU*
+            void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }    //*TOGGLE* *GETTER=IsEnabled
+   virtual  void        SetCursorPosition(Int_t pos);
+            void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
+   virtual  void        SetFocus();
+   virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
    virtual  void        SetState(Bool_t state);
    virtual  void        SetTitle(const char *label) { SetText(label); }
    virtual  void        SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }

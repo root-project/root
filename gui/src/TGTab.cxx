@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.28 2006/04/07 14:22:34 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.29 2006/04/12 12:56:32 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -63,7 +63,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fBorderWidth  = 0;
    fNormGC       = norm;
    fFontStruct   = font;
-   fEditDisabled = kEditDisableGrab;
+   fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
 
    int max_ascent, max_descent;
    if (fText)

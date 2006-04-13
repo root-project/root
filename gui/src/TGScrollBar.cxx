@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.12 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -234,6 +234,16 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    fSliderSize  = 50;
    fSliderRange = 1;
+
+   fHead->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fTail->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fSlider->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fEditDisabled = kEditDisableLayout | kEditDisableHeight | kEditDisableBtnEnable;
+
+   if (!p && fClient->IsEditable()) {
+      MapSubwindows();
+      MapWindow();
+   }
 }
 
 //______________________________________________________________________________
@@ -325,7 +335,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       }
 
       // last argument kFALSE forces all specified events to this window
-      if (fGrabPointer)
+      if (fGrabPointer && !fClient->IsEditable())
          gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                                 kPointerMotionMask, kNone, kNone, 
                                 kTRUE, kFALSE);
@@ -452,6 +462,16 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
     
    fSliderSize  = 50;
    fSliderRange = 1;
+
+   fHead->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fTail->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fSlider->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fEditDisabled = kEditDisableLayout | kEditDisableWidth | kEditDisableBtnEnable;
+
+   if (!p && fClient->IsEditable()) {
+      MapSubwindows();
+      MapWindow();
+   }
 }
 
 //______________________________________________________________________________
@@ -545,7 +565,7 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       }
 
       // last argument kFALSE forces all specified events to this window
-      if (fGrabPointer)
+      if (fGrabPointer && !fClient->IsEditable())
          gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                                 kPointerMotionMask, kNone, kNone,
                                 kTRUE, kFALSE);

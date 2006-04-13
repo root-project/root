@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.31 2006/04/06 12:48:33 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.32 2006/04/11 06:58:23 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -190,6 +190,7 @@ public:
    virtual Bool_t IsEntryHidden(Int_t id);
    virtual void   DefaultEntry(Int_t id);
    virtual void   CheckEntry(Int_t id);
+   virtual void   CheckEntryByData(void *user_data);
    virtual void   UnCheckEntry(Int_t id);
    virtual Bool_t IsEntryChecked(Int_t id);
    virtual void   RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast);

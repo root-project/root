@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.21 2006/04/12 12:56:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.22 2006/04/13 13:54:21 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1812,7 +1812,7 @@ public:
    TGRepeatFireButton(const TGWindow *p, const TGPicture *pic,
                       Int_t id, Bool_t logstep)
     : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
-       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { fEditDisabled = 1 | kEditDisableGrab; }
+       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { fEditDisabled = kEditDisable | kEditDisableGrab; }
    virtual ~TGRepeatFireButton() { delete fTimer; }
 
    virtual  Bool_t HandleButton(Event_t *event);
@@ -1845,6 +1845,7 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
    if (fTip)
       fTip->Hide();
 
+   // disable button handling while guibuilding
    if (IsEditableParent()) {
       return kTRUE;
    }
@@ -1953,7 +1954,7 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    SetLayoutManager(new TGNumberEntryLayout(this));
    MapSubwindows();
    Resize(w, h);
-   fEditDisabled = kEditDisableLayout; // | kEditDisableHeight;
+   fEditDisabled = kEditDisableLayout | kEditDisableHeight;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.68 2006/04/07 07:58:26 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.69 2006/04/11 06:44:09 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -231,6 +231,7 @@ public:
    virtual UInt_t  GetDefaultHeight() const { return GetDefaultSize().fHeight; }
    virtual Pixel_t GetBackground() const { return fBackground; }
    virtual void    ChangeBackground(Pixel_t back);
+   virtual void    SetBgndColor(const char *hexvalue = "#c0c0c0");   //*MENU*
    virtual void    SetBackgroundColor(Pixel_t back);
    virtual Pixel_t GetForeground() const;
    virtual void    SetForegroundColor(Pixel_t /*fore*/) { }
@@ -365,8 +366,8 @@ public:
    virtual void   ChangeOptions(UInt_t options);
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
 
-   TGLayoutManager *GetLayoutManager() const { return fLayoutManager; }
-   void             SetLayoutManager(TGLayoutManager *l);
+   virtual TGLayoutManager *GetLayoutManager() const { return fLayoutManager; }
+   virtual void SetLayoutManager(TGLayoutManager *l);
 
    virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = 0);
    virtual void   RemoveFrame(TGFrame *f);
@@ -391,6 +392,7 @@ public:
    virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }
 
    virtual void   Print(Option_t *option="") const;
+   virtual void   SetBgndColor(const char *hexvalue = "#c0c0c0");       //*MENU*
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
    virtual void   SavePrimitiveSubframes(ofstream &out, Option_t *option);
 

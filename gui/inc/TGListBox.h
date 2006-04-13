@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.27 2006/01/20 08:52:26 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.28 2006/02/01 14:32:52 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -53,7 +53,7 @@ class TGListBox;
 // TGLBEntry                                                            //
 //                                                                      //
 // Basic listbox entries. Listbox entries are created by a TGListBox    //
-// and not by the user.                                                 //                                              //
+// and not by the user.                                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +75,7 @@ public:
    virtual void Update(TGLBEntry *) { }  // this is needed on TGComboBoxes :(
    Int_t  EntryId() const { return fEntryId; }
    Bool_t IsActive() const { return fActive;  }
+   virtual void SetBackgroundColor(Pixel_t col) { TGFrame::SetBackgroundColor(col); fBkcolor = col; }
 
    ClassDef(TGLBEntry,0)  // Basic listbox entry
 };
@@ -295,12 +296,16 @@ public:
    virtual void InsertEntry(TGString *s, Int_t id, Int_t afterID);
    virtual void InsertEntry(const char *s , Int_t id, Int_t afterID);
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID);
-   virtual void RemoveEntry(Int_t id) { fLbc->RemoveEntry(id); }
-   virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
+   virtual void NewEntry(const char *s = "Entry");             //*MENU*
+   virtual void RemoveEntry(Int_t id = -1);                    //*MENU*
+//   virtual void MoveSelectedUp();                              //*MENU*
+//   virtual void MoveSelectedDown();                            //*MENU*
+   virtual void SetBgndColor(const char *color);               //*MENU*
+   virtual void RemoveEntries(Int_t from_ID, Int_t to_ID) 
                   { fLbc->RemoveEntries(from_ID, to_ID); }
-   virtual void SetTopEntry(Int_t id);
-   virtual void SetMultipleSelections(Bool_t multi)
-                  { fLbc->SetMultipleSelections(multi); }
+   virtual void SetTopEntry(Int_t id = -1);
+   virtual void SetMultipleSelections(Bool_t multi = kTRUE)
+                  { fLbc->SetMultipleSelections(multi); }      //*TOGGLE* *GETTER=GetMultipleSelections
    virtual Bool_t GetMultipleSelections() const
                   { return fLbc->GetMultipleSelections(); }
    virtual Int_t  GetNumberOfEntries() const

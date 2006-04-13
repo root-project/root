@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.13 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -92,7 +92,7 @@ TGVSlider::TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
 
    // set initial values
    fPos = h/2; fVmin = 0; fVmax = h;
-   //fEditDisabled = kEditDisableWidth;
+   fEditDisabled = kEditDisableWidth;
 }
 
 //______________________________________________________________________________
@@ -238,7 +238,7 @@ TGHSlider::TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
 
    // set initial values
    fPos = w/2; fVmin = 0; fVmax = w;
-   //fEditDisabled = kEditDisableHeight;
+   fEditDisabled = kEditDisableHeight;
 }
 
 //______________________________________________________________________________

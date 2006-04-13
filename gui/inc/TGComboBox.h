@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.19 2006/04/12 15:28:31 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.20 2006/04/13 13:02:56 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -103,8 +103,16 @@ public:
                         { fListBox->InsertEntry(s, id, afterID); }
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID)
                         { fListBox->InsertEntry(lbe, lhints, afterID); }
-   virtual void RemoveEntry(Int_t id)
-                        { fListBox->RemoveEntry(id); }
+   virtual void NewEntry(const char *s = "Entry") 
+                        { fListBox->NewEntry(s); Resize(); }       //*MENU*
+   virtual void RemoveEntry(Int_t id = -1)
+                        { fListBox->RemoveEntry(id); Resize(); }   //*MENU*
+//   virtual void MoveSelectedUp()
+//                        { fListBox->MoveSelectedUp(); }            //*MENU*
+//   virtual void MoveSelectedDown()
+//                        { fListBox->MoveSelectedDown(); }          //*MENU*
+   virtual Bool_t IsTextInputEnabled() const { return (fTextEntry != 0); }
+   virtual void   EnableTextInput(Bool_t on);    //*TOGGLE* *GETTER=IsTextInputEnabled
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID)
                         { fListBox->RemoveEntries(from_ID, to_ID); }
    virtual Int_t GetNumberOfEntries() const

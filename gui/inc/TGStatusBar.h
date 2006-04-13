@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.11 2004/09/08 09:03:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.12 2006/04/12 12:56:32 antcheva Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -58,9 +58,11 @@ public:
 
    virtual void DrawBorder();
    virtual void SetText(TGString *text, Int_t partidx = 0);
-   virtual void SetText(const char *text, Int_t partidx = 0);  //*MENU*bld_rename.png*
-   virtual void SetParts(Int_t *parts, Int_t npart);           //*MENU*
+   virtual void SetText(const char *text, Int_t partidx = 0);
+           void AddText(const char *text, Int_t partidx = 0)
+                  { SetText(text, partidx); }                  //*MENU*
    virtual void SetParts(Int_t npart);                         //*MENU*
+   virtual void SetParts(Int_t *parts, Int_t npart); 
    void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
    TGCompositeFrame *GetBarPart(Int_t npart) const;
    TGDimension GetDefaultSize() const;

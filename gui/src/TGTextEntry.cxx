@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.37 2006/04/05 14:37:58 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.38 2006/04/12 12:56:32 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -357,7 +357,7 @@ void TGTextEntry::Init()
 
    SetWindowName();
    fHasOwnFont = kFALSE;
-   //fEditDisabled = kEditDisableHeight;
+   fEditDisabled = kEditDisableHeight;
 }
 
 //______________________________________________________________________________

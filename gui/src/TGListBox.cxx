@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.50 2006/01/20 08:52:26 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.51 2006/04/13 13:02:56 antcheva Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -66,6 +66,7 @@ TGLBEntry::TGLBEntry(const TGWindow *p, Int_t id, UInt_t options, Pixel_t back) 
    fActive = kFALSE;
    fEntryId = id;
    fBkcolor = back;
+   fEditDisabled = kEditDisable | kEditDisableGrab;
 
    SetWindowName();
 }
@@ -117,6 +118,7 @@ TGTextLBEntry::TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    Resize(fTWidth, fTHeight + 1);
+   fEditDisabled = kEditDisable | kEditDisableGrab;
    SetWindowName();
 }
 
@@ -236,6 +238,7 @@ TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
    fTHeight = max_ascent + max_descent;
 
    Resize(fTWidth, fTHeight + 1);
+   fEditDisabled = kEditDisable | kEditDisableGrab;
    SetWindowName();
 }
 
@@ -380,6 +383,7 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
       fTHeight = fPicture->GetHeight();
 
    Resize(fTWidth, fTHeight + 1);
+   fEditDisabled = kEditDisable | kEditDisableGrab;
    SetWindowName();
 }
 
@@ -455,6 +459,7 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fMultiSelect = kFALSE;
 
    SetWindowName();
+   fEditDisabled = kEditDisable | kEditDisableGrab;
 }
 
 //______________________________________________________________________________
@@ -739,6 +744,11 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
    Int_t y = pos.fY + event->fY;
    Bool_t activate = kFALSE;
 
+   // do not handle "context menu button" during guibuilding 
+   if (fClient->IsEditable() && (event->fCode == kButton3)) {
+      return kTRUE;
+   }
+
    TGVScrollBar *vb = GetVScrollbar();
 
    if ((event->fCode == kButton4) && vb){
@@ -1007,6 +1017,18 @@ TGListBox::TGListBox(const TGWindow *p, Int_t id,
    fIntegralHeight = kTRUE;
 
    InitListBox();
+
+   if (!p && fClient->IsEditable()) {  // defauld used in the GUI builder
+      AddEntry("Entry 1", 0);
+      AddEntry("Entry 2", 1);
+      AddEntry("Entry 3", 2);
+      AddEntry("Entry 4", 3);
+      AddEntry("Entry 5", 4);
+      AddEntry("Entry 6", 5);
+      AddEntry("Entry 7", 6);
+      MapSubwindows();
+      Resize(60, fItemVsize*4);
+   }
 }
 
 //______________________________________________________________________________
@@ -1034,7 +1056,6 @@ void TGListBox::InitListBox()
    fLbc->SetListBox(this);
    SetContainer(fLbc);
 
-
    AddFrame(fVport, 0);
    AddFrame(fVScrollbar, 0);
 
@@ -1044,6 +1065,11 @@ void TGListBox::InitListBox()
                          kPointerMotionMask);
    fLbc->RemoveInput(kPointerMotionMask);
    fLbc->AddInput(kButtonPressMask | kButtonReleaseMask | kButtonMotionMask);
+
+   fVport->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fVScrollbar->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
+   fLbc->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
+   fEditDisabled = kEditDisableLayout;
 }
 
 //______________________________________________________________________________
@@ -1168,6 +1194,51 @@ void TGListBox::InsertEntry(const char *s, Int_t id, Int_t afterID)
 
    InsertEntry(new TGString(s), id, afterID);
 }
+
+//______________________________________________________________________________
+void TGListBox::NewEntry(const char *s)
+{
+   // method used to add entry via context menu
+
+   Int_t selected = fLbc->GetSelected();
+
+   // no selected entry or the last entry
+   if ((selected < 0) || (selected == GetNumberOfEntries())) {
+      AddEntry(s, GetNumberOfEntries()+1);
+   } else {
+      InsertEntry(s, GetNumberOfEntries()+1, selected);
+   }
+   Layout();
+} 
+
+//______________________________________________________________________________
+void TGListBox:: RemoveEntry(Int_t id)
+{
+   // remove entry with id.
+   // If id = -1 - the selected entry/entries is/are removed.
+   //                
+
+   if (id > 0) {
+      fLbc->RemoveEntry(id);
+      Layout();
+      return;
+   }
+   if (!fLbc->GetMultipleSelections()) {
+      fLbc->RemoveEntry(fLbc->GetSelected());
+      Layout();
+      return;
+   }
+   TList li;
+   fLbc->GetSelectedEntries(&li);
+   TGLBEntry *e;
+   TIter next(&li);
+
+   while ((e = (TGLBEntry*)next())) {
+      fLbc->RemoveEntry(e->EntryId());
+   }
+   Layout();
+}
+
 
 //______________________________________________________________________________
 void TGListBox::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, int afterID)
@@ -1305,6 +1376,7 @@ void TGListBox::Layout()
    }
 
    fVScrollbar->SetRange(container->GetHeight()/fItemVsize, fVport->GetHeight()/fItemVsize);
+
    fClient->NeedRedraw(container);
 }
 
@@ -1324,6 +1396,27 @@ void TGListBox::GetSelectedEntries(TList *selected)
    // the list selected.
 
    fLbc->GetSelectedEntries(selected);
+}
+
+//______________________________________________________________________________
+void TGListBox::SetBgndColor(const char *hexvalue)
+{
+   // sets background color for list box entries
+
+   Pixel_t pixel;
+
+   if (!fClient->GetColorByName(hexvalue, pixel)) {
+      return;
+   }
+
+   TIter next(fLbc->GetList());
+   TGFrameElement *el;
+
+   while ((el = (TGFrameElement *)next())) {
+      TGLBEntry *lbe = (TGLBEntry *)el->fFrame;
+      lbe->SetBackgroundColor(pixel);
+   }
+   fClient->NeedRedraw(fLbc);
 }
 
 //______________________________________________________________________________
