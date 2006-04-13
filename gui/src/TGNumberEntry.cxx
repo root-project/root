@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.20 2006/04/11 06:23:44 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.21 2006/04/12 12:56:32 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1815,9 +1815,9 @@ public:
        fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { fEditDisabled = 1 | kEditDisableGrab; }
    virtual ~TGRepeatFireButton() { delete fTimer; }
 
-   virtual Bool_t HandleButton(Event_t *event);
-           void   FireButton();
-   virtual void   SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
+   virtual  Bool_t HandleButton(Event_t *event);
+            void   FireButton();
+   virtual  void   SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
 };
 
 //______________________________________________________________________________
