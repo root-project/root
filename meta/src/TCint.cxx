@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.118 2006/04/03 16:14:37 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.119 2006/04/06 17:25:08 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1058,6 +1058,7 @@ Int_t TCint::LoadLibraryMap()
             }
          }
          G__set_class_autoloading_table((char*)cls.Data(), lib);
+         G__security_recover(stderr); // Ignore any error during this setting.
          if (gDebug > 0)
             Info("LoadLibraryMap", "adding class %s in lib %s", cls.Data(), lib);
          delete tokens;
