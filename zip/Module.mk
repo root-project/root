@@ -45,8 +45,8 @@ ifeq ($(BUILTINZLIB),yes)
 ZIPH	     := $(ZIPOLDH) $(ZIPNEWH)
 ZIPS	     := $(ZIPOLDS) $(ZIPNEWS)
 else
-ZIPH	     := $(ZIPOLDH)
-ZIPS	     := $(ZIPOLDS)
+ZIPH	     := $(ZIPOLDH) $(ZIPNEWH)
+ZIPS	     := $(ZIPOLDS) $(ZIPNEWS)
 endif
 ZIPO         := $(ZIPS:.c=.o)
 ZIPDEP       := $(ZIPO:.o=.d)
