@@ -1,4 +1,5 @@
 Package: root-doc
+Section: doc
 Architecture: all
 Suggests: root-bin
 Description: Tutorial and test suit for the ROOT system

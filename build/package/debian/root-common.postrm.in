@@ -17,7 +17,6 @@ case "$1" in
 		> /etc/ld.so.conf.root-tmp
             mv /etc/ld.so.conf.root-tmp /etc/ld.so.conf
 	fi
-	ldconfig 
         ;;
     upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 	# Nothing to be done here

@@ -369,6 +369,9 @@ COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
                 $(METAUTILSDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
+ifneq ($(BUILTINZLIB),yes)
+CORELIBEXTRA += $(ZLIBCLILIB)
+endif
 
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
 

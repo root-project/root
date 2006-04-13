@@ -1,5 +1,5 @@
 Package: root-plugin-maxdb
-Architecture: i386 ia64
+Architecture: i386 ia64 amd64
 Depends: ${shlibs:Depends}
 Provides: root-db-client
 Replaces: root-plugin-sapdb

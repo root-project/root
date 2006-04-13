@@ -64,6 +64,8 @@ for d in * ; do
 	build|freetype|win*|main) continue ;; 			
 	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  
 	sapdb)      lib=root-plugin-maxdb   ; dev=$lib       ; bin=$lib ;;  
+	qtgsi)      lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;  
+	fftw)       lib=root-plugin-${d}3   ; dev=$lib       ; bin=$lib ;;  
 	*)          lib=root-plugin-$d      ; dev=$lib       ; bin=$lib ;;  
     esac 
 

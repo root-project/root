@@ -49,6 +49,11 @@ BUILTINFREETYPE:= @builtinfreetype@
 
 BUILTINPCRE    := @builtinpcre@
 
+BUILTINZLIB    := @builtinzlib@
+ZLIBLIBDIR     := @zliblibdir@
+ZLIBCLILIB     := @zliblib@
+ZLIBINCDIR     := $(filter-out /usr/include, @zlibincdir@)
+
 BUILDGL        := @buildgl@
 OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@

@@ -110,24 +110,6 @@ GNU/Linux and Redhat distributions.
 [1] deb http://mirror.phy.bnl.gov/debian-root root main
 [2] http://root.cern.ch
 
-Parallel ROOT Facility Daemon:
-==============================
-Per default, the PROOF daemon (proofd) is turned off.   This is
-because the user need to set up a few things before starting the
-daemon.   Specifically, the user need to make the files
-`<proofd_dir>/etc/cluster.conf' and `<proofd_dir>/etc/proofd.conf'.
-Examples for these are provided in the documentation directory of
-`root-proofd' (`/usr/share/doc/root-proofd/examples/').
-`<proofd_dir>' can be set to any location in
-`/etc/default/root-proofd'.  Note, however, that ROOT recommends that
-this directory is shared (via NFS or similar) among all the nodes of
-the cluster.   To enable `root-proofd' set `ENABLE_PROOFD=yes' in
-`/etc/default/root-proofd'.    See also the `read me' file  
-`/usr/share/doc/root-doc/README.PROOF' in the `root-doc' package, as
-well as the web-site [1].
-
-[1] http://root.cern.ch/root/PROOF.html
-
 Original Sources:
 =================
 The packaging scripts for both Debian GNU/Linux and Redhat - those

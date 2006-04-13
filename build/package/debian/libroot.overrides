@@ -1,3 +1,0 @@
-libroot5.09: postinst-has-useless-call-to-ldconfig
-libroot5.09: postrm-has-useless-call-to-ldconfig
-

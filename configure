@@ -31,6 +31,7 @@ options="                    \
    enable_builtin_freetype   \
    enable_builtin_pcre       \
    enable_builtin_gsl        \
+   enable_builtin_zlib       \
    enable_cern               \
    enable_chirp              \
    enable_cintex             \
@@ -804,6 +805,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-freetype   Built included libfreetype, or use system libfreetype
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-gsl        Built included libgsl, or use system libgsl
+  builtin-zlib       Built included libz, or use system libz
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
   cintex             Build the libCintex Reflex interface library
@@ -1367,6 +1369,41 @@ if test "x$enable_builtin_pcre" = "x" || \
 fi
 message "Checking whether to build included libpcre"
 result "$enable_builtin_pcre"
+
+######################################################################
+#
+### echo %%% Use included ZLib or use systems
+#
+if test "x$enable_builtin_zlib" = "xno" ; then
+    check_header "zlib.h" "/usr/include"  $ZLIB $ZLIB/include \
+	/usr/local/include /usr/include/zlib /usr/local/include/zlib \
+	/opt/zlib/include
+    if test "x$found_dir" = "x" ; then
+	enable_builtin_zlib=yes
+    else
+        zlibinc=$found_hdr
+        zlibincdir=$found_dir
+    fi
+
+    check_library "libz" "$enable_shared" "" "/usr/lib" \
+	$ZLIB $ZLIB/lib /usr/local/zlib/lib /usr/local/lib \
+            /usr/lib/zlib /usr/local/lib/zlib /usr/zlib/lib /usr/lib \
+            /usr/zlib /usr/local/zlilb /opt/zlib /opt/zlib/lib
+    if test "x$found_lib" = "x" ; then
+	zliblib=""
+	zliblibdir=""
+	enable_builtin_zlib="yes"
+    else
+	zliblib="$found_lib"
+	zliblibdir="$found_dir"
+    fi
+
+    if test "x$zlibincdir" = "x" || test "x$zliblib" = "x"; then
+        enable_builtin_zlib="yes"
+    fi
+fi
+message "Checking whether to build included zlib"
+result "$enable_builtin_zlib"
 
 ######################################################################
 #
@@ -3393,7 +3430,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-plugin-pythia6"
     test "x$enable_python"  = "xyes" && pkglist="$pkglist libroot-python"
     test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
-    test "x$enable_qtgsi"   = "xyes" && pkglist="$pkglist root-plugin-qtgsi"
     test "x$enable_roofit"  = "xyes" && pkglist="$pkglist libroot-roofit"
     test "x$enable_ruby"    = "xyes" && pkglist="$pkglist libroot-ruby"
     test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-castor"
@@ -3654,8 +3690,12 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildmathcore@|$enable_mathcore|"    \
     -e "s|@buildmathmore@|$enable_mathmore|"    \
     -e "s|@builtingsl@|$enable_builtin_gsl|"    \
-    -e "s|@gslflags@|$gslflags|"    		\
-    -e "s|@gsllibs@|$gsllibs|"    		\
+    -e "s|@gslflags@|$gslflags|"                \
+    -e "s|@gsllibs@|$gsllibs|"                  \
+    -e "s|@builtinzlib@|$enable_builtin_zlib|"  \
+    -e "s|@zlibincdir@|$zlibincdir|"            \
+    -e "s|@zliblib@|$zliblib|"                  \
+    -e "s|@zliblibdir@|$zliblibdir|"            \
     -e "s|@buildcintex@|$enable_cintex|"        \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \

@@ -21,6 +21,7 @@ if test "x$1" = "xrpm" ; then
 	    *clarens)							;;
 	    *dcache)							;;
 	    *fumili)							;;
+	    *fftw3)							;;
 	    *gl)							;;
 	    *globus)	echo "BuildRequires: globus"			;;
 	    *hbook)	echo "BuildRequires: gcc-g77"			;;
@@ -110,9 +111,9 @@ for i in $* ; do
 	*chirp)		echo -n ", libchirp-dev"			;;
 	*clarens)	echo -n ", libxmlrpc-c3-dev | libxmlrpc-c-dev"	;;
 	*dcache)	echo -n ", libdcap-dev"				;;
-	*fftw)		echo -n ", fftw3-dev"				;;
+	*fftw3)		echo -n ", fftw3-dev"				;;
 	*fumili)							;;
-	*gl)		echo -n ", libglu1-xorg-dev | xlibmesa-glu-dev |  libglu-dev"	;;
+	*gl)		echo -n ", libglu1-mesa-dev | libglu1-xorg-dev | xlibmesa-glu-dev |  libglu-dev"	;;
 	*globus)	echo -n ", globus"				;;
 	*hbook)		echo -n ", libpacklib1-dev [!kfreebsd-i386], g77|fortran-compiler" ;;
 	*krb5)		echo -n ", libkrb5-dev|heimdal-dev"		;;
@@ -134,7 +135,7 @@ for i in $* ; do
 	*quadp)								;;
 	*roofit)							;;
 	*ruby)		echo -n ", ruby (>= 1.8), ruby1.8-dev | ruby-dev (>= 1.8)"	;;
-	*maxdb)		echo -n ", libsqlod75-dev [i386 ia64]"		;;
+	*maxdb)		echo -n ", libsqlod75-dev [i386 ia64 amd64]"	;;
 	*sql)								;;
 	*srp)		echo -n ", libsrputil-dev"			;;
 	*venus)		echo -n ", libvenus-dev"			;;

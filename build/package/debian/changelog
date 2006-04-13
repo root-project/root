@@ -1,3 +1,13 @@
+root (5.11.01-6) unstable; urgency=low
+
+  * Package libroot-fftw made a plugin by Fons.  Now it's called
+    root-plugin-fftw.
+  * Small fixes from Kevin.
+  * Default ZipMode is now 1 (checked in debian/rules).
+  * Implemented a configure switch to use system Zlib.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 12 Apr 2006 15:39:11 +0200
+
 root (5.11.01-5) unstable; urgency=low
 
   * Added new package libroot-fftw, and libroot-fftw-dev.   Extension 

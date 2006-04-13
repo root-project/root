@@ -1,4 +1,5 @@
-?package(root-bin):needs="text" section="Apps/Science" \
+?package(root-bin):needs="text" \
+  section="Apps/Science" \
   title="ROOT" \
-  longtitle="ROOT'a Object Oriented Technologies" \
-  command="@prefix@/bin/root"
+  longtitle="ROOT's Object Oriented Technologies" \
+  command="@prefix@/bin/root" 

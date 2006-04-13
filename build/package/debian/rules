@@ -49,6 +49,7 @@ CONFOPTIONS	:=--enable-table				\
 		  --enable-roofit				\
 		  --enable-ruby					\
 		  --enable-qt					\
+		  --enable-qtgsi				\
 		  --enable-mathcore				\
 		  --enable-mathmore				\
 		  --enable-minuit2				\
@@ -63,6 +64,7 @@ CONFOPTIONS	:=--enable-table				\
 		  --disable-builtin-afterimage			\
 		  --disable-builtin-pcre			\
 		  --disable-builtin-gsl				\
+		  --disable-builtin-zlib			\
 		  --disable-alien				\
 		  --disable-rfio				\
 		  --disable-chirp				\
@@ -100,7 +102,7 @@ PLUGINS		:= root-plugin-asimage 		\
 		   root-plugin-hbook 		\
 		   root-plugin-krb5 		\
 		   libroot-ldap 		\
-		   libroot-fftw 		\
+		   root-plugin-fftw3 		\
 		   root-plugin-minuit2 		\
 		   root-plugin-gl 		\
 		   root-plugin-qt 		\
@@ -183,7 +185,7 @@ debian/%:debian/%.in
 		-e 's,@pythondir@,$(PYTHONDIR),g' \
 		-e 's,@libvers@,$(SOVERS),g' < $< > $@ 
 
-debian/control:debian/control.in
+debian/control:debian/control.in 
 	@echo "Making $@ (special)"
 	@cp $< $@.tmp
 	@for p in $(PKGLIST) ; do \
@@ -280,7 +282,7 @@ pkglists:
 	@for i in debian/libroot* ; do \
 	  if test -d $$i ; then continue ; fi ; \
 	  case $$i in \
-          *-dev.*|*.in|libroot*$(SOVERS).*|*.overrides) continue ;; \
+          *-dev.*|*.in|libroot*$(SOVERS).*) continue ;; \
 	  *) echo "Renaming $$i to version specific" ; \
 	     cp $$i `echo $$i | sed 's/libroot\(.*\)\.\(.*\)/libroot\1$(SOVERS).\2/'` ;; esac ; \
 	done 
@@ -301,6 +303,9 @@ install-indep:
 	# Fix some permissions 
 	-find debian/root-common/$(PREFIX)/share/root/icons \
 		-perm 0755 -and -not -type d | xargs chmod a-x 
+	mkdir -p debian/root-doc/usr/share/lintian/overrides/
+	cp debian/root-doc.overrides \
+	  debian/root-doc/usr/share/lintian/overrides/root-doc
 
 install-arch: 
 	dh_testroot
@@ -316,6 +321,11 @@ install-arch:
 	sed 's,$(PREFIX)/lib/root/$(SOVERS),$(PREFIX)/lib/root,' \
 		< $(DTMP)/$(PREFIX)/bin/root-config > root-config.tmp 
 	mv root-config.tmp $(DTMP)/$(PREFIX)/bin/root-config
+
+	# Make default ZIP mode be new library (system library)
+	sed 's,Root\.ZipMode:.*,Root.ZipMode: 1,' \
+		< $(DTMP)/etc/root/system.rootrc  > rootrc.tmp 
+	mv rootrc.tmp $(DTMP)/etc/root/system.rootrc
 
 	# Rename proofserv, xrdgsiproxy, and xrdpwdadmin in /usr/bin 
 	# to end in `.bin' and make wrapper script in /usr/bin 
@@ -381,9 +391,7 @@ install-arch:
 	  if test ! -f $$i ; then continue; fi;	\
 	  b=`basename $$i .overrides` ;		\
 	  case $$b in 				\
-		*-dev)  		;; 	\
-		lib*)  b=$${b}$(SOVERS) ;;	\
-		*)      		;; 	\
+	  	libroot)  continue	;;	\
 	  esac ; 				\
 	  echo "Installing Lintian override $$i in /usr/share/lintian/overrides/$$b" ; \
 	  mkdir -p debian/$$b/usr/share/lintian/overrides/ ; \

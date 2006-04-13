@@ -4,7 +4,7 @@ Mon, 21 Feb 2005 16:28:37 +0100.
 It was downloaded from :pserver:cvs@root.cern.ch:/user/cvs
 (anonymous CVS access to main repository - password is "cvs")
 
-Upstream Authors: The ROOT Team consiting of Rene Brun
+Upstream Authors: The ROOT Team consisting of Rene Brun
 <Rene.Brun@cern.ch> and Fons Rademakers <Fons.Rademakers@cern.ch>
 
 License:
@@ -35,3 +35,6 @@ License, version 2.1, can be found in
 Note, that the sources and the packages have been purged of the
 non-free MS TTF Core fonts. 
 
+Local Variables:
+  mode: text
+End:

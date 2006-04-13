@@ -1,0 +1,4 @@
+#!/bin/sh
+if [ "$1" = "remove" ]; then
+	ldconfig
+fi

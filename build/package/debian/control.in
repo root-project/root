@@ -2,7 +2,7 @@ Source: root
 Section: science
 Priority: optional
 Maintainer: Christian Holm Christensen <cholm@nbi.dk>
-Build-Depends: debhelper (>= 4.1.16), libssl-dev, comerr-dev, libxpm-dev, libfreetype6-dev, libpcre3-dev@builddepends@
+Build-Depends: debhelper (>= 4.1.16), libssl-dev, comerr-dev, libxpm-dev, libfreetype6-dev, libpcre3-dev, zlib1g-dev | libz-dev@builddepends@
 Standards-Version: 3.6.2
 
 Package: root
