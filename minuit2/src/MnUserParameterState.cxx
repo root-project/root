@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnUserParameterState.cpp,v 1.6.2.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnUserParameterState.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -115,7 +115,7 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
     fIntCovariance = MnUserCovariance(std::vector<double>(st.Error().InvHessian().Data(), st.Error().InvHessian().Data()+st.Error().InvHessian().size()), st.Error().InvHessian().Nrow());
     fCovariance.Scale(2.*up);
     fGlobalCC = MnGlobalCorrelationCoeff(st.Error().InvHessian());
-    fGCCValid = true;
+    fGCCValid = fGlobalCC.IsValid();
 
     assert(fCovariance.Nrow() == VariableParameters());
   }
