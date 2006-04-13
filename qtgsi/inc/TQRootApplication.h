@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.h,v 1.2 2006/04/12 10:07:21 brun Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.h,v 1.3 2006/04/13 09:08:59 brun Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -40,7 +40,10 @@ class TQRootApplication : public QApplication {
 #ifndef __CINT__
    Q_OBJECT
 #endif
-   protected:
+private:
+   TQRootApplication(const TQRootApplication &);
+   TQRootApplication& operator=(const TQRootApplication &);
+protected:
    QTimer *fQTimer;                    // Qt timer that poll the event loop of ROOT
    TTimer *fRTimer;                    // Root timer
 public:
@@ -48,8 +51,6 @@ public:
 
    TQRootApplication(int argc, char **argv,int poll=0);
    ~TQRootApplication();
-   TQRootApplication(const TQRootApplication &);
-   TQRootApplication& operator=(const TQRootApplication &);
    void SetDebugOn(){ fgDebug=kTRUE; }
    void SetWarningOn(){ fgWarning=kTRUE;}
 public slots:

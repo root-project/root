@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.cxx,v 1.2 2006/04/12 10:07:21 brun Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.cxx,v 1.3 2006/04/13 09:09:00 brun Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -52,19 +52,6 @@ TQRootApplication::TQRootApplication(int argc, char **argv, int poll):QApplicati
    // install a msg-handler
    fgWarning=fgDebug=kFALSE;
    qInstallMsgHandler( qMessageOutput );
-}
-
-//______________________________________________________________________________
-TQRootApplication::TQRootApplication(const TQRootApplication &)
-                  :QApplication(0,0)
-{
-   // dummy copy constructor
-}
-
-//______________________________________________________________________________
-TQRootApplication& TQRootApplication::operator=(const TQRootApplication &)
-{
-   return *this;
 }
 
 //______________________________________________________________________________

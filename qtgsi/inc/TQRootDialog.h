@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootDialog.h,v 1.2 2006/04/12 10:07:21 brun Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootDialog.h,v 1.3 2006/04/13 09:08:59 brun Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -48,11 +48,13 @@ class TQRootDialog: public QVBox
 #ifndef __CINT__
    Q_OBJECT
 #endif
+private:
+   TQRootDialog(const TQRootDialog &);
+   TQRootDialog& operator=(const TQRootDialog &);
+      
 public:
    TQRootDialog(QWidget *parent, const char *name, WFlags f=0,
                 TObject *obj=0,TMethod *meth=0);
-   TQRootDialog(const TQRootDialog &);
-   TQRootDialog& operator=(const TQRootDialog &);
    virtual ~TQRootDialog();
    void Add(const char* argname, const char* value, const char* type);
    void Popup();
