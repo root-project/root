@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootDialog.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootDialog.cxx,v 1.2 2006/04/12 10:07:21 brun Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -44,6 +44,19 @@ TQRootDialog::TQRootDialog(QWidget *parent, const char *name, WFlags f,
    QPushButton *bCancel = new QPushButton("Cancel",hbox,"Close");
    connect(bCancel,SIGNAL (clicked()), this, SLOT(close()));
    connect(bOk,SIGNAL( clicked() ), this, SLOT( ExecuteMethod() ));
+}
+
+//______________________________________________________________________________
+TQRootDialog::TQRootDialog(const TQRootDialog &)
+                  :QVBox(0,0,0)
+{
+   // dummy copy constructor
+}
+
+//______________________________________________________________________________
+TQRootDialog& TQRootDialog::operator=(const TQRootDialog &)
+{
+   return *this;
 }
 
 //______________________________________________________________________________

@@ -29,7 +29,7 @@ SYSCONF_CXXFLAGS_YACC     = -Wno-unused -Wno-parentheses -Wno-deprecated
 # Linking with support libraries
 # X11
 SYSCONF_LFLAGS_X11	= -L/usr/X11R6/lib
-SYSCONF_LIBS_X11	= -lXext -lX11 -lm
+SYSCONF_LIBS_X11	= -lXft -lXext -lX11 -lm
 # Qt, Qt+OpenGL
 SYSCONF_LFLAGS_QT	= -L$(QTDIR)/lib
 SYSCONF_LIBS_QT		= $(QTLINKLIB)

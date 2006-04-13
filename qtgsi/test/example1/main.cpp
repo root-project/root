@@ -11,9 +11,7 @@
 #include "guitest.h"
 #include "qtroot.h"
 
-#include "TROOT.h"
 #include "TBrowser.h"
-#include "TTimer.h"
 
 #include "TQRootApplication.h"
 #include "TQApplication.h"
@@ -32,7 +30,6 @@ int main( int argc, char **argv )
 
   int mode = 0; 
   
-  TROOT root("uno","dos");
   TQApplication app("uno",&argc,argv);
 
   // Define a QRootApplication with polling mechanism on.

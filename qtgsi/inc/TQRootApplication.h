@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.h,v 1.1 2006/04/11 16:33:46 rdm Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootApplication.h,v 1.2 2006/04/12 10:07:21 brun Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -48,6 +48,8 @@ public:
 
    TQRootApplication(int argc, char **argv,int poll=0);
    ~TQRootApplication();
+   TQRootApplication(const TQRootApplication &);
+   TQRootApplication& operator=(const TQRootApplication &);
    void SetDebugOn(){ fgDebug=kTRUE; }
    void SetWarningOn(){ fgWarning=kTRUE;}
 public slots:

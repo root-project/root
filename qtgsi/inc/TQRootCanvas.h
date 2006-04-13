@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.2 2006/04/12 10:07:21 brun Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.3 2006/04/12 17:02:55 brun Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -62,7 +62,8 @@ public:
    TQRootCanvas( QWidget *parent = 0, const char *name = 0 ,TCanvas *c=0);
    TQRootCanvas( QWidget *parent, QWidget* tabWin , const char *name = 0 ,TCanvas *c=0);
    virtual ~TQRootCanvas();
-
+   TQRootCanvas(const TQRootCanvas &);
+   TQRootCanvas& operator=(const TQRootCanvas &);
    TCanvas* GetCanvas() { return fCanvas;}
    Int_t GetRootWid() { return fWid;}
    Bool_t GetCanvasOwner(){ return fIsCanvasOwned; }
