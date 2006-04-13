@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.39 2006/04/11 07:17:53 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.40 2006/04/12 13:21:58 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -3898,7 +3898,7 @@ void TGuiBldDragManager::HandleAction(Int_t act)
    }
 
    if (fPimpl->fSaveGrab) {
-     fClient->NeedRedraw(fPimpl->fSaveGrab, kTRUE);
+      fClient->NeedRedraw(fPimpl->fSaveGrab, kTRUE);
    }
 
    DoRedraw();
