@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.39 2005/11/29 19:02:58 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.40 2006/03/20 08:22:40 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,6 +49,7 @@ TFitter::~TFitter()
 
    if (fCovar)  delete [] fCovar;
    if (fSumLog) delete [] fSumLog;
+   delete fMinuit;
 }
 
 //______________________________________________________________________________
