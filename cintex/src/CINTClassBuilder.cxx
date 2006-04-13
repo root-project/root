@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.8 2006/01/30 11:55:38 axel Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.9 2006/02/16 05:58:56 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -28,6 +28,9 @@ using namespace ROOT::Reflex;
 using namespace std;
 
 namespace ROOT { namespace Cintex {
+  
+  void* CINTClassBuilder::sFakeObject  = 0;
+  void* CINTClassBuilder::sFakeAddress = &CINTClassBuilder::sFakeObject;
 
   struct PendingBase {
     Type   basetype;
@@ -96,8 +99,7 @@ namespace ROOT { namespace Cintex {
 
       // Setup_memfunc();        // It is delayed
       // Setup_memvar();         // It is delayed
-      // Setup_inheritance();
-      Setup_inheritance_simple();
+      Setup_inheritance();
       Setup_typetable();
     }
     return;
@@ -213,7 +215,7 @@ namespace ROOT { namespace Cintex {
     return fBases;
   }
 
-  void CINTClassBuilder::Setup_inheritance_simple() {
+  void CINTClassBuilder::Setup_inheritance() {
     if ( 0 == ::G__getnumbaseclass(fTaginfo->tagnum) )  {     
       bool IsVirtual = false; 
       for ( Bases::iterator it = GetBases()->begin(); it != GetBases()->end(); it++ )
@@ -229,13 +231,13 @@ namespace ROOT { namespace Cintex {
           }
           if ( ctor )  {
             Object obj = fClass.Construct();
-            Setup_inheritance_simple(obj);
+            Setup_inheritance(obj);
             if ( dtor ) fClass.Destruct(obj.Address());
           }
           // There is no default constructor. So, it is not a I/O class
           else {  
             Object obj(fClass, 0);
-            Setup_inheritance_simple(obj);
+            Setup_inheritance(obj);
           }
         }
         // Special case of "pure abstract". The offsets will be Set to 0.
@@ -246,22 +248,22 @@ namespace ROOT { namespace Cintex {
         // offsets to base class to be 0.
         else if ( fClass.IsAbstract() && fClass.DataMemberSize() == 0) {
           Object obj(fClass, 0);
-          Setup_inheritance_simple(obj);
+          Setup_inheritance(obj);
         }
         // The above fails for Gaudi Algorithms (virutal inheritance, abstract and with
         // data members. Do not know What to do.
         else {  
           Object obj(fClass, 0);
-          Setup_inheritance_simple(obj);
+          Setup_inheritance(obj);
         }
       }
       else {
-        Object obj(fClass, (void*)0x100);
-        Setup_inheritance_simple(obj);
+        Object obj(fClass, sFakeAddress);
+        Setup_inheritance(obj);
       }
     }
   }
-  void CINTClassBuilder::Setup_inheritance_simple(Object& obj) {
+  void CINTClassBuilder::Setup_inheritance(Object& obj) {
     if ( ! IsSTL(fClass.Name(SCOPED)) )    {
       if ( 0 == ::G__getnumbaseclass(fTaginfo->tagnum) )  {
         for ( Bases::iterator it = GetBases()->begin(); it != GetBases()->end(); it++ ) {
@@ -284,7 +286,7 @@ namespace ROOT { namespace Cintex {
             }
           }
           else {
-            offset = base.Offset((void*)0x100);
+            offset = base.Offset(sFakeAddress);
           }
           if( Cintex::Debug() > 1 )  {
             std::cout << fClass.Name(SCOPED) << " Base:" << btype.Name(SCOPED) << " Offset:" << offset << std::endl;
@@ -292,72 +294,9 @@ namespace ROOT { namespace Cintex {
           int mod = base.IsPublic() ? G__PUBLIC : ( base.IsPrivate() ? G__PRIVATE : G__PROTECTED );
           ::G__inheritance_setup(fTaginfo->tagnum, b_tagnum, offset, mod, type );
           Object bobj(btype,(char*)obj.Address() + offset);
-          //CINTClassBuilder::Get(btype).Setup_inheritance_simple(bobj);
         }
       }
     }    
-  }
-  
-  void CINTClassBuilder::Setup_inheritance() {
-    Member GetBases = fClass.MemberByName("__getBasesTable");
-    if( GetBases ) {
-      typedef vector<pair<Base,int> > Bases;
-      Bases* bases = (Bases*)(GetBases.Invoke().Address());
-      for ( Bases::iterator it = bases->begin(); it != bases->end(); it++ ) {
-        Base base  = it->first;
-        int  level = it->second;
-        int b_tagnum = CintTag(base.ToType().Name(SCOPED));
-        // Get the offset. Treat differently virtual and non-virtual inheritance
-        size_t offset;
-        long  type = level == 0 ?  G__ISDIRECTINHERIT : 0;
-        if ( base.IsVirtual() ) {
-          offset = (size_t) base.OffsetFP();
-          type = type | G__ISVIRTUALBASE;
-        }
-        else {
-          offset = base.Offset((void*)0x100);
-        }
-        int mod = base.IsPublic() ? G__PUBLIC : ( base.IsPrivate() ? G__PRIVATE : G__PROTECTED );
-        G__inheritance_setup(fTaginfo->tagnum, b_tagnum, offset, mod, type );
-      }    
-    }
-    else {
-      Setup_inheritance( fTaginfo->tagnum, 0, fClass, G__ISDIRECTINHERIT);
-      // check if pending bases are needed to be resolved
-      for ( list<PendingBase>::iterator it = pendingBases().begin(); it != pendingBases().end();) {
-        if ( (*it).basetype == fClass ) {
-          list<PendingBase>::iterator curr = it++;
-          Setup_inheritance((*curr).tagnum, (*curr).offset, (*curr).basetype, 0);
-          pendingBases().erase(curr);
-        }
-        else {
-          it++;
-        }
-      }
-    }
-  }  
-  
-  void CINTClassBuilder::Setup_inheritance(int tagnum, size_t /* off */, const Type& cl, int ind) {
-    for ( size_t i = 0; i < cl.BaseSize(); i++ ) {
-      Base base = cl.BaseAt(i);
-      int b_tagnum = CintTag(base.ToType().Name(SCOPED));
-      // Get the offset. Treat differently virtual and non-virtual inheritance
-      size_t offset;
-      long  type = ind;
-      if ( base.IsVirtual() ) {
-        offset = (size_t) base.OffsetFP();
-        type = type | G__ISVIRTUALBASE;
-      }
-      else {
-        offset = base.Offset((void*)0x100);
-      }
-      int mod = base.IsPublic() ? G__PUBLIC : ( base.IsPrivate() ? G__PRIVATE : G__PROTECTED );
-      G__inheritance_setup(tagnum, b_tagnum, offset, mod, type );
-      // scan next level of base classes recursively if already loaded otherwise add into 
-      // the pending list
-      if( base.ToType() ) Setup_inheritance(tagnum, offset, base.ToType(), 0);
-      else                pendingBases().push_back(PendingBase(base.ToType(),tagnum, offset));
-    }
   }
 
   void CINTClassBuilder::Setup_typetable() {

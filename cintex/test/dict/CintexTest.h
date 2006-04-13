@@ -138,6 +138,7 @@ public:
   ~Calling() {}
   MyClass  retByValue() { return m_object; }
   MyClass* retByPointer() { return &m_object; }
+  MyClass* retByNewPointer() { return new MyClass; }
   MyClass& retByReference() { return m_object; }
   MyClass*& retByRefPointer() { return m_ptr; }
   void* retByVoidPointer() { return &m_object; }

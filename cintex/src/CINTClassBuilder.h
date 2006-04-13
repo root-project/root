@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -36,10 +36,8 @@ namespace ROOT {
       void Setup_tagtable(void);
       void Setup_memfunc(void);
       void Setup_memvar(void);
-      void Setup_inheritance(void);
-      void Setup_inheritance(int, size_t, const ROOT::Reflex::Type&, int);
-      void Setup_inheritance_simple();
-      void Setup_inheritance_simple(ROOT::Reflex::Object& obj);
+      void Setup_inheritance();
+      void Setup_inheritance(ROOT::Reflex::Object& obj);
       void Setup_typetable(void);
       const std::string& Name() const {  return fName;     }
       ROOT::Reflex::Type& TypeGet()      {  return fClass;    }
@@ -47,6 +45,8 @@ namespace ROOT {
       static void Setup_memfunc_with_context(void*);
       static void Setup_memvar_with_context(void*);
     private:
+      static void*               sFakeObject;
+      static void*               sFakeAddress;
       ROOT::Reflex::Type         fClass;
       G__linked_taginfo*         fTaginfo;
       std::string                fName;

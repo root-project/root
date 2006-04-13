@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.5 2005/12/07 21:33:59 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.6 2005/12/12 09:12:27 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -121,6 +121,7 @@ namespace ROOT {
   }
   
   void Callback::operator () ( const Type& t ) {
+    int autoload = G__set_class_autoloading(0); // To avoid recursive loads
     if ( t.IsClass() || t.IsStruct() ) {
       ROOTClassEnhancer enhancer(t);
       enhancer.Setup();
@@ -133,9 +134,11 @@ namespace ROOT {
     else if ( t.IsEnum() ) {
       CINTEnumBuilder::Setup(t);
     } 
+    G__set_class_autoloading(autoload);
   }
   
   void Callback::operator () ( const Member& m ) {
+    int autoload = G__set_class_autoloading(0); // To avoid recursive loads
     if ( m.IsFunctionMember() ) {
       if( Cintex::Debug() ) cout << "Building function " << m.Name(SCOPED|QUALIFIED) << endl; 
       CINTFunctionBuilder(m).Setup();
@@ -144,5 +147,6 @@ namespace ROOT {
       if( Cintex::Debug() ) cout << "Building variable " << m.Name(SCOPED|QUALIFIED) << endl; 
       CINTVariableBuilder(m).Setup();
     } 
+    G__set_class_autoloading(autoload);
   }
 }}
