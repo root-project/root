@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.7 2006/04/07 10:05:09 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.8 2006/04/12 13:21:58 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -73,16 +73,17 @@ private:
    Bool_t         IsPointVisible(Int_t x, Int_t y);
    Bool_t         IsSelectedVisible();
    void           CloseMenus();
-   Bool_t         IsEditDisabled(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisable); }
-   Bool_t         IsGrabDisabled(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableGrab); }
-   Bool_t         IsEventsDisabled(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableEvents); }
-   Bool_t         IsFixedLayout(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableLayout); }
-   Bool_t         IsFixedH(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableHeight); }
-   Bool_t         IsFixedW(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableWidth); }
-   Bool_t         IsFixedSize(TGWindow *f) const { return (f->GetEditDisabled() & kEditDisableResize); }
+   Bool_t         IsEditDisabled(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisable)); }
+   Bool_t         IsGrabDisabled(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableGrab)); }
+   Bool_t         IsEventsDisabled(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableEvents)); }
+   Bool_t         IsFixedLayout(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableLayout)); }
+   Bool_t         IsFixedH(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableHeight)); }
+   Bool_t         IsFixedW(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableWidth)); }
+   Bool_t         IsFixedSize(TGWindow *f) const { return (f && (f->GetEditDisabled() & kEditDisableResize)); }
    void           ChangeSelected(TGFrame *f); 
    TGFrame       *GetEditableParent(TGFrame *f);
    TGFrame       *GetMovableParent(TGWindow *p);
+   TGFrame       *GetBtnEnableParent(TGFrame *fr);
    TGWindow      *GetResizableParent(TGWindow *p);
    TGFrame       *FindMdiFrame(TGFrame *in);
    void           RaiseMdiFrame(TGFrame *in);

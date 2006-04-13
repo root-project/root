@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.4 2006/03/29 15:44:57 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.5 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -130,7 +130,7 @@ public:
    static ULong_t    GetPopupHlght();
    static TGGC      *GetPopupHlghtGC();
 
-   static void       SetBgndColor(TGFrame *frame, Pixel_t color);
+   static void       PropagateBgndColor(TGFrame *frame, Pixel_t color);
 
    static TGPopupMenu *CreatePopup();
       

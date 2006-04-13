@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.7 2006/03/29 15:44:57 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.8 2006/04/07 10:05:09 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -71,7 +71,7 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
 
    TGLabel *label = new TGLabel(this, title.Data());
    AddFrame(label, new TGLayoutHints(kLHintsNormal, 5, 5, 5, 5));
-   TRootGuiBuilder::SetBgndColor(this, TRootGuiBuilder::GetBgnd());
+   TRootGuiBuilder::PropagateBgndColor(this, TRootGuiBuilder::GetBgnd());
 
    fEntry = new TGTextEntry(this);
    AddFrame(fEntry, new TGLayoutHints(kLHintsNormal | kLHintsExpandX, 5, 5, 5, 5));
@@ -91,7 +91,7 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
    UInt_t w = fOK->GetDefaultWidth();
    w = TMath::Max(w, fCancel->GetDefaultWidth());
    hf->Resize(2 * (w + 10), hf->GetDefaultHeight());
-   TRootGuiBuilder::SetBgndColor(hf, TRootGuiBuilder::GetBgnd());
+   TRootGuiBuilder::PropagateBgndColor(hf, TRootGuiBuilder::GetBgnd());
 
    MapSubwindows();
    Resize();

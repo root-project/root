@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.25 2006/04/11 07:17:53 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.26 2006/04/12 13:21:58 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -328,6 +328,7 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
 
    int tx = entry->GetEx() + fXl;
    int ty = entry->GetEy() + max_ascent;
+   UInt_t h = max_ascent + max_descent + sep;
 
    switch (entry->GetType()) {
       case kMenuPopup:
@@ -337,14 +338,14 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             if (entry->GetStatus() & kMenuEnableMask) {
                gVirtualX->FillRectangle(fId, TRootGuiBuilder::GetPopupHlghtGC()->GetGC(), 
                                        entry->GetEx()+1, entry->GetEy(),
-                                       fMenuWidth-6, max_ascent + max_descent + sep - 1);
+                                       fMenuWidth-6, h - 1);
                gVirtualX->DrawRectangle(fId,  TGFrame::GetBlackGC()(), entry->GetEx()+ 1, entry->GetEy()-1,
-                                        fMenuWidth - entry->GetEx()- 6, max_ascent + max_descent + sep - 1);
+                                        fMenuWidth - entry->GetEx()- 6, h - 1);
             }
 
             if (entry->GetType() == kMenuPopup) {
-               DrawTrianglePattern(fSelGC, fMenuWidth-10, entry->GetEy()+sep,
-                                   fMenuWidth-6, entry->GetEy()+11);
+               DrawTrianglePattern(fSelGC, fMenuWidth-10, entry->GetEy() + 3,
+                                   fMenuWidth-6, entry->GetEy() + 11);
             }
 
             if (entry->GetStatus() & kMenuCheckedMask) {
@@ -366,20 +367,20 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             if ( entry->GetType() != kMenuLabel) {
                gVirtualX->FillRectangle(fId, TRootGuiBuilder::GetBgndGC()->GetGC(),
                                        entry->GetEx()+1, entry->GetEy()-1,
-                                       tx-4, max_ascent + max_descent + sep);
+                                       tx-4, h);
 
                gVirtualX->FillRectangle(fId, TRootGuiBuilder::GetPopupBgndGC()->GetGC(),
                                        tx-1, entry->GetEy()-1,
-                                       fMenuWidth-tx-1, max_ascent + max_descent + sep);
+                                       fMenuWidth-tx-1, h);
             } else { // we need some special background for labels
                gVirtualX->FillRectangle(fId, TGFrame::GetBckgndGC()(),
                                        entry->GetEx()+1, entry->GetEy()-1,
-                                       fMenuWidth - entry->GetEx()- sep, max_ascent + max_descent + sep);
+                                       fMenuWidth - entry->GetEx()- sep, h);
             }
 
             if (entry->GetType() == kMenuPopup) {
-               DrawTrianglePattern(fNormGC, fMenuWidth-10, entry->GetEy()+sep,
-                                   fMenuWidth-6, entry->GetEy()+11);
+               DrawTrianglePattern(fNormGC, fMenuWidth-10, entry->GetEy() + 3,
+                                   fMenuWidth-6, entry->GetEy() + 11);
             }
 
             if (entry->GetStatus() & kMenuCheckedMask) {
@@ -681,6 +682,16 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_numberentry.xpm";
    AddAction(act, "Input");
 
+   act = new TGuiBldAction("TGComboBox", "Combo Box", kGuiBldCtor);
+   act->fAct = "new TGComboBox()";
+   act->fPic = "bld_combobox.xpm";
+   AddAction(act, "Input");
+
+   act = new TGuiBldAction("TGListBox", "List Box", kGuiBldCtor);
+   act->fAct = "new TGListBox()";
+   act->fPic = "bld_listbox.xpm";
+   AddAction(act, "Input");
+
    act = new TGuiBldAction("TGHSlider", "Horizontal Slider", kGuiBldCtor);
    act->fAct = "new TGHSlider()";
    act->fPic = "bld_hslider.xpm";
@@ -689,6 +700,16 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act = new TGuiBldAction("TGVSlider", "Vertical Slider", kGuiBldCtor);
    act->fAct = "new TGVSlider()";
    act->fPic = "bld_vslider.xpm";
+   AddAction(act, "Input");
+
+   act = new TGuiBldAction("TGHScrollBar", "Horizontal Scrollbar", kGuiBldCtor);
+   act->fAct = "new TGHScrollBar()";
+   act->fPic = "bld_hscrollbar.xpm";
+   AddAction(act, "Input");
+
+   act = new TGuiBldAction("TGVScrollBar", "Vertical Scrollbar", kGuiBldCtor);
+   act->fAct = "new TGVScrollBar()";
+   act->fPic = "bld_vscrollbar.xpm";
    AddAction(act, "Input");
 
    act = new TGuiBldAction("TGLabel", "Text Label", kGuiBldCtor);
@@ -760,7 +781,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fStatusBar = new TGStatusBar(this, 40, 10);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
-   SetBgndColor(this, GetBgnd());
+   PropagateBgndColor(this, GetBgnd());
    MapSubwindows();
 
    Int_t qq; 
@@ -990,7 +1011,7 @@ void TRootGuiBuilder::InitMenu()
    bar->AddTitle(title, new TGLayoutHints(kLHintsTop | kLHintsRight, 4, 4, 0, 0));
 
    fMenuBar->SetEditDisabled(kEditDisable);
-   SetBgndColor(fMenuBar, GetBgnd());
+   PropagateBgndColor(fMenuBar, GetBgnd());
 }
 
 //______________________________________________________________________________
@@ -1803,7 +1824,7 @@ TGGC *TRootGuiBuilder::GetBgndGC()
 }
 
 //______________________________________________________________________________
-void TRootGuiBuilder::SetBgndColor(TGFrame *frame, Pixel_t color)
+void TRootGuiBuilder::PropagateBgndColor(TGFrame *frame, Pixel_t color)
 {
    // Set a background color to frame and all its subframes.
 
@@ -1819,7 +1840,7 @@ void TRootGuiBuilder::SetBgndColor(TGFrame *frame, Pixel_t color)
       if (fe->fFrame->GetBackground() == TGFrame::GetWhitePixel()) {
          continue;
       }
-      SetBgndColor(fe->fFrame, color);
+      PropagateBgndColor(fe->fFrame, color);
    }
 }
 
