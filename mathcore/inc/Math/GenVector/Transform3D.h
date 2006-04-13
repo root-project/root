@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.10 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.11 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -60,7 +60,6 @@ namespace ROOT {
 
   */ 
 
-  //template <class Tag2=DefaultCoordinateSystemTag> 
   class Transform3D { 
     
 

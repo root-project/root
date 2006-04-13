@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.6 2005/12/05 08:40:34 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.6 2005/12/05 08:40:34 moneta Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
 //
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
@@ -49,6 +49,9 @@ namespace ROOT {
               One example is the XYZVector which is a vector based on
               double precision x,y,z data members by using the
               Cartesian3D<double> Coordinate system.
+	      The class is having also an extra template parameter, the coordinate system tag, 
+	      to be able to identify (tag) vector described in different reference coordinate system, 
+	      like global or local coordinate systems.   
 
 	      @ingroup GenVector
     */
