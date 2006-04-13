@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.251 2006/03/28 15:50:10 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.252 2006/04/10 06:55:14 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6318,71 +6318,70 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    }
    
    switch (fShowProjection) {
-     case 1:
-        // "x"
-        break;
+      case 1:
+         // "x"
+         break;
 
-     case 2:
-        // "y"
-        break;
+      case 2:
+         // "y"
+         break;
 
-     case 3:
-        // "z"
-        break;
+      case 3:
+         // "z"
+         break;
 
-     case 4:
-        // "xy"
-        {
-           Int_t first = zaxis->GetFirst();
-           Int_t last  = zaxis->GetLast();
-           Int_t binz = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
-           zaxis->SetRange(binz,binz);
-           if( px1old ) gVirtualX->DrawLine(px1old,py1old,px2old,py2old);
-           xx[0] = xaxis->GetXmin();
-           xx[1] = yaxis->GetXmin();
-           xx[2] = zaxis->GetBinCenter(binz);
-           view->WCtoNDC(xx,u);
-           px1old = pxmin + Int_t((u[0]-uxmin)*cx);
-           py1old = pymin + Int_t((u[1]-uymin)*cy);
-           xx[0] = xaxis->GetXmax();
-           view->WCtoNDC(xx,u);
-           px2old = pxmin + Int_t((u[0]-uxmin)*cx);
-           py2old = pymin + Int_t((u[1]-uymin)*cy);
-           gVirtualX->DrawLine(px1old,py1old,px2old,py2old);
+      case 4:
+         // "xy"
+         {
+            Int_t first = zaxis->GetFirst();
+            Int_t last  = zaxis->GetLast();
+            Int_t binz = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
+            zaxis->SetRange(binz,binz);
+            if( px1old ) gVirtualX->DrawLine(px1old,py1old,px2old,py2old);
+            xx[0] = xaxis->GetXmin();
+            xx[1] = yaxis->GetXmin();
+            xx[2] = zaxis->GetBinCenter(binz);
+            view->WCtoNDC(xx,u);
+            px1old = pxmin + Int_t((u[0]-uxmin)*cx);
+            py1old = pymin + Int_t((u[1]-uymin)*cy);
+            xx[0] = xaxis->GetXmax();
+            view->WCtoNDC(xx,u);
+            px2old = pxmin + Int_t((u[0]-uxmin)*cx);
+            py2old = pymin + Int_t((u[1]-uymin)*cy);
+            gVirtualX->DrawLine(px1old,py1old,px2old,py2old);
            
-           c->Clear();
-           c->cd();
-           TH2 *hp = (TH2*)h3->Project3D("xy");
-           zaxis->SetRange(first,last);
-           hp->SetFillColor(38);
-           hp->SetTitle(Form("ProjectionXY of binz=%d", binz));
-           hp->SetXTitle(fH->GetYaxis()->GetTitle());
-           hp->SetZTitle("Number of Entries");
-           hp->Draw(fShowOption.Data());
-        }
-        break;
+            c->Clear();
+            c->cd();
+            TH2 *hp = (TH2*)h3->Project3D("xy");
+            zaxis->SetRange(first,last);
+            hp->SetFillColor(38);
+            hp->SetTitle(Form("ProjectionXY of binz=%d", binz));
+            hp->SetXTitle(fH->GetYaxis()->GetTitle());
+            hp->SetZTitle("Number of Entries");
+            hp->Draw(fShowOption.Data());
+         }
+         break;
 
-     case 5:
-        // "yx"
-        break;
+      case 5:
+         // "yx"
+         break;
 
-     case 6:
-        // "xz"
-        break;
+      case 6:
+         // "xz"
+         break;
 
-     case 7:
-        // "zx"
-        break;
+      case 7:
+         // "zx"
+         break;
 
-     case 8:
-        // "yz"
-        break;
+      case 8:
+         // "yz"
+         break;
 
-     case 9:
-        // "zy"
-        break;
-     
-  }
+      case 9:
+         // "zy"
+         break;
+   }
    c->Update();
    padsav->cd();
 }
