@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.15 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.16 2006/03/20 21:43:41 pcanal Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 */
 //End_Html
 
+#include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGButtonGroup.h"
 #include "TGraphEditor.h"
@@ -55,7 +56,9 @@ enum EGraphWid {
    kSHAPE_BAR,
    kSHAPE_FILL,
    kMARKER_ONOFF,
-   kGRAPH_TITLE
+   kGRAPH_TITLE,
+   kGRAPH_LINE_WIDTH,
+   kGRAPH_LINE_SIDE
 };
 
 //______________________________________________________________________________
@@ -96,12 +99,29 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
    fgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft, 0,3,0,0), fShape1);
    fgr->Show();
    fgr->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
-   f2->AddFrame(fgr, new TGLayoutHints(kLHintsLeft, 4, 0, 0, 3));
+   f2->AddFrame(fgr, new TGLayoutHints(kLHintsLeft, 4, 0, 0, 0));
+
    // CheckBox to activate/deactivate the drawing of the Marker
    fMarkerOnOff = new TGCheckButton(f2,"Show Marker",kMARKER_ONOFF);
    fMarkerOnOff->SetToolTipText("Make Marker visible/invisible");
-   f2->AddFrame(fMarkerOnOff, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
+   f2->AddFrame(fMarkerOnOff, new TGLayoutHints(kLHintsTop, 5, 1, 0, 3));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   // Exclusion zone parameters
+   MakeTitle("Exclusion Zone");
+   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 5, 0));
+
+   fExSide = new TGCheckButton(f3,"+-",kGRAPH_LINE_SIDE);
+   fExSide->SetToolTipText("Zone is drawing side");
+   f3->AddFrame(fExSide, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
+
+   fWidthCombo = new TGLineWidthComboBox(f3, kGRAPH_LINE_WIDTH,
+                                         kHorizontalFrame | kSunkenFrame | kDoubleBorder,
+                                         GetWhitePixel(), kTRUE);
+   fWidthCombo->Resize(91, 20);
+   f3->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
+   fWidthCombo->Associate(f3);
 
    // initialises the window layout
    MapSubwindows();
@@ -147,6 +167,9 @@ void TGraphEditor::ConnectSignals2Slots()
    fTitle->Connect("TextChanged(const char *)","TGraphEditor",this,"DoTitle(const char *)");
    fgr->Connect("Pressed(Int_t)","TGraphEditor",this,"DoShape(Int_t)");
    fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff(Bool_t)");
+   fWidthCombo->Connect("Selected(Int_t)", "TGraphEditor", this, "DoGraphLineWidth()");
+   fExSide->Connect("Clicked()","TGraphEditor",this,"DoGraphLineWidth()");
+
    fInit = kFALSE;  // connect the slots to the signals only once
 }
 
@@ -217,6 +240,11 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    } else if (opt.Contains("P")) {
       fMarkerOnOff->SetState(kButtonDown);
    } else fMarkerOnOff->SetState(kButtonUp);
+
+   // Exclusion zone parameters
+   if (fGraph->GetLineWidth()<0) fExSide->SetState(kButtonDown, kFALSE);
+   else fExSide->SetState(kButtonUp, kFALSE);
+   fWidthCombo->Select(TMath::Abs(Int_t(fGraph->GetLineWidth()/100)), kFALSE);
 
    if (fInit) ConnectSignals2Slots();
    SetActive();  // activates this Editor
@@ -301,6 +329,7 @@ void TGraphEditor::DoShape(Int_t s)
 
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
+
    // set/reset the Marker CheckBox
    if (opt.Contains("P"))
       fMarkerOnOff->SetState(kButtonDown);
@@ -311,6 +340,15 @@ void TGraphEditor::DoShape(Int_t s)
          opt +="P";
       fMarkerOnOff->SetState(kButtonDisabled);
    }
+
+   // set/reset the exclusion zone CheckBox
+   if (opt.Contains("L") || opt.Contains("C")) {
+      if (fGraph->GetLineWidth()<0) fExSide->SetState(kButtonDown, kFALSE);
+      else fExSide->SetState(kButtonUp, kFALSE);
+   } else {
+      fExSide->SetState(kButtonDisabled);
+   }
+
    SetDrawOption(opt);
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
@@ -336,3 +374,18 @@ void TGraphEditor::DoMarkerOnOff(Bool_t on)
    }
    SetDrawOption(t);
 }
+
+//______________________________________________________________________________
+
+void TGraphEditor::DoGraphLineWidth()
+{
+   // Slot connected to the graph line width.
+
+   Int_t width = fWidthCombo->GetSelected();
+   Int_t lineWidth = TMath::Abs(fGraph->GetLineWidth()%100);
+   Int_t side = 1;
+   if (fExSide->GetState() == kButtonDown) side = -1;
+   fGraph->SetLineWidth(side*(100*width+lineWidth));
+   Update();
+}
+

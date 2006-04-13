@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.5 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.6 2006/04/05 08:30:26 antcheva Exp $
 // Author: Carsten Hof 28/07/04
 
 /*************************************************************************
@@ -30,26 +30,29 @@
 #include "TGraph.h"
 #endif
 
-
 class TGLabel;
 class TGTextEntry;
 class TGCheckButton;
 class TGRadioButton;
+class TGLineWidthComboBox;
 
 class TGraphEditor : public TGedFrame {
 
 protected:
-   char             fDrawShape;    // Shape of the Graph (simple, smooth, bar)
-   TGTextEntry     *fTitle;        // Contains the title of the graph
-   Int_t            fTitlePrec;    // font precision level
-   TGraph          *fGraph;        // Graph object
-   TGButtonGroup   *fgr;           // Group the Radiobuttons:
-   TGRadioButton   *fShape;        // just draw unconnected points
-   TGRadioButton   *fShape0;       // set smooth graph curve
-   TGRadioButton   *fShape1;       // set simple poly-line between every graph point
-   TGRadioButton   *fShape2;       // set graph draw mode to bar chart
-   TGRadioButton   *fShape3;       // set graph draw mode to fill area
-   TGCheckButton   *fMarkerOnOff;  // set Marker visible/unvisible
+   char                 fDrawShape;   // Shape of the Graph (simple, smooth, bar)
+   TGTextEntry         *fTitle;       // Contains the title of the graph
+   Int_t                fTitlePrec;   // font precision level
+   TGraph              *fGraph;       // Graph object
+   TGButtonGroup       *fgr;          // Group the Radiobuttons:
+   TGRadioButton       *fShape;       // just draw unconnected points
+   TGRadioButton       *fShape0;      // set smooth graph curve
+   TGRadioButton       *fShape1;      // set simple poly-line between every graph point
+   TGRadioButton       *fShape2;      // set graph draw mode to bar chart
+   TGRadioButton       *fShape3;      // set graph draw mode to fill area
+   TGCheckButton       *fMarkerOnOff; // set Marker visible/unvisible
+   TGLineWidthComboBox *fWidthCombo;  // Exclusion zone width 
+   TGCheckButton       *fExSide;      // set the exclusion zone side
+
    virtual void ConnectSignals2Slots();
 
 public:
@@ -64,6 +67,7 @@ public:
    virtual void DoShape(Int_t s);
    virtual void DoMarkerOnOff(Bool_t on);
    virtual void DoTitle(const char *text);
+   virtual void DoGraphLineWidth();
 
    ClassDef(TGraphEditor,0)        // graph editor
 };
