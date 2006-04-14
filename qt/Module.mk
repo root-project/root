@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.16 2006/04/03 18:41:19 pcanal Exp $
+# $Id: Module.mk,v 1.17 2006/04/12 23:42:37 pcanal Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -29,8 +29,8 @@ GQTS          := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 GQTO          := $(GQTS:.cxx=.o)
 
-GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h           \
-                 $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h       \
+GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h \
+                 $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h \
                  $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h
 
 GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))) 
@@ -61,31 +61,27 @@ INCLUDEFILES  += $(GQTDEP)
 include/%.h:    $(GQTDIRI)/%.h
 		cp $< $@
 
-include/%.cw:    $(GQTDIRI)/%.cw
+include/%.cw:   $(GQTDIRI)/%.cw
 		cp $< $@
 
-include/%.pri:    $(GQTDIRI)/%.pri
+include/%.pri:  $(GQTDIRI)/%.pri
 		cp $< $@
 
-$(GQTLIB):    $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
+$(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ \
-         "$(GQTO) $(GQTMOCO) $(GQTDO)" \
-		  "$(GQTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
-
+		   "$(GQTO) $(GQTMOCO) $(GQTDO)" \
+		   "$(GQTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
 $(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GQTH1) $(GQTL)
 
-$(GQTDO): $(GQTDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
+all-qt:         $(GQTLIB)
 
-all-qt:      $(GQTLIB)
-
-map-qt:        $(RLIBMAP)
+map-qt:         $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(GQTLIB) \
-                  -d $(GQTLIBDEP) -c $(GQTL)
+		   -d $(GQTLIBDEP) -c $(GQTL)
 
 map::           map-qt
 
@@ -100,8 +96,8 @@ distclean-qt: clean-qt
 distclean::     distclean-qt
 
 ##### extra rules ######
-$(sort $(GQTMOCO) $(GQTO)): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
+$(sort $(GQTMOCO) $(GQTO)): CXXFLAGS += $(GQTCXXFLAGS)
+$(GQTDO): CXXFLAGS += $(GQTCXXFLAGS)
 
 $(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 	$(QTMOCEXE) $< -o $@
@@ -114,12 +110,11 @@ $(GQTMOC) : $(GQTDIRS)/moc_%.cxx: $(GQTDIRI)/%.h
 qtcint: lib/qtcint.dll
 
 lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
-                           cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h \
-			   cint/lib/qt/qtfunctions.h
+                cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h \
+                cint/lib/qt/qtfunctions.h
 	$(MAKECINTDLL) $(PLATFORM) C++ qtcint qt \
 	  " -p $(GQTCXXFLAGS) qtcint.h " \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" \
            "$(CINTCXXFLAGS) $(GQTCXXFLAGS)" "$(CINTCFLAGS)" \
            "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"
-

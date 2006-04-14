@@ -60,7 +60,6 @@ $(QTGSILIB):    $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO) $(ORDER_) $(MAINLIBS) $(QTGSIL
 		   "$(QTGSIO) $(QTGSIDO) $(QTGSIMOCO)" \
 		   "$(QTGSILIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
-
 $(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(QTGSIH) $(QTGSIL)
