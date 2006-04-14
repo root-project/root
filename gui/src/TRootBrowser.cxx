@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.93 2006/03/28 00:37:07 pcanal Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.94 2006/03/28 16:21:25 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -872,7 +872,6 @@ void TRootBrowser::CreateBrowser(const char *name)
    fHistory = new TRootBrowserHistory;
    fHistoryCursor = 0;
    fBrowseTextFile = kFALSE;
-   fEditDisabled = 1;
 
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -1112,6 +1111,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), kKeyMod1Mask, kTRUE);
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), kKeyMod1Mask, kTRUE);
    ClearHistory();
+   SetEditDisabled(kEditDisable);
 
    MapSubwindows();
    SetDefaults();

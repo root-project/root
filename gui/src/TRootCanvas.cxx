@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.96 2006/03/23 15:49:16 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.97 2006/04/11 06:57:05 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -324,7 +324,6 @@ void TRootCanvas::CreateCanvas(const char *name)
    fButton    = 0;
    fAutoFit   = kTRUE;   // check also menu entry
    fEditor    = 0;
-   fEditDisabled = kEditDisable;
 
    // Create menus
    fFileSaveMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -563,6 +562,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
 
+   SetEditDisabled(kEditDisable);
    MapSubwindows();
 
    // by default status bar, tool bar and pad editor are hidden

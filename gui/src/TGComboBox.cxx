@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.39 2006/04/13 13:02:56 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.40 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -116,11 +116,15 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    Layout();
    MapRaised();
 
-   if (!fClient->IsEditable()) {
-      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | 
+
+   gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | 
                               kPointerMotionMask, kNone, 
                               fClient->GetResourcePool()->GetGrabCursor());
+
+   if (fClient->IsEditable()) {
+      fClient->RegisterPopup(this);
    }
+
    fClient->WaitForUnmap(this);
    EndPopup();
 }
@@ -244,6 +248,7 @@ void TGComboBox::Init()
    if (fTextEntry) fTextEntry->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
    fDDButton->SetEditDisabled(kEditDisable | kEditDisableGrab);
    fEditDisabled = kEditDisableLayout | kEditDisableBtnEnable | kEditDisableHeight;
+
    SetWindowName();
 }
 
@@ -276,8 +281,9 @@ void TGComboBox::EnableTextInput(Bool_t on)
 {
    // switch text input or readonly mode of combobox (not perfect yet)
 
-   UInt_t w=0, h=0;
+   UInt_t w, h;
    const char *text = "";
+
    if (on) {
       if (fSelEntry) {
          text = ((TGTextLBEntry*)fSelEntry)->GetText()->GetString();
@@ -293,15 +299,13 @@ void TGComboBox::EnableTextInput(Bool_t on)
       }
       if (!fTextEntry) {
          fTextEntry = new TGTextEntry(this, text, 0);
-         fTextEntry->SetMaxLength(64);
-         fTextEntry->MoveResize(2, 2, w, h+2);
          fTextEntry->SetFrameDrawn(kFALSE);
          fTextEntry->Connect("ReturnPressed()", "TGComboBox", this, "ReturnPressed()");
          AddFrame(fTextEntry, fLhs);
          fTextEntry->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
       }
       MapSubwindows();
-      Resize(fListBox->GetDefaultWidth(), h+6);
+      GetLayoutManager()->Layout();
    } else {
       if (fTextEntry) {
          text = fTextEntry->GetText();
@@ -315,12 +319,11 @@ void TGComboBox::EnableTextInput(Bool_t on)
       if (!fSelEntry) {
          fSelEntry = new TGTextLBEntry(this, new TGString(text), 0);
          fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
-         fSelEntry->MoveResize(2, 2, w, h);
          AddFrame(fSelEntry, fLhs);
          fSelEntry->SetEditDisabled(kEditDisable | kEditDisableGrab);
       }
       MapSubwindows();
-      Resize(fListBox->GetDefaultWidth(), h+4);
+      GetLayoutManager()->Layout();
    }
 }
 

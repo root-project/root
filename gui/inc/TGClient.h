@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.21 2004/09/12 10:55:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.22 2004/09/13 09:02:37 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -118,6 +118,9 @@ public:
    void         ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2);
    void         WaitFor(TGWindow *w);
    void         WaitForUnmap(TGWindow *w);
+   void         ResetWaitFor(TGWindow *w);
+   EGEventType  GetWaitForEvent() const  { return fWaitForEvent;}
+   Window_t     GetWaitForWindow() const { return fWaitForWindow; }
    Bool_t       ProcessEventsFor(TGWindow *w);
 
    const TGResourcePool *GetResourcePool() const { return fResourcePool; }

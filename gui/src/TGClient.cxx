@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.47 2006/01/25 19:46:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.48 2006/03/23 15:56:03 antcheva Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -668,6 +668,14 @@ void TGClient::WaitForUnmap(TGWindow *w)
 
    fWaitForWindow = wsave;
    fWaitForEvent  = esave;
+}
+
+//______________________________________________________________________________
+void TGClient::ResetWaitFor(TGWindow *w)
+{
+   // reset waiting
+
+   if (fWaitForWindow == w->GetId()) fWaitForWindow = kNone;
 }
 
 //______________________________________________________________________________
