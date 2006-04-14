@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.41 2006/04/13 13:56:40 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.42 2006/04/13 15:33:03 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1498,7 +1498,8 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
          fPimpl->fPlane = 0;
       }
 
-      return HandleButtonPress(&ev);
+      Bool_t ret = HandleButtonPress(&ev);
+      return ret;
    }
 
    if ((fDragging || fMoveWaiting) && (!ev.fState || (ev.fState == kKeyShiftMask)) &&
@@ -1659,6 +1660,10 @@ void TGuiBldDragManager::HandleButon3Pressed(Event_t *event, TGFrame *frame)
 
    if (fStop) return;
 
+   if (fClient->GetWaitForEvent() == kUnmapNotify) {
+      return;
+   }
+
    if (frame == fPimpl->fGrab) {
       Menu4Frame(frame, event->fXRoot, event->fYRoot);
    } else if (frame->IsEditable())  {
@@ -1800,7 +1805,8 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
                gDbx = event->fXRoot;
                gDby = event->fYRoot;
 
-               return HandleButtonPress(event);
+               Bool_t ret = HandleButtonPress(event);
+               return ret;
             }
 
             return kFALSE;
@@ -1874,6 +1880,24 @@ TGFrame *TGuiBldDragManager::GetBtnEnableParent(TGFrame *fr)
 }
 
 //______________________________________________________________________________
+void TGuiBldDragManager::UnmapAllPopups()
+{
+   // unmap all popups 
+
+   TList *li = fClient->GetListOfPopups();
+   if (!li->GetEntries()) return;
+
+   TGPopupMenu *pup; 
+   TIter next(li);
+
+   while ((pup = (TGPopupMenu*)next())) {
+      pup->UnmapWindow();
+      fClient->ResetWaitFor(pup);
+   }
+   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+}
+
+//______________________________________________________________________________
 Bool_t TGuiBldDragManager::HandleButtonPress(Event_t *event)
 {
    // handle button press event
@@ -1938,6 +1962,11 @@ Bool_t TGuiBldDragManager::HandleButtonRelease(Event_t *event)
    // handle button release event
 
    if (fStop) return kFALSE;
+
+   // unmap all waiting popups
+   if (fClient->GetWaitForEvent() == kUnmapNotify) {
+     UnmapAllPopups();
+   }
 
    TGWindow *w = fClient->GetWindowById(event->fWindow);
 
@@ -3800,6 +3829,8 @@ void TGuiBldDragManager::SetEditable(Bool_t on)
       if (fBuilder) {
          fBuilder->Update();
       }
+      CloseMenus();
+
       fStop = kTRUE;
    }
 
@@ -4348,6 +4379,7 @@ void TGuiBldDragManager::CloseMenus()
    if (fLassoMenu) {
       fLassoMenu->EndMenu(ud);
    }
+   UnmapAllPopups();
 }
 
 //______________________________________________________________________________
@@ -4744,8 +4776,6 @@ out:
 
    HideGrabRectangles();
    fFrameMenu->PlaceMenu(x, y, kFALSE, kTRUE);
- 
-   if (fLassoDrawn) DrawLasso();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.26 2006/04/12 13:21:58 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.27 2006/04/13 15:33:03 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -531,7 +531,6 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    // Create GUI builder application.
 
    SetCleanup(kDeepCleanup);
-   fEditDisabled = kEditDisable;
    gGuiBuilder  = this;
    fActionButton = 0;
 
@@ -666,7 +665,6 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_radiobutton.xpm";
    AddAction(act, "Buttons");
 
-
    act = new TGuiBldAction("TGPictureButton", "Picture Button", kGuiBldCtor);
    act->fAct = "new TGPictureButton()";
    act->fPic = "bld_image.xpm";
@@ -782,6 +780,8 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
    PropagateBgndColor(this, GetBgnd());
+   SetEditDisabled(kEditDisable);   // disable editting to all subframes
+
    MapSubwindows();
 
    Int_t qq; 

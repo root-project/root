@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.8 2006/04/12 13:21:58 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.9 2006/04/13 15:33:02 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -135,6 +135,7 @@ public:
    void           SetEditable(Bool_t on = kTRUE);
    void           DoRedraw();
    void           SwitchEditable(TGFrame *frame);
+   void           UnmapAllPopups();
 
    Bool_t         HandleEvent(Event_t *);
    Bool_t         RecognizeGesture(Event_t *, TGFrame *frame = 0);
