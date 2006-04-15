@@ -51,6 +51,7 @@
 TList *FileList;
 TFile *Target, *Source;
 Bool_t noTrees;
+Bool_t fastMethod;
 
 void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
 
@@ -67,6 +68,8 @@ int main( int argc, char **argv ) {
     cout << "level of the target file. By default the compression level is 1, but" <<endl;
     cout << "if \"-f0\" is specified, the target file will not be compressed." <<endl;
     cout << "if \"-f6\" is specified, the compression level 6 will be used." <<endl;
+    cout << "if Target and source files have different compression levels"<<endl;
+    cout << " a slower method is used"<<endl;
     return 1;
   }
   FileList = new TList();
@@ -101,11 +104,17 @@ int main( int argc, char **argv ) {
   Long64_t maxsize = 100000000; //100GB
   maxsize *= 100;  //to bypass some compiler limitations with big constants
   TTree::SetMaxTreeSize(maxsize);
-
+  
+  fastMethod = kTRUE;
   for ( int i = ffirst; i < argc; i++ ) {
     cout << "Source file " << i-ffirst+1 << ": " << argv[i] << endl;
     Source = TFile::Open( argv[i] );
     FileList->Add(Source);
+    if (newcomp != Source->GetCompressionLevel())  fastMethod = kFALSE;
+  }
+  if (!fastMethod) {
+     cout <<"Sources and Target have different compression levels"<<endl;
+     cout <<"Merging will be slower"<<endl;
   }
 
   MergeRootfile( Target, FileList,0 );
@@ -246,7 +255,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) {
           } else if(obj->IsA()->InheritsFrom( "TTree" )) {
              if (!noTrees) {
                 globChain->ls();
-                globChain->Merge(target->GetFile(),0,"keep fast");
+                if (fastMethod) globChain->Merge(target->GetFile(),0,"keep fast");
+                else            globChain->Merge(target->GetFile(),0,"keep");
                 delete globChain;
              }
           } else {
