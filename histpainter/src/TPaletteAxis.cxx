@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.13 2005/11/10 10:36:59 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.14 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -226,7 +226,7 @@ void TPaletteAxis::Paint(Option_t *)
 // Paint the palette
 
    ConvertNDCtoPad();
-   
+
    SetFillStyle(1001);
    Double_t ymin = fY1;
    Double_t ymax = fY2;
@@ -280,8 +280,8 @@ void TPaletteAxis::Paint(Option_t *)
       gPad->PaintBox(xmin,y1,xmax,y2);
    }
    Int_t ndiv  = fH->GetZaxis()->GetNdivisions()%100; //take primary divisions only
-   char chopt[5] = "";
-   chopt[0] = 0;
+   char chopt[5] = "S   ";
+   chopt[1] = 0;
    strcat(chopt, "+L");
    if (ndiv < 0) {
       ndiv =TMath::Abs(ndiv);
