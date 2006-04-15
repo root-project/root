@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.283 2006/04/11 16:17:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.284 2006/04/11 18:08:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2544,8 +2544,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
             if (!f1->IsInside(&cache[2])) continue;
             Int_t bin = GetBin(binx,biny,binz);
             cache[0] = GetBinContent(bin);
-            if (fitOption.W1 || fitOption.Like) cache[1] = 1;
-            else              cache[1]  = GetBinError(bin);
+            if (fitOption.W1) cache[1] = 1;
+            else              cache[1] = GetBinError(bin);
             if (cache[1] == 0) continue;
             np++;
             cache += psize;
@@ -2660,7 +2660,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
       }
       hFitter->GetStats(aminref,edm,errdef,nvpar,nparx);
       //     If Log Likelihood, compute an equivalent chisquare
-      //if (fitOption.Like) amin = hFitter->Chisquare(npar, params, amin, params, 1);
       amin = aminref;
       if (fitOption.Like) amin = hFitter->Chisquare(npar, params);
 
