@@ -138,7 +138,7 @@ void G__instantiate_templateclasslater(G__Definedtemplateclass *deftmpclass)
       G__tagdefining=store_tagdefining;
       G__def_struct_member=store_def_struct_member;
     }
-    G__instantiate_templateclass(tagname);
+    G__instantiate_templateclass(tagname,0);
     ilist = ilist->next;
   }
   G__def_tagnum=store_def_tagnum;
@@ -1655,6 +1655,12 @@ static void G__templatemaptypename(char *string)
   else if(strcmp(string,"unsignedshort*")==0||
           strcmp(string,"unsignedshortint*")==0)
     strcpy(string,"unsigned short*");
+  else if (strcmp(string,"Double32_t")==0||
+           strcmp(string,"Double32_t*")==0) 
+    { 
+       /* nothing to do, we want to keep those as is */
+
+    }
 /* #define G__OLDIMPLEMENTATION787 */
   else {
     char saveref[G__LONGLINE];
@@ -1942,8 +1948,13 @@ int G__gettemplatearglist(char *paralist,G__Charlist *charlist_in
 /***********************************************************************
 * G__instantiate_templateclass()
 *
+*  noerror = 0   if not found try to instantiate template class
+*                if template is not found, display error
+*          = 1   if not found try to instantiate template class
+*                no error messages if template is not found
+*
 ***********************************************************************/
-int G__instantiate_templateclass(char *tagnamein)
+int G__instantiate_templateclass(char *tagnamein, int noerror)
 {
   int typenum;
   int tagnum;
@@ -2074,15 +2085,19 @@ int G__instantiate_templateclass(char *tagnamein)
 
   /* if no such template, error */
   if(!deftmpclass->next) {
-    G__fprinterr(G__serr,"Error: no such template %s",tagname);
-    G__genericerror((char*)NULL);
+    if (noerror==0) {
+      G__fprinterr(G__serr,"Error: no such template %s",tagname);
+      G__genericerror((char*)NULL);
+    }
     return(-1);
   }
 
   if(!deftmpclass->def_fp) {
-    G__fprinterr(G__serr,"Limitation: Can't instantiate precompiled template %s"
-            ,tagname);
-    G__genericerror(NULL);
+    if (noerror==0) {
+      G__fprinterr(G__serr,"Limitation: Can't instantiate precompiled template %s"
+                   ,tagname);
+      G__genericerror(NULL);
+    }
     return(-1);
   }
 

@@ -14,7 +14,6 @@
 extern "C" void G__cpp_reset_tagtableG__stream();
 
 extern "C" void G__set_cpp_environmentG__stream() {
-  G__add_macro("G__CINTVERSION=50160009");
   G__add_compiledheader("iostrm.h");
   G__add_compiledheader("fstrm.h");
   G__add_compiledheader("sstrm.h");

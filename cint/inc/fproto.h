@@ -494,7 +494,7 @@ struct G__Definetemplatefunc *G__defined_templatefunc G__P((char *name));
 struct G__Definetemplatefunc *G__defined_templatememfunc G__P((char *name));
 void G__declare_template G__P((void));
 int G__gettemplatearglist G__P((char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara,int parent_tagnum));
-int G__instantiate_templateclass G__P((char *tagname));
+int G__instantiate_templateclass G__P((char *tagname,int noerror));
 void G__replacetemplate G__P((char *templatename,char *tagname,struct G__Charlist *callpara,FILE *def_fp,int line,int filenum,fpos_t *pdef_pos,struct G__Templatearg *def_para,int isclasstemplate,int npara,int parent_tagnum));
 int G__templatesubstitute G__P((char *symbol,struct G__Charlist *callpara,struct G__Templatearg *defpara,char *templatename,char *tagname,int c,int npara,int isnew));
 void G__freedeftemplateclass G__P((struct G__Definedtemplateclass *deftmpclass));

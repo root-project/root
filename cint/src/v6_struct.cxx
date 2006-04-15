@@ -393,7 +393,14 @@ void G__set_class_autoloading_table(char *classname,char *libname)
          G__ifile.fp = (FILE*)NULL;
          G__def_tagnum = G__struct.parent_tagnum[tagnum];
          G__tagdefining = G__struct.parent_tagnum[tagnum];
-         G__createtemplateclass(buf,(struct G__Templatearg*)NULL,0);
+         char *templatename = buf;
+         for(int j=(p-classname); j>=0 ; --j) {
+            if (buf[j]==':' && buf[j-1]==':') {
+               templatename = buf+j+1;
+               break;
+            }
+         }
+         G__createtemplateclass(templatename,(struct G__Templatearg*)NULL,0);
          G__ifile.fp = store_fp;
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
@@ -620,7 +627,7 @@ int G__defined_tagname(const char *tagname,int noerror)
       return(-1);
     }
     /* CAUTION: tagname may be modified in following function */
-    i=G__instantiate_templateclass((char*)tagname);
+    i=G__instantiate_templateclass((char*)tagname,noerror);
     return(i);
   }
   else if(noerror<2) {
@@ -628,7 +635,7 @@ int G__defined_tagname(const char *tagname,int noerror)
     if(deftmplt 
        && deftmplt->def_para
        && deftmplt->def_para->default_parameter) {
-      i=G__instantiate_templateclass((char*)tagname);
+      i=G__instantiate_templateclass((char*)tagname,noerror);
       return(i);
     }
   }
@@ -714,6 +721,12 @@ int G__search_tagname(const char *tagname,int type)
   char temp[G__LONGLINE];
   char atom_tagname[G__LONGLINE];
 #endif
+  int noerror = 0;
+  if (type == G__CLASS_AUTOLOAD) {
+     /* no need to issue error message while uploading
+        the autoloader information */
+     noerror=2;
+  }
   /* int parent_tagnum; */
   int envtagnum= -1;
   int isstructdecl = isupper(type);
@@ -775,9 +788,9 @@ int G__search_tagname(const char *tagname,int type)
       if (strcmp (temp, "std") == 0
           && G__ignore_stdnamespace
           ) G__struct.parent_tagnum[i] = -1;
-      else G__struct.parent_tagnum[i] = G__defined_tagname(temp,0);
+      else G__struct.parent_tagnum[i] = G__defined_tagname(temp,noerror);
 #else
-      G__struct.parent_tagnum[i] = G__defined_tagname(temp,0);
+      G__struct.parent_tagnum[i] = G__defined_tagname(temp,noerror);
 #endif
     }
     else {

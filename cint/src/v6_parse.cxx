@@ -799,7 +799,7 @@ int G__keyword_anytime_8(char* statement)
       }
     }
     if(!G__defined_templateclass(tcname)) {
-      G__instantiate_templateclass(tcname);
+      G__instantiate_templateclass(tcname,0);
     }
     return(1);
   }

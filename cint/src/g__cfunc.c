@@ -67,7 +67,7 @@ void* memcpy();
 #endif
 #if !defined(G__NOMATHLIB) && !defined(floor) \
    && defined(G__FUNCPOINTER) && (_MSC_VER == 1400)
-   double G__floor_MSVC8(double f) {return floor(f);}
+   static double G__floor_MSVC8(double f) {return floor(f);}
 #endif
 
 /*************************************************

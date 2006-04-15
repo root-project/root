@@ -2106,12 +2106,17 @@ va_list arg;
 #else
     FILE *fpnull = fopen("/dev/null","w");
 #endif
-    int len;
-    len = vfprintf(fpnull,fmt,argptr);
-    buf = (char*)malloc(len+5);
-    result = vsprintf(buf,fmt,argptr);
-    (*G__ErrMsgCallback)(buf);
-    free((void*)buf);
+    if (fpnull==0) {
+       vfprintf(stderr,"Could not open /dev/null!\n",argptr);
+    } else {
+       int len;
+       len = vfprintf(fpnull,fmt,argptr);
+       buf = (char*)malloc(len+5);
+       result = vsprintf(buf,fmt,argptr);
+       (*G__ErrMsgCallback)(buf);
+       free((void*)buf);
+       fclose(fpnull);
+    }
   }
   else {
 #ifdef G__WIN32
