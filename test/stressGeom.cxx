@@ -9,12 +9,12 @@
 #include <TBenchmark.h>
 #include <TApplication.h>
 
-void stressgeom();
+void stressGeom();
 
 int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
-   stressgeom();
+   stressGeom();
    return 0;
 }
 
@@ -29,11 +29,11 @@ int main(int argc, char **argv)
 //--- given shape and compares with reference values.
 //
 // This test program is automatically created by $ROOTSYS/test/Makefile.
-// To run it in batch, execute stressgeom.
+// To run it in batch, execute stressGeom.
 // To run this test with interactive CINT, do
-// root > .x stressgeom.cxx++
+// root > .x stressGeom.cxx++
 // or
-// root > .x stressgeom.cxx
+// root > .x stressGeom.cxx
 
 void sample_volume(Int_t ivol)
 {
@@ -164,7 +164,7 @@ void length()
    delete hlist;
 }
 
-void stressgeom()
+void stressGeom()
 {
 // New geometry test suite. Creates a geometry containing all shape
 // types. Loop over all volumes and compute the following :
@@ -178,9 +178,9 @@ void stressgeom()
 #endif
    
    gBenchmark = new TBenchmark();
-   gBenchmark->Start("stressgeom");
+   gBenchmark->Start("stressGeom");
    
-   TGeoManager *geom = new TGeoManager("stressgeom", "arbitrary shapes");
+   TGeoManager *geom = new TGeoManager("stressGeom", "arbitrary shapes");
    TGeoMaterial *mat;
    TGeoMixture *mix;
    //---> create some materials
@@ -306,8 +306,8 @@ TGeoMedium *med16 = new TGeoMedium("RHONEYCM",16,16,0,0,0,20,0.1000000E+11,0.212
    length();
 
    // print ROOTMARKs
-   gBenchmark->Stop("stressgeom");
-   Float_t ct = gBenchmark->GetCpuTime("stressgeom");
+   gBenchmark->Stop("stressGeom");
+   Float_t ct = gBenchmark->GetCpuTime("stressGeom");
 #ifdef __CINT__
    Float_t cp_brun = 310.47;
 #else

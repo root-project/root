@@ -97,9 +97,9 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
-STRESSGEOMO   = stressgeom.$(ObjSuf)
-STRESSGEOMS   = stressgeom.$(SrcSuf)
-STRESSGEOM    = stressgeom$(ExeSuf)
+STRESSGEOMO   = stressGeom.$(ObjSuf)
+STRESSGEOMS   = stressGeom.$(SrcSuf)
+STRESSGEOM    = stressGeom$(ExeSuf)
 
 STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
