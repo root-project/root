@@ -13,7 +13,7 @@ Description: Multi layer perceptron extension for ROOT - run-time libraries
 Package: libroot-mlp-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-mlp@libvers@ (= ${Source-Version}), ${shlibs:Depends}
+Depends: libroot-mlp@libvers@ (= ${Source-Version}), libroot-dev
 Description: Multi layer perceptron extension for ROOT - development files
  This package contains the mlp plug-in for ROOT.  This plugin provides
  a Multi Layer Perceptron Neural Network package for ROOT.

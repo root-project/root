@@ -1,3 +1,16 @@
+root (5.11.01-8) unstable; urgency=low
+
+  * Various fixes from Kevin
+  * Added overrides for various extension packages 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 15 Apr 2006 12:25:12 +0200
+
+root (5.11.01-7) unstable; urgency=low
+
+  * Fixed a problem with transition of libroot-fftw to root-plugin-fftw3 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 13 Apr 2006 15:26:10 +0200
+
 root (5.11.01-6) unstable; urgency=low
 
   * Package libroot-fftw made a plugin by Fons.  Now it's called

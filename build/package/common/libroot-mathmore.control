@@ -12,7 +12,7 @@ Description: GSL interface library for ROOT
 Package: libroot-mathmore-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-mathmore@libvers@ (= ${Source-Version}), ${shlibs:Depends}
+Depends: libroot-mathmore@libvers@ (= ${Source-Version}), libroot-dev, libgsl0-dev
 Description: Mathmore plugin for ROOT
  This package contains the MathMore lirary for for ROOT.  This provides 
  a partial GNU Scientific Library interface for ROOT.

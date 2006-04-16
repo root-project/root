@@ -1,0 +1,3 @@
+libroot-minuit@libvers@: postinst-has-useless-call-to-ldconfig
+libroot-minuit@libvers@: postrm-has-useless-call-to-ldconfig
+

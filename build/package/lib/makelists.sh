@@ -59,7 +59,7 @@ for d in * ; do
 	            xrdlibs=
 	    	    extra="ALLLIBS= NOVERS=1" ;;     
 	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;;  
-	clarens|fftw|ldap|mlp|quadp|roofit|ruby|mathmore|minuit)
+	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit)
 	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
 	build|freetype|win*|main) continue ;; 			
 	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  

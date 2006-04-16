@@ -13,6 +13,7 @@ incdir=@incdir@
 features="@features@"
 configargs="@configargs@"
 dicttype=@dicttype@
+zliblib=@zliblib@
 
 if test "$platform" = "win32"; then
    bindir=`cygpath -u $bindir`
@@ -24,7 +25,7 @@ fi
 
 newlib="-lNew"
 rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
-          -lPostscript -lMatrix -lPhysics"
+          -lPostscript -lMatrix -lPhysics $zliblib"
 rootglibs="-lGui"
 
 if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then

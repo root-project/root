@@ -14,7 +14,7 @@ Description: Ruby extension for ROOT - run-time library
 Package: libroot-ruby-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-ruby@libvers@ (= ${Source-Version}), ${shlibs:Depends}
+Depends: libroot-ruby@libvers@ (= ${Source-Version}), libroot-dev, ruby1.8-dev | ruby-dev (>= 1.8)
 Description: Ruby extension for ROOT - development headers
  This package contains the Ruby extension for ROOT.
  .

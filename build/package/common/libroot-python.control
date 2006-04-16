@@ -13,7 +13,7 @@ Description: Python extension for ROOT - runtime libraries
 Package: libroot-python-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-python@libvers@ (= ${Source-Version}), ${shlibs:Depends}, ${python:Depends}
+Depends: libroot-python@libvers@ (= ${Source-Version}), libroot-dev, python-dev (>= 2.1)
 Description: Python extension for ROOT - development files 
  This package contains the python plug-in for ROOT.  This package
  provide a Python interface to ROOT, and a ROOT interface to Python.

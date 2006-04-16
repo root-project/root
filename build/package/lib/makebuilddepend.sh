@@ -131,7 +131,7 @@ for i in $* ; do
 	*pythia5)	echo -n ", pythia5-dev"				;;
 	*pythia6)	echo -n ", pythia6-dev"				;;
 	*python)	echo -n ", python-dev (>= 2.1)"			;;
-	*qt)		echo -n ", libqt3-mt-dev, libqt3-headers, qt3-dev-tools"			;;
+	*qt)		echo -n ", libqt3-mt-dev, libqt3-headers, qt3-dev-tools, libqt3-compat-headers"			;;
 	*quadp)								;;
 	*roofit)							;;
 	*ruby)		echo -n ", ruby (>= 1.8), ruby1.8-dev | ruby-dev (>= 1.8)"	;;
@@ -145,7 +145,9 @@ for i in $* ; do
 	root-xrootd)	echo -n ", libkrb5-dev|heimdal-dev"		;;
 	ttf-root*)							;;
 	root-common)							;;
-	*) echo "*** Warning *** Unknown package $i - please update $0" ;;
+	*) 
+	    echo "*** Warning *** Unknown package $i - please update $0" \
+		> /dev/stderr ;;
     esac
 done
 

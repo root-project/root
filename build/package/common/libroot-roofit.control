@@ -1,7 +1,7 @@
 Package: libroot-roofit@libvers@
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, root-plugin-minuit | root-fitter
+Depends: ${shlibs:Depends}, libroot-minuit | root-fitter
 Provides: libroot-roofit, root-plugin-roofit
 Replaces: root-plugin-roofit  (<< 5.09.01-1)
 Description: ROOT extension for modeling expected distribtions - libraries
@@ -23,7 +23,7 @@ Description: ROOT extension for modeling expected distribtions - libraries
 Package: libroot-roofit-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-roofit@libvers@ (= ${Source-Version}), ${shlibs:Depends}, root-plugin-minuit | root-fitter 
+Depends: libroot-roofit@libvers@ (= ${Source-Version}), libroot-dev, libroot-minuit-dev
 Description: ROOT extension for modeling expected distribtions - development
  The RooFit packages provide a toolkit for modeling the expected
  distribution of events in a physics analysis. Models can be used to

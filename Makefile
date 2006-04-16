@@ -695,7 +695,7 @@ endif
 	@rm -f bin/roota bin/proofserva lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
-	@rm -f $(CINTDIR)/lib/posix/a.out
+	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/include/*.so*
 	@$(MAKECINTDLLS) clean
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)

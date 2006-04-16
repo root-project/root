@@ -176,6 +176,10 @@ show_pkgs:
 	@echo -e "HAVERUBY: $(HAVERUBY)\nRUBYARCHDIR: $(RUBYARCHDIR)"
 	@echo -e "HAVEPYTHON: $(HAVEPYTHON)\nPYTHONDIR: $(PYTHONDIR)"
 
+show_libpkgs:
+	@echo "$(SPKGLIST)"
+	@echo "$(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))"
+
 debian/%:debian/%.in  
 	@echo "Making $@ from $< "
 	@sed -e 's,@prefix@,$(PREFIX),g' \
@@ -253,6 +257,7 @@ clean:  $(TEMPLATES:%.in=%)
 	-rm -f  etc/proofd.xinetd
 	-rm -f  etc/rootd
 	-rm -f  etc/rootd.xinetd
+	-rm -f  qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
 	-find . -name ".#*" | xargs rm -rf
 
 	# Add here commands to clean up after the build process.
@@ -271,7 +276,9 @@ clean:  $(TEMPLATES:%.in=%)
 		debian/*.install		\
 		debian/shlibs.local		\
 		freetype/src/freetype-2.1.3	\
-		cint/lib/posix/a.out
+		cint/lib/posix/a.out		\
+		cint/include/*.so*		\
+		cint/include/*.dll		
 	dh_clean 
 
 pkglists:
@@ -449,7 +456,7 @@ binary-common:
 #	dh_perl
 	dh_python -plibroot-python-dev \
 		$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
-	dh_makeshlibs -n -V
+	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))
 	dh_installdeb
 #	dh_shlibdeps $(PKGLIST:%=-L%) $(PKGLIST:%=-ldebian/%/usr/lib/root)
 	dh_shlibdeps $(SPKGLIST:%=-L%) \

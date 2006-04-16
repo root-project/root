@@ -18,7 +18,7 @@ Description: Clarens extension for ROOT - run-time libraries
 Package: libroot-clarens-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-clarens@libvers@ (= ${Source-Version}), ${shlibs:Depends}
+Depends: libroot-clarens@libvers@ (= ${Source-Version}), libroot-dev, libxmlrpc-c3-dev | libxmlrpc-c-dev
 Description: Clarens extension for ROOT - development files
  This package contains the Clarens plug-in for ROOT, for use in a GRID
  enabled analysis environment.

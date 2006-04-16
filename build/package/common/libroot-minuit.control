@@ -13,7 +13,7 @@ Description: Minuit plugin for ROOT
 Package: libroot-minuit-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-minuit@libvers@ (= ${Source-Version}), ${shlibs:Depends}
+Depends: libroot-minuit@libvers@ (= ${Source-Version}), libroot-dev
 Provides: root-fitter
 Replaces: root-plugin-minuit (<< 5.09.01-7)
 Description: Minuit plugin for ROOT

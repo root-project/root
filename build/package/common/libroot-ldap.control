@@ -13,7 +13,7 @@ Description: Ldap extension for ROOT - run-time libraries
 Package: libroot-ldap-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-ldap@libvers@ (= ${Source-Version}), ${shlibs:Depends}
+Depends: libroot-ldap@libvers@ (= ${Source-Version}), libroot-dev, libldap2-dev | libldap-dev
 Description: Ldap extension for ROOT
  This package contains the Ldap plug-in for ROOT.  This gives you
  access to Ldap directories via ROOT.
