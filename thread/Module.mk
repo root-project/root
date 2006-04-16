@@ -103,6 +103,7 @@ ifneq ($(ARCH),win32)
 $(CINTDIRDLLS)/pthread.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/pthread/pthd.h
 	@$(MAKECINTDLL) $(PLATFORM) C pthread pthread pthd.h \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
-	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
-           "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"
+	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
+	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" \
+	   "$(CXXOUT)"
 endif

@@ -289,5 +289,6 @@ $(CINTDIRS)/v6_loadfile_tmp.cxx: $(CINTDIRS)/v6_loadfile.cxx
 $(CINTDIRDLLS)/stdfunc.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/stdstrct/stdfunc.h
 	@$(MAKECINTDLL) $(PLATFORM) C stdfunc stdstrct stdfunc.h \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
-	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
-           "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"
+	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
+	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" \
+	   "$(CXXOUT)"
