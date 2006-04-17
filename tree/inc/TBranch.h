@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.28 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.29 2005/11/16 20:20:01 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
    TBranch(const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
    virtual ~TBranch();
 
-   virtual void      AddBasket(TBasket &b, Bool_t ondisk);
+   virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);
    virtual void      Browse(TBrowser *b);
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();

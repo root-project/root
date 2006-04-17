@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.99 2006/02/22 23:26:12 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.100 2006/03/20 21:43:44 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -296,15 +296,14 @@ TBranch::~TBranch()
 }
 
 //______________________________________________________________________________
-void TBranch::AddBasket(TBasket &b, Bool_t ondisk)
+void TBranch::AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry)
 {
    // Add the basket to this branch.
 
    // Warning: if the basket are not 'flushed/copied' in the same
-   // order as they were created, then they will be moved around in the tree
-   // (entry wise).  In other word, we assume here that the previous basket
-   // in the 'to' branch is the same as the previous basket in the 'from' 
-   // branch (if there is one!).
+   // order as they were created, this will induce a slow down in 
+   // the insert (since we'll need to move all the record that are
+   // entere 'too early).
    // Warning we also assume that the __current__ write basket is
    // not present (aka has been removed).
 
@@ -315,10 +314,41 @@ void TBranch::AddBasket(TBasket &b, Bool_t ondisk)
    if (fWriteBasket >= fMaxBaskets) {
       ExpandBasketArrays();
    }
-   fBasketEntry[fWriteBasket] = fEntryNumber;
+   Int_t where = fWriteBasket;
+
+   if (startEntry != fEntryNumber) {
+      // Need to find the right location and move the possible baskets
+
+      if (!ondisk) {
+         Warning("AddBasket","The assumption that out-of-order basket only comes from disk based ntuple is false.");
+         Warning("AddBasket","%s %lld %lld",GetName(),startEntry,fEntryNumber);
+      }
+
+      for(Int_t i=fWriteBasket-1; i>0; --i) {
+         if (fBasketEntry[i] < startEntry) {
+            where = i+1;
+            break;
+         } else if (fBasketEntry[i] < startEntry) {
+            Error("AddBasket","An out-of-order basket matches the entry number of an existing basket.");
+         }
+      }
+//       if (!ondisk) 
+//          Warning("AddBasket","Out-of-order: target=%lld where=%d fWrite=%d loc-1=%lld loc=%lld loc+1=%lld name=%s\n",
+//                  startEntry,where,fWriteBasket,fBasketEntry[where-1],fBasketEntry[where],fBasketEntry[where+1],GetName());
+
+      if (where < fWriteBasket) {
+         // We shall move the content of the array
+         for (Int_t j=where; j < fWriteBasket; ++j) {
+            fBasketEntry[where+1] = fBasketEntry[where];
+            fBasketBytes[where+1] = fBasketBytes[where];
+            fBasketSeek[where+1]  = fBasketSeek[where];
+         }
+      }
+   }
+   fBasketEntry[where] = startEntry;
    if (ondisk) {
-      fBasketBytes[fWriteBasket] = basket->GetNbytes();  // not for in mem
-      fBasketSeek[fWriteBasket] = basket->GetSeekKey();  // not for in mem
+      fBasketBytes[where] = basket->GetNbytes();  // not for in mem
+      fBasketSeek[where] = basket->GetSeekKey();  // not for in mem
       ++fWriteBasket;
    } else {
       fBaskets.AddAtAndExpand(basket,fWriteBasket);
