@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.6 2006/03/16 16:41:59 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.7 2006/03/20 21:24:59 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -260,7 +260,7 @@ extern "C"
       pi->eDest->Say(0, "proofd: using ROOTSYS = ", rootsys);
 
       // Find out timeout on internal communications
-      char *pw = pe ? (char *)strstr(pe+1, "-intwait:") : 0;
+      char *pw = parms ? (char *)strstr(parms, "-intwait:") : 0;
       int iwait = -1;
       if (pw) {
          pe = (char *)strstr(pw, " -");
@@ -269,6 +269,7 @@ extern "C"
          if (errno != ERANGE)
             pi->eDest->Say(0, "proofd: setting internal timeout to (secs): ", pw+9);
       }
+      pi->eDest->Say(0, "proofd:  = ", rootsys);
 
       // Return the protocol object to be used if static init succeeds
       if (XrdProofdProtocol::Configure(parms, pi)) {
@@ -279,6 +280,20 @@ extern "C"
          return (XrdProtocol *)new XrdProofdProtocol((const char *)rootsys, iwait);
       }
       return (XrdProtocol *)0;
+   }
+}
+
+//_________________________________________________________________________________
+extern "C"
+{
+   int XrdgetProtocolPort(const char *pname, char *parms, XrdProtocol_Config *pi)
+   {
+      // This function is called early on to determine the port we need to use. The
+      // The default is ostensibly 1093 but can be overidden; which we allow.
+
+      if (pi->Port < 0)
+         return 1093;
+      return pi->Port;
    }
 }
 
@@ -365,7 +380,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    xp->fLink = lp;
    xp->fResponse.Set(lp);
    strcpy(xp->fEntity.prot, "host");
-   xp->fEntity.host = (char *)lp->Host();
+   xp->fEntity.host = strdup((char *)lp->Host());
 
    // Dummy data use dby 'proofd'
    kXR_int32 dum[2];
@@ -415,7 +430,10 @@ void XrdProofdProtocol::Reset()
    fClientID = 0;
 
    fClient = 0;
-   fAuthProt = 0;
+   if (fAuthProt) {
+      fAuthProt->Delete();
+      fAuthProt = 0;
+   }
    memset(&fEntity, 0, sizeof(fEntity));
 
    // Unix socket
@@ -1124,7 +1142,8 @@ int XrdProofdProtocol::Auth()
       if (!(fAuthProt = fgCIA->getProtocol(fLink->Host(), netaddr, &cred, &eMsg))) {
          eText = eMsg.getErrText(rc);
          TRACEP(REQ,"Auth: user authentication failed; "<<eText);
-         return fResponse.Send(kXR_NotAuthorized, eText);
+         fResponse.Send(kXR_NotAuthorized, eText);
+         return -EACCES;
       }
       fAuthProt->Entity.tident = fLink->ID;
    }
@@ -1155,7 +1174,8 @@ int XrdProofdProtocol::Auth()
          fAuthProt = 0;
       }
       TRACEP(ALL,"Auth: security requested additional auth w/o parms!");
-      return fResponse.Send(kXR_ServerError,"invalid authentication exchange");
+      fResponse.Send(kXR_ServerError,"invalid authentication exchange");
+      return -EACCES;
    }
 
    // We got an error, bail out
@@ -1165,7 +1185,8 @@ int XrdProofdProtocol::Auth()
    }
    eText = eMsg.getErrText(rc);
    TRACEP(ALL,"Auth: user authentication failed; "<<eText);
-   return fResponse.Send(kXR_NotAuthorized, eText);
+   fResponse.Send(kXR_NotAuthorized, eText);
+   return -EACCES;
 }
 
 //______________________________________________________________________________

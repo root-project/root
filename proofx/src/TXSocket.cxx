@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.5 2006/03/03 15:42:37 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.6 2006/04/07 09:26:19 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -34,7 +34,6 @@
 
 #include "XrdClient/XrdClientConnMgr.hh"
 #include "XrdClient/XrdClientConst.hh"
-#include "XrdClient/XrdClientDNS.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientLogConnection.hh"
 #include "XrdClient/XrdClientMessage.hh"
@@ -1297,6 +1296,14 @@ void TXSocket::InitEnvs()
    TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","2");
    if (crlcheck.Length() > 0)
       gSystem->Setenv("XrdSecGSICRLCHECK",crlcheck.Data());
+
+   TString delegpxy = gEnv->GetValue("XSec.GSI.DelegProxy","0");
+   if (delegpxy.Length() > 0)
+      gSystem->Setenv("XrdSecGSIDELEGPROXY",delegpxy.Data());
+
+   TString signpxy = gEnv->GetValue("XSec.GSI.SignProxy","1");
+   if (signpxy.Length() > 0)
+      gSystem->Setenv("XrdSecGSISIGNPROXY",signpxy.Data());
 
    // Print the tag, if required (only once)
    if (gEnv->GetValue("XNet.PrintTAG",0) == 1)

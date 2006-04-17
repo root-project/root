@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.23 2006/03/30 16:39:10 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.24 2006/04/06 23:01:45 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -860,11 +860,6 @@ void TXNetFile::SetEnv()
    Int_t goAsync = gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC);
    EnvPutInt(NAME_GOASYNC, goAsync);
 
-   // Read ahead switch
-   Int_t rAhead = gEnv->GetValue("XNet.ReadAhead",
-                                  DFLT_READAHEADTYPE);
-   EnvPutInt(NAME_READAHEADTYPE, rAhead);
-
    // Read ahead size
    Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",
                                      DFLT_READAHEADSIZE);
@@ -948,6 +943,14 @@ void TXNetFile::SetEnv()
    if (crlcheck.Length() > 0)
       gSystem->Setenv("XrdSecGSICRLCHECK",crlcheck.Data());
 
+   TString delegpxy = gEnv->GetValue("XSec.GSI.DelegProxy","0");
+   if (delegpxy.Length() > 0)
+      gSystem->Setenv("XrdSecGSIDELEGPROXY",delegpxy.Data());
+
+   TString signpxy = gEnv->GetValue("XSec.GSI.SignProxy","1");
+   if (signpxy.Length() > 0)
+      gSystem->Setenv("XrdSecGSISIGNPROXY",signpxy.Data());
+
    // Print the tag, if required (only once)
    if (gEnv->GetValue("XNet.PrintTAG",0) == 1)
       Info("TXNetFile","(C) 2005 SLAC TXNetFile (eXtended TNetFile) %s",
@@ -956,4 +959,3 @@ void TXNetFile::SetEnv()
    // Using ROOT mechanism to IGNORE SIGPIPE signal
    gSystem->IgnoreSignal(kSigPipe);
 }
-
