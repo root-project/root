@@ -59,7 +59,7 @@ echo "#"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
 echo "# CERN local rules for RFIO compatibility"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
 echo "*.cern.ch:rootd usrpwd ssh uidgid"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
 # The start script; will make it relocatable in the post-install
-install -m 755 %{_rootdir}/rootd/misc/rootd.rc.d $RPM_BUILD_ROOT/etc/rc.d/init.d/rootd
+install -m 755 %{_rootdir}/etc/daemons/rootd.rc.d $RPM_BUILD_ROOT/etc/rc.d/init.d/rootd
 #---------------------------------------------------------------------
 # Files that go into this package 
 %files
@@ -142,9 +142,6 @@ fi
 #
 # Do not remove antries from /etc/services, since the numbers _are_ 
 # assigned IANA, so there's no need 
-#
-# We remove system.rootdaemonrc ...
-rm -f %{_sysconfdir}/system.rootdaemonrc
 #
 # end of script
 #---------------------------------------------------------------------
