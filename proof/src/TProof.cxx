@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.135 2006/03/21 16:54:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.138 2006/04/13 10:27:14 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4460,7 +4460,7 @@ void TProof::SetAlias(const char *alias)
 
 //______________________________________________________________________________
 Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
-                            const char *dataSetName, Int_t opt, 
+                            const char *dataSetName, Int_t opt,
                             TList *skippedFiles)
 {
    // Upload a set of files and save the list of files by name dataSetName.
@@ -4473,12 +4473,12 @@ Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
    //   kOverwriteAllFiles  (0x8)   overwrite all files that may exist
    //   kOverwriteNoFiles   (0x10)   overwrite none
    //   kAskUser            (0x0)   ask user before overwriteng dataset/files
-   // The default value is kAskUser. 
-   // The user will be asked to confirm overwriting dataset or files unless 
-   // specified opt provides the answer! 
-   // If kOverwriteNoFiles is set, then a pointer to TList must be passed as 
-   // skippedFiles argument. The function will add to this list TFileInfo 
-   // objects describing all files that existed on the cluster and were 
+   // The default value is kAskUser.
+   // The user will be asked to confirm overwriting dataset or files unless
+   // specified opt provides the answer!
+   // If kOverwriteNoFiles is set, then a pointer to TList must be passed as
+   // skippedFiles argument. The function will add to this list TFileInfo
+   // objects describing all files that existed on the cluster and were
    // not uploaded.
    //
    // Communication Summary
@@ -4506,27 +4506,27 @@ Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
 
    //If skippedFiles is not provided we can not return list of skipped files.
    if ((!skippedFiles || !&skippedFiles) && overwriteNone) {
-      Error("UploadDataSet", 
+      Error("UploadDataSet",
             "Provide pointer to TList object as skippedFiles argument when using kOverwriteNoFiles option.");
       return kError;
    }
    //If skippedFiles was provided but did not point to a TList the program would crash.
    if (skippedFiles && &skippedFiles) {
       if (skippedFiles->Class() != TList::Class())
-      Error("UploadDataSet", 
+      Error("UploadDataSet",
             "Provided skippedFiles argument does not point to a TList object.");
       return kError;
    }
-   
-   
+
+
    TSocket *master;
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
-      Error("UploadDataSet", "No connection to the master!");   
+      Error("UploadDataSet", "No connection to the master!");
       return kError;
-   }   
-   
+   }
+
    // First check whether this dataset already exist
    TMessage nameMess(kPROOF_UPLOAD_DATASET);
    nameMess << TString(dataSetName);
@@ -4633,13 +4633,13 @@ Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
                 fileList->Add(new TFileInfo(Form("%s/%s", dest, ent)));
                 if (skippedFiles && &skippedFiles) {
                 // user specified the TList *skippedFiles argument so we create the list of skipped files
-                   TUrl *url = new TUrl(Form("%s/%s", 
+                   TUrl *url = new TUrl(Form("%s/%s",
                                         gSystem->DirName(files), ent));
-                   url->SetProtocol("file");  
+                   url->SetProtocol("file");
                    skippedFiles->Add(new TFileInfo(url->GetUrl()));
                    delete url;
-                }      
-             }   
+                }
+             }
          } //if matching dir entry
       } //while
 
@@ -4695,7 +4695,7 @@ Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
             // when uploading the first file user may have to decide
             fileCount += UploadDataSet(line.Data(), dest, dataset, opt);
          } else // later - just append
-            fileCount += UploadDataSet(line.Data(), dest, 
+            fileCount += UploadDataSet(line.Data(), dest,
                                        dataset, opt | kAppend);
       }
       f.close();
@@ -4709,16 +4709,16 @@ Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
 //______________________________________________________________________________
 TList *TProof::GetDataSets()
 {
-   // Get TList of TObjStrings with all datasets available on master 
+   // Get TList of TObjStrings with all datasets available on master
    // (just ls contents of ~/proof/datasets).
 
    TSocket *master;
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
-      Error("GetDataSets", "No connection to the master!");   
+      Error("GetDataSets", "No connection to the master!");
       return NULL;
-   }   
+   }
    Broadcast(kPROOF_QUERY_DATASETS);
    TMessage *retMess;
    master->Recv(retMess);
@@ -4737,7 +4737,7 @@ void TProof::ShowDataSets()
    // ~/proof/datasets).
 
    TList *dataSetList;
-   if (dataSetList = GetDataSets()) {
+   if ((dataSetList = GetDataSets())) {
       Printf("Existing DataSets:");
       TIter next(dataSetList);
       while (TObjString *obj = (TObjString*)next())
@@ -4758,9 +4758,9 @@ TList *TProof::GetDataSet(const char *dataset)
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
-      Error("GetDataSet", "No connection to the master!");   
+      Error("GetDataSet", "No connection to the master!");
       return NULL;
-   }   
+   }
    TMessage nameMess(kPROOF_GET_DATASET);
    nameMess << TString(dataset);
    if (Broadcast(nameMess) < 0)
@@ -4811,9 +4811,9 @@ Int_t TProof::RemoveDataSet(const char *dataSet)
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
-      Error("RemoveDataSet", "No connection to the master!");   
+      Error("RemoveDataSet", "No connection to the master!");
       return kError;
-   }   
+   }
    TMessage nameMess(kPROOF_RM_DATASET);
    nameMess << TString(dataSet);
    if (Broadcast(nameMess) < 0)
@@ -4822,7 +4822,7 @@ Int_t TProof::RemoveDataSet(const char *dataSet)
    TString errorMess;
    master->Recv(mess);
    if (mess->What() != kMESS_OK) {
-      if (mess->What() != kMESS_NOTOK) 
+      if (mess->What() != kMESS_NOTOK)
          Error("RemoveDataSet", "unrecongnized message type: %d!",
                mess->What());
       delete mess;
@@ -4845,9 +4845,9 @@ Int_t TProof::VerifyDataSet(const char *dataSet)
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
-      Error("VerifyDataSet", "No connection to the master!");   
+      Error("VerifyDataSet", "No connection to the master!");
       return kError;
-   }   
+   }
    TMessage nameMess(kPROOF_VERIFY_DATASET);
    nameMess << TString(dataSet);
    if (Broadcast(nameMess) < 0)
