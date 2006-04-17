@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.134 2006/04/10 13:48:39 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.135 2006/04/10 15:30:16 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -444,6 +444,7 @@ Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,c
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB   "TSapDBServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle  "TOracleServer(const char*,const char*,const char*)"
++Plugin.TSQLServer:  ^odbc:    TODBCServer   RODBC    "TODBCServer(const char*,const char*,const char*)"
 Plugin.TGrid:        ^alien    TAlien        RAliEn  "TAlien(const char*,const char*,const char*,const char*)"
 Plugin.TVirtualAuth:    Root   TRootAuth     RootAuth     "TRootAuth()"
 Plugin.TVirtualPad:         *  TPad          Gpad         "TPad()"

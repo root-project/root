@@ -90,6 +90,9 @@ endif
 ifeq ($(BUILDSAPDB),yes)
 MODULES      += sapdb
 endif
+ifeq ($(BUILDODBC),yes)
+MODULES      += odbc
+endif
 ifeq ($(BUILDSHIFT),yes)
 MODULES      += rfio
 endif
@@ -207,7 +210,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio thread \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofit minuit2 \
-                monalisa fftw
+                monalisa fftw odbc
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

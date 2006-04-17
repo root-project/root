@@ -43,7 +43,7 @@ $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS)
 
 $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
+		$(ROOTCINTTMP) -f $@ -c -I$(MYSQLINCDIR) $(MYSQLH) $(MYSQLL)
 
 all-mysql:      $(MYSQLLIB)
 

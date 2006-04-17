@@ -48,6 +48,7 @@ options="                    \
    enable_mathmore           \
    enable_monalisa           \
    enable_mysql              \
+   enable_odbc               \
    enable_opengl             \
    enable_oracle             \
    enable_pch                \
@@ -823,6 +824,7 @@ enable/disable options, prefix with either --enable- or --disable-
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
+  odbc               ODBC support, requires libiodbc or libodbc
   opengl             OpenGL support, requires libGL and libGLU
   oracle             Oracle support, requires libocci
   pch                Precompiled headers (if supported by the compiler)
@@ -878,6 +880,8 @@ with options, prefix with --with-, enables corresponding support
   monalisa-libdir    Monalisa support, location of libapmoncpp
   mysql-incdir       MySQL support, location of mysql.h
   mysql-libdir       MySQL support, location of libmysqlclient
+  odbc-incdir        ODBC support, location of sqlext.h
+  odbc-libdir        ODBC support, location of libiodbc or libodbc
   opengl-incdir      OpenGL support, location of GL/gl.h
   opengl-libdir      OpenGL support, location of libGL
   oracle-incdir      Oracle support, location of occi.h
@@ -1043,12 +1047,14 @@ if test $# -gt 0 ; then
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
-      --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
-      --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-monalisa-incdir=*)monalisaincdir=$optarg; enable_monalisa="yes";;
       --with-monalisa-libdir=*)monalisalibdir=$optarg; enable_monalisa="yes";;
+      --with-odbc-incdir=*)    odbcincdir=$optarg    ; enable_odbc="yes"    ;;
+      --with-odbc-libdir=*)    odbclibdir=$optarg    ; enable_odbc="yes"    ;;
+      --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
+      --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
       --with-oracle-incdir=*)  oracleincdir=$optarg  ; enable_oracle="yes"  ;;
       --with-oracle-libdir=*)  oraclelibdir=$optarg  ; enable_oracle="yes"  ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
@@ -1627,6 +1633,34 @@ if test ! "x$enable_sapdb" = "xno"; then
 
     if test "x$sapdbincdir" = "x" || test "x$sapdblib" = "x"; then
         enable_sapdb="no"
+    fi
+fi
+
+######################################################################
+#
+### echo %%% ODBC Support - Third party libraries
+#
+# (See unixodbc.org or iodbc.org)
+#
+# If the user has set the flags "--disable-odbc", we don't check for
+# ODBC at all.
+#
+if test ! "x$enable_odbc" = "xno"; then
+    # Check for odbc include and library
+    check_header "sqlext.h" "$odbcincdir" \
+        $ODBC $ODBC/include $ODBCINCDIR /usr/local/include \
+        /usr/include $finkdir/include
+    odbcinc=$found_hdr
+    odbcincdir=$found_dir
+
+    check_library "libiodbc libodbc odbc32" "$enable_shared" "$odbclibdir" \
+        $ODBC $ODBC/lib $ODBCLIBDIR /usr/local/lib /usr/lib \
+        $finkdir/lib
+    odbclib=$found_lib
+    odbclibdir=$found_dir
+
+    if test "x$odbcincdir" = "x" || test "x$odbclib" = "x"; then
+        enable_odbc="no"
     fi
 fi
 
@@ -3445,6 +3479,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_mathmore" = "xyes" && pkglist="$pkglist libroot-mathmore"
     test "x$enable_monalisa" = "xyes" && pkglist="$pkglist root-plugin-monalisa"
     test "x$enable_mysql"   = "xyes" && pkglist="$pkglist root-plugin-mysql"
+    test "x$enable_odbc"    = "xyes" && pkglist="$pkglist root-plugin-odbc"
     test "x$enable_opengl"  = "xyes" && pkglist="$pkglist root-plugin-gl"
     test "x$enable_oracle"  = "xyes" && pkglist="$pkglist root-plugin-oracle"
     test "x$enable_peac"    = "xyes" && pkglist="$pkglist root-plugin-peac"
@@ -3766,6 +3801,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@mysqlincdir@|$mysqlincdir|"          \
     -e "s|@mysqllib@|$mysqllib|"                \
     -e "s|@mysqllibdir@|$mysqllibdir|"          \
+    -e "s|@odbcincdir@|$odbcincdir|"            \
+    -e "s|@odbclib@|$odbclib|"                  \
+    -e "s|@odbclibdir@|$odbclibdir|"            \
     -e "s|@openglincdir@|$openglincdir|"        \
     -e "s|@opengllib@|$opengllib|"              \
     -e "s|@opengllibdir@|$opengllibdir|"        \
@@ -3838,6 +3876,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildldap@|$enable_ldap|"            \
     -e "s|@buildmysql@|$enable_mysql|"          \
     -e "s|@buildpgsql@|$enable_pgsql|"          \
+    -e "s|@buildodbc@|$enable_odbc|"            \
     -e "s|@buildoracle@|$enable_oracle|"        \
     -e "s|@buildsapdb@|$enable_sapdb|"          \
     -e "s|@buildqt@|$enable_qt|"                \

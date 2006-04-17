@@ -89,6 +89,11 @@ SAPDBLIBDIR    := @sapdblibdir@
 SAPDBCLILIB    := @sapdblib@
 SAPDBINCDIR    := $(filter-out /usr/include, @sapdbincdir@)
 
+BUILDODBC      := @buildodbc@
+ODBCLIBDIR     := @odbclibdir@
+ODBCCLILIB     := @odbclib@
+ODBCINCDIR     := $(filter-out /usr/include, @odbcincdir@)
+
 BUILDQT        := @buildqt@
 BUILDQTGSI     := @buildqtgsi@
 QTLIBDIR       := @qtlibdir@
