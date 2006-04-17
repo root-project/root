@@ -1469,36 +1469,59 @@ fi
 #
 if test ! "x$enable_mysql" = "xno"; then
     # Check for MySQL include and library
-    check_header "mysql.h" "$mysqlincdir" \
-	$MYSQL $MYSQL/include /usr/local/include /usr/local/include/mysql \
-        /usr/local/mysql /usr/local/mysql/include /opt/mysql \
-        /opt/mysql/include /usr/include /usr/include/mysql \
-	/usr/mysql /usr/mysql/include
-    mysqlinc=$found_hdr
-    mysqlincdir=$found_dir
+    checking_msg "mysql_config"
+    mysql_config=`which mysql_config 2> /dev/null`
+    if test ! "x$mysql_config" = "x" && test -x "$mysql_config" && \
+       test ! "x$platform" = "xwin32" ; then
+       which mysql_config
+       # we found mysql_config - now check the version number
+       message "Checking for libmysqlclient version >= 4.1.x"
+       mysql_version=`mysql_config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+       if test $mysql_version -lt 4001 ; then
+          result "no (`mysql_config --version`)"
+          enable_mysql="no"
+          mysqllibdir=""
+       else
+          result "ok"
+          mysqllib=`mysql_config --libs`
+          mysqlincdir=`mysql_config --cflags | sed 's/-I\(.*\)/\1/'`
+          mysqllibdir=""
+       fi
+    else
+       result "not found"
+       # fall back in case mysql_config is not found
+       check_header "mysql.h" "$mysqlincdir" \
+	   $MYSQL $MYSQL/include /usr/local/include /usr/local/include/mysql \
+           /usr/local/mysql /usr/local/mysql/include /opt/mysql \
+           /opt/mysql/include /usr/include /usr/include/mysql \
+	   /usr/mysql /usr/mysql/include $finkdir/include/mysql
+       mysqlinc=$found_hdr
+       mysqlincdir=$found_dir
 
-    mysqlclientlibs="libmysqlclient mysqlclient"
-    if test "x$enable_thread" = "xyes"; then
-        mysqlclientlibs="libmysqlclient_r $mysqlclientlibs"
-    fi
+       mysqlclientlibs="libmysqlclient mysqlclient"
+       if test "x$enable_thread" = "xyes"; then
+           mysqlclientlibs="libmysqlclient_r $mysqlclientlibs"
+       fi
 
-    check_library "$mysqlclientlibs" "$enable_shared" "$mysqllibdir" \
-	$MYSQL $MYSQL/lib /usr/local/lib /usr/local/lib/mysql \
-        /usr/local/mysql /usr/local/mysql/lib /opt/mysql /opt/mysql/lib \
-        /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib
-    mysqllib=$found_lib
-    mysqllibdir=$found_dir
+       check_library "$mysqlclientlibs" "$enable_shared" "$mysqllibdir" \
+	   $MYSQL $MYSQL/lib /usr/local/lib /usr/local/lib/mysql \
+           /usr/local/mysql /usr/local/mysql/lib /opt/mysql /opt/mysql/lib \
+           /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib \
+           $finkdir/lib/mysql
+       mysqllib=$found_lib
+       mysqllibdir=$found_dir
 
-    # on linux, but maybe also other systems, explicitely add libz
-    # (formally only needed when linking against the static libmysqlclient.a)
-    if test ! "x$mysqllib" = "x" ; then
-	case $platform in
-	    linux) mysqllib="$mysqllib -lz" ;;
-	esac
-    fi
+       # on linux, but maybe also other systems, explicitely add libz
+       # (formally only needed when linking against the static libmysqlclient.a)
+       if test ! "x$mysqllib" = "x" ; then
+	   case $platform in
+	       linux) mysqllib="$mysqllib -lz" ;;
+	   esac
+       fi
 
-    if test "x$mysqlincdir" = "x" || test "x$mysqllib" = "x"; then
-        enable_mysql="no"
+       if test "x$mysqlincdir" = "x" || test "x$mysqllib" = "x"; then
+           enable_mysql="no"
+       fi
     fi
 fi
 

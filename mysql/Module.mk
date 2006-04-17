@@ -64,4 +64,4 @@ distclean-mysql: clean-mysql
 distclean::     distclean-mysql
 
 ##### extra rules ######
-$(MYSQLO) $(MYSQLDO): CXXFLAGS += $(MYSQLINCDIR:%=-I%)
+$(MYSQLO) $(MYSQLDO): CXXFLAGS += -I$(MYSQLINCDIR)
