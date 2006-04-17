@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.7 2006/03/20 21:24:59 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.8 2006/04/17 21:04:17 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -286,7 +286,7 @@ extern "C"
 //_________________________________________________________________________________
 extern "C"
 {
-   int XrdgetProtocolPort(const char *pname, char *parms, XrdProtocol_Config *pi)
+   int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Config *pi)
    {
       // This function is called early on to determine the port we need to use. The
       // The default is ostensibly 1093 but can be overidden; which we allow.
