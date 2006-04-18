@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.100 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.101 2006/04/17 21:21:59 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -321,27 +321,23 @@ void TBranch::AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry)
 
       if (!ondisk) {
          Warning("AddBasket","The assumption that out-of-order basket only comes from disk based ntuple is false.");
-         Warning("AddBasket","%s %lld %lld",GetName(),startEntry,fEntryNumber);
       }
 
       for(Int_t i=fWriteBasket-1; i>0; --i) {
          if (fBasketEntry[i] < startEntry) {
             where = i+1;
             break;
-         } else if (fBasketEntry[i] < startEntry) {
+         } else if (fBasketEntry[i] == startEntry) {
             Error("AddBasket","An out-of-order basket matches the entry number of an existing basket.");
          }
       }
-//       if (!ondisk) 
-//          Warning("AddBasket","Out-of-order: target=%lld where=%d fWrite=%d loc-1=%lld loc=%lld loc+1=%lld name=%s\n",
-//                  startEntry,where,fWriteBasket,fBasketEntry[where-1],fBasketEntry[where],fBasketEntry[where+1],GetName());
 
       if (where < fWriteBasket) {
          // We shall move the content of the array
-         for (Int_t j=where; j < fWriteBasket; ++j) {
-            fBasketEntry[where+1] = fBasketEntry[where];
-            fBasketBytes[where+1] = fBasketBytes[where];
-            fBasketSeek[where+1]  = fBasketSeek[where];
+         for (Int_t j=fWriteBasket; j > where; --j) {
+            fBasketEntry[j] = fBasketEntry[j-1];
+            fBasketBytes[j] = fBasketBytes[j-1];
+            fBasketSeek[j]  = fBasketSeek[j-1];
          }
       }
    }
