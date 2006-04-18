@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.26 2006/03/21 16:54:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.27 2006/04/13 10:27:14 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -64,7 +64,7 @@ public:
    };
    enum EUploadDataSetAnswer {
       kError = -1,
-      kDataSetExists = -2,
+      kDataSetExists = -2
    };
 
 protected:
