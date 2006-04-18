@@ -131,24 +131,27 @@ class genDictionary(object) :
     return
 #----------------------------------------------------------------------------------
   def notice_autoselect (self, c, selection):
-    attrs = self.xref[c['id']]['attrs']
-    if attrs.has_key('extra') : attrs['extra']['autoselect'] = 'true'
-    else                      : attrs['extra'] = {'autoselect':'true'}
+    self_autoselect = 1
     for f in self.get_fields (selection):
       tid = f['type']
       tname = self.genTypeName (tid)
+      if tname.startswith( self.selectionname+'::NO_SELF_AUTOSELECT'): self_autoselect = 0
       if tname.startswith (self.selectionname+'::AUTOSELECT'):
-	if 'members' in c:
-	  for mnum in c['members'].split():
-	    m = self.xref[mnum]
-	    if 'name' in m['attrs'] and m['attrs']['name'] == f['name']:
-	      if m['elem'] == 'Field':
-		fattrs = self.xref[m['attrs']['type']]['attrs']
-		if fattrs.has_key('extra') : fattrs['extra']['autoselect'] = 'true'
-		else                       : fattrs['extra'] = {'autoselect':'true'}
-	      else :
-	        print '--->> genreflex: WARNING: AUTOSELECT selection functionality for %s not implemented yet' % m['elem']
-	        self.warnings += 1
+        if 'members' in c:
+          for mnum in c['members'].split():
+            m = self.xref[mnum]
+            if 'name' in m['attrs'] and m['attrs']['name'] == f['name']:
+              if m['elem'] == 'Field':
+                fattrs = self.xref[m['attrs']['type']]['attrs']
+                if fattrs.has_key('extra') : fattrs['extra']['autoselect'] = 'true'
+                else                       : fattrs['extra'] = {'autoselect':'true'}
+              else :
+                print '--->> genreflex: WARNING: AUTOSELECT selection functionality for %s not implemented yet' % m['elem']
+                self.warnings += 1
+    if self_autoselect :
+      attrs = self.xref[c['id']]['attrs']
+      if attrs.has_key('extra') : attrs['extra']['autoselect'] = 'true'
+      else                      : attrs['extra'] = {'autoselect':'true'}
     return
 #----------------------------------------------------------------------------------
   def get_fields (self, c):

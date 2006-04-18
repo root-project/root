@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.3 2005/11/23 16:08:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: DictSelection.h,v 1.4 2006/03/13 15:49:50 roiser Exp $
 // Author: Stefan Roiser 2004
 
 #ifndef ROOT_Reflex_DictSelection
@@ -236,6 +236,16 @@ namespace ROOT {
    namespace Reflex {
 
       namespace Selection {
+
+        /*
+         * @brief turn of autoselection of the class
+         * 
+         * By default classes which appear in the Selection namespace will be selected
+         * for dictionary generation. If a class has a member of type NO_SELF_AUTOSELECT
+         * no dictionary information for this class will be generated. 
+         */
+        class RFLX_API NO_SELF_AUTOSELECT {};
+
     
          /*
           * @brief Mark a MemberAt as being transient.
