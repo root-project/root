@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.19 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.20 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -1012,7 +1012,7 @@ void TGVerticalLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save vertical layout manager as a C++ statement(s) on output stream
 
-   out << " new TGVerticalLayout(" << fMain->GetName() << ")";
+   out << "new TGVerticalLayout(" << fMain->GetName() << ")";
 
 }
 
@@ -1022,7 +1022,7 @@ void TGHorizontalLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save horizontal layout manager as a C++ statement(s) on output stream
 
-   out << " new TGHorizontalLayout(" << fMain->GetName() << ")";
+   out << "new TGHorizontalLayout(" << fMain->GetName() << ")";
 }
 
 // __________________________________________________________________________
@@ -1031,7 +1031,7 @@ void TGRowLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save row layout manager as a C++ statement(s) on output stream
 
-   out << " new TGRowLayout(" << fMain->GetName() << ","
+   out << "new TGRowLayout(" << fMain->GetName() << ","
                              << fSep << ")";
 }
 
@@ -1041,7 +1041,7 @@ void TGColumnLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save column layout manager as a C++ statement(s) on output stream
 
-   out << " new TGColumnLayout(" << fMain->GetName() << ","
+   out << "new TGColumnLayout(" << fMain->GetName() << ","
                                 << fSep << ")";
 
 }
@@ -1052,7 +1052,7 @@ void TGMatrixLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save matrix layout manager as a C++ statement(s) on output stream
 
-   out << " new TGMatrixLayout(" << fMain->GetName() << ","
+   out << "new TGMatrixLayout(" << fMain->GetName() << ","
                                 << fRows << ","
                                 << fColumns << ","
                                 << fSep << ","
@@ -1066,7 +1066,7 @@ void TGTileLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save tile layout manager as a C++ statement(s) on output stream
 
-   out << " new TGTileLayout(" << fMain->GetName() << ","
+   out << "new TGTileLayout(" << fMain->GetName() << ","
                               << fSep << ")";
 
 }
@@ -1077,7 +1077,7 @@ void TGListLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save list layout manager as a C++ statement(s) on output stream
 
-   out << " new TGListLayout(" << fMain->GetName() << ","
+   out << "new TGListLayout(" << fMain->GetName() << ","
                               << fSep << ")";
 
 }
@@ -1088,7 +1088,7 @@ void TGListDetailsLayout::SavePrimitive(ofstream &out, Option_t *)
 
    // Save list details layout manager as a C++ statement(s) on out stream
 
-   out << " new TGListDetailsLayout(" << fMain->GetName() << ","
+   out << "new TGListDetailsLayout(" << fMain->GetName() << ","
                                      << fSep << "," << fWidth << ")";
 
 }
