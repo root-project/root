@@ -1,6 +1,6 @@
 /*
 
-  This program will add histograms from a list of root files and write them
+  This program will add histograms and Trees from a list of root files and write them
   to a target root file. The target file is newly created and must not be
   identical to one of the source files.
          
@@ -22,8 +22,7 @@
     f3 with h5
    the result of
      hadd -f x.root f1.root f2.root f3.root
-   will be a file x.root with
-     x with h1 h2 h3 h4 h5 T1 T2
+   will be a file x.root with h1 h2 h3 h4 h5 T1 T2
    where h1 will be the sum of the 2 histograms in f1 and f2
          T1 will be the merge of the Trees in f1 and f2
 
@@ -33,6 +32,12 @@
   the Trees with
        hadd -T targetfile source1 source2 ...
   
+  If the sources and and target compression levels are identical (default),
+  the program uses the TChain::Merge function with option "fast", ie
+  the merge will be done without  unzipping or unstreaming the baskets 
+  (i.e. direct copy of the raw byte on disk). The "fast" mode is typically
+  5 times faster than the mode unzipping and unstreaming the baskets.
+   
   Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
          : rewritten from scratch by Rene Brun (30 November 2005)
             to support files with nested directories.
