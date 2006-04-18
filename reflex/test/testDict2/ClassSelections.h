@@ -30,13 +30,28 @@ namespace ns {
     private:
     int fI;
   };
+
+  class AutoSelectClass {};
+
+  class NoSelfAutoSelection {
+  private:
+    AutoSelectClass m_c;
+  };
+
 }
+
+
 
 namespace ROOT {
   namespace Reflex {
     namespace Selection {
 
       namespace ns {
+
+        class NoSelfAutoSelection {
+          NO_SELF_AUTOSELECT m_whatever;
+          AUTOSELECT m_c;
+        };
 
         class TestSelectionClass {
           TRANSIENT  fI;

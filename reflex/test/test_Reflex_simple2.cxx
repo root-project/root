@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.11 2006/04/05 15:39:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.12 2006/04/12 10:18:57 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -167,6 +167,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testOperators );
   CPPUNIT_TEST( testTypedefSelection );
   CPPUNIT_TEST( testTypedef );
+  CPPUNIT_TEST( testCppSelectNoAutoselect );
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST_SUITE_END();
 
@@ -187,6 +188,7 @@ public:
   void testOperators();
   void testTypedefSelection();
   void testTypedef();
+  void testCppSelectNoAutoselect();
   void unloadLibrary();
 
   void tearDown() {}
@@ -827,6 +829,18 @@ void ReflexSimple2Test::testTypedef() {
   CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.ToType().ToType().Name());
   CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.ToType(FINAL).Name());
 }
+
+
+void ReflexSimple2Test::testCppSelectNoAutoselect() {
+
+  Type t = Type::ByName("ns::NoSelfAutoSelection");
+  CPPUNIT_ASSERT(!t);
+  Type t2 = Type::ByName("ns::AutoSelectClass");
+  CPPUNIT_ASSERT(t2);
+  CPPUNIT_ASSERT(t2.IsClass());
+
+}
+
 
 
 void ReflexSimple2Test::unloadLibrary() {
