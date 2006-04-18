@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.29 2006/04/12 12:56:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.30 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -692,6 +692,7 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
    }
 
    TGCompositeFrame *cf;
+   TGLayoutManager * lm;
    for (Int_t i=0; i<GetNumberOfTabs(); i++) {
       cf = GetTabContainer(i);
       out << endl << "   // container of " << quote
@@ -700,13 +701,22 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
       out << "   " << cf->GetName() << " = " << GetName()
                    << "->AddTab(" << quote << GetTabTab(i)->GetString()
                    << quote << ");" << endl;
-
+      lm = cf->GetLayoutManager();
+      if (lm) {
+         if ((cf->GetOptions() & kHorizontalFrame) &&
+            (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
+            ;
+         } else if ((GetOptions() & kVerticalFrame) &&
+            (lm->InheritsFrom(TGVerticalLayout::Class()))) {
+            ;
+         } else {
+            out << "   " << cf->GetName() <<"->SetLayoutManager(";
+            lm->SavePrimitive(out, option);
+            out << ");" << endl;
+         }    
+      }
       cf->SavePrimitiveSubframes(out, option);
-      // setting layout manager
-      out << "   " << cf->GetName() <<"->SetLayoutManager(";
-      cf->GetLayoutManager()->SavePrimitive(out, option);
-      out << ");"<< endl;
-
+ 
       if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {
          GetTabTab(i)->SaveUserColor(out, option);
          out << "   TGTabElement *tab" << i << " = "
