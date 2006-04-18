@@ -1867,12 +1867,14 @@ fi
 if test ! "x$enable_fftw3" = "xno"; then
     # Check for FFTW3 include and library
     check_header "fftw3.h" "$fftw3incdir" $FFTW3 $FFTW3/include \
-	$FFTW3/api /usr/local/include /usr/include /opt/fftw3/include
+	$FFTW3/api /usr/local/include /usr/include /opt/fftw3/include \
+        $finkdir/include
     fftw3inc=$found_hdr
     fftw3incdir=$found_dir
 
     check_library "libfftw3 libfftw3-3" "$enable_shared" "$fftw3libdir" \
-	$FFTW3 $FFTW3/lib $FFTW3/.libs /usr/local/lib /usr/lib /opt/fftw3/lib
+	$FFTW3 $FFTW3/lib $FFTW3/.libs /usr/local/lib /usr/lib /opt/fftw3/lib \
+        $finkdir/lib
     fftw3lib=$found_lib
     fftw3libdir=$found_dir
 
