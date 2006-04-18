@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.32 2005/02/28 17:28:12 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.33 2005/12/09 09:35:07 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -103,7 +103,7 @@ ClassImp(TRFIOSystem)
 //______________________________________________________________________________
 TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
                      Int_t compress)
-         : TFile(url, "NET", ftitle, compress), fUrl(url)
+         : TFile(url, "NET", ftitle, compress)
 {
    // Create a RFIO file object. A RFIO file is the same as a TFile
    // except that it is being accessed via a rfiod server. The url

@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.10 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.11 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -25,9 +25,6 @@
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
-#ifndef ROOT_TUrl
-#include "TUrl.h"
-#endif
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
@@ -36,9 +33,7 @@
 class TRFIOFile : public TFile {
 
 private:
-   TUrl      fUrl;        //URL of file
-
-   TRFIOFile() : fUrl("dummy") { }
+   TRFIOFile() { }
 
    // Interface to basic system I/O routines
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);

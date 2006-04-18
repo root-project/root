@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.11 2005/09/23 13:04:53 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.12 2005/10/27 10:00:41 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -29,23 +29,20 @@
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
-#ifndef ROOT_TUrl
-#include "TUrl.h"
-#endif
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
 
+class TUrl;
 
 class TAlienFile : public TFile {
 
 private:
-   TUrl      fUrl;                 //URL of file
    TFile    *fSubFile;             //sub file (PFN)
    TString   fAuthz;               //authorization envelope
    TString   fLfn;                 //logical filename
 
-   TAlienFile() : fUrl("dummy") { }
+   TAlienFile() { }
 
 public:
    TAlienFile(const char *url, Option_t *option = "",

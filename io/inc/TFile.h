@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.42 2006/02/01 18:54:51 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.43 2006/04/06 23:01:45 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -27,8 +27,10 @@
 #ifndef ROOT_TCache
 #include "TCache.h"
 #endif
+#ifndef ROOT_TUrl
+#include "TUrl.h"
+#endif
 
-class TUrl;
 class TFree;
 class TArrayC;
 class TArchiveFile;
@@ -73,15 +75,18 @@ protected:
    Bool_t        fInitDone;       //!True if the file has been initialized
    TFileOpenHandle *fAsyncHandle; //!For proper automatic cleanup
    EAsyncOpenStatus fAsyncOpenStatus; //!Status of an asynchronous open request
+   TUrl          fUrl;            //!URL of file
 
    TList        *fInfoCache;      //!Cached list of the streamer infos in this file
+
+   static TList *fgAsyncOpenRequests; //!List of handles for pending open requests
 
    static Long64_t fgBytesWrite;  //Number of bytes written by all TFile objects
    static Long64_t fgBytesRead;   //Number of bytes read by all TFile objects
 
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
-   virtual void  Init(Bool_t create);
    Long64_t GetRelOffset() const { return fOffset - fArchiveOffset; }
+   virtual void  Init(Bool_t create);
    Int_t    ReadBufferViaCache(char *buf, Int_t len);
    Int_t    WriteBufferViaCache(const char *buf, Int_t len);
 
@@ -134,7 +139,7 @@ public:
    virtual Int_t       GetErrno() const;
    virtual void        ResetErrno() const;
    Int_t               GetFd() const { return fD; }
-   virtual const TUrl *GetEndpointUrl() const { return 0; }
+   virtual const TUrl *GetEndpointUrl() const { return &fUrl; }
    TObjArray          *GetListOfProcessIDs() const {return fProcessIDs;}
    TList              *GetListOfFree() const { return fFree; }
    virtual Int_t       GetNfree() const { return fFree->GetSize(); }
@@ -158,6 +163,7 @@ public:
    virtual void        MakeFree(Long64_t first, Long64_t last);
    virtual void        MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
    virtual void        Map(); // *MENU*
+   virtual Bool_t      Matches(const char *name);
    virtual void        Paint(Option_t *option="");
    virtual void        Print(Option_t *option="") const;
    virtual Bool_t      ReadBuffer(char *buf, Int_t len);
@@ -189,7 +195,9 @@ public:
                             Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
 
+   static EAsyncOpenStatus GetAsyncOpenStatus(const char *name);
    static EAsyncOpenStatus GetAsyncOpenStatus(TFileOpenHandle *handle);
+   static const TUrl  *GetEndpointUrl(const char *name);
 
    static Long64_t     GetFileBytesRead();
    static Long64_t     GetFileBytesWritten();
@@ -200,37 +208,33 @@ public:
    ClassDef(TFile,7)  //ROOT file
 };
 
-
 //
-// Class containing info about the file being opened via TFile::AsyncOpen()
+// Class holding info about the file being opened
 //
-class TFileOpenHandle {
-
-friend class TFile;
-
-private:
-   TString  fName;       // File name
+class TFileOpenHandle : public TNamed {
+ friend class TFile;
+ private:
    TString  fOpt;        // Options
-   TString  fTitle;      // File title
    Int_t    fCompress;   // Compression factor
    Int_t    fNetOpt;     // Network options
-   TFile   *fFile;       // TFile instance of the file being opened
+   TFile   *fFile;       // TFile instance of the file being opened 
 
-   TFileOpenHandle(TFile *f) : fCompress(1), fNetOpt(0), fFile(f) { }
+   TFileOpenHandle(TFile *f) : TNamed("",""), fOpt(""), fCompress(1),
+                               fNetOpt(0), fFile(f) { }
    TFileOpenHandle(const char *n, const char *o, const char *t, Int_t cmp,
-                   Int_t no) : fName(n), fOpt(o), fTitle(t), fCompress(cmp),
+                   Int_t no) : TNamed(n,t), fOpt(o), fCompress(cmp),
                                fNetOpt(no), fFile(0) { }
 
-   TFile *GetFile() const { return fFile; }
+   TFile      *GetFile() { return fFile; }
 
  public:
    ~TFileOpenHandle() { }
 
-   const char *GetName() const { return fName; }
-   const char *GetOpt() const { return fOpt; }
-   const char *GetTitle() const { return fTitle; }
-   Int_t       GetCompress() const { return fCompress; }
-   Int_t       GetNetOpt() const { return fNetOpt; }
+   Bool_t      Matches(const char *name);
+
+   const char *GetOpt() { return fOpt; }
+   Int_t       GetCompress() { return fCompress; }
+   Int_t       GetNetOpt() { return fNetOpt; }
 };
 
 R__EXTERN TFile   *gFile;

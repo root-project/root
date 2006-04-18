@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.151 2006/04/06 23:01:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.152 2006/04/07 15:35:29 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -54,6 +54,7 @@ TFile *gFile;                 //Pointer to current file
 
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
+TList *TFile::fgAsyncOpenRequests = 0;
 
 const Int_t kBEGIN = 100;
 
@@ -90,7 +91,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
 
 //1_____________________________________________________________________________
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectory(), fInfoCache(0)
+           : TDirectory(), fUrl(fname1,kTRUE), fInfoCache(0)
 {
    // Opens or creates a local ROOT file whose name is fname1. It is
    // recommended to specify fname1 as "<file>.root". The suffix ".root"
@@ -225,12 +226,11 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    SetTitle(ftitle);
 
    // accept also URL like "file:..." syntax
-   TUrl url(fname1, kTRUE);
-   fname1 = url.GetFile();
+   fname1 = fUrl.GetFile();
 
    // if option contains filetype=raw then go into raw file mode
    fIsRootFile = kTRUE;
-   if (strstr(url.GetOptions(), "filetype=raw"))
+   if (strstr(fUrl.GetOptions(), "filetype=raw"))
       fIsRootFile = kFALSE;
 
    // Init initialization control flag
@@ -239,8 +239,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    // We are opening synchronously
    fAsyncHandle = 0;
    fAsyncOpenStatus = kAOSNotAsync;
-
-   gDirectory = 0;
 
    TDirectory::Build(this, 0);
 
@@ -267,7 +265,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    fArchiveOffset = 0;
    fIsArchive     = kFALSE;
-   fArchive = TArchiveFile::Open(url.GetUrl(), this);
+   fArchive = TArchiveFile::Open(fUrl.GetUrl(), this);
    if (fArchive) {
       fname1 = fArchive->GetArchiveName();
       // if no archive member is specified then this TFile is just used
@@ -2147,6 +2145,15 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TUrl urlname(name, kTRUE);
    name = urlname.GetUrl();
 
+   // Check first if a pending async open request matches this one
+   if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
+      TIter nxr(fgAsyncOpenRequests);
+      TFileOpenHandle *fh = 0;
+      while ((fh = (TFileOpenHandle *)nxr()))
+         if (fh->Matches(name))
+            return TFile::Open(fh);
+   }
+
    // Resolve the file type; this also adjusts names
    EFileType type = GetType(name, option);
 
@@ -2266,6 +2273,14 @@ TFileOpenHandle *TFile::AsyncOpen(const char *name, Option_t *option,
       fh = new TFileOpenHandle(f);
    }
 
+   // Record this request
+   if (fh) {
+      // Create the lst, if not done already
+      if (!fgAsyncOpenRequests)
+         fgAsyncOpenRequests = new TList;
+      fgAsyncOpenRequests->Add(fh);
+   }
+
    // We are done
    return fh;
 }
@@ -2280,7 +2295,7 @@ TFile *TFile::Open(TFileOpenHandle *fh)
    TFile *f = 0;
 
    // Note that the request may have failed
-   if (fh) {
+   if (fh && fgAsyncOpenRequests) {
       // Was asynchronous open functionality implemented?
       if ((f = fh->GetFile()) && !(f->IsZombie())) {
          // Yes: wait for the completion of the open phase, if needed
@@ -2297,6 +2312,9 @@ TFile *TFile::Open(TFileOpenHandle *fh)
       // Adopt the handle instance in the TFile instance so that it gets
       // automatically cleaned up
       f->fAsyncHandle = fh;
+
+      // Remove it from the pending list
+      fgAsyncOpenRequests->Remove(fh);
    }
 
    // We are done
@@ -2397,6 +2415,74 @@ void TFile::SetFileBytesRead(Long64_t bytes){ fgBytesRead = bytes; }
 void TFile::SetFileBytesWritten(Long64_t bytes){ fgBytesWrite = bytes; }
 
 //______________________________________________________________________________
+Bool_t TFile::Matches(const char *url)
+{
+   // Return kTRUE if 'url' matches the coordinates of this file.
+   // The check is implementation dependent and may need to be overload
+   // by each TFile implememtation relying on this check.
+   // The default implementation checks teh file name only.
+
+   // Check the full URL, including port and FQDN.
+   TUrl u(url);
+   TInetAddress a = gSystem->GetHostByName(u.GetHost());
+   TString fqdn = a.GetHostName();
+   if (fqdn == "UnNamedHost")
+      fqdn = a.GetHostAddress();
+
+   // Check 
+   if (!strcmp(u.GetFile(),fUrl.GetFile())) {
+      // Check ports
+      if (u.GetPort() == fUrl.GetPort()) {
+         TInetAddress aref = gSystem->GetHostByName(fUrl.GetHost());
+         TString fqdnref = aref.GetHostName();
+         if (fqdnref == "UnNamedHost")
+            fqdnref = aref.GetHostAddress();
+         if (fqdn == fqdnref)
+            // Ok, coordinates match
+            return kTRUE;
+      }
+   }
+
+   // Default is not matching
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TFileOpenHandle::Matches(const char *url)
+{
+   // Return kTRUE if this async request matches the open request
+   // specified by 'url'
+
+   if (fFile) {
+      return fFile->Matches(url);
+   } else if (fName.Length() > 0){
+      // Deep check of URLs
+      TUrl u(url);
+      TUrl uref(fName);
+      if (!strcmp(u.GetFile(),uref.GetFile())) {
+         // Check ports
+         if (u.GetPort() == uref.GetPort()) {
+            // Check also the host name
+            TInetAddress a = gSystem->GetHostByName(u.GetHost());
+            TInetAddress aref = gSystem->GetHostByName(uref.GetHost());
+            TString fqdn = a.GetHostName();
+            if (fqdn == "UnNamedHost")
+               fqdn = a.GetHostAddress();
+            TString fqdnref = aref.GetHostName();
+            if (fqdnref == "UnNamedHost")
+               fqdnref = aref.GetHostAddress();
+            if (fqdn == fqdnref)
+               // Ok, coordinates match
+               return kTRUE;
+         }
+      }
+   }
+
+   // Default is not matching
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 TFile::EFileType TFile::GetType(const char *name, Option_t *option)
 {
    // Resolve the file type as a function of the protocol field in 'name'
@@ -2467,6 +2553,34 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option)
 }
 
 //______________________________________________________________________________
+TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
+{
+   // Get status of the async open request related to 'name'.
+
+   // Check the list of pending async opem requests
+   if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
+      TIter nxr(fgAsyncOpenRequests);
+      TFileOpenHandle *fh = 0;
+      while ((fh = (TFileOpenHandle *)nxr()))
+         if (fh->Matches(name))
+            return TFile::GetAsyncOpenStatus(fh);
+   }
+
+   // Check also the list of files open
+   TSeqCollection *of = gROOT->GetListOfFiles();
+   if (of && (of->GetSize() > 0)) {
+      TIter nxf(of);
+      TFile *f = 0;
+      while ((f = (TFile *)nxf()))
+         if (f->Matches(name))
+            return f->GetAsyncOpenStatus();
+   }
+
+   // Default is synchronous mode
+   return kAOSNotAsync;
+}
+
+//______________________________________________________________________________
 TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(TFileOpenHandle *handle)
 {
    // Get status of the async open request related to 'handle'.
@@ -2479,4 +2593,34 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(TFileOpenHandle *handle)
 
    // Default is synchronous mode
    return TFile::kAOSNotAsync;
+}
+
+//______________________________________________________________________________
+const TUrl *TFile::GetEndpointUrl(const char* name)
+{
+   // Get final URL for file being opened asynchronously.
+   // Returns 0 is the information is not yet available.
+
+   // Check the list of pending async opem requests
+   if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
+      TIter nxr(fgAsyncOpenRequests);
+      TFileOpenHandle *fh = 0;
+      while ((fh = (TFileOpenHandle *)nxr()))
+         if (fh->Matches(name))
+            if (fh->fFile)
+               return fh->fFile->GetEndpointUrl();
+   }
+
+   // Check also the list of files open
+   TSeqCollection *of = gROOT->GetListOfFiles();
+   if (of && (of->GetSize() > 0)) {
+      TIter nxf(of);
+      TFile *f = 0;
+      while ((f = (TFile *)nxf()))
+         if (f->Matches(name))
+            return f->GetEndpointUrl();
+   }
+
+   // Information not yet available
+   return (const TUrl *)0;
 }

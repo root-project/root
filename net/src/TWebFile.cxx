@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.7 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.8 2004/01/03 09:38:54 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 ClassImp(TWebFile)
 
 //______________________________________________________________________________
-TWebFile::TWebFile(const char *url) : TFile(url, "WEB"), fUrl(url)
+TWebFile::TWebFile(const char *url) : TFile(url, "WEB")
 {
    // Create a Web file object. A web file is the same as a read-only
    // TFile except that it is being read via a HTTP server. The url
@@ -44,7 +44,7 @@ TWebFile::TWebFile(const char *url) : TFile(url, "WEB"), fUrl(url)
 }
 
 //______________________________________________________________________________
-TWebFile::TWebFile(TUrl url) : TFile(url.GetUrl(), "WEB"), fUrl(url)
+TWebFile::TWebFile(TUrl url) : TFile(url.GetUrl(), "WEB")
 {
    // Create a Web file object. A web file is the same as a read-only
    // TFile except that it is being read via a HTTP server. Make sure url

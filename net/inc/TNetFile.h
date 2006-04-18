@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.21 2006/02/21 16:57:12 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.22 2006/02/26 16:13:38 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -44,7 +44,6 @@ class TSocket;
 class TNetFile : public TFile {
 
 protected:
-   TUrl      fUrl;         //URL of file
    TUrl      fEndpointUrl; //URL of realfile (after possible redirection)
    TString   fUser;        //remote user name
    TSocket  *fSocket;      //connection to rootd server
@@ -68,13 +67,14 @@ protected:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
-   TNetFile() : fUrl("dummy"), fEndpointUrl("dummy") { fSocket = 0; }
+   TNetFile() { fSocket = 0; }
    virtual ~TNetFile();
 
    void    Close(Option_t *option="");  // *MENU*
    void    Flush();
    Int_t   GetErrorCode() const { return fErrorCode; }
    Bool_t  IsOpen() const;
+   Bool_t  Matches(const char *url);
    Int_t   ReOpen(Option_t *mode);
    Bool_t  ReadBuffer(char *buf, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);

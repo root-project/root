@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.14 2005/12/09 16:24:34 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.15 2006/03/15 11:01:52 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -36,12 +36,13 @@
 #include "TVirtualMutex.h"
 #include "TProcessUUID.h"
 #include "TArchiveFile.h"
+#include "TUrl.h"
 
 ClassImp(TAlienFile)
 
 //______________________________________________________________________________
 TAlienFile::TAlienFile(const char *url, Option_t *option,
-                       const char *ftitle, Int_t compress) : fUrl(url)
+                       const char *ftitle, Int_t compress)
 {
    // Create an Alien File Object. An AliEn File is the same as a TFile
    // except that it is being accessed via an Alien service. The url
@@ -67,6 +68,8 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    // object. Use IsZombie() to see if the file is accessable.
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
+
+   fUrl = TUrl(url);
 
    TUrl lUrl(url);
 

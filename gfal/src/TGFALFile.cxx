@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.2 2006/02/24 08:45:31 rdm Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.3 2006/02/24 08:55:26 brun Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -62,6 +62,7 @@
 
 #include "TGFALFile.h"
 #include "TROOT.h"
+#include "TUrl.h"
 
 extern "C" {
 #include <gfal_api.h>
@@ -73,7 +74,7 @@ ClassImp(TGFALSystem)
 //______________________________________________________________________________
 TGFALFile::TGFALFile(const char *url, Option_t *option, const char *ftitle,
                      Int_t compress)
-         : TFile(url, "NET", ftitle, compress), fUrl(url)
+         : TFile(url, "NET", ftitle, compress)
 {
    // Create a GFAL file object. A GFAL file is the same as a TFile
    // except that it is being accessed via the underlaying Grid access

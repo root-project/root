@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.h,v 1.11 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.h,v 1.1 2005/12/10 01:19:52 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -67,9 +67,6 @@
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
-#ifndef ROOT_TUrl
-#include "TUrl.h"
-#endif
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
@@ -78,11 +75,10 @@
 class TGFALFile : public TFile {
 
 private:
-   TUrl          fUrl;         //URL of file
    Bool_t        fStatCached;  //! (transient) is file status cached?
    struct stat64 fStatBuffer;  //! (transient) Cached file status buffer (for performance)
 
-   TGFALFile() : fUrl("dummy"), fStatCached(kFALSE) { }
+   TGFALFile() : fStatCached(kFALSE) { }
 
    // Interface to basic system I/O routines
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);

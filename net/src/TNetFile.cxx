@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.64 2006/02/21 16:57:12 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.65 2006/02/26 16:13:38 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -82,7 +82,7 @@ ClassImp(TNetSystem)
 //______________________________________________________________________________
 TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
-   : TFile(url, "NET", ftitle, compress), fUrl(url), fEndpointUrl(url)
+   : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
 {
    // Create a TNetFile object. This is actually done inside Create(), so
    // for a description of the options and other arguments see Create().
@@ -93,7 +93,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
 }
 //______________________________________________________________________________
 TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
-   : TFile(url, "NET", ftitle, compress), fUrl(url), fEndpointUrl(url)
+   : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
 {
    // Create a TNetFile object. To be used by derived classes, that need
    // to initialize the TFile base class but not open a connection at this
@@ -627,6 +627,43 @@ void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
 
    // Create the connection
    Create(s->GetUrl(), option, netopt);
+}
+
+//______________________________________________________________________________
+Bool_t TNetFile::Matches(const char *url)
+{
+   // Return kTRUE if 'url' matches the coordinates of this file.
+   // Check the full URL, including port and FQDN.
+
+   // Run standard check on fUrl, first
+   Bool_t rc = TFile::Matches(url);
+   if (rc)
+      // Ok, standard check enough
+      return kTRUE;
+
+   // Check also endpoint URL
+   TUrl u(url);
+   if (!strcmp(u.GetFile(),fEndpointUrl.GetFile())) {
+      // Candidate info
+      TInetAddress a = gSystem->GetHostByName(u.GetHost());
+      TString fqdn = a.GetHostName();
+      if (fqdn == "UnNamedHost")
+         fqdn = a.GetHostAddress();
+
+      // Check ports
+      if (u.GetPort() == fEndpointUrl.GetPort()) {
+         TInetAddress aref = gSystem->GetHostByName(fEndpointUrl.GetHost());
+         TString fqdnref = aref.GetHostName();
+         if (fqdnref == "UnNamedHost")
+            fqdnref = aref.GetHostAddress();
+         if (fqdn == fqdnref)
+            // Ok, coordinates match
+            return kTRUE;
+      }
+   }
+
+   // Default is not matching
+   return kFALSE;
 }
 
 //
