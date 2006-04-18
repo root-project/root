@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.9 2005/08/18 00:24:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.10 2006/04/17 21:10:59 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 
 /*************************************************************************
@@ -424,7 +424,7 @@ void TCastorFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
       TNetFile::ConnectServer(stat, kind, netopt, tcpwindowsize, forceOpen, forceRead);
    } else {
       // Failure: fill these to signal it to TNetFile
-      *stat = ERootdErrors::kErrFileOpen;
+      *stat = kErrFileOpen;
       *kind = kROOTD_ERR;
    }
 }
