@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.125 2006/04/11 17:08:43 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.126 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2259,7 +2259,10 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
          conn = (TQConnection*)connlist->Last();
          signal_name = connlist->GetName();
          slot_name = conn->GetName();
-         
+         Int_t eq = slot_name.First('=');
+         Int_t rb = slot_name.First(')');
+         if (eq != -1) 
+            slot_name.Remove(eq, rb-eq);
          out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name 
              << quote << ", 0, 0, " << quote << slot_name << quote << ");" << endl;
 
@@ -2296,10 +2299,8 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
-   SavePrimitiveSubframes(out, option);
-
    // setting layout manager if it differs from the composite frame type
-   TGLayoutManager * lm = GetLayoutManager();
+   TGLayoutManager *lm = GetLayoutManager();
    if ((GetOptions() & kHorizontalFrame) &&
        (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
       ;
@@ -2311,6 +2312,8 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
       lm->SavePrimitive(out, option);
       out << ");"<< endl;
    }
+
+   SavePrimitiveSubframes(out, option);
 }
 
 //______________________________________________________________________________
@@ -2592,8 +2595,6 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
        << GetOptionString() << ");" <<endl;
 
-   SavePrimitiveSubframes(out, option);
-
    // setting layout manager if it differs from the main frame type
    TGLayoutManager * lm = GetLayoutManager();
    if ((GetOptions() & kHorizontalFrame) &&
@@ -2607,6 +2608,8 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
       lm->SavePrimitive(out, option);
       out << ");"<< endl;
    }
+
+   SavePrimitiveSubframes(out, option);
 
    if (strlen(fWindowName)) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
@@ -2643,6 +2646,20 @@ void TGHorizontalFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
+   // setting layout manager if it differs from the main frame type
+   TGLayoutManager * lm = GetLayoutManager();
+   if ((GetOptions() & kHorizontalFrame) &&
+       (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
+      ;
+   } else if ((GetOptions() & kVerticalFrame) &&
+              (lm->InheritsFrom(TGVerticalLayout::Class()))) {
+      ;
+   } else {
+      out << "   " << GetName() <<"->SetLayoutManager(";
+      lm->SavePrimitive(out, option);
+      out << ");"<< endl;
+   }
+
    SavePrimitiveSubframes(out, option);
 }
 
@@ -2666,6 +2683,20 @@ void TGVerticalFrame::SavePrimitive(ofstream &out, Option_t *option)
       }
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   // setting layout manager if it differs from the main frame type
+   TGLayoutManager * lm = GetLayoutManager();
+   if ((GetOptions() & kHorizontalFrame) &&
+       (lm->InheritsFrom(TGHorizontalLayout::Class()))) {
+      ;
+   } else if ((GetOptions() & kVerticalFrame) &&
+              (lm->InheritsFrom(TGVerticalLayout::Class()))) {
+      ;
+   } else {
+      out << "   " << GetName() <<"->SetLayoutManager(";
+      lm->SavePrimitive(out, option);
+      out << ");"<< endl;
    }
 
    SavePrimitiveSubframes(out, option);
@@ -2745,14 +2776,14 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetOptionString() << "," << parGC << "," << parFont << ",ucolor);"  << endl;
    }
 
-   SavePrimitiveSubframes(out, option);
-
    if (GetTitlePos() != -1)
       out << "   " << GetName() <<"->SetTitlePos(";
    if (GetTitlePos() == 0)
       out << "TGGroupFrame::kCenter);" << endl;
    if (GetTitlePos() == 1)
       out << "TGGroupFrame::kRight);" << endl;
+
+   SavePrimitiveSubframes(out, option);
 
    // setting layout manager
    out << "   " << GetName() <<"->SetLayoutManager(";
@@ -3036,8 +3067,6 @@ void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
 
-   SavePrimitiveSubframes(out, option);
-
    // setting layout manager if it differs from transient frame type
    TGLayoutManager * lm = GetLayoutManager();
    if ((GetOptions() & kHorizontalFrame) &&
@@ -3051,6 +3080,8 @@ void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
       lm->SavePrimitive(out, option);
       out << ");"<< endl;
    }
+
+   SavePrimitiveSubframes(out, option);
 
    if (strlen(fWindowName)) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
