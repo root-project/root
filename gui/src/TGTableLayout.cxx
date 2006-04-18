@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.8 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.9 2005/11/17 19:09:28 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -520,7 +520,12 @@ void TGTableLayout::Layout()
    TGFrameElement *ptr;
    UInt_t border_width = fMain->GetBorderWidth();
    while ((ptr = (TGFrameElement*) next())) {
-      TGTableLayoutHints *layout = (TGTableLayoutHints*)ptr->fLayout;
+      TGTableLayoutHints *layout = 
+            dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
+      if (!layout) {
+         Error("TGTableLayout::Layout", "didn't get TGTableLayoutHints");
+         return;
+      }
       ULong_t hints = layout->GetLayoutHints();
       TGDimension size = ptr->fFrame->GetDefaultSize();
 
