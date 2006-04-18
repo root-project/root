@@ -467,6 +467,10 @@ N: Christian Stratowa
 E: cstrato@EUnet.at
 D: development of class TGraphSmooth + many suggestions
 
+N: Tim Tran
+E: timtran@jlab.org
+D: Full implementation of all projections in THistPainter::ShowProjection3
+
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
 D: byteswapping assembler code for the i486 and up
