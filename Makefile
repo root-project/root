@@ -198,6 +198,9 @@ ifneq ($(ARCH),win32)
 MODULES      += rpdutils rootd proofd
 endif
 ifeq ($(BUILDXRD),yes)
+ifeq ($(ARCH),win32)
+MODULES      += proofd
+endif
 MODULES      += proofx
 endif
 

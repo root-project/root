@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.108 2006/02/20 12:02:18 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.109 2006/03/28 16:35:00 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -825,7 +825,8 @@ Bool_t TGWin32::IsCmdThread() const
 {
    // returns kTRUE if we are inside cmd/server thread
 
-   return (::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId);
+//   return (::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

@@ -16,31 +16,55 @@ XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
 XROOTDETAG := $(MODDIRS)/headers.d
 
 ##### Xrootd config options #####
+ifeq ($(PLATFORM),win32)
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+XRDDBG      = "Win32 Debug"
+else
+XRDDBG      = "Win32 Release"
+endif
+else
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 XRDDBG      = "--build=debug"
 else
 XRDDBG      =
+endif
 endif
 ifeq ($(PLATFORM),macosx)
 XRDSOEXT    = so
 else
 XRDSOEXT    = $(SOEXT)
 endif
+ifeq ($(PLATFORM),win32)
+XRDSOEXT    = lib
+endif
 
 ##### Xrootd executables #####
+ifneq ($(PLATFORM),win32)
 XRDEXEC     = xrootd olbd xrdcp xrdpwdadmin xrdgsiproxy
+else
+XRDEXEC     = xrdcp.exe
+endif
 XRDEXECS   := $(patsubst %,bin/%,$(XRDEXEC))
 
 ##### Xrootd plugins #####
+ifeq ($(PLATFORM),win32)
+XRDPLUGINSA:= $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT)
+XRDPLUGINS := $(XRDPLUGINSA)
+else
 XRDPLUGINSA:= $(XROOTDDIRL)/libXrdSec.$(XRDSOEXT)
 XRDPLUGINS := $(LPATH)/libXrdSec.$(XRDSOEXT)
 ifeq ($(ARCH),win32gcc)
 XRDPLUGINS := $(patsubst $(LPATH)/%.$(XRDSOEXT),bin/%.$(XRDSOEXT),$(XRDPLUGINS))
 endif
+endif
 
 # used in the main Makefile
 ALLLIBS    += $(XRDPLUGINS)
+#ifneq ($(PLATFORM),win32)
 ALLEXECS   += $(XRDEXECS)
+#else
+#ALLEXECS   += $(XRDPLUGINS)
+#endif
 
 ##### local rules #####
 $(XROOTDETAG): $(XROOTDSRCS)
@@ -54,7 +78,27 @@ $(XROOTDETAG): $(XROOTDSRCS)
 		   etag=`basename $(XROOTDETAG)` ; \
 		   touch $$etag ; \
 		fi)
+ifeq ($(PLATFORM),win32)
+		@(if [ -d $(XROOTDDIRD)/pthreads-win32 ]; then \
+		    lsplug=`find $(XROOTDDIRD)/pthreads-win32/lib -name "*.dll"` ; \
+		    for i in $$lsplug ; do \
+		       echo "Copying $$i ..." ; \
+	          cp $$i "$(ROOTSYS)/bin" ; \
+		    done ; \
+		    lsplug=`find $(XROOTDDIRD)/pthreads-win32/lib -name "*.lib"` ; \
+		    for i in $$lsplug ; do \
+		       echo "Copying $$i ..." ; \
+	          cp $$i "$(ROOTSYS)/lib" ; \
+		    done ; \
+		    lsplug=`find $(XROOTDDIRD)/pthreads-win32/include -name "*.h"` ; \
+		    for i in $$lsplug ; do \
+		       echo "Copying $$i ..." ; \
+	          cp $$i "$(ROOTSYS)/include" ; \
+		    done ; \
+		  fi)
+endif
 
+ifneq ($(PLATFORM),win32)
 $(XRDPLUGINS): $(XRDPLUGINSA)
 		@(if [ -d $(XROOTDDIRL) ]; then \
 		    lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ; \
@@ -70,6 +114,7 @@ $(XRDPLUGINS): $(XRDPLUGINSA)
 		       fi; \
 		    done ; \
 		  fi)
+endif
 
 $(XRDEXECS): $(XRDPLUGINSA)
 		@(for i in $(XRDEXEC); do \
@@ -84,6 +129,7 @@ $(XRDEXECS): $(XRDPLUGINSA)
 		     fi ; \
 		  done)
 
+ifneq ($(PLATFORM),win32)
 $(XRDPLUGINSA): $(XROOTDETAG)
 		@(cd $(XROOTDDIRS); \
 		RELE=`uname -r`; \
@@ -127,14 +173,27 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):" \
 			" building only the client ... " ; \
 		fi)
+else
+$(XRDPLUGINSA): $(XROOTDETAG)
+		@(cd $(XROOTDDIRD); \
+		echo "*** Building xrootd..."; \
+		unset MAKEFLAGS; \
+		nmake -f Makefile.msc CFG=$(XRDDBG))
+endif
 
 all-xrootd:   $(XRDPLUGINS) $(XRDEXECS)
 
 clean-xrootd:
+ifneq ($(PLATFORM),win32)
 		-@(if [ -d $(XROOTDDIRD)/config ]; then \
 			cd $(XROOTDDIRD); \
 			$(MAKE) clean; \
 		fi)
+else
+		@(if [ -d $(XROOTDDIRD) ]; then \
+		   rm -rf $(XROOTDDIRD); \
+		fi;)
+endif
 
 clean::         clean-xrootd
 

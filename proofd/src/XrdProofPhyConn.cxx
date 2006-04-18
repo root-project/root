@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.3 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.4 2006/03/16 09:08:08 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -28,9 +28,13 @@
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdSec/XrdSecInterface.hh"
 
+#ifndef WIN32
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <pwd.h>
+#else
+#include <Winsock2.h>
+#endif
 
 // Tracing utils
 #include "XrdProofdTrace.h"
@@ -68,8 +72,15 @@ bool XrdProofPhyConn::Init(const char *url)
 
    if (!fTcp) {
       // Set some variables
+#ifndef WIN32
       struct passwd *pw = getpwuid(getuid());
       fUser = (pw) ? pw->pw_name : "";
+#else
+      char  name[256];
+      DWORD length = sizeof (name);
+      ::GetUserName(name, &length);
+      fUser = name;
+#endif
       fHost = "localhost";
       fPort = -1;
 
@@ -142,7 +153,11 @@ bool XrdProofPhyConn::Init(const char *url)
 
       // And we wait a bit before retrying
       TRACE(REQ,"XrdProofPhyConn::Init: connection attempt failed: sleep " << timeOut << " secs");
+#ifndef WIN32
       sleep(timeOut);
+#else
+      Sleep(timeOut * 1000);
+#endif
 
    } //for connect try
 

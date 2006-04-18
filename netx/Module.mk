@@ -49,8 +49,12 @@ endif
 NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 
 # Xrootd client libs
+ifeq ($(PLATFORM),win32)
+NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
+else
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 		$(XROOTDDIRL)/libXrdNet.a
+endif
 
 ##### local rules #####
 include/%.h:    $(NETXDIRI)/%.h

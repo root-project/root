@@ -17,8 +17,15 @@ PROOFXDS     := $(MODDIRS)/G__Proofx.cxx
 PROOFXDO     := $(PROOFXDS:.cxx=.o)
 PROOFXDH     := $(PROOFXDS:.cxx=.h)
 
+ifeq ($(PLATFORM),win32)
+PROOFXH      := $(MODDIRI)/TXProofMgr.h $(MODDIRI)/TXSlave.h \
+                $(MODDIRI)/TXSocket.h $(MODDIRI)/TXSocketHandler.h
+PROOFXS      := $(MODDIRS)/TXProofMgr.cxx $(MODDIRS)/TXSlave.cxx \
+                $(MODDIRS)/TXSocket.cxx $(MODDIRS)/TXSocketHandler.cxx
+else
 PROOFXH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+endif
 PROOFXO      := $(PROOFXS:.cxx=.o)
 
 PROOFXDEP    := $(PROOFXO:.o=.d) $(PROOFXDO:.o=.d)
@@ -51,8 +58,13 @@ PROOFXINCEXTRA += $(XROOTDDIRI:%=-I%)
 PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 
 # Xrootd client libs
+ifeq ($(PLATFORM),win32)
+PROOFXLIBEXTRA := $(XROOTDDIRL)/libXrdClient.lib
+PROOFXLIBEXTRA += $(ROOTSYS)/lib/libThread.lib $(ROOTSYS)/lib/libProof.lib
+else
 PROOFXLIBEXTRA := $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 		  $(XROOTDDIRL)/libXrdNet.a
+endif
 
 ##### local rules #####
 include/%.h:    $(PROOFXDIRI)/%.h

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.133 2006/03/28 23:59:13 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.134 2006/03/29 10:29:32 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -326,6 +326,19 @@ static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
 
    if (retcode == SOCKET_ERROR) {
       int errcode = ::WSAGetLastError();
+
+      // if file descriptor is not a socket, assume it is the pipe used
+      // by TXSocket
+      if (errcode == WSAENOTSOCK) {
+         struct __stat64 buf;
+         int result = _fstat64( readready->GetFd(0), &buf );
+         if ( result == 0 ) {
+            if (buf.st_size > 0)
+               return 1;
+         }
+         SleepEx(1, TRUE);
+         return 0;
+      }
 
       if ( errcode == WSAEINTR) {
          TSystem::ResetErrno();  // errno is not self reseting

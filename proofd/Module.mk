@@ -11,6 +11,69 @@ PROOFDDIR    := $(MODDIR)
 PROOFDDIRS   := $(PROOFDDIR)/src
 PROOFDDIRI   := $(PROOFDDIR)/inc
 
+ifeq ($(PLATFORM),win32)
+
+##### XrdProofd plugin ####
+XPDH         := $(wildcard $(MODDIRI)/X*.h)
+XPDS         := $(wildcard $(MODDIRS)/X*.cxx)
+XPDO         := $(XPDS:.cxx=.o)
+XPDO         := $(MODDIRS)/XProofProtUtils.o
+
+
+##### Object files used by libProofx #####
+XPCONNH      := $(MODDIRI)/XrdProofConn.h $(MODDIRI)/XrdProofPhyConn.h \
+                $(MODDIRI)/XProofProtUtils.h
+
+XPCONNS      := $(MODDIRS)/XrdProofConn.cxx $(MODDIRS)/XrdProofPhyConn.cxx \
+                $(MODDIRS)/XProofProtUtils.cxx
+
+XPCONNO      := $(MODDIRS)/XrdProofConn.o $(MODDIRS)/XrdProofPhyConn.o \
+                $(MODDIRS)/XProofProtUtils.o
+
+XPDDEP       := $(XPCONNO:.o=.d)
+
+XPDLIB       := $(LPATH)/libXrdProofd.$(SOEXT)
+
+# Extra include paths and libs
+XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
+XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
+
+XPDLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
+
+# used in the main Makefile
+PROOFDEXEH   := $(MODDIRI)/proofdp.h
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
+ALLLIBS      += $(XPDLIB)
+
+# include all dependency files
+INCLUDEFILES += $(XPDDEP)
+
+##### local rules #####
+include/%.h:    $(PROOFDDIRI)/%.h
+		cp $< $@
+
+$(XPDLIB):      $(XPCONNO) $(XPCONNH) $(XRDPLUGINS) $(ORDER_) $(MAINLIBS)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO)" \
+		   "$(XPDLIBEXTRA)"
+
+all-proofd:     $(XPDLIB)
+
+clean-proofd:
+		@rm -f $(XPCONNO)
+
+clean::         clean-proofd
+
+distclean-proofd: clean-proofd
+		@rm -f $(XPDDEP) $(XPDLIB)
+
+distclean::     distclean-proofd
+
+##### extra rules ######
+$(XPCONNO): CXXFLAGS += $(XPDINCEXTRA)
+
+else
+
 ##### proofd #####
 PROOFDEXEH   := $(MODDIRI)/proofdp.h
 PROOFDEXES   := $(MODDIRS)/proofd.cxx
@@ -105,4 +168,6 @@ $(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA)
 else
 $(XPDO): CXXFLAGS += $(XPDINCEXTRA)
 endif
+endif
+
 endif

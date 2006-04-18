@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.6 2006/04/07 09:26:19 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.7 2006/04/17 21:04:17 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -38,7 +38,11 @@
 #include "XrdClient/XrdClientLogConnection.hh"
 #include "XrdClient/XrdClientMessage.hh"
 
+#ifndef WIN32
 #include <sys/socket.h>
+#else
+#include <Winsock2.h>
+#endif
 
 // ---- Tracing utils ----------------------------------------------------------
 #include "XrdOuc/XrdOucError.hh"
@@ -47,6 +51,11 @@
 XrdOucTrace *XrdProofdTrace = 0;
 static XrdOucLogger eLogger;
 static XrdOucError eDest(0, "Proofx");
+
+#ifdef WIN32
+ULong64_t TSocket::fgBytesSent;
+ULong64_t TSocket::fgBytesRecv;
+#endif
 
 //______________________________________________________________________________
 
@@ -365,8 +374,13 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Signal it
             if (gDebug > 3)
                Info("ProcessUnsolicitedMsg","%p: sending SIGURG: %d",this,ilev);
+#ifndef WIN32
             if (kill(fPid, SIGURG) != 0) {
                Error("ProcessUnsolicitedMsg","%d: problems sending kSigUrgent", this);
+#else
+            if(!TerminateProcess((HANDLE)fPid, 0)) {
+               Error("ProcessUnsolicitedMsg","%d: problems calling TerminateProcess()", this);
+#endif
                return rc;
             }
          }

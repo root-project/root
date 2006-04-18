@@ -52,7 +52,7 @@ PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
 PROOFLIBEXTRA       = lib/libTree.lib lib/libGraf3d.lib lib/libGraf.lib \
                       lib/libHist.lib lib/libTreePlayer.lib lib/libThread.lib
 PROOFXLIBDEP        = $(PROOFLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = lib/libProof.lib lib/libXrdProofd
+PROOFXLIBEXTRA      = lib/libProof.lib lib/libXrdProofd.lib
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
 PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)

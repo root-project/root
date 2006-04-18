@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.5 2006/03/16 09:08:08 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.6 2006/03/20 21:24:59 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -45,9 +45,11 @@
 #endif
 #endif
 
+#ifndef WIN32
 #include <dlfcn.h>
 #if !defined(__APPLE__)
 #include <link.h>
+#endif
 #endif
 
 // Tracing utils
@@ -56,9 +58,14 @@ extern XrdOucTrace *XrdProofdTrace;
 static const char *TraceID = " ";
 #define TRACEID TraceID
 
+#ifndef WIN32
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <pwd.h>
+#else
+#include <process.h>
+#include <Winsock2.h>
+#endif
 
 // Security handle
 typedef XrdSecProtocol *(*XrdSecGetProt_t)(const char *, const struct sockaddr &,
@@ -856,10 +863,18 @@ bool XrdProofConn::Login()
    reqhdr.login.pid = getpid();
 
    // Get username from Url
+#ifndef WIN32
    struct passwd *pw = getpwuid(getuid());
    if (fUser.length() <= 0 && pw)
       // Use local username, if not specified
       fUser = pw->pw_name;
+#else
+   char  name[256];
+   DWORD length = sizeof (name);
+   ::GetUserName(name, &length);
+   if (fUser.length() <= 0 && strlen(name) > 1)
+      fUser = name;
+#endif
    if (fUser.length() >= 0)
       strcpy( (char *)reqhdr.login.username, (char *)(fUser.c_str()) );
    else
@@ -931,9 +946,11 @@ bool XrdProofConn::Login()
             putenv(s);
             // netrc file
             XrdOucString netrc = "/.rootnetrc";
+#ifndef WIN32
             if (pw)
                netrc.insert((char *)(pw->pw_dir),0);
             else
+#endif
                netrc = "";
             if (netrc.length() > 0) {
                s = new char [strlen("XrdSecNETRC")+netrc.length()+2];

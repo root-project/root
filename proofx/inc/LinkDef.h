@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Name:  $:$Id: LinkDef.h,v 1.5 2005/10/27 16:36:38 rdm Exp $ */
+/* @(#)root/netx:$Name:  $:$Id: LinkDef.h,v 1.1 2005/12/12 12:54:27 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -15,9 +15,11 @@
 #pragma link off all functions;
 
 #pragma link C++ class TXProofMgr;
-#pragma link C++ class TXProofServ;
 #pragma link C++ class TXSlave;
 #pragma link C++ class TXSocket;
+#ifndef WIN32
+#pragma link C++ class TXProofServ;
 #pragma link C++ class TXUnixSocket;
+#endif
 
 #endif
