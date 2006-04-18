@@ -1478,6 +1478,7 @@ if test ! "x$enable_mysql" = "xno"; then
     checking_msg "mysql_config"
     mysql_config=`which mysql_config 2> /dev/null`
     if test ! "x$mysql_config" = "x" && test -x "$mysql_config" && \
+       test "x$mysqlincdir" = "x"    && test "x$mysqllibdir" = "x" && \
        test ! "x$platform" = "xwin32" ; then
        which mysql_config
        # we found mysql_config - now check the version number
