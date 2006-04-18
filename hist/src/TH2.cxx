@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.89 2006/03/21 15:40:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.90 2006/04/10 06:55:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2208,7 +2208,7 @@ void TH2::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH2::SetShowProjectionX()
+void TH2::SetShowProjectionX(Int_t nbins)
 {
    // When the mouse is moved in a pad containing a 2-d view of this histogram
    // a second canvas shows the projection along X corresponding to the
@@ -2218,12 +2218,12 @@ void TH2::SetShowProjectionX()
    
    GetPainter();
 
-   if (fPainter) fPainter->SetShowProjection("x");
+   if (fPainter) fPainter->SetShowProjection("x",nbins);
 }
 
 
 //______________________________________________________________________________
-void TH2::SetShowProjectionY()
+void TH2::SetShowProjectionY(Int_t nbins)
 {
    // When the mouse is moved in a pad containing a 2-d view of this histogram
    // a second canvas shows the projection along Y corresponding to the
@@ -2233,7 +2233,7 @@ void TH2::SetShowProjectionY()
    
    GetPainter();
 
-   if (fPainter) fPainter->SetShowProjection("y");
+   if (fPainter) fPainter->SetShowProjection("y",nbins);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.75 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.76 2006/04/10 06:55:14 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -2375,7 +2375,7 @@ void TH3C::SetBinContent(Int_t bin, Double_t content)
 
 
 //______________________________________________________________________________
-void TH3::SetShowProjection(const char *option)
+void TH3::SetShowProjection(const char *option,Int_t nbins)
 {
    // When the mouse is moved in a pad containing a 3-d view of this histogram
    // a second canvas shows a projection type given as option.
@@ -2398,7 +2398,7 @@ void TH3::SetShowProjection(const char *option)
       
    GetPainter();
 
-   if (fPainter) fPainter->SetShowProjection(option);
+   if (fPainter) fPainter->SetShowProjection(option,nbins);
 }
 
 //______________________________________________________________________________

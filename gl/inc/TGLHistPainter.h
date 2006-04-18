@@ -179,7 +179,7 @@ public:
    void           SetHistogram(TH1 *hist);
    void           SetStack(TList *stack);
    Int_t          MakeCuts(char *cutsOpt);
-   void           SetShowProjection(const char * /*option*/) {;}
+   void           SetShowProjection(const char * /*option*/,Int_t /*nbins*/) {;}
 
 private:
    EGLPaintOption SetPaintFunction(TString &option);

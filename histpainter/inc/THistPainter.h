@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.25 2006/03/21 15:40:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.26 2006/04/10 06:55:14 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -112,7 +112,7 @@ public:
    virtual void       RecursiveRemove(TObject *) {;}
    virtual void       SetHistogram(TH1 *h);
    virtual void       SetStack(TList *stack) {fStack = stack;}
-   virtual void       SetShowProjection(const char *option);
+   virtual void       SetShowProjection(const char *option,Int_t nbins);
    virtual void       ShowProjectionX(Int_t px, Int_t py);
    virtual void       ShowProjectionY(Int_t px, Int_t py);
    virtual void       ShowProjection3(Int_t px, Int_t py);
