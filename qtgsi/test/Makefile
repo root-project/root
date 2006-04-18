@@ -10,4 +10,4 @@ clean:
 	@for dir in $(SUBDIRS); do cd $$dir ; $(MAKE) clean ; cd .. ; done
 
 $(SUBDIRS):
-	@cd $@; $(MAKE) all "QTLINKLIB=$(GSIQTLIBI)"
+	@cd $@; $(MAKE) all

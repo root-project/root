@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.4 2006/04/13 09:08:59 brun Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.5 2006/04/13 09:46:06 brun Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -74,8 +74,8 @@ public:
    virtual void dropEvent( QDropEvent *Event );
    virtual void dragEnterEvent( QDragEnterEvent *e );
 
-signals:
 #ifndef __CINT__
+signals:
    void SelectedPadChanged(TPad *);
 #endif
 public slots:
@@ -148,7 +148,7 @@ public slots:
    virtual void      ToggleEventStatus();
    virtual void      ToggleAutoExec();
    virtual void      Update();
-//////////////////////////////////////////////////////////////////////
+   //////////////////////////////////////////////////////////////////////
    Bool_t NeedsResize(){return fNeedResize;}
    void SetNeedsResize(Bool_t yes) {fNeedResize=yes;}
 
@@ -162,7 +162,7 @@ protected:
    virtual void mouseMoveEvent(QMouseEvent *e);
    virtual void leaveEvent(QEvent *e);
    virtual void  closeEvent( QCloseEvent * e);
-  ////////////////////////////////////
+   ////////////////////////////////////
    TQCanvasMenu *fContextMenu;   // Qt Context menu for this canvas
    TCanvas *fCanvas;             // Root Canvas
    Int_t fWid;                   // Windows Id of the Canvas

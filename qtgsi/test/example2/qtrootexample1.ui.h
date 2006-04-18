@@ -5,6 +5,8 @@
 ** update this file, preserving your code. Create an init() slot in place of
 ** a constructor, and a destroy() slot in place of a destructor.
 *****************************************************************************/
+#include "TCanvas.h"
+
 static QPixmap uic_load_pixmap( const QString &name )
 {
     const QMimeSource *m = QMimeSourceFactory::defaultFactory()->data( name );

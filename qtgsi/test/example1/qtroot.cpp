@@ -93,147 +93,133 @@ const char* clearHisto = " clear histograms ";
 ApplicationWindow::ApplicationWindow()
     : QMainWindow( 0, "example application main window", WDestructiveClose )
 {
-    
-    // create a printer
-    printer = new QPrinter;
-    // create user interface actions
-    QAction *fileNewAction, *fileOpenAction, *fileSaveAction,
-	* fileSaveAsAction, *filePrintAction, *fileCloseAction,
-	*fileQuitAction;
+   // create a printer
+   printer = new QPrinter;
+   // create user interface actions
+   QAction *fileNewAction, *fileOpenAction, *fileSaveAction,
+           *fileSaveAsAction, *filePrintAction, *fileCloseAction,
+           *fileQuitAction;
+
+   fileNewAction = new QAction( "New", "&New", CTRL+Key_N, this, "new" );
+   connect( fileNewAction, SIGNAL( activated() ) , this, SLOT( newDoc() ) );
+
+   fileOpenAction = new QAction( "Open File", QPixmap( fileopen ), "&Open", CTRL+Key_O, this, "open" );
+   connect( fileOpenAction, SIGNAL( activated() ) , this, SLOT( load() ) );
+   QMimeSourceFactory::defaultFactory()->setPixmap( "fileopen", QPixmap( fileopen ) );
+   fileOpenAction->setWhatsThis( fileOpenText );
+
+   fileSaveAction = new QAction( "Save File", QPixmap( filesave ), "&Save", CTRL+Key_S, this, "save" );
+   connect( fileSaveAction, SIGNAL( activated() ) , this, SLOT( save() ) );
+   fileSaveAction->setWhatsThis( fileSaveText );
+
+   fileSaveAsAction = new QAction( "Save File As", "Save &as", 0,  this, "save as" );
+   connect( fileSaveAsAction, SIGNAL( activated() ) , this, SLOT( saveAs() ) );
+   fileSaveAsAction->setWhatsThis( fileSaveText );
+
+   filePrintAction = new QAction( "Print File", QPixmap( fileprint ), "&Print", CTRL+Key_P, this, "print" );
+   connect( filePrintAction, SIGNAL( activated() ) , this, SLOT( print() ) );
+   filePrintAction->setWhatsThis( filePrintText );
+
+   fileCloseAction = new QAction( "Close", "&Close", CTRL+Key_W, this, "close" );
+   connect( fileCloseAction, SIGNAL( activated() ) , this, SLOT( close() ) );
+
+   fileQuitAction = new QAction( "Quit", "&Quit", CTRL+Key_Q, this, "quit" );
+   connect( fileQuitAction, SIGNAL( activated() ) , qApp, SLOT( quit() ) );
+
+   // create button for histo handling
+   QAction *Update_histo, *clear_histo;
+   Update_histo = new QAction("Update Histo",QPixmap("qtbuttonsupdate.xpm"),"&Update", CTRL+Key_0, this, "update");
+   connect( Update_histo, SIGNAL( activated() ) , this, SLOT( execute() ) );
+   QMimeSourceFactory::defaultFactory()->setPixmap( "update", QPixmap("qtbuttonsupdate.xpm" ) );
+   Update_histo->setWhatsThis( updateHisto );
+
+   clear_histo = new QAction("Clear Histo",QPixmap("qtbuttonsclear.xpm"),"&Clear", CTRL+Key_0, this, "clear");
+   connect( clear_histo, SIGNAL( activated() ) , this, SLOT( clear_histo() ) );
+   QMimeSourceFactory::defaultFactory()->setPixmap( "clear", QPixmap("qtbuttonsclear.xpm" ) );
+   clear_histo->setWhatsThis( clearHisto );
+
+   // populate a tool bar with some actions
+
+   QToolBar* fileTools = new QToolBar( this, "file operations" );
+   fileTools->setLabel( tr( "File Operations" ) );
+   fileOpenAction->addTo( fileTools );
+   fileSaveAction->addTo( fileTools );
+   filePrintAction->addTo( fileTools );
+   Update_histo->addTo ( fileTools );
+   clear_histo->addTo ( fileTools );
+   (void)QWhatsThis::whatsThisButton( fileTools );
+
+   // popuplate a menu with all actions
+
+   QPopupMenu * file = new QPopupMenu( this );
+   menuBar()->insertItem( "&File", file );
+   fileNewAction->addTo( file );
+   fileOpenAction->addTo( file );
+   fileSaveAction->addTo( file );
+   fileSaveAsAction->addTo( file );
+   file->insertSeparator();
+   filePrintAction->addTo( file );
+   file->insertSeparator();
+   fileCloseAction->addTo( file );
+   fileQuitAction->addTo( file );
+
+   // add a help menu
+
+   QPopupMenu * help = new QPopupMenu( this );
+   menuBar()->insertSeparator();
+   menuBar()->insertItem( "&Help", help );
+   help->insertItem( "&About", this, SLOT(about()), Key_F1 );
+   help->insertItem( "About &Qt", this, SLOT(aboutQt()) );
+   help->insertSeparator();
+   help->insertItem( "What's &This", this, SLOT(whatsThis()), SHIFT+Key_F1 );
+
+   // create and define the ROOT Canvas central widget
+   tab = new QTabWidget(this);
+   tab->show();
+   setCentralWidget( tab );
+
+   QMainWindow *win1 = new QMainWindow( 0, "tab1 main window", WDestructiveClose );
+   QMainWindow *win2 = new QMainWindow( 0, "tab2 main window", WDestructiveClose );
+   aCanvas = new TQRootCanvas(this, win1,"Qt&Root");
+   aCanvas2 = new TQRootCanvas(this, win2,"Qt&Root");
+
+   win1->setCentralWidget(aCanvas);
+   win2->setCentralWidget(aCanvas2);
 
 
-    
-    fileNewAction = new QAction( "New", "&New", CTRL+Key_N, this, "new" );
-    connect( fileNewAction, SIGNAL( activated() ) , this, SLOT( newDoc() ) );
-    
-    fileOpenAction = new QAction( "Open File", QPixmap( fileopen ), "&Open", CTRL+Key_O, this, "open" );
-    connect( fileOpenAction, SIGNAL( activated() ) , this, SLOT( load() ) );
-    QMimeSourceFactory::defaultFactory()->setPixmap( "fileopen", QPixmap( fileopen ) );
-    fileOpenAction->setWhatsThis( fileOpenText );
-    
-    fileSaveAction = new QAction( "Save File", QPixmap( filesave ), "&Save", CTRL+Key_S, this, "save" );
-    connect( fileSaveAction, SIGNAL( activated() ) , this, SLOT( save() ) );
-    fileSaveAction->setWhatsThis( fileSaveText );
+   tab->addTab(win1,"page1");
+   tab->addTab(win2,"page2");
 
-    fileSaveAsAction = new QAction( "Save File As", "Save &as", 0,  this, "save as" );
-    connect( fileSaveAsAction, SIGNAL( activated() ) , this, SLOT( saveAs() ) );
-    fileSaveAsAction->setWhatsThis( fileSaveText );
-    
-    filePrintAction = new QAction( "Print File", QPixmap( fileprint ), "&Print", CTRL+Key_P, this, "print" );
-    connect( filePrintAction, SIGNAL( activated() ) , this, SLOT( print() ) );
-    filePrintAction->setWhatsThis( filePrintText );
-    
-    fileCloseAction = new QAction( "Close", "&Close", CTRL+Key_W, this, "close" );
-    connect( fileCloseAction, SIGNAL( activated() ) , this, SLOT( close() ) );
+   win1->show();
+   win2->show();
 
-    fileQuitAction = new QAction( "Quit", "&Quit", CTRL+Key_Q, this, "quit" );
-    connect( fileQuitAction, SIGNAL( activated() ) , qApp, SLOT( quit() ) );
+   // with no QTabWidget
+   //    aCanvas = new TQRootCanvas(this,"Qt&Root");
+   //    setCentralWidget( aCanvas );
+   resize( 450, 500 );
 
-
-    // create button for histo handling 
-    QAction *Update_histo, *clear_histo; 
-    Update_histo = new QAction("Update Histo",QPixmap("qtbuttonsupdate.xpm"),"&Update", CTRL+Key_0, this, "update");
-    connect( Update_histo, SIGNAL( activated() ) , this, SLOT( execute() ) ); 
-    QMimeSourceFactory::defaultFactory()->setPixmap( "update", QPixmap("qtbuttonsupdate.xpm" ) );
-    Update_histo->setWhatsThis( updateHisto ); 
-
-    clear_histo = new QAction("Clear Histo",QPixmap("qtbuttonsclear.xpm"),"&Clear", CTRL+Key_0, this, "clear");
-    connect( clear_histo, SIGNAL( activated() ) , this, SLOT( clear_histo() ) ); 
-    QMimeSourceFactory::defaultFactory()->setPixmap( "clear", QPixmap("qtbuttonsclear.xpm" ) );
-    clear_histo->setWhatsThis( clearHisto ); 
-
-
-
-
-
-    
-    // populate a tool bar with some actions
-    
-    QToolBar* fileTools = new QToolBar( this, "file operations" );
-    fileTools->setLabel( tr( "File Operations" ) );
-    fileOpenAction->addTo( fileTools );
-    fileSaveAction->addTo( fileTools );
-    filePrintAction->addTo( fileTools );
-    Update_histo->addTo ( fileTools );
-    clear_histo->addTo ( fileTools );  
-    (void)QWhatsThis::whatsThisButton( fileTools );
-
-    
-    // popuplate a menu with all actions
-    
-    QPopupMenu * file = new QPopupMenu( this );
-    menuBar()->insertItem( "&File", file );
-    fileNewAction->addTo( file );
-    fileOpenAction->addTo( file );
-    fileSaveAction->addTo( file );
-    fileSaveAsAction->addTo( file );
-    file->insertSeparator();
-    filePrintAction->addTo( file );
-    file->insertSeparator();
-    fileCloseAction->addTo( file );
-    fileQuitAction->addTo( file );
-
-    
-    // add a help menu
-    
-    QPopupMenu * help = new QPopupMenu( this );
-    menuBar()->insertSeparator();
-    menuBar()->insertItem( "&Help", help );
-    help->insertItem( "&About", this, SLOT(about()), Key_F1 );
-    help->insertItem( "About &Qt", this, SLOT(aboutQt()) );
-    help->insertSeparator();
-    help->insertItem( "What's &This", this, SLOT(whatsThis()), SHIFT+Key_F1 );
-   
-    
-    // create and define the ROOT Canvas central widget
-    tab = new QTabWidget(this);
-    tab->show();
-    setCentralWidget( tab ); 
-    
-    QMainWindow *win1 = new QMainWindow( 0, "tab1 main window", WDestructiveClose );
-    QMainWindow *win2 = new QMainWindow( 0, "tab2 main window", WDestructiveClose );
-    aCanvas = new TQRootCanvas(this, win1,"Qt&Root");
-    aCanvas2 = new TQRootCanvas(this, win2,"Qt&Root");
-
-    win1->setCentralWidget(aCanvas);
-    win2->setCentralWidget(aCanvas2); 
-
-
-    tab->addTab(win1,"page1");
-    tab->addTab(win2,"page2");
-  
-    win1->show();
-    win2->show();
-
-    // with no QTabWidget
-    //    aCanvas = new TQRootCanvas(this,"Qt&Root");
-    //    setCentralWidget( aCanvas );
-    resize( 450, 500 );
-  
-    // put here some ROOT Specifics ... 
-    if (aCanvas->GetCanvas()) {
+   // put here some ROOT Specifics ...
+   if (aCanvas->GetCanvas()) {
 
       aCanvas->GetCanvas()->SetFillColor(40);
-      TPad *padsave = (TPad*) aCanvas->GetCanvas();
-      
+
       pad1 = new TPad("pad1","The pad with the function",0.05,0.50,0.95,0.95,21);
-      aCanvas->GetCanvas()->cd();  
+      aCanvas->GetCanvas()->cd();
       pad2 = new TPad("pad2","The pad with the histogram",0.05,0.05,0.95,0.45,21);
       pad1->SetCanvas(  aCanvas->GetCanvas() );
-      pad1->Draw(); 
+      pad1->Draw();
       pad1->cd();
-      
-      
-      histo= new TH1F("hppx","Gaussian distribution",100,-4,4);  
+
+
+      histo= new TH1F("hppx","Gaussian distribution",100,-4,4);
       histo->SetFillColor(0);
-      histo->Draw(); 
-      
-      aCanvas->GetCanvas()->cd();  
+      histo->Draw();
+
+      aCanvas->GetCanvas()->cd();
       pad2->SetCanvas(  aCanvas->GetCanvas() );
       pad2->Draw();
       pad2->cd();
-      
-      
+
       form1 = new TFormula("form1","abs(sin(x)/x)");
       sqroot = new TF1("sqroot","x*gaus(0) + [3]*form1",0,10);
       sqroot->SetParameters(10,4,1,20);
@@ -245,130 +231,109 @@ ApplicationWindow::ApplicationWindow()
       sqroot->SetLineColor(4);
       sqroot->SetLineWidth(6);
       sqroot->Draw();
-    } // ! aCAnvas    
+   } // ! aCAnvas
 
-    if(aCanvas2){
-     
+   if (aCanvas2) {
+
       aCanvas2->GetCanvas()->SetFillColor(42);
-      TPad *padsave2 = (TPad*) aCanvas2->GetCanvas();
       aCanvas2->GetCanvas()->cd();
       TCanvas *c1 = aCanvas2->GetCanvas();
-     
+
       //graph example
-        const Int_t n = 20;
-	Double_t x[n], y[n];
-	for (Int_t i=0;i<n;i++) {
-	  x[i] = i*0.1;
-	  y[i] = 10*sin(x[i]+0.2);
-	  //  printf(" i %i %f %f \n",i,x[i],y[i]);
-	}
-	TGraph* gr = new TGraph(n,x,y);
-	gr->SetLineColor(2);
-	gr->SetLineWidth(4);
-	gr->SetMarkerColor(4);
-	gr->SetMarkerStyle(21);
-	gr->SetTitle("a simple graph");
-	gr->Draw("ACP");
+      const Int_t n = 20;
+      Double_t x[n], y[n];
+      for (Int_t i=0;i<n;i++) {
+         x[i] = i*0.1;
+         y[i] = 10*sin(x[i]+0.2);
+         //  printf(" i %i %f %f \n",i,x[i],y[i]);
+      }
+      TGraph* gr = new TGraph(n,x,y);
+      gr->SetLineColor(2);
+      gr->SetLineWidth(4);
+      gr->SetMarkerColor(4);
+      gr->SetMarkerStyle(21);
+      gr->SetTitle("a simple graph");
+      gr->Draw("ACP");
 
-	
-	c1->Update();
-	c1->GetFrame()->SetFillColor(21);
-	c1->GetFrame()->SetBorderSize(12);
-	gr->GetHistogram()->SetXTitle("X title");
-	gr->GetHistogram()->SetYTitle("Y title");
-	c1->Modified();
-
+      c1->Update();
+      c1->GetFrame()->SetFillColor(21);
+      c1->GetFrame()->SetBorderSize(12);
+      gr->GetHistogram()->SetXTitle("X title");
+      gr->GetHistogram()->SetYTitle("Y title");
+      c1->Modified();
     } //!aCanvas2
-
-
 }
-
 
 ApplicationWindow::~ApplicationWindow()
 {
-  qDebug(" ~ApplicationWindow() \n");
-  if(aCanvas)  delete aCanvas; 
-  if(printer) delete printer;
-  if(histo) delete histo;
- 
-
+   qDebug(" ~ApplicationWindow() \n");
+   if (aCanvas)  delete aCanvas;
+   if (printer) delete printer;
+   if (histo) delete histo;
 }
 
-
-void ApplicationWindow::clear_histo(){
-  // clear histo and update
-  if(histo) {
-          histo->Reset();
-          histo->Draw(); 
-  gROOT->GetSelectedPad()->Modified(); 
-  gROOT->GetSelectedPad()->Update(); 
-
+void ApplicationWindow::clear_histo()
+{
+   // clear histo and update
+   if (histo) {
+      histo->Reset();
+      histo->Draw();
+      gROOT->GetSelectedPad()->Modified();
+      gROOT->GetSelectedPad()->Update();
   }
-
-
 }
 
-
-
-void ApplicationWindow::execute(){
-    //fill histograms and update for monitoring
-  if ( histo ) { 
-     aCanvas->GetCanvas()->cd();
-     pad1->cd();  
+void ApplicationWindow::execute()
+{
+   //fill histograms and update for monitoring
+   if ( histo ) {
+      aCanvas->GetCanvas()->cd();
+      pad1->cd();
       float px,py;
-      const int kUPDATE = 1000; 
-    //internal event loop    
-     for (Int_t i = 0; i < 25000; i++) {
-          gRandom->Rannor(px,py);
-	  float random = gRandom->Rndm(1);
-	  histo->Fill(px);
-	  if (i && (i%kUPDATE) == 0) {
-	    if (i == kUPDATE) histo->Draw("same");
-	    aCanvas->GetCanvas()->Modified();
-	    aCanvas->GetCanvas()->Update();
-	  }
-     }      
-
-   histo->Draw("same");
-   aCanvas->GetCanvas()->Modified();
-   aCanvas->GetCanvas()->Update();
-  } 
-
+      const int kUPDATE = 1000;
+      //internal event loop
+      for (Int_t i = 0; i < 25000; i++) {
+         gRandom->Rannor(px,py);
+         float random = gRandom->Rndm(1);
+         histo->Fill(px);
+         if (i && (i%kUPDATE) == 0) {
+            if (i == kUPDATE) histo->Draw("same");
+            aCanvas->GetCanvas()->Modified();
+            aCanvas->GetCanvas()->Update();
+         }
+      }
+      histo->Draw("same");
+      aCanvas->GetCanvas()->Modified();
+      aCanvas->GetCanvas()->Update();
+   }
 }
-
-
 
 void ApplicationWindow::newDoc()
 {
-    ApplicationWindow *ed = new ApplicationWindow;
-    ed->show();
+   ApplicationWindow *ed = new ApplicationWindow;
+   ed->show();
 }
 
 void ApplicationWindow::load()
 {
-    QString fn = QFileDialog::getOpenFileName( QString::null, QString::null,
-					       this);
-    if ( !fn.isEmpty() )
-	load( fn );
-    else
-	statusBar()->message( "Loading aborted", 2000 );
+   QString fn = QFileDialog::getOpenFileName(QString::null, QString::null, this);
+   if ( !fn.isEmpty() )
+      load( fn );
+   else
+      statusBar()->message( "Loading aborted", 2000 );
 }
-
 
 void ApplicationWindow::load( const char *fileName )
 {
 }
 
-
 void ApplicationWindow::save()
 {
 }
 
-
 void ApplicationWindow::saveAs()
 {
 }
-
 
 void ApplicationWindow::print()
 {
@@ -376,54 +341,47 @@ void ApplicationWindow::print()
 
 void ApplicationWindow::closeEvent( QCloseEvent* ce )
 {
-  int testvar =  QMessageBox::information( 0, "Qt Application Example",
-				   "Do you want to close QtRoot? "
-				   "",
-				   "Save", "Cancel", "Close",
-				   0, 1 );
-  switch( testvar)
-    {
-    case 0: // here we should save
-      // data 
-      save();
-      ce->accept();
-      break;
-    case 1:
-    default: // just for sanity
-      ce->ignore();
-      break;
-    case 2: // Here i close all windows
-
-      // do now an explicit release of Histogram's
-      // child windows  
-
-      TList *lc = (TList*)gROOT->GetListOfCanvases();
-      TObject *fitpanel  =  lc->FindObject("R__fitpanel");
-      TObject *drawpanel =  lc->FindObject("R__drawpanelhist"); 
-      if (fitpanel) { 
-	qDebug("detecting fitpanel %x \n",fitpanel); 
-	delete fitpanel; 
-      }
-      if(drawpanel){
-        qDebug("detecting drawpanel %x \n",drawpanel);    
-        delete drawpanel; 
-      }
-  
-      ce->accept();
-      
-      break;
-    }
+   int testvar =  QMessageBox::information( 0, "Qt Application Example",
+                                            "Do you want to close QtRoot? "
+                                            "", "Save", "Cancel", "Close",
+                                            0, 1 );
+   switch (testvar) {
+      case 0: // here we should save
+         // data
+         save();
+         ce->accept();
+         break;
+      case 1:
+      default: // just for sanity
+         ce->ignore();
+         break;
+      case 2: // Here i close all windows
+         // do now an explicit release of Histogram's
+         // child windows
+         TList *lc = (TList*)gROOT->GetListOfCanvases();
+         TObject *fitpanel  =  lc->FindObject("R__fitpanel");
+         TObject *drawpanel =  lc->FindObject("R__drawpanelhist");
+         if (fitpanel) {
+            qDebug("detecting fitpanel %x \n",fitpanel);
+            delete fitpanel;
+         }
+         if (drawpanel) {
+            qDebug("detecting drawpanel %x \n",drawpanel);
+            delete drawpanel;
+         }
+         ce->accept();
+         break;
+   }
 }
-
 
 void ApplicationWindow::about()
 {
-    QMessageBox::about( this, "Qt&ROOT Application Example",
-			"This example demonstrates simple use of "
-			"QMainWindow,\nQMenuBar and QToolBar.");
+   QMessageBox::about( this, "Qt&ROOT Application Example",
+                       "This example demonstrates simple use of "
+                       "QMainWindow,\nQMenuBar and QToolBar.");
 }
 
 void ApplicationWindow::aboutQt()
 {
-    QMessageBox::aboutQt( this, "Qt Application Example" );
+   QMessageBox::aboutQt( this, "Qt Application Example" );
 }

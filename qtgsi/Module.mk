@@ -32,15 +32,9 @@ QTGSICXXFLAGS := -DQT_DLL -DQT_THREAD_SUPPORT -I. $(QTINCDIR:%=-I%)
 QTGSILIB      := $(LPATH)/libQtGSI.$(SOEXT)
 
 ifeq ($(PLATFORM),win32)
-ifeq (yes,$(WINRTDEBUG))
-QTGSINMCXXFLAGS := "$(BLDCXXFLAGS)" DEBUG=1
+QTTESTOPTS    := -f Makefile.win
 else
-QTGSINMCXXFLAGS := "$(BLDCXXFLAGS)"
-endif
-QTTESTOPTS    := -f Makefile.win INMCXXFLAGS:=$(QTGSINMCXXFLAGS)
-QTTESTOPTS    += GSIQTLIBI:="$(QTLIBDIR)$(QTLIB)"
-else
-QTTESTOPTS    := GSIQTLIBI:="$(QTLIBDIR) $(QTLIB)"
+QTTESTOPTS    :=
 endif
 
 # used in the main Makefile
@@ -89,6 +83,7 @@ distclean::     distclean-qtgsi
 
 ##### extra rules ######
 $(sort $(QTGSIMOCO) $(QTGSIO)): CXXFLAGS += $(QTGSICXXFLAGS)
+
 $(QTGSIDO): CXXFLAGS += $(QTGSICXXFLAGS)
 
 $(QTGSIMOC): $(QTGSIDIRS)/moc_%.cxx: $(QTGSIDIRI)/%.h

@@ -5,11 +5,10 @@ SUBDIRS := example1 example2
 
 lib: $(SUBDIRS)
 
-all: lib 
+all: lib
 
-clean: 
+clean:
 	for dir in $(SUBDIRS); do cd $$dir ; $(MAKE) clean ; cd .. ; done
 
 $(SUBDIRS):
-	@cd $@; unset MAKEFLAGS; unset CFLAGS; unset CXXFLAGS; \
-	nmake -f Makefile.win NMCXXFLAGS="$(INMCXXFLAGS)" GSIQTLIB="$(GSIQTLIBI)"
+	@cd $@; make -f Makefile.win
