@@ -1497,7 +1497,7 @@ if test ! "x$enable_mysql" = "xno"; then
        else
           result "ok"
           mysqllib=`mysql_config --libs`
-          mysqlincdir=`mysql_config --cflags | sed -e 's,^.*-I\([^ ]\+\).*$,\1,'`
+          mysqlincdir=`mysql_config --cflags | sed -e 's,^.*-I\([^ ]*\).*$,\1,'`
           mysqllibdir=""
        fi
     else
