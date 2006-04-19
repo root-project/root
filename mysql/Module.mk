@@ -43,7 +43,7 @@ $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS)
 
 $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c -I$(MYSQLINCDIR) $(MYSQLH) $(MYSQLL)
+		$(ROOTCINTTMP) -f $@ -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
 all-mysql:      $(MYSQLLIB)
 
@@ -64,4 +64,4 @@ distclean-mysql: clean-mysql
 distclean::     distclean-mysql
 
 ##### extra rules ######
-$(MYSQLO) $(MYSQLDO): CXXFLAGS += -I$(MYSQLINCDIR)
+$(MYSQLO) $(MYSQLDO): CXXFLAGS += $(MYSQLINCDIR:%=-I%)
