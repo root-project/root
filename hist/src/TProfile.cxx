@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.74 2006/02/28 10:08:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.75 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -289,9 +289,9 @@ void TProfile::Add(const TH1 *h1, Double_t c1)
    Double_t *en1 = p1->GetB();
    for (bin=0;bin<=nbinsx+1;bin++) {
       fArray[bin]             += c1*cu1[bin];
-    //fSumw2.fArray[bin]      += ac1*ac1*er1[bin];
+      //see http://savannah.cern.ch/bugs/?func=detailitem&item_id=14851
       fSumw2.fArray[bin]      += ac1*er1[bin];
-      if (!fScaling) fBinEntries.fArray[bin] += ac1*en1[bin];
+      fBinEntries.fArray[bin] += ac1*en1[bin];
    }
 }
 
@@ -347,11 +347,12 @@ void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    Double_t *en2 = p2->GetB();
    for (bin=0;bin<=nbinsx+1;bin++) {
       fArray[bin]             = c1*cu1[bin] +  c2*cu2[bin];
-    //fSumw2.fArray[bin]      = ac1*ac1*er1[bin] + ac2*ac2*er2[bin];
-      fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
       if (fScaling) {
+         //see http://savannah.cern.ch/bugs/?func=detailitem&item_id=14851
+	 fSumw2.fArray[bin]      = ac1*ac1*er1[bin] + ac2*ac2*er2[bin];
          fBinEntries.fArray[bin] = en1[bin];
       } else {
+	 fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
          fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
       }
    }
@@ -1378,9 +1379,10 @@ void TProfile::Multiply(TF1 *f1, Double_t c1)
       cf1 = f1->EvalPar(xx);
       if (TF1::RejectedPoint()) continue;
       fArray[bin]             *= c1*cf1;
-    //fSumw2.fArray[bin]      *= c1*c1*cf1*cf1;
+      //see http://savannah.cern.ch/bugs/?func=detailitem&item_id=14851
+      //fSumw2.fArray[bin]      *= c1*c1*cf1*cf1;
       fSumw2.fArray[bin]      *= ac1*cf1*cf1;
-      //if (!fScaling) fBinEntries.fArray[bin] *= ac1*TMath::Abs(cf1);
+      //fBinEntries.fArray[bin] *= ac1*TMath::Abs(cf1);
    }
 }
 

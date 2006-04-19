@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.46 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.47 2006/04/05 10:23:47 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -282,8 +282,9 @@ void TProfile2D::Add(const TH1 *h1, Double_t c1)
       for (biny =0;biny<=ny+1;biny++) {
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
          fArray[bin]             += c1*cu1[bin];
+         //see http://savannah.cern.ch/bugs/?func=detailitem&item_id=14851
          fSumw2.fArray[bin]      += ac1*er1[bin];
-         if (!fScaling) fBinEntries.fArray[bin] += ac1*en1[bin];
+         fBinEntries.fArray[bin] += ac1*en1[bin];
       }
    }
 }
@@ -350,10 +351,12 @@ void TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       for (biny =0;biny<=ny+1;biny++) {
          bin   = biny*(fXaxis.GetNbins()+2) + binx;
          fArray[bin]             = c1*cu1[bin] +  c2*cu2[bin];
-         fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
          if (fScaling) {
+            //see http://savannah.cern.ch/bugs/?func=detailitem&item_id=14851
+	    fSumw2.fArray[bin]      = ac1*ac1*er1[bin] + ac2*ac2*er2[bin];
             fBinEntries.fArray[bin] = en1[bin];
          } else {
+	    fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
             fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
          }
       }
