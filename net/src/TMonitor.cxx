@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.7 2004/12/15 17:48:03 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.8 2006/04/19 08:22:25 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -109,6 +109,7 @@ TMonitor::TMonitor(Bool_t mainloop)
    fActive   = new TList;
    fDeActive = new TList;
    fMainLoop = mainloop;
+   fInterrupt = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -279,10 +280,17 @@ TSocket *TMonitor::Select()
    // Return pointer to socket for which an event is waiting.
    // Return 0 in case of error.
 
+   fInterrupt = kFALSE;
    fReady = 0;
 
-   while (!fReady)
+   while (!fReady && !fInterrupt)
       gSystem->InnerLoop();
+
+   // Notify interrupts
+   if (fInterrupt) {
+      fReady = 0;
+      Info("Select","*** interrupt occured ***");
+   }
 
    return fReady;
 }
@@ -295,12 +303,19 @@ TSocket *TMonitor::Select(Long_t timeout)
    // If return is due to timeout it returns (TSocket *)-1.
    // Return 0 in case of any other error situation.
 
+   fInterrupt = kFALSE;
    fReady = 0;
 
    TTimeOutTimer t(this, timeout);
 
-   while (!fReady)
+   while (!fReady && !fInterrupt)
       gSystem->InnerLoop();
+
+   // Notify interrupts
+   if (fInterrupt) {
+      fReady = 0;
+      Info("Select","*** interrupt occured ***");
+   }
 
    return fReady;
 }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.7 2004/12/15 17:48:03 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.8 2005/12/09 15:12:19 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -40,8 +40,9 @@ class TSocket;
 class TMonitor : public TObject , public TQObject {
 
 friend class TSocketHandler;
-friend class TXSocketHandler;
 friend class TTimeOutTimer;
+friend class TXSlave;
+friend class TXSocket;
 
 private:
    TList    *fActive;     //list of sockets to monitor
@@ -49,6 +50,7 @@ private:
    TSocket  *fReady;      //socket which is ready to be read or written
    Bool_t    fMainLoop;   //true if monitoring sockets within the main
                           //event loop
+   Bool_t    fInterrupt;  //flags an interrupt to Select
 
    void  SetReady(TSocket *sock);
    void *GetSender() { return this; }  // used to get gTQSender
@@ -69,6 +71,8 @@ public:
    virtual void DeActivate(TSocket *sock);
    virtual void DeActivateAll();
    virtual void Ready(TSocket *sock); // *SIGNAL*
+
+   void     Interrupt() { fInterrupt = kTRUE; }
 
    TSocket *Select();
    TSocket *Select(Long_t timeout);
