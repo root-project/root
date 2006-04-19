@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.84 2006/04/07 13:17:52 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.85 2006/04/07 15:34:46 rdm Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1779,6 +1779,7 @@ void THtml::Convert(const char *filename, const char *title,
 //
 
    gROOT->GetListOfGlobals(kTRUE);        // force update of this list
+   CreateListOfClasses("*");
 
    const char *dir;
    char *ptr;
