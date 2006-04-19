@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.5 2006/04/18 10:34:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.6 2006/04/19 10:53:19 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -90,8 +90,15 @@ bool XrdProofPhyConn::Init(const char *url)
       fUser = fUrl.User.c_str();
       if (fUser.length() <= 0) {
          // Use local username, if not specified
+#ifndef WIN32
          struct passwd *pw = getpwuid(getuid());
          fUser = pw ? pw->pw_name : "";
+#else
+         char  lname[256];
+         DWORD length = sizeof (lname);
+         ::GetUserName(lname, &length);
+         fUser = lname;
+#endif
       }
       fHost = fUrl.Host.c_str();
       fPort = fUrl.Port;
