@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.10 2005/02/15 16:17:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.11 2005/09/02 11:04:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -48,7 +48,7 @@ ClassImp(TMatrixDEigen)
 //______________________________________________________________________________
 TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   const Int_t nRows  = a.GetNrows();
   const Int_t nCols  = a.GetNcols();
@@ -97,7 +97,7 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 // This is derived from the Algol procedures orthes and ortran, by Martin and Wilkinson,
 // Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
 // Fortran subroutines in EISPACK.
-   
+
   Double_t *pV = v.GetMatrixArray();
   Double_t *pO = ortho.GetMatrixArray();
   Double_t *pH = H.GetMatrixArray();
@@ -106,22 +106,22 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 
   const Int_t low  = 0;
   const Int_t high = n-1;
-   
+
   Int_t i,j,m;
   for (m = low+1; m <= high-1; m++) {
     const Int_t off_m = m*n;
-   
+
     // Scale column.
-   
+
     Double_t scale = 0.0;
     for (i = m; i <= high; i++) {
       const Int_t off_i = i*n;
       scale = scale + TMath::Abs(pH[off_i+m-1]);
     }
     if (scale != 0.0) {
-   
+
       // Compute Householder transformation.
-   
+
       Double_t h = 0.0;
       for (i = high; i >= m; i--) {
         const Int_t off_i = i*n;
@@ -133,10 +133,10 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
         g = -g;
       h = h-pO[m]*g;
       pO[m] = pO[m]-g;
-   
+
       // Apply Householder similarity transformation
       // H = (I-u*u'/h)*H*(I-u*u')/h)
-   
+
       for (j = m; j < n; j++) {
         Double_t f = 0.0;
         for (i = high; i >= m; i--) {
@@ -149,7 +149,7 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
           pH[off_i+j] -= f*pO[i];
         }
       }
-   
+
       for (i = 0; i <= high; i++) {
         const Int_t off_i = i*n;
         Double_t f = 0.0;
@@ -165,7 +165,7 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
       pH[off_m+m-1] = scale*g;
     }
   }
-   
+
   // Accumulate transformations (Algol's ortran).
 
   for (i = 0; i < n; i++) {
@@ -212,7 +212,7 @@ static void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
     r = yr/yi;
     d = yi+r*yr;
     gCdivr = (r*xr+xi)/d;
-    gCdivi = (r*xi-xr)/d; 
+    gCdivi = (r*xi-xr)/d;
   }
 }
 
@@ -223,9 +223,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 // This is derived from the Algol procedure hqr2, by Martin and Wilkinson,
 // Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
 // Fortran subroutine in EISPACK.
-   
+
   // Initialize
-   
+
   const Int_t nn = v.GetNrows();
         Int_t n = nn-1;
   const Int_t low = 0;
@@ -238,9 +238,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
   Double_t *pD = d.GetMatrixArray();
   Double_t *pE = e.GetMatrixArray();
   Double_t *pH = H.GetMatrixArray();
-   
+
   // Store roots isolated by balanc and compute matrix norm
-   
+
   Double_t norm = 0.0;
   Int_t i,j,k;
   for (i = 0; i < nn; i++) {
@@ -252,16 +252,16 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
     for (j = TMath::Max(i-1,0); j < nn; j++)
       norm += TMath::Abs(pH[off_i+j]);
   }
-   
+
   // Outer loop over eigenvalue index
-   
+
   Int_t iter = 0;
   while (n >= low) {
     const Int_t off_n  = n*nn;
     const Int_t off_n1 = (n-1)*nn;
-   
+
     // Look for single small sub-diagonal element
-   
+
     Int_t l = n;
     while (l > low) {
       const Int_t off_l1 = (l-1)*nn;
@@ -273,19 +273,19 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
         break;
       l--;
     }
-       
+
     // Check for convergence
     // One root found
-   
+
     if (l == n) {
       pH[off_n+n] = pH[off_n+n]+exshift;
       pD[n] = pH[off_n+n];
       pE[n] = 0.0;
       n--;
       iter = 0;
-   
+
       // Two roots found
-   
+
     } else if (l == n-1) {
       w = pH[off_n+n-1]*pH[off_n1+n];
       p = (pH[off_n1+n-1]-pH[off_n+n])/2.0;
@@ -294,9 +294,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
       pH[off_n+n] = pH[off_n+n]+exshift;
       pH[off_n1+n-1] = pH[off_n1+n-1]+exshift;
       x = pH[off_n+n];
-   
+
       // Double_t pair
-   
+
       if (q >= 0) {
         if (p >= 0)
           z = p+z;
@@ -315,7 +315,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
         r = TMath::Sqrt((p*p)+(q*q));
         p = p/r;
         q = q/r;
- 
+
         // Row modification
 
         for (j = n-1; j < nn; j++) {
@@ -332,7 +332,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
           pH[off_i+n-1] = q*z+p*pH[off_i+n];
           pH[off_i+n]  = q*pH[off_i+n]-p*z;
         }
-   
+
         // Accumulate transformations
 
         for (i = low; i <= high; i++) {
@@ -354,11 +354,11 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
       iter = 0;
 
       // No convergence yet
-   
+
     } else {
-   
+
       // Form shift
-   
+
       x = pH[off_n+n];
       y = 0.0;
       w = 0.0;
@@ -366,9 +366,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
         y = pH[off_n1+n-1];
         w = pH[off_n+n-1]*pH[off_n1+n];
       }
-  
+
       // Wilkinson's original ad hoc shift
-   
+
       if (iter == 10) {
         exshift += x;
         for (i = low; i <= n; i++) {
@@ -398,14 +398,14 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
            x = y = w = 0.964;
          }
       }
-   
+
       if (iter++ == 50) {  // (check iteration count here.)
         Error("MakeSchurr","too many iterations");
         break;
-      } 
-   
+      }
+
       // Look for two consecutive small sub-diagonal elements
-   
+
       Int_t m = n-2;
       while (m >= l) {
         const Int_t off_m   = m*nn;
@@ -430,16 +430,16 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
             break;
         m--;
       }
-   
+
       for (i = m+2; i <= n; i++) {
         const Int_t off_i = i*nn;
         pH[off_i+i-2] = 0.0;
         if (i > m+2)
           pH[off_i+i-3] = 0.0;
       }
-   
+
       // Double QR step involving rows l:n and columns m:n
-   
+
       for (k = m; k <= n-1; k++) {
         const Int_t off_k  = k*nn;
         const Int_t off_k1 = (k+1)*nn;
@@ -473,9 +473,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
           z = r/s;
           q = q/p;
           r = r/p;
-   
+
           // Row modification
-   
+
           for (j = k; j < nn; j++) {
             p = pH[off_k+j]+q*pH[off_k1+j];
             if (notlast) {
@@ -485,9 +485,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
             pH[off_k+j]  = pH[off_k+j]-p*x;
             pH[off_k1+j] = pH[off_k1+j]-p*y;
           }
-  
+
           // Column modification
- 
+
           for (i = 0; i <= TMath::Min(n,k+3); i++) {
             const Int_t off_i = i*nn;
             p = x*pH[off_i+k]+y*pH[off_i+k+1];
@@ -515,7 +515,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
       }  // k loop
     }  // check convergence
   }  // while (n >= low)
-      
+
   // Backsubstitute to find vectors of upper triangular form
 
   if (norm == 0.0)
@@ -524,9 +524,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
   for (n = nn-1; n >= 0; n--) {
     p = pD[n];
     q = pE[n];
-   
+
     // Double_t vector
-   
+
     const Int_t off_n = n*nn;
     if (q == 0) {
       Int_t l = n;
@@ -564,7 +564,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
               else
                 pH[i+1+n] = (-s-y*t)/z;
             }
-   
+
             // Overflow control
 
             t = TMath::Abs(pH[off_i+n]);
@@ -576,15 +576,15 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
             }
          }
       }
-   
+
       // Complex vector
-   
+
     } else if (q < 0) {
       Int_t l = n-1;
       const Int_t off_n1 = (n-1)*nn;
 
       // Last vector component imaginary so matrix is triangular
-   
+
       if (TMath::Abs(pH[off_n+n-1]) > TMath::Abs(pH[off_n1+n])) {
         pH[off_n1+n-1] = q/pH[off_n+n-1];
         pH[off_n1+n]   = -(pH[off_n+n]-p)/pH[off_n+n-1];
@@ -606,7 +606,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
           sa += pH[off_i+j]*pH[off_j+n];
         }
         w = pH[off_i+i]-p;
-   
+
         if (pE[i] < 0.0) {
           z = w;
           r = ra;
@@ -619,7 +619,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
             pH[off_i+n]   = gCdivi;
           } else {
 
-            // Solve complex equations 
+            // Solve complex equations
 
             x = pH[off_i+i+1];
             y = pH[off_i1+i];
@@ -641,7 +641,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
               pH[off_i1+n]   = gCdivi;
             }
           }
-   
+
           // Overflow control
 
           t = TMath::Max(TMath::Abs(pH[off_i+n-1]),TMath::Abs(pH[off_i+n]));
@@ -656,9 +656,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
       }
     }
   }
-   
+
   // Vectors of isolated roots
-   
+
   for (i = 0; i < nn; i++) {
     if (i < low || i > high) {
       const Int_t off_i = i*nn;
@@ -666,9 +666,9 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
         pV[off_i+j] = pH[off_i+j];
     }
   }
-   
+
   // Back transformation to get eigenvectors of original matrix
-   
+
   for (j = nn-1; j >= low; j--) {
     for (i = low; i <= high; i++) {
       const Int_t off_i = i*nn;
@@ -702,12 +702,12 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
     Int_t j;
     for (j = i+1; j < n; j++) {
       const Double_t norm_new = pD[j]*pD[j]+pE[j]*pE[j];
-      if (norm_new > norm) { 
-        k = j;  
+      if (norm_new > norm) {
+        k = j;
         norm = norm_new;
       }
     }
-    if (k != i) { 
+    if (k != i) {
       Double_t tmp;
       tmp   = pD[k];
       pD[k] = pD[i];
@@ -716,7 +716,7 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
       pE[k] = pE[i];
       pE[i] = tmp;
       for (j = 0; j < n; j++) {
-        const Int_t off_j = j*n; 
+        const Int_t off_j = j*n;
         tmp = pV[off_j+i];
         pV[off_j+i] = pV[off_j+k];
         pV[off_j+k] = tmp;
@@ -740,8 +740,8 @@ TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
 const TMatrixD TMatrixDEigen::GetEigenValues() const
 {
 // Computes the block diagonal eigenvalue matrix.
-// If the original matrix A is not symmetric, then the eigenvalue 
-// matrix D is block diagonal with the real eigenvalues in 1-by-1 
+// If the original matrix A is not symmetric, then the eigenvalue
+// matrix D is block diagonal with the real eigenvalues in 1-by-1
 // blocks and any complex eigenvalues,
 //    a + i*b, in 2-by-2 blocks, [a, b; -b, a].
 //  That is, if the complex eigenvalues look like
@@ -756,7 +756,7 @@ const TMatrixD TMatrixDEigen::GetEigenValues() const
 // then D looks like
 //
 //     u        v        .          .      .    .
-//    -v        u        .          .      .    . 
+//    -v        u        .          .      .    .
 //     .        .        a          b      .    .
 //     .        .       -b          a      .    .
 //     .        .        .          .      x    .

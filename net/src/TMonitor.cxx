@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.6 2004/10/18 14:03:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.7 2004/12/15 17:48:03 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -104,7 +104,7 @@ TMonitor::TMonitor(Bool_t mainloop)
    // Create a monitor object. If mainloop is true the monitoring will be
    // done in the main event loop.
 
-   Assert(gSystem);
+   R__ASSERT(gSystem);
 
    fActive   = new TList;
    fDeActive = new TList;

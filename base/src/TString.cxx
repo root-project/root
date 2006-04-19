@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.46 2005/12/02 16:17:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.47 2005/12/08 18:22:32 pcanal Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -893,7 +893,7 @@ TString *TString::ReadString(TBuffer &b, const TClass *clReq)
    // because TBuffer::ReadObject can only handle descendant
    // of TObject.
 
-   Assert(b.IsReading());
+   R__ASSERT(b.IsReading());
 
    // Make sure ReadArray is initialized
    b.InitMap();
@@ -978,7 +978,7 @@ void TString::WriteString(TBuffer &b, const TString *a)
    // because TBuffer::ReadObject can only handle descendant
    // of TObject
 
-   Assert(b.IsWriting());
+   R__ASSERT(b.IsWriting());
 
    // Make sure WriteMap is initialized
    b.InitMap();

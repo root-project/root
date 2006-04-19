@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.29 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.30 2006/03/20 21:43:43 pcanal Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -154,7 +154,7 @@ public:
       // Must return -1 if this is smaller than obj, 0 if objects are equal
       // and 1 if this is larger than obj.
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
-      Assert(obj != 0);
+      R__ASSERT(obj != 0);
 
       if (fSlaveCnt < obj->fSlaveCnt) {
          return -1;
@@ -566,7 +566,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
    ((TProof*)gProof)->DeActivateAsyncInput();
 
-   // Some monitoring systems (TXSocketHandler) need to know this 
+   // Some monitoring systems (TXSocketHandler) need to know this
    ((TProof*)gProof)->fCurrentMonitor = &mon;
 
    Bool_t done = kFALSE;
@@ -609,7 +609,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
               << TString(elem->GetDirectory())
               << TString(elem->GetObjName());
             PDB(kPacketizer,3)
-               Info("ValidateFiles", "Send %s, %s, %s\n", 
+               Info("ValidateFiles", "Send %s, %s, %s\n",
                     elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
 
             s->GetSocket()->Send( m );
@@ -756,13 +756,13 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 }
 
 //______________________________________________________________________________
-void TPacketizer::SplitEventList(TDSet *dset) 
+void TPacketizer::SplitEventList(TDSet *dset)
 {
    // Splits the eventlist into parts for each file.
    // Each part is assigned to the apropriate TDSetElement.
 
    TEventList *mainList = dset->GetEventList();
-   Assert(mainList);
+   R__ASSERT(mainList);
 
    TIter next(dset->GetListOfElements());
    TDSetElement *el, *prev;
@@ -842,7 +842,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( sl );
 
-   Assert( slstat != 0 );
+   R__ASSERT( slstat != 0 );
 
    // update stats & free old element
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.7 2006/03/22 15:16:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.h,v 1.8 2006/04/04 05:51:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -66,7 +66,7 @@ public:
   TMatrixT(const TMatrixTSparse<Element> &another);
   template <class Element2> TMatrixT(const TMatrixT<Element2> &another)
   {
-    Assert(another.IsValid());
+    R__ASSERT(another.IsValid());
     Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
     *this = another;
   }
@@ -206,7 +206,7 @@ template <class Element> inline       TMatrixT<Element> &TMatrixT<Element>::Use 
                                                                                           { return Use(0,nrows-1,0,ncols-1,data); }
 template <class Element> inline       TMatrixT<Element> &TMatrixT<Element>::Use           (TMatrixT &a)
                                                                                           {
-                                                                                            Assert(a.IsValid());
+                                                                                            R__ASSERT(a.IsValid());
                                                                                             return Use(a.GetRowLwb(),a.GetRowUpb(),
                                                                                                        a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray());
                                                                                           }
@@ -220,21 +220,21 @@ template <class Element> inline       TMatrixT<Element>  TMatrixT<Element>::GetS
 
 template <class Element> inline Element TMatrixT<Element>::operator()(Int_t rown,Int_t coln) const
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   const Int_t arown = rown-this->fRowLwb;
   const Int_t acoln = coln-this->fColLwb;
-  Assert(arown < this->fNrows && arown >= 0);
-  Assert(acoln < this->fNcols && acoln >= 0);
+  R__ASSERT(arown < this->fNrows && arown >= 0);
+  R__ASSERT(acoln < this->fNcols && acoln >= 0);
   return (fElements[arown*this->fNcols+acoln]);
 }
 
 template <class Element> inline Element &TMatrixT<Element>::operator()(Int_t rown,Int_t coln)
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   const Int_t arown = rown-this->fRowLwb;
   const Int_t acoln = coln-this->fColLwb;
-  Assert(arown < this->fNrows && arown >= 0);
-  Assert(acoln < this->fNcols && acoln >= 0);
+  R__ASSERT(arown < this->fNrows && arown >= 0);
+  R__ASSERT(acoln < this->fNcols && acoln >= 0);
   return (fElements[arown*this->fNcols+acoln]);
 }
 

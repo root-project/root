@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.193 2006/02/18 06:58:54 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.194 2006/02/22 06:59:15 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -229,11 +229,11 @@ void TTreeFormula::Init(const char*name, const char* expression)
    }
    if (fNoper==1 && GetAction(0)==kAliasString) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-      Assert(subform);
+      R__ASSERT(subform);
       if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
    } else if (fNoper==2 && GetAction(0)==kAlternateString) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-      Assert(subform);
+      R__ASSERT(subform);
       if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
    }
 
@@ -399,7 +399,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMult
 
 //______________________________________________________________________________
 Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
-                                       TFormLeafInfo *maininfo, 
+                                       TFormLeafInfo *maininfo,
                                        Bool_t useCollectionObject) {
    // This method is used internally to decode the dimensions of the variables
 
@@ -457,7 +457,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
          ndim = 1;
          size = -1;
       } else {
-         Assert( fHasMultipleVarDim[code] );
+         R__ASSERT( fHasMultipleVarDim[code] );
          ndim = 1;
          size = 1;
       }
@@ -504,7 +504,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TBranchElement *branch) {
       // With have a second variable dimensions
       TBranchElement *leafcount = dynamic_cast<TBranchElement*>(branch->GetBranchCount());
 
-      Assert(leafcount); // The function should only be called on a functional TBranchElement object
+      R__ASSERT(leafcount); // The function should only be called on a functional TBranchElement object
 
       fManager->EnableMultiVarDims();
       TFormLeafInfoMultiVarDim * info = new TFormLeafInfoMultiVarDimDirect();
@@ -673,7 +673,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
 
    Int_t action = 0;
 
-   Assert(leaf);
+   R__ASSERT(leaf);
 
    Int_t numberOfVarDim = 0;
    char *current;
@@ -1037,7 +1037,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
       if (unwindCollection) {
          // So far we should get here only if we encounter a split collection of a class that contains
          // directly a collection.
-         Assert(numberOfVarDim==1 && maininfo);
+         R__ASSERT(numberOfVarDim==1 && maininfo);
 
          if (!useLeafCollectionObject && cl && cl->GetCollectionProxy()) {
             TFormLeafInfo *multi =
@@ -1485,7 +1485,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                            leafinfo = new TFormLeafInfo(cl,coll_offset,curelem);
                            useCollectionObject = kTRUE;
                         } else if (numberOfVarDim==1) {
-                           Assert(maininfo);
+                           R__ASSERT(maininfo);
                            leafinfo =
                               new TFormLeafInfoMultiVarDimCollection(cl,coll_offset,
                                                                      curelem,maininfo);
@@ -1602,7 +1602,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                            leafinfo = new TFormLeafInfo(cl,offset,element);
                            useCollectionObject = kTRUE;
                         } else if (numberOfVarDim==1) {
-                           Assert(maininfo);
+                           R__ASSERT(maininfo);
                            leafinfo =
                               new TFormLeafInfoMultiVarDimCollection(cl,offset,element,maininfo);
 
@@ -1661,7 +1661,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                         mustderef = kTRUE;
                      } else {
                         // this is an embedded object.
-                        Assert(object);
+                        R__ASSERT(object);
                         leafinfo = new TFormLeafInfo(cl,offset,element);
                      }
                   }
@@ -1690,7 +1690,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             current = &(work[0]);
             *current = 0;
 
-            Assert(right[i] != '[');  // We are supposed to have removed all dimensions already!
+            R__ASSERT(right[i] != '[');  // We are supposed to have removed all dimensions already!
 
          } else
             *current++ = right[i];
@@ -3470,7 +3470,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kAlias: {
                int aliasN = i;
                TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
-               Assert(subform);
+               R__ASSERT(subform);
 
                Double_t param = subform->EvalInstance(instance);
 
@@ -3481,7 +3481,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kAliasString: {
                int aliasN = i;
                TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
-               Assert(subform);
+               R__ASSERT(subform);
 
                pos2++;
                stringStack[pos2-1] = subform->EvalStringInstance(instance);
@@ -3565,7 +3565,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          }
       }
 
-      Assert(i<fNoper);
+      R__ASSERT(i<fNoper);
    }
 
    Double_t result = tab[0];
@@ -3713,7 +3713,7 @@ Bool_t TTreeFormula::IsInteger() const
 
    if (fNoper==2 && GetAction(0)==kAlternate) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-      Assert(subform);
+      R__ASSERT(subform);
       return subform->IsInteger();
    }
 
@@ -3721,7 +3721,7 @@ Bool_t TTreeFormula::IsInteger() const
 
    if (GetAction(0)==kAlias) {
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-      Assert(subform);
+      R__ASSERT(subform);
       return subform->IsInteger();
    }
 
@@ -3974,11 +3974,11 @@ void TTreeFormula::SetAxis(TAxis *axis)
       fAxis = axis;
       if (fNoper==1 && GetAction(0)==kAliasString){
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-         Assert(subform);
+         R__ASSERT(subform);
          subform->SetAxis(axis);
       } else if (fNoper==2 && GetAction(0)==kAlternateString){
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
-         Assert(subform);
+         R__ASSERT(subform);
          subform->SetAxis(axis);
       }
    }
@@ -4067,11 +4067,11 @@ void TTreeFormula::UpdateFormulaLeaves()
          case kAlternateString:
          {
             TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
-            Assert(subform);
+            R__ASSERT(subform);
             subform->UpdateFormulaLeaves();
             break;
          }
-         case kDefinedVariable: 
+         case kDefinedVariable:
          {
             Int_t code = GetActionParam(k);
             if (fCodes[code]==0) switch(fLookupType[code]) {
@@ -4079,7 +4079,7 @@ void TTreeFormula::UpdateFormulaLeaves()
                case kSum:
                {
                   TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
-                  Assert(subform);
+                  R__ASSERT(subform);
                   subform->UpdateFormulaLeaves();
                   break;
                }
@@ -4144,7 +4144,7 @@ void TTreeFormula::ResetDimensions() {
 
       if (action==kAlias || action==kAliasString) {
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(i));
-         Assert(subform);
+         R__ASSERT(subform);
          switch(subform->GetMultiplicity()) {
             case 0: break;
             case 1: fMultiplicity = 1; break;
@@ -4344,7 +4344,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (!branchcount->GetAddress()) R__LoadBranch(branchcount,readentry,fQuickLoad);
             else {
                // Since we do not read the full branch let's reset the read entry number
-               // so that a subsequent read from TTreeFormula will properly load the full 
+               // so that a subsequent read from TTreeFormula will properly load the full
                // object event if fQuickLoad is true.
                branchcount->TBranch::GetEntry(readentry);
                branchcount->ResetReadEntry();
@@ -4424,7 +4424,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          } else if (hasBranchCount2) {
             TFormLeafInfo * info;
             info = (TFormLeafInfo *)fDataMembers.At(i);
-            if (fIndexes[i][0]<0 
+            if (fIndexes[i][0]<0
                 || fIndexes[i][info->GetVarDim()] >= info->GetSize(fIndexes[i][0])) {
                // unreacheable element requested:
                fManager->fUsedSizes[0] = 0;

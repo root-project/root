@@ -623,7 +623,7 @@ Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, I
    // Write for STL container.
 
    if (!nc) return 0;
-   Assert((unsigned int)nc==cont->Size());
+   R__ASSERT((unsigned int)nc==cont->Size());
 
    int ret = WriteBufferAux(b, *cont,first,nc,eoffset,1);
    return ret;

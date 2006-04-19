@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.47 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.48 2006/03/01 10:55:21 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -106,7 +106,7 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
       hurl.SetOptions("MC");
    } else {
       Error("Init","Impossible PROOF <-> SlaveType Configuration Requested");
-      Assert(0);
+      R__ASSERT(0);
    }
 
    // Open authenticated connection to remote PROOF slave server.

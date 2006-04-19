@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.5 2006/03/28 10:00:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.6 2006/04/04 05:51:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -65,9 +65,9 @@ public:
   TVectorT(const TMatrixTRow_const   <Element> &mr);
   TVectorT(const TMatrixTColumn_const<Element> &mc);
   TVectorT(const TMatrixTDiag_const  <Element> &md);
-  template <class Element2> TVectorT(const TVectorT<Element2> &another) 
+  template <class Element2> TVectorT(const TVectorT<Element2> &another)
   {
-    Assert(another.IsValid());
+    R__ASSERT(another.IsValid());
     Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
     *this = another;
   }
@@ -88,7 +88,7 @@ public:
   inline void     MakeValid  ()       { ResetBit(kStatus); }
   inline Bool_t   IsValid    () const { return !TestBit(kStatus); }
   inline Bool_t   IsOwner    () const { return fIsOwner; }
-  inline void     SetElements(const Element *elements) { Assert(IsValid());
+  inline void     SetElements(const Element *elements) { R__ASSERT(IsValid());
                                                          memcpy(fElements,elements,fNrows*sizeof(Element)); }
   inline TVectorT<Element> &Shift     (Int_t row_shift)            { fRowLwb += row_shift; return *this; }
          TVectorT<Element> &ResizeTo  (Int_t lwb,Int_t upb);
@@ -183,12 +183,12 @@ public:
 
 template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use           (Int_t n,Element *data) { return Use(0,n-1,data); }
 template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use           (TVectorT &v)
-                                                                                         { 
-                                                                                           Assert(v.IsValid());
+                                                                                         {
+                                                                                           R__ASSERT(v.IsValid());
                                                                                            return Use(v.GetLwb(),v.GetUpb(),v.GetMatrixArray());
                                                                                          }
 template<class Element> inline       TVectorT<Element>  TVectorT<Element>::GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option) const
-                                                                                         { 
+                                                                                         {
                                                                                            TVectorT tmp;
                                                                                            this->GetSub(row_lwb,row_upb,tmp,option);
                                                                                            return tmp;
@@ -198,9 +198,9 @@ template<class Element> inline const Element           &TVectorT<Element>::opera
 {
   // Access a vector element.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
   const Int_t aind = ind-fRowLwb;
-  Assert(aind < fNrows && aind >= 0);
+  R__ASSERT(aind < fNrows && aind >= 0);
 
   return fElements[aind];
 }

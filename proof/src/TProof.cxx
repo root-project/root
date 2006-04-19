@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.138 2006/04/13 10:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.139 2006/04/17 09:29:48 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -324,7 +324,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // master or slave servers, returns 0 in case of error, in which case
    // fValid remains false.
 
-   Assert(gSystem);
+   R__ASSERT(gSystem);
 
    fValid = kFALSE;
 
@@ -943,7 +943,7 @@ void TProof::FindUniqueSlaves()
                   fNonUniqueMasters->Add(sl);
                } else {
                   Error("FindUniqueSlaves", "TSlave is neither Master nor Slave");
-                  Assert(0);
+                  R__ASSERT(0);
                }
             }
             break;
@@ -1306,7 +1306,7 @@ TList *TProof::GetSlaveInfo()
          }
       } else {
          Error("GetSlaveInfo", "TSlave is neither Master nor Slave");
-         Assert(0);
+         R__ASSERT(0);
       }
    }
    if (masters.GetSize() > 0) Collect(&masters);
@@ -2224,7 +2224,7 @@ void TProof::Print(Option_t *option) const
                   masters.Add(sl);
             } else {
                Error("Print", "TSlave is neither Master nor Slave");
-               Assert(0);
+               R__ASSERT(0);
             }
          }
          const_cast<TProof*>(this)->Collect(&masters);
@@ -3214,7 +3214,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
             }
          } else {
             Error("GoParallel", "TSlave is neither Master nor Slave");
-            Assert(0);
+            R__ASSERT(0);
          }
          cnt += slavenodes;
       }
@@ -3871,7 +3871,7 @@ void TProof::ValidateDSet(TDSet *dset)
                nonLocal.Add(elem);
             } else {
                Error("ValidateDSet", "No Node to allocate TDSetElement to");
-               Assert(0);
+               R__ASSERT(0);
             }
          }
       }

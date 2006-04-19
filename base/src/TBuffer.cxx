@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.91 2006/02/17 05:20:13 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.92 2006/04/07 21:16:19 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -490,8 +490,8 @@ void TBuffer::SetReadParam(Int_t mapsize)
    // the TBuffer, before any reading is done. Globally this option
    // can be changed using SetGlobalReadParam().
 
-   Assert(IsReading());
-   Assert(fMap == 0);
+   R__ASSERT(IsReading());
+   R__ASSERT(fMap == 0);
 
    fMapSize = mapsize;
 }
@@ -510,8 +510,8 @@ void TBuffer::SetWriteParam(Int_t mapsize)
    // the TBuffer, before any writing is done. Globally this option
    // can be changed using SetGlobalWriteParam().
 
-   Assert(IsWriting());
-   Assert(fMap == 0);
+   R__ASSERT(IsWriting());
+   R__ASSERT(fMap == 0);
 
    fMapSize = mapsize;
 }
@@ -695,7 +695,7 @@ Int_t TBuffer::ReadBuf(void *buf, Int_t max)
    // Read max bytes from the I/O buffer into buf. The function returns
    // the actual number of bytes read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    if (max == 0) return 0;
 
@@ -712,7 +712,7 @@ void TBuffer::WriteBuf(const void *buf, Int_t max)
 {
    // Write max bytes from buf into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    if (max == 0) return;
 
@@ -730,7 +730,7 @@ Text_t *TBuffer::ReadString(Text_t *s, Int_t max)
    // bytes allocated). If max = -1 no check on number of character is
    // made, reading continues till 0 character is found.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    char  ch;
    Int_t nr = 0;
@@ -765,7 +765,7 @@ void TBuffer::ReadDouble32 (Double_t *d, TStreamerElement *ele)
 {
    // read a Double32_t from the buffer
    // see comments about Double32_t encoding at TBuffer::WriteDouble32
-   
+
    if (ele && ele->GetFactor() != 0) {
       UInt_t aint; *this >> aint; d[0] = (Double_t)(aint/ele->GetFactor() + ele->GetXmin());
    } else {
@@ -809,7 +809,7 @@ void TBuffer::WriteDouble32 (Double_t *d, TStreamerElement *ele)
      <img src="gif/double32.gif">
    */
    //End_Html
-         
+
       if (ele && ele->GetFactor() != 0) {
       Double_t x = d[0];
       Double_t xmin = ele->GetXmin();
@@ -829,7 +829,7 @@ Int_t TBuffer::ReadArray(Bool_t *&b)
    // bools read. If argument is a 0 pointer then space will be
    // allocated for the array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -857,7 +857,7 @@ Int_t TBuffer::ReadArray(Char_t *&c)
    // characters read. If argument is a 0 pointer then space will be
    // allocated for the array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -880,7 +880,7 @@ Int_t TBuffer::ReadArray(Short_t *&h)
    // read. If argument is a 0 pointer then space will be allocated for the
    // array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -913,7 +913,7 @@ Int_t TBuffer::ReadArray(Int_t *&ii)
    // read. If argument is a 0 pointer then space will be allocated for the
    // array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -946,7 +946,7 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
    // read. If argument is a 0 pointer then space will be allocated for the
    // array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -972,7 +972,7 @@ Int_t TBuffer::ReadArray(Long64_t *&ll)
    // long longs read. If argument is a 0 pointer then space will be
    // allocated for the array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1000,7 +1000,7 @@ Int_t TBuffer::ReadArray(Float_t *&f)
    // read. If argument is a 0 pointer then space will be allocated for the
    // array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1033,7 +1033,7 @@ Int_t TBuffer::ReadArray(Double_t *&d)
    // read. If argument is a 0 pointer then space will be allocated for the
    // array.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1062,7 +1062,7 @@ Int_t TBuffer::ReadArrayDouble32(Double_t *&d, TStreamerElement *ele)
    // If argument is a 0 pointer then space will be allocated for the array.
    // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1082,7 +1082,7 @@ Int_t TBuffer::ReadStaticArray(Bool_t *b)
    // Read array of bools from the I/O buffer. Returns the number of bools
    // read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1109,7 +1109,7 @@ Int_t TBuffer::ReadStaticArray(Char_t *c)
    // Read array of characters from the I/O buffer. Returns the number of
    // characters read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1131,7 +1131,7 @@ Int_t TBuffer::ReadStaticArray(Short_t *h)
    // Read array of shorts from the I/O buffer. Returns the number of shorts
    // read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1163,7 +1163,7 @@ Int_t TBuffer::ReadStaticArray(Int_t *ii)
    // Read array of ints from the I/O buffer. Returns the number of ints
    // read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1195,7 +1195,7 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
    // Read array of longs from the I/O buffer. Returns the number of longs
    // read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1220,7 +1220,7 @@ Int_t TBuffer::ReadStaticArray(Long64_t *ll)
    // Read array of long longs from the I/O buffer. Returns the number of
    // long longs read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1247,7 +1247,7 @@ Int_t TBuffer::ReadStaticArray(Float_t *f)
    // Read array of floats from the I/O buffer. Returns the number of floats
    // read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1279,7 +1279,7 @@ Int_t TBuffer::ReadStaticArray(Double_t *d)
    // Read array of doubles from the I/O buffer. Returns the number of doubles
    // read.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1307,7 +1307,7 @@ Int_t TBuffer::ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele)
    // Returns the number of doubles read.
    // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    Int_t n;
    *this >> n;
@@ -1563,15 +1563,15 @@ void TBuffer::ReadFastArray(void **start, const TClass *cl, Int_t n,
 
       for (Int_t j=0; j<n; j++){
          //delete the object or collection
-         if (start[j] && TStreamerInfo::CanDelete() 
+         if (start[j] && TStreamerInfo::CanDelete()
              // There are some cases where the user may set up a pointer in the (default)
-             // constructor but not mark this pointer as transient.  Sometime the value 
+             // constructor but not mark this pointer as transient.  Sometime the value
              // of this pointer is the address of one of the object with just created
-             // and the following delete would result in the deletion (possibly of the 
+             // and the following delete would result in the deletion (possibly of the
              // top level object we are goint to return!).
              // Eventhough this is a user error, we could prevent the crash by simply
              // adding:
-             // && !CheckObject(start[j],cl) 
+             // && !CheckObject(start[j],cl)
              // However this can increase the read time significantly (10% in the case
              // of one TLine pointer in the test/Track and run ./Event 200 0 0 20 30000
              ) ((TClass*)cl)->Destructor(start[j],kFALSE); // call delete and desctructor
@@ -1593,13 +1593,13 @@ void TBuffer::WriteArray(const Bool_t *b, Int_t n)
 {
    // Write array of n bools into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(b);
+   R__ASSERT(b);
 
    Int_t l = sizeof(UChar_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1618,13 +1618,13 @@ void TBuffer::WriteArray(const Char_t *c, Int_t n)
 {
    // Write array of n characters into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(c);
+   R__ASSERT(c);
 
    Int_t l = sizeof(Char_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1638,13 +1638,13 @@ void TBuffer::WriteArray(const Short_t *h, Int_t n)
 {
    // Write array of n shorts into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(h);
+   R__ASSERT(h);
 
    Int_t l = sizeof(Short_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1668,13 +1668,13 @@ void TBuffer::WriteArray(const Int_t *ii, Int_t n)
 {
    // Write array of n ints into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(ii);
+   R__ASSERT(ii);
 
    Int_t l = sizeof(Int_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1698,13 +1698,13 @@ void TBuffer::WriteArray(const Long_t *ll, Int_t n)
 {
    // Write array of n longs into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(ll);
+   R__ASSERT(ll);
 
    Int_t l = 8*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1718,13 +1718,13 @@ void TBuffer::WriteArray(const ULong_t *ll, Int_t n)
    // This is an explicit case for unsigned longs since signed longs
    // have a special tobuf().
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(ll);
+   R__ASSERT(ll);
 
    Int_t l = 8*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1736,13 +1736,13 @@ void TBuffer::WriteArray(const Long64_t *ll, Int_t n)
 {
    // Write array of n long longs into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(ll);
+   R__ASSERT(ll);
 
    Int_t l = sizeof(Long64_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1761,13 +1761,13 @@ void TBuffer::WriteArray(const Float_t *f, Int_t n)
 {
    // Write array of n floats into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(f);
+   R__ASSERT(f);
 
    Int_t l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1791,13 +1791,13 @@ void TBuffer::WriteArray(const Double_t *d, Int_t n)
 {
    // Write array of n doubles into the I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(d);
+   R__ASSERT(d);
 
    Int_t l = sizeof(Double_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1817,13 +1817,13 @@ void TBuffer::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *e
    // Write array of n doubles (as float) into the I/O buffer.
    // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    *this << n;
 
    if (n <= 0) return;
 
-   Assert(d);
+   R__ASSERT(d);
 
    Int_t l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -2150,7 +2150,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
    // real beginning of the object in memory.  You will need to use a
    // dynamic_cast later if you need to retrieve it.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    // make sure fMap is initialized
    InitMap();
@@ -2280,7 +2280,7 @@ void TBuffer::WriteObject(const void *actualObjectStart, const TClass *actualCla
    // This function assumes that the value of 'actualObjectStart' is the actual start of
    // the object of class 'actualClass'
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    if (!actualObjectStart) {
 
@@ -2402,7 +2402,7 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
    // if the actually read object is of the requested class. objTag is
    // set in case the object is a reference to an already read object.
 
-   Assert(IsReading());
+   R__ASSERT(IsReading());
 
    // read byte count and/or tag (older files don't have byte count)
    TClass *cl;
@@ -2483,7 +2483,7 @@ void TBuffer::WriteClass(const TClass *cl)
 {
    // Write class description to I/O buffer.
 
-   Assert(IsWriting());
+   R__ASSERT(IsWriting());
 
    ULong_t idx;
    ULong_t hash = Void_Hash(cl);
@@ -2572,12 +2572,12 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
          } else {
             // There are some cases (for example when the buffer was stored outside of
             // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
-            // the one from the current class, we can still assume that we can read 
+            // the one from the current class, we can still assume that we can read
             // the data so let use it.
             if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
                version = cl->GetClassVersion();
             } else {
-               Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
+               Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
                   checksum, cl->GetName(), ((TFile*)fParent)->GetName());
                return 0;
             }
@@ -2596,13 +2596,13 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
                if (vinfo) {
                   version = vinfo->GetClassVersion();
                } else {
-                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
+                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
                         checksum, cl->GetName(), ((TFile*)fParent)->GetName());
                   return 0;
                }
             }
             else  {
-               Error("ReadVersion", "Class %s not known to file %s.", 
+               Error("ReadVersion", "Class %s not known to file %s.",
                  cl->GetName(), ((TFile*)fParent)->GetName());
                version = 0;
             }

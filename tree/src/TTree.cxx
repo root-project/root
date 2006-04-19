@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.279 2006/03/25 16:12:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.280 2006/03/29 10:36:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -320,8 +320,8 @@ ClassImp(TTree)
 //  Helper class to prevent infinite recursion in the usage of TTree Friends.
 
 //______________________________________________________________________________
-TTree::TFriendLock::TFriendLock(TTree *tree, UInt_t methodbit) 
-   : fTree(tree) 
+TTree::TFriendLock::TFriendLock(TTree *tree, UInt_t methodbit)
+   : fTree(tree)
 {
    // Record in 'tree' that it has been used while
    // recursively looks through the friends.
@@ -335,11 +335,11 @@ TTree::TFriendLock::TFriendLock(TTree *tree, UInt_t methodbit)
    }
 }
 
-TTree::TFriendLock::~TFriendLock() 
-{ 
+TTree::TFriendLock::~TFriendLock()
+{
    // Restore the state of tree the same as before
    // we set the 'lock'
-   
+
    if (fTree) {
       if (!fPrevious) {
          fTree->fFriendLockStatus &= ~(fMethodBit & kBitMask);
@@ -597,12 +597,12 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 //
 //  tree.Draw("var:ft1.var:ft2.var")
 
-   //if (kAddFriend & fFriendLockStatus) 
+   //if (kAddFriend & fFriendLockStatus)
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,filename);
-   Assert(fe);           // this assert is for historical reasons. Don't remove it unless you 
-                         // understand all the consequences.
+   R__ASSERT(fe);  // this assert is for historical reasons. Don't remove it
+                   // unless you understand all the consequences.
    fFriends->Add(fe);
    TTree *t = fe->GetTree();
    if (t) {
@@ -628,7 +628,7 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,file);
-   Assert(fe);
+   R__ASSERT(fe);
    fFriends->Add(fe);
    TTree *t = fe->GetTree();
    if (t) {
@@ -652,8 +652,8 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
    if (!tree) return 0;
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,tree, alias);
-   Assert(fe);           // this assert is for historical reasons. Don't remove it unless you
-                         // understand all the consequences.
+   R__ASSERT(fe);  // this assert is for historical reasons. Don't remove it
+                   // unless you understand all the consequences.
    fFriends->Add(fe);
    TTree *t = fe->GetTree();
    if (warn && t->GetEntries() < fEntries) {
@@ -1796,7 +1796,7 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *option)
 // is disabled, the clone will be done without unzipping or unstreaming
 // tbe baskets (i.e. direct copy of the raw byte on disk).
 // If 'option' also containts 'SortBasketsByBranch', the branches' baskets
-// will be reordered so that for each branch, all its baskets will be 
+// will be reordered so that for each branch, all its baskets will be
 // stored contiguously.  Typically this will increase the performance when
 // reading a low number of branches (2 to 5) but will decrease the performance
 // when reading more branches (or the full entry).
@@ -1834,7 +1834,7 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *option)
    AddClone(newtree);
 
    newtree->Reset();
-   
+
    TDirectory *ndir = newtree->GetDirectory();
    TFile *nfile = 0;
    if (ndir) nfile = ndir->GetFile();
@@ -1881,9 +1881,9 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *option)
    newtree->SetMakeClass(fMakeClass);
    CopyAddresses(newtree);
 
-   if (fastClone && nentries<0 && 
+   if (fastClone && nentries<0 &&
        newtree->GetListOfLeaves()->GetEntries()==GetListOfLeaves()->GetEntries()) {
-      
+
       // Quickly copy the basket without decompression and streaming.
       nentries = GetEntriesFast();
       for (Long64_t i=0; i<nentries; i += this->GetTree()->GetEntries() )
@@ -2356,8 +2356,8 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //
 //  Length$(formula): return the total number of element of the formula given as a
 //                    parameter.
-//  Sum$(formula): return the sum of the value of the elements of the formula given 
-//                    as a parameter.  For eaxmple the mean for all the elements in 
+//  Sum$(formula): return the sum of the value of the elements of the formula given
+//                    as a parameter.  For eaxmple the mean for all the elements in
 //                    one entry can be calculated with:
 //                Sum$(formula)/Length$(formula)
 //
@@ -2577,7 +2577,7 @@ Int_t TTree::Fill()
 //   If a leaf is a simple data type, a simple conversion to a machine
 //   independent format has to be done.
 //
-//   The function returns the number of bytes committed to the 
+//   The function returns the number of bytes committed to the
 //   individual branch(es).
 //   If a write error occurs, the number of bytes returned is -1.
 //   If no data are written, because e.g. the branch is disabled,
@@ -2708,7 +2708,7 @@ TLeaf *TTree::FindLeaf(const char* searchname)
       if ( *subsearchname != '.' ) subsearchname = 0;
       else subsearchname ++;
    }
-   
+
    // For leaves we allow for one level up to be prefixed to the
    // name
 
@@ -2825,7 +2825,7 @@ const char *TTree::GetAlias(const char *aliasName) const
    // We already have been visited while recursively looking
    // through the friends tree, let return
    if (kGetAlias & fFriendLockStatus) return 0;
-      
+
    if (fAliases) {
       TObject *alias = fAliases->FindObject(aliasName);
       if (alias) return alias->GetTitle();
@@ -3480,11 +3480,11 @@ Long64_t TTree::LoadTree(Long64_t entry)
       // The current tree has not changed but some of its friend might.
 
       //An Alternative would move this code to each of the function calling LoadTree
-      //(and to overload a few more). 
+      //(and to overload a few more).
       Bool_t needUpdate = kFALSE;
       {
          // This scope is need to insure the lock is release at the right time
-        
+
          TIter nextf(fFriends);
          TFriendLock lock(this,kLoadTree);
          TFriendElement *fe;
@@ -3497,16 +3497,16 @@ Long64_t TTree::LoadTree(Long64_t entry)
             TTree *t = fe->GetTree();
             if (t->IsA()!=TTree::Class()) {
                Int_t oldNumber = t->GetTreeNumber();
-               
+
                friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
-               
+
                Int_t newNumber = t->GetTreeNumber();
                if (oldNumber!=newNumber) {
-                  
+
                // We can not just compare the tree pointers because they could be reused.
                // So we compare the tree number instead.
                   needUpdate = kTRUE;
-                  
+
                }
             } else {
                // we assume it is a simple tree so we have nothing to do.
@@ -3621,7 +3621,7 @@ Int_t TTree::MakeProxy(const char *proxyClassname, const char *macrofilename,
    // Method of the same name as the file(minus the extension and path)
    // will be called by the generated skeleton's Process method as follow:
    //    [if (cutfilename())] htemp->Fill(macrofilename());
-   // 
+   //
    // "option" can be used select some of the optional features during
    // the code generation.  The possible options are:
    //    nohist : indicates that the generated ProcessFill should not
@@ -4651,13 +4651,13 @@ void TTree::SetCircular(Long64_t maxEntries)
    // NOTE 4:
    //  A circular Tree can still be saved in a file. When read back,
    //  it is still a circular Tree and can be filled again.
-   
+
    if (maxEntries <= 0) {
       //disable circularity
       fMaxEntries     = 1000000000; fMaxEntries   *= 1000;
       ResetBit(kCircular);
       //in case the Tree was originally created in gROOT, the branch
-      //compression level was set to -1. If the Tree is now associated to 
+      //compression level was set to -1. If the Tree is now associated to
       //a file, reset the compression level to the file compression level
       if (fDirectory) {
          TFile *bfile = fDirectory->GetFile();

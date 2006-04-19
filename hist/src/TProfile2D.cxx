@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.47 2006/04/05 10:23:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.48 2006/04/19 08:16:33 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1303,7 +1303,7 @@ Long64_t TProfile2D::Merge(TCollection *li)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
-   Assert(hclone);
+   R__ASSERT(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);

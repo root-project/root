@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -108,7 +108,7 @@ TQpDataSparse::TQpDataSparse(TVectorD       &c_in,   TMatrixDSparse &Q_in,
 TQpDataSparse::TQpDataSparse(const TQpDataSparse &another) : TQpDataBase(another)
 {
   *this = another;
-} 
+}
 
 //______________________________________________________________________________
 void TQpDataSparse::SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC)
@@ -128,7 +128,7 @@ void TQpDataSparse::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVector
 
 //______________________________________________________________________________
 void TQpDataSparse::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fA.GetNoElements() > 0)
     y += alpha*(fA*x);
@@ -136,7 +136,7 @@ void TQpDataSparse::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVector
 
 //______________________________________________________________________________
 void TQpDataSparse::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fC.GetNoElements() > 0)
     y += alpha*(fC*x);
@@ -144,7 +144,7 @@ void TQpDataSparse::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVector
 
 //______________________________________________________________________________
 void TQpDataSparse::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fA.GetNoElements() > 0)
     y += alpha*(TMatrixDSparse(TMatrixDSparse::kTransposed,fA)*x);
@@ -152,7 +152,7 @@ void TQpDataSparse::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TV
 
 //______________________________________________________________________________
 void TQpDataSparse::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fC.GetNoElements() > 0)
     y += alpha*(TMatrixDSparse(TMatrixDSparse::kTransposed,fC)*x);
@@ -169,7 +169,7 @@ Double_t TQpDataSparse::DataNorm()
   TMatrixDSparse fQ_abs(fQ);
   componentNorm = (fQ_abs.Abs()).Max();
   if (componentNorm > norm) norm = componentNorm;
- 
+
   componentNorm = fBa.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
@@ -181,19 +181,19 @@ Double_t TQpDataSparse::DataNorm()
   componentNorm = (fC_abs.Abs()).Max();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fXloBound.MatchesNonZeroPattern(fXloIndex));
+  R__ASSERT(fXloBound.MatchesNonZeroPattern(fXloIndex));
   componentNorm = fXloBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fXupBound.MatchesNonZeroPattern(fXupIndex));
+  R__ASSERT(fXupBound.MatchesNonZeroPattern(fXupIndex));
   componentNorm = fXupBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fCloBound.MatchesNonZeroPattern(fCloIndex));
+  R__ASSERT(fCloBound.MatchesNonZeroPattern(fCloIndex));
   componentNorm = fCloBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fCupBound.MatchesNonZeroPattern(fCupIndex));
+  R__ASSERT(fCupBound.MatchesNonZeroPattern(fCupIndex));
   componentNorm = fCupBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
@@ -298,9 +298,9 @@ void TQpDataSparse::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 
 //______________________________________________________________________________
 TQpDataSparse &TQpDataSparse::operator=(const TQpDataSparse &source)
-{                                                                        
+{
   if (this != &source) {
-    TQpDataBase::operator=(source);                                      
+    TQpDataBase::operator=(source);
     fQ.ResizeTo(source.fQ); fQ = source.fQ;
     fA.ResizeTo(source.fA); fA = source.fA;
     fC.ResizeTo(source.fC); fC = source.fC;

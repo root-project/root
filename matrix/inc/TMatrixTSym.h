@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.5 2006/03/29 05:16:49 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.h,v 1.6 2006/04/04 05:51:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -61,9 +61,9 @@ public:
   TMatrixTSym(Int_t nrows,const Element *data,Option_t *option="");
   TMatrixTSym(Int_t row_lwb,Int_t row_upb,const Element *data,Option_t *option="");
   TMatrixTSym(const TMatrixTSym<Element> &another);
-  template <class Element2> TMatrixTSym(const TMatrixTSym<Element2> &another) 
+  template <class Element2> TMatrixTSym(const TMatrixTSym<Element2> &another)
   {
-    Assert(another.IsValid());
+    R__ASSERT(another.IsValid());
     Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
     *this = another;
   }
@@ -143,10 +143,10 @@ public:
   {
     if (!AreCompatible(*this,source)) {
       Error("operator=(const TMatrixTSym2 &)","matrices not compatible");
-      this->Invalidate();      
+      this->Invalidate();
       return *this;
     }
-  
+
     TObject::operator=(source);
     const Element2 * const ps = source.GetMatrixArray();
           Element  * const pt = this->GetMatrixArray();
@@ -190,21 +190,21 @@ template <class Element> inline       TMatrixTSym<Element>   TMatrixTSym<Element
 
 template <class Element> inline Element TMatrixTSym<Element>::operator()(Int_t rown,Int_t coln) const
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   const Int_t arown = rown-this->fRowLwb;
   const Int_t acoln = coln-this->fColLwb;
-  Assert(arown < this->fNrows && arown >= 0);
-  Assert(acoln < this->fNcols && acoln >= 0);
+  R__ASSERT(arown < this->fNrows && arown >= 0);
+  R__ASSERT(acoln < this->fNcols && acoln >= 0);
   return (fElements[arown*this->fNcols+acoln]);
 }
 
 template <class Element> inline Element &TMatrixTSym<Element>::operator()(Int_t rown,Int_t coln)
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   const Int_t arown = rown-this->fRowLwb;
   const Int_t acoln = coln-this->fColLwb;
-  Assert(arown < this->fNrows && arown >= 0);
-  Assert(acoln < this->fNcols && acoln >= 0);
+  R__ASSERT(arown < this->fNrows && arown >= 0);
+  R__ASSERT(acoln < this->fNcols && acoln >= 0);
   return (fElements[arown*this->fNcols+acoln]);
 }
 

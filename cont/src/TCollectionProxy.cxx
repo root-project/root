@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.5 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.6 2005/11/16 20:07:50 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -238,7 +238,7 @@ void TCollectionStreamer::InvalidProxyError()   {
    Fatal("TCollectionStreamer>","No proxy available. Data streaming impossible.");
 }
 
-TCollectionStreamer::TCollectionStreamer() : fStreamer(0) 
+TCollectionStreamer::TCollectionStreamer() : fStreamer(0)
 {
    // Initializing constructor.
 }
@@ -248,7 +248,7 @@ TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c)
    // Copy constructor.
    if ( c.fStreamer )  {
       fStreamer = dynamic_cast<TGenCollectionProxy*>(c.fStreamer->Generate());
-      Assert(fStreamer != 0);
+      R__ASSERT(fStreamer != 0);
       return;
    }
    InvalidProxyError();

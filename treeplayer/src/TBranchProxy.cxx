@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.4 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.5 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -119,7 +119,7 @@ Bool_t ROOT::TBranchProxy::Setup()
    if (fParent) {
 
       TClass *pcl = fParent->GetClass();
-      Assert(pcl);
+      R__ASSERT(pcl);
 
       if (pcl==TClonesArray::Class()) {
          // We always skip the clones array
@@ -139,7 +139,7 @@ Bool_t ROOT::TBranchProxy::Setup()
       fIsaPointer = fElement->IsaPointer();
       fClass = fElement->GetClassPointer();
 
-      Assert(fElement);
+      R__ASSERT(fElement);
 
       fIsClone = (fClass==TClonesArray::Class());
 
@@ -328,7 +328,7 @@ Bool_t ROOT::TBranchProxy::Setup()
                TString member;
 
                Bool_t forgotWhenThisHappens = false;
-               Assert(forgotWhenThisHappens);
+               R__ASSERT(forgotWhenThisHappens);
 
                member += fDataMember;
                fMemberOffset = fClass->GetDataMemberOffset(member);

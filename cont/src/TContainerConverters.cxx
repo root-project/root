@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.4 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.5 2006/03/20 21:43:41 pcanal Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -28,11 +28,11 @@ namespace {
 
 //________________________________________________________________________
 TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
-   TVirtualCollectionProxy *proxy,                           
+   TVirtualCollectionProxy *proxy,
    Bool_t isPointer, Bool_t isPrealloc) :
       fIsPointer(isPointer),
       fIsPrealloc(isPrealloc),
-      fProxy(proxy?proxy->Generate():0) 
+      fProxy(proxy?proxy->Generate():0)
 {
    // Constructor.
 
@@ -40,12 +40,12 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
    else fOffset = sizeof(TClonesArray*);
 }
 
-void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t size) 
+void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
 {
    // Read a TClonesArray in the TBuffer b and load it into a (stl) collection
 
    TStreamerInfo *subinfo = fProxy->GetValueClass()->GetStreamerInfo();
-   Assert(subinfo); 
+   R__ASSERT(subinfo);
 
    Int_t   nobjects, dummy;
    char    nch;
@@ -54,7 +54,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
    void *env;
    UInt_t start, bytecount;
 
-   Assert(b.IsReading());
+   R__ASSERT(b.IsReading());
 
    Bool_t needAlloc = fIsPointer && !fIsPrealloc;
 
@@ -81,11 +81,11 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 
          // before reading object save start position
          UInt_t startpos = b.Length();
- 
+
          // attempt to load next object as TClass clCast
          UInt_t tag;       // either tag or byte count
          TClass *clRef = b.ReadClass(TClonesArray::Class(), &tag);
-         
+
          if (clRef==0) {
             // got a reference to an already read object
             // got a reference to an already read object
@@ -118,10 +118,10 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 
                if (objptr==0) continue;
 
-               clRef = fProxy->GetCollectionClass(); 
+               clRef = fProxy->GetCollectionClass();
 
             }
-            Assert(clRef);
+            R__ASSERT(clRef);
             if (clRef==TClonesArray::Class()) {
                Error("TConvertClonesArrayToProxy",
                   "Object refered to has not been converted from TClonesArray to %s",

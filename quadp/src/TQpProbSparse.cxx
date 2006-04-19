@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.cxx,v 1.4 2005/08/30 12:19:23 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -58,14 +58,14 @@ TQpProbSparse::TQpProbSparse(Int_t nx,Int_t my,Int_t mz)
   : TQpProbBase(nx,my,mz)
 {
   // We do not wanr more constrains than variables
-  Assert(nx-my-mz > 0);
+  R__ASSERT(nx-my-mz > 0);
 }
 
 //______________________________________________________________________________
 TQpProbSparse::TQpProbSparse(const TQpProbSparse &another) : TQpProbBase(another)
-{                        
-  *this = another;       
-}                        
+{
+  *this = another;
+}
 
 //______________________________________________________________________________
 TQpDataBase *TQpProbSparse::MakeData(Double_t *c,
@@ -77,7 +77,7 @@ TQpDataBase *TQpProbSparse::MakeData(Double_t *c,
                                      Int_t nnzC,Int_t *irowC,Int_t *icolC,Double_t *C,
                                      Double_t *clo,Bool_t *iclo,
                                      Double_t *cup,Bool_t *icup)
-{ 
+{
   TVectorD       vc  ; vc  .Use(fNx,c);
   TMatrixDSparse mQ  ; mQ  .Use(fNx,fNx,nnzQ,irowQ,icolQ,Q);
   TVectorD       vxlo; vxlo.Use(fNx,xlo);
@@ -131,23 +131,23 @@ TQpDataBase *TQpProbSparse::MakeData(TVectorD     &c,
   TMatrixDSparse &mA = (TMatrixDSparse &) A_in;
   TMatrixDSparse &mC = (TMatrixDSparse &) C_in;
 
-  Assert(mQ.GetNrows() == fNx && mQ.GetNcols() == fNx);
-  if (fMy > 0) Assert(mA.GetNrows() == fMy && mA.GetNcols() == fNx);
-  else         Assert(mA.GetNrows() == fMy);
-  if (fMz > 0) Assert(mC.GetNrows() == fMz && mC.GetNcols() == fNx);
-  else         Assert(mC.GetNrows() == fMz);
+  R__ASSERT(mQ.GetNrows() == fNx && mQ.GetNcols() == fNx);
+  if (fMy > 0) R__ASSERT(mA.GetNrows() == fMy && mA.GetNcols() == fNx);
+  else         R__ASSERT(mA.GetNrows() == fMy);
+  if (fMz > 0) R__ASSERT(mC.GetNrows() == fMz && mC.GetNcols() == fNx);
+  else         R__ASSERT(mC.GetNrows() == fMz);
 
-  Assert(c.GetNrows()    == fNx);
-  Assert(xlo.GetNrows()  == fNx);
-  Assert(ixlo.GetNrows() == fNx);
-  Assert(xup.GetNrows()  == fNx);
-  Assert(ixup.GetNrows() == fNx);
+  R__ASSERT(c.GetNrows()    == fNx);
+  R__ASSERT(xlo.GetNrows()  == fNx);
+  R__ASSERT(ixlo.GetNrows() == fNx);
+  R__ASSERT(xup.GetNrows()  == fNx);
+  R__ASSERT(ixup.GetNrows() == fNx);
 
-  Assert(bA.GetNrows()   == fMy);
-  Assert(clo.GetNrows()  == fMz);
-  Assert(iclo.GetNrows() == fMz);
-  Assert(cup.GetNrows()  == fMz);
-  Assert(icup.GetNrows() == fMz);
+  R__ASSERT(bA.GetNrows()   == fMy);
+  R__ASSERT(clo.GetNrows()  == fMz);
+  R__ASSERT(iclo.GetNrows() == fMz);
+  R__ASSERT(cup.GetNrows()  == fMz);
+  R__ASSERT(icup.GetNrows() == fMz);
 
   TQpDataSparse *data = new TQpDataSparse(c,mQ,xlo,ixlo,xup,ixup,mA,bA,mC,clo,iclo,cup,icup);
 
@@ -171,7 +171,7 @@ TQpVar* TQpProbSparse::MakeVariables(const TQpDataBase *data_in)
 
 //______________________________________________________________________________
 TQpLinSolverBase* TQpProbSparse::MakeLinSys(const TQpDataBase *data_in)
-{ 
+{
   TQpDataSparse *data = (TQpDataSparse *) data_in;
   return new TQpLinSolverSparse(this,data);
 }

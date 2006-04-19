@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.h,v 1.1 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.h,v 1.2 2005/09/18 23:44:11 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
 
       void        IncMySlaveCnt() { fMySlaveCnt++; }
       void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
-      void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; Assert(fSlaveCnt >= 0); }
+      void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; R__ASSERT(fSlaveCnt >= 0); }
       Int_t       GetSlaveCnt() const { return fMySlaveCnt + fSlaveCnt; }
       Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
       Bool_t      IsSortable() const { return kTRUE; }

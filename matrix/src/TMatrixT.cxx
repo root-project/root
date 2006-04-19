@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.15 2006/04/02 08:38:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.16 2006/04/04 05:51:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TMatrixT<Element>::TMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &another) : TMatrixTBase<Element>(another)
 {
-  Assert(another.IsValid());
+  R__ASSERT(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -84,7 +84,7 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &another) : TMatrixTBase<Ele
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &another)
 {
-  Assert(another.IsValid());
+  R__ASSERT(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -93,7 +93,7 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &another)
 template<class Element>
 TMatrixT<Element>::TMatrixT(const TMatrixTSparse<Element> &another)
 {
-  Assert(another.IsValid());
+  R__ASSERT(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
@@ -106,10 +106,10 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &proto
   // Example: TMatrixT<Element> a(10,12); ...; TMatrixT<Element> b(TMatrixT::kTransposed, a);
   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
-  Assert(this != &prototype);
+  R__ASSERT(this != &prototype);
   this->Invalidate();
 
-  Assert(prototype.IsValid());
+  R__ASSERT(prototype.IsValid());
 
   switch(op) {
     case kZero:
@@ -135,7 +135,7 @@ TMatrixT<Element>::TMatrixT(EMatrixCreatorsOp1 op,const TMatrixT<Element> &proto
                prototype.GetRowLwb(),prototype.GetColLwb(),1);
       *this = prototype;
       // Since the user can not control the tolerance of this newly created matrix
-      // we put it to the smallest possible number 
+      // we put it to the smallest possible number
       const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
       this->Invert();
       this->SetTol(oldTol);
@@ -162,8 +162,8 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 
   this->Invalidate();
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  R__ASSERT(a.IsValid());
+  R__ASSERT(b.IsValid());
 
   switch(op) {
     case kMult:
@@ -218,8 +218,8 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
 {
   this->Invalidate();
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  R__ASSERT(a.IsValid());
+  R__ASSERT(b.IsValid());
 
   switch(op) {
     case kMult:
@@ -253,7 +253,7 @@ TMatrixT<Element>::TMatrixT(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,con
     {
       Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
       Plus(a,b);
-      break; 
+      break;
     }
 
     case kMinus:
@@ -274,8 +274,8 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 {
   this->Invalidate();
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  R__ASSERT(a.IsValid());
+  R__ASSERT(b.IsValid());
 
   switch(op) {
     case kMult:
@@ -309,7 +309,7 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
     {
       Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
       Plus(a,b);
-      break; 
+      break;
     }
 
     case kMinus:
@@ -330,8 +330,8 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
 {
   this->Invalidate();
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  R__ASSERT(a.IsValid());
+  R__ASSERT(b.IsValid());
 
   switch(op) {
     case kMult:
@@ -364,7 +364,7 @@ TMatrixT<Element>::TMatrixT(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,
     {
       Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1);
       Plus(*dynamic_cast<const TMatrixT<Element> *>(&a),b);
-      break; 
+      break;
     }
 
     case kMinus:
@@ -392,14 +392,14 @@ TMatrixT<Element>::TMatrixT(const TMatrixTLazy<Element> &lazy_constructor)
 //______________________________________________________________________________
 template<class Element>
 void TMatrixT<Element>::Delete_m(Int_t size,Element *&m)
-{ 
+{
   // delete data pointer m, if it was assigned on the heap
 
   if (m) {
     if (size > this->kSizeMax)
       delete [] m;
     m = 0;
-  }       
+  }
 }
 
 //______________________________________________________________________________
@@ -670,7 +670,7 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixT<Element> 
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp);
 #endif
 }
 
@@ -682,8 +682,8 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixT<Elemen
   // Create a matrix C such that C = A * B.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
     if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
       Error("Mult","A rows and B columns incompatible");
       this->Invalidate();
@@ -724,7 +724,7 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixT<Elemen
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp);
 
 #endif
 }
@@ -737,8 +737,8 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
   // Create a matrix C such that C = A * B.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
     if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
       Error("Mult","A rows and B columns incompatible");
       this->Invalidate();
@@ -779,7 +779,7 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp);
 #endif
 }
 
@@ -792,8 +792,8 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixTSym<Ele
   // Create a matrix C such that C = A * B.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
     if (a.GetNcols() != b.GetNrows() || a.GetColLwb() != b.GetRowLwb()) {
       Error("Mult","A rows and B columns incompatible");
       this->Invalidate();
@@ -834,7 +834,7 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a,const TMatrixTSym<Ele
   const Element * const bp = b.GetMatrixArray();
         Element *       cp = this->GetMatrixArray();
 
-  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp); 
+  AMultB(ap,na,ncolsa,bp,nb,ncolsb,cp);
 #endif
 }
 
@@ -846,8 +846,8 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixT<Element>
   // c[i,j] = SUM{ a[k,i] * b[k,j] }.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
     if (a.GetNrows() != b.GetNrows() || a.GetRowLwb() != b.GetRowLwb()) {
       Error("TMult","A rows and B columns incompatible");
       this->Invalidate();
@@ -899,8 +899,8 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a,const TMatrixTSym<Eleme
   // c[i,j] = SUM{ a[k,i] * b[k,j] }.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
     if (a.GetNrows() != b.GetNrows() || a.GetRowLwb() != b.GetRowLwb()) {
       Error("TMult","A rows and B columns incompatible");
       this->Invalidate();
@@ -951,8 +951,8 @@ void TMatrixT<Element>::MultT(const TMatrixT<Element> &a,const TMatrixT<Element>
   // General matrix multiplication. Create a matrix C such that C = A * B^T.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
       Error("MultT","A rows and B columns incompatible");
@@ -1006,8 +1006,8 @@ void TMatrixT<Element>::MultT(const TMatrixTSym<Element> &a,const TMatrixT<Eleme
   // Create a matrix C such that C = A * B^T.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
     if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
       Error("MultT","A rows and B columns incompatible");
       this->Invalidate();
@@ -1096,7 +1096,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int
   // else          : return [row_lwb..row_upb][col_lwb..col_upb]
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("GetSub","row_lwb out of bounds");
       target.Invalidate();
@@ -1165,11 +1165,11 @@ TMatrixTBase<Element> &TMatrixT<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,con
 {
   // Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][col_lwb..col_lwb+ncols_source];
-  
+
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
-  
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
+
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("SetSub","row_lwb outof bounds");
       this->Invalidate();
@@ -1190,7 +1190,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,con
 
   const Int_t nRows_source = source.GetNrows();
   const Int_t nCols_source = source.GetNcols();
-  
+
   if (source.GetRowIndexArray() && source.GetColIndexArray()) {
     const Int_t rowlwb_s = source.GetRowLwb();
     const Int_t collwb_s = source.GetColLwb();
@@ -1202,7 +1202,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,con
   } else {
     const Element *bp = source.GetMatrixArray();
           Element *ap = this->GetMatrixArray()+(row_lwb-this->fRowLwb)*this->fNcols+(col_lwb-this->fColLwb);
-  
+
     for (Int_t irow = 0; irow < nRows_source; irow++) {
       Element *ap_sub = ap;
       for (Int_t icol = 0; icol < nCols_source; icol++) {
@@ -1223,7 +1223,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t
   // New dynamic elements are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (!this->fIsOwner) {
     Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
     this->Invalidate();
@@ -1245,7 +1245,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t
     const Int_t ncols_old    = this->fNcols;
 
     Allocate(nrows,ncols);
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
 
     Element *elements_new = GetMatrixArray();
     // new memory should be initialized but be careful ot to wipe out the stack
@@ -1256,8 +1256,8 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t
       memset(elements_new+nelems_old,0,(this->fNelems-nelems_old)*sizeof(Element));
 
     // Copy overlap
-    const Int_t ncols_copy = TMath::Min(this->fNcols,ncols_old); 
-    const Int_t nrows_copy = TMath::Min(this->fNrows,nrows_old); 
+    const Int_t ncols_copy = TMath::Min(this->fNcols,ncols_old);
+    const Int_t nrows_copy = TMath::Min(this->fNrows,nrows_old);
 
     const Int_t nelems_new = this->fNelems;
     if (ncols_old < this->fNcols) {
@@ -1287,7 +1287,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,I
   // New dynamic elemenst are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (!this->fIsOwner) {
     Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
     this->Invalidate();
@@ -1317,7 +1317,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,I
     const Int_t colLwb_old   = this->fColLwb;
 
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb);
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
 
     Element *elements_new = GetMatrixArray();
     // new memory should be initialized but be careful ot to wipe out the stack
@@ -1328,10 +1328,10 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,I
       memset(elements_new+nelems_old,0,(this->fNelems-nelems_old)*sizeof(Element));
 
     // Copy overlap
-    const Int_t rowLwb_copy = TMath::Max(this->fRowLwb,rowLwb_old); 
-    const Int_t colLwb_copy = TMath::Max(this->fColLwb,colLwb_old); 
-    const Int_t rowUpb_copy = TMath::Min(this->fRowLwb+this->fNrows-1,rowLwb_old+nrows_old-1); 
-    const Int_t colUpb_copy = TMath::Min(this->fColLwb+this->fNcols-1,colLwb_old+ncols_old-1); 
+    const Int_t rowLwb_copy = TMath::Max(this->fRowLwb,rowLwb_old);
+    const Int_t colLwb_copy = TMath::Max(this->fColLwb,colLwb_old);
+    const Int_t rowUpb_copy = TMath::Min(this->fRowLwb+this->fNrows-1,rowLwb_old+nrows_old-1);
+    const Int_t colUpb_copy = TMath::Min(this->fColLwb+this->fNcols-1,colLwb_old+ncols_old-1);
 
     const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
     const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
@@ -1390,7 +1390,7 @@ TMatrixT<Element> &TMatrixT<Element>::Invert(Double_t *det)
 {
   // Invert the matrix and calculate its determinant
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   TMatrixD tmp(*this);
   TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
   memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
@@ -1404,7 +1404,7 @@ TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
 {
   // Invert the matrix and calculate its determinant
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   const Char_t nRows = Char_t(this->GetNrows());
   switch (nRows) {
@@ -1468,10 +1468,10 @@ template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::Transpose(const TMatrixT<Element> &source)
 {
   // Transpose a matrix.
-      
-  Assert(this->IsValid());
-  Assert(source.IsValid());
-        
+
+  R__ASSERT(this->IsValid());
+  R__ASSERT(source.IsValid());
+
   if (this == &source) {
     Element *ap = this->GetMatrixArray();
     if (this->fNrows == this->fNcols && this->fRowLwb == this->fColLwb) {
@@ -1527,7 +1527,7 @@ TMatrixT<Element> &TMatrixT<Element>::Transpose(const TMatrixT<Element> &source)
         sp2 += this->fNrows;
       }
     }
-    Assert(tp == tp_last && scp == sp1+this->fNrows);
+    R__ASSERT(tp == tp_last && scp == sp1+this->fNrows);
   }
 
   return *this;
@@ -1539,10 +1539,10 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v,Ele
 {
   // Perform a rank 1 operation on the matrix:
   //     A += alpha * v * v^T
-      
+
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(v.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(v.IsValid());
    if (v.GetNoElements() < TMath::Max(this->fNrows,this->fNcols)) {
       Error("Rank1Update","vector too short");
       this->Invalidate();
@@ -1564,15 +1564,15 @@ TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v,Ele
 
 //______________________________________________________________________________
 template<class Element>
-TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,const TVectorT<Element> &v2,Element alpha)       
+TMatrixT<Element> &TMatrixT<Element>::Rank1Update(const TVectorT<Element> &v1,const TVectorT<Element> &v2,Element alpha)
 {
-  // Perform a rank 1 operation on the matrix:                          
+  // Perform a rank 1 operation on the matrix:
   //     A += alpha * v1 * v2^T
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(v1.IsValid());
-    Assert(v2.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(v1.IsValid());
+    R__ASSERT(v2.IsValid());
     if (v1.GetNoElements() < this->fNrows) {
       Error("Rank1Update","vector v1 too short");
       this->Invalidate();
@@ -1606,8 +1606,8 @@ Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v) const
 // Calculate scalar v * (*this) * v^T
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(v.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(v.IsValid());
     if (this->fNcols != this->fNrows || this->fColLwb != this->fRowLwb) {
       Error("Similarity(const TVectorT &)","matrix is not square");
       return -1.;
@@ -1632,7 +1632,7 @@ Element TMatrixT<Element>::Similarity(const TVectorT<Element> &v) const
     sum1 += sum2 * *vp++;
   }
 
-  Assert(mp == this->GetMatrixArray()+this->GetNoElements());
+  R__ASSERT(mp == this->GetMatrixArray()+this->GetNoElements());
 
   return sum1;
 }
@@ -1647,8 +1647,8 @@ TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Op
   // else  :  b(i,j) = a(i,j)*v(i)
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(v.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(v.IsValid());
     if (v.GetNoElements() < this->fNrows) {
       Error("NormByColumn","vector shorter than matrix column");
       this->Invalidate();
@@ -1668,7 +1668,7 @@ TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Op
     for ( ; mp < mp_last; pv++) {
       for (Int_t j = 0; j < this->fNcols; j++)
       {
-        Assert(*pv != 0.0);
+        R__ASSERT(*pv != 0.0);
         *mp++ /= *pv;
       }
     }
@@ -1691,8 +1691,8 @@ TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Optio
   // else  :  b(i,j) = a(i,j)*v(j)
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(v.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(v.IsValid());
     if (v.GetNoElements() < this->fNcols) {
       Error("NormByRow","vector shorter than matrix column");
       this->Invalidate();
@@ -1712,7 +1712,7 @@ TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Optio
   if (divide) {
     for ( ; mp < mp_last; pv = pv0 )
       for (Int_t j = 0; j < this->fNcols; j++) {
-        Assert(*pv != 0.0);
+        R__ASSERT(*pv != 0.0);
         *mp++ /= *pv++;
       }
   } else {
@@ -1798,7 +1798,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSparse<Element> &s
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTLazy<Element> &lazy_constructor)
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   if (lazy_constructor.GetRowUpb() != this->GetRowUpb() ||
       lazy_constructor.GetColUpb() != this->GetColUpb() ||
@@ -1820,7 +1820,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(Element val)
 {
   // Assign val to every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = this->GetMatrixArray();
   const Element * const ep_last = ep+this->fNelems;
@@ -1836,7 +1836,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator+=(Element val)
 {
   // Add val to every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = this->GetMatrixArray();
   const Element * const ep_last = ep+this->fNelems;
@@ -1852,7 +1852,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator-=(Element val)
 {
   // Subtract val from every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = this->GetMatrixArray();
   const Element * const ep_last = ep+this->fNelems;
@@ -1868,7 +1868,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(Element val)
 {
   // Multiply every element of the matrix with val.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = this->GetMatrixArray();
   const Element * const ep_last = ep+this->fNelems;
@@ -1971,8 +1971,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source
   // "Inplace" multiplication is only allowed when the 'source' matrix is square.
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
     if (this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb() ||
         this->fNcols != source.GetNcols() || this->fColLwb != source.GetColLwb()) {
       Error("operator*=(const TMatrixT &)","source matrix has wrong shape");
@@ -2017,10 +2017,10 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixT<Element> &source
       scp -= source.GetNoElements()-1;               // Set bcp to the (j+1)-th col
     }
     trp0 += this->fNcols;                            // Set trp0 to the (i+1)-th row
-    Assert(trp0 == cp);
-  }                                             
+    R__ASSERT(trp0 == cp);
+  }
 
-  Assert(cp == trp0_last && trp0 == trp0_last);
+  R__ASSERT(cp == trp0_last && trp0 == trp0_last);
   if (isAllocated)
     delete [] trp;
 
@@ -2035,8 +2035,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
   // done inplace, though only the row of the target matrix needs to be saved.
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
     if (this->fNcols != source.GetNrows() || this->fColLwb != source.GetRowLwb()) {
       Error("operator*=(const TMatrixTSym &)","source matrix has wrong shape");
       this->Invalidate();
@@ -2069,7 +2069,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
   const Element * const trp0_last = trp0+this->fNelems;
   while (trp0 < trp0_last) {
     memcpy(trp,trp0,this->fNcols*sizeof(Element));        // copy the i-th row of target, Start at target[i,0]
-    for (const Element *scp = sp; scp < sp+this->fNcols; ) {  // Pointer to the j-th column of source, 
+    for (const Element *scp = sp; scp < sp+this->fNcols; ) {  // Pointer to the j-th column of source,
                                                          // Start scp = source[0,0]
       Element cij = 0;
       for (Int_t j = 0; j < this->fNcols; j++) {
@@ -2080,12 +2080,12 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
       scp -= source.GetNoElements()-1;               // Set bcp to the (j+1)-th col
     }
     trp0 += this->fNcols;                            // Set trp0 to the (i+1)-th row
-    Assert(trp0 == cp); 
-  }        
+    R__ASSERT(trp0 == cp);
+  }
 
-  Assert(cp == trp0_last && trp0 == trp0_last);
+  R__ASSERT(cp == trp0_last && trp0 == trp0_last);
   if (isAllocated)
-    delete [] trp; 
+    delete [] trp;
 
 
   return *this;
@@ -2099,9 +2099,9 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTDiag_const<Elemen
   // matrix(i,j) *= diag(j), j=1,fNcols
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(diag.GetMatrix()->IsValid());
-    Assert(this->fNcols == diag.GetNdiags());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(diag.GetMatrix()->IsValid());
+    R__ASSERT(this->fNcols == diag.GetNdiags());
     if (this->fNcols != diag.GetNdiags()) {
       Error("operator*=(const TMatrixDDiag_const &)","wrong diagonal length");
       this->Invalidate();
@@ -2131,8 +2131,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Elemen
   // matrix(i,j) /= diag(j)
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(diag.GetMatrix()->IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(diag.GetMatrix()->IsValid());
     if (this->fNcols != diag.GetNdiags()) {
       Error("operator/=(const TMatrixDDiag_const &)","wrong diagonal length");
       this->Invalidate();
@@ -2146,7 +2146,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTDiag_const<Elemen
   while (mp < mp_last) {
     const Element *dp = diag.GetPtr();
     for (Int_t j = 0; j < this->fNcols; j++) {
-      Assert(*dp != 0.0);
+      R__ASSERT(*dp != 0.0);
       *mp++ /= *dp;
       dp += inc;
     }
@@ -2165,8 +2165,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTColumn_const<Elem
   const TMatrixTBase<Element> *mt = col.GetMatrix();
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(mt->IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(mt->IsValid());
     if (this->fNrows != mt->GetNrows()) {
       Error("operator*=(const TMatrixTColumn_const &)","wrong column length");
       this->Invalidate();
@@ -2180,7 +2180,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTColumn_const<Elem
   const Element *cp = col.GetPtr();      //  ptr
   const Int_t inc = col.GetInc();
   while (mp < mp_last) {
-    Assert(cp < endp);
+    R__ASSERT(cp < endp);
     for (Int_t j = 0; j < this->fNcols; j++)
       *mp++ *= *cp;
     cp += inc;
@@ -2199,8 +2199,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTColumn_const<Elem
   const TMatrixTBase<Element> *mt = col.GetMatrix();
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(mt->IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(mt->IsValid());
     if (this->fNrows != mt->GetNrows()) {
       Error("operator/=(const TMatrixTColumn_const &)","wrong column matrix");
       this->Invalidate();
@@ -2214,8 +2214,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTColumn_const<Elem
   const Element *cp = col.GetPtr();      //  ptr
   const Int_t inc = col.GetInc();
   while (mp < mp_last) {
-    Assert(cp < endp);
-    Assert(*cp != 0.0);
+    R__ASSERT(cp < endp);
+    R__ASSERT(*cp != 0.0);
     for (Int_t j = 0; j < this->fNcols; j++)
       *mp++ /= *cp;
     cp += inc;
@@ -2234,8 +2234,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTRow_const<Element
   const TMatrixTBase<Element> *mt = row.GetMatrix();
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(mt->IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(mt->IsValid());
     if (this->fNcols != mt->GetNcols()) {
       Error("operator*=(const TMatrixTRow_const &)","wrong row length");
       this->Invalidate();
@@ -2250,7 +2250,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTRow_const<Element
   while (mp < mp_last) {
     const Element *rp = row.GetPtr();    // Row ptr
     for (Int_t j = 0; j < this->fNcols; j++) {
-      Assert(rp < endp);
+      R__ASSERT(rp < endp);
       *mp++ *= *rp;
       rp += inc;
     }
@@ -2267,8 +2267,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTRow_const<Element
   // matrix(i,j) /= another(k,j) for fixed k
 
   const TMatrixTBase<Element> *mt = row.GetMatrix();
-  Assert(this->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fNcols != mt->GetNcols()) {
     Error("operator/=(const TMatrixTRow_const &)","wrong row length");
@@ -2283,8 +2283,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTRow_const<Element
   while (mp < mp_last) {
     const Element *rp = row.GetPtr();    // Row ptr
     for (Int_t j = 0; j < this->fNcols; j++) {
-      Assert(rp < endp);
-      Assert(*rp != 0.0);
+      R__ASSERT(rp < endp);
+      R__ASSERT(*rp != 0.0);
       *mp++ /= *rp;
       rp += inc;
     }
@@ -3004,7 +3004,7 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixT<Element> 
         Element *tp  = target.GetMatrixArray();
   const Element *ftp = tp+target.GetNoElements();
   while ( tp < ftp ) {
-    Assert(*sp != 0.0);
+    R__ASSERT(*sp != 0.0);
     *tp++ /= *sp++;
   }
 
@@ -3027,7 +3027,7 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixTSym<Elemen
         Element *tp  = target.GetMatrixArray();
   const Element *ftp = tp+target.GetNoElements();
   while ( tp < ftp ) {
-    Assert(*sp != 0.0);
+    R__ASSERT(*sp != 0.0);
     *tp++ /= *sp++;
   }
 
@@ -3037,7 +3037,7 @@ TMatrixT<Element> &ElementDiv(TMatrixT<Element> &target,const TMatrixTSym<Elemen
 //______________________________________________________________________________
 template<class Element>
 void AMultB(const Element * const ap,Int_t na,Int_t ncolsa,
-            const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp) 
+            const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp)
 {
   const Element *arp0 = ap;                     // Pointer to  A[i,0];
   while (arp0 < ap+na) {
@@ -3056,10 +3056,10 @@ void AMultB(const Element * const ap,Int_t na,Int_t ncolsa,
 }
 
 //______________________________________________________________________________
-template<class Element>                                     
+template<class Element>
 void AtMultB(const Element * const ap,Int_t ncolsa,
              const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp)
-{ 
+{
   const Element *acp0 = ap;           // Pointer to  A[i,0];
   while (acp0 < ap+ncolsa) {
     for (const Element *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
@@ -3074,8 +3074,8 @@ void AtMultB(const Element * const ap,Int_t ncolsa,
       bcp -= nb-1;                    // Set bcp to the (j+1)-th col
     }
     acp0++;                           // Set acp0 to the (i+1)-th col
-  } 
-}     
+  }
+}
 
 //______________________________________________________________________________
 template<class Element>

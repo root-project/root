@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.19 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.cxx,v 1.20 2005/11/14 22:36:48 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -95,7 +95,7 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 {
    // Initialize the CallFunc objects when selector is interpreted.
 
-   Assert(cl);
+   R__ASSERT(cl);
 
    // The G__MethodInfo created by SetFuncProto will remember the address
    // of cl, so we need to keep it around.

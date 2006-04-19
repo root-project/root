@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.1 2005/12/22 09:27:57 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTLazy.cxx,v 1.2 2005/12/23 19:55:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -38,7 +38,7 @@ template<class Element>
 THaarMatrixT<Element>::THaarMatrixT(Int_t order,Int_t no_cols)
     : TMatrixTLazy<Element>(1<<order, no_cols == 0 ? 1<<order : no_cols)
 {
-  Assert(order > 0 && no_cols >= 0);
+  R__ASSERT(order > 0 && no_cols >= 0);
 }
 
 //______________________________________________________________________________
@@ -54,10 +54,10 @@ void MakeHaarMat(TMatrixT<Element> &m)
   // column 4: [ 0  0  1 -1]/sqrt(2)
   // Matrix m is assumed to be zero originally.
 
-  Assert(m.IsValid());
+  R__ASSERT(m.IsValid());
   const Int_t no_rows = m.GetNrows();
   const Int_t no_cols = m.GetNcols();
-  Assert(no_rows >= no_cols && no_cols > 0);
+  R__ASSERT(no_rows >= no_cols && no_cols > 0);
 
   // It is easier to calculate a Haar matrix when the elements are stored
   // column-wise . Since we are row-wise, the transposed Haar is calculted
@@ -91,8 +91,8 @@ void MakeHaarMat(TMatrixT<Element> &m)
     norm_factor *= TMath::Sqrt(2.0);
   }
 
-  Assert(step_length != 0       || cp == m_end);
-  Assert(no_rows     != no_cols || step_length == 0);
+  R__ASSERT(step_length != 0       || cp == m_end);
+  R__ASSERT(no_rows     != no_cols || step_length == 0);
 
   m.Transpose(mtr);
 }
@@ -109,7 +109,7 @@ template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t no_rows,Int_t no_cols)
     : TMatrixTLazy<Element>(no_rows,no_cols)
 {
-  Assert(no_rows > 0 && no_cols > 0);
+  R__ASSERT(no_rows > 0 && no_cols > 0);
 }
 
 //______________________________________________________________________________
@@ -117,7 +117,7 @@ template<class Element>
 THilbertMatrixT<Element>::THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
     : TMatrixTLazy<Element>(row_lwb,row_upb,col_lwb,col_upb)
 {
-  Assert(row_upb-row_lwb+1 > 0 && col_upb-col_lwb+1 > 0);
+  R__ASSERT(row_upb-row_lwb+1 > 0 && col_upb-col_lwb+1 > 0);
 }
 
 //______________________________________________________________________________
@@ -127,10 +127,10 @@ void MakeHilbertMat(TMatrixT<Element> &m)
   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
   // i,j=0...max-1 (matrix need not be a square one).
 
-  Assert(m.IsValid());
+  R__ASSERT(m.IsValid());
   const Int_t no_rows = m.GetNrows();
   const Int_t no_cols = m.GetNcols();
-  Assert(no_rows > 0 && no_cols > 0);
+  R__ASSERT(no_rows > 0 && no_cols > 0);
 
   Element *cp = m.GetMatrixArray();
   for (Int_t i = 0; i < no_rows; i++)
@@ -150,7 +150,7 @@ template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t no_rows)
     : TMatrixTSymLazy<Element>(no_rows)
 {
-  Assert(no_rows > 0);
+  R__ASSERT(no_rows > 0);
 }
 
 //______________________________________________________________________________
@@ -158,7 +158,7 @@ template<class Element>
 THilbertMatrixTSym<Element>::THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb)
     : TMatrixTSymLazy<Element>(row_lwb,row_upb)
 {
-  Assert(row_upb-row_lwb+1 > 0);
+  R__ASSERT(row_upb-row_lwb+1 > 0);
 }
 
 //______________________________________________________________________________
@@ -168,9 +168,9 @@ void MakeHilbertMat(TMatrixTSym<Element> &m)
   // Make a Hilbert matrix. Hilb[i,j] = 1/(i+j+1),
   // i,j=0...max-1 (matrix must be square).
 
-  Assert(m.IsValid());
+  R__ASSERT(m.IsValid());
   const Int_t no_rows = m.GetNrows();
-  Assert(no_rows > 0);
+  R__ASSERT(no_rows > 0);
 
   Element *cp = m.GetMatrixArray();
   for (Int_t i = 0; i < no_rows; i++)

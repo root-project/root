@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.124 2006/02/10 23:43:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.125 2006/03/20 21:43:44 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -460,7 +460,7 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
 
-   Assert(fe); // There used to be a "if (fe)" test ... Keep this assert until we are sure that fe is never null
+   R__ASSERT(fe); // There used to be a "if (fe)" test ... Keep this assert until we are sure that fe is never null
 
    fFriends->Add(fe);
 
@@ -483,7 +483,7 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
 
-   Assert(fe); // There used to be a "if (fe)" test ... Keep this assert until we are sure that fe is never null
+   R__ASSERT(fe); // There used to be a "if (fe)" test ... Keep this assert until we are sure that fe is never null
 
    fFriends->Add(fe);
 
@@ -506,7 +506,7 @@ TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,alias);
-   Assert(fe);
+   R__ASSERT(fe);
 
    fFriends->Add(fe);
 
@@ -1203,11 +1203,11 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    //   file->mkdir("mydir")->cd();
    //   ch.Merge(file);
    //
-   // If 'option' contains the word 'fast' the merge will be done without 
+   // If 'option' contains the word 'fast' the merge will be done without
    // unzipping or unstreaming the baskets (i.e. direct copy of the raw byte on disk).
-   // If 'option' also containts 'SortBasketsByBranch', for each original tree, 
-   // the branches' baskets will be reordered so that for each branch, all its 
-   // baskets will be stored contiguously.  Typically this will increase the performance 
+   // If 'option' also containts 'SortBasketsByBranch', for each original tree,
+   // the branches' baskets will be reordered so that for each branch, all its
+   // baskets will be stored contiguously.  Typically this will increase the performance
    // when reading a low number of branches (2 to 5) but will decrease the performance
    // when reading more branches (or the full entry).
    //
@@ -1697,7 +1697,7 @@ void TChain::SetProof(TVirtualProof *proof)
    ReleaseChainProof();
    if (proof) {
       TDSet* set = MakeTDSet();
-      Assert(set);         // should always succeed
+      R__ASSERT(set);         // should always succeed
       fChainProof = TChainProof::MakeChainProof(set, proof);
       if (!fChainProof)
          Error("SetProof", "can't set PROOF");

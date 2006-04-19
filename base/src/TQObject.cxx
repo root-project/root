@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.45 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.46 2006/03/20 21:43:41 pcanal Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -490,7 +490,7 @@ void TQConnectionList::ls(Option_t *option) const
    // List signal name and list all connections in this signal list.
 
    cout <<  "TQConnectionList:" << "\t" << GetName() << endl;
-   ((TQConnectionList*)this)->ForEach(TQConnection,Print)(option);
+   ((TQConnectionList*)this)->R__FOR_EACH(TQConnection,Print)(option);
 }
 
 //______________________________________________________________________________

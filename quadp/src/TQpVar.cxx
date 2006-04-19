@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.5 2005/09/04 10:02:30 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -91,10 +91,10 @@ TQpVar::TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
   fMy = fY.GetNrows();
   fMz = fZ.GetNrows();
 
-  Assert(fNx == fXloIndex.GetNrows() || 0 == fXloIndex.GetNrows());
-  Assert(fNx == fXloIndex.GetNrows() || 0 == fXloIndex.GetNrows());
-  Assert(fMz == fCloIndex.GetNrows() || 0 == fCloIndex.GetNrows());
-  Assert(fMz == fCupIndex.GetNrows() || 0 == fCupIndex.GetNrows());
+  R__ASSERT(fNx == fXloIndex.GetNrows() || 0 == fXloIndex.GetNrows());
+  R__ASSERT(fNx == fXloIndex.GetNrows() || 0 == fXloIndex.GetNrows());
+  R__ASSERT(fMz == fCloIndex.GetNrows() || 0 == fCloIndex.GetNrows());
+  R__ASSERT(fMz == fCupIndex.GetNrows() || 0 == fCupIndex.GetNrows());
 
   fNxlo = fXloIndex.NonZeros();
   fNxup = fXupIndex.NonZeros();
@@ -102,43 +102,43 @@ TQpVar::TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
   fMcup = fCupIndex.NonZeros();
   fNComplementaryVariables = fMclo+fMcup+fNxlo+fNxup;
 
-  Assert(fMz == fS.GetNrows());
-  Assert(fNx == fV     .GetNrows() || (0 == fV     .GetNrows() && fNxlo == 0));
-  Assert(fNx == fGamma .GetNrows() || (0 == fGamma .GetNrows() && fNxlo == 0));
+  R__ASSERT(fMz == fS.GetNrows());
+  R__ASSERT(fNx == fV     .GetNrows() || (0 == fV     .GetNrows() && fNxlo == 0));
+  R__ASSERT(fNx == fGamma .GetNrows() || (0 == fGamma .GetNrows() && fNxlo == 0));
 
-  Assert(fNx == fW     .GetNrows() || (0 == fW     .GetNrows() && fNxup == 0));
-  Assert(fNx == fPhi   .GetNrows() || (0 == fPhi   .GetNrows() && fNxup == 0));
+  R__ASSERT(fNx == fW     .GetNrows() || (0 == fW     .GetNrows() && fNxup == 0));
+  R__ASSERT(fNx == fPhi   .GetNrows() || (0 == fPhi   .GetNrows() && fNxup == 0));
 
-  Assert(fMz == fT     .GetNrows() || (0 == fT     .GetNrows() && fMclo == 0));
-  Assert(fMz == fLambda.GetNrows() || (0 == fLambda.GetNrows() && fMclo == 0));
+  R__ASSERT(fMz == fT     .GetNrows() || (0 == fT     .GetNrows() && fMclo == 0));
+  R__ASSERT(fMz == fLambda.GetNrows() || (0 == fLambda.GetNrows() && fMclo == 0));
 
-  Assert(fMz == fU     .GetNrows() || (0 == fU     .GetNrows() && fMcup == 0));
-  Assert(fMz == fPi    .GetNrows() || (0 == fPi    .GetNrows() && fMcup == 0));
+  R__ASSERT(fMz == fU     .GetNrows() || (0 == fU     .GetNrows() && fMcup == 0));
+  R__ASSERT(fMz == fPi    .GetNrows() || (0 == fPi    .GetNrows() && fMcup == 0));
 }
 
 //______________________________________________________________________________
 TQpVar::TQpVar(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlow,TVectorD &ixupp,
                                           TVectorD &iclow,TVectorD &icupp)
 {
-  Assert(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
-  Assert(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
-  Assert(mz == iclow.GetNrows() || 0 == iclow.GetNrows());
-  Assert(mz == icupp.GetNrows() || 0 == icupp.GetNrows());
+  R__ASSERT(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
+  R__ASSERT(nx == ixlow.GetNrows() || 0 == ixlow.GetNrows());
+  R__ASSERT(mz == iclow.GetNrows() || 0 == iclow.GetNrows());
+  R__ASSERT(mz == icupp.GetNrows() || 0 == icupp.GetNrows());
 
   fNxlo = ixlow.NonZeros();
   fNxup = ixupp.NonZeros();
   fMclo = iclow.NonZeros();
   fMcup = icupp.NonZeros();
 
-  if (ixlow.GetNrows() > 0) fXloIndex.Use(ixlow.GetNrows(),ixlow.GetMatrixArray()); 
-  if (ixupp.GetNrows() > 0) fXupIndex.Use(ixupp.GetNrows(),ixupp.GetMatrixArray());  
-  if (iclow.GetNrows() > 0) fCloIndex.Use(iclow.GetNrows(),iclow.GetMatrixArray()); 
+  if (ixlow.GetNrows() > 0) fXloIndex.Use(ixlow.GetNrows(),ixlow.GetMatrixArray());
+  if (ixupp.GetNrows() > 0) fXupIndex.Use(ixupp.GetNrows(),ixupp.GetMatrixArray());
+  if (iclow.GetNrows() > 0) fCloIndex.Use(iclow.GetNrows(),iclow.GetMatrixArray());
   if (icupp.GetNrows() > 0) fCupIndex.Use(icupp.GetNrows(),icupp.GetMatrixArray());
-  
+
   fNx = nx;
   fMy = my;
   fMz = mz;
-  
+
   if (fMclo > 0) {
     fT.ResizeTo(fMz);
     fLambda.ResizeTo(fMz);
@@ -172,14 +172,14 @@ TQpVar::TQpVar(const TQpVar &another) : TObject(another)
 
 //______________________________________________________________________________
 Double_t TQpVar::GetMu()
-{   
+{
   Double_t mu = 0.0;
   if (fNComplementaryVariables > 0 ) {
     if (fMclo > 0) mu += fT*fLambda;
     if (fMcup > 0) mu += fU*fPi;
     if (fNxlo > 0) mu += fV*fGamma;
     if (fNxup > 0) mu += fW*fPhi;
-    
+
     mu /= fNComplementaryVariables;
 
   }
@@ -212,28 +212,28 @@ void TQpVar::Saxpy(TQpVar *b,Double_t alpha)
   Add(fZ,alpha,b->fZ);
   Add(fS,alpha,b->fS);
   if (fMclo > 0) {
-    Assert((b->fT)     .MatchesNonZeroPattern(fCloIndex) &&
+    R__ASSERT((b->fT)     .MatchesNonZeroPattern(fCloIndex) &&
            (b->fLambda).MatchesNonZeroPattern(fCloIndex));
 
     Add(fT     ,alpha,b->fT);
     Add(fLambda,alpha,b->fLambda);
   }
   if (fMcup > 0) {
-    Assert((b->fU) .MatchesNonZeroPattern(fCupIndex) &&
+    R__ASSERT((b->fU) .MatchesNonZeroPattern(fCupIndex) &&
            (b->fPi).MatchesNonZeroPattern(fCupIndex));
 
     Add(fU ,alpha,b->fU);
     Add(fPi,alpha,b->fPi);
   }
   if (fNxlo > 0) {
-    Assert((b->fV)    .MatchesNonZeroPattern(fXloIndex) &&
+    R__ASSERT((b->fV)    .MatchesNonZeroPattern(fXloIndex) &&
            (b->fGamma).MatchesNonZeroPattern(fXloIndex));
 
     Add(fV    ,alpha,b->fV);
     Add(fGamma,alpha,b->fGamma);
   }
   if (fNxup > 0) {
-    Assert((b->fW)  .MatchesNonZeroPattern(fXupIndex) &&
+    R__ASSERT((b->fW)  .MatchesNonZeroPattern(fXupIndex) &&
            (b->fPhi).MatchesNonZeroPattern(fXupIndex));
 
     Add(fW  ,alpha,b->fW);
@@ -272,32 +272,32 @@ Double_t TQpVar::StepBound(TQpVar *b)
   Double_t maxStep = 1.0;
 
   if (fMclo > 0 ) {
-    Assert(fT     .SomePositive(fCloIndex));
-    Assert(fLambda.SomePositive(fCloIndex));
+    R__ASSERT(fT     .SomePositive(fCloIndex));
+    R__ASSERT(fLambda.SomePositive(fCloIndex));
 
     maxStep = this->StepBound(fT,     b->fT,     maxStep);
     maxStep = this->StepBound(fLambda,b->fLambda,maxStep);
   }
 
   if (fMcup > 0 ) {
-    Assert(fU .SomePositive(fCupIndex));
-    Assert(fPi.SomePositive(fCupIndex));
+    R__ASSERT(fU .SomePositive(fCupIndex));
+    R__ASSERT(fPi.SomePositive(fCupIndex));
 
     maxStep = this->StepBound(fU, b->fU, maxStep);
     maxStep = this->StepBound(fPi,b->fPi,maxStep);
   }
 
   if (fNxlo > 0 ) {
-    Assert(fV    .SomePositive(fXloIndex));
-    Assert(fGamma.SomePositive(fXloIndex));
+    R__ASSERT(fV    .SomePositive(fXloIndex));
+    R__ASSERT(fGamma.SomePositive(fXloIndex));
 
     maxStep = this->StepBound(fV,    b->fV,    maxStep);
     maxStep = this->StepBound(fGamma,b->fGamma,maxStep);
   }
 
   if (fNxup > 0 ) {
-    Assert(fW  .SomePositive(fXupIndex));
-    Assert(fPhi.SomePositive(fXupIndex));
+    R__ASSERT(fW  .SomePositive(fXupIndex));
+    R__ASSERT(fPhi.SomePositive(fXupIndex));
 
     maxStep = this->StepBound(fW,  b->fW,  maxStep);
     maxStep = this->StepBound(fPhi,b->fPhi,maxStep);
@@ -308,7 +308,7 @@ Double_t TQpVar::StepBound(TQpVar *b)
 
 //______________________________________________________________________________
 Double_t TQpVar::StepBound(TVectorD &v,TVectorD &dir,Double_t maxStep)
-{ 
+{
   if (!AreCompatible(v,dir)) {
     ::Error("StepBound(TVectorD &,TVectorD &,Double_t)","vector's not compatible");
     return kFALSE;
@@ -354,23 +354,23 @@ Bool_t TQpVar::IsInteriorPoint()
 }
 
 //______________________________________________________________________________
-Double_t TQpVar::FindBlocking(TQpVar   *step, 
+Double_t TQpVar::FindBlocking(TQpVar   *step,
                               Double_t &primalValue,
                               Double_t &primalStep,
                               Double_t &dualValue,
-                              Double_t &dualStep, 
+                              Double_t &dualStep,
                               Int_t    &fIrstOrSecond)
-{ 
+{
   fIrstOrSecond = 0;
   Double_t alpha = 1.0;
   if (fMclo > 0)
     alpha = FindBlocking(fT,step->fT,fLambda,step->fLambda,alpha,
                          primalValue,primalStep,dualValue,dualStep,fIrstOrSecond);
-  
+
   if (fMcup > 0)
     alpha = FindBlocking(fU,step->fU,fPi,step->fPi,alpha,
                          primalValue,primalStep,dualValue,dualStep,fIrstOrSecond);
-  
+
   if (fNxlo > 0)
     alpha = FindBlocking(fV,step->fV,fGamma,step->fGamma,alpha,
                          primalValue,primalStep,dualValue,dualStep,fIrstOrSecond);
@@ -510,28 +510,28 @@ Double_t TQpVar::Violation()
   if (fNxlo > 0) {
     cmin = fV.Min();
     if (cmin < viol) viol = cmin;
-   
+
     cmin = fGamma.Min();
     if (cmin < viol) viol = cmin;
   }
   if (fNxup > 0) {
     cmin = fW.Min();
     if (cmin < viol) viol = cmin;
-   
+
     cmin = fPhi.Min();
     if (cmin < viol) viol = cmin;
   }
   if (fMclo > 0) {
     cmin = fT.Min();
     if (cmin < viol) viol = cmin;
-   
+
     cmin = fLambda.Min();
     if (cmin < viol) viol = cmin;
   }
   if (fMcup > 0) {
     cmin = fU.Min();
     if (cmin < viol) viol = cmin;
-   
+
     cmin = fPi.Min();
     if (cmin < viol) viol = cmin;
   }
@@ -656,7 +656,7 @@ Double_t TQpVar::NormInf()
 //______________________________________________________________________________
 Bool_t TQpVar::ValidNonZeroPattern()
 {
-  if (fNxlo > 0 && 
+  if (fNxlo > 0 &&
       ( !fV    .MatchesNonZeroPattern(fXloIndex) ||
         !fGamma.MatchesNonZeroPattern(fXloIndex) ) ) {
     return kFALSE;
@@ -678,7 +678,7 @@ Bool_t TQpVar::ValidNonZeroPattern()
         !fPi.MatchesNonZeroPattern(fCupIndex) ) ) {
     return kFALSE;
   }
-  
+
   return kTRUE;
 }
 
@@ -704,16 +704,16 @@ TQpVar &TQpVar::operator=(const TQpVar &source)
     fS     .ResizeTo(source.fS);      fS      = source.fS;
     fY     .ResizeTo(source.fY);      fY      = source.fY;
     fZ     .ResizeTo(source.fZ);      fZ      = source.fZ;
-  
+
     fV     .ResizeTo(source.fV);      fV      = source.fV;
     fPhi   .ResizeTo(source.fPhi);    fPhi    = source.fPhi;
-  
+
     fW     .ResizeTo(source.fW);      fW      = source.fW;
     fGamma .ResizeTo(source.fGamma) ; fGamma  = source.fGamma;
 
     fT     .ResizeTo(source.fT);      fT      = source.fT;
     fLambda.ResizeTo(source.fLambda); fLambda = source.fLambda;
-  
+
     fU     .ResizeTo(source.fU);      fU      = source.fU;
     fPi    .ResizeTo(source.fPi);     fPi     = source.fPi;
   }

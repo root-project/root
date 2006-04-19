@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.233 2006/02/22 19:51:06 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.234 2006/03/20 21:35:47 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -418,7 +418,7 @@ void TStreamerInfo::BuildCheck()
          Bool_t match = kTRUE;
          Bool_t done = kFALSE;
          if (!fClass->TestBit(TClass::kWarned) &&
-             fClassVersion == info->GetClassVersion() && fCheckSum != info->GetCheckSum()) 
+             fClassVersion == info->GetClassVersion() && fCheckSum != info->GetCheckSum())
          {
             match = kFALSE;
          }
@@ -436,7 +436,7 @@ void TStreamerInfo::BuildCheck()
                   e2->SetTitle(e1->GetTitle());
                }
             }
-            if (!match 
+            if (!match
                 && fClass->IsLoaded()
                 && (fClassVersion == fClass->GetClassVersion())
                 && fClass->GetListOfDataMembers()
@@ -445,10 +445,10 @@ void TStreamerInfo::BuildCheck()
             {
                // In the case where the read-in TStreamerInfo does not
                // match in the 'current' in memory TStreamerInfo for
-               // a non foreign class (we can get here if this is 
+               // a non foreign class (we can get here if this is
                // a foreign class so we do not need to test it),
-               // we need to add this one more test since the CINT behaviour 
-               // with enums changed over time, so verify the checksum ignoring 
+               // we need to add this one more test since the CINT behaviour
+               // with enums changed over time, so verify the checksum ignoring
                // members of type enum
                if (fCheckSum == fClass->GetCheckSum(1)) match = kTRUE;
                if (fOldVersion<=2) {
@@ -463,7 +463,7 @@ void TStreamerInfo::BuildCheck()
             delete info; info = 0;
          }
          if (!match && !fClass->TestBit(TClass::kWarned)) {
-            if (done) 
+            if (done)
                Warning("BuildCheck","\n\
         The StreamerInfo for version %d of class %s read from file %s\n\
         has a different checksum than the previously loaded StreamerInfo.\n\
@@ -475,7 +475,7 @@ void TStreamerInfo::BuildCheck()
                        ,gDirectory->GetFile()->GetName()
                        ,GetName(),gDirectory->GetFile()->GetName()
                        ,GetName(),fClassVersion);
-            else 
+            else
                Warning("BuildCheck","TStreamerInfo (WriteWarning) from %s does not match existing one (%s:%d)"
                     ,gDirectory->GetFile()->GetName()
                     ,GetName(),fClassVersion);
@@ -558,9 +558,9 @@ void TStreamerInfo::BuildEmulated(TFile *file)
 {
    // Create an Emulation TStreamerInfo object.
    char duName[100];
-   Assert(file);
+   R__ASSERT(file);
    Int_t fv = file->GetVersion()%100000;
-   Assert(fv < 30000);
+   R__ASSERT(fv < 30000);
    fClassVersion = -1;
    fCheckSum = 2001;
    TObjArray *elements = GetElements();
@@ -1154,7 +1154,7 @@ void TStreamerInfo::Clear(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-  
+
    if (opt.Contains("build")) {
       delete [] fType;     fType    = 0;
       delete [] fNewType;  fNewType = 0;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.2 2005/02/15 16:17:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.3 2006/03/20 21:43:43 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Sep 2004
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
 //______________________________________________________________________________
 TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   SetBit(kMatrixSet);
   fCondition = a.Norm1();
@@ -91,10 +91,10 @@ TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
   if (tol > 0)
     fTol = tol;
 
-  fNIpiv = a.GetNcols(); 
-  fIpiv = new Int_t[fNIpiv]; 
+  fNIpiv = a.GetNcols();
+  fIpiv = new Int_t[fNIpiv];
   memset(fIpiv,0,fNIpiv*sizeof(Int_t));
-  
+
   const Int_t nRows = a.GetNrows();
   fColLwb = fRowLwb = a.GetRowLwb();
   fU.ResizeTo(nRows,nRows);
@@ -289,7 +289,7 @@ Bool_t TDecompBK::Decompose()
 //______________________________________________________________________________
 void TDecompBK::SetMatrix(const TMatrixDSym &a)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   ResetStatus();
 
@@ -314,7 +314,7 @@ Bool_t TDecompBK::Solve(TVectorD &b)
 {
 // Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -446,11 +446,11 @@ Bool_t TDecompBK::Solve(TVectorD &b)
 
 //______________________________________________________________________________
 Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
-{ 
+{
 // Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
-    
+
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;
@@ -461,13 +461,13 @@ Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
       return kFALSE;
     }
   }
-    
+
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb()) {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
     b->Invalidate();
-    return kFALSE; 
-  }   
-    
+    return kFALSE;
+  }
+
   const Int_t n = fU.GetNrows();
 
   TMatrixDDiag_const diag(fU);
@@ -608,9 +608,9 @@ void TDecompBK::Invert(TMatrixDSym &inv)
 }
 
 //______________________________________________________________________________
-TMatrixDSym TDecompBK::Invert()                                        
-{  
-  // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned . 
+TMatrixDSym TDecompBK::Invert()
+{
+  // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
   const Int_t rowLwb = GetRowLwb();
   const Int_t rowUpb = rowLwb+GetNrows()-1;
@@ -634,7 +634,7 @@ void TDecompBK::Print(Option_t *opt) const
 
 //______________________________________________________________________________
 TDecompBK &TDecompBK::operator=(const TDecompBK &source)
-{ 
+{
   if (this != &source) {
     TDecompBase::operator=(source);
     fU.ResizeTo(source.fU);

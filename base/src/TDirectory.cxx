@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.81 2006/02/01 18:54:51 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.82 2006/02/03 21:55:38 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -634,7 +634,7 @@ void TDirectory::Draw(Option_t *option)
 // Loop on all objects (memory or file) and all subdirectories
 //
 
-   fList->ForEach(TObject,Draw)(option);
+   fList->R__FOR_EACH(TObject,Draw)(option);
 }
 
 //______________________________________________________________________________
@@ -1165,7 +1165,7 @@ void TDirectory::Paint(Option_t *option)
 //*-*                    ==================================
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   fList->ForEach(TObject,Paint)(option);
+   fList->R__FOR_EACH(TObject,Paint)(option);
 }
 
 //______________________________________________________________________________
@@ -1175,7 +1175,7 @@ void TDirectory::Print(Option_t *option) const
 //*-*                    ==================================
 //
 
-   fList->ForEach(TObject,Print)(option);
+   fList->R__FOR_EACH(TObject,Print)(option);
 }
 
 //______________________________________________________________________________
@@ -1576,7 +1576,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    //  It returns 0 if the object cannot be written.
 
    TDirectory::TContext ctxt(this);
-   
+
    if (fFile==0) return 0;
 
    if (!fFile->IsWritable()) {
@@ -1688,7 +1688,7 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    // see TDirectory::WriteObject for comments
 
    TDirectory::TContext ctxt(this);
-   
+
    if (fFile==0) return 0;
 
    if (!fFile->IsWritable()) {

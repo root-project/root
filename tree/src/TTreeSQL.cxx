@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.7 2006/02/06 21:26:29 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.cxx,v 1.8 2006/02/07 15:25:52 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -63,8 +63,8 @@ TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
 }
 
 //______________________________________________________________________________
-TBranch* TTreeSQL::BranchImp(const char *, const char *, 
-                             TClass *, void *, Int_t , 
+TBranch* TTreeSQL::BranchImp(const char *, const char *,
+                             TClass *, void *, Int_t ,
                              Int_t )
 {
    // Not implemented yet
@@ -74,7 +74,7 @@ TBranch* TTreeSQL::BranchImp(const char *, const char *,
 }
 
 //______________________________________________________________________________
-TBranch* TTreeSQL::BranchImp(const char *, TClass *, 
+TBranch* TTreeSQL::BranchImp(const char *, TClass *,
                              void *, Int_t , Int_t )
 {
    // Not implemented yet
@@ -84,7 +84,7 @@ TBranch* TTreeSQL::BranchImp(const char *, TClass *,
 }
 
 //______________________________________________________________________________
-Int_t TTreeSQL::Branch(TCollection *, Int_t, 
+Int_t TTreeSQL::Branch(TCollection *, Int_t,
                        Int_t, const char *)
 {
    // Not implemented yet
@@ -103,7 +103,7 @@ Int_t TTreeSQL::Branch(TList *, Int_t, Int_t)
 }
 
 //______________________________________________________________________________
-Int_t TTreeSQL::Branch(const char *, Int_t , 
+Int_t TTreeSQL::Branch(const char *, Int_t ,
                        Int_t)
 {
    // Not implemented yet
@@ -143,7 +143,7 @@ TBranch *TTreeSQL::Branch(const char *, const char *, void *,
 }
 
 //______________________________________________________________________________
-TBranch * TTreeSQL::Branch(const char *name, void *address, 
+TBranch * TTreeSQL::Branch(const char *name, void *address,
                            const char *leaflist, Int_t bufsize)
 {
    // Create a branch
@@ -160,7 +160,7 @@ TBranch * TTreeSQL::Branch(const char *name, void *address,
          // Dealing with duplicate branch has been done, but not tested yet.
          // So if you want to allow duplicate branch, just comment Fatal() line and uncomment commented
          // below Fatal() line
-         
+
          Fatal("Branch()", "Duplicate branch!!!");
 
          /* Commented. If uncommented, should comment Fatal line.
@@ -263,7 +263,7 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
 TString TTreeSQL::ConvertTypeName(const TString& typeName )
 {
    // Convert from ROOT typename to SQL typename
-   
+
    TString tn = "";
 
    if(typeName == "Char_t"){
@@ -323,7 +323,7 @@ TBasket * TTreeSQL::CreateBasket(TBranch * tb)
       return 0;
    }
    vector<Int_t> *columnVec = GetColumnIndice(tb);
-   return new TBasketSQL(tb->GetName(), tb->GetName(), tb, 
+   return new TBasketSQL(tb->GetName(), tb->GetName(), tb,
                          &fResult, &fInsertQuery, columnVec, &fRow);
 }
 
@@ -331,7 +331,7 @@ TBasket * TTreeSQL::CreateBasket(TBranch * tb)
 void TTreeSQL::CreateBranch(const TString &branchName, const TString &typeName)
 {
    // Create the column(s) in the database that correspond to the branch/
- 
+
    if (fServer==0) {
       Error("CreateBranch","No TSQLServer specified");
       return;
@@ -452,7 +452,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
 }
 
 //______________________________________________________________________________
-void TTreeSQL::CreateTable(const TString &table) 
+void TTreeSQL::CreateTable(const TString &table)
 {
    // Create the database table corresponding to this TTree.
 
@@ -561,7 +561,7 @@ Int_t TTreeSQL::Fill()
       fBranchChecked = kTRUE;
    }
    ResetQuery();
-   
+
    TTree::Fill();
 
    fInsertQuery.Remove(fInsertQuery.Length()-1);
@@ -572,9 +572,9 @@ Int_t TTreeSQL::Fill()
 }
 
 //______________________________________________________________________________
-vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch) 
+vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
 {
-   // Return a vector of columns index corresponding to the 
+   // Return a vector of columns index corresponding to the
    // current SQL table and the branch given as argument
    // Returns 0 if no columns indices is found
    // Otherwise returns a pointer to a vector to be deleted by the caller
@@ -584,7 +584,7 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
    vector<Int_t> *columns = new vector<Int_t>;
 
    Int_t nl = branch->GetNleaves();
-   
+
    vector<TString> names;
 
    TSQLResult *rs = fServer->GetColumns(fDB,fTable);
@@ -601,12 +601,12 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
    delete rs;
 
    for(int j=0;j<nl;j++) {
-     
+
       Int_t col = -1;
       TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(j);
       TString leafName = leaf->GetName();
       TString str;
-      
+
       if (leafName != branch->GetName()) {
          str = "";
          str = branch->GetName();
@@ -720,7 +720,7 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
 //______________________________________________________________________________
 // void TTreeSQL::LoadNumberEntries()
 // {
-//    Assert(0);
+//    R__ASSERT(0);
 
 //    fResult =    fServer->Query(fQuery.Data());
 //    fEntries=0;

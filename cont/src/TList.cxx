@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.16 2004/12/06 10:46:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.17 2005/11/01 21:16:13 pcanal Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -20,8 +20,8 @@
 //                                                                      //
 // There are basically four ways to iterate over a TList (in order      //
 // of preference, if not forced by other constraints):                  //
-//    1) Using the ForEach macro:                                       //
-//         GetListOfPrimitives()->ForEach(TObject,Paint)(option);       //
+//    1) Using the R__FOR_EACH macro:                                   //
+//         GetListOfPrimitives()->R__FOR_EACH(TObject,Paint)(option);   //
 //                                                                      //
 //    2) Using the TList iterator TListIter (via the wrapper class      //
 //       TIter):                                                        //

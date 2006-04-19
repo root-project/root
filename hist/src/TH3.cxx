@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.76 2006/04/10 06:55:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.77 2006/04/18 06:58:59 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -136,7 +136,7 @@ void TH3::Copy(TObject &obj) const
    ((TH3&)obj).fTsumwxz     = fTsumwxz;
    ((TH3&)obj).fTsumwyz     = fTsumwyz;
 }
-      
+
 //______________________________________________________________________________
 Int_t TH3::BufferEmpty(Int_t action)
 {
@@ -145,7 +145,7 @@ Int_t TH3::BufferEmpty(Int_t action)
    // action =  0 histogram is filled from the buffer
    // action =  1 histogram is filled and buffer is deleted
    //             The buffer is automatically deleted when the number of entries
-   //             in the buffer is greater than the number of entries in the histogram   
+   //             in the buffer is greater than the number of entries in the histogram
 
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
@@ -1045,7 +1045,7 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
    //
    //     option is a character string to specify options
    //         "U" include Underflows in test
-   //         "O" include Overflows 
+   //         "O" include Overflows
    //         "N" include comparison of normalizations
    //         "D" Put out a line of "Debug" printout
    //
@@ -1235,7 +1235,7 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
       printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
       printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
       printf(" Kolmo Probabil = %f, Max Dist = %g\n",prb,dfmax);
-      if (opt.Contains("N")) 
+      if (opt.Contains("N"))
          printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
    }
    // This numerical error condition should never occur:
@@ -1243,7 +1243,7 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
    return prb;
-}   
+}
 
 
 //______________________________________________________________________________
@@ -1267,7 +1267,7 @@ Long64_t TH3::Merge(TCollection *list)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
-   Assert(hclone);
+   R__ASSERT(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -1418,7 +1418,7 @@ Long64_t TH3::Merge(TCollection *list)
    inlist.Remove(hclone);
    delete hclone;
    return (Long64_t)nentries;
-}   
+}
 
 //______________________________________________________________________________
 TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, Int_t iymax, Option_t *option) const
@@ -1513,7 +1513,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
       char optin[100];
       strcpy(optin,opt.Data());
       char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
       if (!gPad->FindObject(h1)) {
          h1->Draw(optin);
       } else {
@@ -1554,7 +1554,7 @@ TH1 *TH3::Project3D(Option_t *option) const
    // The following sequence
    //    h->Project3D("xy");
    //    h->Project3D("xy2");
-   //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2" 
+   //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2"
    //
    //  NOTE 2: The number of entries in the projected histogram is set to the
    //  number of entries of the parent histogram if all bins are selected,
@@ -1651,13 +1651,13 @@ TH1 *TH3::Project3D(Option_t *option) const
         xbins = fXaxis.GetXbins();
         ybins = fYaxis.GetXbins();
         if (xbins->fN == 0 && ybins->fN == 0) {
-           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)                                  
+           h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
               ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
         } else if (ybins->fN == 0) {
            h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
               ,nx,&xbins->fArray[ixmin-1]);
         } else if (xbins->fN == 0) {
-           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]                                  
+           h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1]
            ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
         } else {
            h2 = new TH2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
@@ -1934,7 +1934,7 @@ TH1 *TH3::Project3D(Option_t *option) const
 //______________________________________________________________________________
 TProfile2D *TH3::Project3DProfile(Option_t *option) const
 {
-   // Project a 3-d histogram into a 2-d profile histograms depending 
+   // Project a 3-d histogram into a 2-d profile histograms depending
    // on the option parameter
    // option may contain a combination of the characters x,y,z
    // option = "xy" return the x versus y projection into a TProfile2D histogram
@@ -1955,7 +1955,7 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    // The following sequence
    //    h->Project3DProfile("xy");
    //    h->Project3DProfile("xy2");
-   //  will generate two TProfile2D histograms named "myhist_pxy" and "myhist_pxy2" 
+   //  will generate two TProfile2D histograms named "myhist_pxy" and "myhist_pxy2"
    //
    //  NOTE 2: The number of entries in the projected profile is set to the
    //  number of entries of the parent histogram if all bins are selected,
@@ -1997,13 +1997,13 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
         xbins = fXaxis.GetXbins();
         ybins = fYaxis.GetXbins();
         if (xbins->fN == 0 && ybins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)                                  
+           p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
               ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
         } else if (ybins->fN == 0) {
            p2 = new TProfile2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
               ,nx,&xbins->fArray[ixmin-1]);
         } else if (xbins->fN == 0) {
-           p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]                                  
+           p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1]
            ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
         } else {
            p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
@@ -2395,7 +2395,7 @@ void TH3::SetShowProjection(const char *option,Int_t nbins)
    // the xy projection using the draw option "box" do
    //   myhist.SetShowProjection("xy box");
    // This function is typically called from the context menu.
-      
+
    GetPainter();
 
    if (fPainter) fPainter->SetShowProjection(option,nbins);

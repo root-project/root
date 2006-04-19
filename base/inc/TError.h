@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.h,v 1.4 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TError.h,v 1.5 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -69,10 +69,19 @@ extern void MayNotUse(const char *method);
 
 R__EXTERN const char *kAssertMsg;
 R__EXTERN const char *kCheckMsg;
+
+#define R__ASSERT(e) \
+   if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__)
+#define R__CHECK(e) \
+   if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__)
+
+// deprecated macros (will be removed in next release)
 #define Assert(e) \
-        if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__)
+   { if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
+   Warning("", "please change Assert to R__ASSERT in %s at line %d", __FILE__, __LINE__); }
 #define Check(e) \
-        if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__)
+   { if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
+   Warning("", "please change Check to R__CHECK in %s at line %d", __FILE__, __LINE__); }
 
 R__EXTERN Int_t gErrorIgnoreLevel;
 R__EXTERN Int_t gErrorAbortLevel;

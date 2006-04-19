@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.8 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.9 2005/11/16 20:07:50 pcanal Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -211,7 +211,7 @@ void TBtree::Add(TObject *obj)
    }
    if (!fRoot) {
       fRoot = new TBtLeafNode(0, obj, this);
-      Check(fRoot != 0);
+      R__CHECK(fRoot != 0);
       IncrNofKeys();
    } else {
       TBtNode *loc;
@@ -312,7 +312,7 @@ Int_t TBtree::IdxAdd(const TObject &obj)
    }
    if (!fRoot) {
       fRoot = new TBtLeafNode(0, &obj, this);
-      Assert(fRoot != 0);
+      R__ASSERT(fRoot != 0);
       IncrNofKeys();
       r = 0;
    } else {
@@ -326,7 +326,7 @@ Int_t TBtree::IdxAdd(const TObject &obj)
          // in which case we would handle an exception here.
          // cerr << "Multiple entry warning\n";
       } else {
-         Check(loc->fIsLeaf);
+         R__CHECK(loc->fIsLeaf);
       }
       if (loc->fIsLeaf) {
          if (loc->fParent == 0)
@@ -339,7 +339,7 @@ Int_t TBtree::IdxAdd(const TObject &obj)
       }
       loc->Add(&obj, idx);
    }
-   Check(r == Rank(&obj) || &obj == (*this)[r]);
+   R__CHECK(r == Rank(&obj) || &obj == (*this)[r]);
    return r;
 }
 
@@ -436,7 +436,7 @@ void TBtree::RootIsFull()
 
    TBtNode *oldroot = fRoot;
    fRoot = new TBtInnerNode(0, this, oldroot);
-   Assert(fRoot != 0);
+   R__ASSERT(fRoot != 0);
    oldroot->Split();
 }
 
@@ -447,12 +447,12 @@ void TBtree::RootIsEmpty()
 
    if (fRoot->fIsLeaf) {
       TBtLeafNode *lroot = (TBtLeafNode*)fRoot;
-      Check(lroot->Psize() == 0);
+      R__CHECK(lroot->Psize() == 0);
       delete lroot;
       fRoot = 0;
    } else {
       TBtInnerNode *iroot = (TBtInnerNode*)fRoot;
-      Check(iroot->Psize() == 0);
+      R__CHECK(iroot->Psize() == 0);
       fRoot = iroot->GetTree(0);
       fRoot->fParent = 0;
       delete iroot;
@@ -558,7 +558,7 @@ TBtNode::TBtNode(Int_t isleaf, TBtInnerNode *p, TBtree *t)
    fIsLeaf = isleaf;
    fParent = p;
    if (p == 0) {
-      Check(t != 0);
+      R__CHECK(t != 0);
       fTree = t;
    } else
 #ifdef cxxbug
@@ -712,7 +712,7 @@ void TBtInnerNode::Add(const TObject *obj, Int_t index)
 {
    // This is called only from TBtree::Add().
 
-   Assert(index >= 1 && obj->IsSortable());
+   R__ASSERT(index >= 1 && obj->IsSortable());
    TBtLeafNode *ln = GetTree(index-1)->LastLeafNode();
    ln->Add(obj, ln->fLast+1);
 }
@@ -722,8 +722,8 @@ void TBtInnerNode::AddElt(TBtItem &itm, Int_t at)
 {
    // Add one element.
 
-   Assert(0 <= at && at <= fLast+1);
-   Assert(fLast < MaxIndex());
+   R__ASSERT(0 <= at && at <= fLast+1);
+   R__ASSERT(fLast < MaxIndex());
    for (Int_t i = fLast+1; i > at ; i--)
       GetItem(i) = GetItem(i-1);
    SetItem(at, itm);
@@ -766,9 +766,9 @@ void TBtInnerNode::AppendFrom(TBtInnerNode *src, Int_t start, Int_t stop)
 
    if (start > stop)
       return;
-   Assert(0 <= start && start <= src->fLast);
-   Assert(0 <= stop  && stop  <= src->fLast );
-   Assert(fLast + stop - start + 1 < MaxIndex()); // full-node check
+   R__ASSERT(0 <= start && start <= src->fLast);
+   R__ASSERT(0 <= stop  && stop  <= src->fLast );
+   R__ASSERT(fLast + stop - start + 1 < MaxIndex()); // full-node check
    for (Int_t i = start; i <= stop; i++)
       SetItem(++fLast, src->GetItem(i));
 }
@@ -778,8 +778,8 @@ void TBtInnerNode::Append(TObject *d, TBtNode *n)
 {
    // Never called from anywhere where it might fill up THIS.
 
-   Assert(fLast < MaxIndex());
-   if (d) Assert(d->IsSortable());
+   R__ASSERT(fLast < MaxIndex());
+   if (d) R__ASSERT(d->IsSortable());
    SetItem(++fLast, d, n);
 }
 
@@ -788,7 +788,7 @@ void TBtInnerNode::Append(TBtItem &itm)
 {
    // Append itm to this tree.
 
-   Assert(fLast < MaxIndex());
+   R__ASSERT(fLast < MaxIndex());
    SetItem(++fLast, itm);
 }
 
@@ -799,8 +799,8 @@ void TBtInnerNode::BalanceWithLeft(TBtInnerNode *leftsib, Int_t pidx)
    // PIDX is the index of the parent item that will change when keys
    // are moved.
 
-   Assert(Vsize() >= leftsib->Psize());
-   Assert(fParent->GetTree(pidx) == this);
+   R__ASSERT(Vsize() >= leftsib->Psize());
+   R__ASSERT(fParent->GetTree(pidx) == this);
    Int_t newThisSize = (Vsize() + leftsib->Psize())/2;
    Int_t noFromThis = Psize() - newThisSize;
    PushLeft(noFromThis, leftsib, pidx);
@@ -813,8 +813,8 @@ void TBtInnerNode::BalanceWithRight(TBtInnerNode *rightsib, Int_t pidx)
    // PIDX is the index of the parent item that will change when keys
    // are moved.
 
-   Assert(Psize() >= rightsib->Vsize());
-   Assert(fParent->GetTree(pidx) == rightsib);
+   R__ASSERT(Psize() >= rightsib->Vsize());
+   R__ASSERT(fParent->GetTree(pidx) == rightsib);
    Int_t newThisSize = (Psize() + rightsib->Vsize())/2;
    Int_t noFromThis = Psize() - newThisSize;
    PushRight(noFromThis, rightsib, pidx);
@@ -897,7 +897,7 @@ TObject *TBtInnerNode::Found(const TObject *what, TBtNode **which, Int_t *where)
 {
    // Recursively look for WHAT starting in the current node.
 
-   Assert(what->IsSortable());
+   R__ASSERT(what->IsSortable());
    for (Int_t i = 1 ; i <= fLast; i++) {
       if (GetKey(i)->Compare(what) == 0) {
          // then could go in either fItem[i].fTree or fItem[i-1].fTree
@@ -936,7 +936,7 @@ Int_t TBtInnerNode::IndexOf(const TBtNode *that) const
    for (Int_t i = 0; i <= fLast; i++)
       if (GetTree(i) == that)
          return i;
-   Check(0);
+   R__CHECK(0);
    return 0;
 }
 
@@ -948,7 +948,7 @@ void TBtInnerNode::InformParent()
    if (fParent == 0) {
       // then this is the root of the tree and needs to be split
       // inform the btree.
-      Assert(fTree->fRoot == this);
+      R__ASSERT(fTree->fRoot == this);
       fTree->RootIsFull();
    } else
       fParent->IsFull(this);
@@ -998,7 +998,7 @@ void TBtInnerNode::IsFull(TBtNode *that)
          leaf->BalanceWithLeft(left, leafidx);
       } else {
          // neither a left or right sib; should never happen
-         Check(0);
+         R__CHECK(0);
       }
    } else {
       TBtInnerNode *inner = (TBtInnerNode *)that;
@@ -1028,7 +1028,7 @@ void TBtInnerNode::IsFull(TBtNode *that)
       } else if (hasLeftSib) {
          inner->BalanceWithLeft(left, inneridx);
       } else {
-         Check(0);
+         R__CHECK(0);
       }
    }
 }
@@ -1067,7 +1067,7 @@ void TBtInnerNode::IsLow(TBtNode *that)
       } else if (hasRightSib) {
          leaf->MergeWithRight(right, leafidx+1);
       } else {
-         Check(0); // should never happen
+         R__CHECK(0); // should never happen
       }
    } else {
       TBtInnerNode *inner = (TBtInnerNode *)that;
@@ -1090,7 +1090,7 @@ void TBtInnerNode::IsLow(TBtNode *that)
       } else if (hasRightSib) {
          inner->MergeWithRight(right, inneridx+1);
       } else {
-         Check(0);
+         R__CHECK(0);
       }
    }
 }
@@ -1108,7 +1108,7 @@ void TBtInnerNode::MergeWithRight(TBtInnerNode *rightsib, Int_t pidx)
 {
    // Merge the 2 part of the tree.
 
-   Assert(Psize() + rightsib->Vsize() < MaxIndex());
+   R__ASSERT(Psize() + rightsib->Vsize() < MaxIndex());
    if (rightsib->Psize() > 0)
       rightsib->PushLeft(rightsib->Psize(), this, pidx);
    rightsib->SetKey(0, fParent->GetKey(pidx));
@@ -1157,9 +1157,9 @@ void TBtInnerNode::PushLeft(Int_t noFromThis, TBtInnerNode *leftsib, Int_t pidx)
    // noFromThis==1 => moves the parent item into the leftsib,
    // and the first item in this's array into the parent item.
 
-   Assert(fParent->GetTree(pidx) == this);
-   Assert(noFromThis > 0 && noFromThis <= Psize());
-   Assert(noFromThis + leftsib->Psize() < MaxPsize());
+   R__ASSERT(fParent->GetTree(pidx) == this);
+   R__ASSERT(noFromThis > 0 && noFromThis <= Psize());
+   R__ASSERT(noFromThis + leftsib->Psize() < MaxPsize());
    SetKey(0, fParent->GetKey(pidx)); // makes AppendFrom's job easier
    leftsib->AppendFrom(this, 0, noFromThis-1);
    ShiftLeft(noFromThis);
@@ -1171,16 +1171,16 @@ void TBtInnerNode::PushLeft(Int_t noFromThis, TBtInnerNode *leftsib, Int_t pidx)
 //______________________________________________________________________________
 void TBtInnerNode::PushRight(Int_t noFromThis, TBtInnerNode *rightsib, Int_t pidx)
 {
-   
+
    //
    // The operation is three steps:
    //  Step I.   Make room for the incoming keys in RIGHTSIB.
    //  Step II.  Move the items from THIS into RIGHTSIB.
    //  Step III. Update the length of THIS.
 
-   Assert(noFromThis > 0 && noFromThis <= Psize());
-   Assert(noFromThis + rightsib->Psize() < rightsib->MaxPsize());
-   Assert(fParent->GetTree(pidx) == rightsib);
+   R__ASSERT(noFromThis > 0 && noFromThis <= Psize());
+   R__ASSERT(noFromThis + rightsib->Psize() < rightsib->MaxPsize());
+   R__ASSERT(fParent->GetTree(pidx) == rightsib);
 
    //
    // Step I. Make space for noFromThis items
@@ -1206,7 +1206,7 @@ void TBtInnerNode::PushRight(Int_t noFromThis, TBtInnerNode *rightsib, Int_t pid
    }
    fParent->SetKey(pidx, rightsib->GetKey(0));
    DecNofKeys(0);
-   Check(tgt == -1);
+   R__CHECK(tgt == -1);
 
    // Step III.
    fLast -= noFromThis;
@@ -1221,7 +1221,7 @@ void TBtInnerNode::Remove(Int_t index)
 {
    // Remove an element.
 
-   Assert(index >= 1 && index <= fLast);
+   R__ASSERT(index >= 1 && index <= fLast);
    TBtLeafNode *lf = GetTree(index)->FirstLeafNode();
    SetKey(index, lf->fItem[0]);
    lf->RemoveItem(0);
@@ -1232,7 +1232,7 @@ void TBtInnerNode::RemoveItem(Int_t index)
 {
    // Remove an item.
 
-   Assert(index >= 1 && index <= fLast);
+   R__ASSERT(index >= 1 && index <= fLast);
    for (Int_t to = index; to < fLast; to++)
       fItem[to] = fItem[to+1];
    fLast--;
@@ -1266,7 +1266,7 @@ void TBtInnerNode::Split()
    // Assumes that idx of THIS in fParent is 0.
 
    TBtInnerNode *newnode = new TBtInnerNode(fParent);
-   Check(newnode != 0);
+   R__CHECK(newnode != 0);
    fParent->Append(GetKey(fLast), newnode);
    newnode->AppendFrom(this, fLast, fLast);
    fLast--;
@@ -1303,7 +1303,7 @@ void TBtInnerNode::SplitWith(TBtInnerNode *rightsib, Int_t keyidx)
    // newly created node will be recorded (sibling will be moved to
    // keyidx+1)
 
-   Assert(keyidx > 0 && keyidx <= fParent->fLast);
+   R__ASSERT(keyidx > 0 && keyidx <= fParent->fLast);
 
    rightsib->SetKey(0, fParent->GetKey(keyidx));
    Int_t nofKeys      = Psize() + rightsib->Vsize();
@@ -1316,10 +1316,10 @@ void TBtInnerNode::SplitWith(TBtInnerNode *rightsib, Int_t keyidx)
    // give up any elements to the new node.  I.e., noFromThis == 0.
    // This will not happen for TBtLeafNodes.
    // We handle this by pulling an item from the rightsib.
-   Check(noFromThis >= 0);
-   Check(noFromSib >= 1);
+   R__CHECK(noFromThis >= 0);
+   R__CHECK(noFromSib >= 1);
    TBtInnerNode *newNode = new TBtInnerNode(fParent);
-   Check(newNode != 0);
+   R__CHECK(newNode != 0);
    if (noFromThis > 0) {
       newNode->Append(GetItem(fLast));
       fParent->AddElt(keyidx, GetKey(fLast--), newNode);
@@ -1358,7 +1358,7 @@ TBtLeafNode::TBtLeafNode(TBtInnerNode *p, const TObject *obj, TBtree *t): TBtNod
    fItem = new TObject *[MaxIndex()+1];
    memset(fItem, 0, (MaxIndex()+1)*sizeof(TObject*));
 
-   Assert(fItem != 0);
+   R__ASSERT(fItem != 0);
    if (obj != 0)
       fItem[++fLast] = (TObject*)obj;   // cast const away
 }
@@ -1377,9 +1377,9 @@ void TBtLeafNode::Add(const TObject *obj, Int_t index)
    // Add the object OBJ to the leaf node, inserting it at location INDEX
    // in the fItem array.
 
-   Assert(obj->IsSortable());
-   Assert(0 <= index && index <= fLast+1);
-   Assert(fLast <= MaxIndex());
+   R__ASSERT(obj->IsSortable());
+   R__ASSERT(0 <= index && index <= fLast+1);
+   R__ASSERT(fLast <= MaxIndex());
    for (Int_t i = fLast+1; i > index ; i--)
       fItem[i] = fItem[i-1];
    fItem[index] = (TObject *)obj;
@@ -1396,7 +1396,7 @@ void TBtLeafNode::Add(const TObject *obj, Int_t index)
       if (fParent == 0) {
          // this occurs when this leaf is the only node in the
          // btree, and this->fTree->fRoot == this
-         Check(fTree->fRoot == this);
+         R__CHECK(fTree->fRoot == this);
          // in which case we inform the btree, which can be
          // considered the parent of this node
          fTree->RootIsFull();
@@ -1420,12 +1420,12 @@ void TBtLeafNode::AppendFrom(TBtLeafNode *src, Int_t start, Int_t stop)
 
    if (start > stop)
       return;
-   Assert(0 <= start && start <= src->fLast);
-   Assert(0 <= stop  && stop  <= src->fLast);
-   Assert(fLast + stop - start + 1 < MaxIndex()); // full-node check
+   R__ASSERT(0 <= start && start <= src->fLast);
+   R__ASSERT(0 <= stop  && stop  <= src->fLast);
+   R__ASSERT(fLast + stop - start + 1 < MaxIndex()); // full-node check
    for (Int_t i = start; i <= stop; i++)
       fItem[++fLast] = src->fItem[i];
-   Check(fLast < MaxIndex());
+   R__CHECK(fLast < MaxIndex());
 }
 
 //______________________________________________________________________________
@@ -1434,9 +1434,9 @@ void TBtLeafNode::Append(TObject *obj)
    // Never called from anywhere where it might fill up THIS
    // does NOT handle nofKeys.
 
-   Assert(obj->IsSortable());
+   R__ASSERT(obj->IsSortable());
    fItem[++fLast] = obj;
-   Check(fLast < MaxIndex());
+   R__CHECK(fLast < MaxIndex());
 }
 
 //______________________________________________________________________________
@@ -1444,7 +1444,7 @@ void TBtLeafNode::BalanceWithLeft(TBtLeafNode *leftsib, Int_t pidx)
 {
    // THIS has more than LEFTSIB;  move some items from THIS to LEFTSIB.
 
-   Assert(Vsize() >= leftsib->Psize());
+   R__ASSERT(Vsize() >= leftsib->Psize());
    Int_t newThisSize = (Vsize() + leftsib->Psize())/2;
    Int_t noFromThis  = Psize() - newThisSize;
    PushLeft(noFromThis, leftsib, pidx);
@@ -1455,7 +1455,7 @@ void TBtLeafNode::BalanceWithRight(TBtLeafNode *rightsib, Int_t pidx)
 {
    // THIS has more than RIGHTSIB;  move some items from THIS to RIGHTSIB.
 
-   Assert(Psize() >= rightsib->Vsize());
+   R__ASSERT(Psize() >= rightsib->Vsize());
    Int_t newThisSize = (Psize() + rightsib->Vsize())/2;
    Int_t noFromThis  = Psize() - newThisSize;
    PushRight(noFromThis, rightsib, pidx);
@@ -1502,7 +1502,7 @@ TObject *TBtLeafNode::Found(const TObject *what, TBtNode **which, Int_t *where)
    // WHAT was not in any inner node; it is either here, or it's
    // not in the tree.
 
-   Assert(what->IsSortable());
+   R__ASSERT(what->IsSortable());
    for (Int_t i = 0; i <= fLast; i++) {
       if (fItem[i]->Compare(what) == 0) {
          *which = this;
@@ -1529,7 +1529,7 @@ Int_t TBtLeafNode::IndexOf(const TObject *that) const
       if (fItem[i] == that)
          return i;
    }
-   Check(0);
+   R__CHECK(0);
    return -1;
 }
 
@@ -1545,7 +1545,7 @@ void TBtLeafNode::MergeWithRight(TBtLeafNode *rightsib, Int_t pidx)
 {
    // Merge.
 
-   Assert(Psize() + rightsib->Vsize() < MaxPsize());
+   R__ASSERT(Psize() + rightsib->Vsize() < MaxPsize());
    rightsib->PushLeft(rightsib->Psize(), this, pidx);
    Append(fParent->GetKey(pidx));
    fParent->SetNofKeys(pidx-1, NofKeys());
@@ -1582,9 +1582,9 @@ void TBtLeafNode::PushLeft(Int_t noFromThis, TBtLeafNode *leftsib, Int_t pidx)
    // noFromThis==1 => moves the parent item into the leftsib,
    // and the first item in this's array into the parent item.
 
-   Assert(noFromThis > 0 && noFromThis <= Psize());
-   Assert(noFromThis + leftsib->Psize() < MaxPsize());
-   Assert(fParent->GetTree(pidx) == this);
+   R__ASSERT(noFromThis > 0 && noFromThis <= Psize());
+   R__ASSERT(noFromThis + leftsib->Psize() < MaxPsize());
+   R__ASSERT(fParent->GetTree(pidx) == this);
    leftsib->Append(fParent->GetKey(pidx));
    if (noFromThis > 1)
       leftsib->AppendFrom(this, 0, noFromThis-2);
@@ -1601,9 +1601,9 @@ void TBtLeafNode::PushRight(Int_t noFromThis, TBtLeafNode *rightsib, Int_t pidx)
    // rightsib, and the last item in this's array into the parent
    // item.
 
-   Assert(noFromThis > 0 && noFromThis <= Psize());
-   Assert(noFromThis + rightsib->Psize() < MaxPsize());
-   Assert(fParent->GetTree(pidx) == rightsib);
+   R__ASSERT(noFromThis > 0 && noFromThis <= Psize());
+   R__ASSERT(noFromThis + rightsib->Psize() < MaxPsize());
+   R__ASSERT(fParent->GetTree(pidx) == rightsib);
    // The operation is five steps:
    //  Step I.   Make room for the incoming keys in RIGHTSIB.
    //  Step II.  Move the key in the parent into RIGHTSIB.
@@ -1627,7 +1627,7 @@ void TBtLeafNode::PushRight(Int_t noFromThis, TBtLeafNode *rightsib, Int_t pidx)
    // Step III.Move the items from THIS into RIGHTSIB
    for (Int_t i = fLast; i > start; i--)
       rightsib->fItem[tgt--] = fItem[i];
-   Check(tgt == -1);
+   R__CHECK(tgt == -1);
 
    // Step IV.
    fParent->SetKey(pidx, fItem[start]);
@@ -1645,7 +1645,7 @@ void TBtLeafNode::Remove(Int_t index)
 {
    // Remove an element.
 
-   Assert(index >= 0 && index <= fLast);
+   R__ASSERT(index >= 0 && index <= fLast);
    for (Int_t to = index; to < fLast; to++)
       fItem[to] = fItem[to+1];
    fLast--;
@@ -1683,7 +1683,7 @@ void TBtLeafNode::Split()
    // Assumes that idx of THIS in Parent is 0.
 
    TBtLeafNode *newnode = new TBtLeafNode(fParent);
-   Assert(newnode != 0);
+   R__ASSERT(newnode != 0);
    fParent->Append(fItem[fLast--], newnode);
    fParent->SetNofKeys(0, fParent->GetTree(0)->NofKeys());
    fParent->SetNofKeys(1, fParent->GetTree(1)->NofKeys());
@@ -1695,18 +1695,18 @@ void TBtLeafNode::SplitWith(TBtLeafNode *rightsib, Int_t keyidx)
 {
    // Split.
 
-   Assert(fParent == rightsib->fParent);
-   Assert(keyidx > 0 && keyidx <= fParent->fLast);
+   R__ASSERT(fParent == rightsib->fParent);
+   R__ASSERT(keyidx > 0 && keyidx <= fParent->fLast);
    Int_t nofKeys      = Psize() + rightsib->Vsize();
    Int_t newSizeThis  = nofKeys / 3;
    Int_t newSizeNew   = (nofKeys - newSizeThis) / 2;
    Int_t newSizeSib   = (nofKeys - newSizeThis - newSizeNew);
    Int_t noFromThis   = Psize() - newSizeThis;
    Int_t noFromSib    = rightsib->Vsize() - newSizeSib;
-   Check(noFromThis >= 0);
-   Check(noFromSib >= 1);
+   R__CHECK(noFromThis >= 0);
+   R__CHECK(noFromSib >= 1);
    TBtLeafNode *newNode  = new TBtLeafNode(fParent);
-   Assert(newNode != 0);
+   R__ASSERT(newNode != 0);
    fParent->AddElt(keyidx, fItem[fLast--], newNode);
    fParent->SetNofKeys(keyidx, 0);
    fParent->DecNofKeys(keyidx-1);

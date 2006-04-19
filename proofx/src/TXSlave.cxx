@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.2 2005/12/12 16:42:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.4 2006/03/01 10:55:21 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -110,7 +110,7 @@ void TXSlave::Init(const char *host, Int_t stype)
       mode = 'M';
    } else {
       Error("Init","Impossible PROOF <-> SlaveType Configuration Requested");
-      Assert(0);
+      R__ASSERT(0);
    }
 
    // Open connection to a remote XrdPROOF slave server.

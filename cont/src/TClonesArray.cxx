@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.50 2005/12/08 22:34:23 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.51 2006/02/19 21:02:35 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -269,7 +269,7 @@ void TClonesArray::Compress()
 
    delete [] tmp;
 
-   Assert(je == jf);
+   R__ASSERT(je == jf);
 }
 
 //______________________________________________________________________________
@@ -373,7 +373,7 @@ void TClonesArray::ExpandCreate(Int_t n)
          fKeep->fCont[i] = (TObject*)fClass->New();
       } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
          // The object has been delete (or never initilized)
-         fClass->New(fKeep->fCont[i]);    
+         fClass->New(fKeep->fCont[i]);
       }
       fCont[i] = fKeep->fCont[i];
    }
@@ -411,7 +411,7 @@ void TClonesArray::ExpandCreateFast(Int_t n)
          fKeep->fCont[i] = (TObject*)fClass->New();
       } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
          // The object has been delete (or never initilized)
-         fClass->New(fKeep->fCont[i]);    
+         fClass->New(fKeep->fCont[i]);
       }
       fCont[i] = fKeep->fCont[i];
    }
@@ -479,7 +479,7 @@ TObject *TClonesArray::Remove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TClonesArray::SetOwner(Bool_t /* enable */) 
+void TClonesArray::SetOwner(Bool_t /* enable */)
 {
    // A TClonesArray is always the owner of the object it contains.
    // However the collection its inherits from (TObjArray) does not.
@@ -572,7 +572,7 @@ void TClonesArray::Streamer(TBuffer &b)
       // make sure there are enough slots in the fKeep array
       if (fKeep->GetSize() < nobjects)
          Expand(nobjects);
-      
+
       //reset fLast. nobjects may be 0
       Int_t oldLast = fLast;
       fLast = nobjects-1;
@@ -584,7 +584,7 @@ void TClonesArray::Streamer(TBuffer &b)
                fKeep->fCont[i] = (TObject*)fClass->New();
             } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
                // The object has been delete (or never initilized)
-               fClass->New(fKeep->fCont[i]);    
+               fClass->New(fKeep->fCont[i]);
             }
 
             fCont[i] = fKeep->fCont[i];
@@ -601,11 +601,11 @@ void TClonesArray::Streamer(TBuffer &b)
                   fClass->New(fKeep->fCont[i]);
 
                fCont[i] = fKeep->fCont[i];
-               b.StreamObject(fKeep->fCont[i]); 
+               b.StreamObject(fKeep->fCont[i]);
             }
          }
       }
-      for (Int_t i = TMath::Max(nobjects,0); i < oldLast+1; ++i) fCont[i] = 0; 
+      for (Int_t i = TMath::Max(nobjects,0); i < oldLast+1; ++i) fCont[i] = 0;
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {

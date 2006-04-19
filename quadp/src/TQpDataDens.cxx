@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -102,7 +102,7 @@ TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
 TQpDataDens::TQpDataDens(const TQpDataDens &another) : TQpDataBase(another)
 {
   *this = another;
-} 
+}
 
 //______________________________________________________________________________
 void TQpDataDens::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x )
@@ -114,7 +114,7 @@ void TQpDataDens::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD 
 
 //______________________________________________________________________________
 void TQpDataDens::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fA.GetNoElements() > 0)
     y += alpha*(fA*x);
@@ -122,7 +122,7 @@ void TQpDataDens::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD 
 
 //______________________________________________________________________________
 void TQpDataDens::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fC.GetNoElements() > 0)
     y += alpha*(fC*x);
@@ -130,7 +130,7 @@ void TQpDataDens::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD 
 
 //______________________________________________________________________________
 void TQpDataDens::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fA.GetNoElements() > 0)
     y += alpha*(TMatrixD(TMatrixD::kTransposed,fA)*x);
@@ -138,7 +138,7 @@ void TQpDataDens::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVec
 
 //______________________________________________________________________________
 void TQpDataDens::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
-{ 
+{
   y *= beta;
   if (fC.GetNoElements() > 0)
     y += alpha*(TMatrixD(TMatrixD::kTransposed,fC)*x);
@@ -155,7 +155,7 @@ Double_t TQpDataDens::DataNorm()
   TMatrixDSym fQ_abs(fQ);
   componentNorm = (fQ_abs.Abs()).Max();
   if (componentNorm > norm) norm = componentNorm;
- 
+
   componentNorm = fBa.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
@@ -167,19 +167,19 @@ Double_t TQpDataDens::DataNorm()
   componentNorm = (fC_abs.Abs()).Max();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fXloBound.MatchesNonZeroPattern(fXloIndex));
+  R__ASSERT(fXloBound.MatchesNonZeroPattern(fXloIndex));
   componentNorm = fXloBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fXupBound.MatchesNonZeroPattern(fXupIndex));
+  R__ASSERT(fXupBound.MatchesNonZeroPattern(fXupIndex));
   componentNorm = fXupBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fCloBound.MatchesNonZeroPattern(fCloIndex));
+  R__ASSERT(fCloBound.MatchesNonZeroPattern(fCloIndex));
   componentNorm = fCloBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
-  Assert(fCupBound.MatchesNonZeroPattern(fCupIndex));
+  R__ASSERT(fCupBound.MatchesNonZeroPattern(fCupIndex));
   componentNorm = fCupBound.NormInf();
   if (componentNorm > norm) norm = componentNorm;
 
@@ -281,9 +281,9 @@ void TQpDataDens::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 
 //______________________________________________________________________________
 TQpDataDens &TQpDataDens::operator=(const TQpDataDens &source)
-{                                                                        
+{
   if (this != &source) {
-    TQpDataBase::operator=(source);                                      
+    TQpDataBase::operator=(source);
     fQ.ResizeTo(source.fQ); fQ = source.fQ;
     fA.ResizeTo(source.fA); fA = source.fA;
     fC.ResizeTo(source.fC); fC = source.fC;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.17 2005/09/03 13:12:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.18 2005/12/22 08:41:31 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 // where U is a upper triangular matrix                                  //
 //                                                                       //
 // The decomposition fails if a diagonal element of fU is <= 0, the      //
-// matrix is not positive negative . The matrix fU is made invalid .     // 
+// matrix is not positive negative . The matrix fU is made invalid .     //
 //                                                                       //
 // fU has the same index range as A .                                    //
 //                                                                       //
@@ -46,7 +46,7 @@ TDecompChol::TDecompChol(Int_t row_lwb,Int_t row_upb)
 //______________________________________________________________________________
 TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   SetBit(kMatrixSet);
   fCondition = a.Norm1();
@@ -63,7 +63,7 @@ TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
 //______________________________________________________________________________
 TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
     Error("TDecompChol(const TMatrixD &","matrix should be square");
@@ -99,7 +99,7 @@ Bool_t TDecompChol::Decompose()
         Double_t *pU = fU.GetMatrixArray();
   for (icol = 0; icol < n; icol++) {
     const Int_t rowOff = icol*n;
-   
+
     //Compute fU(j,j) and test for non-positive-definiteness.
     Double_t ujj = pU[rowOff+icol];
     for (irow = 0; irow < icol; irow++) {
@@ -158,17 +158,17 @@ const TMatrixDSym TDecompChol::GetMatrix()
 //______________________________________________________________________________
 void TDecompChol::SetMatrix(const TMatrixDSym &a)
 {
-  Assert(a.IsValid());
-  
+  R__ASSERT(a.IsValid());
+
   ResetStatus();
   if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
     Error("SetMatrix(const TMatrixDSym &","matrix should be square");
     return;
-  } 
-  
+  }
+
   SetBit(kMatrixSet);
   fCondition = -1.0;
-    
+
   fRowLwb = a.GetRowLwb();
   fColLwb = a.GetColLwb();
   fU.ResizeTo(a);
@@ -182,7 +182,7 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 // assumed to be in upper triang of fU. fTol is used to determine if diagonal
 // element is zero. The solution is returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -237,9 +237,9 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 
 //______________________________________________________________________________
 Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
-{ 
+{
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;
@@ -252,21 +252,21 @@ Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
   }
 
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
-  { 
+  {
     Error("Solve(TMatrixDColumn &cb","vector and matrix incompatible");
     b->Invalidate();
-    return kFALSE; 
+    return kFALSE;
   }
-      
+
   const Int_t n = fU.GetNrows();
-    
+
   const Double_t *pU  = fU.GetMatrixArray();
         Double_t *pcb = cb.GetPtr();
-  const Int_t     inc = cb.GetInc(); 
-  
+  const Int_t     inc = cb.GetInc();
+
   Int_t i;
   // step 1: Forward substitution U^T
-  for (i = 0; i < n; i++) { 
+  for (i = 0; i < n; i++) {
     const Int_t off_i  = i*n;
     const Int_t off_i2 = i*inc;
     if (pU[off_i+i] < fTol)
@@ -334,14 +334,14 @@ void TDecompChol::Invert(TMatrixDSym &inv)
     TMatrixDColumn b(inv,icol);
     status &= Solve(b);
   }
-  
+
   if (!status)
     inv.Invalidate();
 }
 
 //______________________________________________________________________________
 TMatrixDSym TDecompChol::Invert()
-{ 
+{
   // For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
 
   const Int_t rowLwb = GetRowLwb();
@@ -363,14 +363,14 @@ void TDecompChol::Print(Option_t *opt) const
 
 //______________________________________________________________________________
 TDecompChol &TDecompChol::operator=(const TDecompChol &source)
-{ 
+{
   if (this != &source) {
     TDecompBase::operator=(source);
     fU.ResizeTo(source.fU);
     fU = source.fU;
   }
   return *this;
-}     
+}
 
 //______________________________________________________________________________
 TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b)

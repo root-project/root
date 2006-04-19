@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.21 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.22 2006/03/20 21:43:43 pcanal Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ Bool_t TProofDraw::Notify()
    PDB(kDraw,1) Info("Notify","Enter");
    if (fStatus == 0) {
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      Assert(fStatus);
+      R__ASSERT(fStatus);
    }
    if (!fStatus->IsOk()) return kFALSE;
    if (!fManager) return kFALSE;
@@ -134,7 +134,7 @@ Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
    PDB(kDraw,3) Info("ProcessSingle","w[%d] = %f", i, w);
 
    if (w != 0.0) {
-      Assert(fDimension <= TTreeDrawArgsParser::GetMaxDimension());
+      R__ASSERT(fDimension <= TTreeDrawArgsParser::GetMaxDimension());
       for (int j = 0; j < fDimension; j++)
          v[j] = fVar[j]->EvalInstance(i);
       if (fDimension >= 1);
@@ -217,7 +217,7 @@ void TProofDraw::SetError(const char *sub, const char *mesg)
 
    if (fStatus == 0) {
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
-      Assert(fStatus);
+      R__ASSERT(fStatus);
    }
 
    TString m;
@@ -252,7 +252,7 @@ Bool_t TProofDraw::CompileVariables()
          ClearFormula();
          Error("CompileVariables", "Error compiling expression");
          SetError("CompileVariables", "Error compiling variables");
-         
+
          return kFALSE;
       }
       fManager->Add(fVar[i]);
@@ -282,7 +282,7 @@ void TProofDrawHist::Begin1D(TTree *)
 {
    // Initialization for 1D Histogram.
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 1);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 1);
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH1* hold;
    if (fTreeDrawArgsParser.GetNoParameters() == 0 && (hold = dynamic_cast<TH1*> (orig))) {
@@ -301,7 +301,7 @@ void TProofDrawHist::Begin2D(TTree *)
 {
    // Initialization for 2D histogram.
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 2);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH2* hold;
    if (fTreeDrawArgsParser.GetNoParameters() == 0 && (hold = dynamic_cast<TH2*> (orig))) {
@@ -320,7 +320,7 @@ void TProofDrawHist::Begin3D(TTree *)
 {
    // Initialization for 3D histogram.
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH3* hold;
    if ((hold = dynamic_cast<TH3*> (orig)) && fTreeDrawArgsParser.GetNoParameters() == 0) {
@@ -371,7 +371,7 @@ void TProofDrawHist::DefVar1D()
 {
    // Define vars for 1D Histogram.
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 1);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 1);
 
    fTreeDrawArgsParser.SetOriginal(0);
    TString exp = fTreeDrawArgsParser.GetVarExp();
@@ -406,7 +406,7 @@ void TProofDrawHist::DefVar2D()
 {
    // Define variables for 2D histogram.
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 2);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
 
    fTreeDrawArgsParser.SetOriginal(0);
    TString exp = fTreeDrawArgsParser.GetVarExp();
@@ -452,7 +452,7 @@ void TProofDrawHist::DefVar3D()
 {
    // Define variables for 3D histogram.
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
    fTreeDrawArgsParser.SetOriginal(0);
    TString exp = fTreeDrawArgsParser.GetVarExp();
@@ -833,7 +833,7 @@ void TProofDrawProfile::DefVar()
       fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
    }
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 2);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
 
    fTreeDrawArgsParser.SetOriginal(0);
    TString exp = fTreeDrawArgsParser.GetVarExp();
@@ -876,7 +876,7 @@ void TProofDrawProfile::Begin(TTree *tree)
 
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 2);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
 
    TObject *orig = fTreeDrawArgsParser.GetOriginal();
    TH1* pold;
@@ -1039,7 +1039,7 @@ void TProofDrawProfile2D::DefVar()
 
       fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
    }
-   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
    fTreeDrawArgsParser.SetOriginal(0);
    TString exp = fTreeDrawArgsParser.GetVarExp();
@@ -1094,7 +1094,7 @@ void TProofDrawProfile2D::Begin(TTree *tree)
 
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
 
-   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
    TObject *orig = fTreeDrawArgsParser.GetOriginal();
    TProfile2D *pold;
@@ -1229,7 +1229,7 @@ void TProofDrawGraph::Init(TTree *tree)
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    if (fTree == 0) {
-      Assert(fGraph);
+      R__ASSERT(fGraph);
       fGraph->SetMarkerStyle(tree->GetMarkerStyle());
       fGraph->SetMarkerColor(tree->GetMarkerColor());
       fGraph->SetMarkerSize(tree->GetMarkerSize());
@@ -1369,7 +1369,7 @@ void TProofDrawPolyMarker3D::Init(TTree *tree)
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    if (fTree == 0) {
-      Assert(fPolyMarker3D);
+      R__ASSERT(fPolyMarker3D);
       fPolyMarker3D->SetMarkerStyle(tree->GetMarkerStyle());
       fPolyMarker3D->SetMarkerColor(tree->GetMarkerColor());
       fPolyMarker3D->SetMarkerSize(tree->GetMarkerSize());
@@ -1388,7 +1388,7 @@ void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
    SafeDelete(fPolyMarker3D);
    fDimension = 3;
@@ -1531,7 +1531,7 @@ void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   Assert(fTreeDrawArgsParser.GetDimension() == 3);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
    SafeDelete(fPoints);
 
@@ -1569,7 +1569,7 @@ void TProofDrawListOfGraphs::Terminate(void)
                (fOutput->FindObject("PROOF_SCATTERPLOT"));
    if (fPoints) {
       std::vector<Point3D_t> *points = fPoints->GetVector();
-      Assert(points);
+      R__ASSERT(points);
       SetStatus((Int_t) points->size());
       TH2F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
@@ -1678,7 +1678,7 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
    fSelection = fInput->FindObject("selection")->GetTitle();
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   Assert(fTreeDrawArgsParser.GetDimension() == 4);
+   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 4);
 
    SafeDelete(fPoints);
 
@@ -1717,7 +1717,7 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
                (fOutput->FindObject("PROOF_SCATTERPLOT"));
    if (fPoints) {
       std::vector<Point4D_t> *points = fPoints->GetVector();
-      Assert(points);
+      R__ASSERT(points);
       SetStatus((Int_t) points->size());
       TH3F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();

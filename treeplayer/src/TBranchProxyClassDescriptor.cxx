@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.7 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.8 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -41,10 +41,10 @@ namespace ROOT {
       SetName(fRawSymbol);
    }
 
-   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, 
-                                                            TStreamerInfo *info, 
+   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type,
+                                                            TStreamerInfo *info,
                                                             const char *branchname,
-                                                            UInt_t isclones, 
+                                                            UInt_t isclones,
                                                             UInt_t splitlevel) :
       TNamed(type,type),
       fIsClones(isclones),
@@ -57,7 +57,7 @@ namespace ROOT {
    {
       // Constructor.
 
-      Assert( strcmp(fInfo->GetName(), type)==0 );
+      R__ASSERT( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
@@ -78,7 +78,7 @@ namespace ROOT {
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
-   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info, 
+   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info,
                                                             const char *branchname,
                                                             const char *branchPrefix, UInt_t isclones,
                                                             UInt_t splitlevel) :
@@ -93,36 +93,36 @@ namespace ROOT {
    {
       // Constructor.
 
-      Assert( strcmp(fInfo->GetName(), type)==0 );
+      R__ASSERT( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
-   const char* TBranchProxyClassDescriptor::GetBranchName() const 
+   const char* TBranchProxyClassDescriptor::GetBranchName() const
    {
       // Get the branch name
       return fBranchName.Data();
    }
 
-   const char* TBranchProxyClassDescriptor::GetSubBranchPrefix() const 
+   const char* TBranchProxyClassDescriptor::GetSubBranchPrefix() const
    {
       // Get the prefix from the branch name
       return fSubBranchPrefix.Data();
    }
 
-   const char* TBranchProxyClassDescriptor::GetRawSymbol() const 
+   const char* TBranchProxyClassDescriptor::GetRawSymbol() const
    {
       // Get the real symbol name
 
       return fRawSymbol;
    }
 
-   UInt_t TBranchProxyClassDescriptor::GetSplitLevel() const { 
+   UInt_t TBranchProxyClassDescriptor::GetSplitLevel() const {
       // Return the split level of the branch.
-      return fSplitLevel; 
+      return fSplitLevel;
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsEquivalent(const TBranchProxyClassDescriptor* other) 
+   Bool_t TBranchProxyClassDescriptor::IsEquivalent(const TBranchProxyClassDescriptor* other)
    {
       // Return true if this description is the 'same' as the other decription.
 
@@ -166,7 +166,7 @@ namespace ROOT {
       return true;
    }
 
-   void TBranchProxyClassDescriptor::AddDescriptor(TBranchProxyDescriptor *desc, Bool_t isBase) 
+   void TBranchProxyClassDescriptor::AddDescriptor(TBranchProxyDescriptor *desc, Bool_t isBase)
    {
       // Add a descriptor to this proxy.
 
@@ -181,22 +181,22 @@ namespace ROOT {
       }
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsLoaded() const 
+   Bool_t TBranchProxyClassDescriptor::IsLoaded() const
    {
       // Return true if the class needed by the branch is loaded
       TClass *cl = gROOT->GetClass(GetTitle());
       return (cl && cl->IsLoaded());
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsClones() const 
-   {  
+   Bool_t TBranchProxyClassDescriptor::IsClones() const
+   {
       // Return true if this proxy is for a TClonesArray.
-      return fIsClones!=kOut; 
+      return fIsClones!=kOut;
    }
-   UInt_t TBranchProxyClassDescriptor::GetIsClones() const 
+   UInt_t TBranchProxyClassDescriptor::GetIsClones() const
    {
       // Return whether the branch is inside, nested in or outside of a TClonesArray
-      return fIsClones; 
+      return fIsClones;
    }
 
    void TBranchProxyClassDescriptor::OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */)

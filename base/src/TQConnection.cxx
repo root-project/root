@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.19 2005/03/13 15:05:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.20 2005/06/22 20:18:10 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -593,7 +593,7 @@ void TQConnection::ls(Option_t *option) const
    // connected to this connection.
 
    cout << "\t" <<  IsA()->GetName() << "\t" << GetName() << endl;
-   ((TQConnection*)this)->ForEach(TList,ls)(option);
+   ((TQConnection*)this)->R__FOR_EACH(TList,ls)(option);
 }
 
 //______________________________________________________________________________

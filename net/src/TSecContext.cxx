@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.9 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.10 2005/09/02 19:34:49 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
             : TObject()
 {
    // Ctor for SecContext object.
-   Assert(gROOT);
+   R__ASSERT(gROOT);
 
    fContext = ctx;
    fCleanup = new TList;
@@ -76,7 +76,7 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
 {
    // Ctor for SecContext object.
    // User and host from url = user@host .
-   Assert(gROOT);
+   R__ASSERT(gROOT);
 
    fContext = ctx;
    fCleanup = new TList;
@@ -107,7 +107,7 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
 TSecContext::~TSecContext()
 {
    // Dtor: delete (deActivate, local/remote cleanup, list removal)
-   // all what is still active 
+   // all what is still active
 
    Cleanup();
 }

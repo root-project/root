@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.2 2005/12/23 07:20:11 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.3 2006/02/25 15:47:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 template<class Element>
 TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixT<Element> &matrix,Int_t row)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fRowInd = row-matrix.GetRowLwb();
   if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
@@ -57,7 +57,7 @@ TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixT<Element> &matrix,In
 template<class Element>
 TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixTSym<Element> &matrix,Int_t row)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fRowInd = row-matrix.GetRowLwb();
   if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
@@ -97,7 +97,7 @@ void TMatrixTRow<Element>::operator=(Element val)
 {
   // Assign val to every element of the matrix row.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *rp = const_cast<Element *>(this->fPtr);
   for ( ; rp < this->fPtr+this->fMatrix->GetNcols(); rp += this->fInc)
     *rp = val;
@@ -107,9 +107,9 @@ void TMatrixTRow<Element>::operator=(Element val)
 template<class Element>
 void TMatrixTRow<Element>::operator+=(Element val)
 {
-  // Add val to every element of the matrix row. 
+  // Add val to every element of the matrix row.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *rp = const_cast<Element *>(this->fPtr);
   for ( ; rp < this->fPtr+this->fMatrix->GetNcols(); rp += this->fInc)
     *rp += val;
@@ -121,7 +121,7 @@ void TMatrixTRow<Element>::operator*=(Element val)
 {
    // Multiply every element of the matrix row with val.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *rp = const_cast<Element *>(this->fPtr);
   for ( ; rp < this->fPtr + this->fMatrix->GetNcols(); rp += this->fInc)
     *rp *= val;
@@ -134,8 +134,8 @@ void TMatrixTRow<Element>::operator=(const TMatrixTRow_const<Element> &mr)
   const TMatrixTBase<Element> *mt = mr.GetMatrix();
   if (this->fMatrix == mt && this->fRowInd == mr.GetRowIndex()) return;
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fMatrix->GetNcols() != mt->GetNcols() || this->fMatrix->GetColLwb() != mt->GetColLwb()) {
     Error("operator=(const TMatrixTRow_const &)", "matrix rows not compatible");
@@ -156,8 +156,8 @@ void TMatrixTRow<Element>::operator=(const TVectorT<Element> &vec)
    // Assign a vector to a matrix row. The vector is considered row-vector
    // to allow the assignment in the strict sense.
 
-  Assert(this->fMatrix->IsValid());
-  Assert(vec.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(vec.IsValid());
 
   if (this->fMatrix->GetColLwb() != vec.GetLwb() || this->fMatrix->GetNcols() != vec.GetNrows()) {
     Error("operator=(const TVectorT &)","vector length != matrix-row length");
@@ -179,8 +179,8 @@ void TMatrixTRow<Element>::operator+=(const TMatrixTRow_const<Element> &r)
 
   const TMatrixTBase<Element> *mt = r.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator+=(const TMatrixTRow_const &)","different row lengths");
@@ -203,8 +203,8 @@ void TMatrixTRow<Element>::operator*=(const TMatrixTRow_const<Element> &r)
 
   const TMatrixTBase<Element> *mt = r.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator*=(const TMatrixTRow_const &)","different row lengths");
@@ -222,7 +222,7 @@ void TMatrixTRow<Element>::operator*=(const TMatrixTRow_const<Element> &r)
 template<class Element>
 TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixT<Element> &matrix,Int_t col)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   this->fColInd = col-matrix.GetColLwb();
   if (this->fColInd >= matrix.GetNcols() || this->fColInd < 0) {
@@ -239,7 +239,7 @@ TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixT<Element> &mat
 template<class Element>
 TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixTSym<Element> &matrix,Int_t col)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fColInd = col-matrix.GetColLwb();
   if (fColInd >= matrix.GetNcols() || fColInd < 0) {
@@ -279,7 +279,7 @@ void TMatrixTColumn<Element>::operator=(Element val)
 {
   // Assign val to every element of the matrix column.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *cp = const_cast<Element *>(this->fPtr);
   for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
     *cp = val;
@@ -291,7 +291,7 @@ void TMatrixTColumn<Element>::operator+=(Element val)
 {
   // Add val to every element of the matrix column.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *cp = const_cast<Element *>(this->fPtr);
   for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
     *cp += val;
@@ -303,7 +303,7 @@ void TMatrixTColumn<Element>::operator*=(Element val)
 {
    // Multiply every element of the matrix column with val.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *cp = const_cast<Element *>(this->fPtr);
   for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
     *cp *= val;
@@ -311,18 +311,18 @@ void TMatrixTColumn<Element>::operator*=(Element val)
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixTColumn<Element>::operator=(const TMatrixTColumn_const<Element> &mc) 
+void TMatrixTColumn<Element>::operator=(const TMatrixTColumn_const<Element> &mc)
 {
   const TMatrixTBase<Element> *mt = mc.GetMatrix();
   if (this->fMatrix == mt && this->fColInd == mc.GetColIndex()) return;
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fMatrix->GetNrows() != mt->GetNrows() || this->fMatrix->GetRowLwb() != mt->GetRowLwb()) {
     Error("operator=(const TMatrixTColumn_const &)", "matrix columns not compatible");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
-    return; 
+    return;
   }
 
   Element *cp1 = const_cast<Element *>(this->fPtr);
@@ -337,8 +337,8 @@ void TMatrixTColumn<Element>::operator=(const TVectorT<Element> &vec)
 {
   // Assign a vector to a matrix column.
 
-  Assert(this->fMatrix->IsValid());
-  Assert(vec.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(vec.IsValid());
 
   if (this->fMatrix->GetRowLwb() != vec.GetLwb() || this->fMatrix->GetNrows() != vec.GetNrows()) {
     Error("operator=(const TVectorT &)","vector length != matrix-column length");
@@ -351,7 +351,7 @@ void TMatrixTColumn<Element>::operator=(const TVectorT<Element> &vec)
   for ( ; cp < this->fPtr+this->fMatrix->GetNoElements(); cp += this->fInc)
     *cp = *vp++;
 
-  Assert(vp == vec.GetMatrixArray()+vec.GetNrows());
+  R__ASSERT(vp == vec.GetMatrixArray()+vec.GetNrows());
 }
 
 //______________________________________________________________________________
@@ -360,8 +360,8 @@ void TMatrixTColumn<Element>::operator+=(const TMatrixTColumn_const<Element> &mc
 {
   const TMatrixTBase<Element> *mt = mc.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fMatrix->GetRowLwb() != mt->GetRowLwb() || this->fMatrix->GetNrows() != mt->GetNrows()) {
     Error("operator+=(const TMatrixTColumn_const &)","different row lengths");
@@ -384,8 +384,8 @@ void TMatrixTColumn<Element>::operator*=(const TMatrixTColumn_const<Element> &mc
 
   const TMatrixTBase<Element> *mt = mc.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fMatrix->GetRowLwb() != mt->GetRowLwb() || this->fMatrix->GetNrows() != mt->GetNrows()) {
     Error("operator*=(const TMatrixTColumn_const &)","different row lengths");
@@ -403,7 +403,7 @@ void TMatrixTColumn<Element>::operator*=(const TMatrixTColumn_const<Element> &mc
 template<class Element>
 TMatrixTDiag_const<Element>::TMatrixTDiag_const(const TMatrixT<Element> &matrix)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fMatrix = &matrix;
   fNdiag  = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
@@ -415,8 +415,8 @@ TMatrixTDiag_const<Element>::TMatrixTDiag_const(const TMatrixT<Element> &matrix)
 template<class Element>
 TMatrixTDiag_const<Element>::TMatrixTDiag_const(const TMatrixTSym<Element> &matrix)
 {
-  Assert(matrix.IsValid());
-  
+  R__ASSERT(matrix.IsValid());
+
   fMatrix = &matrix;
   fNdiag  = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
   fPtr    = matrix.GetMatrixArray();
@@ -450,7 +450,7 @@ void TMatrixTDiag<Element>::operator=(Element val)
 {
   // Assign val to every element of the matrix diagonal.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *dp = const_cast<Element *>(this->fPtr);
   for (Int_t i = 0; i < this->fNdiag; i++, dp += this->fInc)
     *dp = val;
@@ -462,7 +462,7 @@ void TMatrixTDiag<Element>::operator+=(Element val)
 {
   // Assign val to every element of the matrix diagonal.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *dp = const_cast<Element *>(this->fPtr);
   for (Int_t i = 0; i < this->fNdiag; i++, dp += this->fInc)
     *dp += val;
@@ -474,7 +474,7 @@ void TMatrixTDiag<Element>::operator*=(Element val)
 {
   // Assign val to every element of the matrix diagonal.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *dp = const_cast<Element *>(this->fPtr);
   for (Int_t i = 0; i < this->fNdiag; i++, dp += this->fInc)
     *dp *= val;
@@ -487,8 +487,8 @@ void TMatrixTDiag<Element>::operator=(const TMatrixTDiag_const<Element> &md)
   const TMatrixTBase<Element> *mt = md.GetMatrix();
   if (this->fMatrix == mt) return;
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->GetNdiags() != md.GetNdiags()) {
     Error("operator=(const TMatrixTDiag_const &)","diagonals not compatible");
@@ -508,8 +508,8 @@ void TMatrixTDiag<Element>::operator=(const TVectorT<Element> &vec)
 {
   // Assign a vector to the matrix diagonal.
 
-  Assert(this->fMatrix->IsValid());
-  Assert(vec.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(vec.IsValid());
 
   if (this->fNdiag != vec.GetNrows()) {
     Error("operator=(const TVectorT &)","vector length != matrix-diagonal length");
@@ -532,8 +532,8 @@ void TMatrixTDiag<Element>::operator+=(const TMatrixTDiag_const<Element> &md)
 
   const TMatrixTBase<Element> *mt = md.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fNdiag != md.GetNdiags()) {
     Error("operator=(const TMatrixTDiag_const &)","matrix-diagonal's different length");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -555,8 +555,8 @@ void TMatrixTDiag<Element>::operator*=(const TMatrixTDiag_const<Element> &md)
 
   const TMatrixTBase<Element> *mt = md.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fNdiag != md.GetNdiags()) {
     Error("operator*=(const TMatrixTDiag_const &)","matrix-diagonal's different length");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -573,7 +573,7 @@ void TMatrixTDiag<Element>::operator*=(const TMatrixTDiag_const<Element> &md)
 template<class Element>
 TMatrixTFlat_const<Element>::TMatrixTFlat_const(const TMatrixT<Element> &matrix)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fMatrix = &matrix;
   fPtr    = matrix.GetMatrixArray();
@@ -584,7 +584,7 @@ TMatrixTFlat_const<Element>::TMatrixTFlat_const(const TMatrixT<Element> &matrix)
 template<class Element>
 TMatrixTFlat_const<Element>::TMatrixTFlat_const(const TMatrixTSym<Element> &matrix)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fMatrix = &matrix;
   fPtr    = matrix.GetMatrixArray();
@@ -618,7 +618,7 @@ void TMatrixTFlat<Element>::operator=(Element val)
 {
   // Assign val to every element of the matrix.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *fp = const_cast<Element *>(this->fPtr);
   while (fp < this->fPtr+this->fMatrix->GetNoElements())
     *fp++ = val;
@@ -630,7 +630,7 @@ void TMatrixTFlat<Element>::operator+=(Element val)
 {
   // Add val to every element of the matrix.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *fp = const_cast<Element *>(this->fPtr);
   while (fp < this->fPtr+this->fMatrix->GetNoElements())
     *fp++ += val;
@@ -642,7 +642,7 @@ void TMatrixTFlat<Element>::operator*=(Element val)
 {
   // Multiply every element of the matrix with val.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   Element *fp = const_cast<Element *>(this->fPtr);
   while (fp < this->fPtr+this->fMatrix->GetNoElements())
     *fp++ *= val;
@@ -655,8 +655,8 @@ void TMatrixTFlat<Element>::operator=(const TMatrixTFlat_const<Element> &mf)
   const TMatrixTBase<Element> *mt = mf.GetMatrix();
   if (this->fMatrix == mt) return;
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fMatrix->GetNoElements() != mt->GetNoElements()) {
     Error("operator=(const TMatrixTFlat_const &)","matrix lengths different");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -675,7 +675,7 @@ void TMatrixTFlat<Element>::operator=(const TVectorT<Element> &vec)
 {
   // Assign a vector to the matrix. The matrix is traversed row-wise
 
-  Assert(vec.IsValid());
+  R__ASSERT(vec.IsValid());
 
   if (this->fMatrix->GetNoElements() != vec.GetNrows()) {
     Error("operator=(const TVectorT &)","vector length != # matrix-elements");
@@ -697,8 +697,8 @@ void TMatrixTFlat<Element>::operator+=(const TMatrixTFlat_const<Element> &mf)
 
   const TMatrixTBase<Element> *mt = mf.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fMatrix->GetNoElements() != mt->GetNoElements()) {
     Error("operator+=(const TMatrixTFlat_const &)","matrices lengths different");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -719,8 +719,8 @@ void TMatrixTFlat<Element>::operator*=(const TMatrixTFlat_const<Element> &mf)
 
   const TMatrixTBase<Element> *mt = mf.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fMatrix->GetNoElements() != mt->GetNoElements()) {
     Error("operator*=(const TMatrixTFlat_const &)","matrices lengths different");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -742,17 +742,17 @@ TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixT<Element> &matrix,In
   // The indexing range of the reference is
   // [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
 
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
-  Assert(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
+  R__ASSERT(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
   const Int_t rowLwb = matrix.GetRowLwb();
   const Int_t rowUpb = matrix.GetRowUpb();
   const Int_t colLwb = matrix.GetColLwb();
   const Int_t colUpb = matrix.GetColUpb();
-  Assert(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
-  Assert(col_lwbs >= colLwb && col_lwbs <= colUpb);
-  Assert(row_upbs >= rowLwb && row_upbs <= rowUpb);
-  Assert(col_upbs >= colLwb && col_upbs <= colUpb);
+  R__ASSERT(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
+  R__ASSERT(col_lwbs >= colLwb && col_lwbs <= colUpb);
+  R__ASSERT(row_upbs >= rowLwb && row_upbs <= rowUpb);
+  R__ASSERT(col_upbs >= colLwb && col_upbs <= colUpb);
 
   fRowOff    = row_lwbs-rowLwb;
   fColOff    = col_lwbs-colLwb;
@@ -771,17 +771,17 @@ TMatrixTSub_const<Element>::TMatrixTSub_const(const TMatrixTSym<Element> &matrix
   // The indexing range of the reference is
   // [0..row_upbs-row_lwbs+1][0..col_upb-col_lwbs+1] (default)
 
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
-  Assert(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
+  R__ASSERT(row_upbs >= row_lwbs && col_upbs >= col_lwbs);
   const Int_t rowLwb = matrix.GetRowLwb();
   const Int_t rowUpb = matrix.GetRowUpb();
   const Int_t colLwb = matrix.GetColLwb();
   const Int_t colUpb = matrix.GetColUpb();
-  Assert(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
-  Assert(col_lwbs >= colLwb && col_lwbs <= colUpb);
-  Assert(row_upbs >= rowLwb && row_upbs <= rowUpb);
-  Assert(col_upbs >= colLwb && col_upbs <= colUpb);
+  R__ASSERT(row_lwbs >= rowLwb && row_lwbs <= rowUpb);
+  R__ASSERT(col_lwbs >= colLwb && col_lwbs <= colUpb);
+  R__ASSERT(row_upbs >= rowLwb && row_upbs <= rowUpb);
+  R__ASSERT(col_upbs >= colLwb && col_upbs <= colUpb);
 
   fRowOff    = row_lwbs-rowLwb;
   fColOff    = col_lwbs-colLwb;
@@ -816,13 +816,13 @@ TMatrixTSub<Element>::TMatrixTSub(const TMatrixTSub<Element> &ms) : TMatrixTSub_
 
 //______________________________________________________________________________
 template<class Element>
-void TMatrixTSub<Element>::Rank1Update(const TVectorT<Element> &v,Element alpha)       
+void TMatrixTSub<Element>::Rank1Update(const TVectorT<Element> &v,Element alpha)
 {
-  // Perform a rank 1 operation on the matrix:                          
+  // Perform a rank 1 operation on the matrix:
   //     A += alpha * v * v^T
 
-  Assert(this->fMatrix->IsValid());
-  Assert(v.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(v.IsValid());
 
   if (v.GetNoElements() < TMath::Max(this->fNrowsSub,this->fNcolsSub)) {
     Error("Rank1Update","vector too short");
@@ -848,7 +848,7 @@ void TMatrixTSub<Element>::operator=(Element val)
 {
   // Assign val to every element of the sub matrix.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
 
   Element *p = (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->GetMatrixArray();
   const Int_t ncols = this->fMatrix->GetNcols();
@@ -865,7 +865,7 @@ void TMatrixTSub<Element>::operator+=(Element val)
 {
   // Add val to every element of the sub matrix.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
 
   Element *p = (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->GetMatrixArray();
   const Int_t ncols = this->fMatrix->GetNcols();
@@ -882,7 +882,7 @@ void TMatrixTSub<Element>::operator*=(Element val)
 {
   // Multiply every element of the sub matrix by val .
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
 
   Element *p = (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->GetMatrixArray();
   const Int_t ncols = this->fMatrix->GetNcols();
@@ -899,8 +899,8 @@ void TMatrixTSub<Element>::operator=(const TMatrixTSub_const<Element> &ms)
 {
   const TMatrixTBase<Element> *mt = ms.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->fMatrix == mt &&
       (this->GetNrows()  == ms.GetNrows () && this->GetNcols()  == ms.GetNcols () &&
@@ -955,13 +955,13 @@ void TMatrixTSub<Element>::operator=(const TMatrixTSub_const<Element> &ms)
 template<class Element>
 void TMatrixTSub<Element>::operator=(const TMatrixTBase<Element> &m)
 {
-  Assert(this->fMatrix->IsValid());
-  Assert(m.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(m.IsValid());
 
   if (this->fMatrix == &m) return;
 
   if (this->fNrowsSub != m.GetNrows() || this->fNcolsSub != m.GetNcols()) {
-    Error("operator=(const TMatrixTBase<Element> &)","sub matrices and matrix have different size"); 
+    Error("operator=(const TMatrixTBase<Element> &)","sub matrices and matrix have different size");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
     return;
   }
@@ -976,8 +976,8 @@ void TMatrixTSub<Element>::operator+=(const TMatrixTSub_const<Element> &ms)
 {
   const TMatrixTBase<Element> *mt = ms.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
 
   if (this->GetNrows() != ms.GetNrows() || this->GetNcols() != ms.GetNcols()) {
     Error("operator+=(const TMatrixTSub_const &)","sub matrices have different size");
@@ -1043,7 +1043,7 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSub_const<Element> &ms)
     const Int_t col_upbs = col_lwbs+this->fNcolsSub-1;
     source->GetSub(row_lwbs,row_upbs,col_lwbs,col_upbs,source_sub);
   }
-  
+
   const Element *sp = source_sub.GetMatrixArray();
   const Int_t ncols = this->fMatrix->GetNcols();
 
@@ -1073,10 +1073,10 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSub_const<Element> &ms)
     }
     cp   += ncols-this->fNcolsSub;
     trp0 += ncols;                                      // Set trp0 to the (i+1)-th row
-    Assert(trp0 == cp);
+    R__ASSERT(trp0 == cp);
   }
 
-  Assert(cp == trp0_last && trp0 == trp0_last);
+  R__ASSERT(cp == trp0_last && trp0 == trp0_last);
   if (isAllocated)
     delete [] trp;
 }
@@ -1085,8 +1085,8 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSub_const<Element> &ms)
 template<class Element>
 void TMatrixTSub<Element>::operator+=(const TMatrixTBase<Element> &mt)
 {
-  Assert(this->fMatrix->IsValid());
-  Assert(mt.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt.IsValid());
 
   if (this->GetNrows() != mt.GetNrows() || this->GetNcols() != mt.GetNcols()) {
     Error("operator+=(const TMatrixTBase<Element> &)","sub matrix and matrix have different size");
@@ -1156,10 +1156,10 @@ void TMatrixTSub<Element>::operator*=(const TMatrixT<Element> &source)
     }
     cp   += ncols-this->fNcolsSub;
     trp0 += ncols;                                        // Set trp0 to the (i+1)-th row
-    Assert(trp0 == cp);
+    R__ASSERT(trp0 == cp);
   }
 
-  Assert(cp == trp0_last && trp0 == trp0_last);
+  R__ASSERT(cp == trp0_last && trp0 == trp0_last);
   if (isAllocated)
     delete [] trp;
 }
@@ -1213,10 +1213,10 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSym<Element> &source)
     }
     cp   += ncols-this->fNcolsSub;
     trp0 += ncols;                                        // Set trp0 to the (i+1)-th row
-    Assert(trp0 == cp);
+    R__ASSERT(trp0 == cp);
   }
 
-  Assert(cp == trp0_last && trp0 == trp0_last);
+  R__ASSERT(cp == trp0_last && trp0 == trp0_last);
   if (isAllocated)
     delete [] trp;
 }
@@ -1225,7 +1225,7 @@ void TMatrixTSub<Element>::operator*=(const TMatrixTSym<Element> &source)
 template<class Element>
 TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<Element> &matrix,Int_t row)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fRowInd = row-matrix.GetRowLwb();
   if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
@@ -1260,10 +1260,10 @@ TMatrixTSparseRow<Element>::TMatrixTSparseRow(const TMatrixTSparseRow<Element> &
 template<class Element>
 Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
 {
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
 
-  const Int_t acoln = i-this->fMatrix->GetColLwb(); 
-  Assert(acoln < this->fMatrix->GetNcols() && acoln >= 0);
+  const Int_t acoln = i-this->fMatrix->GetColLwb();
+  R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
   Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
   if (index >= 0 && this->fColPtr[index] == acoln)
     return (const_cast<Element*>(this->fDataPtr))[index];
@@ -1293,8 +1293,8 @@ template<class Element>
 void TMatrixTSparseRow<Element>::operator=(Element val)
 {
   // Assign val to every non-zero (!) element of the matrix row.
-  
-  Assert(this->fMatrix->IsValid());
+
+  R__ASSERT(this->fMatrix->IsValid());
   Element *rp = const_cast<Element *>(this->fDataPtr);
   for ( ; rp < this->fDataPtr+this->fNindex; rp++)
     *rp = val;
@@ -1305,8 +1305,8 @@ template<class Element>
 void TMatrixTSparseRow<Element>::operator+=(Element val)
 {
   // Add val to every non-zero (!) element of the matrix row.
-  
-  Assert(this->fMatrix->IsValid());
+
+  R__ASSERT(this->fMatrix->IsValid());
   Element *rp = const_cast<Element *>(this->fDataPtr);
   for ( ; rp < this->fDataPtr+this->fNindex; rp++)
     *rp += val;
@@ -1317,8 +1317,8 @@ template<class Element>
 void TMatrixTSparseRow<Element>::operator*=(Element val)
 {
   // Multiply every element of the matrix row by val.
-  
-  Assert(this->fMatrix->IsValid());
+
+  R__ASSERT(this->fMatrix->IsValid());
   Element *rp = const_cast<Element *>(this->fDataPtr);
   for ( ; rp < this->fDataPtr+this->fNindex; rp++)
     *rp *= val;
@@ -1331,8 +1331,8 @@ void TMatrixTSparseRow<Element>::operator=(const TMatrixTSparseRow_const<Element
   const TMatrixTBase<Element> *mt = mr.GetMatrix();
   if (this->fMatrix == mt) return;
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator=(const TMatrixTSparseRow_const &)","matrix rows not compatible");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -1362,8 +1362,8 @@ void TMatrixTSparseRow<Element>::operator=(const TVectorT<Element> &vec)
    // Assign a vector to a matrix row. The vector is considered row-vector
    // to allow the assignment in the strict sense.
 
-  Assert(this->fMatrix->IsValid());
-  Assert(vec.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(vec.IsValid());
 
   if (this->fMatrix->GetColLwb() != vec.GetLwb() || this->fMatrix->GetNcols() != vec.GetNrows()) {
     Error("operator=(const TVectorT &)","vector length != matrix-row length");
@@ -1391,8 +1391,8 @@ void TMatrixTSparseRow<Element>::operator+=(const TMatrixTSparseRow_const<Elemen
 
   const TMatrixTBase<Element> *mt = r.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator+=(const TMatrixTRow_const &)","different row lengths");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -1427,8 +1427,8 @@ void TMatrixTSparseRow<Element>::operator*=(const TMatrixTSparseRow_const<Elemen
 
   const TMatrixTBase<Element> *mt = r.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fMatrix->GetColLwb() != mt->GetColLwb() || this->fMatrix->GetNcols() != mt->GetNcols()) {
     Error("operator+=(const TMatrixTRow_const &)","different row lengths");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -1459,7 +1459,7 @@ void TMatrixTSparseRow<Element>::operator*=(const TMatrixTSparseRow_const<Elemen
 template<class Element>
 TMatrixTSparseDiag_const<Element>::TMatrixTSparseDiag_const(const TMatrixTSparse<Element> &matrix)
 {
-  Assert(matrix.IsValid());
+  R__ASSERT(matrix.IsValid());
 
   fMatrix  = &matrix;
   fNdiag   = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
@@ -1485,9 +1485,9 @@ TMatrixTSparseDiag<Element>::TMatrixTSparseDiag(const TMatrixTSparseDiag<Element
 template<class Element>
 Element &TMatrixTSparseDiag<Element>::operator()(Int_t i)
 {
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
 
-  Assert(i < this->fNdiag && i >= 0);
+  R__ASSERT(i < this->fNdiag && i >= 0);
   TMatrixTBase<Element> *mt = const_cast<TMatrixTBase<Element> *>(this->fMatrix);
   const Int_t *pR = mt->GetRowIndexArray();
   const Int_t *pC = mt->GetColIndexArray();
@@ -1523,7 +1523,7 @@ void TMatrixTSparseDiag<Element>::operator=(Element val)
 {
   // Assign val to every element of the matrix diagonal.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   for (Int_t i = 0; i < this->fNdiag; i++)
     (*this)(i) = val;
 }
@@ -1534,7 +1534,7 @@ void TMatrixTSparseDiag<Element>::operator+=(Element val)
 {
   // Add val to every element of the matrix diagonal.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   for (Int_t i = 0; i < this->fNdiag; i++)
     (*this)(i) += val;
 }
@@ -1545,7 +1545,7 @@ void TMatrixTSparseDiag<Element>::operator*=(Element val)
 {
   // Multiply every element of the matrix diagonal by val.
 
-  Assert(this->fMatrix->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
   for (Int_t i = 0; i < this->fNdiag; i++)
     (*this)(i) *= val;
 }
@@ -1557,8 +1557,8 @@ void TMatrixTSparseDiag<Element>::operator=(const TMatrixTSparseDiag_const<Eleme
   const TMatrixTBase<Element> *mt = md.GetMatrix();
   if (this->fMatrix == mt) return;
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fNdiag != md.GetNdiags()) {
     Error("operator=(const TMatrixTSparseDiag_const &)","matrix-diagonal's different length");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -1575,8 +1575,8 @@ void TMatrixTSparseDiag<Element>::operator=(const TVectorT<Element> &vec)
 {
   // Assign a vector to the matrix diagonal.
 
-  Assert(this->fMatrix->IsValid());
-  Assert(vec.IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(vec.IsValid());
 
   if (this->fNdiag != vec.GetNrows()) {
     Error("operator=(const TVectorT &)","vector length != matrix-diagonal length");
@@ -1598,8 +1598,8 @@ void TMatrixTSparseDiag<Element>::operator+=(const TMatrixTSparseDiag_const<Elem
 
   const TMatrixTBase<Element> *mt = md.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fNdiag != md.GetNdiags()) {
     Error("operator+=(const TMatrixTSparseDiag_const &)","matrix-diagonal's different length");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();
@@ -1619,8 +1619,8 @@ void TMatrixTSparseDiag<Element>::operator*=(const TMatrixTSparseDiag_const<Elem
 
   const TMatrixTBase<Element> *mt = md.GetMatrix();
 
-  Assert(this->fMatrix->IsValid());
-  Assert(mt->IsValid());
+  R__ASSERT(this->fMatrix->IsValid());
+  R__ASSERT(mt->IsValid());
   if (this->fNdiag != md.GetNdiags()) {
     Error("operator*=(const TMatrixTSparseDiag_const &)","matrix-diagonal's different length");
     (const_cast<TMatrixTBase<Element> *>(this->fMatrix))->Invalidate();

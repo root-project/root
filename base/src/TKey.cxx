@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.54 2006/03/03 20:36:20 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.55 2006/03/06 22:33:48 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
    // TKey default constructor.
 
    Build(0, "", 0);
-   
+
    fKeylen     = Sizeof();
 
    keyAbsNumber++; SetUniqueID(keyAbsNumber);
@@ -96,7 +96,7 @@ TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
    // TKey default constructor.
 
    Build(motherDir, "", 0);
-   
+
    fKeylen     = Sizeof();
 
    keyAbsNumber++; SetUniqueID(keyAbsNumber);
@@ -110,7 +110,7 @@ TKey::TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir) : TNamed()
    // A TKey object is created to read the keys structure itself.
 
    Build(motherDir, "", pointer);
-   
+
    fSeekKey    = pointer;
    fNbytes     = nbytes;
    fBuffer     = new char[nbytes];
@@ -124,7 +124,7 @@ TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, 
    // Create a TKey object with the specified name, title for the given class.
 
    Build(motherDir, cl->GetName(), -1);
-   
+
    fKeylen     = Sizeof();
    fObjlen     = nbytes;
    Create(nbytes);
@@ -137,7 +137,7 @@ TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nb
    // Create a TKey object with the specified name, title for the given class.
 
    Build(motherDir, cl->GetName(), -1);
-   
+
    fKeylen     = Sizeof();
    fObjlen     = nbytes;
    Create(nbytes);
@@ -149,7 +149,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 {
    // Create a TKey object for a TObject* and fill output buffer
 
-   Assert(obj);
+   R__ASSERT(obj);
 
    if (!obj->IsA()->HasDefaultConstructor()) {
       Warning("TKey", "since %s had no public constructor\n"
@@ -219,7 +219,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    // Create a TKey object for any object obj of class cl d and fill
    // output buffer.
 
-   Assert(obj && cl);
+   R__ASSERT(obj && cl);
 
    if (!cl->HasDefaultConstructor()) {
       Warning("TKey", "since %s had no public constructor\n"
@@ -302,10 +302,10 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
 {
    // method used in all TKey constructor to initialize basic data fields
    // filepos is used to calculate correct version number of key
-   // if filepos==-1, end of file position is used 
-   
+   // if filepos==-1, end of file position is used
+
    fMotherDir = motherDir;
-   
+
    fPidOffset  = 0;
    fNbytes     = 0;
    fBuffer     = 0;
@@ -319,7 +319,7 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
    fClassName = classname;
 
    fVersion = TKey::Class_Version();
-   
+
    if ((filepos==-1) && GetFile()) filepos = GetFile()->GetEND();
    if (filepos > TFile::kStartBigFile) fVersion += 1000;
 
@@ -360,16 +360,16 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
    // Create a TKey object of specified size
    // if externFile!=0, key will be allocated in specified file,
    // otherwise file of mother directory will be used
-   
+
    keyAbsNumber++; SetUniqueID(keyAbsNumber);
-   
+
    TFile *f = externFile;
    if (!f) f = GetFile();
    if (!f) {
       Error("Create","Cannot create key without file");
-      return;   
+      return;
    }
-   
+
    Int_t nsize      = nbytes + fKeylen;
    TList *lfree     = f->GetListOfFree();
    TFree *f1        = (TFree*)lfree->First();
@@ -467,7 +467,7 @@ TFile *TKey::GetFile() const
 {
    // Returns file to which key belong
 
-   return fMotherDir!=0 ? fMotherDir->GetFile() : gFile; 
+   return fMotherDir!=0 ? fMotherDir->GetFile() : gFile;
 }
 
 //______________________________________________________________________________
@@ -914,7 +914,7 @@ void TKey::ReadBuffer(char *&buffer)
    // Decode input buffer.
    // In some situation will add key to gDirectory ???
 
-   ReadKeyBuffer(buffer); 
+   ReadKeyBuffer(buffer);
 
    if (!gROOT->ReadingObject() && gDirectory) {
       if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);

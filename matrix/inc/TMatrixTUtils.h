@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.1 2005/12/22 09:19:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.h,v 1.2 2005/12/23 07:20:10 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -129,9 +129,9 @@ public:
   inline       Int_t                  GetRowIndex() const { return fRowInd; }
   inline       Int_t                  GetInc     () const { return fInc; }
   inline const Element               *GetPtr     () const { return fPtr; }
-  inline const Element               &operator   ()(Int_t i) const { Assert(fMatrix->IsValid());
+  inline const Element               &operator   ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
                                                                      const Int_t acoln = i-fMatrix->GetColLwb();
-                                                                     Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                                                     R__ASSERT(acoln < fMatrix->GetNcols() && acoln >= 0);
                                                                      return fPtr[acoln]; }
   inline const Element               &operator   [](Int_t i) const { return (*(const TMatrixTRow_const<Element> *)this)(i); }
 
@@ -148,13 +148,13 @@ public:
 
   inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
-  inline const Element &operator()(Int_t i) const { Assert(this->fMatrix->IsValid());
+  inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
                                                     const Int_t acoln = i-this->fMatrix->GetColLwb();
-                                                    Assert(acoln < this->fMatrix->GetNcols() && acoln >= 0);
+                                                    R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
                                                     return this->fPtr[acoln]; }
-  inline       Element &operator()(Int_t i)       { Assert(this->fMatrix->IsValid());
+  inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
                                                     const Int_t acoln = i-this->fMatrix->GetColLwb();
-                                                    Assert(acoln < this->fMatrix->GetNcols() && acoln >= 0);
+                                                    R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
                                                     return (const_cast<Element *>(this->fPtr))[acoln]; }
   inline const Element &operator[](Int_t i) const { return (*(const TMatrixTRow<Element> *)this)(i); }
   inline       Element &operator[](Int_t i)       { return (*(      TMatrixTRow<Element> *)this)(i); }
@@ -199,9 +199,9 @@ public:
   inline       Int_t                   GetColIndex() const { return fColInd; }
   inline       Int_t                   GetInc     () const { return fInc; }
   inline const Element                *GetPtr     () const { return fPtr; }
-  inline const Element                &operator   ()(Int_t i) const { Assert(fMatrix->IsValid());
+  inline const Element                &operator   ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
                                                                       const Int_t arown = i-fMatrix->GetRowLwb();
-                                                                      Assert(arown < fMatrix->GetNrows() && arown >= 0);
+                                                                      R__ASSERT(arown < fMatrix->GetNrows() && arown >= 0);
                                                                       return fPtr[arown*fInc]; }
   inline const Element      &operator [](Int_t i) const { return (*(const TMatrixTColumn_const<Element> *)this)(i); }
 
@@ -218,13 +218,13 @@ public:
 
   inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
-  inline const Element &operator()(Int_t i) const { Assert(this->fMatrix->IsValid());
+  inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
                                                     const Int_t arown = i-this->fMatrix->GetRowLwb();
-                                                    Assert(arown < this->fMatrix->GetNrows() && arown >= 0);
+                                                    R__ASSERT(arown < this->fMatrix->GetNrows() && arown >= 0);
                                                     return this->fPtr[arown]; }
-  inline       Element &operator()(Int_t i)       { Assert(this->fMatrix->IsValid());
+  inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
                                                     const Int_t arown = i-this->fMatrix->GetRowLwb();
-                                                    Assert(arown < this->fMatrix->GetNrows() && arown >= 0);
+                                                    R__ASSERT(arown < this->fMatrix->GetNrows() && arown >= 0);
                                                     return (const_cast<Element *>(this->fPtr))[arown*this->fInc]; }
   inline const Element &operator[](Int_t i) const { return (*(const TMatrixTColumn<Element> *)this)(i); }
   inline       Element &operator[](Int_t i)       { return (*(      TMatrixTColumn<Element> *)this)(i); }
@@ -268,8 +268,8 @@ public:
   inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
   inline const Element               *GetPtr   () const { return fPtr; }
   inline       Int_t                  GetInc   () const { return fInc; }
-  inline const Element               &operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                          Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+  inline const Element               &operator ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
+                                                          R__ASSERT(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
   inline const Element               &operator [](Int_t i) const { return (*(const TMatrixTDiag_const<Element> *)this)(i); }
 
   Int_t GetNdiags() const { return fNdiag; }
@@ -287,10 +287,10 @@ public:
 
   inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
-  inline const Element &operator()(Int_t i) const { Assert(this->fMatrix->IsValid());
-                                                    Assert(i < this->fNdiag && i >= 0); return this->fPtr[i*this->fInc]; }
-  inline       Element &operator()(Int_t i)       { Assert(this->fMatrix->IsValid());
-                                                    Assert(i < this->fNdiag && i >= 0);
+  inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
+                                                    R__ASSERT(i < this->fNdiag && i >= 0); return this->fPtr[i*this->fInc]; }
+  inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
+                                                    R__ASSERT(i < this->fNdiag && i >= 0);
                                                     return (const_cast<Element *>(this->fPtr))[i*this->fInc]; }
   inline const Element &operator[](Int_t i) const { return (*(const TMatrixTDiag<Element> *)this)(i); }
   inline       Element &operator[](Int_t i)       { return (*(      TMatrixTDiag *)this)(i); }
@@ -332,8 +332,8 @@ public:
 
   inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
   inline const Element               *GetPtr   () const { return fPtr; }
-  inline const Element               &operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                           Assert(i >=0 && i < fNelems); return fPtr[i]; }
+  inline const Element               &operator ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
+                                                           R__ASSERT(i >=0 && i < fNelems); return fPtr[i]; }
   inline const Element               &operator [](Int_t i) const { return (*(const TMatrixTFlat_const<Element> *)this)(i); }
 
   ClassDef(TMatrixTFlat_const,0)  // Template of General Matrix Flat Representation class
@@ -349,10 +349,10 @@ public:
 
   inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
 
-  inline const Element &operator()(Int_t i) const { Assert(this->fMatrix->IsValid());
-                                                    Assert(i >=0 && i < this->fNelems); return this->fPtr[i]; }
-  inline       Element &operator()(Int_t i)       { Assert(this->fMatrix->IsValid());
-                                                    Assert(i >=0 && i < this->fNelems);
+  inline const Element &operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
+                                                    R__ASSERT(i >=0 && i < this->fNelems); return this->fPtr[i]; }
+  inline       Element &operator()(Int_t i)       { R__ASSERT(this->fMatrix->IsValid());
+                                                    R__ASSERT(i >=0 && i < this->fNelems);
                                                     return (const_cast<Element *>(this->fPtr))[i]; }
   inline const Element &operator[](Int_t i) const { return (*(const TMatrixTFlat<Element> *)this)(i); }
   inline       Element &operator[](Int_t i)       { return (*(      TMatrixTFlat<Element> *)this)(i); }
@@ -400,9 +400,9 @@ public:
   inline       Int_t                  GetNrows () const { return fNrowsSub; }
   inline       Int_t                  GetNcols () const { return fNcolsSub; }
   inline const Element               &operator ()(Int_t rown,Int_t coln) const
-                                                    { Assert(fMatrix->IsValid());
-                                                      Assert(rown < fNrowsSub && rown >= 0);
-                                                      Assert(coln < fNcolsSub && coln >= 0);
+                                                    { R__ASSERT(fMatrix->IsValid());
+                                                      R__ASSERT(rown < fNrowsSub && rown >= 0);
+                                                      R__ASSERT(coln < fNcolsSub && coln >= 0);
                                                       const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fColOff;
                                                       const Element *ptr = fMatrix->GetMatrixArray();
                                                       return ptr[index]; }
@@ -422,9 +422,9 @@ public:
   TMatrixTSub(const TMatrixTSub<Element> &ms);
 
   inline       Element &operator()(Int_t rown,Int_t coln)
-                                                    { Assert(this->fMatrix->IsValid());
-                                                      Assert(rown < this->fNrowsSub && rown >= 0);
-                                                      Assert(coln < this->fNcolsSub && coln >= 0);
+                                                    { R__ASSERT(this->fMatrix->IsValid());
+                                                      R__ASSERT(rown < this->fNrowsSub && rown >= 0);
+                                                      R__ASSERT(coln < this->fNcolsSub && coln >= 0);
                                                       const Int_t index = (rown+this->fRowOff)*this->fMatrix->GetNcols()+
                                                                            coln+this->fColOff;
                                                       const Element *ptr = this->fMatrix->GetMatrixArray();
@@ -477,9 +477,9 @@ public:
   inline       Int_t                  GetRowIndex() const { return fRowInd; }
   inline       Int_t                  GetNindex  () const { return fNindex; }
 
-  inline Element operator()(Int_t i) const { Assert(fMatrix->IsValid());
+  inline Element operator()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
                                              const Int_t acoln = i-fMatrix->GetColLwb();
-                                             Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                             R__ASSERT(acoln < fMatrix->GetNcols() && acoln >= 0);
                                              const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
                                              if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
                                              else                                       return 0.0; }
@@ -497,9 +497,9 @@ public:
 
   inline Element *GetDataPtr() const { return const_cast<Element *>(this->fDataPtr); }
 
-  inline Element  operator()(Int_t i) const { Assert(this->fMatrix->IsValid());
+  inline Element  operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
                                               const Int_t acoln = i-this->fMatrix->GetColLwb();
-                                              Assert(acoln < this->fMatrix->GetNcols() && acoln >= 0);
+                                              R__ASSERT(acoln < this->fMatrix->GetNcols() && acoln >= 0);
                                               const Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
                                               if (index >= 0 && this->fColPtr[index] == acoln) return this->fDataPtr[index];
                                               else                                             return 0.0; }
@@ -545,8 +545,8 @@ public:
   inline const Element               *GetDataPtr() const { return fDataPtr; }
   inline       Int_t                  GetNdiags () const { return fNdiag; }
 
-  inline Element operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                              Assert(i < fNdiag && i >= 0);
+  inline Element operator ()(Int_t i) const { R__ASSERT(fMatrix->IsValid());
+                                              R__ASSERT(i < fNdiag && i >= 0);
                                               const Int_t   * const pR = fMatrix->GetRowIndexArray();
                                               const Int_t   * const pC = fMatrix->GetColIndexArray();
                                               const Element * const pD = fMatrix->GetMatrixArray();
@@ -570,8 +570,8 @@ public:
 
   inline Element *GetDataPtr() const { return const_cast<Element *>(this->fDataPtr); }
 
-  inline       Element  operator()(Int_t i) const { Assert(this->fMatrix->IsValid());
-                                                    Assert(i < this->fNdiag && i >= 0);
+  inline       Element  operator()(Int_t i) const { R__ASSERT(this->fMatrix->IsValid());
+                                                    R__ASSERT(i < this->fNdiag && i >= 0);
                                                     const Int_t   * const pR = this->fMatrix->GetRowIndexArray();
                                                     const Int_t   * const pC = this->fMatrix->GetColIndexArray();
                                                     const Element * const pD = this->fMatrix->GetMatrixArray();

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.cxx,v 1.3 2005/09/04 10:02:30 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -96,14 +96,14 @@ TQpLinSolverBase::TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data)
 
 //______________________________________________________________________________
 TQpLinSolverBase::TQpLinSolverBase(const TQpLinSolverBase &another) : TObject(another)
-{ 
+{
   *this = another;
-} 
+}
 
 //______________________________________________________________________________
 void TQpLinSolverBase::Factor(TQpDataBase * /* prob */,TQpVar *vars)
 {
-  Assert(vars->ValidNonZeroPattern());
+  R__ASSERT(vars->ValidNonZeroPattern());
 
   if (fNxlo+fNxup > 0) {
     fDd.ResizeTo(fDq);
@@ -139,15 +139,15 @@ void TQpLinSolverBase::ComputeDiagonals(TVectorD &dd,TVectorD &omega,
 //______________________________________________________________________________
 void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQpVar *step)
 {
-  Assert(vars->ValidNonZeroPattern());
-  Assert(res ->ValidNonZeroPattern());
-  
+  R__ASSERT(vars->ValidNonZeroPattern());
+  R__ASSERT(res ->ValidNonZeroPattern());
+
   (step->fX).ResizeTo(res->fRQ); step->fX = res->fRQ;
   if (fNxlo > 0) {
     TVectorD &vInvGamma = step->fV;
     vInvGamma.ResizeTo(vars->fGamma); vInvGamma = vars->fGamma;
     ElementDiv(vInvGamma,vars->fV,fXloIndex);
-        
+
     AddElemMult(step->fX,1.0,vInvGamma,res->fRv);
     AddElemDiv (step->fX,1.0,res->fRgamma,vars->fV,fXloIndex);
   }
@@ -156,7 +156,7 @@ void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQp
     TVectorD &wInvPhi = step->fW;
     wInvPhi.ResizeTo(vars->fPhi); wInvPhi = vars->fPhi;
     ElementDiv(wInvPhi,vars->fW,fXupIndex);
-          
+
     AddElemMult(step->fX,1.0,wInvPhi,res->fRw);
     AddElemDiv (step->fX,-1.0,res->fRphi,vars->fW,fXupIndex);
   }
@@ -174,10 +174,10 @@ void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQp
 
   if (fMcup > 0) {
     TVectorD &uInvPi = step->fU;
-        
+
     uInvPi.ResizeTo(vars->fPi); uInvPi = vars->fPi;
     ElementDiv(uInvPi,vars->fU,fCupIndex);
-        
+
     AddElemMult(step->fS,1.0,uInvPi,res->fRu);
     AddElemDiv (step->fS,-1.0,res->fRpi,vars->fU,fCupIndex);
   }
@@ -214,7 +214,7 @@ void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQp
     (step->fV).ResizeTo(step->fX); step->fV = step->fX;
     Add(step->fV,-1.0,res->fRv);
     (step->fV).SelectNonZeros(fXloIndex);
-        
+
     (step->fGamma).ResizeTo(res->fRgamma); step->fGamma = res->fRgamma;
     AddElemMult(step->fGamma,-1.0,vars->fGamma,step->fV);
     ElementDiv(step->fGamma,vars->fV,fXloIndex);
@@ -224,12 +224,12 @@ void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQp
     (step->fW).ResizeTo(res->fRw); step->fW = res->fRw;
     Add(step->fW,-1.0,step->fX);
     (step->fW).SelectNonZeros(fXupIndex);
-        
+
     (step->fPhi).ResizeTo(res->fRphi); step->fPhi = res->fRphi;
     AddElemMult(step->fPhi,-1.0,vars->fPhi,step->fW);
     ElementDiv(step->fPhi,vars->fW,fXupIndex);
   }
-  Assert(step->ValidNonZeroPattern());
+  R__ASSERT(step->ValidNonZeroPattern());
 }
 
 //______________________________________________________________________________
@@ -246,7 +246,7 @@ void TQpLinSolverBase::SolveXYZS(TVectorD &stepx,TVectorD &stepy,
 
   stepy *= -1.;
   stepz *= -1.;
-        
+
   Add(steps,-1.0,stepz);
   ElementMult(steps,fNomegaInv);
   steps *= -1.;

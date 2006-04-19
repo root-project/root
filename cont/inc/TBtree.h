@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.8 2004/08/02 08:52:54 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.9 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -379,7 +379,7 @@ inline TObject *TBtree::Last() const
 
 inline Int_t TBtInnerNode::GetNofKeys(Int_t i) const
 {
-   Assert(i >= 0 && i <= fLast);
+   R__ASSERT(i >= 0 && i <= fLast);
    return fItem[i].fNofKeysInTree;
 }
 
@@ -405,7 +405,7 @@ inline Int_t TBtInnerNode::DecNofKeys(Int_t i, Int_t n)
 
 inline Int_t TBtInnerNode::Vsize() const
 {
-   Assert(fParent != 0 && fParent->GetTree(0) != (TBtNode *)this);
+   R__ASSERT(fParent != 0 && fParent->GetTree(0) != (TBtNode *)this);
    return Psize()+1;
 }
 
@@ -414,13 +414,13 @@ inline Int_t TBtInnerNode::Vsize() const
 
 inline TObject *TBtLeafNode::operator[](Int_t i) const
 {
-   Assert(i >= 0 && i <= fLast);
+   R__ASSERT(i >= 0 && i <= fLast);
    return fItem[i];
 }
 
 inline Int_t TBtLeafNode::Vsize() const
 {
-   Assert(fParent != 0 && fParent->GetTree(0) != (TBtNode *)this);
+   R__ASSERT(fParent != 0 && fParent->GetTree(0) != (TBtNode *)this);
    return Psize()+1;
 }
 

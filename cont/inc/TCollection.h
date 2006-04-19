@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.19 2005/08/30 02:45:05 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.20 2006/02/19 21:02:34 pcanal Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -46,7 +46,7 @@ R__EXTERN TVirtualMutex *gCollectionMutex;
 class TCollection : public TObject {
 
 private:
-   static TCollection  *fgCurrentCollection;  //used by macro ForEach
+   static TCollection  *fgCurrentCollection;  //used by macro R__FOR_EACH
    static TObjectTable *fgGarbageCollection;  //used by garbage collector
    static Bool_t        fgEmptyingGarbage;    //used by garbage collector
    static Int_t         fgGarbageStack;       //used by garbage collector
@@ -152,13 +152,22 @@ public:
 };
 
 
-//---- ForEach macro -----------------------------------------------------------
+//---- R__FOR_EACH macro -------------------------------------------------------
 
 // Macro to loop over all elements of a list of type "type" while executing
 // procedure "proc" on each element
 
+#define R__FOR_EACH(type,proc) \
+    SetCurrentCollection(); \
+    TIter _NAME3_(nxt_,type,proc)(TCollection::GetCurrentCollection()); \
+    type *_NAME3_(obj_,type,proc); \
+    while ((_NAME3_(obj_,type,proc) = (type*) _NAME3_(nxt_,type,proc)())) \
+       _NAME3_(obj_,type,proc)->proc
+
+// deprecated macros (will be removed in next release)
 #define ForEach(type,proc) \
     SetCurrentCollection(); \
+    printf("please change ForEach to R__FOR_EACH in %s at line %d\n", __FILE__, __LINE__); \
     TIter _NAME3_(nxt_,type,proc)(TCollection::GetCurrentCollection()); \
     type *_NAME3_(obj_,type,proc); \
     while ((_NAME3_(obj_,type,proc) = (type*) _NAME3_(nxt_,type,proc)())) \

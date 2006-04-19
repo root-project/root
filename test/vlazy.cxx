@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.8 2004/01/25 20:33:32 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.9 2004/09/03 13:41:34 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -81,7 +81,7 @@ int main()
       TMatrix orig_m = THaarMatrixF(9,201);   // which is a pretty big matrix
       TMatrix small1 = traditional_downsampling(orig_m);
       TMatrix small2 = downsample_matrix(orig_m);
-      Assert( small1 == small2 );
+      R__ASSERT( small1 == small2 );
    }
 
    {

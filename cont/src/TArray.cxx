@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.cxx,v 1.4 2002/05/03 14:30:42 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.cxx,v 1.6 2002/05/09 20:22:00 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -43,7 +43,7 @@ TArray *TArray::ReadArray(TBuffer &b, const TClass *clReq)
    // TBuffer::ReadObject (does not keep track of multiple
    // references to same array).
 
-   Assert(b.IsReading());
+   R__ASSERT(b.IsReading());
 
    // Make sure ReadArray is initialized
    b.InitMap();
@@ -83,7 +83,7 @@ void TArray::WriteArray(TBuffer &b, const TArray *a)
    // TBuffer::WriteObject (does not keep track of multiple
    // references to the same array).
 
-   Assert(b.IsWriting());
+   R__ASSERT(b.IsWriting());
 
    // Make sure WriteMap is initialized
    b.InitMap();

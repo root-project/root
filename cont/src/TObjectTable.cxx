@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.5 2001/10/17 11:03:04 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.6 2001/10/18 13:07:28 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -379,7 +379,7 @@ void TObjectTable::UpdateInstCount() const
    if (!fTable || !TROOT::Initialized())
       return;
 
-   gROOT->GetListOfClasses()->ForEach(TClass,ResetInstanceCount)();
+   gROOT->GetListOfClasses()->R__FOR_EACH(TClass,ResetInstanceCount)();
 
    for (int i = 0; i < fSize; i++)
       if ((op = fTable[i])) {                // attention: no ==

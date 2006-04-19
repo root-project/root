@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.22 2005/07/28 19:51:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.23 2005/09/02 11:04:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
 //______________________________________________________________________________
 TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
     Error("TDecompLU(const TMatrixD &","matrix should be square");
@@ -181,7 +181,7 @@ const TMatrixD TDecompLU::GetMatrix()
 //______________________________________________________________________________
 void TDecompLU::SetMatrix(const TMatrixD &a)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   ResetStatus();
   if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
@@ -212,7 +212,7 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 // Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
 // been transformed.  Solution returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -281,7 +281,7 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
 // been transformed.  Solution returned in b.
 
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;
@@ -354,7 +354,7 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 // Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
 // been transformed.  Solution returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -426,7 +426,7 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 // been transformed.  Solution returned in b.
 
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;

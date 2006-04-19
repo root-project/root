@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.23 2005/10/17 21:34:07 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.24 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -875,7 +875,7 @@ namespace ROOT {
             TBranch *subbranch;
             while ( (subbranch = (TBranch*)next()) && subbranch!=branch ) {};
 
-            Assert( subbranch == branch );
+            R__ASSERT( subbranch == branch );
             extraLookedAt -= 1; // Avoid counting the branch itself twice
 
             do {
@@ -1182,7 +1182,7 @@ namespace ROOT {
 
    }
 
-   void TTreeProxyGenerator::AnalyzeTree(TTree *tree) 
+   void TTreeProxyGenerator::AnalyzeTree(TTree *tree)
    {
       // Analyze a TTree and its (potential) friends.
 
@@ -1452,7 +1452,7 @@ namespace ROOT {
 
                   TFormLeafInfo *leafinfo = formula->GetLeafInfo(0);
                   TLeaf *leaf = formula->GetLeaf(0);
-                  Assert(leaf && leafinfo);
+                  R__ASSERT(leaf && leafinfo);
 
                   arr = (TClonesArray*)leafinfo->GetLocalValuePointer(leaf,0);
 

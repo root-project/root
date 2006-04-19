@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.5 2006/03/23 11:23:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.6 2006/03/29 05:16:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -108,9 +108,9 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lw
   const Int_t irowmax = TMath::LocMax(nr,row);
   const Int_t icolmin = TMath::LocMin(nr,col);
   const Int_t icolmax = TMath::LocMax(nr,col);
-  
-  Assert(row[irowmin] >= row_lwb && row[irowmax] <= row_upb);
-  Assert(col[icolmin] >= col_lwb && col[icolmax] <= col_upb);
+
+  R__ASSERT(row[irowmin] >= row_lwb && row[irowmax] <= row_upb);
+  R__ASSERT(col[icolmin] >= col_lwb && col[icolmax] <= col_upb);
 
   Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb,1,nr);
 
@@ -145,12 +145,12 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
 {
   // Create a matrix applying a specific operation to the prototype.
   // Supported operations are: kZero, kUnit, kTransposed and kAtA
-  
-  Assert(this != &prototype);
+
+  R__ASSERT(this != &prototype);
   this->Invalidate();
-  
-  Assert(prototype.IsValid());
-  
+
+  R__ASSERT(prototype.IsValid());
+
   Int_t nr_nonzeros = 0;
 
   switch(op) {
@@ -158,7 +158,7 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
       Allocate(prototype.GetNrows(),prototype.GetNcols(),
                prototype.GetRowLwb(),prototype.GetColLwb(),1,nr_nonzeros);
       break;
-    
+
     case kUnit:
       {
         const Int_t nrows  = prototype.GetNrows();
@@ -199,8 +199,8 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
 
   this->Invalidate();
 
-  Assert(a.IsValid());
-  Assert(b.IsValid());
+  R__ASSERT(a.IsValid());
+  R__ASSERT(b.IsValid());
 
   switch(op) {
     case kMult:
@@ -228,19 +228,19 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
 template<class Element>
 void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
                               Int_t init,Int_t nr_nonzeros)
-{ 
+{
   // Allocate new matrix. Arguments are number of rows, columns, row lowerbound (0 default)
-  // and column lowerbound (0 default), 0 initialization flag and number of non-zero 
+  // and column lowerbound (0 default), 0 initialization flag and number of non-zero
   // elements (only relevant for sparse format).
-  
+
   if ( (nr_nonzeros > 0 && (no_rows == 0 || no_cols == 0)) ||
        (no_rows < 0 || no_cols < 0 || nr_nonzeros < 0) )
-  { 
+  {
     Error("Allocate","no_rows=%d no_cols=%d non_zeros=%d",no_rows,no_cols,nr_nonzeros);
     this->Invalidate();
     return;
   }
-  
+
   this->MakeValid();
   this->fNrows     = no_rows;
   this->fNcols     = no_cols;
@@ -250,7 +250,7 @@ void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb
   this->fNelems    = nr_nonzeros;
   this->fIsOwner   = kTRUE;
   this->fTol       = std::numeric_limits<Element>::epsilon();
-  
+
   fRowIndex = new Int_t[this->fNrowIndex];
   if (init)
     memset(fRowIndex,0,this->fNrowIndex*sizeof(Int_t));
@@ -349,7 +349,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::InsertRow(Int_t rown,Int_t coln,
   if (colIndex_old) delete [] (Int_t*)    colIndex_old;
   if (elements_old) delete [] (Element*) elements_old;
 
-  Assert(this->fNelems == fRowIndex[this->fNrowIndex-1]);
+  R__ASSERT(this->fNelems == fRowIndex[this->fNrowIndex-1]);
 
   return *this;
 }
@@ -400,10 +400,10 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
 {
   // General matrix multiplication. Create a matrix C such that C = A * B'.
   // Note, matrix C is allocated for constr=1.
-  
+
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
       Error("AMultBt","A and B columns incompatible");
@@ -520,10 +520,10 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
 {
   // General matrix multiplication. Create a matrix C such that C = A * B'.
   // Note, matrix C is allocated for constr=1.
-  
+
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
       Error("AMultBt","A and B columns incompatible");
@@ -623,10 +623,10 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
 {
   // General matrix multiplication. Create a matrix C such that C = A * B'.
   // Note, matrix C is allocated for constr=1.
-  
+
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
       Error("AMultBt","A and B columns incompatible");
@@ -729,8 +729,8 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
   // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
         a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
@@ -822,8 +822,8 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
   // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
         a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
@@ -852,7 +852,7 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
 
   const Int_t * const pRowIndexa = a.GetRowIndexArray();
   const Int_t * const pColIndexa = a.GetColIndexArray();
-      
+
   const Element * const pDataa = a.GetMatrixArray();
   Element * const pDatac = this->GetMatrixArray();
   Int_t indexc_r = 0;
@@ -900,8 +900,8 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
   // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
         a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
@@ -926,7 +926,7 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
   const Int_t * const pRowIndexb = b.GetRowIndexArray();
   const Int_t * const pColIndexa = a.GetColIndexArray();
   const Int_t * const pColIndexb = b.GetColIndexArray();
-      
+
   if (constr) {
     Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb());
     SetSparseIndexAB(a,b);
@@ -993,8 +993,8 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
   // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
         a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
@@ -1023,7 +1023,7 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
 
   const Int_t * const pRowIndexa = a.GetRowIndexArray();
   const Int_t * const pColIndexa = a.GetColIndexArray();
-      
+
   const Element * const pDataa = a.GetMatrixArray();
   Element * const pDatac = this->GetMatrixArray();
   Int_t indexc_r = 0;
@@ -1071,8 +1071,8 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
   // Note, matrix C is allocated for constr=1.
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
         a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
@@ -1101,7 +1101,7 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
 
   const Int_t * const pRowIndexb = b.GetRowIndexArray();
   const Int_t * const pColIndexb = b.GetColIndexArray();
-      
+
   const Element * const pDatab = b.GetMatrixArray();
   Element * const pDatac = this->GetMatrixArray();
   Int_t indexc_r = 0;
@@ -1147,7 +1147,7 @@ void TMatrixTSparse<Element>::GetMatrix2Array(Element *data,Option_t * /*option*
 {
   // Copy matrix data to array . It is assumed that array is of size >= fNelems
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   const Element * const elem = GetMatrixArray();
   memcpy(data,elem,this->fNelems*sizeof(Element));
@@ -1160,7 +1160,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
   // Copy nr elements from row/col index and data array to matrix . It is assumed
   // that arrays are of size >= nr
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (nr <= 0) {
     Error("SetMatrixArray(Int_t,Int_t*,Int_t*,Element*","nr <= 0");
     this->Invalidate();
@@ -1172,8 +1172,8 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
   const Int_t icolmin = TMath::LocMin(nr,col);
   const Int_t icolmax = TMath::LocMax(nr,col);
 
-  Assert(row[irowmin] >= this->fRowLwb && row[irowmax] <= this->fRowLwb+this->fNrows-1);
-  Assert(col[icolmin] >= this->fColLwb && col[icolmax] <= this->fColLwb+this->fNcols-1);
+  R__ASSERT(row[irowmin] >= this->fRowLwb && row[irowmax] <= this->fRowLwb+this->fNrows-1);
+  R__ASSERT(col[icolmin] >= this->fColLwb && col[icolmax] <= this->fColLwb+this->fNcols-1);
 
   DoubleLexSort(nr,row,col,data);
 
@@ -1234,17 +1234,17 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(Int_t nelems_ne
     Int_t *oIp = fColIndex;
     fColIndex = new Int_t[nelems_new];
     memmove(fColIndex,oIp,nr*sizeof(Int_t));
-    if (oIp) delete [] oIp; 
+    if (oIp) delete [] oIp;
     Element *oDp = fElements;
     fElements = new Element[nelems_new];
     memmove(fElements,oDp,nr*sizeof(Element));
-    if (oDp) delete [] oDp; 
+    if (oDp) delete [] oDp;
     this->fNelems = nelems_new;
-    if (nelems_new > nr) { 
+    if (nelems_new > nr) {
       memset(fElements+nr,0,(nelems_new-nr)*sizeof(Element));
       memset(fColIndex+nr,0,(nelems_new-nr)*sizeof(Int_t));
     } else {
-      for (Int_t irow = 0; irow < this->fNrowIndex; irow++) 
+      for (Int_t irow = 0; irow < this->fNrowIndex; irow++)
         if (fRowIndex[irow] > nelems_new)
           fRowIndex[irow] = nelems_new;
     }
@@ -1260,7 +1260,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(const TMatrixTB
   // Use non-zero data of matrix source to set the sparse structure
 
   if (gMatrixCheck) {
-    Assert(source.IsValid());
+    R__ASSERT(source.IsValid());
     if (this->GetNrows()  != source.GetNrows()  || this->GetNcols()  != source.GetNcols() ||
         this->GetRowLwb() != source.GetRowLwb() || this->GetColLwb() != source.GetColLwb()) {
       Error("SetSparseIndex","matrices not compatible");
@@ -1304,8 +1304,8 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
   // It is checked that enough space has been allocated
 
   if (gMatrixCheck) {
-    Assert(a.IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(a.IsValid());
+    R__ASSERT(b.IsValid());
 
     if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
         a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
@@ -1325,7 +1325,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
   const Int_t * const pColIndexa = a.GetColIndexArray();
   const Int_t * const pColIndexb = b.GetColIndexArray();
 
-  Int_t nc = 0, irowc; 
+  Int_t nc = 0, irowc;
   for (irowc = 0; irowc < a.GetNrows(); irowc++) {
     const Int_t sIndexa = pRowIndexa[irowc];
     const Int_t eIndexa = pRowIndexa[irowc+1];
@@ -1339,14 +1339,14 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
         if (pColIndexb[indexb] >= icola) {
           if (pColIndexb[indexb] == icola)
             indexb++;
-          break;  
-        }       
-        nc++;   
-      }       
+          break;
+        }
+        nc++;
+      }
     }
     while (indexb < eIndexb) {
       if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
-        nc++;   
+        nc++;
     }
   }
 
@@ -1395,7 +1395,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t nrows,Int_t ncols
   // New dynamic elements are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (!this->fIsOwner) {
     Error("ResizeTo(Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
     this->Invalidate();
@@ -1437,7 +1437,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t nrows,Int_t ncols
     }
 
     Allocate(nrows,ncols,0,0,1,nelems_new);
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
 
     Element *elements_new = GetMatrixArray();
     Int_t   *rowIndex_new = GetRowIndexArray();
@@ -1491,7 +1491,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t row_lwb,Int_t row
   // New dynamic elemenst are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (!this->fIsOwner) {
     Error("ResizeTo(Int_t,Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
     this->Invalidate();
@@ -1541,7 +1541,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t row_lwb,Int_t row
     }
 
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1,nelems_new);
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
 
     Int_t    *rowIndex_new = GetRowIndexArray();
     Int_t    *colIndex_new = GetColIndexArray();
@@ -1617,7 +1617,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use(Int_t row_lwb,Int_t row_up
   this->fNelems    = nr_nonzeros;
   this->fIsOwner   = kFALSE;
   this->fTol       = std::numeric_limits<Element>::epsilon();
-  
+
   fElements  = pData;
   fRowIndex  = pRowIndex;
   fColIndex  = pColIndex;
@@ -1637,7 +1637,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::GetSub(Int_t row_lwb,Int_t row_u
   // else          : return [row_lwb..row_upb][col_lwb..col_upb]
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("GetSub","row_lwb out-of-bounds");
       target.Invalidate();
@@ -1741,8 +1741,8 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
   // [row_lwb..row_lwb+nrows_source-1][col_lwb..col_lwb+ncols_source-1];
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
 
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("SetSub","row_lwb out-of-bounds");
@@ -1865,7 +1865,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
     }
   }
 
-  Assert(this->fNelems == fRowIndex[this->fNrowIndex-1]);
+  R__ASSERT(this->fNelems == fRowIndex[this->fNrowIndex-1]);
 
   if (rowIndex_old) delete [] (Int_t*)    rowIndex_old;
   if (colIndex_old) delete [] (Int_t*)    colIndex_old;
@@ -1881,8 +1881,8 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
   // Transpose a matrix.
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
 
     if (this->fNrows  != source.GetNcols()  || this->fNcols  != source.GetNrows() ||
         this->fRowLwb != source.GetColLwb() || this->fColLwb != source.GetRowLwb())
@@ -1920,12 +1920,12 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
     }
   }
 
-  Assert(nr_nonzeros == ielem);
+  R__ASSERT(nr_nonzeros == ielem);
 
   DoubleLexSort(nr_nonzeros,rownr,colnr,pData_t);
   SetMatrixArray(nr_nonzeros,rownr,colnr,pData_t);
 
-  Assert(this->fNelems == fRowIndex[this->fNrowIndex-1]);
+  R__ASSERT(this->fNelems == fRowIndex[this->fNrowIndex-1]);
 
   if (pData_t) delete [] pData_t;
   if (rownr)   delete [] rownr;
@@ -1938,7 +1938,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::Zero()
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   if (fElements) { delete [] fElements; fElements = 0; }
   if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
@@ -1954,7 +1954,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::UnitMatrix()
 {
   // Make a unit matrix (matrix need not be a square one).
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Int_t i;
 
@@ -1993,16 +1993,16 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::UnitMatrix()
 template<class Element>
 Element TMatrixTSparse<Element>::RowNorm() const
 {
-  // Row matrix norm, MAX{ SUM{ |M(i,j)|, over j}, over i}.                     
+  // Row matrix norm, MAX{ SUM{ |M(i,j)|, over j}, over i}.
   // The norm is induced by the infinity vector norm.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   const Element *       ep = GetMatrixArray();
   const Element * const fp = ep+this->fNelems;
   const Int_t   * const pR = GetRowIndexArray();
         Element norm = 0;
-            
+
   // Scan the matrix row-after-row
   for (Int_t irow = 0; irow < this->fNrows; irow++) {
     const Int_t sIndex = pR[irow];
@@ -2013,7 +2013,7 @@ Element TMatrixTSparse<Element>::RowNorm() const
     norm = TMath::Max(norm,sum);
   }
 
-  Assert(ep == fp); 
+  R__ASSERT(ep == fp);
 
   return norm;
 }
@@ -2025,7 +2025,7 @@ Element TMatrixTSparse<Element>::ColNorm() const
   // Column matrix norm, MAX{ SUM{ |M(i,j)|, over i}, over j}.
   // The norm is induced by the 1 vector norm.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   const TMatrixTSparse<Element> mt(kTransposed,*this);
 
@@ -2043,7 +2043,7 @@ Element TMatrixTSparse<Element>::ColNorm() const
     norm = TMath::Max(norm,sum);
   }
 
-  Assert(ep == fp);
+  R__ASSERT(ep == fp);
 
   return norm;
 }
@@ -2052,12 +2052,12 @@ Element TMatrixTSparse<Element>::ColNorm() const
 template<class Element>
 Element &TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln)
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   const Int_t arown = rown-this->fRowLwb;
-  const Int_t acoln = coln-this->fColLwb; 
-  Assert(arown < this->fNrows && arown >= 0);
-  Assert(acoln < this->fNcols && acoln >= 0);
+  const Int_t acoln = coln-this->fColLwb;
+  R__ASSERT(arown < this->fNrows && arown >= 0);
+  R__ASSERT(acoln < this->fNcols && acoln >= 0);
 
   Int_t index = -1;
   Int_t sIndex = 0;
@@ -2080,7 +2080,7 @@ Element &TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln)
       return fElements[index];
     else {
       Error("operator()(Int_t,Int_t","Insert row failed");
-      Assert(0);
+      R__ASSERT(0);
       return fElements[0];
     }
   }
@@ -2149,7 +2149,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(Element val)
   // Assign val to every element of the matrix. Check that the row/col
   // indices are set !
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   if (fRowIndex[this->fNrowIndex-1] == 0) {
     Error("operator=(Element","row/col indices are not set");
@@ -2171,7 +2171,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator+=(Element val)
 {
   // Add val to every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = this->GetMatrixArray();
   const Element * const ep_last = ep+this->fNelems;
@@ -2187,7 +2187,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator-=(Element val)
 {
   // Subtract val from every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = this->GetMatrixArray();
   const Element * const ep_last = ep+this->fNelems;
@@ -2203,7 +2203,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator*=(Element val)
 {
   // Multiply every element of the matrix with val.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = this->GetMatrixArray();
   const Element * const ep_last = ep+this->fNelems;
@@ -2219,7 +2219,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::Randomize(Element alpha,Element 
 {
   // randomize matrix element values
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   const Element scale = beta-alpha;
   const Element shift = alpha/scale;
@@ -2250,12 +2250,12 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::Randomize(Element alpha,Element 
       }
       ep[chosen] = scale*(Drand(seed)+shift);
       chosen++;
-    }  
+    }
   }
   for ( ; icurrent < m; icurrent++)
     pRowIndex[icurrent+1] = length;
 
-  Assert(chosen == length);
+  R__ASSERT(chosen == length);
 
   return *this;
 }
@@ -2270,8 +2270,8 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Elem
   const Element shift = alpha/scale;
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-  
+    R__ASSERT(this->IsValid());
+
     if (this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
       Error("RandomizePD(Element &","matrix should be square");
       this->Invalidate();
@@ -2349,10 +2349,10 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Elem
 
       nnz++; // We have added another element to the matrix
       chosen++; // And finished choosing another element.
-    }  
+    }
   }
 
-  Assert(chosen == length);
+  R__ASSERT(chosen == length);
 
   // and of course, we must choose all remaining diagonal elements .
   for ( ; icurrent < n; icurrent++) {
@@ -2422,7 +2422,7 @@ TMatrixTSparse<Element> operator+(const TMatrixTSparse<Element> &source,Element 
   TMatrixTSparse<Element> target(source);
   target += val;
   return target;
-} 
+}
 
 //______________________________________________________________________________
 template<class Element>
@@ -2464,7 +2464,7 @@ TMatrixTSparse<Element> operator-(const TMatrixTSparse<Element> &source,Element 
   TMatrixTSparse<Element> target(source);
   target -= val;
   return target;
-} 
+}
 
 //______________________________________________________________________________
 template<class Element>
@@ -2552,22 +2552,22 @@ TMatrixTSparse<Element> &ElementMult(TMatrixTSparse<Element> &target,const TMatr
 template<class Element>
 TMatrixTSparse<Element> &ElementDiv(TMatrixTSparse<Element> &target,const TMatrixTSparse<Element> &source)
 {
-  // Divide target by the source, element-by-element. 
-    
+  // Divide target by the source, element-by-element.
+
   if (gMatrixCheck && !AreCompatible(target,source)) {
     ::Error("ElementDiv(TMatrixT &,const TMatrixT &)","matrices not compatible");
     target.Invalidate();
     return target;
   }
-  
+
   const Element *sp  = source.GetMatrixArray();
         Element *tp  = target.GetMatrixArray();
   const Element *ftp = tp+target.GetNoElements();
   while ( tp < ftp ) {
-    Assert(*sp != 0.0);
+    R__ASSERT(*sp != 0.0);
     *tp++ /= *sp++;
-  } 
-    
+  }
+
   return target;
 }
 
@@ -2578,12 +2578,12 @@ Bool_t AreCompatible(const TMatrixTSparse<Element> &m1,const TMatrixTSparse<Elem
   if (!m1.IsValid()) {
     if (verbose)
       ::Error("AreCompatible", "matrix 1 not valid");
-    return kFALSE; 
+    return kFALSE;
   }
   if (!m2.IsValid()) {
     if (verbose)
       ::Error("AreCompatible", "matrix 2 not valid");
-    return kFALSE; 
+    return kFALSE;
   }
 
   if (m1.GetNrows()  != m2.GetNrows()  || m1.GetNcols()  != m2.GetNcols() ||

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.27 2006/01/19 20:15:03 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.28 2006/02/22 06:59:15 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -488,7 +488,7 @@ Int_t TFormLeafInfo::GetCounterValue(TLeaf* leaf) {
 }
 
 //______________________________________________________________________________
-Int_t TFormLeafInfo::ReadCounterValue(char* where) 
+Int_t TFormLeafInfo::ReadCounterValue(char* where)
 {
    //  Return the size of the underlying array for the current entry in the TTree.
 
@@ -929,7 +929,7 @@ Bool_t TFormLeafInfoNumerical::Update()
    // information has changed (for example when changing from the 'emulated'
    // class to the real class.
 
-   Assert(fNext==0);
+   R__ASSERT(fNext==0);
 
    if (fCounter) return fCounter->Update();
    return kFALSE;
@@ -1147,7 +1147,7 @@ Double_t TFormLeafInfoCollectionObject::ReadValue(char * /* where */, Int_t /* i
    // Return the value of the underlying data member inside the
    // clones array.
 
-   Assert(0);
+   R__ASSERT(0);
    return 0;
 }
 
@@ -1354,12 +1354,12 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf)
 }
 
 //______________________________________________________________________________
-Int_t TFormLeafInfoCollection::ReadCounterValue(char* where) 
+Int_t TFormLeafInfoCollection::ReadCounterValue(char* where)
 {
    //  Return the size of the underlying array for the current entry in the TTree.
 
    if (fCounter) { return (Int_t)fCounter->ReadValue(where); }
-   Assert(fCollProxy);
+   R__ASSERT(fCollProxy);
    if (where==0) return 0;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, where);
    return (Int_t)fCollProxy->Size();
@@ -1374,7 +1374,7 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf, Int_t instance)
    if (fCounter) {
       return (Int_t)fCounter->ReadValue((char*)ptr);
    }
-   Assert(fCollProxy);
+   R__ASSERT(fCollProxy);
    if (ptr==0) return 0;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
@@ -1397,7 +1397,7 @@ Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance)
       sub_instance = 0;
    }
 
-   Assert(fCollProxy);
+   R__ASSERT(fCollProxy);
    void *ptr = GetLocalValuePointer(where,instance);
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
 
@@ -1455,7 +1455,7 @@ Double_t TFormLeafInfoCollection::GetValue(TLeaf *leaf, Int_t instance)
       sub_instance = 0;
    }
 
-   Assert(fCollProxy);
+   R__ASSERT(fCollProxy);
    void *coll = GetLocalValuePointer(leaf);
    TVirtualCollectionProxy::TPushPop helper(fCollProxy,coll);
 
@@ -1473,7 +1473,7 @@ void * TFormLeafInfoCollection::GetValuePointer(TLeaf *leaf, Int_t instance)
 {
    // Return the pointer to the clonesArray
 
-   Assert(fCollProxy);
+   R__ASSERT(fCollProxy);
 
    void *collection = GetLocalValuePointer(leaf);
 
@@ -1506,7 +1506,7 @@ void * TFormLeafInfoCollection::GetValuePointer(char *where, Int_t instance)
 {
    // Return the pointer to the clonesArray
 
-   Assert(fCollProxy);
+   R__ASSERT(fCollProxy);
 
    void *collection = where;
 
@@ -1657,7 +1657,7 @@ Double_t  TFormLeafInfoCollectionSize::ReadValue(char *where, Int_t /* instance 
 {
    // Return the value of the underlying pointer data member
 
-   Assert(fCollProxy);
+   R__ASSERT(fCollProxy);
    if (where==0) return 0;
    void *ptr = fElement ? TFormLeafInfo::GetLocalValuePointer(where) : where;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
@@ -2089,7 +2089,7 @@ void TFormLeafInfoMultiVarDim::LoadSizes(TBranch* branch)
    }
    if (!fCounter2 || !fCounter) return;
    TBranchElement *br = dynamic_cast<TBranchElement*>(branch);
-   Assert(br);
+   R__ASSERT(br);
    fNsize = br->GetBranchCount()->GetNdata();
    if (fNsize > fSizes.GetSize()) fSizes.Set(fNsize);
    fSumOfSizes = 0;
@@ -2258,7 +2258,7 @@ TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection(
                                           )
 {
    // Constructor.
-   Assert(parent);
+   R__ASSERT(parent);
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
@@ -2275,7 +2275,7 @@ TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection(
    TFormLeafInfoMultiVarDim(motherclassptr,offset,element)
 {
    // Constructor.
-   Assert(parent && element);
+   R__ASSERT(parent && element);
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
@@ -2319,7 +2319,7 @@ void TFormLeafInfoMultiVarDimCollection::LoadSizes(TBranch* branch)
 {
    // Load the current array sizes.
 
-   Assert(fCounter2);
+   R__ASSERT(fCounter2);
 
    TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
    fNsize = (Int_t)fCounter->GetCounterValue(leaf);
@@ -2367,7 +2367,7 @@ TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones(
 {
    // Constructor.
 
-   Assert(parent);
+   R__ASSERT(parent);
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
@@ -2385,7 +2385,7 @@ TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones(
 {
    // Constructor.
 
-   Assert(parent && element);
+   R__ASSERT(parent && element);
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
@@ -2429,7 +2429,7 @@ void TFormLeafInfoMultiVarDimClones::LoadSizes(TBranch* branch)
 {
    // Load the current array sizes.
 
-   Assert(fCounter2);
+   R__ASSERT(fCounter2);
 
    TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
    fNsize = (Int_t)fCounter->GetCounterValue(leaf);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.152 2006/04/07 15:35:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.153 2006/04/18 14:23:20 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -789,7 +789,7 @@ void TFile::Draw(Option_t *option)
 // Loop on all objects (memory or file) and all subdirectories
 //
 
-   GetList()->ForEach(TObject,Draw)(option);
+   GetList()->R__FOR_EACH(TObject,Draw)(option);
 }
 
 //______________________________________________________________________________
@@ -1192,7 +1192,7 @@ void TFile::Paint(Option_t *option)
 //*-*                    =============================
 //
 
-   GetList()->ForEach(TObject,Paint)(option);
+   GetList()->R__FOR_EACH(TObject,Paint)(option);
 }
 
 //______________________________________________________________________________
@@ -1203,7 +1203,7 @@ void TFile::Print(Option_t *option) const
 //
 
    Printf("TFile: name=%s, title=%s, option=%s", GetName(), GetTitle(), GetOption());
-   GetList()->ForEach(TObject,Print)(option);
+   GetList()->R__FOR_EACH(TObject,Print)(option);
 }
 
 //______________________________________________________________________________
@@ -2429,7 +2429,7 @@ Bool_t TFile::Matches(const char *url)
    if (fqdn == "UnNamedHost")
       fqdn = a.GetHostAddress();
 
-   // Check 
+   // Check
    if (!strcmp(u.GetFile(),fUrl.GetFile())) {
       // Check ports
       if (u.GetPort() == fUrl.GetPort()) {

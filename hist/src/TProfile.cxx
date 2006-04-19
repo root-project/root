@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.75 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.76 2006/04/19 08:16:33 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -370,7 +370,7 @@ void TProfile::Approximate(Bool_t approx)
 //  - the bin number of entries is small ( <5)
 //  - the estimated bin error is extremely small compared to the bin content
 //  (see TProfile::GetBinError)
-   
+
    fgApproximate = approx;
 }
 
@@ -382,7 +382,7 @@ Int_t TProfile::BufferEmpty(Int_t action)
 // action =  0 histogram is filled from the buffer
 // action =  1 histogram is filled and buffer is deleted
 //             The buffer is automatically deleted when the number of entries
-//             in the buffer is greater than the number of entries in the histogram   
+//             in the buffer is greater than the number of entries in the histogram
 
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
@@ -423,7 +423,7 @@ Int_t TProfile::BufferEmpty(Int_t action)
       Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
    }
    fBuffer = buffer;
-   
+
    if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
    else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
@@ -868,11 +868,11 @@ Double_t TProfile::GetBinError(Int_t bin) const
 //   statistics bins giving a very small value for eprim2.
 // - in version 3.04 (Nov 2002), the algorithm is modified/protected for the case
 //   when a TProfile is projected (ProjectionX). The previous algorithm
-//   generated a N^2 problem when projecting a TProfile with a large number of 
+//   generated a N^2 problem when projecting a TProfile with a large number of
 //   bins (eg 100000).
 // - in version 3.05/06, a new static function TProfile::Approximate
 //   is introduced to enable or disable (default) the approximation.
-// 
+//
 // Ideas for improvements of this algorithm are welcome. No suggestions
 // received since our call for advice to roottalk in Jul 2002.
 // see for instance: http://root.cern.ch/root/roottalk/roottalk02/2916.html
@@ -936,7 +936,7 @@ Option_t *TProfile::GetErrorOption() const
 }
 
 //______________________________________________________________________________
-char* TProfile::GetObjectInfo(Int_t px, Int_t py) const 
+char* TProfile::GetObjectInfo(Int_t px, Int_t py) const
 {
    //   Redefines TObject::GetObjectInfo.
    //   Displays the profile info (bin number, contents, eroor, entries per bin
@@ -1225,7 +1225,7 @@ Long64_t TProfile::Merge(TCollection *li)
    //
    //IMPORTANT remark. The axis x may have different number
    //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width and the upper limit must also 
+   //a multiple of the smallest bin width and the upper limit must also
    //be a multiple of the bin width.
 
    if (!li) return 0;
@@ -1233,7 +1233,7 @@ Long64_t TProfile::Merge(TCollection *li)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
-   Assert(hclone);
+   R__ASSERT(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -1366,7 +1366,7 @@ void TProfile::Multiply(TF1 *f1, Double_t c1)
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
    PutStats(s1);
-   
+
    SetMinimum();
    SetMaximum();
 
@@ -1657,7 +1657,7 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
       }
       out << "}; " << endl;
    }
-   
+
    char quote = '"';
    out<<"   "<<endl;
    out<<"   "<<ClassName()<<" *";
@@ -1695,7 +1695,7 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
-   
+
    TH1::SavePrimitiveHelp(out, option);
 }
 

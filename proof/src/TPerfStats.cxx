@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.4 2005/03/11 08:25:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.5 2005/09/16 08:48:39 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -68,7 +68,7 @@ Int_t TPerfEvent::Compare(const TObject *obj) const
 
    const TPerfEvent *pe = dynamic_cast<const TPerfEvent*>(obj);
 
-   Assert(pe != 0);
+   R__ASSERT(pe != 0);
 
    if (fTimeStamp < pe->fTimeStamp) {
       return -1;

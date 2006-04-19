@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.16 2004/11/28 19:26:22 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.17 2005/02/15 16:17:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -22,10 +22,10 @@
 //  fW : (n) - vector with Householder beta's                            //
 //                                                                       //
 //  If row/column index of A starts at (rowLwb,colLwb) then              //
-//  the decomposed matrices start from :                                 // 
+//  the decomposed matrices start from :                                 //
 //  fQ  : (rowLwb,0)                                                     //
 //  fR  : (0,colLwb)                                                     //
-//  and the decomposed vectors start from :                              // 
+//  and the decomposed vectors start from :                              //
 //  fUp : (0)                                                            //
 //  fW  : (0)                                                            //
 //                                                                       //
@@ -85,7 +85,7 @@ TDecompQRH::TDecompQRH(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 //______________________________________________________________________________
 TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
   if (a.GetNrows() < a.GetNcols()) {
     Error("TDecompQRH(const TMatrixD &","matrix rows should be >= columns");
     return;
@@ -193,7 +193,7 @@ Bool_t TDecompQRH::QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Doub
 //______________________________________________________________________________
 void TDecompQRH::SetMatrix(const TMatrixD &a)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   ResetStatus();
   if (a.GetNrows() < a.GetNcols()) {
@@ -227,7 +227,7 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 // Solve Ax=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
 // has *not* been transformed.  Solution returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -239,11 +239,11 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
     }
   }
 
-  if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb()) { 
+  if (fQ.GetNrows() != b.GetNrows() || fQ.GetRowLwb() != b.GetLwb()) {
     Error("Solve(TVectorD &","vector and matrix incompatible");
     b.Invalidate();
     return kFALSE;
-  } 
+  }
 
   const Int_t nQRow = fQ.GetNrows();
   const Int_t nQCol = fQ.GetNcols();
@@ -280,9 +280,9 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 
 //______________________________________________________________________________
 Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
-{ 
+{
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;
@@ -298,21 +298,21 @@ Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
   {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
     b->Invalidate();
-    return kFALSE; 
+    return kFALSE;
   }
-  
+
   const Int_t nQRow = fQ.GetNrows();
   const Int_t nQCol = fQ.GetNcols();
-    
+
   // Calculate  Q^T.b
   const Int_t nQ = (nQRow <= nQCol) ? nQRow-1 : nQCol;
   for (Int_t k = 0; k < nQ; k++) {
     const TVectorD qc_k = TMatrixDColumn_const(fQ,k);
     ApplyHouseHolder(qc_k,fUp(k),fW(k),k,k+1,cb);
-  }   
-    
+  }
+
   const Int_t nRCol = fR.GetNcols();
-  
+
   const Double_t *pR  = fR.GetMatrixArray();
         Double_t *pcb = cb.GetPtr();
   const Int_t     inc = cb.GetInc();
@@ -342,7 +342,7 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 // Solve A^T x=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
 // has *not* been transformed.  Solution returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -360,11 +360,11 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
     return kFALSE;
   }
 
-  if (fR.GetNrows() != b.GetNrows() || fR.GetRowLwb() != b.GetLwb()) {   
+  if (fR.GetNrows() != b.GetNrows() || fR.GetRowLwb() != b.GetLwb()) {
     Error("TransSolve(TVectorD &","vector and matrix incompatible");
     b.Invalidate();
     return kFALSE;
-  } 
+  }
 
   const Double_t *pR = fR.GetMatrixArray();
         Double_t *pb = b.GetMatrixArray();
@@ -403,7 +403,7 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 {
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;
@@ -420,19 +420,19 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
     b->Invalidate();
     return kFALSE;
   }
-  
+
   if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb()) {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
     b->Invalidate();
     return kFALSE;
   }
-  
+
   const Double_t *pR  = fR.GetMatrixArray();
         Double_t *pcb = cb.GetPtr();
   const Int_t     inc = cb.GetInc();
-  
+
   const Int_t nRCol = fR.GetNcols();
-  
+
   // Backward substitution
   for (Int_t i = 0; i < nRCol; i++) {
     const Int_t off_i  = i*nRCol;
@@ -502,7 +502,7 @@ void TDecompQRH::Invert(TMatrixD &inv)
 
 //______________________________________________________________________________
 TMatrixD TDecompQRH::Invert()
-{  
+{
   // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
   // (n x m) Ainv is returned .
 
@@ -529,7 +529,7 @@ void TDecompQRH::Print(Option_t *opt) const
 
 //______________________________________________________________________________
 TDecompQRH &TDecompQRH::operator=(const TDecompQRH &source)
-{ 
+{
   if (this != &source) {
     TDecompBase::operator=(source);
     fQ.ResizeTo(source.fQ);

@@ -138,12 +138,12 @@ void mstress_inversion             ();
 void mstress_matrix_io             ();
 
 void spstress_allocation           (Int_t msize);
-void spstress_matrix_fill          (Int_t rsize,Int_t csize); 
+void spstress_matrix_fill          (Int_t rsize,Int_t csize);
 void spstress_element_op           (Int_t rsize,Int_t csize);
 void spstress_binary_ebe_op        (Int_t rsize, Int_t csize);
 void spstress_transposition        (Int_t msize);
 void spstress_norms                (Int_t rsize,Int_t csize);
-void spstress_mm_multiplications   (); 
+void spstress_mm_multiplications   ();
 void spstress_vm_multiplications   ();
 void spstress_matrix_slices        (Int_t vsize);
 void spstress_matrix_io            ();
@@ -169,7 +169,7 @@ void   cleanup                     ();
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-int main(int argc,const char *argv[]) 
+int main(int argc,const char *argv[])
 {
   Int_t maxSizeReq = 100;
   if (argc > 1)  maxSizeReq = atoi(argv[1]);
@@ -258,7 +258,7 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     vstress_allocation(maxSize);
     vstress_element_op(maxSize);
     vstress_binary_op(maxSize);
-    vstress_norms(maxSize); 
+    vstress_norms(maxSize);
     vstress_matrix_slices(maxSize);
     vstress_vector_io();
     cout << "******************************************************************" <<endl;
@@ -555,7 +555,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
       TMatrixDSub(m3,-1,-1,2,csize)     = TMatrixDSub(m,-1,-1,2,csize);
       TMatrixDSub(m3,-1,-1,1,1)         = TMatrixDSub(m,-1,-1,1,1);
       ok &= VerifyMatrixIdentity(m,m3,gVerbose,EPSILON);
-         
+
       TMatrixD unit(3,3);
       TMatrixDSub(m3,1,3,1,3)  = unit.UnitMatrix();
       TMatrixDSub(m3,1,3,1,3) *= m.GetSub(1,3,1,3);
@@ -627,8 +627,8 @@ void mstress_element_op(Int_t rsize,Int_t csize)
 
   if (gVerbose)
     cout << "Comparing m1 with 0 ..." << endl;
-  Assert(m1 == 0);
-  Assert(!(m1 != 0));
+  R__ASSERT(m1 == 0);
+  R__ASSERT(!(m1 != 0));
 
   if (gVerbose)
     cout << "Writing a pattern " << pattern << " by assigning to m(i,j)..." << endl;
@@ -646,10 +646,10 @@ void mstress_element_op(Int_t rsize,Int_t csize)
 
   if (gVerbose)
     cout << "Comparing m and m1 ..." << endl;
-  Assert(m == m1);
+  R__ASSERT(m == m1);
   if (gVerbose)
     cout << "Comparing (m=0) and m1 ..." << endl;
-  Assert(!(m.Zero() == m1));
+  R__ASSERT(!(m.Zero() == m1));
 
   if (gVerbose)
     cout << "Clearing m1 ..." << endl;
@@ -673,21 +673,21 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "\nVerify comparison operations when all elems are the same" << endl;
   m = pattern;
-  Assert( m == pattern && !(m != pattern) );
-  Assert( m > 0 && m >= pattern && m <= pattern );
-  Assert( m > -pattern && m >= -pattern );
-  Assert( m <= pattern && !(m < pattern) );
+  R__ASSERT( m == pattern && !(m != pattern) );
+  R__ASSERT( m > 0 && m >= pattern && m <= pattern );
+  R__ASSERT( m > -pattern && m >= -pattern );
+  R__ASSERT( m <= pattern && !(m < pattern) );
   m -= 2*pattern;
-  Assert( m  < -pattern/2 && m <= -pattern/2 );
-  Assert( m  >= -pattern && !(m > -pattern) );
+  R__ASSERT( m  < -pattern/2 && m <= -pattern/2 );
+  R__ASSERT( m  >= -pattern && !(m > -pattern) );
 
   if (gVerbose)
     cout << "\nVerify comparison operations when not all elems are the same" << endl;
   m = pattern; m(m.GetRowUpb(),m.GetColUpb()) = pattern-1;
-  Assert( !(m == pattern) && !(m != pattern) );
-  Assert( m != 0 );                   // none of elements are 0
-  Assert( !(m >= pattern) && m <= pattern && !(m<pattern) );
-  Assert( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
+  R__ASSERT( !(m == pattern) && !(m != pattern) );
+  R__ASSERT( m != 0 );                   // none of elements are 0
+  R__ASSERT( !(m >= pattern) && m <= pattern && !(m<pattern) );
+  R__ASSERT( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
 
   if (gVerbose)
     cout << "\nAssign 2*pattern to m by repeating additions" << endl;
@@ -696,7 +696,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
     cout << "Assign 2*pattern to m1 by multiplying by two " << endl;
   m1 = pattern; m1 *= 2;
   ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
-  Assert( m == m1 );
+  R__ASSERT( m == m1 );
   if (gVerbose)
     cout << "Multiply m1 by one half returning it to the 1*pattern" << endl;
   m1 *= 1/2.;
@@ -706,7 +706,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
     cout << "\nAssign -pattern to m and m1" << endl;
   m.Zero(); m -= pattern; m1 = -pattern;
   ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
-  Assert( m == m1 );
+  R__ASSERT( m == m1 );
   if (gVerbose)
     cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << endl;
   m.Sqr();
@@ -784,7 +784,7 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
   m1.Zero();
   m1 = m;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
-  Assert( m1 == m );
+  R__ASSERT( m1 == m );
 
   if (gVerbose)
     cout << "\nAdding the matrix to itself, uniform pattern " << pattern << endl;
@@ -872,7 +872,7 @@ void mstress_transposition(Int_t msize)
     TMatrixD m(msize,msize+1);
     m.UnitMatrix();
     TMatrixD mt(TMatrixD::kTransposed,m);
-    Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
+    R__ASSERT(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
     for (Int_t i = m.GetRowLwb(); i <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); i++)
       for (Int_t j = m.GetColLwb(); j <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); j++)
         ok &= ( m(i,j) == mt(i,j) ) ? kTRUE : kFALSE;
@@ -892,9 +892,9 @@ void mstress_transposition(Int_t msize)
     TMatrixD m = THilbertMatrixD(msize+1,msize);
     m(1,2) = TMath::Pi();
     TMatrixD mt(TMatrixD::kTransposed,m);
-    Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
-    Assert(mt(2,1)  == (Double_t)TMath::Pi() && mt(1,2)  != (Double_t)TMath::Pi());
-    Assert(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
+    R__ASSERT(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
+    R__ASSERT(mt(2,1)  == (Double_t)TMath::Pi() && mt(1,2)  != (Double_t)TMath::Pi());
+    R__ASSERT(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
 
     if (gVerbose)
       cout << "\nCheck double transposing a non-symmetric matrix" << endl;
@@ -1593,7 +1593,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
   }
 
   if (ok)
-  { 
+  {
     if (gVerbose)
       cout << "\nTest symmetric multiplications" << endl;
     {
@@ -1868,7 +1868,7 @@ void mstress_vm_multiplications()
 #endif
       nr = 0;
       iloop--;
-    } else 
+    } else
       nr++;
 
     if (!ok) {
@@ -1998,7 +1998,7 @@ void mstress_inversion()
 #endif
       nr = 0;
       iloop--;
-    } else 
+    } else
       nr++;
 
     if (!ok) {
@@ -2379,8 +2379,8 @@ void spstress_element_op(Int_t rsize,Int_t csize)
 
   if (gVerbose)
     cout << "Comparing m1 with 0 ..." << endl;
-  Assert(m1 == 0);
-  Assert(!(m1 != 0));
+  R__ASSERT(m1 == 0);
+  R__ASSERT(!(m1 != 0));
 
   if (gVerbose)
     cout << "Writing a pattern " << pattern << " by assigning through SetMatrixArray..." << endl;
@@ -2414,10 +2414,10 @@ void spstress_element_op(Int_t rsize,Int_t csize)
 
   if (gVerbose)
     cout << "Comparing m and m1 ..." << endl;
-  Assert(m == m1);
+  R__ASSERT(m == m1);
   if (gVerbose)
     cout << "Comparing (m=0) and m1 ..." << endl;
-  Assert(!((m=0) == m1));
+  R__ASSERT(!((m=0) == m1));
 
   if (gVerbose)
     cout << "Clearing m1 ..." << endl;
@@ -2440,13 +2440,13 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "\nVerify comparison operations when all elems are the same" << endl;
   m = pattern;
-  Assert( m == pattern && !(m != pattern) );
-  Assert( m > 0 && m >= pattern && m <= pattern );
-  Assert( m > -pattern && m >= -pattern );
-  Assert( m <= pattern && !(m < pattern) );
+  R__ASSERT( m == pattern && !(m != pattern) );
+  R__ASSERT( m > 0 && m >= pattern && m <= pattern );
+  R__ASSERT( m > -pattern && m >= -pattern );
+  R__ASSERT( m <= pattern && !(m < pattern) );
   m -= 2*pattern;
-  Assert( m  < -pattern/2 && m <= -pattern/2 );
-  Assert( m  >= -pattern && !(m > -pattern) );
+  R__ASSERT( m  < -pattern/2 && m <= -pattern/2 );
+  R__ASSERT( m  >= -pattern && !(m > -pattern) );
 
   if (gVerbose)
     cout << "\nVerify comparison operations when not all elems are the same" << endl;
@@ -2472,10 +2472,10 @@ void spstress_element_op(Int_t rsize,Int_t csize)
     delete [] val;
   }
 
-  Assert( !(m == pattern) && !(m != pattern) );
-  Assert( m != 0 );                   // none of elements are 0
-  Assert( !(m >= pattern) && m <= pattern && !(m<pattern) );
-  Assert( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
+  R__ASSERT( !(m == pattern) && !(m != pattern) );
+  R__ASSERT( m != 0 );                   // none of elements are 0
+  R__ASSERT( !(m >= pattern) && m <= pattern && !(m<pattern) );
+  R__ASSERT( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
   if (gVerbose)
     cout << "\nAssign 2*pattern to m by repeating additions" << endl;
   m = 0; m += pattern; m += pattern;
@@ -2484,7 +2484,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   m1.SetSparseIndex(m);
   m1 = pattern; m1 *= 2;
   ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
-  Assert( m == m1 );
+  R__ASSERT( m == m1 );
   if (gVerbose)
     cout << "Multiply m1 by one half returning it to the 1*pattern" << endl;
   m1 *= 1/2.;
@@ -2494,7 +2494,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
     cout << "\nAssign -pattern to m and m1" << endl;
   m = 0; m -= pattern; m1 = -pattern;
   ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
-  Assert( m == m1 );
+  R__ASSERT( m == m1 );
   if (gVerbose)
     cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << endl;
   m.Sqr();
@@ -2540,7 +2540,7 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
   m  = pattern;
   m1 = m;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
-  Assert( m1 == m );
+  R__ASSERT( m1 == m );
 
   if (gVerbose)
     cout << "\nAdding the matrix to itself, uniform pattern " << pattern << endl;
@@ -2627,7 +2627,7 @@ void spstress_transposition(Int_t msize)
     TMatrixDSparse m(msize,msize+1);
     m.UnitMatrix();
     TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
-    Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
+    R__ASSERT(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
     const Int_t rowlwb = m.GetRowLwb();
     const Int_t collwb = m.GetColLwb();
     const Int_t upb = TMath::Min(m.GetRowUpb(),m.GetColUpb());
@@ -2650,9 +2650,9 @@ void spstress_transposition(Int_t msize)
     TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize+1,msize));
     m(1,2) = TMath::Pi();
     TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
-    Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
-    Assert(mt(2,1)  == (Double_t)TMath::Pi() && mt(1,2)  != (Double_t)TMath::Pi());
-    Assert(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
+    R__ASSERT(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
+    R__ASSERT(mt(2,1)  == (Double_t)TMath::Pi() && mt(1,2)  != (Double_t)TMath::Pi());
+    R__ASSERT(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
 
     if (gVerbose)
       cout << "\nCheck double transposing a non-symmetric matrix" << endl;
@@ -2972,7 +2972,7 @@ void spstress_vm_multiplications()
 #endif
       nr = 0;
       iloop--;
-    } else 
+    } else
       nr++;
 
     if (!ok) {
@@ -3804,7 +3804,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     cout << "right factor V" <<endl;
     svd.GetV().Print();
   }
-  
+
   {
     if (gVerbose)
       cout << "\tchecking that U is orthogonal indeed, i.e., U'U=E and UU'=E" <<endl;
@@ -3816,7 +3816,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     ok &= VerifyMatrixIdentity(ut * svd.GetU(),E2,gVerbose,100*EPSILON);
     ok &= VerifyMatrixIdentity(svd.GetU() * ut,E1,gVerbose,100*EPSILON);
   }
-  
+
   {
     if (gVerbose)
       cout << "\tchecking that V is orthogonal indeed, i.e., V'V=E and VV'=E" <<endl;
@@ -3828,7 +3828,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     ok &= VerifyMatrixIdentity(vt * svd.GetV(),E2,gVerbose,100*EPSILON);
     ok &= VerifyMatrixIdentity(svd.GetV() * vt,E1,gVerbose,100*EPSILON);
   }
-  
+
   {
     if (gVerbose)
       cout << "\tchecking that U*Sig*V' is indeed A" <<endl;
@@ -3854,7 +3854,7 @@ class MakeMatrix : public TMatrixDLazy {
   const Double_t *array;
         Int_t     no_elems;
   void FillIn(TMatrixD& m) const {
-    Assert( m.GetNrows() * m.GetNcols() == no_elems );
+    R__ASSERT( m.GetNrows() * m.GetNcols() == no_elems );
     const Double_t *ap = array;
           Double_t *mp = m.GetMatrixArray();
     for (Int_t i = 0; i < no_elems; i++)
@@ -3886,7 +3886,7 @@ void astress_decomp()
   {
     if (gVerbose)
       cout << "\nBrandt example page 503\n" <<endl;
-  
+
     Double_t array0[] = { -2,1,0,0, 2,1,0,0, 0,0,0,0, 0,0,0,0 };
     ok &= test_svd_expansion(MakeMatrix(4,4,array0,sizeof(array0)/sizeof(array0[0])));
   }
@@ -3894,7 +3894,7 @@ void astress_decomp()
   {
     if (gVerbose)
       cout << "\nRotated by PI/2 Matrix Diag(1,4,9)\n" <<endl;
-  
+
     Double_t array1[] = {0,-4,0,  1,0,0,  0,0,9 };
     ok &= test_svd_expansion(MakeMatrix(3,3,array1,sizeof(array1)/sizeof(array1[0])));
   }
@@ -3902,8 +3902,8 @@ void astress_decomp()
   {
     if (gVerbose)
       cout << "\nExample from the Forsythe, Malcolm, Moler's book\n" <<endl;
-  
-    Double_t array2[] = 
+
+    Double_t array2[] =
          { 1,6,11, 2,7,12, 3,8,13, 4,9,14, 5,10,15};
     ok &= test_svd_expansion(MakeMatrix(5,3,array2,sizeof(array2)/sizeof(array2[0])));
   }
@@ -3912,8 +3912,8 @@ void astress_decomp()
     if (gVerbose)
       cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
               "Singular numbers are 0, 19.5959, 20, 0, 35.3270\n" <<endl;
-  
-    Double_t array3[] = 
+
+    Double_t array3[] =
         { 22, 10,  2,   3,  7,    14,  7, 10,  0,  8,
           -1, 13, -1, -11,  3,    -3, -2, 13, -2,  4,
            9,  8,  1,  -2,  4,     9,  1, -7,  5, -1,
@@ -3938,11 +3938,11 @@ void astress_decomp()
     if (gVerbose) {
       cout << "\nTest by W. Meier <wmeier@manu.com> to catch an obscure "
            << "bug in QR\n" <<endl;
-      cout << "expect singular values to be\n" 
+      cout << "expect singular values to be\n"
            << "1.4666e-024   1.828427   3.828427   4.366725  7.932951\n" <<endl;
     }
 
-    Double_t array4[] = 
+    Double_t array4[] =
         {  1,  2,  0,  0,  0,
            0,  2,  3,  0,  0,
            0,  0,  0,  4,  0,
@@ -4177,7 +4177,7 @@ void astress_eigen(Int_t msize)
   // Check :
   // 1.  the eigen values of M' * M are the same as the singular values
   //     squared of the SVD of M .
-  // 2.  M' * M  x_i =  lambda_i x_i where x_i and lambda_i are the ith 
+  // 2.  M' * M  x_i =  lambda_i x_i where x_i and lambda_i are the ith
   //     eigen - vector/value .
 
   const TMatrixD m = THilbertMatrixD(msize,msize);

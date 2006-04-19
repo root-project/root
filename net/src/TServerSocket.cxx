@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.11 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.12 2005/09/02 19:34:49 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -36,7 +36,7 @@ SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
 // Defaul options for accept
 UChar_t TServerSocket::fgAcceptOpt = kSrvNoAuth;
 
-TVirtualMutex *gSrvAuthenticateMutex = 0; 
+TVirtualMutex *gSrvAuthenticateMutex = 0;
 
 ClassImp(TServerSocket)
 
@@ -75,8 +75,8 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
    // will make sure that any open sockets are properly closed on
    // program termination.
 
-   Assert(gROOT);
-   Assert(gSystem);
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
 
    SetName("ServerSocket");
 
@@ -118,8 +118,8 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
    // will make sure that any open sockets are properly closed on
    // program termination.
 
-   Assert(gROOT);
-   Assert(gSystem);
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
 
    SetName("ServerSocket");
 

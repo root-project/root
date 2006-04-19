@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.284 2006/04/11 18:08:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.285 2006/04/15 07:33:03 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1792,12 +1792,12 @@ void TH1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 TH1* TH1::FFT(TH1* h_output, Option_t *option)
 {
-// This function allows to do discrete Fourier transforms of TH1 and TH2. 
-// Available transform types and flags are described below. 
+// This function allows to do discrete Fourier transforms of TH1 and TH2.
+// Available transform types and flags are described below.
 //
 // To extract more information about the transform, use the function
-//  TVirtualFFT::GetCurrentTransform() to get a pointer to the current 
-//  transform object. 
+//  TVirtualFFT::GetCurrentTransform() to get a pointer to the current
+//  transform object.
 //
 // Parameters:
 //  1st - histogram for the output. If a null pointer is passed, a new histogram is created
@@ -1812,14 +1812,14 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
 //
 //    - option of transform type
 //   "R2C"  - real to complex transforms - default
-//   "R2HC" - real to halfcomplex (special format of storing output data, 
+//   "R2HC" - real to halfcomplex (special format of storing output data,
 //          results the same as for R2C)
 //   "DHT" - discrete Hartley transform
 //         real to real transforms (sine and cosine):
 //   "R2R_0", "R2R_1", "R2R_2", "R2R_3" - discrete cosine transforms of types I-IV
 //   "R2R_4", "R2R_5", "R2R_6", "R2R_7" - discrete sine transforms of types I-IV
-//    To specify the type of each dimension of a 2-dimensional real to real 
-//    transform, use options of form "R2R_XX", for example, "R2R_02" for a transform, 
+//    To specify the type of each dimension of a 2-dimensional real to real
+//    transform, use options of form "R2R_XX", for example, "R2R_02" for a transform,
 //    which is of type "R2R_0" in 1st dimension and  "R2R_2" in the 2nd.
 //
 //    - option of transform flag
@@ -1831,7 +1831,7 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
 //     This option should be chosen depending on how many transforms of the same size and
 //     type are going to be done. Planning is only done once, for the first transform of this
 //     size and type. Default is "ES".
-//   Examples of valid options: "Mag R2C M" "Re R2R_11" "Im R2C ES" "PH R2HC EX" 
+//   Examples of valid options: "Mag R2C M" "Re R2R_11" "Im R2C ES" "PH R2HC EX"
 
 
    Int_t ndim[3];
@@ -1878,7 +1878,7 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
    h_output = TransformHisto(fft, h_output, option);
    return h_output;
 }
-  
+
 //______________________________________________________________________________
 Int_t TH1::Fill(Double_t x)
 {
@@ -3967,7 +3967,7 @@ Long64_t TH1::Merge(TCollection *li)
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
    if (mustCleanup) SetBit(kMustCleanup);
-   Assert(hclone);
+   R__ASSERT(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -6625,7 +6625,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
                hout->SetBinContent(binx, biny, re);
             }
          }
-      } else {        
+      } else {
          for (binx = 1; binx<=hout->GetNbinsX(); binx++) {
             for (biny=1; biny<=hout->GetNbinsY(); biny++) {
                ind[0] = binx-1; ind[1] = biny-1;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.12 2006/04/02 08:38:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.13 2006/04/04 05:51:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -42,7 +42,7 @@ templateClassImp(TVectorT)
 #endif
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Delete_m(Int_t size,Element *&m)
 {
   if (m) {
@@ -53,7 +53,7 @@ void TVectorT<Element>::Delete_m(Int_t size,Element *&m)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element* TVectorT<Element>::New_m(Int_t size)
 {
   if (size == 0) return 0;
@@ -68,7 +68,7 @@ Element* TVectorT<Element>::New_m(Int_t size)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Add(const TVectorT<Element> &v)
 {
   // Add vector v to this vector
@@ -86,7 +86,7 @@ void TVectorT<Element>::Add(const TVectorT<Element> &v)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Add(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
   // Set this vector to v1+v2
@@ -107,7 +107,7 @@ void TVectorT<Element>::Add(const TVectorT<Element> &v1,const TVectorT<Element> 
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Int_t TVectorT<Element>::Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
                                   Int_t newSize,Int_t oldSize)
 {
@@ -131,13 +131,13 @@ Int_t TVectorT<Element>::Memcpy_m(Element *newp,const Element *oldp,Int_t copySi
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
 {
   // Allocate new vector. Arguments are number of rows and row
   // lowerbound (0 default).
 
-  Assert(nrows >= 0);
+  R__ASSERT(nrows >= 0);
 
   MakeValid();
   fNrows   = nrows;
@@ -150,21 +150,21 @@ void TVectorT<Element>::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(Int_t n)
 {
   Allocate(n,0,1);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb)
 {
   Allocate(upb-lwb+1,lwb,1);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(Int_t n,const Element *elements)
 {
   Allocate(n,0);
@@ -172,7 +172,7 @@ TVectorT<Element>::TVectorT(Int_t n,const Element *elements)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,const Element *elements)
 {
   Allocate(upb-lwb+1,lwb);
@@ -180,46 +180,46 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,const Element *elements)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(const TVectorT &another) : TObject(another)
 {
-  Assert(another.IsValid());
+  R__ASSERT(another.IsValid());
   Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
   *this = another;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(const TMatrixTRow_const<Element> &mr) : TObject()
 {
   const TMatrixTBase<Element> *mt = mr.GetMatrix();
-  Assert(mt->IsValid());
+  R__ASSERT(mt->IsValid());
   Allocate(mt->GetColUpb()-mt->GetColLwb()+1,mt->GetColLwb());
   *this = mr;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(const TMatrixTColumn_const<Element> &mc) : TObject()
 {
   const TMatrixTBase<Element> *mt = mc.GetMatrix();
-  Assert(mt->IsValid());
+  R__ASSERT(mt->IsValid());
   Allocate(mt->GetRowUpb()-mt->GetRowLwb()+1,mt->GetRowLwb());
   *this = mc;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(const TMatrixTDiag_const<Element> &md) : TObject()
 {
   const TMatrixTBase<Element> *mt = md.GetMatrix();
-  Assert(mt->IsValid());
+  R__ASSERT(mt->IsValid());
   Allocate(TMath::Min(mt->GetNrows(),mt->GetNcols()));
   *this = md;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
 {
   // Make a vector and assign initial values. Argument list should contain
@@ -228,7 +228,7 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
   // TVectorT foo(1,3,0.0,1.0,1.5,"END");
 
   const Int_t no_rows = upb-lwb+1;
-  Assert(no_rows);
+  R__ASSERT(no_rows);
   Allocate(no_rows,lwb);
 
   va_list args;
@@ -246,14 +246,14 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::ResizeTo(Int_t lwb,Int_t upb)
 {
   // Resize the vector to [lwb:upb] .
   // New dynamic elemenst are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleleted.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(lwb,upb)","Not owner of data array,cannot resize");
     Invalidate();
@@ -276,7 +276,7 @@ TVectorT<Element> &TVectorT<Element>::ResizeTo(Int_t lwb,Int_t upb)
     const Int_t  rowLwb_old   = fRowLwb;
 
     Allocate(new_nrows,lwb);
-    Assert(IsValid());
+    R__ASSERT(IsValid());
     if (fNrows > kSizeMax || nrows_old > kSizeMax)
       memset(GetMatrixArray(),0,fNrows*sizeof(Element));
     else if (fNrows > nrows_old)
@@ -304,10 +304,10 @@ TVectorT<Element> &TVectorT<Element>::ResizeTo(Int_t lwb,Int_t upb)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Use(Int_t lwb,Int_t upb,Element *data)
 {
-  Assert(upb >= lwb);
+  R__ASSERT(upb >= lwb);
 
   Clear();
   fNrows    = upb-lwb+1;
@@ -319,7 +319,7 @@ TVectorT<Element> &TVectorT<Element>::Use(Int_t lwb,Int_t upb,Element *data)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,TVectorT<Element> &target,Option_t *option) const
 {
   // Get subvector [row_lwb..row_upb]; The indexing range of the
@@ -329,7 +329,7 @@ TVectorT<Element> &TVectorT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,TVector
   // else          : return [row_lwb..row_upb]
 
   if (gMatrixCheck) {
-    Assert(IsValid());
+    R__ASSERT(IsValid());
     if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
       Error("GetSub","row_lwb out of bounds");
       target.Invalidate();
@@ -374,15 +374,15 @@ TVectorT<Element> &TVectorT<Element>::GetSub(Int_t row_lwb,Int_t row_upb,TVector
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::SetSub(Int_t row_lwb,const TVectorT<Element> &source)
 {
   // Insert vector source starting at [row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source];
 
   if (gMatrixCheck) {
-    Assert(IsValid());
-    Assert(source.IsValid());
+    R__ASSERT(IsValid());
+    R__ASSERT(source.IsValid());
 
     if (row_lwb < fRowLwb && row_lwb > fRowLwb+fNrows-1) {
       Error("SetSub","row_lwb outof bounds");
@@ -408,21 +408,21 @@ TVectorT<Element> &TVectorT<Element>::SetSub(Int_t row_lwb,const TVectorT<Elemen
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Zero()
 {
-  Assert(IsValid());
+  R__ASSERT(IsValid());
   memset(this->GetMatrixArray(),0,fNrows*sizeof(Element));
   return *this;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Abs()
 {
   // Take an absolute value of a vector, i.e. apply Abs() to each element.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -435,12 +435,12 @@ TVectorT<Element> &TVectorT<Element>::Abs()
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Sqr()
 {
   // Square each element of the vector.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -453,17 +453,17 @@ TVectorT<Element> &TVectorT<Element>::Sqr()
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Sqrt()
 {
    // Take square root of all elements.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
   while (ep < fp) {
-    Assert(*ep >= 0);
+    R__ASSERT(*ep >= 0);
     *ep = TMath::Sqrt(*ep);
     ep++;
   }
@@ -472,17 +472,17 @@ TVectorT<Element> &TVectorT<Element>::Sqrt()
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Invert()
 {
    // v[i] = 1/v[i]
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
-  const Element * const fp = ep+fNrows; 
+  const Element * const fp = ep+fNrows;
   while (ep < fp) {
-    Assert(*ep != 0.0);
+    R__ASSERT(*ep != 0.0);
     *ep = 1./ *ep;
     ep++;
   }
@@ -491,34 +491,34 @@ TVectorT<Element> &TVectorT<Element>::Invert()
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::SelectNonZeros(const TVectorT<Element> &select)
-{   
+{
   if (gMatrixCheck && !AreCompatible(*this,select)) {
     Error("SelectNonZeros(const TVectorT<Element> &","vector's not compatible");
     Invalidate();
     return *this;
   }
-  
+
   const Element *sp = select.GetMatrixArray();
         Element *ep = this->GetMatrixArray();
-  const Element * const fp = ep+fNrows; 
+  const Element * const fp = ep+fNrows;
   while (ep < fp) {
     if (*sp == 0.0)
       *ep = 0.0;
     sp++; ep++;
-  } 
+  }
 
   return *this;
-}   
+}
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element TVectorT<Element>::Norm1() const
 {
   // Compute the 1-norm of the vector SUM{ |v[i]| }.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   Element norm = 0;
   const Element *ep = this->GetMatrixArray();
@@ -530,12 +530,12 @@ Element TVectorT<Element>::Norm1() const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element TVectorT<Element>::Norm2Sqr() const
 {
   // Compute the square of the 2-norm SUM{ v[i]^2 }.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   Element norm = 0;
   const Element *ep = this->GetMatrixArray();
@@ -549,12 +549,12 @@ Element TVectorT<Element>::Norm2Sqr() const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element TVectorT<Element>::NormInf() const
 {
   // Compute the infinity-norm of the vector MAX{ |v[i]| }.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   Element norm = 0;
   const Element *ep = this->GetMatrixArray();
@@ -566,12 +566,12 @@ Element TVectorT<Element>::NormInf() const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Int_t TVectorT<Element>::NonZeros() const
 {
   // Compute the number of elements != 0.0
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   Int_t nr_nonzeros = 0;
   const Element *ep = this->GetMatrixArray();
@@ -583,48 +583,48 @@ Int_t TVectorT<Element>::NonZeros() const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element TVectorT<Element>::Sum() const
 {
   // Compute sum of elements
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   Element sum = 0.0;
   const Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
-  while (ep < fp) 
+  while (ep < fp)
     sum += *ep++;
 
   return sum;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element TVectorT<Element>::Min() const
 {
   // return minimum vector element value
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Int_t index = TMath::LocMin(fNrows,fElements);
   return fElements[index];
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element TVectorT<Element>::Max() const
 {
   // return maximum vector element value
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Int_t index = TMath::LocMax(fNrows,fElements);
   return fElements[index];
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator=(const TVectorT<Element> &source)
 {
   // Notice that this assignment does NOT change the ownership :
@@ -645,7 +645,7 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TVectorT<Element> &source)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTRow_const<Element> &mr)
 {
   // Assign a matrix row to a vector.
@@ -653,8 +653,8 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTRow_const<Element>
   const TMatrixTBase<Element> *mt = mr.GetMatrix();
 
   if (gMatrixCheck) {
-     Assert(IsValid());
-     Assert(mt->IsValid());
+     R__ASSERT(IsValid());
+     R__ASSERT(mt->IsValid());
       if( mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
          Error("operator=(const TMatrixTRow_const &)","vector and row not compatible");
          Invalidate();
@@ -671,13 +671,13 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTRow_const<Element>
      rp += inc;
   }
 
-  Assert(rp == mr.GetPtr()+mt->GetNcols());
+  R__ASSERT(rp == mr.GetPtr()+mt->GetNcols());
 
   return *this;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTColumn_const<Element> &mc)
 {
    // Assign a matrix column to a vector.
@@ -685,8 +685,8 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTColumn_const<Eleme
   const TMatrixTBase<Element> *mt = mc.GetMatrix();
 
   if (gMatrixCheck) {
-     Assert(IsValid());
-     Assert(mt->IsValid());
+     R__ASSERT(IsValid());
+     R__ASSERT(mt->IsValid());
      if( mt->GetRowLwb() != fRowLwb || mt->GetNrows() != fNrows) {
         Error("operator=(const TMatrixTColumn_const &)","vector and column not compatible");
         Invalidate();
@@ -703,13 +703,13 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTColumn_const<Eleme
      cp += inc;
   }
 
-  Assert(cp == mc.GetPtr()+mt->GetNoElements());
+  R__ASSERT(cp == mc.GetPtr()+mt->GetNoElements());
 
   return *this;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTDiag_const<Element> &md)
 {
   // Assign the matrix diagonal to a vector.
@@ -717,8 +717,8 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTDiag_const<Element
   const TMatrixTBase<Element> *mt = md.GetMatrix();
 
   if (gMatrixCheck) {
-     Assert(IsValid());
-     Assert(mt->IsValid());
+     R__ASSERT(IsValid());
+     R__ASSERT(mt->IsValid());
      if ( md.GetNdiags() != fNrows) {
         Error("operator=(const TMatrixTDiag_const &)","vector and matrix-diagonal not compatible");
        Invalidate();
@@ -735,13 +735,13 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTDiag_const<Element
      dp += inc;
   }
 
-  Assert(dp < md.GetPtr()+mt->GetNoElements()+inc);
+  R__ASSERT(dp < md.GetPtr()+mt->GetNoElements()+inc);
 
   return *this;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseRow_const<Element> &mr)
 {
   // Assign a sparse matrix row to a vector. The matrix row is implicitly transposed
@@ -750,8 +750,8 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseRow_const<El
   const TMatrixTBase<Element> *mt = mr.GetMatrix();
 
   if (gMatrixCheck) {
-     Assert(IsValid());
-     Assert(mt->IsValid());
+     R__ASSERT(IsValid());
+     R__ASSERT(mt->IsValid());
      if (mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
         Error("operator=(const TMatrixTSparseRow_const &)","vector and row not compatible");
         Invalidate();
@@ -774,7 +774,7 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseRow_const<El
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseDiag_const<Element> &md)
 {
   // Assign a sparse matrix diagonal to a vector.
@@ -782,14 +782,14 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseDiag_const<E
   const TMatrixTBase<Element> *mt = md.GetMatrix();
 
   if (gMatrixCheck) {
-    Assert(IsValid());
-    Assert(mt->IsValid());
+    R__ASSERT(IsValid());
+    R__ASSERT(mt->IsValid());
     if (md.GetNdiags() != fNrows) {
         Error("operator=(const TMatrixTSparseDiag_const &)","vector and matrix-diagonal not compatible");
         Invalidate();
         return *this;
-     } 
-  } 
+     }
+  }
 
   Element * const pvData = this->GetMatrixArray();
   for (Int_t idiag = 0; idiag < fNrows; idiag++)
@@ -799,12 +799,12 @@ TVectorT<Element> &TVectorT<Element>::operator=(const TMatrixTSparseDiag_const<E
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator=(Element val)
 {
   // Assign val to every element of the vector.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -815,12 +815,12 @@ TVectorT<Element> &TVectorT<Element>::operator=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator+=(Element val)
 {
   // Add val to every element of the vector.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -831,12 +831,12 @@ TVectorT<Element> &TVectorT<Element>::operator+=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator-=(Element val)
 {
   // Subtract val from every element of the vector.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -847,12 +847,12 @@ TVectorT<Element> &TVectorT<Element>::operator-=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator*=(Element val)
 {
   // Multiply every element of the vector with val.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
         Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -863,7 +863,7 @@ TVectorT<Element> &TVectorT<Element>::operator*=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator+=(const TVectorT<Element> &source)
 {
   // Add vector source
@@ -884,7 +884,7 @@ TVectorT<Element> &TVectorT<Element>::operator+=(const TVectorT<Element> &source
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator-=(const TVectorT<Element> &source)
 {
   // Subtract vector source
@@ -905,7 +905,7 @@ TVectorT<Element> &TVectorT<Element>::operator-=(const TVectorT<Element> &source
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
 {
   // "Inplace" multiplication target = A*target. A needn't be a square one
@@ -913,8 +913,8 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
 
 
   if (gMatrixCheck) {
-     Assert(IsValid());
-     Assert(a.IsValid());
+     R__ASSERT(IsValid());
+     R__ASSERT(a.IsValid());
      if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
         Error("operator*=(const TMatrixT &)","vector and matrix incompatible");
         Invalidate();
@@ -954,7 +954,7 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
                 a.GetNcols(),elements_old,1,0.0,tp,1);
   else if (typeid(Element) != typeid(Float_t))
     cblas_sgemv(CblasRowMajor,CblasNoTrans,a.GetNrows(),a.GetNcols(),1.0,mp,
-                a.GetNcols(),elements_old,1,0.0,tp,1);            
+                a.GetNcols(),elements_old,1,0.0,tp,1);
   else
     Error("operator*=","type %s not implemented in BLAS library",typeid(Element));
 #else
@@ -965,7 +965,7 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
       sum += *sp++ * *mp++;
     *tp++ = sum;
   }
-  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+  R__ASSERT(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
   if (isAllocated)
@@ -975,15 +975,15 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixT<Element> &a)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSparse<Element> &a)
 {
   // "Inplace" multiplication target = A*target. A needn't be a square one
   // If target has to be resized, it should own the storage: fIsOwner = kTRUE
 
   if (gMatrixCheck) {
-     Assert(IsValid());
-     Assert(a.IsValid());
+     R__ASSERT(IsValid());
+     R__ASSERT(a.IsValid());
      if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
         Error("operator*=(const TMatrixTSparse &)","vector and matrix incompatible");
         Invalidate();
@@ -1023,7 +1023,7 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSparse<Element> &
         Element *       tp = this->GetMatrixArray(); // Target vector ptr
 
   for (Int_t irow = 0; irow < fNrows; irow++) {
-    const Int_t sIndex = pRowIndex[irow]; 
+    const Int_t sIndex = pRowIndex[irow];
     const Int_t eIndex = pRowIndex[irow+1];
     Element sum = 0.0;
     for (Int_t index = sIndex; index < eIndex; index++) {
@@ -1040,15 +1040,15 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSparse<Element> &
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSym<Element> &a)
 {
   // "Inplace" multiplication target = A*target. A is symmetric .
   // vector size will not change
 
   if (gMatrixCheck) {
-     Assert(IsValid());
-     Assert(a.IsValid());
+     R__ASSERT(IsValid());
+     R__ASSERT(a.IsValid());
      if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
         Error("operator*=(const TMatrixTSym &)","vector and matrix incompatible");
         Invalidate();
@@ -1063,7 +1063,7 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSym<Element> &a)
   if (nrows_old > kWorkMax) {
     isAllocated = kTRUE;
     elements_old = new Element[nrows_old];
-  } 
+  }
   memcpy(elements_old,fElements,nrows_old*sizeof(Element));
   memset(fElements,0,fNrows*sizeof(Element));
 
@@ -1086,7 +1086,7 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSym<Element> &a)
       sum += *sp++ * *mp++;
     *tp++ = sum;
   }
-  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+  R__ASSERT(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
   if (isAllocated)
@@ -1096,12 +1096,12 @@ TVectorT<Element> &TVectorT<Element>::operator*=(const TMatrixTSym<Element> &a)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::operator==(Element val) const
 {
   // Are all vector elements equal to val?
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -1113,12 +1113,12 @@ Bool_t TVectorT<Element>::operator==(Element val) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::operator!=(Element val) const
 {
   // Are all vector elements not equal to val?
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -1130,12 +1130,12 @@ Bool_t TVectorT<Element>::operator!=(Element val) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::operator<(Element val) const
 {
   // Are all vector elements < val?
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -1147,12 +1147,12 @@ Bool_t TVectorT<Element>::operator<(Element val) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::operator<=(Element val) const
 {
   // Are all vector elements <= val?
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -1164,12 +1164,12 @@ Bool_t TVectorT<Element>::operator<=(Element val) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::operator>(Element val) const
 {
   // Are all vector elements > val?
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -1181,12 +1181,12 @@ Bool_t TVectorT<Element>::operator>(Element val) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::operator>=(Element val) const
 {
   // Are all vector elements >= val?
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   const Element *ep = this->GetMatrixArray();
   const Element * const fp = ep+fNrows;
@@ -1198,13 +1198,13 @@ Bool_t TVectorT<Element>::operator>=(Element val) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::MatchesNonZeroPattern(const TVectorT<Element> &select)
 {
   if (gMatrixCheck && !AreCompatible(*this,select)) {
     Error("MatchesNonZeroPattern(const TVectorT&)","vector's not compatible");
     return kFALSE;
-  } 
+  }
 
   const Element *sp = select.GetMatrixArray();
   const Element *ep = this->GetMatrixArray();
@@ -1219,7 +1219,7 @@ Bool_t TVectorT<Element>::MatchesNonZeroPattern(const TVectorT<Element> &select)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TVectorT<Element>::SomePositive(const TVectorT<Element> &select)
 {
   if (gMatrixCheck && !AreCompatible(*this,select)) {
@@ -1240,7 +1240,7 @@ Bool_t TVectorT<Element>::SomePositive(const TVectorT<Element> &select)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::AddSomeConstant(Element val,const TVectorT<Element> &select)
 {
   if (gMatrixCheck && !AreCompatible(*this,select))
@@ -1259,54 +1259,54 @@ void TVectorT<Element>::AddSomeConstant(Element val,const TVectorT<Element> &sel
 extern Double_t Drand(Double_t &ix);
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Randomize(Element alpha,Element beta,Double_t &seed)
 {
   // randomize vector elements value
-   
-  Assert(IsValid());
-   
+
+  R__ASSERT(IsValid());
+
   const Element scale = beta-alpha;
   const Element shift = alpha/scale;
 
         Element *       ep = GetMatrixArray();
   const Element * const fp = ep+fNrows;
-  while (ep < fp)  
+  while (ep < fp)
     *ep++ = scale*(Drand(seed)+shift);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Apply(const TElementActionT<Element> &action)
 {
   // Apply action to each element of the vector.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
   for (Element *ep = fElements; ep < fElements+fNrows; ep++)
     action.Operation(*ep);
   return *this;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &TVectorT<Element>::Apply(const TElementPosActionT<Element> &action)
 {
   // Apply action to each element of the vector. In action the location
   // of the current element is known.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   Element *ep = fElements;
   for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
     action.Operation(*ep++);
 
-  Assert(ep == fElements+fNrows);
+  R__ASSERT(ep == fElements+fNrows);
 
   return *this;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Draw(Option_t *option)
 {
   // Draw this vector using an intermediate histogram
@@ -1327,12 +1327,12 @@ void TVectorT<Element>::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Print(Option_t *flag) const
 {
   // Print the vector as a list of elements.
 
-  Assert(IsValid());
+  R__ASSERT(IsValid());
 
   printf("\nVector (%d) %s is as follows",fNrows,flag);
 
@@ -1347,7 +1347,7 @@ void TVectorT<Element>::Print(Option_t *flag) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t operator==(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
   // Check to see if two vectors are identical.
@@ -1357,7 +1357,7 @@ Bool_t operator==(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element operator*(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
   // Compute the scalar product.
@@ -1373,7 +1373,7 @@ Element operator*(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> operator+(const TVectorT<Element> &source1,const TVectorT<Element> &source2)
 {
   TVectorT<Element> target = source1;
@@ -1382,7 +1382,7 @@ TVectorT<Element> operator+(const TVectorT<Element> &source1,const TVectorT<Elem
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> operator-(const TVectorT<Element> &source1,const TVectorT<Element> &source2)
 {
   TVectorT<Element> target = source1;
@@ -1391,34 +1391,34 @@ TVectorT<Element> operator-(const TVectorT<Element> &source1,const TVectorT<Elem
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> operator*(const TMatrixT<Element> &a,const TVectorT<Element> &source)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
   TVectorT<Element> target(a.GetRowLwb(),a.GetRowUpb());
   return Add(target,Element(1.0),a,source);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> operator*(const TMatrixTSym<Element> &a,const TVectorT<Element> &source)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
   TVectorT<Element> target(a.GetRowLwb(),a.GetRowUpb());
   return Add(target,Element(1.0),a,source);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> operator*(const TMatrixTSparse<Element> &a,const TVectorT<Element> &source)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
   TVectorT<Element> target(a.GetRowLwb(),a.GetRowUpb());
   return Add(target,Element(1.0),a,source);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> operator*(Element val,const TVectorT<Element> &source)
 {
   TVectorT<Element> target = source;
@@ -1441,7 +1441,7 @@ Element Dot(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,const TVectorT<Element> &source)
 {
   // Modify addition: target += scalar * source.
@@ -1470,7 +1470,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,const TVectorT<E
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
                        const TMatrixT<Element> &a,const TVectorT<Element> &source)
 {
@@ -1478,15 +1478,15 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
   // NOTE: in case scalar=0, do  target = A * source.
 
   if (gMatrixCheck) {
-    Assert(target.IsValid());
-    Assert(a.IsValid());
+    R__ASSERT(target.IsValid());
+    R__ASSERT(a.IsValid());
     if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
       Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","target vector and matrix are incompatible");
       target.Invalidate();
       return target;
     }
 
-    Assert(source.IsValid());
+    R__ASSERT(source.IsValid());
     if (a.GetNcols() != source.GetNrows() || a.GetColLwb() != source.GetLwb()) {
       Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","source vector and matrix are incompatible");
       target.Invalidate();
@@ -1543,24 +1543,24 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
     }
   }
 
-  if (gMatrixCheck) Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+  if (gMatrixCheck) R__ASSERT(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
   return target;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
                        const TMatrixTSym<Element> &a,const TVectorT<Element> &source)
 {
   // Modify addition: target += A * source.
   // NOTE: in case scalar=0, do  target = A * source.
-  
+
   if (gMatrixCheck) {
-    Assert(target.IsValid());
-    Assert(source.IsValid());
-    Assert(a.IsValid());
+    R__ASSERT(target.IsValid());
+    R__ASSERT(source.IsValid());
+    R__ASSERT(a.IsValid());
     if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
       Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","target vector and matrix are incompatible");
       target.Invalidate();
@@ -1608,7 +1608,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
       *tp++ -= sum;
     }
   } else {
-    while (tp < tp_last) { 
+    while (tp < tp_last) {
       const Element *sp1 = sp;
       Element sum = 0;
       while (sp1 < sp_last)
@@ -1616,14 +1616,14 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
       *tp++ += scalar * sum;
     }
   }
-  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+  R__ASSERT(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
   return target;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
                        const TMatrixTSparse<Element> &a,const TVectorT<Element> &source)
 {
@@ -1631,15 +1631,15 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
   // NOTE: in case scalar=0, do  target = A * source.
 
   if (gMatrixCheck) {
-    Assert(target.IsValid());
-    Assert(a.IsValid());
+    R__ASSERT(target.IsValid());
+    R__ASSERT(a.IsValid());
     if (a.GetNrows() != target.GetNrows() || a.GetRowLwb() != target.GetLwb()) {
       Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","target vector and matrix are incompatible");
       target.Invalidate();
       return target;
     }
 
-    Assert(source.IsValid());
+    R__ASSERT(source.IsValid());
     if (a.GetNcols() != source.GetNrows() || a.GetColLwb() != source.GetLwb()) {
       Error("Add(TVectorT &,const TMatrixT &,const TVectorT &)","source vector and matrix are incompatible");
       target.Invalidate();
@@ -1656,7 +1656,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
 
   if (scalar == 1.0) {
     for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
-      const Int_t sIndex = pRowIndex[irow]; 
+      const Int_t sIndex = pRowIndex[irow];
       const Int_t eIndex = pRowIndex[irow+1];
       Element sum = 0.0;
       for (Int_t index = sIndex; index < eIndex; index++) {
@@ -1667,7 +1667,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
     }
  } else if (scalar == 0.0) {
     for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
-      const Int_t sIndex = pRowIndex[irow]; 
+      const Int_t sIndex = pRowIndex[irow];
       const Int_t eIndex = pRowIndex[irow+1];
       Element sum = 0.0;
       for (Int_t index = sIndex; index < eIndex; index++) {
@@ -1678,7 +1678,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
     }
   } else if (scalar == -1.0) {
     for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
-      const Int_t sIndex = pRowIndex[irow]; 
+      const Int_t sIndex = pRowIndex[irow];
       const Int_t eIndex = pRowIndex[irow+1];
       Element sum = 0.0;
       for (Int_t index = sIndex; index < eIndex; index++) {
@@ -1689,7 +1689,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
     }
   } else {
     for (Int_t irow = 0; irow < a.GetNrows(); irow++) {
-      const Int_t sIndex = pRowIndex[irow]; 
+      const Int_t sIndex = pRowIndex[irow];
       const Int_t eIndex = pRowIndex[irow+1];
       Element sum = 0.0;
       for (Int_t index = sIndex; index < eIndex; index++) {
@@ -1704,7 +1704,7 @@ TVectorT<Element> &Add(TVectorT<Element> &target,Element scalar,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
                       const TVectorT<Element> &source1,const TVectorT<Element> &source2)
 {
@@ -1737,18 +1737,18 @@ TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
                       const TVectorT<Element> &source1,const TVectorT<Element> &source2,const TVectorT<Element> &select)
 {
   // Modify addition: target += scalar * ElementMult(source1,source2) only for those elements
-  // where select[i] != 0.0 
+  // where select[i] != 0.0
 
   if (gMatrixCheck && !( AreCompatible(target,source1) && AreCompatible(target,source1) &&
          AreCompatible(target,select) )) {
     Error("AddElemMult(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &,onst TVectorT<Element> &)",
-           "vector's are incompatible"); 
-    target.Invalidate(); 
+           "vector's are incompatible");
+    target.Invalidate();
     return target;
   }
 
@@ -1779,7 +1779,7 @@ TVectorT<Element> &AddElemMult(TVectorT<Element> &target,Element scalar,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
                      const TVectorT<Element> &source1,const TVectorT<Element> &source2)
 {
@@ -1798,32 +1798,32 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
   const Element * const ftp = tp+target.GetNrows();
 
   if (scalar == 1.0 ) {
-    while ( tp < ftp ) 
+    while ( tp < ftp )
       *tp++ += *sp1++ / *sp2++;
   } else if (scalar == -1.0) {
-    while ( tp < ftp ) 
+    while ( tp < ftp )
       *tp++ -= *sp1++ / *sp2++;
   } else {
-    while ( tp < ftp ) 
+    while ( tp < ftp )
       *tp++ += scalar * *sp1++ / *sp2++;
-  } 
+  }
 
   return target;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
                      const TVectorT<Element> &source1,const TVectorT<Element> &source2,const TVectorT<Element> &select)
 {
   // Modify addition: target += scalar * ElementMult(source1,source2) only for those elements
-  // where select[i] != 0.0 
+  // where select[i] != 0.0
 
   if (gMatrixCheck && !( AreCompatible(target,source1) && AreCompatible(target,source1) &&
          AreCompatible(target,select) )) {
     Error("AddElemDiv(TVectorT<Element> &,Element,const TVectorT<Element> &,const TVectorT<Element> &,onst TVectorT<Element> &)",
-           "vector's are incompatible"); 
-    target.Invalidate(); 
+           "vector's are incompatible");
+    target.Invalidate();
     return target;
   }
 
@@ -1854,7 +1854,7 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &ElementMult(TVectorT<Element> &target,const TVectorT<Element> &source)
 {
   // Multiply target by the source, element-by-element.
@@ -1875,10 +1875,10 @@ TVectorT<Element> &ElementMult(TVectorT<Element> &target,const TVectorT<Element>
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &ElementMult(TVectorT<Element> &target,const TVectorT<Element> &source,const TVectorT<Element> &select)
 {
-  // Multiply target by the source, element-by-element only where select[i] != 0.0 
+  // Multiply target by the source, element-by-element only where select[i] != 0.0
 
   if (gMatrixCheck && !(AreCompatible(target,source) && AreCompatible(target,select))) {
     Error("ElementMult(TVectorT<Element> &,const TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
@@ -1899,7 +1899,7 @@ TVectorT<Element> &ElementMult(TVectorT<Element> &target,const TVectorT<Element>
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> &source)
 {
   // Divide target by the source, element-by-element.
@@ -1920,11 +1920,11 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> &source,const TVectorT<Element> &select)
-{ 
-  // Divide target by the source, element-by-element only where select[i] != 0.0 
-    
+{
+  // Divide target by the source, element-by-element only where select[i] != 0.0
+
   if (gMatrixCheck && !AreCompatible(target,source)) {
     Error("ElementDiv(TVectorT<Element> &,const TVectorT<Element> &,const TVectorT<Element> &)","vector's are incompatible");
     target.Invalidate();
@@ -1951,13 +1951,13 @@ Bool_t AreCompatible(const TVectorT<Element1> &v1,const TVectorT<Element2> &v2,I
     if (verbose)
       ::Error("AreCompatible", "vector 1 not valid");
     return kFALSE;
-  } 
+  }
   if (!v2.IsValid()) {
     if (verbose)
       ::Error("AreCompatible", "vector 2 not valid");
     return kFALSE;
-  } 
-  
+  }
+
   if (v1.GetNrows() != v2.GetNrows() || v1.GetLwb() != v2.GetLwb()) {
     if (verbose)
       ::Error("AreCompatible", "matrices 1 and 2 not compatible");
@@ -1968,7 +1968,7 @@ Bool_t AreCompatible(const TVectorT<Element1> &v1,const TVectorT<Element2> &v2,I
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void Compare(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 {
    // Compare two vectors and print out the result of the comparison.
@@ -2021,7 +2021,7 @@ void Compare(const TVectorT<Element> &v1,const TVectorT<Element> &v2)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t VerifyVectorValue(const TVectorT<Element> &v,Element val,
                          Int_t verbose,Element maxDevAllow)
 {
@@ -2056,7 +2056,7 @@ Bool_t VerifyVectorValue(const TVectorT<Element> &v,Element val,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t VerifyVectorIdentity(const TVectorT<Element> &v1,const TVectorT<Element> &v2,
                             Int_t verbose, Element maxDevAllow)
 {
@@ -2095,20 +2095,20 @@ Bool_t VerifyVectorIdentity(const TVectorT<Element> &v1,const TVectorT<Element> 
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TVectorT<Element>::Streamer(TBuffer &R__b)
 {
   // Stream an object of class TVectorT.
 
-  if (R__b.IsReading()) {                                               
+  if (R__b.IsReading()) {
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
     if (R__v > 1) {
       Clear();
-      TVectorT<Element>::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);          
+      TVectorT<Element>::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
     } else { //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
-      R__b >> fRowLwb;                                                  
+      R__b >> fRowLwb;
       fNrows = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TVectorT<Element>::IsA());
     }

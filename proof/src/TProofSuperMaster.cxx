@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.10 2005/12/09 01:12:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.11 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -309,7 +309,7 @@ Int_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *opt
 
    if (!IsValid()) return -1;
 
-   Assert(GetPlayer());
+   R__ASSERT(GetPlayer());
 
    if (GetProgressDialog())
       GetProgressDialog()->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),

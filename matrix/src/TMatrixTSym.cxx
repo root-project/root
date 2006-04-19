@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.10 2006/03/29 05:16:49 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.11 2006/04/04 05:51:06 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -33,14 +33,14 @@ templateClassImp(TMatrixTSym)
 #endif
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(Int_t no_rows)
 {
   Allocate(no_rows,no_rows,0,0,1);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(Int_t row_lwb,Int_t row_upb)
 {
   const Int_t no_rows = row_upb-row_lwb+1;
@@ -48,7 +48,7 @@ TMatrixTSym<Element>::TMatrixTSym(Int_t row_lwb,Int_t row_upb)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(Int_t no_rows,const Element *elements,Option_t *option)
 {
   // option="F": array elements contains the matrix stored column-wise
@@ -67,7 +67,7 @@ TMatrixTSym<Element>::TMatrixTSym(Int_t no_rows,const Element *elements,Option_t
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(Int_t row_lwb,Int_t row_upb,const Element *elements,Option_t *option)
 {
   // array elements are copied
@@ -82,27 +82,27 @@ TMatrixTSym<Element>::TMatrixTSym(Int_t row_lwb,Int_t row_upb,const Element *ele
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSym<Element> &another) : TMatrixTBase<Element>(another)
 {
-  Assert(another.IsValid());
+  R__ASSERT(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
   *this = another;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Element> &prototype)
 {
   // Create a matrix applying a specific operation to the prototype.
   // Example: TMatrixTSym<Element> a(10,12); ...; TMatrixTSym<Element> b(TMatrixT::kTransposed, a);
   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kAtA.
 
-  Assert(this != &prototype);
+  R__ASSERT(this != &prototype);
   this->Invalidate();
-                   
-  Assert(prototype.IsValid());
-  
+
+  R__ASSERT(prototype.IsValid());
+
   switch(op) {
     case kZero:
       Allocate(prototype.GetNrows(),prototype.GetNcols(),
@@ -122,12 +122,12 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Elemen
       break;
 
     case kInverted:
-    { 
+    {
       Allocate(prototype.GetNrows(),prototype.GetNcols(),
                prototype.GetRowLwb(),prototype.GetColLwb(),1);
       *this = prototype;
       // Since the user can not control the tolerance of this newly created matrix
-      // we put it to the smallest possible number 
+      // we put it to the smallest possible number
       const Element oldTol = this->SetTol(std::numeric_limits<Element>::min());
       this->Invert();
       this->SetTol(oldTol);
@@ -146,13 +146,13 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixTSym<Elemen
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixT<Element> &prototype)
 {
-  Assert(dynamic_cast<TMatrixT<Element> *>(this) != &prototype);
+  R__ASSERT(dynamic_cast<TMatrixT<Element> *>(this) != &prototype);
   this->Invalidate();
-                   
-  Assert(prototype.IsValid());
+
+  R__ASSERT(prototype.IsValid());
 
   switch(op) {
     case kAtA:
@@ -167,14 +167,14 @@ TMatrixTSym<Element>::TMatrixTSym(EMatrixCreatorsOp1 op,const TMatrixT<Element> 
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSym<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSym<Element> &b)
-{     
+{
   this->Invalidate();
-    
-  Assert(a.IsValid());
-  Assert(b.IsValid());
-    
+
+  R__ASSERT(a.IsValid());
+  R__ASSERT(b.IsValid());
+
   switch(op) {
     case kPlus:
     {
@@ -194,7 +194,7 @@ TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSym<Element> &a,EMatrixCreatorsO
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSymLazy<Element> &lazy_constructor)
 {
   Allocate(lazy_constructor.GetRowUpb()-lazy_constructor.GetRowLwb()+1,
@@ -208,20 +208,20 @@ TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSymLazy<Element> &lazy_construct
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TMatrixTSym<Element>::Delete_m(Int_t size,Element *&m)
-{ 
+{
   // delete data pointer m, if it was assigned on the heap
 
   if (m) {
     if (size > this->kSizeMax)
       delete [] m;
     m = 0;
-  }       
+  }
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element* TMatrixTSym<Element>::New_m(Int_t size)
 {
   // return data pointer . if requested size <= kSizeMax, assign pointer
@@ -239,7 +239,7 @@ Element* TMatrixTSym<Element>::New_m(Int_t size)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Int_t TMatrixTSym<Element>::Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
                                      Int_t newSize,Int_t oldSize)
 {
@@ -266,7 +266,7 @@ Int_t TMatrixTSym<Element>::Memcpy_m(Element *newp,const Element *oldp,Int_t cop
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TMatrixTSym<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
                                     Int_t init,Int_t /*nr_nonzeros*/)
 {
@@ -336,13 +336,13 @@ void TMatrixTSym<Element>::Plus(const TMatrixTSym<Element> &a,const TMatrixTSym<
 //______________________________________________________________________________
 template<class Element>
 void TMatrixTSym<Element>::Minus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
-{   
+{
   // Symmetric matrix summation. Create a matrix C such that C = A + B.
-  
+
   if (gMatrixCheck) {
     if (!AreCompatible(a,b)) {
       Error("Minus","matrices not compatible");
-      return; 
+      return;
     }
 
     if (this == &a) {
@@ -357,26 +357,26 @@ void TMatrixTSym<Element>::Minus(const TMatrixTSym<Element> &a,const TMatrixTSym
       return;
     }
   }
-  
+
   const Element *       ap      = a.GetMatrixArray();
   const Element *       bp      = b.GetMatrixArray();
         Element *       cp      = this->GetMatrixArray();
   const Element * const cp_last = cp+this->fNelems;
-      
+
   while (cp < cp_last) {
-     *cp = *ap++ - *bp++; 
+     *cp = *ap++ - *bp++;
      cp++;
   }
-} 
+}
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TMatrixTSym<Element>::TMult(const TMatrixT<Element> &a)
 {
   // Create a matrix C such that C = A' * A. In other words,
   // c[i,j] = SUM{ a[k,i] * a[k,j] }.
 
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -386,7 +386,7 @@ void TMatrixTSym<Element>::TMult(const TMatrixT<Element> &a)
                  1.0,ap,a.GetNcols(),ap,a.GetNcols(),1.0,cp,this->fNcols);
   else if (typeid(Element) != typeid(Float_t))
     cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
-                 1.0,ap,a.GetNcols(),ap,a.GetNcols(),1.0,cp,fNcols); 
+                 1.0,ap,a.GetNcols(),ap,a.GetNcols(),1.0,cp,fNcols);
   else
     Error("TMult","type %s not implemented in BLAS library",typeid(Element));
 #else
@@ -413,18 +413,18 @@ void TMatrixTSym<Element>::TMult(const TMatrixT<Element> &a)
     acp0++;                           // Set acp0 to the (i+1)-th col
   }
 
-  Assert(cp == this->GetMatrixArray()+this->fNelems && acp0 == ap+ncolsa);
+  R__ASSERT(cp == this->GetMatrixArray()+this->fNelems && acp0 == ap+ncolsa);
 #endif
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TMatrixTSym<Element>::TMult(const TMatrixTSym<Element> &a)
 {
   // Matrix multiplication, with A symmetric
   // Create a matrix C such that C = A' * A = A * A = A * A'
 
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
 #ifdef CBLAS
   const Element *ap = a.GetMatrixArray();
@@ -461,12 +461,12 @@ void TMatrixTSym<Element>::TMult(const TMatrixTSym<Element> &a)
     acp0++;                           // Set acp0 to the (i+1)-th col
   }
 
-  Assert(cp == this->GetMatrixArray()+this->fNelems && acp0 == ap+ncolsa);
+  R__ASSERT(cp == this->GetMatrixArray()+this->fNelems && acp0 == ap+ncolsa);
 #endif
 }
 
-//______________________________________________________________________________ 
-template<class Element> 
+//______________________________________________________________________________
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::Use(Int_t row_lwb,Int_t row_upb,Element *data)
 {
   if (gMatrixCheck && row_upb < row_lwb)
@@ -489,7 +489,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Use(Int_t row_lwb,Int_t row_upb,Elem
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::GetSub(Int_t row_lwb,Int_t row_upb,
                                                    TMatrixTSym<Element> &target,Option_t *option) const
 {
@@ -500,7 +500,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::GetSub(Int_t row_lwb,Int_t row_upb,
   // else          : return [row_lwb..row_upb][row_lwb..row_upb]
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("GetSub","row_lwb out of bounds");
       target.Invalidate();
@@ -558,7 +558,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::GetSub(Int_t row_lwb,Int_t row_upb,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                     TMatrixTBase<Element> &target,Option_t *option) const
 {
@@ -569,7 +569,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::GetSub(Int_t row_lwb,Int_t row_upb,
   // else          : return [row_lwb..row_upb][col_lwb..col_upb]
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("GetSub","row_lwb out of bounds");
       target.Invalidate();
@@ -633,16 +633,16 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::GetSub(Int_t row_lwb,Int_t row_upb,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::SetSub(Int_t row_lwb,const TMatrixTBase<Element> &source)
-{ 
+{
   // Insert matrix source starting at [row_lwb][row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
-    
+
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
-    
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
+
     if (!source.IsSymmetric()) {
       Error("SetSub","source matrix is not symmetric");
       this->Invalidate();
@@ -661,7 +661,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SetSub(Int_t row_lwb,const TMatrixTB
   }
 
   const Int_t nRows_source = source.GetNrows();
-  
+
   if (source.GetRowIndexArray() && source.GetColIndexArray()) {
     const Int_t rowlwb_s = source.GetRowLwb();
     for (Int_t irow = 0; irow < nRows_source; irow++) {
@@ -672,7 +672,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SetSub(Int_t row_lwb,const TMatrixTB
   } else {
     const Element *bp = source.GetMatrixArray();
           Element *ap = this->GetMatrixArray()+(row_lwb-this->fRowLwb)*this->fNrows+(row_lwb-this->fRowLwb);
-      
+
     for (Int_t irow = 0; irow < nRows_source; irow++) {
       Element *ap_sub = ap;
       for (Int_t icol = 0; icol < nRows_source; icol++) {
@@ -686,15 +686,15 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SetSub(Int_t row_lwb,const TMatrixTB
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source)
 {
   // Insert matrix source starting at [row_lwb][col_lwb] in a symmetric fashion, thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
 
     if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
       Error("SetSub","row_lwb out of bounds");
@@ -721,7 +721,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,
 
   const Int_t nRows_source = source.GetNrows();
   const Int_t nCols_source = source.GetNcols();
-  
+
   const Int_t rowlwb_s = source.GetRowLwb();
   const Int_t collwb_s = source.GetColLwb();
   if (row_lwb >= col_lwb) {
@@ -749,39 +749,39 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::SetMatrixArray(const Element *data,Option_t *option)
 {
   TMatrixTBase<Element>::SetMatrixArray(data,option);
   if (!this->IsSymmetric()) {
     Error("SetMatrixArray","Matrix is not symmetric after Set");
-    this->Invalidate(); 
+    this->Invalidate();
   }
 
   return *this;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::Shift(Int_t row_shift,Int_t col_shift)
 {
   if (row_shift != col_shift) {
     Error("Shift","row_shift != col_shift");
-    this->Invalidate(); 
+    this->Invalidate();
     return *this;
   }
   return TMatrixTBase<Element>::Shift(row_shift,col_shift);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
 {
   // Set size of the matrix to nrows x ncols
   // New dynamic elements are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (!this->fIsOwner) {
     Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
     this->Invalidate();
@@ -790,7 +790,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t nrows,Int_t ncols,In
 
   if (nrows != ncols) {
     Error("ResizeTo(Int_t,Int_t)","nrows != ncols");
-    this->Invalidate(); 
+    this->Invalidate();
     return *this;
   }
 
@@ -809,7 +809,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t nrows,Int_t ncols,In
     const Int_t  ncols_old    = this->fNcols;
 
     Allocate(nrows,ncols);
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
 
     Element *elements_new = GetMatrixArray();
     // new memory should be initialized but be careful ot to wipe out the stack
@@ -820,8 +820,8 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t nrows,Int_t ncols,In
       memset(elements_new+nelems_old,0,(this->fNelems-nelems_old)*sizeof(Element));
 
     // Copy overlap
-    const Int_t ncols_copy = TMath::Min(this->fNcols,ncols_old); 
-    const Int_t nrows_copy = TMath::Min(this->fNrows,nrows_old); 
+    const Int_t ncols_copy = TMath::Min(this->fNcols,ncols_old);
+    const Int_t nrows_copy = TMath::Min(this->fNrows,nrows_old);
 
     const Int_t nelems_new = this->fNelems;
     if (ncols_old < this->fNcols) {
@@ -843,7 +843,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t nrows,Int_t ncols,In
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                       Int_t /*nr_nonzeros*/)
 {
@@ -851,7 +851,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
   // New dynamic elemenst are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (!this->fIsOwner) {
     Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
     this->Invalidate();
@@ -860,12 +860,12 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
 
   if (row_lwb != col_lwb) {
     Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","row_lwb != col_lwb");
-    this->Invalidate(); 
+    this->Invalidate();
     return *this;
   }
   if (row_upb != col_upb) {
     Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","row_upb != col_upb");
-    this->Invalidate(); 
+    this->Invalidate();
     return *this;
   }
 
@@ -892,7 +892,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
     const Int_t  colLwb_old   = this->fColLwb;
 
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb);
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
 
     Element *elements_new = GetMatrixArray();
     // new memory should be initialized but be careful ot to wipe out the stack
@@ -903,10 +903,10 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
       memset(elements_new+nelems_old,0,(this->fNelems-nelems_old)*sizeof(Element));
 
     // Copy overlap
-    const Int_t rowLwb_copy = TMath::Max(this->fRowLwb,rowLwb_old); 
-    const Int_t colLwb_copy = TMath::Max(this->fColLwb,colLwb_old); 
-    const Int_t rowUpb_copy = TMath::Min(this->fRowLwb+this->fNrows-1,rowLwb_old+nrows_old-1); 
-    const Int_t colUpb_copy = TMath::Min(this->fColLwb+this->fNcols-1,colLwb_old+ncols_old-1); 
+    const Int_t rowLwb_copy = TMath::Max(this->fRowLwb,rowLwb_old);
+    const Int_t colLwb_copy = TMath::Max(this->fColLwb,colLwb_old);
+    const Int_t rowUpb_copy = TMath::Min(this->fRowLwb+this->fNrows-1,rowLwb_old+nrows_old-1);
+    const Int_t colUpb_copy = TMath::Min(this->fColLwb+this->fNcols-1,colLwb_old+ncols_old-1);
 
     const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
     const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
@@ -940,7 +940,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Double_t TMatrixTSym<Element>::Determinant() const
 {
   const TMatrixT<Element> &tmp = *this;
@@ -951,7 +951,7 @@ Double_t TMatrixTSym<Element>::Determinant() const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TMatrixTSym<Element>::Determinant(Double_t &d1,Double_t &d2) const
 {
   const TMatrixT<Element> &tmp = *this;
@@ -960,14 +960,14 @@ void TMatrixTSym<Element>::Determinant(Double_t &d1,Double_t &d2) const
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::Invert(Double_t *det)
-{     
+{
   // Invert the matrix and calculate its determinant
   // Notice that the LU decomposition is used instead of Bunch-Kaufman
   // Bunch-Kaufman guarantees a symmetric inverted matrix but is slower than LU .
   // The user can access Bunch-Kaufman through the TDecompBK class .
-    
+
   TMatrixD tmp(*this);
   TDecompLU::InvertLU(tmp,Double_t(this->fTol),det);
   memcpy(this->GetMatrixArray(),tmp.GetMatrixArray(),this->GetNoElements()*sizeof(Element));
@@ -975,12 +975,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Invert(Double_t *det)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::InvertFast(Double_t *det)
 {
   // Invert the matrix and calculate its determinant
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   const Char_t nRows = Char_t(this->GetNrows());
   switch (nRows) {
@@ -991,11 +991,11 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::InvertFast(Double_t *det)
         Error("InvertFast","matrix is singular");
         this->Invalidate();
         *det = 0;
-      } 
+      }
       else {
         *det = *pM;
         *pM = 1.0/(*pM);
-      } 
+      }
       return *this;
     }
     case 2:
@@ -1035,14 +1035,14 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::InvertFast(Double_t *det)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::Transpose(const TMatrixTSym<Element> &source)
 {
   // Transpose a matrix.
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(source.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(source.IsValid());
 
     if (this->fNrows != source.GetNcols() || this->fRowLwb != source.GetColLwb())
     {
@@ -1057,15 +1057,15 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Transpose(const TMatrixTSym<Element>
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::Rank1Update(const TVectorT<Element> &v,Element alpha)
 {
-  // Perform a rank 1 operation on the matrix:                          
+  // Perform a rank 1 operation on the matrix:
   //     A += alpha * v * v^T
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(v.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(v.IsValid());
     if (v.GetNoElements() < this->fNrows) {
       Error("Rank1Update","vector too short");
       this->Invalidate();
@@ -1092,17 +1092,17 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Rank1Update(const TVectorT<Element> 
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &b)
 {
 // Calculate B * (*this) * B^T , final matrix will be (nrowsb x nrowsb)
 // This is a similarity transform when B is orthogonal . It is more
 // efficient than applying the actual multiplication because this
-// routine realizes that  the final matrix is symmetric . 
+// routine realizes that  the final matrix is symmetric .
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(b.IsValid());
     if (this->fNcols != b.GetNcols() || this->fColLwb != b.GetColLwb()) {
       Error("Similarity(const TMatrixT &)","matrices incompatible");
       this->Invalidate();
@@ -1165,7 +1165,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
     cp += ++ishift;
   }
 
-  Assert(cp == cp0+this->fNelems+ishift && barp0 == bap+nba);
+  R__ASSERT(cp == cp0+this->fNelems+ishift && barp0 == bap+nba);
 
   cp = cp0;
   for (Int_t irow = 0; irow < this->fNrows; irow++) {
@@ -1184,7 +1184,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixT<Element> &
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element> &b)
 {
 // Calculate B * (*this) * B^T , final matrix will be (nrowsb x nrowsb)
@@ -1193,8 +1193,8 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
 // routine realizes that  the final matrix is symmetric .
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(b.IsValid());
     if (this->fNcols != b.GetNcols() || this->fColLwb != b.GetColLwb()) {
       Error("Similarity(const TMatrixTSym &)","matrices incompatible");
       this->Invalidate();
@@ -1271,7 +1271,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
     cp += ++ishift;
   }
 
-  Assert(cp == cp0+this->fNelems+ishift && barp0 == bap+nba);
+  R__ASSERT(cp == cp0+this->fNelems+ishift && barp0 == bap+nba);
 
   cp = cp0;
   for (Int_t irow = 0; irow < this->fNrows; irow++) {
@@ -1290,14 +1290,14 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::Similarity(const TMatrixTSym<Element
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Element TMatrixTSym<Element>::Similarity(const TVectorT<Element> &v) const
 {
 // Calculate scalar v * (*this) * v^T
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(v.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(v.IsValid());
     if (this->fNcols != v.GetNrows() || this->fColLwb != v.GetLwb()) {
       Error("Similarity(const TVectorT &)","vector and matrix incompatible");
       return -1.;
@@ -1317,13 +1317,13 @@ Element TMatrixTSym<Element>::Similarity(const TVectorT<Element> &v) const
     sum1 += sum2 * *vp++;
   }
 
-  Assert(mp == this->GetMatrixArray()+this->GetNoElements());
+  R__ASSERT(mp == this->GetMatrixArray()+this->GetNoElements());
 
   return sum1;
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::SimilarityT(const TMatrixT<Element> &b)
 {
 // Calculate B^T * (*this) * B , final matrix will be (ncolsb x ncolsb)
@@ -1331,8 +1331,8 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SimilarityT(const TMatrixT<Element> 
 // routine realizes that  the final matrix is symmetric .
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
-    Assert(b.IsValid());
+    R__ASSERT(this->IsValid());
+    R__ASSERT(b.IsValid());
     if (this->fNrows != b.GetNrows() || this->fRowLwb != b.GetRowLwb()) {
       Error("SimilarityT(const TMatrixT &)","matrices incompatible");
       this->Invalidate();
@@ -1395,7 +1395,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SimilarityT(const TMatrixT<Element> 
     cp += ++ishift;
   }
 
-  Assert(cp == cp0+this->fNelems+ishift && btarp0 == btap+nbta);
+  R__ASSERT(cp == cp0+this->fNelems+ishift && btarp0 == btap+nbta);
 
   cp = cp0;
   for (Int_t irow = 0; irow < this->fNrows; irow++) {
@@ -1414,7 +1414,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::SimilarityT(const TMatrixT<Element> 
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator=(const TMatrixTSym<Element> &source)
 {
   if (gMatrixCheck && !AreCompatible(*this,source)) {
@@ -1431,10 +1431,10 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator=(const TMatrixTSym<Element>
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator=(const TMatrixTSymLazy<Element> &lazy_constructor)
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   if (lazy_constructor.fRowUpb != this->GetRowUpb() ||
       lazy_constructor.fRowLwb != this->GetRowLwb()) {
@@ -1449,12 +1449,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator=(const TMatrixTSymLazy<Elem
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator=(Element val)
 {
   // Assign val to every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = fElements;
   const Element * const ep_last = ep+this->fNelems;
@@ -1465,12 +1465,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator+=(Element val)
 {
   // Add val to every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = fElements;
   const Element * const ep_last = ep+this->fNelems;
@@ -1481,12 +1481,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator+=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator-=(Element val)
 {
   // Subtract val from every element of the matrix.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = fElements;
   const Element * const ep_last = ep+this->fNelems;
@@ -1497,12 +1497,12 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator-=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator*=(Element val)
 {
   // Multiply every element of the matrix with val.
 
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
 
   Element *ep = fElements;
   const Element * const ep_last = ep+this->fNelems;
@@ -1513,7 +1513,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator*=(Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator+=(const TMatrixTSym<Element> &source)
 {
   // Add the source matrix.
@@ -1534,7 +1534,7 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator+=(const TMatrixTSym<Element
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::operator-=(const TMatrixTSym<Element> &source)
 {
   // Subtract the source matrix.
@@ -1555,11 +1555,11 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::operator-=(const TMatrixTSym<Element
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::Apply(const TElementActionT<Element> &action)
-{ 
-  Assert(this->IsValid());
-  
+{
+  R__ASSERT(this->IsValid());
+
   Element val = 0;
   Element *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
   Element *tcp = trp;                    // pointer to LL part,              traverse col-wise
@@ -1579,13 +1579,13 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::Apply(const TElementActionT<Element
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::Apply(const TElementPosActionT<Element> &action)
-{ 
+{
   // Apply action to each element of the matrix. To action the location
   // of the current element is passed.
-  
-  Assert(this->IsValid());
+
+  R__ASSERT(this->IsValid());
 
   Element val = 0;
   Element *trp = this->GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
@@ -1608,13 +1608,13 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::Apply(const TElementPosActionT<Elem
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::Randomize(Element alpha,Element beta,Double_t &seed)
 {
   // randomize matrix element values but keep matrix symmetric
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
     if (this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
       Error("Randomize(Element,Element,Element &","matrix should be square");
       this->Invalidate();
@@ -1640,13 +1640,13 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::Randomize(Element alpha,Element bet
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &TMatrixTSym<Element>::RandomizePD(Element alpha,Element beta,Double_t &seed)
 {
   // randomize matrix element values but keep matrix symmetric positive definite
 
   if (gMatrixCheck) {
-    Assert(this->IsValid());
+    R__ASSERT(this->IsValid());
     if (this->fNrows != this->fNcols || this->fRowLwb != this->fColLwb) {
       Error("RandomizeSym(Element,Element,Element &","matrix should be square");
       this->Invalidate();
@@ -1682,32 +1682,32 @@ TMatrixTSym<Element> &TMatrixTSym<Element>::RandomizePD(Element alpha,Element be
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 const TMatrixT<Element> TMatrixTSym<Element>::EigenVectors(TVectorT<Element> &eigenValues) const
 {
   // Return a matrix containing the eigen-vectors ordered by descending eigen-values.
   // For full functionality use TMatrixDSymEigen .
-  
+
   TMatrixDSym tmp = *this;
   TMatrixDSymEigen eigen(tmp);
   eigenValues.ResizeTo(this->fNrows);
   eigenValues = eigen.GetEigenValues();
   return eigen.GetEigenVectors();
-} 
+}
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t operator==(const TMatrixTSym<Element> &m1,const TMatrixTSym<Element> &m2)
 {
   // Check to see if two matrices are identical.
 
   if (!AreCompatible(m1,m2)) return kFALSE;
-  return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),               
+  return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),
                  m1.GetNoElements()*sizeof(Element)) == 0);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator+(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   TMatrixTSym<Element> target(source1);
@@ -1716,7 +1716,7 @@ TMatrixTSym<Element> operator+(const TMatrixTSym<Element> &source1,const TMatrix
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator+(const TMatrixTSym<Element> &source1,Element val)
 {
   TMatrixTSym<Element> target(source1);
@@ -1725,14 +1725,14 @@ TMatrixTSym<Element> operator+(const TMatrixTSym<Element> &source1,Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator+(Element val,const TMatrixTSym<Element> &source1)
 {
   return operator+(source1,val);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator-(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   TMatrixTSym<Element> target(source1);
@@ -1741,7 +1741,7 @@ TMatrixTSym<Element> operator-(const TMatrixTSym<Element> &source1,const TMatrix
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator-(const TMatrixTSym<Element> &source1,Element val)
 {
   TMatrixTSym<Element> target(source1);
@@ -1750,14 +1750,14 @@ TMatrixTSym<Element> operator-(const TMatrixTSym<Element> &source1,Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator-(Element val,const TMatrixTSym<Element> &source1)
 {
   return Element(-1.0)*operator-(source1,val);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator*(const TMatrixTSym<Element> &source1,Element val)
 {
   TMatrixTSym<Element> target(source1);
@@ -1766,14 +1766,14 @@ TMatrixTSym<Element> operator*(const TMatrixTSym<Element> &source1,Element val)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator*(Element val,const TMatrixTSym<Element> &source1)
 {
   return operator*(source1,val);
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator&&(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   // Logical AND
@@ -1799,7 +1799,7 @@ TMatrixTSym<Element> operator&&(const TMatrixTSym<Element> &source1,const TMatri
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator||(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   // Logical Or
@@ -1825,7 +1825,7 @@ TMatrixTSym<Element> operator||(const TMatrixTSym<Element> &source1,const TMatri
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator>(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   // source1 > source2
@@ -1852,7 +1852,7 @@ TMatrixTSym<Element> operator>(const TMatrixTSym<Element> &source1,const TMatrix
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator>=(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   // source1 >= source2
@@ -1879,7 +1879,7 @@ TMatrixTSym<Element> operator>=(const TMatrixTSym<Element> &source1,const TMatri
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator<=(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   // source1 <= source2
@@ -1906,7 +1906,7 @@ TMatrixTSym<Element> operator<=(const TMatrixTSym<Element> &source1,const TMatri
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> operator<(const TMatrixTSym<Element> &source1,const TMatrixTSym<Element> &source2)
 {
   // source1 < source2
@@ -1933,7 +1933,7 @@ TMatrixTSym<Element> operator<(const TMatrixTSym<Element> &source1,const TMatrix
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &Add(TMatrixTSym<Element> &target,Element scalar,const TMatrixTSym<Element> &source)
 {
   // Modify addition: target += scalar * source.
@@ -1967,7 +1967,7 @@ TMatrixTSym<Element> &Add(TMatrixTSym<Element> &target,Element scalar,const TMat
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &ElementMult(TMatrixTSym<Element> &target,const TMatrixTSym<Element> &source)
 {
   // Multiply target by the source, element-by-element.
@@ -2000,7 +2000,7 @@ TMatrixTSym<Element> &ElementMult(TMatrixTSym<Element> &target,const TMatrixTSym
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 TMatrixTSym<Element> &ElementDiv(TMatrixTSym<Element> &target,const TMatrixTSym<Element> &source)
 {
   // Multiply target by the source, element-by-element.
@@ -2022,7 +2022,7 @@ TMatrixTSym<Element> &ElementDiv(TMatrixTSym<Element> &target,const TMatrixTSym<
     trp += i;        // point to [i,i]
     tcp += i*ncols;  // point to [i,i]
     for (Int_t j = i; j < ncols; j++) {
-      Assert(*sp != 0.0);
+      R__ASSERT(*sp != 0.0);
       if (j > i) *tcp /= *sp;
       *trp++ /= *sp++;
       tcp += ncols;
@@ -2034,7 +2034,7 @@ TMatrixTSym<Element> &ElementDiv(TMatrixTSym<Element> &target,const TMatrixTSym<
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 void TMatrixTSym<Element>::Streamer(TBuffer &R__b)
 {
   // Stream an object of class TMatrixTSym.
@@ -2106,7 +2106,7 @@ template TMatrixDSym  operator+  <Double_t>(const TMatrixDSym &source1,const TMa
 template TMatrixDSym  operator+  <Double_t>(const TMatrixDSym &source1,      Double_t      val);
 template TMatrixDSym  operator+  <Double_t>(      Double_t     val    ,const TMatrixDSym  &source2);
 template TMatrixDSym  operator-  <Double_t>(const TMatrixDSym &source1,const TMatrixDSym  &source2);
-template TMatrixDSym  operator-  <Double_t>(const TMatrixDSym &source1,      Double_t      val);    
+template TMatrixDSym  operator-  <Double_t>(const TMatrixDSym &source1,      Double_t      val);
 template TMatrixDSym  operator-  <Double_t>(      Double_t     val    ,const TMatrixDSym  &source2);
 template TMatrixDSym  operator*  <Double_t>(const TMatrixDSym &source,       Double_t      val    );
 template TMatrixDSym  operator*  <Double_t>(      Double_t     val,    const TMatrixDSym  &source );

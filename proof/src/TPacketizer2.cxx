@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.41 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.42 2006/03/20 21:43:43 pcanal Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -104,7 +104,7 @@ public:
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
    void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
-   void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; Assert(fSlaveCnt >= 0); }
+   void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; R__ASSERT(fSlaveCnt >= 0); }
    Int_t       GetSlaveCnt() const {return fMySlaveCnt + fSlaveCnt;}
    Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
    Bool_t      IsSortable() const { return kTRUE; }
@@ -158,7 +158,7 @@ public:
       // Must return -1 if this is smaller than obj, 0 if objects are equal
       // and 1 if this is larger than obj.
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
-      Assert(obj != 0);
+      R__ASSERT(obj != 0);
 
       Int_t myVal = GetSlaveCnt();
       Int_t otherVal = obj->GetSlaveCnt();
@@ -586,7 +586,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
    ((TProof*)gProof)->DeActivateAsyncInput();
 
-   // Some monitoring systems (TXSocketHandler) need to know this 
+   // Some monitoring systems (TXSocketHandler) need to know this
    ((TProof*)gProof)->fCurrentMonitor = &mon;
 
    while (kTRUE) {
@@ -758,7 +758,7 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
    }
 }
 
-                                                                                                        
+
 //______________________________________________________________________________
 void TPacketizer2::SplitEventList(TDSet *dset) {
 
@@ -766,7 +766,7 @@ void TPacketizer2::SplitEventList(TDSet *dset) {
    // Each part is assigned to the apropriate TDSetElement.
 
    TEventList *mainList = dset->GetEventList();
-   Assert(mainList);
+   R__ASSERT(mainList);
 
    TIter next(dset->GetListOfElements());
    TDSetElement *el, *prev;
@@ -848,7 +848,7 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( sl );
 
-   Assert( slstat != 0 );
+   R__ASSERT( slstat != 0 );
 
    // update stats & free old element
 

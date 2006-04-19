@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.73 2006/03/20 21:26:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.74 2006/03/20 21:59:31 pcanal Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -365,7 +365,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
    Int_t iglevelsave = gErrorIgnoreLevel;
    if (compselec)
       // Silent error printout on first attempt
-      gErrorIgnoreLevel = kBreak; 
+      gErrorIgnoreLevel = kBreak;
 
    if ((fSelector = TSelector::GetSelector(selec))) {
       if (compselec)
@@ -405,8 +405,8 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
             }
          }
       }
-      if (!fSelector) { 
-         if (compselec) 
+      if (!fSelector) {
+         if (compselec)
             Info("ReinitSelector", "compiled selector re-init failed:"
                                    " automatic reload unsuccessful:"
                                    " please load manually the correct library");
@@ -1333,7 +1333,7 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
-   Assert( !IsClient() );
+   R__ASSERT( !IsClient() );
 
    if ( fFeedbackTimer == 0 ) return kFALSE; // timer already switched off
 

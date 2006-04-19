@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.10 2005/02/15 16:17:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.11 2005/09/02 11:04:45 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -306,7 +306,7 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
 {
 // Solve Ax=b . Solution returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;

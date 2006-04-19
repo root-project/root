@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.8 2004/11/05 16:37:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.9 2005/02/15 16:17:10 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -30,7 +30,7 @@ ClassImp(TMatrixDSymEigen)
 //______________________________________________________________________________
 TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSym &a)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   const Int_t nRows  = a.GetNrows();
   const Int_t rowLwb = a.GetRowLwb();

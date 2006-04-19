@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.117 2006/03/21 16:37:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.118 2006/04/05 08:08:49 pcanal Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -142,7 +142,7 @@ TFormula::TFormula(): TNamed()
    fOperOptimized  = 0;
    fOperOffset     = 0;
    fPredefined     = 0;
-   fOptimal        = (TFormulaPrimitive::TFuncG)&TFormula::EvalParOld; 
+   fOptimal        = (TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 }
 
 //______________________________________________________________________________
@@ -171,7 +171,7 @@ TFormula::TFormula(const char *name,const char *expression) :
    fOperOptimized  = 0;
    fOperOffset     = 0;
    fPredefined     = 0;
-   fOptimal        = (TFormulaPrimitive::TFuncG)&TFormula::EvalParOld; 
+   fOptimal        = (TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 
    if (!expression || !*expression) {
       Error("TFormula", "expression may not be 0 or have 0 length");
@@ -195,7 +195,7 @@ TFormula::TFormula(const char *name,const char *expression) :
    Bool_t gausNorm   = kFALSE;
    Bool_t landauNorm = kFALSE;
    Bool_t linear = kFALSE;
-   
+
    if (j) {
       TString chaine = expr;
       //special case for functions for linear fitting
@@ -228,8 +228,8 @@ TFormula::TFormula(const char *name,const char *expression) :
    if (old) {
       gROOT->GetListOfFunctions()->Remove(old);
    }
-   if (strcmp(name,"x")==0 || strcmp(name,"y")==0 || 
-       strcmp(name,"z")==0 || strcmp(name,"t")==0 ) 
+   if (strcmp(name,"x")==0 || strcmp(name,"y")==0 ||
+       strcmp(name,"z")==0 || strcmp(name,"t")==0 )
    {
       Error("TFormula","The name \'%s\' is reserved as a TFormula variable name.\n"
          "\tThis function will not be registered in the list of functions",name);
@@ -255,7 +255,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fNval   = 0;
    fPredefined    = 0;
    fOperOffset    = 0;
-   fExprOptimized = 0;  
+   fExprOptimized = 0;
    fOperOptimized = 0;
 
    ((TFormula&)formula).TFormula::Copy(*this);
@@ -428,10 +428,10 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    TString cbase(chaine);
    if (cbase.First("(")>0){
       cbase[cbase.First("(")]=0;
-   }   
+   }
 
-   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase);   
-   if (prim &&   (!IsA()->GetBaseClass("TTreeFormula"))) {   
+   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase);
+   if (prim &&   (!IsA()->GetBaseClass("TTreeFormula"))) {
       // TO BE DONE ALSO IN TTREFORMULA - temporary fix MI
       // Analyze the arguments
       TIter next(&argArr);
@@ -444,7 +444,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
             prim->GetName(), prim->fNArguments);
          return kFALSE;
       }
-      fExpr[fNoper] = prim->GetName();     
+      fExpr[fNoper] = prim->GetName();
       if (prim->fType==10){
          SetAction(fNoper, kFD1);
       }
@@ -763,7 +763,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
        if (chaine(i-1,2)=="<<" && compt==0 && compt2==0 && lshift==0) {puiss10=0; lshift=i;}
        if (chaine(i-1,1)=="<"  && compt==0 && compt2==0 && lshift==0 && petit==0)
           {puiss10=0; petit=i;
-            // Check whether or not we have a template names! (actually this can 
+            // Check whether or not we have a template names! (actually this can
             // only happen in TTreeFormula.
             for(int ip = i,depth=0; ip < lchain; ++ip) {
                char c = chaine(ip);
@@ -1387,8 +1387,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
 //*-*- Look for an exponential
 //*-*  =======================
-                } else if ( chaine == "expo" || chaine(0,5)=="expo(" 
-                            || (lchain==5 && chaine(1,4)=="expo") 
+                } else if ( chaine == "expo" || chaine(0,5)=="expo("
+                            || (lchain==5 && chaine(1,4)=="expo")
                             || (lchain==6 && chaine(2,4)=="expo")
                             || chaine(1,5)=="expo(" || chaine(2,5)=="expo(" ) {
                   chaine1ST=chaine;
@@ -1472,8 +1472,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                       }
 //*-*- Look for gaus, xgaus,ygaus,xygaus
 //*-*  =================================
-          } else if (chaine=="gaus" 
-                     || (lchain==5 && chaine(1,4)=="gaus") 
+          } else if (chaine=="gaus"
+                     || (lchain==5 && chaine(1,4)=="gaus")
                      || (lchain==6 && chaine(2,4)=="gaus")
                      || chaine(0,5)=="gaus(" || chaine(1,5)=="gaus(" || chaine(2,5)=="gaus(") {
             chaine1ST=chaine;
@@ -1556,7 +1556,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      }
 //*-*- Look for landau, xlandau,ylandau,xylandau
 //*-*  =================================
-          } else if (chaine=="landau" || (lchain==7 && chaine(1,6)=="landau") 
+          } else if (chaine=="landau" || (lchain==7 && chaine(1,6)=="landau")
                      || (lchain==8 && chaine(2,6)=="landau")
                      || chaine(0,7)=="landau(" || chaine(1,7)=="landau(" || chaine(2,7)=="landau(") {
             chaine1ST=chaine;
@@ -2030,7 +2030,7 @@ Int_t TFormula::Compile(const char *expression)
   if (strlen(expression)) SetTitle(expression);
 
   TString chaine = GetTitle();
-  
+
   if (chaine.Contains(";")) {
      char *ctemp = new char[chaine.Length()+1];
      strcpy(ctemp,chaine.Data());
@@ -2043,7 +2043,7 @@ Int_t TFormula::Compile(const char *expression)
 
 //if the function is linear, process it and fill the array of linear parts
   if (TestBit(kLinear)){
-     ProcessLinear(chaine);  
+     ProcessLinear(chaine);
   }
 
 
@@ -2487,10 +2487,10 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
         case kDivide     : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
                                   else               tab[pos-1] /= tab[pos];
                            continue;
-        case kModulo     : {pos--; 
-                            Long64_t int1((Long64_t)tab[pos-1]); 
-                            Long64_t int2((Long64_t)tab[pos]); 
-                            tab[pos-1] = Double_t(int1%int2); 
+        case kModulo     : {pos--;
+                            Long64_t int1((Long64_t)tab[pos-1]);
+                            Long64_t int2((Long64_t)tab[pos]);
+                            tab[pos-1] = Double_t(int1%int2);
                             continue;}
 
         case kcos  : tab[pos-1] = TMath::Cos(tab[pos-1]); continue;
@@ -2962,7 +2962,7 @@ void TFormula::Print(Option_t *) const
 
 //______________________________________________________________________________
 void TFormula::ProcessLinear(TString &formula)
-{   
+{
    //if the formula is for linear fitting, change the title to
    //normal and fill the LinearParts array
 
@@ -2972,17 +2972,17 @@ void TFormula::ProcessLinear(TString &formula)
    Int_t nf;
    //replace "++" with "+[i]*"
    pch= (char*)strstr(formula.Data(), "++");
-   if (pch) 
+   if (pch)
       formula.Insert(0, "[0]*(");
    pch= (char*)strstr(formula.Data(), "++");
-   if (pch){ 
+   if (pch){
       //if there are "++", replaces them with +[i]*
       nf = 1;
       while (pch){
          sprintf(repl, ")+[%d]*(", nf);
          Int_t offset = pch-formula.Data();
          formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+7);
-         pch = (char*)strstr(formula.Data()+offset, "++");   
+         pch = (char*)strstr(formula.Data()+offset, "++");
          nf++;
       }
       formula.Append(')', 1);
@@ -2999,7 +2999,7 @@ void TFormula::ProcessLinear(TString &formula)
          nf++;
       }
    }
-   
+
    fLinearParts.Expand(nf);
 
    //break up the formula and fill the array of linear parts
@@ -3206,10 +3206,10 @@ void TFormula::Convert(UInt_t /* fromVersion */)
 
          Float_t aresult = 99.99;
          sscanf((const char*)fExpr[i],"%g",&aresult);
-         Assert((aresult+1)<0.001);
+         R__ASSERT((aresult+1)<0.001);
 
          ++i; // skip the implied multiplication.
-         
+
          // For consistency and for Optimize to work correctly
          // we need to remove the "-1" string in fExpr
          for (int z=i; z<fNoper; ++z) {
@@ -3344,10 +3344,10 @@ TOperOffset::TOperOffset()
 {
    //  TOper offset  - helper class for TFormula*
    //                     specify type of operand
-   //                     fTypeX   = kVariable    
-   //                              = kParameter   
+   //                     fTypeX   = kVariable
+   //                              = kParameter
    //                              = kConstant
-   //                     fOffestX = offset in corresponding array 
+   //                     fOffestX = offset in corresponding array
    //*-*                  ============================
    fType0=0;
    fType1=0;
@@ -3365,7 +3365,7 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
    //
    //  MakePrimitive
    //  find TFormulaPrimitive replacement for some operands
-   //  
+   //
    //
    TString cbase(expr);
    cbase.ReplaceAll("Double_t ","");
@@ -3394,7 +3394,7 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
       }
       if (prim->fType==-1) {
          SetActionOptimized(pos, kFDM);
-      }    
+      }
       if (prim->fType==0){
          SetActionOptimized(pos,kConstant,fNconst);
          fConst[fNconst] = prim->Eval(0);
@@ -3408,19 +3408,19 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
 void TFormula::Optimize()
 {
    //
-   // MI include 
+   // MI include
    //
    // Optimize formula
    // 1.) Minimize the number of operands
    //     a.)  several operanands are glued togther
    //     b.)  some primitive functions glued together - exemp. (x+y) => PlusXY(x,y)
-   //     c.)  maximize number of standard calls minimizing number of jumps in Eval cases 
+   //     c.)  maximize number of standard calls minimizing number of jumps in Eval cases
    //     d.)  variables, parameters and constants are mapped - using fOperOfssets0
    //          Eval procedure use direct acces to data (only one corresponding case statement in eval procedure)
-   //          
+   //
    //          pdata[operand={Var,Par,Const}][offset]
-   //          pdata[fOperOffsets0[i]][fOperOffset1[i+1]] 
-   // 2.) The fastest evaluation function is choosen at the end 
+   //          pdata[fOperOffsets0[i]][fOperOffset1[i+1]]
+   // 2.) The fastest evaluation function is choosen at the end
    //     a.) fOptimal := pointer to the fastest function for given evaluation string
    //             switch(GetActionOptimized(0)){
    //               case kData : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive0; break;}
@@ -3431,7 +3431,7 @@ void TFormula::Optimize()
    //             }
    //     b.) ex. fOptimal = ::EvalPrimitive0 - if it return only variable, constant or parameter
    //                      = ::EvalParameter1 - if only one unary operation
-   //                      = ::EvalPrimitive2 - if only one binary operation 
+   //                      = ::EvalPrimitive2 - if only one binary operation
    //                        .......
 
    //
@@ -3458,11 +3458,11 @@ void TFormula::Optimize()
    //
    //Make primitives
    //
-   for (i=0;i<fNoper;i++){   
+   for (i=0;i<fNoper;i++){
       if (fExprOptimized[i].Data()) {
          MakePrimitive(fExprOptimized[i].Data(), i);
       }
-   }  
+   }
    //
    Int_t maxfound   = fNoper+1;
    Int_t *offset    = new Int_t[maxfound*16];
@@ -3483,14 +3483,14 @@ void TFormula::Optimize()
    //
    // set data pointers
    //
-   for (i=0;i<fNoper;i++) optimized[i]=0;    
+   for (i=0;i<fNoper;i++) optimized[i]=0;
    //
-   for (i=0;i<fNoper;i++){        
+   for (i=0;i<fNoper;i++){
       Int_t actionparam = GetActionParamOptimized(i);
       Int_t action = GetActionOptimized(i);
 
       if (action==kBoolOptimize){
-         //      
+         //
          // optimize boolens
          //
          fOperOffset[i].fType1     = actionparam/10;           //  operands to skip
@@ -3501,7 +3501,7 @@ void TFormula::Optimize()
       //
       if (action==kConstant&&i<fNoper-2){
          //
-         // get offsets for kFDM operands 
+         // get offsets for kFDM operands
          //
          if (GetActionOptimized(i+1)==kConstant && GetActionOptimized(i+2)==kFDM){
             optimized[i]=1;
@@ -3511,7 +3511,7 @@ void TFormula::Optimize()
             fOperOffset[i].fOffset0=GetActionParamOptimized(i-1);
             Int_t offset =  int(fConst[fOperOffset[i].fOffset0]+0.4);
             fOperOffset[i].fOffset0=offset;
-            Int_t nparmax = offset+fPredefined[i]->fNParameters;  
+            Int_t nparmax = offset+fPredefined[i]->fNParameters;
             if (nparmax>fNpar){ // increase expected number of parameters
                fNpar=nparmax;
             }
@@ -3521,11 +3521,11 @@ void TFormula::Optimize()
       switch(action){
     case kVariable : {action=kData; fOperOffset[i].fType0=0; break;}
     case kParameter: {action=kData; fOperOffset[i].fType0=1; break;}
-    case kConstant : {action=kData; fOperOffset[i].fType0=2; break;}              
-      }    
+    case kConstant : {action=kData; fOperOffset[i].fType0=2; break;}
+      }
       //
       fOperOffset[i].fOffset0 = GetActionParamOptimized(i);
-      SetActionOptimized(i,action, actionparam);    //set common data option 
+      SetActionOptimized(i,action, actionparam);    //set common data option
    }
    //
    //
@@ -3535,7 +3535,7 @@ void TFormula::Optimize()
    {
       //
       if (!(GetActionOptimized(i)== kData)) continue;
-      offset[0] = fOperOffset[i].fType0;       //                  
+      offset[0] = fOperOffset[i].fType0;       //
       offset[1] = fOperOptimized[i] & kTFOperMask;   // offset
 
       if ((i+1) >= fNoper) continue;
@@ -3544,7 +3544,7 @@ void TFormula::Optimize()
          optimized[i] = 1; // to be optimized
          i++;
          fOperOffset[i].fType0   = offset[0];
-         fOperOffset[i].fOffset0 = offset[1];      
+         fOperOffset[i].fOffset0 = offset[1];
          SetActionOptimized(i  ,kUnary);
          continue;
       }
@@ -3552,7 +3552,7 @@ void TFormula::Optimize()
          optimized[i] = 1; // to be optimized
          i++;
          fOperOffset[i].fType0   = offset[0];
-         fOperOffset[i].fOffset0 = offset[1];      
+         fOperOffset[i].fOffset0 = offset[1];
          SetActionOptimized(i  ,kPlusD);
          continue;
       }
@@ -3560,7 +3560,7 @@ void TFormula::Optimize()
          optimized[i] = 1; // to be optimized
          i++;
          fOperOffset[i].fType0   = offset[0];
-         fOperOffset[i].fOffset0 = offset[1];      
+         fOperOffset[i].fOffset0 = offset[1];
          SetActionOptimized(i,kMultD);
          continue;
       }
@@ -3572,10 +3572,10 @@ void TFormula::Optimize()
       if (!(GetActionOptimized(i+1)== kData))  continue;
       offset[2] = fOperOffset[i+1].fType0;
       offset[3] = fOperOptimized[i+1] & kTFOperMask;   // offset
-      //  
+      //
       if (GetActionOptimized(i+2)==kFD2 || GetActionOptimized(i+2)==kAdd ||GetActionOptimized(i+2)==kSubstract||
           GetActionOptimized(i+2)==kMultiply || GetActionOptimized(i+2)==kDivide){
- 
+
           optimized[i] = 1; // to be optimized
           optimized[i+1] = 1; // to be optimized
           i+=2;
@@ -3583,7 +3583,7 @@ void TFormula::Optimize()
           fOperOffset[i].fType0   = offset[0];
           fOperOffset[i].fOffset0 = offset[1];
           fOperOffset[i].fType1   = offset[2];
-          fOperOffset[i].fOffset1 = offset[3];      
+          fOperOffset[i].fOffset1 = offset[3];
           fOperOffset[i].fType2   = GetActionOptimized(i);  //remember old action
           if (GetActionOptimized(i)==kAdd)       {fPredefined[i] = primitive[0];}
           if (GetActionOptimized(i)==kSubstract) {fPredefined[i] = primitive[1];}
@@ -3610,8 +3610,8 @@ void TFormula::Optimize()
        if (!(GetActionOptimized(i+2)== kData))  continue;
        offset[4] = fOperOffset[i+2].fType0;
        offset[5] = fOperOptimized[i+2] & kTFOperMask;   // offset
-       //  
-       if (GetActionOptimized(i+3)==kFD3|| (  (GetActionOptimized(i+3)==kAdd||GetActionOptimized(i+3)==kMultiply) && 
+       //
+       if (GetActionOptimized(i+3)==kFD3|| (  (GetActionOptimized(i+3)==kAdd||GetActionOptimized(i+3)==kMultiply) &&
            (GetActionOptimized(i+4)==kAdd||GetActionOptimized(i+4)==kMultiply) ) ){
           optimized[i+0]   = 1; // to be optimized
           optimized[i+1] = 1; // to be optimized
@@ -3621,10 +3621,10 @@ void TFormula::Optimize()
           fOperOffset[i].fType0   = offset[0];
           fOperOffset[i].fOffset0 = offset[1];
           fOperOffset[i].fType1   = offset[2];
-          fOperOffset[i].fOffset1 = offset[3]; 
+          fOperOffset[i].fOffset1 = offset[3];
           fOperOffset[i].fType2   = offset[4];
-          fOperOffset[i].fOffset2 = offset[5]; 
-          //     
+          fOperOffset[i].fOffset2 = offset[5];
+          //
           fOperOffset[i].fOldAction = GetActionOptimized(i);  //remember old action
           if (GetActionOptimized(i)==kFD3) {
              SetActionOptimized(i,kThree);
@@ -3636,7 +3636,7 @@ void TFormula::Optimize()
           if (GetActionOptimized(i)==kMultiply&&GetActionOptimized(i+1)==kMultiply) {
              action=5;
              if (offset[0]==offset[2]&&offset[1]==offset[3]&&offset[0]==offset[4]&&offset[1]==offset[5]){
-                fPredefined[i]=primitive[9];         
+                fPredefined[i]=primitive[9];
                 action2=kUnary;
                 action =9;
              }
@@ -3645,20 +3645,20 @@ void TFormula::Optimize()
           if (GetActionOptimized(i)==kMultiply&&GetActionOptimized(i+1)==kAdd) action=7;
           //
           optimized[i]=1;
-          i++; 
+          i++;
           fOperOffset[i].fType0   = offset[0];
           fOperOffset[i].fOffset0 = offset[1];
           fOperOffset[i].fType1 = offset[2];
-          fOperOffset[i].fOffset1 = offset[3]; 
+          fOperOffset[i].fOffset1 = offset[3];
           fOperOffset[i].fType2 = offset[4];
-          fOperOffset[i].fOffset2 = offset[5];       
+          fOperOffset[i].fOffset2 = offset[5];
           fPredefined[i]=primitive[action];
           SetActionOptimized(i,action2);
           continue;
        }
-   }   
+   }
    //
-   // 
+   //
    Int_t operO=0;
    TString expr="";
    Int_t *map0 = new Int_t[maxfound];   //remapping of the operands
@@ -3667,7 +3667,7 @@ void TFormula::Optimize()
       map0[i]     =  operO;
       map1[operO] =  i;
       fOperOptimized[operO] = fOperOptimized[i];
-      fPredefined[operO]    = fPredefined[i];    
+      fPredefined[operO]    = fPredefined[i];
       fOperOffset[operO]    = fOperOffset[i];
       expr += fExprOptimized[i];
       if (optimized[i]==0){
@@ -3680,7 +3680,7 @@ void TFormula::Optimize()
    }
    //
    // Recalculate long jump for  Boolen optimize
-   //  
+   //
    for (i=0; i<fNOperOptimized; i++){
       if (GetActionOptimized(i)==kBoolOptimize){
          Int_t oldpos = fOperOffset[i].fToJump;
@@ -3694,8 +3694,8 @@ void TFormula::Optimize()
 
 
    fNOperOptimized = operO;
-   //  
-   fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalParFast;  
+   //
+   fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalParFast;
    if (fNOperOptimized==1) {
       switch(GetActionOptimized(0)){
          case kData   : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive0; break;}
@@ -3723,14 +3723,14 @@ Double_t TFormula::EvalPrimitive(const Double_t *x, const Double_t *params)
    switch((fOperOptimized[0] >> kTFOperShift)) {
      case kData          : return result;
      case kUnary         : return (fPredefined[0]->fFunc10)(pdata[fOperOffset->fType0][fOperOffset->fOffset0]);
-     case kBinary         :return (fPredefined[0]->fFunc110)(result, 
-                              pdata[fOperOffset->fType1][fOperOffset->fOffset1]);   
+     case kBinary         :return (fPredefined[0]->fFunc110)(result,
+                              pdata[fOperOffset->fType1][fOperOffset->fOffset1]);
 
      case kThree         :return (fPredefined[0]->fFunc1110)(result, pdata[fOperOffset->fType1][fOperOffset->fOffset1],
                              pdata[fOperOffset->fType2][fOperOffset->fOffset2]);
      case kFDM         : return (fPredefined[0]->fFuncG)((Double_t*)&x[fOperOffset->fType0],
                             (Double_t*)&params[fOperOffset->fOffset0]);
-   }  
+   }
    return 0;
 }
 
@@ -3771,7 +3771,7 @@ Double_t TFormula::EvalPrimitive3(const Double_t *x, const Double_t *params)
    //
    //Evaluate primitive formula
    //
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};  
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
    return (fPredefined[0]->fFunc1110)(pdata[fOperOffset->fType0][fOperOffset->fOffset0], pdata[fOperOffset->fType1][fOperOffset->fOffset1],
       pdata[fOperOffset->fType2][fOperOffset->fOffset2]);
 }
@@ -3784,7 +3784,7 @@ Double_t TFormula::EvalPrimitive4(const Double_t *x, const Double_t *params)
    //
    const Double_t *par = (params!=0)?params:fParams;
    return (fPredefined[0]->fFuncG)((Double_t*)&x[fOperOffset->fType0],
-      (Double_t*)&par[fOperOffset->fOffset0]); 
+      (Double_t*)&par[fOperOffset->fOffset0]);
 }
 
 
@@ -3805,7 +3805,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
    //*-*
    //*-*
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};  
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
    //
    Int_t i,j,pos,pos2; // ,inter,inter2,int1,int2;
    //    Float_t aresult;
@@ -3831,7 +3831,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
       switch(opcode) {  // FREQUENTLY USED OPERATION
          case kData       : tab[pos] = pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; pos++;continue;
          case kPlusD      : tab[pos-1]+= pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; continue;
-         case kMultD      : tab[pos-1]*= pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; continue;       
+         case kMultD      : tab[pos-1]*= pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; continue;
          case kAdd        : pos--; tab[pos-1] += tab[pos]; continue;
          case kSubstract  : pos--; tab[pos-1] -= tab[pos]; continue;
          case kMultiply   : pos--; tab[pos-1] *= tab[pos]; continue;
@@ -3839,7 +3839,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
                             else               tab[pos-1] /= tab[pos];
                             continue;
          case kUnary      : tab[pos] = (fPredefined[i]->fFunc10)(pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]); pos++;continue;
-         case kBinary     : tab[pos] = (fPredefined[i]->fFunc110)(pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0], 
+         case kBinary     : tab[pos] = (fPredefined[i]->fFunc110)(pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0],
                                pdata[fOperOffset[i].fType1][fOperOffset[i].fOffset1]);pos++;continue;
 
          case kThree      : tab[pos]   = (fPredefined[i]->fFunc1110)(pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0],
@@ -3850,7 +3850,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
          case kFD1       : tab[pos-1]   =(fPredefined[i]->fFunc10)(tab[pos-1]); continue;
          case kFD2       :    pos--; tab[pos-1]   = (fPredefined[i]->fFunc110)(tab[pos-1],tab[pos]); continue;
          case kFD3       :    pos-=2; tab[pos-1]   = (fPredefined[i]->fFunc1110)(tab[pos-2],tab[pos-1],tab[pos]); continue;
-      }       
+      }
       //
       switch(opcode) {
          case kBoolOptimizeAnd:{
@@ -3858,21 +3858,21 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
                                }
          case kBoolOptimizeOr:{
             if (tab[pos-1])  i=fOperOffset[i].fToJump; continue;
-                              }     
+                              }
          case kAnd  : pos--; tab[pos-1] = tab[pos];  continue;  // use the fact that other were check before - see bool optimize
          case kOr   : pos--; tab[pos-1] = tab[pos];  continue;
       }
-      switch(opcode) { 
+      switch(opcode) {
          //    case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
          case kabs  : if (tab[pos-1]<0) tab[pos-1]=-tab[pos-1]; continue;
          case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
          case kint  : tab[pos-1] = Double_t(Int_t(tab[pos-1])); continue;
          case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
 
-         case kModulo     : {pos--; 
-            Long64_t int1((Long64_t)tab[pos-1]); 
-            Long64_t int2((Long64_t)tab[pos]); 
-            tab[pos-1] = Double_t(int1%int2); 
+         case kModulo     : {pos--;
+            Long64_t int1((Long64_t)tab[pos-1]);
+            Long64_t int2((Long64_t)tab[pos]);
+            tab[pos-1] = Double_t(int1%int2);
             continue;}
 
 
@@ -4091,7 +4091,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
 Int_t TFormula::PreCompile()
 {
    //
-   //Pre compile function 
+   //Pre compile function
    //
    TString str = fTitle;
    if (str.Length()<3) return 1;

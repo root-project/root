@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.174 2006/03/20 21:39:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.175 2006/04/06 13:47:57 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1542,7 +1542,7 @@ void TROOT::ls(Option_t *option) const
    // attached to the ROOT linked list.
 
 //   TObject::SetDirLevel();
-//   GetList()->ForEach(TObject,ls)(option);
+//   GetList()->R__FOR_EACH(TObject,ls)(option);
    TDirectory::ls(option);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.35 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.36 2006/03/22 21:57:17 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -50,12 +50,12 @@ ULong64_t TSocket::fgBytesRecv = 0;
 // 9 -> 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
 // 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
 // 11 -> 12: add random tags to avoid reply attacks (password+token)
-// 12 -> 13: authentication re-organization; cleanup in PROOF 
+// 12 -> 13: authentication re-organization; cleanup in PROOF
 // 13 -> 14: support for SSH authentication via SSH tunnel
 //
 Int_t TSocket::fgClientProtocol = 14;  // increase when client protocol changes
 
-TVirtualMutex *gSocketAuthMutex = 0; 
+TVirtualMutex *gSocketAuthMutex = 0;
 
 ClassImp(TSocket)
 
@@ -72,8 +72,8 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   Assert(gROOT);
-   Assert(gSystem);
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
 
    fService = service;
    fSecContext = 0;
@@ -116,8 +116,8 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   Assert(gROOT);
-   Assert(gSystem);
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
 
    fService = gSystem->GetServiceByPort(port);
    fSecContext = 0;
@@ -158,8 +158,8 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   Assert(gROOT);
-   Assert(gSystem);
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
 
    fService = service;
    fSecContext = 0;
@@ -202,8 +202,8 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   Assert(gROOT);
-   Assert(gSystem);
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
 
    fUrl = TString(url);
    TString host(TUrl(fUrl).GetHost());
@@ -239,8 +239,8 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
 {
    // Create a socket. The socket will use descriptor desc.
 
-   Assert(gROOT);
-   Assert(gSystem);
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
 
    fSecContext = 0;
    fRemoteProtocol= 0;
@@ -798,7 +798,7 @@ Bool_t TSocket::Authenticate(const char *user)
       // Authentication not required by the remote server
       runauth = kFALSE;
       fRemoteProtocol %= 1000;
-   } 
+   }
 
    // If authentication is required, we need to find out which library
    // has to be loaded (preparation for near future, 9/7/05)
@@ -808,9 +808,9 @@ Bool_t TSocket::Authenticate(const char *user)
       // Default (future)
       TString alib = "Xrd";
       if (fRemoteProtocol < 100) {
-         // Standard Authentication lib 
+         // Standard Authentication lib
          alib = "Root";
-      } 
+      }
 
       // Load the plugin
       TPluginHandler *h =

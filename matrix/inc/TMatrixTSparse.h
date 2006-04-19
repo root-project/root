@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.2 2006/01/05 08:26:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.3 2006/03/22 15:16:59 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -197,7 +197,7 @@ inline TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (Int_t nrows,Int_
                                                                   { return Use(0,nrows-1,0,ncols-1,nr_nonzeros,pRowIndex,pColIndex,pData); }
 template <class Element>
 inline TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (TMatrixTSparse<Element> &a)
-                                                                  { Assert(a.IsValid());
+                                                                  { R__ASSERT(a.IsValid());
                                                                      return Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),
                                                                                 a.GetNoElements(),a.GetRowIndexArray(),
                                                                                 a.GetColIndexArray(),a.GetMatrixArray()); }
@@ -213,7 +213,7 @@ inline TMatrixTSparse<Element>  TMatrixTSparse<Element>::GetSub(Int_t row_lwb,In
 template <class Element>
 inline Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
 {
-  Assert(this->IsValid());
+  R__ASSERT(this->IsValid());
   if (this->fNrowIndex > 0 && this->fRowIndex[this->fNrowIndex-1] == 0) {
     Error("operator=()(Int_t,Int_t) const","row/col indices are not set");
     printf("fNrowIndex = %d fRowIndex[fNrowIndex-1] = %d\n",this->fNrowIndex,this->fRowIndex[this->fNrowIndex-1]);
@@ -221,8 +221,8 @@ inline Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
   }
   const Int_t arown = rown-this->fRowLwb;
   const Int_t acoln = coln-this->fColLwb;
-  Assert(arown < this->fNrows && arown >= 0);
-  Assert(acoln < this->fNcols && acoln >= 0);
+  R__ASSERT(arown < this->fNrows && arown >= 0);
+  R__ASSERT(acoln < this->fNcols && acoln >= 0);
   const Int_t sIndex = fRowIndex[arown];
   const Int_t eIndex = fRowIndex[arown+1];
   const Int_t index = TMath::BinarySearch(eIndex-sIndex,fColIndex+sIndex,acoln)+sIndex;

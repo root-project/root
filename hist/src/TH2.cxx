@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.90 2006/04/10 06:55:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.91 2006/04/18 06:58:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1349,7 +1349,7 @@ Long64_t TH2::Merge(TCollection *list)
    //
    //IMPORTANT remark. The 2 axis x and y may have different number
    //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width and the upper limit must also 
+   //a multiple of the smallest bin width and the upper limit must also
    //be a multiple of the bin width.
 
    if (!list) return 0;
@@ -1357,7 +1357,7 @@ Long64_t TH2::Merge(TCollection *list)
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
-   Assert(hclone);
+   R__ASSERT(hclone);
    BufferEmpty(1);         // To remove buffer.
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
@@ -1410,7 +1410,7 @@ Long64_t TH2::Merge(TCollection *list)
    }
    next.Reset();
 
-   same = same && SameLimitsAndNBins(newXAxis, *GetXaxis()) 
+   same = same && SameLimitsAndNBins(newXAxis, *GetXaxis())
       && SameLimitsAndNBins(newYAxis, *GetYaxis());
    if (!same && initialLimitsFound)
       SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
@@ -2215,7 +2215,7 @@ void TH2::SetShowProjectionX(Int_t nbins)
    // mouse position along Y.
    // To stop the generation of the projections, delete the canvas
    // containing the projection.
-   
+
    GetPainter();
 
    if (fPainter) fPainter->SetShowProjection("x",nbins);
@@ -2230,7 +2230,7 @@ void TH2::SetShowProjectionY(Int_t nbins)
    // mouse position along X.
    // To stop the generation of the projections, delete the canvas
    // containing the projection.
-   
+
    GetPainter();
 
    if (fPainter) fPainter->SetShowProjection("y",nbins);

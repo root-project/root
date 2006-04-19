@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.31 2005/12/16 11:34:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.32 2006/02/19 21:02:35 pcanal Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -261,8 +261,7 @@ void TCollection::Paint(Option_t *option)
 {
    // Paint all objects in this collection.
 
-//   this->ForEach(TObject,Paint)((Option_t *)TObjectPaint_nxt.GetOption());
-   this->ForEach(TObject,Paint)(option);
+   this->R__FOR_EACH(TObject,Paint)(option);
 }
 
 //______________________________________________________________________________
@@ -474,16 +473,16 @@ void TCollection::GarbageCollect(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TCollection::SetOwner(Bool_t enable) 
+void TCollection::SetOwner(Bool_t enable)
 {
    // Set whether this collection is the owner (enable==true)
    // of its content.  If it is the owner of its contents,
    // these objects will be deleted whenever the collection itself
-   // is delete.   The objects might also be deleted or destructed when Clear 
+   // is delete.   The objects might also be deleted or destructed when Clear
    // is called (depending on the collection).
-   
+
    if (enable) SetBit(kIsOwner);
-   else ResetBit(kIsOwner); 
+   else ResetBit(kIsOwner);
 }
 
    //______________________________________________________________________________

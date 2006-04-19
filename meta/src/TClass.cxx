@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.185 2006/02/09 20:43:12 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.186 2006/03/20 21:38:34 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -315,7 +315,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
    std::string clmName(TClassEdit::ShortType(m.Type()->Name(),
                                              TClassEdit::kDropTrailStar) );
    TClass * clm = gROOT->GetClass(clmName.c_str());
-   Assert(clm);
+   R__ASSERT(clm);
    if (!(prop&G__BIT_ISPOINTER)) {
       size = clm->Size();
       if (size==0) size = m.Type()->Size();
@@ -641,7 +641,7 @@ void TClass::Init(const char *name, Version_t cversion,
          }
          if (!fClassInfo) {
             isStl = TClassEdit::IsSTLCont(name);
-         } 
+         }
       }
    }
    if (!fClassInfo && !isStl)
@@ -1432,7 +1432,7 @@ TVirtualCollectionProxy *TClass::GetCollectionProxy() const
    // Return the proxy describinb the collection (if any).
 
    if (gThreadTsd && fCollectionProxy) {
-      TClassLocalStorage *local = TClassLocalStorage::GetStorage(this); 
+      TClassLocalStorage *local = TClassLocalStorage::GetStorage(this);
       if (local == 0) return fCollectionProxy;
       if (local->fCollectionProxy==0) local->fCollectionProxy = fCollectionProxy->Generate();
       return local->fCollectionProxy;
@@ -1444,9 +1444,9 @@ TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 TClassStreamer *TClass::GetStreamer() const
 {
    // Return the proxy describinb the collection (if any).
-   
+
    if (gThreadTsd && fStreamer) {
-      TClassLocalStorage *local = TClassLocalStorage::GetStorage(this); 
+      TClassLocalStorage *local = TClassLocalStorage::GetStorage(this);
       if (local==0) return fStreamer;
       if (local->fStreamer==0) {
          local->fStreamer = fStreamer->Generate();
@@ -2826,7 +2826,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 
       Bool_t inRepo = kTRUE;
       Version_t objVer = -1;
-   
+
       // Was this array object allocated through TClass?
       std::map<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
       if (iter == fgObjectVersionRepository.end()) {
@@ -2836,7 +2836,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       } else {
          objVer = iter->second;
       }
-   
+
       if (!inRepo || (objVer == fClassVersion)) {
          // The object was allocated using code for the same class version
          // as is loaded now.  We may proceed without worry.
@@ -2873,7 +2873,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
             }
          }
       }
-   
+
       // Deregister the object for special handling in the destructor.
       if (inRepo && p) {
          std::map<void*, Version_t>::iterator tmp = fgObjectVersionRepository.find(p);
@@ -3033,7 +3033,7 @@ Bool_t  TClass::IsForeign() const
 }
 
 //______________________________________________________________________________
-void TClass::PostLoadCheck() 
+void TClass::PostLoadCheck()
 {
    // Do the initialization that can only be done after the CINT dictionary has
    // been fully populated and can not be delayed efficiently.
@@ -3042,20 +3042,20 @@ void TClass::PostLoadCheck()
    // we reset fClassVersion to be -1 so that the current TStreamerInfo will not
    // be confused with a previously loaded streamerInfo.
 
-   if (IsLoaded() && fClassInfo && fClassVersion==1 && fStreamerInfo 
-      && fStreamerInfo->At(1) && IsForeign() ) 
+   if (IsLoaded() && fClassInfo && fClassVersion==1 && fStreamerInfo
+      && fStreamerInfo->At(1) && IsForeign() )
    {
       SetClassVersion(-1);
-   } 
-   else if (IsLoaded() && fClassInfo && fStreamerInfo && !IsForeign() ) 
+   }
+   else if (IsLoaded() && fClassInfo && fStreamerInfo && !IsForeign() )
    {
       TStreamerInfo *info = dynamic_cast<TStreamerInfo*>(fStreamerInfo->At(fClassVersion));
-      // Here we need to check whether this TStreamerInfo (which presumably has been 
+      // Here we need to check whether this TStreamerInfo (which presumably has been
       // loaded from a file) is consisten with the definition in the library we just loaded.
-      // BuildCheck is not appropriate here since it check a streamerinfo against the 
+      // BuildCheck is not appropriate here since it check a streamerinfo against the
       // 'current streamerinfo' which, at time point, would be the same as 'info'!
-      if (info && GetListOfDataMembers() 
-          && (info->GetCheckSum()!=GetCheckSum() && info->GetCheckSum()!=GetCheckSum(1))) 
+      if (info && GetListOfDataMembers()
+          && (info->GetCheckSum()!=GetCheckSum() && info->GetCheckSum()!=GetCheckSum(1)))
       {
          Bool_t warn = ! TestBit(kWarned);
          if (warn && info->GetOldVersion()<=2) {
@@ -3714,7 +3714,7 @@ TStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
       TStreamerInfo *info = (TStreamerInfo*)GetStreamerInfos()->At(i);
       if (!info) continue;
       if (info->GetCheckSum() == checksum) {
-         Assert(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
+         R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
          return info;
       }
    }

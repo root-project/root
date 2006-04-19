@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.18 2006/01/25 18:49:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.19 2006/03/20 21:43:43 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -239,7 +239,7 @@ Double_t TDecompBase::Condition()
   if ( !TestBit(kCondition) ) {
     fCondition = -1;
     if (TestBit(kSingular))
-      return fCondition; 
+      return fCondition;
     if ( !TestBit(kDecomposed) ) {
       if (!Decompose())
         return fCondition;
@@ -260,7 +260,7 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 // Solve set of equations with RHS in columns of B
 
   const TMatrixDBase &m = GetDecompMatrix();
-  Assert(m.IsValid() && B.IsValid());
+  R__ASSERT(m.IsValid() && B.IsValid());
 
   const Int_t colLwb = B.GetColLwb();
   const Int_t colUpb = B.GetColUpb();
@@ -287,7 +287,7 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
       fDet2 = 0.0;
     } else {
       const TMatrixDBase &m = GetDecompMatrix();
-      Assert(m.IsValid());
+      R__ASSERT(m.IsValid());
       TVectorD diagv(m.GetNrows());
       for (Int_t i = 0; i < diagv.GetNrows(); i++)
         diagv(i) = m(i,i);

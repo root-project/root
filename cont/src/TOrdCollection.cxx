@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.11 2004/04/20 09:27:23 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.12 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -88,7 +88,7 @@ void TOrdCollection::AddAt(TObject *obj, Int_t idx)
          physIdx = fGapStart + fGapSize - 1;
       }
    }
-   Assert(physIdx >= 0 && physIdx < fCapacity);
+   R__ASSERT(physIdx >= 0 && physIdx < fCapacity);
    fCont[physIdx] = obj;
    fGapSize--;
    fSize++;
@@ -298,7 +298,7 @@ void TOrdCollection::MoveGapTo(Int_t start)
 
    Int_t i;
 
-   Assert(start + fGapSize - 1 < fCapacity);
+   R__ASSERT(start + fGapSize - 1 < fCapacity);
 
    if (fGapSize <= 0) {
       fGapStart = start;
@@ -325,7 +325,7 @@ void TOrdCollection::PutAt(TObject *obj, Int_t idx)
    if (IllegalIndex("PutAt", idx)) return;
 
    Int_t phx = PhysIndex(idx);
-   Assert(phx >= 0 && phx < fCapacity);
+   R__ASSERT(phx >= 0 && phx < fCapacity);
    fCont[phx] = obj;
    Changed();
 }
@@ -352,7 +352,7 @@ TObject *TOrdCollection::RemoveAt(Int_t idx)
          physIdx = fGapStart + fGapSize;
       }
    }
-   Assert(physIdx >= 0 && physIdx < fCapacity);
+   R__ASSERT(physIdx >= 0 && physIdx < fCapacity);
    TObject *obj = fCont[physIdx];
    fCont[physIdx] = 0;
    fGapSize++;
@@ -385,8 +385,8 @@ void TOrdCollection::SetCapacity(Int_t newCapacity)
 {
    // Set/change ordered collection capacity.
 
-   Assert(newCapacity > 0);
-   Assert(fSize <= newCapacity);
+   R__ASSERT(newCapacity > 0);
+   R__ASSERT(fSize <= newCapacity);
 
    if (fCapacity == newCapacity) return;
 

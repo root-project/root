@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.24 2005/12/23 16:58:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.25 2006/01/25 18:49:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TDecompSVD::TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 //______________________________________________________________________________
 TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
   if (a.GetNrows() < a.GetNcols()) {
     Error("TDecompSVD(const TMatrixD &","matrix rows should be >= columns");
     return;
@@ -555,7 +555,7 @@ const TMatrixD TDecompSVD::GetMatrix()
 //______________________________________________________________________________
 void TDecompSVD::SetMatrix(const TMatrixD &a)
 {
-  Assert(a.IsValid());
+  R__ASSERT(a.IsValid());
 
   ResetStatus();
   if (a.GetNrows() < a.GetNcols()) {
@@ -588,7 +588,7 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 //
 // For m > n , x  is the least-squares solution of min(A . x - b)
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -647,7 +647,7 @@ Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
 // For m > n , x  is the least-squares solution of min(A . x - b)
 
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;
@@ -702,7 +702,7 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 {
 // Solve A^T x=b assuming the SVD form of A is stored . Solution returned in b.
 
-  Assert(b.IsValid());
+  R__ASSERT(b.IsValid());
   if (TestBit(kSingular)) {
     b.Invalidate();
     return kFALSE;
@@ -754,7 +754,7 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
   TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
-  Assert(b->IsValid());
+  R__ASSERT(b->IsValid());
   if (TestBit(kSingular)) {
     b->Invalidate();
     return kFALSE;
@@ -834,7 +834,7 @@ void TDecompSVD::Det(Double_t &d1,Double_t &d2)
       fDet1 = 0.0;
       fDet2 = 0.0;
     } else {
-      Assert(fSig.IsValid());
+      R__ASSERT(fSig.IsValid());
       DiagProd(fSig,fTol,fDet1,fDet2);
     }
     SetBit(kDetermined);

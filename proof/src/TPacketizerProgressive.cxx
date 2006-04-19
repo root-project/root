@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.1 2005/09/18 01:06:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.2 2006/03/20 21:43:43 pcanal Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -100,7 +100,7 @@ Int_t TPacketizerProgressive::TFileNode::Compare(const TObject *other) const
    // and 1 if this is larger than obj.
 
    const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
-   Assert(obj != 0);
+   R__ASSERT(obj != 0);
 
    Int_t myVal = GetSlaveCnt();
    Int_t otherVal = obj->GetSlaveCnt();

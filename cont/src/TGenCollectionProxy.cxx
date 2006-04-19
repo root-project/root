@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.25 2006/02/09 20:41:40 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.26 2006/02/22 06:55:36 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -297,7 +297,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
             }
             if ( prop&G__BIT_ISCLASS ) {
                fType = gROOT->GetClass(intype.c_str());
-               Assert(fType);
+               R__ASSERT(fType);
                fCtor   = fType->GetNew();
                fDtor   = fType->GetDestructor();
                fDelete = fType->GetDelete();
@@ -309,7 +309,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                   fKind = (EDataType)kBOOL_t;
                }
                fSize = ti.Size();
-               Assert(fKind>0 && fKind<0x16 || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
+               R__ASSERT(fKind>0 && fKind<0x16 || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
             }
             else if ( prop&G__BIT_ISENUM ) {
                fSize = sizeof(int);
@@ -576,8 +576,8 @@ UInt_t TGenCollectionProxy::Sizeof() const
 Bool_t TGenCollectionProxy::HasPointers() const
 {
    // Return true if the content is of type 'pointer to'
-   
-   // The content of a map and multimap is always a 'pair' and hence 
+
+   // The content of a map and multimap is always a 'pair' and hence
    // fPointers means "Flag to indicate if containee has pointers (key or value)"
    // so we need to ignore its value for map and multimap;
    return fPointers && !(fSTL_type == TClassEdit::kMap || fSTL_type == TClassEdit::kMultiMap);

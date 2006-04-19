@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TRootSecContext.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TRootSecContext.cxx,v 1.2 2005/09/06 09:34:34 brun Exp $
 // Author: G. Ganis   08/07/2005
 
 /*************************************************************************
@@ -40,7 +40,7 @@ ClassImp(TRootSecContext)
       : TSecContext(user, host, meth, offset, id, token, expdate, ctx)
 {
    // Ctor for SecContext object.
-   Assert(gROOT);
+   R__ASSERT(gROOT);
 
    fRSAKey  = key;
    fMethodName = TAuthenticate::GetAuthMethod(fMethod);
@@ -54,7 +54,7 @@ TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
 {
    // Ctor for SecContext object.
    // User and host from url = user@host .
-   Assert(gROOT);
+   R__ASSERT(gROOT);
 
    fRSAKey  = key;
    fMethodName = TAuthenticate::GetAuthMethod(fMethod);

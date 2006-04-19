@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.3 2005/06/28 16:49:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.4 2005/09/03 02:21:32 pcanal Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -34,13 +34,13 @@ TChainIndex::TChainIndex(): TVirtualIndex()
 TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
            : TVirtualIndex()
 {
-   // Normal constructor for TChainIndex. See TTreeIndex::TTreeIndex for the description of the 
+   // Normal constructor for TChainIndex. See TTreeIndex::TTreeIndex for the description of the
    // parameters.
    // The tree must be a TChain.
-   // All the index values in the first tree of the chain must be 
+   // All the index values in the first tree of the chain must be
    // less then any index value in the second one, and so on.
    // If any of those requirements isn't met the object becomes a zombie.
-   // If some subtrees don't have indices the indices are created and stored inside this 
+   // If some subtrees don't have indices the indices are created and stored inside this
    // TChainIndex.
 
    fTree = 0;
@@ -76,7 +76,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
          MakeZombie();
          Error("TChainIndex", "Error creating a tree index on a tree in the chain");
       }
-      Assert(dynamic_cast<TTreeIndex*>(index));
+      R__ASSERT(dynamic_cast<TTreeIndex*>(index));
       entry.fMinIndexValue = dynamic_cast<TTreeIndex*>(index)->GetIndexValues()[0];
       entry.fMaxIndexValue = dynamic_cast<TTreeIndex*>(index)->GetIndexValues()[index->GetN() - 1];
 
@@ -93,7 +93,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
 }
 
 //______________________________________________________________________________
-void TChainIndex::DeleteIndices() 
+void TChainIndex::DeleteIndices()
 {
    // Delete all the indices which were built by this object
    for (unsigned int i = 0; i < fEntries.size(); i++) {
@@ -143,7 +143,7 @@ std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Int_t major, Int_t
          break;
       }
    TChain* chain = dynamic_cast<TChain*> (fTree);
-   Assert(chain);
+   R__ASSERT(chain);
    chain->LoadTree(chain->GetTreeOffset()[treeNo]);
    TVirtualIndex* index =  fTree->GetTree()->GetTreeIndex();
    if (index)
@@ -170,7 +170,7 @@ void TChainIndex::ReleaseSubTreeIndex(TVirtualIndex* index, int treeNo) const
    // deleted in its destructor.
 
    if (fEntries[treeNo].fTreeIndex == index) {
-      Assert(fTree->GetTree()->GetTreeIndex() == index);
+      R__ASSERT(fTree->GetTree()->GetTreeIndex() == index);
       fTree->GetTree()->SetTreeIndex(0);
    }
 }
@@ -221,7 +221,7 @@ Long64_t TChainIndex::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) cons
       Long64_t rv = indexAndNumber.first->GetEntryNumberWithBestIndex(major, minor);
       ReleaseSubTreeIndex(indexAndNumber.first, indexAndNumber.second);
       TChain* chain = dynamic_cast<TChain*> (fTree);
-      Assert(chain);
+      R__ASSERT(chain);
       return rv + chain->GetTreeOffset()[indexAndNumber.second];
    }
 }
@@ -241,7 +241,7 @@ Long64_t TChainIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
       Long64_t rv = indexAndNumber.first->GetEntryNumberWithBestIndex(major, minor);
       ReleaseSubTreeIndex(indexAndNumber.first, indexAndNumber.second);
       TChain* chain = dynamic_cast<TChain*> (fTree);
-      Assert(chain);
+      R__ASSERT(chain);
       return rv + chain->GetTreeOffset()[indexAndNumber.second];
    }
 }
@@ -293,6 +293,6 @@ void TChainIndex::SetTree(const TTree *T)
 {
    // See TTreeIndex::SetTree.
    // Used only by the streamer.
-   Assert(fTree == 0 || fTree == T);
+   R__ASSERT(fTree == 0 || fTree == T);
 }
 

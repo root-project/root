@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.3 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -77,7 +77,7 @@ TQpSolverBase::TQpSolverBase()
 
 //______________________________________________________________________________
 TQpSolverBase::TQpSolverBase(const TQpSolverBase &another) : TObject(another)
-{ 
+{
   *this = another;
 }
 
@@ -110,11 +110,11 @@ void TQpSolverBase::DefStart(TQpProbBase * /* formulation */,TQpVar *iterate,
   iterate->InteriorPoint(a,b);
   resid->CalcResids(prob,iterate);
   resid->Set_r3_xz_alpha(iterate,0.0);
-  
+
   fSys->Factor(prob,iterate);
   fSys->Solve(prob,iterate,resid,step);
   step->Negate();
-  
+
   // Take the full affine scaling step
   iterate->Saxpy(step,1.0);
   // resid.CalcResids(prob,iterate); // Calc the resids if debugging.
@@ -200,7 +200,7 @@ Double_t TQpSolverBase::FinalStepLength(TQpVar *iterate,TQpVar *step)
     alpha = (-dualValue+mufull/(primalValue+maxAlpha*primalStep))/dualStep;
     break;
   default:
-    Assert(0 && "Can't get here");
+    R__ASSERT(0 && "Can't get here");
     break;
   }
   // make it at least fGamma_f * maxStep
@@ -259,7 +259,7 @@ Int_t TQpSolverBase::DefStatus(TQpDataBase * /* data */,TQpVar * /* vars */,
   if (stop_code != kNOT_FINISHED)  return stop_code;
 
   // check infeasibility condition
-  if (idx >= 10 && fPhi >= 1.e-8 && fPhi >= 1.e4*fPhi_min_history[idx]) 
+  if (idx >= 10 && fPhi >= 1.e-8 && fPhi >= 1.e4*fPhi_min_history[idx])
     stop_code = kINFEASIBLE;
   if (stop_code != kNOT_FINISHED)  return stop_code;
 
@@ -267,8 +267,8 @@ Int_t TQpSolverBase::DefStatus(TQpDataBase * /* data */,TQpVar * /* vars */,
   if (idx >= 30 && fPhi_min_history[idx] >= .5*fPhi_min_history[idx-30])
     stop_code = kUNKNOWN;
 
-  if (rnorm/fDnorm > fArtol && 
-     (fRnorm_history[idx]/fMu_history[idx])/(fRnorm_history[0]/fMu_history[0]) >= 1.e8) 
+  if (rnorm/fDnorm > fArtol &&
+     (fRnorm_history[idx]/fMu_history[idx])/(fRnorm_history[0]/fMu_history[0]) >= 1.e8)
     stop_code = kUNKNOWN;
 
   return stop_code;
@@ -276,7 +276,7 @@ Int_t TQpSolverBase::DefStatus(TQpDataBase * /* data */,TQpVar * /* vars */,
 
 //______________________________________________________________________________
 TQpSolverBase &TQpSolverBase::operator=(const TQpSolverBase &source)
-{ 
+{
   if (this != &source) {
     TObject::operator=(source);
 
