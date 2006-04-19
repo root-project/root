@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.240 2006/03/15 21:00:01 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.241 2006/04/19 08:22:26 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3692,7 +3692,8 @@ char *Compress(const char *str)
    s = s1;
 
    while (*p) {
-      if (*p != ' ')
+      // keep space for A<const B>!
+      if (*p != ' ' || (p-str>6 && !strncmp(p-5,"const",5)))
          *s++ = *p;
       p++;
    }
