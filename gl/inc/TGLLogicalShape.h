@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.9 2006/03/09 16:53:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.10 2006/04/07 08:43:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -50,15 +50,15 @@ class TContextMenu;
 // viewer architecture and how external viewer clients use it.          //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLLogicalShape : public TGLDrawable 
+class TGLLogicalShape : public TGLDrawable
 {
 private:
    // Fields
-   mutable UInt_t    fRef;       //! physical instance ref counting
+   mutable UInt_t  fRef;         //! physical instance ref counting
 
 protected:
-           TObject * fExternalObj;
-   mutable Bool_t fRefStrong; //! Strong ref (delete on 0 ref)
+   mutable Bool_t  fRefStrong;   //! Strong ref (delete on 0 ref)
+   TObject        *fExternalObj;
 
    // TODO: Common UInt_t flags section (in TGLDrawable?) to avoid multiple bools
 
@@ -84,7 +84,7 @@ public:
 
 //______________________________________________________________________________
 inline Bool_t TGLLogicalShape::SubRef() const
-{ 
+{
    if (--fRef == 0) {
       if (fRefStrong) {
          delete this;

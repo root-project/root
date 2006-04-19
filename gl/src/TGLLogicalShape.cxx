@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.9 2006/02/20 11:02:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.10 2006/04/07 08:43:59 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 //////////////////////////////////////////////////////////////////////////
@@ -42,7 +42,7 @@ ClassImp(TGLLogicalShape)
 //______________________________________________________________________________
 TGLLogicalShape::TGLLogicalShape(ULong_t ID) :
    TGLDrawable(ID, kTRUE), // Logical shapes DL cached by default
-   fExternalObj(0), fRef(0), fRefStrong(kFALSE)
+   fRef(0), fRefStrong(kFALSE), fExternalObj(0)
 {
    // Construct a logical shape with unique id 'ID'.
    // Logical shapes are not display list cached by default.
@@ -51,13 +51,13 @@ TGLLogicalShape::TGLLogicalShape(ULong_t ID) :
 //______________________________________________________________________________
 TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    TGLDrawable(reinterpret_cast<ULong_t>(buffer.fID), kTRUE), // Logical shapes DL cached by default
-   fExternalObj(buffer.fID), fRef(0), fRefStrong(kFALSE)
+   fRef(0), fRefStrong(kFALSE), fExternalObj(buffer.fID)
 {
    // Use the bounding box in buffer if valid
    if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
       fBoundingBox.Set(buffer.fBBVertex);
    } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
-   // otherwise use the raw points to generate one   
+   // otherwise use the raw points to generate one
       fBoundingBox.SetAligned(buffer.NbPnts(), buffer.fPnts);
    }
 }
@@ -66,7 +66,7 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
 TGLLogicalShape::~TGLLogicalShape()
 {
    // Destroy logical shape
-   
+
    // Physical refs should have been cleared
    if (fRef > 0) {
       assert(kFALSE);
@@ -76,8 +76,8 @@ TGLLogicalShape::~TGLLogicalShape()
 //______________________________________________________________________________
 void TGLLogicalShape::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const
 {
-   // Invoke popup menu or our bound external TObject (if any), using passed 
-   // 'menu' object, at location 'x' 'y' 
+   // Invoke popup menu or our bound external TObject (if any), using passed
+   // 'menu' object, at location 'x' 'y'
    if (fExternalObj) {
       menu.Popup(x, y, fExternalObj);
    }
