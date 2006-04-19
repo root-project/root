@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.3 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.4 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H
@@ -40,7 +40,7 @@ namespace PyROOT {
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
       G__DataMemberInfo fDMInfo;
-      Bool_t            fIsStatic;
+      Long_t            fProperty;
       TConverter*       fConverter;
 
    private:              // private, as the python C-API will handle creation

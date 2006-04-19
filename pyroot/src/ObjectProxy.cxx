@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.9 2005/11/17 06:26:35 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.10 2006/03/23 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -54,6 +54,23 @@ namespace {
    {
       op_dealloc_nofree( pyobj );
       pyobj->ob_type->tp_free( (PyObject*)pyobj );
+   }
+
+//____________________________________________________________________________
+   PyObject* op_richcompare( ObjectProxy* self, ObjectProxy* other, int op )
+   {
+      if ( op != Py_EQ ) {
+         Py_INCREF( Py_NotImplemented );
+         return Py_NotImplemented;
+      }
+
+   // type + held pointer value defines identity
+      if ( self->ob_type == other->ob_type && self->fObject == other->fObject ) {
+         Py_INCREF( Py_True );
+         return Py_True;
+      }
+
+      return Py_False;
    }
 
 //____________________________________________________________________________
@@ -113,7 +130,7 @@ PyTypeObject ObjectProxy_Type = {
    (char*)"PyROOT object proxy (internal)",      // tp_doc
    0,                         // tp_traverse
    0,                         // tp_clear
-   0,                         // tp_richcompare
+   (richcmpfunc)op_richcompare,                  // tp_richcompare
    0,                         // tp_weaklistoffset
    0,                         // tp_iter
    0,                         // tp_iternext

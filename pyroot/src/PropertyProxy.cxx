@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.7 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.8 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -49,6 +49,12 @@ namespace {
    int pp_set( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* value )
    {
       const int errret = -1;
+
+   // filter const objects and enums to prevent changing their values
+      if ( pyprop->fProperty & ( kIsConstant | kIsEnum ) ) {
+         PyErr_SetString( PyExc_TypeError, "assignment to const data not allowed" );
+         return errret;
+      }
 
       Long_t address = pyprop->GetAddress( pyobj );
       if ( PyErr_Occurred() )
@@ -155,7 +161,7 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
       fullType.append( "*" );
    }
 
-   fIsStatic = (Bool_t)(fDMInfo.Property() & G__BIT_ISSTATIC);
+   fProperty = (Long_t)fDMInfo.Property();
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
 }
 
@@ -178,14 +184,14 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
       }
    }
 
-   fIsStatic = kTRUE;
+   fProperty = gbl->Property() | kIsStatic;       // force static flag
    fConverter = CreateConverter( gbl->GetFullTypeName(), gbl->GetMaxIndex( 0 ) );
 }
 
 //____________________________________________________________________________
 Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // class attributes, global properties
-   if ( fIsStatic )
+   if ( fProperty & kIsStatic )
       return (Long_t)((G__var_array*)fDMInfo.Handle())->p[fDMInfo.Index()];
 
 // instance attributes; requires object for full address

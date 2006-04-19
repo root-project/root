@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.16 2005/12/07 06:16:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.17 2006/04/06 05:38:31 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -189,7 +189,8 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( G__CallFunc* func, void* 
 // execution will bring a temporary in existence ...
    void* result1 = (void*)func->ExecInt( self );
    if ( ! result1 ) {
-      PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
+      if ( ! PyErr_Occurred() )         // callee may have set a python error itself
+         PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
       return 0;
    }
 

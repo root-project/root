@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.35 2006/03/23 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.36 2006/03/24 06:04:09 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -139,6 +139,33 @@ namespace {
       return result;
    }
 
+//- "smart pointer" behaviour --------------------------------------------------
+   PyObject* DeRefGetAttr( PyObject*, PyObject* args )
+   {
+      PyObject* self = 0; PyObject* name = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OS:__deref__" ), &self, &name ) )
+         return 0;
+
+      PyObject* pyptr = CallPyObjMethod( self, "__deref__" );
+      if ( ! pyptr )
+         return 0;
+
+      return PyObject_GetAttr( pyptr, name );
+   }
+
+//____________________________________________________________________________
+   PyObject* FollowGetAttr( PyObject*, PyObject* args )
+   {
+      PyObject* self = 0; PyObject* name = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OS:__follow__" ), &self, &name ) )
+         return 0;
+
+      PyObject* pyptr = CallPyObjMethod( self, "__follow__" );
+      if ( ! pyptr )
+         return 0;
+
+      return PyObject_GetAttr( pyptr, name );
+   }
 
 //- TObject behaviour ----------------------------------------------------------
    PyObject* TObjectContains( PyObject*, PyObject* args )
@@ -1536,6 +1563,13 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 {
    if ( pyclass == 0 )
       return kFALSE;
+
+// for smart pointer style classes (note fall-through)
+   if ( PyObject_HasAttrString( pyclass, (char*)"__deref__" ) ) {
+      Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) DeRefGetAttr );
+   } else if ( PyObject_HasAttrString( pyclass, (char*)"__follow__" ) ) {
+      Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) FollowGetAttr );
+   }
 
    if ( name == "TObject" ) {
    // support for the 'in' operator

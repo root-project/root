@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.27 2006/03/13 22:13:37 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.28 2006/03/16 06:07:32 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -17,6 +17,7 @@
 #include "Api.h"
 
 // Standard
+#include <limits.h>
 #include <string.h>
 #include <utility>
 
@@ -100,15 +101,26 @@ PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
                                                                               \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
-   const char* buf = PyString_AsString( value );                              \
-   if ( PyErr_Occurred() )                                                    \
-      return kFALSE;                                                          \
-   int len = strlen( buf );                                                   \
-   if ( len != 1 ) {                                                          \
-      PyErr_Format( PyExc_TypeError, #type" expected, got string of size %d", len );\
-      return kFALSE;                                                          \
+   if ( PyString_Check( value ) ) {                                           \
+      const char* buf = PyString_AsString( value );                           \
+      if ( PyErr_Occurred() )                                                 \
+         return kFALSE;                                                       \
+      int len = strlen( buf );                                                \
+      if ( len != 1 ) {                                                       \
+         PyErr_Format( PyExc_TypeError, #type" expected, got string of size %d", len );\
+         return kFALSE;                                                       \
+      }                                                                       \
+      *((type*)address) = (type)buf[0];                                       \
+   } else {                                                                   \
+      Long_t l = PyLong_AsLong( value );                                      \
+      if ( PyErr_Occurred() )                                                 \
+         return kFALSE;                                                       \
+      if ( ! ( low <= l && l <= high ) ) {                                    \
+         PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
+         return kFALSE;                                                       \
+      }                                                                       \
+      *((type*)address) = (type)l;                                            \
    }                                                                          \
-   *((type*)address) = (type)buf[0];                                          \
    return kTRUE;                                                              \
 }
 
@@ -155,8 +167,8 @@ Bool_t PyROOT::TBoolConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Bool, Bool_t, Long_t, PyInt_FromLong, PyInt_AsLong )
 
 //____________________________________________________________________________
-PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( Char,  Char_t, -128, 127 )
-PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( UChar, UChar_t,   0, 255 )
+PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( Char,  Char_t,  CHAR_MIN, CHAR_MAX  )
+PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( UChar, UChar_t,        0, UCHAR_MAX )
 
 //____________________________________________________________________________
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Short,  Short_t,  Long_t, PyInt_FromLong,  PyInt_AsLong )
