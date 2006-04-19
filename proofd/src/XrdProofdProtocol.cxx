@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.9 2006/04/17 21:11:32 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.10 2006/04/19 10:57:44 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -806,12 +806,13 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
             if (access(fgPROOFcfg, R_OK)) {
                fgEDest.Say(0, "Configure: PROOF config file cannot be read: ", fgPROOFcfg);
                SafeFree(fgPROOFcfg);
-               return 0;
+               // Enable user config files
+               fgWorkerUsrCfg = 1;
             }
          }
          fgEDest.Say(0, "Configure: PROOF config file: ", fgPROOFcfg);
          // Load file content in memory
-         if (ReadPROOFcfg() != 0) {
+         if (fgPROOFcfg && ReadPROOFcfg() != 0) {
             fgEDest.Say(0, "Configure: unable to find valid information"
                            "in PROOF config file", fgPROOFcfg);
             SafeFree(fgPROOFcfg);
