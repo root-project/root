@@ -2,3 +2,5 @@ rootd.rc.d
 rootd.xinetd
 proofd.rc.d
 proofd.xinetd
+olbd.rc.d
+xrootd.rc.d

@@ -1,0 +1,148 @@
+###
+### Example of simple xrootd config file.
+###
+### The first part enables a simple data server exposing to clients
+### the root paths /tmp and /data1.
+### The second part shows how to enable password-based strong
+### authentication using the ROOT special password in $HOME/.rootdpass
+### The third part shows how to concurrently enable the PROOF serving
+### features
+###
+### To load this configuration file:
+###
+### ~> xrootd -c $ROOTSYS/etc/xpd.cf
+###
+### See http://www.slac.stanford.edu/xrootd for more details on the
+### data serving part.
+###
+
+###
+### Part one: data serving
+###
+xrd.protocol xrootd *
+xrootd.fslib libXrdOfs.so
+
+### Specify a non-default port here:
+###  - overwritten by -p <port> on the command line
+# xrd.port 5151
+
+### Export path directives, i.e. the root paths which can accessed
+### by clients ('xrootd.export /' exports the whole file system).
+### An arbitrary number of these can be defined. The default is
+### to export /tmp.
+### NB: specifying any of these directives removes the default /tmp
+###     from the internal list; in such a case a directive needs to
+###     be given explicitely if /tmp needs to be exposed.
+xrootd.export /tmp
+xrootd.export /pool/data
+
+###
+### Part two: security directives:
+###
+
+### Example: enable password-based strong authentication checking
+### also the special ROOT password in $HOME/.rootdpass.
+### NB: if the application complains about a missing password file in
+###    $HOME/.xrd/ just create an empty one running 'xrdpwdadmin' and
+###    replying to the questions
+###    (<ROOT_sys> with the path to the ROOT distribution)
+# xrootd.seclib <ROOT_sys>/lib/libXrdSec.so
+# sec.protocol pwd -d:0 -a:1 -vc:1 -upwd:2 -cryptfile:.rootdpass
+
+###
+### Part three: enable PROOF serving
+###
+
+### Load the XrdProofd protocol:
+### a) if the ROOT lib paths are known by the linker/loader 
+xrd.protocol xproofd:1093 libXrdProofd.so
+### b) using absolute paths (<ROOT_sys> with the path to the ROOT distribution)
+# xrd.protocol xproofd:1093 <ROOT_sys>/lib/libXrdProofd.so rootsys:<ROOT_sys>
+
+###
+### Directives governing the behaviour of the XrdProofd plug-in.
+### Except when explicitely indicated, all the following directives support
+### an optional 'if <pattern>' condition at the end of the line, e.g.
+###    xpd.rootsys /opt/root   if lxb*.cern.ch
+###    xpd.rootsys /usr/local  if lxp*.cern.ch
+### Patterns may contain any number of wild cards; the best match is retained
+### (max number of matching chars; if two are equal, the last specified wins).
+###
+### ROOTSYS path (alternative to rootsys: above)
+# xpd.rootsys /opt/root
+###
+### Location of the temporary directory [/tmp]
+# xpd.tmp /usr/tmp
+###
+### Internal wait timeout in secs [5]
+# xpd.intwait 500
+###
+### Max number of PROOF sessions [-1, i.e. no limit]
+# xpd.maxsessions 10
+###
+### Image name of this server [node name]
+# xpd.image <image>
+###
+### Working directory for sessions [<User_Home>/proof]
+# xpd.workdir <work_dir>
+###
+### Modify priority of sessions belonging to <user> by <delta_priority>
+### If <user> is missing, apply the change to all sessions.
+### This directive requires special privileges, so it may be ineffective
+### if these are missing
+# xpd.priority <delta_priority> [if <user>]
+# xpd.priority 4
+# xpd.priority 6 if thatuser
+###
+### Resource finder
+### NB: 'if <pattern>' not supported for this directive.
+# "static", i.e. using a config file
+#   <cfg_file>          path alternative config file
+#                       [$ROOTSYS/proof/etc/proof.conf]
+#   <user_cfg_opt>      if "yes": enable user private config files at
+#                       $HOME/.proof.conf or $HOME/.<usr_def>, where
+#                       <usr_cfg> is the second argument to
+#                       TProof::Open("<master>","<usr_cfg>") ["no"]
+#   <max_workers>       Maximum number of workers to be assigned to user
+#                       session [-1, i.e. all]
+#   <selection_mode>    If <max_workers> != -1, specify the way workers
+#                       are chosen:
+#                       "roundrobin"  round-robin selection in bunches
+#                                     of n(=<max_workers>) workers.
+#                                     Example:
+#                                     N = 10 (available workers), n = 4:
+#                                     1st (session): 1-4, 2nd: 5-8,
+#                                     3rd: 9,10,1,2, 4th: 3-6, ...
+#                         "random"    random choice (a worker is not
+#                                     assigned twice)
+# xpd.resource static [<cfg_file>] [ucfg:<user_cfg_opt>]  [wmx:<max_workers>] [selopt:<selection_mode>]
+# xpd.resource static ~/.proof.test.conf wmx:2 selopt:random
+###
+### Master(s) allowed to connect. Directive active only for Worker or
+### Submaster session requests. Multiple 'allow' directives can
+### be specified. By default all connections are allowed.
+# xpd.allow lxb6041.cern.ch
+###
+### Server role (master, submaster, worker) [default: any]
+### Allows to control the cluster structure.
+### The following (commented) example will set lxb6041 as master, and all
+### the others lxb* as workers 
+# xpd.role worker if lxb*.cern.ch
+# xpd.role master if lxb6041.cern.ch
+###
+### URL and namespace for the local storage if different from defaults.
+### By the default it is assumed that the pool space on the cluster is
+### accessed via a redirector running at the top master under the common
+### namespace /proofpool.
+# xpd.poolurl lxb0105.cern.ch
+# xpd.namespace /store
+
+### xproofd specific security directives, allowing for independent
+### rules from the ones applying to data serving.
+### NB: 'if <pattern>' not supported for these directives (protbind can
+###     used for similar purposes).
+### In the example, GSI authentication is required with no control on CRL.
+### If this section is missing xproofd falls back to the security setup
+### defined for data serving.
+# xpd.seclib libXrdSec.so
+# xpd.sec.protocol gsi -crl:0 -gmapopt:1 -dlgpxy:1

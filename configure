@@ -733,6 +733,10 @@ PROOFDIN=config/proofd.in
 PROOFDOUT=etc/daemons/proofd.rc.d
 PROOFDXINETDIN=config/proofd.xinetd.in
 PROOFDXINETDOUT=etc/daemons/proofd.xinetd
+XROOTDIN=config/xrootd.in
+XROOTDOUT=etc/daemons/xrootd.rc.d
+OLBDIN=config/olbd.in
+OLBDOUT=etc/daemons/olbd.rc.d
 ROOTHELPIN=config/root-help.el.in
 ROOTHELPOUT=build/misc/root-help.el
 HTMLIN=config/html.C.in
@@ -1001,7 +1005,7 @@ fi
 trapcmd="rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
          proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
-         conftest.c conftest"
+         conftest.c conftest xrootd.tmp olbd.tmp"
 trap "$trapcmd; exit 1" 1 2 3 15
 trap "$trapcmd" 0
 
@@ -1162,6 +1166,8 @@ if test "x$noact" = "xno"; then
     cp -f $ROOTDXINETDIN rootd.xinetd.tmp
     cp -f $PROOFDIN proofd.tmp
     cp -f $PROOFDXINETDIN proofd.xinetd.tmp
+    cp -f $XROOTDIN xrootd.tmp
+    cp -f $OLBDIN olbd.tmp
 fi
 
 ######################################################################
@@ -1491,7 +1497,7 @@ if test ! "x$enable_mysql" = "xno"; then
        else
           result "ok"
           mysqllib=`mysql_config --libs`
-          mysqlincdir=`mysql_config --cflags | sed 's/-I\(.*\)/\1/'`
+          mysqlincdir=`mysql_config --cflags | sed -e 's,-I\([^ ]*\).*$,\1,'`
           mysqllibdir=""
        fi
     else
@@ -4067,6 +4073,26 @@ sed -e "s|@bindir@|$bindir|" \
     -e "s|@prefix@|$prefix|" \
     < proofd.xinetd.tmp > $PROOFDXINETDOUT
 rm -f proofd.xinetd.tmp
+result "done"
+
+#---------------------------------------------------------------------
+# etc/daemons/xrootd.rc.d
+#
+message "Writing $XROOTDOUT"
+sed -e "s|@bindir@|$bindir|" \
+    < xrootd.tmp > $XROOTDOUT
+chmod a+x $XROOTDOUT
+rm -f xrootd.tmp
+result "done"
+
+#---------------------------------------------------------------------
+# etc/daemons/olbd.rc.d
+#
+message "Writing $OLBDOUT"
+sed -e "s|@bindir@|$bindir|" \
+    < olbd.tmp > $OLBDOUT
+chmod a+x $OLBDOUT
+rm -f olbd.tmp
 result "done"
 
 #---------------------------------------------------------------------
