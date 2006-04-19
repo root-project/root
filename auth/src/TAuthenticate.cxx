@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.10 2006/01/18 21:49:25 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.11 2006/03/22 21:57:17 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2299,11 +2299,12 @@ Int_t TAuthenticate::RfioAuth(TString &username)
    UserGroup_t *pw = gSystem->GetUserInfo(gSystem->GetEffectiveUid());
    if (pw) {
 
-      // Check that we are not root and that the requested user is ourselves
-      if (pw->fUid != 0 && username == pw->fUser) {
+      // These are the details to be saved in case of success ...
+      username = pw->fUser;
+      fDetails = TString("pt:0 ru:0 us:") + username;
 
-         // These are the details to be saved in case of success ...
-         fDetails = TString("pt:0 ru:0 us:") + username;
+      // Check that we are not root and that the requested user is ourselves
+      if (pw->fUid != 0) {
 
          UserGroup_t *grp = gSystem->GetGroupInfo(gSystem->GetEffectiveGid());
 
