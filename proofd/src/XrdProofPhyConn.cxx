@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.4 2006/03/16 09:08:08 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.5 2006/04/18 10:34:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -15,8 +15,8 @@
 //                                                                      //
 // Authors: G. Ganis, CERN, 2005                                        //
 //                                                                      //
-//  XrdProofConn implementation using a simple phycical connection      //
-//  (Unix or Tcp)                                                       //
+//  XrdProofConn implementation using a simple physical connection      //
+// (Unix or Tcp)                                                        //
 //////////////////////////////////////////////////////////////////////////
 
 #include "XrdProofPhyConn.h"
@@ -88,6 +88,11 @@ bool XrdProofPhyConn::Init(const char *url)
 
       // Parse Url
       fUser = fUrl.User.c_str();
+      if (fUser.length() <= 0) {
+         // Use local username, if not specified
+         struct passwd *pw = getpwuid(getuid());
+         fUser = pw ? pw->pw_name : "";
+      }
       fHost = fUrl.Host.c_str();
       fPort = fUrl.Port;
       // Check port
