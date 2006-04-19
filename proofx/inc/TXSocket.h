@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -51,12 +51,14 @@
 
 class TObjString;
 class TXSockBuf;
+class TXHandler;
 class TXSocketHandler;
 class XrdClientMessage;
 
 
 class TXSocket  : public TSocket, public XrdClientAbsUnsolMsgHandler {
 
+friend class TXProofMgr;
 friend class TXProofServ;
 friend class TXSlave;
 friend class TXSocketHandler;
@@ -72,6 +74,7 @@ private:
    TString             fAlias;         // An alias name for this connection
 
    TObject            *fReference;     // Generic object reference of this socket
+   TXHandler          *fHandler;       // Handler of asynchronous events (input, error)
 
    XrdProofConn       *fConn;          // instance of the underlying connection module
 
@@ -102,7 +105,6 @@ private:
    static TString      fgLoc;          // Location string
    static Bool_t       fgInitDone;     // Avoid initializing more than once
 
-
    // Manage asynchronous message
    Int_t               PickUpReady();
    TXSockBuf          *PopUpSpare(Int_t sz);
@@ -120,8 +122,9 @@ private:
    static void         DumpReadySock(); // Dump content of the ready-socket list
 
 public:
-   // Should be the same as in proofd/src/XrdProofdProtocol::do_Admin
-   enum ECoordMsgType { kQuerySessions = 1000, kSessionTag, kSessionAlias };
+   // Should be the same as in proofd/src/XrdProofdProtocol::Admin
+   enum ECoordMsgType { kQuerySessions = 1000,
+                        kSessionTag, kSessionAlias, kGetWorkers, kQueryWorkers };
 
    TXSocket(const char *url,
             Char_t mode = 'M', Int_t psid = -1, Char_t ver = -1, const char *alias = 0);

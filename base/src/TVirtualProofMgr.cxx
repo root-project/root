@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.2 2005/12/12 17:59:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.3 2005/12/13 10:12:02 brun Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -21,9 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TError.h"
 #include "TInetAddress.h"
 #include "TList.h"
-#include "TPluginManager.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TVirtualMutex.h"
@@ -35,6 +35,17 @@ ClassImp(TVirtualProofMgr)
 
 // Sub-list of TROOT::fProofs with managers
 TList TVirtualProofMgr::fgListOfManagers;
+TVirtualProofMgr_t TVirtualProofMgr::fgTProofMgrHook[2] = { 0, 0 };
+
+//______________________________________________________________________________
+TVirtualProofMgr::TVirtualProofMgr(const char *url, Int_t, const char *)
+                 : TNamed("",""), fServType(kXProofd), fSessions(0)
+{
+   // Constructor
+
+   // AVoid problems with empty URLs
+   fUrl = (!url || strlen(url) <= 0) ? TUrl("proof://localhost") : TUrl(url);
+}
 
 //______________________________________________________________________________
 TVirtualProofMgr::~TVirtualProofMgr()
@@ -45,6 +56,14 @@ TVirtualProofMgr::~TVirtualProofMgr()
 
    fgListOfManagers.Remove(this);
    gROOT->GetListOfProofs()->Remove(this);
+}
+
+//______________________________________________________________________________
+void TVirtualProofMgr::ShowWorkers()
+{
+   // Show available workers
+
+   AbstractMethod("ShowWorkers");
 }
 
 //______________________________________________________________________________
@@ -84,21 +103,35 @@ TVirtualProof *TVirtualProofMgr::CreateSession(const char *cfg,
       return 0;
    }
 
-   // Load regular TProof for client
-   TPluginHandler *h = pm->FindHandler("TVirtualProof", "");
-   if (!h) {
-      Error("CreateSession", "no plugin found for TVirtualProof");
-      return 0;
-   }
-   if (h->LoadPlugin() == -1) {
-      Error("CreateSession", "plugin for TVirtualProof could not be loaded");
-      return 0;
-   }
+   TProof_t proofhook = TVirtualProof::GetTProofHook();
+   if (!proofhook) {
 
+      // Load the library containing TProof ...
+#ifdef ROOTLIBDIR
+      TString prooflib = TString(ROOTLIBDIR) + "/libProof";
+#else
+#ifndef WIN32
+      TString prooflib = TString(gRootDir) + "/lib/libProof";
+#else
+      TString prooflib = TString(gRootDir) + "/bin/libProof";
+#endif
+#endif
+      char *p = 0;
+      if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(prooflib) == -1)
+            Error("CreateSession", "can't load %s", prooflib.Data());
+         proofhook = TVirtualProof::GetTProofHook();
+      } else
+         Error("CreateSession", "can't locate %s", prooflib.Data());
+   }
+   if (!proofhook) {
+      Error("CreateSession", "hook for TVirtualProof could not be loaded");
+      return 0;
+   }
    // Create the instance
    TVirtualProof *p =
-     (TVirtualProof*) h->ExecPlugin(4, fUrl.GetUrl(), cfg, cfgdir, loglevel);
-   fUrl.SetOptions("");
+     (TVirtualProof*) (*proofhook)(fUrl.GetUrl(), cfg, cfgdir, loglevel, 0);
 
    if (p && p->IsValid()) {
 
@@ -230,14 +263,13 @@ TVirtualProofMgr *TVirtualProofMgr::Create(const char *url, Int_t loglevel,
    }
 
    m = 0;
-   TPluginHandler *h = 0;
    Bool_t trystd = kTRUE;
 
    // If required, we assume first that the remote server is based on XrdProofd
    if (xpd) {
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualProofMgr", "xpd")) &&
-           h->LoadPlugin() == 0) {
-         m = (TVirtualProofMgr *) h->ExecPlugin(3, url, loglevel, alias);
+      TVirtualProofMgr_t cm = TVirtualProofMgr::GetProofMgrHook("xpd");
+      if (cm) {
+         m = (TVirtualProofMgr *) (*cm)(url, loglevel, alias);
          // Update trystd flag
          trystd = (m && !(m->IsValid()) && m->IsProofd()) ? kTRUE : kFALSE;
       }
@@ -246,10 +278,9 @@ TVirtualProofMgr *TVirtualProofMgr::Create(const char *url, Int_t loglevel,
    // If the first attempt failed, we instantiate an old interface
    if (trystd) {
       SafeDelete(m);
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualProofMgr", "std")) &&
-           h->LoadPlugin() == 0) {
-         m = (TVirtualProofMgr *) h->ExecPlugin(3, url, loglevel, alias);
-      }
+      TVirtualProofMgr_t cm = TVirtualProofMgr::GetProofMgrHook("std");
+      if (cm)
+         m = (TVirtualProofMgr *) (*cm)(url, loglevel, alias);
    }
 
    // Record the new manager, if any
@@ -264,6 +295,56 @@ TVirtualProofMgr *TVirtualProofMgr::Create(const char *url, Int_t loglevel,
 
    // We are done
    return m;
+}
+
+//________________________________________________________________________
+TVirtualProofMgr_t TVirtualProofMgr::GetProofMgrHook(const char *type)
+{
+   // Get the specified constructor hook.
+   // We do this without the plugin manager because it blocks the
+   // CINT mutex breaking the parallel startup.
+
+   static const char *libs[] = { "/libProof", "/libProofx" };
+
+   // Find index (default: classic)
+   Int_t idx = (type && !strncmp(type,"xpd",3)) ? 1 : 0;
+
+   if (!fgTProofMgrHook[idx]) {
+      // Load the appropriate library ...
+#ifdef ROOTLIBDIR
+      TString prooflib = TString(ROOTLIBDIR);
+#else
+#ifndef WIN32
+      TString prooflib = TString(gRootDir) + "/lib";
+#else
+      TString prooflib = TString(gRootDir) + "/bin";
+#endif
+#endif
+      prooflib += libs[idx];
+      char *p = 0;
+      if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(prooflib) == -1)
+            ::Error("TVirtualProofMgr::GetProofMgrCtor",
+                       "can't load %s", prooflib.Data());
+      } else
+         ::Error("TVirtualProofMgr::GetProofMgrCtor",
+                 "can't locate %s", prooflib.Data());
+   }
+
+   // Done
+   return fgTProofMgrHook[idx];
+}
+
+//_____________________________________________________________________________
+void TVirtualProofMgr::SetTProofMgrHook(TVirtualProofMgr_t pmh, const char *t)
+{
+   // Set hook to TProofMgr ctor
+
+   // Find index (default: classic)
+   Int_t idx = (t && !strncmp(t,"xpd",3)) ? 1 : 0;
+
+   fgTProofMgrHook[idx] = pmh;
 }
 
 ClassImp(TVirtualProofDesc)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.116 2006/03/31 07:42:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.117 2006/04/13 10:27:14 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -82,6 +82,7 @@
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
+#include "TTimer.h"
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -f";
@@ -257,6 +258,13 @@ static TList *GetDataSet(const char *name)
 
 ClassImp(TProofServ)
 
+// Hook to the constructor. This is needed to avoid using the plugin manager
+// which may create problems in multi-threaded environments.
+extern "C" {
+   TApplication *GetTProofServ(Int_t *argc, char **argv)
+   { return ((TApplication *)(new TProofServ(argc, argv))); }
+}
+
 //______________________________________________________________________________
 TProofServ::TProofServ(Int_t *argc, char **argv)
        : TApplication("proofserv", argc, argv, 0, -1)
@@ -373,6 +381,12 @@ void TProofServ::CreateServer()
 
    Setup();
    RedirectOutput();
+   // If for some reason we failed setting a redirection fole for the logs
+   // we cannot continue
+   if (!fLogFile) {
+      SendLogFile(-98);
+      Terminate(0);
+   }
 
    // Send message of the day to the client
    if (IsMaster()) {
@@ -2167,6 +2181,10 @@ void TProofServ::Run(Bool_t retrn)
 {
    // Main server eventloop.
 
+   // Setup the server
+   CreateServer();
+
+   // Run the main event loop
    TApplication::Run(retrn);
 }
 
@@ -2181,22 +2199,24 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    fflush(stdout);
 
    off_t ltot, lnow;
-   Int_t left;
-
-   ltot = lseek(fileno(stdout),   (off_t) 0, SEEK_END);
-   lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
-
+   Int_t left = -1;
    Bool_t adhoc = kFALSE;
-   if (start > -1) {
-      lseek(fileno(fLogFile), (off_t) start, SEEK_SET);
-      if (end <= start || end > ltot)
-         end = ltot;
-      left = (Int_t)(end - start);
-      if (end < ltot)
-         left++;
-      adhoc = kTRUE;
-   } else {
-      left = (Int_t)(ltot - lnow);
+
+   if (fLogFile) {
+      ltot = lseek(fileno(stdout),   (off_t) 0, SEEK_END);
+      lnow = lseek(fileno(fLogFile), (off_t) 0, SEEK_CUR);
+
+      if (start > -1) {
+         lseek(fileno(fLogFile), (off_t) start, SEEK_SET);
+         if (end <= start || end > ltot)
+            end = ltot;
+         left = (Int_t)(end - start);
+         if (end < ltot)
+            left++;
+         adhoc = kTRUE;
+      } else {
+         left = (Int_t)(ltot - lnow);
+      }
    }
 
    if (left > 0) {
@@ -2452,7 +2472,6 @@ void TProofServ::Setup()
    bindir += "/bin:/usr/bin:/usr/local/bin";
    gSystem->Setenv("PATH", bindir);
 #endif
-
    if (gSystem->AccessPathName(fWorkDir)) {
       gSystem->mkdir(fWorkDir, kTRUE);
       if (!gSystem->ChangeDirectory(fWorkDir)) {
@@ -3690,4 +3709,46 @@ void TProofServ::HandleRetrieve(TMessage *mess)
 
    // Done
    return;
+}
+
+//______________________________________________________________________________
+TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
+                                                Int_t & /* prioritychange */)
+{
+   // Get list of workers to be used from now on.
+   // The list must be provide by the caller.
+
+   // Needs a list where to store the info
+   if (!workers) {
+      Error("GetWorkers", "output list undefined");
+      return kQueryStop;
+   }
+
+   // Parse the config file
+   TProofResourcesStatic *resources =
+      new TProofResourcesStatic(fConfDir, fConfFile);
+   fConfFile = resources->GetFileName(); // Update the global file name (with path)
+   PDB(kGlobal,1)
+         Info("GetWorkers", "using PROOF config file: %s", fConfFile.Data());
+
+   // Get the master
+   TProofNodeInfo *master = resources->GetMaster();
+   if (master)
+      fImage = master->GetImage();
+   if (!master || (fImage.Length() == 0)) {
+      Error("GetWorkers",
+            "no appropriate master line found in %s", fConfFile.Data());
+      return kQueryStop;
+   }
+
+   // Fill worker list
+   if (resources->GetWorkers()) {
+      TProofNodeInfo *ni = 0;
+      TIter nw(resources->GetWorkers());
+      while ((ni = (TProofNodeInfo *) nw()))
+         workers->Add(new TProofNodeInfo(*ni));
+   }
+
+   // We are done
+   return kQueryOK;
 }

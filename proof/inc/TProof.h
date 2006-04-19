@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.75 2006/03/21 16:54:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.76 2006/04/13 10:27:14 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -209,12 +209,14 @@ friend class TSlave;
 friend class TXSlave;
 friend class TXSocket;     // to access kPing
 friend class TXSocketHandler; // to access fCurrentMonitor and CollectInputFrom
+friend class TXProofMgr;  // to access EUrgent
 friend class TXProofServ;  // to access EUrgent
 
 private:
    enum EUrgent {
-      kPing          = 0,
-      kHardInterrupt = 1,
+      kLocalInterrupt = -1,
+      kPing           = 0,
+      kHardInterrupt  = 1,
       kSoftInterrupt,
       kShutdownInterrupt
    };
@@ -366,6 +368,7 @@ private:
    Int_t    GetNumberOfBadSlaves() const;
 
    Bool_t   IsSync() const { return fSync; }
+   void     InterruptCurrentMonitor();
 
    void     MarkBad(TSlave *sl);
    void     MarkBad(TSocket *s);

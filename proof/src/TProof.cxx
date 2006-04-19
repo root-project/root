@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.139 2006/04/17 09:29:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.140 2006/04/19 08:22:25 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -124,7 +124,12 @@ Bool_t TProofInterruptHandler::Notify()
 {
    // TProof interrupt handler.
 
+   // Stop any remote processing
    fProof->StopProcess(kTRUE);
+
+   // Handle also interrupt condition on socket(s)
+   fProof->Interrupt(TProof::kLocalInterrupt);
+
    return kTRUE;
 }
 
@@ -228,6 +233,21 @@ static char *CollapseSlashesInPath(const char *path)
 }
 
 ClassImp(TProof)
+
+// Autoloading hooks.
+// These are needed to avoid using the plugin manager which may create problems
+// in multi-threaded environments.
+extern "C" {
+   TVirtualProof *GetTProof(const char *url, const char *file,
+                            const char *dir, Int_t log, const char *al)
+   { return (new TProof(url, file, dir, log, al)); }
+}
+class ProofInit {
+ public:
+   ProofInit() {
+      TVirtualProof::SetTProofHook(&GetTProof);
+}};
+static ProofInit proof_init;
 
 TSemaphore    *TProof::fgSemaphore = 0;
 
@@ -363,7 +383,13 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          delete pw;
       }
    }
-   fMaster         = fUrl.GetHost();
+   // Make sure to store the FQDN, so to get a solid reference for
+   // subsequent checks (strings corresponding to non-existing hosts
+   // - like "__master__" - will not be touched by this)
+   if (!strlen(fUrl.GetHost()))
+      fMaster = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+   else
+      fMaster = gSystem->GetHostByName(fUrl.GetHost()).GetHostName();
    fConfDir        = confdir;
    fConfFile       = conffile;
    fWorkDir        = gSystem->WorkingDirectory();
@@ -512,26 +538,16 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
    // servers as specified in the config file
    if (IsMaster()) {
 
-      // Parse the config file
-      TProofResourcesStatic *resources =
-         new TProofResourcesStatic(fConfDir, fConfFile);
-      fConfFile = resources->GetFileName(); // Update the global file name (with path)
-      PDB(kGlobal,1)
-         Info("StartSlaves", "using PROOF config file: %s", fConfFile.Data());
-
-      // Get the master
-      TProofNodeInfo *master = resources->GetMaster();
-      if (master) {
-         fImage = master->GetImage();
-      }
-      if (!master || (fImage.Length() == 0)) {
-         Error("StartSlaves",
-               "no appropriate master line found in %s", fConfFile.Data());
+      Int_t pc = 0;
+      TList *workerList = new TList;
+      // Get list of workers
+      if (gProofServ->GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
+         Error("StartSlaves", "getting list of worker nodes");
          return kFALSE;
       }
+      fImage = gProofServ->GetImage();
 
       // Get all workers
-      TList *workerList = resources->GetWorkers();
       UInt_t nSlaves = workerList->GetSize();
       UInt_t nSlavesDone = 0;
       Int_t ord = 0;
@@ -627,8 +643,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
       } //end of worker loop
 
       // Cleanup
-      delete resources;
-      resources = 0;
+      SafeDelete(workerList);
 
       nSlavesDone = 0;
       if (parallel) {
@@ -740,12 +755,18 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                fSlaves->Add(slave);
                fAllMonitor->Add(slave->GetSocket());
                Collect(slave);
-               if (slave->GetStatus() == -99) {
+               Int_t slStatus = slave->GetStatus();
+               if (slStatus == -99 || slStatus == -98) {
                   fSlaves->Remove(slave);
                   fAllMonitor->Remove(slave->GetSocket());
+                  if (slStatus == -99)
+                     Error("StartSlaves", "not allowed to connect to PROOF master server");
+                  else if (slStatus == -98)
+                     Error("StartSlaves", "could not setup output redirection on master");
+                  else
+                     Error("StartSlaves", "setting up master");
                   slave->Close("S");
                   delete slave;
-                  Error("StartSlaves", "not allowed to connect to PROOF master server");
                   return 0;
                }
 
@@ -1546,6 +1567,12 @@ Int_t TProof::Collect(TMonitor *mon)
 
       // Wait for a ready socket
       TSocket *s = mon->Select();
+
+      // Treat interrupt condition
+      if (!s) {
+         mon->DeActivateAll();
+         break;
+      }
 
       // Get and analyse the info it did receive
       if ((rc = CollectInputFrom(s)) == 1)
@@ -2585,23 +2612,21 @@ void TProof::StopProcess(Bool_t abort)
    PDB(kGlobal,2)
       Info("StopProcess","enter %d", abort);
 
-   if (!IsValid()) return;
+   if (!IsValid())
+      return;
 
    fPlayer->StopProcess(abort);
 
-   if (fSlaves->GetSize() == 0) return;
+   // Stop any blocking 'Collect' request
+   InterruptCurrentMonitor();
 
-   TSlave *sl;
-   TIter   next(fSlaves);
+   if (fSlaves->GetSize() == 0)
+      return;
 
-   while ((sl = (TSlave *)next())) {
-      if (sl->IsValid()) {
-         TSocket *s = sl->GetSocket();
-         TMessage msg(kPROOF_STOPPROCESS);
-         msg << abort;
-         s->Send(msg);
-      }
-   }
+   // Notify the remote counterpart
+   TMessage msg(kPROOF_STOPPROCESS);
+   msg << abort;
+   Broadcast(msg, fSlaves);
 }
 
 //______________________________________________________________________________
@@ -3752,7 +3777,8 @@ void TProof::Feedback(TList *objs)
    // Get list of feedback objects. Connect a slot to this signal
    // to monitor the feedback object.
 
-   PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
+   PDB(kGlobal,1)
+      Info("Feedback","%d Objects", objs->GetSize());
    PDB(kFeedback,1) {
       Info("Feedback","%d objects", objs->GetSize());
       objs->ls();
@@ -4891,4 +4917,12 @@ TVirtualProof *TProof::Open(const char *cluster, const char *conffile,
    // TVirtualProof::Open().
 
    return TVirtualProof::Open(cluster, conffile, confdir, loglevel);
+}
+
+//_____________________________________________________________________________
+void TProof::InterruptCurrentMonitor()
+{
+   // If in active in a monitor set ready state
+   if (fCurrentMonitor)
+      fCurrentMonitor->Interrupt();
 }

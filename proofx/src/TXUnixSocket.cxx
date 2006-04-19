@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.3 2006/01/17 13:23:29 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXUnixSocket.cxx,v 1.2 2006/02/26 16:09:57 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TXProofServ.h"
 #include "TXUnixSocket.h"
 #include "XrdProofPhyConn.h"
 
@@ -50,3 +51,4 @@ TXUnixSocket::TXUnixSocket(const char *url, Int_t psid, Char_t capver)
       fPid = gSystem->GetPid();
    }
 }
+

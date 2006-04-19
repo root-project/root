@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.27 2006/04/13 10:27:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.28 2006/04/18 07:27:02 brun Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 #include "TQObject.h"
 #endif
 
-
 class TList;
 class TDSet;
 class TEventList;
@@ -42,6 +41,11 @@ class TQueryResult;
 // Global object with default PROOF session
 class TVirtualProof;
 R__EXTERN TVirtualProof *gProof;
+
+// Special type for the hook to the TProof constructor, needed to avoid
+// using the plugin manager
+typedef TVirtualProof *(*TProof_t)(const char *, const char *, const char *,
+                                   Int_t, const char *);
 
 class TVirtualProof : public TNamed, public TQObject {
 
@@ -66,6 +70,9 @@ public:
       kError = -1,
       kDataSetExists = -2
    };
+
+private:
+   static TProof_t              fgProofHook; // Hook to TProof constructor
 
 protected:
    TVirtualProofMgr::EServType  fServType;  // Type of server: proofd, XrdProofd
@@ -228,6 +235,9 @@ public:
 
    virtual TVirtualProofMgr *GetManager() { return fManager; }
    virtual void        SetManager(TVirtualProofMgr *mgr) { fManager = mgr; }
+
+   static void         SetTProofHook(TProof_t proofhook);
+   static TProof_t     GetTProofHook();
 
    static TVirtualProof *Open(const char *cluster = 0, const char *conffile = 0,
                               const char *confdir = 0, Int_t loglevel = 0);

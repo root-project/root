@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -30,10 +30,13 @@
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
+#ifndef ROOT_TXHandler
+#include "TXHandler.h"
+#endif
 
 class TXSocket;
 
-class TXProofMgr : public TVirtualProofMgr {
+class TXProofMgr : public TVirtualProofMgr, public TXHandler {
 
 private:
 
@@ -45,12 +48,15 @@ public:
    TXProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
    virtual ~TXProofMgr();
 
+   Bool_t      HandleError();
+
    Bool_t      IsValid() const { return fSocket; }
 
    TVirtualProof *AttachSession(Int_t id, Bool_t gui = kFALSE);
    void        DetachSession(Int_t, Option_t * = "");
    Bool_t      MatchUrl(const char *url);
    TList      *QuerySessions(Option_t *opt = "S");
+   void        ShowWorkers();
 
    ClassDef(TXProofMgr,0)  // XrdProofd PROOF manager interface
 };

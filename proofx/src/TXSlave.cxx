@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.4 2006/03/01 10:55:21 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.5 2006/04/19 08:22:25 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TROOT.h"
 #include "TUrl.h"
 #include "TMessage.h"
+#include "TMonitor.h"
 #include "TError.h"
 #include "TVirtualMutex.h"
 #include "TThread.h"
@@ -32,6 +33,41 @@
 #include "TXSocketHandler.h"
 
 ClassImp(TXSlave)
+
+//______________________________________________________________________________
+
+//---- Hook to the constructor -------------------------------------------------
+//---- This is needed to avoid using the plugin manager which may create -------
+//---- problems in multi-threaded environments. --------------------------------
+
+extern "C" {
+   TSlave *GetTXSlave(const char *url, const char *ord, Int_t perf,
+                      const char *image, TProof *proof, Int_t stype,
+                      const char *workdir, const char *msd)
+   {
+      return ((TSlave *)(new TXSlave(url, ord, perf, image,
+                                     proof, stype, workdir, msd)));
+   }
+}
+class XSlaveInit {
+ public:
+   XSlaveInit() {
+      TSlave::SetTXSlaveHook(&GetTXSlave);
+}};
+static XSlaveInit xslave_init;
+
+//______________________________________________________________________________
+
+//---- error handling ----------------------------------------------------------
+//---- Needed to avoid blocking on the CINT mutex in printouts -----------------
+
+//______________________________________________________________________________
+void TXSlave::DoError(int level, const char *location, const char *fmt, va_list va) const
+{
+   // Interface to ErrorHandler (protected).
+
+   ::ErrorHandler(level, Form("TXSlave::%s", location), fmt, va);
+}
 
 //______________________________________________________________________________
 TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
@@ -75,11 +111,11 @@ void TXSlave::Init(const char *host, Int_t stype)
       // For the time being we use 'rootd' service as default.
       // This will be changed to 'proofd' as soon as XRD will be able to
       // accept on multiple ports
-      Int_t port = gSystem->GetServiceByName("rootd");
+      Int_t port = gSystem->GetServiceByName("proofd");
       if (port < 0) {
          if (gDebug > 0)
-            Info("Init","service 'rootd' not found by GetServiceByName"
-                        ": using default IANA assigned tcp port 1094");
+            Info("Init","service 'proofd' not found by GetServiceByName"
+                        ": using default IANA assigned tcp port 1093");
          port = 1094;
       } else {
          if (gDebug > 1)
@@ -128,8 +164,10 @@ void TXSlave::Init(const char *host, Int_t stype)
       return;
    }
 
-   // Set the this as reference of this socket
-   ((TXSocket *)fSocket)->fReference = this;
+   // Set the reference to TProof
+   ((TXSocket *)fSocket)->fReference = fProof;
+   // Set this has handler
+   ((TXSocket *)fSocket)->fHandler = this;
 
    // Set server type
    fProof->fServType = TVirtualProofMgr::kXProofd;
@@ -266,10 +304,16 @@ Int_t TXSlave::Ping()
 //______________________________________________________________________________
 void TXSlave::Interrupt(Int_t type)
 {
-   // Send interrupt OOB byte to master or slave servers.
+   // Send interrupt to master or slave servers.
    // Returns 0 if ok, -1 in case of error
 
    if (!IsValid()) return;
+
+   if (type == TProof::kLocalInterrupt) {
+      // Equivalent to an error condition on the socket
+      HandleError();
+      return;
+   }
 
    ((TXSocket *)fSocket)->SendInterrupt(type);
    Info("Interrupt","Interrupt of type %d sent", type);
@@ -352,4 +396,73 @@ void TXSlave::SetAlias(const char *alias)
    ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kSessionAlias, alias);
 
    return;
+}
+
+//_____________________________________________________________________________
+Bool_t TXSlave::HandleError()
+{
+   // Handle error on the input socket
+
+   Printf("HandleError: %p: got called ...", this);
+
+   // Post semaphore to wake up anybody waiting; send as many posts as needed
+   TSemaphore *sem = &(((TXSocket *)fSocket)->fASem);
+   while (sem->TryWait() != 1)
+      sem->Post();
+
+   if (fProof) {
+
+      // Attach to the monitor instance, if any
+      TMonitor *mon = fProof->fCurrentMonitor;
+
+      if (gDebug > 2)
+         Info("HandleInput","%p: proof: %p, mon: %p", this, fProof, mon);
+
+      if (mon && mon->GetListOfActives()->FindObject(fSocket)) {
+         // Synchronous collection in TProof
+         if (gDebug > 2)
+            Info("HandleInput","%p: deactivating from monitor %p", this, mon);
+         mon->DeActivate(fSocket);
+      }
+   } else {
+      Warning("HandleInput", "%p: reference to PROOF missing", this);
+   }
+
+   Printf("HandleError: %p: DONE ... ", this);
+
+   // We are done
+   return kTRUE;
+}
+
+//_____________________________________________________________________________
+Bool_t TXSlave::HandleInput()
+{
+   // Handle asynchronous input on the socket
+
+   if (fProof) {
+
+      // Attach to the monitor instance, if any
+      TMonitor *mon = fProof->fCurrentMonitor;
+
+      if (gDebug > 2)
+         Info("HandleInput","%p: proof: %p, mon: %p", this, fProof, mon);
+
+      if (mon && mon->GetListOfActives()->FindObject(fSocket)) {
+         // Synchronous collection in TProof
+         if (gDebug > 2)
+            Info("HandleInput","%p: posting monitor %p", this, mon);
+         mon->SetReady(fSocket);
+      } else {
+         // Asynchronous collection in TProof
+         if (gDebug > 2)
+            Info("HandleInput","%p: calling TProof::CollectInputFrom", this);
+         fProof->CollectInputFrom(fSocket);
+      }
+   } else {
+      Warning("HandleInput", "%p: reference to PROOF missing", this);
+      return kFALSE;
+   }
+
+   // We are done
+   return kTRUE;
 }

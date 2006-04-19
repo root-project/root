@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.23 2005/11/14 21:36:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.h,v 1.1 2005/12/10 16:51:57 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -35,12 +35,19 @@
 class TList;
 class TVirtualProof;
 class TVirtualProofDesc;
+class TVirtualProofMgr;
 
+typedef TVirtualProofMgr
+     *(*TVirtualProofMgr_t)(const char *, Int_t, const char *);
 
 class TVirtualProofMgr : public TNamed {
 
 public:
    enum EServType { kProofd = 0, kXProofd = 1 };
+
+private:
+   static TVirtualProofMgr_t fgTProofMgrHook[2]; // Constructor hooks for TProofMgr
+   static TVirtualProofMgr_t GetProofMgrHook(const char *type);
 
 protected:
    EServType      fServType;  // Type of server: old-proofd, XrdProofd
@@ -52,8 +59,7 @@ protected:
    TVirtualProofMgr() : TNamed("",""), fServType(kXProofd), fSessions(0), fUrl("") { }
 
 public:
-   TVirtualProofMgr(const char *url, Int_t /*loglevel*/ = 0, const char * /*alias*/ = 0)
-      : TNamed("",""), fServType(kXProofd), fSessions(0), fUrl(url) { }
+   TVirtualProofMgr(const char *url, Int_t /*loglevel*/ = 0, const char * /*alias*/ = 0);
    virtual ~TVirtualProofMgr();
 
    virtual Bool_t      IsProofd() const { return (fServType == kProofd); }
@@ -66,10 +72,13 @@ public:
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
    virtual TList      *QuerySessions(Option_t *opt = "S") = 0;
+   virtual void        ShowWorkers();
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
 
    static TList       *GetListOfManagers();
+
+   static void SetTProofMgrHook(TVirtualProofMgr_t pmh, const char *type = 0);
 
    static TVirtualProofMgr *Create(const char *url, Int_t loglevel = -1,
                                    const char *alias = 0, Bool_t xpd = kTRUE);

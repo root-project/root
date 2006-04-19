@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -24,8 +24,11 @@
 #ifndef ROOT_TProofServ
 #include "TProofServ.h"
 #endif
+#ifndef ROOT_TXHandler
+#include "TXHandler.h"
+#endif
 
-class TXProofServ : public TProofServ {
+class TXProofServ : public TProofServ, public TXHandler {
 
 private:
    void          SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
@@ -36,6 +39,11 @@ public:
    virtual ~TXProofServ();
 
    void          CreateServer();
+
+   EQueryAction  GetWorkers(TList *workers, Int_t &prioritychange);
+
+   Bool_t        HandleError(); // Error Handler
+   Bool_t        HandleInput(); // Input handler
 
    void          HandleUrgentData();
    void          HandleSigPipe();

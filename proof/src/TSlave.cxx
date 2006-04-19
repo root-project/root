@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.48 2006/03/01 10:55:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.49 2006/04/19 08:22:25 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -32,10 +32,12 @@
 #include "TVirtualMutex.h"
 #include "TThread.h"
 #include "TSocket.h"
-#include "TPluginManager.h"
 #include "TObjString.h"
 
 ClassImp(TSlave)
+
+// Hook for the TXSlave constructor
+TSlave_t TSlave::fgTXSlaveHook = 0;
 
 //______________________________________________________________________________
 TSlave::TSlave(const char *url, const char *ord, Int_t perf,
@@ -404,12 +406,28 @@ TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
          tryxpd = kFALSE;
    }
 
-   // If we have TXSlave the plugin manager will find it
-   TPluginHandler *h = 0;
-   if (tryxpd && (h = gROOT->GetPluginManager()->FindHandler("TSlave","xpd")) &&
-       h->LoadPlugin() == 0) {
-      s = (TSlave *) h->ExecPlugin(8, url, ord, perf, image, proof, stype,
-                                      workdir, msd);
+   // We do this without the plugin manager because it blocks the CINT mutex
+   // breaking the parallel startup
+   if (!fgTXSlaveHook) {
+
+      // Load the library containing TXSlave ...
+#ifdef ROOTLIBDIR
+      TString proofxlib = TString(ROOTLIBDIR) + "/libProofx";
+#else
+      TString proofxlib = TString(gRootDir) + "/lib/libProofx";
+#endif
+      char *p = 0;
+      if ((p = gSystem->DynamicPathName(proofxlib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(proofxlib) == -1)
+            ::Error("TSlave::Create", "can't load %s", proofxlib.Data());
+      } else
+         ::Error("TSlave::Create", "can't locate %s", proofxlib.Data());
+   }
+
+   // Load the right class
+   if (fgTXSlaveHook && tryxpd) {
+      s = (*fgTXSlaveHook)(url, ord, perf, image, proof, stype, workdir, msd);
    } else {
       s = new TSlave(url, ord, perf, image, proof, stype, workdir, msd);
    }
@@ -575,4 +593,11 @@ void TSlave::SetAlias(const char *)
    if (gDebug > 0)
       Info("SetAlias","method not implemented for this communication layer");
    return;
+}
+
+//_____________________________________________________________________________
+void TSlave::SetTXSlaveHook(TSlave_t xslavehook)
+{
+   // Set hook to TXSlave ctor
+   fgTXSlaveHook = xslavehook;
 }

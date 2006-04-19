@@ -60,11 +60,7 @@ endif
 
 # used in the main Makefile
 ALLLIBS    += $(XRDPLUGINS)
-#ifneq ($(PLATFORM),win32)
 ALLEXECS   += $(XRDEXECS)
-#else
-#ALLEXECS   += $(XRDPLUGINS)
-#endif
 
 ##### local rules #####
 $(XROOTDETAG): $(XROOTDSRCS)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.2 2006/03/03 15:42:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.3 2006/03/20 21:43:43 pcanal Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -26,6 +26,20 @@
 #include "TROOT.h"
 
 ClassImp(TProofMgr)
+
+// Autoloading hooks.
+// These are needed to avoid using the plugin manager which may create
+// problems in multi-threaded environments.
+extern "C" {
+   TVirtualProofMgr *GetTProofMgr(const char *url, Int_t l, const char *al)
+   { return ((TVirtualProofMgr *) new TProofMgr(url, l, al)); }
+}
+class ProofMgrInit {
+ public:
+   ProofMgrInit() {
+      TVirtualProofMgr::SetTProofMgrHook(&GetTProofMgr);
+}};
+static ProofMgrInit proofmgr_init;
 
 //______________________________________________________________________________
 TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)

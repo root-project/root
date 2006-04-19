@@ -51,8 +51,8 @@ PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
                       $(TREEPLAYERLIB) $(THREADLIB)
 PROOFLIBEXTRA       = lib/libTree.lib lib/libGraf3d.lib lib/libGraf.lib \
                       lib/libHist.lib lib/libTreePlayer.lib lib/libThread.lib
-PROOFXLIBDEP        = $(PROOFLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = lib/libProof.lib lib/libXrdProofd.lib
+PROOFXLIBDEP        = $(PROOFLIB) $(THREADLIB) $(XPDLIB)
+PROOFXLIBEXTRA      = lib/libProof.lib lib/libThread.lib lib/libXrdProofd.lib
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
 PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
@@ -153,16 +153,14 @@ TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
 PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
                       $(TREEPLAYERLIB) $(THREADLIB)
 PROOFLIBEXTRA       = -Llib -lTree -lGraf3d -lGraf -lHist -lTreePlayer -lThread
-PROOFXLIBDEP        = $(PROOFLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = -Llib -lProof -lXrdProofd
+PROOFXLIBDEP        = $(PROOFLIB) $(THREADLIB) $(XPDLIB)
+PROOFXLIBEXTRA      = -Llib -lProof -lThread -lXrdProofd
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
 PROOFGUILIBEXTRA    = -Llib -lProof -lGui
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
 PEACLIBEXTRA        = -Llib -lProof -lClarens
 PEACGUILIBDEP       = $(GUILIB)
 PEACGUILIBEXTRA     = -Llib -lGui
-PROOFXLIBDEP        = $(PROOFLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = -Llib -lProof -lXrdProofd
 X3DLIBDEP           = $(G3DLIB) $(GUILIB)
 X3DLIBEXTRA         = -Llib -lGraf3d -lGui
 EGLIBDEP            = $(G3DLIB) $(GRAFLIB)

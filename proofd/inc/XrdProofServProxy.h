@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.2 2006/03/01 15:46:12 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -96,6 +96,8 @@ class XrdClientID {
 #define kXPROOFSRVTAGMAX   64
 #define kXPROOFSRVALIASMAX 256
 
+class XrdProofWorker;
+
 class XrdProofServProxy
 {
 
@@ -120,6 +122,9 @@ public:
    int                 GetFreeID();
    int                 GetNClients();
 
+   void                AddWorker(XrdProofWorker *w) { fWorkers.push_back(w); }
+   void                RemoveWorker(XrdProofWorker *w) { fWorkers.remove(w); }
+
    bool                IsValid() const { return fIsValid; }
 
    void                Reset();
@@ -132,6 +137,7 @@ public:
 
    XrdClientID              *fParent;    // Parent creating this session
    std::vector<XrdClientID *> fClients;   // Attached clients stream ids
+   std::list<XrdProofWorker *> fWorkers; // Workers assigned to the session
 
    XrdOucSemWait            *fPingSem;   // To sychronize ping requests
 
@@ -149,5 +155,7 @@ public:
 
    char                      fTag[kXPROOFSRVTAGMAX];
    char                      fAlias[kXPROOFSRVALIASMAX];
+
+   void                      ClearWorkers();
 };
 #endif

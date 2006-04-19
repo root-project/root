@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.35 2006/03/21 15:07:53 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -52,10 +52,14 @@ class TMessage;
 // For backward compatibility
 typedef Int_t (*OldProofServAuthSetup_t)(TSocket *, Bool_t, Int_t,
                                          TString &, TString &, TString &);
+class TList;
 
 class TProofServ : public TApplication {
 
 friend class TXProofServ;
+
+public:
+   enum EQueryAction { kQueryOK, kQueryModify, kQueryStop };
 
 private:
    TString       fService;          //service we are running, either "proofserv" or "proofslave"
@@ -63,6 +67,7 @@ private:
    TString       fConfDir;          //directory containing cluster config information
    TString       fConfFile;         //file containing config information
    TString       fWorkDir;          //directory containing all proof related info
+   TString       fImage;            //image name of the session
    TString       fSessionTag;       //tag for the session
    TString       fSessionDir;       //directory containing session dependent files
    TString       fPackageDir;       //directory containing packages and user libs
@@ -148,7 +153,7 @@ public:
    TProofServ(Int_t *argc, char **argv);
    virtual ~TProofServ();
 
-   virtual void  CreateServer();
+   virtual void   CreateServer();
 
    TProof        *GetProof()      const { return fProof; }
    const char    *GetService()    const { return fService; }
@@ -156,6 +161,7 @@ public:
    const char    *GetConfFile()   const { return fConfFile; }
    const char    *GetUser()       const { return fUser; }
    const char    *GetWorkDir()    const { return fWorkDir; }
+   const char    *GetImage()      const { return fImage; }
    const char    *GetSessionDir() const { return fSessionDir; }
    Int_t          GetProtocol()   const { return fProtocol; }
    const char    *GetOrdinal()    const { return fOrdinal; }
@@ -166,6 +172,8 @@ public:
    Float_t        GetRealTime()   const { return fRealTime; }
    Float_t        GetCpuTime()    const { return fCpuTime; }
    void           GetOptions(Int_t *argc, char **argv);
+
+   virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange);
 
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();

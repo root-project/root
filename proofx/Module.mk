@@ -19,9 +19,11 @@ PROOFXDH     := $(PROOFXDS:.cxx=.h)
 
 ifeq ($(PLATFORM),win32)
 PROOFXH      := $(MODDIRI)/TXProofMgr.h $(MODDIRI)/TXSlave.h \
-                $(MODDIRI)/TXSocket.h $(MODDIRI)/TXSocketHandler.h
+                $(MODDIRI)/TXSocket.h $(MODDIRI)/TXSocketHandler.h \
+                $(MODDIRI)/TXHandler.h
 PROOFXS      := $(MODDIRS)/TXProofMgr.cxx $(MODDIRS)/TXSlave.cxx \
-                $(MODDIRS)/TXSocket.cxx $(MODDIRS)/TXSocketHandler.cxx
+                $(MODDIRS)/TXSocket.cxx $(MODDIRS)/TXSocketHandler.cxx \
+                $(MODDIRS)/TXHandler.cxx
 else
 PROOFXH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -59,10 +61,9 @@ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 
 # Xrootd client libs
 ifeq ($(PLATFORM),win32)
-PROOFXLIBEXTRA := $(XROOTDDIRL)/libXrdClient.lib
-PROOFXLIBEXTRA += $(ROOTSYS)/lib/libThread.lib $(ROOTSYS)/lib/libProof.lib
+PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-PROOFXLIBEXTRA := $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
+PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 		  $(XROOTDDIRL)/libXrdNet.a
 endif
 
@@ -102,14 +103,18 @@ distclean::     distclean-proofx
 ##### extra rules ######
 $(PROOFXO) $(PROOFXDO): $(XROOTDETAG)
 
+ifeq ($(PLATFORM),win32)
+$(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA)
+else
 ifeq ($(ICC_MAJOR),9)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(PROOFXO) $(PROOFXDO): CXXFLAGS += -Wno-deprecated $(PROOFXINCEXTRA)
 else
-ifeq ($(GCC_MAJOR),4)
+ifneq ($(GCC_MAJOR),2)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(PROOFXO) $(PROOFXDO): CXXFLAGS += -Wno-deprecated $(PROOFXINCEXTRA)
 else
 $(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA)
+endif
 endif
 endif

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.18 2005/09/17 13:52:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.19 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -37,11 +37,17 @@
 class TFileHandler;
 class TObjString;
 class TProof;
+class TSlave;
 
-// Hook to external function setting up authentication related stuff
-// for old versions. For backward compatibility.
+// Special type for the hook to external function setting up authentication
+// related stuff for old versions. For backward compatibility.
 typedef Int_t (*OldSlaveAuthSetup_t)(TSocket *, Bool_t, TString, TString);
 
+// Special type for the hook to the TSlave constructor, needed to avoid
+// using the plugin manager
+typedef TSlave *(*TSlave_t)(const char *url, const char *ord, Int_t perf,
+                            const char *image, TProof *proof, Int_t stype,
+                            const char *workdir, const char *msd);
 
 class TSlave : public TObject {
 
@@ -53,6 +59,8 @@ public:
    enum ESlaveType { kMaster, kSlave };
 
 private:
+
+   static TSlave_t fgTXSlaveHook;
 
    TSlave(const TSlave &s) : TObject(s) { }
    TSlave(const char *host, const char *ord, Int_t perf,
@@ -66,6 +74,7 @@ private:
    static TSlave *Create(const char *url, const char *ord, Int_t perf,
                          const char *image, TProof *proof, Int_t stype,
                          const char *workdir, const char *msd);
+
 protected:
    TString       fName;      //slave's hostname
    TString       fImage;     //slave's image name
@@ -128,6 +137,8 @@ public:
    void           Print(Option_t *option="") const;
 
    virtual void   SetupServ(Int_t stype, const char *conffile);
+
+   static void    SetTXSlaveHook(TSlave_t xslavehook);
 
    ClassDef(TSlave,0)  //PROOF slave server
 };

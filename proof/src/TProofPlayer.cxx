@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.74 2006/03/20 21:59:31 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.75 2006/04/19 08:22:25 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -111,7 +111,8 @@ TProofPlayer::~TProofPlayer()
 //______________________________________________________________________________
 void TProofPlayer::StopProcess(Bool_t abort)
 {
-   if (fEvIter != 0) fEvIter->StopProcess(abort);
+   if (fEvIter != 0)
+      fEvIter->StopProcess(abort);
    if (abort == kTRUE)
       fExitStatus = kAborted;
    else
@@ -723,6 +724,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       }
 
       if ( !fPacketizer->IsValid() ) {
+         fExitStatus = kAborted;
          return -1;
       }
 

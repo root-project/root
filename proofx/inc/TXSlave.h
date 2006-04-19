@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -25,13 +25,17 @@
 #ifndef ROOT_TSlave
 #include "TSlave.h"
 #endif
+#ifndef ROOT_TXHandler
+#include "TXHandler.h"
+#endif
 
 class TObjString;
 class TSocket;
 
-class TXSlave : public TSlave {
+class TXSlave : public TSlave, public TXHandler {
 
 friend class TProof;
+friend class TXProofMgr;
 
 private:
    void  Init(const char *host, Int_t stype);
@@ -44,6 +48,7 @@ protected:
    Int_t    Ping();
    TObjString *SendCoordinator(Int_t kind, const char *msg = 0);
    void     SetAlias(const char *alias);
+   void     SetReady();
 
 public:
    TXSlave(const char *url, const char *ord, Int_t perf,
@@ -52,6 +57,12 @@ public:
    virtual ~TXSlave();
 
    void   Close(Option_t *opt = "");
+   void   DoError(int level, const char *location, const char *fmt,
+                  va_list va) const;
+
+   Bool_t HandleError(); // Error Handler
+   Bool_t HandleInput(); // Input handler
+
    void   SetupServ(Int_t stype, const char *conffile);
 
    ClassDef(TXSlave,0)  //Xrd PROOF slave server

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.3 2006/03/01 15:46:12 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.4 2006/03/20 21:24:59 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include <map>
 
 #include "XrdProofServProxy.h"
+#include "XrdProofdProtocol.h"
 
 // Tracing utils
 #include "XrdProofdTrace.h"
@@ -63,6 +64,22 @@ XrdProofServProxy::~XrdProofServProxy()
        if (*i)
           delete (*i);
    fClients.clear();
+
+   // Cleanup worker info
+   ClearWorkers();
+}
+
+//__________________________________________________________________________
+void XrdProofServProxy::ClearWorkers()
+{
+   // Decrease worker counters and clean-up the list
+
+   // Decrease worker counters
+   std::list<XrdProofWorker *>::iterator i;
+   for (i = fWorkers.begin(); i != fWorkers.end(); i++)
+       if (*i)
+          (*i)->fActive--;
+   fWorkers.clear();
 }
 
 //__________________________________________________________________________
@@ -85,6 +102,8 @@ void XrdProofServProxy::Reset()
    strcpy(fTag,"");
    strcpy(fAlias,"");
    fClients.clear();
+   // Cleanup worker info
+   ClearWorkers();
 }
 
 //__________________________________________________________________________

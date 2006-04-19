@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.4 2006/03/01 15:46:33 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "XrdOuc/XrdOucError.hh"
 #include "XrdOuc/XrdOucPthread.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
 #include "XrdNet/XrdNet.hh"
 
@@ -41,26 +42,31 @@
 // Version index: start from 1001 (0x3E9) to distinguish from 'proofd'
 // To be increment when non-backward compatible changes are introduced
 #define XPROOFD_VERSBIN 0x000003E9
-#define XPROOFD_VERSION "1001"
+#define XPROOFD_VERSION "0.1"
 
 #define XPD_LOGGEDIN       1
 #define XPD_NEED_AUTH      2
 #define XPD_ADMINUSER      4
 #define XPD_NEED_MAP       8
 
+enum EResourceType { kRTStatic, kRTPlb };
+enum EStaticSelOpt { kSSORoundRobin, kSSORandom };
+
 class XrdOucError;
 class XrdOucTrace;
 class XrdBuffer;
 class XrdLink;
 class XrdProofClient;
+class XrdProofWorker;
 class XrdScheduler;
+class XrdProofdPriority;
 
 class XrdProofdProtocol : XrdProtocol {
 
 friend class XrdProofClient;
 
 public:
-   XrdProofdProtocol(const char *rsys = 0, int iw = -1 );
+   XrdProofdProtocol();
    virtual ~XrdProofdProtocol() {} // Never gets destroyed
 
    static int    Configure(char *parms, XrdProtocol_Config *pi);
@@ -96,10 +102,16 @@ public:
    int           SetUserEnvironment(const char *usr, const char *dir = 0);
 
    // Static methods
+   static int    ChangeProcessPriority(int pid, int deltap);
+   static int    CheckIf(XrdOucStream *s);
+   static bool   CheckMaster(const char *m);
    static int    Config(const char *fn);
+   static char  *Expand(char *p);
    static char  *FilterSecConfig(const char *cfn, int &nd);
+   static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
    static XrdSecService *LoadSecurity(char *seclib, char *cfn);
-   static int    Xsecl(XrdOucStream &Config);
+   static int    ReadPROOFcfg();
+   static int    SetSrvProtVers();
 
    // Local members
    XrdObject<XrdProofdProtocol>  fProtLink;
@@ -127,6 +139,7 @@ public:
 
    static XrdBuffManager        *fgBPool;     // Buffer manager
    static XrdSecService         *fgCIA;       // Authentication Server
+   static bool                   fgConfigDone; // Whether configure has been run
 
    static XrdScheduler          *fgSched;     // System scheduler
    static XrdOucError            fgEDest;     // Error message handler
@@ -136,11 +149,29 @@ public:
    static int                    fgPort;
    static char                  *fgSecLib;
 
-   static char                  *fgPrgmSrv;  // Server application
+   static char                  *fgPrgmSrv;  // PROOF server application
+   static int                    fgSrvProtVers;  // Protocol version run by PROOF server
    static char                  *fgROOTsys;  // ROOTSYS
-   static char                  *fgTMPdir;  // directory for temporary files
+   static char                  *fgTMPdir;   // directory for temporary files
+   static char                  *fgImage;    // image name for these servers
+   static char                  *fgWorkDir;  // working dir for these servers
+   static int                    fgMaxSessions; // max number of sessions per client
+   static std::list<XrdOucString *> fgMastersAllowed;  // list of master (domains) allowed
+   static std::list<XrdProofdPriority *> fgPriorities;  // list of {users, priority change}
+   static kXR_int32              fgSrvType;    // Master, Submaster, Worker or any
+   static XrdOucString           fgLocalHost;  // FQDN of this machine
+   static char                  *fgPoolURL;    // Local pool URL
+   static char                  *fgNamespace;  // Local pool namespace
 
    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
+
+   static EResourceType          fgResourceType; // resource type
+
+   static char                  *fgPROOFcfg; // PROOF static configuration
+   static int                    fgWorkerMax; // max number or workers per user
+   static EStaticSelOpt          fgWorkerSel; // selection option
+   static bool                   fgWorkerUsrCfg; // user cfg files enabled / disabled
+   static std::vector<XrdProofWorker *> fgWorkers;  // vector of possible workers
 
    static XrdOucMutex            fgXPDMutex;  // Mutex for static area
 
@@ -197,6 +228,64 @@ class XrdProofClient {
 
  private:
    char                            *fClientID;  // String identifying this client
+};
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// XrdProofWorker                                                       //
+//                                                                      //
+// Authors: G. Ganis, CERN, 2006                                        //
+//                                                                      //
+// Small class with information about a potential worker.               //
+// A list of instances of this class is built using the config file or  //
+// or the information collected from the resource discoverers.          //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class XrdProofWorker {
+
+ public:
+   XrdProofWorker(const char *str = 0);
+   virtual ~XrdProofWorker() { }
+
+   void                    Reset(const char *str); // Set from 'str'
+
+   const char             *Export();
+
+   // Counters
+   int                     fActive;      // number of active sessions
+   int                     fSuspended;   // number of suspended sessions 
+
+   std::list<XrdProofServProxy *> fProofServs; // ProofServ sessions using
+                                               // this worker
+
+   // Worker definitions
+   XrdOucString            fExport;    // export string
+   char                    fType;        // type: worker ('W') or submaster ('S')
+   XrdOucString            fHost;    // user@host
+   int                     fPort;        // port
+   int                     fPerfIdx;     // performance index
+   XrdOucString            fImage;       // image name
+   XrdOucString            fWorkDir;     // work directory
+   XrdOucString            fMsd;         // mass storage domain
+   XrdOucString            fId;          // ID string
+};
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// XrdProofdPriority                                                    //
+//                                                                      //
+// Authors: G. Ganis, CERN, 2006                                        //
+//                                                                      //
+// Small class to describe priority changes.                            //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class XrdProofdPriority {
+public:
+   XrdOucString            fUser;          // User to who this applies (wild cards accepted)
+   int                     fDeltaPriority; // Priority change
+   XrdProofdPriority(const char *usr, int dp) : fUser(usr), fDeltaPriority(dp) { }
 };
 
 #endif

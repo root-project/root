@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.6 2006/03/03 15:42:37 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.7 2006/03/20 21:43:43 pcanal Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -30,6 +30,20 @@
 
 ClassImp(TXProofMgr)
 
+// Autoloading hooks.
+// These are needed to avoid using the plugin manager which may create
+// problems in multi-threaded environments.
+extern "C" {
+   TVirtualProofMgr *GetTXProofMgr(const char *url, Int_t l, const char *al)
+   { return ((TVirtualProofMgr *) new TXProofMgr(url, l, al)); }
+}
+class XProofMgrInit {
+ public:
+   XProofMgrInit() {
+      TVirtualProofMgr::SetTProofMgrHook(&GetTXProofMgr, "xpd");
+}};
+static XProofMgrInit xproofmgr_init;
+
 //______________________________________________________________________________
 TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
           : TVirtualProofMgr(url)
@@ -44,11 +58,11 @@ TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
       // For the time being we use 'rootd' service as default.
       // This will be changed to 'proofd' as soon as XRD will be able to
       // accept on multiple ports
-      Int_t port = gSystem->GetServiceByName("rootd");
+      Int_t port = gSystem->GetServiceByName("proofd");
       if (port < 0) {
          if (gDebug > 0)
-            Info("TXProofMgr","service 'rootd' not found by GetServiceByName"
-                              ": using default IANA assigned tcp port 1094");
+            Info("TXProofMgr","service 'proofd' not found by GetServiceByName"
+                              ": using default IANA assigned tcp port 1093");
          port = 1094;
       } else {
          if (gDebug > 1)
@@ -99,6 +113,9 @@ Int_t TXProofMgr::Init(Int_t)
          fServType = TVirtualProofMgr::kProofd;
       return -1;
    }
+
+   // Set this has handler
+   ((TXSocket *)fSocket)->fHandler = this;
 
    // We add the manager itself fro correct destruction
    {  R__LOCKGUARD2(gROOTMutex);
@@ -236,6 +253,29 @@ Bool_t TXProofMgr::MatchUrl(const char *url)
 }
 
 //______________________________________________________________________________
+void TXProofMgr::ShowWorkers()
+{
+   // Show available workers
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid())
+      return;
+
+   // Send the request
+   TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryWorkers);
+   if (os) {
+      TObjArray *oa = TString(os->GetName()).Tokenize(TString("&"));
+      if (oa) {
+         TIter nxos(oa);
+         TObjString *to = 0;
+         while ((to = (TObjString *) nxos()))
+            // Now parse them ...
+            Printf("+  %s", to->GetName());
+      }
+   }
+}
+
+//______________________________________________________________________________
 TList *TXProofMgr::QuerySessions(Option_t *opt)
 {
    // Get list of sessions accessible to this manager
@@ -260,8 +300,9 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
       TObjArray *oa = TString(os->GetName()).Tokenize(TString("|"));
       if (oa) {
          TVirtualProofDesc *d = 0;
-         TObjString *to = (TObjString *) oa->First();
-         while ((to = (TObjString *) oa->After(to))) {
+         TIter nxos(oa);
+         TObjString *to = (TObjString *) nxos();
+         while ((to = (TObjString *) nxos())) {
             // Now parse them ...
             char al[256];
             char tg[256];
@@ -303,4 +344,27 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
 
    // We are done
    return fSessions;
+}
+
+//_____________________________________________________________________________
+Bool_t TXProofMgr::HandleError()
+{
+   // Handle error on the input socket
+
+   Printf("HandleError: %p: got called ...", this);
+
+   // Interrupt any PROOF session in Collect
+   if (fSessions && fSessions->GetSize() > 0) {
+      TIter nxd(fSessions);
+      TVirtualProofDesc *d = 0;
+      while ((d = (TVirtualProofDesc *)nxd())) {
+         TProof *p = (TProof *) d->GetProof();
+         if (p)
+            p->InterruptCurrentMonitor();
+      }
+   }
+   Printf("HandleError: %p: DONE ... ", this);
+
+   // We are done
+   return kTRUE;
 }

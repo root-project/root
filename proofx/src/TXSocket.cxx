@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.7 2006/04/17 21:04:17 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.8 2006/04/18 10:34:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -21,12 +21,14 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TException.h"
+#include "TMonitor.h"
 #include "TObjString.h"
 #include "TProof.h"
 #include "TSlave.h"
 #include "TRegexp.h"
 #include "TROOT.h"
 #include "TUrl.h"
+#include "TXHandler.h"
 #include "TXSocket.h"
 #include "XProofProtocol.h"
 
@@ -159,6 +161,7 @@ TXSocket::TXSocket(const char *url,
    // This is used by external code to create a link between this object
    // and another one
    fReference = 0;
+   fHandler = 0;
 
    // The global pipe
    if (fgPipe[0] == -1) {
@@ -177,7 +180,7 @@ TXSocket::TXSocket(const char *url,
       if (!fConn || !(fConn->IsValid())) {
          if (fConn->GetServType() != XrdProofConn::kSTProofd)
              Error("TXSocket", "severe error occurred while opening a connection"
-                   " to server [%s]", fUrl.Data());
+                   " to server [%s]: %s", url, fConn->GetLastErr());
          return;
       }
 
@@ -193,6 +196,7 @@ TXSocket::TXSocket(const char *url,
       }
 
       // Fill some info
+      fUser = fConn->fUser.c_str();
       fHost = fConn->fHost.c_str();
       fPort = fConn->fPort;
 
@@ -313,6 +317,16 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    // responses are asynchronous by nature.
    UnsolRespProcResult rc = kUNSOL_KEEP;
 
+   // Error notification
+   if (m->IsError()) {
+      Info("ProcessUnsolicitedMsg","got error from underlying connection");
+      fASem.Post();
+      fHandler->HandleError();
+      Info("ProcessUnsolicitedMsg","closing ...");
+      Close();
+      return rc;
+   }
+
    // From now on make sure is for us
    if (!m->MatchStreamid(fConn->fStreamid))
       return kUNSOL_CONTINUE;
@@ -320,7 +334,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if (gDebug > 2)
       Info("TXSocket::ProcessUnsolicitedMsg", "Processing unsolicited response");
 
-   // Local processing ....
+   // Local processing ...
    if (!m) {
       Error("ProcessUnsolicitedMsg","undefined message");
       return rc;
@@ -413,7 +427,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
                Info("ProcessUnsolicitedMsg","%p: posting semaphore: %p (%d bytes)",
                     this,&fASem,len);
             fASem.Post();
-
          }
 
          break;
@@ -695,17 +708,6 @@ Bool_t TXSocket::Create()
          len -= sizeof(kXR_int32);
       } else {
          Warning("Create","protocol version of the remote daemon undefined!");
-      }
-
-      if (len > 0) {
-         // The login username
-         char *u = new char[len+1];
-         if (u) {
-            memcpy(u, pdata, len);
-            u[len] = 0;
-            fUser = u;
-            delete[] u;
-         }
       }
 
       // Cleanup
@@ -1156,6 +1158,16 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg)
          reqhdr.proof.sid = fSessionID;
          reqhdr.header.dlen = strlen(msg);
          buf = (const void *)msg;
+         break;
+      case kGetWorkers:
+         reqhdr.proof.sid = fSessionID;
+         reqhdr.header.dlen = 0;
+         vout = (void **)&bout;
+         break;
+      case kQueryWorkers:
+         reqhdr.proof.sid = 0;
+         reqhdr.header.dlen = 0;
+         vout = (void **)&bout;
          break;
       default:
          Info("SendCoordinator", "unknown message kind: %d", kind);

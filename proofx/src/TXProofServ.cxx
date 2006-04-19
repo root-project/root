@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.3 2006/01/17 13:23:29 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.4 2006/02/26 16:09:57 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
 
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
@@ -220,6 +221,13 @@ Bool_t TXProofServInputHandler::Notify()
 
 ClassImp(TXProofServ)
 
+// Hook to the constructor. This is needed to avoid using the plugin manager
+// which may create problems in multi-threaded environments.
+extern "C" {
+   TApplication *GetTXProofServ(Int_t *argc, char **argv)
+   { return ((TApplication *)(new TXProofServ(argc, argv))); }
+}
+
 //______________________________________________________________________________
 TXProofServ::TXProofServ(Int_t *argc, char **argv) : TProofServ(argc, argv)
 {
@@ -233,9 +241,6 @@ TXProofServ::TXProofServ(Int_t *argc, char **argv) : TProofServ(argc, argv)
      Fatal("TXProofServ", "Must have at least 1 arguments (see  proofd).");
      exit(1);
    }
-
-   // Parse options
-   GetOptions(argc, argv);
 }
 
 //______________________________________________________________________________
@@ -246,7 +251,8 @@ void TXProofServ::CreateServer()
 
 
    // wait (loop) to allow debugger to connect
-   if (gEnv->GetValue("Proof.GdbHook",0) == 3) {
+   if ((gEnv->GetValue("Proof.GdbHook",0) == 3 && fService != "prooftest") ||
+       (gEnv->GetValue("Proof.GdbHook",0) == 4 && fService == "prooftest")) {
       while (gProofServDebug)
          ;
    }
@@ -281,6 +287,15 @@ void TXProofServ::CreateServer()
      Fatal("CreateServer", "Socket setup by xpd undefined");
      exit(1);
    }
+   // If test session, just send the protcol version and exit
+   if (Argc() > 3) {
+      Int_t fpw = (Int_t) strtol(sockpath, 0, 10);
+      int proto = htonl(kPROOF_Protocol);
+      if (write(fpw, &proto, sizeof(proto)) != sizeof(proto)) {
+         Error("CreateServer", "test: sending protocol number");
+      }
+      exit(0);
+   }
 
    // Get the sessions ID
    const char *sessID = 0;
@@ -296,6 +311,8 @@ void TXProofServ::CreateServer()
       Fatal("CreateServer", "Failed to open connection to XrdProofd coordinator");
       exit(1);
    }
+
+   // Get socket descriptor
    Int_t sock = fSocket->GetDescriptor();
 
    // Get the client ID
@@ -385,10 +402,6 @@ void TXProofServ::CreateServer()
    ProcessLine("#define ROOT_TError 0", kTRUE);
    ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
 
-   // The following libs are also useful to have, make sure they are loaded...
-   gROOT->LoadClass("TMinuit",     "Minuit");
-   gROOT->LoadClass("TPostScript", "Postscript");
-
    // Load user functions
    const char *logon;
    logon = gEnv->GetValue("Proof.Load", (char *)0);
@@ -418,6 +431,11 @@ void TXProofServ::CreateServer()
       TXSocketHandler::GetSocketHandler(new TXProofServInputHandler(this, sock), fSocket);
    gSystem->AddFileHandler(sh);
 
+   // Set the this as reference of this socket
+   ((TXSocket *)fSocket)->fReference = this;
+   // Set this has handler
+   ((TXSocket *)fSocket)->fHandler = this;
+
    gProofServ = this;
 
    // if master, start slave servers
@@ -430,6 +448,10 @@ void TXProofServ::CreateServer()
          master += ":";
          master += port;
       }
+
+      // Make sure that parallel startup via threads is not active
+      // (it is broken for xpd because of the locks on gCINTMutex)
+      gEnv->SetValue("Proof.ParallelStartup", 0);
 
       // Get plugin manager to load appropriate TVirtualProof from
       TPluginManager *pm = gROOT->GetPluginManager();
@@ -858,4 +880,106 @@ void TXProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
       mess << status << (Int_t) 1;
 
    fSocket->Send(mess);
+}
+
+//______________________________________________________________________________
+TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
+                                                 Int_t & /* prioritychange */)
+{
+   // Get list of workers to be used from now on.
+   // The list must be provide by the caller.
+
+   // Needs a list where to store the info
+   if (!workers) {
+      Error("GetWorkers", "output list undefined");
+      return kQueryStop;
+   }
+
+   // If user config files are enabled, check them first
+   if (gSystem->Getenv("ROOTUSEUSERCFG")) {
+      Int_t pc = 1;
+      TProofServ::EQueryAction rc = TProofServ::GetWorkers(workers, pc);
+      if (rc == kQueryOK)
+         return rc;
+   }
+
+   // Send request to the coordinator
+   TObjString *os = ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kGetWorkers);
+
+   // The reply contains some information about the master (image, workdir)
+   // followed by the information about the workers; the tokens for each node
+   // are separated by '&'
+   if (os) {
+      TObjArray *oa = TString(os->GetName()).Tokenize(TString("&"));
+      if (oa) {
+         TIter nxos(oa);
+         // The master, first
+         TObjString *to = (TObjString *) nxos();
+         TProofNodeInfo *master = new TProofNodeInfo(to->GetName());
+         // Image
+         fImage = master->GetImage();
+         if (fImage.Length() <= 0) {
+            Error("GetWorkers", "no appropriate master line got from coordinator");
+            SafeDelete(oa);
+            SafeDelete(os);
+            SafeDelete(master);
+            return kQueryStop;
+         }
+         // Work dir, if defined
+         TString tmpwrk = master->GetWorkDir(); 
+         if (tmpwrk != "")
+            fWorkDir = tmpwrk;
+
+         // Now the workers
+         while ((to = (TObjString *) nxos()))
+            workers->Add(new TProofNodeInfo(to->GetName()));
+
+         // Cleanup
+         SafeDelete(oa);
+         SafeDelete(master);
+      }
+      // Cleanup
+      SafeDelete(os);
+   }
+
+   // We are done
+   return kQueryOK;
+}
+
+//_____________________________________________________________________________
+Bool_t TXProofServ::HandleError()
+{
+   // Handle error on the input socket
+
+   Printf("HandleError: %p: got called ...", this);
+
+   // If master server, propagate interrupt to slaves
+   // (shutdown interrupt send internally).
+   if (IsMaster())
+      fProof->Close("S");
+
+   // Close link with coordinator
+   ((TXSocket *)fSocket)->SetSessionID(-1);
+   fSocket->Close();
+
+   Terminate(0);  // will not return from here....
+
+   Printf("HandleError: %p: DONE ... ", this);
+
+   // We are done
+   return kTRUE;
+}
+
+//_____________________________________________________________________________
+Bool_t TXProofServ::HandleInput()
+{
+   // Handle asynchronous input on the input socket
+
+   if (gDebug > 2)
+      Info("HandleInput","%p", this);
+   HandleSocketInput();
+   // This request has been completed: remove the client ID from the pipe
+   ((TXSocket *)fSocket)->RemoveClientID();
+   // We are done
+   return kTRUE;
 }

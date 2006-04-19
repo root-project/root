@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.3 2006/01/17 09:55:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.4 2006/03/03 15:42:37 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -19,12 +19,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TError.h"
+#include "TList.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TVirtualProof.h"
 
 TVirtualProof *gProof = 0;
+
+TProof_t TVirtualProof::fgProofHook = 0; // Hook to the TProof constructor
 
 ClassImp(TVirtualProof)
 
@@ -135,4 +138,20 @@ TVirtualProof *TVirtualProof::Open(const char *cluster, const char *conffile,
       }
       return proof;
    }
+}
+
+//_____________________________________________________________________________
+void TVirtualProof::SetTProofHook(TProof_t proofhook)
+{
+   // Set hook to TProof ctor.
+
+   fgProofHook = proofhook;
+}
+
+//_____________________________________________________________________________
+TProof_t TVirtualProof::GetTProofHook()
+{
+   // Get the TProof hook.
+
+   return fgProofHook;
 }
