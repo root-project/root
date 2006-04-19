@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.7 2005/02/17 14:35:37 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.1 2006/04/17 14:12:52 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -30,30 +30,33 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    // Open a connection to a ODBC server. The db arguments can be:
    // 1. Form "odbc://[user[:passwd]@]<host>[:<port>][/<database>][?Driver]",
    //    e.g.: "odbc://pcroot.cern.ch:3306/test?MySQL".
-   //    Driver argument specifies ODBC driver, which should be used for connection.
-   //    By default, MyODBC driver name is used
-   //    The uid is the username and pw the password that should be used for the connection.
+   //    Driver argument specifies ODBC driver, which should be used for
+   //    connection. By default, MyODBC driver name is used.
+   //    The uid is the username and pw the password that should be used
+   //    for the connection.
    //    If uid and pw are not specified (==0), user and passwd arguments from
-   //    URL will be used. Works only with MySQL ODBC, probably with PostrSQL ODBC.
+   //    URL will be used. Works only with MySQL ODBC, probably with PostrSQL
+   //    ODBC.
    // 2. Form "odbcd://DRIVER={MyODBC};SERVER=pcroot.cern.ch;DATABASE=test;USER=user;PASSWORD=pass;OPTION=3;PORT=3306;"
    //    This is a form, which is accepted by SQLDriverConnect function of ODBC.
-   //    Here some other arguments can be specified, which are not included in standard
-   //    URL format.
-   // 3. Form "odbcn://MySpecialConfig", where MySpecialConfig is entry, defined in
-   //    user DSN (user data source). Here uid and pw should be always specified
+   //    Here some other arguments can be specified, which are not included
+   //    in standard URL format.
+   // 3. Form "odbcn://MySpecialConfig", where MySpecialConfig is entry,
+   //    defined in user DSN (user data source). Here uid and pw should be
+   //    always specified.
    //
    //    Configuring unixODBC under Linux: http://www.unixodbc.org/odbcinst.html
-   //    Remarks: for variants 1 & 2 it is enough to create/configure odbcinst.ini file.
-   //    For variant 3 file odbc.ini should be created. Path to this files can be specified
-   //    in enviromental variables like
+   //    Remarks: for variants 1 & 2 it is enough to create/configure
+   //    odbcinst.ini file. For variant 3 file odbc.ini should be created.
+   //    Path to this files can be specified in enviromental variables like
    //      export ODBCINI=/home/my/unixODBC/etc/odbc.ini
    //      export ODBCSYSINI=/home/my/unixODBC/etc
    //
    //    Configuring MySQL ODBC under Windows.
    //    Installing ODBC driver for MySQL is enough to use it under Windows.
    //    Afer odbcd:// variant can be used with DRIVER={MySQL ODBC 3.51 Driver};
-   //    To configure User DSN, go into Start menu -> Settings -> Control panel ->
-   //    Administrative tools-> Data Sources (ODBC).
+   //    To configure User DSN, go into Start menu -> Settings ->
+   //    Control panel -> Administrative tools-> Data Sources (ODBC).
    //
    //    To install Oracle ODBC driver for Windows, one should download
    //    and install either complete Oracle client (~500 MB), or so-called
@@ -69,9 +72,9 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    //          like ldap.ora, sqlnet.ora, tnsnames.ora should be installed.
    //          Contact your Oracle administrator to get these files.
    //    After Oracle ODBC driver is installed, appropriate entry in ODBC drivers
-   //    list like "Oracle in instantclient10_2" should appiar. Connection string example:
-   //       "odbcd://DRIVER={Oracle in instantclient10_2};DBQ=db-test;UID=user_name;PWD=user_pass;";
-   //
+   //    list like "Oracle in instantclient10_2" should appiar. Connection
+   //    string example:
+   //     "odbcd://DRIVER={Oracle in instantclient10_2};DBQ=db-test;UID=user_name;PWD=user_pass;";
 
    TString connstr;
    Bool_t simpleconnect = kTRUE;
