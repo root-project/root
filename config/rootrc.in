@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.135 2006/04/10 15:30:16 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.136 2006/04/17 14:12:52 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -196,7 +196,7 @@ ACLiC.Linkdef:          _linkdef
 #
 #
 # On the master enable parallel startup of workers using threads
-# Proof.ParallelStartup: yes
+# Proof.ParallelStartup: no
 #
 # Proof.StatsHist:       no
 # Proof.StatsTrace:      no
