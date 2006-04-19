@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.30 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.31 2006/04/19 08:22:25 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -230,6 +230,15 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 {
    PDB(kPacketizer,1) Info("TPacketizer", "enter (first %lld, num %lld)", first, num);
 
+   // Init pointer members
+   fSlaveStats = 0;
+   fPackets = 0;
+   fSlaveStats = 0;
+   fUnAllocated = 0;
+   fActive = 0;
+   fFileNodes = 0;
+   fProgress = 0;
+
    fProcessed = 0;
    fMaxPerfIdx = 1;
 
@@ -391,8 +400,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       fProgress = new TTimer;
       fProgress->SetObject(this);
       fProgress->Start(500,kFALSE);
-   } else
-      fProgress = 0;
+   }
 
    PDB(kPacketizer,1) Info("TPacketizer", "Return");
 }
@@ -739,6 +747,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       // we ran out of slaves ...
       fValid = kFALSE;
    }
+
+   // No reason to continue if invalid
+   if (!fValid)
+      return;
 
    // compute the offset for each file element
    Long64_t offset = 0;

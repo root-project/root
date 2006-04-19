@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.42 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.43 2006/04/19 08:22:25 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -239,6 +239,15 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
 {
    PDB(kPacketizer,1) Info("TPacketizer2", "Enter (first %lld, num %lld)", first, num);
 
+   // Init pointer members
+   fSlaveStats = 0;
+   fPackets = 0;
+   fSlaveStats = 0;
+   fUnAllocated = 0;
+   fActive = 0;
+   fFileNodes = 0;
+   fProgress = 0;
+
    fProcessed = 0;
    fMaxPerfIdx = 1;
 
@@ -404,8 +413,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first,
       fProgress = new TTimer;
       fProgress->SetObject(this);
       fProgress->Start(500,kFALSE);
-   } else
-      fProgress = 0;
+   }
 
    PDB(kPacketizer,1) Info("TPacketizer2", "Return");
 }
@@ -742,6 +750,10 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
    // This needs to be reset
    ((TProof*)gProof)->fCurrentMonitor = 0;
+
+   // No reason to continue if invalid
+   if (!fValid)
+      return;
 
    // compute the offset for each file element
    Long64_t offset = 0;
