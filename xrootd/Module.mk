@@ -76,21 +76,9 @@ $(XROOTDETAG): $(XROOTDSRCS)
 		fi)
 ifeq ($(PLATFORM),win32)
 		@(if [ -d $(XROOTDDIRD)/pthreads-win32 ]; then \
-		    lsplug=`find $(XROOTDDIRD)/pthreads-win32/lib -name "*.dll"` ; \
-		    for i in $$lsplug ; do \
-		       echo "Copying $$i ..." ; \
-	          cp $$i "$(ROOTSYS)/bin" ; \
-		    done ; \
-		    lsplug=`find $(XROOTDDIRD)/pthreads-win32/lib -name "*.lib"` ; \
-		    for i in $$lsplug ; do \
-		       echo "Copying $$i ..." ; \
-	          cp $$i "$(ROOTSYS)/lib" ; \
-		    done ; \
-		    lsplug=`find $(XROOTDDIRD)/pthreads-win32/include -name "*.h"` ; \
-		    for i in $$lsplug ; do \
-		       echo "Copying $$i ..." ; \
-	          cp $$i "$(ROOTSYS)/include" ; \
-		    done ; \
+		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.dll "$(ROOTSYS)/bin" ; \
+		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.lib "$(ROOTSYS)/lib" ; \
+		    cp $(XROOTDDIRD)/pthreads-win32/include/*.h "$(ROOTSYS)/include" ; \
 		  fi)
 endif
 
@@ -112,6 +100,7 @@ $(XRDPLUGINS): $(XRDPLUGINSA)
 		  fi)
 endif
 
+ifneq ($(PLATFORM),win32)
 $(XRDEXECS): $(XRDPLUGINSA)
 		@(for i in $(XRDEXEC); do \
 		     fopt="" ; \
@@ -124,6 +113,11 @@ $(XRDEXECS): $(XRDPLUGINSA)
 		        cp $$bexe bin/$$i ; \
 		     fi ; \
 		  done)
+else
+$(XRDEXECS): $(XRDPLUGINSA)
+		@(echo "Copying xrootd executables ..." ; \
+		cp $(XROOTDDIRD)/bin/*.exe "$(ROOTSYS)/bin" ;)
+endif
 
 ifneq ($(PLATFORM),win32)
 $(XRDPLUGINSA): $(XROOTDETAG)
