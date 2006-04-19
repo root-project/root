@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -94,7 +94,6 @@ private:
    ESrvType            DoHandShake();
    virtual bool        GetAccessToSrv();
    virtual bool        Init(const char *url = 0);
-   bool                IsDefaultPort(int port, int defport[2]);
    bool                Login();
    XReqErrorType       LowWrite(XPClientRequest *, const void *, int);
    bool                MatchStreamID(struct ServerResponseHeader *resp);
@@ -116,6 +115,7 @@ public:
    int                 GetServType() const { return (int)fServerType; }
    short               GetSessionID() const { return fSessionID; }
    const char         *GetUrl() { return (const char *) fUrl.GetUrl().c_str(); }
+   const char         *GetLastErr() { return fLastErrMsg.c_str(); }
 
    bool                IsValid() const { return fConnected; }
 

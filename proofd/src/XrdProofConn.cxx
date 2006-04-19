@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.6 2006/03/20 21:24:59 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.7 2006/04/18 10:34:35 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -118,6 +118,20 @@ bool XrdProofConn::Init(const char *url)
    // Parse Url
    fUrl.TakeUrl(XrdOucString(url));
    fUser = fUrl.User.c_str();
+   // Get username from Url
+   if (fUser.length() <= 0) {
+      // If not specified, use local username
+#ifndef WIN32
+      struct passwd *pw = getpwuid(getuid());
+      fUser = pw ? pw->pw_name : "";
+#else
+      char  name[256];
+      DWORD length = sizeof (name);
+      ::GetUserName(name, &length);
+      if (strlen(name) > 1)
+         fUser = name;
+#endif
+   }
    fHost = fUrl.Host.c_str();
    fPort = fUrl.Port;
 
@@ -145,17 +159,16 @@ bool XrdProofConn::Init(const char *url)
 
             // Get access to server
             if (!GetAccessToSrv()) {
-               if (GetServType() == kSTProofd) {
-                  fConnected = 0;
+               fConnected = 0;
+               if (GetServType() == kSTProofd)
                   return fConnected;
-               }
-               if (fLastErr == kXR_NotAuthorized) {
-                  // Authentication error: does not make much sense to retry
+               if (fLastErr == kXR_NotAuthorized || fLastErr == kXR_InvalidRequest) {
+                  // Auth error or iunvalid request: does not make much sense to retry
                   Close("P");
                   XrdOucString msg = fLastErrMsg;
                   msg.erase(msg.rfind(":"));
-                  TRACE(REQ,"XrdProofConn::Init: authentication failure: " << msg);
-                  return 0;
+                  TRACE(REQ,"XrdProofConn::Init: failure: " << msg);
+                  return fConnected;
                } else {
                   TRACE(REQ,"XrdProofConn::Init: access to server failed (" << fLastErrMsg << ")");
                }
@@ -198,44 +211,6 @@ XrdProofConn::~XrdProofConn()
    // force its closing)
    Close();
 }
-//_____________________________________________________________________________
-bool XrdProofConn::IsDefaultPort(int port, int defport[2])
-{
-   // Check if port is an IANA default for 'rootd' and 'proofd',
-   // and in such a case return default values for 'rootd' and 'proofd'
-   // in defport
-
-   // Default ports
-   static bool first = 1;
-   static int servdef[2]= { 1094, 1093};
-   struct servent *ent = 0;
-
-   // The first time find defaults
-   if (first) {
-      ent = getservbyname("rootd", "tcp");
-      servdef[0] = (ent) ? (int)ntohs(ent->s_port) : servdef[0];
-      ent = getservbyname("proofd", "tcp");
-      servdef[1] = (ent) ? (int)ntohs(ent->s_port) : servdef[1];
-      first = 0;
-   }
-
-   // Is it a default?
-   bool isdefport = 0;
-   defport[0] = -1;
-   defport[1] = -1;
-   if (port == servdef[0] || port <= 0) {
-      isdefport = 1;
-      defport[0] = servdef[0];
-      defport[1] = servdef[1];
-   } else if (port == servdef[1]) {
-      isdefport = 1;
-      defport[0] = servdef[1];
-      defport[1] = servdef[0];
-   }
-
-   // We are done
-   return isdefport;
-}
 
 //_____________________________________________________________________________
 int XrdProofConn::Connect()
@@ -260,34 +235,21 @@ int XrdProofConn::Connect()
                 " with addr " << fUrl.HostAddr);
    }
 
-   // Is the specified port a default one?
-   int servdef[2]= { -1, -1};
-   bool usedefport = IsDefaultPort(fUrl.Port, servdef);
-
-   // Silent internal error notifications during attempts
-   int savedbg = DebugLevel();
-   DebugSetLevel(-1);
-
-   int ntry = (usedefport) ? 2 : 1;
-   for (i = 0; i < ntry; i++) {
-      // Set port
-      fUrl.Port = (usedefport) ? servdef[i] : fUrl.Port;
-      // Connect
-      if ((logid = fgConnMgr->Connect(fUrl)) < 0) {
-         if(i == ntry-1) {
-            if (usedefport)
-               fUrl.Port = -1;
-            TRACE(REQ,"XrdProofConn::Connect: creating logical connection to " <<URLTAG);
-            fLogConnID = logid;
-            fConnected = 0;
-            return -1;
-         }
-      } else
-         break;
+   // Set port: the first time find the default
+   static int servdef = -1;
+   if (servdef < 0) {
+      struct servent *ent = getservbyname("proofd", "tcp");
+      servdef = (ent) ? (int)ntohs(ent->s_port) : 1093;
    }
-   // Restor debug level
-   DebugSetLevel(savedbg);
+   fUrl.Port = (fUrl.Port <= 0) ? servdef : fUrl.Port;
 
+   // Connect
+   if ((logid = fgConnMgr->Connect(fUrl)) < 0) {
+      TRACE(REQ,"XrdProofConn::Connect: creating logical connection to " <<URLTAG);
+      fLogConnID = logid;
+      fConnected = 0;
+      return -1;
+   }
    TRACE(REQ,"XrdProofConn::Connect: connect to "<<URLTAG<<" returned "<<logid );
 
    // Set some vars
@@ -692,7 +654,7 @@ bool XrdProofConn::GetAccessToSrv()
       // Close correctly this connection to proofd
       kXR_int32 dum[2];
       dum[0] = (kXR_int32)htonl(0);
-      dum[1] = (kXR_int32)htonl(2032);
+      dum[1] = (kXR_int32)htonl(2034);
       WriteRaw(&dum[0], sizeof(dum));
       Close("P");
       return 0;
@@ -862,19 +824,7 @@ bool XrdProofConn::Login()
 
    reqhdr.login.pid = getpid();
 
-   // Get username from Url
-#ifndef WIN32
-   struct passwd *pw = getpwuid(getuid());
-   if (fUser.length() <= 0 && pw)
-      // Use local username, if not specified
-      fUser = pw->pw_name;
-#else
-   char  name[256];
-   DWORD length = sizeof (name);
-   ::GetUserName(name, &length);
-   if (fUser.length() <= 0 && strlen(name) > 1)
-      fUser = name;
-#endif
+   // Fill login username
    if (fUser.length() >= 0)
       strcpy( (char *)reqhdr.login.username, (char *)(fUser.c_str()) );
    else
@@ -945,13 +895,14 @@ bool XrdProofConn::Login()
             sprintf(s, "XrdSecHOST=%s", fHost.c_str());
             putenv(s);
             // netrc file
-            XrdOucString netrc = "/.rootnetrc";
+            XrdOucString netrc;
 #ifndef WIN32
-            if (pw)
-               netrc.insert((char *)(pw->pw_dir),0);
-            else
+            struct passwd *pw = getpwuid(getuid());
+            if (pw) {
+               netrc = pw->pw_dir;
+               netrc += "/.rootnetrc";
+            }
 #endif
-               netrc = "";
             if (netrc.length() > 0) {
                s = new char [strlen("XrdSecNETRC")+netrc.length()+2];
                sprintf(s, "XrdSecNETRC=%s", netrc.c_str());

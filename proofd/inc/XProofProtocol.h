@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
 // Author: G. Ganis  June 2005
 
 #ifndef ROOT_XProofProtocol
@@ -53,6 +53,8 @@ enum XProofRequestTypes {
 #define kXPD_TopMaster    2
 #define kXPD_MasterServer 1
 #define kXPD_SlaveServer  0
+#define kXPD_WorkerServer 0
+#define kXPD_AnyServer   -1
 
 // XPROOFD SERVER STATUS
 #define kXPD_idle    0
