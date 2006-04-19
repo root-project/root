@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHelix.cxx,v 1.1 2004/05/26 15:11:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHelix.cxx,v 1.2 2005/11/18 16:07:58 brun Exp $
 // Author: Andrei Gheata   28/04/04
 
 /*************************************************************************
@@ -306,7 +306,7 @@ void TGeoHelix::UpdateHelix()
    if ((1.-TMath::Abs(ddb))<1E-10 || fC==0) {
       // helix is just a straigth line
       TObject::SetBit(kHelixStraigth, kTRUE);
-      *fMatrix = gGeoIdentity;
+      fMatrix->Clear();
       return;
    }   
    rot[2] = fB[0];

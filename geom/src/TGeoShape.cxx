@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.37 2006/03/22 11:18:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.38 2006/04/11 11:21:45 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -442,19 +442,22 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
       const TGeoVolume * paintVolume = gGeoManager->GetPaintVolume();
       if (!paintVolume) paintVolume = gGeoManager->GetTopVolume();
       if (!paintVolume) { 
-         assert(kFALSE); 
-         return; 
-      }
+         buffer.fID = const_cast<TGeoShape *>(this);
+         buffer.fColor = 0;
+         buffer.fTransparency = 0;
+//         assert(kFALSE); 
+//         return; 
+      } else {
+         buffer.fID = const_cast<TGeoVolume *>(paintVolume);
+         buffer.fColor = paintVolume->GetLineColor();
 
-      buffer.fID = const_cast<TGeoVolume *>(paintVolume);
-      buffer.fColor = paintVolume->GetLineColor();
-
-      buffer.fTransparency = paintVolume->GetTransparency();
-      Double_t visdensity = gGeoManager->GetVisDensity();
-      if (visdensity>0 && paintVolume->GetMedium()) {
-         if (paintVolume->GetMaterial()->GetDensity() < visdensity) {
-            buffer.fTransparency = 90;
-         }
+         buffer.fTransparency = paintVolume->GetTransparency();
+         Double_t visdensity = gGeoManager->GetVisDensity();
+         if (visdensity>0 && paintVolume->GetMedium()) {
+            if (paintVolume->GetMaterial()->GetDensity() < visdensity) {
+               buffer.fTransparency = 90;
+            }
+         }   
       }
 
       buffer.fLocalFrame = localFrame;
@@ -462,22 +465,25 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
       
       // Set up local -> master translation matrix
       if (localFrame) {
-         TGeoMatrix * localMasterMat = gGeoManager->GetCurrentMatrix();
+         TGeoMatrix * localMasterMat = 0;
+         if (TGeoShape::GetTransform()) {
+            localMasterMat = TGeoShape::GetTransform();
+         } else {   
+            localMasterMat = gGeoManager->GetCurrentMatrix();
 
          // For overlap drawing the correct matrix needs to obtained in 
          // from GetGLMatrix() - this should not be applied in the case
          // of composite shapes
-         if (gGeoManager->IsMatrixTransform() && !IsComposite()) {
-            localMasterMat = gGeoManager->GetGLMatrix();
+            if (gGeoManager->IsMatrixTransform() && !IsComposite()) {
+               localMasterMat = gGeoManager->GetGLMatrix();
+            }
          }
-         if (TGeoShape::GetTransform()) localMasterMat = TGeoShape::GetTransform();
          if (!localMasterMat) { 
             assert(kFALSE); 
             return; 
          }
          localMasterMat->GetHomogenousMatrix(buffer.fLocalMaster);
-      }
-      else {
+      } else {
          buffer.SetLocalMasterIdentity();
       }
 
