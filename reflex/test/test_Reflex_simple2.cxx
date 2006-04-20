@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.12 2006/04/12 10:18:57 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.13 2006/04/18 07:31:26 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -168,6 +168,8 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testTypedefSelection );
   CPPUNIT_TEST( testTypedef );
   CPPUNIT_TEST( testCppSelectNoAutoselect );
+  CPPUNIT_TEST( testTypedefInClass );
+  CPPUNIT_TEST( testConstMembers );
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST_SUITE_END();
 
@@ -189,6 +191,8 @@ public:
   void testTypedefSelection();
   void testTypedef();
   void testCppSelectNoAutoselect();
+  void testTypedefInClass();
+  void testConstMembers();
   void unloadLibrary();
 
   void tearDown() {}
@@ -841,6 +845,75 @@ void ReflexSimple2Test::testCppSelectNoAutoselect() {
 
 }
 
+void ReflexSimple2Test::testTypedefInClass() {
+
+  Type t0 = Type::ByName("testclasses::WithTypedefMember");
+  CPPUNIT_ASSERT(t0);
+  Member t0m0 = t0.DataMemberByName("m_i");
+  CPPUNIT_ASSERT(t0m0);
+  CPPUNIT_ASSERT(t0m0.TypeOf().IsFundamental());
+  CPPUNIT_ASSERT_EQUAL(std::string("int"), t0m0.TypeOf().Name());
+  Member t0m1 = t0.DataMemberByName("m_mi");
+  CPPUNIT_ASSERT(t0m1);
+  CPPUNIT_ASSERT(t0m1.TypeOf().IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("MyInt"), t0m1.TypeOf().Name());
+  CPPUNIT_ASSERT(t0m1.TypeOf().ToType(FINAL).IsFundamental());
+  CPPUNIT_ASSERT_EQUAL(std::string("int"), t0m1.TypeOf().ToType(FINAL).Name());
+  Member t0m2 = t0.DataMemberByName("m_v");
+  CPPUNIT_ASSERT(t0m2);
+  CPPUNIT_ASSERT(t0m2.TypeOf().IsClass());
+  CPPUNIT_ASSERT(t0m2.TypeOf().IsTemplateInstance());
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t0m2.TypeOf().Name(SCOPED));
+  Member t0m3 = t0.DataMemberByName("m_mv");
+  CPPUNIT_ASSERT(t0m3);
+  CPPUNIT_ASSERT(t0m3.TypeOf().IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("MyVector"), t0m3.TypeOf().Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("testclasses::MyVector"), t0m3.TypeOf().Name(SCOPED));
+  CPPUNIT_ASSERT(t0m3.TypeOf().ToType(FINAL).IsClass());
+  CPPUNIT_ASSERT(t0m3.TypeOf().ToType(FINAL).IsTemplateInstance());
+  CPPUNIT_ASSERT_EQUAL(std::string("vector<int>"), t0m3.TypeOf().ToType(FINAL).Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t0m3.TypeOf().ToType(FINAL).Name(SCOPED));
+
+  Type t1 = Type::ByName("testclasses::WithTypedefMemberT<std::vector<int> >");
+  CPPUNIT_ASSERT(t1);
+  Member t1m0 = t1.DataMemberByName("m_t");
+  CPPUNIT_ASSERT(t1m0);
+  CPPUNIT_ASSERT(t1m0.TypeOf().IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("testclasses::MyVector"), t1m0.TypeOf().Name(SCOPED));
+  CPPUNIT_ASSERT(t1m0.TypeOf().ToType(FINAL).IsClass());
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), t1m0.TypeOf().ToType(FINAL).Name(SCOPED));
+  
+  Type t2 = Type::ByName("testclasses::WithTypedefMemberT<int>");
+  CPPUNIT_ASSERT(t2);
+  Member t2m0 = t2.DataMemberByName("m_t");
+  CPPUNIT_ASSERT(t2m0);
+  CPPUNIT_ASSERT(t2m0.TypeOf().IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("testclasses::MyInt"), t2m0.TypeOf().Name(SCOPED));
+  CPPUNIT_ASSERT(t2m0.TypeOf().ToType(FINAL).IsFundamental());
+  CPPUNIT_ASSERT_EQUAL(std::string("int"), t2m0.TypeOf().ToType(FINAL).Name(SCOPED));
+  
+}
+
+
+void ReflexSimple2Test::testConstMembers() {
+
+  Type t = Type::ByName("testclasses::ConstNonConstMembers");
+  CPPUNIT_ASSERT(t);
+  CPPUNIT_ASSERT(t.IsClass());
+  Member m0 = t.FunctionMemberByName("foo",Type::ByName("int (int)"));
+  CPPUNIT_ASSERT(m0);
+  CPPUNIT_ASSERT(! m0.TypeOf().IsConst());
+  Member m1 = t.FunctionMemberByName("foo",Type(Type::ByName("int (int)"),CONST));
+  CPPUNIT_ASSERT(m1);
+  CPPUNIT_ASSERT(m1.TypeOf().IsConst());
+
+  Member m2 = t.DataMemberByName("m_i");
+  CPPUNIT_ASSERT(m2);
+  CPPUNIT_ASSERT(! m2.TypeOf().IsConst());
+  Member m3 = t.DataMemberByName("m_ci");
+  CPPUNIT_ASSERT(m3);
+  CPPUNIT_ASSERT(m3.TypeOf().IsConst());
+}
 
 
 void ReflexSimple2Test::unloadLibrary() {

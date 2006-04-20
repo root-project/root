@@ -1,4 +1,5 @@
 <lcgdict>
+  <class name="testclases::WithTypedefMemberT<MyVector>"/>
   <class pattern="classVec*"/>
   <class pattern="Class*"/>
   <class pattern="Bla::*"/>

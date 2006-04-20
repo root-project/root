@@ -14,6 +14,19 @@ namespace xmlTypedefSelection {
 
 namespace testclasses {
 
+  typedef int MyInt;
+  typedef std::vector<MyInt> MyVector;
+  
+  class WithTypedefMember {
+    int m_i;
+    MyInt m_mi;
+    std::vector<MyInt> m_v;
+    MyVector m_mv;
+  };
+
+  template < class T > class WithTypedefMemberT {
+    T m_t;
+  };
   
   class UnnamedTypes {
     
@@ -39,6 +52,17 @@ namespace testclasses {
   struct PrivateConstructors {
     int i;
     void foo() {}
+  };
+
+
+  struct ConstNonConstMembers {
+
+    int foo(int i) { return m_i; }
+    int foo(int i) const { return m_i; }
+
+    int m_i;
+    const int m_ci;
+
   };
 
   namespace OverloadedOperators {
@@ -143,5 +167,7 @@ namespace testclasses {
 namespace {
   struct _testclasses_instances {
     testclasses::ConvOp::ConversionOperatorT<int> m1;
+    testclasses::WithTypedefMemberT<testclasses::MyVector> m2;
+    testclasses::WithTypedefMemberT<testclasses::MyInt> m3;
   };
 }
