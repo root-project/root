@@ -1007,6 +1007,7 @@ class genDictionary(object) :
     if   type == 'constructor' : mod += ' | CONSTRUCTOR'
     elif type == 'operator' :    mod += ' | OPERATOR'
     elif type == 'converter' :   mod += ' | CONVERTER'
+    if attrs.get('const')=='1' : mod += ' | CONST'
     if args : params  = '"'+ string.join( map(self.genParameter, args),';')+'"'
     else    : params  = '0'
     s = '  .AddFunctionMember(%s, "%s", %s%s, 0, %s, %s)' % (self.genTypeID(id), name, type, id, params, mod)
