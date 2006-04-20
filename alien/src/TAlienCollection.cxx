@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.4 2005/12/09 16:24:34 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.5 2006/02/03 14:50:25 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -141,28 +141,28 @@ void TAlienCollection::ParseXML()
             xml.GetAttr(xfile, "turl");
 
             TMap *attributes = new TMap();
-	    TObjString* oname = new TObjString(xml.GetAttr(xfile,"name"));
-	    TObjString* oturl = new TObjString(xml.GetAttr(xfile,"turl"));
-	    TObjString* olfn  = new TObjString(xml.GetAttr(xfile,"lfn"));
-	    TObjString* omd5  = new TObjString(xml.GetAttr(xfile,"md5"));
-	    TObjString* osize = new TObjString(xml.GetAttr(xfile,"size"));
-	    TObjString* oguid = new TObjString(xml.GetAttr(xfile,"guid"));
-	    TObjString* oseStringlist = new TObjString(xml.GetAttr(xfile,"seStringlist"));
+            TObjString* oname = new TObjString(xml.GetAttr(xfile,"name"));
+            TObjString* oturl = new TObjString(xml.GetAttr(xfile,"turl"));
+            TObjString* olfn  = new TObjString(xml.GetAttr(xfile,"lfn"));
+            TObjString* omd5  = new TObjString(xml.GetAttr(xfile,"md5"));
+            TObjString* osize = new TObjString(xml.GetAttr(xfile,"size"));
+            TObjString* oguid = new TObjString(xml.GetAttr(xfile,"guid"));
+            TObjString* oseStringlist = new TObjString(xml.GetAttr(xfile,"seStringlist"));
 
-	    attributes->Add(new TObjString("name"),oname);
-	    attributes->Add(new TObjString("turl"),oturl);
-	    attributes->Add(new TObjString("lfn"),olfn);
-	    attributes->Add(new TObjString("md5"),omd5);
-	    attributes->Add(new TObjString("size"),osize);
-	    attributes->Add(new TObjString("guid"),oguid);
-	    attributes->Add(new TObjString("seStringlist"),oseStringlist);
+            attributes->Add(new TObjString("name"),oname);
+            attributes->Add(new TObjString("turl"),oturl);
+            attributes->Add(new TObjString("lfn"),olfn);
+            attributes->Add(new TObjString("md5"),omd5);
+            attributes->Add(new TObjString("size"),osize);
+            attributes->Add(new TObjString("guid"),oguid);
+            attributes->Add(new TObjString("seStringlist"),oseStringlist);
             files->Add(new TObjString(xml.GetAttr(xfile,"name")) , attributes);
 
-	    // we add the first file always as a file without name to the map
-	    if (firstfile) {
-	      files->Add(new TObjString(""),attributes);
-	      firstfile=kFALSE;
-	    }
+            // we add the first file always as a file without name to the map
+            if (firstfile) {
+               files->Add(new TObjString(""),attributes);
+               firstfile=kFALSE;
+            }
          } while ((xfile = xml.GetNext(xfile)));
          fEventList->Add(files);
       }
@@ -186,9 +186,9 @@ const char *TAlienCollection::GetTURL(const char* filename) const
    if (fCurrent) {
       TMap *obj = (TMap*)fCurrent->GetValue(filename);
       if (obj) {
-	if (obj->GetValue("turl")) {
-	  return ( ((TObjString*)obj->GetValue("turl"))->GetName());
-	}
+         if (obj->GetValue("turl")) {
+            return ( ((TObjString*)obj->GetValue("turl"))->GetName());
+         }
       }
    }
    Error("GetTURL","cannot get TURL of file %s",filename);

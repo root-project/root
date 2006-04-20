@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.9 2005/05/25 14:25:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.10 2006/02/07 14:18:45 couet Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -58,7 +58,7 @@
 /*
    This file contains compressed version of CSGSolid and SOLID.
    All stuff is in RootCsg namespace,
-   I used ROOT's own	typedefs and math functions, removed resulting triangulation
+   I used ROOT's own typedefs and math functions, removed resulting triangulation
    (I use OpenGL's inner implementation), changed names from MT_xxx CSG_xxx
    to more natural etc.
    Interface to CSGSolid :
@@ -1197,7 +1197,7 @@ namespace RootCsg {
       TPlane3(const TPlane3 & p):Tuple4(p){}
 
       TVector3  Normal()const;
-      Double_t	Scalar()const;
+      Double_t  Scalar()const;
       void     Invert();
       Double_t SignedDistance(const TVector3 &)const;
 
@@ -1659,7 +1659,7 @@ namespace RootCsg {
       Bool_t discardSign = plane.SignedDistance(origin) < 0 ? kTRUE : kFALSE;
       const Int_t polySize = p1.Size();
       TPoint3 lastPoint = p1[polySize-1];
-      for (Int_t i=0;i<polySize; ++i)	{
+      for (Int_t i=0;i<polySize; ++i) {
          const TPoint3& aPoint = p1[i];
          TPlane3 testPlane(origin, lastPoint, aPoint);
          if ((testPlane.SignedDistance(pointOnPlane) <= 0) == discardSign) return kFALSE;
@@ -1729,7 +1729,7 @@ namespace RootCsg {
    template <typename TGBinder>
    TBBox fit_bbox(const TGBinder &p1)
    {
-      TBBox bbox;	bbox.SetEmpty();
+      TBBox bbox; bbox.SetEmpty();
       for (Int_t i = 0; i < p1.Size(); ++i)
          bbox.Include(p1[i]);
       return bbox;
@@ -1766,7 +1766,7 @@ namespace RootCsg {
       TSplitFunction(TMesh &mesh, TSplitFunctionBinder &functionBindor)
          : fMesh(mesh), fFunctionBinder(functionBindor)
       {}
-      void SplitPolygon(const Int_t p1Index,	const TPlane3 &plane,
+      void SplitPolygon(const Int_t p1Index, const TPlane3 &plane,
                         Int_t &inPiece, Int_t &outPiece,
                         const Double_t onEpsilon)
       {
@@ -1797,7 +1797,7 @@ namespace RootCsg {
                fMesh.Verts().back().Pos() = lastVertex + (v * epsilon);
                typename TMesh::Polygon::TVProp splitProp(newVertexIndex,p.VertexProps(j),p.VertexProps(i),epsilon);
                inP.Verts().push_back(  splitProp );
-               outP.Verts().push_back(	splitProp );
+               outP.Verts().push_back( splitProp );
                fFunctionBinder.InsertVertexAlongEdge(lastIndex,newIndex,splitProp);
             }
             Classify(inP.Verts(),outP.Verts(),newClassification, p.VertexProps(i));
@@ -1998,7 +1998,7 @@ namespace RootCsg {
             TPolygonGeometry<TMesh> pg1(*fMeshA,la->fPolyIndex);
             TPolygonGeometry<TMesh> pg2(*fMeshB,lb->fPolyIndex);
 
-            if (intersect_polygons(pg1, pg2,	fMeshA->Polys()[la->fPolyIndex].Plane(),
+            if (intersect_polygons(pg1, pg2, fMeshA->Polys()[la->fPolyIndex].Plane(),
                 fMeshB->Polys()[lb->fPolyIndex].Plane())) {
                (*fAoverlapsB)[lb->fPolyIndex].push_back(la->fPolyIndex);
                (*fBoverlapsA)[la->fPolyIndex].push_back(lb->fPolyIndex);
@@ -2068,7 +2068,7 @@ namespace RootCsg {
       const Double_t * GetValue()const{return fPos.GetValue();}
 
       Double_t operator [] (Int_t ind)const{return fPos[ind];}
-	};
+   };
 
    class TCVertex : public TVertexBase {
    private:
@@ -2125,7 +2125,7 @@ namespace RootCsg {
       //return the polygons neibouring the given edge.
       void         EdgePolygons(Int_t v1, Int_t v2, PIndexList_t &polys);
       void         InsertVertexAlongEdge(Int_t v1,Int_t v2, const VProp &prop);
-      void         SplitPolygon(Int_t p1Index,	const TPlane3 &plane,	Int_t &inPiece,
+      void         SplitPolygon(Int_t p1Index, const TPlane3 &plane, Int_t &inPiece,
                                 Int_t &outPiece, Double_t onEpsilon);
    };
 
@@ -2141,7 +2141,7 @@ namespace RootCsg {
       {
          fMesh.InsertVertexAlongEdge(lastIndex, newIndex,prop);
       }
-	};
+   };
 
    //______________________________________________________________________________
    template <typename TMesh>
@@ -2352,7 +2352,7 @@ namespace RootCsg {
 
       std::copy(source.Verts().begin(), source.Verts().end(), output.Verts().begin());
       std::copy(source.Polys().begin(), source.Polys().end(), output.Polys().begin());
-	}
+   }
 
    //______________________________________________________________________________
    void build_tree(const AMesh_t &mesh, TBBoxTree &tree)

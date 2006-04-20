@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.76 2006/04/19 08:16:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.77 2006/04/19 08:22:24 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -349,10 +349,10 @@ void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       fArray[bin]             = c1*cu1[bin] +  c2*cu2[bin];
       if (fScaling) {
          //see http://savannah.cern.ch/bugs/?func=detailitem&item_id=14851
-	 fSumw2.fArray[bin]      = ac1*ac1*er1[bin] + ac2*ac2*er2[bin];
+         fSumw2.fArray[bin]      = ac1*ac1*er1[bin] + ac2*ac2*er2[bin];
          fBinEntries.fArray[bin] = en1[bin];
       } else {
-	 fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
+         fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
          fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
       }
    }
@@ -1650,7 +1650,7 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
       nonEqiX = kTRUE;
       out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN
- 	 << "] = {";
+          << "] = {";
       for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
          out << GetXaxis()->GetXbins()->fArray[i];

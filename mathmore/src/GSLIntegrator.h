@@ -1,5 +1,5 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.1 2005/09/08 07:14:56 brun Exp $
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.2 2005/09/18 20:41:25 brun Exp $
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLIntegrator
-// 
+//
 // Created by: Lorenzo Moneta  at Thu Nov 11 14:22:32 2004
-// 
+//
 // Last update: Thu Nov 11 14:22:32 2004
-// 
+//
 #ifndef ROOT_Math_GSLIntegrator
 #define ROOT_Math_GSLIntegrator
 
@@ -42,7 +42,7 @@
 
 /**
 
-@defgroup Integration Numerical Integration 
+@defgroup Integration Numerical Integration
 
 */
 
@@ -52,31 +52,31 @@ namespace Math {
 
 
 
-  class GSLIntegrationWorkspace; 
-  class GSLFunctionWrapper; 
+  class GSLIntegrationWorkspace;
+  class GSLFunctionWrapper;
 
 
- /**  
- 
+ /**
+
 Class for performing numerical integration of a function in one dimension.
-It uses the numerical integration algorithms of GSL, which reimplements the 
-algorithms used in the QUADPACK, a numerical integration package written in Fortran. 
+It uses the numerical integration algorithms of GSL, which reimplements the
+algorithms used in the QUADPACK, a numerical integration package written in Fortran.
 
-Various types of adaptive and non-adaptive integration are supported. These include 
+Various types of adaptive and non-adaptive integration are supported. These include
 integration over infinite and semi-infinite ranges and singular integrals.
 
 The integration type is selected using the Integration::type enumeration
-in the class constructor. 
-The default type is adaptive integration with singularity 
-(ADAPTIVESINGULAR or QAGS in the QUADPACK convention) applying a Gauss-Kronrod 21-point integration rule. 
-In the case of ADAPTIVE type, the integration rule can also be specified via the 
-Integration::GKRule. The default rule is 31 points. 
+in the class constructor.
+The default type is adaptive integration with singularity
+(ADAPTIVESINGULAR or QAGS in the QUADPACK convention) applying a Gauss-Kronrod 21-point integration rule.
+In the case of ADAPTIVE type, the integration rule can also be specified via the
+Integration::GKRule. The default rule is 31 points.
 
-In the case of integration over infinite and semi-infinite ranges, the type used is always 
-ADAPTIVESINGULAR applying a transformation from the original interval into (0,1). 
+In the case of integration over infinite and semi-infinite ranges, the type used is always
+ADAPTIVESINGULAR applying a transformation from the original interval into (0,1).
 
-The ADAPTIVESINGULAR type is the most sophicticated type. When performances are 
-important, it is then recommened to use the NONADAPTIVE type in case of smooth functions or 
+The ADAPTIVESINGULAR type is the most sophicticated type. When performances are
+important, it is then recommened to use the NONADAPTIVE type in case of smooth functions or
  ADAPTIVE with a lower Gauss-Kronrod rule.
 
 For detailed description on GSL integration algorithms see the
@@ -89,24 +89,24 @@ For detailed description on GSL integration algorithms see the
 
   class GSLIntegrator {
 
-  public: 
+  public:
 
 
 
-    // constructors 
+    // constructors
 
 
-    /** Default constructor of GSL Integrator for Adaptive Singular integration 
+    /** Default constructor of GSL Integrator for Adaptive Singular integration
 
        @param absTol desired absolute Error
        @param relTol desired relative Error
        @param size maximum number of sub-intervals
     */
 
-    GSLIntegrator(const IGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);    
-    
+    GSLIntegrator(const IGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
-    GSLIntegrator(GSLFuncPointer f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);    
+
+    GSLIntegrator(GSLFuncPointer f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
 
     /** constructor of GSL Integrator. In the case of Adaptive integration the Gauss-Krond rule of 31 points is used
@@ -116,11 +116,11 @@ For detailed description on GSL integration algorithms see the
        @param relTol desired relative Error
        @param size maximum number of sub-intervals
     */
-    
 
-    GSLIntegrator(const IGenFunction &f, const Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);    
 
-    GSLIntegrator(GSLFuncPointer f, const Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);    
+    GSLIntegrator(const IGenFunction &f, const Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
+
+    GSLIntegrator(GSLFuncPointer f, const Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
     /**
        generic constructor for GSL Integrator
@@ -133,41 +133,41 @@ For detailed description on GSL integration algorithms see the
 
     */
 
-    GSLIntegrator(const IGenFunction &f, const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);    
+    GSLIntegrator(const IGenFunction &f, const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
-    GSLIntegrator(GSLFuncPointer f, const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);    
+    GSLIntegrator(GSLFuncPointer f, const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
-  virtual ~GSLIntegrator(); 
-  //~GSLIntegrator(); 
+  virtual ~GSLIntegrator();
+  //~GSLIntegrator();
 
     // disable copy ctrs
-  private: 
+  private:
 
     GSLIntegrator(const GSLIntegrator &);
     GSLIntegrator & operator=(const GSLIntegrator &);
 
-  public: 
+  public:
 
 
-  // template methods for generic functors 
+  // template methods for generic functors
 
   /**
      method to set the a generic integration function
 
      @param f integration function. The function type must implement the assigment operator, <em>  double  operator() (  double  x ) </em>
- 
+
   */
 
 
-  void SetFunction(const IGenFunction &f) { 
-    //const void * p = &f; 
+  void SetFunction(const IGenFunction &f) {
+    //const void * p = &f;
     //FillGSLFunction(  &GSLFunctionAdapter<IGenFunction>::F, const_cast<void *>(p) );
     FillGSLFunction(f);
   }
- 
-     inline void SetFunction( const GSLFuncPointer &f) {     
-	 FillGSLFunction( f, 0); 
-       }
+
+     inline void SetFunction( const GSLFuncPointer &f) {
+        FillGSLFunction( f, 0);
+     }
 
     // methods using IGenFunction
 
@@ -179,7 +179,7 @@ For detailed description on GSL integration algorithms see the
     */
 
     double Integral(const IGenFunction & f, double a, double b);
-    
+
 
     /**
        evaluate the Integral of a function f over the infinite interval (-inf,+inf)
@@ -193,24 +193,24 @@ For detailed description on GSL integration algorithms see the
        @param a lower value of the integration interval
 
     */
-    double IntegralUp(const IGenFunction & f, double a ); 
+    double IntegralUp(const IGenFunction & f, double a );
 
     /**
        evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b)
        @param f integration function. The function type must implement the mathlib::IGenFunction interface
        @param b upper value of the integration interval
     */
-    double IntegralLow(const IGenFunction & f, double b ); 
-    
+    double IntegralLow(const IGenFunction & f, double b );
+
     /**
        evaluate the Integral of a function f with known singular points over the defined Integral (a,b)
        @param f integration function. The function type must implement the mathlib::IGenFunction interface
-       @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.  
+       @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.
 
     */
-    double Integral(const IGenFunction & f, const std::vector<double> & pts ); 
+    double Integral(const IGenFunction & f, const std::vector<double> & pts );
 
-    // evaluate using cached function 
+    // evaluate using cached function
 
     /**
        evaluate the Integral over the defined interval (a,b) using the function previously set with GSLIntegrator::SetFunction method
@@ -229,35 +229,35 @@ For detailed description on GSL integration algorithms see the
        evaluate the Integral of a function f over the semi-infinite interval (a,+inf) using the function previously set with GSLIntegrator::SetFunction method.
        @param a lower value of the integration interval
     */
-    double IntegralUp(double a ); 
+    double IntegralUp(double a );
 
     /**
        evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b) using the function previously set with GSLIntegrator::SetFunction method.
        @param b upper value of the integration interval
     */
-    double IntegralLow( double b ); 
+    double IntegralLow( double b );
 
     /**
-       evaluate the Integral over the defined interval (a,b) using the function previously set with GSLIntegrator::SetFunction method. The function has known singular points. 
-       @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.  
+       evaluate the Integral over the defined interval (a,b) using the function previously set with GSLIntegrator::SetFunction method. The function has known singular points.
+       @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.
 
     */
     double Integral( const std::vector<double> & pts);
 
-    // evaluate using free function pointer (same GSL signature) 
+    // evaluate using free function pointer (same GSL signature)
 
     /**
        signature for function pointers used by GSL
     */
-    //typedef double ( * GSLFuncPointer ) ( double, void * ); 
+    //typedef double ( * GSLFuncPointer ) ( double, void * );
 
     /**
        evaluate the Integral of  of a function f over the defined interval (a,b) passing a free function pointer
-       The integration function must be a free function and have a signature consistent with GSL functions: 
+       The integration function must be a free function and have a signature consistent with GSL functions:
 
        <em>double my_function ( double x, void * p ) { ...... } </em>
-       
-       This method is the most efficient since no internal adapter to GSL function is created. 
+
+       This method is the most efficient since no internal adapter to GSL function is created.
        @param f pointer to the integration function
        @param p pointer to the Parameters of the function
        @param a lower value of the integration interval
@@ -289,46 +289,46 @@ For detailed description on GSL integration algorithms see the
     /**
        return  the Result of the last Integral calculation
     */
-    double Result() const; 
+    double Result() const;
 
     /**
        return the estimate of the absolute Error of the last Integral calculation
     */
-    double Error() const; 
+    double Error() const;
 
     /**
        return the Error Status of the last Integral calculation
     */
-    int Status() const; 
+    int Status() const;
 
 
-    // setter for control Parameters  (getters are not needed so far ) 
-    
+    // setter for control Parameters  (getters are not needed so far )
+
     /**
        set the desired relative Error
     */
     void SetRelTolerance(double relTolerance);
 
-    
+
     /**
        set the desired absolute Error
     */
     void SetAbsTolerance(double absTolerance);
 
     /**
-       set the integration rule (Gauss-Kronrod rule). 
+       set the integration rule (Gauss-Kronrod rule).
        The possible rules are defined in the Integration::GKRule enumeration.
        The integration rule can be modified only for ADAPTIVE type integrations
     */
     void SetIntegrationRule(Integration::GKRule );
 
-   
 
-protected: 
+
+protected:
 
     // internal method to create GSL function adapter
-    void FillGSLFunction( GSLFuncPointer fp, void *); 
-    void FillGSLFunction(const IGenFunction & f); 
+    void FillGSLFunction( GSLFuncPointer fp, void *);
+    void FillGSLFunction(const IGenFunction & f);
 
 private:
 
@@ -343,18 +343,18 @@ private:
 
     double fResult;
     double fError;
-    int fStatus; 
+    int fStatus;
 
     // GSLIntegrationAlgorithm * fAlgorithm;
 
     GSLIntegrationWorkspace * fWorkspace;
-    GSLFunctionWrapper * fFunction;  
+    GSLFunctionWrapper * fFunction;
 
   };
 
 
 
- 
+
 
 } // namespace Math
 } // namespace ROOT

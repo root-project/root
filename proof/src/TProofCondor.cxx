@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.5 2005/12/09 01:12:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.6 2005/12/10 16:51:57 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -77,7 +77,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
    fImage = fCondor->GetImage(gSystem->HostName());
    if (fImage.Length() == 0) {
       Error("StartSlaves", "Empty Condor image found for system %s",
-	    gSystem->HostName());
+            gSystem->HostName());
       return kFALSE;
    }
 
@@ -155,7 +155,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
       } else {
          PDB(kGlobal,1)
             Info("StartSlaves","cannot reserve enough space thread"
-		 " handlers - switch to serial startup");
+                 " handlers - switch to serial startup");
          parallel = kFALSE;
       }
    }

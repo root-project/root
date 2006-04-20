@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.12 2005/09/09 04:57:59 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.13 2005/11/17 15:17:52 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -264,7 +264,7 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
         Double_t newTranslation[3] = {position->GetX(),position->GetY(),position->GetZ()};
         Double_t newMatrix[9];
         TRotMatrix currentMatrix;
-        
+
         if (nodePosition) {
           if (positionMatrix) {
             TGeometry::UpdateTempMatrix(thisTranslation,thisMatrix?((TRotMatrix *)thisMatrix)->GetMatrix():0
@@ -309,7 +309,7 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
   }
 }
 //_____________________________________________________________________________
-TVolumeView::TVolumeView(TVolumeView &viewNode): 
+TVolumeView::TVolumeView(TVolumeView &viewNode):
              TObjectSet(viewNode.GetName(),(TObject *)viewNode.GetPosition())
             ,TAtt3D()
             ,fListOfShapes(viewNode.GetListOfShapes())
@@ -528,16 +528,16 @@ void TVolumeView::Draw(Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(11);
-      // Set the view to perform a first autorange (frame) draw. 
+      // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
    }
-   
+
    // Create a 3D viewer to draw us
    gPad->GetViewer3D(option);
-#else   
+#else
     Paint(option);
-#endif   
+#endif
 }
 
 //_____________________________________________________________________________
@@ -805,12 +805,12 @@ void TVolumeView::PaintShape(Option_t *option)
 
          // Ask all shapes for kCore/kBoundingBox/kShapeSpecific
          // Not all will support the last two - which is fine
-         const TBuffer3D & buffer = 
+         const TBuffer3D & buffer =
             shape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
- 
- 			// TShape sets buffer id based on TNode * gNode
-			// As we not using TNode we need to override this
-			const_cast<TBuffer3D &>(buffer).fID = this;
+
+            // TShape sets buffer id based on TNode * gNode
+            // As we not using TNode we need to override this
+            const_cast<TBuffer3D &>(buffer).fID = this;
 
          Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);
          if (reqSections != TBuffer3D::kNone)

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.9 2005/09/09 04:57:59 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.10 2005/11/17 15:17:52 brun Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -663,11 +663,11 @@ void TVolume::PaintShape(Option_t *option)
          // Not all will support the last two - which is fine
          const TBuffer3D & buffer =
             fShape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
-				
- 			// TShape sets buffer id based on TNode * gNode
-			// As we not using TNode we need to override this
-			const_cast<TBuffer3D &>(buffer).fID = this;
-			
+
+         // TShape sets buffer id based on TNode * gNode
+         // As we not using TNode we need to override this
+         const_cast<TBuffer3D &>(buffer).fID = this;
+
          Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);
          if (reqSections != TBuffer3D::kNone)
          {

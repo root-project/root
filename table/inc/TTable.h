@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.10 2005/05/08 13:50:55 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.11 2005/11/24 17:08:36 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -87,7 +87,7 @@ public:
                      ,kEndColumnType };
    enum ETableBits {
       kIsNotOwn      = BIT(23)   // if the TTable wrapper doesn't own the STAF table
-		                 // As result of the Update() method for example
+                                 // As result of the Update() method for example
    };
    static const char *fgTypeName[kEndColumnType];
    TTable(const Text_t *name=0, Int_t size=0);
@@ -236,28 +236,28 @@ public:
         void                **fCurrentColPtr;
 
       protected:
-      	void **column() {return  fCurrentColPtr = (void **)(fCurrentRowPtr + fPtrs[fCurrentColIndex]);}
+        void **column() {return  fCurrentColPtr = (void **)(fCurrentRowPtr + fPtrs[fCurrentColIndex]);}
 
       public:
         piterator(const TTable *t=0,EColumnType type=kPtr);
         piterator(const piterator& iter);
-    	  void operator=(const piterator& iter);
+        void operator=(const piterator& iter);
 
-    	  void operator++();
-    	  void operator++(int);
-    	  void operator--();
-    	  void operator--(int);
+        void operator++();
+        void operator++(int);
+        void operator--();
+        void operator--(int);
 
 //        operator const char *() const;
         void **operator *();
 
- 	      Bool_t operator==(const piterator &t) const;
-	      Bool_t operator!=(const piterator &t) const;
+        Bool_t operator==(const piterator &t) const;
+        Bool_t operator!=(const piterator &t) const;
 
-	      UInt_t Row()    const;
-	      UInt_t Column() const;
+        UInt_t Row()    const;
+        UInt_t Column() const;
 
-	      void  MakeEnd(UInt_t lastRowIndex);
+        void  MakeEnd(UInt_t lastRowIndex);
     }; // class iterator over pointers
 
     piterator pbegin(){ return piterator(this); }

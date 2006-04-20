@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLNode.cxx,v 1.1 2005/05/11 13:19:50 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLNode.cxx,v 1.2 2006/01/17 17:42:36 rdm Exp $
 // Author: Jose Lo   12/4/2005
 
 /*************************************************************************
@@ -117,7 +117,7 @@ TList *TXMLNode::GetAttributes()
    xmlAttr *attr_node = fXMLNode->properties;
    for (; attr_node; attr_node = attr_node->next) {
       fAttrList->Add(new TXMLAttr((const char *) attr_node->name,
-				  (const char *) attr_node->children->content));
+                                  (const char *) attr_node->children->content));
    }
 
    return fAttrList;

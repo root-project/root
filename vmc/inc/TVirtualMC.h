@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name: v5-04-00 $:$Id: TVirtualMC.h,v 1.14 2005/09/04 09:25:01 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.15 2005/11/18 21:20:15 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -30,12 +30,12 @@ class TArrayD;
 class TVirtualMC : public TNamed {
 
   public:
-    TVirtualMC(const char *name, const char *title, 
+    TVirtualMC(const char *name, const char *title,
                Bool_t isRootGeometrySupported = kFALSE);
     TVirtualMC();
     virtual ~TVirtualMC();
     TVirtualMC(const TVirtualMC &mc) : TNamed(mc) {}
-  
+
     // static access method
     static TVirtualMC* GetMC() { return fgMC; }
 
@@ -48,60 +48,60 @@ class TVirtualMC : public TNamed {
     virtual Bool_t IsRootGeometrySupported() const { return kFALSE; }
                       // make this function =0 with next release
 
-    // functions from GCONS 
-    virtual void  Gfmate(Int_t imat, char *name, Float_t &a, Float_t &z,  
+    // functions from GCONS
+    virtual void  Gfmate(Int_t imat, char *name, Float_t &a, Float_t &z,
                            Float_t &dens, Float_t &radl, Float_t &absl,
-                         Float_t* ubuf, Int_t& nbuf) = 0; 
-    virtual void  Gfmate(Int_t imat, char *name, Double_t &a, Double_t &z,  
+                         Float_t* ubuf, Int_t& nbuf) = 0;
+    virtual void  Gfmate(Int_t imat, char *name, Double_t &a, Double_t &z,
                            Double_t &dens, Double_t &radl, Double_t &absl,
-                         Double_t* ubuf, Int_t& nbuf) = 0; 
+                         Double_t* ubuf, Int_t& nbuf) = 0;
     virtual void  Gckmat(Int_t imed, char* name) = 0;
 
     // detector composition
-    virtual void  Material(Int_t& kmat, const char* name, Double_t a, 
+    virtual void  Material(Int_t& kmat, const char* name, Double_t a,
                      Double_t z, Double_t dens, Double_t radl, Double_t absl,
                      Float_t* buf, Int_t nwbuf) = 0;
-    virtual void  Material(Int_t& kmat, const char* name, Double_t a, 
+    virtual void  Material(Int_t& kmat, const char* name, Double_t a,
                      Double_t z, Double_t dens, Double_t radl, Double_t absl,
                      Double_t* buf, Int_t nwbuf) = 0;
-    virtual void  Mixture(Int_t& kmat, const char *name, Float_t *a, 
+    virtual void  Mixture(Int_t& kmat, const char *name, Float_t *a,
                      Float_t *z, Double_t dens, Int_t nlmat, Float_t *wmat) = 0;
-    virtual void  Mixture(Int_t& kmat, const char *name, Double_t *a, 
+    virtual void  Mixture(Int_t& kmat, const char *name, Double_t *a,
                      Double_t *z, Double_t dens, Int_t nlmat, Double_t *wmat) = 0;
-    virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
-                     Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
-                     Double_t stemax, Double_t deemax, Double_t epsil, 
+    virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat,
+                     Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd,
+                     Double_t stemax, Double_t deemax, Double_t epsil,
                      Double_t stmin, Float_t* ubuf, Int_t nbuf) = 0;
-    virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat, 
-                     Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd, 
-                     Double_t stemax, Double_t deemax, Double_t epsil, 
+    virtual void  Medium(Int_t& kmed, const char *name, Int_t nmat,
+                     Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd,
+                     Double_t stemax, Double_t deemax, Double_t epsil,
                      Double_t stmin, Double_t* ubuf, Int_t nbuf) = 0;
-    virtual void  Matrix(Int_t& krot, Double_t thetaX, Double_t phiX, 
-                     Double_t thetaY, Double_t phiY, Double_t thetaZ, 
+    virtual void  Matrix(Int_t& krot, Double_t thetaX, Double_t phiX,
+                     Double_t thetaY, Double_t phiY, Double_t thetaZ,
                      Double_t phiZ) = 0;
-    virtual void  Gstpar(Int_t itmed, const char *param, Double_t parval) = 0; 
+    virtual void  Gstpar(Int_t itmed, const char *param, Double_t parval) = 0;
 
-    // functions from GGEOM 
-    virtual Int_t  Gsvolu(const char *name, const char *shape, Int_t nmed,  
-                          Float_t *upar, Int_t np) = 0; 
-    virtual Int_t  Gsvolu(const char *name, const char *shape, Int_t nmed,  
-                          Double_t *upar, Int_t np) = 0; 
-    virtual void  Gsdvn(const char *name, const char *mother, Int_t ndiv, 
-                         Int_t iaxis) = 0; 
-    virtual void  Gsdvn2(const char *name, const char *mother, Int_t ndiv, 
-                         Int_t iaxis, Double_t c0i, Int_t numed) = 0; 
-    virtual void  Gsdvt(const char *name, const char *mother, Double_t step, 
-                         Int_t iaxis, Int_t numed, Int_t ndvmx) = 0; 
-    virtual void  Gsdvt2(const char *name, const char *mother, Double_t step, 
-                         Int_t iaxis, Double_t c0, Int_t numed, Int_t ndvmx) = 0; 
-    virtual void  Gsord(const char *name, Int_t iax) = 0; 
-    virtual void  Gspos(const char *name, Int_t nr, const char *mother,  
-                         Double_t x, Double_t y, Double_t z, Int_t irot, 
-                         const char *konly="ONLY") = 0; 
-    virtual void  Gsposp(const char *name, Int_t nr, const char *mother,  
+    // functions from GGEOM
+    virtual Int_t  Gsvolu(const char *name, const char *shape, Int_t nmed,
+                          Float_t *upar, Int_t np) = 0;
+    virtual Int_t  Gsvolu(const char *name, const char *shape, Int_t nmed,
+                          Double_t *upar, Int_t np) = 0;
+    virtual void  Gsdvn(const char *name, const char *mother, Int_t ndiv,
+                         Int_t iaxis) = 0;
+    virtual void  Gsdvn2(const char *name, const char *mother, Int_t ndiv,
+                         Int_t iaxis, Double_t c0i, Int_t numed) = 0;
+    virtual void  Gsdvt(const char *name, const char *mother, Double_t step,
+                         Int_t iaxis, Int_t numed, Int_t ndvmx) = 0;
+    virtual void  Gsdvt2(const char *name, const char *mother, Double_t step,
+                         Int_t iaxis, Double_t c0, Int_t numed, Int_t ndvmx) = 0;
+    virtual void  Gsord(const char *name, Int_t iax) = 0;
+    virtual void  Gspos(const char *name, Int_t nr, const char *mother,
+                         Double_t x, Double_t y, Double_t z, Int_t irot,
+                         const char *konly="ONLY") = 0;
+    virtual void  Gsposp(const char *name, Int_t nr, const char *mother,
                          Double_t x, Double_t y, Double_t z, Int_t irot,
                          const char *konly, Float_t *upar, Int_t np) = 0;
-    virtual void  Gsposp(const char *name, Int_t nr, const char *mother,  
+    virtual void  Gsposp(const char *name, Int_t nr, const char *mother,
                          Double_t x, Double_t y, Double_t z, Int_t irot,
                          const char *konly, Double_t *upar, Int_t np) = 0;
     virtual void  Gsbool(const char* onlyVolName, const char* manyVolName) = 0;
@@ -110,7 +110,7 @@ class TVirtualMC : public TNamed {
                                Float_t *absco, Float_t *effic, Float_t *rindex) = 0;
     virtual void  SetCerenkov(Int_t itmed, Int_t npckov, Double_t *ppckov,
                                Double_t *absco, Double_t *effic, Double_t *rindex) = 0;
-  
+
     // functions for definition of surfaces
     // and material properties for optical physics
     virtual void  DefineOpSurface(const char* name,
@@ -126,43 +126,43 @@ class TVirtualMC : public TNamed {
                          const char* volName,
                          const char* opSurfaceName);
     virtual void  SetMaterialProperty(
-                         Int_t itmed, const char* propertyName, 
+                         Int_t itmed, const char* propertyName,
                          Int_t np, Double_t* pp, Double_t* values);
     virtual void  SetMaterialProperty(
                          Int_t itmed, const char* propertyName,
                          Double_t value);
     virtual void  SetMaterialProperty(
-                         const char* surfaceName, const char* propertyName, 
+                         const char* surfaceName, const char* propertyName,
                          Int_t np, Double_t* pp, Double_t* values);
-			 
+
     // functions for access to geometry
     //
     // Return the Transformation matrix between the volume specified by
     // the path volumePath and the top or master volume.
-    virtual Bool_t GetTransformation(const TString& volumePath, 
+    virtual Bool_t GetTransformation(const TString& volumePath,
                          TGeoHMatrix& matrix);
-   
+
     // Return the name of the shape and its parameters for the volume
     // specified by the volume name.
-    virtual Bool_t GetShape(const TString& volumePath, 
+    virtual Bool_t GetShape(const TString& volumePath,
                          TString& shapeType, TArrayD& par);
 
     // Returns the material parameters for the volume specified by
     // the volume name.
     virtual Bool_t GetMaterial(const TString& volumeName,
-	 	         TString& name, Int_t& imat,
-		         Double_t& a, Double_t& z, Double_t& density,
-		         Double_t& radl, Double_t& inter, TArrayD& par);
-		     
+                               TString& name, Int_t& imat,
+                               Double_t& a, Double_t& z, Double_t& density,
+                               Double_t& radl, Double_t& inter, TArrayD& par);
+
     // Returns the medium parameters for the volume specified by the
     // volume name.
     virtual Bool_t GetMedium(const TString& volumeName,
-                         TString& name, Int_t& imed,
-		         Int_t& nmat, Int_t& isvol, Int_t& ifield,
-		         Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
-		         Double_t& deemax, Double_t& epsil, Double_t& stmin,
-		         TArrayD& par);
-    
+                             TString& name, Int_t& imed,
+                             Int_t& nmat, Int_t& isvol, Int_t& ifield,
+                             Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
+                             Double_t& deemax, Double_t& epsil, Double_t& stmin,
+                             TArrayD& par);
+
     // functions for drawing
     // to be removed with complete move to TGeo
     virtual void  DrawOneSpec(const char* name) = 0;
@@ -173,10 +173,10 @@ class TVirtualMC : public TNamed {
 
     // Euclid
     virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t) = 0;
-    
+
     // set geometry from Root (built via TGeo)
-    virtual void  SetRootGeometry() = 0; 
-                               
+    virtual void  SetRootGeometry() = 0;
+
     // get methods
     virtual Int_t VolId(const Text_t* volName) const = 0;
     virtual const char* VolName(Int_t id) const = 0;
@@ -190,28 +190,28 @@ class TVirtualMC : public TNamed {
     // methods for physics management
     // ------------------------------------------------
     //
- 
+
     // set methods
     virtual Bool_t   SetCut(const char* cutName, Double_t cutValue) = 0;
     virtual Bool_t   SetProcess(const char* flagName, Int_t flagValue) = 0;
-    virtual Bool_t   DefineParticle(Int_t pdg, const char* name, 
-                        TMCParticleType pType, 
-                        Double_t mass, Double_t charge, Double_t lifetime) = 0; 
-    virtual Bool_t   DefineIon(const char* name, Int_t Z, Int_t A,  
-                        Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0; 
-    virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0; 
- 
-        // particle table usage         
-    virtual Int_t   IdFromPDG(Int_t id) const =0;  
+    virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
+                        TMCParticleType pType,
+                        Double_t mass, Double_t charge, Double_t lifetime) = 0;
+    virtual Bool_t   DefineIon(const char* name, Int_t Z, Int_t A,
+                        Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0;
+    virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0;
+
+        // particle table usage
+    virtual Int_t   IdFromPDG(Int_t id) const =0;
     virtual Int_t   PDGFromId(Int_t pdg) const =0;
-    
+
         // get methods
-    virtual TString   ParticleName(Int_t pdg) const = 0;          
-    virtual Double_t  ParticleMass(Int_t pdg) const = 0;          
-    virtual Double_t  ParticleCharge(Int_t pdg) const = 0;          
-    virtual Double_t  ParticleLifeTime(Int_t pdg) const = 0;          
+    virtual TString   ParticleName(Int_t pdg) const = 0;
+    virtual Double_t  ParticleMass(Int_t pdg) const = 0;
+    virtual Double_t  ParticleCharge(Int_t pdg) const = 0;
+    virtual Double_t  ParticleLifeTime(Int_t pdg) const = 0;
     virtual TMCParticleType ParticleMCType(Int_t pdg) const = 0;
-  
+
     //
     // methods for step management
     // ------------------------------------------------
@@ -219,27 +219,27 @@ class TVirtualMC : public TNamed {
 
     // action methods
     virtual void StopTrack() = 0;
-    virtual void StopEvent() = 0;   
-    virtual void StopRun() = 0;   
+    virtual void StopEvent() = 0;
+    virtual void StopRun() = 0;
 
     // set methods
     virtual void SetMaxStep(Double_t) = 0;
     virtual void SetMaxNStep(Int_t) = 0;
-    virtual void SetUserDecay(Int_t) = 0;  
+    virtual void SetUserDecay(Int_t) = 0;
     virtual void ForceDecayTime(Float_t) = 0;
-    
+
     // get methods
-    // tracking volume(s) 
+    // tracking volume(s)
     virtual Int_t    CurrentVolID(Int_t& copyNo) const =0;
     virtual Int_t    CurrentVolOffID(Int_t off, Int_t& copyNo) const =0;
     virtual const char* CurrentVolName() const =0;
     virtual const char* CurrentVolOffName(Int_t off) const =0;
     virtual const char* CurrentVolPath() = 0;
-    virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z, 
-                       Float_t &dens, Float_t &radl, Float_t &absl) const =0;  
+    virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z,
+                       Float_t &dens, Float_t &radl, Float_t &absl) const =0;
     virtual Int_t    CurrentMedium() const;
                          // new function (to replace GetMedium() const)
-    virtual Int_t    CurrentEvent() const =0; 
+    virtual Int_t    CurrentEvent() const =0;
     virtual void     Gmtod(Float_t* xm, Float_t* xd, Int_t iflag) = 0;
     virtual void     Gmtod(Double_t* xm, Double_t* xd, Int_t iflag) = 0;
     virtual void     Gdtom(Float_t* xd, Float_t* xm, Int_t iflag)= 0 ;
@@ -249,14 +249,14 @@ class TVirtualMC : public TNamed {
     virtual Int_t    GetMedium() const = 0;
                          // Replaced with CurrentMedium(), to be removed
 
-        // tracking particle 
+        // tracking particle
         // dynamic properties
     virtual void     TrackPosition(TLorentzVector& position) const =0;
     virtual void     TrackPosition(Double_t &x, Double_t &y, Double_t &z) const =0;
     virtual void     TrackMomentum(TLorentzVector& momentum) const =0;
     virtual void     TrackMomentum(Double_t &px, Double_t &py, Double_t &pz, Double_t &etot) const =0;
     virtual Double_t TrackStep() const =0;
-    virtual Double_t TrackLength() const =0; 
+    virtual Double_t TrackLength() const =0;
     virtual Double_t TrackTime() const =0;
     virtual Double_t Edep() const =0;
         // static properties
@@ -277,22 +277,22 @@ class TVirtualMC : public TNamed {
 
         // secondaries
     virtual Int_t    NSecondaries() const=0;
-    virtual void     GetSecondary(Int_t isec, Int_t& particleId, 
+    virtual void     GetSecondary(Int_t isec, Int_t& particleId,
                         TLorentzVector& position, TLorentzVector& momentum) =0;
-    virtual TMCProcess ProdProcess(Int_t isec) const =0; 
+    virtual TMCProcess ProdProcess(Int_t isec) const =0;
     virtual Int_t    StepProcesses(TArrayI &proc) const = 0;
     // Information about the transport order needed by the stack
     virtual Bool_t   SecondariesAreOrdered() const = 0;
-    
+
     //
     // Geant3 specific methods
     // !!! to be removed with move to TGeo
     //
     virtual void Gdopt(const char*,const char*) = 0;
     virtual void SetClipBox(const char*,Double_t=-9999,Double_t=0, Double_t=-9999,
-                            Double_t=0,Double_t=-9999,Double_t=0) = 0;    
+                            Double_t=0,Double_t=-9999,Double_t=0) = 0;
     virtual void DefaultRange() = 0;
-    virtual void Gdhead(Int_t, const char*, Double_t=0) = 0;   
+    virtual void Gdhead(Int_t, const char*, Double_t=0) = 0;
     virtual void Gdman(Double_t, Double_t, const char*) = 0;
 
     //
@@ -319,7 +319,7 @@ class TVirtualMC : public TNamed {
     virtual TVirtualMCStack*   GetStack() const   { return fStack; }
     virtual TVirtualMCDecayer* GetDecayer() const { return fDecayer; }
     virtual TRandom*           GetRandom() const  { return fRandom; }
-                                     
+
 
   protected:
     TVirtualMCApplication* fApplication; //! User MC application
@@ -341,77 +341,77 @@ class TVirtualMC : public TNamed {
 inline void  TVirtualMC::DefineOpSurface(const char* /*name*/,
                 EMCOpSurfaceModel /*model*/, EMCOpSurfaceType /*surfaceType*/,
                 EMCOpSurfaceFinish /*surfaceFinish*/, Double_t /*sigmaAlpha*/) {
-   
+
    Warning("DefineOpSurface", "New function - not yet implemented.");
-}   
-                
+}
+
 inline void  TVirtualMC::SetBorderSurface(const char* /*name*/,
                 const char* /*vol1Name*/, int /*vol1CopyNo*/,
                 const char* /*vol2Name*/, int /*vol2CopyNo*/,
                 const char* /*opSurfaceName*/) {
    Warning("SetBorderSurface", "New function - not yet implemented.");
-}   
-                
+}
+
 inline void  TVirtualMC::SetSkinSurface(const char* /*name*/,
                 const char* /*volName*/,
                 const char* /*opSurfaceName*/) {
    Warning("SetSkinSurface", "New function - not yet implemented.");
-}   
-                
+}
+
 inline void  TVirtualMC::SetMaterialProperty(
-                Int_t /*itmed*/, const char* /*propertyName*/, 
+                Int_t /*itmed*/, const char* /*propertyName*/,
                 Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
    Warning("SetMaterialProperty", "New function - not yet implemented.");
-}   
-                
+}
+
 inline void  TVirtualMC::SetMaterialProperty(
-                Int_t /*itmed*/, const char* /*propertyName*/, 
+                Int_t /*itmed*/, const char* /*propertyName*/,
                 Double_t /*value*/) {
    Warning("SetMaterialProperty", "New function - not yet implemented.");
-}   
-                
+}
+
 inline void  TVirtualMC::SetMaterialProperty(
-                const char* /*surfaceName*/, const char* /*propertyName*/, 
+                const char* /*surfaceName*/, const char* /*propertyName*/,
                 Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
    Warning("SetMaterialProperty", "New function - not yet implemented.");
-}   
+}
 
-inline Bool_t TVirtualMC::GetTransformation(const TString& /*volumePath*/, 
+inline Bool_t TVirtualMC::GetTransformation(const TString& /*volumePath*/,
                  TGeoHMatrix& /*matrix*/) {
    Warning("GetTransformation", "New function - not yet implemented.");
    return kFALSE;
-}   
-			 
-inline Bool_t TVirtualMC::GetShape(const TString& /*volumeName*/, 
+}
+
+inline Bool_t TVirtualMC::GetShape(const TString& /*volumeName*/,
                  TString& /*shapeType*/, TArrayD& /*par*/) {
    Warning("GetShape", "New function - not yet implemented.");
    return kFALSE;
-}   
+}
 
 inline Bool_t TVirtualMC::GetMaterial(const TString& /*volumeName*/,
-	 	 TString& /*name*/, Int_t& /*imat*/,
-		 Double_t& /*a*/, Double_t& /*z*/, Double_t& /*density*/,
-		 Double_t& /*radl*/, Double_t& /*inter*/, TArrayD& /*par*/) {
+                 TString& /*name*/, Int_t& /*imat*/,
+                 Double_t& /*a*/, Double_t& /*z*/, Double_t& /*density*/,
+                 Double_t& /*radl*/, Double_t& /*inter*/, TArrayD& /*par*/) {
    Warning("GetMaterial", "New function - not yet implemented.");
    return kFALSE;
-}   
-		     
+}
+
 inline Bool_t TVirtualMC::GetMedium(const TString& /*volumeName*/,
                  TString& /*name*/, Int_t& /*imed*/,
-		 Int_t& /*nmat*/, Int_t& /*isvol*/, Int_t& /*ifield*/,
-		 Double_t& /*fieldm*/, Double_t& /*tmaxfd*/, Double_t& /*stemax*/,
-		 Double_t& /*deemax*/, Double_t& /*epsil*/, Double_t& /*stmin*/,
-		 TArrayD& /*par*/) {
+                 Int_t& /*nmat*/, Int_t& /*isvol*/, Int_t& /*ifield*/,
+                 Double_t& /*fieldm*/, Double_t& /*tmaxfd*/, Double_t& /*stemax*/,
+                 Double_t& /*deemax*/, Double_t& /*epsil*/, Double_t& /*stmin*/,
+                 TArrayD& /*par*/) {
    Warning("GetMedium", "New function - not yet implemented.");
    return kFALSE;
-}   
-		 
+}
+
 inline Int_t TVirtualMC::CurrentMedium() const {
    Warning("CurrentMedium", "New function - not yet implemented.");
    return 0;
-}   
-		 
-    
+}
+
+
 R__EXTERN TVirtualMC *gMC;
 
 #endif //ROOT_TVirtualMC

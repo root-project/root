@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.26 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.27 2006/03/13 09:33:50 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -83,8 +83,8 @@ ClassImp(TGLColorEditor)
 //______________________________________________________________________________
 TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGLSAViewer *v)
                :TGCompositeFrame(parent, 100, 100, kVerticalFrame),// | kRaisedFrame),
-                fViewer(v), fRedSlider(0), fGreenSlider(0), fBlueSlider(0), 
-                fAlphaSlider(0), fApplyButton(0), fIsActive(kFALSE), 
+                fViewer(v), fRedSlider(0), fGreenSlider(0), fBlueSlider(0),
+                fAlphaSlider(0), fApplyButton(0), fIsActive(kFALSE),
                 fIsLight(kFALSE), fRGBA()
 {
    // Construct color editor GUI component, parented by window 'parent',
@@ -108,7 +108,7 @@ TGLColorEditor::TGLColorEditor(const TGWindow *parent, TGLSAViewer *v)
    AddFrame(fApplyFamily, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 2, 2, 5, 0));
    fApplyFamily->SetState(kButtonDisabled);
    fApplyFamily->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
-   
+
    //Init GL
    MakeCurrent();
 
@@ -134,7 +134,7 @@ TGLColorEditor::~TGLColorEditor()
 //______________________________________________________________________________
 void TGLColorEditor::SetRGBA(const Float_t *rgba)
 {
-   // Set color sliders from 17 component 'rgba' 
+   // Set color sliders from 17 component 'rgba'
    fApplyButton->SetState(kButtonDisabled);
    fApplyFamily->SetState(kButtonDisabled);
 
@@ -160,7 +160,7 @@ void TGLColorEditor::SetRGBA(const Float_t *rgba)
    fRedSlider->SetPosition(Int_t(fRGBA[fLMode * 4] * 100));
    fGreenSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 1] * 100));
    fBlueSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 2] * 100));
-   
+
    DrawSphere();
 }
 
@@ -277,24 +277,24 @@ void TGLColorEditor::CreateRadioButtons()
    // partFrame will delete the layout manager ml for us so don't add to fTrash
    fLightTypes[kDiffuse] = new TGRadioButton(partFrame, "Diffuse", kCPd);
    fLightTypes[kDiffuse]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
-   fLightTypes[kDiffuse]->SetToolTipText("Diffuse component of color");	
+   fLightTypes[kDiffuse]->SetToolTipText("Diffuse component of color");
    partFrame->AddFrame(fLightTypes[kDiffuse]);
 
    fLightTypes[kAmbient] = new TGRadioButton(partFrame, "Ambient", kCPa);
    fLightTypes[kAmbient]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
-   fLightTypes[kAmbient]->SetToolTipText("Ambient component of color");	
+   fLightTypes[kAmbient]->SetToolTipText("Ambient component of color");
    partFrame->AddFrame(fLightTypes[kAmbient]);
 
    fLightTypes[kSpecular] = new TGRadioButton(partFrame, "Specular", kCPs);
    fLightTypes[kSpecular]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
-   fLightTypes[kSpecular]->SetToolTipText("Specular component of color");	
+   fLightTypes[kSpecular]->SetToolTipText("Specular component of color");
    partFrame->AddFrame(fLightTypes[kSpecular]);
 
    fLightTypes[kEmission] = new TGRadioButton(partFrame, "Emissive", kCPe);
    fLightTypes[kEmission]->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
-   fLightTypes[kEmission]->SetToolTipText("Emissive component of color");	
+   fLightTypes[kEmission]->SetToolTipText("Emissive component of color");
    partFrame->AddFrame(fLightTypes[kEmission]);
-   
+
    fLMode = kDiffuse;
    fLightTypes[fLMode]->SetState(kButtonDown);
 }
@@ -354,7 +354,7 @@ void TGLColorEditor::SetSlidersPos()
 
 //______________________________________________________________________________
 Bool_t TGLColorEditor::HandleContainerNotify(Event_t *event)
-{  
+{
    // Handle resize event
    gVirtualX->ResizeWindow(fGLWin, event->fWidth, event->fHeight);
    DrawSphere();
@@ -468,7 +468,7 @@ void TGLGeometryEditor::DoButton()
       fViewer->ProcessGUIEvent(wid);
       if (wid == kTBa1) {
          fApplyButton->SetState(kButtonDisabled);
-      } 
+      }
    }
 }
 
@@ -497,22 +497,22 @@ void TGLGeometryEditor::ValueSet(Long_t)
 void TGLGeometryEditor::CreateCenterControls()
 {
    // Create object center GUI
-   AddFrame(new TGLabel(this, "Object's center, X:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));  
+   AddFrame(new TGLabel(this, "Object's center, X:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
    fGeomData[kCenterX] = new TGNumberEntry(this, 0.0, 8, kNExc);
    AddFrame(fGeomData[kCenterX], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fGeomData[kCenterX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+   fGeomData[kCenterX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor",
                                 this, "ValueSet(Long_t)");
 
-   AddFrame(new TGLabel(this, "Object's center, Y:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));  
+   AddFrame(new TGLabel(this, "Object's center, Y:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
    fGeomData[kCenterY] = new TGNumberEntry(this, 0.0, 8, kNEyc);
    AddFrame(fGeomData[kCenterY], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fGeomData[kCenterY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+   fGeomData[kCenterY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor",
                                 this, "ValueSet(Long_t)");
 
-   AddFrame(new TGLabel(this, "Object's center, Z:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));  
+   AddFrame(new TGLabel(this, "Object's center, Z:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
    fGeomData[kCenterZ] = new TGNumberEntry(this, 0.0, 8, kNEzc);
    AddFrame(fGeomData[kCenterZ], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fGeomData[kCenterZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+   fGeomData[kCenterZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor",
                                 this, "ValueSet(Long_t)");
 }
 
@@ -520,22 +520,22 @@ void TGLGeometryEditor::CreateCenterControls()
 void TGLGeometryEditor::CreateStretchControls()
 {
    // Create object scale GUI
-   AddFrame(new TGLabel(this, "Object's scale, X:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));  
+   AddFrame(new TGLabel(this, "Object's scale, X:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
    fGeomData[kScaleX] = new TGNumberEntry(this, 1.0, 8, kNExs);
    AddFrame(fGeomData[kScaleX], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fGeomData[kScaleX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+   fGeomData[kScaleX]->Connect("ValueSet(Long_t)", "TGLGeometryEditor",
                                this, "ValueSet(Long_t)");
 
-   AddFrame(new TGLabel(this, "Object's scale, Y:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));  
+   AddFrame(new TGLabel(this, "Object's scale, Y:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
    fGeomData[kScaleY] = new TGNumberEntry(this, 1.0, 8, kNEys);
    AddFrame(fGeomData[kScaleY], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fGeomData[kScaleY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+   fGeomData[kScaleY]->Connect("ValueSet(Long_t)", "TGLGeometryEditor",
                                this, "ValueSet(Long_t)");
 
-   AddFrame(new TGLabel(this, "Object's scale, Z:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));  
+   AddFrame(new TGLabel(this, "Object's scale, Z:"), new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 3, 3, 3));
    fGeomData[kScaleZ] = new TGNumberEntry(this, 1.0, 8, kNEzs);
    AddFrame(fGeomData[kScaleZ], new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-   fGeomData[kScaleZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor", 
+   fGeomData[kScaleZ]->Connect("ValueSet(Long_t)", "TGLGeometryEditor",
                                this, "ValueSet(Long_t)");
 
    fGeomData[kScaleX]->SetLimits(TGNumberFormat::kNELLimitMin, 0.1);
@@ -551,9 +551,9 @@ void TGLGeometryEditor::CreateStretchControls()
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLClipEditor)
-      
+
 //______________________________________________________________________________
-TGLClipEditor::TGLClipEditor(const TGWindow *parent, TGLSAViewer *v) : 
+TGLClipEditor::TGLClipEditor(const TGWindow *parent, TGLSAViewer *v) :
    TGCompositeFrame(parent, 100, 100, kVerticalFrame),
                     fViewer(v), fCurrentClip(kClipNone)
 {
@@ -607,8 +607,8 @@ void TGLClipEditor::CreateControls()
       fPlaneProp[i] = new TGNumberEntry(fPlanePropFrame, 1., 8);
       fTrash.AddLast(fPlaneProp[i]);
       fPlanePropFrame->AddFrame(fPlaneProp[i], fL1);
-      fPlaneProp[i]->Connect("ValueSet(Long_t)", "TGLClipEditor", 
-                             this, "ClipValueChanged(Long_t)");   
+      fPlaneProp[i]->Connect("ValueSet(Long_t)", "TGLClipEditor",
+                             this, "ClipValueChanged(Long_t)");
    }
 
    // Box properties
@@ -624,10 +624,10 @@ void TGLClipEditor::CreateControls()
       fBoxProp[i] = new TGNumberEntry(fBoxPropFrame, 1., 8);
       fTrash.AddLast(fBoxProp[i]);
       fBoxPropFrame->AddFrame(fBoxProp[i], fL1);
-      fBoxProp[i]->Connect("ValueSet(Long_t)", "TGLClipEditor", 
-                           this, "ClipValueChanged(Long_t)");   
+      fBoxProp[i]->Connect("ValueSet(Long_t)", "TGLClipEditor",
+                           this, "ClipValueChanged(Long_t)");
    }
-	
+
    // Apply button
    fApplyButton = new TGTextButton(this, "Apply", kTBcpm);
    fTrash.AddLast(fApplyButton);
@@ -655,7 +655,7 @@ void TGLClipEditor::ClipValueChanged(Long_t)
 
 //______________________________________________________________________________
 void TGLClipEditor::ClipTypeChanged(Int_t id)
-{ 
+{
    // Clip type radio button changed - update viewer
    if (id == 1) {
       SetCurrent(kClipNone, kFALSE);
@@ -769,7 +769,7 @@ void TGLClipEditor::SetCurrent(EClipType type, Bool_t edit)
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLLightEditor)
-      
+
 //______________________________________________________________________________
 TGLLightEditor::TGLLightEditor(const TGWindow *parent, TGLSAViewer *v)
                :TGCompositeFrame(parent, 100, 100, kVerticalFrame),// | kRaisedFrame),
@@ -782,9 +782,9 @@ TGLLightEditor::TGLLightEditor(const TGWindow *parent, TGLSAViewer *v)
    fTrash.AddLast(ligFrame);
    ligFrame->SetTitlePos(TGGroupFrame::kLeft);
    TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3);
-	fTrash.AddLast(l);
+   fTrash.AddLast(l);
    AddFrame(ligFrame, l);
-   
+
    TGMatrixLayout *ml = new TGMatrixLayout(ligFrame, 0, 1, 10);
    ligFrame->SetLayoutManager(ml);
    // ligFrame will delete the layout manager ml for us so don't add to fTrash
@@ -883,29 +883,29 @@ TGLGuideEditor::TGLGuideEditor(const TGWindow *parent, TGLSAViewer *v) :
 
    TGLabel * label = new TGLabel(fReferenceContainer, "X");
    fTrash.AddLast(label);
-   fReferenceContainer->AddFrame(label, fL2);  
+   fReferenceContainer->AddFrame(label, fL2);
    fReferencePos[0] = new TGNumberEntry(fReferenceContainer, 0.0, 8);
    fTrash.AddLast(fReferencePos[0]);
    fReferenceContainer->AddFrame(fReferencePos[0], fL1);
-   fReferencePos[0]->Connect("ValueSet(Long_t)", "TGLGuideEditor", 
+   fReferencePos[0]->Connect("ValueSet(Long_t)", "TGLGuideEditor",
                              this, "Update()");
 
    label = new TGLabel(fReferenceContainer, "Y");
    fTrash.AddLast(label);
-   fReferenceContainer->AddFrame(label, fL2);  
+   fReferenceContainer->AddFrame(label, fL2);
    fReferencePos[1] = new TGNumberEntry(fReferenceContainer, 0.0, 8);
    fTrash.AddLast(fReferencePos[1]);
    fReferenceContainer->AddFrame(fReferencePos[1], fL1);
-   fReferencePos[1]->Connect("ValueSet(Long_t)", "TGLGuideEditor", 
+   fReferencePos[1]->Connect("ValueSet(Long_t)", "TGLGuideEditor",
                              this, "Update()");
 
    label = new TGLabel(fReferenceContainer, "Z");
    fTrash.AddLast(label);
-   fReferenceContainer->AddFrame(label, fL2);  
+   fReferenceContainer->AddFrame(label, fL2);
    fReferencePos[2] = new TGNumberEntry(fReferenceContainer, 0.0, 8);
    fTrash.AddLast(fReferencePos[2]);
    fReferenceContainer->AddFrame(fReferencePos[2], fL1);
-   fReferencePos[2]->Connect("ValueSet(Long_t)", "TGLGuideEditor", 
+   fReferencePos[2]->Connect("ValueSet(Long_t)", "TGLGuideEditor",
                              this, "Update()");
    axesNone->SetState(kButtonDown);
 }
@@ -930,9 +930,9 @@ void TGLGuideEditor::GetState(TGLViewer::EAxesType & axesType, Bool_t & referenc
    // 'axesType'     - axes type - one of EAxesType - kAxesNone/kAxesPlane/kAxesBox
    // 'referenceOn'  - reference marker on (visible)
    // 'referencePos' - current reference position (vertex)
-   
+
    // Button ids run from 1
-   for (Int_t i = 1; i < 4; i++) { 
+   for (Int_t i = 1; i < 4; i++) {
       TGButton * button = fAxesContainer->GetButton(i);
       if (button && button->IsDown()) {
          axesType = TGLViewer::EAxesType(i-1);
@@ -951,7 +951,7 @@ void TGLGuideEditor::SetState(TGLViewer::EAxesType axesType, Bool_t referenceOn,
    // 'axesType'     - axes type - one of EAxesType - kAxesNone/kAxesPlane/kAxesBox
    // 'referenceOn'  - reference marker on (visible)
    // 'referencePos' - current reference position (vertex)
-   
+
    // Button ids run from 1
    TGButton * button = fAxesContainer->GetButton(axesType+1);
    if (button) {
@@ -967,7 +967,7 @@ void TGLGuideEditor::SetState(TGLViewer::EAxesType axesType, Bool_t referenceOn,
 //______________________________________________________________________________
 void TGLGuideEditor::UpdateReferencePos()
 {
-   // Enable/disable reference position (x/y/z) number edits based on 
+   // Enable/disable reference position (x/y/z) number edits based on
    // reference check box
    fReferencePos[0]->SetState(fReferenceOn->IsDown());
    fReferencePos[1]->SetState(fReferenceOn->IsDown());

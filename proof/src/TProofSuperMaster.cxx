@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.11 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.12 2006/04/19 08:22:25 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -83,7 +83,7 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel, Bool_t)
    }
    if (!master || (fImage.Length() == 0)) {
       Error("StartSlaves",
-	    "no appropriate master line found in %s", fConfFile.Data());
+            "no appropriate master line found in %s", fConfFile.Data());
       return kFALSE;
    }
 
@@ -101,8 +101,8 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel, Bool_t)
       thrHandlers.reserve(nSubmasters);
       if (thrHandlers.max_size() < nSubmasters) {
          PDB(kGlobal,1)
-	    Info("StartSlaves","cannot reserve enough space thread"
-		 " handlers - switch to serial startup");
+            Info("StartSlaves","cannot reserve enough space thread"
+                 " handlers - switch to serial startup");
          parallel = kFALSE;
       }
    }
