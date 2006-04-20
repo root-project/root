@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.6 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.7 2006/02/27 18:41:58 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -168,14 +168,15 @@ public:
 
   /// return dimension $D$
   inline static unsigned int Dim() { return D; }
-  /// access the parse tree
+  /// access the parse tree. Index starts from zero
   T apply(unsigned int i) const;
   /// return read-only pointer to internal array
   const T* Array() const;
   /// return pointer to internal array
   T* Array();
 
-  // STL interface
+  /** @name --- STL-like interface --- */
+
 
   /** STL iterator interface. */
   iterator begin();
@@ -221,13 +222,13 @@ public:
   template <class A>
   bool operator<(const VecExpr<A,T,D>& rhs) const;
 
-  /// read-only access
+  /// read-only access of vector elements. Index starts from 0. 
   const T& operator[](unsigned int i) const;
-  /// read-only access
+  /// read-only access of vector elements. Index starts from 0. 
   const T& operator()(unsigned int i) const;
-  /// read/write access
+  /// read/write access of vector elements. Index starts from 0. 
   T& operator[](unsigned int i);
-  /// read/write access
+  /// read/write access of vector elements. Index starts from 0. 
   T& operator()(unsigned int i);
 
   ///

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.17 2006/03/30 10:33:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.18 2006/03/30 16:18:05 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -220,7 +220,9 @@ public:
   };
 #endif
   /** @name --- Access functions --- */
-  /// access the parse tree
+  /** access the parse tree. Index starts from zero and follows C convention for accessing 
+      the matrix elements. 
+   */  
   T apply(unsigned int i) const;
 
   /// return read-only pointer to internal array
@@ -228,7 +230,7 @@ public:
   /// return pointer to internal array
   T* Array();
 
-  // STL interface
+  /** @name --- STL-like interface --- */
 
   /** STL iterator interface. */
   iterator begin();
@@ -277,9 +279,13 @@ public:
   template <class A, class R2>
   bool operator<(const Expr<A,T,D1,D2,R2>& rhs) const;
 
-  /// read-only access
+  /**
+     read only access to matrix element. Indeces start from 0
+   */ 
   const T& operator()(unsigned int i, unsigned int j) const;
-  /// read/write access
+    /**
+     read/write access to matrix element. Indeces start from 0
+   */ 
   T& operator()(unsigned int i, unsigned int j);
 
   ///
