@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.9 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.10 2006/04/12 10:21:11 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -61,9 +61,15 @@ namespace ROOT {
          Type( const Type & rh );
 
 
-         /** copy constructor applying qualification */
+         /** 
+          * copy constructor applying qualification 
+          * @param rh the right hand type
+          * @param modifiers to be applied
+          * @param append if set to true modifiers will be appended
+          */
          Type( const Type & rh,
-               unsigned int modifiers );
+               unsigned int modifiers,
+               bool append = false );
       
 
          /** destructor */
@@ -1143,10 +1149,11 @@ inline ROOT::Reflex::Type::Type( const Type & rh )
 
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Type::Type( const Type & rh, 
-                                 unsigned int modifiers ) 
+                                 unsigned int modifiers,
+                                 bool append ) 
 //-------------------------------------------------------------------------------
    : fTypeName( rh.fTypeName ),
-     fModifiers( modifiers ) {}
+     fModifiers( append ? rh.fModifiers | modifiers : modifiers ) {}
 
 
 //-------------------------------------------------------------------------------

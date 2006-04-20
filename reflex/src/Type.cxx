@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.7 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.8 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -139,32 +139,68 @@ ROOT::Reflex::Member ROOT::Reflex::Type::FunctionMemberByName( const std::string
 
 //-------------------------------------------------------------------------------
 bool ROOT::Reflex::Type::IsEquivalentTo( const Type & typ ) const {
-//-------------------------------------------------------------------------------
-   Type t1 = *this;
-   Type t2 = typ;
-   if (!t1.Id() & !t2.Id()) return true;
-   while (t1.IsTypedef()) t1 = t1.ToType();
-   while (t2.IsTypedef()) t2 = t2.ToType();
-   switch ( t1.TypeType() ) {
-   case CLASS:
+  //-------------------------------------------------------------------------------
+  Type t1 = *this;
+  Type t2 = typ;
+  if (!t1.Id() & !t2.Id()) return true;
+
+  unsigned int mod1 = t1.fModifiers;
+  unsigned int mod2 = t2.fModifiers;
+
+  while (t1.IsTypedef()) { 
+    t1 = t1.ToType();
+    mod1 |= t1.fModifiers;
+  }
+  while ( t2.IsTypedef()) {
+    t2 = t2.ToType();
+    mod2 |= t2.fModifiers;
+  }
+
+  if (mod1 == mod2) {
+
+    switch ( t1.TypeType() ) {
+    case CLASS:
       if ( t2.IsClass() )           return ( t1.fTypeName == t2.fTypeName ); 
-   case FUNDAMENTAL:
+    case FUNDAMENTAL:
       if ( t2.IsFundamental() )     return ( t1.fTypeName == t2.fTypeName );
-   case UNION:
+    case UNION:
       if ( t2.IsUnion() )           return ( t1.fTypeName == t2.fTypeName ); 
-   case ENUM:
+    case ENUM:
       if ( t2.IsEnum() )            return ( t1.fTypeName == t2.fTypeName ); 
-   case POINTER:
+    case POINTER:
       if ( t2.IsPointer() )         return ( t1.ToType().IsEquivalentTo(t2.ToType()) );
-   case POINTERTOMEMBER:
+    case POINTERTOMEMBER:
       if ( t2.IsPointerToMember() ) return ( t1.ToType().IsEquivalentTo(t2.ToType()) );
-   case ARRAY:
+    case ARRAY:
       if ( t2.IsArray() )           return ( t1.ToType().IsEquivalentTo(t2.ToType()) && t1.ArrayLength() == t2.ArrayLength() );
-   case FUNCTION:
-      if ( t2.IsFunction() )        return true; // FIXME 
-   default:
+    case FUNCTION:
+      if ( t2.IsFunction() ) {
+
+        if ( t1.ReturnType().IsEquivalentTo(t2.ReturnType())) {
+
+          if ( t1.FunctionParameterSize() == t2.FunctionParameterSize() ) {
+
+            Type_Iterator pi1;
+            Type_Iterator pi2;
+            for ( pi1 = t1.FunctionParameter_Begin(), pi2 = t2.FunctionParameter_Begin(); 
+                  pi1 != t1.FunctionParameter_End(),  pi2 != t2.FunctionParameter_End(); 
+                  ++pi1, ++pi2 ) {
+
+              if ( ! pi1->IsEquivalentTo(*pi2)) return false;
+
+            }
+            return true;
+          }
+        }
+        return false;
+      }
+    default:
       return false;
-   }
+    }
+  }
+  else {
+    return false;
+  }
 }
 
 
@@ -207,7 +243,7 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
    }
 
    /** if At is not a pointer qualifiers can be put before */
-   if ( cv.length() && TypeType() != POINTER ) s += cv + " ";
+   if ( cv.length() && TypeType() != POINTER && TypeType() != FUNCTION ) s += cv + " ";
   
    /** use implemented names if available */
    if ( * this ) s += fTypeName->fTypeBase->Name( mod );
@@ -224,7 +260,7 @@ std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
    }
 
    /** if At is a pointer qualifiers have to be after At */
-   if ( cv.length() && TypeType() == POINTER ) s += " " + cv;
+   if ( cv.length() && ( TypeType() == POINTER || TypeType() == FUNCTION) ) s += " " + cv;
 
    /** apply reference if qualifications wanted */
    if ( ( 0 != ( mod & ( QUALIFIED | Q ))) && IsReference()) s += "&";
