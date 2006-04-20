@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.73 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.74 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -812,7 +812,7 @@ void TObject::Streamer(TBuffer &R__b)
          pid = TProcessID::GetProcessWithUID(fUniqueID,this);
          //add uid to the TRefTable if there is one
          TRefTable *table = TRefTable::GetRefTable();
-         if(table) table->Add(fUniqueID, pid);
+         if(table) table->Add(uid, pid);
 
          pidf = TProcessID::WriteProcessID(pid,file);
          R__b << pidf;

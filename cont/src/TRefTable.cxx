@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.8 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.9 2006/03/30 13:09:40 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -106,11 +106,6 @@ Int_t TRefTable::Add(Int_t uid, TProcessID *context)
    // Add a new uid to the table.
    // we add a new pair (uid,fparent) to the map
    // This function is called by TObject::Streamer or TStreamerInfo::WriteBuffer
-
-   if (uid <= 0) {
-      Error("Add", "Attempt to add an invalid uid=%d", uid);
-      return uid;
-   }
 
    if (!context)
       context = TProcessID::GetSessionProcessID();
