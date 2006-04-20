@@ -36,7 +36,13 @@ extern char	*notdotdot[ ];
 extern boolean show_where_not;
 extern boolean warn_multiple;
 
-#ifndef S_IFREG
+#if defined(S_IFREG)
+#define RMKDEPEND_STAT_S_IFREG S_IFREG
+#elif defined(__S_IFREG)
+#define RMKDEPEND_STAT_S_IFREG __S_IFREG
+#elif defined (_S_IFREG)
+#define RMKDEPEND_STAT_S_IFREG _S_IFREG
+#else
 #error S_IFREG not defined
 #endif
 
@@ -273,7 +279,7 @@ struct inclist *inc_path(file, include, dot)
 	 * then check the exact path provided.
 	 */
 	if (!found && (dot || *include == '/')) {
-		if (stat(include, &st) == 0 && (st.st_mode & S_IFREG) ) {
+		if (stat(include, &st) == 0 && (st.st_mode & RMKDEPEND_STAT_S_IFREG) ) {
 			ip = newinclude(include, include);
 			found = TRUE;
 		}
@@ -297,7 +303,7 @@ struct inclist *inc_path(file, include, dot)
 			strcpy(path + (p-file) + 1, include);
 		}
 		remove_dotdot(path);
-		if (stat(path, &st) == 0 && (st.st_mode & S_IFREG)) {
+		if (stat(path, &st) == 0 && (st.st_mode & RMKDEPEND_STAT_S_IFREG)) {
 			ip = newinclude(path, include);
 			found = TRUE;
 		}
@@ -313,7 +319,7 @@ struct inclist *inc_path(file, include, dot)
 		for (pp = includedirs; *pp; pp++) {
 			sprintf(path, "%s/%s", *pp, include);
 			remove_dotdot(path);
-			if (stat(path, &st) == 0 && (st.st_mode & S_IFREG)) {
+			if (stat(path, &st) == 0 && (st.st_mode & RMKDEPEND_STAT_S_IFREG)) {
 				ip = newinclude(path, include);
 				found = TRUE;
 				break;
