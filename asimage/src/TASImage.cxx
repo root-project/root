@@ -808,7 +808,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    TCanvas *canvas = pad->GetCanvas();
    Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
-	gVirtualX->Update(1);
+   gVirtualX->Update(1);
    Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
    if (!wd) return;
 
@@ -851,8 +851,8 @@ void TASImage::Draw(Option_t *option)
    opt.ToLower();
    if (opt.Contains("n") || !gPad || !gPad->IsEditable()) {
       Int_t w = -64;
-		Int_t h = 64;
-		w = (fImage->width > 64) ? fImage->width : w;
+      Int_t h = 64;
+      w = (fImage->width > 64) ? fImage->width : w;
       h = (fImage->height > 64) ? fImage->height : h;
       TString rname = GetName();
       rname.ReplaceAll(".", "");
@@ -1716,7 +1716,7 @@ Bool_t TASImage::InitVisual()
    // batch or win32 mode
    if (gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32")) {
       dpy = 0;
-      fgVisual = create_asvisual( NULL, 0, 0, NULL );
+      fgVisual = create_asvisual(0, 0, 0, 0);
       return kTRUE;
    }
 
@@ -1726,10 +1726,13 @@ Bool_t TASImage::InitVisual()
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
    Colormap cmap = (Colormap) gVirtualX->GetColormap();
 #ifndef WIN32
-   fgVisual = create_asvisual_for_id(dpy, screen, depth,
-                                     XVisualIDFromVisual(vis), cmap, 0);
+   if (vis == 0 || cmap == 0)
+      fgVisual = create_asvisual(0, 0, 0, 0);
+   else
+      fgVisual = create_asvisual_for_id(dpy, screen, depth,
+                                        XVisualIDFromVisual(vis), cmap, 0);
 #else
-   fgVisual = create_asvisual(NULL, 0, 0, NULL);
+   fgVisual = create_asvisual(0, 0, 0, 0);
 #endif
 
    return kTRUE;
@@ -1926,8 +1929,8 @@ TArrayL *TASImage::GetPixels(Int_t x, Int_t y, UInt_t width, UInt_t height)
       height = img->height - y;
    }
 
-   if ((imdec = start_image_decoding(NULL, fImage, SCL_DO_ALL, 0, y,
-                                     img->width, height, NULL)) == NULL) {
+   if ((imdec = start_image_decoding(0, fImage, SCL_DO_ALL, 0, y,
+                                     img->width, height, 0)) == 0) {
       Warning("GetPixels", "Failed to create image decoder");
       return 0;
    }
@@ -1982,8 +1985,8 @@ TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
-   if ((imdec = start_image_decoding(NULL, img, SCL_DO_ALL, 0, 0,
-                                     img->width, 0, NULL)) == NULL) {
+   if ((imdec = start_image_decoding(0, img, SCL_DO_ALL, 0, 0,
+                                     img->width, 0, 0)) == 0) {
       Warning("GetArray", "Failed to create image decoder");
       return 0;
    }
@@ -2091,7 +2094,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    ASImage *rimg = fImage;
 
    if (fore_file) {
-      ASImage *tmp = file2ASImage(fore_file, 0xFFFFFFFF, SCREEN_GAMMA, 0, NULL);
+      ASImage *tmp = file2ASImage(fore_file, 0xFFFFFFFF, SCREEN_GAMMA, 0, 0);
       if (tmp) {
          if ((tmp->width != width) || (tmp->height != height)) {
             fore_im = tile_asimage(fgVisual, tmp, 0, 0, width, height, 0,
@@ -2861,7 +2864,7 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
       return;
    }
    ASImageDecoder *imdec = start_image_decoding(fgVisual, fImage, SCL_DO_ALL,
-                                                x, y, width, height, NULL);
+                                                x, y, width, height, 0);
 
    if (!imdec) {
       Warning("Crop", "Failed to start image decoding");
@@ -3040,7 +3043,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
    CARD32 *ret = new CARD32[img->width];
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALL,
-                                                0, y, img->width, 1, NULL);
+                                                0, y, img->width, 1, 0);
 
    if (!imdec) {
       Warning("GetScanline", "Failed to start image decoding");
@@ -4670,7 +4673,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
       while (pAET) {
          ptsOut->fX = pAET->bres.minor_axis;
          ptsOut->fY = y;
-		   ptsOut++;
+         ptsOut++;
          nPts++;
 
          *width++ = pAET->next->bres.minor_axis - pAET->bres.minor_axis;
@@ -4770,7 +4773,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
       while (pAET) {
          ptsOut->fX = pAET->bres.minor_axis;
          ptsOut->fY = y;
-		   ptsOut++;
+         ptsOut++;
          nPts++;
 
          *width++ = pAET->next->bres.minor_axis - pAET->bres.minor_axis;
@@ -4838,7 +4841,7 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
 
    if (corner_x+tw <= 0 || corner_x >= cw || corner_y+th <= 0 || corner_y >= ch) {
       return;
-	}
+   }
 
    if (corner_y > 0) {
       dst += corner_y*cw;
@@ -4878,16 +4881,16 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 
    static ASDrawContext *ctx = new ASDrawContext;
 
-	ctx->canvas_width = im->width;
-	ctx->canvas_height = im->height;
-	ctx->canvas = im->alt.argb32;
+   ctx->canvas_width = im->width;
+   ctx->canvas_height = im->height;
+   ctx->canvas = im->alt.argb32;
    ctx->scratch_canvas = 0;
 
-	ctx->tool = brush;
-	ctx->fill_hline_func = fill_hline_notile_argb32;
+   ctx->tool = brush;
+   ctx->fill_hline_func = fill_hline_notile_argb32;
    ctx->apply_tool_func = apply_tool_2D_argb32;
 
-	return ctx;
+   return ctx;
 }
 
 static const UInt_t kBrushCacheSize = 20;
@@ -5270,7 +5273,7 @@ void TASImage::Streamer(TBuffer &b)
          Double_t *vec = new Double_t[size];
          b.ReadFastArray(vec, size);
          SetImage(vec, w, h, &fPalette);
-			delete vec;
+         delete vec;
       }
       b.CheckByteCount(R__s, R__c, TASImage::IsA());
    } else {
@@ -5320,9 +5323,9 @@ const char *TASImage::GetTitle() const
 {
    // title is used to keep 32x32 xpm image's thumbnail
 
-	if (!gFile || !gFile->IsOpen() || !gFile->IsWritable()) {
-		return 0;
-	}
+   if (!gFile || !gFile->IsOpen() || !gFile->IsWritable()) {
+      return 0;
+   }
 
    TASImage *mutble = (TASImage *)this;
 
@@ -5452,12 +5455,12 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, UInt_t thi
    for (int i = 0; i < sz; i++) {
       matrix[i] = (CARD32)color;
    }
- 
+
    static ASDrawTool *brush = new ASDrawTool;
    brush->matrix = matrix;
    brush->width = thick;
    brush->height = thick;
-   brush->center_y = brush->center_x = thick/2; 
+   brush->center_y = brush->center_x = thick/2;
 
    ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
    asim_circle(ctx, x,  y, r, 0);
