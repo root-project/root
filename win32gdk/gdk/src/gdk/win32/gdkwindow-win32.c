@@ -1860,10 +1860,8 @@ gdk_window_set_icon(GdkWindow * window,
 
    hicon = CreateIconIndirect(&icon_info);
 
-   SendMessage((HWND) GDK_DRAWABLE_XID(window), WM_SETICON, ICON_SMALL,
-               (LPARAM) hicon);
-   SendMessage((HWND) GDK_DRAWABLE_XID(window), WM_SETICON, ICON_BIG,
-               (LPARAM) hicon);
+   SetClassLong((HWND)GDK_DRAWABLE_XID(window), GCL_HICONSM, (LPARAM)CopyIcon(hicon));
+   SetClassLong((HWND)GDK_DRAWABLE_XID(window), GCL_HICON, (LPARAM)CopyIcon(hicon));
 
    DestroyIcon(hicon);
    DeleteObject(hbitmap_mask);
