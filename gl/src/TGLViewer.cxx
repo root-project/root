@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.48 2006/04/07 16:39:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.49 2006/04/10 09:23:31 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -405,7 +405,7 @@ Int_t TGLViewer::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t *
 
    // Scene should be modify locked
    if (fScene.CurrentLock() != TGLScene::kModifyLock) {
-      Error("TGLViewer::AddObject", "expected scene to be in mofifed locked");
+      Error("TGLViewer::AddObject", "expected scene to be in mode modified locked");
       return TBuffer3D::kNone;
    }
 
