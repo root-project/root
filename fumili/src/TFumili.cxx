@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.29 2005/11/26 15:25:38 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.30 2006/03/20 08:22:40 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1902,11 +1902,10 @@ void TFumili::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    Double_t *zik = GetZ();
    Double_t *pl0 = GetPL0();
 
-   Double_t *df=new Double_t[npar];
-
    npar = f1->GetNpar();
    SetParNumber(npar);
    if(flag == 9) return;
+   Double_t *df=new Double_t[npar];
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f1->InitArgs(x,u);
    f = 0;
