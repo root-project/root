@@ -44,6 +44,7 @@ The vector classes are based on a generic type of coordinate system, expressed a
 </ul>
 </li>
 </ul>
+The angle <em>theta</em> is defined between [0,PI] and <em>phi</em> between [-PI,PI]. The angles are  expressed in radians.
 <br>
 Users can define the Vectors according to the coordinate type which is most efficient for their use. Transformations between the various coordinate systems are available through copy constructors or the assignment <em>(=)</em> operator.
 <br>
@@ -51,6 +52,9 @@ For maximum flexibility and minimize in some use case memory allocation, the coo
 <br>
 See the \ref Vector3DPage "3D Vector", \ref Point3DPage "3D Point" and \ref LorentzVectorPage "LorentzVector" classes for all the possible types of vector classes which can be constructed by the user with the available coordinate system types.  
 </li>
+
+<li><h4>Coordinate System Tag</h4>
+The 3D points and vector classes can be associated to a tag defining the coordinate system. This can be used to distinguish between vectors of different coordinate systems like global or local vectors. The coordinate system tag is a template parameter of the ROOT::Math::DisplacementVector3D and ROOT::Math::PositionVector3D classes. A default tag,  ROOT::Math::DefaultCoordinateSystemTag, exists for users who don't need this funcitonality. 
 
 <li><h3>Transformations</h3>
 <p>
