@@ -385,7 +385,7 @@ protected:
       result &= SetOrVerifyNestedPtr(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedV(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedD(entryNumber,reset,testname,splitlevel);
-      if (reset) Assert(result);
+      if (reset) R__ASSERT(result);
       return result;
    }
 
