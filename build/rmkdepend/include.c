@@ -38,12 +38,12 @@ extern boolean warn_multiple;
 
 #if defined(S_IFREG)
 #define RMKDEPEND_STAT_S_IFREG S_IFREG
-#elif defined(__S_IFREG)
-#define RMKDEPEND_STAT_S_IFREG __S_IFREG
 #elif defined (_S_IFREG)
 #define RMKDEPEND_STAT_S_IFREG _S_IFREG
+#elif defined(__S_IFREG)
+#define RMKDEPEND_STAT_S_IFREG __S_IFREG
 #else
-#error S_IFREG not defined
+#error S_IFREG nor _S_IFREG nor __S_IFREG defined
 #endif
 
 boolean
