@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.27 2005/06/23 06:24:27 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.28 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -231,11 +231,10 @@ UInt_t TProcessID::GetObjectCount()
 TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 {
    //returns the TObject with unique identifier uid in the table of objects
-   //if (!fObjects) fObjects = new TObjArray(100);
    
    Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
    
-   if (uid >= fObjects->GetSize()) return 0;
+   if (fObjects==0 || uid >= fObjects->GetSize()) return 0;
    return fObjects->UncheckedAt(uid);
 }
 
@@ -256,10 +255,12 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {
    //stores the object at the uid th slot in the table of objects
    //The object uniqueid is set as well as its kMustCleanup bit
-   //if (!fObjects) fObjects = new TObjArray(100);
 
    if (uid == 0) uid = obj->GetUniqueID() & 0xffffff;
+
+   if (!fObjects) fObjects = new TObjArray(100);
    fObjects->AddAtAndExpand(obj,uid);
+
    obj->SetBit(kMustCleanup);
    if ( (obj->GetUniqueID()&0xff000000)==0xff000000 ) {
       // We have more than 255 pids we need to store this 
