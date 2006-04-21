@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.12 2006/02/28 16:38:23 rdm Exp $
+# $Id: makerpmspec.sh,v 1.13 2006/03/31 00:53:23 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -33,6 +33,7 @@ dpkglist="`echo $pkglist | sed -e 's/ *ttf-root[-a-z]* *//g' -e 's/ /, /g'`, roo
 # ROOT version 
 version=`cat build/version_number | tr '/' '.'`
 major=`echo $version | cut -f1 -d.`
+sovers=`echo $version | cut -f1,2 -d.`
 ### echo %%% make sure we've got a fresh file 
 rm -f root.spec
 csplit -f root.spec. build/package/rpm/spec.in '/@builddepends@/'
@@ -101,9 +102,14 @@ for p in $pkglist ; do
     # 	%description -n $pp
     # 	$long
     sed -n "/Package: $p/,/^$/ { s/^Description:.*/%description -n $pp/p ; s/^ //p; /^$/q }"  < build/package/common/$c.control >>  root.spec
+    case $p in 
+	lib*-dev) files=rpm/${p}.install ;; 
+	lib*)     files=rpm/${p}${sovers}.install ;;
+	*) 	  files=rpm/${p}.install ;; 
+    esac
 
     cat >> root.spec <<-EOF
-	%files -n $pp -f rpm/$p.install
+	%files -n $pp -f ${files}
 	%defattr(-,root,root)
 
 	EOF

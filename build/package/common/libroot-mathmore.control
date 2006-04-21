@@ -4,7 +4,7 @@ Architecture: any
 Depends: ${shlibs:Depends}
 Provides: root-plugin-mathmore, libroot-mathmore
 Description: GSL interface library for ROOT
- This package contains the MathMore lirary for for ROOT.  This provides 
+ This package contains the MathMore library for ROOT.  This provides 
  a partial GNU Scientific Library interface for ROOT.
  .
  ROOT web-site: http://root.cern.ch
@@ -14,7 +14,7 @@ Architecture: any
 Section: libdevel
 Depends: libroot-mathmore@libvers@ (= ${Source-Version}), libroot-dev, libgsl0-dev
 Description: Mathmore plugin for ROOT
- This package contains the MathMore lirary for for ROOT.  This provides 
+ This package contains the MathMore library for ROOT.  This provides 
  a partial GNU Scientific Library interface for ROOT.
  .
  ROOT web-site: http://root.cern.ch

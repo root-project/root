@@ -703,6 +703,9 @@ endif
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/include/*.so*
 	@$(MAKECINTDLLS) clean
+	@rm -f etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd
+	@rm -f etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd
+	@rm -f etc/daemons/olbd.rc.d etc/daemons/xrootd.rc.d
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
 	-@cd test && $(MAKE) distclean
@@ -711,8 +714,6 @@ maintainer-clean:: distclean
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
 	   etc/root.mimes build/misc/root-help.el \
-	   etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd \
-	   etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd \
 	   rootd/misc/rootd.rc.d build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 

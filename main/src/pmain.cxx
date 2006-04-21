@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.4 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.5 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 #include "TApplication.h"
 #include "TInterpreter.h"
 #include "TROOT.h"

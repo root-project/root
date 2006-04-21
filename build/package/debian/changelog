@@ -1,3 +1,39 @@
+root (5.11.03-1) experimental; urgency=low
+
+  * fixes to Proof library loading.  Missing `#include "config.h"' added.
+  * Fix to ODBC plugin.
+  * Added print-out to s050000l.pe.
+  * Fixed symbol.ttf font in TImageDump.
+  * Fixed FSF address in root-common.copyright
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 20 Apr 2006 22:17:08 +0200
+
+root (5.11.02-1) experimental; urgency=low
+
+  * New upstream version.
+  * New scheme to make package file lists.
+  * Using new GPL'ed `symbol.tff'
+  * Fix it so that the font installer package doesn't overwrite and delete 
+    the already installed `symbol.ttf'.
+  * Fixed free font table in TTF.cxx to include the GPL'ed symbol.ttf.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 20 Apr 2006 02:20:08 +0200
+
+root (5.11.01-9) unstable; urgency=low
+
+  * Added plugin package root-plugin-odbc - ODBC database connectivty.
+  * [Kevin] Fixed spelling errors in description of libroot-mathmore
+  * [Kevin] Fixed call to dh_makeshlibs
+  * [Kevin] Fixed maxdb build on amd64
+  * [Kevin] Fixed some dependencies of root-plugin-peac and root-proofd
+  * [Kevin] Fixed some code problems in SapDB code (again!)
+  * Leave in `symbol.ttf' in the root-common package, because it will soon 
+    be replaced by a GPL'ed one. 
+  * Added a specific copyright file for root-common due to the new
+    symbol.ttf font. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 19 Apr 2006 02:25:10 +0200
+
 root (5.11.01-8) unstable; urgency=low
 
   * Various fixes from Kevin

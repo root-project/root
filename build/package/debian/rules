@@ -33,6 +33,9 @@ endif
 ifneq (,$(findstring ia64,$(DEB_BUILD_ARCH)))
 SAPDB		= --enable-sapdb
 endif
+ifneq (,$(findstring amd64,$(DEB_BUILD_ARCH)))
+SAPDB		= --enable-sapdb
+endif
 endif
 HBOOK		= --enable-cern
 ifneq (,$(findstring kfreebsd-i386,$(DEB_BUILD_GNU_SYSTEM)))
@@ -44,29 +47,29 @@ PREFIX		= /usr
 SYSCONFDIR	= /etc
 PKGDOCDIR	= $(PREFIX)/share/doc/root
 CINTDIR		= $(PREFIX)/lib/root/$(SOVERS)/cint
-CONFOPTIONS	:=--enable-table				\
+CONFOPTIONS	:=--enable-explicitlink				\
 		  --enable-fftw3				\
-		  --enable-roofit				\
-		  --enable-ruby					\
 		  --enable-qt					\
 		  --enable-qtgsi				\
 		  --enable-mathcore				\
 		  --enable-mathmore				\
 		  --enable-minuit2				\
-		  --enable-xrootd				\
+		  --enable-odbc					\
+		  --enable-roofit				\
+		  --enable-ruby					\
 		  --enable-shared				\
 		  --enable-soversion				\
-		  --enable-explicitlink				\
+		  --enable-table				\
+		  --enable-xrootd				\
 		  --disable-rpath				\
 		  --disable-afs					\
 		  --disable-srp					\
-		  --disable-builtin-freetype			\
 		  --disable-builtin-afterimage			\
-		  --disable-builtin-pcre			\
+		  --disable-builtin-freetype			\
 		  --disable-builtin-gsl				\
+		  --disable-builtin-pcre			\
 		  --disable-builtin-zlib			\
 		  --disable-alien				\
-		  --disable-rfio				\
 		  --disable-chirp				\
 		  --disable-dcache				\
 		  --disable-gfal				\
@@ -75,6 +78,7 @@ CONFOPTIONS	:=--enable-table				\
 		  --disable-oracle				\
 		  --disable-pythia				\
 		  --disable-pythia6				\
+		  --disable-rfio				\
 		  --disable-venus				\
 		  $(SAPDB)					\
 		  $(HBOOK)					\
@@ -83,7 +87,6 @@ CONFOPTIONS	:=--enable-table				\
 # Things for the future 
 #
 #		  --enable-mathcore	libroot
-#		  --enable-mathmoree	libroot-mathmore
 #		  --enable-cintex	libroot
 #		  --enable-reflex	libroot
 #		  --with-globus=/opt/globus
@@ -94,48 +97,49 @@ MINOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
 SOVERS		:= $(MAJOR).$(MINOR)
 PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
 ESSENTIALS	:= libroot-dev 			\
-		   root-bin 			\
 		   libroot 			\
-		   ttf-root-installer		\
-		   root-common	
-PLUGINS		:= root-plugin-asimage 		\
-		   root-plugin-hbook 		\
-		   root-plugin-krb5 		\
-		   libroot-ldap 		\
-		   root-plugin-fftw3 		\
-		   root-plugin-minuit2 		\
-		   root-plugin-gl 		\
-		   root-plugin-qt 		\
-		   root-plugin-xml 		\
-		   root-plugin-sql 		\
-		   root-plugin-netx 		\
-		   root-xrootd 			\
-		   root-plugin-fumili 		\
+		   root-bin 			\
+		   root-common			\
+		   ttf-root-installer		
+PLUGINS		:= libroot-ldap 		\
 		   libroot-mathmore 		\
 		   libroot-minuit 		\
 		   libroot-mlp	 		\
+		   libroot-quadp 		\
+		   root-doc 			\
+		   root-plugin-asimage 		\
+		   root-plugin-fftw3 		\
+		   root-plugin-fumili 		\
+		   root-plugin-gl 		\
+		   root-plugin-hbook 		\
+		   root-plugin-krb5 		\
+		   root-plugin-minuit2 		\
+		   root-plugin-netx 		\
+		   root-plugin-odbc 		\
 		   root-plugin-proof 		\
+		   root-plugin-qt 		\
+		   root-plugin-sql 		\
+		   root-plugin-xml 		\
 		   root-plugin-xproof 		\
 		   root-proofd 			\
-		   libroot-quadp 		\
 		   root-rootd 			\
-		   root-doc 
-EXTRAS		:= root-plugin-alien 		\
+		   root-xrootd 			
+EXTRAS		:= libroot-clarens 		\
+		   libroot-python 		\
+		   libroot-roofit 		\
+		   libroot-ruby 		\
+		   root-plugin-alien 		\
+		   root-plugin-castor 		\
 		   root-plugin-chirp  		\
-		   libroot-clarens 		\
 		   root-plugin-dcache 		\
 		   root-plugin-globus  		\
 		   root-plugin-peac 		\
+		   root-plugin-maxdb 		\
 		   root-plugin-mysql 		\
 		   root-plugin-oracle 		\
 		   root-plugin-pgsql 		\
 		   root-plugin-pythia5 		\
 		   root-plugin-pythia6 		\
-		   libroot-python 		\
-		   libroot-roofit 		\
-		   libroot-ruby 		\
-		   root-plugin-castor 		\
-		   root-plugin-maxdb 		\
 		   root-plugin-srp 		\
 		   root-plugin-venus 		
 PLUGINLIST	:= $(filter-out $(EXTRAS) $(ESSENTIALS), $(PKGLIST))
@@ -251,12 +255,13 @@ clean:  $(TEMPLATES:%.in=%)
 	-rm -rf freetype/src/freetype-2.1.9
 	-rm -rf asimage/src/libAfterImage 
 	-rm -rf debian/*.files 	debian/*.install	
-	-rm -rf debian/libroot*$(SOVERS).*
 	-rm -f  macros/html.C 
-	-rm -f  etc/proofd
-	-rm -f  etc/proofd.xinetd
-	-rm -f  etc/rootd
-	-rm -f  etc/rootd.xinetd
+	-rm -f  etc/daemons/proofd.rc.d
+	-rm -f  etc/daemons/proofd.xinetd
+	-rm -f  etc/daemons/rootd.rc.d
+	-rm -f  etc/daemons/rootd.xinetd
+	-rm -f  etc/daemons/olbd.rc.d
+	-rm -f  etc/daemons/xrootd.rc.d
 	-rm -f  qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
 	-find . -name ".#*" | xargs rm -rf
 
@@ -283,16 +288,15 @@ clean:  $(TEMPLATES:%.in=%)
 
 pkglists:
 	-rm -rf debian/*.files 	debian/*.install	
-	-rm -rf debian/libroot*$(SOVERS).*
 	build/package/lib/makelists.sh debian debian/tmp \
 		$(VERSION) $(PREFIX) $(SYSCONFDIR) $(PKGDOCDIR)
-	@for i in debian/libroot* ; do \
-	  if test -d $$i ; then continue ; fi ; \
-	  case $$i in \
-          *-dev.*|*.in|libroot*$(SOVERS).*) continue ;; \
-	  *) echo "Renaming $$i to version specific" ; \
-	     cp $$i `echo $$i | sed 's/libroot\(.*\)\.\(.*\)/libroot\1$(SOVERS).\2/'` ;; esac ; \
-	done 
+# 	@for i in debian/libroot* ; do \
+# 	  if test -d $$i ; then continue ; fi ; \
+# 	  case $$i in \
+#           *-dev.*|*.in|libroot*$(SOVERS).*) continue ;; \
+# 	  *) echo "Renaming $$i to version specific" ; \
+# 	     cp $$i `echo $$i | sed 's/libroot\(.*\)\.\(.*\)/libroot\1$(SOVERS).\2/'` ;; esac ; \
+# 	done 
 
 install: install-indep install-arch
 install-indep: 
@@ -362,9 +366,11 @@ install-arch:
 	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.plist
 
 	# Remove Xinetd and Red Hat Init scripts from /etc 
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.xinetd 
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/proofd 
-	rm -rf $(DTMP)/$(SYSCONFDIR)/root/rootd 
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/*.xinetd
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/proofd
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/rootd
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/xrootd
+	rm -rf $(DTMP)/$(SYSCONFDIR)/root/olbd 
 
 	# Remove sample configurations for PROOF 
 	rm -rf $(DTMP)/$(PREFIX)/share/root/proof/etc/*.sample
@@ -389,18 +395,17 @@ install-arch:
 		-Xusr/include/root/TQtWidget.cw 		\
 		-Xusr/share/root/fonts 				\
 		-Xusr/share/doc/root				\
-		-Xusr/lib/root/lib*.so.$(SOVERS)		\
-		-Xusr/share/root/icons/*			\
+		-Xusr/lib/root/lib\*.so.$(SOVERS)		\
+		-Xusr/share/root/icons/  			\
+		-Xetc/root/daemon/				\
+		-Xetc/root/proof/				\
 		-Xusr/lib/root/$(SOVERS)/libAfterImage.a	
 
 	# Install Lintian overrides files 
 	for i in debian/*.overrides ; do 	\
 	  if test ! -f $$i ; then continue; fi;	\
-	  b=`basename $$i .overrides` ;		\
-	  case $$b in 				\
-	  	libroot)  continue	;;	\
-	  esac ; 				\
-	  echo "Installing Lintian override $$i in /usr/share/lintian/overrides/$$b" ; \
+	  b=`basename $$i .overrides` ; \
+	  echo "Installing Lintian override $$i in debian/$$b/usr/share/lintian/overrides/$$b" ; \
 	  mkdir -p debian/$$b/usr/share/lintian/overrides/ ; \
 	  cp  $$i debian/$$b/usr/share/lintian/overrides/$$b ; \
 	done 
@@ -454,25 +459,26 @@ binary-common:
 	dh_compress -Xusr/share/doc/root/test -Xusr/share/doc/root/tutorials
 	dh_fixperms
 #	dh_perl
+
+# Build architecture independent packages using the common target.
+binary-indep: build-indep install-indep
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture dependent packages using the common target.
+binary-arch: build-arch install-arch
+	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
 	dh_python -plibroot-python-dev \
 		$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
 	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))
-	dh_installdeb
-#	dh_shlibdeps $(PKGLIST:%=-L%) $(PKGLIST:%=-ldebian/%/usr/lib/root)
-	dh_shlibdeps $(SPKGLIST:%=-L%) \
+	dh_installdeb -s
+	dh_shlibdeps -s $(SPKGLIST:%=-L%) \
 	  -l$(shell echo $(SPKGLIST:%=debian/%/$(PREFIX)/lib/root/$(SOVERS)) | tr ' ' ':')
-	dh_gencontrol
-	dh_md5sums 
-# Build architecture independant packages using the common target.
-binary-indep: build-indep install-indep
-	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
-	# dh_builddeb $(IPKGOPTS)
-	dh_builddeb -i
-
-# Build architecture dependant packages using the common target.
-binary-arch: build-arch install-arch
-	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
-	# dh_builddeb $(SPKGOPTS)
+	dh_gencontrol -s
+	dh_md5sums -s 
 	dh_builddeb -s 
 
 binary: binary-arch binary-indep

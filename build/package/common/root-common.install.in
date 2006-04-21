@@ -6,3 +6,5 @@
 @sysconfdir@/root/system.rootdaemonrc
 @prefix@/share/man/man1/system.rootdaemonrc.1
 @prefix@/share/root/icons/
+@prefix@/share/root/fonts/symbol.ttf
+

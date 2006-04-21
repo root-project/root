@@ -23,7 +23,7 @@ Description: Numerical data analysis framework - shared runtime libraries
 Package: libroot-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, zlib1g-dev, libssl-dev, comerr-dev, libkrb5-dev, libx11-dev, libfreetype6-dev, libpcre3-dev, libxpm-dev, g++ | c++-compiler
 Suggests: root-bin
 Replaces: root-cint
 Conflicts: root-cint
@@ -36,7 +36,7 @@ Description: Header files for ROOT
 
 Package: root-common
 Architecture: all
-Depends: ttf-freefont | root-ttf, ttf-opensymbol | root-ttf, 
+Depends: ttf-freefont | root-ttf, ttf-opensymbol | root-ttf
 Replaces: libroot (<< 5.09.01-5), root-bin (<< 5.09.01-5), root-rootd (<< 5.09.01-7), root-proofd (<< 5.09.01-7), root-xrootd (<< 5.09.01-7)
 Conflicts: libroot (<< 5.09.01-5), root-bin (<< 5.09.01-5), root-rootd (<< 5.09.01-7), root-proofd (<< 5.09.01-7), root-xrootd (<< 5.09.01-7)
 Description: Common files for ROOT

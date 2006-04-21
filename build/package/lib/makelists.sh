@@ -74,7 +74,7 @@ for d in * ; do
     # investiaged directory 
     #
     # echo "Making list for $d (dev=$dev lib=$lib bin=$bin extra=$extra)"
-    echo "Making list for $d"
+    # echo "Making list for $d"
     build/package/lib/makelist DIRS=$d DEV=$dev LIB=$lib BIN=$bin  \
 	VERSION=$version PREFIX=$prefix OUT=$outdir BUILD=$build $extra  \
 	--no-print-directory all
@@ -86,26 +86,30 @@ done
 #
 for i in build/package/common/*.install.in ; do 
     if test ! -f $i ; then continue ; fi
-
-    b=$outdir/`basename $i .install.in`
+    b=`basename $i .install.in`
+    case $b in 
+	lib*-dev) b=$outdir/${b}          ;; 
+	lib*)     b=$outdir/${b}${sovers} ;;
+	*)        b=$outdir/${b}          ;; 
+    esac
     sed -e "s|@prefix@|${prefix}|g" 		\
 	-e "s|@sysconfdir@|${sysconfdir}|g"	\
 	-e "s|@pkgdocdir@|${pkgdocdir}|g"	\
 	-e "s|@version@|${sovers}|g"		\
-	< $i > $b.tmp
-    if test -f $b.install ; then 
-	cat $b.tmp $b.install > $b.tmp2
-	mv  $b.tmp2 $b.install 
+	< $i > ${b}.tmp
+    if test -f ${b}.install ; then 
+	cat ${b}.tmp  ${b}.install > ${b}.tmp2
+	mv  ${b}.tmp2 ${b}.install 
     else
-	cp  $b.tmp $b.install
+	cp  ${b}.tmp ${b}.install
     fi
-    rm -f $b.tmp $b.tmp2 
+    rm -f ${b}.tmp ${b}.tmp2 
 done 
 
 for i in $outdir/*.install ; do 
     if test ! -f $i ; then continue ; fi
-    sort -u $i > $i.tmp 
-    mv $i.tmp $i
+    sort -u ${i} > ${i}.tmp 
+    mv ${i}.tmp ${i}
 done
 	
 

@@ -1,7 +1,7 @@
 Package: libroot-roofit@libvers@
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, libroot-minuit | root-fitter
+Depends: ${shlibs:Depends}, root-fitter
 Provides: libroot-roofit, root-plugin-roofit
 Replaces: root-plugin-roofit  (<< 5.09.01-1)
 Description: ROOT extension for modeling expected distribtions - libraries

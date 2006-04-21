@@ -1,107 +1,122 @@
 #!/usr/bin/make -f 
 #
 #
-LPATH	= $(PREFIX)/lib/root
-IPATH	= $(PREFIX)/include/root
-BPATH	= $(PREFIX)/bin
-MPATH   = $(PREFIX)/share/man/man1
-SOEXT	= so
-MAJOR   = $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
-MINOR   = $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
-SOVER	= $(MAJOR).$(MINOR)
+# Normal variables derived from passed variables  
+LPATH	:= $(PREFIX)/lib/root
+IPATH	:= $(PREFIX)/include/root
+BPATH	:= $(PREFIX)/bin
+MPATH   := $(PREFIX)/share/man/man1
+SOEXT	:= so
+MAJOR   := $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
+MINOR   := $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
+SOVER	:= $(MAJOR).$(MINOR)
+RLIBD   := $(PREFIX)/lib/root
 
+# Put all library files into version-specific lists 
+ifneq ($(LIB),$(DEV))
+SLIB    := $(LIB)$(SOVER)
+else 
+SLIB	:= $(LIB)
+endif
+ifneq ($(LIB),$(BIN))
+SBIN    := $(BIN)
+else 
+SBIN	:= $(SLIB)
+endif
+
+# Include general and directory specific make rules 
 ifneq ($(DIRS),)
 include config/Makefile.config 
 include $(foreach i, $(DIRS), $(i)/Module.mk)
 endif
 
+# Default target and message 
+all:	hello liblist devlist binlist
+hello:
+	@echo "Makeing list for $(DIRS) ($(SLIB),$(DEV),$(SBIN))"
+
+
+# If we have a development package, get the list of headers. 
 ifneq ($(DEV),)
-PKGHDRS:=$(shell echo $(ALLHDRS) | sed -e 's,[^ ]*inc/,include/,g' -e 's,include/,usr/include/root/,g')
+PKGHDRS	:= $(shell echo $(ALLHDRS) | sed -e 's,[^ ]*inc/,include/,g' -e 's,include/,usr/include/root/,g')
 endif
 
-ifneq ($(PKG),)
-PKGLIBS=$(ALLLIBS:%.so=%.so*)
-PKGBINS=$(ALLEXECS:bin/%=usr/bin/%)
-endif
-
-all:	liblist devlist binlist
-
+# If we have a Library, then we get the list of libraries 
 ifneq ($(LIB),)
+# if the development package and the library package is not the same, 
+# we need to append the soversion to the library directory 
 ifneq ($(LIB),$(DEV))
-PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(SOVER)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(MAJOR)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/%.$(SOVER)) 
+PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) \
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) \
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) \
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER)) 
 DEVLIBS := $(ALLLIBS) 
 else # ! $(LIB) = $(DEV)
+# If the development and library package is the same (plugins), then we need
+# only add the soversion to the library directory 
 ifneq ($(NOVERS),1)
-ifeq ($(DIRS), cint)
-PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(SOVER)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(MAJOR)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/%.$(SOVER)) \
-	   $(ALLLIBS)
-else # ! $(DIRS) = cint
-PKGLIBS	:= $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(SOVER)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%.$(MAJOR)) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) 
-endif # $(DIRS) = cint
+PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) \
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) \
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) 
 else # ! $(NOVERS) != 1
+# Special case of xrootd 
 ifeq ($(DIRS), xrootd)
 XRDLIBS := $(patsubst lib/%, $(LPATH)/%, \
 		$(filter-out lib/libXrdProofd.so, $(wildcard lib/libXrd*.so)))
-PKGLIBS	:= $(XRDLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%)
-else  # ! $(LIB)
+PKGLIBS	:= $(XRDLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)
+# In case we do no have a library package 
+else  # ! $(DIR) = xrootd
 PKGLIBS	:= $(ALLLIBS) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/$(SOVER)/%) \
-	   $(ALLLIBS:$(PREFIX)/lib/root/%=$(PREFIX)/lib/root/%.$(SOVER))
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) \
+	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER))
 endif # $(DIRS) = xrootd
 endif # $(NOVERS) != 1
 endif # $(LIB) = $(DEV)
+endif # $(LIB)
+
+# The rule to make library lists 
 liblist:
-	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(LIB).install
+ifneq ($(LIB),)
+	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(SLIB).install
 ifneq ($(LIB),$(DEV))
-	@(cd $(BUILD)/$(PREFIX)/lib/root && \
-	   for i in $(ALLLIBS) ; do \
-	      b=`basename $$i` ; \
-	      ln -fs $(SOVER)/$$b . ; \
-	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
-else 
-ifeq ($(DIRS), cint)
-	@(cd $(BUILD)/$(PREFIX)/lib/root && \
+	@(cd $(BUILD)/$(RLIBD) && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b . ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
 else 
 ifneq ($(DIRS), xrootd) 
-	@(cd $(BUILD)/$(PREFIX)/lib/root && \
+	@(cd $(BUILD)/$(RLIBD) && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
 endif
-endif # $(DIRS) = cint
 endif # $(LIB) = $(DEV)
-else  # ! $(LIB)
-liblist:
 endif # $(LIB)
 
+# If we have a development library, get the list of headers for the package.
 ifneq ($(DEV),)
 PKGHDRS	:= $(ALLHDRS:include/%=$(IPATH)/%) $(DEVLIBS)
+endif # $(DEV)
+
+# Rule to make development package list 
 devlist:
-	@for f in $(filter-out %.cw %.pri, $(PKGHDRS))  ; do echo $$f ; done >> $(OUT)/$(DEV).install
-else
-devlist:
+ifneq ($(DEV),)
+	@for f in $(filter-out %.cw %.pri, $(PKGHDRS)) ; \
+		do echo $$f ; done >> $(OUT)/$(DEV).install
 endif
 
+# If we have a binary package, then get list of programs and man pages
 ifneq ($(BIN),)
 PKGEXECS= $(ALLEXECS:bin/%=$(BPATH)/%) 
 PKGMANS = $(ALLEXECS:bin/%=$(MPATH)/%.1) 
+endif # $(BIN)
+
+# Rule to make program package list 
 binlist:
-	@for f in $(PKGEXECS)  ; do echo $$f ; done >> $(OUT)/$(BIN).install
-	@for f in $(PKGMANS)  ; do echo $$f ; done >> $(OUT)/$(BIN).install
-else
-binlist:
+ifneq ($(BIN),)
+	@for f in $(PKGEXECS)  ; do echo $$f ; done >> $(OUT)/$(SBIN).install
+	@for f in $(PKGMANS)  ; do echo $$f ; done >> $(OUT)/$(SBIN).install
 endif
 
 #

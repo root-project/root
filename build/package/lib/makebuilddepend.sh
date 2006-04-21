@@ -125,6 +125,7 @@ for i in $* ; do
 	*mlp)								;;
 	*mysql)		echo -n ", libmysqlclient15-dev | libmysqlclient14-dev | libmysqlclient12-dev| libmysqlclient-dev" ;;
 	*netx)								;;
+	*odbc)		echo -n ", libiodbc2-dev"			;;
 	*peac)								;;
 	*pgsql)		echo -n ", postgresql-dev | libpq-dev"		;;
 	*proof)								;;

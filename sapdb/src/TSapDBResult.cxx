@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:  $:$Id: TSapDBResult.cxx,v 1.1 2001/08/24 16:41:19 rdm Exp $
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBResult.cxx,v 1.2 2004/06/25 12:53:18 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -27,7 +27,7 @@ TSapDBResult::TSapDBResult(SQLHSTMT result, SDWORD rowCount)
    fRowCount   = 0;
 
    if (fResult) {
-      SQLINTEGER rowcount = 0;
+      SQLLEN rowcount = 0;
       if (SQLRowCount(fResult, &rowcount) != SQL_SUCCESS) {
          Error("TSapDBResult", "no rows counted");
       }
@@ -119,7 +119,7 @@ const char *TSapDBResult::GetFieldName(Int_t field)
    SQLSMALLINT  bufferLength = 256;
    SQLSMALLINT  nameLength;
    SQLSMALLINT  dataType;
-   SQLUINTEGER  columnSize;
+   SQLULEN      columnSize;
    SQLSMALLINT  decimalDigits;
    SQLSMALLINT  nullable;
 

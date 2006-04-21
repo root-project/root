@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.49 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.50 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -20,6 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 #include "TApplication.h"
 #include "TSlave.h"
 #include "TProof.h"

@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:  $:$Id: TSapDBRow.cxx,v 1.3 2001/11/16 18:58:39 rdm Exp $
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBRow.cxx,v 1.4 2004/06/25 12:53:18 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -83,7 +83,7 @@ ULong_t TSapDBRow::GetFieldLength(Int_t field)
    SQLSMALLINT  bufferLength = 256;
    SQLSMALLINT  nameLength;
    SQLSMALLINT  dataType;
-   SQLUINTEGER  columnSize;
+   SQLULEN      columnSize;
    SQLSMALLINT  decimalDigits;
    SQLSMALLINT  nullable;
 
@@ -118,7 +118,7 @@ const char *TSapDBRow::GetField(Int_t field)
    SQLSMALLINT  bufferLength = 256;
    SQLSMALLINT  nameLength;
    SQLSMALLINT  dataType;
-   SQLUINTEGER  columnSize;
+   SQLULEN      columnSize;
    SQLSMALLINT  decimalDigits;
    SQLSMALLINT  nullable;
 
@@ -137,7 +137,7 @@ const char *TSapDBRow::GetField(Int_t field)
       return 0;
    }
 
-   SQLINTEGER strLenOrIndPtr;
+   SQLLEN     strLenOrIndPtr;
    SQLPOINTER targetValuePtr[4000];
    bufferLength = sizeof(targetValuePtr);
 

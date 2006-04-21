@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.14 2006/01/18 10:26:53 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.15 2006/02/28 16:48:17 rdm Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -501,7 +501,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
       /* 9 */ { "couri.ttf",     "FreeMonoOblique.ttf"     },
       /*10 */ { "courbd.ttf",    "FreeMonoBold.ttf"        },
       /*11 */ { "courbi.ttf",    "FreeMonoBoldOblique.ttf" },
-      /*12 */ { "symbol.ttf",    "opens___.ttf"            },
+      /*12 */ { "symbol.ttf",    "symbol.ttf"              },
       /*13 */ { "times.ttf",     "FreeSerif.ttf"           },
       /*14 */ { "wingding.ttf",  "opens___.ttf"            }
    };

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.11 2006/03/06 14:30:00 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.12 2006/03/31 16:57:18 rdm Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -422,7 +422,7 @@ void TTF::SetTextFont(Font_t fontnumber)
       /* 9 */ { "couri.ttf",     "FreeMonoOblique.ttf"     },
       /*10 */ { "courbd.ttf",    "FreeMonoBold.ttf"        },
       /*11 */ { "courbi.ttf",    "FreeMonoBoldOblique.ttf" },
-      /*12 */ { "symbol.ttf",    "FreeSans.ttf"            },
+      /*12 */ { "symbol.ttf",    "symbol.ttf"              },
       /*13 */ { "times.ttf",     "FreeSerif.ttf"           },
       /*14 */ { "wingding.ttf",  "opens___.ttf"            }
    };
