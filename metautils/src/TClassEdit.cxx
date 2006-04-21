@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.19 2006/01/25 19:46:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.20 2006/03/29 22:18:49 pcanal Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -645,7 +645,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
             char keep = input[i];
             string temp( input, prev,i-prev );
 
-            if (resolveAll || ShouldReplace(temp.c_str())) {
+            if ( (resolveAll&&(temp!="Double32_t")) || ShouldReplace(temp.c_str())) {
                answ << ResolveTypedef( temp.c_str(), resolveAll);
             } else {
                answ << temp;
@@ -656,7 +656,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
       }
    }
    const char *last = &(input.c_str()[prev]);
-   if (resolveAll || ShouldReplace(last)) {
+   if ((resolveAll&&(strcmp(last,"Double32_t")!=0)) || ShouldReplace(last)) {
       answ << ResolveTypedef( last, resolveAll);
    } else {
       answ << last;
