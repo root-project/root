@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.2 2005/11/05 15:17:35 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -17,7 +17,7 @@
 #include "TF1.h"
 #include "TVirtualFitter.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 #ifdef DEBUG
 #include <iostream>
 #endif
