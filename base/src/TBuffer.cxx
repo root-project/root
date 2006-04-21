@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.90 2006/02/15 06:37:17 pcanal Exp $
+// @(#)root/base:$Name: v5-10-00-patches $:$Id: TBuffer.cxx,v 1.91 2006/02/17 05:20:13 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1364,13 +1364,13 @@ void TBuffer::ReadFastArrayString(Char_t *c, Int_t n)
       *this >> len;
    }
    if (len) {
+      if (len <= 0 || len > fBufSize) return;
+      Int_t blen = len;
       if (len >= n) len = n-1;
 
-      if (n <= 0 || n > fBufSize) return;
-
-      Int_t l = sizeof(Char_t)*n;
+      Int_t l = sizeof(Char_t)*len;
       memcpy(c, fBufCur, l);
-      fBufCur += l;
+      fBufCur += blen;
 
       c[len] = 0;
    } else {
