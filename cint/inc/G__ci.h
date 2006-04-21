@@ -164,7 +164,7 @@
 
 /* For a machine which has unaddressable bool */
 #ifndef G__UNADDRESSABLEBOOL
-#if defined(__APPLE__)
+#if defined(__APPLE__) && defined(__ppc__)
 /* Fons, if you find problems, comment out G__BOOL4BYTE and uncomment
  * G__UNADDRESSABLEBOOL. Thanks */
 #define G__BOOL4BYTE
