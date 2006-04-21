@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.h,v 1.3 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/tree:$Name: v5-10-00-patches $:$Id: TTreeCloner.h,v 1.4 2006/02/10 23:43:51 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -39,15 +39,16 @@ class TTreeCloner {
    TObjArray  fToBranches;
 
    UInt_t     fMaxBaskets;
-   UInt_t    *fBasketBranchNum;  //[fMaxBaskets] Index of the branch(es) of the basket
-   UInt_t    *fBasketNum;        //[fMaxBaskets] index of the basket within the branch
+   UInt_t    *fBasketBranchNum;  //[fMaxBaskets] Index of the branch(es) of the basket.
+   UInt_t    *fBasketNum;        //[fMaxBaskets] index of the basket within the branch.
 
-   Long64_t  *fBasketSeek;       //[fMaxBaskets] list of basket position to be read
-   Int_t     *fBasketIndex;      //[fMaxBaskets] ordered list of basket indices to be written
+   Long64_t  *fBasketSeek;       //[fMaxBaskets] list of basket position to be read.
+   Int_t     *fBasketIndex;      //[fMaxBaskets] ordered list of basket indices to be written.
 
-   UShort_t   fPidOffset;        //Offset to be added to the copied key/basket
+   UShort_t   fPidOffset;        //Offset to be added to the copied key/basket.
 
-   UInt_t     fCloneMethod;      //Indicates which cloning method was selected
+   UInt_t     fCloneMethod;      //Indicates which cloning method was selected.
+   Long64_t   fToStartEntries;   //Number of entries in the target tree before any addition.
 
    enum ECloneMethod {
       kDefault             = 0,

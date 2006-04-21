@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.5 2006/01/30 09:01:12 rdm Exp $
+// @(#)root/tree:$Name: v5-10-00-patches $:$Id: TTreeCloner.cxx,v 1.6 2006/02/10 23:43:51 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -40,7 +40,8 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fBasketNum(new UInt_t[fMaxBaskets]),
    fBasketSeek(new Long64_t[fMaxBaskets]),
    fBasketIndex(new Int_t[fMaxBaskets]),
-   fCloneMethod(TTreeCloner::kDefault)
+   fCloneMethod(TTreeCloner::kDefault),
+   fToStartEntries(0)
 {
    // Constructor.  This object would transfer the data from
    // 'from' to 'to' using the method indicated in method.
@@ -52,6 +53,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    } else {
       fCloneMethod = TTreeCloner::kSortBasketsByOffset;
    }
+   if (fToTree) fToStartEntries = fToTree->GetEntries();
 }
 
 Bool_t TTreeCloner::Exec()
@@ -239,7 +241,12 @@ void TTreeCloner::CopyMemoryBaskets()
       basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : 0;
       if (basket) {
          basket = (TBasket*)basket->Clone();
-         to->AddBasket(*basket,kFALSE);
+         to->AddBasket(*basket, kFALSE, fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()]);
+      }
+      // If the branch is a TBranchElement non-terminal 'object' branch, it's basket will contain 0
+      // events.
+      if (from->GetEntries()!=0 && from->GetWriteBasket()==0 && basket->GetNevBuf()==0) {
+         to->SetEntries(to->GetEntries()+from->GetEntries());
       }
    }
 }
@@ -319,7 +326,7 @@ void TTreeCloner::WriteBaskets()
       basket->LoadBasketBuffers(pos,len,fromfile);
       basket->IncrementPidOffset(fPidOffset);
       basket->CopyTo(tofile);
-      to->AddBasket(*basket,kTRUE);
+      to->AddBasket(*basket,kTRUE,fToStartEntries + from->GetBasketEntry()[index]);
 
    }
    delete basket;
