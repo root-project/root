@@ -1,23 +1,23 @@
 
-// begin_html <a href="http://doc.trolltech.com/3.3/mainclasses.html"> Qt's Main Classes</a> 
-// <P> <h2>These are the most frequently used Qt classes. </h2>end_html
-
-
-
+// begin_html <h2>These are the most frequently used <a href="http://doc.trolltech.com/3.3/mainclasses.html">Qt classes</a>. </h2>
+// <center>including the <a href="http://doc.trolltech.com/3.3/dialogs.html">Standard Qt Dialogs</a></center>  end_html
 // Some templated Qt containers, namely 
 //
 //    QDict       QGuardedPtr   QMap, 
 //    QValueList  QValueVector  QValueStack
 //
 // were not included:
-
-
+//
+// Some classes those are beyond TrollTech "main classes" list were included too:
+//   QApplication  QStringList::Iterator   QStyle
+//
 #ifdef __CINT__
 
 #pragma link off all classes;
 
 // A
 #pragma link C++ class  QAction;
+#pragma link C++ class  QApplication;
 // B                
 #pragma link C++ class  QButtonGroup;
 // C
@@ -100,6 +100,9 @@
 #pragma link C++ class  QScrollView;
 #pragma link C++ class  QString;
 #pragma link C++ class  QStringList;
+#pragma link C++ class  QValueList<QString>;
+#pragma link C++ class  QStringList::Iterator;
+#pragma link C++ class  QStyle;
 #pragma link C++ class  QStatusBar;
 #pragma link C++ class  QSqlDriverPlugin;
 #pragma link C++ class  QSqlForm;
