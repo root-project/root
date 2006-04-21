@@ -1654,20 +1654,28 @@ fi
 #
 if test ! "x$enable_odbc" = "xno"; then
     # Check for odbc include and library
-    check_header "sqlext.h" "$odbcincdir" \
-        $ODBC $ODBC/include $ODBCINCDIR /usr/local/include \
-        /usr/include $finkdir/include
-    odbcinc=$found_hdr
-    odbcincdir=$found_dir
+    if test "x$platform" = xwin32 ; then
+        odbcinc="sqlext.h"
+        odbcincdir=""
+        odbclib="odbc32.lib"
+        odbclibdir=""
+        enable_odbc="yes"
+    else
+        check_header "sqlext.h" "$odbcincdir" \
+            $ODBC $ODBC/include $ODBCINCDIR /usr/local/include \
+            /usr/include $finkdir/include
+        odbcinc=$found_hdr
+        odbcincdir=$found_dir
 
-    check_library "libiodbc libodbc odbc32" "$enable_shared" "$odbclibdir" \
-        $ODBC $ODBC/lib $ODBCLIBDIR /usr/local/lib /usr/lib \
-        $finkdir/lib
-    odbclib=$found_lib
-    odbclibdir=$found_dir
+        check_library "libiodbc libodbc odbc32" "$enable_shared" "$odbclibdir" \
+            $ODBC $ODBC/lib $ODBCLIBDIR /usr/local/lib /usr/lib \
+            $finkdir/lib
+        odbclib=$found_lib
+        odbclibdir=$found_dir
 
-    if test "x$odbcincdir" = "x" || test "x$odbclib" = "x"; then
-        enable_odbc="no"
+        if test "x$odbcincdir" = "x" || test "x$odbclib" = "x"; then
+            enable_odbc="no"
+        fi
     fi
 fi
 
