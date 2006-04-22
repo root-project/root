@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.7 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.8 2005/08/30 06:39:31 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -11,17 +11,122 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGenerator                                                            //
+// TGenerator                                                           //
 //                                                                      //
-// Is an abstact base class, that defines the interface of ROOT and the //
-// various event generators. Every event generator should inherit from  //
-// TGenerator or its subclasses.                                         //
+// Is an base class, that defines the interface of ROOT to various  	//
+// event generators. Every event generator should inherit from   	//
+// TGenerator or its subclasses.                                        //
 //                                                                      //
-// Every class inherited from TGenerator knows already the interface to  //
-// the /HEPEVT/ common block. So in the event creation of the various   //
-// generators, the /HEPEVT/ common block should be filled               //
-// The ImportParticles method then parses the result from the event        //
-// generators into a TClonesArray of TParticle objects.                   //
+// Derived class can overload the member  function GenerateEvent        //
+// to do the actual event generation (e.g., call PYEVNT or similar).    //
+//                                                                      //
+// The derived class should overload the member function                //
+// ImportParticles (both types) to read the internal storage of the     //
+// generated event into either the internal TObjArray or the passed     //
+// TClonesArray of TParticles.                                          //
+//                                                                      //
+// If the generator code stores event data in the /HEPEVT/ common block //
+// Then the default implementation of ImportParticles should suffice.   //
+// The common block /HEPEVT/ is structed like                           //
+//                                                                      //
+//   /* C */                                                            //
+//   typedef struct {                                                   //
+//      Int_t    nevhep;           // Event number                      //
+//      Int_t    nhep;             // # of particles                    //
+//      Int_t    isthep[4000];     // Status flag of i'th particle      //
+//      Int_t    idhep[4000];      // PDG # of particle                 //
+//      Int_t    jmohep[4000][2];  // 1st & 2nd mother particle #	//
+//      Int_t    jdahep[4000][2];  // 1st & 2nd daughter particle #     //
+//      Double_t phep[4000][5];    // 4-momentum and 1 word             //
+//      Double_t vhep[4000][4];    // 4-position of production          //
+//   } HEPEVT_DEF;                                                      //
+//                                                                      //
+//                                                                      //
+//   C Fortran                                                          //
+//         COMMON/HEPEVT/NEVHEP,NHEP,ISTHEP(4000),IDHEP(4000),          //
+//       +    JMOHEP(2,4000),JDAHEP(2,4000),PHEP(5,4000),VHEP(4,4000)   //
+//         INTEGER NEVHEP,NHEP,ISTHEP,IDHEP,JMOHEP,JDAHEP               //
+//         DOUBLE PRECISION PHEP,VHEP                                   //
+//                                                                      //
+// The generic member functions SetParameter and GetParameter can be    //
+// overloaded to set and get parameters of the event generator.         //
+//                                                                      //
+// Note, if the derived class interfaces a (set of) Fortran common      //
+// blocks (like TPythia, TVenus does), one better make the derived      //
+// class a singleton.  That is, something like                          //
+//                                                                      //
+//     class MyGenerator : public TGenerator                            //
+//     {                                                                //
+//     public:                                                          //
+//       static MyGenerator* Instance()                                 //
+//       {                                                              //
+//         if (!fgInstance) fgInstance = new MyGenerator;               //
+//         return fgInstance;                                           //
+//       }                                                              //
+//       void  GenerateEvent() { ... }                                  //
+//       void  ImportParticles(TClonesArray* a, Option_t opt="") {...}  //
+//       Int_t ImportParticles(Option_t opt="") { ... }                 //
+//       Int_t    SetParameter(const char* name, Double_t val) { ... }  //
+//       Double_t GetParameter(const char* name) { ... }                //
+//       virtual ~MyGenerator() { ... }                                 //
+//     protected:                                                       //
+//       MyGenerator() { ... }                                          //
+//       MyGenerator(const MyGenerator& o) { ... }                      //
+//       MyGenerator& operator=(const MyGenerator& o) { ... }           //
+//       static MyGenerator* fgInstance;                                //
+//       ClassDef(MyGenerator,0);                                       //
+//     };                                                               //
+//                                                                      //
+// Having multiple objects accessing the same common blocks is not      //
+// safe.                                                                //
+//                                                                      //
+// concrete TGenerator classes can be loaded in scripts and subseqent-  //
+// ly used in compiled code:                                            //
+//                                                                      //
+//     // MyRun.h                                                       //
+//     class MyRun : public TObject                                     //
+//     {                                                                //
+//     public:                                                          //
+//       static MyRun* Instance() { ... }                               //
+//       void SetGenerator(TGenerator* g) { fGenerator = g; }           //
+//       void Run(Int_t n, Option_t* option="")                         //
+//       {                                                              //
+//         TFile*        file = TFile::Open("file.root","RECREATE");    //
+//         TTree*        tree = new TTree("T","T");                     //
+//         TClonesArray* p    = new TClonesArray("TParticles");         //
+//         tree->Branch("particles", &p);                               //
+//         for (Int_t event = 0; event < n; event++) {                  //
+//           fGenerator->GenerateEvent();                               //
+//           fGenerator->ImportParticles(p,option);                     //
+//           tree->Fill();                                              //
+//         }                                                            //
+//         file->Write();                                               //
+//         file->Close();                                               //
+//       }                                                              //
+//       ...                                                            //
+//     protected:                                                       //
+//       TGenerator* fGenerator;                                        //
+//       ClassDef(MyRun,0);                                             //
+//     };                                                               //
+//                                                                      //
+//     // Config.C                                                      //
+//     void Config()                                                    //
+//     {                                                                //
+//        MyRun* run = MyRun::Instance();                               //
+//        run->SetGenerator(MyGenerator::Instance());                   //
+//     }                                                                //
+//                                                                      //
+//     // main.cxx                                                      //
+//     int                                                              //
+//     main(int argc, char** argv)                                      //
+//     {                                                                //
+//       TApplication app("", 0, 0);                                    //
+//       gSystem->ProcessLine(".x Config.C");                           //
+//       MyRun::Instance()->Run(10);                                    //
+//       return 0;                                                      //
+//     }                                                                //
+//                                                                      //
+// This is especially useful for example with TVirtualMC or similar.    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -76,15 +181,22 @@ TGenerator::~TGenerator()
 }
 
 //______________________________________________________________________________
+void TGenerator::GenerateEvent()
+{
+  // must be implemented in concrete class (see eg TPythia6)
+}
+
+//______________________________________________________________________________
 TObjArray* TGenerator::ImportParticles(Option_t *option)
 {
 //
-//  Default primary creation method. It reads the /HEPEVT/ common block which
-//  has been filled by the GenerateEvent method. If the event generator does
-//  not use the HEPEVT common block, This routine has to be overloaded by
-//  the subclasses.
-//  The default action is to store only the stable particles (ISTHEP = 1)
-//  This can be demanded explicitly by setting the option = "Final"
+//  It reads the /HEPEVT/ common block which has been filled by the
+//  GenerateEvent method. If the event generator does not use the
+//  HEPEVT common block, This routine has to be overloaded by the
+//  subclasses.
+//
+//  The default action is to store only the stable particles (ISTHEP =
+//  1) This can be demanded explicitly by setting the option = "Final"
 //  If the option = "All", all the particles are stored.
 //
   fParticles->Clear();
@@ -143,15 +255,16 @@ TObjArray* TGenerator::ImportParticles(Option_t *option)
 Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
 {
 //
-//  Default primary creation method. It reads the /HEPEVT/ common block which
-//  has been filled by the GenerateEvent method. If the event generator does
-//  not use the HEPEVT common block, This routine has to be overloaded by
-//  the subclasses.
+//  It reads the /HEPEVT/ common block which has been filled by the
+//  GenerateEvent method. If the event generator does not use the
+//  HEPEVT common block, This routine has to be overloaded by the
+//  subclasses.
+//
 //  The function loops on the generated particles and store them in
-//  the TClonesArray pointed by the argument particles.
-//  The default action is to store only the stable particles (ISTHEP = 1)
-//  This can be demanded explicitly by setting the option = "Final"
-//  If the option = "All", all the particles are stored.
+//  the TClonesArray pointed by the argument particles.  The default
+//  action is to store only the stable particles (ISTHEP = 1) This can
+//  be demanded explicitly by setting the option = "Final" If the
+//  option = "All", all the particles are stored.
 //
   if (particles == 0) return 0;
   TClonesArray &clonesParticles = *particles;
