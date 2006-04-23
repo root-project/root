@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.22 2006/01/18 20:44:18 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.23 2006/01/24 05:59:27 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,6 +67,7 @@
 
 TPythia6*  TPythia6::fgInstance = 0;
 
+
 #ifndef WIN32
 # define pydiff pydiff_
 # define pyevnt pyevnt_
@@ -85,6 +86,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pystat pystat_
 # define pytest pytest_
 # define pyupda pyupda_
+# define py1ent py1ent_
 # ifdef PYTHIA6_DOUBLE_UNDERSCORE
 #  define tpythia6_open_fortran_file tpythia6_open_fortran_file__
 #  define tpythia6_close_fortran_file tpythia6_close_fortran_file__
@@ -117,6 +119,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pystat PYSTAT
 # define pytest PYTEST
 # define pyupda PYUPDA
+# define py1ent PY1ENT
 # define tpythia6_open_fortran_file TPYTHIA6_OPEN_FORTRAN_FILE
 # define tpythia6_close_fortran_file TPYTHIA6_CLOSE_FORTRAN_FILE
 # define type_of_call _stdcall
@@ -140,6 +143,7 @@ extern "C" int  type_of_call pyrget(int *lun, int *move);
 extern "C" int  type_of_call pyrset(int *lun, int *move);
 extern "C" int  type_of_call pytest(int *flag);
 extern "C" int  type_of_call pyupda(int *mupda, int *lun);
+extern "C" void type_of_call py1ent(Int_t&, Int_t&, Double_t&, Double_t&, Double_t&);
 
 #ifndef WIN32
 extern "C" void type_of_call pyinit(char *frame, char *beam, char *target,
@@ -182,7 +186,12 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
 // TPythia6 constructor: creates a TClonesArray in which it will store all
 // particles. Note that there may be only one functional TPythia6 object
 // at a time, so it's not use to create more than one instance of it.
-
+  
+  // Protect against multiple objects.   All access should be via the
+  // Instance member function. 
+  if (fgInstance) 
+    Fatal("TPythia6", "There's already an instance of TPythia6");
+  
   delete fParticles; // was allocated as TObjArray in TGenerator
 
   fParticles = new TClonesArray("TMCParticle",50);
@@ -568,6 +577,31 @@ double TPythia6::Pymass(int kf) {
 int TPythia6::Pychge(int kf) {
   return pychge(&kf);
 }
+
+//______________________________________________________________________________
+void 
+TPythia6::Py1ent(Int_t ip, Int_t kf, Double_t pe, Double_t theta, Double_t phi)
+{
+  // Add one entry to the event record, i.e. either a parton or a
+  // particle. 
+  //
+  //  IP:   normally line number for the parton/particle. There are two
+  //        exceptions:
+  // 
+  //        If IP = 0: line number 1 is used and PYEXEC is called. 
+  //        If IP < 0: line -IP is used, with status code K(-IP,2)=2
+  //                   rather than 1; thus a parton system may be built
+  //                   up by filling all but the last parton of the
+  //                   system with IP < 0.   
+  //  KF:   parton/particle flavour code (PDG code)
+  //  PE:   parton/particle energy. If PE is smaller than the mass,
+  //        the parton/particle is taken to be at rest.  
+  //  THETA:
+  //  PHI:  polar and azimuthal angle for the momentum vector of the
+  //        parton/particle. 
+  py1ent(ip, kf, pe, theta, phi);
+}
+
 
 //______________________________________________________________________________
 void TPythia6::SetupTest()

@@ -1,4 +1,5 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.7 2005/09/04 19:08:11 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.8 2006/01/24 05:59:27 brun Exp $
+// -*- mode: C++ -*-
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -310,6 +311,7 @@ public:
   void             Pydiff();
   void             Pyedit(int medit);
   void             Pyevnt();
+  void             Py1ent(Int_t line, Int_t kf, Double_t pe, Double_t theta, Double_t phi);
   void             Pyexec();
   void             Pyhepc(int mconv);
   void             Pyinit(char* frame, char* beam, char* target, double wint);
