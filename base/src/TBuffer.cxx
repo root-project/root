@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.93 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.94 2006/04/20 16:53:59 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -32,7 +32,8 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 
-#if defined(__linux) && defined(__i386__)
+#if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
+     defined(__GNUC__)
 #define USE_BSWAPCPY
 #endif
 

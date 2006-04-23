@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.15 2004/01/10 10:52:29 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.16 2004/08/05 23:51:55 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -40,8 +40,12 @@
 #include <string.h>
 #endif
 
+#if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
+     defined(__GNUC__)
+#define R__USEASMSWAP
+#endif
 
-#if defined(__linux) && defined(__i386__) && !defined(__CINT__)
+#if defined(R__USEASMSWAP) && !defined(__CINT__)
 #include "Byteswap.h"
 #endif
 
@@ -60,7 +64,7 @@ inline void tobuf(char *&buf, UChar_t x)
 inline void tobuf(char *&buf, UShort_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__)
+# if defined(R__USEASMSWAP)
    *((UShort_t *)buf) = Rbswap_16(x);
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
@@ -78,7 +82,7 @@ inline void tobuf(char *&buf, UShort_t x)
 inline void tobuf(char *&buf, UInt_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__)
+# if defined(R__USEASMSWAP)
    *((UInt_t *)buf) = Rbswap_32(x);
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
@@ -190,8 +194,7 @@ inline void tobuf(char *&buf, Long_t x)
 inline void tobuf(char *&buf, ULong64_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
-     defined(__GNUC__) && __GNUC__ >= 2
+# if defined(R__USEASMSWAP)
    *((ULong64_t *)buf) = Rbswap_64(x);
 # else
    // To work around a stupid optimization bug in MSVC++ 6.0
@@ -215,8 +218,7 @@ inline void tobuf(char *&buf, ULong64_t x)
 inline void tobuf(char *&buf, Float_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__) && \
-     defined(__GNUC__) && __GNUC__ >= 2
+# if defined(R__USEASMSWAP)
    *((UInt_t *)buf) = Rbswap_32(*((UInt_t *)&x));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
@@ -247,8 +249,7 @@ inline void tobuf(char *&buf, Float_t x)
 inline void tobuf(char *&buf, Double_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
-     defined(__GNUC__) && __GNUC__ >= 2
+# if defined(R__USEASMSWAP)
    *((ULong64_t *)buf) = Rbswap_64(*((ULong64_t *)&x));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
@@ -299,7 +300,7 @@ inline void frombuf(char *&buf, UChar_t *x)
 inline void frombuf(char *&buf, UShort_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__)
+# if defined(R__USEASMSWAP)
    *x = Rbswap_16(*((UShort_t *)buf));
 # else
    char *sw = (char *)x;
@@ -315,7 +316,7 @@ inline void frombuf(char *&buf, UShort_t *x)
 inline void frombuf(char *&buf, UInt_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__)
+# if defined(R__USEASMSWAP)
    *x = Rbswap_32(*((UInt_t *)buf));
 # else
    char *sw = (char *)x;
@@ -362,8 +363,7 @@ inline void frombuf(char *&buf, ULong_t *x)
 inline void frombuf(char *&buf, ULong64_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
-     defined(__GNUC__) && __GNUC__ >= 2
+# if defined(R__USEASMSWAP)
    *x = Rbswap_64(*((ULong64_t *)buf));
 # else
    char *sw = (char *)x;
@@ -385,8 +385,7 @@ inline void frombuf(char *&buf, ULong64_t *x)
 inline void frombuf(char *&buf, Float_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__) && \
-     defined(__GNUC__) && __GNUC__ >= 2
+# if defined(R__USEASMSWAP)
    // Use a union to allow strict-aliasing
    union {
       volatile UInt_t  i;
@@ -423,8 +422,7 @@ inline void frombuf(char *&buf, Float_t *x)
 inline void frombuf(char *&buf, Double_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
-     defined(__GNUC__) && __GNUC__ >= 2
+# if defined(R__USEASMSWAP)
    // Use a union to allow strict-aliasing
    union {
       volatile ULong64_t l;
@@ -482,7 +480,7 @@ inline void frombuf(char *&buf, Long64_t *x) { frombuf(buf, (ULong64_t *) x); }
 #ifdef R__BYTESWAP
 inline UShort_t host2net(UShort_t x)
 {
-#if defined(__linux) && defined(__i386__)
+#if defined(R__USEASMSWAP)
    return Rbswap_16(x);
 #else
    return (((x & 0x00ff) << 8) | ((x & 0xff00) >> 8));
@@ -491,7 +489,7 @@ inline UShort_t host2net(UShort_t x)
 
 inline UInt_t host2net(UInt_t x)
 {
-#if defined(__linux) && defined(__i386__)
+#if defined(R__USEASMSWAP)
    return Rbswap_32(x);
 #else
    return (((x & 0x000000ffU) << 24) | ((x & 0x0000ff00U) <<  8) |
@@ -502,8 +500,7 @@ inline UInt_t host2net(UInt_t x)
 inline ULong_t host2net(ULong_t x)
 {
 #ifdef R__B64
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
-     defined(__GNUC__) && __GNUC__ >= 2
+# if defined(R__USEASMSWAP)
    return Rbswap_64(x);
 # else
    char sw[sizeof(ULong_t)];
@@ -527,8 +524,7 @@ inline ULong_t host2net(ULong_t x)
 
 inline ULong64_t host2net(ULong64_t x)
 {
-#if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
-    defined(__GNUC__) && __GNUC__ >= 2
+#if defined(R__USEASMSWAP)
    return Rbswap_64(x);
 #else
    char sw[sizeof(ULong64_t)];
@@ -549,8 +545,7 @@ inline ULong64_t host2net(ULong64_t x)
 
 inline Float_t host2net(Float_t xx)
 {
-#if defined(__linux) && defined(__i386__) && \
-    defined(__GNUC__) && __GNUC__ >= 2
+#if defined(R__USEASMSWAP)
    // Use a union to allow strict-aliasing
    union {
       volatile UInt_t  i;
@@ -568,8 +563,7 @@ inline Float_t host2net(Float_t xx)
 
 inline Double_t host2net(Double_t x)
 {
-#if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
-    defined(__GNUC__) && __GNUC__ >= 2
+#if defined(R__USEASMSWAP)
    // Use a union to allow strict-aliasing
    union {
       volatile ULong64_t l;

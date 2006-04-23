@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: Bswapcpy.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -52,16 +52,18 @@ __asm__ __volatile__(
         :"memory");
 return (to);
 }
+
 extern inline void * bswapcpy32(void * to, const void * from, size_t n)
 {
 int d0, d1, d2, d3;
 __asm__ __volatile__(
         "cld\n"
         "1:\tlodsl\n\t"
-#if !defined __i486__ && !defined __pentium__ && !defined __pentiumpro__
+#if !defined __i486__ && !defined __pentium__ && !defined __pentiumpro__ && \
+    !defined __pentium4__ && !defined __x86_64__
         "rorw $8, %%ax\n\t"
-	"rorl $16, %%eax\n\t"
-	"rorw $8, %%ax\n\t"	
+        "rorl $16, %%eax\n\t"
+        "rorw $8, %%ax\n\t"
 #else
         "bswap %%eax\n\t"
 #endif
@@ -73,4 +75,3 @@ __asm__ __volatile__(
 return (to);
 }
 #endif
-

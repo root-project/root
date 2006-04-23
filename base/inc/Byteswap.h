@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Byteswap.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Byteswap.h,v 1.2 2000/09/27 09:16:42 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,7 +42,7 @@
      (__extension__                                                           \
       ({ register unsigned short int __v;                                     \
          if (__builtin_constant_p (x))                                        \
-           __v = R__bswap_constant_16 (x);                                     \
+           __v = R__bswap_constant_16 (x);                                    \
          else                                                                 \
            __asm__ __volatile__ ("rorw $8, %w0"                               \
                                  : "=r" (__v)                                 \
@@ -63,12 +63,13 @@
 #if defined __GNUC__ && __GNUC__ >= 2
 /* To swap the bytes in a word the i486 processors and up provide the
    `bswap' opcode.  On i386 we have to use three instructions.  */
-# if !defined __i486__ && !defined __pentium__ && !defined __pentiumpro__
+# if !defined __i486__ && !defined __pentium__ && !defined __pentiumpro__ &&  \
+     !defined __pentium4__ && !defined __x86_64__
 #  define R__bswap_32(x) \
      (__extension__                                                           \
       ({ register unsigned int __v;                                           \
          if (__builtin_constant_p (x))                                        \
-           __v = R__bswap_constant_32 (x);                                     \
+           __v = R__bswap_constant_32 (x);                                    \
          else                                                                 \
            __asm__ __volatile__ ("rorw $8, %w0;"                              \
                                  "rorl $16, %0;"                              \
@@ -82,7 +83,7 @@
      (__extension__                                                           \
       ({ register unsigned int __v;                                           \
          if (__builtin_constant_p (x))                                        \
-           __v = R__bswap_constant_32 (x);                                     \
+           __v = R__bswap_constant_32 (x);                                    \
          else                                                                 \
            __asm__ __volatile__ ("bswap %0"                                   \
                                  : "=r" (__v)                                 \
@@ -101,8 +102,8 @@
       ({ union { __extension__ unsigned long long int __ll;                   \
                  unsigned long int __l[2]; } __w, __r;                        \
          __w.__ll = (x);                                                      \
-         __r.__l[0] = R__bswap_32 (__w.__l[1]);                                \
-         __r.__l[1] = R__bswap_32 (__w.__l[0]);                                \
+         __r.__l[0] = R__bswap_32 (__w.__l[1]);                               \
+         __r.__l[1] = R__bswap_32 (__w.__l[0]);                               \
          __r.__ll; }))
 #endif /* bits/byteswap.h */
 
