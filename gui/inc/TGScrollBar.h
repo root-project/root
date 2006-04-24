@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.11 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.12 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -115,6 +115,10 @@ public:
    virtual Int_t GetPosition() const { return fPos; }
    virtual Int_t GetPageSize() const { return fPsize; }
    virtual Int_t GetRange() const { return fRange; }
+   virtual void  Resize(UInt_t w = 0, UInt_t h = 0) { TGFrame::Resize(w, h); SetRange(fRange, fPsize); }
+   virtual void  MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) 
+                  { TGFrame::MoveResize(x, y, w, h); SetRange(fRange, fPsize); }
+   virtual void  Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
 
    virtual void MapSubwindows() { TGWindow::MapSubwindows(); }
 
@@ -138,7 +142,8 @@ public:
    virtual void Layout();
 
    virtual void SetRange(Int_t range, Int_t page_size);  //*MENU*
-   virtual void SetPosition(Int_t pos);                  //*MENU*
+   virtual void SetPosition(Int_t pos);                  //*MENU* *GETTER=GetPosition
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHScrollBar,0)  // Horizontal scrollbar widget
 };
@@ -160,7 +165,8 @@ public:
    virtual void Layout();
 
    virtual void SetRange(Int_t range, Int_t page_size);  //*MENU*
-   virtual void SetPosition(Int_t pos);                  //*MENU*
+   virtual void SetPosition(Int_t pos);                  //*MENU*  *GETTER=GetPosition
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGVScrollBar,0)  // Vertical scrollbar widget
 };

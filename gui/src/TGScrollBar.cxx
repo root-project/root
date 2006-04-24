@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.14 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -45,6 +45,8 @@
 #include "TSystem.h"
 #include "TTimer.h"
 #include "TMath.h"
+#include "Riostream.h"
+
 
 Pixmap_t TGScrollBar::fgBckgndPixmap = 0;
 Int_t    TGScrollBar::fgScrollBarWidth = kDefaultScrollBarWidth;
@@ -241,8 +243,9 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fEditDisabled = kEditDisableLayout | kEditDisableHeight | kEditDisableBtnEnable;
 
    if (!p && fClient->IsEditable()) {
+      TGFrame::Resize(100, GetDefaultHeight());
+      SetRange(100, 20);
       MapSubwindows();
-      MapWindow();
    }
 }
 
@@ -441,7 +444,7 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fTailPic = fClient->GetPicture("arrow_down.xpm");
 
    if (!fHeadPic || !fTailPic)
-      Error("TGHScrollBar", "arrow_*.xpm not found");
+      Error("TGVScrollBar", "arrow_*.xpm not found");
 
    fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
                                     kRaisedFrame);
@@ -469,8 +472,9 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fEditDisabled = kEditDisableLayout | kEditDisableWidth | kEditDisableBtnEnable;
 
    if (!p && fClient->IsEditable()) {
+      TGFrame::Resize(GetDefaultWidth(), 100);
       MapSubwindows();
-      MapWindow();
+      SetRange(100, 20);
    }
 }
 
@@ -657,4 +661,55 @@ void TGVScrollBar::SetPosition(Int_t pos)
    fSlider->MoveResize(0, fY0, fgScrollBarWidth, fSliderSize);
 
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
+}
+
+//______________________________________________________________________________
+void TGHScrollBar::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save an horizontal scrollbar as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out <<"   TGHScrollBar *";
+   out << GetName() << " = new TGHScrollBar(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight();
+ 
+   if (fBackground == GetDefaultFrameBackground()) {
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << endl;
+   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
+}
+
+//______________________________________________________________________________
+void TGVScrollBar::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save an horizontal scrollbar as a C++ statement(s) on output stream out.
+
+   if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   out<<"   TGVScrollBar *";
+   out << GetName() <<" = new TGVScrollBar("<< fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight() << ",";
+
+   if (fBackground == GetDefaultFrameBackground()) {
+
+      if (!GetOptions()) {
+         out <<");" << endl;
+      } else {
+         out << "," << GetOptionString() <<");" << endl;
+      }
+   } else {
+      out << "," << GetOptionString() << ",ucolor);" << endl;
+   }
+
+   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << endl;
+   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
 }
