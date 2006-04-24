@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.51 2006/04/13 13:02:56 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.52 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -148,7 +148,7 @@ void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       fText->Draw(id, fNormGC, x + 3, y + max_ascent);
    } else {
       gVirtualX->SetForeground(fNormGC, fBkcolor);
-      gVirtualX->FillRectangle(id,fNormGC, x, y, fWidth, fHeight);
+      gVirtualX->FillRectangle(id, fNormGC, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, GetForeground());
       fText->Draw(id, fNormGC, x + 3, y + max_ascent);
    }
@@ -176,7 +176,7 @@ void TGTextLBEntry::SetText(TGString *new_text)
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
 
-   Resize(fTWidth, fTHeight + 1);
+   Resize(fTWidth + 3, fTHeight + 1);
 
    fClient->NeedRedraw(this);
 }
