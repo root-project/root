@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.16 2004/09/11 16:27:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.17 2004/09/12 10:43:49 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    virtual const char *GetTitle() const { return fText->Data(); }
    virtual void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
+   void ChangeText(const char *newText) { SetText(newText); } //*MENU*
    virtual void SetTitle(const char *label) { SetText(label); }
    void SetText(Int_t number) { SetText(new TGString(number)); }
    void SetTextJustify(Int_t tmode);
@@ -81,8 +82,8 @@ public:
    virtual void SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void SetTextColor(TColor *color, Bool_t global = kFALSE);
    virtual void SetForegroundColor(Pixel_t fore) { SetTextColor(fore, kFALSE); }
-
-   virtual void Disable() { fDisabled = kTRUE; fClient->NeedRedraw(this); }
+   virtual void Disable(Bool_t on = kTRUE) 
+               { fDisabled = on; fClient->NeedRedraw(this); } //*TOGGLE* *GETTER=IsDisabled
    virtual void Enable() { fDisabled = kFALSE; fClient->NeedRedraw(this); }
    Bool_t IsDisabled() const { return fDisabled; }
    Bool_t HasOwnFont() const;
