@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.40 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.41 2006/04/14 17:54:11 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -395,6 +395,25 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
       }
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGComboBox::RemoveEntry(Int_t id)
+{ 
+   // Remove entry. If id == -1, the currently selected entry is removed 
+
+   fListBox->RemoveEntry(id);
+
+   if (id < 0) {
+      if (fSelEntry) {
+         ((TGTextLBEntry*)fSelEntry)->SetTitle("");
+         fClient->NeedRedraw(fSelEntry);
+      } else {
+         fTextEntry->SetTitle("");
+         fClient->NeedRedraw(fTextEntry);
+      }
+   }
+   Resize();
 }
 
 //______________________________________________________________________________

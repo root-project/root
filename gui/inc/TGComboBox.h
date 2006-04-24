@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.20 2006/04/13 13:02:56 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.21 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -105,8 +105,7 @@ public:
                         { fListBox->InsertEntry(lbe, lhints, afterID); }
    virtual void NewEntry(const char *s = "Entry") 
                         { fListBox->NewEntry(s); Resize(); }       //*MENU*
-   virtual void RemoveEntry(Int_t id = -1)
-                        { fListBox->RemoveEntry(id); Resize(); }   //*MENU*
+   virtual void RemoveEntry(Int_t id = -1);                        //*MENU*
 //   virtual void MoveSelectedUp()
 //                        { fListBox->MoveSelectedUp(); }            //*MENU*
 //   virtual void MoveSelectedDown()
