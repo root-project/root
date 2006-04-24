@@ -1,3 +1,14 @@
+root (5.11.03-2) experimental; urgency=low
+
+  * Minor fixes.  Typos in the font generation script, lingering temp file,
+    remove build code, lingering source directory, better copyright file,
+    and so on.
+  * Fixes to ODBC interface to use SQL{U}LEN consistently where specified
+    by the ODBC prototypes.   This should remove any problems with 
+    i386/ia64/amd64/windows.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 22 Apr 2006 03:15:21 +0200
+
 root (5.11.03-1) experimental; urgency=low
 
   * fixes to Proof library loading.  Missing `#include "config.h"' added.

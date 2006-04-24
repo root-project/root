@@ -33,7 +33,7 @@ endif
 # Default target and message 
 all:	hello liblist devlist binlist
 hello:
-	@echo "Makeing list for $(DIRS) ($(SLIB),$(DEV),$(SBIN))"
+	@echo "Making list for $(DIRS) ($(SLIB),$(DEV),$(SBIN))"
 
 
 # If we have a development package, get the list of headers. 

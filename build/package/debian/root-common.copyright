@@ -37,7 +37,7 @@ non-free MS TTF Core fonts.
 
 The font `/usr/share/root/fonts/symbol.ttf' is made from the
 Ghostscript [1] PS font `s050000l.pfb' using fontforge [2], using the
-script `s050000l.pe'.  The file script.pe may be found in the ROOT
+script `s050000l.pe'.  The file `s050000l.pe' may be found in the ROOT
 source package.  The Ghostscript PS file is licensed under the GPL, as
 is the `symbol.ttf' file.  The copyright and license of `s050000l.pfb'
 is as follows:

@@ -209,6 +209,7 @@ debian/control:debian/control.in
 		-e 's/@pkglist@/$(DPKGLIST)/' 	\
 		-e 's/@plugins@/$(PLUGINLIST)/'	\
 		-e 's/@extras@/$(EXTRALIST)/' < $@.tmp > $@
+	rm -rf $@.tmp 
 
 configure-stamp:$(TEMPLATES:%.in=%) config.status
 config.status: configure 
@@ -263,6 +264,7 @@ clean:  $(TEMPLATES:%.in=%)
 	-rm -f  etc/daemons/olbd.rc.d
 	-rm -f  etc/daemons/xrootd.rc.d
 	-rm -f  qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
+	-rm -f  qt/moc_*.cxx
 	-find . -name ".#*" | xargs rm -rf
 
 	# Add here commands to clean up after the build process.
