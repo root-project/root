@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.27 2006/04/13 15:33:03 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.28 2006/04/14 17:54:49 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -641,7 +641,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddSection("Containers");
    AddSection("Input");
    AddSection("Display");
-//   AddSection("Complex Input");
+   AddSection("Dialogs");
 //   AddSection("Extended");
 
    TGuiBldAction *act = new TGuiBldAction("TGMainFrame", "Main Frame", kGuiBldProj);
@@ -700,12 +700,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_vslider.xpm";
    AddAction(act, "Input");
 
-   act = new TGuiBldAction("TGHScrollBar", "Horizontal Scrollbar", kGuiBldCtor);
+   act = new TGuiBldAction("TGHScrollBar", "HScrollbar", kGuiBldCtor);
    act->fAct = "new TGHScrollBar()";
    act->fPic = "bld_hscrollbar.xpm";
    AddAction(act, "Input");
 
-   act = new TGuiBldAction("TGVScrollBar", "Vertical Scrollbar", kGuiBldCtor);
+   act = new TGuiBldAction("TGVScrollBar", "VScrollbar", kGuiBldCtor);
    act->fAct = "new TGVScrollBar()";
    act->fPic = "bld_vscrollbar.xpm";
    AddAction(act, "Input");
@@ -713,6 +713,11 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act = new TGuiBldAction("TGLabel", "Text Label", kGuiBldCtor);
    act->fAct = "new TGLabel()";
    act->fPic = "bld_label.xpm";
+   AddAction(act, "Display");
+
+   act = new TGuiBldAction("TGIcon", "Icon", kGuiBldCtor);
+   act->fAct = "new TGIcon()";
+   act->fPic = "bld_image.xpm";
    AddAction(act, "Display");
 
    act = new TGuiBldAction("TGHorizontal3DLine", "Horizontal Line", kGuiBldCtor);
@@ -731,9 +736,14 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fHints = new TGLayoutHints(kLHintsBottom | kLHintsExpandX);
    AddAction(act, "Display");
 
-   act = new TGuiBldAction("TGHProgressBar", "Progress Bar", kGuiBldCtor);
+   act = new TGuiBldAction("TGHProgressBar", "HProgress Bar", kGuiBldCtor);
    act->fAct = "new TGHProgressBar()";
    act->fPic = "bld_hprogressbar.xpm";
+   AddAction(act, "Display");
+
+   act = new TGuiBldAction("TGVProgressBar", "VProgress Bar", kGuiBldCtor);
+   act->fAct = "new TGVProgressBar()";
+   act->fPic = "bld_vprogressbar.xpm";
    AddAction(act, "Display");
 
    act = new TGuiBldAction("TRootEmbeddedCanvas", "Embed Canvas", kGuiBldCtor);
@@ -762,6 +772,12 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_tab.xpm";
    AddAction(act, "Containers");
 
+//   act = new TGuiBldAction("TGCanvas", "Scrolled Canvas", kGuiBldCtor);
+//   act->fAct = "new TGCanvas()";
+//   act->fPic = "bld_canvas.xpm";
+//   AddAction(act, "Containers");
+
+
 /*
    act = new TGuiBldAction("TGVSplitter", "Horizontal Panes", kGuiBldFunc);
    act->fAct = "TRootGuiBuilder::VSplitter()";
@@ -773,6 +789,11 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    act->fPic = "bld_vpaned.xpm";
    AddAction(act, "Containers");
 */
+
+   act = new TGuiBldAction("TGColorSelect", "Color Selector", kGuiBldFunc);
+   act->fAct = "new TGColorSelect()";
+   act->fPic = "bld_colorselect.xpm";
+   AddAction(act, "Dialogs");
 
    fShutter->Resize(140, fShutter->GetHeight());
 
@@ -903,7 +924,7 @@ void TRootGuiBuilder::AddSection(const char *sect)
 //______________________________________________________________________________
 void TRootGuiBuilder::HandleButtons()
 {
-   // Handle buttons in in the GUI builder.
+   // Handle buttons in the GUI builder's widget palette.
 
    TGFrame *parent;
 

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.42 2006/04/13 15:33:03 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.43 2006/04/14 17:54:49 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TToggle.h"
 #include "TDataType.h"
 #include "TObjString.h"
+#include "Api.h"
 
 
 #undef DEBUG_LOCAL
@@ -54,6 +55,9 @@ ClassImp(TGuiBldDragManager)
 static UInt_t gGridStep = 10;
 static TGuiBldDragManager *gGuiBldDragManager = 0;
 
+static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
+                                         "All files",   "*",
+                                          0,             0 };
 
 ////////////////////////////////////////////////////////////////////////////////
 class TGuiBldMenuDialog : public TGTransientFrame {
@@ -138,7 +142,7 @@ void TGuiBldMenuDialog::ApplyMethod()
 {
    // execute method for obejct with input args
 
-   const char *params =  GetParameters();
+   const char *params = GetParameters();
    fObject->Execute(fMethod->GetName(), params);
 }
 
@@ -157,7 +161,7 @@ const char *TGuiBldMenuDialog::GetParameters()
 //   if (fMenu->GetContextMenu()->GetSelectedMenuItem())
 //      selfobjpos = fMenu->GetContextMenu()->GetSelectedMenuItem()->GetSelfObjectPos();
 //   else
-      selfobjpos = -1;
+   selfobjpos = -1;
 
    params[0] = 0;
    TIter next(fWidgets);
@@ -723,7 +727,8 @@ private:
    TGFrame           *fPlane; // highlighted plain composite frame when mose is moving
    TGFrame           *fSpacePressedFrame; // frame which was grabbed via spacebar pressed
    Bool_t             fPlacePopup; // kTRUE is menu fo frame was placed
-   TList             *fFrameMenuTrash;
+   TList             *fFrameMenuTrash; // trash list
+   TGFrame           *fMenuObject;     // object/frame for which context menu is created
 
 public:
    TGuiBldDragManagerPimpl(TGuiBldDragManager *m) {
@@ -761,6 +766,7 @@ public:
       fSpacePressedFrame = 0;
       fPlacePopup = kFALSE;
       fFrameMenuTrash->Delete();
+      fMenuObject = 0;
    }
 
    ~TGuiBldDragManagerPimpl() {
@@ -1030,7 +1036,7 @@ void TGuiBldDragManager::SwitchEditable(TGFrame *frame)
 
    TGCompositeFrame *comp = 0;
 
-   if (frame->InheritsFrom(TGCompositeFrame::Class())) {
+   if (frame->InheritsFrom(TGCompositeFrame::Class()) && CanChangeLayout(frame)) {
       comp = (TGCompositeFrame *)frame;
    } else if (frame->GetParent()->InheritsFrom(TGCompositeFrame::Class())) {
       comp = (TGCompositeFrame *)frame->GetParent();
@@ -1173,17 +1179,9 @@ void TGuiBldDragManager::GrabFrame(TGFrame *frame)
 
    Window_t c;
 
-#ifdef DEBUG_LOCAL
-printf("GrabFrame1\n");
-#endif
-
    gVirtualX->TranslateCoordinates(frame->GetId(),
                                    fClient->GetDefaultRoot()->GetId(),
                                    0, 0, fPimpl->fX0, fPimpl->fY0, c);
-
-#ifdef DEBUG_LOCAL
-printf("GrabFrame2\n");
-#endif
 
    fPimpl->fX = fPimpl->fX0;
    fPimpl->fY = fPimpl->fY0;
@@ -1272,15 +1270,7 @@ Bool_t TGuiBldDragManager::IsPointVisible(Int_t xi, Int_t yi)
    Int_t y = yi;
    Bool_t ret = kFALSE;
 
-#ifdef DEBUG_LOCAL
-printf("IsPointVisible1\n");
-#endif
-
    gVirtualX->TranslateCoordinates(fPimpl->fGrab->GetId(), w, x, y, x, y, child);
-
-#ifdef DEBUG_LOCAL
-printf("IsPointVisible2\n");
-#endif
 
    dst = src = child = w;
 
@@ -1293,10 +1283,6 @@ printf("IsPointVisible2\n");
          return kTRUE;
       }
    }
-
-#ifdef DEBUG_LOCAL
-printf("IsPointVisible3\n");
-#endif
 
    return ret;
 }
@@ -1795,7 +1781,7 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
                   HandleAction(kEndEditAct);
                   return kTRUE;
                } else if (!(event->fState & 0xFF)) {
-                  ExecuteQuickAction(event);
+                  //ExecuteQuickAction(event);
                   return kTRUE;
                }
             } else {
@@ -1912,9 +1898,8 @@ Bool_t TGuiBldDragManager::HandleButtonPress(Event_t *event)
       fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
    }
 
-   if (fQuickHandler && fQuickHandler->fEditor) { // keep quick editor on the top 
-      fQuickHandler->fEditor->RaiseWindow();
-      fQuickHandler->fEditor->RequestFocus();
+   if (gMenuDialog) { // keep quick editor on the top 
+      gMenuDialog->RaiseWindow();
    }
 
    if ( ((event->fCode != kButton1) && (event->fCode != kButton3)) ||
@@ -2017,9 +2002,6 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
 
    if (fStop) return kFALSE;
 
-   static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
-                                            "All files",   "*",
-                                            0,             0 };
    char   tmp[10];
    UInt_t keysym;
    Bool_t ret = kFALSE;
@@ -2034,7 +2016,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
 
    if (IsEditDisabled(w) && !((TGFrame*)w)->HandleKey(event)) {
       TGFrame *parent = GetEditableParent((TGFrame*)w);
-      if (!parent) {
+      if (parent) {
          event->fWindow = parent->GetId();
          parent->HandleKey(event);
          return kTRUE;
@@ -2081,10 +2063,8 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
             break;
          case kKey_B:
          {
-            if (fPimpl->fGrab && (fPimpl->fClickFrame != fClient->GetRoot())) {
-               if (fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
-                  BreakLayout();
-               }
+            if (fPimpl->fGrab ) {
+               BreakLayout();
             }
             ret = kTRUE;
             break;
@@ -2165,6 +2145,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
             break;
          case kKey_Return:
          case kKey_Enter:
+            //UnmapAllPopups();
             HandleReturn(kFALSE);
             ret = kTRUE;
             break;
@@ -2180,15 +2161,18 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
             ret = kTRUE;
             break;
          case kKey_Space:
+            //UnmapAllPopups();
             if (fPimpl && fPimpl->fGrab) {
                SwitchEditable(fPimpl->fGrab);
 
-               if (fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
-                  UngrabFrame();
-               } else {
-                  TGFrame *p = (TGFrame*)fPimpl->fGrab->GetParent();
-                  SelectFrame(p);
-                  fSource = fPimpl->fSpacePressedFrame = p;
+               TGFrame *p = (TGFrame*)GetEditableParent(fPimpl->fGrab);
+               if (p) {
+                  if (p == fBuilder->GetMdiMain()->GetCurrent()) {
+                     if (CanChangeLayout(fPimpl->fGrab)) UngrabFrame();
+                  } else {
+                     SelectFrame(p);
+                     fSource = fPimpl->fSpacePressedFrame = p;
+                  }
                }
             }
             ret = kTRUE;
@@ -2263,9 +2247,6 @@ void TGuiBldDragManager::ReparentFrames(TGFrame *newfr, TGCompositeFrame *oldfr)
          }
       }
    }
-#ifdef DEBUG_LOCAL
-printf("ReparentFrames3\n");
-#endif
 }
 
 //______________________________________________________________________________
@@ -2279,11 +2260,6 @@ TList *TGuiBldDragManager::GetFramesInside(Int_t x0, Int_t y0, Int_t x, Int_t y)
 
    if (!fClient->GetRoot()->InheritsFrom(TGCompositeFrame::Class())) return 0;
    TList *list = new TList();
-
-
-#ifdef DEBUG_LOCAL
-printf("GetFramesInside1\n");
-#endif
 
    xx = x0; yy = y0;
    x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
@@ -2341,20 +2317,12 @@ void TGuiBldDragManager::HandleReturn(Bool_t on)
 
    if (fLassoDrawn) {
 
-#ifdef DEBUG_LOCAL
-printf("HandleReturn1\n");
-#endif
-
       gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                       fClient->GetRoot()->GetId(),
                                       fPimpl->fX, fPimpl->fY, x, y, c);
       gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                       fClient->GetRoot()->GetId(),
                                       fPimpl->fX0, fPimpl->fY0, x0, y0, c);
-
-#ifdef DEBUG_LOCAL
-printf("HandleReturn2\n");
-#endif
 
       xx = x0; yy = y0;
       x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
@@ -2366,10 +2334,6 @@ printf("HandleReturn2\n");
          parent = new TGCompositeFrame(comp, x - x0, y - y0);
          parent->MoveResize(x0, y0, x - x0, y - y0);
          ReparentFrames(parent, comp);
-
-#ifdef DEBUG_LOCAL
-printf("HandleReturn3\n");
-#endif
 
          comp->AddFrame(parent);
          parent->MapWindow();
@@ -2391,10 +2355,6 @@ printf("HandleReturn3\n");
          return;
       }
 
-#ifdef DEBUG_LOCAL
-printf("HandleReturn4\n");
-#endif
-
       if (fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
          parent = (TGCompositeFrame*)fPimpl->fGrab;
       } else {
@@ -2405,10 +2365,6 @@ printf("HandleReturn4\n");
          DeleteFrame(fPimpl->fGrab);
          UngrabFrame();
          ChangeSelected(0);   //update editors
-
-#ifdef DEBUG_LOCAL
-printf("HandleReturn6\n");
-#endif
 
          if (fBuilder) {
             fBuilder->UpdateStatusBar("Drop action performed");
@@ -2433,18 +2389,13 @@ void TGuiBldDragManager::HandleAlignment(Int_t to, Bool_t lineup)
        !fClient->IsEditable()) return;
 
    if (fLassoDrawn) {
-#ifdef DEBUG_LOCAL
-printf("HandleAlignment1\n");
-#endif
       gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                       fClient->GetRoot()->GetId(),
                                       fPimpl->fX, fPimpl->fY, x, y, c);
       gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                       fClient->GetRoot()->GetId(),
                                       fPimpl->fX0, fPimpl->fY0, x0, y0, c);
-#ifdef DEBUG_LOCAL
-printf("HandleAlignment2\n");
-#endif
+
       xx = x0; yy = y0;
       x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
       y0 = TMath::Min(yy, y); y = TMath::Max(yy, y);
@@ -2672,9 +2623,10 @@ void TGuiBldDragManager::HandleCut()
 }
 
 //______________________________________________________________________________
-void TGuiBldDragManager::HandleCopy()
+void TGuiBldDragManager::HandleCopy(Bool_t brk_layout)
 {
-   // handle copy
+   // Handle copy. This method is also used by SaveFrame method.
+   // In later case  brk_layout == kFALSE
 
    if (fStop || !fPimpl->fGrab) return;
 
@@ -2697,9 +2649,9 @@ void TGuiBldDragManager::HandleCopy()
    TGFrameElement *fe = fPimpl->fGrab->GetFrameElement();
 
    tmp->GetList()->Add(fe);
-   tmp->SetLayoutBroken(kTRUE);
+   tmp->SetLayoutBroken(brk_layout);
 
-   tmp->SaveSource(fPasteFileName.Data(), "quiet");
+   tmp->SaveSource(fPasteFileName.Data(), brk_layout ? "quiet" : "");
    tmp->GetList()->Remove(fe);
 
    fPimpl->fGrab->SetX(x0);
@@ -2863,9 +2815,6 @@ void TGuiBldDragManager::Save(const char *file)
    if (!file || !strlen(file)) {
       static TString dir(".");
       static Bool_t overwr = kFALSE;
-      static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
-                                               "All files",   "*",
-                                               0,             0 };
       TGFileInfo fi;
 
       fi.fFileTypes = gSaveMacroTypes;
@@ -2900,6 +2849,90 @@ out:
 }
 
 //______________________________________________________________________________
+void TGuiBldDragManager::SaveFrame()
+{
+   // Save composite frame as macro
+
+   if (fStop || !fClient->GetRoot() || !fClient->IsEditable() || !fPimpl->fGrab) return;
+
+   TString fname;
+
+   TGFrame *frame = fPimpl->fGrab;
+   SetEditable(kFALSE);
+
+   static TString dir(".");
+   static Bool_t overwr = kFALSE;
+
+   TString sav = fPasteFileName;
+
+   TGFileInfo fi;
+
+   fi.fFileTypes = gSaveMacroTypes;
+   fi.fIniDir    = StrDup(dir);
+   fi.fOverwrite = overwr;
+   new TGFileDialog(fClient->GetDefaultRoot(), frame, kFDSave, &fi);
+
+   if (!fi.fFilename) {
+      goto out;
+   }
+
+   dir = fi.fIniDir;
+   overwr = fi.fOverwrite;
+   fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
+
+   if (strstr(fname.Data(), ".C")) {
+      fPasteFileName = fname;
+      fPimpl->fGrab = frame;
+      fStop = kFALSE;
+      TGFrameElement *fe = fPimpl->fGrab->GetFrameElement();
+      fe->fLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+      HandleCopy(kFALSE);
+      fStop = kTRUE;
+   } else {
+      Int_t retval;
+      TString msg = Form("file (%s) must have extension .C", fname.Data());
+
+      new TGMsgBox(fClient->GetDefaultRoot(), frame, "Error...", msg.Data(),
+                   kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+
+      if (retval == kMBRetry) {
+         SaveFrame();
+      }
+   }
+
+out:
+   fPasteFileName = sav;
+}
+/*
+//______________________________________________________________________________
+static Int_t canResize(TGFrame *frame, Int_t x, Int_t y, UInt_t &w, UInt_t &h)
+{
+   // Not used yet. Return 0 if all child frames are inside area x,y, w,h
+
+   if (frame->InheritsFrom(TGCompositeFrame::Class())) return 0;
+
+   TGCompositeFrame *comp = (TGCompositeFrame*)frame;
+
+   TIter next(comp->GetList());
+   TGFrameElement *fe;
+   Int_t d = gGuiBldDragManager->GetGridStep();
+   Int_t ret = 0;
+
+   while ((fe = (TGFrameElement*)next())) {
+      if (x + fe->fFrame->GetX() + fe->fFrame->GetWidth() > w) {
+         w = fe->fFrame->GetX() + x  + fe->fFrame->GetWidth();
+         ret |= 4;
+      }
+      if (y + fe->fFrame->GetY() + fe->fFrame->GetHeight() > h) {
+         h = fe->fFrame->GetY() + y + fe->fFrame->GetHeight();
+         ret |= 8;
+      }
+   }
+   return ret;
+}
+*/
+
+//______________________________________________________________________________
 void TGuiBldDragManager::DoResize()
 {
    // handle resize
@@ -2928,40 +2961,63 @@ void TGuiBldDragManager::DoResize()
    Int_t y = fPimpl->fY;
    UInt_t w = 0;
    UInt_t h = 0;
+   UInt_t wp = ((TGFrame*)fr->GetParent())->GetWidth() - 2;
+   UInt_t hp = ((TGFrame*)fr->GetParent())->GetHeight() - 2;
 
    gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                    fr->GetId(), x, y, x, y, c);
 
    ToGrid(x, y);
+   HighlightCompositeFrame(fr->GetParent()->GetId());
 
    switch (fPimpl->fResizeType) {
       case kTopLeft:
          if ((((int)fr->GetWidth() > x) || (x < 0)) &&
              (((int)fr->GetHeight() > y) || (y < 0))) {
 
+            if (fr->GetY() + y < 2) {
+               y = 2 - fr->GetY();
+            }
+            if (fr->GetX() + x < 2) {
+               x = 2 - fr->GetX();
+            }
+            h = fr->GetHeight() - y;
+            w = fr->GetWidth() - x;
+            x = fr->GetX() + x;
+            y = fr->GetY() + y;
+
             if (!IsFixedH(fr) && !IsFixedW(fr)) {
-               fr->MoveResize(fr->GetX() + x, fr->GetY() + y,
-                              fr->GetWidth() - x, fr->GetHeight() - y);
+               fr->MoveResize(x, y, w, h);
                break;
             }
             if (IsFixedH(fr)) {
-               fr->MoveResize(fr->GetX() + x, fr->GetY(),
-                              fr->GetWidth() - x, fr->GetDefaultHeight());
+               fr->MoveResize(x, fr->GetY(), w, fr->GetDefaultHeight());
                break;
             }
             if (IsFixedW(fr)) {
-               fr->MoveResize(fr->GetX(), fr->GetY() + y,
-                              fr->GetDefaultWidth(), fr->GetHeight() - y);
+               fr->MoveResize(fr->GetX(), y, fr->GetDefaultWidth(), h);
                break;
             }
          }
          break;
       case kTopRight:
          if ((x > 0) && (((int)fr->GetHeight() > y) || (y < 0))) {
-            w = !IsFixedW(fr) ? x : fr->GetDefaultWidth();
+            
+            if (fr->GetY() + y < 2) {
+               y = 2 - fr->GetY();
+            }
+            h = fr->GetHeight() - y;
+
+            if (IsFixedW(fr)) {
+              w =  fr->GetDefaultWidth();
+            } else {
+               w = fr->GetX() + x > (Int_t)wp ? wp - fr->GetX() : x;
+            }
+            x = fr->GetX();
+            y = fr->GetY() + y;
+
             if (!IsFixedH(fr)) { 
-               fr->MoveResize(fr->GetX(), fr->GetY() + y,
-                              w, fr->GetHeight() - y);
+               fr->MoveResize(x, y, w, h);
             } else {
                fr->Resize(x, fr->GetDefaultHeight());
             }
@@ -2972,25 +3028,39 @@ void TGuiBldDragManager::DoResize()
             if (IsFixedH(fr)) {
                break;
             }
-            fr->MoveResize(fr->GetX(), fr->GetY() + y,
-                           fr->GetWidth(), fr->GetHeight() - y);
+
+            if (fr->GetY() + y < 2) {
+               y = 2 - fr->GetY();
+            }
+            h = fr->GetHeight() - y;
+            w = fr->GetWidth();
+            x = fr->GetX();
+            y = fr->GetY() + y;
+
+            fr->MoveResize(x, y, w, h);
          }
          break;
       case kBottomLeft:
          if ((((int)fr->GetWidth() > x) || (x < 0)) && (y > 0)) {
+
+            if (fr->GetX() + x < 2) {
+               x = 2 - fr->GetX();
+            }
+            h = fr->GetY() + y > (Int_t)hp ? hp - fr->GetY() : y;
+            w = fr->GetWidth() - x;
+            x = fr->GetX() + x;
+
             if (!IsFixedH(fr) && !IsFixedW(fr)) {
-               fr->MoveResize(fr->GetX() + x, fr->GetY(),
-                              fr->GetWidth() - x, y);
+               fr->MoveResize(x, fr->GetY(), w, h);
                break;
             }
             if (IsFixedH(fr)) {
-               fr->MoveResize(fr->GetX() + x, fr->GetY(),
-                              fr->GetWidth() - x, fr->GetDefaultHeight());
+               fr->MoveResize(x, fr->GetY(), w, fr->GetDefaultHeight());
                break;
             }
             if (IsFixedW(fr)) {
                fr->MoveResize(fr->GetX(), fr->GetY(),
-                              fr->GetDefaultWidth(), y);
+                              fr->GetDefaultWidth(), h);
                break;
             }
          }
@@ -2999,6 +3069,11 @@ void TGuiBldDragManager::DoResize()
          if ((x > 0) && (y > 0)) {
             w = !IsFixedW(fr) ? x : fr->GetDefaultWidth();
             h = !IsFixedH(fr) ? y : fr->GetDefaultHeight();
+
+            h = fr->GetY() + h > hp ? hp - fr->GetY() : h;
+            w = fr->GetX() + w > wp ? wp - fr->GetX() : w;
+
+            //canResize(comp, 0, 0, w, h);
             fr->Resize(w, h);
          }
          break;
@@ -3007,16 +3082,30 @@ void TGuiBldDragManager::DoResize()
             if (IsFixedH(fr)) {
                break;
             }
-            fr->Resize(fr->GetWidth(), y);
+
+            w = fr->GetWidth();      
+            h = fr->GetY() + y > (Int_t)hp ? hp - fr->GetY() : y;
+
+            //canResize(comp, 0, 0, w, h);
+            fr->Resize(w, h);
          }
          break;
       case kLeftSide:
-         if ((int)fr->GetWidth() > x) {
+         if ((int)fr->GetWidth() > x ) {
             if (IsFixedW(fr)) {
                break;
             }
-            fr->MoveResize(fr->GetX() + x, fr->GetY(),
-                           fr->GetWidth() - x, fr->GetHeight());
+
+            if (fr->GetX() + x < 2) {
+               x = 2 - fr->GetX();
+            }
+            w = fr->GetWidth() - x;
+            h = fr->GetHeight();
+            y = fr->GetY();
+            x = fr->GetX() + x;
+
+            //canResize(comp, x, y, w, h);
+            fr->MoveResize(x, y, w, h);
          }
          break;
       case kRightSide:
@@ -3024,7 +3113,11 @@ void TGuiBldDragManager::DoResize()
             if (IsFixedW(fr)) {
                break;
             }
-            fr->Resize(x, fr->GetHeight());
+
+            h = fr->GetHeight();
+            w = fr->GetX() + x > (Int_t)wp ? wp - fr->GetX() : x;
+            //canResize(comp, 0, 0, w, h);
+            fr->Resize(w, h);
          }
          break;
       default:
@@ -3322,9 +3415,6 @@ void TGuiBldDragManager::DrawLasso()
    Int_t x0, y0, x, y;
    Window_t c;
 
-#ifdef DEBUG_LOCAL
-printf("DrawLasso1\n");
-#endif
 
    gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                    fClient->GetRoot()->GetId(),
@@ -3332,9 +3422,6 @@ printf("DrawLasso1\n");
    gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
                                    fClient->GetRoot()->GetId(),
                                    fPimpl->fX , fPimpl->fY, x, y, c);
-#ifdef DEBUG_LOCAL
-printf("DrawLasso2\n");
-#endif
 
    ToGrid(x, y);
    ToGrid(x0, y0);
@@ -3966,6 +4053,9 @@ void TGuiBldDragManager::HandleAction(Int_t act)
             Save();
          }
          break;
+      case kSaveFrameAct:
+         SaveFrame();
+         break;
       default:
          break;
    }
@@ -4267,6 +4357,9 @@ void TGuiBldDragManager::ExecuteQuickAction(Event_t *event)
 
    if (fStop) return;
 
+// We are going to remove quick handler action. Everything  must be done via context menu
+return;
+
    TGWindow *win = gClient->GetWindowById(event->fWindow);
    if (!win) return;
 
@@ -4304,7 +4397,6 @@ void TGuiBldDragManager::BreakLayout()
    ChangeSelected(frame);   // update editors
 
    frame->SetLayoutBroken(!frame->IsLayoutBroken());
-   //if (!fPimpl->fGrab->IsLayoutBroken()) Compact();
 
    if (fBuilder) {
       str += (frame->IsLayoutBroken() ? " Disable Layout" : " Enable Layout");
@@ -4379,7 +4471,7 @@ void TGuiBldDragManager::CloseMenus()
    if (fLassoMenu) {
       fLassoMenu->EndMenu(ud);
    }
-   UnmapAllPopups();
+   //UnmapAllPopups();
 }
 
 //______________________________________________________________________________
@@ -4403,9 +4495,9 @@ static TString FindMenuIconName(TString &in)
 {
    // returns a name of icon
 
-   Int_t p1 = in.Index("*", 1);
+   Int_t p1 = in.Index("*icon=", 1);
    if (p1 == kNPOS) return "";
-   p1++;
+   p1 += 6;
    Int_t p2 = in.Index("*", p1);
 
    if (p2 == kNPOS) return "";
@@ -4423,6 +4515,7 @@ void TGuiBldDragManager::AddClassMenuMethods(TGPopupMenu *menu, TObject *object)
    }
 
    TList *menuItemList = object->IsA()->GetMenuList();
+   fPimpl->fMenuObject = (TGFrame*)object;
 
    TClassMenuItem *menuItem;
    TIter nextItem(menuItemList);
@@ -4453,9 +4546,15 @@ void TGuiBldDragManager::AddClassMenuMethods(TGPopupMenu *menu, TObject *object)
                      case kMenuDialog:
                      {  
                         TString str = method->GetCommentString();
-                        str = FindMenuIconName(str);
-                        const TGPicture *pic = fClient->GetPicture(str.Data());
-                        menu->AddEntry(method->GetName(), kMethodMenuAct, method, pic);
+                        TString pname = FindMenuIconName(str);
+                        const TGPicture *pic = fClient->GetPicture(pname.Data());
+
+                        if (str.Contains("*DIALOG")) {
+                           //menu->AddSeparator();
+                           menu->AddEntry(Form("%s ...", method->GetName()), kMethodMenuAct, method, pic);
+                        } else {
+                           menu->AddEntry(method->GetName(), kMethodMenuAct, method, pic);
+                        }
                         break;
                      }
 
@@ -4545,14 +4644,36 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
       return;
    }
 
+   TGMenuEntry *me = 0;
+
    if (id == kMethodMenuAct) {
       delete gMenuDialog;
-      TMethod *method = (TMethod*)fFrameMenu->GetCurrent()->GetUserData();
-      gMenuDialog = new TGuiBldMenuDialog(fPimpl->fGrab, fPimpl->fGrab, method);
+      me = fFrameMenu->GetCurrent();
+
+      if (!me || !fPimpl->fMenuObject) {
+         return;
+      }
+      TMethod *method = (TMethod*)me->GetUserData();
+      TString str = method->GetCommentString();
+
+      if (str.Contains("*DIALOG")) {
+         TString str;
+         str.Form("((%s*)0x%lx)->%s()", fPimpl->fMenuObject->ClassName(), 
+                                        fPimpl->fMenuObject, method->GetName());
+         G__calc((char *)str.Data());
+         delete fFrameMenu;
+         fFrameMenu = 0;
+         return;
+      }
+      gMenuDialog = new TGuiBldMenuDialog(fPimpl->fMenuObject, fPimpl->fMenuObject, method);
       gMenuDialog->Popup();
 
    } else if (id == kToggleMenuAct) {
-      TGPopupMenu *menu = fFrameMenu->GetCurrent()->GetPopup();
+      me = fFrameMenu->GetCurrent();
+      if (!me) {
+         return;
+      }
+      TGPopupMenu *menu = me->GetPopup();
       TToggle *toggle = 0;
 
       if (menu) {    //process submenu
@@ -4571,6 +4692,8 @@ void TGuiBldDragManager::DeleteMenuDialog()
 
    fPimpl->fFrameMenuTrash->Delete();
    gMenuDialog->DeleteWindow();
+   gMenuDialog = 0;
+   fPimpl->fMenuObject = 0;
 }
 
 //______________________________________________________________________________
@@ -4611,7 +4734,6 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
    fPimpl->fSaveGrab = fPimpl->fGrab;
    fPimpl->fX0 = x;
    fPimpl->fY0 = y;
-
    fPimpl->fClickFrame = frame;
 
    Bool_t composite = frame->InheritsFrom(TGCompositeFrame::Class());
@@ -4672,7 +4794,7 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
    if (!IsEditDisabled(cfrp)) {
       fFrameMenu->AddSeparator();
 
-      if (composite && !IsFixedLayout(frame)) {
+      if (composite && !IsFixedLayout(frame) && cfr->GetList()->GetEntries()) {
          fFrameMenu->AddEntry("Drop               Ctrl+Return", kDropAct);
       }
 
@@ -4739,10 +4861,10 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
            (lm->IsA() == TGHorizontalLayout::Class())) && !IsFixedLayout(frame)) {
 
          if (lm->IsA() == TGVerticalLayout::Class()) {
-            fFrameMenu->AddEntry("Horizontal        Ctrl+H", kSwitchLayoutAct,
+            fFrameMenu->AddEntry("Horizontal         Ctrl+H", kSwitchLayoutAct,
                                  0, fClient->GetPicture("bld_hbox.png"));
          } else if (lm->IsA() == TGHorizontalLayout::Class()) {
-            fFrameMenu->AddEntry("Vertical          Ctrl+H", kSwitchLayoutAct,
+            fFrameMenu->AddEntry("Vertical            Ctrl+H", kSwitchLayoutAct,
                                  0, fClient->GetPicture("bld_vbox.png"));
          }
       }
@@ -4761,13 +4883,12 @@ void TGuiBldDragManager::Menu4Frame(TGFrame *frame, Int_t x, Int_t y)
    if (frame->IsEditable()) {
       fFrameMenu->AddEntry("Grid On/Off       Ctrl+G", kGridAct,
                             0, fClient->GetPicture("bld_grid.png"));
-      fFrameMenu->AddEntry("Save As ...        Ctrl+S", kSaveAct,
-                            0, fClient->GetPicture("bld_save.png"));
-      //fFrameMenu->AddEntry("End Edit         Ctrl+DblClick", kEndEditAct);
-   } else if (composite && !IsFixedLayout(frame)) {
-      //fFrameMenu->AddEntry("Edit              Ctrl+DblClick", kEditableAct);
    }
-
+   if (composite && !cfr->GetList()->IsEmpty()) {
+fPimpl->fSaveGrab = frame;
+      fFrameMenu->AddEntry("Save As ...       ", kSaveFrameAct,
+                            0, fClient->GetPicture("bld_save.png"));
+   }
 out:
    fFrameMenu->Connect("Activated(Int_t)", "TGuiBldDragManager", this, "HandleAction(Int_t)");
 

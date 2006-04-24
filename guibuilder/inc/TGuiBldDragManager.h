@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.9 2006/04/13 15:33:02 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.10 2006/04/14 17:54:49 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -39,8 +39,8 @@ class TGuiBldQuickHandler;
 enum EActionType { kNoneAct, kPropertyAct, kEditableAct, kReparentAct,
                    kDropAct, kCutAct, kCopyAct, kPasteAct, kCropAct,
                    kCompactAct, kCompactGlobalAct, kLayUpAct, kLayDownAct,
-                   kCloneAct, kSaveAct, kGrabAct, kDeleteAct, kLeftAct,
-                   kRightAct, kUpAct, kDownAct, kEndEditAct, kReplaceAct,
+                   kCloneAct, kSaveAct, kSaveFrameAct, kGrabAct, kDeleteAct,
+                   kLeftAct, kRightAct, kUpAct, kDownAct, kEndEditAct, kReplaceAct,
                    kGridAct, kBreakLayoutAct, kSwitchLayoutAct, kNewAct,
                    kOpenAct, kLayoutHAct, kLayoutVAct, kUndoAct, kRedoAct, 
                    kSelectAct, kMethodMenuAct, kToggleMenuAct };
@@ -105,12 +105,13 @@ public:
    void           HandleReturn(Bool_t on = kFALSE);
    void           HandleAlignment(Int_t to, Bool_t lineup = kFALSE);
    void           HandleCut();
-   void           HandleCopy();
+   void           HandleCopy(Bool_t brk_layout = kTRUE);
    void           HandlePaste();
    void           HandleReplace();
    void           HandleGrid();
    void           CloneEditable();
    void           Save(const char *file = "");
+   void           SaveFrame();
    void           HandleLayoutOrder(Bool_t forward = kTRUE);
    void           DoResize();
    void           DoMove();
