@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.1 2006/04/17 14:12:52 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.2 2006/04/18 09:59:41 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -15,9 +15,7 @@
 #ifndef ROOT_TSQLStatement
 #include "TSQLStatement.h"
 #endif
-#ifndef ROOT_TODBCTypes
-#include "TODBCTypes.h"
-#endif
+
 
 #ifdef __CINT__
 typedef void *   SQLHSTMT;
@@ -44,7 +42,7 @@ protected:
        Int_t       sqlctype;
        void       *buffer;
        Int_t       elementsize;
-       ODBCInt_t  *lenarray;
+       SQLLEN     *lenarray;
        char       *strbuffer;
        char       *namebuffer;
     };

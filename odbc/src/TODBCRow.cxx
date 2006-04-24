@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCRow.cxx,v 1.1 2006/04/17 14:12:52 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCRow.cxx,v 1.2 2006/04/18 09:59:41 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "TODBCRow.h"
-#include "TODBCTypes.h"
 
 #include <sqlext.h>
 
@@ -76,7 +75,7 @@ const char *TODBCRow::GetField(Int_t field)
 
    fBuffer[field] = new char[buffer_len];
 
-   ODBCInt_t  ressize;
+   SQLLEN ressize;
 
    SQLGetData(fHstmt, field+1, SQL_C_CHAR, fBuffer[field], buffer_len, &ressize);
 

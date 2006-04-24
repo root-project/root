@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCResult.cxx,v 1.1 2006/04/17 14:12:52 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCResult.cxx,v 1.2 2006/04/18 09:59:41 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include "TODBCResult.h"
 #include "TODBCRow.h"
-#include "TODBCTypes.h"
 
 
 ClassImp(TODBCResult)
@@ -54,7 +53,7 @@ const char *TODBCResult::GetFieldName(Int_t field)
 
    SQLSMALLINT nameLength;
    SQLSMALLINT dataType;
-   ODBCUInt_t  columnSize;
+   SQLULEN     columnSize;
    SQLSMALLINT decimalDigits;
    SQLSMALLINT nullable;
 

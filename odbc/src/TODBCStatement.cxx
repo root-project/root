@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.1 2006/04/17 14:12:52 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.2 2006/04/18 09:59:41 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -151,8 +151,7 @@ Bool_t TODBCStatement::Process()
 //______________________________________________________________________________
 Int_t TODBCStatement::GetNumAffectedRows()
 {
-
-   ODBCInt_t RowCount;
+   SQLLEN    RowCount;
    SQLRETURN retcode = SQL_SUCCESS;
 
    retcode = SQLRowCount(fHstmt, &RowCount);
@@ -194,7 +193,7 @@ Bool_t TODBCStatement::StoreResult()
       SQLCHAR ColumnName[1024];
       SQLSMALLINT NameLength;
       SQLSMALLINT DataType;
-      ODBCUInt_t  ColumnSize;
+      SQLULEN     ColumnSize;
       SQLSMALLINT DecimalDigits;
       SQLSMALLINT Nullable;
 
@@ -408,7 +407,7 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
    fBuffer[ncol].sqlctype    = sqlctype;
    fBuffer[ncol].buffer      = malloc(elemsize * fBufferLength);
    fBuffer[ncol].elementsize = elemsize;
-   fBuffer[ncol].lenarray    = new ODBCInt_t[fBufferLength];
+   fBuffer[ncol].lenarray    = new SQLLEN[fBufferLength];
 
    SQLRETURN retcode =
       SQLBindCol(fHstmt, ncol+1, sqlctype, fBuffer[ncol].buffer,
@@ -454,8 +453,7 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
    }
 
    void* buffer = malloc(elemsize * fBufferLength);
-   ODBCInt_t *lenarray = new ODBCInt_t[fBufferLength];
-
+   SQLLEN* lenarray = new SQLLEN[fBufferLength];
    SQLRETURN retcode =
       SQLBindParameter(fHstmt, npar+1, SQL_PARAM_INPUT,
                        sqlctype, sqltype, 0, 0,
