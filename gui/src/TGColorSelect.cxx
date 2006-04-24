@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.13 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.14 2006/04/12 15:01:48 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -85,6 +85,7 @@ TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
    fActive = kFALSE;
 
    fGrayGC = GetShadowGC()();
+   fEditDisabled = kEditDisable;
 }
 
 //________________________________________________________________________________
@@ -141,6 +142,8 @@ TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
 
    fMsgWindow  = p;
    fActive = -1;
+
+   SetEditDisabled(kEditDisable);
 }
 
 //________________________________________________________________________________
@@ -235,6 +238,7 @@ TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) 
 
    Resize(cs->GetDefaultWidth() + 6, cs->GetDefaultHeight() +
           other->GetDefaultHeight());
+   SetEditDisabled(kEditDisable);
 }
 
 //________________________________________________________________________________
@@ -358,6 +362,10 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    // mark there is color area with a little down arrow.
    // When clicked on the arrow the TGColorPopup pops up.
 
+   if (!p && fClient->IsEditable() && !color) {
+      color = TColor::Number2Pixel(6); // magenta
+   }
+
    fColor = color;
    fColorPopup = 0;
    fDrawGC = *fClient->GetResourcePool()->GetFrameGC();
@@ -366,6 +374,8 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    SetState(kButtonUp);
    AddInput(kButtonPressMask | kButtonReleaseMask);
    SetColor(fColor);
+
+   fEditDisabled = kEditDisable | kEditDisableBtnEnable;
 }
 
 //________________________________________________________________________________
@@ -414,6 +424,9 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
       WantFocus();
 
    if (event->fType == kButtonPress) {
+      fPressPos.fX = fX;
+      fPressPos.fY = fY;
+
       if (fState != kButtonDown) {
          fPrevState = fState;
          SetState(kButtonDown);
@@ -422,6 +435,10 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
       if (fState != kButtonUp) {
          SetState(kButtonUp);
 
+         // case when it was dragged during guibuilding
+         if ((fPressPos.fX != fX) || (fPressPos.fY != fY)) {
+            return kFALSE;
+         }
          Window_t wdummy;
          Int_t ax, ay;
 
@@ -439,11 +456,15 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGColorSelect::Enable()
+void TGColorSelect::Enable(Bool_t on)
 {
    // Set state of widget as enabled.
 
-   SetFlags(kWidgetIsEnabled);
+   if (on) {
+      SetFlags(kWidgetIsEnabled);
+   } else {
+      ClearFlags(kWidgetIsEnabled);
+   }
    fClient->NeedRedraw(this);
 }
 

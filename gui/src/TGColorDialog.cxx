@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.19 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.20 2005/11/21 00:25:37 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -177,6 +177,7 @@ TGColorPalette::TGColorPalette(const TGWindow *p, Int_t cols, Int_t rows, Int_t 
 
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
             kFocusChangeMask | kStructureNotifyMask);
+   fEditDisabled = kEditDisable;
 }
 
 //________________________________________________________________________________
@@ -456,6 +457,7 @@ TGColorPick::TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id) :
 
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
             kFocusChangeMask | kStructureNotifyMask);
+   fEditDisabled = kEditDisable;
 }
 
 //________________________________________________________________________________
@@ -1235,6 +1237,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    MapSubwindows();
    Resize(GetDefaultSize());
+   SetEditDisabled(kEditDisable);
 
    //---- position relative to the parent's window
 
@@ -1256,6 +1259,14 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
                kMWMInputModeless);
 
    MapWindow();
+
+   if (fClient->IsEditable()) {
+      const TGWindow *main = fMain;
+      fMain = fClient->GetRoot();
+      CenterOnParent(kTRUE, TGTransientFrame::kRight);
+      fMain = main;
+   }
+
    fClient->WaitForUnmap(this);
    DeleteWindow();
 }

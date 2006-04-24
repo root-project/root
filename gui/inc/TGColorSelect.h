@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.7 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.8 2006/04/12 15:01:48 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -120,13 +120,15 @@ protected:
    Pixel_t       fColor;         // color value of the button
    TGGC          fDrawGC;        // drawing GC
    TGColorPopup *fColorPopup;    // color popup associated
+   TGPosition    fPressPos;      // psotion of frame on button press event
 
    virtual void DoRedraw();
 
    void DrawTriangle(GContext_t gc, Int_t x, Int_t y);
 
 public:
-   TGColorSelect(const TGWindow *p = 0, Pixel_t color = 0, Int_t id = -1);
+   TGColorSelect(const TGWindow *p = 0, Pixel_t color = 0, 
+                 Int_t id = -1);
    virtual ~TGColorSelect();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -134,8 +136,13 @@ public:
 
    void    SetColor(Pixel_t color, Bool_t emit = kTRUE);
    Pixel_t GetColor() const { return fColor; }
-   void    Enable();
+   void    Enable(Bool_t on = kTRUE);  //*TOGGLE* *GETTER=IsEnabled
    void    Disable();
+
+   // dummy methods just to remove from context menu
+   void SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE) { TGButton::SetDown(on, emit); }
+   void Rename(const char *title)  { TGTextButton::SetTitle(title); }
+   void SetEnabled(Bool_t e = kTRUE) {TGButton::SetEnabled(e); }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
    virtual void SavePrimitive(ofstream &out, Option_t *);
