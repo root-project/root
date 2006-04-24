@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.15 2006/04/07 14:22:33 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.16 2006/04/12 12:56:32 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -86,8 +86,8 @@ public:
 
    virtual TGCompositeFrame *AddTab(TGString *text);
    virtual TGCompositeFrame *AddTab(const char *text);
-   virtual void              NewTab(const char *text = "tab");   // *MENU*bld_newtab.png*
-   virtual void              RemoveTab(Int_t tabIndex = -1);     // *MENU*bld_removetab.png*
+   virtual void              NewTab(const char *text = "tab");   // *MENU*icon=bld_newtab.png*
+   virtual void              RemoveTab(Int_t tabIndex = -1);     // *MENU*icon=bld_removetab.png*
    virtual Bool_t            SetTab(Int_t tabIndex);
    virtual Bool_t            SetTab(const char *name);
    virtual void              DrawBorder() { }
@@ -103,7 +103,7 @@ public:
    UInt_t            GetTabHeight() const { return fTabh; }
    Int_t             GetNumberOfTabs() const;
    virtual void      SetEnabled(Int_t tabIndex, Bool_t on = kTRUE);  //*MENU*
-   virtual void      SetText(const char *text = "tab");              //*MENU*bld_rename.png*
+   virtual void      SetText(const char *text = "tab");              //*MENU*icon=bld_rename.png*
    Bool_t            IsEnabled(Int_t tabIndex) const;
 
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
