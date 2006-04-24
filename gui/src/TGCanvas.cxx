@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.38 2006/03/28 16:25:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.39 2006/03/30 08:50:28 antcheva Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -1858,7 +1858,20 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
    fVScrollbar->Associate(this);
 
    SetWindowName();
-   fEditDisabled = kEditDisable;
+   fVScrollbar->SetEditDisabled(kEditDisable);
+   fHScrollbar->SetEditDisabled(kEditDisable);
+   fEditDisabled = kEditDisableLayout;
+
+   if (!p && fClient->IsEditable()) {
+      fVport->SetEditDisabled(kEditDisable | kEditDisableLayout);
+      TGCompositeFrame *cont = new TGCompositeFrame(fVport, 120, 120, 
+                                                    kHorizontalFrame | kOwnBackground, 
+                                                    TGFrame::GetWhitePixel());
+      SetContainer(cont);
+      cont->SetEditDisabled(kEditEnable);
+      Resize(20, 20);
+      MapSubwindows();
+   }
 }
 
 //______________________________________________________________________________
