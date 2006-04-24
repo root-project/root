@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.25 2006/04/12 12:56:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.26 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -151,13 +151,13 @@ public:
    virtual  void        SetTextColor(TColor *color, Bool_t local = kFALSE);
    virtual  void        SetText(const char *text);                               //*MENU*
    virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000); //*MENU*
-            void        SetTextColor(const char *hexvalue = "#000000");          //*MENU*
    virtual  void        SetMaxLength(Int_t maxlen);                              //*MENU*
-   virtual  void        SelectAll();                                             //*MENU*
+   virtual  void        SelectAll();
    virtual  void        SetAlignment(ETextJustification mode = kTextLeft);       //*SUBMENU*         
    virtual  void        SetInsertMode(EInsertMode mode = kInsert);               //*SUBMENU*               
    virtual  void        SetEchoMode(EEchoMode mode = kNormal);                   //*SUBMENU*
             void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }    //*TOGGLE* *GETTER=IsEnabled
+   void                 ChangeTextColor();                                       //*MENU* *DIALOG*
    virtual  void        SetCursorPosition(Int_t pos);
             void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
    virtual  void        SetFocus();
