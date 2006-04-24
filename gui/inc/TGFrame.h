@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.69 2006/04/11 06:44:09 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.70 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -231,7 +231,7 @@ public:
    virtual UInt_t  GetDefaultHeight() const { return GetDefaultSize().fHeight; }
    virtual Pixel_t GetBackground() const { return fBackground; }
    virtual void    ChangeBackground(Pixel_t back);
-   virtual void    SetBgndColor(const char *hexvalue = "#c0c0c0");   //*MENU*
+   virtual void    ChangeBackgroundColor();   //*MENU* *DIALOG*
    virtual void    SetBackgroundColor(Pixel_t back);
    virtual Pixel_t GetForeground() const;
    virtual void    SetForegroundColor(Pixel_t /*fore*/) { }
@@ -346,7 +346,8 @@ public:
    virtual UInt_t GetDefaultHeight() const
                      { return GetDefaultSize().fHeight; }
    virtual TGDimension GetDefaultSize() const
-                     { return fLayoutManager->GetDefaultSize(); }
+                     { return (IsLayoutBroken() ? TGDimension(fWidth, fHeight) : 
+                               fLayoutManager->GetDefaultSize()); }
    virtual TGFrame *GetFrameFromPoint(Int_t x, Int_t y);
    virtual Bool_t TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
                                        Int_t &fx, Int_t &fy);
@@ -392,7 +393,7 @@ public:
    virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }
 
    virtual void   Print(Option_t *option="") const;
-   virtual void   SetBgndColor(const char *hexvalue = "#c0c0c0");       //*MENU*
+   virtual void   ChangeBackgroundColor();       //*MENU* *DIALOG*
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
    virtual void   SavePrimitiveSubframes(ofstream &out, Option_t *option);
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.126 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.127 2006/04/18 12:32:20 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -83,6 +83,7 @@
 #include "TVirtualDragManager.h"
 #include "TGuiBuilder.h"
 #include "TQConnection.h"
+#include "TGColorDialog.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -245,14 +246,16 @@ void TGFrame::ChangeBackground(Pixel_t back)
 }
 
 //______________________________________________________________________________
-void TGFrame::SetBgndColor(const char *hexvalue)
+void TGFrame::ChangeBackgroundColor()
 {
-   // change background color via context menu.  hexvalue is in format #00FF00
+   // Change background color via context menu
 
-   Pixel_t pixel;
+   Int_t retc;
 
-   if (fClient->GetColorByName(hexvalue, pixel)) {
-      SetBackgroundColor(pixel);
+   new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &fBackground);
+
+   if (retc == kMBOk) {
+      SetBackgroundColor(fBackground);
       fClient->NeedRedraw(this);
    }
 }
@@ -931,9 +934,6 @@ void TGCompositeFrame::SetLayoutBroken(Bool_t on)
    // Set broken layout. No Layout method is called.
 
    fLayoutBroken = on;
-   if (!fLayoutBroken) {
-      Layout();
-   }
 }
 
 //______________________________________________________________________________
@@ -1201,22 +1201,17 @@ void TGCompositeFrame::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::SetBgndColor(const char *hexvalue)
+void TGCompositeFrame::ChangeBackgroundColor()
 {
-   // change background color via context menu for this frame and all subframes.
-   // hexvalue is in format #00FF00
+   // Change background color via context menu for this frame and all subframes.
 
-   Pixel_t pixel;
-
-   if (!fClient->GetColorByName(hexvalue, pixel)) return;
-
-   SetBackgroundColor(pixel);
+   TGFrame::ChangeBackgroundColor();
    TGFrameElement *el;
 
    TIter next(fList);
  
    while ((el = (TGFrameElement*)next())) {
-      el->fFrame->SetBgndColor(hexvalue);
+      el->fFrame->SetBackgroundColor(fBackground);
       fClient->NeedRedraw(el->fFrame);
    }
    fClient->NeedRedraw(this);
