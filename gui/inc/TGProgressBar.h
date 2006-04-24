@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.9 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.10 2006/04/12 12:56:32 antcheva Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -44,8 +44,8 @@ protected:
    Float_t       fPos;          // logical position [fMin,fMax]
    Int_t         fPosPix;       // position of progress bar in pixel coordinates
    Int_t         fBarWidth;     // progress bar width
-   EFillType     fType;         // fill type (default kSolidFill)
-   EBarType      fBarType;      // bar type (default kStandard)
+   EFillType     fFillType;     // *OPTION={GetMethod="GetFillType";SetMethod="SetFillType";Items=(kSolidFill=Solid",kBlockFill="Block")}*
+   EBarType      fBarType;      // *OPTION={GetMethod="GetBarType";SetMethod="SetBarType";Items=(kStandard="Standard",kFancy="Fancy")}*
    TString       fFormat;       // format used to show position not in percent
    Bool_t        fShowPos;      // show position value (default false)
    Bool_t        fPercent;      // show position in percent (default true)
@@ -71,21 +71,30 @@ public:
                  UInt_t options = kDoubleBorder | kSunkenFrame);
    virtual ~TGProgressBar() { }
 
-   void         SetRange(Float_t min, Float_t max);   //*MENU*
-   void         SetPosition(Float_t pos);             //*MENU*
-   void         Increment(Float_t inc);
-   void         Reset();                              //*MENU*
-   void         SetFillType(EFillType type);          //*MENU*
-   void         SetBarColor(Pixel_t color);
-   void         SetBarColor(const char *color);       //*MENU*
    Float_t      GetMin() const { return fMin; }
    Float_t      GetMax() const { return fMax; }
    Float_t      GetPosition() const { return fPos; }
-   EFillType    GetFillType() const { return fType; }
+   EFillType    GetFillType() const { return fFillType; }
    EBarType     GetBarType() const { return fBarType; }
    Bool_t       GetShowPos() const { return fShowPos; }
    TString      GetFormat() const { return fFormat; }
+   const char*  GetValueFormat() const { return fFormat.Data(); }
    Bool_t       UsePercent() const { return fPercent; }
+
+   void         SetPosition(Float_t pos);                //*MENU*  *GETTER=GetPosition
+   void         SetRange(Float_t min, Float_t max);      //*MENU*
+   void         Increment(Float_t inc);
+   void         SetBarType(EBarType type);               //*SUBMENU*
+   void         SetFillType(EFillType type);             //*SUBMENU*
+   virtual void Percent(Bool_t on) { fPercent = on; fClient->NeedRedraw(this); } //*TOGGLE* *GETTER=UsePercent
+   virtual void ShowPos(Bool_t on) { fShowPos = on; fClient->NeedRedraw(this); } //*TOGGLE* *GETTER=GetShowPos
+   virtual void Format(const char *format = "%.2f");     //*MENU* *GETTER=GetValueFormat
+   void         SetMin(Float_t min) { fMin = min; }
+   void         SetMax(Float_t max) { fMax = max; }
+   void         SetBarColor(Pixel_t color);
+   void         SetBarColor(const char *color="blue");
+   void         Reset();                                 //*MENU*
+   void         ChangeBarColor();                        //*MENU* *DIALOG*
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class
@@ -104,8 +113,7 @@ public:
                   Pixel_t barcolor = GetDefaultSelectedBackground(),
                   GContext_t norm = GetDefaultGC()(),
                   FontStruct_t font = GetDefaultFontStruct(),
-                  UInt_t options = kDoubleBorder | kSunkenFrame) :
-      TGProgressBar(p, w, h, back, barcolor, norm, font, options) { fBarWidth = h; }
+                  UInt_t options = kDoubleBorder | kSunkenFrame);
    TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w);
    virtual ~TGHProgressBar() { }
 
@@ -113,7 +121,7 @@ public:
                      { return TGDimension(fWidth, fBarWidth); }
 
    void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
-                     const char *format = "%.2f");          //*MENU*
+                     const char *format = "%.2f");
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHProgressBar,0)  // Horizontal progress bar widget
@@ -132,14 +140,15 @@ public:
                   Pixel_t barcolor = GetDefaultSelectedBackground(),
                   GContext_t norm = GetDefaultGC()(),
                   FontStruct_t font = GetDefaultFontStruct(),
-                  UInt_t options = kDoubleBorder | kSunkenFrame) :
-      TGProgressBar(p, w, h, back, barcolor, norm, font, options) { fBarWidth = w; }
+                  UInt_t options = kDoubleBorder | kSunkenFrame);
    TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h);
    virtual ~TGVProgressBar() { }
 
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fBarWidth, fHeight); }
    virtual void SavePrimitive(ofstream &out, Option_t *option);
+   void ShowPos(Bool_t) { }
+   void Percent(Bool_t) { }
 
    ClassDef(TGVProgressBar,0)  // Vertical progress bar widget
 };

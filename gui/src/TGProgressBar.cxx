@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.11 2005/04/05 13:12:15 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.12 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 #include "TGResourcePool.h"
 #include "Riostream.h"
 #include "TColor.h"
-
+#include "TGMsgBox.h"
+#include "TGColorDialog.h"
 
 const TGFont *TGProgressBar::fgDefaultFont = 0;
 TGGC         *TGProgressBar::fgDefaultGC = 0;
@@ -47,7 +48,7 @@ TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
    fMax        = 100;
    fPos        = 0;
    fPosPix     = 0;
-   fType       = kSolidFill;
+   fFillType   = kSolidFill;
    fBarType    = kStandard;
    fShowPos    = kFALSE;
    fPercent    = kTRUE;
@@ -134,7 +135,17 @@ void TGProgressBar::SetFillType(EFillType type)
 {
    // Set fill type.
 
-   fType = type;
+   fFillType = type;
+
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGProgressBar::SetBarType(EBarType type)
+{
+   // Set bar type.
+
+   fBarType = type;
 
    fClient->NeedRedraw(this);
 }
@@ -156,8 +167,32 @@ void TGProgressBar::SetBarColor(const char *color)
 
    ULong_t ic;
    fClient->GetColorByName(color, ic);
-
    fBarColorGC.SetForeground(ic);
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGProgressBar::ChangeBarColor()
+{
+   // Set progress bar color via TGColorDialog
+
+   Int_t retc;
+   ULong_t color = fBarColorGC.GetForeground();
+  
+   new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &color);
+
+   if (retc == kMBOk) {
+      fBarColorGC.SetForeground(color);
+      fClient->NeedRedraw(this);
+   }
+}
+
+//______________________________________________________________________________
+void TGProgressBar::Format(const char *format)
+{
+   // Set format for displaying a value.
+
+   fFormat = format;
 
    fClient->NeedRedraw(this);
 }
@@ -182,6 +217,24 @@ const TGGC &TGProgressBar::GetDefaultGC()
    return *fgDefaultGC;
 }
 
+//______________________________________________________________________________
+TGHProgressBar::TGHProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
+                              Pixel_t back, Pixel_t barcolor,
+                              GContext_t norm, FontStruct_t font, UInt_t options) :
+      TGProgressBar(p, w, h, back, barcolor, norm, font, options)
+{
+   // ctor.
+
+   fBarWidth = h;
+   fEditDisabled = kEditDisableHeight;
+
+   if (!p && fClient->IsEditable()) {
+      Resize(100, GetDefaultHeight());
+      SetPosition(25);
+      fFormat =  "%.2f";
+      SetFillType(kBlockFill);
+   }
+}
 
 //______________________________________________________________________________
 TGHProgressBar::TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w)
@@ -198,6 +251,7 @@ TGHProgressBar::TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w)
 
    fBarType  = type;
    fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
+   fEditDisabled = kEditDisableHeight;
 }
 
 //______________________________________________________________________________
@@ -228,7 +282,7 @@ void TGHProgressBar::DoRedraw()
 
    Int_t pospix = fPosPix;
 
-   if (fType == kSolidFill)
+   if (fFillType == kSolidFill)
       gVirtualX->FillRectangle(fId, fBarColorGC(), fBorderWidth,
                                fBorderWidth, fPosPix - fBorderWidth, fBarWidth -
                                (fBorderWidth << 1));
@@ -277,6 +331,23 @@ void TGHProgressBar::DoRedraw()
    fDrawBar = kFALSE;
 }
 
+//______________________________________________________________________________
+TGVProgressBar::TGVProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
+                              Pixel_t back, Pixel_t barcolor, GContext_t norm,
+                              FontStruct_t font,UInt_t options) :
+      TGProgressBar(p, w, h, back, barcolor, norm, font, options) 
+{
+   // ctor
+
+   fBarWidth = w;
+   fEditDisabled = kEditDisableWidth;
+
+   if (!p && fClient->IsEditable()) {
+      Resize(GetDefaultWidth(), 100);
+      SetPosition(25);
+      SetFillType(kBlockFill);
+   }
+}
 
 //______________________________________________________________________________
 TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
@@ -294,6 +365,7 @@ TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
    fBarType  = type;
    fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
    fDrawBar  = kFALSE;
+   fEditDisabled = kEditDisableWidth;
 }
 
 //______________________________________________________________________________
@@ -310,7 +382,7 @@ void TGVProgressBar::DoRedraw()
              (fPos - fMin) / (fMax - fMin) +
              fBorderWidth);
 
-   if (fType == kSolidFill)
+   if (fFillType == kSolidFill)
       gVirtualX->FillRectangle(fId, fBarColorGC(), fBorderWidth,
                                fHeight - fPosPix, fBarWidth - (fBorderWidth << 1),
                                fPosPix - fBorderWidth);
