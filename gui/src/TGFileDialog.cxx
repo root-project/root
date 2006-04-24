@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.24 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.25 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -239,6 +239,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fHf->AddFrame(fVbf, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 
    AddFrame(fHf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 4, 4, 3, 1));
+   SetEditDisabled(kEditDisable);
 
    MapSubwindows();
 
