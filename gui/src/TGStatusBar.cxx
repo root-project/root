@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.13 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.14 2006/03/30 08:50:28 antcheva Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -117,7 +117,7 @@ TGStatusBar::TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
    AddFrame(fStatusPart[0], fgHints);
    Resize(w, ht + 5);
 
-   fEditDisabled = kEditDisableLayout;
+   //fEditDisabled = kEditDisableLayout;
 }
 
 //______________________________________________________________________________
