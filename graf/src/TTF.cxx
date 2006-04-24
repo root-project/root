@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.12 2006/03/31 16:57:18 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.13 2006/04/21 16:29:33 rdm Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -339,10 +339,11 @@ Int_t TTF::SetTextFont(const char *fontname)
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 # ifdef TTFFONTDIR
-                                       TTFFONTDIR);
+                                       TTFFONTDIR
 # else
-                                       "$(ROOTSYS)/fonts");
+                                       "$(ROOTSYS)/fonts"
 # endif
+                                      );
 
    char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 
@@ -428,29 +429,34 @@ void TTF::SetTextFont(Font_t fontnumber)
    };
 
    static int fontset = -1;
+   int        thisset = fontset;
 
    int fontid = fontnumber / 10;
    if (fontid < 0 || fontid > 14) fontid = 0;
 
-   if (fontset == -1) {
+   if (thisset == -1) {
       // try to load font (font must be in Root.TTFontPath resource)
       // to see which fontset we have available
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 #ifdef TTFFONTDIR
-                                          TTFFONTDIR);
+                                          TTFFONTDIR
 #else
-                                          "$(ROOTSYS)/fonts");
+                                          "$(ROOTSYS)/fonts"
 #endif
+                                         );
       char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
       if (ttfont) {
          delete [] ttfont;
-         fontset = 0;
+         thisset = 0;
       } else {
          // try backup free font
-         fontset = 1;
+         thisset = 1;
       }
    }
-   SetTextFont(fonttable[fontid][fontset]);
+   int ret = SetTextFont(fonttable[fontid][thisset]);
+   // Do not define font set is we're loading the symbol.ttf - it's
+   // the same in both cases.
+   if (ret == 0 && fontid != 12) fontset = thisset;
 }
 
 //______________________________________________________________________________
