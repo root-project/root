@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.8 2006/01/24 05:59:27 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.h,v 1.1 2006/04/23 20:40:23 brun Exp $
 // Author: Christian Holm Christensen   22/04/06
 
 /*************************************************************************
@@ -61,6 +61,7 @@ public:
       kMaxDecay
    };
 
+   TPythia6Decayer();
    virtual ~TPythia6Decayer(){;}
    static  TPythia6Decayer* Instance();
    virtual void    Init();
@@ -76,7 +77,7 @@ public:
    virtual void    WriteDecayTable();
    virtual void    SetForceDecay(Decay_t type) { fDecay = type; }
 protected:
-   TPythia6Decayer();
+
    static TPythia6Decayer* fgInstance;
    TString fDecayTableFile; // File to read decay table from 
    Decay_t fDecay;          // Forced decay mode

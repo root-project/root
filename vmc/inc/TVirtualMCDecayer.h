@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCDecayer.h,v 1.4 2002/11/27 11:31:52 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCDecayer.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Andreas Morsch  13/04/2002
    
 #ifndef ROOT_TVirtualMCDecayer
@@ -16,6 +16,7 @@ class TLorentzVector;
 class TVirtualMCDecayer : public TObject {
  public:
 //
+    TVirtualMCDecayer() {;}
     virtual ~TVirtualMCDecayer(){;}
     virtual void    Init()                                     =0;
     virtual void    Decay(Int_t idpart, TLorentzVector* p)     =0;
