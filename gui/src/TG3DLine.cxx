@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.2 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TG3DLine.cxx,v 1.3 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -26,6 +26,36 @@
 
 ClassImp(TGHorizontal3DLine)
 ClassImp(TGVertical3DLine)
+
+//______________________________________________________________________________
+TGHorizontal3DLine::TGHorizontal3DLine(const TGWindow *p, UInt_t w, UInt_t h,
+                                       UInt_t options, Pixel_t back) : 
+                    TGFrame(p, w, h, options, back)
+{
+   // ctor
+
+   SetWindowName();
+   fEditDisabled = kEditDisableHeight;
+
+   if (!p && fClient->IsEditable()) {
+      Resize(100, 5);
+   }
+}
+
+//______________________________________________________________________________
+TGVertical3DLine::TGVertical3DLine(const TGWindow *p, UInt_t w, UInt_t h,
+                                   UInt_t options, Pixel_t back) : 
+                  TGFrame(p, w, h, options, back)
+{
+   // ctor
+
+   SetWindowName();
+   fEditDisabled = kEditDisableWidth;
+
+   if (!p && fClient->IsEditable()) {
+      Resize(5, 100);
+   }
+}
 
 //______________________________________________________________________________
 void TGHorizontal3DLine::SavePrimitive(ofstream &out, Option_t *option)
