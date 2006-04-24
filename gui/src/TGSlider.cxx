@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.13 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.14 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -93,6 +93,10 @@ TGVSlider::TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
    // set initial values
    fPos = h/2; fVmin = 0; fVmax = h;
    fEditDisabled = kEditDisableWidth;
+
+  if (!p && fClient->IsEditable()) {
+      Resize(GetDefaultWidth(), 100);
+   }
 }
 
 //______________________________________________________________________________
@@ -239,6 +243,10 @@ TGHSlider::TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
    // set initial values
    fPos = w/2; fVmin = 0; fVmax = w;
    fEditDisabled = kEditDisableHeight;
+
+  if (!p && fClient->IsEditable()) {
+      Resize(100, GetDefaultHeight());
+   }
 }
 
 //______________________________________________________________________________
