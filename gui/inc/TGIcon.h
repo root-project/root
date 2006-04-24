@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.4 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.5 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -29,23 +29,37 @@
 #endif
 
 class TGPicture;
-
+class TImage;
 
 class TGIcon : public TGFrame {
 
 protected:
    const TGPicture  *fPic;     // icon picture
+   TImage           *fImage;   // image  
+   TString           fPath;    // directory of image
 
    virtual void DoRedraw();
 
 public:
-   TGIcon(const TGWindow *p = 0, const TGPicture *pic = 0, UInt_t w = 1, UInt_t h = 1,
+   TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground()) :
-      TGFrame(p, w, h, options, back) { fPic = pic; }
-   ~TGIcon();
+         TGFrame(p, w, h, options, back) { fPic = pic; fImage = 0; SetWindowName(); }
+   TGIcon(const TGWindow *p = 0, const char *image = 0);
 
+   virtual ~TGIcon();
+
+   virtual void ChangeImage();   //*MENU* *DIALOG*icon=bld_open.png*
+   virtual void Reset();         //*MENU*
    const TGPicture *GetPicture() const { return fPic; }
+   TImage *GetImage() const { return fImage; }
    virtual void SetPicture(const TGPicture *pic);
+   virtual void SetImage(const char *img); 
+   virtual void SetImage(TImage *img);
+
+   virtual void Resize(UInt_t w = 0, UInt_t h = 0);
+   virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
+   virtual void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
+   virtual void ChangeBackgroundColor() { }
 
    virtual TGDimension GetDefaultSize() const;
    virtual void SavePrimitive(ofstream &out, Option_t *option); 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.9 2003/12/12 18:21:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.10 2005/09/05 13:33:08 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -31,9 +31,38 @@
 #include "TGIcon.h"
 #include "TGPicture.h"
 #include "TSystem.h"
+#include "TImage.h"
 #include "Riostream.h"
+#include "TMath.h"
+#include "TGFileDialog.h"
+#include "TGMsgBox.h"
+#include "TVirtualDragManager.h"
+
 
 ClassImp(TGIcon)
+
+//______________________________________________________________________________
+TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
+{
+   // ctor
+
+   fPic = 0;
+   char *path;
+
+   if (!image) {
+      const char *rootsys = gSystem->ExpandPathName("$ROOTSYS");
+      path = gSystem->ConcatFileName(rootsys, "icons/bld_rgb.xpm");
+   }
+   fPath = gSystem->DirName(path);
+
+   fImage = TImage::Open(path);
+   fPic = fClient->GetPicturePool()->GetPicture(Form("%s_%dx%d", gSystem->BaseName(path), 
+                                                fImage->GetWidth(), fImage->GetHeight()),
+                                                fImage->GetPixmap(), fImage->GetMask());
+   TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
+   SetWindowName();
+   delete path;
+}
 
 //______________________________________________________________________________
 TGIcon::~TGIcon()
@@ -54,6 +83,32 @@ void TGIcon::SetPicture(const TGPicture *pic)
 }
 
 //______________________________________________________________________________
+void TGIcon::SetImage(const char *img)
+{
+   // Change image
+
+   //delete fImage;
+   TImage *i = TImage::Open(img);
+   fPath = gSystem->DirName(img);
+
+   SetImage(i);
+}
+
+//______________________________________________________________________________
+void TGIcon::SetImage(TImage *img)
+{
+   // change image
+
+   if (!img) {
+      return;
+   }
+
+   //delete fImage;  !! mem.leak!!
+   fImage = img;
+   Resize(fImage->GetWidth(), fImage->GetHeight());
+}
+
+//______________________________________________________________________________
 TGDimension TGIcon::GetDefaultSize() const
 {
    // Return size of icon.
@@ -67,7 +122,128 @@ void TGIcon::DoRedraw()
 {
    // Redraw picture.
 
-   if (fPic) fPic->Draw(fId, GetBckgndGC()(), 0, 0);
+  Bool_t border = (GetOptions() & kRaisedFrame) || 
+                   (GetOptions() & kSunkenFrame) ||
+                   (GetOptions() & kDoubleBorder);
+
+   if (fPic) fPic->Draw(fId, GetBckgndGC()(), border, border);
+   DrawBorder();
+}
+
+//______________________________________________________________________________
+void TGIcon::Resize(UInt_t w, UInt_t h)
+{
+   // Resize
+
+   //if (fImage && (TMath::Abs(Int_t(fImage->GetWidth() - w)) < 5) && 
+   //    (TMath::Abs(Int_t(fImage->GetHeight() - h)) < 5)) {
+   //   return;
+   //}
+
+   gVirtualX->ClearWindow(fId);
+   TGFrame::Resize(w, h);
+
+   if (!fImage) {
+      fImage = TImage::Create();
+      if (fPic) fImage->SetImage(fPic->GetPicture(), fPic->GetMask());
+   }
+   if (fPic) {
+      fClient->FreePicture(fPic);
+   }
+   Bool_t border = (GetOptions() & kRaisedFrame) || 
+                   (GetOptions() & kSunkenFrame) ||
+                   (GetOptions() & kDoubleBorder);
+
+   fImage->Scale(w - 2*border, h - 2*border);
+   fPic = fClient->GetPicturePool()->GetPicture(Form("%s_%dx%d", fImage->GetName(), 
+                                                fImage->GetWidth(), fImage->GetHeight()),
+                                                fImage->GetPixmap(), fImage->GetMask());
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGIcon::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // Move & Resize 
+
+   Move(x, y);
+   Resize(w, h);
+}
+
+//______________________________________________________________________________
+void TGIcon::Reset()
+{
+   // Reset icon to original image. It can be used only via context menu.
+
+   if (!fImage || !fClient->IsEditable()) return;
+
+   TString name = fImage->GetName();
+   name.Chop();
+   char *path = gSystem->ConcatFileName(fPath.Data(), name.Data());
+   SetImage(path);
+
+   delete path;
+}
+
+//______________________________________________________________________________
+void TGIcon::ChangeImage()
+{
+   // Invoke file dialog to assign a new image
+
+   static const char *gImageTypes[] = {"XPM", "*.xpm", 
+                                       "GIF", "*.gif",
+                                       "PNG", "*.png", 
+                                       "JPEG", "*.jpg",
+                                        "TARGA", "*.tga", "ICO", "*.ico", 
+                                        "XCF", "*.xcf", "CURSORS", "*.cur",
+                                        "PPM", "*.ppm", "PNM", "*.pnm", "XBM","*.xbm", 
+                                        "TIFF", "*.tiff", "BMP", "*.bmp",
+                                        "Enacapsulated PostScript", "*.eps", 
+                                        "PostScript", "*.ps", 
+                                        "PDF", "*.pdf", "ASImage XML","*.xml",
+                                        "All files",   "*",
+                                         0,             0 };
+
+   TGFileInfo fi;
+   static TString dir(".");
+   static Bool_t overwr = kFALSE;
+   const char *fname;
+
+   fi.fFileTypes = gImageTypes;
+   fi.fIniDir    = StrDup(dir);
+   fi.fOverwrite = overwr;
+
+   TGWindow *root = (TGWindow*)fClient->GetRoot();
+   gDragManager->SetEditable(kFALSE);
+
+   new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen, &fi);
+
+   if (!fi.fFilename) {
+      root->SetEditable(kTRUE);
+      gDragManager->SetEditable(kTRUE);
+      return;
+   }
+
+   dir    = fi.fIniDir;
+   overwr = fi.fOverwrite;
+   fname  = fi.fFilename;
+
+   fImage = TImage::Open(fname);
+
+   if (!fImage) {
+      Int_t retval;
+      new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
+                   Form("Cannot read image file (%s)", fname),
+                   kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+
+      if (retval == kMBRetry) {
+         ChangeImage();
+      }
+   } else {
+      SetImage(fImage);
+   }
+   root->SetEditable(kTRUE);
+   gDragManager->SetEditable(kTRUE);
 }
 
 //______________________________________________________________________________
