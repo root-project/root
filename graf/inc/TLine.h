@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.h,v 1.4 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.h,v 1.5 2005/11/21 08:49:48 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -40,7 +40,11 @@ protected:
 
 public:
    // TLine status bits
-   enum { kLineNDC = BIT(14) };
+   enum {
+      kLineNDC    = BIT(14), // Use NDC coordinates
+      kVertical   = BIT(15), // Line is vertical
+      kHorizontal = BIT(16)  // Line is horizontal
+   };
 
    TLine();
    TLine(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
@@ -52,16 +56,20 @@ public:
    virtual TLine *DrawLine(Double_t x1, Double_t y1,Double_t x2, Double_t y2);
    virtual TLine *DrawLineNDC(Double_t x1, Double_t y1,Double_t x2, Double_t y2);
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Double_t        GetX1() const {return fX1;}
-   Double_t        GetX2() const {return fX2;}
-   Double_t        GetY1() const {return fY1;}
-   Double_t        GetY2() const {return fY2;}
+   Double_t       GetX1() const {return fX1;}
+   Double_t       GetX2() const {return fX2;}
+   Double_t       GetY1() const {return fY1;}
+   Double_t       GetY2() const {return fY2;}
+   Bool_t         IsHorizontal();
+   Bool_t         IsVertical();
    virtual void   ls(Option_t *option="") const;
    virtual void   Paint(Option_t *option="");
    virtual void   PaintLine(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    virtual void   PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t  v2);
    virtual void   Print(Option_t *option="") const;
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   void           SetHorizontal(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHorizontal
+   void           SetVertical(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsVertical
    virtual void   SetX1(Double_t x1) {fX1=x1;}
    virtual void   SetX2(Double_t x2) {fX2=x2;}
    virtual void   SetY1(Double_t y1) {fY1=y1;}

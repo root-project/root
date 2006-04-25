@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.12 2005/08/29 14:43:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.13 2005/11/21 08:49:48 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -239,6 +239,8 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py2));
          }
       }
+      if (TestBit(kVertical))   fX2 = fX1;
+      if (TestBit(kHorizontal)) fY2 = fY1;
       gPad->Modified(kTRUE);
       gVirtualX->SetLineColor(-1);
       break;
@@ -330,6 +332,66 @@ void TLine::SavePrimitive(ofstream &out, Option_t *)
    SaveLineAttributes(out,"line",1,1,1);
 
    out<<"   line->Draw();"<<endl;
+}
+
+
+//______________________________________________________________________________
+Bool_t TLine::IsHorizontal()
+{
+   // Check whether this line is to be drawn horizontally.
+
+   return TestBit(kHorizontal);
+}
+
+
+//______________________________________________________________________________
+Bool_t TLine::IsVertical()
+{
+   // Check whether this line is to be drawn vertically.
+
+   return TestBit(kVertical);
+}
+
+
+//______________________________________________________________________________
+void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
+{
+   // Force the line to be drawn horizontally.
+   // fY1 will be drawn instead of fY2 at drawing time.
+
+   SetBit(kHorizontal, set);
+   if (set) {
+      SetVertical(kFALSE);
+      Int_t px1 = gPad->XtoAbsPixel(fX1);
+      Int_t px2 = gPad->XtoAbsPixel(fX2);
+      Int_t py1 = gPad->YtoAbsPixel(fY1);
+      Int_t py2 = gPad->YtoAbsPixel(fY2);
+      Int_t l   = Int_t(TMath::Sqrt((px2-px1)*(px2-px1)+(py2-py1)*(py2-py1)));
+      if (fX2 >= fX1) fX2 = gPad->AbsPixeltoX(px1+l);
+      else            fX2 = gPad->AbsPixeltoX(px1-l);
+      fY2 = fY1;
+   }
+}
+
+
+//______________________________________________________________________________
+void TLine::SetVertical(Bool_t set /*= kTRUE*/)
+{
+   // Force the line to be drawn vertically.
+   // fX1 will be drawn instead of fX2 at drawing time.
+
+   SetBit(kVertical, set);
+   if (set) {
+      SetHorizontal(kFALSE);
+      Int_t px1 = gPad->XtoAbsPixel(fX1);
+      Int_t px2 = gPad->XtoAbsPixel(fX2);
+      Int_t py1 = gPad->YtoAbsPixel(fY1);
+      Int_t py2 = gPad->YtoAbsPixel(fY2);
+      Int_t l   = Int_t(TMath::Sqrt((px2-px1)*(px2-px1)+(py2-py1)*(py2-py1)));
+      if (fY2 >= fY1) fY2 = gPad->AbsPixeltoY(py1-l);
+      else            fY2 = gPad->AbsPixeltoY(py1+l);
+      fX2 = fX1;
+   }
 }
 
 
