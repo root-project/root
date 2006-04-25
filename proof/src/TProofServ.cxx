@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.117 2006/04/13 10:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.118 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2198,7 +2198,7 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
 
-   off_t ltot, lnow;
+   off_t ltot=0, lnow=0;
    Int_t left = -1;
    Bool_t adhoc = kFALSE;
 
