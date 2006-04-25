@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.86 2006/04/19 13:41:48 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.87 2006/04/25 17:25:33 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2726,15 +2726,17 @@ void THtml::CreateListOfClasses(const char* filter)
          fFileNames[fNumberOfFileNames] = StrDup(impname, 64);
          char* posSlash = strchr(fFileNames[fNumberOfFileNames], '/');
 
-         // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
-         char *srcdir = strstr(posSlash, "/src/");
+         char *srcdir = 0;
+         if (posSlash) {
+            // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
+            srcdir = strstr(posSlash, "/src/");
 
-         // if impl is unset, check for decl and see if it matches
-         // format "base/inc/TROOT.h" - in which case it's not a USER
+            // if impl is unset, check for decl and see if it matches
+            // format "base/inc/TROOT.h" - in which case it's not a USER
          // class, but a BASE class.
-         if (!srcdir)
-            srcdir=strstr(posSlash, "/inc/");
-
+            if (!srcdir)
+               srcdir=strstr(posSlash, "/inc/");
+         } else srcdir = 0;
          if (srcdir && srcdir == posSlash
              && fFileNames[fNumberOfFileNames][0]!='/') {
             strcpy(srcdir, "_");
