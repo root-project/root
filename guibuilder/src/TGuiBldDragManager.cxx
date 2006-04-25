@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.43 2006/04/14 17:54:49 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.44 2006/04/24 14:09:16 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1950,7 +1950,7 @@ Bool_t TGuiBldDragManager::HandleButtonRelease(Event_t *event)
 
    // unmap all waiting popups
    if (fClient->GetWaitForEvent() == kUnmapNotify) {
-     UnmapAllPopups();
+      UnmapAllPopups();
    }
 
    TGWindow *w = fClient->GetWindowById(event->fWindow);
@@ -3009,7 +3009,7 @@ void TGuiBldDragManager::DoResize()
             h = fr->GetHeight() - y;
 
             if (IsFixedW(fr)) {
-              w =  fr->GetDefaultWidth();
+               w =  fr->GetDefaultWidth();
             } else {
                w = fr->GetX() + x > (Int_t)wp ? wp - fr->GetX() : x;
             }
@@ -4661,8 +4661,8 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
          str.Form("((%s*)0x%lx)->%s()", fPimpl->fMenuObject->ClassName(), 
                                         fPimpl->fMenuObject, method->GetName());
          G__calc((char *)str.Data());
-         delete fFrameMenu;
-         fFrameMenu = 0;
+//         delete fFrameMenu;  // suicide (BB)?
+//         fFrameMenu = 0;
          return;
       }
       gMenuDialog = new TGuiBldMenuDialog(fPimpl->fMenuObject, fPimpl->fMenuObject, method);
