@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.7 2006/03/30 16:18:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.8 2006/04/25 13:54:01 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps_h 
@@ -84,7 +84,6 @@ namespace ROOT {
 	}
 	// create a temporary object to store result
 	else { 
-	  std::cout << "create temp obj since it is in use" << std::endl; 
 	  T tmp[MatRepSym<T,D1>::kSize]; 
 	  unsigned int l = 0; 
 	  for(unsigned int i=0; i<D1; ++i) 
