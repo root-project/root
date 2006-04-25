@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: CintLDAP.h,v 1.2 2002/11/28 18:39:04 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: CintLDAP.h,v 1.3 2002/12/09 15:13:40 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -19,6 +19,10 @@
 struct LDAP;
 struct LDAPMessage;
 struct LDAPMod;
+
+#define LDAP_VERSION1	1
+#define LDAP_VERSION2	2
+#define LDAP_VERSION3	3
 
 const int LDAP_PORT              = 389;
 

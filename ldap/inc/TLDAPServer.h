@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -39,7 +39,8 @@ private:
 
 public:
    TLDAPServer(const char *host, Int_t port = LDAP_PORT,
-               const char *binddn = 0, const char *password = 0);
+               const char *binddn = 0, const char *password = 0,
+               Int_t version = LDAP_VERSION2);
 
    virtual ~TLDAPServer();
 

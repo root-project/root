@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:$:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -19,7 +19,7 @@ ClassImp(TLDAPServer)
 
 //______________________________________________________________________________
 TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
-                         const char *password)
+                         const char *password, Int_t version)
 {
    // During construction TLDAPServer object tries to connect to the
    // specified server and you should check the connection status by
@@ -33,6 +33,8 @@ TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
    //                       values for bind DN and password are zero, that means
    //                       anonymous connection. Usually it is enough to read
    //                       the data from the server.
+   //  Int_t version        Set LDAP protocol version: LDAP_VERSION1,
+   //                       LDAP_VERSION2, LDAP_VERSION3
 
    fLd          = 0;
    fIsConnected = kFALSE;
@@ -43,6 +45,11 @@ TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
    if (!fLd) {
       Error("TLDAPServer", "error in ldap_init function");
    } else {
+      if (ldap_set_option(fLd, LDAP_OPT_PROTOCOL_VERSION, &version) != LDAP_OPT_SUCCESS ) {
+                      Error("Bind", "Could not set protocol version!");
+                      return;
+      }
+
       Bind( );
    }
 }
