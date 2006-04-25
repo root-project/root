@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.5 2006/01/06 10:26:24 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.6 2006/03/05 21:49:48 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -737,22 +737,31 @@ void ReflexBuilderUnitTest::type_equivalence() {
   Type f4 = Type(f2, VOLATILE );
   Type f5 = Type(f2, CONST | VOLATILE );
   CPPUNIT_ASSERT(f1.IsEquivalentTo(f2));
-  CPPUNIT_ASSERT(f1.IsEquivalentTo(f3));
-  CPPUNIT_ASSERT(f1.IsEquivalentTo(f4));
-  CPPUNIT_ASSERT(f2.IsEquivalentTo(f3));
-  CPPUNIT_ASSERT(f2.IsEquivalentTo(f4));
-  CPPUNIT_ASSERT(f3.IsEquivalentTo(f4));
+  CPPUNIT_ASSERT(!f1.IsEquivalentTo(f3));
+  CPPUNIT_ASSERT(!f1.IsEquivalentTo(f4));
+  CPPUNIT_ASSERT(!f1.IsEquivalentTo(f5));
+  CPPUNIT_ASSERT(!f2.IsEquivalentTo(f3));
+  CPPUNIT_ASSERT(!f2.IsEquivalentTo(f4));
+  CPPUNIT_ASSERT(!f2.IsEquivalentTo(f5));
+  CPPUNIT_ASSERT(!f3.IsEquivalentTo(f4));
+  CPPUNIT_ASSERT(f3.IsEquivalentTo(f5));
+  CPPUNIT_ASSERT(!f4.IsEquivalentTo(f5));
 
   Type f1p = PointerBuilder(f1);
   Type f2p = PointerBuilder(f2);
   Type f3p = PointerBuilder(f3);
   Type f4p = PointerBuilder(f4);
+  Type f5p = PointerBuilder(f5);
   CPPUNIT_ASSERT(f1p.IsEquivalentTo(f2p));
-  CPPUNIT_ASSERT(f1p.IsEquivalentTo(f3p));
-  CPPUNIT_ASSERT(f1p.IsEquivalentTo(f4p));
-  CPPUNIT_ASSERT(f2p.IsEquivalentTo(f3p));
-  CPPUNIT_ASSERT(f2p.IsEquivalentTo(f4p));
-  CPPUNIT_ASSERT(f3p.IsEquivalentTo(f4p));
+  CPPUNIT_ASSERT(!f1p.IsEquivalentTo(f3p));
+  CPPUNIT_ASSERT(!f1p.IsEquivalentTo(f4p));
+  CPPUNIT_ASSERT(!f1p.IsEquivalentTo(f5p));
+  CPPUNIT_ASSERT(!f2p.IsEquivalentTo(f3p));
+  CPPUNIT_ASSERT(!f2p.IsEquivalentTo(f4p));
+  CPPUNIT_ASSERT(!f2p.IsEquivalentTo(f5p));
+  CPPUNIT_ASSERT(!f3p.IsEquivalentTo(f4p));
+  CPPUNIT_ASSERT(f3p.IsEquivalentTo(f5p));
+  CPPUNIT_ASSERT(!f4p.IsEquivalentTo(f5p));
 }
 
 

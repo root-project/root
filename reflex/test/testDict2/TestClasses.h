@@ -57,8 +57,8 @@ namespace testclasses {
 
   struct ConstNonConstMembers {
 
-    int foo(int i) { return m_i; }
-    int foo(int i) const { return m_i; }
+    int foo(int i) { return m_i * i; }
+    int foo(int i) const { return m_i * i ; }
 
     int m_i;
     const int m_ci;
