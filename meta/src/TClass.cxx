@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.186 2006/03/20 21:38:34 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.187 2006/04/19 08:22:24 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1563,13 +1563,14 @@ TRealData *TClass::GetRealData(const char *name) const
    if (rd) return rd;
 
    const char *dot = strchr(name,'.');
+   const char *ldot = strrchr(name,'.');
    if (!dot) return 0;
 
    //may be a pointer like in TH1 fXaxis.fLabels (in TRealdata is fXaxis.*fLabels)
    char starname[1024];
-   Int_t nch = dot-name;
+   Int_t nch = ldot-name;
    strncpy(starname,name,nch);
-   sprintf(starname+nch,".*%s",dot+1);
+   sprintf(starname+nch,".*%s",ldot+1);
    rd = (TRealData*)fRealData->FindObject(starname);
    if (rd) return rd;
 
