@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.10 2005/09/05 13:33:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.11 2006/04/24 13:51:06 antcheva Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -44,7 +44,7 @@ ClassImp(TGIcon)
 //______________________________________________________________________________
 TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
 {
-   // ctor
+   // Create icon.
 
    fPic = 0;
    char *path;
@@ -85,7 +85,7 @@ void TGIcon::SetPicture(const TGPicture *pic)
 //______________________________________________________________________________
 void TGIcon::SetImage(const char *img)
 {
-   // Change image
+   // Set icon image.
 
    //delete fImage;
    TImage *i = TImage::Open(img);
@@ -97,7 +97,7 @@ void TGIcon::SetImage(const char *img)
 //______________________________________________________________________________
 void TGIcon::SetImage(TImage *img)
 {
-   // change image
+   // Change icon image.
 
    if (!img) {
       return;
@@ -122,7 +122,7 @@ void TGIcon::DoRedraw()
 {
    // Redraw picture.
 
-  Bool_t border = (GetOptions() & kRaisedFrame) || 
+   Bool_t border = (GetOptions() & kRaisedFrame) || 
                    (GetOptions() & kSunkenFrame) ||
                    (GetOptions() & kDoubleBorder);
 
@@ -133,7 +133,7 @@ void TGIcon::DoRedraw()
 //______________________________________________________________________________
 void TGIcon::Resize(UInt_t w, UInt_t h)
 {
-   // Resize
+   // Resize.
 
    //if (fImage && (TMath::Abs(Int_t(fImage->GetWidth() - w)) < 5) && 
    //    (TMath::Abs(Int_t(fImage->GetHeight() - h)) < 5)) {
@@ -164,7 +164,7 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
 //______________________________________________________________________________
 void TGIcon::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move & Resize 
+   // Move icon to (x,y) and resize it to (w,h). 
 
    Move(x, y);
    Resize(w, h);
@@ -188,21 +188,27 @@ void TGIcon::Reset()
 //______________________________________________________________________________
 void TGIcon::ChangeImage()
 {
-   // Invoke file dialog to assign a new image
+   // Invoke file dialog to assign a new image.
 
-   static const char *gImageTypes[] = {"XPM", "*.xpm", 
-                                       "GIF", "*.gif",
-                                       "PNG", "*.png", 
-                                       "JPEG", "*.jpg",
-                                        "TARGA", "*.tga", "ICO", "*.ico", 
-                                        "XCF", "*.xcf", "CURSORS", "*.cur",
-                                        "PPM", "*.ppm", "PNM", "*.pnm", "XBM","*.xbm", 
-                                        "TIFF", "*.tiff", "BMP", "*.bmp",
-                                        "Enacapsulated PostScript", "*.eps", 
-                                        "PostScript", "*.ps", 
-                                        "PDF", "*.pdf", "ASImage XML","*.xml",
-                                        "All files",   "*",
-                                         0,             0 };
+   static const char *gImageTypes[] = {"XPM",     "*.xpm", 
+                                       "GIF",     "*.gif",
+                                       "PNG",     "*.png", 
+                                       "JPEG",    "*.jpg",
+                                       "TARGA",   "*.tga", 
+                                       "ICO",     "*.ico", 
+                                       "XCF",     "*.xcf", 
+                                       "CURSORS", "*.cur",
+                                       "PPM",     "*.ppm", 
+                                       "PNM",     "*.pnm", 
+                                       "XBM",     "*.xbm", 
+                                       "TIFF",    "*.tiff", 
+                                       "BMP",     "*.bmp",
+                                       "Enacapsulated PostScript", "*.eps", 
+                                       "PostScript", "*.ps", 
+                                       "PDF",        "*.pdf", 
+                                       "ASImage XML","*.xml",
+                                       "All files",  "*",
+                                        0,             0 };
 
    TGFileInfo fi;
    static TString dir(".");
