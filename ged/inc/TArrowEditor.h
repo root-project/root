@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h,v 1.4 2006/01/30 17:42:05 rdm Exp $
 // Author: Ilka  Antcheva 20/10/04
 
 /*************************************************************************
@@ -38,10 +38,6 @@ protected:
    TGComboBox           *fOptionCombo;      // arrow shapes combo box
    TGNumberEntry        *fAngleEntry;       // opening angle entry
    TGNumberEntry        *fSizeEntry;        // size entry
-   TGNumberEntry        *fStartPointXEntry; // start point x entry
-   TGNumberEntry        *fEndPointXEntry;   // end point x entry
-   TGNumberEntry        *fStartPointYEntry; // start point y entry
-   TGNumberEntry        *fEndPointYEntry;   // end point y entry
 
    virtual void   ConnectSignals2Slots();
    TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);
@@ -58,8 +54,6 @@ public:
    virtual void   DoAngle();
    virtual void   DoOption(Int_t id);
    virtual void   DoSize();
-   virtual void   DoStartPoint();
-   virtual void   DoEndPoint();
 
    ClassDef(TArrowEditor,0)  // GUI for editing arrow attributes
 };
