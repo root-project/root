@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.153 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.154 2006/04/19 08:22:22 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -82,6 +82,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
    fIsRootFile    = kTRUE;
    fIsArchive     = kFALSE;
    fInitDone      = kFALSE;
+   fMustFlush     = kTRUE;
    fAsyncHandle   = 0;
    fAsyncOpenStatus   = kAOSNotAsync;
 
@@ -235,6 +236,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    // Init initialization control flag
    fInitDone   = kFALSE;
+   fMustFlush  = kTRUE;
 
    // We are opening synchronously
    fAsyncHandle = 0;
@@ -1635,10 +1637,12 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
          Info("Write", "writing name = s title = %s", GetName(), GetTitle());
    }
 
+   fMustFlush = kFALSE;
    Int_t nbytes = TDirectory::Write(0, opt, bufsiz); // Write directory tree
    WriteStreamerInfo();
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
+   fMustFlush = kTRUE;
 
    cursav->cd();
    return nbytes;

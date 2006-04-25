@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.43 2006/04/06 23:01:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.44 2006/04/18 14:23:20 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -73,6 +73,7 @@ protected:
    Bool_t        fIsArchive;      //!True if this is a pure archive file
    Bool_t        fIsRootFile;     //!True is this is a ROOT file
    Bool_t        fInitDone;       //!True if the file has been initialized
+   Bool_t        fMustFlush;      //!True if the file buffers must be flushed
    TFileOpenHandle *fAsyncHandle; //!For proper automatic cleanup
    EAsyncOpenStatus fAsyncOpenStatus; //!Status of an asynchronous open request
    TUrl          fUrl;            //!URL of file
@@ -164,6 +165,7 @@ public:
    virtual void        MakeProject(const char *dirname, const char *classes="*", Option_t *option="new"); // *MENU*
    virtual void        Map(); // *MENU*
    virtual Bool_t      Matches(const char *name);
+   virtual Bool_t      MustFlush() const {return fMustFlush;}
    virtual void        Paint(Option_t *option="");
    virtual void        Print(Option_t *option="") const;
    virtual Bool_t      ReadBuffer(char *buf, Int_t len);

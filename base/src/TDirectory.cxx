@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.82 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.83 2006/04/19 08:22:22 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1774,7 +1774,7 @@ void TDirectory::WriteDirHeader()
    fModified     = kFALSE;
    f->Seek(pointer);
    f->WriteBuffer(header, nbytes);
-   f->Flush();
+   if (f->MustFlush()) f->Flush();
    delete [] header;
 }
 
