@@ -53,7 +53,7 @@ FORCELINK     = no
 ifeq ($(MACOSX_MINOR),4)
 MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.4
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
-                -Xlinker -undefined dynamic_lookup -install_name $(LIBDIR)/
+                -undefined dynamic_lookup -install_name $(LIBDIR)/
 endif
 SOEXT         = dylib
 
