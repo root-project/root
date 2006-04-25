@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:$:$Id:$
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.h,v 1.1 2006/04/25 08:14:20 antcheva Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #endif
 
 class TGNumberEntry;
+class TGCheckButton;
 class TLine;
 
 class TLineEditor : public TGedFrame {
@@ -38,6 +39,8 @@ protected:
    TGNumberEntry   *fStartPointY;  //start point y coordinate
    TGNumberEntry   *fEndPointX;    //end point x coordinate
    TGNumberEntry   *fEndPointY;    //end point y coordinate
+   TGCheckButton   *fVertical;     //set the line vertical
+   TGCheckButton   *fHorizontal;   //set the line horizontal
 
    virtual void   ConnectSignals2Slots();
 
@@ -51,6 +54,8 @@ public:
    virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
    virtual void   DoStartPoint();
    virtual void   DoEndPoint();
+   virtual void   DoLineVertical();
+   virtual void   DoLineHorizontal();
 
    ClassDef(TLineEditor,0)  // GUI for editing Line attributes
 };

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:$:$Id:$
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.1 2006/04/25 08:14:20 antcheva Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -37,7 +37,9 @@ enum ELineWid {
    kLine_STAX,
    kLine_STAY,
    kLine_ENDX,
-   kLine_ENDY
+   kLine_ENDY,
+   kLine_VERTICAL,
+   kLine_HORIZONTAL
 };
 
 
@@ -100,6 +102,17 @@ TLineEditor::TLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fEndPointY->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of Line.");
    f6->AddFrame(fEndPointY, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
 
+   TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 5, 0));
+
+   fVertical = new TGCheckButton(f7,"Vertical",kLine_VERTICAL);
+   fVertical->SetToolTipText("Set vertical");
+   f7->AddFrame(fVertical, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
+
+   fHorizontal = new TGCheckButton(f7,"Horizontal",kLine_HORIZONTAL);
+   fHorizontal->SetToolTipText("Set horizontal");
+   f7->AddFrame(fHorizontal, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
+
    TClass *cl = TLine::Class();
    TGedElement *ge = new TGedElement;
    ge->fGedFrame = this;
@@ -135,6 +148,8 @@ void TLineEditor::ConnectSignals2Slots()
    (fEndPointX->GetNumberEntry())->Connect("ReturnPressed()", "TLineEditor", this, "DoEndPoint()");
    fEndPointY->Connect("ValueSet(Long_t)", "TLineEditor", this, "DoEndPoint()");
    (fEndPointY->GetNumberEntry())->Connect("ReturnPressed()", "TLineEditor", this, "DoEndPoint()");
+   fVertical->Connect("Clicked()","TLineEditor",this,"DoLineVertical()");
+   fHorizontal->Connect("Clicked()","TLineEditor",this,"DoLineHorizontal()");
 
    fInit = kFALSE;
 }
@@ -169,6 +184,12 @@ void TLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    val = fLine->GetY2();
    fEndPointY->SetNumber(val);
 
+   if (fLine->IsHorizontal()) fHorizontal->SetState(kButtonDown, kFALSE);
+   else fHorizontal->SetState(kButtonUp, kFALSE);
+
+   if (fLine->IsVertical()) fVertical->SetState(kButtonDown, kFALSE);
+   else fVertical->SetState(kButtonUp, kFALSE);
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
@@ -194,3 +215,30 @@ void TLineEditor::DoEndPoint()
    Update();
 }
 
+//______________________________________________________________________________                                                                                
+void TLineEditor::DoLineVertical()
+{
+   // Slot so set the line vertical
+
+   if (fVertical->GetState() == kButtonDown) {
+      fLine->SetVertical();
+      fHorizontal->SetState(kButtonUp, kFALSE);
+   } else {
+      fLine->SetVertical(kFALSE);
+   }
+   Update();
+}
+
+//______________________________________________________________________________                                                                                
+void TLineEditor::DoLineHorizontal()
+{
+   // Slot so set the line horizontal
+
+   if (fHorizontal->GetState() == kButtonDown) {
+      fLine->SetHorizontal();
+      fVertical->SetState(kButtonUp, kFALSE);
+   } else {
+      fLine->SetHorizontal(kFALSE);
+   }
+   Update();
+}
