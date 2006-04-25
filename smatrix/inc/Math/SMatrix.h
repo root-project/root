@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.18 2006/03/30 16:18:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.19 2006/04/20 13:13:21 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -119,7 +119,7 @@ public:
 
   /**
      construct from an expression. 
-     In case of symmetric matrices doesnot work if expression is of type general 
+     In case of symmetric matrices does not work if expression is of type general 
      matrices. In case one needs to force the assignment from general to symmetric, one can use the 
      ROOT::Math::AssignSym::Evaluate function. 
    */ 
@@ -220,7 +220,7 @@ public:
   };
 #endif
   /** @name --- Access functions --- */
-  /** access the parse tree. Index starts from zero and follows C convention for accessing 
+  /** access the parse tree with the index starting from zero and following the C convention for the order in accessing 
       the matrix elements. 
    */  
   T apply(unsigned int i) const;
@@ -230,7 +230,19 @@ public:
   /// return pointer to internal array
   T* Array();
 
-  /** @name --- STL-like interface --- */
+  /** @name --- STL-like interface --- 
+      The iterators access the matrix element in the order how they are 
+      stored in memory. The C (row-major) convention is used, and in the 
+      case of symmetric matrices the iterator spans only the lower diagonal 
+      block. For example for a symmetric 3x3 matrices the order of the 6 
+      elements \f${a_0,...a_5}\f$ is: 
+      \f[
+       M = \left( \begin{array}{ccc} 
+       a_0 & a_1 & a_3  \\ 
+       a1 & a_2  & a_4  \\
+       a3 & a_4 & a_5   \end{array} \right)
+       \f]
+  */
 
   /** STL iterator interface. */
   iterator begin();
@@ -280,11 +292,11 @@ public:
   bool operator<(const Expr<A,T,D1,D2,R2>& rhs) const;
 
   /**
-     read only access to matrix element. Indeces start from 0
+     read only access to matrix element, with indices starting from 0
    */ 
   const T& operator()(unsigned int i, unsigned int j) const;
     /**
-     read/write access to matrix element. Indeces start from 0
+     read/write access to matrix element with indices starting from 0
    */ 
   T& operator()(unsigned int i, unsigned int j);
 
@@ -483,7 +495,14 @@ SMatrix<T,D1,D2,R>& Place_in_col(const VecExpr<A,T,D>& rhs,
 #endif
 
 
-
+  /** 
+      check if matrix is sharing same memory location.
+      This functionis used by the expression to avoid the alias problem when 
+      evaluating them. In case  matrix is in use, a temporary object is automatically 
+      created evaluating the expression. Then the correct result is obtained for operations 
+      like  A = B * A
+   */
+  bool IsInUse(const T* p) const; 
 
   // submatrices
 

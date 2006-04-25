@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.8 2006/03/09 09:24:04 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Expression.h,v 1.9 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_Expression
@@ -53,11 +53,11 @@ namespace ROOT {
 
 
 
+//    template <class T, unsigned int D, unsigned int D2> class MatRepStd;
 
-    //    template <class T, unsigned int D, unsigned int D2> class MatRepStd;
+template <class ExprType, class T, unsigned int D >
+class VecExpr {
 
-    template <class ExprType, class T, unsigned int D >
-    class VecExpr {
 public:
   typedef T  value_type;
 
@@ -108,11 +108,11 @@ private:
 
 
 
-    template <class T, unsigned int D, unsigned int D2> class MatRepStd;
+template <class T, unsigned int D, unsigned int D2> class MatRepStd;
 
-    template <class ExprType, class T, unsigned int D, unsigned int D2 = 1,
-	      class R1=MatRepStd<T,D,D2> >
-    class Expr {
+template <class ExprType, class T, unsigned int D, unsigned int D2 = 1,
+	  class R1=MatRepStd<T,D,D2> >
+class Expr {
 public:
   typedef T  value_type;
 
@@ -130,6 +130,15 @@ public:
   inline T operator() (unsigned int i, unsigned j) const {
     return rhs_(i,j);
   }
+   
+  /** 
+      function to  determine if any use operand 
+      is being used (has same memory adress)
+   */ 
+  inline bool IsInUse (const T * p) const { 
+    return rhs_.IsInUse(p); 
+  }
+  
 
 
 #ifdef OLD_IMPL
@@ -214,6 +223,10 @@ public:
     return Operator::apply(lhs_(i,j), rhs_(i,j) );
   }
 
+  inline bool IsInUse (const T * p) const { 
+    return lhs_.IsInUse(p) || rhs_.IsInUse(p); 
+  }
+
 protected:
 
   const LHS& lhs_;
@@ -249,6 +262,11 @@ public:
     return Operator::apply(lhs_(i,j), rhs_(i,j) );
   }
 
+  inline bool IsInUse (const T * p) const { 
+    // no need to check left since we copy it
+    return rhs_.IsInUse(p); 
+  }
+
 protected:
 
   const LHS  lhs_;
@@ -260,7 +278,7 @@ protected:
 //==============================================================================
 /**
    Special case of BinaryOp where for the wight argument a copy is stored instead of a reference 
-   This is use in the coase for example of constant where we cannot store by reference 
+   This is use in the case for example of constant where we cannot store by reference 
    but need to copy since Constant is a temporary object
 */
 //==============================================================================
@@ -280,6 +298,11 @@ public:
   }
   inline T operator() (unsigned int i, unsigned int j) const {
     return Operator::apply(lhs_(i,j), rhs_(i,j) );
+  }
+
+  inline bool IsInUse (const T * p) const { 
+    // no need for right since we copied 
+    return lhs_.IsInUse(p); 
   }
 
 protected:
@@ -318,6 +341,10 @@ public:
     return Operator::apply(rhs_(i,j));
   }
 
+  inline bool IsInUse (const T * p) const { 
+    return rhs_.IsInUse(p); 
+  }
+
 protected:
 
   const RHS& rhs_;
@@ -348,6 +375,8 @@ public:
   inline T apply(unsigned int /*i */ ) const { return rhs_; }
 
   inline T operator() (unsigned int /*i */, unsigned int /*j */ ) const { return rhs_; }
+
+  //inline bool IsInUse (const T * ) const { return false; }
 
 protected:
 

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.18 2006/03/30 10:33:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.19 2006/03/30 16:18:05 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -872,6 +872,14 @@ SMatrix<T,D1,D2,R>::SMatrix(const SVector<T, N >  & v, bool lower ) {
     }
   }
 }
+
+
+template <class T, unsigned int D1, unsigned int D2, class R>
+bool SMatrix<T,D1,D2,R>::IsInUse( const T * p) const { 
+  return p == fRep.Array(); 
+} 
+
+
 
 
   }  // namespace Math

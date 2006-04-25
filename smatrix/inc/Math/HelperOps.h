@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.6 2006/03/30 10:33:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.7 2006/03/30 16:18:05 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps_h 
@@ -39,14 +39,29 @@ namespace ROOT {
     {
       static void Evaluate(SMatrix<T,D1,D2,R1>& lhs,  const Expr<A,T,D1,D2,R2>& rhs) 
       {
-        //for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep[i] = rhs.apply(i);
-	unsigned int l = 0; 
-        for(unsigned int i=0; i<D1; ++i) 
-	  for(unsigned int j=0; j<D2; ++j) { 
-	    lhs.fRep[l] = rhs(i,j);
-	    l++;
-	  }
+	if (! rhs.IsInUse(lhs.begin() ) ) { 
+	  unsigned int l = 0; 
+	  for(unsigned int i=0; i<D1; ++i) 
+	    for(unsigned int j=0; j<D2; ++j) { 
+	      lhs.fRep[l] = rhs(i,j);
+	      l++;
+	    }
+	}
+	// lhs is in use in expression, need to create a temporary with the result
+	else { 
+	  T tmp[D1*D2]; 
+	  unsigned int l = 0; 
+	  for(unsigned int i=0; i<D1; ++i) 
+	    for(unsigned int j=0; j<D2; ++j) { 
+	      tmp[l] = rhs(i,j);
+	      l++;
+	    }
+	  // copy now the temp object 
+	  for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep[i] = tmp[i];
+	}
+
       }
+	    
     };
     // specialization in case of symmetric expression to symmetric matrices :  
     template <class T, 
@@ -58,13 +73,28 @@ namespace ROOT {
       static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  
                            const Expr<A,T,D1,D2,MatRepSym<T,D1> >& rhs) 
       {
-	unsigned int l = 0; 
-        for(unsigned int i=0; i<D1; ++i)
-	  // storage of symmetric matrix is in lower block
-	  for(unsigned int j=0; j<=i; ++j) { 
-	    lhs.fRep.Array()[l] = rhs(i,j);
-	    l++;
-	  }
+	if (! rhs.IsInUse(lhs.begin() ) ) { 
+	  unsigned int l = 0; 
+	  for(unsigned int i=0; i<D1; ++i)
+	    // storage of symmetric matrix is in lower block
+	    for(unsigned int j=0; j<=i; ++j) { 
+	      lhs.fRep.Array()[l] = rhs(i,j);
+	      l++;
+	    }
+	}
+	// create a temporary object to store result
+	else { 
+	  std::cout << "create temp obj since it is in use" << std::endl; 
+	  T tmp[MatRepSym<T,D1>::kSize]; 
+	  unsigned int l = 0; 
+	  for(unsigned int i=0; i<D1; ++i) 
+	    for(unsigned int j=0; j<=i; ++j) { 
+	      tmp[l] = rhs(i,j);
+	      l++;
+	    }
+	  // copy now the temp object 
+	  for(unsigned int i=0; i<MatRepSym<T,D1>::kSize; ++i) lhs.fRep.Array()[i] = tmp[i];
+	}
       }
     };
 
@@ -91,6 +121,21 @@ namespace ROOT {
               class A, 
 	      class R>
       static void Evaluate(SMatrix<T,D,D,MatRepSym<T,D> >& lhs,  const Expr<A,T,D,D,R>& rhs) 
+      {
+        //for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep[i] = rhs.apply(i);
+	unsigned int l = 0; 
+        for(unsigned int i=0; i<D; ++i)
+	  // storage of symmetric matrix is in lower block
+	  for(unsigned int j=0; j<=i; ++j) { 
+	    lhs.fRep.Array()[l] = rhs(i,j);
+	    l++;
+	  }
+      }
+      // assign a symmetric matrix from a general matrix that we assume is symmetric 
+    template <class T, 
+              unsigned int D,
+	      class R>
+      static void Evaluate(SMatrix<T,D,D,MatRepSym<T,D> >& lhs,  const SMatrix<T,D,D,R>& rhs) 
       {
         //for(unsigned int i=0; i<D1*D2; ++i) lhs.fRep[i] = rhs.apply(i);
 	unsigned int l = 0; 

@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.4 2006/03/14 17:11:19 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixRepresentationsStatic.h,v 1.5 2006/03/17 15:11:35 moneta Exp $
 // Authors: L. Moneta, J. Palacios    2006  
 
 #ifndef ROOT_Math_MatrixRepresentationsStatic_h
@@ -198,7 +198,8 @@ namespace ROOT {
 
     private:
       T fArray[kSize];
-      RowOffsets<D> * fOff; 
+
+      RowOffsets<D> * fOff;   //! transient
 
     };
 

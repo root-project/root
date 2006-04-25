@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.8 2006/03/09 09:24:04 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.9 2006/03/20 17:11:44 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -308,6 +308,11 @@ public:
     return meta_matrix_dot<D-1>::g(lhs_, rhs_, i, j);
   }
 
+  inline bool IsInUse (const T * p) const { 
+    return lhs_.IsInUse(p) || rhs_.IsInUse(p);
+  }
+
+
 protected:
   const MatrixA&    lhs_;
   const MatrixB&    rhs_;
@@ -356,6 +361,7 @@ inline Expr<MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>,T,D>, T, D1, D2, ty
   typedef MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>, T,D> MatMulOp;
   return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 }
+
 
 
 #ifdef XXX
@@ -445,6 +451,10 @@ public:
     return rhs_( j, i);
   }
 
+  inline bool IsInUse (const T * p) const { 
+    return rhs_.IsInUse(p); 
+  }
+
 protected:
   const Matrix& rhs_;
 };
@@ -471,6 +481,37 @@ inline Expr<TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2>, T, D2, D1, typename TranspPo
 
   return Expr<MatTrOp, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>(MatTrOp(rhs));
 }
+
+
+#ifdef ENABLE_TEMPORARIES_TRANSPOSE 
+// sometimes is faster to create a temp, not clear why
+
+//==============================================================================
+// transpose
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
+ Transpose(const SMatrix<T,D1,D2, R>& rhs) {
+  typedef TransposeOp<SMatrix<T,D1,D2,R>,T,D1,D2> MatTrOp;
+
+  return SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType> 
+    ( Expr<MatTrOp, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>(MatTrOp(rhs)) );
+}
+
+//==============================================================================
+// transpose
+//==============================================================================
+template <class A, class T, unsigned int D1, unsigned int D2, class R>
+inline  SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
+ Transpose(const Expr<A,T,D1,D2,R>& rhs) {
+  typedef TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2> MatTrOp;
+
+  return SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType> 
+    ( Expr<MatTrOp, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>(MatTrOp(rhs)) );
+}
+
+#endif 
+
 
 #ifdef OLD
 //==============================================================================
