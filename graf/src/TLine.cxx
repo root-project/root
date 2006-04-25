@@ -357,7 +357,8 @@ Bool_t TLine::IsVertical()
 void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
 {
    // Force the line to be drawn horizontally.
-   // fY1 will be drawn instead of fY2 at drawing time.
+   // Makes fY2 equal to fX1. The line length is kept.
+   // TArrow and TGaxis also get this function by inheritance.
 
    SetBit(kHorizontal, set);
    if (set) {
@@ -378,7 +379,8 @@ void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
 void TLine::SetVertical(Bool_t set /*= kTRUE*/)
 {
    // Force the line to be drawn vertically.
-   // fX1 will be drawn instead of fX2 at drawing time.
+   // Makes fX2 equal to fX1. The line length is kept.
+   // TArrow and TGaxis also get this function by inheritance.
 
    SetBit(kVertical, set);
    if (set) {
