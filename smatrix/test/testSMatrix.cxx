@@ -407,8 +407,8 @@ int test11() {
 
   SMatrix<double,5,5> m4 = m1 -  m32 * m1; 
   SMatrix<double,5,5> m5 = m3*m2;
-  // in smatrix this should not be done since a temporary object storing 
-  //  m5 * m1 first is not computed 
+
+  // now thanks to the IsInUse() function this should work 
   m5 =  m1 - m5 * m1;
 
   // this works probably becuse here multiplication is done first
@@ -423,8 +423,8 @@ int test11() {
   std::cout << m5 << std::endl;
   std::cout << m6 << std::endl;
 
-  // this is test will fail because operation is done at the same time
-  iret |= compare( m4==m5, false ); 
+  // this is test will now work  
+  iret |= compare( m4==m5, true ); 
   iret |= compare( m4==m6, true ); 
 
 
@@ -842,6 +842,40 @@ int test15() {
   return iret;
 }
 
+int test16() { 
+  // test IsInUse() function  to create automatically temporaries 
+  int iret = 0; 
+
+  double a[6] = {1,2,3,4,5,6};
+  double w[9] = {10,2,3,4,50,6,7,8,90};
+  
+  SMatrix<double,3,3,MatRepSym<double,3> > A(a,a+6); 
+  SMatrix<double,3,3,MatRepSym<double,3> > B;
+//   SMatrix<double,3,3,MatRepSym<double,3> > C; 
+
+  B = Transpose(A);
+  A = Transpose(A);
+  iret |= compare( A==B,true);
+  
+  SMatrix<double,3 > W(w,w+9); 
+  SMatrix<double,3 > Y = W.Inverse(iret);
+  SMatrix<double,3 > Z; 
+  Z = W * Y; 
+  Y = W *  Y; 
+  iret |= compare( Z==Y,true);
+
+  Z = (A+W)*(B+Y); 
+  Y = (A+W)*(B+Y); 
+
+  iret |= compare( Z==Y,true);
+
+
+
+
+  return iret; 
+}
+
+
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
@@ -869,6 +903,7 @@ int main() {
   TEST(13);
   TEST(14);
   TEST(15);
+  TEST(16);
 
 
 
