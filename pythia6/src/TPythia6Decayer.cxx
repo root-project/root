@@ -1,24 +1,26 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.8 2006/01/24 05:59:27 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.1 2006/04/23 20:40:23 brun Exp $
 // Author: Christian Holm Christensen   22/04/06
-// Much of this code has been lifted from AliROOT. 
+// Much of this code has been lifted from AliROOT.
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            
-// TPythia6Decayer                                                                   
-//
-// This implements the TVirtualMCDecayer interface.  The TPythia6
-// singleton object is used to decay particles.  Note, that since this
-// class modifies common blocks (global variables) it is defined as a
-// singleton.   
-//
-//////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// TPythia6Decayer                                                           //
+//                                                                           //
+// This implements the TVirtualMCDecayer interface.  The TPythia6            //
+// singleton object is used to decay particles.  Note, that since this       //
+// class modifies common blocks (global variables) it is defined as a        //
+// singleton.                                                                //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
 #include "TPythia6.h"
 #include "TPythia6Decayer.h"
 #include "TPDGCode.h"
@@ -29,7 +31,7 @@ ClassImp(TPythia6Decayer)
 
 TPythia6Decayer* TPythia6Decayer::fgInstance = 0;
 
-//____________________________________________________________________
+//______________________________________________________________________________
 TPythia6Decayer* TPythia6Decayer::Instance()
 {
    // Get the singleton object.
@@ -37,45 +39,45 @@ TPythia6Decayer* TPythia6Decayer::Instance()
    return fgInstance;
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 TPythia6Decayer::TPythia6Decayer()
    : fBraPart(501)
 {
-   // Constructor 
+   // Constructor
    fBraPart.Reset(1);
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::Init()
 {
-   // Initialize the decayer 
+   // Initialize the decayer
    static bool init = false;
    if (init) return;
    init = true;
    ForceDecay();
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::Decay(Int_t idpart, TLorentzVector* p)
 {
-   // Decay a particle of type IDPART (PDG code) and momentum P. 
+   // Decay a particle of type IDPART (PDG code) and momentum P.
    if (!p) return;
    TPythia6::Instance()->Py1ent(0, idpart, p->Energy(), p->Theta(), p->Phi());
    TPythia6::Instance()->GetPrimaries();
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 Int_t TPythia6Decayer::ImportParticles(TClonesArray *particles)
 {
    // Get the decay products into the passed PARTICLES TClonesArray of
-   // TParticles 
+   // TParticles
    return TPythia6::Instance()->ImportParticles(particles);
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::SetForceDecay(Int_t type)
 {
-   // Force a particular decay type 
+   // Force a particular decay type
    if (type > kMaxDecay) {
       Warning("SetForceDecay", "Invalid decay mode: %d", type);
       return;
@@ -83,7 +85,7 @@ void TPythia6Decayer::SetForceDecay(Int_t type)
    fDecay = Decay_t(type);
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::ForceDecay()
 {
    // Force a particle decay mode
@@ -260,121 +262,119 @@ void TPythia6Decayer::ForceDecay()
     }
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 Float_t TPythia6Decayer::GetPartialBranchingRatio(Int_t ipart)
 {
    // Get the partial branching ratio for a particle of type IPART (a
-   // PDG code). 
+   // PDG code).
    Int_t kc = TPythia6::Instance()->Pycomp(TMath::Abs(ipart));
    // return TPythia6::Instance()->GetBRAT(kc);
    return fBraPart[kc];
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 Float_t TPythia6Decayer::GetLifetime(Int_t kf)
 {
-   // Get the life-time of a particle of type KF (a PDG code). 
+   // Get the life-time of a particle of type KF (a PDG code).
    Int_t kc=TPythia6::Instance()->Pycomp(TMath::Abs(kf));
    return TPythia6::Instance()->GetPMAS(kc,4) * 3.3333e-12;
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::ReadDecayTable()
 {
    // Read in particle data from an ASCII file.   The file name must
    // previously have been set using the member function
-   // SetDecayTableFile. 
+   // SetDecayTableFile.
    if (fDecayTableFile.IsNull()) {
       Warning("ReadDecayTable", "No file set");
       return;
    }
    Int_t lun = 15;
-   TPythia6::Instance()->OpenFortranFile(lun, 
+   TPythia6::Instance()->OpenFortranFile(lun,
 					 const_cast<char*>(fDecayTableFile.Data()));
    TPythia6::Instance()->Pyupda(3,lun);
    TPythia6::Instance()->CloseFortranFile(lun);
 }
 
 // ===================================================================
-// BEGIN COMMENT 
+// BEGIN COMMENT
 //
 // It would be better if the particle and decay information could be
-// read from the current TDatabasePDG instance. 
-// 
+// read from the current TDatabasePDG instance.
+//
 // However, it seems to me that some information is missing.  In
-// particular 
-// 
-//   - The broadning cut-off, 
+// particular
+//
+//   - The broadning cut-off,
 //   - Resonance width
-//   - Color charge 
+//   - Color charge
 //   - MWID (?)
 //
 // Further more, it's not clear to me at least, what all the
-// parameters Pythia needs are. 
+// parameters Pythia needs are.
 //
 // Code like the below could be used to make a temporary file that
 // Pythia could then read in.   Ofcourse, one could also manipulate
-// the data structures directly, but that's propably more dangerous. 
+// the data structures directly, but that's propably more dangerous.
 //
 #if 0
-void
-PrintPDG(TParticlePDG* pdg)
+void PrintPDG(TParticlePDG* pdg)
 {
   TParticlePDG* anti = pdg->AntiParticle();
   const char* antiName = (anti ? anti->GetName() : "");
   Int_t color = 0;
   switch (TMath::Abs(pdg->PdgCode())) {
-  case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: // Quarks 
+  case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: // Quarks
     color = 1; break;
   case 21: // Gluon
     color = 2; break;
-  case 1103: 
-  case 2101: case 2103: case 2203: 
-  case 3101: case 3103: case 3201: case 3203: case 3303: 
+  case 1103:
+  case 2101: case 2103: case 2203:
+  case 3101: case 3103: case 3201: case 3203: case 3303:
   case 4101: case 4103: case 4201: case 4203: case 4301: case 4303: case 4403:
   case 5101: case 5103: case 5201: case 5203: case 5301: case 5303: case 5401:
   case 5403: case 5503:
-    // Quark combinations 
+    // Quark combinations
     color = -1; break;
-  case 1000001: case 1000002: case 1000003: case 1000004: case 1000005: 
-  case 1000006: // super symmetric partners to quars 
+  case 1000001: case 1000002: case 1000003: case 1000004: case 1000005:
+  case 1000006: // super symmetric partners to quars
     color = 1; break;
-  case 1000021: // ~g 
+  case 1000021: // ~g
     color = 2; break;
-  case 2000001: case 2000002: case 2000003: case 2000004: case 2000005: 
-  case 2000006: // R hadrons 
+  case 2000001: case 2000002: case 2000003: case 2000004: case 2000005:
+  case 2000006: // R hadrons
     color = 1; break;
   case 3000331: case 3100021: case 3200111: case 3100113: case 3200113:
   case 3300113: case 3400113:
     // Technicolor
     color = 2; break;
-  case 4000001: case 4000002: 
+  case 4000001: case 4000002:
     color = 1; break;
-  case 9900443: case 9900441: case 9910441: case 9900553: case 9900551: 
+  case 9900443: case 9900441: case 9910441: case 9900553: case 9900551:
   case 9910551:
     color = 2; break;
   }
-  std::cout << std::right 
+  std::cout << std::right
 	    << " " << std::setw(9) << pdg->PdgCode()
 	    << "  " << std::left   << std::setw(16) << pdg->GetName()
-	    << "  " << std::setw(16) << antiName 
+	    << "  " << std::setw(16) << antiName
 	    << std::right
 	    << std::setw(3) << Int_t(pdg->Charge())
 	    << std::setw(3) << color
-	    << std::setw(3) << (anti ? 1 : 0) 
+	    << std::setw(3) << (anti ? 1 : 0)
 	    << std::fixed   << std::setprecision(5)
 	    << std::setw(12) << pdg->Mass()
 	    << std::setw(12) << pdg->Width()
 	    << std::setw(12) << 0 // Broad
-	    << std::scientific 
-	    << " " << std::setw(13) << pdg->Lifetime() 
+	    << std::scientific
+	    << " " << std::setw(13) << pdg->Lifetime()
 	    << std::setw(3) << 0 // MWID
 	    << std::setw(3) << pdg->Stable()
 	    << std::endl;
 }
 
-void
-MakeDecayList()
+void MakeDecayList()
 {
   TDatabasePDG* pdgDB = TDatabasePDG::Instance();
   pdgDB->ReadPDGTable();
@@ -384,7 +384,7 @@ MakeDecayList()
   while ((pdg = static_cast<TParticlePDG*>(nextPDG()))) {
     // std::cout << "Processing " << pdg->GetName() << std::endl;
     PrintPDG(pdg);
-    
+
     TObjArray*     decays = pdg->DecayList();
     TDecayChannel* decay  = 0;
     TIter          nextDecay(decays);
@@ -394,95 +394,95 @@ MakeDecayList()
   }
 }
 #endif
-// END COMMENT 
+// END COMMENT
 // ===================================================================
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::WriteDecayTable()
 {
    // write particle data to an ASCII file.   The file name must
    // previously have been set using the member function
-   // SetDecayTableFile. 
-   // 
+   // SetDecayTableFile.
+   //
    // Users can use this function to make an initial decay list file,
    // which then can be edited by hand, and re-loaded into the decayer
-   // using ReadDecayTable. 
-   // 
-   // The file syntax is 
-   // 
+   // using ReadDecayTable.
+   //
+   // The file syntax is
+   //
    //    particle_list : partcle_data
    //                  | particle_list particle_data
    //                  ;
    //    particle_data : particle_info
    //                  | particle_info '\n' decay_list
    //                  ;
-   //    particle_info : See below 
+   //    particle_info : See below
    //                  ;
    //    decay_list    : decay_entry
    //                  | decay_list decay_entry
    //                  ;
-   //    decay_entry   : See below 
-   // 
+   //    decay_entry   : See below
+   //
    // The particle_info consists of 13 fields:
-   // 
-   //     PDG code             int 
+   //
+   //     PDG code             int
    //     Name                 string
    //     Anti-particle name   string  if there's no anti-particle,
    //                                  then this field must be the
-   //                                  empty string 
+   //                                  empty string
    //     Electic charge       int     in units of |e|/3
    //     Color charge         int     in units of quark color charges
    //     Have anti-particle   int     1 of there's an anti-particle
    //                                  to this particle, or 0
-   //                                  otherwise 
+   //                                  otherwise
    //     Mass                 float   in units of GeV
-   //     Resonance width      float   
-   //     Max broadning        float   
-   //     Lifetime             float 
+   //     Resonance width      float
+   //     Max broadning        float
+   //     Lifetime             float
    //     MWID                 int     ??? (some sort of flag)
-   //     Decay                int     1 if it decays. 0 otherwise 
-   //                       
-   // The format to write these entries in are 
-   // 
+   //     Decay                int     1 if it decays. 0 otherwise
+   //
+   // The format to write these entries in are
+   //
    //    " %9  %-16s  %-16s%3d%3d%3d%12.5f%12.5f%12.5f%13.gf%3d%d\n"
-   // 
-   // The decay_entry consists of 8 fields: 
-   // 
-   //     On/Off               int     1 for on, -1 for off 
-   //     Matrix element type  int     
-   //     Branching ratio      float   
+   //
+   // The decay_entry consists of 8 fields:
+   //
+   //     On/Off               int     1 for on, -1 for off
+   //     Matrix element type  int
+   //     Branching ratio      float
    //     Product 1            int     PDG code of decay product 1
    //     Product 2            int     PDG code of decay product 2
    //     Product 3            int     PDG code of decay product 3
    //     Product 4            int     PDG code of decay product 4
    //     Product 5            int     PDG code of decay product 5
-   // 
-   // The format for these lines are 
-   // 
+   //
+   // The format for these lines are
+   //
    //    "          %5d%5d%12.5f%10d%10d%10d%10d%10d\n"
-   // 
+   //
    if (fDecayTableFile.IsNull()) {
       Warning("ReadDecayTable", "No file set");
       return;
    }
    Int_t lun = 15;
-   TPythia6::Instance()->OpenFortranFile(lun, 
+   TPythia6::Instance()->OpenFortranFile(lun,
 					 const_cast<char*>(fDecayTableFile.Data()));
    TPythia6::Instance()->Pyupda(1,lun);
    TPythia6::Instance()->CloseFortranFile(lun);
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 Int_t TPythia6Decayer::CountProducts(Int_t channel, Int_t particle)
 {
    // Count number of decay products
    Int_t np = 0;
-   for (Int_t i = 1; i <= 5; i++) 
+   for (Int_t i = 1; i <= 5; i++)
       if (TMath::Abs(TPythia6::Instance()->GetKFDP(channel,i)) == particle) np++;
    return np;
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::ForceHadronicD()
 {
    // Force golden D decay modes
@@ -519,12 +519,12 @@ void TPythia6Decayer::ForceHadronicD()
       pyth->SetMDCY(kc,1,1);
       Int_t ifirst = pyth->GetMDCY(kc,2);
       Int_t ilast  = ifirst + pyth->GetMDCY(kc,3)-1;
-      
+
       for (channel = ifirst; channel <= ilast; channel++) {
 	 if ((pyth->GetKFDP(channel,1) == decayP1[ihadron][0] &&
 	      pyth->GetKFDP(channel,2) == decayP1[ihadron][1] &&
 	      pyth->GetKFDP(channel,3) == decayP1[ihadron][2] &&
-	      pyth->GetKFDP(channel,4) == 0) || 
+	      pyth->GetKFDP(channel,4) == 0) ||
 	     (pyth->GetKFDP(channel,1) == decayP2[ihadron][0] &&
 	      pyth->GetKFDP(channel,2) == decayP2[ihadron][1] &&
 	      pyth->GetKFDP(channel,3) == decayP2[ihadron][2] &&
@@ -538,13 +538,13 @@ void TPythia6Decayer::ForceHadronicD()
    } // hadrons
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t product, Int_t mult)
 {
    //
-   //  Force decay of particle into products with multiplicity mult 
+   //  Force decay of particle into products with multiplicity mult
    TPythia6* pyth = TPythia6::Instance();
-   
+
    Int_t kc =  pyth->Pycomp(particle);
    pyth->SetMDCY(kc,1,1);
 
@@ -564,14 +564,14 @@ void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t product, Int_t mu
    }
 }
 
-//____________________________________________________________________
-void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products, 
+//______________________________________________________________________________
+void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products,
 				    Int_t* mult, Int_t npart)
 {
    //
    //  Force decay of particle into products with multiplicity mult
    TPythia6* pyth = TPythia6::Instance();
-   
+
    Int_t kc     = pyth->Pycomp(particle);
    pyth->SetMDCY(kc,1,1);
    Int_t ifirst = pyth->GetMDCY(kc,2);
@@ -583,7 +583,7 @@ void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products,
       Int_t nprod = 0;
       for (Int_t i = 0; i < npart; i++)
 	 nprod += (CountProducts(channel, products[i]) >= mult[i]);
-      if (nprod) 
+      if (nprod)
 	 pyth->SetMDME(channel,1,1);
       else {
 	 pyth->SetMDME(channel,1,0);
@@ -592,7 +592,7 @@ void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products,
    }
 }
 
-//____________________________________________________________________
+//______________________________________________________________________________
 void TPythia6Decayer::ForceOmega()
 {
    // Force Omega -> Lambda K- Decay
@@ -607,7 +607,7 @@ void TPythia6Decayer::ForceOmega()
 	  pyth->GetKFDP(channel,2) == kKMinus  &&
 	  pyth->GetKFDP(channel,3) == 0)
 	 pyth->SetMDME(channel,1,1);
-      else 
+      else
 	 pyth->SetMDME(channel,1,0);
       // selected channel ?
    } // decay channels
