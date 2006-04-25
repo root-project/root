@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.140 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.141 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4537,12 +4537,12 @@ Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
       return kError;
    }
    //If skippedFiles was provided but did not point to a TList the program would crash.
-   if (skippedFiles && &skippedFiles) {
-      if (skippedFiles->Class() != TList::Class())
-      Error("UploadDataSet",
-            "Provided skippedFiles argument does not point to a TList object.");
-      return kError;
-   }
+   if (skippedFiles && &skippedFiles) 
+      if (skippedFiles->Class() != TList::Class()) {
+         Error("UploadDataSet",
+               "Provided skippedFiles argument does not point to a TList object.");
+         return kError;
+      }
 
 
    TSocket *master;
