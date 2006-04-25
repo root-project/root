@@ -4,11 +4,12 @@ bool drawSingleGraph = false;
 int topX=10;
 int topY=50;
 
-void matrixOperations_do(std::string type = ""); 
 
-void matrixOperations(std::string type = "") { 
+void matrixOperations_do(std::string type = "", bool clhep=false); 
 
-  matrixOperations_do(type); 
+void matrixOperations(std::string type = "",bool clhep=false) { 
+
+  matrixOperations_do(type,clhep); 
 //   matrixOperations_do("slc3_ia32_gcc323"); 
 //   matrixOperations_do("win32_vc71"); 
 
@@ -96,10 +97,10 @@ TGraphErrors * hd = h1;
     TLegend * tleg = new TLegend(0.78, 0.25, 0.97 ,0.45);
     tleg->AddEntry(h1, "SMatrix", "p");
     tleg->AddEntry(h2, "TMatrix", "p");
-    if (h3) tleg->AddEntry(h3, "SMatrix_sym", "p");
-    if (h4) tleg->AddEntry(h4, "TMatrix_sym", "p");
-    if (h5) tleg->AddEntry(h5, "HepMatrix", "l");
-    if (h6) tleg->AddEntry(h6, "HepMatrix_sym", "l");
+    if (h3 != 0) tleg->AddEntry(h3, "SMatrix_sym", "p");
+    if (h4 != 0) tleg->AddEntry(h4, "TMatrix_sym", "p");
+    if (h5 != 0) tleg->AddEntry(h5, "HepMatrix", "l");
+    if (h6 != 0) tleg->AddEntry(h6, "HepMatrix_sym", "l");
     tleg->Draw();
 
 
@@ -139,7 +140,7 @@ void GetData(std::string s,double * x, double * y, double * ey) {
 
 
 
-void matrixOperations_do(std::string type ) { 
+void matrixOperations_do(std::string type, bool clhep) { 
 
 
    systemName = type;
@@ -163,46 +164,63 @@ void matrixOperations_do(std::string type ) {
    double cmat[N]; // = {  2., 3., 4., 5,8,10,300,800,5000 };  
    double ymat[N]; // = {  2., 3., 4., 5,8,10,300,800,5000 };  
    double wmat[N]; // = {  2., 3., 4., 5,8,10,300,800,5000 };  
+   double zmat[N]; // = {  2., 3., 4., 5,8,10,300,800,5000 };  
    double es[N];
    double et[N];
    double ec[N];
    double ey[N];
    double ew[N];
+   double ez[N];
 
 
    c1->cd(1);
    
    GetData("SMatrix_dot",x,smat,es);
    GetData("TMatrix_dot",x,tmat,et);
-   //GetData("HepMatrix_dot",x,cmat,ec);
+   if (clhep) GetData("HepMatrix_dot",x,cmat,ec); 
    TGraphErrors * g10 = new TGraphErrors(nb,x, smat,0, es);
    TGraphErrors * g20 = new TGraphErrors(nb,x, tmat,0, et);
-   //TGraphErrors * g30 = new TGraphErrors(nb,x, cmat,0, ec);
-   DrawData("#vec{v} #upoint #vec{w}",g10,g20);
+   TGraphErrors * g30 = 0; 
+   TGraphErrors * g40 = 0; 
+   TGraphErrors * g50 = 0; 
+   if (clhep)   g50 = new TGraphErrors(nb,x, cmat,0, ec);
+   DrawData("#vec{v} #upoint #vec{w}",g10,g20,g30,g40,g50);
 
    c1->cd(2);
    GetData("SMatrix_M*V+",x,smat,es);
    GetData("TMatrix_M*V+",x,tmat,et);
    GetData("SMatrix_sym_M*V+",x,ymat,ey);
    GetData("TMatrix_sym_M*V+",x,wmat,ew);
-   //GetData("HepMatrix_M*V+",x,cmat,ec);
+   if (clhep) GetData("HepMatrix_M*V+",x,cmat,ec);
+   if (clhep) GetData("HepMatrix_sym_M*V+",x,zmat,ez);
    TGraphErrors * g11 = new TGraphErrors(nb,x, smat,0,es);
    TGraphErrors * g21 = new TGraphErrors(nb,x, tmat,0,et);
    TGraphErrors * g31 = new TGraphErrors(nb,x, ymat,0,ey);
    TGraphErrors * g41 = new TGraphErrors(nb,x, wmat,0,ew);
-   DrawData("M #upoint #vec{v} + #vec{w}",g11,g21,g31,g41);
+   TGraphErrors * g51 = 0; 
+   TGraphErrors * g61 = 0; 
+   if (clhep)     g51 = new TGraphErrors(nb,x, cmat,0, ec);
+   if (clhep)     g61 = new TGraphErrors(nb,x, zmat,0, ez);
+   DrawData("M #upoint #vec{v} + #vec{w}",g11,g21,g31,g41,g51,g61);
 
    c1->cd(3);
    GetData("SMatrix_prod",x,smat,es);
    GetData("TMatrix_prod",x,tmat,et);
    GetData("SMatrix_sym_prod",x,ymat,ey);
    GetData("TMatrix_sym_prod",x,wmat,ew);
-   //GetData("HepMatrix_M*V+",x,cmat,ec);
+   if (clhep) { 
+     GetData("HepMatrix_M*V+",x,cmat,ec);
+     GetData("HepMatrix_sym_M*V+",x,zmat,ez);
+   }
    TGraphErrors * g12 = new TGraphErrors(nb,x, smat,0,es);
    TGraphErrors * g22 = new TGraphErrors(nb,x, tmat,0,et);
    TGraphErrors * g32 = new TGraphErrors(nb,x, ymat,0,ey);
    TGraphErrors * g42 = new TGraphErrors(nb,x, wmat,0,ew);
-   DrawData("v^{T} * M * v",g11,g21,g31,g41);
+   TGraphErrors * g52 = 0; 
+   TGraphErrors * g62 = 0; 
+   if (clhep)     g52 = new TGraphErrors(nb,x, cmat,0, ec);
+   if (clhep)     g62 = new TGraphErrors(nb,x, zmat,0, ez);
+   DrawData("v^{T} * M * v",g11,g21,g31,g41,g52,g62);
 
 
    c1->cd(4);
@@ -210,36 +228,57 @@ void matrixOperations_do(std::string type ) {
    GetData("TMatrix_M*M",x,tmat,et);
    GetData("SMatrix_sym_M*M",x,ymat,ey);
    GetData("TMatrix_sym_M*M",x,wmat,ew);
-   //GetData("HepMatrix_M*M",x,cmat,ec);
+   if (clhep) { 
+     GetData("HepMatrix_M*M",x,cmat,ec);
+     GetData("HepMatrix_sym_M*M",x,zmat,ez);
+   }
    TGraphErrors * g14 = new TGraphErrors(nb,x, smat,0,es);
    TGraphErrors * g24 = new TGraphErrors(nb,x, tmat,0,et);
    TGraphErrors * g34 = new TGraphErrors(nb,x, ymat,0,ey);
    TGraphErrors * g44 = new TGraphErrors(nb,x, wmat,0,ew);
-   DrawData("A * B + C",g14,g24,g34,g44);
+   TGraphErrors * g54 = 0; 
+   TGraphErrors * g64 = 0; 
+   if (clhep)     g54 = new TGraphErrors(nb,x, cmat,0, ec);
+   if (clhep)     g64 = new TGraphErrors(nb,x, zmat,0, ez);
+   DrawData("A * B + C",g14,g24,g34,g44,g54,g64);
 
    c1->cd(5);
    GetData("SMatrix_At*M*A",x,smat,es);
    GetData("TMatrix_At*M*A",x,tmat,et);
    GetData("SMatrix_sym_At*M*A",x,ymat,ey);
    GetData("TMatrix_sym_At*M*A",x,wmat,ew);
-   //GetData("HepMatrix_At*M*A",x,cmat,ec);
+   if (clhep) { 
+     GetData("HepMatrix_At*M*A",x,cmat,ec);
+     GetData("HepMatrix_sym_At*M*A",x,zmat,ez);
+   }
    TGraphErrors * g15 = new TGraphErrors(nb,x, smat,0,es);
    TGraphErrors * g25 = new TGraphErrors(nb,x, tmat,0,et);
    TGraphErrors * g35 = new TGraphErrors(nb,x, ymat,0,ey);
    TGraphErrors * g45 = new TGraphErrors(nb,x, wmat,0,ew);
-   DrawData("A * M * A^{T}",g15,g25,g35,g45);
+   TGraphErrors * g55 = 0; 
+   TGraphErrors * g65 = 0; 
+   if (clhep)     g55 = new TGraphErrors(nb,x, cmat,0, ec);
+   if (clhep)     g65 = new TGraphErrors(nb,x, zmat,0, ez);
+   DrawData("A * M * A^{T}",g15,g25,g35,g45,g55,g65);
 
    c1->cd(6);
    GetData("SMatrix_inv",x,smat,es);
    GetData("TMatrix_inv",x,tmat,et);
    GetData("SMatrix_sym_inv",x,ymat,ey);
    GetData("TMatrix_sym_inv",x,wmat,ew);
-   //GetData("HepMatrix_inv",x,cmat,ec);
+   if (clhep) { 
+     GetData("HepMatrix_inv",x,cmat,ec);
+     GetData("HepMatrix_sym_inv",x,zmat,ez);
+   }
    TGraphErrors * g16 = new TGraphErrors(nb,x, smat,0,es);
    TGraphErrors * g26 = new TGraphErrors(nb,x, tmat,0,et);
    TGraphErrors * g36 = new TGraphErrors(nb,x, ymat,0,ey);
    TGraphErrors * g46 = new TGraphErrors(nb,x, wmat,0,ew);
-   DrawData("A^{-1}",g16,g26,g36,g46);
+   TGraphErrors * g56 = 0; 
+   TGraphErrors * g66 = 0; 
+   if (clhep)     g56 = new TGraphErrors(nb,x, cmat,0, ec);
+   if (clhep)     g66 = new TGraphErrors(nb,x, zmat,0, ez);
+   DrawData("A^{-1}",g16,g26,g36,g46,g56,g66);
    
 
    // TCanvas::Update() draws the frame, after which one can change it

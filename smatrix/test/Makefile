@@ -11,8 +11,15 @@ include ../../test/Makefile.arch
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),macosx) 
-CXXFLAGS+= -g -funroll-loops
-#CXXFLAGS+= -g 
+#unroll loop better on gcc > 4
+CXXFLAGS+= -g  -funroll-loops
+endif
+
+# if have clhep
+#CLHEPBASE=/Users/moneta/mathlibs/CLHEP-1.9.2.2
+ifneq ($(CLHEPBASE),)
+CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
+EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
 endif
 
 ifneq ($(PLATFORM),win32) 

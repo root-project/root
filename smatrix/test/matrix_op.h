@@ -126,6 +126,7 @@ void testGMV(const M & mat, const V & v1, const V & v2, double & time, V & resul
     }
 }
 
+
 // general matrix matrix op 
 template<class A, class B, class C> 
 void testMM(const A & a, const B & b, const C & c, double & time, C & result) {  
@@ -208,7 +209,8 @@ void testATBA_S(const A & a, const B & b, double & time, C & result) {
       //result = Transpose(a) * b * a;  
       //result = a * b * Transpose(a);  
       //result = a * b * a;  
-      btmp(0,0) = gV[l]; 
+      btmp(0,0) = gV[l];
+      //      A at = Transpose(a);
       C tmp = btmp * Transpose(a);
       result = a * tmp; 
     }
@@ -218,6 +220,7 @@ void testATBA_S(const A & a, const B & b, double & time, C & result) {
 template<class A, class B, class C> 
 void testATBA_S2(const A & a, const B & b, double & time, C & result) {  
   B btmp = b;
+
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) 	
     {
@@ -432,56 +435,131 @@ void testMT_T(const A & a, double & time, C & result) {
 //smatrix
 template<class V> 
 double testDot_C(const V & v1, const V & v2, double & time) {  
+  V vtmp =  v2;
   test::Timer t(time,"dot ");
   double result=0; 
   for (int l = 0; l < 10*NLOOP; l++) 	
     {
-      result += dot(v1,v2);  
+      vtmp[0] = gV[l];
+      result = dot(v1,v2);  
     }
   return result; 
 }
 
 template<class M, class V> 
 double testInnerProd_C(const M & a, const V & v, double & time) {  
+  V vtmp = v; 
   test::Timer t(time,"prod");
   double result=0; 
   for (int l = 0; l < NLOOP; l++) 	
     {
-      V tmp = a*v; 
-      result += dot(v,tmp);
+      vtmp[0] = gV[l];
+      V tmp = a*vtmp; 
+      result = dot(vtmp,tmp);
     }
   return result; 
 }
 
+
+// matrix assignmnent(index starts from 1)
+template<class M> 
+void testMeq_C(const M & m, double & time, M & result) {  
+  M mtmp = m;
+  test::Timer t(time,"M=M ");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      mtmp(1,1) = gV[l];
+      result = mtmp;  
+    }
+}
+
+// matrix sum 
+template<class M> 
+void testMad_C(const M & m1, const M & m2, double & time, M & result) {  
+  M mtmp = m2;
+  test::Timer t(time,"M+M ");;
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      mtmp(1,1) = gV[l]; 
+      result = m1; result += mtmp;  
+    }
+}
+
+
+// matrix * constant
+template<class M> 
+void testMscale_C(const M & m1, double a, double & time, M & result) {  
+  M mtmp = m1;
+  test::Timer t(time,"a*M ");;
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      mtmp(1,1) = gV[l];
+      result = mtmp * a;  
+    }
+}
+
+
+// clhep matrix matrix op (index starts from 1)
+template<class A, class B, class C> 
+void testMM_C(const A & a, const B & b, const C & c, double & time, C & result) {  
+  B btmp = b; 
+  test::Timer t(time,"M*M ");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      btmp(1,1) = gV[l];
+      result = a * btmp + c;
+    }
+}
+
+
 //inversion
 template<class M> 
 void  testInv_C( const M & a,  double & time, M& result){ 
+  M mtmp = a;
   test::Timer t(time,"inv ");
   int ifail = 0; 
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = a.inverse(ifail);  
+      mtmp(1,1) = gV[l]; 
+      result = mtmp.inverse(ifail); 
+      if (ifail) {std::cout <<"error inverting" << mtmp << std::endl; return; } 
     }
 }
 
 // general matrix matrix op
 template<class A, class B, class C> 
 void testATBA_C(const A & a, const B & b, double & time, C & result) {  
+  B btmp = b;
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) 	
     {
+      btmp(1,1) = gV[l];
       //result = a.T() * b * a;  
-      result = a * b * a.T();  
+      result = a * btmp * a.T();  
     }
 }
 
 
 template<class A, class B, class C> 
-void testATBA_C2(const A & a, const B & b, double & time, C & result) {  
+void testATBA_C2(const A & a, const B & b, double & time, C & result) { 
+  B btmp = b; 
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) 	
     {
-      result = b.similarity(a); 
+      btmp(1,1) = gV[l]; 
+      result = btmp.similarity(a); 
+    }
+}
+
+
+template<class A, class C> 
+void testMT_C(const A & a, double & time, C & result) {  
+  A atmp = a;
+  test::Timer t(time,"Transp");
+  for (int l = 0; l < NLOOP; l++) 	
+    {
+      atmp(1,1) = gV[l];
+      result  = atmp.T();
     }
 }
 

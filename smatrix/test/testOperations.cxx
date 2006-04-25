@@ -1,3 +1,4 @@
+#define  ENABLE_TEMPORARIES
 
 #include "Math/SVector.h"
 #include "Math/SMatrix.h"
@@ -356,12 +357,15 @@ int test_tmatrix_op() {
     MnMatrix C1(NDIM1,NDIM1);  testATBA_T(B,C0,t_ama,C1);
     //if (k == 0) C1.Print();
     MnMatrix C2(NDIM1,NDIM1);  testInv_T(C1,t_inv,C2);
+    //if (k == 0) C2.Print();
     MnVector v3(NDIM1);        testVeq(v,t_veq,v3);
     MnVector v4(NDIM1);        testVad_T(v2,v3,t_vad,v4);
     MnVector v5(NDIM1);        testVscale_T(v4,2.0,t_vsc,v5);
     MnMatrix C3(NDIM1,NDIM1);  testMeq(C,t_meq,C3);
     MnMatrix C4(NDIM1,NDIM1);  testMad_T(C2,C3,t_mad,C4);
+    //if (k == 0) C4.Print();
     MnMatrix C5(NDIM1,NDIM1);  testMscale_T(C4,0.5,t_msc,C5);
+    //if (k == 0) C5.Print();
     MnMatrix C6(NDIM1,NDIM1);  testMT_T(C5,t_tra,C6);
 
 #ifdef DEBUG
@@ -508,8 +512,10 @@ int test_hepmatrix_op() {
   std::cout << "  HepMatrix operations test  "   <<  first << " x " << second  << std::endl;
   std::cout << "************************************************\n";
   
-  double t_veq, t_meq, t_vad, t_mad, t_dot, t_mv, t_gmv, t_mm, t_prd, t_inv, t_vsc, t_msc, t_ama = 0;
+  double t_veq, t_meq, t_vad, t_mad, t_dot, t_mv, t_gmv, t_mm, t_prd, t_inv, t_vsc, t_msc, t_ama, t_tra = 0;
   
+
+  double totTime1, totTime2; 
    
   double r1,r2;
   int npass = NITER; 
@@ -524,6 +530,8 @@ int test_hepmatrix_op() {
     MnMatrix   D(NDIM2,NDIM2); 
     MnVector   v(NDIM1);
     MnVector   p(NDIM2);
+
+    TStopwatch w; 
 
     { 
       // fill matrices with random data
@@ -548,30 +556,46 @@ int test_hepmatrix_op() {
     }
 #endif
 	
+    w.Start(); 
     
     MnVector v1(NDIM1);        testMV(A,v,t_mv,v1);
     MnVector v2(NDIM1);        testGMV(A,v,v1,t_gmv,v2);
-    MnMatrix C0(NDIM1,NDIM1);  testMM(A,B,C,t_mm,C0);
+    MnMatrix C0(NDIM1,NDIM1);  testMM_C(A,B,C,t_mm,C0);
     MnMatrix C1(NDIM1,NDIM1);  testATBA_C(B,C0,t_ama,C1);
     //std::cout << " C1 = " << C1 << std::endl;
     MnMatrix C2(NDIM1,NDIM1);  testInv_C(C1,t_inv,C2);
+    //std::cout << " C2 = " << C2 << std::endl;
     MnVector v3(NDIM1);        testVeq(v,t_veq,v3);
     MnVector v4(NDIM1);        testVad(v2,v3,t_vad,v4);
     MnVector v5(NDIM1);        testVscale(v4,2.0,t_vsc,v5);
-    MnMatrix C3(NDIM1,NDIM1);  testMeq(C,t_meq,C3);
-    MnMatrix C4(NDIM1,NDIM1);  testMad(C2,C3,t_mad,C4);
-    MnMatrix C5(NDIM1,NDIM1);  testMscale(C4,0.5,t_msc,C5);
+    MnMatrix C3(NDIM1,NDIM1);  testMeq_C(C,t_meq,C3);
+    MnMatrix C4(NDIM1,NDIM1);  testMad_C(C2,C3,t_mad,C4);
+    //std::cout << " C4 = " << C4 << std::endl;
+    MnMatrix C5(NDIM1,NDIM1);  testMscale_C(C4,0.5,t_msc,C5);
+    //std::cout << " C5 = " << C5 << std::endl;
+    MnMatrix C6(NDIM1,NDIM1);  testMT_C(C5,t_tra,C6);
 
 
     r1 = testDot_C(v3,v5,t_dot);
-    r2 = testInnerProd_C(C5,v5,t_prd);
+    r2 = testInnerProd_C(C6,v5,t_prd);
+
+#ifdef DEBUG
+    if (k == 0) { 
+      std::cout << " C6 = " << C6 << std::endl;
+      std::cout << " v5 = " << v5 << std::endl;
+    }
+#endif
 
     //    MnMatrix C2b(NDIM1,NDIM1); testInv_T2(C1,t_inv2,C2b);
 
+    w.Stop();
+    totTime1 = w.RealTime();
+    totTime2 = w.CpuTime();
   
   }
   //  tr.dump();
 
+  std::cout << "Total Time = " << totTime1 << "  (s)  -  cpu " <<  totTime2 << "  (s) " << std::endl; 
   std::cout << " r1 = " << r1 << " r2 = " << r2 << std::endl; 
 
   return 0;
@@ -601,6 +625,7 @@ int test_hepmatrix_sym_op() {
 
   double t_meq, t_mad, t_mv, t_gmv, t_mm, t_prd, t_inv, t_msc, t_ama = 0;
   
+  double totTime1, totTime2; 
   
    
   double r1;
@@ -614,6 +639,8 @@ int test_hepmatrix_sym_op() {
     MnMatrix C(NDIM1,NDIM1);
     MnVector v(NDIM1);
 #define N NDIM1
+
+    TStopwatch w; 
 
     {       
       // fill matrices with random data
@@ -631,15 +658,16 @@ int test_hepmatrix_sym_op() {
     }
 #endif
     
+    w.Start(); 
 	        
     MnVector   v1(N);  testMV(A,v,t_mv,v1);
     MnVector   v2(N);  testGMV(A,v,v1,t_gmv,v2);
-    MnMatrix   C0(N,N);  testMM(A,B,C,t_mm,C0);
+    MnMatrix   C0(N,N);  testMM_C(A,B,C,t_mm,C0);
     MnSymMatrix  C1(N);  testATBA_C2(C0,B,t_ama,C1);
     MnSymMatrix  C2(N);  testInv_C(A,t_inv,C2);
-    MnSymMatrix  C3(N);  testMeq(C2,t_meq,C3);
-    MnSymMatrix  C4(N);  testMad(A,C3,t_mad,C4);
-    MnSymMatrix  C5(N);  testMscale(C4,0.5,t_msc,C5);
+    MnSymMatrix  C3(N);  testMeq_C(C2,t_meq,C3);
+    MnSymMatrix  C4(N);  testMad_C(A,C3,t_mad,C4);
+    MnSymMatrix  C5(N);  testMscale_C(C4,0.5,t_msc,C5);
 
     r1 = testInnerProd_C(C5,v2,t_prd);
 
@@ -648,10 +676,15 @@ int test_hepmatrix_sym_op() {
     if (k == 0) { 
     }
 #endif
+
+    w.Stop();
+    totTime1 = w.RealTime();
+    totTime2 = w.CpuTime();
   
   }
   //tr.dump();
 
+  std::cout << "Total Time = " << totTime1 << "  (s)  -  cpu " <<  totTime2 << "  (s) " << std::endl; 
   std::cout << " r1 = " << r1 << std::endl; 
 
   return 0;
@@ -667,7 +700,7 @@ int test_hepmatrix_sym_op() {
    MATRIX_SIZE=N;  \
    TEST_TYPE=0; test_smatrix_op<N,N>(); \
    TEST_TYPE=1; test_tmatrix_op<N,N>();     \
-   TEST_TYPE=2; test_hepmatrix_op<N,N>();
+   TEST_TYPE=2; test_hepmatrix_op<N,N>();   \
    TEST_TYPE=3; test_smatrix_sym_op<N,N>(); \
    TEST_TYPE=4; test_tmatrix_sym_op<N,N>();     \
    TEST_TYPE=5; test_hepmatrix_sym_op<N,N>();
@@ -745,9 +778,18 @@ int main(int argc , char *argv[] ) {
 
   typeNames[0] = "SMatrix";
   typeNames[1] = "TMatrix";
-  //typeNames[2] = "HepMatrix";
+#if !defined(HAVE_CLHEP) && defined (TEST_SYM)
   typeNames[2] = "SMatrix_sym";
   typeNames[3] = "TMatrix_sym";
+#elif defined(HAVE_CLHEP) && defined (TEST_SYM)
+  typeNames[2] = "HepMatrix";
+  typeNames[3] = "SMatrix_sym";
+  typeNames[4] = "TMatrix_sym";
+  typeNames[5] = "HepMatrix_sym";
+#elif defined(HAVE_CLHEP) && !defined (TEST_SYM)
+  typeNames[2] = "HepMatrix";
+#endif
+
 #endif
 
 #ifndef TEST_ALL_MATRIX_SIZES
