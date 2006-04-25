@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name: v5-10-00-patches $:$Id: TRefTable.cxx,v 1.7 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.7.2.1 2006/04/21 11:51:46 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -340,7 +340,9 @@ void TRefTable::ReadBuffer(TBuffer &b)
       TFile *file = dynamic_cast<TFile*>(b.GetParent());
       TProcessID *fileProcessID = TProcessID::GetProcessID(0);
       if (file && file->GetNProcessIDs() > 0)
-         fileProcessID = (TProcessID *) file->GetListOfProcessIDs()->UncheckedAt(file->GetNProcessIDs() - 1);
+         // take the last loaded PID
+         fileProcessID = (TProcessID *) file->GetListOfProcessIDs()->Last();
+
       startIid = GetInternalIdxForPID(fileProcessID);
       if (startIid == -1) {
          fProcessGUIDs.push_back(fileProcessID->GetTitle());
