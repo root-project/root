@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.146 2006/04/10 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.147 2006/04/11 11:21:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -828,6 +828,13 @@ void TGeoManager::Browse(TBrowser *b)
    TQObject::Connect("TRootBrowser", "Checked(TObject*,Bool_t)", 
                      "TGeoManager", this, "SetVisibility(TObject*,Bool_t)");
 }
+
+//_____________________________________________________________________________
+void TGeoManager::Edit(Option_t *option) {
+// Append a pad for this geometry.
+   AppendPad("");
+   GetGeomPainter()->EditGeometry(option);
+}   
 
 //_____________________________________________________________________________
 void TGeoManager::SetVisibility(TObject *obj, Bool_t vis)
@@ -3265,7 +3272,7 @@ TGeoNode *TGeoManager::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe
             nextovlp = mup->IsOverlapping();
             if (offset) {
                mother = mup;
-               if (nextovlp) nmany -= imother-up-1;
+               if (nextovlp) nmany -= imother-up;
                up = imother-1;
             } else {    
                if (ovlp) nmany--;
@@ -3573,7 +3580,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             nextovlp = mup->IsOverlapping();
             if (offset) {
                mother = mup;
-               if (nextovlp) nmany -= imother-up-1;
+               if (nextovlp) nmany -= imother-up;
                up = imother-1;
             } else {    
                if (ovlp) nmany--;
@@ -3676,8 +3683,8 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
          if (voxels && voxels->IsSafeVoxel(point, i, fStep)) continue;
          current->MasterToLocal(point, lpoint);
          current->MasterToLocalVect(dir, ldir);
+         if (current->IsOverlapping() && current->GetVolume()->Contains(lpoint)) continue;
          snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
-         
          if (snext<fStep) {
             indnext = current->GetVolume()->GetNextNodeIndex();
             if (compmatrix) {
@@ -3711,6 +3718,7 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
          current->cd();
          current->MasterToLocal(point, lpoint);
          current->MasterToLocalVect(dir, ldir);
+         if (current->IsOverlapping() && current->GetVolume()->Contains(lpoint)) continue;
          snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
          if (snext<fStep) {
             indnext = current->GetVolume()->GetNextNodeIndex();

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.52 2006/04/18 16:10:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.53 2006/04/19 09:11:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1959,6 +1959,20 @@ TGeoMatrix& TGeoHMatrix::Inverse() const
    }
    return h;
 }   
+
+//_____________________________________________________________________________
+Double_t TGeoHMatrix::Determinant() const
+{
+// computes determinant of the rotation matrix
+   Double_t 
+   det = fRotationMatrix[0]*fRotationMatrix[4]*fRotationMatrix[8] + 
+         fRotationMatrix[3]*fRotationMatrix[7]*fRotationMatrix[1] +
+         fRotationMatrix[6]*fRotationMatrix[1]*fRotationMatrix[5] - 
+         fRotationMatrix[2]*fRotationMatrix[4]*fRotationMatrix[6] -
+         fRotationMatrix[5]*fRotationMatrix[7]*fRotationMatrix[0] - 
+         fRotationMatrix[7]*fRotationMatrix[1]*fRotationMatrix[3];
+   return det;
+}
 
 //_____________________________________________________________________________
 void TGeoHMatrix::Multiply(const TGeoMatrix *right)

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.12 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.13 2006/04/03 16:19:31 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -264,6 +264,7 @@ TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
    TGeoNode *node = 0;
    Int_t ind = (Int_t)((point[2]-fStart)/fStep);
    if ((ind<0) || (ind>=fNdivisions)) return node; 
+   node = GetNodeOffset(ind);
    cd(ind);
    return node;
 

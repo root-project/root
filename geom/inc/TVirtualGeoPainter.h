@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.32 2006/03/24 15:11:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.33 2006/04/11 11:21:44 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual void       DrawPanel() = 0;
    virtual void       DrawPath(const char *path) = 0;
    virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       EditGeometry(Option_t *option="") = 0;
    virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {;}
    virtual void       ExecuteShapeEvent(TGeoShape *shape, Int_t event, Int_t px, Int_t py) = 0;
    virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py) = 0;

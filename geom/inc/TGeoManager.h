@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.76 2006/03/24 15:11:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.77 2006/03/27 09:28:10 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -178,6 +178,7 @@ public:
    void                   SetPdgName(Int_t pdg, const char *name);
    Bool_t                 IsFolder() const { return kTRUE; }
    //--- visualization settings
+   virtual void           Edit(Option_t *option="");  // *MENU*
    void                   BombTranslation(const Double_t *tr, Double_t *bombtr);
    void                   UnbombTranslation(const Double_t *tr, Double_t *bombtr);
    void                   ClearAttributes(); // *MENU*

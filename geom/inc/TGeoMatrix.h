@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.23 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.24 2006/02/23 13:23:07 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -382,6 +382,7 @@ public :
    TGeoHMatrix& operator*=(const TGeoMatrix &matrix) {Multiply(&matrix);return(*this);}
 
    void                 Clear(Option_t *option ="");
+   Double_t             Determinant() const;
    virtual TGeoMatrix&  Inverse() const;
    void                 Multiply(const TGeoMatrix *right);
    void                 MultiplyLeft(const TGeoMatrix *left);

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.82 2006/04/03 16:19:32 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.83 2006/04/11 11:21:45 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,7 +15,10 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TPad.h"
+#include "TCanvas.h"
 #include "TH2F.h"
+#include "TPluginManager.h"
+#include "TVirtualPadEditor.h"
 
 #include "TPolyMarker3D.h"
 #include "TVirtualGL.h"
@@ -321,7 +324,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
          gPad->SetSelected(fGeoManager);
          fVolInfo = fGeoManager->GetName();
          box = (TGeoBBox*)volume->GetShape();
-         fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         memcpy(fCheckedBox, box->GetOrigin(), 3*sizeof(Double_t));
          fCheckedBox[3] = box->GetDX();
          fCheckedBox[4] = box->GetDY();
          fCheckedBox[5] = box->GetDZ();
@@ -331,7 +334,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
       gPad->SetSelected(volume);
       fVolInfo = volume->GetName();
       box = (TGeoBBox*)volume->GetShape();
-      fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+      memcpy(fCheckedBox, box->GetOrigin(), 3*sizeof(Double_t));
       fCheckedBox[3] = box->GetDX();
       fCheckedBox[4] = box->GetDY();
       fCheckedBox[5] = box->GetDZ();
@@ -348,7 +351,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
          fVolInfo = vol->GetName();
          gPad->SetSelected(vol);
          box = (TGeoBBox*)vol->GetShape();
-         fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+         memcpy(fCheckedBox, box->GetOrigin(), 3*sizeof(Double_t));
          fCheckedBox[3] = box->GetDX();
          fCheckedBox[4] = box->GetDY();
          fCheckedBox[5] = box->GetDZ();
@@ -364,7 +367,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
             fVolInfo = vol->GetName();
             gPad->SetSelected(vol);
             box = (TGeoBBox*)vol->GetShape();
-            fGeoManager->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+            memcpy(fCheckedBox, box->GetOrigin(), 3*sizeof(Double_t));
             fCheckedBox[3] = box->GetDX();
             fCheckedBox[4] = box->GetDY();
             fCheckedBox[5] = box->GetDZ();
@@ -375,6 +378,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py
    }      
    // Do we need to check a branch only?
    if (volume->IsVisBranch()) {
+      if (!fGeoManager->IsClosed()) return big;
       fGeoManager->PushPath();
       fGeoManager->cd(fVisBranch.Data());
       while (fGeoManager->GetLevel()) {
@@ -541,11 +545,10 @@ Int_t TGeoPainter::CountVisibleNodes()
 {
 // Count total number of visible nodes.
    Int_t maxnodes = fGeoManager->GetMaxVisNodes(); 
-   Int_t vislevel;
+   Int_t vislevel = fGeoManager->GetVisLevel();
 //   TGeoVolume *top = fGeoManager->GetTopVolume();
    TGeoVolume *top = fTopVolume;
-   if (maxnodes <= 0) {
-      vislevel = fGeoManager->GetVisLevel();
+   if (maxnodes <= 0  && top) {
       fNVisNodes = CountNodes(top, vislevel);
       SetVisLevel(vislevel);
       return fNVisNodes;
@@ -553,6 +556,10 @@ Int_t TGeoPainter::CountVisibleNodes()
    //if (the total number of nodes of the top volume is less than maxnodes
    // we can visualize everything.
    //recompute the best visibility level
+   if (!top) {
+      SetVisLevel(vislevel);
+      return 0;
+   }   
    fNVisNodes = -1;
    Bool_t again = kFALSE;
    for (Int_t level = 1;level<20;level++) {
@@ -575,6 +582,22 @@ Int_t TGeoPainter::CountVisibleNodes()
    }
    SetVisLevel(vislevel);
    return fNVisNodes;
+}
+
+//______________________________________________________________________________
+void TGeoPainter::EditGeometry(Option_t *option)
+{
+// Start the geometry editor.
+   if (!gPad) return;
+   if (!strlen(option)) gPad->GetCanvas()->GetCanvasImp()->ShowEditor();
+   else TVirtualPadEditor::ShowEditor();
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TGeoManagerEditor"))) {
+      if (h->LoadPlugin() == -1) return;
+      h->ExecPlugin(0);
+   }
+   gPad->SetSelected(fGeoManager);
+   gPad->GetCanvas()->Selected(gPad,fGeoManager,kButton1Down);   
 }
 
 //______________________________________________________________________________
@@ -1575,8 +1598,9 @@ void TGeoPainter::SetNsegments(Int_t nseg)
 //______________________________________________________________________________
 void TGeoPainter::SetVisLevel(Int_t level) {
 // Set default level down to which visualization is performed
-   if (level==fVisLevel && fLastVolume==fGeoManager->GetTopVolume()) return;
+   if (level==fVisLevel && fLastVolume==fTopVolume) return;
    fVisLevel=level;
+   if (!fTopVolume) return;
    if (fVisLock) {
       ClearVisibleVolumes();
       fVisLock = kFALSE;

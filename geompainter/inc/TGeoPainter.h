@@ -98,6 +98,7 @@ public:
    virtual void       DrawPath(const char *path);
    virtual void       DrawShape(TGeoShape *shape, Option_t *option="");
    virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="");
+   virtual void       EditGeometry(Option_t *option="");
    virtual void       EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end);
    virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py);
    virtual void       ExecuteShapeEvent(TGeoShape *shape, Int_t event, Int_t px, Int_t py);
