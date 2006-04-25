@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.241 2006/04/19 08:22:26 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.242 2006/04/19 13:28:38 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2180,32 +2180,32 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
           << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
-          << "   return ::ROOT::GenerateInitInstance((const ::" << cl.Fullname()
+          << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
           << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
           << "//_______________________________________"
           << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) <<"template <> ";
       (*dictSrcOut) << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
-          << "   return ::ROOT::GenerateInitInstance((const ::" << cl.Fullname()
+          << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
           << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
           << "//_______________________________________"
           << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl
-          << "   fgIsA = ::ROOT::GenerateInitInstance((const ::" << cl.Fullname()
+          << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
           << "*)0x0)->GetClass();" << std::endl
           << "}" << std::endl << std::endl
 
           << "//_______________________________________"
           << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
-      (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl
-          << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstance((const ::"
-          << cl.Fullname() << "*)0x0)->GetClass();" << std::endl
-          << "   return fgIsA;" << std::endl
-          << "}" << std::endl << std::endl;
+      (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
+      (*dictSrcOut) << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+      (*dictSrcOut) << cl.Fullname() << "*)0x0)->GetClass();" << std::endl
+                    << "   return fgIsA;" << std::endl
+                    << "}" << std::endl << std::endl;
    }
 
    while (enclSpaceNesting) {
@@ -2258,19 +2258,17 @@ void WriteClassInit(G__ClassInfo &cl)
 
 #if 0
    fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
-   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *::ROOT::GenerateInitInstance< %s >(const %s*)\n   {\n",
+   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *::ROOT::GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
            cl.Fullname(), cl.Fullname() );
    fprintf(fp, "#else\n");
-   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *GenerateInitInstance< %s >(const %s*)\n   {\n",
+   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
            classname.c_str(), classname.c_str() );
    fprintf(fp, "#endif\n");
 #endif
-   if (stl)
-      (*dictSrcOut) << "   static // The GenerateInitInstance for STL are not unique and should not be externally accessible"
-          << std::endl;
 
-   (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
-       << "   {" << std::endl;
+
+   (*dictSrcOut) << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl
+                    << "   {" << std::endl;
 
    if (NeedShadowClass(cl)) {
       (*dictSrcOut) << "      // Make sure the shadow class has the right sizeof" << std::endl;
@@ -2390,18 +2388,29 @@ void WriteClassInit(G__ClassInfo &cl)
           << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
    }
    (*dictSrcOut) << "      return &instance;"  << std::endl
-       << "   }" << std::endl
-       << "   // Static variable to force the class initialization" << std::endl
-   // must be one long line otherwise R__UseDummy does not work
-       << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance((const "
-       << csymbol.c_str() << "*)0x0); R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
+                 << "   }" << std::endl;
 
+   if (!stl) {
+      // The GenerateInitInstance for STL are not unique and should not be externally accessible
+      (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
+                    << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }" 
+                    << std::endl;
+   }
+    
+   (*dictSrcOut) << "   // Static variable to force the class initialization" << std::endl;
+   // must be one long line otherwise R__UseDummy does not work
+
+
+   (*dictSrcOut) 
+      << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const "
+      << csymbol.c_str() << "*)0x0); R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
+ 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       (*dictSrcOut) <<  std::endl << "   // Dictionary for non-ClassDef classes" << std::endl
-          << "   static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
-          << "      ::ROOT::GenerateInitInstance((const " << csymbol.c_str()
-          << "*)0x0)->GetClass();" << std::endl
-          << "   }" << std::endl << std::endl;
+                    << "   static void " << mappedname.c_str() << "_Dictionary() {" << std::endl;
+      (*dictSrcOut) << "      ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str();
+      (*dictSrcOut) << "*)0x0)->GetClass();" << std::endl
+                    << "   }" << std::endl << std::endl;
    }
 
    (*dictSrcOut) << "} // end of namespace ROOT" << std::endl << std::endl;
@@ -3263,7 +3272,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       (*dictSrcOut) << "      TClass *R__cl = " << csymbol.c_str() << "::IsA();" << std::endl;
 #endif
    } else {
-      (*dictSrcOut) << "      TClass *R__cl  = ::ROOT::GenerateInitInstance((const " << csymbol.c_str() << "*)0x0)->GetClass();" << std::endl;
+      (*dictSrcOut) << "      TClass *R__cl  = ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str() << "*)0x0)->GetClass();" << std::endl;
    }
    (*dictSrcOut) << "      Int_t R__ncp = strlen(R__parent);" << std::endl
        << "      if (R__ncp || R__cl || R__insp.IsA()) { }" << std::endl;
