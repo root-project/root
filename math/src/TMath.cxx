@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.112 2006/02/03 14:56:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.113 2006/02/03 21:55:38 pcanal Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -140,7 +140,7 @@ Long_t TMath::NextPrime(Long_t x)
    // Return next prime number after x, unless x is a prime in which case
    // x is returned.
 
-   if (x < 2)
+   if (x <= 2)
       return 2;
    if (x == 3)
       return 3;
