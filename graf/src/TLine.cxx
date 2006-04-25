@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.13 2005/11/21 08:49:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.15 2006/04/25 09:15:29 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -357,7 +357,7 @@ Bool_t TLine::IsVertical()
 void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
 {
    // Force the line to be drawn horizontally.
-   // Makes fY2 equal to fX1. The line length is kept.
+   // Makes fY2 equal to fY1. The line length is kept.
    // TArrow and TGaxis also get this function by inheritance.
 
    SetBit(kHorizontal, set);
