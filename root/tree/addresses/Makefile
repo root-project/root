@@ -119,9 +119,9 @@ suetest.log: configtest.root
 suetest: suetest.log
 	$(TestDiff)
 
-Jan.log: JansEvent_C.$(DllSuf)
+Jantest.log: JansEvent_C.$(DllSuf)
 
-Jantest: Jan.log
+Jantest: Jantest.log
 	$(TestDiff)
 
 deepnest: deepnest.clog

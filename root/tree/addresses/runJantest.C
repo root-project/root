@@ -1,4 +1,4 @@
-void runJan() {
+void runJantest() {
   gSystem->Load("libPhysics");
   gROOT->LoadMacro( "JansEvent.C+" );
   testJan();
