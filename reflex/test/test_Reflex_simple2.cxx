@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.14 2006/04/20 17:11:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.15 2006/04/26 09:16:04 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -943,7 +943,6 @@ void ReflexSimple2Test::testSubTypes() {
   }
 
   CPPUNIT_ASSERT( 5 < tdefs  && tdefs < 20 );
-  std::cout << tdefs << std::endl;
 
 }
 
