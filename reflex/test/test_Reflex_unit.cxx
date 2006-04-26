@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.2 2005/11/24 13:29:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.3 2006/01/06 08:34:39 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -54,6 +54,7 @@ class ReflexUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( function_member );
   CPPUNIT_TEST( type_template );
   CPPUNIT_TEST( member );
+  CPPUNIT_TEST( tools );
   CPPUNIT_TEST_SUITE_END();
 public:
   void setUp () {}
@@ -77,6 +78,7 @@ public:
   void function_member();
   void type_template();
   void member();
+  void tools();
   void tearDown() {}
 };
 
@@ -520,6 +522,46 @@ void ReflexUnitTest::member() {
 
   Member m2 = Member();
   CPPUNIT_ASSERT( ! m2 );
+
+}
+
+
+void ReflexUnitTest::tools() {
+
+  std::string t0 = "NS1::NS2::Type";
+  CPPUNIT_ASSERT_EQUAL(size_t(10), Tools::GetBasePosition(t0));
+  CPPUNIT_ASSERT_EQUAL(std::string("NS1::NS2"), Tools::GetScopeName(t0));
+  CPPUNIT_ASSERT_EQUAL(std::string("Type"), Tools::GetBaseName(t0));
+
+  std::string t1 = "std::vector<int>";
+  CPPUNIT_ASSERT_EQUAL(size_t(5), Tools::GetBasePosition(t1));
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(t1));
+  CPPUNIT_ASSERT_EQUAL(std::string("vector<int>"), Tools::GetBaseName(t1));
+
+  std::string t2 = "std::vector<int>::iterator";
+  CPPUNIT_ASSERT_EQUAL(size_t(18), Tools::GetBasePosition(t2));
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<int>"), Tools::GetScopeName(t2));
+  CPPUNIT_ASSERT_EQUAL(std::string("iterator"), Tools::GetBaseName(t2));
+
+  std::string t3 = "std::vector<A::B::C>";
+  CPPUNIT_ASSERT_EQUAL(size_t(5), Tools::GetBasePosition(t3));
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(t3));
+  CPPUNIT_ASSERT_EQUAL(std::string("vector<A::B::C>"), Tools::GetBaseName(t3));
+
+  std::string t4 = "std::vector<A::B::C>::iterator";
+  CPPUNIT_ASSERT_EQUAL(size_t(22), Tools::GetBasePosition(t4));
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<A::B::C>"), Tools::GetScopeName(t4));
+  CPPUNIT_ASSERT_EQUAL(std::string("iterator"), Tools::GetBaseName(t4));
+
+  std::string t5 = "std::vector<void (*) (int)>";
+  CPPUNIT_ASSERT_EQUAL(size_t(5), Tools::GetBasePosition(t5));
+  CPPUNIT_ASSERT_EQUAL(std::string("std"), Tools::GetScopeName(t5));
+  CPPUNIT_ASSERT_EQUAL(std::string("vector<void (*) (int)>"), Tools::GetBaseName(t5));
+
+  std::string t6 = "std::vector<void (*) (int)>::iterator";
+  CPPUNIT_ASSERT_EQUAL(size_t(29), Tools::GetBasePosition(t6));
+  CPPUNIT_ASSERT_EQUAL(std::string("std::vector<void (*) (int)>"), Tools::GetScopeName(t6));
+  CPPUNIT_ASSERT_EQUAL(std::string("iterator"), Tools::GetBaseName(t6));
 
 }
 

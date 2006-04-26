@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.13 2006/04/18 07:31:26 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.14 2006/04/20 17:11:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -170,6 +170,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testCppSelectNoAutoselect );
   CPPUNIT_TEST( testTypedefInClass );
   CPPUNIT_TEST( testConstMembers );
+  CPPUNIT_TEST( testSubTypes );
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST_SUITE_END();
 
@@ -193,8 +194,9 @@ public:
   void testCppSelectNoAutoselect();
   void testTypedefInClass();
   void testConstMembers();
-  void unloadLibrary();
+  void testSubTypes();
 
+  void unloadLibrary();
   void tearDown() {}
 
 }; // class ReflexSimple2Test
@@ -913,6 +915,36 @@ void ReflexSimple2Test::testConstMembers() {
   Member m3 = t.DataMemberByName("m_ci");
   CPPUNIT_ASSERT(m3);
   CPPUNIT_ASSERT(m3.TypeOf().IsConst());
+}
+
+
+void ReflexSimple2Test::testSubTypes() {
+
+  Type t = Type::ByName("testclasses::WithTypedef");
+  CPPUNIT_ASSERT(t);
+  CPPUNIT_ASSERT(t.IsClass());
+
+  CPPUNIT_ASSERT_EQUAL(size_t(1),t.SubTypeSize());
+  
+  Type st = t.SubTypeAt(0);
+  CPPUNIT_ASSERT(st.IsTypedef());
+  CPPUNIT_ASSERT_EQUAL(std::string("MyInt"),st.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("testclasses::WithTypedef::MyInt"), st.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("int"),st.ToType().Name());
+
+  t = Type::ByName("std::vector<int>");
+  CPPUNIT_ASSERT(t);
+  CPPUNIT_ASSERT(t.IsClass());
+
+  int tdefs = 0;
+  CPPUNIT_ASSERT( t.SubTypeSize() > 0 );
+  for ( Reverse_Type_Iterator ti = t.SubType_RBegin(); ti != t.SubType_REnd(); ++ti) {
+    if (ti->IsTypedef()) ++tdefs;
+  }
+
+  CPPUNIT_ASSERT( 5 < tdefs  && tdefs < 20 );
+  std::cout << tdefs << std::endl;
+
 }
 
 

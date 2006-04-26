@@ -27,6 +27,11 @@ namespace testclasses {
   template < class T > class WithTypedefMemberT {
     T m_t;
   };
+
+
+  class WithTypedef {
+    typedef int MyInt;
+  };
   
   class UnnamedTypes {
     
