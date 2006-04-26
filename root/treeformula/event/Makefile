@@ -1,3 +1,5 @@
+local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(DllSuf) *.root $(ALL_LIBRARIES)
+
 CLEAN_TARGETS += $(local_clean)
 TEST_TARGETS += bigeventTest
 
@@ -25,6 +27,4 @@ else
 endif
 
 
-
-local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(DllSuf) *.root $(ALL_LIBRARIES)
 

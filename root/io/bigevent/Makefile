@@ -1,3 +1,5 @@
+local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(ObjSuf) $(ALL_LIBRARIES)
+
 CLEAN_TARGETS += $(local_clean)
 TEST_TARGETS += bigeventTest
 
@@ -19,5 +21,4 @@ bigeventTest: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO)./Event 10 1 1 1 > Event.write.log
 	$(CMDECHO)./Event 10 1 1 20 > Event.read.log
 
-local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(ObjSuf) $(ALL_LIBRARIES)
 
