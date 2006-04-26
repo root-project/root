@@ -185,7 +185,10 @@ class genDictionary(object) :
     if sel :
       self.selector = sel  # remember the selector
       for c in self.classes :
-        if 'incomplete' in c : continue 
+        if 'incomplete' in c : continue
+        # this check fixes a bug in gccxml 0.6.0_patch3 which sometimes generates incomplete definitions 
+        # of classes (without members). Every version after 0.6.0_patch3 is tested and fixes this bug
+        if not c.has_key('members') : continue
         match = self.selector.matchclass( self.genTypeName(c['id']), self.files[c['file']]['name'])
         if match[0] and not match[1] :
           c['extra'] = match[0]
