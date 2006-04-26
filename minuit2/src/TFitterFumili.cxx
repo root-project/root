@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.3 2005/11/29 14:43:31 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -53,13 +53,23 @@ void TFitterFumili::CreateMinimizer(EMinimizerType ) {
   if (!minimizer) delete minimizer;
   SetMinimizer( new FumiliMinimizer() );
 
-  //SetStrategy(2);
+  SetStrategy(2);
   // Fumili cannot deal with tolerance too smalls (10-3 corrsponds to 10-7 in FumiliBuilder)
   SetMinimumTolerance(0.001); 
 
 #ifdef DEBUG
   SetPrintLevel(3);
 #endif
+}
+
+
+Double_t TFitterFumili::Chisquare(Int_t npar, Double_t *params) const {
+  // do chisquare calculations in case of likelihood fits 
+  const TFumiliBinLikelihoodFCN * fcn = dynamic_cast<const TFumiliBinLikelihoodFCN *> ( GetMinuitFCN() ); 
+  std::vector<double> p(npar);
+  for (int i = 0; i < npar; ++i) 
+    p[i] = params[i];
+  return fcn->Chi2(p);
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliMinimizer.cpp,v 1.7.2.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliMinimizer.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -40,6 +40,8 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
 
   unsigned int npar = st.VariableParameters();
   if(maxfcn == 0) maxfcn = 200 + 100*npar + 5*npar*npar;
+  //FUMILI needs much less function calls
+  maxfcn = int(0.1*maxfcn); 
   
   MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
   

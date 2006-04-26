@@ -106,11 +106,12 @@ TFitterMinuit::~TFitterMinuit() {
 
 Double_t TFitterMinuit::Chisquare(Int_t npar, Double_t *params) const {
   // do chisquare calculations in case of likelihood fits 
-  TChi2FCN chi2( *this ); 
+  const TBinLikelihoodFCN * fcn = dynamic_cast<const TBinLikelihoodFCN *> (GetMinuitFCN() ); 
+  if (fcn == 0) return 0;  
   std::vector<double> p(npar); 
   for (int i = 0; i < npar; ++i) 
     p[i] = params[i];
-  return chi2(p);
+  return fcn->Chi2(p);
 }
 
 void TFitterMinuit::Clear(Option_t*) {

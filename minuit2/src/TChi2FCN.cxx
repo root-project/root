@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FCN.cxx,v 1.2 2005/10/29 09:31:47 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FCN.cxx,v 1.3 2005/11/05 15:17:35 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -60,9 +60,12 @@ double TChi2FCN::operator()(const std::vector<double>& par) const {
   //  std::cout << "number of params " << par.size() << " in TF1 " << fFunc->GetNpar() << "  " << fFunc->GetNumberFreeParameters() << std::endl;
   
   unsigned int n = fData->Size();
+  //  std::cout << "Fit data size = " << n << std::endl;
   double chi2 = 0;
+  int nRejected = 0; 
   for (unsigned int i = 0; i < n; ++ i) { 
     const std::vector<double> & x = fData->Coords(i); 
+    fFunc->RejectPoint(false); 
     fFunc->InitArgs( &x.front(), &par.front() ); 
     double y = fData->Value(i);
     double invError = fData->InvError(i);
@@ -75,11 +78,18 @@ double TChi2FCN::operator()(const std::vector<double>& par) const {
     else   
       fval = fFunc->EvalPar( &x.front(), &par.front() ); 
 
-    double tmp = ( y -fval )* invError;
-	  	  
-    chi2 += tmp*tmp;
+    if (!fFunc->RejectedPoint() ) { 
+      // calculat chi2 if point is not rejected
+      double tmp = ( y -fval )* invError;  	  
+      chi2 += tmp*tmp;
+    }
+    else 
+      nRejected++; 
+    
   }
 
+  // reset the number of fitting data points
+  if (nRejected != 0)  fFunc->SetNumberFitPoints(n-nRejected);
 
   return chi2;
 }

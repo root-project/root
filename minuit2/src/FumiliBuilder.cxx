@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cpp,v 1.15.2.4 2005/11/29 11:08:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -28,12 +28,19 @@
 
 #include "Minuit2/MnPrint.h" 
 
+//#define DEBUG 1
+#ifdef DEBUG
+#ifndef WARNINGMSG
+#define WARNINGMSG
+#endif
+#endif
+
+
 namespace ROOT {
 
    namespace Minuit2 {
 
 
-//#define DEBUG 1
 
 
 double inner_product(const LAVector&, const LAVector&);
@@ -86,7 +93,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
     // second time check for validity of function Minimum 
     if (ipass > 0) { 
       if(!min.IsValid()) {
-	std::cout<<"FunctionMinimum is invalid."<<std::endl;
+#ifdef WARNINGMSG
+	std::cout<<"FumiliBuilder: FunctionMinimum is invalid."<<std::endl;
+#endif
 	return min;
       }
     }
@@ -113,7 +122,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
       // break the loop if edm is NOT getting smaller 
       if (ipass > 0 && edm >= edmprev) { 
+#ifdef WARNINGMSG
 	std::cout << "FumiliBuilder: Exit iterations, no improvements after Hesse. edm is  " << edm << " previous " << edmprev << std::endl;
+#endif
 	break; 
       } 
       if (edm > edmval) { 
@@ -251,6 +262,18 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
     MinimumParameters p(s0.Vec() + step,  fcn( s0.Vec() + step ) );
 
+    // check that taking the full step does not do crazy things 
+    // in that case do a line search (use a cut if 10)  
+    if ( p.Fval() > 10*s0.Fval()  ) {
+      MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
+
+      if(fabs(pp.y() - s0.Fval()) < prec.Eps()) {
+	//std::cout<<"FumiliBuilder: no improvement"<<std::endl;
+	break; //no improvement
+      }
+      p =  MinimumParameters(s0.Vec() + pp.x()*step, pp.y() );
+    }
+
 #ifdef DEBUG
     std::cout << "Before Gradient " << fcn.NumOfCalls() << std::endl; 
 #endif
@@ -268,6 +291,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
     MinimumError e = ErrorUpdator().Update(s0, p, gc, lambda);
 
+
     edm = Estimator().Estimate(g, s0.Error());
 
     
@@ -281,8 +305,10 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 #endif
 
     if(edm < 0.) {
+#ifdef WARNINGMSG
       std::cout<<"FumiliBuilder: matrix not pos.def."<<std::endl;
       std::cout<<"edm < 0"<<std::endl;
+#endif
       MnPosDef psdf;
       s0 = psdf(s0, prec);
       edm = Estimator().Estimate(g, s0.Error());
@@ -325,19 +351,25 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
 
   if(fcn.NumOfCalls() >= maxfcn) {
+#ifdef WARNINGMSG
     std::cout<<"FumiliBuilder: call limit exceeded."<<std::endl;
+#endif
     return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit());
   }
 
   if(edm > edmval) {
     if(edm < fabs(prec.Eps2()*result.back().Fval())) {
+#ifdef WARNINGMSG
       std::cout<<"FumiliBuilder: machine accuracy limits further improvement."<<std::endl;
+#endif
       return FunctionMinimum(seed, result, fcn.Up());
     } else if(edm < 10.*edmval) {
       return FunctionMinimum(seed, result, fcn.Up());
     } else {
+#ifdef WARNINGMSG
       std::cout<<"FumiliBuilder: finishes without convergence."<<std::endl;
       std::cout<<"FumiliBuilder: edm= "<<edm<<" requested: "<<edmval<<std::endl;
+#endif
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm());
     }
   }

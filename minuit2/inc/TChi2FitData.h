@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.h,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.h,v 1.2 2005/11/05 15:17:34 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -16,6 +16,7 @@
 // class TObject; 
 class TVirtualFitter;
 class TH1;
+class TF1;
 class TGraph;
 class TGraph2D;
 class TMultiGraph;
@@ -61,13 +62,13 @@ public:
 
 protected:
 
-  virtual void GetFitData(const TH1 * hfit, const TVirtualFitter * hfitter); 
+  virtual void GetFitData(const TH1 * hfit, const TF1 * func, const TVirtualFitter * hfitter); 
 
-  void GetFitData(const TGraph * graph, const TVirtualFitter * hfitter); 
+  void GetFitData(const TGraph * graph, const TF1 * func, const TVirtualFitter * hfitter); 
 
-  void GetFitData(const TGraph2D * graph, const TVirtualFitter * hfitter); 
+  void GetFitData(const TGraph2D * graph, const TF1 * func, const TVirtualFitter * hfitter); 
 
-  void GetFitData(const TMultiGraph * graph, const TVirtualFitter * hfitter); 
+  void GetFitData(const TMultiGraph * graph, const TF1 * func, const TVirtualFitter * hfitter); 
 
   void SetDataPoint(  const CoordData & x, double y, double error );
   

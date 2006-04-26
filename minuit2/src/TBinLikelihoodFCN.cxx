@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.2 2005/11/05 15:17:35 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.3 2006/04/21 09:31:45 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -9,6 +9,7 @@
 
 #include "TBinLikelihoodFCN.h"
 #include "TChi2FitData.h"
+#include "TChi2FCN.h"
 #include "FitterUtil.h"
 
 #include <cmath>
@@ -65,7 +66,9 @@ double TBinLikelihoodFCN::operator()(const std::vector<double>& par) const {
   
   unsigned int n = fData->Size();
   double loglike = 0;
+  int nRejected = 0; 
   for (unsigned int i = 0; i < n; ++ i) { 
+    fFunc->RejectPoint(false); 
     const std::vector<double> & x = fData->Coords(i); 
     double y = fData->Value(i);
     //std::cout << x[0] << "  " << y << "  " << 1./invError << " params " << par[0] << std::endl;
@@ -77,6 +80,11 @@ double TBinLikelihoodFCN::operator()(const std::vector<double>& par) const {
     else   
       fval = fFunc->EvalPar( &x.front(), &par.front() ); 
 
+    if (fFunc->RejectedPoint() ) { 
+      nRejected++; 
+      continue; 
+    }
+
     double logtmp;
     // protections against negative argument to the log 
     // smooth linear extrapolation below pml_A
@@ -86,6 +94,14 @@ double TBinLikelihoodFCN::operator()(const std::vector<double>& par) const {
     loglike +=  fval - y*logtmp;  
   }
 
+  // reset the number of fitting data points
+  if (nRejected != 0)  fFunc->SetNumberFitPoints(n-nRejected);
+
   return loglike;
 }
 
+// implement function to evaluate chi2 equivalent
+double TBinLikelihoodFCN::Chi2(const std::vector<double>& par) const {
+  TChi2FCN chi2Fcn(fData,fFunc);
+  return chi2Fcn(par);
+}

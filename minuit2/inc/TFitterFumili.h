@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.hv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.h,v 1.1 2005/10/27 14:11:07 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -34,9 +34,13 @@ public:
 
 public:
 
+  //inherited interface
+  virtual Double_t  Chisquare(Int_t npar, Double_t *params) const;
 
 
   //virtual FunctionMinimum Minimize(  int nfcn = 0, double edmval = 0.1) const;
+
+
   
 
 protected: 

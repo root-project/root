@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.h,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.h,v 1.2 2005/11/29 14:44:59 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -155,6 +155,11 @@ class TFumiliBinLikelihoodFCN : public TFumiliFCN {
      evaluate objective function 
   */
   double operator()(const std::vector<double>&) const; 
+
+  /**
+     evaluate chi2 equivalent on the data set
+  */
+  double Chi2 ( const std::vector<double>&) const; 
 
 protected: 
 

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFitData.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2ExtendedFitData.cxx,v 1.3 2005/11/05 15:17:35 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "TGraph.h"
+#include "TF1.h"
 
 // constructor - create fit data from Histogram content
 
@@ -25,12 +26,15 @@ TChi2ExtendedFitData::TChi2ExtendedFitData(const TVirtualFitter & fitter )  {
 
   fSize = 0;
 
+  TF1 * func = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );  
+  assert( func != 0);
+
   TObject * obj = fitter.GetObjectFit(); 
   
   // case of TGraph
   TGraph * graph = dynamic_cast<TGraph*> ( obj );
   if (graph) { 
-    GetExtendedFitData(graph, &fitter);    
+    GetExtendedFitData(graph, func, &fitter);    
   } 
   else { 
     std::cout << "other fit on different object than TGraf not yet supported- assert" << std::endl;
@@ -40,7 +44,7 @@ TChi2ExtendedFitData::TChi2ExtendedFitData(const TVirtualFitter & fitter )  {
 
 
   // get data for graf with errors 
-void TChi2ExtendedFitData::GetExtendedFitData(const TGraph * gr, const TVirtualFitter * /*hFitter*/ ) {
+void TChi2ExtendedFitData::GetExtendedFitData(const TGraph * gr, const TF1 * func, const TVirtualFitter * /*hFitter*/ ) {
 
   // fit options
   //Foption_t fitOption = hFitter->GetFitOption();
@@ -61,7 +65,8 @@ void TChi2ExtendedFitData::GetExtendedFitData(const TGraph * gr, const TVirtualF
   for (int  i = 0; i < nPoints; ++i) { 
     
     x[0] = gx[i];
-    SetDataPoint( x, gy[i], gr->GetErrorY(i),  gr->GetErrorXlow(i), gr->GetErrorXhigh(i) );
+    if (func->IsInside(&x.front() ) )
+      SetDataPoint( x, gy[i], gr->GetErrorY(i),  gr->GetErrorXlow(i), gr->GetErrorXhigh(i) );
     
   }
 }

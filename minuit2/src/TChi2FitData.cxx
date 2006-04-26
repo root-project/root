@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.2 2005/10/27 17:06:29 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.3 2005/11/05 15:17:35 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -14,8 +14,12 @@
 
 #include "TVirtualFitter.h" 
 
+//#define DEBUG
+#ifdef DEBUG
 #include <iostream>
+#endif
 
+#include "TF1.h"
 #include "TH1.h"
 #include "TGraph.h"
 #include "TGraph2D.h"
@@ -29,43 +33,49 @@ TChi2FitData::TChi2FitData( const TVirtualFitter & fitter, bool skipEmptyBins) :
   fSize(0), fSkipEmptyBins(skipEmptyBins), fIntegral(false)
 {
 
+  TF1 * func = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );  
+  assert( func != 0);
+
   TObject * obj = fitter.GetObjectFit(); 
-  
   // downcast to see type of object
   TH1 * hfit = dynamic_cast<TH1*> ( obj );
   if (hfit) { 
-    GetFitData(hfit, &fitter);    
+    GetFitData(hfit, func, &fitter);    
     return; 
   } 
   // case of TGraph
   TGraph * graph = dynamic_cast<TGraph*> ( obj );
   if (graph) { 
-    GetFitData(graph, &fitter);    
+    GetFitData(graph, func, &fitter);    
     return; 
   } 
   // case of TGraph2D
   TGraph2D * graph2D = dynamic_cast<TGraph2D*> ( obj );
   if (graph2D) { 
-    GetFitData(graph2D, &fitter);    
+    GetFitData(graph2D, func, &fitter);    
     return; 
   } 
   // case of TMultiGraph
   TMultiGraph * multigraph = dynamic_cast<TMultiGraph*> ( obj );
   if (multigraph) { 
-    GetFitData(graph2D, &fitter);    
+    GetFitData(graph2D, func, &fitter);    
     return; 
   } 
   // else 
+#ifdef DEBUG
   std::cout << "other fit type are not yet supported- assert" << std::endl;
+#endif
   assert(hfit != 0); 
 
 }
 
 // get Histogram Data
-void TChi2FitData::GetFitData(const TH1 * hfit, const TVirtualFitter * hFitter) {
+void TChi2FitData::GetFitData(const TH1 * hfit, const TF1 * func, const TVirtualFitter * hFitter) {
 
   assert(hfit != 0); 
   assert(hFitter != 0);
+  assert(func != 0);
+
   //std::cout << "creating Fit Data from histogram " << hfit->GetName() << std::endl; 
 
 //  use TVirtual fitter to get fit range (should have a FitRange class ) 
@@ -86,7 +96,12 @@ void TChi2FitData::GetFitData(const TH1 * hfit, const TVirtualFitter * hFitter) 
    if (fitOption.Integral) fIntegral=true;
 
    int n = (hxlast-hxfirst+1)*(hylast-hyfirst+1)*(hzlast-hzfirst+1); 
-   //std::cout << "total bins  " << hxlast-hxfirst+1 << std::endl; 
+
+#ifdef DEBUG
+   std::cout << "TChi2FitData: ifirst = " << hxfirst << " ilast =  " << hxlast 
+	     << "total bins  " << hxlast-hxfirst+1  
+	     << "skip empty bins "  << fSkipEmptyBins << std::endl; 
+#endif
 
    fInvErrors.reserve(n);
    fValues.reserve(n);
@@ -119,7 +134,7 @@ void TChi2FitData::GetFitData(const TH1 * hfit, const TVirtualFitter * hFitter) 
 	       x[2] = zaxis->GetBinLowEdge(binz);
 	     else
 	       x[2] = zaxis->GetBinCenter(binz);
-	     //if (!func->IsInside(x) ) continue;
+	     if (!func->IsInside(&x.front()) ) continue;
 	     double error =  hfit->GetBinError(binx, biny, binz); 
 	     if (fitOption.W1) error = 1;
 	     SetDataPoint( x,  hfit->GetBinContent(binx, biny, binz), error );
@@ -127,7 +142,7 @@ void TChi2FitData::GetFitData(const TH1 * hfit, const TVirtualFitter * hFitter) 
 	 }
 	 else if (ndim == 2) { 
 	   // for dim == 2
-	   //if (!func->IsInside(x) ) continue;
+	     if (!func->IsInside(&x.front()) ) continue;
 	     double error =  hfit->GetBinError(binx, biny); 
 	     if (fitOption.W1) error = 1;
 	     SetDataPoint( x,  hfit->GetBinContent(binx, biny), error );
@@ -138,7 +153,7 @@ void TChi2FitData::GetFitData(const TH1 * hfit, const TVirtualFitter * hFitter) 
      }
      else if (ndim == 1) { 
        // for 1D 
-       //if (!func->IsInside(x) ) continue;
+       if (!func->IsInside(&x.front()) ) continue;
        double error =  hfit->GetBinError(binx); 
        if (fitOption.W1) error = 1;
        SetDataPoint( x,  hfit->GetBinContent(binx), error );
@@ -158,10 +173,18 @@ void TChi2FitData::GetFitData(const TH1 * hfit, const TVirtualFitter * hFitter) 
      fCoordinates.push_back(x);
    }
 
+#ifdef DEBUG
+   std::cout << "TChi2FitData: Hist FitData size is " << fCoordinates.size() << std::endl;
+#endif
+
 }
 
 
-void TChi2FitData::GetFitData(const TGraph * gr, const TVirtualFitter * hFitter ) {
+void TChi2FitData::GetFitData(const TGraph * gr, const TF1 * func, const TVirtualFitter * hFitter ) {
+
+  assert(gr != 0); 
+  assert(hFitter != 0);
+  assert(func != 0);
 
   // fit options
    Foption_t fitOption = hFitter->GetFitOption();
@@ -176,6 +199,7 @@ void TChi2FitData::GetFitData(const TGraph * gr, const TVirtualFitter * hFitter 
 
      x[0] = gx[i];
      // neglect error in x (it is a different chi2) 
+     if (!func->IsInside(&x.front()) ) continue;
      double errorY = gr->GetErrorY(i); 
      // consider error = 0 as 1 
      if (errorY <= 0) errorY = 1;
@@ -187,7 +211,11 @@ void TChi2FitData::GetFitData(const TGraph * gr, const TVirtualFitter * hFitter 
 
 // fetch graph 2D data for CHI2 fit. 
 // neglect errors in x and y (one use the ExtendedChi2 method)
-void TChi2FitData::GetFitData(const TGraph2D * gr, const TVirtualFitter * hFitter ) {
+void TChi2FitData::GetFitData(const TGraph2D * gr, const TF1 * func, const TVirtualFitter * hFitter ) {
+
+  assert(gr != 0); 
+  assert(hFitter != 0);
+  assert(func != 0);
 
   // fit options
    Foption_t fitOption = hFitter->GetFitOption();
@@ -203,6 +231,7 @@ void TChi2FitData::GetFitData(const TGraph2D * gr, const TVirtualFitter * hFitte
 
      x[0] = gx[i];
      x[1] = gy[i];
+     if (!func->IsInside(&x.front()) ) continue;
      // neglect error in x (it is a different chi2) 
      double error = gr->GetErrorZ(i); 
      // consider error = 0 as 1 
@@ -215,7 +244,12 @@ void TChi2FitData::GetFitData(const TGraph2D * gr, const TVirtualFitter * hFitte
 
 // multigraph
 
-void TChi2FitData::GetFitData(const TMultiGraph * mg, const TVirtualFitter * hFitter ) {
+void TChi2FitData::GetFitData(const TMultiGraph * mg, const TF1 * func, const TVirtualFitter * hFitter ) {
+
+
+  assert(mg != 0); 
+  assert(hFitter != 0);
+  assert(func != 0);
 
   // fit options
    Foption_t fitOption = hFitter->GetFitOption();
@@ -237,6 +271,7 @@ void TChi2FitData::GetFitData(const TMultiGraph * mg, const TVirtualFitter * hFi
 
        x[0] = gx[i];
        // neglect error in x (it is a different chi2) 
+       if (!func->IsInside(&x.front()) ) continue;
        double errorY = gr->GetErrorY(i); 
        // consider error = 0 as 1 
        if (errorY <= 0) errorY = 1;

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.5 2005/11/07 09:41:48 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.6 2005/11/29 14:43:31 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -16,7 +16,12 @@
 #include "TF1.h"
 #include "TVirtualFitter.h"
 
-//#include <iostream>
+
+//#define DEBUG
+
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 #include <cmath>
 
@@ -107,9 +112,12 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
 
   
   // loop on measurements
-  unsigned int nMeasurements = points.Size(); 
+  unsigned int nMeasurements = points.Size();
+  unsigned int nRejected = 0; 
   for (unsigned int i = 0; i < nMeasurements; ++i) {
     
+    fFunc->RejectPoint(false); 
+
     const std::vector<double> & x =  points.Coords(i); 
     fFunc->InitArgs( &x.front(), &fParamCache.front() ); 
 
@@ -118,11 +126,21 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
     if ( fData->UseIntegral()) {
       const std::vector<double> & x2 = fData->Coords(i+1); 
       // need to implement derivatives of integral
-      fval = FitterUtil::EvalIntegral(fFunc,x,x2,fParamCache);     
+      fval = FitterUtil::EvalIntegral(fFunc,x,x2,fParamCache); 
+      if (fFunc->RejectedPoint() ) { 
+	nRejected++; 
+	continue;
+      }
       Calculate_numerical_gradient_of_integral( x, x2, fval); 	
+
     }
     else { 
+
       fval = fFunc->EvalPar(&x.front(), &fParamCache.front() ); 
+      if (fFunc->RejectedPoint() ) { 
+	nRejected++; 
+	continue;
+      }
       Calculate_numerical_gradient( x, fval); 
     }
     
@@ -134,10 +152,27 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
     // calculate i -element contribution to the chi2
     // add contributions to previous one 
 
+
   }
 
+#ifdef DEBUG
+  std::cout << "Calculated Gradient and hessian " << std::endl; 
+  for (unsigned int i = 0; i < npar; ++i) 
+    std::cout << " par " << i << " = " << fParamCache[i] << " grad = " << grad[i] << std::endl;
+  for (unsigned int i = 0; i < npar; ++i) {
+      for (unsigned int j = 0; j < npar; ++j) 
+	std::cout << hess[i*npar+j]; 
+  
+      std::cout << std::endl; 
+  }
+#endif
+
   // set value of Obj function to be used by Minuit
-  SetFCNValue(sum); 
+  SetFCNValue(sum);
+
+  // reset the number of fitting data points
+  if (nRejected != 0)  fFunc->SetNumberFitPoints(nMeasurements-nRejected);
+ 
 	
 }
 
@@ -372,6 +407,12 @@ double TFumiliBinLikelihoodFCN::operator()(const std::vector<double>& par) const
 
   TBinLikelihoodFCN  fcn(fData,fFunc); 
   return fcn(par); 
+}
+
+// implement function to evaluate chi2 equivalent
+double TFumiliBinLikelihoodFCN::Chi2(const std::vector<double>& par) const {
+  TChi2FCN chi2Fcn(fData,fFunc);
+  return chi2Fcn(par);
 }
 
 
