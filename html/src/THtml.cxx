@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.87 2006/04/25 17:25:33 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.88 2006/04/25 18:28:52 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2213,7 +2213,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
                << "window.location.href=s.replace(/%s/ig,escape(document.searchform.t.value));" << endl
                << "return false;}" << endl
                << "</script><form action=\"javascript:onSearch();\" id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\">" << endl
-               << "<input name=\"t\" value=\"Search documentation...\"></input>" << endl
+               << "<input name=\"t\" value=\"Search documentation...\"  onfocus=\"if (document.searchform.t.value=='Search documentation...') document.searchform.t.value='';\"></input>" << endl
                << "<button type=\"submit\">Search</button></form>" << endl;
          }
       }
@@ -2922,6 +2922,9 @@ void THtml::CreateStyleSheet() {
          << "#indxModules a {" << endl
          << "  margin-right: 0.25em;" << endl
          << "  margin-left: 0.25em;" << endl
+         << "}" << endl
+         << "#searchform {" << endl
+         << "  margin-left: 2em;" << endl
          << "}" << endl
          << endl;
    }
