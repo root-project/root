@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.8 2006/03/13 15:49:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Tools.cxx,v 1.9 2006/03/20 09:46:18 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -104,20 +104,26 @@ std::vector<std::string> ROOT::Reflex::Tools::GenTemplateArgVec( const std::stri
 size_t ROOT::Reflex::Tools::GetBasePosition( const std::string & name ) {
 //-------------------------------------------------------------------------------
    // remove the template part of the name <...>
-   int bc = 0;
+   int ab = 0;
+   int rb = 0;
    int i = 0;
-   unsigned int lp = name.rfind(">");
-   if (lp == std::string::npos) lp = name.size()-1;
-   for ( i = lp; i >= 0; --i) {
-      switch (name[i]) {
-      case '>' : bc++; break;
-      case '<' : bc--; break;
-      }
-      if ( bc == 0 ) break;
+   size_t pos = 0;
+   for ( i = name.size()-1; i >= 0; --i) {
+     switch (name[i]) {
+     case '>' : ab++; break;
+     case '<' : ab--; break;
+     case ')' : rb++; break;
+     case '(' : rb--; break;
+     case ':' : 
+       if ( ab == 0 && rb == 0 && name[i-1] == ':' ) {
+         pos = i + 1;
+         break; 
+       }
+     default: continue;
+     }
+     if ( pos ) break;
    }
-   size_t pos = name.rfind("::", i );
-   if ( pos != std::string::npos ) return pos+2;
-   else                            return 0;
+   return pos;
 }
 
 
