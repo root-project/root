@@ -18,19 +18,19 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 #ArraySyntax: Event.root
 #	@echo built
 
-ArraySyntax: main_C.$(DllSuf) $(ROOTSYS)/lib/libTreePlayer.$(DllSuf)
+ArraySyntax: main_C.$(DllSuf)  $(ROOTCORELIBS) $(ROOTV)
 	$(CMDECHO) root.exe -b -l -q run.C > ArraySyntax.log
 
 #main$(ExeSuf) $(ROOTSYS)/lib/libTreePlayer.$(DllSuf)
 #	$(CMDECHO) ./main
 
-main$(ExeSuf): main.C fooDict.C barDict.C foo.C bar.C
-	$(CMDECHO) $(CXX) -o$@ $(CXXFLAGS) $^ -I. $(LDSTARTOPT) $(shell eval root-config --libs)
+main$(ExeSuf): main.C fooDict.C barDict.C foo.C bar.C $(ROOTCORELIBS) $(ROOTV)
+	$(CMDECHO) $(CXX) -o$@ $(CXXFLAGS) $(filter %.C,$^) -I. $(LDSTARTOPT) $(shell eval root-config --libs)
 
-main_C.$(DllSuf) : main.$(ObjSuf) fooDict.$(ObjSuf) barDict.$(ObjSuf) foo.$(ObjSuf) bar.$(ObjSuf)
+main_C.$(DllSuf) : main.$(ObjSuf) fooDict.$(ObjSuf) barDict.$(ObjSuf) foo.$(ObjSuf) bar.$(ObjSuf) $(ROOTCORELIBS) $(ROOTV)
 	$(BuildFromObjs)
 
-%Dict.C: %.h
-	$(CMDECHO) rootcint -f $@ -c $^
+%Dict.C: %.h $(ROOTCINT)
+	$(CMDECHO) rootcint -f $@ -c $<
 
 

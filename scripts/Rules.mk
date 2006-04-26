@@ -353,7 +353,7 @@ endef
 
 define BuildFromObjs
 $(CMDECHO) ( touch dummy$$$$.C && \
-	root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$^\")" > $@.build.log 2>&1 && \
+	root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
 	rm dummy$$$$.C \
 )
