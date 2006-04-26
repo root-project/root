@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += mytest SimpleTest containerEvolution
+TEST_TARGETS += cloning mytest SimpleTest containerEvolution
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -110,3 +110,15 @@ SimpleRead.log: SimpleOne.root SimpleTwo.root SimpleRead.C $(ROOTCORELIBS)
 SimpleTest: SimpleRead.log 
 	$(CMDECHO) diff -b -w SimpleRead.ref SimpleRead.log
 
+
+cloning.root: cloningOne_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l 'runcloning.C(1)' > cloning_root.log
+
+cloning.log: cloningTwo_C.$(DllSuf) cloning.root
+
+cloning: cloning.log
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+else
+	$(TestDiff)
+endif
