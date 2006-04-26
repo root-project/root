@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.122 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.123 2006/03/24 11:42:41 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1674,10 +1674,11 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
       const Double_t rr = r-integral[bin];
       if (rr != 0.0) {
-         Double_t xx;
-         if (gamma[bin] && beta[bin]*beta[bin]+2*gamma[bin]*rr >= 0.0)
+         Double_t xx = 0.0;
+         const Double_t fac = -2.*gamma[bin]*rr/beta[bin]/beta[bin];
+         if (fac != 0 && fac <= 1)
             xx = (-beta[bin]+TMath::Sqrt(beta[bin]*beta[bin]+2*gamma[bin]*rr))/gamma[bin];
-         else
+         else if (beta[bin] != 0.)
             xx = rr/beta[bin];
          q[i] = alpha[bin]+xx;
       } else {
