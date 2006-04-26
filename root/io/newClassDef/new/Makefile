@@ -1,7 +1,7 @@
 TEST_TARGETS += newTest
-CLEAN_TARGETS += local_clean
-
-#include $(ROOTSYS)/test/Makefile.arch
+CLEAN_TARGETS += \ ti_files $(DICTS) $(DICTS_H) ii_files \
+	*.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~ \
+	*.exp .def *.log *.pdb
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -54,14 +54,6 @@ $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 
 #	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 #		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" > $*.build.log
-
-
-local_clean:
-	$(CMDECHO)rm -rf ti_files $(DICTS) $(DICTS_H) ii_files ti_files
-	$(CMDECHO)rm -rf *.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~
-	$(CMDECHO)rm -rf *.exp .def *.log *.pdb
-
-clean: local_clean
 
 
 .C.$(ObjSuf):

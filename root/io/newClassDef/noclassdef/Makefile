@@ -1,6 +1,7 @@
 SHELL=/bin/bash
 TEST_TARGETS += noclassdef
-CLEAN_TARGETS += local_clean
+CLEAN_TARGETS += *.o *.so ti_files ii_files mydict.* driver$(ExeSuf) *~ \
+	*.obj .def *.root *.mode
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -96,14 +97,6 @@ otest:   driver$(ExeSuf)
 	$(CMDECHO)diff -bw good.linux.output odriver.output
 	$(CMDECHO)echo "Testing reading old succeeded in `pwd`"
 
-
-
-local_clean:
-	$(CMDECHO)rm -rf *.o *.so ti_files ii_files 
-	$(CMDECHO)rm -rf mydict.* driver$(ExeSuf) *~
-	$(CMDECHO)rm -rf *.obj .def *.root *.mode
-
-clean: local_clean
 
 
 #driver: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
