@@ -15,13 +15,13 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-testStringFormula.log: testString.C
+testStringFormula.log: testString.C $(ROOTCORELIBS) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b testString.C > testStringFormula.log
 
 testStringFormula: testStringFormula.log
 	$(CMDECHO) echo testStringFormula > /dev/null
 
-testBoolOpt.log: testBoolOpt.C
+testBoolOpt.log: testBoolOpt.C $(ROOTCORELIBS) $(ROOTV)
 	$(CMDECHO) root.exe -b -l -q testBoolOpt.C > testBoolOpt.log 2>&1
 
 testBoolOpt : testBoolOpt.log
