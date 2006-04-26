@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.15 2006/04/25 09:15:29 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.16 2006/04/25 17:38:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -239,8 +239,14 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py2));
          }
       }
-      if (TestBit(kVertical))   fX2 = fX1;
-      if (TestBit(kHorizontal)) fY2 = fY1;
+      if (TestBit(kVertical)) {
+         if (p1) fX2 = fX1;
+         if (p2) fX1 = fX2;
+      }
+      if (TestBit(kHorizontal)) {
+         if (p1) fY2 = fY1;
+         if (p2) fY1 = fY2;
+      }
       gPad->Modified(kTRUE);
       gVirtualX->SetLineColor(-1);
       break;
