@@ -15,13 +15,13 @@ endif
 OperatorNewTest : output
 	$(CMDECHO) diff -bw output good.output
 
-output: Classes.$(DllSuf) runClasses.C
+output: Classes.$(DllSuf) runClasses.C  $(ROOTCORELIBS) $(ROOTV) 
 	$(CMDECHO) root.exe -l -b -q runClasses.C > output 2>&1
 
-ClassesDict.cxx:  Classes.h LinkDef.h $(ROOTSYS)/bin/rootcint
+ClassesDict.cxx:  Classes.h LinkDef.h $(ROOTCINT)
 	$(CMDECHO) rootcint -f ClassesDict.cxx -c Classes.h LinkDef.h
 
-Classes.$(DllSuf): ClassesDict.$(ObjSuf) Classes.$(ObjSuf)
+Classes.$(DllSuf): ClassesDict.$(ObjSuf) Classes.$(ObjSuf) $(ROOTCORELIBS) $(ROOTV) $(ROOTCINT)
 	$(BuildFromObjs)
 
-Classes.o: Classes.cxx Classes.h
+Classes.$(ObjSuf): Classes.cxx Classes.h $(ROOTCORELIBS) $(ROOTV) $(ROOTCINT)

@@ -45,17 +45,13 @@ newTest.log : main Run.C
 	$(CMDECHO)root -q -l -b "Run.C" > newTest.log 2>&1
 #@echo "All test succeeded in `pwd`"
 
-$(DICTS) : %dict.C : %.h %linkdef.h
-	$(CMDECHO)rootcint -f $@ -c $^
+$(DICTS) : %dict.C : %.h %linkdef.h $(ROOTCINT)
+	$(CMDECHO)rootcint -f $@ -c $(filter %.h,$^) 
 
 
-$(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
+$(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf) $(ROOTCORELIBS) $(ROOTV) $(ROOTCINT)
 	$(BuildFromObjs)
 
-#	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-#		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" > $*.build.log
-
-
-.C.$(ObjSuf):
+.C.$(ObjSuf): $(ROOTCORELIBS) $(ROOTV) 
 	$(CMDECHO)$(CXX) $(CXXFLAGS) -c $<
 

@@ -20,16 +20,16 @@ DICTS_H = $(PACKAGES:%=%dict.h)
 
 main: $(SHARED_LIBS) array_cxx.$(DllSuf)
 
-current_test.log : main Run.C $(ROOTV)
+current_test.log : main Run.C $(ROOTV) $(ROOTCORELIBS) 
 	$(CMDECHO)root -q -l -b "Run.C" > current_test.log 2>&1 
 
 currentTest: current_test.log
 	$(CMDECHO) diff -b current_test.log current_test.ref
 
-$(DICTS) : %dict.C : %.h %linkdef.h 
-	$(CMDECHO)rootcint -f $@ -c $^ 
+$(DICTS) : %dict.C : %.h %linkdef.h $(ROOTCINT)
+	$(CMDECHO)rootcint -f $@ -c $(filter %.h,$^)
 
-$(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf) 
+$(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)  $(ROOTCORELIBS) $(ROOTV) $(ROOTCINT)
 	$(BuildFromObjs)
 
 
