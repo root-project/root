@@ -1,4 +1,4 @@
-bool runNestedFunc() {
+bool runnestedFunc() {
    TF1 *feta1 = new TF1("feta1", "TMath::Power(TMath::CosH(x), 2.0)",
 	-5.4, 5.4);
    TF1 *feta2 = new TF1("feta2", "(TMath::CosH(x))*(TMath::CosH(x))",
