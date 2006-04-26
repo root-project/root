@@ -6,6 +6,7 @@
 #pragma link C++ class Default+;
 #pragma link C++ class Typedef+;
 #pragma link C++ class Pointers+;
+#pragma link C++ class WithTemplate+;
 
 #pragma link C++ ioctortype OTHER_ROOT_IO;
 #pragma link C++ ioctortype G4_ROOT_IO;

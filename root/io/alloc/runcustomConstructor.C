@@ -27,5 +27,8 @@
    c = gROOT->GetClass("Pointers");
    c->New();
 
+   c = gROOT->GetClass("WithTemplate");
+   //c->New();
+
    return 0;
 }

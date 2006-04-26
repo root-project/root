@@ -51,3 +51,12 @@ public:
    Pointers(Pointers*) { cout << "Called Pointers::Pointers(Pointers*)\n"; }
 };
 
+#include "Rtypeinfo.h"
+
+class WithTemplate {
+public:
+   WithTemplate() { cout << "Called WithTemplate::WithTemplate()\n"; }
+   template <class T> WithTemplate(T*) {
+      cout << "Called WithTemplate::WithTemplate<T>() T=" << typeid(T*).name() << "\n"; 
+   }
+};
