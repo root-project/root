@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.175 2006/04/06 13:47:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.176 2006/04/19 08:22:22 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -423,6 +423,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fFromPopUp     = kFALSE;
    fReadingObject = kFALSE;
    fInterrupt     = kFALSE;
+   fEscape        = kFALSE;
    fMustClean     = kTRUE;
    fPrimitive     = 0;
    fSelectPad     = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.51 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.52 2006/04/06 13:47:57 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -88,6 +88,7 @@ protected:
    Bool_t          fReadingObject;        //True while reading an object
    Bool_t          fForceStyle;           //Force setting of current style when reading objects
    Bool_t          fInterrupt;            //True if macro should be interrupted
+   Bool_t          fEscape;               //True if ESC has been pressed
    Bool_t          fExecutingMacro;       //True while executing a TMacro
    Int_t           fEditorMode;           //Current Editor mode
    TObject         *fPrimitive;           //Currently selected primitive
@@ -212,6 +213,7 @@ public:
    Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
    Bool_t            IsFolder() const { return kTRUE; }
    Bool_t            IsInterrupted() const { return fInterrupt; }
+   Bool_t            IsEscaped() const { return fEscape; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option = "") const;
@@ -239,6 +241,7 @@ public:
    void              SetExecutingMacro(Bool_t flag = kTRUE) { fExecutingMacro = flag; }
    void              SetFromPopUp(Bool_t flag = kTRUE) { fFromPopUp = flag; }
    void              SetInterrupt(Bool_t flag = kTRUE) { fInterrupt = flag; }
+   void              SetEscape(Bool_t flag = kTRUE) { fEscape = flag; }
    void              SetLineIsProcessing() { fLineIsProcessing++; }
    void              SetLineHasBeenProcessed() { if (fLineIsProcessing) fLineIsProcessing--; }
    void              SetReadingObject(Bool_t flag = kTRUE) { fReadingObject = flag; }
