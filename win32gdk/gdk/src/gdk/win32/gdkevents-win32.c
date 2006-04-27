@@ -5307,13 +5307,23 @@ gdk_event_translate(GdkEvent * event,
       }
 
       is_AltGr_key = FALSE;
-      event->key.type = ((xevent->message == WM_KEYDOWN
-                          || xevent->message == WM_SYSKEYDOWN) ?
-                         GDK_KEY_PRESS : GDK_KEY_RELEASE);
+      event->key.window = window;
+      event->key.type = ((xevent->message == WM_KEYDOWN || 
+                          xevent->message == WM_SYSKEYDOWN) ?
+                          GDK_KEY_PRESS : GDK_KEY_RELEASE);
       event->type = event->key.type;
       event->key.time = xevent->time;
       event->key.string = NULL;
       event->key.length = 0;
+      if (event->key.keyval == GDK_Escape) {
+         event->key.length = 1;
+         event->key.string = g_strdup ("\033");
+      }
+      else if (event->key.keyval == GDK_Return ||
+	            event->key.keyval == GDK_KP_Enter) {
+         event->key.length = 1;
+         event->key.string = g_strdup ("\r");
+      }
       return_val = !GDK_DRAWABLE_DESTROYED(window);
       break;
 
