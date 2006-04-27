@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.134 2006/03/29 10:29:32 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.135 2006/04/18 10:34:35 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -657,8 +657,7 @@ const char *TWinNTSystem::BaseName(const char *name)
    // Base name of a file name. Base name of /user/root is root.
    // But the base name of '/' is '/'
    //                      'c:\' is 'c:\'
-   // The calling routine should use free() to free memory BaseName allocated
-   // for the base name
+
    // BB 28/10/05 : Removed (commented out) StrDup() :
    // - To get same behaviour on Windows and on Linux
    // - To avoid the need to use #ifdefs

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.7 2005/09/02 10:33:48 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -817,6 +817,9 @@ void TClassTree::ScanClasses(Int_t iclass)
    // we stop reading the code when
    //   - a class member function is found
    //   - any class constructor is found
+   if (!cl->GetImplFileName() || !cl->GetImplFileName()[0]) 
+      return;
+
    const char *source = gSystem->BaseName( gSystem->UnixPathName(cl->GetImplFileName()));
    char *sourceName = gSystem->Which( fSourceDir.Data(), source , kReadPermission );
    if (!sourceName) return;
