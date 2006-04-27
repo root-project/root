@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.19 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.20 2005/11/28 13:47:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -214,9 +214,12 @@ again:
 
    switch (event) {
 
+   case kKeyPress:
+      gROOT->SetEscape(px == kESC);
+      break;
+
    case kMouseEnter:
-      if (fTip)
-         gPad->ResetToolTip(fTip);
+      if (fTip) gPad->ResetToolTip(fTip);
       break;
 
    case kButton1Double:
@@ -436,6 +439,10 @@ again:
       break;
 
    case kButton1Up:
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
 
       if (px1 < 0 ) break;
       if (pA) {

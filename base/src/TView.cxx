@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.32 2006/02/28 16:32:24 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.33 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -692,9 +692,14 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kKeyPress :
+      if (px == kESC) {
+         gROOT->SetEscape(kTRUE);
+         break;
+      }
       fChanged = kTRUE;
       MoveViewCommand(Char_t(px), py);
       break;
+
    case kMouseMotion:
       gPad->SetCursor(kRotate);
       break;
@@ -753,6 +758,10 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       break;
    }
    case kButton1Up:
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
 
       // Temporary fix for 2D drawing problems on pad. fOutline contains
       // a TPolyLine3D object for the rotation box. This will be painted

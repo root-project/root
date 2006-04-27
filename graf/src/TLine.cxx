@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.16 2006/04/25 17:38:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.17 2006/04/26 08:03:26 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -134,7 +134,12 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t dx, dy;
 
    if (!gPad->IsEditable()) return;
+   
    switch (event) {
+
+   case kKeyPress:
+      gROOT->SetEscape(px == kESC);
+      break;
 
    case kButton1Down:
       gVirtualX->SetLineColor(-1);
@@ -203,6 +208,11 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
+
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
 
       if (TestBit(kLineNDC)) {
          dpx  = gPad->GetX2() - gPad->GetX1();

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.223 2006/03/28 16:43:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.224 2006/04/06 09:41:09 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1575,6 +1575,10 @@ again:
 
    switch (event) {
 
+   case kKeyPress:
+      gROOT->SetEscape(px == kESC);
+      break;
+
    case kMouseEnter:
       if (fTip)
          ResetToolTip(fTip);
@@ -1886,6 +1890,10 @@ again:
       break;
 
    case kButton1Up:
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
 
       if (pA) {
          fX1 = AbsPixeltoX(pxold);

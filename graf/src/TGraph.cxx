@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.182 2006/04/06 13:45:26 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.183 2006/04/08 13:36:44 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -733,6 +733,10 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    switch (event) {
 
+   case kKeyPress:
+      gROOT->SetEscape(px == kESC);
+      break;
+
    case kButton1Down:
       badcase = kFALSE;
       gVirtualX->SetLineColor(-1);
@@ -870,6 +874,13 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
+
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         delete [] x; x = 0;
+         delete [] y; y = 0;
+         break;
+      }
 
    // Compute x,y range
       xmin = gPad->GetUxmin();

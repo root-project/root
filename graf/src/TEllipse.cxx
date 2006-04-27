@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.23 2006/01/24 09:38:14 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.24 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -207,6 +207,10 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad->IsEditable()) return;
 
    switch (event) {
+
+   case kKeyPress:
+      gROOT->SetEscape(px == kESC);
+      break;
 
    case kButton1Down:
       gVirtualX->SetLineColor(-1);
@@ -420,6 +424,11 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
+
       fX1 = gPad->AbsPixeltoX(px1);
       fY1 = gPad->AbsPixeltoY(py1);
       fBy = gPad->AbsPixeltoY(py1+r2);

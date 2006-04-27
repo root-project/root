@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.71 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.72 2006/03/27 06:38:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -272,6 +272,10 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    switch (event) {
 
+   case kKeyPress:
+      gROOT->SetEscape(px == kESC);
+      break;
+
    case kButton1Down:
       axisNumber = 1;
       if (!strcmp(GetName(),"xaxis")) {
@@ -329,6 +333,11 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    break;
 
    case kButton1Up:
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
+
       if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio2);
          if (ratio1 > ratio2) {
