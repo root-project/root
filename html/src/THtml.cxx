@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.88 2006/04/25 18:28:52 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.89 2006/04/26 06:07:17 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -450,17 +450,13 @@ namespace {
 
          SectionStart_t checkPrev = pushBackWhichOne;
          --checkPrev;
-         while (checkPrev != prevSection->fStart
-            && selectionChar + 1 < checkPrev->length()
-            && selectionChar + 1 < pushBackWhichOne->length()
-            && !checkPrev->compare(0, selectionChar + 1, *pushBackWhichOne, 0, selectionChar + 1))
+         while (checkPrev != prevSection->fStart 
+            && !strncasecmp(checkPrev->c_str(), pushBackWhichOne->c_str(), selectionChar + 1))
             --checkPrev;
          if (checkPrev == prevSection->fStart) {
             SectionStart_t checkNext = pushBackWhichOne;
             while (++checkNext != end
-               && selectionChar + 1 < checkNext->length()
-               && selectionChar + 1 < pushBackWhichOne->length()
-               && !checkNext->compare(0, selectionChar + 1, *pushBackWhichOne, 0, selectionChar + 1));
+               && !strncasecmp(checkNext->c_str(), pushBackWhichOne->c_str(), selectionChar + 1))
 
             if (checkPrev == begin && checkNext == end 
                && selectionChar > checkPrev->length()) {
@@ -544,6 +540,7 @@ namespace {
          words[iWord] = wordsIn[iWord];
       GetIndexChars(words, numSectionsIn, sectionMarkersOut);
    }
+
    void GetIndexChars(const std::list<std::string>& wordsIn, UInt_t numSectionsIn, 
       std::vector<std::string> &sectionMarkersOut) {
 
@@ -554,6 +551,14 @@ namespace {
          words[idx++] = *iWord;
       GetIndexChars(words, numSectionsIn, sectionMarkersOut);
    }
+
+   struct igreater
+   {
+      bool operator()(const std::string& a, const std::string& b)
+      {
+         return (strcasecmp(a.c_str(), b.c_str()) < 0);
+      }
+   };
 }
 
 //______________________________________________________________________________
@@ -2168,7 +2173,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
       if (fModules.size()) {
          indexFile << "<div id=\"indxModules\"><h4>Modules</h4>" << endl;
          // find index chars
-         fModules.sort();
+         fModules.sort(igreater());
          for (std::list<std::string>::iterator iModule = fModules.begin(); 
             iModule != fModules.end(); ++iModule) {
             indexFile << "<a href=\"" << *iModule << "_Index.html\">" << *iModule << "</a>" << endl;
@@ -2493,11 +2498,6 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
       if (second)
          *second = '_';
    }
-
-   // free memory
-   for (i = 0; i < numberOfNames; i++)
-      if (*fileNames[i])
-         delete[]fileNames[i];
 }
 
 //______________________________________________________________________________
@@ -2723,7 +2723,7 @@ void THtml::CreateListOfClasses(const char* filter)
          impname = classPtr->GetDeclFileName();
 
       if (impname && strlen(impname)) {
-         fFileNames[fNumberOfFileNames] = StrDup(impname, 64);
+         fFileNames[fNumberOfFileNames] = StrDup(impname, strlen(fClassNames[fNumberOfClasses])+2);
          char* posSlash = strchr(fFileNames[fNumberOfFileNames], '/');
 
          char *srcdir = 0;
@@ -2733,12 +2733,10 @@ void THtml::CreateListOfClasses(const char* filter)
 
             // if impl is unset, check for decl and see if it matches
             // format "base/inc/TROOT.h" - in which case it's not a USER
-         // class, but a BASE class.
-            if (!srcdir)
-               srcdir=strstr(posSlash, "/inc/");
+            // class, but a BASE class.
+            if (!srcdir) srcdir=strstr(posSlash, "/inc/");
          } else srcdir = 0;
-         if (srcdir && srcdir == posSlash
-             && fFileNames[fNumberOfFileNames][0]!='/') {
+         if (srcdir && srcdir == posSlash) {
             strcpy(srcdir, "_");
             for (char *t = fFileNames[fNumberOfFileNames];
                  (t[0] = toupper(t[0])); t++);
@@ -2798,7 +2796,7 @@ void THtml::CreateListOfTypes()
              && type->GetName())
                typeNames.push_back(type->GetName());
 
-      typeNames.sort();
+      typeNames.sort(igreater());
 
       std::vector<std::string> indexChars;
       if (typeNames.size() > 10) {
