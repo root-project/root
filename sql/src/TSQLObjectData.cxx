@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.3 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.4 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -260,7 +260,7 @@ void TSQLObjectData::ShiftToNextValue()
       doshift = kFALSE;
    }
 
-   if (fCurrentBlob>0) {
+   if (fCurrentBlob) {
       if (doshift) {
          delete fBlobRow;
          fBlobRow = fBlobData->Next();

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.83 2006/04/11 11:21:45 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.84 2006/04/25 09:38:27 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -848,7 +848,7 @@ void TGeoPainter::ExecuteManagerEvent(TGeoManager * /*geom*/, Int_t /*event*/, I
 }
    
 //______________________________________________________________________________
-void TGeoPainter::ExecuteShapeEvent(TGeoShape */*shape*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
+void TGeoPainter::ExecuteShapeEvent(TGeoShape * /*shape*/, Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given shape.
    if (!gPad) return;
