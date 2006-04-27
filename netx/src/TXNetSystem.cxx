@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.7 2006/03/30 16:40:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.8 2006/04/03 14:24:01 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -65,6 +65,9 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    fDir = "";
    fDirp = 0;
    fDirListValid = kFALSE;
+
+   // Set debug level
+   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
 
    // The first time do some global initialization
    if (!fgInitDone)
@@ -168,143 +171,8 @@ void TXNetSystem::InitXrdClient()
 {
    // One-time initialization of some communication variables for xrootd protocol
 
-   // Set debug level
-   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
-
-   // List of domains where redirection is allowed
-   TString allowRE = gEnv->GetValue("XNet.RedirDomainAllowRE", "");
-   if (allowRE.Length() > 0)
-      EnvPutString(NAME_REDIRDOMAINALLOW_RE, allowRE.Data());
-
-   // List of domains where redirection is denied
-   TString denyRE  = gEnv->GetValue("XNet.RedirDomainDenyRE", "");
-   if (denyRE.Length() > 0)
-      EnvPutString(NAME_REDIRDOMAINDENY_RE, denyRE.Data());
-
-   // List of domains where connection is allowed
-   TString allowCO = gEnv->GetValue("XNet.ConnectDomainAllowRE", "");
-   if (allowCO.Length() > 0)
-      EnvPutString(NAME_CONNECTDOMAINALLOW_RE, allowCO.Data());
-
-   // List of domains where connection is denied
-   TString denyCO  = gEnv->GetValue("XNet.ConnectDomainDenyRE", "");
-   if (denyCO.Length() > 0)
-      EnvPutString(NAME_CONNECTDOMAINDENY_RE, denyCO.Data());
-
-   // Connect Timeout
-   Int_t connTO = gEnv->GetValue("XNet.ConnectTimeout",
-                                  DFLT_CONNECTTIMEOUT);
-   EnvPutInt(NAME_CONNECTTIMEOUT, connTO);
-
-   // Reconnect Timeout
-   Int_t recoTO = gEnv->GetValue("XNet.ReconnectTimeout",
-                                  DFLT_RECONNECTTIMEOUT);
-   EnvPutInt(NAME_RECONNECTTIMEOUT, recoTO);
-
-   // Request Timeout
-   Int_t requTO = gEnv->GetValue("XNet.RequestTimeout",
-                                  DFLT_REQUESTTIMEOUT);
-   EnvPutInt(NAME_REQUESTTIMEOUT, requTO);
-
-   // Max number of redirections
-   Int_t maxRedir = gEnv->GetValue("XNet.MaxRedirectCount",
-                                    DFLT_MAXREDIRECTCOUNT);
-   EnvPutInt(NAME_MAXREDIRECTCOUNT, maxRedir);
-
-   // Whether to use a separate thread for garbage collection
-   Int_t garbCollTh = gEnv->GetValue("XNet.StartGarbageCollectorThread",
-                                      DFLT_STARTGARBAGECOLLECTORTHREAD);
-   EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
-
-   // Whether to use a separate thread for reading
-   Int_t goAsync = gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC);
-   EnvPutInt(NAME_GOASYNC, goAsync);
-
-   // Read ahead size
-   Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",
-                                     DFLT_READAHEADSIZE);
-   EnvPutInt(NAME_READAHEADSIZE, rAheadsiz);
-
-   // Cache size (<= 0 disables cache)
-   Int_t rCachesiz = gEnv->GetValue("XNet.ReadCacheSize",
-                                     DFLT_READCACHESIZE);
-   EnvPutInt(NAME_READCACHESIZE, rCachesiz);
-
-   // Max number of retries on first connect
-   Int_t maxRetries = gEnv->GetValue("XNet.TryConnect",
-                                     DFLT_FIRSTCONNECTMAXCNT);
-   EnvPutInt(NAME_FIRSTCONNECTMAXCNT, maxRetries);
-
-   // Whether to activate automatic rootd backward-compatibility
-   // (We override XrdClient default)
-   fgRootdBC = gEnv->GetValue("XNet.RootdFallback", 1);
-   EnvPutInt(NAME_KEEPSOCKOPENIFNOTXRD, fgRootdBC);
-
-   // For password-based authentication
-   TString autolog = gEnv->GetValue("XSec.Pwd.AutoLogin","1");
-   if (autolog.Length() > 0)
-      gSystem->Setenv("XrdSecPWDAUTOLOG",autolog.Data());
-
-   // Old style netrc file
-   TString netrc;
-   netrc.Form("%s/.rootnetrc",gSystem->HomeDirectory());
-   gSystem->Setenv("XrdSecNETRC", netrc.Data());
-
-   TString alogfile = gEnv->GetValue("XSec.Pwd.ALogFile","");
-   if (alogfile.Length() > 0)
-      gSystem->Setenv("XrdSecPWDALOGFILE",alogfile.Data());
-
-   TString verisrv = gEnv->GetValue("XSec.Pwd.VerifySrv","1");
-   if (verisrv.Length() > 0)
-      gSystem->Setenv("XrdSecPWDVERIFYSRV",verisrv.Data());
-
-   TString srvpuk = gEnv->GetValue("XSec.Pwd.ServerPuk","");
-   if (srvpuk.Length() > 0)
-      gSystem->Setenv("XrdSecPWDSRVPUK",srvpuk.Data());
-
-   // For GSI authentication
-   TString cadir = gEnv->GetValue("XSec.GSI.CAdir","");
-   if (cadir.Length() > 0)
-      gSystem->Setenv("XrdSecGSICADIR",cadir.Data());
-
-   TString crldir = gEnv->GetValue("XSec.GSI.CRLdir","");
-   if (crldir.Length() > 0)
-      gSystem->Setenv("XrdSecGSICRLDIR",crldir.Data());
-
-   TString crlext = gEnv->GetValue("XSec.GSI.CRLextension","");
-   if (crlext.Length() > 0)
-      gSystem->Setenv("XrdSecGSICRLEXT",crlext.Data());
-
-   TString ucert = gEnv->GetValue("XSec.GSI.UserCert","");
-   if (ucert.Length() > 0)
-      gSystem->Setenv("XrdSecGSIUSERCERT",ucert.Data());
-
-   TString ukey = gEnv->GetValue("XSec.GSI.UserKey","");
-   if (ukey.Length() > 0)
-      gSystem->Setenv("XrdSecGSIUSERKEY",ukey.Data());
-
-   TString upxy = gEnv->GetValue("XSec.GSI.UserProxy","");
-   if (upxy.Length() > 0)
-      gSystem->Setenv("XrdSecGSIUSERPROXY",upxy.Data());
-
-   TString valid = gEnv->GetValue("XSec.GSI.ProxyValid","");
-   if (valid.Length() > 0)
-      gSystem->Setenv("XrdSecGSIPROXYVALID",valid.Data());
-
-   TString deplen = gEnv->GetValue("XSec.GSI.ProxyForward","0");
-   if (deplen.Length() > 0)
-      gSystem->Setenv("XrdSecGSIPROXYDEPLEN",deplen.Data());
-
-   TString pxybits = gEnv->GetValue("XSec.GSI.ProxyKeyBits","");
-   if (pxybits.Length() > 0)
-      gSystem->Setenv("XrdSecGSIPROXYKEYBITS",pxybits.Data());
-
-   TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","2");
-   if (crlcheck.Length() > 0)
-      gSystem->Setenv("XrdSecGSICRLCHECK",crlcheck.Data());
-
-   // Using ROOT mechanism to IGNORE SIGPIPE signal
-   gSystem->IgnoreSignal(kSigPipe);
+   // Init vars with default debug level -1, so we do not get warnings
+   TXNetFile::SetEnv();
 
    // Only once
    fgInitDone = kTRUE;

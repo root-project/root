@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.6 2006/03/27 14:33:48 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.7 2006/04/06 23:01:45 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -81,7 +81,6 @@ private:
                          Bool_t parallelopen);
    void    Init(Bool_t create);
    Bool_t  Open(Option_t *option, Bool_t parallelopen);
-   void    SetEnv();
    Int_t   SysStat(Int_t fd, Long_t* id, Long64_t* size, Long_t* flags,
                    Long_t* modtime);
    Int_t   SysOpen(const char *pathname, Int_t flags, UInt_t mode);
@@ -90,6 +89,7 @@ private:
    // Static methods
    static void FormUrl(TUrl uut, TString &uu);
    static Int_t GetRootdProtocol(TSocket *s);
+   static void SetEnv();
 
 public:
    TXNetFile() : TNetFile() { fClient = 0; fSize = 0; fIsRootd = 0;

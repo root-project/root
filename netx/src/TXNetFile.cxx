@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.24 2006/04/06 23:01:45 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.25 2006/04/17 21:04:17 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -96,10 +96,18 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    //
    TUrl urlnoanchor(url);
 
+   // Set debug level
+   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
+
    // Set environment, if needed
    if (!fgInitDone || strstr(urlnoanchor.GetOptions(),"checkenv")) {
       SetEnv();
       fgInitDone = kTRUE;
+
+      // Print the tag, if required (only once)
+      if (gEnv->GetValue("XNet.PrintTAG",0) == 1)
+         Info("TXNetFile","(C) 2005 SLAC TXNetFile (eXtended TNetFile) %s",
+              gROOT->GetVersion());
    }
 
    // Remove anchors from the URL!
@@ -386,7 +394,6 @@ Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
    // Create and Recreate are correlated
    if (recreate) {
       openOpt |= kXR_delete;
-      openOpt |= kXR_new;
       create = kTRUE;
    } else if (create) {
       openOpt |= kXR_new;
@@ -514,8 +521,6 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
       return kTRUE;
    }
 
-   Bool_t result = kFALSE;
-
    Int_t st;
    if ((st = WriteBufferViaCache(buffer, bufferLength))) {
       if (st == 2)
@@ -524,23 +529,27 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t bufferLength)
    }
 
    // Read for the remote xrootd
-   Int_t nw = fClient->Write(buffer, fOffset, bufferLength);
-
-   if ((result = (nw > 0))) {
-
-      if (gDebug > 1)
-         Info("WriteBuffer", " %d bytes of data wrote to offset"
-                            " %Ld (%d requested)", nw, fOffset, bufferLength);
-
-      fOffset += bufferLength;
-      fBytesWrite += bufferLength;
-#ifdef WIN32
-      SetFileBytesWritten(GetFileBytesWritten() + bufferLength);
-#else
-      fgBytesWrite += bufferLength;
-#endif
+   if (!fClient->Write(buffer, fOffset, bufferLength)) {
+      if (gDebug > 0)
+         Info("WriteBuffer",
+              "error writing %d bytes of data wrote to offset %Ld",
+              bufferLength , fOffset);
+      return kTRUE;
    }
-   return result;
+
+   if (gDebug > 1)
+      Info("WriteBuffer", " %d bytes of data wrote to offset"
+                         " %Ld", bufferLength , fOffset);
+
+   fOffset += bufferLength;
+   fBytesWrite += bufferLength;
+#ifdef WIN32
+   SetFileBytesWritten(GetFileBytesWritten() + bufferLength);
+#else
+   fgBytesWrite += bufferLength;
+#endif
+
+   return kFALSE;
 }
 
 //_____________________________________________________________________________
@@ -808,9 +817,6 @@ void TXNetFile::SetEnv()
 {
    // Set the relevant environment variables
 
-   // Set debug level
-   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
-
    // List of domains where redirection is allowed
    TString allowRE = gEnv->GetValue("XNet.RedirDomainAllowRE", "");
    if (allowRE.Length() > 0)
@@ -950,11 +956,6 @@ void TXNetFile::SetEnv()
    TString signpxy = gEnv->GetValue("XSec.GSI.SignProxy","1");
    if (signpxy.Length() > 0)
       gSystem->Setenv("XrdSecGSISIGNPROXY",signpxy.Data());
-
-   // Print the tag, if required (only once)
-   if (gEnv->GetValue("XNet.PrintTAG",0) == 1)
-      Info("TXNetFile","(C) 2005 SLAC TXNetFile (eXtended TNetFile) %s",
-            gROOT->GetVersion());
 
    // Using ROOT mechanism to IGNORE SIGPIPE signal
    gSystem->IgnoreSignal(kSigPipe);
