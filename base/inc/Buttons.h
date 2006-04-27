@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Buttons.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Buttons.h,v 1.2 2004/02/18 20:13:42 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,7 @@ enum EEventType {
    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3, kKeyDown  =  4,
    kButton1Up     = 11, kButton2Up     = 12, kButton3Up     = 13, kKeyUp    = 14,
    kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24,
-   kButton1Locate = 41, kButton2Locate = 42, kButton3Locate = 43,
+   kButton1Locate = 41, kButton2Locate = 42, kButton3Locate = 43, kESC      = 27,
    kMouseMotion   = 51, kMouseEnter    = 52, kMouseLeave    = 53,
    kButton1Double = 61, kButton2Double = 62, kButton3Double = 63
 };
