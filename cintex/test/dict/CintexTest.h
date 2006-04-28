@@ -653,8 +653,13 @@ class ExceptionGenerator {
     int intThrow( bool b ) {if (b) throw std::logic_error("Another exception in method"); return 999; }
 };
 
+
+class MyA {};
+
 #include <list>
 struct __ins {
+  std::vector<MyA> mya;
+  std::vector<MyA>::iterator myai;
  std::list<ExceptionGenerator*> a;
 };
 

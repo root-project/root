@@ -45,6 +45,8 @@
   <variable name="gMyInt"/>
   <variable pattern="A::g*"/>
 
+  <class pattern="*MyA*"/>
+
   <exclusion>
     <class name="A::B::C::MyClass::InnerClass"/>
   </exclusion>
