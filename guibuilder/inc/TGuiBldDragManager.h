@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.10 2006/04/14 17:54:49 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.h,v 1.11 2006/04/24 14:09:16 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -33,7 +33,6 @@ class TRootGuiBuilder;
 class TQUndoManager;
 class TGPopupMenu;
 class TGuiBldEditor;
-class TGuiBldQuickHandler;
 
 
 enum EActionType { kNoneAct, kPropertyAct, kEditableAct, kReparentAct,
@@ -56,9 +55,9 @@ private:
 
    TRootGuiBuilder   *fBuilder;        // pointer to gui builder
    TGuiBldEditor *fEditor;             // frame property editor
-   TGuiBldQuickHandler *fQuickHandler; // quick action handler
    Bool_t         fLassoDrawn;         // kTRUE if  lasso drawn
-   TString        fPasteFileName;      // paste_clippboard file name 
+   TString        fPasteFileName;      // paste_clippboard file name
+   TString        fTmpBuildFile;       // temporary file name 
    Bool_t         fSelectionIsOn;      // selection with Shift key pressed
    TGPopupMenu   *fFrameMenu;          // context menu for frames
    TGPopupMenu   *fLassoMenu;          // context menu for lasso drawn
@@ -110,8 +109,8 @@ public:
    void           HandleReplace();
    void           HandleGrid();
    void           CloneEditable();
-   void           Save(const char *file = "");
-   void           SaveFrame();
+   Bool_t         Save(const char *file = "");
+   Bool_t         SaveFrame(const char *file = 0);
    void           HandleLayoutOrder(Bool_t forward = kTRUE);
    void           DoResize();
    void           DoMove();
@@ -147,6 +146,7 @@ public:
    Bool_t         HandleKey(Event_t *);
    Bool_t         HandleMotion(Event_t *);
    Bool_t         HandleClientMessage(Event_t *);
+   Bool_t         HandleDestroyNotify(Event_t *);
    Bool_t         HandleSelection(Event_t *);
    Bool_t         HandleExpose(Event_t *);
    Bool_t         HandleConfigureNotify(Event_t *);
@@ -175,7 +175,6 @@ public:
    Int_t          GetStrartDragY() const;
    Int_t          GetEndDragX() const;
    Int_t          GetEndDragY() const;
-   void           ExecuteQuickAction(Event_t *);
    void           BreakLayout();
    void           SwitchLayout();
    Bool_t         GetDropStatus() const { return fDropStatus; }

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.44 2006/04/24 14:09:16 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.45 2006/04/25 08:46:49 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -13,24 +13,15 @@
 #include "TGuiBldDragManager.h"
 #include "TGuiBldEditor.h"
 #include "TRootGuiBuilder.h"
-#include "TGuiBldQuickHandler.h"
 
 #include "TTimer.h"
 #include "TList.h"
 #include "TSystem.h"
 #include "TMath.h"
-#include "TGResourcePool.h"
 #include "TROOT.h"
 #include "TColor.h"
-#include "KeySymbols.h"
-#include "TGMenu.h"
-#include "TGFileDialog.h"
-#include "TGMsgBox.h"
-#include "TRandom.h"
-#include "TGButton.h"
-#include "TGMdi.h"
-#include "TError.h"
 
+#include "TError.h"
 #include "TClassMenuItem.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
@@ -38,6 +29,18 @@
 #include "TDataType.h"
 #include "TObjString.h"
 #include "Api.h"
+
+
+#include "KeySymbols.h"
+#include "TGResourcePool.h"
+#include "TGMenu.h"
+#include "TGFileDialog.h"
+#include "TGMsgBox.h"
+#include "TRandom.h"
+#include "TGButton.h"
+#include "TGMdi.h"
+#include "TGTextEntry.h"
+#include "TGDockableFrame.h"
 
 
 #undef DEBUG_LOCAL
@@ -808,20 +811,22 @@ TGuiBldDragManager::TGuiBldDragManager() : TVirtualDragManager() ,
    gGuiBldDragManager = this;
    fPimpl = new TGuiBldDragManagerPimpl(this);
 
-   Reset1();
    fSelectionIsOn = kFALSE;
    fFrameMenu     = 0;
    fLassoMenu     = 0;
    fEditor        = 0;
    fBuilder       = 0;
-   fQuickHandler  = 0;
    fLassoDrawn    = kFALSE;
    fDropStatus    = kFALSE;
    fStop          = kTRUE;
+   Reset1();
 
    TString tmpfile = gSystem->TempDirectory();
    fPasteFileName = gSystem->ConcatFileName(tmpfile.Data(),
                              Form("RootGuiBldClipboard%d.C", gSystem->GetPid()));
+
+   fTmpBuildFile = gSystem->ConcatFileName(tmpfile.Data(),
+                             Form("RootGuiBldTmpFile%d.C", gSystem->GetPid()));
 
    fName = "Gui Builder Drag Manager";
    SetWindowName(fName.Data());
@@ -907,6 +912,7 @@ Bool_t TGuiBldDragManager::IgnoreEvent(Event_t *event)
 
    if (fStop || !fClient || !fClient->IsEditable()) return kTRUE;
    if (event->fType == kClientMessage) return kFALSE;
+   if (event->fType == kDestroyNotify) return kFALSE;
 
    TGWindow *w = fClient->GetWindowById(event->fWindow);
 
@@ -1078,7 +1084,7 @@ void TGuiBldDragManager::SwitchEditable(TGFrame *frame)
 //______________________________________________________________________________
 void TGuiBldDragManager::SelectFrame(TGFrame *frame, Bool_t add)
 {
-   // make a frame grabbed/selected
+   // Grab/Select frame
 
    if (fStop || !frame || (frame->GetParent() == fClient->GetDefaultRoot()) ||
        !fClient->IsEditable()) return;
@@ -1148,7 +1154,7 @@ void TGuiBldDragManager::SelectFrame(TGFrame *frame, Bool_t add)
 //______________________________________________________________________________
 void TGuiBldDragManager::ChangeSelected(TGFrame *fr)
 {
-   // inform outside wold the selected frame was changed
+   // Inform outside wold about selected frame was changed
 
    if (fStop) return;
 
@@ -1781,7 +1787,9 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
                   HandleAction(kEndEditAct);
                   return kTRUE;
                } else if (!(event->fState & 0xFF)) {
-                  //ExecuteQuickAction(event);
+                  if (SaveFrame(fTmpBuildFile.Data())) {
+                     gROOT->Macro(fTmpBuildFile.Data());
+                  }
                   return kTRUE;
                }
             } else {
@@ -1812,8 +1820,10 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
          return HandleMotion(event);
 
       case kClientMessage:
-         HandleClientMessage(event);
-         break;
+         return HandleClientMessage(event);
+
+      case kDestroyNotify:
+         return HandleDestroyNotify(event);
 
       case kSelectionNotify:
          //HandleSelection(event);
@@ -1898,9 +1908,14 @@ Bool_t TGuiBldDragManager::HandleButtonPress(Event_t *event)
       fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
    }
 
-   if (gMenuDialog) { // keep quick editor on the top 
+   if (gMenuDialog) { // keep editor on the top 
       gMenuDialog->RaiseWindow();
    }
+
+    // keep undocked toolbar on the top (but under win32 key handling will be broken : todo)
+   //if (fBuilder && fBuilder->GetToolDock()->IsUndocked()) {
+   //   fBuilder->GetToolDock()->GetUndocked()->RaiseWindow();;
+   //}
 
    if ( ((event->fCode != kButton1) && (event->fCode != kButton3)) ||
         (event->fType != kButtonPress) || IgnoreEvent(event)) {
@@ -2651,7 +2666,17 @@ void TGuiBldDragManager::HandleCopy(Bool_t brk_layout)
    tmp->GetList()->Add(fe);
    tmp->SetLayoutBroken(brk_layout);
 
-   tmp->SaveSource(fPasteFileName.Data(), brk_layout ? "quiet" : "");
+   if (!brk_layout) { //save frame
+      tmp->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputFullApplicationModal);
+      tmp->SetWMSize(tmp->GetWidth(), tmp->GetHeight());
+      //tmp->SetWMSizeHints(tmp->GetDefaultWidth(), tmp->GetDefaultHeight(), 10000, 10000, 0, 0);
+      const char *short_name = gSystem->BaseName(fPasteFileName.Data());
+      tmp->SetWindowName(short_name);
+      tmp->SetIconName(short_name);
+      tmp->SetClassHints(short_name, short_name);
+   }
+   Bool_t quite =  brk_layout || (fPasteFileName == fTmpBuildFile);
+   tmp->SaveSource(fPasteFileName.Data(), quite ? "quiet" : "");
    tmp->GetList()->Remove(fe);
 
    fPimpl->fGrab->SetX(x0);
@@ -2686,17 +2711,33 @@ void TGuiBldDragManager::HandlePaste()
    gROOT->Macro(fPasteFileName.Data());
 
    Window_t c;
+   TGFrame *root = (TGFrame*)fClient->GetRoot();
 
    if (!fPimpl->fReplaceOn) {
       gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
-                                      fClient->GetRoot()->GetId(),
+                                      root->GetId(),
                                       fPimpl->fX0, fPimpl->fY0, xp, yp, c);
       ToGrid(xp, yp);
 
+      // fPasteFrame is defined in TVirtualDragManager.h
       // fPasteFrame is a TGMainFrame consisting "the frame to paste" 
       // into the editable frame (aka fClient->GetRoot())
 
       if (fPasteFrame) {
+         TGMainFrame *main = (TGMainFrame*)fPasteFrame;
+         TGFrame *paste = ((TGFrameElement*)main->GetList()->First())->fFrame;
+
+         UInt_t w = paste->GetWidth();
+         UInt_t h = paste->GetHeight();
+
+         if (xp + w > root->GetWidth()) {
+            w = root->GetWidth() - xp -1;
+         }
+         if (yp + h > root->GetHeight()) {
+            h = root->GetHeight() - yp -1;
+         }
+
+         paste->Resize(w, h);
          fPasteFrame->Move(xp, yp);
          fPimpl->fGrab = fPasteFrame;
          HandleReturn(1);  // drop
@@ -2797,16 +2838,13 @@ void TGuiBldDragManager::CloneEditable()
 }
 
 //______________________________________________________________________________
-void TGuiBldDragManager::Save(const char *file)
+Bool_t TGuiBldDragManager::Save(const char *file)
 {
-   // save a editted frame to the file
+   // Save an editted frame to the file
 
-   if (fStop || !fClient->GetRoot() || !fClient->IsEditable()) return;
+   if (fStop || !fClient->GetRoot() || !fClient->IsEditable()) return kFALSE;
 
    TGMainFrame *main = (TGMainFrame*)fClient->GetRoot()->GetMainFrame();
-   Bool_t lbrk = main->IsLayoutBroken();
-   main->SetLayoutBroken();
-
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    TString fname = file;
 
@@ -2829,6 +2867,12 @@ void TGuiBldDragManager::Save(const char *file)
    }
 
    if (strstr(fname.Data(), ".C")) {
+      main->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputFullApplicationModal);
+      main->SetWMSize(main->GetWidth(), main->GetHeight());
+      //main->SetWMSizeHints(main->GetDefaultWidth(), main->GetDefaultHeight(), 10000, 10000, 0, 0);
+      main->SetWindowName(fname.Data());
+      main->SetIconName(fname.Data());
+      main->SetClassHints(fname.Data(), fname.Data());
       main->SaveSource(fname.Data(), file ? "quiet" : "");
    } else {
       Int_t retval;
@@ -2838,24 +2882,26 @@ void TGuiBldDragManager::Save(const char *file)
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {
-         Save();
+         return Save();
       }
    }
 
 out:
    main->RaiseWindow();
-   main->SetLayoutBroken(lbrk);
-//   root->SetEditable(kTRUE);
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TGuiBldDragManager::SaveFrame()
+Bool_t TGuiBldDragManager::SaveFrame(const char *file)
 {
    // Save composite frame as macro
 
-   if (fStop || !fClient->GetRoot() || !fClient->IsEditable() || !fPimpl->fGrab) return;
+   if (fStop || !fClient->GetRoot() || !fClient->IsEditable() ||
+       !fPimpl->fGrab || !fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
+      return kFALSE;
+   }
 
-   TString fname;
+   TString fname = file;
 
    TGFrame *frame = fPimpl->fGrab;
    SetEditable(kFALSE);
@@ -2865,20 +2911,22 @@ void TGuiBldDragManager::SaveFrame()
 
    TString sav = fPasteFileName;
 
-   TGFileInfo fi;
+   if (!file) {
+      TGFileInfo fi;
 
-   fi.fFileTypes = gSaveMacroTypes;
-   fi.fIniDir    = StrDup(dir);
-   fi.fOverwrite = overwr;
-   new TGFileDialog(fClient->GetDefaultRoot(), frame, kFDSave, &fi);
+      fi.fFileTypes = gSaveMacroTypes;
+      fi.fIniDir    = StrDup(dir);
+      fi.fOverwrite = overwr;
+      new TGFileDialog(fClient->GetDefaultRoot(), frame, kFDSave, &fi);
 
-   if (!fi.fFilename) {
-      goto out;
+      if (!fi.fFilename) {
+         goto out;
+      }
+
+      dir = fi.fIniDir;
+      overwr = fi.fOverwrite;
+      fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
    }
-
-   dir = fi.fIniDir;
-   overwr = fi.fOverwrite;
-   fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
 
    if (strstr(fname.Data(), ".C")) {
       fPasteFileName = fname;
@@ -2896,12 +2944,13 @@ void TGuiBldDragManager::SaveFrame()
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {
-         SaveFrame();
+         return SaveFrame();
       }
    }
 
 out:
    fPasteFileName = sav;
+   return kTRUE;
 }
 /*
 //______________________________________________________________________________
@@ -3453,6 +3502,10 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
    if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW) &&
        (event->fHandle != gROOT_MESSAGE)) {
 
+   if (fPimpl->fPlane && (fPimpl->fPlane->GetId() == event->fWindow)) {
+      fPimpl->fPlane = 0;
+   }
+
       TGMainFrame *main = (TGMainFrame*)fClient->GetRoot()->GetMainFrame();
 
       if (event->fWindow == main->GetId()) {
@@ -3485,6 +3538,19 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
    }
    return kFALSE;
 }
+
+//______________________________________________________________________________
+Bool_t TGuiBldDragManager::HandleDestroyNotify(Event_t *event)
+{
+   // handle destroy notify
+
+   if (fPimpl->fPlane && (fPimpl->fPlane->GetId() == event->fWindow)) {
+      fPimpl->fPlane = 0;
+   }
+
+   return kFALSE;
+}
+
 
 //______________________________________________________________________________
 Bool_t TGuiBldDragManager::HandleSelection(Event_t *)
@@ -3913,10 +3979,14 @@ void TGuiBldDragManager::SetEditable(Bool_t on)
          gSystem->Unlink(fPasteFileName.Data());
       }
 
+      if (!gSystem->AccessPathName(fTmpBuildFile.Data())) {
+         gSystem->Unlink(fTmpBuildFile.Data());
+      }
+
       if (fBuilder) {
          fBuilder->Update();
       }
-      CloseMenus();
+      //CloseMenus();
 
       fStop = kTRUE;
    }
@@ -4351,26 +4421,6 @@ Int_t TGuiBldDragManager::GetEndDragY() const
 }
 
 //______________________________________________________________________________
-void TGuiBldDragManager::ExecuteQuickAction(Event_t *event)
-{
-   // create dialog on the double click on selected frame
-
-   if (fStop) return;
-
-// We are going to remove quick handler action. Everything  must be done via context menu
-return;
-
-   TGWindow *win = gClient->GetWindowById(event->fWindow);
-   if (!win) return;
-
-   if (!fQuickHandler) fQuickHandler = new TGuiBldQuickHandler();
-
-   if (fQuickHandler) {
-      fQuickHandler->HandleEvent(win);
-   }
-}
-
-//______________________________________________________________________________
 void TGuiBldDragManager::BreakLayout()
 {
    // disable/enable layouting
@@ -4394,15 +4444,14 @@ void TGuiBldDragManager::BreakLayout()
       }
       return;
    }
-   ChangeSelected(frame);   // update editors
 
    frame->SetLayoutBroken(!frame->IsLayoutBroken());
+   DrawGrabRectangles();
 
    if (fBuilder) {
       str += (frame->IsLayoutBroken() ? " Disable Layout" : " Enable Layout");
       fBuilder->UpdateStatusBar(str.Data());
    }
-   DrawGrabRectangles();
 }
 
 //______________________________________________________________________________
@@ -4478,6 +4527,10 @@ void TGuiBldDragManager::CloseMenus()
 TGFrame *TGuiBldDragManager::GetEditableParent(TGFrame *fr)
 {
    // returns the parent frame which could be editted
+
+   if (!fr || (fr == fClient->GetDefaultRoot())) {
+      return 0;
+   }
 
    TGWindow *parent = (TGWindow*)fr->GetParent();
 
@@ -4661,8 +4714,8 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
          str.Form("((%s*)0x%lx)->%s()", fPimpl->fMenuObject->ClassName(), 
                                         fPimpl->fMenuObject, method->GetName());
          G__calc((char *)str.Data());
-//         delete fFrameMenu;  // suicide (BB)?
-//         fFrameMenu = 0;
+         //delete fFrameMenu;  // suicide (BB)?
+         //fFrameMenu = 0;
          return;
       }
       gMenuDialog = new TGuiBldMenuDialog(fPimpl->fMenuObject, fPimpl->fMenuObject, method);

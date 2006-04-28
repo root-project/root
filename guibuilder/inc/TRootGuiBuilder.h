@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.5 2006/04/07 10:05:09 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.h,v 1.6 2006/04/13 15:33:02 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -117,6 +117,7 @@ public:
 
    TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
    TGuiBldEditor    *GetEditor() const { return fEditor; }
+   TGDockableFrame  *GetToolDock() const { return fToolDock; }
    static TGFrame   *HSplitter();
    static TGFrame   *VSplitter();
    TGMdiMainFrame   *GetMdiMain() const { return fMain; }  

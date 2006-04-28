@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.28 2006/04/14 17:54:49 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.29 2006/04/24 14:09:16 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -234,8 +234,8 @@ public:
    TGuiBldMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu) :  
       TGMenuTitle(p, s, menu) {
          fEditDisabled = kEditDisable;
-         SetBackgroundColor(TRootGuiBuilder::GetBgnd());
          fBgndColor = TRootGuiBuilder::GetBgnd();
+         SetBackgroundColor(fBgndColor);
          AddInput(kEnterWindowMask | kLeaveWindowMask);
    }
 
@@ -375,7 +375,7 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             } else { // we need some special background for labels
                gVirtualX->FillRectangle(fId, TGFrame::GetBckgndGC()(),
                                        entry->GetEx()+1, entry->GetEy()-1,
-                                       fMenuWidth - entry->GetEx()- sep, h);
+                                       fMenuWidth - entry->GetEx()- 3, h);
             }
 
             if (entry->GetType() == kMenuPopup) {
@@ -550,7 +550,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 
    fToolDock = new TGDockableFrame(this);
    AddFrame(fToolDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
-   fToolDock->SetWindowName("ROOT GuiBuilder ToolBar");
+   fToolDock->SetWindowName("GuiBuilder ToolBar");
 
    fToolBar = new TGToolBar(fToolDock);
    fToolDock->AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
@@ -1373,7 +1373,6 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 {
    // Save selected project.
 
-
    TGButton *btn = fToolBar->GetButton(kSaveAct);
    if (btn) {
       btn->SetBackgroundColor(GetBgnd());
@@ -1414,12 +1413,19 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
       TString name = savfr->GetName();
       savfr->SetName(main->GetName());
       main->SetList(savfr->GetList());
+      main->SetLayoutBroken(savfr->IsLayoutBroken());
 
-      main->SetLayoutBroken(savfr->GetDefaultWidth() != savfr->GetWidth());
       main->SaveSource(fname, "");
       savfr->SetWindowName(fname);
 
       main->SetList(list);
+      main->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputFullApplicationModal);
+      main->SetWMSize(main->GetWidth(), main->GetHeight());
+      //main->SetWMSizeHints(main->GetDefaultWidth(), main->GetDefaultHeight(), 10000, 10000, 0, 0);
+      main->SetWindowName(fname);
+      main->SetIconName(fname);
+      main->SetClassHints(fname, fname);
+
       savfr->SetName(name.Data());
       delete main;
    } else {
