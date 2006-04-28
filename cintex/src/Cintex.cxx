@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.6 2005/12/12 09:12:27 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.7 2006/04/13 14:42:48 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -37,10 +37,14 @@ namespace {
         //NamespaceBuilder( "ROOT::Cintex" );
         Type t_void = TypeBuilder("void");
         Type t_int  = TypeBuilder("int");
+        Type t_bool = TypeBuilder("bool");
         ClassBuilderT< Cintex >("Cintex", PUBLIC)
          .AddFunctionMember(FunctionTypeBuilder(t_void), "Enable", Enable, 0, 0, PUBLIC | STATIC)
          .AddFunctionMember(FunctionTypeBuilder(t_void, t_int), "SetDebug", SetDebug, 0, 0, PUBLIC | STATIC)
-         .AddFunctionMember(FunctionTypeBuilder(t_int), "Debug", Debug, 0, 0, PUBLIC | STATIC);
+         .AddFunctionMember(FunctionTypeBuilder(t_int), "Debug", Debug, 0, 0, PUBLIC | STATIC)
+          .AddFunctionMember(FunctionTypeBuilder(t_bool), "PropagateClassTypedefs", PropagateClassTypedefs, 0, 0, PUBLIC | STATIC)
+          .AddFunctionMember(FunctionTypeBuilder(t_void, t_bool), "SetPropagateClassTypedefs", SetPropagateClassTypedefs, 0, 0, PUBLIC | STATIC);
+          
         //--CINT class builder
 	      Type t = Type::ByName("Cintex");
         ROOT::Cintex::CINTClassBuilder::Get(t).Setup();
@@ -57,6 +61,16 @@ namespace {
         static int b = Cintex::Debug();
         return &b;
       }
+
+    static void* PropagateClassTypedefs(void*, const std::vector<void*>&, void*) {
+      static bool b = Cintex::PropagateClassTypedefs();
+      return &b;
+    }
+
+    static void* SetPropagateClassTypedefs(void*, const std::vector<void*>& arg, void*) {
+      Cintex::SetPropagateClassTypedefs(*(bool*)arg[0]);
+      return 0;
+    }
 
   };
   static Cintex_dict s_dict;
@@ -75,6 +89,7 @@ namespace ROOT {
     fCallback = new Callback();
     fRootcreator = 0;
     fDbglevel = 0;
+    fPropagateClassTypedefs = true;
     fEnabled = false;
   }
 
@@ -119,6 +134,15 @@ namespace ROOT {
   void Cintex::SetDebug(int l) {
     Instance().fDbglevel = l;
   }
+
+
+    bool Cintex::PropagateClassTypedefs() {
+      return Instance().fPropagateClassTypedefs;
+    }
+
+    void Cintex::SetPropagateClassTypedefs(bool val) {
+      Instance().fPropagateClassTypedefs = val;
+    }
   
   void Callback::operator () ( const Type& t ) {
     int autoload = G__set_class_autoloading(0); // To avoid recursive loads

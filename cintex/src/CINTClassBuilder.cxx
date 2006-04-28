@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.9 2006/02/16 05:58:56 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.10 2006/04/13 14:42:48 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -17,6 +17,7 @@
 #include "CINTScopeBuilder.h"
 #include "CINTFunctionBuilder.h"
 #include "CINTVariableBuilder.h"
+#include "CINTTypedefBuilder.h"
 #include "CINTFunctional.h"
 #include "Api.h"
 #include <list>
@@ -177,6 +178,16 @@ namespace ROOT { namespace Cintex {
       CINTFunctionBuilder::Setup(method);
     }
     ::G__tag_memfunc_reset();
+
+    for (Type_Iterator ti = fClass.SubType_Begin(); ti != fClass.SubType_End(); ++ti) {
+      if (Cintex::PropagateClassTypedefs()) {
+        if ( ti->IsTypedef()) {
+          CINTTypedefBuilder::Setup(*ti);
+          CINTScopeBuilder::Setup(ti->ToType());
+        }
+      }
+    }
+
   }
 
   void CINTClassBuilder::Setup_memvar() {
@@ -199,6 +210,7 @@ namespace ROOT { namespace Cintex {
       }
     }
     G__tag_memvar_reset();
+
   }
 
   CINTClassBuilder::Bases* CINTClassBuilder::GetBases() {
@@ -300,6 +312,7 @@ namespace ROOT { namespace Cintex {
   }
 
   void CINTClassBuilder::Setup_typetable() {
+
   }
 
 }}

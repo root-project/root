@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: Cintex.h,v 1.3 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -40,11 +40,14 @@ namespace ROOT {
       static ROOTCreator GetROOTCreator();
       static int  Debug();
       static void SetDebug(int);
+      static bool PropagateClassTypedefs();
+      static void SetPropagateClassTypedefs(bool);
     private:
       static Cintex& Instance();
       Callback*     fCallback;
       ROOTCreator   fRootcreator;
       int           fDbglevel;
+      bool          fPropagateClassTypedefs;
       bool          fEnabled;
     };
 
