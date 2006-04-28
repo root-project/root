@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.18 2005/03/21 15:14:39 rdm Exp $ */
+/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.19 2005/06/24 20:25:11 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,9 +10,8 @@
 
 #ifdef __CINT__
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#pragma link C++ nestedtypedefs;
+#pragma link C++ nestedclasses;
 
 #pragma link C++ class TTreePlayer+;
 #pragma link C++ class TTreeFormula-;
@@ -20,10 +19,10 @@
 #pragma link C++ class TFileDrawMap+;
 #pragma link C++ class TTreeIndex-;
 #pragma link C++ class TChainIndex+;
+#pragma link C++ class TChainIndex::TChainIndexEntry+;
 #pragma link C++ class TTreeFormulaManager;
 #pragma link C++ class TTreeDrawArgsParser+;
 
-#pragma link C++ nestedtypedefs;
 #pragma link C++ namespace ROOT;
 
 #pragma link C++ class ROOT::TBranchProxyDirector+;
