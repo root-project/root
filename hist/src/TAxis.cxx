@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.72 2006/03/27 06:38:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.73 2006/04/27 09:26:38 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -271,10 +271,6 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t temp, xmin,xmax;
 
    switch (event) {
-
-   case kKeyPress:
-      gROOT->SetEscape(px == kESC);
-      break;
 
    case kButton1Down:
       axisNumber = 1;

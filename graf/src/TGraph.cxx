@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.183 2006/04/08 13:36:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.184 2006/04/27 09:26:38 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -732,10 +732,6 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad->IsEditable()) return;
 
    switch (event) {
-
-   case kKeyPress:
-      gROOT->SetEscape(px == kESC);
-      break;
 
    case kButton1Down:
       badcase = kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.20 2005/11/28 13:47:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.21 2006/04/27 09:26:38 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -213,10 +213,6 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 again:
 
    switch (event) {
-
-   case kKeyPress:
-      gROOT->SetEscape(px == kESC);
-      break;
 
    case kMouseEnter:
       if (fTip) gPad->ResetToolTip(fTip);

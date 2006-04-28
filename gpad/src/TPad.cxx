@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.224 2006/04/06 09:41:09 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.225 2006/04/27 09:26:38 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1574,10 +1574,6 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 again:
 
    switch (event) {
-
-   case kKeyPress:
-      gROOT->SetEscape(px == kESC);
-      break;
 
    case kMouseEnter:
       if (fTip)

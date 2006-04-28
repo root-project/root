@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.15 2006/04/15 12:16:24 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.16 2006/04/27 09:26:38 couet Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -129,10 +129,6 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t temp, xmin,xmax;
 
    switch (event) {
-
-   case kKeyPress:
-	      gROOT->SetEscape(px == kESC);
-	            break;
 
    case kButton1Down:
       ratio1 = (gPad->AbsPixeltoY(py) - fY1)/(fY2 - fY1);
