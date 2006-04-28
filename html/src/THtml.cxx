@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.89 2006/04/26 06:07:17 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.90 2006/04/27 17:29:58 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -428,58 +428,61 @@ namespace {
    typedef std::list<TSectionInfo> SectionStarts_t;
 
    void Sections_BuildIndex(SectionStarts_t& sectionStarts,
-      const SectionStart_t begin, const SectionStart_t end, 
-      size_t selectionChar, const size_t maxPerSection) {
+      SectionStart_t begin, SectionStart_t end, 
+      size_t maxPerSection) {
       // for each assumed section border, check that previous entry's
       // char[selectionChar] differs, else move section start forward
 
-      for (SectionStart_t pushBackWhichOne = begin; pushBackWhichOne != end;) {
-         if (pushBackWhichOne == begin) {
-            if (sectionStarts.empty() || sectionStarts.back().fStart != pushBackWhichOne)
-               sectionStarts.push_back(TSectionInfo(pushBackWhichOne, selectionChar, 0));
-            size_t numLeft = end - begin;
-            size_t assumedNumSections = (numLeft + maxPerSection - 1 ) / maxPerSection;
-            size_t step = ((numLeft + assumedNumSections - 1) / assumedNumSections);
-            if (!step) step = 1;
-            pushBackWhichOne += step;
-            continue;
-         }
+      SectionStart_t cursor = begin;
+      if (sectionStarts.empty() || sectionStarts.back().fStart != cursor)
+         sectionStarts.push_back(TSectionInfo(cursor, 1, 0));
 
-         SectionStarts_t::iterator prevSection = sectionStarts.end();
-         --prevSection;
+      SectionStarts_t::iterator prevSection = sectionStarts.end();
+      --prevSection;
 
-         SectionStart_t checkPrev = pushBackWhichOne;
-         --checkPrev;
-         while (checkPrev != prevSection->fStart 
-            && !strncasecmp(checkPrev->c_str(), pushBackWhichOne->c_str(), selectionChar + 1))
-            --checkPrev;
-         if (checkPrev == prevSection->fStart) {
-            SectionStart_t checkNext = pushBackWhichOne;
+      while (cursor != end) {
+         size_t numLeft = end - cursor;
+         size_t assumedNumSections = (numLeft + maxPerSection - 1 ) / maxPerSection;
+         size_t step = ((numLeft + assumedNumSections - 1) / assumedNumSections);
+         if (!step || step >= numLeft) return;
+         cursor += step;
+         if (cursor == end) break;
+
+         SectionStart_t addWhichOne = prevSection->fStart;
+
+         size_t selectionChar=1;
+         for (; selectionChar <= cursor->length() && addWhichOne == prevSection->fStart; 
+            ++selectionChar) {
+            SectionStart_t checkPrev = cursor;
+            while (--checkPrev != prevSection->fStart 
+               && !strncasecmp(checkPrev->c_str(), cursor->c_str(), selectionChar));
+
+            SectionStart_t checkNext = cursor;
             while (++checkNext != end
-               && !strncasecmp(checkNext->c_str(), pushBackWhichOne->c_str(), selectionChar + 1))
+               && !strncasecmp(checkNext->c_str(), cursor->c_str(), selectionChar));
 
-            if (checkPrev == begin && checkNext == end 
-               && selectionChar > checkPrev->length()) {
-               // running around in circles here, let's just step.
-               size_t numLeft = end - pushBackWhichOne;
-               size_t assumedNumSections = (numLeft + maxPerSection - 1 ) / maxPerSection;
-               size_t step = (numLeft + assumedNumSections - 1 ) / assumedNumSections;
-               if (!step) step = 1;
-               pushBackWhichOne += step;
-            } else {
-               Sections_BuildIndex(sectionStarts, checkPrev, checkNext, selectionChar + 1, maxPerSection);
-               pushBackWhichOne = checkNext;
-            }
-         } else {
-            pushBackWhichOne = ++checkPrev;
-            sectionStarts.push_back(TSectionInfo(pushBackWhichOne, selectionChar, 0));
-            size_t numLeft = end - pushBackWhichOne;
-            size_t assumedNumSections = (numLeft + maxPerSection - 1 ) / maxPerSection;
-            size_t step = (numLeft + assumedNumSections - 1 ) / assumedNumSections;
-            if (!step) step = 1;
-            pushBackWhichOne += step;
+            // if the previous matching one is closer but not previous section start, take it!
+            if (checkPrev != prevSection->fStart)
+               if ((cursor - checkPrev) <= (checkNext - cursor))
+                  addWhichOne = ++checkPrev;
+               else if (checkNext != end
+                  && (size_t)(checkNext - cursor) < maxPerSection) {
+                  addWhichOne = checkNext;
+               }
          }
-      }
+         if (addWhichOne == prevSection->fStart)
+            addWhichOne = cursor;
+
+         selectionChar = 1;
+         while (selectionChar <= prevSection->fStart->length() 
+            && selectionChar <= addWhichOne->length() 
+            && !strncasecmp(prevSection->fStart->c_str(), addWhichOne->c_str(), selectionChar))
+            ++selectionChar;
+
+         sectionStarts.push_back(TSectionInfo(addWhichOne, selectionChar, 0));
+         cursor = addWhichOne;
+         ++prevSection;
+      } // while cursor != end
    }
 
    void Sections_SetSize(SectionStarts_t& sectionStarts, const Words_t &words) {
@@ -517,7 +520,7 @@ namespace {
 
       const size_t maxPerSection = (words.size() + numSectionsIn - 1)/ numSectionsIn;
       SectionStarts_t sectionStarts;
-      Sections_BuildIndex(sectionStarts, words.begin(), words.end(), 0, maxPerSection);
+      Sections_BuildIndex(sectionStarts, words.begin(), words.end(), maxPerSection);
       Sections_SetSize(sectionStarts, words);
       Sections_PostMerge(sectionStarts, maxPerSection);
 
@@ -528,7 +531,7 @@ namespace {
       for (SectionStarts_t::iterator iSectionStart = sectionStarts.begin();
          iSectionStart != sectionStarts.end(); ++iSectionStart)
          sectionMarkersOut[idx++] = 
-            iSectionStart->fStart->substr(0, iSectionStart->fChars+1);
+            iSectionStart->fStart->substr(0, iSectionStart->fChars);
    }
 
    void GetIndexChars(const char** wordsIn, UInt_t numWordsIn, UInt_t numSectionsIn, 
