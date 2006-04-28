@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -54,6 +54,9 @@ namespace ROOT { namespace Cintex {
       int typenum;
       int tagnum;
       CintType(rt, typenum, tagnum );
+
+      // If the final type was was not found create a place holder in the G__struct for it
+      if (tagnum == -1) tagnum = G__search_tagname(CintName(rt).c_str(), typenum);
 
       ::G__search_typename2( nam.c_str(), typenum, tagnum, 0, -1);
       ::G__setnewtype(-1,NULL,0);
