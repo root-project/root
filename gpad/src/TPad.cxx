@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.226 2006/04/28 08:43:05 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.227 2006/04/29 16:57:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5400,14 +5400,17 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    while (!gSystem->ProcessEvents()) {
       if (gROOT->GetEditorMode() == 0) {
          obj = FindObject(pname);
-         if (obj) {
-            return obj;
-         }
+         if (obj) return obj;
          if (testlast) {
             obj = gPad->GetListOfPrimitives()->Last();
             if (obj != oldlast) return obj;
             Int_t event = GetEvent();
-            if (event == kButton1Double || event == kKeyPress) return 0;
+            if (event == kButton1Double || event == kKeyPress) {
+               //the following statement is required against other loop executions
+               //before returning
+               fCanvas->HandleInput((EEventType)-1,0,0);
+               return 0;
+            }
          }
       }
       gSystem->Sleep(10);
