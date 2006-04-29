@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.28 2006/04/18 07:27:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.29 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -136,9 +136,9 @@ public:
    virtual Int_t       UploadPackage(const char *par) = 0;
 
    //-- dataset management
-   virtual Int_t       UploadDataSet(const char *files,
+   virtual Int_t       UploadDataSet(const char *dataset,
+                                     const char *files,
                                      const char *dest,
-                                     const char *dataset,
                                      Int_t opt = kAskUser,
                                      TList *skippedFiles = NULL) = 0;
                                      

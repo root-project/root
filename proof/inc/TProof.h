@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.76 2006/04/13 10:27:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.77 2006/04/19 10:57:44 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -454,9 +454,9 @@ public:
    Int_t       UploadPackage(const char *par);
 
    //-- dataset management
-   Int_t       UploadDataSet(const char *files,
+   Int_t       UploadDataSet(const char *dataset,
+                             const char *files,
                              const char *dest,
-                             const char *dataset,
                              Int_t opt = kAskUser,
                              TList *skippedFiles = NULL);
    Int_t       UploadDataSetFromFile(const char *file,

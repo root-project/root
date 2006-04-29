@@ -4485,8 +4485,10 @@ void TProof::SetAlias(const char *alias)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
-                            const char *dataSetName, Int_t opt,
+Int_t TProof::UploadDataSet(const char *dataSetName, 
+                            const char *files, 
+                            const char *desiredDest,
+                            Int_t opt,
                             TList *skippedFiles)
 {
    // Upload a set of files and save the list of files by name dataSetName.
@@ -4529,6 +4531,7 @@ Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
    Int_t goodName = (opt & (kOverwriteDataSet | kAppend)) ? 1 : -1;
    Int_t appendToDataSet = (opt & kAppend) ? kTRUE : kFALSE;
    Int_t overwriteNoDataSet = (opt & kNoOverwriteDataSet) ? kTRUE : kFALSE;
+
 
    //If skippedFiles is not provided we can not return list of skipped files.
    if ((!skippedFiles || !&skippedFiles) && overwriteNone) {
@@ -4701,6 +4704,7 @@ Int_t TProof::UploadDataSet(const char *files, const char *desiredDest,
    Collect();
    return fileCount;
 }
+
 //______________________________________________________________________________
 Int_t TProof::UploadDataSetFromFile(const char *file, const char *dest,
                                     const char *dataset, Int_t opt)
