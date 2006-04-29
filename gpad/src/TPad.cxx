@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.225 2006/04/27 09:26:38 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.226 2006/04/28 08:43:05 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1398,7 +1398,23 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 
    TH1F *hframe = (TH1F*)FindObject("hframe");
    if (hframe) delete hframe;
-   hframe = new TH1F("hframe",title,1000,xmin,xmax);
+   Int_t nbins = 1000;
+   //if log scale in X, use variable bin size linear with log(x)
+   //this gives a better precision when zooming on the axis
+   if (fLogx && xmin > 0 && xmax > xmin) {
+      Double_t xminl = TMath::Log(xmin);
+      Double_t xmaxl = TMath::Log(xmax);
+      Double_t dx = (xmaxl-xminl)/nbins;
+      Double_t *xbins = new Double_t[nbins+1];
+      xbins[0] = xmin;
+      for (Int_t i=1;i<=nbins;i++) {
+         xbins[i] = TMath::Exp(xminl+i*dx);
+      }
+      hframe = new TH1F("hframe",title,nbins,xbins);
+      delete [] xbins;
+   } else {
+      hframe = new TH1F("hframe",title,nbins,xmin,xmax);
+   }
    hframe->SetBit(TH1::kNoStats);
    hframe->SetBit(kCanDelete);
    hframe->SetMinimum(ymin);
@@ -1409,7 +1425,6 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    Update();
    return hframe;
 }
-
 
 //______________________________________________________________________________
 void TPad::DrawColorTable()
