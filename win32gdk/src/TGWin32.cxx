@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.109 2006/03/28 16:35:00 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.110 2006/04/18 10:34:35 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -722,7 +722,7 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
 
    // periodically we refresh windows
    // removed by bb 20.02.06 due to interferences with PVSS
-//   TGWin32RefreshTimer *refersh = new TGWin32RefreshTimer();
+   TGWin32RefreshTimer *refersh = new TGWin32RefreshTimer();
 
    while (!endLoop) {
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
@@ -732,7 +732,7 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
 
    TGWin32::Instance()->CloseDisplay();
    // removed by bb 20.02.06 due to interferences with PVSS
-//   delete refersh;
+   delete refersh;
 
    // exit thread
    if (erret == -1) {
@@ -825,8 +825,7 @@ Bool_t TGWin32::IsCmdThread() const
 {
    // returns kTRUE if we are inside cmd/server thread
 
-//   return (::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId);
-   return kTRUE;
+   return (::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId);
 }
 
 //______________________________________________________________________________
