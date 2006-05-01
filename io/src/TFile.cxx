@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.154 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.155 2006/04/25 09:28:42 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2428,22 +2428,15 @@ Bool_t TFile::Matches(const char *url)
 
    // Check the full URL, including port and FQDN.
    TUrl u(url);
-   TInetAddress a = gSystem->GetHostByName(u.GetHost());
-   TString fqdn = a.GetHostName();
-   if (fqdn == "UnNamedHost")
-      fqdn = a.GetHostAddress();
 
    // Check
-   if (!strcmp(u.GetFile(),fUrl.GetFile())) {
+   if (!strcmp(u.GetFile(), fUrl.GetFile())) {
       // Check ports
       if (u.GetPort() == fUrl.GetPort()) {
-         TInetAddress aref = gSystem->GetHostByName(fUrl.GetHost());
-         TString fqdnref = aref.GetHostName();
-         if (fqdnref == "UnNamedHost")
-            fqdnref = aref.GetHostAddress();
-         if (fqdn == fqdnref)
+         if (!strcmp(u.GetHostFQDN(), fUrl.GetHostFQDN())) {
             // Ok, coordinates match
             return kTRUE;
+         }
       }
    }
 
@@ -2463,21 +2456,14 @@ Bool_t TFileOpenHandle::Matches(const char *url)
       // Deep check of URLs
       TUrl u(url);
       TUrl uref(fName);
-      if (!strcmp(u.GetFile(),uref.GetFile())) {
+      if (!strcmp(u.GetFile(), uref.GetFile())) {
          // Check ports
          if (u.GetPort() == uref.GetPort()) {
             // Check also the host name
-            TInetAddress a = gSystem->GetHostByName(u.GetHost());
-            TInetAddress aref = gSystem->GetHostByName(uref.GetHost());
-            TString fqdn = a.GetHostName();
-            if (fqdn == "UnNamedHost")
-               fqdn = a.GetHostAddress();
-            TString fqdnref = aref.GetHostName();
-            if (fqdnref == "UnNamedHost")
-               fqdnref = aref.GetHostAddress();
-            if (fqdn == fqdnref)
+            if (!strcmp(u.GetHostFQDN(), uref.GetHostFQDN())) {
                // Ok, coordinates match
                return kTRUE;
+            }
          }
       }
    }
@@ -2518,10 +2504,10 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option)
             opt.ToUpper();
             if (opt == "" || opt == "READ") read = kTRUE;
             const char *fname = url.GetFile();
-            if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
-               lfname = &fname[1];
+            if (fname[0] == '/' || fname[0] == '~' || fname[0] == '$')
+               lfname = fname;
             else
-               lfname = Form("%s%s", gSystem->HomeDirectory(), fname);
+               lfname = Form("%s/%s", gSystem->HomeDirectory(), fname);
             if (read) {
                char *fn;
                if ((fn = gSystem->ExpandPathName(lfname))) {

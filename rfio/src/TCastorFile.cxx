@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.10 2006/04/17 21:10:59 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.11 2006/04/18 05:02:08 brun Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 
 /*************************************************************************
@@ -338,17 +338,10 @@ void TCastorFile::FindServerAndPath()
       // the full FQDN or address in "nnn.mmm.iii.jjj" form
       // (it can be changed by a proper directive in $HOME/.rootauthrc)
       TString p;
-      TString fqdn;
-      TInetAddress addr = gSystem->GetHostByName(rurl.GetHost());
-      if (addr.IsValid()) {
-         fqdn = addr.GetHostName();
-         if (fqdn == "UnNamedHost")
-            fqdn = addr.GetHostAddress();
-         if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
-            p = "rootug";
-         else
-            p = "root";
-      } else
+      TString fqdn = rurl.GetHostFQDN();
+      if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
+         p = "rootug";
+      else
          p = "root";
 
       // Update protocol and fUrl
