@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.24 2006/03/21 14:53:33 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.25 2006/03/22 15:03:09 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TEnv.h"
+#include "TSystem.h"
 
 TObjArray *TUrl::fgSpecialProtocols;
 
@@ -37,7 +38,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Parse url character string and split in its different subcomponents.
    // Use IsValid() to check if URL is legal.
    //
-   // url: [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]
+   // url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
    //
    // Known protocols: http, root, proof, ftp, news and any special protocols
    // defined in the rootrc Url.Special key.
@@ -207,6 +208,8 @@ again:
 
    // Find file
    u = s;
+   if (*u == '/')
+      u++;
 
    FindFile(u);
 
@@ -221,34 +224,42 @@ void TUrl::FindFile(char *u)
 
    char *s, sav;
 
-   if ((s = strchr(u, '#')) || (s = strchr(u, '?'))) {
+   // Locate anchor and options, if any
+   char *opt = strchr(u, '?');
+   char *anc = strchr(u, '#');
+
+   // URL invalid if anchor is coming before the options
+   if (opt && anc && opt > anc) {
+      fPort = -1;
+      return;
+   }
+
+   if ((s = opt) || (s = anc)) {
       sav = *s;
       *s = 0;
       fFile = u;
       *s = sav;
       s++;
-      if (sav == '#') {
-         // Get anchor
+      if (sav == '?') {
+         // Get options
          if (!*s) {
-         // error if we are at end of string
-            fPort = -1;
+            // options string is empty
             return;
          }
          u = s;
-         if ((s = strchr(u, '?'))) {
+         if ((s = strchr(u, '#'))) {
             sav = *s;
             *s = 0;
-            fAnchor = u;
+            fOptions = u;
             *s = sav;
             s++;
          } else {
-            fAnchor = u;
+            fOptions = u;
             return;
          }
       }
       if (!*s) {
-         // error if we are at end of string
-         fPort = -1;
+         // anhor string is empty
          return;
       }
    } else {
@@ -256,8 +267,8 @@ void TUrl::FindFile(char *u)
       return;
    }
 
-   // Set option
-   fOptions = s;
+   // Set anchor
+   fAnchor = s;
 }
 
 //______________________________________________________________________________
@@ -274,6 +285,8 @@ TUrl::TUrl(const TUrl &url) : TObject(url)
    fAnchor   = url.fAnchor;
    fOptions  = url.fOptions;
    fPort     = url.fPort;
+   fFileOA   = url.fFileOA;
+   fHostFQ   = url.fHostFQ;
 }
 
 //______________________________________________________________________________
@@ -292,6 +305,8 @@ TUrl &TUrl::operator=(const TUrl &rhs)
       fAnchor   = rhs.fAnchor;
       fOptions  = rhs.fOptions;
       fPort     = rhs.fPort;
+      fFileOA   = rhs.fFileOA;
+      fHostFQ   = rhs.fHostFQ;
    }
    return *this;
 }
@@ -313,13 +328,13 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
                fUrl = fProtocol + "://" + fFile;
             else
                fUrl = fProtocol + ":" + fFile;
-            if (fAnchor != "") {
-               fUrl += "#";
-               fUrl += fAnchor;
-            }
             if (fOptions != "") {
                fUrl += "?";
                fUrl += fOptions;
+            }
+            if (fAnchor != "") {
+               fUrl += "#";
+               fUrl += fAnchor;
             }
             return fUrl;
          }
@@ -352,20 +367,40 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
       if (!deflt || withDeflt) {
          char p[10];
          sprintf(p, "%d", fPort);
-         fUrl = fUrl + fHost + ":" + p + fFile;
+         fUrl = fUrl + fHost + ":" + p + "/" + fFile;
       } else
-         fUrl = fUrl + fHost + fFile;
-      if (fAnchor != "") {
-         fUrl += "#";
-         fUrl += fAnchor;
-      }
+         fUrl = fUrl + fHost + "/" + fFile;
       if (fOptions != "") {
          fUrl += "?";
          fUrl += fOptions;
       }
+      if (fAnchor != "") {
+         fUrl += "#";
+         fUrl += fAnchor;
+      }
    }
 
    return fUrl;
+}
+
+//______________________________________________________________________________
+const char *TUrl::GetHostFQDN() const
+{
+   // Return fully qualified domain name of url host. If host cannot be
+   // resolved or not valid return "".
+
+   if (fHostFQ == "") {
+      TInetAddress adr(gSystem->GetHostByName(fHost));
+      if (adr.IsValid()) {
+         fHostFQ = adr.GetHostName();
+         if (fHostFQ == "UnNamedHost")
+            fHostFQ = adr.GetHostAddress();
+      } else
+         fHostFQ = "-";
+   }
+   if (fHostFQ == "-")
+      return "";
+   return fHostFQ;
 }
 
 //______________________________________________________________________________
@@ -375,16 +410,18 @@ const char *TUrl::GetFileAndOptions() const
    // Convenience function useful when the option is used to pass
    // authetication/access information for the specified file.
 
-   fFileAO = fFile;
-   if (fAnchor != "") {
-      fFileAO += "#";
-      fFileAO += fAnchor;
+   if (fFileOA == "") {
+      fFileOA = fFile;
+      if (fOptions != "") {
+         fFileOA += "?";
+         fFileOA += fOptions;
+      }
+      if (fAnchor != "") {
+         fFileOA += "#";
+         fFileOA += fAnchor;
+      }
    }
-   if (fOptions != "") {
-      fFileAO += "?";
-      fFileAO += fOptions;
-   }
-   return fFileAO;
+   return fFileOA;
 }
 
 //______________________________________________________________________________

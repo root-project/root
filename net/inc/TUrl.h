@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.12 2006/03/21 14:53:33 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.13 2006/03/22 15:03:09 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -43,7 +43,8 @@ private:
    TString fFile;           // remote object including the slash after host
    TString fAnchor;         // anchor in object (after #)
    TString fOptions;        // options/search (after ?)
-   mutable TString fFileAO; //!file and option
+   mutable TString fFileOA; //!file with option and anchor
+   mutable TString fHostFQ; //!fully qualified host name
    Int_t   fPort;           // port through which to contact remote server
 
    static TObjArray  *fgSpecialProtocols;  // list of special protocols
@@ -62,6 +63,7 @@ public:
    const char *GetUser() const { return fUser; }
    const char *GetPasswd() const { return fPasswd; }
    const char *GetHost() const { return fHost; }
+   const char *GetHostFQDN() const;
    const char *GetFile() const { return fFile; }
    const char *GetAnchor() const { return fAnchor; }
    const char *GetOptions() const { return fOptions; }
