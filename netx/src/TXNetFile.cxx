@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.25 2006/04/17 21:04:17 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.26 2006/04/27 15:14:11 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -279,7 +279,8 @@ zombie:
 Int_t TXNetFile::GetRootdProtocol(TSocket *s)
 {
    // Find out the remote rootd protocol version.
-   // Returns -1 in case of error
+   // Returns -1 in case of error.
+
    Int_t rproto = -1;
 
    UInt_t cproto = 0;

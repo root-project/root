@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.7 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.8 2006/04/19 10:57:44 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -72,12 +72,8 @@ TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
    }
 
    // Check and save the host FQDN ...
-   TInetAddress addr = gSystem->GetHostByName(fUrl.GetHost());
-   if (addr.IsValid()) {
-      fUrl.SetHost(addr.GetHostName());
-      if (!strcmp(fUrl.GetProtocol(),"UnNamedHost"))
-         fUrl.SetHost(addr.GetHostAddress());
-   }
+   if (strcmp(fUrl.GetHost(), fUrl.GetHostFQDN()))
+      fUrl.SetHost(fUrl.GetHostFQDN());
 
    SetName(fUrl.GetUrl(kTRUE));
    if (alias)
@@ -216,7 +212,7 @@ Bool_t TXProofMgr::MatchUrl(const char *url)
 {
    // Checks if 'url' refers to the same 'user@host:port' entity as the URL
    // in memory. TVirtualProofMgr::MatchUrl cannot be used here because of the
-   // 'double' default port, implying an additional check on teh port effectively
+   // 'double' default port, implying an additional check on the port effectively
    // open.
 
    TUrl u(url);
@@ -233,16 +229,8 @@ Bool_t TXProofMgr::MatchUrl(const char *url)
       u.SetPort(port);
    }
 
-   // Get the url host FQDN ...
-   TInetAddress addr = gSystem->GetHostByName(u.GetHost());
-   if (addr.IsValid()) {
-      u.SetHost(addr.GetHostName());
-      if (!strcmp(u.GetProtocol(),"UnNamedHost"))
-         u.SetHost(addr.GetHostAddress());
-   }
-
    // Now we can check
-   if (!strcmp(u.GetHost(), fUrl.GetHost()))
+   if (!strcmp(u.GetHostFQDN(), fUrl.GetHost()))
       if (u.GetPort() == fUrl.GetPort() ||
           u.GetPort() == fSocket->GetPort())
          if (strlen(u.GetUser()) <= 0 || !strcmp(u.GetUser(),fUrl.GetUser()))

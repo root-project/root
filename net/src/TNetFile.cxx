@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.65 2006/02/26 16:13:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.66 2006/04/18 14:23:20 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -645,17 +645,11 @@ Bool_t TNetFile::Matches(const char *url)
    TUrl u(url);
    if (!strcmp(u.GetFile(),fEndpointUrl.GetFile())) {
       // Candidate info
-      TInetAddress a = gSystem->GetHostByName(u.GetHost());
-      TString fqdn = a.GetHostName();
-      if (fqdn == "UnNamedHost")
-         fqdn = a.GetHostAddress();
+      TString fqdn = u.GetHostFQDN();
 
       // Check ports
       if (u.GetPort() == fEndpointUrl.GetPort()) {
-         TInetAddress aref = gSystem->GetHostByName(fEndpointUrl.GetHost());
-         TString fqdnref = aref.GetHostName();
-         if (fqdnref == "UnNamedHost")
-            fqdnref = aref.GetHostAddress();
+         TString fqdnref = fEndpointUrl.GetHostFQDN();
          if (fqdn == fqdnref)
             // Ok, coordinates match
             return kTRUE;
@@ -724,13 +718,7 @@ void TNetSystem::InitRemoteEntity(const char *url)
    }
 
    // Check and save the host FQDN ...
-   fHost = turl.GetHost();
-   TInetAddress addr = gSystem->GetHostByName(turl.GetHost());
-   if (addr.IsValid()) {
-      fHost = addr.GetHostName();
-      if (fHost == "UnNamedHost")
-         fHost = addr.GetHostAddress();
-   }
+   fHost = turl.GetHostFQDN();
 
    // Remote port: the deafult should be 1094 because we are here
    // only if the protocol is "root://"
@@ -954,13 +942,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
       }
 
       // Get host name
-      TString host = url.GetHost();
-      TInetAddress addr = gSystem->GetHostByName(host);
-      if (addr.IsValid()) {
-         host = addr.GetHostName();
-         if (host == "UnNamedHost")
-            host = addr.GetHostAddress();
-      }
+      TString host = url.GetHostFQDN();
 
       // Get port
       Int_t port = url.GetPort();

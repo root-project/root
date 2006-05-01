@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.3 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.4 2006/04/19 10:57:44 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -54,12 +54,8 @@ TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
       fUrl.SetProtocol("proof");
 
    // Check and save the host FQDN ...
-   TInetAddress addr = gSystem->GetHostByName(fUrl.GetHost());
-   if (addr.IsValid()) {
-      fUrl.SetHost(addr.GetHostName());
-      if (!strcmp(fUrl.GetProtocol(),"UnNamedHost"))
-         fUrl.SetHost(addr.GetHostAddress());
-   }
+   if (strcmp(fUrl.GetHost(), fUrl.GetHostFQDN()))
+      fUrl.SetHost(fUrl.GetHostFQDN());
 
    SetName(fUrl.GetUrl());
    if (alias)

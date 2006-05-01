@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.4 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.5 2006/04/21 16:29:33 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -188,16 +188,8 @@ Bool_t TVirtualProofMgr::MatchUrl(const char *url)
       u.SetPort(port);
    }
 
-   // Get the url host FQDN ...
-   TInetAddress addr = gSystem->GetHostByName(u.GetHost());
-   if (addr.IsValid()) {
-      u.SetHost(addr.GetHostName());
-      if (!strcmp(u.GetProtocol(),"UnNamedHost"))
-         u.SetHost(addr.GetHostAddress());
-   }
-
    // Now we can check
-   if (!strcmp(u.GetHost(), fUrl.GetHost()))
+   if (!strcmp(u.GetHostFQDN(), fUrl.GetHost()))
       if (u.GetPort() == fUrl.GetPort())
          if (strlen(u.GetUser()) <= 0 || !strcmp(u.GetUser(),fUrl.GetUser()))
             return kTRUE;
