@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.111 2006/03/16 16:07:21 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.112 2006/03/22 21:57:17 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1030,7 +1030,7 @@ void RootdOpen(const char *msg)
 
    } else {
 
-      if (file[0] == '/')
+      if (file[0] == '/' && file[1] == '/')
          strcpy(gFile, &file[1]);
       else
          strcpy(gFile, file);
