@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.25 2006/03/22 15:03:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.26 2006/05/01 16:34:00 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -387,7 +387,7 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
 const char *TUrl::GetHostFQDN() const
 {
    // Return fully qualified domain name of url host. If host cannot be
-   // resolved or not valid return "".
+   // resolved or not valid return the host name as originally specified.
 
    if (fHostFQ == "") {
       TInetAddress adr(gSystem->GetHostByName(fHost));
@@ -399,7 +399,7 @@ const char *TUrl::GetHostFQDN() const
          fHostFQ = "-";
    }
    if (fHostFQ == "-")
-      return "";
+      return fHost;
    return fHostFQ;
 }
 
