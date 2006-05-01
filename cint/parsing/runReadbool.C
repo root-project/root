@@ -37,5 +37,12 @@ int runReadbool() {
    if (!f) f = true;
    tester(i++,f,1);
 
+   t = kTRUE;
+   tester(i++,t,1);
+
+   f = kFALSE;
+   tester(i++,f,0);
+
+
    return 0;
 }
