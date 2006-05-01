@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.136 2006/04/17 14:12:52 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.137 2006/04/19 10:58:10 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -432,7 +432,7 @@ Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Opti
 +Plugin.TFile:       .+[.]xml$ TXMLFile      XMLIO   "TXMLFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^mysql:   TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
 +Plugin.TFile:       ^oracle:  TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
-@hasxrd@+Plugin.TFile:  ^root: TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)"
+@hasxrd@+Plugin.TFile:       ^root:    TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)"
 Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^castor:  TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"

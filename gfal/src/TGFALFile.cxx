@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.3 2006/02/24 08:55:26 brun Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.cxx,v 1.4 2006/04/18 14:23:20 rdm Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -53,7 +53,7 @@
 //                    cern.ch/user/b/baud/testgfal15                    //
 //                                                                      //
 //      a TURL starts with a protocol name:                             //
-//          for example rfio:////castor/cern.ch/user/b/baud/testgfal15  //
+//          for example rfio:///castor/cern.ch/user/b/baud/testgfal15   //
 //                                                                      //
 // Note that for the TGFALFile plugin to work, all these pathnames      //
 // should be prepended by gfal:.                                        //
