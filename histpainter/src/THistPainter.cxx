@@ -6228,7 +6228,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    hp->SetTitle(Form("ProjectionX of biny=%d", biny));
    hp->SetXTitle(fH->GetXaxis()->GetTitle());
    hp->SetYTitle("Number of Entries");
-   hp->Draw(fShowOption.Data());
+   hp->Draw();
    c->Update();
    padsav->cd();
 }
@@ -6271,7 +6271,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    hp->SetTitle(Form("ProjectionY of binx=%d", binx));
    hp->SetXTitle(fH->GetYaxis()->GetTitle());
    hp->SetYTitle("Number of Entries");
-   hp->Draw(fShowOption.Data());
+   hp->Draw();
    c->Update();
    padsav->cd();
 }
