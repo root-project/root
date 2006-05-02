@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.13 2006/03/22 15:03:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.14 2006/05/01 16:34:00 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -40,7 +40,7 @@ private:
    TString fUser;           // user name
    TString fPasswd;         // password
    TString fHost;           // remote host
-   TString fFile;           // remote object including the slash after host
+   TString fFile;           // remote object
    TString fAnchor;         // anchor in object (after #)
    TString fOptions;        // options/search (after ?)
    mutable TString fFileOA; //!file with option and anchor
