@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.91 2006/04/28 15:40:50 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.92 2006/05/02 15:57:36 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1153,7 +1153,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
 
    // find a .cxx file
    char *tmp1;
-   if (classPtr->GetImplFileLine()) {
+   if (classPtr->GetImplFileName() && classPtr->GetImplFileName()[0]) {
       tmp1 = GetSourceFileName(classPtr->GetImplFileName());
    } else {
       tmp1 = GetSourceFileName(classPtr->GetDeclFileName());
@@ -2721,8 +2721,12 @@ void THtml::CreateListOfClasses(const char* filter)
       // get class name
       const char *cname = gClassTable->Next();
       TString s = cname;
-      if (s.Index(re) == kNPOS)
+      if (filter && filter[0] && strcmp(filter,"*") && s.Index(re) == kNPOS)
          continue;
+
+      // This is a hack for until after Cint and Reflex are one.
+      if (strstr(cname, "__gnu_cxx::")) continue;
+
       fClassNames[fNumberOfClasses] = cname;
       len = strlen(fClassNames[fNumberOfClasses]);
       fMaxLenClassName = fMaxLenClassName > len ? fMaxLenClassName : len;
@@ -2730,7 +2734,6 @@ void THtml::CreateListOfClasses(const char* filter)
       // get class & filename
       TClass *classPtr = GetClass((const char *) fClassNames[fNumberOfClasses], kTRUE);
       if (!classPtr) continue;
-      //if (cname[0] == 'T' && classPtr->GetClassVersion() > 0) classPtr->BuildRealData();
 
       const char *impname=0;
       if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName()))
