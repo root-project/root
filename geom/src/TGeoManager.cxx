@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.147 2006/04/11 11:21:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.148 2006/04/25 09:38:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -475,6 +475,7 @@ TGeoManager::TGeoManager()
       fStep = 0;
       fBits = 0;
       fMaterials = 0;
+      fHashPNE = 0;
       fMatrices = 0;
       fNodes = 0;
       fOverlaps = 0;
@@ -589,6 +590,7 @@ void TGeoManager::Init()
    fLastSafety = 0.;
    fStep = 0;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
+   fHashPNE = new THashList(256,3);
    fMaterials = new THashList(200,3);
    fMatrices = new TObjArray(256);
    fNodes = new TObjArray(30);
@@ -681,6 +683,7 @@ TGeoManager::~TGeoManager()
    if (fMedia) {fMedia->Delete(); delete fMedia;}
    if (fHashVolumes) delete fHashVolumes;
    if (fHashGVolumes) delete fHashGVolumes;
+   if (fHashPNE) {fHashPNE->Delete(); delete fHashPNE;}
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}
    fVolumes = 0;
    if (fShapes) {fShapes->Delete(); delete fShapes;}
@@ -4590,6 +4593,77 @@ TGeoVolume *TGeoManager::MakeXtru(const char *name, const TGeoMedium *medium, In
    TGeoVolume *vol = new TGeoVolume(name, xtru, medium);
    return vol;
 }
+
+//_____________________________________________________________________________
+TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char *path)
+{
+// Creates an aligneable object with unique name corresponding to a path
+// and adds it to the list of alignables.
+   if (!fHashPNE) fHashPNE = new THashList(256,3);
+   TGeoPNEntry *entry = GetAlignableEntry(unique_name);
+   if (entry) {
+      Error("SetAlignableEntry", "An alignable object with name %s already existing. NOT ADDED !", unique_name);
+      return 0;
+   }
+   entry = new TGeoPNEntry(unique_name, path);
+   fHashPNE->Add(entry);
+   return entry;
+}
+
+//_____________________________________________________________________________
+TGeoPNEntry *TGeoManager::GetAlignableEntry(const char *name) const
+{
+// Retreives an existing alignable object.
+   if (!fHashPNE) return 0;
+   return (TGeoPNEntry*)fHashPNE->FindObject(name);
+}   
+
+//_____________________________________________________________________________
+TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
+{
+// Retreives an existing alignable object at a given index.
+   if (!fHashPNE) return 0;
+   return (TGeoPNEntry*)fHashPNE->At(index);
+}   
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetNAlignable() const
+{
+// Retreives an existing alignable object at a given index.
+   if (!fHashPNE) return 0;
+   return fHashPNE->GetSize();
+}   
+
+//_____________________________________________________________________________
+TGeoPhysicalNode *TGeoManager::MakeAlignablePN(const char *name)
+{
+// Make a physical node from the path pointed by an alignable object with a given name.
+   TGeoPNEntry *entry = GetAlignableEntry(name);
+   if (!entry) {
+      Error("MakeAlignablePN","No alignable object named %s found !", name);
+      return 0;
+   }
+   return MakeAlignablePN(entry);
+}
+      
+//_____________________________________________________________________________
+TGeoPhysicalNode *TGeoManager::MakeAlignablePN(TGeoPNEntry *entry)
+{
+// Make a physical node from the path pointed by a given alignable object.
+   if (!entry) {
+      Error("MakeAlignablePN","No alignable object specified !");
+      return 0;
+   }
+   const char *path = entry->GetTitle();
+   if (!cd(path)) {
+      Error("MakeAlignablePN", "Alignable object %s poins to invalid path: %s",
+            entry->GetName(), path);
+      return 0;
+   }
+   TGeoPhysicalNode *node = MakePhysicalNode(path);
+   entry->SetPhysicalNode(node);
+   return node;
+}        
 
 //_____________________________________________________________________________
 TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)

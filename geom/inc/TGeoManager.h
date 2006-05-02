@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.77 2006/03/27 09:28:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.78 2006/04/25 09:38:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 class TVirtualGeoTrack;
 class TGeoNode;
 class TGeoPhysicalNode;
+class TGeoPNEntry;
 class TGeoVolume;
 class TGeoVolumeMulti;
 class TGeoMatrix;
@@ -134,6 +135,7 @@ private :
    TGeoVolume           *fPaintVolume;      //! volume currently painted
    THashList            *fHashVolumes;      //! hash list of volumes providing fast search
    THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
+   THashList            *fHashPNE;          //-> hash list of phisical node entries
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    void                   BuildIdArray();
@@ -324,6 +326,12 @@ public:
    TGeoVolume            *MakeXtru(const char *name, const TGeoMedium *medium,
                                    Int_t nz);
 
+   TGeoPNEntry           *SetAlignableEntry(const char *unique_name, const char *path);
+   TGeoPNEntry           *GetAlignableEntry(const char *name) const;   
+   TGeoPNEntry           *GetAlignableEntry(Int_t index) const;
+   Int_t                  GetNAlignable() const;
+   TGeoPhysicalNode      *MakeAlignablePN(const char *name);
+   TGeoPhysicalNode      *MakeAlignablePN(TGeoPNEntry *entry);
    TGeoPhysicalNode      *MakePhysicalNode(const char *path=0);
    void                   ClearPhysicalNodes(Bool_t mustdelete=kFALSE);
    TVirtualGeoTrack      *MakeTrack(Int_t id, Int_t pdgcode, TObject *particle);
@@ -505,7 +513,7 @@ public:
    Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index, fPoint); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-   ClassDef(TGeoManager, 10)          // geometry manager
+   ClassDef(TGeoManager, 11)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

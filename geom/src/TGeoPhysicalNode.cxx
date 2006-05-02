@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.13 2006/03/22 11:18:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.14 2006/03/27 09:28:10 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -277,3 +277,31 @@ Bool_t TGeoPhysicalNode::SetPath(const char *path)
    return kTRUE;
 }
 
+ClassImp(TGeoPNEntry)
+
+//_____________________________________________________________________________
+TGeoPNEntry::TGeoPNEntry()
+{
+// Default constructor
+   fNode = 0;
+}
+
+//_____________________________________________________________________________
+TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
+            :TNamed(name, path)
+{
+// Default constructor
+   fNode = 0;
+}
+
+//_____________________________________________________________________________
+void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
+{
+// Setter for the corresponding physical node.
+   if (fNode && node) {
+      Warning("SetPhysicalNode", "Physical node changed for entry %s", GetName());
+      Warning("SetPhysicalNode", "=== New path: %s", node->GetName());
+   }
+   fNode = node;   
+}
+   

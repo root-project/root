@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.5 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.6 2006/02/08 05:05:06 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -12,8 +12,8 @@
 #ifndef ROOT_TGeoPhysicalNode
 #define ROOT_TGeoPhysicalNode
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 #ifndef ROOT_TObjArray
@@ -94,6 +94,29 @@ public:
 
 
    ClassDef(TGeoPhysicalNode, 1)               // base class for physical nodes
+};
+
+/*************************************************************************
+ * TGeoPNEntry - class representing phisical node entry having a unique name
+ *   associated to a path.
+ *
+ *************************************************************************/
+
+class TGeoPNEntry : public TNamed
+{
+private:
+   TGeoPhysicalNode *fNode;        // Physical node to which this applies
+
+public:
+   TGeoPNEntry();
+   TGeoPNEntry(const char *unique_name, const char *path);
+   virtual ~TGeoPNEntry() {;}
+   
+   inline const char   *GetPath() const {return GetTitle();}
+   TGeoPhysicalNode *GetPhysicalNode() const {return fNode;}
+   void              SetPhysicalNode(TGeoPhysicalNode *node);
+   
+   ClassDef(TGeoPNEntry, 1)                  // a physical node entry with unique name
 };
 
 #endif
