@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.141 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.143 2006/04/29 17:57:43 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4607,7 +4607,7 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
       delete dataDir;
 #endif
       char *colpath = CollapseSlashesInPath(destUrl.GetFile());
-      destUrl.SetFile(Form("/%s", colpath));
+      destUrl.SetFile(colpath);
       delete [] colpath;
       dest = destUrl.GetUrl();
       //creating the default directory
