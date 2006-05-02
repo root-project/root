@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.90 2006/04/27 17:29:58 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.91 2006/04/28 15:40:50 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -555,13 +555,26 @@ namespace {
       GetIndexChars(words, numSectionsIn, sectionMarkersOut);
    }
 
-   struct igreater
-   {
-      bool operator()(const std::string& a, const std::string& b)
-      {
-         return (strcasecmp(a.c_str(), b.c_str()) < 0);
+   // std::list::sort(with_stricmp_predicate) doesn't work with Solaris CC...
+   void sort_strlist_stricmp(std::list<std::string>& l) {
+      struct posList {
+         const char* str;
+         std::list<std::string>::const_iterator pos;
+      };
+      posList* carr = new posList[l.size()];
+      size_t idx = 0;
+      for (std::list<std::string>::const_iterator iS = l.begin(); iS != l.end(); ++iS) {
+         carr[idx].pos = iS;
+         carr[idx++].str = iS->c_str();
       }
-   };
+      qsort(&carr[0].str, idx, sizeof(posList), CaseInsensitiveSort);
+      std::list<std::string> lsort;
+      for (idx = 0; idx < l.size(); ++idx) {
+         lsort.push_back(*carr[idx].pos);
+      }
+      delete [] carr;
+      l.swap(lsort);
+   }
 }
 
 //______________________________________________________________________________
@@ -2176,7 +2189,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
       if (fModules.size()) {
          indexFile << "<div id=\"indxModules\"><h4>Modules</h4>" << endl;
          // find index chars
-         fModules.sort(igreater());
+         sort_strlist_stricmp(fModules);
          for (std::list<std::string>::iterator iModule = fModules.begin(); 
             iModule != fModules.end(); ++iModule) {
             indexFile << "<a href=\"" << *iModule << "_Index.html\">" << *iModule << "</a>" << endl;
@@ -2758,7 +2771,7 @@ void THtml::CreateListOfClasses(const char* filter)
    fMaxLenClassName += kSpaceNum;
 
    // quick sort
-   SortNames(fClassNames, fNumberOfClasses, kCaseSensitive);
+   SortNames(fClassNames, fNumberOfClasses, kCaseInsensitive);
    SortNames((const char **) fFileNames, fNumberOfFileNames);
 
 }
@@ -2798,8 +2811,7 @@ void THtml::CreateListOfTypes()
              && !( strchr(type->GetName(), '<') && strchr(type->GetName(),'>'))
              && type->GetName())
                typeNames.push_back(type->GetName());
-
-      typeNames.sort(igreater());
+      sort_strlist_stricmp(typeNames);
 
       std::vector<std::string> indexChars;
       if (typeNames.size() > 10) {
@@ -2837,6 +2849,7 @@ void THtml::CreateListOfTypes()
          typesList << "\"></a>";
          ReplaceSpecialChars(typesList, type->GetTitle());
          typesList << "</li>" << endl;
+         ++idx;
       }
       typesList << "</ul>" << endl;
 
