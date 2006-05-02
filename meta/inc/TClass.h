@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.59 2006/03/20 21:38:34 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.60 2006/03/21 05:20:33 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -245,6 +245,7 @@ public:
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
    void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);
    void               SetDestructor(ROOT::DesFunc_t destructorFunc);
+   void               SetImplFileName(const char *implFileName) { fImplFileName = implFileName; }
    void               SetNew(ROOT::NewFunc_t newFunc);
    void               SetNewArray(ROOT::NewArrFunc_t newArrayFunc);
    TStreamerInfo     *SetStreamerInfo(Int_t version, const char *info="");
