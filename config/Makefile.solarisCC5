@@ -28,7 +28,7 @@ SUNCC5        = true
 CXX           = CC
 CC            = cc
 CXXFLAGS      = -KPIC -I/usr/openwin/include -ptr$(ROOTSYS) $(EXTRA_CXXFLAGS) \
-                -library=stlport4 $(MTOPT)
+                $(MTOPT)
 CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CXXFLAGS) \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -ptr$(ROOTSYS) $(MTOPT)
