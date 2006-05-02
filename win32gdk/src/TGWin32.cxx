@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.110 2006/04/18 10:34:35 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.111 2006/04/30 05:37:56 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -716,13 +716,18 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    MSG msg;
    Int_t erret;
    Bool_t endLoop = kFALSE;
+   TGWin32RefreshTimer *refersh = 0;
 
    // force to create message queue
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 
    // periodically we refresh windows
-   // removed by bb 20.02.06 due to interferences with PVSS
-   TGWin32RefreshTimer *refersh = new TGWin32RefreshTimer();
+   // Don't create refresh timer if the application has been created inside PVSS
+   if (gApplication) {
+      TString arg = gSystem->BaseName(gApplication->Argv(0));
+      if (!arg.Contains("PVSS"))
+         refersh = new TGWin32RefreshTimer();
+   }
 
    while (!endLoop) {
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
@@ -731,8 +736,8 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    }
 
    TGWin32::Instance()->CloseDisplay();
-   // removed by bb 20.02.06 due to interferences with PVSS
-   delete refersh;
+   if (refersh)
+      delete refersh;
 
    // exit thread
    if (erret == -1) {
