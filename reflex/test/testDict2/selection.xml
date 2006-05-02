@@ -35,5 +35,7 @@
   <class name="TT::TemplatedMemberTypes"/>
   <class name="std::string"/>
   <class name="std::map<std::string,double>"/>
+
+  <class name="std::vector<const A*>"/>
  
 </lcgdict>

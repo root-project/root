@@ -167,6 +167,16 @@ namespace testclasses {
 } // namespace testclasses
 
 
+class BadDictionary {
+  const A* rioOnTrack(unsigned int indx) const {
+    //return new A();
+    return m_vect->operator[](indx);
+  }
+
+  std::vector<const A*> 		* m_vect;
+};
+
+
 
 // template instances
 namespace {
