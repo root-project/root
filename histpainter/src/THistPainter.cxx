@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.254 2006/04/18 06:58:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.255 2006/04/25 08:59:19 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6212,7 +6212,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_1");
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_projection_%d",fShowProjection));
    if(c) {
       c->Clear();
    } else {
@@ -6255,7 +6255,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    // Create or set the new canvas proj y
    TVirtualPad *padsav = gPad;
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject("c_projection_2");
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_projection_%d",fShowProjection));
    if(c) {
       c->Clear();
    } else {
