@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.286 2006/04/19 08:22:23 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.287 2006/04/20 19:27:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -553,7 +553,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //     title  : histogram title
 //              if title is of the form "stringt;stringx;stringy;stringz"
 //              the histogram title is set to stringt,
-//              the x axis title to stringy, the y axis title to stringy,etc
+//              the x axis title to stringx, the y axis title to stringy,etc
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
 //              This is an array of size nbins+1
@@ -578,7 +578,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //     title  : histogram title
 //              if title is of the form "stringt;stringx;stringy;stringz"
 //              the histogram title is set to stringt,
-//              the x axis title to stringy, the y axis title to stringy,etc
+//              the x axis title to stringx, the y axis title to stringy,etc
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
 //              This is an array of size nbins+1
