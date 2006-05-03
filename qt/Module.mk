@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.17 2006/04/12 23:42:37 pcanal Exp $
+# $Id: Module.mk,v 1.18 2006/04/14 16:28:05 rdm Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -117,4 +117,5 @@ lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" \
            "$(CINTCXXFLAGS) $(GQTCXXFLAGS)" "$(CINTCFLAGS)" \
-           "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"
+           "$(LDFLAGS)  $(QTLIBDIR) $(QTLIB)" "$(SOFLAGS)" \
+           "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"
