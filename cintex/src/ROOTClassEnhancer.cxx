@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:$:$Id:$
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.6 2005/11/17 14:12:33 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -214,7 +214,7 @@ namespace ROOT { namespace Cintex {
 
     ::ROOT::TGenericClassInfo* info = new ::ROOT::TGenericClassInfo( 
               Name().c_str(),                     // Class Name 
-              "xxx",                              // declaration file Name 
+              "",                              // declaration file Name 
               1,                                  // declaration line number
               TypeGet().TypeInfo(),                  // typeid 
               ROOT::DefineBehavior(0,0),          // default behavior
@@ -224,7 +224,7 @@ namespace ROOT { namespace Cintex {
               0,                                  // pragma bits
               TypeGet().SizeOf()                     // sizeof
            );
-    info->SetImplFile("yyy", 1);
+    info->SetImplFile("", 1);
     //----Fill the New and Deletete functions
     Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions");
     if( getfuncs ) {
@@ -248,8 +248,8 @@ namespace ROOT { namespace Cintex {
                       typeid(fornamespace), // typeid
                       0,                    // TVirtualIsAProxy *isa,
                       0,                    // ShowMembersFunc_t show,
-                      "xxx",                // definition file
-                      "yyy",                // implementation file
+                      "",                // definition file
+                      "",                // implementation file
                       1,                    // definition line number
                       1 );                  // implementation line number
   }
