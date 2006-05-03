@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.184 2006/04/27 09:26:38 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.185 2006/04/28 08:43:05 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -182,7 +182,7 @@ TGraph::TGraph(const TGraph &gr)
 
 
 //______________________________________________________________________________
-TGraph::TGraph(const TVector &vx, const TVector &vy)
+TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
        : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
    // Graph constructor with two vectors of floats in input

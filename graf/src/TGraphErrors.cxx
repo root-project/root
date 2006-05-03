@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.55 2006/01/26 07:55:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.56 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -126,7 +126,7 @@ TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const 
 
 
 //______________________________________________________________________________
-TGraphErrors::TGraphErrors(const TVector  &vx, const TVector  &vy, const TVector  &vex, const TVector  &vey)
+TGraphErrors::TGraphErrors(const TVectorF &vx, const TVectorF &vy, const TVectorF &vex, const TVectorF &vey)
              :TGraph()
 {
    // constructor with four vectors of floats in input

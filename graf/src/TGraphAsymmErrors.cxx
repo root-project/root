@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.54 2006/01/26 07:55:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.55 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -156,7 +156,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
 
 
 //______________________________________________________________________________
-TGraphAsymmErrors::TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, const TVector  &vexl, const TVector  &vexh, const TVector  &veyl, const TVector  &veyh)
+TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, const TVectorF  &vexl, const TVectorF  &vexh, const TVectorF  &veyl, const TVectorF  &veyh)
                   :TGraph()
 {
    // Constructor with six vectors of floats in input

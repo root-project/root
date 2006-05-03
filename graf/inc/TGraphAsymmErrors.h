@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.23 2005/09/05 07:25:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.24 2005/11/15 15:13:59 couet Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
    TGraphAsymmErrors(Int_t n);
    TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl=0, const Float_t *exh=0, const Float_t *eyl=0, const Float_t *eyh=0);
    TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl=0, const Double_t *exh=0, const Double_t *eyl=0, const Double_t *eyh=0);
-   TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, const TVector  &vexl, const TVector  &vexh, const TVector  &veyl, const TVector  &veyh);
+   TGraphAsymmErrors(const TVectorF &vx, const TVectorF &vy, const TVectorF &vexl, const TVectorF &vexh, const TVectorF &veyl, const TVectorF &veyh);
    TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh);
    TGraphAsymmErrors(const TGraphAsymmErrors &gr);
    TGraphAsymmErrors(const TH1 *h);
