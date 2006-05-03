@@ -28,7 +28,10 @@ class genDictionary(object) :
     self.quiet      = opts.get('quiet',False)
     self.xref       = {}
     self.xrefinv    = {}
-    self.cppselect  = {} 
+    self.cppClassSelect    = {}
+    self.cppVariableSelect = {}
+    self.cppEnumSelect     = {}
+    self.cppFunctionSelect = {}
     self.last_id    = ''
     self.transtable = string.maketrans('<>&*,: ().$', '__rp__s___d')
     self.ignoremeth = ('rbegin', 'rend', '_Eq','_Lt', 'value_comp')
@@ -84,27 +87,58 @@ class genDictionary(object) :
       if ns['name'].find('.') != -1:
         self.unnamedNamespaces.append(ns['id'])
 #----------------------------------------------------------------------------------
+  def collectCppSelections(self, ns) :
+    for m in ns.get('members').split():
+      xm = self.xref[m]
+      xelem = xm['elem']
+      if xelem in ('Namespace',) :
+        self.collectCppSelections(xm['attrs'])
+      cname = self.genTypeName(m)
+      if xelem in ('Class','Struct'):
+        #self.xrefinv[cname] = m
+        self.cppClassSelect[cname[len(self.selectionname)+2:]] = m
+      if xelem in ('Variable',):
+        self.cppVariableSelect[cname[len(self.selectionname)+2:]] = m
+      if xelem in ('Enumeration',):
+        self.cppEnumSelect[cname[len(self.selectionname)+2:]] = m
+      if xelem in ('Function',):
+        self.cppFunctionSelect[cname[len(self.selectionname)+2:]] = m
+#----------------------------------------------------------------------------------
   def parse(self, file) :
     p = xml.parsers.expat.ParserCreate()
     p.StartElementHandler = self.start_element
     f = open(file)
     p.ParseFile(f)
     f.close()
-    for c in self.classes :
-      cname = self.genTypeName(c['id'])
-      self.xrefinv[cname] = c['id']
-      if (c.has_key('context') and (self.genTypeName(c['context'])[:len(self.selectionname)] == self.selectionname)):
-        self.cppselect[cname[len(self.selectionname)+2:]] = c['id']
-    for c in self.classes: self.try_selection(c)
+    for n in self.namespaces:
+      if self.genTypeName(n['id']) == self.selectionname : self.collectCppSelections(n)
+    self.tryCppSelections()
     self.findUnnamedNamespace()
 #----------------------------------------------------------------------------------
-  def try_selection (self, c):
-    id = self.cppselect.get(self.genTypeName(c['id'],alltempl=True))
-    if (id != None) :
-      selection = {'id' : id}
-      self.add_template_defaults (c, selection)
-      self.notice_transient (c, selection)
-      self.notice_autoselect (c, selection)
+  def tryCppSelections(self):
+    for c in self.classes:
+      id = self.cppClassSelect.get(self.genTypeName(c['id'],alltempl=True))
+      if (id != None) :
+        selection = {'id' : id}
+        self.add_template_defaults (c, selection)
+        self.notice_transient (c, selection)
+        self.notice_autoselect (c, selection)
+    for v in self.variables:
+      id = self.cppVariableSelect.get(self.genTypeName(v['id']))
+      if (id != None):
+        if v.has_key('extra') : v['extra']['autoselect'] = 'true'
+        else                  : v['extra'] = {'autoselect':'true'}
+    for e in self.enums:
+      id = self.cppEnumSelect.get(self.genTypeName(e['id']))
+      if (id != None):
+        if e.has_key('extra') : e['extra']['autoselect'] = 'true'
+        else                  : e['extra'] = {'autoselect':'true'}
+    for f in self.functions:
+      id = self.cppFunctionSelect.get(self.genTypeName(f['id']))
+      #fixme: check if signature (incl. return type?) is the same
+      if (id != None):
+        if f.has_key('extra') : f['extra']['autoselect'] = 'true'
+        else                  : f['extra'] = {'autoselect':'true'}
     return
 #----------------------------------------------------------------------------------
   def notice_transient (self, c, selection):
@@ -239,6 +273,8 @@ class genDictionary(object) :
         funcname = self.genTypeName(f['id'])
         if self.selector.selfunction( funcname ) and not self.selector.excfunction( funcname ) :
           selec.append(f)
+        if 'extra' in f and f['extra'].get('autoselect') and f not in selec:
+          selec.append(f)
     return selec
 #----------------------------------------------------------------------------------
   def selenums(self, sel) :
@@ -249,6 +285,8 @@ class genDictionary(object) :
         ename = self.genTypeName(e['id'])
         if self.selector.selenum( ename ) and not self.selector.excenum( ename ) :
           selec.append(e)
+        if 'extra' in e and e['extra'].get('autoselect') and e not in selec:
+          selec.append(e)
     return selec
 #---------------------------------------------------------------------------------
   def selvariables(self, sel) :
@@ -258,6 +296,8 @@ class genDictionary(object) :
       for v in self.variables :
         varname = self.genTypeName(v['id'])
         if self.selector.selvariable( varname ) and not self.selector.excvariable( varname ) :
+          selec.append(v)
+        if 'extra' in v and v['extra'].get('autoselect') and v not in selec:
           selec.append(v)
     return selec
 #----------------------------------------------------------------------------------
@@ -896,6 +936,7 @@ class genDictionary(object) :
       id   = e['id']
       cname = self.genTypeName(id, colon=True)
       name  = self.genTypeName(id)
+      if not self.quiet : print 'enum ' + name
       s += '      EnumBuilder("%s",typeid(%s))' % (name, cname)
       items = self.xref[id]['subelems']
       for item in items :
@@ -911,6 +952,7 @@ class genDictionary(object) :
       cname = self.genTypeName(id, colon=True)
       name  = self.genTypeName(id)
       mod   = self.genModifier(v, None)
+      if not self.quiet : print 'variable ' + name 
       s += '      VariableBuilder("%s", %s, (size_t)&%s, %s );\n' % (name, self.genTypeID(v['type']),self.genTypeName(id), mod)
     return s
  #----------------------------------------------------------------------------------
