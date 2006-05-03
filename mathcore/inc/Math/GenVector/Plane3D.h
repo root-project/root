@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.2 2005/12/14 15:59:14 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Plane3D.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
 // Authors: L. Moneta    12/2005  
 
 /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by:    moneta   at Fri Dec 02   2005
 //
-// Last update: $Id: Plane3D.h,v 1.2 2005/12/14 15:59:14 moneta Exp $
+// Last update: $Id: Plane3D.h,v 1.3 2006/04/11 13:06:15 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Plane3D
 #define ROOT_Math_GenVector_Plane3D  1
@@ -52,6 +52,9 @@ namespace ROOT {
       // ------ ctors ------
 
       typedef double Scalar;
+
+      typedef XYZVector Vector;
+      typedef XYZPoint  Point;
 
       /**
          default constructor create plane z = 0 
