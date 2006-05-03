@@ -1,9 +1,21 @@
 #include "Reflex/Builder/DictSelection.h"
 
+int m_foo;
+
+enum XYZ { X, Y, Z };
+
+int foosq (int i) { return i*i; }
 
 namespace ROOT {
   namespace Reflex {
     namespace Selection {
+
+      void * m_foo;
+
+      int foosq(int);
+
+      enum XYZ {};
+
       class ClassA {
         TRANSIENT fA;
       };
@@ -15,6 +27,12 @@ namespace ROOT {
 #include <utility>
 
 namespace ns {
+
+  int m_foo2;
+
+  enum ABC { A, B, C };
+
+  int fooadd (int i) { return i+i; }
 
   class TestSelectionClass {
   private:
@@ -47,6 +65,12 @@ namespace ROOT {
     namespace Selection {
 
       namespace ns {
+
+        void * m_foo2;
+
+        enum ABC {};
+
+        int fooadd(int);
 
         class NoSelfAutoSelection {
           NO_SELF_AUTOSELECT m_whatever;

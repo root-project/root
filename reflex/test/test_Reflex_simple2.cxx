@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.15 2006/04/26 09:16:04 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.16 2006/04/26 09:45:05 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -167,6 +167,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testOperators );
   CPPUNIT_TEST( testTypedefSelection );
   CPPUNIT_TEST( testTypedef );
+  CPPUNIT_TEST( testCppSelection );
   CPPUNIT_TEST( testCppSelectNoAutoselect );
   CPPUNIT_TEST( testTypedefInClass );
   CPPUNIT_TEST( testConstMembers );
@@ -191,6 +192,7 @@ public:
   void testOperators();
   void testTypedefSelection();
   void testTypedef();
+  void testCppSelection();
   void testCppSelectNoAutoselect();
   void testTypedefInClass();
   void testConstMembers();
@@ -689,8 +691,8 @@ void ReflexSimple2Test::testFreeFunctions() {
 
   s = t.DeclaringScope();
   CPPUNIT_ASSERT(s);
-  CPPUNIT_ASSERT_EQUAL(0,int(s.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(7,int(s.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(1,int(s.DataMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(8,int(s.FunctionMemberSize()));
   m = s.MemberByName("function5");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("function5"),m.Name());
@@ -836,6 +838,58 @@ void ReflexSimple2Test::testTypedef() {
   CPPUNIT_ASSERT_EQUAL(std::string("RealXmlSelClass"), t.ToType(FINAL).Name());
 }
 
+
+void ReflexSimple2Test::testCppSelection() {
+
+  Scope g = Scope::ByName("");
+  CPPUNIT_ASSERT(g);
+  Scope s = Scope::ByName("ns");
+  CPPUNIT_ASSERT(s);
+
+
+  Member m0 = g.MemberByName("m_foo");
+  CPPUNIT_ASSERT(m0);
+  CPPUNIT_ASSERT(m0.IsDataMember());
+  Type m0t = m0.TypeOf();
+  CPPUNIT_ASSERT(m0t.IsFundamental());
+  CPPUNIT_ASSERT_EQUAL(std::string("int"),m0t.Name());
+
+  Member m1 = s.MemberByName("m_foo2");
+  CPPUNIT_ASSERT(m1);
+  CPPUNIT_ASSERT(m1.IsDataMember());
+  Type m1t = m1.TypeOf();
+  CPPUNIT_ASSERT(m1t.IsFundamental());
+  CPPUNIT_ASSERT_EQUAL(std::string("int"),m1t.Name());
+
+  Type t0 = Type::ByName("XYZ");
+  CPPUNIT_ASSERT(t0);
+  CPPUNIT_ASSERT(t0.IsEnum());
+
+  Type t1 = Type::ByName("ns::ABC");
+  CPPUNIT_ASSERT(t1);
+  CPPUNIT_ASSERT(t1.IsEnum());
+
+  Type t2 = Type::ByName("int (int)");
+  CPPUNIT_ASSERT(t2);
+  CPPUNIT_ASSERT(t2.IsFunction());
+
+  Member m2 = g.MemberByName("foosq");
+  CPPUNIT_ASSERT(m2);
+  CPPUNIT_ASSERT(m2.IsFunctionMember());
+  Type m2t = m2.TypeOf();
+  CPPUNIT_ASSERT(m2t);
+  CPPUNIT_ASSERT(m2t.IsFunction());
+  CPPUNIT_ASSERT(t2.IsEquivalentTo(m2t));
+
+  Member m3 = s.MemberByName("fooadd");
+  CPPUNIT_ASSERT(m3);
+  CPPUNIT_ASSERT(m3.IsFunctionMember());
+  Type m3t = m3.TypeOf();
+  CPPUNIT_ASSERT(m3t);
+  CPPUNIT_ASSERT(m3t.IsFunction());
+  CPPUNIT_ASSERT(t2.IsEquivalentTo(m3t));
+
+}
 
 void ReflexSimple2Test::testCppSelectNoAutoselect() {
 
