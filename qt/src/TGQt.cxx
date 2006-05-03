@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.28 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.29 2006/03/27 08:10:59 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -518,7 +518,7 @@ QString TGQt::RootFileFormat(const QString &selector)
    // that matches the ROOT inmage formats
    // those Qt library can not provide
    QString saveType;
-   QString defExtension[] = {"cpp","cxx","eps","svg","root","ps","C"};
+   QString defExtension[] = {"cpp","cxx","eps","svg","root","pdf","ps","xml","C"};
    UInt_t nExt = sizeof(defExtension)/sizeof(const char *);
 
    for (UInt_t i = 0; i < nExt; i++) {
@@ -587,7 +587,7 @@ TQtApplication *TGQt::CreateQtApplicationImp()
       static TString argvString ("$ROOTSYS/bin/root.exe");
       gSystem->ExpandPathName(argvString);
       static char *argv[] = {(char *)argvString.Data()};
-      int nArg = 1;
+      static int nArg = 1;
       app = new TQtApplication("Qt",nArg,argv);
    }
    return app;
@@ -655,7 +655,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.28 2006/03/24 15:31:10 antcheva Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.127 2006/05/02 00:39:55 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -768,6 +768,14 @@ Bool_t TGQt::Init(void* /*display*/)
    TQtEventInputHandler::Instance();
    // Add $QTDIR include  path to the  the list of includes for ACliC
    gSystem->AddIncludePath("-I$QTDIR/include");
+   TString newPath = "$(ROOTSYS)/cint/include";
+#ifndef R__WIN32
+     newPath += ":";
+#else
+     newPath += ";";
+#endif
+   newPath += gSystem->GetDynamicPath();
+   gSystem->SetDynamicPath(newPath.Data());
    return fDisplayOpened;
 }
 
@@ -2691,21 +2699,23 @@ void TGQt::Begin()
          ((TQtWidget *)fSelectedWindow)->AdjustBufferSize();
       if (!fQPainter->begin(src) )
          fprintf(stderr,"---> TGQt::Begin() win=%p dev=%p\n",src,fQPainter->device());
-      UpdatePen();
-      UpdateBrush();
-      UpdateFont();
-      TQTCLIPMAP::iterator it= fClipMap.find(fSelectedWindow);
-      QRect clipRect;
-      if (it != fClipMap.end())  {
-         clipRect = it.data();
-         fQPainter->setClipRect(clipRect);
-         fQPainter->setClipping(TRUE);
-      }
+      else {
+         UpdatePen();
+         UpdateBrush();
+         UpdateFont();
+         TQTCLIPMAP::iterator it= fClipMap.find(fSelectedWindow);
+         QRect clipRect;
+         if (it != fClipMap.end())  {
+           clipRect = it.data();
+            fQPainter->setClipRect(clipRect);
+            fQPainter->setClipping(TRUE);
+         }
 #if QT_VERSION < 0x40000
-      fQPainter->setRasterOp(fDrawMode);
+         fQPainter->setRasterOp(fDrawMode);
 #else /* QT_VERSION */
-      fQPainter->setCompositionMode(fDrawMode);
+         fQPainter->setCompositionMode(fDrawMode);
 #endif /* QT_VERSION */
+      }
    }
 }
 

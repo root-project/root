@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.74 2006/03/21 20:40:04 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.75 2006/05/02 00:39:55 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -215,6 +215,7 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
        if (!guiFactory.BeginsWith("qt",TString::kIgnoreCase )){
          // Check for the extention
          char *extLib = gSystem->DynamicPathName("libQtGui",kTRUE);
+         if (!extLib) extLib = gSystem->DynamicPathName("libQtRootGui",kTRUE);
          if (extLib) {
             gEnv->SetValue("Gui.Factory", "qtgui");
          } else {
@@ -227,7 +228,7 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
        // To mimic what TRint::Run(kTRUE) does.
        const char *prompt= gEnv->GetValue("Gui.Prompt", (char*)0);
        if (prompt) {
-           Getlinem(kInit, rint->GetPrompt());	    
+           Getlinem(kInit, rint->GetPrompt());
        } else {
            // disable the TTermInputHandler too to avoid the crash under X11
            // to get the pure "GUI" application

@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootlibs.pri,v 1.21 2006/03/21 05:41:19 fine Exp $
+# $Id: rootlibs.pri,v 1.23 2006/04/25 19:28:38 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -61,7 +61,7 @@ win32 {
       LIBS	+= -include:_G__cpp_setupG__Table
    }   
 
-   exists( $(ROOTSYS)/lib/libQtGui.lib ) {
+   exists( $(ROOTSYS)/lib/libQtRootGui.lib ) {
       LIBS	+=  -include:_G__cpp_setupG__QtGUI     
    }   
    
@@ -77,8 +77,8 @@ win32 {
       LIBS	+=  "$(ROOTSYS)/lib/libTable.lib"
    }   
        
-   exists( $(ROOTSYS)/lib/libQtGui.lib ) {
-      LIBS	+=  "$(ROOTSYS)/lib/libQtGui.lib"
+   exists( $(ROOTSYS)/lib/libQtRootGui.lib ) {
+      LIBS	+=  "$(ROOTSYS)/lib/libQtRootGui.lib"
    }   
 }
 
@@ -86,7 +86,7 @@ unix {
     libFile = $(QTROOTSYSDIR)/lib
     exists ($$libFile ) {
         LIBS += -L$(QTROOTSYSDIR)/lib
-        LIBS += -lGQt  -lQtGui  
+        LIBS += -lGQt  -lQtRootGui  
     }
     LIBS	+= $$system(${ROOTSYS}/bin/root-config --glibs)
     libFile = $(ROOTSYS)/lib/libTable.$$QMAKE_EXTENSION_SHLIB 
@@ -96,8 +96,8 @@ unix {
     
     LIBS *= -lGQt 
     
-    exists( $(ROOTSYS)/lib/libQtGui.$$QMAKE_EXTENSION_SHLIB ) {
-          LIBS	*=  -lQtGui  
+    exists( $(ROOTSYS)/lib/libQtRootGui.$$QMAKE_EXTENSION_SHLIB ) {
+          LIBS	*=  -lQtRootGui  
           message ( "Found Qt extensions library !!!") 
     }
 }
@@ -116,7 +116,7 @@ mac {
          LIBS	+= -u _G__cpp_setupG__Table
       }   
 
-      exists( $(ROOTSYS)/lib/libQtGui.lib ) {
+      exists( $(ROOTSYS)/lib/libQtRootGui.lib ) {
          LIBS	+=  -u _G__cpp_setupG__QtGUI     
       }
   }
@@ -130,4 +130,4 @@ mac {
      POST_TARGETDEPS          += $$sharedso.target
      QMAKE_CLEAN              += $$sharedso.target
   }
- 
+}

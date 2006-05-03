@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.h,v 1.3 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.h,v 1.15 2006/04/25 19:28:38 fine Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -32,9 +32,9 @@ private:
   friend class TQtApplicationThread;
   TQtApplicationThread  *fGUIThread;
 
-  void    CreateGUIThread(int argc, char **argv);
+  void    CreateGUIThread(int &argc, char **argv);
 
-  static void CreateQApplication(int argc, char ** argv, bool GUIenabled);
+  static void CreateQApplication(int &argc, char ** argv, bool GUIenabled);
 
 protected:
    static TQtApplication *fgQtApplication;
@@ -42,7 +42,7 @@ protected:
 public:
 
    TQtApplication() {};
-   TQtApplication(const char *appClassName, int argc, char **argv);
+   TQtApplication(const char *appClassName, int &argc, char **argv);
    virtual ~TQtApplication();
    static bool Terminate();
 

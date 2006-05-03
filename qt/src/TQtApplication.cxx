@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.7 2005/04/15 07:19:50 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.8 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -45,7 +45,7 @@ TQtApplication *TQtApplication::fgQtApplication = 0;
 ClassImp(TQtApplication)
 //
 //______________________________________________________________________________
-TQtApplication::TQtApplication(const char * /*appClassName*/, int argc,char **argv)
+TQtApplication::TQtApplication(const char * /*appClassName*/, int &argc,char **argv)
                 : fGUIThread(0)
 {
    assert(!fgQtApplication);
@@ -56,7 +56,7 @@ TQtApplication::TQtApplication(const char * /*appClassName*/, int argc,char **ar
 TQtApplication::~TQtApplication()
 { }
 //______________________________________________________________________________
-void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
+void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled)
 {
   //  Initialize the Qt package
   //  Check the QT_BATCH environment variable to disactivate Qt GUI mode
@@ -114,7 +114,7 @@ void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
    delete [] qtPluginPath;
 }
 //______________________________________________________________________________
-void TQtApplication::CreateGUIThread(int argc, char **argv)
+void TQtApplication::CreateGUIThread(int &argc, char **argv)
 {
   // Create GUI thread to Qt event loop
    if (gROOT->IsBatch()) {

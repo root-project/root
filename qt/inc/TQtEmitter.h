@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtEmitter.h,v 1.1 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtEmitter.h,v 1.2 2006/04/21 13:59:26 fine Exp $
 // Author: Valeri Fine   06/01/2006
 /****************************************************************************
 **
@@ -23,6 +23,8 @@
 #include "TQtRConfig.h"
 #ifndef __CINT__
 #include <qobject.h>
+class QPixmap;
+
 class TQtEmitter : public QObject {
   Q_OBJECT
 private:
