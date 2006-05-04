@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.155 2006/04/25 09:28:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.156 2006/05/01 16:35:41 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -738,6 +738,7 @@ void TFile::Close(Option_t *option)
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
+   gROOT->GetListOfBrowsers()->RecursiveRemove(this);
 
    TCollection::EmptyGarbageCollection();
 }

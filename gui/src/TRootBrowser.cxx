@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.94 2006/03/28 16:21:25 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.95 2006/04/14 17:54:11 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -2339,6 +2339,10 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
       fListLevel = 0;
    }
    if (fHistory) fHistory->RecursiveRemove(obj);
+   if (obj->IsA() == TFile::Class()) {
+      fListLevel = 0;
+      BrowseObj(gROOT);
+   }
 }
 
 //______________________________________________________________________________
