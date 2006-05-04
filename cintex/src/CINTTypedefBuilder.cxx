@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.5 2006/04/28 15:59:48 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -24,7 +24,7 @@ using namespace std;
 
 namespace ROOT { namespace Cintex {
 
-  void CINTTypedefBuilder::Setup(const Type& t) {
+  int CINTTypedefBuilder::Setup(const Type& t) {
     if ( t.IsTypedef() )  {
 
       std::string nam = CintName(t.Name(SCOPED));
@@ -45,7 +45,7 @@ namespace ROOT { namespace Cintex {
         }
       }
 
-      if( -1 != G__defined_typename(nam.c_str()) ) return;
+      if( -1 != G__defined_typename(nam.c_str()) ) return -1;
 
       if ( Cintex::Debug() )  {
         std::cout << "Building typedef " << nam << std::endl;
@@ -58,8 +58,9 @@ namespace ROOT { namespace Cintex {
       // If the final type was was not found create a place holder in the G__struct for it
       if (tagnum == -1) tagnum = G__search_tagname(CintName(rt).c_str(), typenum);
 
-      ::G__search_typename2( nam.c_str(), typenum, tagnum, 0, -1);
+      int r = ::G__search_typename2( nam.c_str(), typenum, tagnum, 0, -1);
       ::G__setnewtype(-1,NULL,0);
+      return r;
     }
   }
 }}
