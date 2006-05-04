@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.4 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.5 2005/12/12 09:12:27 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -15,6 +15,7 @@
 #include "CINTFunctionBuilder.h"
 #include "CINTScopeBuilder.h"
 #include "CINTFunctional.h"
+#include "CINTTypedefBuilder.h"
 #include "Api.h"
 
 using namespace ROOT::Reflex;
@@ -74,7 +75,12 @@ namespace ROOT { namespace Cintex {
     //---Return type ----------------
     Type rt = function.TypeOf().ReturnType();
     reference = rt.IsReference() ? 1 : 0;
-    while ( rt.IsTypedef() ) rt = rt.ToType();
+    int ret_typedeft = -1;
+    if ( rt.IsTypedef()) {
+      CINTTypedefBuilder::Setup(rt);
+      ret_typedeft = G__defined_typename(CintName(rt.Name(SCOPED)).c_str());
+      rt = rt.ToType(FINAL);
+    }
     //CINTScopeBuilder::Setup( rt );
     CintTypeDesc ret_desc = CintType( rt );
     char ret_type = rt.IsPointer() ? (ret_desc.first - ('a'-'A')) : ret_desc.first;
@@ -124,13 +130,13 @@ namespace ROOT { namespace Cintex {
     G__usermemfunc_setup( funcname.c_str(),                // function Name
                           hash,                            // function Name hash value
                           stub,                            // method stub function
-                          ret_type,                        // return TypeNth (void)
+                          ret_type,                        // return type (void)
                           ret_tag,                         // return TypeNth tag number
-                          -1,                              // TypeNth number
+                          ret_typedeft,                    // typedef number
                           reference,                       // reftype
                           nparam,                          // number of paramerters
-                          memory_type,                     // memory TypeNth
-                          access,                          // access TypeNth
+                          memory_type,                     // memory type
+                          access,                          // access type
                           const_ness,                      // CV qualifiers
                           signature.c_str(),               // signature
                           (char*)NULL,                     // comment line

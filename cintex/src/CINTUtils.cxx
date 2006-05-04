@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTUtils.cxx,v 1.5 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTUtils.cxx,v 1.6 2006/01/16 17:13:06 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,16 +18,16 @@ using namespace std;
 
 namespace ROOT { namespace Cintex {
 
-  Indirection IndirectionGet(const Type& TypeNth) {
-    Type t(TypeNth);
+  Indirection IndirectionGet(const Type& typ) {
+    Type t(typ);
     int indir = 0;
     for ( ; t.IsTypedef(); t = t.ToType()) ;
     for ( ; t.IsPointer(); t = t.ToType()) indir++; 
     return Indirection(indir, t);
   }
 
-  void CintType( const Type& TypeNth, int& typenum, int& tagnum ) {
-    Type t(TypeNth);
+  void CintType( const Type& typ, int& typenum, int& tagnum ) {
+    Type t(typ);
     int indir = 0;
     while( t.IsTypedef()) t = t.ToType();
     for ( ; t.IsPointer(); t = t.ToType()) indir++; 
@@ -49,8 +49,8 @@ namespace ROOT { namespace Cintex {
     }
   }
 
-  CintTypeDesc CintType(const ROOT::Reflex::Type& TypeNth)  {
-    Type t(CleanType(TypeNth));
+  CintTypeDesc CintType(const ROOT::Reflex::Type& typ)  {
+    Type t(CleanType(typ));
     string nam = t.Name(SCOPED);
 
     if ( nam == "void" )
@@ -147,15 +147,15 @@ namespace ROOT { namespace Cintex {
       return CintTypeDesc('-', CintName(t)); 
   }
 
-  Type CleanType(const Type& TypeNth)  {
-    if ( TypeNth )  {
-      Type t(TypeNth);
+  Type CleanType(const Type& typ)  {
+    if ( typ )  {
+      Type t( typ );
       while ( t.IsTypedef()   ) t = CleanType(t.ToType());
       while ( t.IsPointer()   ) t = CleanType(t.ToType());
       while ( t.IsArray()     ) t = CleanType(t.ToType());
       return t;
     }
-    return TypeNth;
+    return typ;
   }
 
   bool IsTypeOf(Type& typ, const std::string& base_name)  {
@@ -229,8 +229,8 @@ namespace ROOT { namespace Cintex {
     ,{"basic_string<char,char_traits<char>,allocator<char> >","string"}
   };
 
-  std::string CintName(const Type& TypeNth)  {
-    Type t(CleanType(TypeNth));
+  std::string CintName(const Type& typ)  {
+    Type t(CleanType(typ));
     return CintName(t.Name(SCOPED));
   }
   std::string CintName(const std::string& full_nam)  {
@@ -281,7 +281,7 @@ namespace ROOT { namespace Cintex {
 
   std::string CintSignature(const Member& func ) {
     // Argument signature is:
-    // <TypeNth-char> <'object TypeNth Name'> <typedef-Name> <indirection> <default-value> <argument-Name>
+    // <type-char> <'object type name'> <typedef-name> <indirection> <default-value> <argument-Name>
     // i - 'Int_t' 0 0 option
     string signature;
     Type ft = func.TypeOf();
@@ -297,11 +297,11 @@ namespace ROOT { namespace Cintex {
       else {
         int tagnum = G__defined_tagname(ctype.second.c_str(), 2);
         if ( tagnum != -1 ) arg_sig += "'" + string(G__fulltagname(tagnum, 1)) + "'";
-        else                arg_sig += "'" + ctype.second + "'";  // Object TypeNth Name
+        else                arg_sig += "'" + ctype.second + "'";  // object type name
       }
       if ( pt.IsTypedef() ) arg_sig += " '" + CintName(pt.Name(SCOPED)) + "' ";
       else                  arg_sig += " - ";                    
-      // Assign indirection. First indirection already taken into account by uppercasing TypeNth
+      // Assign indirection. First indirection already taken into account by uppercasing type
       if( indir.first == 0 || indir.first == 1 ) {
         if ( pt.IsReference() && pt.IsConst() )          arg_sig += "11";
         else if ( pt.IsReference() )                     arg_sig += "1";
@@ -326,10 +326,10 @@ namespace ROOT { namespace Cintex {
     return signature;
   }
 
-  void FillCintResult( G__value* result, const Type& TypeNth, void* obj ) {
-    CintTypeDesc ctype = CintType(TypeNth);
+  void FillCintResult( G__value* result, const Type& typ, void* obj ) {
+    CintTypeDesc ctype = CintType(typ);
     char t = ctype.first;
-    if ( TypeNth.IsPointer() ) t = (t - ('a'-'A'));
+    if ( typ.IsPointer() ) t = (t - ('a'-'A'));
     result->type = t;
     switch( t ) {
       case 'y': G__setnull(result); break;
@@ -364,7 +364,7 @@ namespace ROOT { namespace Cintex {
       case 'Q': Converter<int>::toCint           (result, obj); break;
       default:  
         result->obj.i = (long)obj;
-        if( ! TypeNth.IsPointer()) result->ref = (long)obj;
+        if( ! typ.IsPointer()) result->ref = (long)obj;
         else                   result->ref = 0;
         result->tagnum = G__search_tagname(ctype.second.c_str(),'c');
         break;
