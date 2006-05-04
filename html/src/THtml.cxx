@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.93 2006/05/02 19:36:23 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.94 2006/05/04 15:22:13 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -346,8 +346,10 @@ THtml::THtml()
       }
    }
    // insert html object in the list of special ROOT objects
-   gHtml = this;
-   gROOT->GetListOfSpecials()->Add(gHtml);
+   if (!gHtml) {
+      gHtml = this;
+      gROOT->GetListOfSpecials()->Add(gHtml);
+   }
 }
 
 
@@ -363,7 +365,10 @@ THtml::~THtml()
    delete []fClassNames;
    delete []fFileNames;
 
-   gROOT->GetListOfSpecials()->Remove(gHtml);
+   if (gHtml == this) {
+      gROOT->GetListOfSpecials()->Remove(gHtml);
+      gHtml = 0;
+   }
 
    fSourceDir = 0;
    fLen = 0;
@@ -3556,14 +3561,13 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
    if (classPtr) {
 
       const char *filename;
-      if ( classPtr->GetImplFileLine() )
-         filename = GetImplFileName(classPtr);
-      else
+      filename = GetImplFileName(classPtr);
+      if (!filename || !filename[0])
          filename = GetDeclFileName(classPtr);
 
       // classes without Impl/DeclFileName don't have docs,
       // and classes without docs don't have output file names
-      if (!filename)
+      if (!filename || !filename[0])
          return 0;
 
       char varName[80];
