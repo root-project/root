@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.176 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.177 2006/04/27 09:20:33 couet Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -97,7 +97,7 @@
 #include "TApplication.h"
 #include "TCint.h"
 #include "TGuiFactory.h"
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TMessageHandler.h"
 #include "TFolder.h"
 #include "TQObject.h"
@@ -433,7 +433,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
    gPad           = 0;
-   gRandom        = new TRandom;
+   gRandom        = new TRandom3;
 
    //set name of graphical cut class for the graphics editor
    //cannot call SetCutClassName at this point because the TClass of TCutG
