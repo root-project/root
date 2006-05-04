@@ -321,10 +321,10 @@ class genDictionary(object) :
             if b[:8]  == 'private:'   : b = b[8:]
             self.getdependent(b, types)
 #----------------------------------------------------------------------------------
-  def generate(self, file, selclasses, selfunctions, selenums, selvariables) :
+  def generate(self, file, selclasses, selfunctions, selenums, selvariables, cppinfo) :
     names = []
     f = open(file,'w') 
-    f.write(self.genHeaders(False))
+    f.write(self.genHeaders(cppinfo))
     f_buffer = ''
     f_shadow =  '\n// Shadow classes to obtain the data member offsets \n'
     f_shadow += 'namespace __shadow__ {\n'
@@ -496,8 +496,9 @@ class genDictionary(object) :
           print '#%s#'% a, ' is not found in the table' 
     return True
 #----------------------------------------------------------------------------------
-  def genHeaders(self, clean):
+  def genHeaders(self, gccxmlinfo):
     c =  '// Generated at %s. Do not modify it\n\n' % time.ctime(time.time())
+    if (gccxmlinfo) : c += '/*\n%s*/\n\n' % gccxmlinfo
     c += '#ifdef _WIN32\n'
     c += '#pragma warning ( disable : 4786 )\n'
     c += '#endif\n'

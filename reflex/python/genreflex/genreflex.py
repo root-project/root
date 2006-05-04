@@ -136,9 +136,9 @@ class genreflex:
       if o in ('--deep',):
         self.deep = True
       if o in ('--split',):
-        print '-->WARNING: --split option is obsoleted'
+        print '--->> genreflex: WARNING: --split option is obsolete'
       if o in ('--reflex',):
-        print '-->WARNING: --reflex option is obsoleted'
+        print '--->> genreflex: WARNING: --reflex option is obsolete'
       if o in ('--comments',):
         self.opts['comments'] = True
       if o in ('--no_membertypedefs',):
@@ -207,6 +207,39 @@ class genreflex:
       else           : self.selector = None
     except :
       sys.exit(1)
+
+#----------------------------------------------------------------------------------
+  def genGccxmlInfo(self):
+    s = ''
+    (inp,out,err) = os.popen3(self.gccxml + ' --print')
+    serr = err.read()
+    sout = out.read()
+    if serr :
+      print '--->> genreflex: WARNING: Could not invoke %s --print' % self.gccxml
+      print '--->> genreflex: WARNING: %s' % serr
+      return s
+    s += sout
+    compiler = ''
+    for l in sout.split('\n'):
+      ll = l.split('"')
+      if ll[0].find('GCCXML_COMPILER') != -1 :
+        compiler = ll[1]
+        break
+    bcomp = os.path.basename(compiler)
+    vopt = ''
+    if   bcomp in ('gcc','g++','c++') : vopt = '--version'
+    elif bcomp in ('cl.exe','cl')     : vopt = '' # there is no option to print only the version with cl
+    else :
+      print '--->> genreflex: WARNING: While trying to retrieve compiler version, found unknow compiler' % compiler
+      return s
+    (inp,out,err) = os.popen3('%s %s'%(compiler,vopt))
+    serr = err.read()
+    if serr :
+      print '--->> genreflex: WARNING: While trying to retrieve compiler information. Cannot invoke %s %s' % (compiler,vopt)
+      print '--->> genreflex: WARNING: %s' % serr
+      return s
+    s += '\nCompiler info:\n' + out.read()
+    return s
 #----------------------------------------------------------------------------------
   def process_files(self):
     total_warnings = 0
@@ -222,22 +255,23 @@ class genreflex:
         dicfile = os.path.join(self.outputDir,name+file_extension)
       #---------------Parse the header file with GCC_XML
       cmd  = '%s %s -fxml=%s %s -D__REFLEX__' %(self.gccxml, source, xmlfile, self.cppopt)
-      if not self.quiet : print 'Parsing file %s with GCC_XML' % source,
+      if not self.quiet : print '--->> genreflex: INFO: Parsing file %s with GCC_XML' % source,
       status = os.system(cmd)
       if status :
-        print 'Error processing file with gccxml. genreflex command failed.'
+        print '--->> genreflex: ERROR: processing file with gccxml. genreflex command failed.'
         sys.exit(1)
       else: 
         if not self.quiet : print 'OK'
+      gccxmlinfo = self.genGccxmlInfo()
      #---------------Generate the dictionary---------------
-      if not self.quiet : print 'Generating Reflex Dictionary'
+      if not self.quiet : print '--->> genreflex: INFO: Generating Reflex Dictionary'
       dg = gendict.genDictionary(source, self.opts)
       dg.parse(xmlfile)
       classes   = dg.selclasses(self.selector, self.deep)
       functions = dg.selfunctions(self.selector)
       enums     = dg.selenums(self.selector)
       variables = dg.selvariables(self.selector)
-      cnames, warnings, errors = dg.generate(dicfile, classes, functions, enums, variables )
+      cnames, warnings, errors = dg.generate(dicfile, classes, functions, enums, variables, gccxmlinfo )
       total_warnings += warnings
     #------------Produce Seal Capabilities source file------
       if self.capabilities :
