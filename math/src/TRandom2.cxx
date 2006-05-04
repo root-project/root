@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.4 2003/01/26 21:03:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.5 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   04/03/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -68,9 +68,19 @@ Double_t TRandom2::Rndm(Int_t)
 //______________________________________________________________________________
 void TRandom2::RndmArray(Int_t n, Float_t *array)
 {
-   // Return an array of n random numbers uniformly distributed in ]0,1]
+  // Return an array of n random numbers uniformly distributed in ]0,1]
    
-   for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
+  for(Int_t i=0; i<n; i++) {
+     Int_t k = Int_t(fSeed1/53668);
+     fSeed1 = 40014*(fSeed1 - k*53668) - k*12211;
+     if (fSeed1 < 0) fSeed1 += 2147483563;
+     k = Int_t(fSeed2/52774);
+     fSeed2 = 40692*(fSeed2 - k*52774) - k*3791;
+     if (fSeed2 < 0) fSeed2 += 2147483399;
+     Double_t iz = fSeed1 - fSeed2;
+     if (iz <= 0) iz += 2147483562;
+     array[i] = Float_t(iz*4.6566128e-10);
+  }
 }
 
 //______________________________________________________________________________
@@ -78,7 +88,17 @@ void TRandom2::RndmArray(Int_t n, Double_t *array)
 {
   // Return an array of n random numbers uniformly distributed in ]0,1]
    
-  for(Int_t i=0; i<n; i++) array[i]=Rndm();
+  for(Int_t i=0; i<n; i++) {
+     Int_t k = Int_t(fSeed1/53668);
+     fSeed1 = 40014*(fSeed1 - k*53668) - k*12211;
+     if (fSeed1 < 0) fSeed1 += 2147483563;
+     k = Int_t(fSeed2/52774);
+     fSeed2 = 40692*(fSeed2 - k*52774) - k*3791;
+     if (fSeed2 < 0) fSeed2 += 2147483399;
+     Double_t iz = fSeed1 - fSeed2;
+     if (iz <= 0) iz += 2147483562;
+     array[i] = iz*4.6566128e-10;
+  }
 }
 
 //______________________________________________________________________________
