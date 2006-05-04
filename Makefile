@@ -799,6 +799,7 @@ install: all
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
+	   $(INSTALLDATA) icons/*.png           $(DESTDIR)$(ICONPATH); \
 	   echo "Installing fonts in $(DESTDIR)$(TTFFONTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
@@ -878,6 +879,9 @@ uninstall:
 	   rm -f $(DESTDIR)$(INCDIR)/rmain.cxx; \
 	   rm -rf $(DESTDIR)$(CINTINCDIR); \
 	   for i in icons/*.xpm ; do \
+	      rm -fr $(DESTDIR)$(ICONPATH)/`basename $$i`; \
+	   done; \
+	   for i in icons/*.png ; do \
 	      rm -fr $(DESTDIR)$(ICONPATH)/`basename $$i`; \
 	   done; \
 	   if test -d $(DESTDIR)$(ICONPATH) && \
