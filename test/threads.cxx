@@ -66,8 +66,8 @@ void *mhs(void *)
             pad1->cd();
             total0->Draw("e1p");
          }
-         pad1->cd();
-         total0->Draw("e1p");
+         pad1->Modified();
+         pad1->Update();
          c1->Modified();
          c1->Update();
       }
@@ -168,8 +168,8 @@ void *mhs2(void *)
             pad2->cd();
             total->Draw("e1p");
          }
-         pad2->cd();
-         total->Draw("e1p");
+         pad2->Modified();
+         pad2->Update();
          c1->Modified();
          c1->Update();
       }
