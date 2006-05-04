@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.92 2006/05/02 15:57:36 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.93 2006/05/02 19:36:23 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -626,7 +626,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
          // show box with lib, include
          // needs to go first to allow title on the left
          const char* lib=classPtr->GetSharedLibs();
-         const char* incl=classPtr->GetDeclFileName();
+         const char* incl=GetDeclFileName(classPtr);
          if (incl) incl=gSystem->BaseName(incl);
          if (lib && strlen(lib)|| incl && strlen(incl)) {
             classFile << "<table cellpadding=\"2\" border=\"1\" style=\"float:right;\"><tr><td>";
@@ -692,13 +692,13 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
          // make a link to the '.h' file
          classFile << "<h2>class <a name=\"" << classPtr->GetName()
                    << "\" href=\"";
-         classFile << GetFileName((const char *) classPtr->GetDeclFileName()) << "\">";
+         classFile << GetFileName((const char *) GetDeclFileName(classPtr)) << "\">";
          ReplaceSpecialChars(classFile, classPtr->GetName());
          classFile << "</a> ";
 
 
          // copy .h file to the Html output directory
-         char *declf = GetSourceFileName(classPtr->GetDeclFileName());
+         char *declf = GetSourceFileName(GetDeclFileName(classPtr));
          if (declf) {
             CopyHtmlFile(declf);
             delete[]declf;
@@ -820,7 +820,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
             classFile << "&nbsp;<br><b>"
                       << tab4nbsp << "This is an abstract class, constructors will not be documented.<br>" << endl
                       << tab4nbsp << "Look at the <a href=\""
-                      << GetFileName((const char *) classPtr->GetDeclFileName())
+                      << GetFileName((const char *) GetDeclFileName(classPtr))
                       << "\">header</a> to check for available constructors.</b><br>" << endl;
 
          classFile << "<pre>" << endl;
@@ -1153,10 +1153,10 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
 
    // find a .cxx file
    char *tmp1;
-   if (classPtr->GetImplFileName() && classPtr->GetImplFileName()[0]) {
-      tmp1 = GetSourceFileName(classPtr->GetImplFileName());
+   if (GetImplFileName(classPtr) && GetImplFileName(classPtr)[0]) {
+      tmp1 = GetSourceFileName(GetImplFileName(classPtr));
    } else {
-      tmp1 = GetSourceFileName(classPtr->GetDeclFileName());
+      tmp1 = GetSourceFileName(GetDeclFileName(classPtr));
    }
    char *realFilename = 0;
    if (tmp1) {
@@ -2727,48 +2727,103 @@ void THtml::CreateListOfClasses(const char* filter)
       // This is a hack for until after Cint and Reflex are one.
       if (strstr(cname, "__gnu_cxx::")) continue;
 
+      // get class & filename - use TROOT::GetClass, as we also
+      // want those classes without decl file name!
+      TClass *classPtr = gROOT->GetClass((const char *) cname, kTRUE);
+      if (!classPtr) continue;
+
+      TString srcGuess;
+      TString hdrGuess;
+      const char *impname=GetImplFileName(classPtr);
+      if (!impname || !impname[0]) {
+         impname = GetDeclFileName(classPtr);
+         if (impname && !impname[0]) {
+            // no impl, no decl - might be a cintex dict
+            // use namespace to decrypt path.
+            TString impnameString(cname);
+            TObjArray* arrScopes = impnameString.Tokenize("::");
+
+            // for A::B::C, we assume B to be the module, 
+            // b/inc/B/C.h the header, and b/src/C.cxx the source.
+            TIter iScope(arrScopes, kIterBackward);
+            TObjString *osFile   = (TObjString*)iScope();
+            TObjString *osModule = 0;
+            if (osFile) osModule = (TObjString*)iScope();
+
+            if (osModule) {
+               hdrGuess = osModule->String();
+               hdrGuess.ToLower();
+               hdrGuess += "/inc/";
+               hdrGuess += osModule->String();
+               hdrGuess += "/";
+               hdrGuess += osFile->String();
+               hdrGuess += ".h";
+               char* realFile = gSystem->Which(fSourceDir, hdrGuess, kReadPermission);
+               if (realFile) {
+                  delete realFile;
+                  fGuessedDeclFileNames[classPtr] = hdrGuess.Data();
+                  impname = hdrGuess.Data();
+                  
+                  // only check for source if we've found the header!
+                  srcGuess = osModule->String();
+                  srcGuess.ToLower();
+                  srcGuess += "/src/";
+                  srcGuess += osFile->String();
+                  srcGuess += ".cxx";
+                  realFile = gSystem->Which(fSourceDir, srcGuess, kReadPermission);
+                  if (realFile) {
+                     delete realFile;
+                     fGuessedImplFileNames[classPtr] = srcGuess.Data();
+                     impname = srcGuess.Data();
+                  }
+               }
+            }
+            delete arrScopes;
+         }
+      }
+
+      if (!impname || !impname[0]) {
+         cout << "WARNING class " << cname <<
+            " has no implementation file name !" << endl;
+         continue;
+      }
+      if (strstr(impname,"prec_stl/")) continue;
+      if (strstr(cname, "ROOT::") && !strstr(cname,"Math::")
+          && !strstr(cname,"Reflex::") && !strstr(cname,"Cintex::"))
+         continue;
+
       fClassNames[fNumberOfClasses] = cname;
       len = strlen(fClassNames[fNumberOfClasses]);
       fMaxLenClassName = fMaxLenClassName > len ? fMaxLenClassName : len;
-
-      // get class & filename
-      TClass *classPtr = GetClass((const char *) fClassNames[fNumberOfClasses], kTRUE);
-      if (!classPtr) continue;
-
-      const char *impname=0;
-      if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName()))
-         impname = classPtr->GetImplFileName();
-      else
-         impname = classPtr->GetDeclFileName();
-
-      if (impname && strlen(impname)) {
-         fFileNames[fNumberOfFileNames] = StrDup(impname, strlen(fClassNames[fNumberOfClasses])+2);
-         char* posSlash = strchr(fFileNames[fNumberOfFileNames], '/');
-
-         char *srcdir = 0;
-         if (posSlash) {
-            // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
-            srcdir = strstr(posSlash, "/src/");
-
-            // if impl is unset, check for decl and see if it matches
-            // format "base/inc/TROOT.h" - in which case it's not a USER
-            // class, but a BASE class.
-            if (!srcdir) srcdir=strstr(posSlash, "/inc/");
-         } else srcdir = 0;
-         if (srcdir && srcdir == posSlash) {
-            strcpy(srcdir, "_");
-            for (char *t = fFileNames[fNumberOfFileNames];
-                 (t[0] = toupper(t[0])); t++);
-            strcat(srcdir, fClassNames[fNumberOfClasses]);
-         } else {
+      
+      fFileNames[fNumberOfFileNames] = StrDup(impname, strlen(fClassNames[fNumberOfClasses])+2);
+      char* posSlash = strchr(fFileNames[fNumberOfFileNames], '/');
+      
+      char *srcdir = 0;
+      if (posSlash) {
+         // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
+         srcdir = strstr(posSlash, "/src/");
+         
+         // if impl is unset, check for decl and see if it matches
+         // format "base/inc/TROOT.h" - in which case it's not a USER
+         // class, but a BASE class.
+         if (!srcdir) srcdir=strstr(posSlash, "/inc/");
+      } else srcdir = 0;
+      if (srcdir && srcdir == posSlash) {
+         strcpy(srcdir, "_");
+         for (char *t = fFileNames[fNumberOfFileNames];
+              (t[0] = toupper(t[0])); t++);
+         strcat(srcdir, fClassNames[fNumberOfClasses]);
+      } else {
+         if (posSlash && !strncmp(posSlash,"/Math/GenVector/", 16))
+            strcpy(fFileNames[fNumberOfFileNames], "MATHCORE_");
+         else if (posSlash && !strncmp(posSlash,"/Math/Matrix", 12))
+            strcpy(fFileNames[fNumberOfFileNames], "SMATRIX_");
+         else
             strcpy(fFileNames[fNumberOfFileNames], "USER_");
-            strcat(fFileNames[fNumberOfFileNames], fClassNames[fNumberOfClasses]);
-         }
-         fNumberOfFileNames++;
-      } else
-         cout << "WARNING class:" << fClassNames[i] <<
-             " has no implementation file name !" << endl;
-
+         strcat(fFileNames[fNumberOfFileNames], fClassNames[fNumberOfClasses]);
+      }
+      fNumberOfFileNames++;
       fNumberOfClasses++;
    }
    fMaxLenClassName += kSpaceNum;
@@ -3188,8 +3243,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                   out << "#" << classPtr->GetName() << ":";
                   out << funcName;
                   out << "\">";
-                  out << classPtr->GetName() << "::";
-                  out << funcName;
+                  ReplaceSpecialChars(out, classPtr->GetName());
+                  out << "::";
+                  ReplaceSpecialChars(out, funcName);
                   out << "</a>";
 
                   *funcNameEnd = c2;
@@ -3197,7 +3253,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                } else {
                   // make a link to the class
                   out << "\">";
-                  out << classPtr->GetName();
+                  ReplaceSpecialChars(out, classPtr->GetName());
                   out << "</a>";
 
                   keyword = end;
@@ -3226,7 +3282,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                   out << dir;
                out << "ListOfTypes.html#";
                out << keyword << "\">";
-               out << keyword << "</a>";
+               ReplaceSpecialChars(out, keyword);
+               out << "</a>";
 
                *end = c;
                keyword = end;
@@ -3247,7 +3304,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                   out << "<a href=\"#";
                   out << ptr2class->GetName();
                   out << ":" << keyword << "\">";
-                  out << keyword << "</a>";
+                  ReplaceSpecialChars(out, keyword);
+                  out << "</a>";
                   *end = c;
                   keyword = end;
                } else {
@@ -3273,7 +3331,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                      }
                   }
 
-                  if (cl && strlen(cl->GetDeclFileName()) > 0) {
+                  if (cl && strlen(GetDeclFileName(cl)) > 0) {
                      char *htmlFile = GetHtmlFileName(cl);
 
                      if (htmlFile) {
@@ -3289,7 +3347,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                            out << keyword;
                         }
                         out << "\">";
-                        out << keyword;
+                        ReplaceSpecialChars(out, keyword);
                         out << "</a>";
                         delete[]htmlFile;
                         htmlFile = 0;
@@ -3321,7 +3379,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                                  out << "#" << cm->GetName() << ":";
                                  out << funcName;
                                  out << "\">";
-                                 out << funcName;
+                                 ReplaceSpecialChars(out, funcName);
                                  out << "</a>";
                                  delete[]htmlFile2;
                                  htmlFile2 = 0;
@@ -3499,9 +3557,9 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
 
       const char *filename;
       if ( classPtr->GetImplFileLine() )
-         filename = classPtr->GetImplFileName();
+         filename = GetImplFileName(classPtr);
       else
-         filename = classPtr->GetDeclFileName();
+         filename = GetDeclFileName(classPtr);
 
       // classes without Impl/DeclFileName don't have docs,
       // and classes without docs don't have output file names
@@ -3586,13 +3644,30 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
    TClass *cl=gROOT->GetClass(t, load);
    // hack to get rid of prec_stl types
    // TClassEdit checks are far too slow...
-   if (cl &&
-       cl->GetDeclFileName() &&
-       strstr(cl->GetDeclFileName(),"prec_stl/"))
-      cl = 0;   delete [] name;
-   return (cl && cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ? cl : 0);
+   if (cl && GetDeclFileName(cl) &&
+       strstr(GetDeclFileName(cl),"prec_stl/"))
+      cl = 0;   
+   delete [] name;
+   if (cl && GetDeclFileName(cl) && GetDeclFileName(cl)[0])
+      return cl;
+   return 0;
 }
 
+//______________________________________________________________________________
+const char* THtml::GetDeclFileName(TClass * cl) const
+{
+   std::map<TClass*,std::string>::const_iterator iClDecl = fGuessedDeclFileNames.find(cl);
+   if (iClDecl == fGuessedDeclFileNames.end()) return cl->GetDeclFileName();
+   return iClDecl->second.c_str();
+}
+
+//______________________________________________________________________________
+const char* THtml::GetImplFileName(TClass * cl) const
+{
+   std::map<TClass*,std::string>::const_iterator iClImpl = fGuessedImplFileNames.find(cl);
+   if (iClImpl == fGuessedImplFileNames.end()) return cl->GetImplFileName();
+   return iClImpl->second.c_str();
+}
 
 //______________________________________________________________________________
 Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
@@ -3616,9 +3691,9 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
    switch (type) {
    case kSource:
       if (classPtr->GetImplFileLine())
-         strPtr2 = GetSourceFileName(classPtr->GetImplFileName());
+         strPtr2 = GetSourceFileName(GetImplFileName(classPtr));
       else
-         strPtr2 = GetSourceFileName(classPtr->GetDeclFileName());
+         strPtr2 = GetSourceFileName(GetDeclFileName(classPtr));
       if (strPtr2)
          strcpy(sourceFile, strPtr2);
       strPtr =
@@ -3639,7 +3714,7 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
       break;
 
    case kInclude:
-      strPtr2 = GetSourceFileName(classPtr->GetDeclFileName());
+      strPtr2 = GetSourceFileName(GetDeclFileName(classPtr));
       if (strPtr2)
          strcpy(sourceFile, strPtr2);
       strPtr =
@@ -3652,7 +3727,7 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
       break;
 
    case kTree:
-      strPtr2 = GetSourceFileName(classPtr->GetDeclFileName());
+      strPtr2 = GetSourceFileName(GetDeclFileName(classPtr));
       if (strPtr2)
          strcpy(sourceFile, strPtr2);
       strcpy(classname, classPtr->GetName());
@@ -3895,13 +3970,13 @@ void THtml::ReplaceSpecialChars(ofstream & out, const char c)
    else {
       switch (c) {
       case '<':
-         out << "&lt;";
+         out << "&lt; ";
          break;
       case '&':
          out << "&amp;";
          break;
       case '>':
-         out << "&gt;";
+         out << " &gt;";
          break;
       default:
          out << c;
@@ -3938,6 +4013,22 @@ void THtml::ReplaceSpecialChars(ofstream & out, const char *string)
       }
    }
 }
+
+
+//______________________________________________________________________________
+void THtml::SetDeclFileName(TClass* cl, const char* filename)
+{
+   // Explicitely set a decl file name for TClass cl.
+   fGuessedDeclFileNames[cl] = filename;
+}
+
+//______________________________________________________________________________
+void THtml::SetImplFileName(TClass* cl, const char* filename)
+{
+   // Explicitely set a impl file name for TClass cl.
+   fGuessedImplFileNames[cl] = filename;
+}
+
 
 //______________________________________________________________________________
 void THtml::SortNames(const char **strings, Int_t num, Bool_t type)
@@ -4066,8 +4157,8 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title, TClass *cls/*=0*/
                TString txt(fLine);
                txt.ReplaceAll("%TITLE%", title);
                txt.ReplaceAll("%CLASS%", cls?cls->GetName():"");
-               txt.ReplaceAll("%INCFILE%", cls?cls->GetDeclFileName():"");
-               txt.ReplaceAll("%SRCFILE%", cls?cls->GetImplFileName():"");
+               txt.ReplaceAll("%INCFILE%", cls?GetDeclFileName(cls):"");
+               txt.ReplaceAll("%SRCFILE%", cls?GetImplFileName(cls):"");
                out << txt << endl;
             }
          }

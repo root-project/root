@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.14 2006/04/07 13:17:51 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.15 2006/04/25 17:25:33 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "THashList.h"
 #endif
 #include <list>
+#include <map>
 
 class TClass;
 class TVirtualPad;
@@ -69,6 +70,8 @@ protected:
         Int_t    fNumberOfFileNames;// Number of names of files for known classes
         char   **fFileNames;       // Names of files for known classes
   std::list<std::string> fModules; // Names of modules
+  std::map<TClass*,std::string> fGuessedDeclFileNames; // names of additional decl file names
+  std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
     
         enum ETraverse {
           kUp, kDown, kBoth        // direction to traverse class tree in ClassHtmlTree()
@@ -110,6 +113,8 @@ public:
                  THtml();
        virtual   ~THtml();
           void   Convert(const char *filename, const char *title, const char *dirname = "");
+    const char  *GetDeclFileName(TClass* cl) const;
+    const char  *GetImplFileName(TClass* cl) const;
     const char  *GetSourceDir()  { return fSourceDir; }
     const char  *GetOutputDir()  { return fOutputDir; }
     const char  *GetXwho() const { return fXwho.Data(); }
@@ -117,7 +122,9 @@ public:
           void   MakeClass(const char *className, Bool_t force=kFALSE);
           void   MakeIndex(const char *filter="*");
           void   MakeTree(const char *className, Bool_t force=kFALSE);
+          void   SetDeclFileName(TClass* cl, const char* filename);
           void   SetEscape(char esc='\\') { fEsc = esc; }
+          void   SetImplFileName(TClass* cl, const char* filename);
           void   SetSourcePrefix(const char *prefix) { fSourcePrefix = prefix; }
           void   SetSourceDir(const char *dir) { fSourceDir = dir; }
           void   SetOutputDir(const char *dir) { fOutputDir = dir; }
