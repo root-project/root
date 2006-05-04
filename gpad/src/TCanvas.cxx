@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.107 2006/03/13 16:14:24 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.108 2006/03/28 16:43:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1349,7 +1349,7 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
       Picked(fSelectedPad, fSelected, fEvent);  // emit signal
 
    if ((fEvent == kButton1Down) || (fEvent == kButton2Down) || (fEvent == kButton3Down)) {
-      if (fSelected) {
+      if (fSelected && !fSelected->InheritsFrom("TView")) {
          Selected(fSelectedPad, fSelected, fEvent);  // emit signal
          fSelectedX = px;
          fSelectedY = py;
