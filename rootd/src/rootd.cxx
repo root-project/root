@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.112 2006/03/22 21:57:17 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.113 2006/05/01 20:19:14 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -202,6 +202,7 @@
 // 12 -> 13: changed return message of RootdFstat()
 // 13 -> 14: support for TNetFile setup via TXNetFile
 // 14 -> 15: support for SSH authentication via SSH tunnel
+// 15 -> 16: cope with the bug fix in TUrl::GetFile
 
 #include "config.h"
 #include "RConfig.h"
@@ -341,7 +342,7 @@ enum EFileMode{ kBinary, kAscii };
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 15;      // increase when protocol changes
+static int gProtocol             = 16;      // increase when protocol changes
 static int gClientProtocol       = -1;      // Determined by RpdInitSession
 static int gAnon                 = 0;       // anonymous user flag
 static double gBytesRead         = 0;
@@ -1030,10 +1031,15 @@ void RootdOpen(const char *msg)
 
    } else {
 
-      if (file[0] == '/' && file[1] == '/')
-         strcpy(gFile, &file[1]);
-      else
+      if (gClientProtocol > 14) {
          strcpy(gFile, file);
+      } else {
+         // Old clients send an additional slash at the beginning
+         if (file[0] == '/')
+            strcpy(gFile, &file[1]);
+         else
+            strcpy(gFile, file);
+      }
 
       gFile[strlen(file)] = '\0';
    }

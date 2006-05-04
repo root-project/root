@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.66 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.67 2006/05/01 20:13:41 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -117,8 +117,14 @@ Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
 
    if (!fSocket) return -1;
 
-   fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
-                 kROOTD_OPEN);
+   if (fProtocol > 15) {
+      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
+                    kROOTD_OPEN);
+   } else {
+      // Old daemon versions expect an additional slash at beginning
+      fSocket->Send(Form("/%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
+                    kROOTD_OPEN);
+   }
 
    EMessageTypes kind;
    int stat;
@@ -445,6 +451,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                              Bool_t forceRead)
 {
    // Connect to remote rootd server.
+   TString fn = fUrl.GetFile();
 
    // Create Authenticated socket
    Int_t sSize = netopt < -1 ? -netopt : 1;
@@ -477,13 +484,16 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    }
 
    // Open the file
+   if (fProtocol < 16)
+      // For backward compatibility we need to add a '/' at the beginning
+      fn.Insert(0,"/");
    if (forceOpen)
-      fSocket->Send(Form("%s %s", fUrl.GetFile(),
+      fSocket->Send(Form("%s %s", fn.Data(),
                               ToLower("f"+fOption).Data()), kROOTD_OPEN);
    else if (forceRead)
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), "+read"), kROOTD_OPEN);
+      fSocket->Send(Form("%s %s", fn.Data(), "+read"), kROOTD_OPEN);
    else
-      fSocket->Send(Form("%s %s", fUrl.GetFile(),
+      fSocket->Send(Form("%s %s", fn.Data(),
                               ToLower(fOption).Data()), kROOTD_OPEN);
 
    EMessageTypes tmpkind;
