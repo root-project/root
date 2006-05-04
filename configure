@@ -2878,7 +2878,15 @@ if test "x$enable_ssl" = "xyes" ; then
          $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
      if test "x$found_lib" != "x" ; then
          ssllib="$found_lib"
-         ssllibdir="$found_dir"
+         if test ! "x$found_lib" = "x-lssl" ; then
+            tmpssllibdir="$ssllibdir"
+            if test ! "x$ssl_shared" = "xno" ; then
+               ssl_shared=no
+            fi
+         else
+            ssllibdir="$found_dir"
+            tmpssllibdir=`echo $ssllibdir | cut -c3-`
+         fi
 
          #
          # libcrypto, in the same dir
@@ -2888,7 +2896,7 @@ if test "x$enable_ssl" = "xyes" ; then
              libcrypto="libcrypto_$flavour"
              tmpglbslibdir="$globusdir/lib"
          else
-             tmpglbslibdir=$ssllibdir
+             tmpglbslibdir=$tmpssllibdir
          fi
          check_library "$libcrypto" "$enable_shared" "$tmpglbslibdir" \
              $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
