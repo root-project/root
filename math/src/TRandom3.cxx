@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.8 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,48 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
 {
   // Return an array of n random numbers uniformly distributed in ]0,1]
    
-  for(Int_t i=0; i<n; i++) array[i]=Rndm();
+   Int_t k = 0;
+  
+   UInt_t y;
+
+   const Int_t  kM = 397;
+   const Int_t  kN = 624;
+   const UInt_t kTemperingMaskB =  0x9d2c5680;
+   const UInt_t kTemperingMaskC =  0xefc60000;
+   const UInt_t kUpperMask =       0x80000000;
+   const UInt_t kLowerMask =       0x7fffffff;
+   const UInt_t kMatrixA =         0x9908b0df;
+
+   while (k < n) {
+      if (fCount624 >= kN) {
+         register Int_t i;
+
+         for (i=0; i < kN-kM; i++) {
+            y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
+            fMt[i] = fMt[i+kM] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+         }
+
+         for (   ; i < kN-1    ; i++) {
+            y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
+            fMt[i] = fMt[i+kM-kN] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+         }
+
+         y = (fMt[kN-1] & kUpperMask) | (fMt[0] & kLowerMask);
+         fMt[kN-1] = fMt[kM-1] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
+         fCount624 = 0;
+     }
+
+      y = fMt[fCount624++];
+      y ^=  (y >> 11);
+      y ^= ((y << 7 ) & kTemperingMaskB );
+      y ^= ((y << 15) & kTemperingMaskC );
+      y ^=  (y >> 18);
+
+      if (y) {
+         array[k] = Double_t( y * 2.3283064365386963e-10); // * Power(2,-32)
+         k++;
+      }
+   }
 }
 
 //______________________________________________________________________________
