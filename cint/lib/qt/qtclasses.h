@@ -44,7 +44,7 @@
 #pragma link C++ class  QFont;
 #pragma link C++ class  QFontDialog;
 // G
-// -- #pragma link C++ class  QGLWidget; 
+#pragma link C++ class  QGLWidget; 
 #pragma link C++ class  QGridLayout;
 #pragma link C++ class  QSplitter;
 #pragma link C++ class  QGroupBox;
