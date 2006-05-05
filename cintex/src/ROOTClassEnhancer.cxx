@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.6 2005/11/17 14:12:33 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.7 2006/05/03 15:49:40 axel Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -27,6 +27,8 @@
 #include "Reflex/Builder/TypeBuilder.h"
 #include "Reflex/Builder/CollectionProxy.h"
 #include "Api.h"
+
+#include <sstream>
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
   #include "TVirtualIsAProxy.h"
@@ -489,6 +491,11 @@ namespace ROOT { namespace Cintex {
         string nam = mem.Properties().HasKey("ioname") ? 
                      mem.Properties().PropertyAsString("ioname") : mem.Name();
         if( typ.IsPointer() ) nam = "*" + nam;
+        if( typ.IsArray() ) {
+          std::stringstream s;
+          s << typ.ArrayLength();
+          nam += "[" + s.str() + "]";
+        }
         char*  add = (char*)obj + mem.Offset();
         if ( Cintex::Debug() > 2 )  {
           cout << "Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str() 
