@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.49 2006/04/10 09:23:31 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.50 2006/04/20 10:41:28 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -176,8 +176,8 @@ TGLViewer::~TGLViewer()
    // Destroy viewer object
    delete fContextMenu;
    delete fRedrawTimer;
-   if (fPadEditor)
-      fPadEditor->SetModel(fPad, 0, 0);
+   if (fPadEditor) fPadEditor = 0;
+//    fPadEditor->SetModel(fPad,0,0); //closing canvas via File menu causes SegV
    fPad->ReleaseViewer3D();
 }
 
