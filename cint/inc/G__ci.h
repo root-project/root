@@ -1741,8 +1741,9 @@ typedef struct {
 /**********************************************
  * AMD64/EM64T
  * It turned out it is quite difficult to support this
- * platform as it uses registers for passing arguments (first 6 arguments
- * in registers, the remaining on the stack) for Linux/gcc.
+ * platform as it uses registers for passing arguments (first 6 long
+ * and first 8 double arguments in registers, the remaining on the stack)
+ * for Linux/gcc.
  **********************************************/
 
 #define G__VAARG_INC_COPY_N 8

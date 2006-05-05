@@ -1714,7 +1714,7 @@ void G__set_globalcomp(char *mode,char *linkfilename,char *dllid)
       sprintf(buf,"%s.def",G__PROJNAME);
     else if (G__DLLID[0])
       sprintf(buf,"%s.def",G__DLLID);
-    else 
+    else
       sprintf(buf,"%s.def","G__lib");
     G__WINDEF = (char*)malloc(strlen(buf)+1);
     strcpy(G__WINDEF,buf);
@@ -2286,7 +2286,7 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
 #endif
             if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
               /* constructor need special handling */
-              if(0==G__struct.isabstract[i]&&0==isnonpublicnew) 
+              if(0==G__struct.isabstract[i]&&0==isnonpublicnew)
               {
                 G__cppif_genconstructor(fp,hfp,i,j,ifunc);
               }
@@ -2565,6 +2565,265 @@ static int G__isprotecteddestructoronelevel(int tagnum)
   return(0);
 }
 
+
+#if defined(__x86_64__) && defined(__linux)
+/**************************************************************************
+* G__x8664_vararg()
+*
+* This function sets up vararg calls on X86_64 (AMD64 and EM64T).
+* On these platforms arguments are passed by register and not on
+* the stack. The Linux ABI specifies that the first 6 integer and
+* 8 double arguments are passed via registers, while any remaining
+* arguments are passed via the stack. In this function we use inline
+* assembler to set the arguments in the right registers before
+* calling the vararg function.
+*
+**************************************************************************/
+static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
+                            const char *fn, int tagnum, const char *cls)
+{
+   const int umax = 13;   // maximum number of stack arguments (fixed in ABI)
+   int i;
+
+   fprintf(fp, "  const int imax = 6, dmax = 8, umax = 20;\n");
+   fprintf(fp, "  int objsize, type, i, icnt = 0, dcnt = 0, ucnt = 0;\n");
+   fprintf(fp, "  G__value *pval;\n");
+   fprintf(fp, "  G__int64 lval[imax];\n");
+   fprintf(fp, "  double dval[dmax];\n");
+   fprintf(fp, "  union { G__int64 lval; double dval; } u[umax];\n");
+
+   if (tagnum != -1 && !ifunc->staticalloc[ifn])
+      fprintf(fp, "  lval[icnt] = G__getstructoffset(); icnt++;  // this pointer\n");
+
+   fprintf(fp, "  for (i = 0; i < libp->paran; i++) {\n");
+   fprintf(fp, "    type = libp->para[i].type;\n");
+   fprintf(fp, "    pval = &libp->para[i];\n");
+   fprintf(fp, "    if (isupper(type))\n");
+   fprintf(fp, "      objsize = G__LONGALLOC;\n");
+   fprintf(fp, "    else\n");
+   fprintf(fp, "      objsize = G__sizeof(pval);\n");
+
+   fprintf(fp, "    switch (type) {\n");
+   fprintf(fp, "      case 'c': case 'b': case 's': case 'r': objsize = sizeof(int); break;\n");
+   fprintf(fp, "      case 'f': objsize = sizeof(double); break;\n");
+   fprintf(fp, "    }\n");
+
+   fprintf(fp, "    if (objsize > G__VAARG_PASS_BY_REFERENCE) {\n");
+   fprintf(fp, "      if (pval->ref > 0x1000) {\n");
+   fprintf(fp, "        if (icnt < imax) {\n");
+   fprintf(fp, "          lval[icnt] = pval->ref; icnt++;\n");
+   fprintf(fp, "        } else {\n");
+   fprintf(fp, "          u[ucnt].lval = pval->ref; ucnt++;\n");
+   fprintf(fp, "        }\n");
+   fprintf(fp, "      } else {\n");
+   fprintf(fp, "        if (icnt < imax) {\n");
+   fprintf(fp, "          lval[icnt] = G__int(*pval); icnt++;\n");
+   fprintf(fp, "        } else {\n");
+   fprintf(fp, "          u[ucnt].lval = G__int(*pval); ucnt++;\n");
+   fprintf(fp, "        }\n");
+   fprintf(fp, "      }\n");
+   fprintf(fp, "      type = 'z';\n");
+   fprintf(fp, "    }\n");
+
+   fprintf(fp, "    switch (type) {\n");
+   fprintf(fp, "      case 'n': case 'm':\n");
+   fprintf(fp, "        if (icnt < imax) {\n");
+   fprintf(fp, "          lval[icnt] = (G__int64)G__Longlong(*pval); icnt++;\n");
+   fprintf(fp, "        } else {\n");
+   fprintf(fp, "          u[ucnt].lval = (G__int64)G__Longlong(*pval); ucnt++;\n");
+   fprintf(fp, "        } break;\n");
+   fprintf(fp, "      case 'f': case 'd':\n");
+   fprintf(fp, "        if (dcnt < dmax) {\n");
+   fprintf(fp, "          dval[dcnt] = G__double(*pval); dcnt++;\n");
+   fprintf(fp, "        } else {\n");
+   fprintf(fp, "          u[ucnt].dval = G__double(*pval); ucnt++;\n");
+   fprintf(fp, "        } break;\n");
+   fprintf(fp, "      case 'z': break;\n");
+   fprintf(fp, "      case 'g': case 'c': case 'b': case 'r': case 's': case 'h': case 'i':\n");
+   fprintf(fp, "      case 'k': case 'l': case 'u':\n");
+   fprintf(fp, "      default:\n");
+   fprintf(fp, "        if (icnt < imax) {\n");
+   fprintf(fp, "          lval[icnt] = G__int(*pval); icnt++;\n");
+   fprintf(fp, "        } else {\n");
+   fprintf(fp, "          u[ucnt].lval = G__int(*pval); ucnt++;\n");
+   fprintf(fp, "        } break;\n");
+   fprintf(fp, "    }\n");
+   fprintf(fp, "    if (ucnt >= %d) printf(\"%s: more than %d var args\\n\");\n", umax, fn, umax);
+   fprintf(fp, "  }\n");
+
+   // example of what we try to generate:
+   //    void (TQObject::*fptr)(const char *, Int_t, ...) = &TQObject::EmitVA;
+
+   int type    = ifunc->type[ifn];
+   int ptagnum = ifunc->p_tagtable[ifn];
+   int typenum = ifunc->p_typetable[ifn];
+   int reftype = ifunc->reftype[ifn];
+   int isconst = ifunc->isconst[ifn];
+
+   int m = ifunc->para_nu[ifn];
+   if (tagnum != -1) {
+      if (!strcmp(fn, cls)) {
+         // variadic constructor case, not yet supported
+         printf("G__x8664_vararg: variadic constructors not yet supported\n");
+      } else {
+         // write return type
+         char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
+         if (ifunc->staticalloc[ifn]) {
+            fprintf(fp, "  %s (*fptr)(", typestring);
+         } else {
+            fprintf(fp, "  %s (%s::*fptr)(", typestring, cls);
+         }
+
+         // write arguments
+         for (int k = 0; k < m; k++) {
+            type    = ifunc->para_type[ifn][k];
+            ptagnum = ifunc->para_p_tagtable[ifn][k];
+            typenum = ifunc->para_p_typetable[ifn][k];
+            reftype = ifunc->para_reftype[ifn][k];
+            isconst = ifunc->para_isconst[ifn][k];
+
+            char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
+            if (k)
+               fprintf(fp, ", ");
+            fprintf(fp, "%s", typestring);
+         }
+         fprintf(fp, ", ...) %s = &%s::%s;\n",
+                 (ifunc->isconst[ifn] & G__CONSTFUNC) ? "const" : "", cls, fn);
+      }
+   } else {
+      fprintf(fp, "  long fptr = (long)&%s;\n", fn);
+   }
+
+   if (tagnum != -1 && ifunc->isvirtual[ifn]) {
+      fprintf(fp, "  // special prologue since virtual member function pointers contain\n");
+      fprintf(fp, "  // only an offset into the virtual table and not a function address\n");
+      fprintf(fp, "  long faddr;\n");
+
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (lval[0]) : \"%%rax\", \"%%rdx\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%rax, %%rdx\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr));\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq 8(%%rax), %%rax\");  //multiple inheritance offset\n");
+      fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rdx\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (fptr));  //virtual member function offset\n");
+      fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"decq %%rax\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rax\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\"  : \"=m\" (faddr) :: \"memory\");\n\n");
+   }
+
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm0\"  :: \"m\" (dval[0]) : \"%%xmm0\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm1\"  :: \"m\" (dval[1]) : \"%%xmm1\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm2\"  :: \"m\" (dval[2]) : \"%%xmm2\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm3\"  :: \"m\" (dval[3]) : \"%%xmm3\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm4\"  :: \"m\" (dval[4]) : \"%%xmm4\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm5\"  :: \"m\" (dval[5]) : \"%%xmm5\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm6\"  :: \"m\" (dval[6]) : \"%%xmm6\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm7\"  :: \"m\" (dval[7]) : \"%%xmm7\");\n");
+
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rdi\" :: \"m\" (lval[0]) : \"%%rdi\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rsi\" :: \"m\" (lval[1]) : \"%%rsi\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rdx\" :: \"m\" (lval[2]) : \"%%rdx\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rcx\" :: \"m\" (lval[3]) : \"%%rcx\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r8\"  :: \"m\" (lval[4]) : \"%%r8\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r9\"  :: \"m\" (lval[5]) : \"%%r9\");\n");
+
+   int istck = 0;
+   for (i = 0; i < umax; i++) {
+     fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax \\n\\t\"\n");
+     fprintf(fp, "                       \"movq %%%%rax, %d(%%%%rsp)\" :: \"m\" (u[%d].lval) : \"%%rax\");\n", istck, i);
+     istck += 8;
+   }
+   if (tagnum != -1 && ifunc->isvirtual[ifn])
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\"  :: \"m\" (faddr) : \"%%r10\");\n");
+   else
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\"  :: \"m\" (fptr) : \"%%r10\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movl $8, %%eax\");  // number of used xmm registers\n");
+   fprintf(fp, "  __asm__ __volatile__(\"call *%%r10\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\" : \"=m\" (u[0].lval) :: \"memory\");  // get return value\n");
+}
+
+static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table *ifunc)
+{
+   char *typestring;
+
+   int type    = ifunc->type[ifn];
+   int tagnum  = ifunc->p_tagtable[ifn];
+   int typenum = ifunc->p_typetable[ifn];
+   int reftype = ifunc->reftype[ifn];
+   int isconst = ifunc->isconst[ifn];
+
+   // Function return type is a reference, handle and return.
+   if (reftype == G__PARAREFERENCE) {
+      if (isconst & G__CONSTFUNC) {
+         if (isupper(type)) {
+            isconst |= G__PCONSTVAR;
+         } else {
+            isconst |= G__CONSTVAR;
+         }
+      }
+      typestring = G__type2string(type, tagnum, typenum, reftype, isconst);
+      fprintf(fp, "(%s) u[0].lval", typestring);
+      return;
+   }
+
+   // Function return type is a pointer, handle and return.
+   if (isupper(type)) {
+      fprintf(fp, "u[0].lval");
+      return;
+   }
+
+   // Function returns an object or a fundamental type.
+   switch (type) {
+      case 'y':
+         break;
+      case '1':
+      case 'e':
+      case 'c':
+      case 's':
+      case 'i':
+      case 'l':
+      case 'b':
+      case 'r':
+      case 'h':
+      case 'k':
+      case 'g':
+      case 'n':
+      case 'm':
+         fprintf(fp, "u[0].lval");
+         break;
+      case 'q':
+      case 'f':
+      case 'd':
+         fprintf(fp, "u[0].dval");
+         break;
+      case 'u':
+         switch (G__struct.type[tagnum]) {
+	    case 'c':
+	    case 's':
+	    case 'u':
+               typestring = G__type2string(type, tagnum, typenum, 0, 0);
+               if (reftype) {
+                  fprintf(fp, "(%s&) u[0].lval", typestring);
+               } else {
+ 	          if (G__globalcomp == G__CPPLINK) {
+                     fprintf(fp, "(%s) u[0].lval", typestring);
+                  } else {
+                     fprintf(fp, "(%s*) u[0].lval", typestring);
+                  }
+               }
+               break;
+            default:
+               fprintf(fp, "u[0].lval");
+               break;
+         }
+         break;
+      default:
+         break;
+   }
+}
+#endif
+
 /**************************************************************************
 * G__cppif_genconstructor()
 *
@@ -2620,6 +2879,10 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
     fprintf(fp,             "   G__va_arg_buf G__va_arg_bufobj;\n");
     fprintf(fp,             "   G__va_arg_put(&G__va_arg_bufobj, libp, %d);\n", ifunc->para_nu[ifn]);
   }
+#endif
+#if defined(__x86_64__) && defined(__linux)
+  if (ifunc->ansi[ifn] == 2)
+    G__x8664_vararg(fp, ifn, ifunc, buf, tagnum, buf);
 #endif
 
   G__if_ary_union(fp, ifn, ifunc);
@@ -2738,12 +3001,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
 #elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
-      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__))) || \
-      (defined(__x86_64__) && defined(__linux))
+      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
           int i;
           for (i = 0; i < 100; ++i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
+#elif defined(__x86_64__) && defined(__linux)
+          // see G__x8664_vararg()
 #else
           fprintf(fp,       ", G__va_arg_bufobj");
 #endif
@@ -2775,12 +3039,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
 #elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
-      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__))) || \
-      (defined(__x86_64__) && defined(__linux))
+      ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
           int i;
           for (i = 0; i < 100; ++i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
+#elif defined(__x86_64__) && defined(__linux)
+          // see G__x8664_vararg()
 #else
           fprintf(fp,       ", G__va_arg_bufobj");
 #endif
@@ -2823,12 +3088,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
 #elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
-    ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__))) || \
-    (defined(__x86_64__) && defined(__linux))
+    ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; ++i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
+#elif defined(__x86_64__) && defined(__linux)
+          // see G__x8664_vararg()
 #else
       fprintf(fp,           ", G__va_arg_bufobj");
 #endif
@@ -2859,12 +3125,13 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
 #elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
-    ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__))) || \
-    (defined(__x86_64__) && defined(__linux))
+    ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; ++i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
+#elif defined(__x86_64__) && defined(__linux)
+          // see G__x8664_vararg()
 #else
       fprintf(fp,           ", G__va_arg_bufobj");
 #endif
@@ -3302,10 +3569,10 @@ int G__isprivateassignopr(int tagnum)
 * copy constructor or operator=().
 *
 **************************************************************************/
-void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum, 
-                         int ifn, G__ifunc_table* ifunc, 
-                         int isconstructor, int iscopyconstructor, 
-                         int isdestructor, 
+void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
+                         int ifn, G__ifunc_table* ifunc,
+                         int isconstructor, int iscopyconstructor,
+                         int isdestructor,
                          int isassignmentoperator, int isnonpublicnew)
 {
 #ifndef G__SMALLOBJECT
@@ -3530,10 +3797,10 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     strcpy(buf, G__fulltagname(tagnum, 1));
 
     bool has_a_delete = G__struct.funcs[tagnum] & G__HAS_OPERATORDELETE;
-  
+
     bool has_own_delete1arg = false;
     bool has_own_delete2arg = false;
-  
+
     {
       struct G__ifunc_table* ifunc;
       long index;
@@ -3543,7 +3810,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
       ifunc = G__get_methodhandle("operator delete", "void*, size_t", G__struct.memfunc[tagnum], &index, &offset, 0, 0);
       has_own_delete2arg = (ifunc != 0);
     }
-  
+
     sprintf(funcname, "~%s", G__struct.name[tagnum]);
     sprintf(dtorname, "G__T%s", G__map_cpp_name(G__fulltagname(tagnum, 0)));
 
@@ -3564,13 +3831,13 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     fprintf(fp,   "   long gvp = G__getgvp();\n");
     fprintf(fp,   "   long soff = G__getstructoffset();\n");
     fprintf(fp,   "   int n = G__getaryconstruct();\n");
-  
+
     fprintf(fp,   "   //\n");
     fprintf(fp,   "   //has_a_delete: %d\n", has_a_delete);
     fprintf(fp,   "   //has_own_delete1arg: %d\n", has_own_delete1arg);
     fprintf(fp,   "   //has_own_delete2arg: %d\n", has_own_delete2arg);
     fprintf(fp,   "   //\n");
-  
+
     fprintf(fp,   "   if (!soff) {\n");
     fprintf(fp,   "     return(1);\n");
     fprintf(fp,   "   }\n");
@@ -3745,11 +4012,23 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
 
   G__if_ary_union(fp,ifn,ifunc);
 
+  if (-1 != tagnum) {
+    if ((ifunc->access[ifn] == G__PROTECTED) || ((ifunc->access[ifn] == G__PRIVATE) && (G__struct.protectedaccess[tagnum] & G__PRIVATEACCESS))) {
+      sprintf(castname, "%s_PR", G__get_link_tagname(tagnum));
+    } else {
+      strcpy(castname, G__fulltagname(tagnum, 1));
+    }
+  }
+
 #ifndef G__VAARG_COPYFUNC
   if (ifunc->ansi[ifn] == 2) {
     fprintf(fp, "   G__va_arg_buf G__va_arg_bufobj;\n");
     fprintf(fp, "   G__va_arg_put(&G__va_arg_bufobj, libp, %d);\n", ifunc->para_nu[ifn]);
   }
+#endif
+#if defined(__x86_64__) && defined(__linux)
+  if (ifunc->ansi[ifn] == 2)
+    G__x8664_vararg(fp, ifn, ifunc, ifunc->funcname[ifn], tagnum, castname);
 #endif
 
   /*************************************************************
@@ -3771,11 +4050,6 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         if ('n' == G__struct.type[tagnum]) {
           fprintf(fp,"%s::", G__fulltagname(tagnum, 1));
         } else {
-          if ((G__PROTECTED == ifunc->access[ifn]) || ((G__PRIVATE == ifunc->access[ifn]) && (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))) {
-            sprintf(castname, "%s_PR", G__get_link_tagname(tagnum));
-          } else {
-            strcpy(castname, G__fulltagname(tagnum, 1));
-          }
           if (ifunc->staticalloc[ifn]) {
              fprintf(fp, "%s::", castname);
           } else {
@@ -3808,15 +4082,12 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         int i;
         for (i = G__VAARG_SIZE/sizeof(long) - 1; i > G__VAARG_SIZE/sizeof(long) - 100; i--)
           fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
-        int i;
-        for (i = 0; i < 100 /* G__VAARG_SIZE/4 */; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+      ((defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__)))
         int i;
         for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
 #elif defined(__x86_64__) && defined(__linux)
-        int i;
-        for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
+        // see G__x8664_vararg()
 #else
         fprintf(fp, ", G__va_arg_bufobj");
 #endif
@@ -3829,7 +4100,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
       fprintf(fp, "      break;\n");
       --m;
     } while ((m >= 0) && ifunc->para_default[ifn][m]);
-    // 
+    //
     // End of switch on number of parameters provided by call.
     fprintf(fp, "   }\n");
   } else {
@@ -3837,17 +4108,20 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     //
     // Output the return type.
     G__cppif_returntype(fp, ifn, ifunc, endoffunc);
+
+#if defined(__x86_64__) && defined(__linux)
+    if (ifunc->ansi[ifn] == 2) {
+       // all code is already generated by G__x8664_vararg()
+       G__x8664_vararg_epilog(fp, ifn, ifunc);
+       fprintf(fp, "%s\n", endoffunc);
+    } else {
+#endif
     //
     // Output the function name.
     if (-1 != tagnum) {
       if (G__struct.type[tagnum] == 'n')
         fprintf(fp, "%s::", G__fulltagname(tagnum, 1));
       else {
-        if ((ifunc->access[ifn] == G__PROTECTED) || ((ifunc->access[ifn] == G__PRIVATE) && (G__struct.protectedaccess[tagnum] & G__PRIVATEACCESS))) {
-          sprintf(castname, "%s_PR", G__get_link_tagname(tagnum));
-        } else {
-          strcpy(castname, G__fulltagname(tagnum, 1));
-        }
         if (ifunc->staticalloc[ifn]) {
            fprintf(fp, "%s::", castname);
         } else {
@@ -3879,15 +4153,12 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
       //FIXME:  This loops only 99 times, the other clause loops 100 times.
       int i;
       for (i = G__VAARG_SIZE/sizeof(long) - 1; i > G__VAARG_SIZE/sizeof(long) - 100; --i) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
-      int i;
-      for (i = 0; i < 100 /* G__VAARG_SIZE/4 */; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+      ((defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
 #elif defined(__x86_64__) && defined(__linux)
-      int i;
-      for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
+      // see G__x8664_vararg()
 #else
       fprintf(fp, ", G__va_arg_bufobj");
 #endif
@@ -3895,6 +4166,9 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
     //
     // Output the function body.
     fprintf(fp, ")%s\n", endoffunc);
+#if defined(__x86_64__) && defined(__linux)
+    }  // end G__x8664_vararg_epilog
+#endif
   }
 
   G__if_ary_union_reset(ifn, ifunc);
