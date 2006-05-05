@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.94 2006/05/04 15:22:13 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.95 2006/05/04 19:00:51 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -858,6 +858,19 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                   classFile << endl;
                classFile << tab4 << "<b>" << ftitle << "</b><br>" << endl;
 
+               TString strClassNameNoScope(classPtr->GetName());
+               
+               UInt_t templateNest = 0;
+               Ssiz_t posLastScope = strClassNameNoScope.Length()-1;
+               for (;posLastScope && (templateNest || strClassNameNoScope[posLastScope] != ':'); --posLastScope)
+                  if (strClassNameNoScope[posLastScope] == '>') ++templateNest;
+                  else if (strClassNameNoScope[posLastScope] == '<') --templateNest;
+                  else if (!strncmp(strClassNameNoScope.Data()+posLastScope,"operator", 8) && templateNest==1) 
+                     --templateNest;
+               if (strClassNameNoScope[posLastScope] == ':' 
+                   && strClassNameNoScope[posLastScope-1] == ':')
+                  strClassNameNoScope.Remove(0, posLastScope+1);
+
                for (i = 0; i < num[j]; i++) {
                   method =
                      (TMethod *) methodNames[j * 2 * nMethods + 2 * i +
@@ -871,10 +884,10 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
                         len = strlen(method->GetReturnTypeName());
                      else
                         len = 0;
-                     if (!strcmp(method->GetName(),classPtr->GetName()))
+                     if (!strcmp(method->GetName(),strClassNameNoScope.Data()))
                         // it's a c'tor - Cint stores the class name as return type
                         isctor=true;
-                     if (!strcmp(Form("~%s",classPtr->GetName()),method->GetName()))
+                     if (!isctor && method->GetName()[0] == '~' && !strcmp(method->GetName()+1,strClassNameNoScope.Data()))
                         // it's a d'tor - Cint stores "void" as return type
                         isdtor=true;
                      if (isctor || isdtor)
@@ -3086,25 +3099,23 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
       // get end of the word
       end = keyword;
-      while (IsName(*end) && *end)
+      while ((IsName(*end) || *end == ':' && *(end+1) == ':') && *end) {
+         if (*end == ':' && *(end+1) == ':') end++;
          end++;
+      }
 
-      // check wether we have a namespace::class here (2x if to make sure we don't end up in no man's land
-      if (*end == ':')
-         if (*(end + 1) == ':') {
-            char *keywordTmp = StrDup(keyword);
-            char *endNameSpace = keywordTmp + (end - keyword) + 2;
-            while (IsName(*endNameSpace) && *endNameSpace)
-               endNameSpace++;
-            *endNameSpace = 0;
-            if (GetClass((const char *) keywordTmp, forceLoad) != 0)
-               end = keyword + (endNameSpace - keywordTmp);
-            if (keywordTmp != 0)
-               delete[]keywordTmp;
-         }
-      // put '\0' at the end of the keyword
       c = *end;
       *end = 0;
+
+      // take as many scopes as possible
+      char *posScope = strrchr(keyword, ':');
+      while (posScope && !GetClass(keyword)) {
+         *end = c;
+         end = posScope-1;
+         c = *end;
+         *end = 0;
+         posScope = strrchr(keyword, ':');
+      }
 
       if (strlen(keyword) > 50) {
          out << keyword;
