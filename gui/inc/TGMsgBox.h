@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.3 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.4 2004/09/13 09:29:03 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -29,6 +29,9 @@
 #endif
 #ifndef ROOT_TGPicture
 #include "TGPicture.h"
+#endif
+#ifndef ROOT_TGWidget
+#include "TGWidget.h"
 #endif
 
 
@@ -76,17 +79,19 @@ protected:
    Int_t               *fRetCode;                    // address to store return code
 
    void PMsgBox(const char *title, const char *msg, const TGPicture *icon,
-                Int_t buttons, Int_t *ret_code);
+                Int_t buttons, Int_t *ret_code, Int_t text_align);
 
 public:
    TGMsgBox(const TGWindow *p = 0, const TGWindow *main = 0,
             const char *title = 0, const char *msg = 0, const TGPicture *icon = 0,
             Int_t buttons = kMBDismiss, Int_t *ret_code = 0,
-            UInt_t options = kVerticalFrame);
+            UInt_t options = kVerticalFrame,
+            Int_t text_align = kTextCenterX | kTextCenterY);
    TGMsgBox(const TGWindow *p, const TGWindow *main,
             const char *title, const char *msg, EMsgBoxIcon icon,
             Int_t buttons = kMBDismiss, Int_t *ret_code = 0,
-            UInt_t options = kVerticalFrame);
+            UInt_t options = kVerticalFrame,
+            Int_t text_align = kTextCenterX | kTextCenterY);
    virtual ~TGMsgBox();
 
    virtual void CloseWindow();

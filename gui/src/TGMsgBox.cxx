@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.10 2006/03/02 08:14:04 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -42,13 +42,14 @@ ClassImp(TGMsgBox)
 //______________________________________________________________________________
 TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
                    const char *title, const char *msg, const TGPicture *icon,
-                   Int_t buttons, Int_t *ret_code, UInt_t options) :
+                   Int_t buttons, Int_t *ret_code, UInt_t options,
+                   Int_t text_align) :
    TGTransientFrame(p, main, 10, 10, options)
 {
    // Create a message dialog box.
    
    if (p)
-      PMsgBox(title, msg, icon, buttons, ret_code);
+      PMsgBox(title, msg, icon, buttons, ret_code, text_align);
    else
       MakeZombie();
 }
@@ -56,10 +57,23 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
 //______________________________________________________________________________
 TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
                    const char *title, const char *msg, EMsgBoxIcon icon,
-                   Int_t buttons, Int_t *ret_code, UInt_t options) :
+                   Int_t buttons, Int_t *ret_code, UInt_t options,
+                   Int_t text_align) :
    TGTransientFrame(p, main, 10, 10, options)
 {
-   // Create a message dialog box.
+   // Create a message dialog box with the following parameters:.
+   //       title: Window title
+   //         msg: Message to be shown ('\n' may be used to split it in lines)
+   //        icon: Picture to be shown at the left on the dialog window.
+   //              It might take any of the following values:
+   //              kMBIconStop, kMBIconQuestion, 
+   //              kMBIconExclamation, kMBIconAsterisk
+   //     buttons: Buttons to be shown at the botton of the dialgo window.
+   //              Look at EMsgBoxButton for the different possible values.
+   //    ret_code: It will hold the value of the button pressed when the 
+   //              dialog is closed
+   //     options: Frame options of this dialog window.
+   //  text_align: Align options for 'msg'. See ETextJustification for the values.
 
    const TGPicture *icon_pic;
 
@@ -90,14 +104,15 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
    }
 
    if (p)
-      PMsgBox(title, msg, icon_pic, buttons, ret_code);
+      PMsgBox(title, msg, icon_pic, buttons, ret_code, text_align);
    else
       MakeZombie();
 }
 
 //______________________________________________________________________________
 void TGMsgBox::PMsgBox(const char *title, const char *msg,
-                       const TGPicture *icon, Int_t buttons, Int_t *ret_code)
+                       const TGPicture *icon, Int_t buttons, Int_t *ret_code,
+                       Int_t text_align)
 {
    // Protected, common message dialog box initialization.
 
@@ -220,12 +235,14 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
    while ((nextLine = strchr(line, '\n'))) {
       *nextLine = 0;
       label = new TGLabel(fLabelFrame, line);
+      label->SetTextJustify(text_align);
       fMsgList->Add(label);
       fLabelFrame->AddFrame(label, fL4);
       line = nextLine + 1;
    }
 
    label = new TGLabel(fLabelFrame, line);
+   label->SetTextJustify(text_align);
    fMsgList->Add(label);
    fLabelFrame->AddFrame(label, fL4);
    delete [] tmpMsg;
