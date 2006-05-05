@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.11 2006/04/24 13:51:06 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.12 2006/04/25 08:47:30 antcheva Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -52,12 +52,13 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
    if (!image) {
       const char *rootsys = gSystem->ExpandPathName("$ROOTSYS");
       path = gSystem->ConcatFileName(rootsys, "icons/bld_rgb.xpm");
+   } else {
+      path = strdup(image);
    }
    fPath = gSystem->DirName(path);
 
    fImage = TImage::Open(path);
-   fPic = fClient->GetPicturePool()->GetPicture(Form("%s_%dx%d", gSystem->BaseName(path), 
-                                                fImage->GetWidth(), fImage->GetHeight()),
+   fPic = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(path), 
                                                 fImage->GetPixmap(), fImage->GetMask());
    TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
    SetWindowName();
@@ -127,7 +128,7 @@ void TGIcon::DoRedraw()
                    (GetOptions() & kDoubleBorder);
 
    if (fPic) fPic->Draw(fId, GetBckgndGC()(), border, border);
-   DrawBorder();
+   if (border)  DrawBorder();
 }
 
 //______________________________________________________________________________
@@ -135,17 +136,20 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
 {
    // Resize.
 
-   //if (fImage && (TMath::Abs(Int_t(fImage->GetWidth() - w)) < 5) && 
-   //    (TMath::Abs(Int_t(fImage->GetHeight() - h)) < 5)) {
-   //   return;
-   //}
-
-   gVirtualX->ClearWindow(fId);
    TGFrame::Resize(w, h);
+
+   // allow dynamic resize of icon during guibuilding
+   if (!fClient->IsEditable()) {
+      return;
+   }
+   gVirtualX->ClearWindow(fId);
 
    if (!fImage) {
       fImage = TImage::Create();
-      if (fPic) fImage->SetImage(fPic->GetPicture(), fPic->GetMask());
+      if (fPic) {
+         fImage->SetName(fPic->GetName());
+         fImage->SetImage(fPic->GetPicture(), fPic->GetMask());
+      }
    }
    if (fPic) {
       fClient->FreePicture(fPic);
@@ -155,8 +159,7 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
                    (GetOptions() & kDoubleBorder);
 
    fImage->Scale(w - 2*border, h - 2*border);
-   fPic = fClient->GetPicturePool()->GetPicture(Form("%s_%dx%d", fImage->GetName(), 
-                                                fImage->GetWidth(), fImage->GetHeight()),
+   fPic = fClient->GetPicturePool()->GetPicture(fImage->GetName(),
                                                 fImage->GetPixmap(), fImage->GetMask());
    fClient->NeedRedraw(this);
 }
@@ -189,25 +192,26 @@ void TGIcon::Reset()
 void TGIcon::ChangeImage()
 {
    // Invoke file dialog to assign a new image.
+   // This method is activated via context menu during guibuilding.
 
-   static const char *gImageTypes[] = {"XPM",     "*.xpm", 
+   static const char *gImageTypes[] = {"All files", "*",
+                                       "XPM",     "*.xpm",
                                        "GIF",     "*.gif",
-                                       "PNG",     "*.png", 
+                                       "PNG",     "*.png",
                                        "JPEG",    "*.jpg",
-                                       "TARGA",   "*.tga", 
-                                       "ICO",     "*.ico", 
-                                       "XCF",     "*.xcf", 
-                                       "CURSORS", "*.cur",
-                                       "PPM",     "*.ppm", 
-                                       "PNM",     "*.pnm", 
-                                       "XBM",     "*.xbm", 
-                                       "TIFF",    "*.tiff", 
+                                       "TARGA",   "*.tga",
                                        "BMP",     "*.bmp",
-                                       "Enacapsulated PostScript", "*.eps", 
-                                       "PostScript", "*.ps", 
-                                       "PDF",        "*.pdf", 
+                                       "ICO",     "*.ico",
+                                       "XCF",     "*.xcf",
+                                       "CURSORS", "*.cur",
+                                       "PPM",     "*.ppm",
+                                       "PNM",     "*.pnm",
+                                       "XBM",     "*.xbm",
+                                       "TIFF",    "*.tiff",
+                                       "Enacapsulated PostScript", "*.eps",
+                                       "PostScript", "*.ps",
+                                       "PDF",        "*.pdf",
                                        "ASImage XML","*.xml",
-                                       "All files",  "*",
                                         0,             0 };
 
    TGFileInfo fi;
