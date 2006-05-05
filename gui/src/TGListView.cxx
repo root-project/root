@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.33 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.34 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -376,6 +376,8 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
          int i;
 
          for (i = 0; fSubnames[i] != 0; ++i) {
+            if (fCpos[i] == 0)
+               break;
             if (fJmode[i] == kTextRight)
                lx = fCpos[i+1] - fCtw[i] - 2;
             else if (fJmode[i] == kTextCenterX)
@@ -744,8 +746,10 @@ void TGListView::SetHeaders(Int_t ncolumns)
    fColumns   = new int[fNColumns];
    fJmode     = new int[fNColumns];
    fColHeader = new TGTextButton* [fNColumns];
-   for (int i = 0; i < fNColumns; i++)
+   for (int i = 0; i < fNColumns; i++) {
       fColHeader[i] = 0;
+      fJmode[i] = kTextLeft;
+   }
 
    // create blank filler header
    fColHeader[fNColumns-1] = new TGTextButton(this, new TGHotString(""), -1,
