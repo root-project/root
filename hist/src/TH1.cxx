@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.287 2006/04/20 19:27:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.288 2006/05/02 12:24:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1989,7 +1989,17 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
 //    if w is NULL each entry is assumed a weight=1
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   
    Int_t bin,i;
+   //If a buffer is activated, go via standard Fill (sorry)
+   if (fBuffer) {
+      for (i=0;i<ntimes;i+=stride) {
+         if (w) Fill(x[i],w[i]);
+         else   Fill(x[i],0);
+      }
+      return;
+   }
+   
    fEntries += ntimes;
    Double_t ww = 1;
    Int_t nbins   = fXaxis.GetNbins();
