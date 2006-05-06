@@ -231,8 +231,8 @@ void stress2(Int_t np2) {
    delete s;
    delete f2;
    delete h2;
-   Int_t nfoundRef = 173;
-   Int_t ngoodRef  = 173;
+   Int_t nfoundRef = 174;
+   Int_t ngoodRef  = 174;
    Int_t nghostRef = 7;
    char sok[20];
    if (nfound == nfoundRef && ngood == ngoodRef && nghost == nghostRef) {
