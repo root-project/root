@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.22 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.23 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -230,6 +230,18 @@ Double_t TRandom::BreitWigner(Double_t mean, Double_t gamma)
    displ = 0.5*gamma*TMath::Tan(rval*TMath::PiOver2());
 
    return (mean+displ);
+}
+   
+//______________________________________________________________________________
+void TRandom::Circle(Double_t &x, Double_t &y, Double_t r)
+{
+   // generates random vectors, uniformly distributed over a circle of given radius. 
+   //   Input : r = circle radius
+   //   Output: x,y a random 2-d vector of length r
+
+   Double_t phi = Uniform(0,TMath::TwoPi());
+   x = r*TMath::Cos(phi);
+   y = r*TMath::Sin(phi);
 }
 
 //______________________________________________________________________________
@@ -649,12 +661,12 @@ void TRandom::SetSeed(UInt_t seed)
 }
    
 //______________________________________________________________________________
-void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t xlong)
+void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r)
 {
    // generates random vectors, uniformly distributed over the surface 
    // of a sphere of given radius. 
-   //   Input : xlong = sphere radius
-   //   Output: x,y,z a random 3-d vector of length xlong
+   //   Input : r = sphere radius
+   //   Output: x,y,z a random 3-d vector of length r
    // Method:  (based on CERNLIB RN3DIM)
    // A random vector in the unit cube is generated  and is rejected if it lies outside the unit sphere. 
    // This rejection technique uses on average about 6 random numbers per vector, where only two are
@@ -669,7 +681,7 @@ void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t xlong)
       r2 =  a*a+b*b+c*c;
    } 
 
-   Double_t rinv = xlong/TMath::Sqrt(r2);
+   Double_t rinv = r/TMath::Sqrt(r2);
    x = a*rinv;
    y = b*rinv;
    z = c*rinv;
