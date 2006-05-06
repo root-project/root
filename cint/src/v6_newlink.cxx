@@ -2582,7 +2582,7 @@ static int G__isprotecteddestructoronelevel(int tagnum)
 static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
                             const char *fn, int tagnum, const char *cls)
 {
-   const int umax = 13;   // maximum number of stack arguments (fixed in ABI)
+   const int umax = 20;   // maximum number of extra vararg stack arguments
    int i;
 
    fprintf(fp, "  const int imax = 6, dmax = 8, umax = 20;\n");
@@ -2729,6 +2729,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r9\"  :: \"m\" (lval[5]) : \"%%r9\");\n");
 
    int istck = 0;
+   fprintf(fp, "  __asm__ __volatile__(\"subq %%0, %%%%rsp\" :: \"i\" ((umax+2)*8));\n");
    for (i = 0; i < umax; i++) {
      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax \\n\\t\"\n");
      fprintf(fp, "                       \"movq %%%%rax, %d(%%%%rsp)\" :: \"m\" (u[%d].lval) : \"%%rax\");\n", istck, i);
