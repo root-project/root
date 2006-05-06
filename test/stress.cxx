@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.61 2005/04/21 06:28:57 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.62 2005/06/03 07:37:06 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -304,7 +304,7 @@ void stress1()
    //Some slight differences are authorized to take into account
    //different math libraries used by the compiler, CINT and TFormula
    Bool_t OK = kTRUE;
-   if (hdiff > 0.1 || pdifftot > 2.e-3 || rint > 0.1) OK = kFALSE;
+   if (hdiff > 0.1 || pdifftot > 2.e-3 || rint > 10) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -404,7 +404,7 @@ void stress4()
    ntotout += f.GetBytesWritten();
 
    //Compare results of fit with expected parameters
-   Double_t th0=394.079, th5=612.216, th10=152.194;
+   Double_t th0=393.396, th5=614.03, th10=157.775;
    Double_t dp0  = TMath::Abs((f2form->GetParameter(0) -th0)/th0);
    Double_t dp5  = TMath::Abs((f2form->GetParameter(5) -th5)/th5);
    Double_t dp10 = TMath::Abs((f2form->GetParameter(10)-th10)/th10);
@@ -607,7 +607,7 @@ void stress7()
    TH2F *hpxpy = new TH2F("hpxpy","px vx py with cutg",40,-4,4,40,-4,4);
    ntuple->Draw("px:py>>hpxpy","cutg","goff");
    Int_t npxpy = (Int_t)hpxpy->GetEntries();
-   Int_t npxpyGood = 28037;
+   Int_t npxpyGood = 27902;
    hpxpy->Write();
    cutg->Write();
 
