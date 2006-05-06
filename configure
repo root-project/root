@@ -1695,7 +1695,7 @@ if test ! "x$enable_qt" = "xno" || \
     qtinc=$found_hdr
     qtincdir=$found_dir
 
-    check_library "libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt" "$enable_shared" \
+    check_library "libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt-mt336 qt" "$enable_shared" \
         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
         /usr/lib /usr/qt/lib
     qtlib=$found_lib
