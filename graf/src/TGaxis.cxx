@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.85 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.86 2006/05/06 13:46:41 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -674,6 +674,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                               //unpredictable. If /timeptr/ points to a *tm* structure returned by a
                               //previous call to *asctime*, *gmtime*, or *localtime*, the *tm_isdst* field
                               //contains the correct value.            timeoffset  = mktime(&tp);
+            timeoffset  = mktime(&tp);
             // have to correct this time to go back to UTC
             timeoffsettest = (time_t)((Long_t)timeoffset);
             tptest = gmtime(&timeoffsettest);
@@ -714,7 +715,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          tp0->tm_hour  = 0;
          tp0->tm_min   = 0;
          tp0->tm_sec   = 0;
-         tp0->tm_isdst = 0; // daylight saving time is not in effect (see mktime man pages)
+         tp0->tm_isdst =-1; // see comments above
          rangeBase = (timetp-mktime(tp0)); // years
          rangeOffset = (Double_t) (rangeBase);
       }
