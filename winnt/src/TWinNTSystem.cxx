@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.135 2006/04/18 10:34:35 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.136 2006/04/27 15:07:57 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -336,7 +336,10 @@ static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
             if (buf.st_size > 0)
                return 1;
          }
-         SleepEx(1, TRUE);
+         // yield execution to another thread that is ready to run 
+         // if no other thread is ready, sleep 1 ms before to return
+         if (!SwitchToThread())
+            SleepEx(1, TRUE);
          return 0;
       }
 
@@ -1076,7 +1079,10 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    while (1) {
       if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
          if (!pendingOnly) {
-            SleepEx(1, TRUE);
+            // yield execution to another thread that is ready to run 
+            // if no other thread is ready, sleep 1 ms before to return
+            if (!SwitchToThread())
+               SleepEx(1, TRUE);
             return;
          }
       }
@@ -1135,7 +1141,10 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       if (fReadmask && !fReadmask->GetBits() &&
           fWritemask && !fWritemask->GetBits()) {
-         ::SleepEx(1, 1);
+         // yield execution to another thread that is ready to run 
+         // if no other thread is ready, sleep 1 ms before to return
+         if (!SwitchToThread())
+            SleepEx(1, TRUE);
          return;
       }
 
