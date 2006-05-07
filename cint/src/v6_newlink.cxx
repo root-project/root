@@ -2703,10 +2703,16 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
       fprintf(fp, "  __asm__ __volatile__(\"movq %%rax, %%rdx\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr));\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq 8(%%rax), %%rax\");  //multiple inheritance offset\n");
+#if defined(__GNUC__) && __GNUC__ > 3
       fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rdx\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (fptr));  //virtual member function offset\n");
       fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
+#else
+      fprintf(fp, "  __asm__ __volatile__(\"addq %%rax, %%rdx\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (fptr));  //virtual member function offset\n");
+      fprintf(fp, "  __asm__ __volatile__(\"addq (%%rdx), %%rax\");\n");
+#endif
       fprintf(fp, "  __asm__ __volatile__(\"decq %%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\"  : \"=m\" (faddr) :: \"memory\");\n\n");
@@ -2722,6 +2728,13 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
    fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm7\"  :: \"m\" (dval[7]) : \"%%xmm7\");\n");
 
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rdi\" :: \"m\" (lval[0]) : \"%%rdi\");\n");
+#if defined(__GNUC__) && __GNUC__ < 4
+   if (tagnum != -1 && ifunc->isvirtual[ifn]) {
+      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr));\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq 8(%%rax), %%rax\");  //multiple inheritance offset\n");
+      fprintf(fp, "  __asm__ __volatile__(\"addq %%rax, %%rdi\");\n");
+   }
+#endif
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rsi\" :: \"m\" (lval[1]) : \"%%rsi\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rdx\" :: \"m\" (lval[2]) : \"%%rdx\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rcx\" :: \"m\" (lval[3]) : \"%%rcx\");\n");
@@ -2742,6 +2755,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
    fprintf(fp, "  __asm__ __volatile__(\"movl $8, %%eax\");  // number of used xmm registers\n");
    fprintf(fp, "  __asm__ __volatile__(\"call *%%r10\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\" : \"=m\" (u[0].lval) :: \"memory\");  // get return value\n");
+   fprintf(fp, "  __asm__ __volatile__(\"addq %%0, %%%%rsp\" :: \"i\" ((umax+2)*8));\n");
 }
 
 static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table *ifunc)
