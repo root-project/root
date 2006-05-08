@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.255 2006/04/25 08:59:19 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.257 2006/05/02 16:46:03 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6194,38 +6194,47 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 {
    // Show projection onto X
-
-   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
+   Int_t nbins = (Int_t)fShowProjection/100;
+   gPad->SetDoubleBuffer(0); // turn off double buffer mode
+   gVirtualX->SetDrawMode(TVirtualX::kInvert); // set the drawing mode to XOR mode
       
    // Erase old position and draw a line at current position
-   static int pyold = 0;
+   static int pyold1 = 0;
+   static int pyold2 = 0;
    float uxmin = gPad->GetUxmin();
    float uxmax = gPad->GetUxmax();
-   int pxmin = gPad->XtoAbsPixel(uxmin);
-   int pxmax = gPad->XtoAbsPixel(uxmax);
-   if( pyold ) gVirtualX->DrawLine(pxmin,pyold,pxmax,pyold);
-   gVirtualX->DrawLine(pxmin,py,pxmax,py);
-   pyold = py;
+   int pxmin   = gPad->XtoAbsPixel(uxmin);
+   int pxmax   = gPad->XtoAbsPixel(uxmax);
    Float_t upy = gPad->AbsPixeltoY(py);
-   Float_t y = gPad->PadtoY(upy);
+   Float_t y   = gPad->PadtoY(upy);
+   Int_t biny1 = fH->GetYaxis()->FindBin(y);
+   Int_t biny2 = TMath::Min(biny1+nbins-1, fH->GetYaxis()->GetNbins());
+   Int_t py1   = gPad->YtoAbsPixel(fH->GetYaxis()->GetBinLowEdge(biny1));
+   Int_t py2   = gPad->YtoAbsPixel(fH->GetYaxis()->GetBinUpEdge(biny2));
+
+   if (pyold1 || pyold2) gVirtualX->DrawBox(pxmin,pyold1,pxmax,pyold2,TVirtualX::kFilled);
+   gVirtualX->DrawBox(pxmin,py1,pxmax,py2,TVirtualX::kFilled);
+   pyold1 = py1;
+   pyold2 = py2;
 
    // Create or set the new canvas proj x
    TVirtualPad *padsav = gPad;
    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_projection_%d",fShowProjection));
-   if(c) {
+   if (c) {
       c->Clear();
    } else {
       fShowProjection = 0;
+      pyold1 = 0;
+      pyold2 = 0;
       return;
    }
    c->cd();
 
    // Draw slice corresponding to mouse position
-   Int_t biny = fH->GetYaxis()->FindBin(y);
-   TH1D *hp = ((TH2*)fH)->ProjectionX("_px", biny, biny);
+   TH1D *hp = ((TH2*)fH)->ProjectionX("_px", biny1, biny2);
    hp->SetFillColor(38);
-   hp->SetTitle(Form("ProjectionX of biny=%d", biny));
+   if (biny1 == biny2) hp->SetTitle(Form("ProjectionX of biny=%d", biny1));
+   else hp->SetTitle(Form("ProjectionX of biny=[%d,%d]", biny1,biny2));
    hp->SetXTitle(fH->GetXaxis()->GetTitle());
    hp->SetYTitle("Number of Entries");
    hp->Draw();
@@ -6237,21 +6246,28 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
    // Show projection onto Y
-
+   Int_t nbins = (Int_t)fShowProjection/100;
    gPad->SetDoubleBuffer(0);             // turn off double buffer mode
    gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
       
    // Erase old position and draw a line at current position
-   static int pxold = 0;
+   static int pxold1 = 0;
+   static int pxold2 = 0;
    float uymin = gPad->GetUymin();
    float uymax = gPad->GetUymax();
-   int pymin = gPad->YtoAbsPixel(uymin);
-   int pymax = gPad->YtoAbsPixel(uymax);
-   if( pxold ) gVirtualX->DrawLine(pxold,pymin,pxold,pymax);
-   gVirtualX->DrawLine(px,pymin,px,pymax);
-   pxold = px;
+   int pymin   = gPad->YtoAbsPixel(uymin);
+   int pymax   = gPad->YtoAbsPixel(uymax);
    Float_t upx = gPad->AbsPixeltoX(px);
-   Float_t x = gPad->PadtoX(upx);
+   Float_t x   = gPad->PadtoX(upx);
+   Int_t binx1 = fH->GetXaxis()->FindBin(x);
+   Int_t binx2 = TMath::Min(binx1+nbins-1, fH->GetXaxis()->GetNbins());
+   Int_t px1   = gPad->XtoAbsPixel(fH->GetXaxis()->GetBinLowEdge(binx1));
+   Int_t px2   = gPad->XtoAbsPixel(fH->GetXaxis()->GetBinUpEdge(binx2));
+   
+   if (pxold1 || pxold2) gVirtualX->DrawBox(pxold1,pymin,pxold2,pymax,TVirtualX::kFilled);
+   gVirtualX->DrawBox(px1,pymin,px2,pymax,TVirtualX::kFilled);
+   pxold1 = px1;
+   pxold2 = px2;
 
    // Create or set the new canvas proj y
    TVirtualPad *padsav = gPad;
@@ -6260,15 +6276,17 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       c->Clear();
    } else {
       fShowProjection = 0;
+      pxold1 = 0;
+      pxold2 = 0;
       return;
    }
    c->cd();
 
    // Draw slice corresponding to mouse position
-   Int_t binx = fH->GetXaxis()->FindBin(x);
-   TH1D *hp = ((TH2*)fH)->ProjectionY("_py", binx, binx);
+   TH1D *hp = ((TH2*)fH)->ProjectionY("_py", binx1, binx2);
    hp->SetFillColor(38);
-   hp->SetTitle(Form("ProjectionY of binx=%d", binx));
+   if (binx1 == binx2) hp->SetTitle(Form("ProjectionY of binx=%d", binx1));
+   else hp->SetTitle(Form("ProjectionY of binx=[%d,%d]", binx1,binx2));
    hp->SetXTitle(fH->GetYaxis()->GetTitle());
    hp->SetYTitle("Number of Entries");
    hp->Draw();
