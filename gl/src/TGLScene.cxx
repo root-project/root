@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.40 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.41 2006/04/07 09:20:43 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -371,9 +371,11 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(ULong_t ID) const
    if (it != fSmartRefreshCache.end()) {
       TGLLogicalShape* l_shape = it->second;
       fSmartRefreshCache.erase(it);
-      // printf("TGLScene::SmartRefresh found cached: %p %s [%s]\n",
+      // printf("TGLScene::SmartRefresh found cached: %p '%s' [%s] for %p\n",
       //    l_shape, l_shape->GetExternal()->GetName(),
-      //    l_shape->GetExternal()->IsA()->GetName());
+      //    l_shape->GetExternal()->IsA()->GetName(), (void*) ID);
+      LogicalShapeMap_t* lsm = const_cast<LogicalShapeMap_t*>(&fLogicalShapes);
+      lsm->insert(LogicalShapeMapValueType_t(l_shape->ID(), l_shape));
       return l_shape;
    } else {
       return 0;
