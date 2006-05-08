@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.8 2005/08/17 12:58:40 rdm Exp $
+// @(#)root/net:$Name: v5-10-00 $:$Id: TCastorFile.cxx,v 1.9 2005/08/18 00:24:38 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "NetErrors.h"
 #include "TCastorFile.h"
 #include "TError.h"
 
@@ -112,6 +113,7 @@ TCastorFile::TCastorFile(const char *url, Option_t *option, const char *ftitle,
 void TCastorFile::FindServerAndPath()
 {
    // Find the CASTOR disk server and internal file path.
+   // The result of this search can be checked via fIsCastor.
 
    if (!UseCastor2API()) {
 
@@ -330,7 +332,29 @@ void TCastorFile::FindServerAndPath()
       }
 
       TUrl rurl(url);
+      // Set the protocol prefix for TNetFile.
+      // For the cern.ch domain we set the default authentication
+      // method to UidGid, i.e. as for rfiod; for this we need
+      // the full FQDN or address in "nnn.mmm.iii.jjj" form
+      // (it can be changed by a proper directive in $HOME/.rootauthrc)
+      TString p;
+      TString fqdn;
+      TInetAddress addr = gSystem->GetHostByName(rurl.GetHost());
+      if (addr.IsValid()) {
+         fqdn = addr.GetHostName();
+         if (fqdn == "UnNamedHost")
+            fqdn = addr.GetHostAddress();
+         if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
+            p = "rootug";
+         else
+            p = "root";
+      } else
+         p = "root";
+
+      // Update protocol and fUrl
+      rurl.SetProtocol(p);
       fUrl = rurl;
+
       if (response) free(response);
       if (url) free(url);
       if (requestId) free(requestId);
@@ -395,5 +419,12 @@ void TCastorFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 
    FindServerAndPath();
 
-   TNetFile::ConnectServer(stat, kind, netopt, tcpwindowsize, forceOpen, forceRead);
+   // Continue only if successful
+   if (fIsCastor) {
+      TNetFile::ConnectServer(stat, kind, netopt, tcpwindowsize, forceOpen, forceRead);
+   } else {
+      // Failure: fill these to signal it to TNetFile
+      *stat = kErrFileOpen;
+      *kind = kROOTD_ERR;
+   }
 }
