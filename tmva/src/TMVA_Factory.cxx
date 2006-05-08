@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Factory.cpp,v 1.17 2006/05/03 19:45:38 helgevoss Exp $   
+// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $   
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -881,7 +881,7 @@ void TMVA_Factory::GetCorrelationMatrix( TTree* theTree )
     h2->Scale( 100.0  ); 
     for (Int_t ibin=1; ibin<=nvar; ibin++)
       for (Int_t jbin=1; jbin<=nvar; jbin++)
-	h2->SetBinContent( ibin, jbin, Int_t(fabs(h2->GetBinContent( ibin, jbin ))) );
+	h2->SetBinContent( ibin, jbin, Int_t(TMath::Abs(h2->GetBinContent( ibin, jbin ))) );
 
     // style settings
     h2->SetStats( 0 );

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticBase.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticBase.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -23,7 +23,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_GeneticBase.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $
+ * $Id: TMVA_GeneticBase.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
 
 #include "TMVA_GeneticBase.h"
@@ -162,7 +162,7 @@ Bool_t TMVA_GeneticBase::hasConverged( Int_t steps, Double_t improvement )
   if( convCounter < 0 ) {
     convValue = population.getFitness( 0 );
   }
-  if( fabs(population.getFitness( 0 )-convValue) <= improvement || steps<0){
+  if( TMath::Abs(population.getFitness( 0 )-convValue) <= improvement || steps<0){
     convCounter ++;
   } 
   else {

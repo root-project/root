@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodPDERS.cpp,v 1.17 2006/05/03 08:31:10 helgevoss Exp $    
+// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -409,7 +409,7 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
 	  scaleN   = scale;	
 
 	  // take if better (don't accept it if too small number of events)
-	  if (fabs(cS + cB - nEventsE) < fabs(countS + countB - nEventsE) && 
+	  if (TMath::Abs(cS + cB - nEventsE) < TMath::Abs(countS + countB - nEventsE) && 
 	      (cS + cB >= fNEventsMin || countS + countB < cS + cB)) {
 	    countS = cS; countB = cB; 
 	  }

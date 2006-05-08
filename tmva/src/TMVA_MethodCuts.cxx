@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCuts.cpp,v 1.17 2006/05/03 08:31:10 helgevoss Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -689,8 +689,8 @@ Double_t TMVA_MethodCuts::ComputeEstimator( Double_t *par, Int_t /*npar*/ )
   const Double_t epsilon = 1.0e-06;
   Double_t eta;  
   if (fConstrainType == ConstrainEffS) {
-    if (fabs(effS - fEffRef) > 0.001) eta = fabs(effB) + fabs(effS - fEffRef)/epsilon;
-    else eta = fabs(effB);
+    if (TMath::Abs(effS - fEffRef) > 0.001) eta = TMath::Abs(effB) + TMath::Abs(effS - fEffRef)/epsilon;
+    else eta = TMath::Abs(effB);
   }
   else if (fConstrainType == ConstrainEffB) {
     eta = ( pow( (effB - fEffRef)/epsilon, 1 ) +

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodANNBase.h,v 1.2 2006/04/29 23:55:41 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TMVA_MethodANNBase.h,v 1.1 2006/05/08 12:46:31 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodANNBase.h,v 1.2 2006/04/29 23:55:41 andreas.hoecker Exp $
+ * $Id: TMVA_MethodANNBase.h,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodANNBase
@@ -49,6 +49,7 @@ class TMVA_MethodANNBase {
  public:
 
   TMVA_MethodANNBase( void );
+  virtual ~TMVA_MethodANNBase() {}
 
  protected:
 
