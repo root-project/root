@@ -258,7 +258,7 @@ class genreflex:
       if not self.quiet : print '--->> genreflex: INFO: Parsing file %s with GCC_XML' % source,
       status = os.system(cmd)
       if status :
-        print '--->> genreflex: ERROR: processing file with gccxml. genreflex command failed.'
+        print '\n--->> genreflex: ERROR: processing file with gccxml. genreflex command failed.'
         sys.exit(1)
       else: 
         if not self.quiet : print 'OK'
