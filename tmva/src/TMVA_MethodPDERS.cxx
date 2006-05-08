@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.2 2006/05/08 12:59:13 brun Exp $    
+// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.3 2006/05/08 15:39:03 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -451,8 +451,7 @@ Double_t TMVA_MethodPDERS::KernelEstimate( TMVA_Event& event,
 {
   // define gaussian sigmas  
   Double_t fac = 0.2;
-  const Int_t nvar = fNvar;
-  Double_t sigma[nvar];
+  Double_t *sigma = new Double_t[fNvar];
   for (Int_t ivar=0; ivar<fNvar; ivar++) 
     sigma[ivar] = ((*V.Upper)[ivar] - (*V.Lower)[ivar])*fac;
 
@@ -465,6 +464,7 @@ Double_t TMVA_MethodPDERS::KernelEstimate( TMVA_Event& event,
 
     pdfSum += pdf;
   }
+  delete [] sigma;
 
   return pdfSum;
 }
@@ -525,17 +525,16 @@ void TMVA_MethodPDERS::WriteWeightsToFile( void )
   // create clone of fTrainingTree in new file
   TObjArrayIter branchIter( fTrainingTree->GetListOfBranches(), kIterForward );
   TBranch*      branch = NULL;
-  const Int_t nvar = fNvar;
-  Float_t       branchVar[nvar];
-  Int_t         theType, ivar = -1;
+  Float_t      *branchVar[1000]; //please check
+  Int_t         theType, jvar = -1;
   while ((branch = (TBranch*)branchIter.Next()) != 0) {
 
     // note: allowed are only variables with minimum and maximum cut
     //       i.e., no distinct cut regions are supported
     if ((TString)branch->GetName() == "type") 
       fTrainingTree->SetBranchAddress( branch->GetName(), &theType );
-    else 
-      fTrainingTree->SetBranchAddress( branch->GetName(), &branchVar[++ivar] );
+    else
+      fTrainingTree->SetBranchAddress( branch->GetName(), &branchVar[++jvar] );
   }
 
   fTrainingTree->SetBranchStatus( "*", 1 );

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.2 2006/05/08 12:59:13 brun Exp $   
+// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.3 2006/05/08 15:39:03 brun Exp $   
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -306,9 +306,11 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
      
      // loop over existing bins and add the new ones
      // store their values in temporary opjects
-     const Int_t nOldBins =  fMultipleMVAnames.size();
-     TString SimpleName[nOldBins], Description[nOldBins];
-     TCut OldCut[nOldBins];
+     Int_t nOldBins =  fMultipleMVAnames.size();
+     //TString SimpleName[nOldBins], Description[nOldBins];
+     TString SimpleName[1000], Description[1000]; //please check
+     //TCut OldCut[nOldBins];
+     TCut OldCut[1000];
      Int_t binc=0;
      for (map<TString, std::pair<TString,TCut> >::iterator oldBin = fMultipleMVAnames.begin();
 	  oldBin != fMultipleMVAnames.end(); oldBin++) {
@@ -613,8 +615,9 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
   fTestTree = new TTree("TestTree"+TreeName, "Variables used for MVA testing, and MVA outputs" );
   fTestTree->Branch( "type", &type, "type/I", basketsize );
 
-  const Int_t nvars = fInputVariables->size();
-  Float_t v[nvars];
+  Int_t nvars = fInputVariables->size();
+  //Float_t v[nvars];
+  Float_t v[1000];  //please check
   for (Int_t ivar=0; ivar<nvars; ivar++) {
     
     // Add Branch to training/test Tree

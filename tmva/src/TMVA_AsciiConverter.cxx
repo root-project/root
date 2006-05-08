@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_AsciiConverter.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
+// @(#)root/tmva $Id: TMVA_AsciiConverter.cxx,v 1.2 2006/05/08 15:39:03 brun Exp $ 
 // Author: unknown
 
 /**********************************************************************************
@@ -278,9 +278,11 @@ void TMVA_AsciiConverter::ParseFormatLine( void )
   
   formatstring->ReadLine(fInfile); // read format line from file
  
-  const Int_t n = formatstring->Length();
-  TObjString* format_obj[n]; // array of formats (e.g. 'blah/D')
-  TObjString* label_obj[n];  // array of labels (e.g. 'blah')
+  Int_t n = formatstring->Length();
+  //TObjString* format_obj[n]; // array of formats (e.g. 'blah/D')
+  //TObjString* label_obj[n];  // array of labels (e.g. 'blah')
+  TObjString* format_obj[1000]; // please check
+  TObjString* label_obj[1000];  // please check
   
   for (Int_t i=0; i<n; i++) {
     format->Append((*formatstring)(i));

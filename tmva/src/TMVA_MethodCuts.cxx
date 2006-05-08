@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.2 2006/05/08 12:59:13 brun Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.3 2006/05/08 15:39:03 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -344,7 +344,8 @@ Double_t TMVA_MethodCuts::GetMvaValue( TMVA_Event *e )
     
     Bool_t passed = kTRUE;
     for (size_t ivar=0; ivar<e->GetData().size(); ivar++) {
-      passed *= (e->GetData()[ivar] >= fCutMin[ivar][ibin] && e->GetData()[ivar] <= fCutMax[ivar][ibin]);
+      //please check this statement (machine dependent)
+       passed *= (e->GetData()[ivar] >= fCutMin[ivar][ibin] && e->GetData()[ivar] <= fCutMax[ivar][ibin]);
     }
     return (Double_t)passed;
   }
@@ -380,9 +381,10 @@ void  TMVA_MethodCuts::Train( void )
   TObjArrayIter branchIter( fTrainingTree->GetListOfBranches(), kIterForward );
   TBranch*      branch = 0;
   Int_t         ivar   = -1;
-  const Int_t nvar = this->fNvar;
-  TString       branchName[nvar];
-  Float_t       branchVar[nvar];
+  //TString       branchName[fNvar];
+  //Float_t       branchVar[fNvar];
+  TString       branchName[1000]; //please check
+  Float_t       branchVar[1000];  //please check
   Int_t         theType;
 
   vector<TH1F*> signalDist, bkgDist;
@@ -439,8 +441,10 @@ void  TMVA_MethodCuts::Train( void )
   if (fFitMethod == UseMonteCarlo) {
     
     // generate MC cuts
-    Double_t cutMin[nvar];
-    Double_t cutMax[nvar];
+    //Double_t cutMin[fNvar];
+    //Double_t cutMax[fNvar];
+    Double_t cutMin[1000]; //please check
+    Double_t cutMax[1000]; //please check
     
     // MC loop
     cout << "--- " << GetName() << ": Generating " << fNRandCuts 
@@ -621,8 +625,8 @@ void  TMVA_MethodCuts::Train( void )
       } while (!ga.hasConverged( fGa_nsteps, 0.00001 ));
 
       Int_t n;
-      const Int_t nvar2 = 2*this->fNvar;
-      Double_t par[nvar2];
+      //Double_t par[2*fNvar];
+      Double_t par[2000]; //please check
 
       n = 0;
       for( vector< Double_t >::iterator vec = ga.population.getGenes( 0 )->factors.begin(); 
@@ -632,8 +636,10 @@ void  TMVA_MethodCuts::Train( void )
       }
 
       Double_t effS = 0, effB = 0;
-      Double_t cutMin[nvar];
-      Double_t cutMax[nvar];
+      //Double_t cutMin[fNvar];
+      //Double_t cutMax[fNvar];
+      Double_t cutMin[1000]; //please check
+      Double_t cutMax[1000]; //please check
       this->MatchParsToCuts( par, &cutMin[0], &cutMax[0] );
       this->GetEffsfromSelection( &cutMin[0], &cutMax[0], effS, effB);
 
@@ -671,9 +677,10 @@ Double_t TMVA_MethodCuts::ComputeEstimator( Double_t *par, Int_t /*npar*/ )
 
   // determine cuts
   Double_t effS = 0, effB = 0;
-  const Int_t nvar = this->fNvar;
-  Double_t cutMin[nvar];
-  Double_t cutMax[nvar];
+  //Double_t cutMin[fNvar];
+  //Double_t cutMax[fNvar];
+  Double_t cutMin[1000]; //please check
+  Double_t cutMax[1000]; //please check
   this->MatchParsToCuts( par, &cutMin[0], &cutMax[0] );
 
   // retrieve signal and background efficiencies for given cut
@@ -907,7 +914,8 @@ void  TMVA_MethodCuts::WriteWeightsToFile( void )
   // in the reader application !!!
   fout << this->GetMethodName() <<endl;
   fout << "NVars= " << fNvar <<endl; 
-  for (Int_t ivar=0; ivar<fNvar; ivar++) {
+  Int_t ivar;
+  for (ivar=0; ivar<fNvar; ivar++) {
     TString var = (*fInputVars)[ivar];
     fout << var << "  " << GetXminNorm( var ) << "  " << GetXmaxNorm( var )
 	 << endl;
@@ -924,7 +932,7 @@ void  TMVA_MethodCuts::WriteWeightsToFile( void )
   fout << "the optimised cuts for " << fNvar << " variables"  << endl;
   fout << "format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0]"
        << " ... cutMin[ivar=n-1] cutMax[ivar=n-1]" << endl;
-  Int_t ibin, ivar;
+  Int_t ibin;
   for (ibin=0; ibin<fNbins; ibin++) {
     fout << setw(4) << ibin+1 << "  "    
 	 << setw(8)<< fEffBvsSLocal->GetBinCenter( ibin +1 ) << "  " 
@@ -958,7 +966,8 @@ void  TMVA_MethodCuts::ReadWeightsFromFile( void )
   fin >> dummy;
   this->SetMethodName(dummy);
   fin >> dummy >> fNvar;
-  for (Int_t ivar=0; ivar<fNvar; ivar++) {
+  Int_t ivar;
+  for (ivar=0; ivar<fNvar; ivar++) {
     fin >> var >> xmin >> xmax;
 
     // sanity check
@@ -987,7 +996,7 @@ void  TMVA_MethodCuts::ReadWeightsFromFile( void )
   fin.getline(buffer,200);
 
   // read histogram and cuts
-  Int_t   ibin, ivar;
+  Int_t   ibin;
   Int_t   tmpbin;
   Float_t tmpeffS, tempeffB;
   for (ibin=0; ibin<fNbins; ibin++) {
@@ -1080,7 +1089,8 @@ Double_t TMVA_MethodCuts::GetEfficiency( TString theString, TTree * /*theTree*/ 
     // make the background-vs-signal efficiency plot
     const Int_t nvar = this->fNvar;
     for (Int_t bini=1; bini<=fNbins; bini++) {
-      Double_t tmpCutMin[nvar], tmpCutMax[nvar];
+      //Double_t tmpCutMin[nvar], tmpCutMax[nvar];
+      Double_t tmpCutMin[1000], tmpCutMax[1000]; //please check
       for (Int_t ivar=0; ivar <fNvar; ivar++){
 	tmpCutMin[ivar] = fCutMin[ivar][bini-1];
 	tmpCutMax[ivar] = fCutMax[ivar][bini-1];

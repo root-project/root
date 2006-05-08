@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_DecisionTreeNode.cpp,v 1.10 2006/05/02 23:27:40 helgevoss Exp $    
+// @(#)root/tmva $Id: TMVA_DecisionTreeNode.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_DecisionTreeNode.cpp,v 1.10 2006/05/02 23:27:40 helgevoss Exp $    
+ * $Id: TMVA_DecisionTreeNode.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
  **********************************************************************************/
    
 //_______________________________________________________________________
@@ -52,7 +52,7 @@ TMVA_DecisionTreeNode::TMVA_DecisionTreeNode(TMVA_Event* e)
 {
   fCutMin=0;
   fCutMax=0;
-  fCutType=-1;
+  fCutType= kTRUE;
   
   fSoverSB=-1;
   fSeparationIndex=-1;
@@ -68,7 +68,7 @@ TMVA_DecisionTreeNode::TMVA_DecisionTreeNode(TMVA_Node* p)
 {
   fCutMin=0;
   fCutMax=0;
-  fCutType=-1;
+  fCutType= kTRUE;
   
   fSoverSB=-1;
   fSeparationIndex=-1;

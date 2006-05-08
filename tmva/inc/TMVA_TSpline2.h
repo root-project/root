@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_TSpline2.h,v 1.3 2006/04/29 23:55:41 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TMVA_TSpline2.h,v 1.1 2006/05/08 12:46:31 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_TSpline2.h,v 1.3 2006/04/29 23:55:41 andreas.hoecker Exp $        
+ * $Id: TMVA_TSpline2.h,v 1.1 2006/05/08 12:46:31 brun Exp $        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSpline2
@@ -53,7 +53,7 @@ class TMVA_TSpline2 : public TSpline {
 
   TMVA_TSpline2( TString title, TGraph* theGraph );
   virtual ~TMVA_TSpline2( void );
-  virtual  Double_t Eval( const Double_t x ) const;
+  virtual  Double_t Eval( Double_t x ) const;
 
  private:
 
