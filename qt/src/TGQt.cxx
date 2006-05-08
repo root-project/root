@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.29 2006/03/27 08:10:59 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.30 2006/05/03 09:55:49 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -655,7 +655,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.127 2006/05/02 00:39:55 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.130 2006/05/05 15:32:44 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1037,8 +1037,10 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
       QRect sr = src->rect();
       bitBlt ( dst,QPoint(xpos,ypos),src,sr,Qt::CopyROP); // bool ignoreMask )
 #else /* QT_VERSION */
-      QPainter paint(dst);
-      paint.drawPixmap(xpos,ypos,*src);
+      {
+        QPainter paint(dst);
+        paint.drawPixmap(xpos,ypos,*src);
+      }
      //  ----  !!!!  bitBlt ( dst,QPoint(xpos,ypos),src,sr,QPainter::CompositionMode_Source); // bool ignoreMask )
 #endif /* QT_VERSION */
       if (isPainted) Begin();
@@ -1888,7 +1890,7 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
 #if QT_VERSION < 0x40000
       if (fQPainter->isActive()) { fQPainter->setRasterOp(fDrawMode); }
 #else /* QT_VERSION */
-      if (fQPainter->isActive()) { fQPainter->setCompositionMode(fDrawMode); }
+      if (fQPainter->isActive()) { /* fQPainter->setCompositionMode(fDrawMode); */}
 #endif /* QT_VERSION */
    }
 }
@@ -2697,9 +2699,9 @@ void TGQt::Begin()
       // Adjust size
       if ( fSelectedWindow->devType() ==  QInternal::Widget)
          ((TQtWidget *)fSelectedWindow)->AdjustBufferSize();
-      if (!fQPainter->begin(src) )
+      if (!fQPainter->begin(src) ) {
          fprintf(stderr,"---> TGQt::Begin() win=%p dev=%p\n",src,fQPainter->device());
-      else {
+      } else {
          UpdatePen();
          UpdateBrush();
          UpdateFont();
@@ -2713,7 +2715,7 @@ void TGQt::Begin()
 #if QT_VERSION < 0x40000
          fQPainter->setRasterOp(fDrawMode);
 #else /* QT_VERSION */
-         fQPainter->setCompositionMode(fDrawMode);
+       /*  fQPainter->setCompositionMode(fDrawMode); */ 
 #endif /* QT_VERSION */
       }
    }

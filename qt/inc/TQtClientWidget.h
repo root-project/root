@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.43 2006/01/06 18:51:27 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.44 2006/05/05 01:16:54 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -83,21 +83,12 @@ protected:
        TQtWidget       *fCanvasWidget;
              friend class TQtClientGuard;
        friend class TGQt;
-
 #ifndef __CINT__
-      TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, Qt::WFlags f=0 ):
-          CLIENT_WIDGET_BASE_CLASS(parent,name,f),
+      TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, Qt::WFlags f=0);
 #else
-     TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, WFlags f=0 ) :
-#endif             
-          fGrabButtonMask(kAnyModifier),      fGrabEventPointerMask(kNoEventMask)
-         ,fGrabEventButtonMask(kNoEventMask), fSelectEventMask(kNoEventMask), fSaveSelectInputMask(kNoEventMask) // ,fAttributeEventMask(0)
-         ,fButton(kAnyButton),fGrabbedKey(0), fPointerOwner(kFALSE)
-         ,fNormalPointerCursor(0),fGrabPointerCursor(0),fGrabButtonCursor(0)
-         ,fIsClosing(false)  ,fDeleteNotify(false), fGuard(guard)
-         ,fCanvasWidget(0)
-          { }
-       void SetCanvasWidget(TQtWidget *widget);
+      TQtClientWidget(TQtClientGuard *guard, QWidget* parent=0, const char* name=0, WFlags f=0);
+#endif
+      void SetCanvasWidget(TQtWidget *widget);
 public:
     enum {kRemove = -1, kTestKey = 0, kInsert = 1};
     virtual ~TQtClientWidget();

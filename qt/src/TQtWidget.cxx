@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.75 2006/05/02 00:39:55 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.76 2006/05/05 01:16:54 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -140,6 +140,8 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
 #else /* QT_VERSION */
   setFocusPolicy(Qt::WheelFocus);
   setWindowFlags(windowFlags () | Qt::WNoAutoErase | Qt:: WResizeNoErase );
+  setAttribute(Qt::WA_PaintOnScreen);
+  setAttribute(Qt::WA_PaintOutsidePaintEvent);
 #endif /* QT_VERSION */
   setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
@@ -686,7 +688,12 @@ void TQtWidget::paintEvent (QPaintEvent *e)
    {
       // fprintf(stderr,"TQtWidget::paintEvent: window = %p; buffer =  %p\n",
       //  (QPaintDevice *)this, (QPaintDevice *)&GetBuffer());
+#if QT_VERSION < 0x40000
       bitBlt(this, rect.x(),rect.y(),&GetBuffer(),rect.x(), rect.y(), rect.width(), rect.height());
+#else
+      QPainter screen(this);
+      screen.drawPixmap(rect,GetBuffer());      
+#endif
    }
 }
 //  Layout methods:

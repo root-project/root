@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.22 2005/10/27 06:41:23 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.23 2005/12/11 10:51:39 rdm Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -27,15 +27,31 @@
 #include <qbitmap.h>
 #include <qregion.h>
 #include <qclipboard.h>
-#include <qpaintdevicemetrics.h>
+
+#if QT_VERSION < 0x40000
+#  include <qpaintdevicemetrics.h>
+#  include <qobjectlist.h>
+#  include <qcstring.h>
+#else /* QT_VERSION */
+#  include <q3paintdevicemetrics.h>
+#  include <q3cstring.h>
+#  include <QBoxLayout>
+#  include <Q3Frame>
+#  include <QKeyEvent>
+#  include <QEvent>
+#  include <Q3ValueList>
+#  include <QVBoxLayout>
+#  include <Q3PointArray>
+#  include <QDesktopWidget>
+#endif /* QT_VERSION */
+
 #include <qfontmetrics.h>
 #include <qpoint.h>
 #include <qpainter.h>
-#include <qobjectlist.h>
+
 #include <qlayout.h>
 #include <qdatetime.h>
 #include <qimage.h>
-#include <qcstring.h>
 #include <qtextcodec.h>
 
 #include "TMath.h"
@@ -74,7 +90,11 @@ class QtGContext : public QWidget {
    friend class TQtPainter;
 protected:
    Mask_t       fMask;       // mask the active values
+#if QT_VERSION < 0x40000
    Qt::RasterOp fROp;        // raster operation
+#else /* QT_VERSION */
+   QPainter::CompositionMode  fROp;   // composition mode
+#endif /* QT_VERSION */
    QPen         fPen;        // line styles
    QBrush       fBrush;      // fill styles
    QPixmap     *fTilePixmap; // tile pixmap for tiling operations
@@ -145,10 +165,15 @@ QColor &TGQt::QtColor(ULong_t pixel)
       _NAME2_(f,member) = dst._NAME2_(f,member);                              \
    }
 //______________________________________________________________________________
+#if QT_VERSION < 0x40000
 void DumpROp(Qt::RasterOp op) {
+#else /* QT_VERSION */
+void DumpROp(QPainter::CompositionMode op) {
+#endif /* QT_VERSION */
    // Dump QT Raster Operation Code
    QString s;
    switch (op) {
+#if QT_VERSION < 0x40000
         case Qt::ClearROP:  s = "Qt::ClearROP -> dst = 0 ";               break;
         case Qt::AndROP:    s = "Qt::AndROP dst = src AND dst ";          break;
         case Qt::AndNotROP: s = "Qt::AndNotROP dst = src AND (NOT dst) "; break;
@@ -166,8 +191,31 @@ void DumpROp(Qt::RasterOp op) {
         case Qt::NandROP:   s = "Qt::NandROP dst = NOT (src AND dst)";    break;
         case Qt::SetROP:    s = "Qt::SetROP dst = 1";                     break;
         default: s = "UNKNOWN";                                           break;
+#else /* QT_VERSION */
+        case QPainter::CompositionMode_Clear:     s = "Qt::ClearROP   dst = 0 ";                break; // ClearROP
+  //    case QPainter::CompositionMode_AndROP:    s = "Qt::AndROP     dst = src AND dst ";      break;
+  //    case QPainter::CompositionMode_AndNotROP: s = "Qt::AndNotROP  dst = src AND (NOT dst) ";break;
+        case QPainter::CompositionMode_Source:    s = "Qt::CopyROP    dst = src ";              break; // CopyROP
+  //    case QPainter::CompositionMode_NotAndROP: s = "Qt::NotAndROP  dst = (NOT src) AND dst"; break;
+  //    case QPainter::CompositionMode_NorROP:    s = "Qt::NorROP     dst = NOT (src OR dst) "; break;
+        case QPainter::CompositionMode_Destination:s= "Qt::NopROP     dst = dst ";              break; // NopROP
+        case QPainter::CompositionMode_Xor:       s = "Qt::XorROP     dst = src XOR dst ";      break; // Qt::XorROP
+  //    case QPainter::CompositionMode_OrROP:     s = "Qt::OrROP      dst = src OR dst ";       break;
+  //    case QPainter::CompositionMode_NotXorROP: s = "Qt::NotXorROP  dst = (NOT src) XOR dst  // Qt::NotOrROP);  // !!! This is not a GDK_EQUIV; !!!";  break;
+  //    case QPainter::CompositionMode_NotROP:    s = "Qt::NotROP     dst = NOT dst ";          break;
+  //    case QPainter::CompositionMode_OrNotROP:  s = "Qt::OrNotROP   dst = src OR (NOT dst) "; break;
+  //    case QPainter::CompositionMode_NotCopyROP:s = "Qt::NotCopyROP dst = NOT src ";          break;
+  //    case QPainter::CompositionMode_NotOrROP:  s = "Qt::NotOrROP   dst = (NOT src) OR dst "; break;
+  //    case QPainter::CompositionMode_NandROP:   s = "Qt::NandROP    dst = NOT (src AND dst)"; break;
+  //    case QPainter::CompositionMode_SetROP:    s = "Qt::SetROP     dst = 1";                 break;
+        default: s = "UNKNOWN";                                                                 break;
+#endif /* QT_VERSION */
    }
+#if QT_VERSION < 0x40000
    fprintf(stderr," Dump QT Raster Operation Code: %x \"%s\"\n",op, (const char *)s);
+#else /* QT_VERSION */
+   fprintf(stderr," Dump QT Composition mode Code: %x \"%s\"\n",op, (const char *)s);
+#endif /* QT_VERSION */
 }
 
 //______________________________________________________________________________
@@ -229,6 +277,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       SETBIT(fMask, kROp);
       switch (gval.fFunction)
       {
+#if QT_VERSION < 0x40000
       case kGXclear:
          fROp = Qt::ClearROP;  // dst = 0
          break;
@@ -277,16 +326,26 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       case kGXset:
          fROp = Qt::SetROP;     // dst = 1
          break;
+#endif /* not QT_VERSION */
       default:
+#if QT_VERSION < 0x40000
 	      fROp = Qt::CopyROP;
 	break;
+#else /* QT_VERSION */
+        fROp = QPainter::CompositionMode_Source; //Qt::CopyROP;
+        break;
+#endif /* QT_VERSION */
       }
       DumpROp(fROp);
 //      fprintf(stderr," kGCFunction: fROp = %x\n",fROp );
    } else {
         // Fons said this must be like this. 4/07/2003 Valeri Fine
         SETBIT(fMask, kROp);
+#if QT_VERSION < 0x40000
 	fROp = Qt::CopyROP;
+#else /* QT_VERSION */
+	fROp = QPainter::CompositionMode_Source; // Qt::CopyROP;
+#endif /* QT_VERSION */
    };
 
    if (mask & kGCSubwindowMode) {
@@ -375,7 +434,11 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       // setPaletteBackgroundPixmap (*fStipple);
       fBrush.setPixmap(*fStipple);
       SETBIT(fMask, kROp);
+#if QT_VERSION < 0x40000
       fROp = Qt::XorROP;
+#else /* QT_VERSION */
+      fROp = QPainter::CompositionMode_Xor; // Qt::XorROP;
+#endif /* QT_VERSION */
    }
    if ((mask & kGCTileStipXOrigin)) {
       SETBIT(fMask,kTileRect);
@@ -437,11 +500,21 @@ void   QtGContext::SetForeground(ULong_t foreground)
 //
 class TQtPainter : public QPainter {
 public:
+#if QT_VERSION < 0x40000
    TQtPainter(const QPaintDevice * pd,const QtGContext &rootContext, Mask_t mask=0xff,bool unclipped = FALSE):
       QPainter(pd,unclipped){
+#else /* QT_VERSION */
+   TQtPainter(QPaintDevice * pd,const QtGContext &rootContext, Mask_t mask=0xff,bool unclipped = FALSE):
+      QPainter(pd){
+         setClipping(!unclipped);
+#endif /* QT_VERSION */
          if (mask){}
          if (rootContext.HasValid(QtGContext::kROp)) {
+#if QT_VERSION < 0x40000
             setRasterOp (rootContext.fROp);
+#else /* QT_VERSION */
+          /*  setCompositionMode(rootContext.fROp); */
+#endif /* QT_VERSION */
          }
          if (rootContext.HasValid(QtGContext::kPen)) {
             setPen(rootContext.fPen);
@@ -839,8 +912,9 @@ void         TGQt::MapWindow(Window_t id)
    // QWidget *nextWg = 0;
    QWidget *wg = wid(id);
    if ( wg ) {
-      if  ( wg->isTopLevel () ) wg->showNormal();
-      else wg->show();
+      if  ( wg->isTopLevel () ){ 
+         wg->showNormal();
+      } else wg->show();
       // wg->update();
    }
 }
@@ -854,21 +928,39 @@ void         TGQt::MapSubwindows(Window_t id)
 
    if (id == kNone || id == kDefault) return;
 //   return;
+#if QT_VERSION < 0x40000
    const QObjectList *childList = wid(id)->children();
+#else /* QT_VERSION */
+   const QObjectList &childList = wid(id)->children();
+#endif /* QT_VERSION */
    int nSubWindows = 0;
    int nChild = 0;
+#if QT_VERSION < 0x40000
    if (childList) {
       nChild = childList->count();
       QObjectListIterator next(*childList);
       next.toLast();
+#else /* QT_VERSION */
+   if (!childList.isEmpty () ) {
+      nChild = childList.count();
+      QListIterator<QObject *> next(childList);
+#endif /* QT_VERSION */
       QObject *widget = 0;
       int childCounter = 0; // to debug;
       // while ( (widget = *next) )
       Bool_t updateUnable;
       if ( (updateUnable = wid(id)->isUpdatesEnabled()) && nChild >0 )
             wid(id)->setUpdatesEnabled(FALSE);
+#if QT_VERSION < 0x40000
       for (widget=next.toLast(); (widget = next.current()); --next)
+#else /* QT_VERSION */
+      next.toBack();
+      while (next.hasPrevious())
+#endif /* QT_VERSION */
       {
+#if QT_VERSION >= 0x40000
+         widget = next.previous();
+#endif /* QT_VERSION */
          childCounter++;
          if (widget->isWidgetType ())
          {
@@ -1093,6 +1185,7 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       // Alas ROOT design does require us to do the dirt thing
    if (        wtype & kTransientFrame) {
       win =  fQClientGuard.Create(pWidget,"TransientFrame");
+#if QT_VERSION < 0x40000
       win->setFrameShape(QFrame::Box);      //  xattr.window_type = GDK_WINDOW_DIALOG;
    }  else if (wtype & kMainFrame)  {
       win =  fQClientGuard.Create(pWidget,"MainFrame"); //,Qt::WDestructiveClose);
@@ -1101,11 +1194,26 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       win =  fQClientGuard.Create(pWidget,"tooltip", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WStyle_NoBorder | Qt::WStyle_Tool | Qt::WX11BypassWM );
       win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
    } else {
+      win =  fQClientGuard.Create(pWidget,"Other", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM );
+      if (!pWidget) {
+           win->setFrameStyle( QFrame::PopupPanel | QFrame::Plain );
+//         printf(" 2 TGQt::CreateWindow %p parent = %p \n", win,pWidget);
+      }
+#else
+      win->setFrameShape(Q3Frame::Box);      //  xattr.window_type = GDK_WINDOW_DIALOG;
+   }  else if (wtype & kMainFrame)  {
+      win =  fQClientGuard.Create(pWidget,"MainFrame"); //,Qt::WDestructiveClose);
+      win->setFrameShape(Q3Frame::WinPanel); // xattr.window_type   = GDK_WINDOW_TOPLEVEL;
+   }  else if (wtype & kTempFrame) {
+      win =  fQClientGuard.Create(pWidget,"tooltip", Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WStyle_NoBorder | Qt::WStyle_Tool | Qt::WX11BypassWM );
+      win->setFrameStyle(QFrame::StyledPanel | Q3Frame::Plain);
+   } else {
       win =  fQClientGuard.Create(pWidget,"Other",   Qt::WStyle_StaysOnTop | Qt::WStyle_Customize | Qt::WX11BypassWM  );
       if (!pWidget) {
-         // win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
-         // printf(" TGQt::CreateWindow %p parent = %p \n", win,pWidget);
+         win->setFrameStyle(QFrame::PopupPanel | QFrame::Plain);
+       //   printf(" TGQt::CreateWindow %p parent = %p \n", win,pWidget);
       }
+#endif
   }
 
    // printf(" TQt::CreateWindow %p parent = %p \n", win,pWidget);
@@ -1391,12 +1499,24 @@ static inline void FillPixmapAttribute(QPixmap &pixmap, Pixmap_t &pict_mask
    attr.fWidth  = pixmap.width();
    attr.fHeight = pixmap.height();
    // Let's see whether the file brought us any mask.
+#if QT_VERSION < 0x40000
    if  ( pixmap.mask() && !pixmap.mask()->isNull() ) {
+#else /* QT_VERSION */
+   if  ( !pixmap.mask().isNull() ) {
+#endif /* QT_VERSION */
       QBitmap *pixmask = (QBitmap *)guard.Pixmap(pict_mask,kTRUE);
       if (pixmask) { // fill it with the new value
+#if QT_VERSION < 0x40000
          *pixmask = *pixmap.mask();
+#else /* QT_VERSION */
+         *pixmask = pixmap.mask();
+#endif /* QT_VERSION */
       } else {
+#if QT_VERSION < 0x40000
          pixmask   = guard.Create(*pixmap.mask());
+#else /* QT_VERSION */
+         pixmask   = guard.Create(pixmap.mask());
+#endif /* QT_VERSION */
          pict_mask = Pixmap_t(TGQt::rootwid(pixmask));
       }
    } else {
@@ -1587,7 +1707,11 @@ void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *at
    if ( attr->fMask & kWABorderPixel) {
       // ULong_t    fBorderPixel;          // border pixel value
        // f.setFrameShape( QFrame::PopupPanel );
+#if QT_VERSION < 0x40000
        f.setFrameStyle( QFrame::Box | QFrame::Plain );
+#else /* QT_VERSION */
+       f.setFrameStyle( Q3Frame::Box | Q3Frame::Plain );
+#endif /* QT_VERSION */
        // printf("TGQt::ChangeWindowAttributes  kWABorderPixel %p name = %s; shape = %d; margin = %d width=%d \n",&f,(const char*)f.name(),f.frameShape(),f.margin(),f.lineWidth() );
    }
    if ( attr->fMask & kWABorderWidth) {
@@ -2023,7 +2147,11 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Escape,    kKey_Escape},
    {Qt::Key_Tab,       kKey_Tab},
    {Qt::Key_Backtab,   kKey_Backtab},
+#if QT_VERSION < 0x40000
    {Qt::Key_BackSpace, kKey_Backspace},
+#else /* QT_VERSION */
+   {Qt::Key_Backspace, kKey_Backspace},
+#endif /* QT_VERSION */
    {Qt::Key_Return,    kKey_Return},
    {Qt::Key_Insert,    kKey_Insert},
    {Qt::Key_Delete,    kKey_Delete},
@@ -2036,8 +2164,13 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Up,        kKey_Up},
    {Qt::Key_Right,     kKey_Right},
    {Qt::Key_Down,      kKey_Down},
+#if QT_VERSION < 0x40000
    {Qt::Key_Prior,     kKey_Prior},
    {Qt::Key_Next,      kKey_Next},
+#else /* QT_VERSION */
+   {Qt::Key_PageUp,     kKey_Prior},
+   {Qt::Key_PageDown,      kKey_Next},
+#endif /* QT_VERSION */
    {Qt::Key_Shift,     kKey_Shift},
    {Qt::Key_Control,   kKey_Control},
    {Qt::Key_Meta,      kKey_Meta},
@@ -2073,7 +2206,11 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
    }
 #if 0
    UInt_t text;
+#if QT_VERSION < 0x40000
    QCString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
+#else /* QT_VERSION */
+   Q3CString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
+#endif /* QT_VERSION */
    qstrncpy((char *)&text, (const char *)r,1);
    return text;
 #else
@@ -2128,7 +2265,11 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
     // Draws multiple line segments. Each line is specified by a pair of points.
     if (id == kNone) return;
     TQtPainter paint(iwid(id),qtcontext(gc));
+#if QT_VERSION < 0x40000
     QPointArray segments(2*nseg);
+#else /* QT_VERSION */
+    Q3PointArray segments(2*nseg);
+#endif /* QT_VERSION */
     for (int i=0;i<nseg;i++) {
        segments.setPoint (2*i,   seg[i].fX1, seg[i].fY1);
        segments.setPoint (2*i+1, seg[i].fX2, seg[i].fY2);
@@ -2300,7 +2441,11 @@ void  TGQt::FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt)
    if (id == kNone) return;
    if (npnt > 1) {
       TQtPainter paint(iwid(id),qtcontext(gc));
+#if QT_VERSION < 0x40000
       QPointArray pa(npnt);
+#else /* QT_VERSION */
+      Q3PointArray pa(npnt);
+#endif /* QT_VERSION */
       Int_t x = points[0].fX;
       Int_t y = points[0].fY;
       pa.setPoint(0,x,y);
@@ -2448,7 +2593,11 @@ Region_t TGQt::PolygonRegion(Point_t *points, Int_t np, Bool_t winding)
    if( np<0 || !points )
       return 0;
 
+#if QT_VERSION < 0x40000
    QPointArray pa;
+#else /* QT_VERSION */
+   Q3PointArray pa;
+#endif /* QT_VERSION */
    pa.resize( np );
    for(int i=0; i<np; i++)
       pa.setPoint( i, points[i].fX, points[i].fY );
@@ -2644,8 +2793,13 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
             TXlfd currentFont(family,bold,italic);
             if (currentFont != patternFont) continue;
             
+#if QT_VERSION < 0x40000
             QValueList<int> sizes = fdb.pointSizes( family, style );
             for ( QValueList<int>::Iterator points = sizes.begin();
+#else /* QT_VERSION */
+            Q3ValueList<int> sizes = fdb.pointSizes( family, style );
+            for ( Q3ValueList<int>::Iterator points = sizes.begin();
+#endif /* QT_VERSION */
                   points != sizes.end() && (Int_t)xlFonts.size() < max; ++points ) 
             {
               currentFont.SetPointSize(*points);
@@ -2743,7 +2897,11 @@ void TGQt::PutImage(Drawable_t id, GContext_t gc,Drawable_t img, Int_t dx, Int_t
     const QImage *image = (QImage *)img;
     if (image) {
        TQtPainter pnt(iwid(id),qtcontext(gc));
+#if QT_VERSION < 0x40000
        int conversionFlags=0;
+#else /* QT_VERSION */
+       Qt::ImageConversionFlag conversionFlags=Qt::AutoColor;
+#endif /* QT_VERSION */
        pnt.drawImage(dx,dy, *image, x,y,w,h,conversionFlags);
        //   Qt::ImageConversionFlags
        //   The conversion flag is a bitwise-OR of the following values.
@@ -2860,7 +3018,11 @@ unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UI
                           }
    case QInternal::Picture:
    case QInternal::Printer:
+#if QT_VERSION < 0x40000
    case QInternal::UndefinedDevice:
+#else /* QT_VERSION */
+   // case QInternal::UndefinedDevice:
+#endif /* QT_VERSION */
    default: assert(0);
      break;
    };

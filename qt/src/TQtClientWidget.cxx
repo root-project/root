@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.10 2005/12/11 10:51:39 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.11 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,19 +19,15 @@
 
 #include <qkeysequence.h>
 #if QT_VERSION < 0x40000
-#include <qaccel.h>
+#  include <qaccel.h>
+#  include <qobjectlist.h>
 #else /* QT_VERSION */
-#include <q3accel.h>
+#  include <q3accel.h>
+#  include <qobject.h>
+#  include <QKeyEvent>
+#  include <QCloseEvent>
 #endif /* QT_VERSION */
 #include <qevent.h>
-#if QT_VERSION < 0x40000
-#include <qobjectlist.h>
-#else /* QT_VERSION */
-#include <qobject.h>
-//Added by qt3to4:
-#include <QKeyEvent>
-#include <QCloseEvent>
-#endif /* QT_VERSION */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -47,6 +43,21 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+//______________________________________________________________________________
+TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const char* name, Qt::WFlags f ):
+          CLIENT_WIDGET_BASE_CLASS(parent,name,f),
+          fGrabButtonMask(kAnyModifier),      fGrabEventPointerMask(kNoEventMask)
+         ,fGrabEventButtonMask(kNoEventMask), fSelectEventMask(kNoEventMask), fSaveSelectInputMask(kNoEventMask) // ,fAttributeEventMask(0)
+         ,fButton(kAnyButton),fGrabbedKey(0), fPointerOwner(kFALSE)
+         ,fNormalPointerCursor(0),fGrabPointerCursor(0),fGrabButtonCursor(0)
+         ,fIsClosing(false)  ,fDeleteNotify(false), fGuard(guard)
+         ,fCanvasWidget(0)
+{
+#if QT_VERSION >= 0x40000
+   setAttribute(Qt::WA_PaintOnScreen);
+   setAttribute(Qt::WA_PaintOutsidePaintEvent);
+#endif
+}
 
 //______________________________________________________________________________
 TQtClientWidget::~TQtClientWidget()
