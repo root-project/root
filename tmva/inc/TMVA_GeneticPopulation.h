@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.2 2006/05/08 20:56:16 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -56,7 +56,7 @@ class TMVA_GeneticPopulation {
   virtual ~TMVA_GeneticPopulation();
 
   TRandom *fRandomGenerator;
-  typedef std::pair< Double_t, TMVA_GeneticGenes > entry;
+  typedef std::pair<const Double_t, TMVA_GeneticGenes > entry;
 
   std::multimap<Double_t, TMVA_GeneticGenes  >* fGenePool;
   std::multimap<Double_t, TMVA_GeneticGenes  >* fNewGenePool;
