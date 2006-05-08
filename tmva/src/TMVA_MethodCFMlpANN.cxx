@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cxx,v 1.2 2006/05/08 21:33:46 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -49,10 +49,10 @@ ClassImp(TMVA_MethodCFMlpANN)
 static Int_t         TMVA_MethodCFMlpANN_nsel    = 0;
 TMVA_MethodCFMlpANN* TMVA_MethodCFMlpANN::fThis = 0;
 
-// references for mlpl3 functions
-R__EXTERN "C" Int_t train_nn__( Double_t *tin2, Double_t *tout2, Int_t *ntrain, 
-			     Int_t *ntest, Int_t *nvar2, Int_t *nlayer, 
-			     Int_t *nodes, Int_t *ncycle );
+// references for mlpl3 functions <=======please check
+//extern "C" Int_t train_nn__( Double_t *tin2, Double_t *tout2, Int_t *ntrain, 
+//			     Int_t *ntest, Int_t *nvar2, Int_t *nlayer, 
+//			     Int_t *nodes, Int_t *ncycle );
 
 //_______________________________________________________________________
 int TMVA_MethodCFMlpANN_dataInterface( Double_t* /*tout2*/, Double_t*  /*tin2*/, 
@@ -386,7 +386,8 @@ void TMVA_MethodCFMlpANN::Train( void )
   for (Int_t i=0; i<*nlayers; i++) nodes[i] = fNodes[i]; // full copy of class member
   Int_t* ncycles = new Int_t(fNcycles);
 
-  train_nn__( dumDat, dumDat, ntrain, ntest, nvar, nlayers, nodes, ncycles );
+  //please check
+  //train_nn__( dumDat, dumDat, ntrain, ntest, nvar, nlayers, nodes, ncycles );
   
   delete nodes;
   delete ntrain;

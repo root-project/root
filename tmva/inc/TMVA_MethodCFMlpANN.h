@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.h,v 1.2 2006/05/08 21:33:46 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -70,7 +70,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodCFMlpANN.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
+ * $Id: TMVA_MethodCFMlpANN.h,v 1.2 2006/05/08 21:33:46 brun Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN
@@ -95,11 +95,11 @@
 #endif
 
 // forward definitions, needed for rootcint
-R__EXTERN "C" int TMVA_MethodCFMlpANN_dataInterface( Double_t*, Double_t*, 
+extern "C" int TMVA_MethodCFMlpANN_dataInterface( Double_t*, Double_t*, 
 						  Int_t*, Int_t*, Int_t*, Int_t*,
 						  Double_t*, Int_t*, Int_t* );
 
-R__EXTERN "C" void TMVA_MethodCFMlpANN_writeWeightsToFile( Int_t, Int_t, Double_t*, Double_t*, 
+extern "C" void TMVA_MethodCFMlpANN_writeWeightsToFile( Int_t, Int_t, Double_t*, Double_t*, 
 							Int_t, Int_t*, 
 							Double_t*, Double_t*, Double_t* );
 
