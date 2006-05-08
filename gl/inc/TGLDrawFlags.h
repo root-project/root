@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawFlags.h,v 1.1 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawFlags.h,v 1.2 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  27/01/2006
 
 /*************************************************************************
@@ -31,7 +31,7 @@ public:
       kLODLow         = 20,
       kLODMed         = 50,
       kLODHigh        = 100,
-      kLODUnsupported = 200, // Used to draw/DL cache drawables with LODSupport() of TGLDrawable::kLODAxesNone
+      kLODUnsupported = 200 // Used to draw/DL cache drawables with LODSupport() of TGLDrawable::kLODAxesNone
    };
 
 private:
