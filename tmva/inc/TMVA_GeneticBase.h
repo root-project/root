@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticBase.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticBase.h,v 1.1 2006/05/08 12:46:30 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -22,8 +22,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_GeneticBase.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_GeneticBase
@@ -56,38 +54,40 @@ class TMVA_GeneticBase {
  private:
 
   // converging?
-  Int_t convCounter;
-  Double_t convValue;
+  Int_t              fConvCounter;
+  Double_t           fConvValue;
 
   // spread-control (stepsize)
-  std::deque<Int_t> successList;
-  Double_t lastResult;
+  std::deque<Int_t>  fSuccessList;
+  Double_t           fLastResult;
 
  public:
 
-  TMVA_GeneticPopulation population;
+  TMVA_GeneticPopulation fPopulation;
 
-  Double_t spread;  // regulates the spread of the value change at mutation (sigma)
-  Bool_t mirror;
-  Bool_t sexual;
-  Bool_t firstTime;
+  Double_t fSpread;  // regulates the spread of the value change at mutation (sigma)
+  Bool_t fMirror;
+  Bool_t fSexual;
+  Bool_t fFirstTime;
 
   TMVA_GeneticBase() {}
   TMVA_GeneticBase( Int_t populationSize, std::vector<LowHigh*> ranges );
   virtual ~TMVA_GeneticBase() {}
 
-  void init();
-  virtual Bool_t hasConverged( Int_t steps = 10, Double_t ratio = 0.1 );
-  virtual Double_t spreadControl( Int_t steps, Int_t ofSteps, Double_t factor );
-  Double_t calc();
-  virtual Double_t fitnessFunction( std::vector< Double_t > factors );
-  virtual Double_t newFitness( Double_t oldValue, Double_t newValue );
-  virtual Double_t calculateFitness();
-  Double_t doRenewFitness();
-  virtual Double_t renewFitness( std::vector< Double_t > factors, 
+  void Init();
+  virtual Bool_t HasConverged( Int_t steps = 10, Double_t ratio = 0.1 );
+  virtual Double_t SpreadControl( Int_t steps, Int_t ofSteps, Double_t factor );
+  Double_t Calc();
+  virtual Double_t FitnessFunction( std::vector< Double_t > factors );
+  virtual Double_t NewFitness( Double_t oldValue, Double_t newValue );
+  virtual Double_t CalculateFitness();
+  Double_t DoRenewFitness();
+  virtual Double_t RenewFitness( std::vector< Double_t > factors, 
 				 std::vector< Double_t > results );
-  virtual void evolution();
-  void finalize();
+  virtual void Evolution();
+  void Finalize();
+  
+  ClassDef(TMVA_GeneticBase,0) //Base definition for genetic algorithm
 };
 
 

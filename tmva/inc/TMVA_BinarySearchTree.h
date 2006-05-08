@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_BinarySearchTree.h,v 1.6 2006/04/29 23:55:41 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_BinarySearchTree.h,v 1.1 2006/05/08 12:46:30 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,8 +26,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_BinarySearchTree.h,v 1.6 2006/04/29 23:55:41 andreas.hoecker Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_BinarySearchTree

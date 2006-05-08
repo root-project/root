@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticRange.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticRange.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -23,11 +23,8 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_GeneticRange.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $
+ * $Id: TMVA_GeneticRange.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
-
-#include "TMVA_GeneticRange.h"
-#include <iostream>
 
 //_______________________________________________________________________
 //                                                                      
@@ -35,6 +32,12 @@
 //                                                                      
 //_______________________________________________________________________
 
+#include "TMVA_GeneticRange.h"
+#include <iostream>
+
+ClassImp(TMVA_GeneticRange)
+
+//_______________________________________________________________________
 TMVA_GeneticRange::TMVA_GeneticRange( TRandom *rnd, Double_t f, Double_t t )
 {
   from = f;
@@ -44,6 +47,7 @@ TMVA_GeneticRange::TMVA_GeneticRange( TRandom *rnd, Double_t f, Double_t t )
   randomGenerator = rnd;
 }
 
+//_______________________________________________________________________
 Double_t TMVA_GeneticRange::random( Bool_t near, Double_t value, Double_t spread, Bool_t mirror )
 {
   if( near ){
@@ -55,6 +59,7 @@ Double_t TMVA_GeneticRange::random( Bool_t near, Double_t value, Double_t spread
   return randomGenerator->Uniform(from, to);
 }
 
+//_______________________________________________________________________
 Double_t TMVA_GeneticRange::reMap( Double_t val )
 {
   if( from >= to ) return val;
@@ -63,6 +68,7 @@ Double_t TMVA_GeneticRange::reMap( Double_t val )
   return val;
 }
 
+//_______________________________________________________________________
 Double_t TMVA_GeneticRange::reMapMirror( Double_t val )
 {
   if( from >= to ) return val;
@@ -71,5 +77,6 @@ Double_t TMVA_GeneticRange::reMapMirror( Double_t val )
   return val;
 }
 
+//_______________________________________________________________________
 TMVA_GeneticRange::~TMVA_GeneticRange(){}
 

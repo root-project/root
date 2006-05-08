@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN_utils.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN_utils.h,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -30,8 +30,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_MethodCFMlpANN_utils.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $ 
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN_utils

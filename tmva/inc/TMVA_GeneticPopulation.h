@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.5 2006/05/02 12:01:35 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -22,8 +22,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_GeneticPopulation.h,v 1.5 2006/05/02 12:01:35 andreas.hoecker Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_GeneticPopulation
@@ -57,45 +55,47 @@ class TMVA_GeneticPopulation {
   TMVA_GeneticPopulation();
   virtual ~TMVA_GeneticPopulation();
 
-  TRandom *randomGenerator;
+  TRandom *fRandomGenerator;
   typedef std::pair< Double_t, TMVA_GeneticGenes > entry;
 
-  std::multimap<Double_t, TMVA_GeneticGenes  >* genePool;
-  std::multimap<Double_t, TMVA_GeneticGenes  >* newGenePool;
+  std::multimap<Double_t, TMVA_GeneticGenes  >* fGenePool;
+  std::multimap<Double_t, TMVA_GeneticGenes  >* fNewGenePool;
 
-  std::vector< TMVA_GeneticRange* > ranges;
+  std::vector< TMVA_GeneticRange* > fRanges;
 
   std::multimap<Double_t, TMVA_GeneticGenes >::iterator counter;
-  Double_t counterFitness;
+  Double_t fCounterFitness;
 
-  Int_t populationSize;
+  Int_t fPopulationSize;
 
-  void createPopulation( Int_t size );
-  void addPopulation( TMVA_GeneticPopulation *genePool );
-  void trimPopulation();
-  void giveHint( std::vector< Double_t > hint, Double_t fitness = 0 );
-  void makeChildren();
-  TMVA_GeneticGenes makeSex( TMVA_GeneticGenes male, TMVA_GeneticGenes female );
+  void CreatePopulation( Int_t size );
+  void AddPopulation( TMVA_GeneticPopulation *genePool );
+  void TrimPopulation();
+  void GiveHint( std::vector< Double_t > hint, Double_t fitness = 0 );
+  void MakeChildren();
+  TMVA_GeneticGenes MakeSex( TMVA_GeneticGenes male, TMVA_GeneticGenes female );
 
-  void makeMutants( Double_t probability = 30, Bool_t near = kFALSE, 
+  void MakeMutants( Double_t probability = 30, Bool_t near = kFALSE, 
 		    Double_t spread = 0.1, Bool_t mirror = kFALSE  );
-  void mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE, 
+  void Mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE, 
 	       Double_t spread = 0.1, Bool_t mirror = kFALSE  );
 
-  void addFactor( Double_t from, Double_t to );
+  void AddFactor( Double_t from, Double_t to );
 
-  TMVA_GeneticGenes* getGenes();
-  TMVA_GeneticGenes* getGenes( Int_t index );
+  TMVA_GeneticGenes* GetGenes();
+  TMVA_GeneticGenes* GetGenes( Int_t index );
 
-  void clearResults( );
-  void reset();
-  Bool_t setFitness( TMVA_GeneticGenes *g, Double_t fitness, Bool_t add = kTRUE );
-  Double_t getFitness( Int_t index );
-  Double_t getFitness( );
-  void print( Int_t untilIndex = -1 );
-  void print( ostream & out, Int_t utilIndex = -1 );
-  TH1F* variableDistribution( Int_t varNumber, Int_t bins, Int_t min, Int_t max  );
-  std::vector< Double_t > variableDistribution( Int_t varNumber );
+  void ClearResults( );
+  void Reset();
+  Bool_t SetFitness( TMVA_GeneticGenes *g, Double_t fitness, Bool_t add = kTRUE );
+  Double_t GetFitness( Int_t index );
+  Double_t GetFitness( );
+  void Print( Int_t untilIndex = -1 );
+  void Print( ostream & out, Int_t utilIndex = -1 );
+  TH1F* VariableDistribution( Int_t varNumber, Int_t bins, Int_t min, Int_t max  );
+  std::vector< Double_t > VariableDistribution( Int_t varNumber );
+  
+  ClassDef(TMVA_GeneticPopulation,0) //Population definition for genetic algorithm
 };
 
 

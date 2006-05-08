@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticCuts.cxx,v 1.2 2006/05/08 15:39:03 brun Exp $ 
+// @(#)root/tmva $Id: TMVA_GeneticCuts.cxx,v 1.3 2006/05/08 17:56:50 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,23 +26,24 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  **********************************************************************************/
-
-#include "TMVA_GeneticCuts.h"
-#include "TMVA_MethodCuts.h"
-
 //_______________________________________________________________________
 //                                                                      
 // User class for genetics algorithm                                    
 //                                                                      
 //_______________________________________________________________________
 
+#include "TMVA_GeneticCuts.h"
+#include "TMVA_MethodCuts.h"
 
+ClassImp(TMVA_GeneticCuts)
+
+//_______________________________________________________________________
 TMVA_GeneticCuts::TMVA_GeneticCuts( Int_t size, std::vector<LowHigh*> ranges ) 
   : TMVA_GeneticBase( size, ranges ) 
 {}
 
 //_______________________________________________________________________
-Double_t TMVA_GeneticCuts::fitnessFunction( std::vector<Double_t> parameters )
+Double_t TMVA_GeneticCuts::FitnessFunction( std::vector<Double_t> parameters )
 {
   Int_t n = parameters.size();
   const Int_t kNMAX=1000;

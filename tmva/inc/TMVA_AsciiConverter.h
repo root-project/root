@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_AsciiConverter.h,v 1.6 2006/04/29 23:55:41 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: TMVA_AsciiConverter.h,v 1.1 2006/05/08 12:46:30 brun Exp $ 
 // Author: unknown
 
 /**********************************************************************************
@@ -18,8 +18,6 @@
  *      1.3    3.55 3.2 5    ...                                                  *
  *      ...                                                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_AsciiConverter.h,v 1.6 2006/04/29 23:55:41 andreas.hoecker Exp $       
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_AsciiConverter

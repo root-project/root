@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_BinaryTree.h,v 1.7 2006/05/02 23:27:40 helgevoss Exp $    
+// @(#)root/tmva $Id: TMVA_BinaryTree.h,v 1.1 2006/05/08 12:46:30 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -25,8 +25,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_BinaryTree.h,v 1.7 2006/05/02 23:27:40 helgevoss Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_BinaryTree
@@ -114,5 +112,5 @@ class TMVA_BinaryTree {
   ClassDef(TMVA_BinaryTree,0) //Base class for BinarySearch and Decision Trees
 };
 
-#endif // ROOT_TMVA_BinaryTree
+#endif
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticPopulation.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticPopulation.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -22,8 +22,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_GeneticPopulation.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $
  **********************************************************************************/
 
 #include "TMVA_GeneticPopulation.h"
@@ -36,6 +34,8 @@
 
 using namespace std;
 
+ClassImp(TMVA_GeneticPopulation)
+   
 //_______________________________________________________________________
 //                                                                      
 // Population definition for genetic algorithm                          
@@ -44,83 +44,83 @@ using namespace std;
 
 TMVA_GeneticPopulation::TMVA_GeneticPopulation()
 {
-  randomGenerator = new TRandom3();
-  gSystem->Sleep(2);
-  randomGenerator->SetSeed( (long)gSystem->Now() );
+  fRandomGenerator = new TRandom3(0); //please check
+  //gSystem->Sleep(2);
+  //fRandomGenerator->SetSeed( (long)gSystem->Now() );
   // seed of random-generator to machine clock
   // --> if called twice within a second, the generated numbers will be the same.
 
-  randomGenerator->Uniform(0.,1.);
-  genePool    = new multimap<Double_t, TMVA_GeneticGenes>();
-  newGenePool = new multimap<Double_t, TMVA_GeneticGenes>();
+  fRandomGenerator->Uniform(0.,1.);
+  fGenePool    = new multimap<Double_t, TMVA_GeneticGenes>();
+  fNewGenePool = new multimap<Double_t, TMVA_GeneticGenes>();
 
-  counterFitness = 0;
+  fCounterFitness = 0;
 }
 
-void TMVA_GeneticPopulation::createPopulation( Int_t size )
+void TMVA_GeneticPopulation::CreatePopulation( Int_t size )
 {
-  populationSize = size;
-  genePool->clear();
-  newGenePool->clear();
+  fPopulationSize = size;
+  fGenePool->clear();
+  fNewGenePool->clear();
 
   vector< TMVA_GeneticRange* >::iterator rIt;
   vector< Double_t > newEntry;
 
-  for( Int_t i=0; i<populationSize; i++ ){
+  for( Int_t i=0; i<fPopulationSize; i++ ){
     newEntry.clear();
-    for( rIt = ranges.begin(); rIt<ranges.end(); rIt++ ){
+    for( rIt = fRanges.begin(); rIt<fRanges.end(); rIt++ ){
       newEntry.push_back( (*rIt)->random() );
     }
     entry e(0, TMVA_GeneticGenes( newEntry) );
-    genePool->insert( e );
+    fGenePool->insert( e );
   }
 
-  counter = genePool->begin();
+  counter = fGenePool->begin();
 }
 
-void TMVA_GeneticPopulation::addPopulation( TMVA_GeneticPopulation *strangers )
+void TMVA_GeneticPopulation::AddPopulation( TMVA_GeneticPopulation *strangers )
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
-  for( it = strangers->genePool->begin(); it != strangers->genePool->end(); it++ ) {
-    giveHint( it->second.factors, it->first );
+  for( it = strangers->fGenePool->begin(); it != strangers->fGenePool->end(); it++ ) {
+    GiveHint( it->second.fFactors, it->first );
   }
 }
 
-void TMVA_GeneticPopulation::trimPopulation( )
+void TMVA_GeneticPopulation::TrimPopulation( )
 {
-  multimap<Double_t, TMVA_GeneticGenes >::iterator it = genePool->begin() ;
-  for( Int_t i=0; i<populationSize; i++ ) it++;
-  genePool->erase( it, genePool->end()-- );
+  multimap<Double_t, TMVA_GeneticGenes >::iterator it = fGenePool->begin() ;
+  for( Int_t i=0; i<fPopulationSize; i++ ) it++;
+  fGenePool->erase( it, fGenePool->end()-- );
 }
 
-void TMVA_GeneticPopulation::makeChildren() 
+void TMVA_GeneticPopulation::MakeChildren() 
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
   multimap<Double_t, TMVA_GeneticGenes >::iterator it2;
   Int_t pos = 0;
   Int_t n = 0;
-  for( it = genePool->begin(); it != genePool->end(); it++ ){
-    if( n< (Int_t)(genePool->size()/2) ){
-      newGenePool->insert( entry(0, it->second) );
-      pos = (Int_t)randomGenerator->Integer( genePool->size()/2 );
-      it2 = genePool->begin();
+  for( it = fGenePool->begin(); it != fGenePool->end(); it++ ){
+    if( n< (Int_t)(fGenePool->size()/2) ){
+      fNewGenePool->insert( entry(0, it->second) );
+      pos = (Int_t)fRandomGenerator->Integer( fGenePool->size()/2 );
+      it2 = fGenePool->begin();
       for( Int_t i=0; i<pos; i++) it2++;
-      newGenePool->insert( entry( 0, makeSex( it->second, it2->second ) ) );
+      fNewGenePool->insert( entry( 0, MakeSex( it->second, it2->second ) ) );
     } else continue;
     n++;
   }
-  genePool->swap( (*newGenePool) );
-  newGenePool->clear();
+  fGenePool->swap( (*fNewGenePool) );
+  fNewGenePool->clear();
 }
 
-TMVA_GeneticGenes TMVA_GeneticPopulation::makeSex( TMVA_GeneticGenes male, 
+TMVA_GeneticGenes TMVA_GeneticPopulation::MakeSex( TMVA_GeneticGenes male, 
 						   TMVA_GeneticGenes female )
 {
   vector< Double_t > child;
   vector< Double_t >::iterator itM;
-  vector< Double_t >::iterator itF = female.factors.begin();
-  for( itM = male.factors.begin(); itM < male.factors.end(); itM++ ){
-    if( randomGenerator->Integer( 2 ) == 0 ){
+  vector< Double_t >::iterator itF = female.fFactors.begin();
+  for( itM = male.fFactors.begin(); itM < male.fFactors.end(); itM++ ){
+    if( fRandomGenerator->Integer( 2 ) == 0 ){
       child.push_back( (*itM) );
     }else{
       child.push_back( (*itF) );
@@ -130,35 +130,35 @@ TMVA_GeneticGenes TMVA_GeneticPopulation::makeSex( TMVA_GeneticGenes male,
   return TMVA_GeneticGenes( child );
 }
 
-void TMVA_GeneticPopulation::makeMutants( Double_t probability, Bool_t near, 
+void TMVA_GeneticPopulation::MakeMutants( Double_t probability, Bool_t near, 
 					  Double_t spread, Bool_t mirror )
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
   Int_t n = 0;
-  for( it = genePool->begin(); it != genePool->end(); it++ ){
-    if( n< (populationSize/2) ){
-      newGenePool->insert( entry(0, it->second) );
-      newGenePool->insert( entry(1, it->second) );
+  for( it = fGenePool->begin(); it != fGenePool->end(); it++ ){
+    if( n< (fPopulationSize/2) ){
+      fNewGenePool->insert( entry(0, it->second) );
+      fNewGenePool->insert( entry(1, it->second) );
     } else continue;
     n++;
   }
-  genePool->swap( (*newGenePool) );
-  mutate( probability, populationSize/2, near, spread, mirror );
-  newGenePool->clear();
+  fGenePool->swap( (*fNewGenePool) );
+  Mutate( probability, fPopulationSize/2, near, spread, mirror );
+  fNewGenePool->clear();
 }
 
-void TMVA_GeneticPopulation::mutate( Double_t probability , Int_t startIndex, 
+void TMVA_GeneticPopulation::Mutate( Double_t probability , Int_t startIndex, 
 				     Bool_t near, Double_t spread, Bool_t mirror ) 
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
   Int_t index = 0;
   vector< Double_t >::iterator vec;
   vector< TMVA_GeneticRange* >::iterator vecRange;
-  for( it = genePool->begin(); it != genePool->end(); it++ ){
+  for( it = fGenePool->begin(); it != fGenePool->end(); it++ ){
     if( index >= startIndex ){
-      vecRange = ranges.begin();
-      for( vec = (it->second.factors).begin(); vec < (it->second.factors).end(); vec++ ){
-	if( randomGenerator->Uniform( 100 ) <= probability ){
+      vecRange = fRanges.begin();
+      for( vec = (it->second.fFactors).begin(); vec < (it->second.fFactors).end(); vec++ ){
+	if( fRandomGenerator->Uniform( 100 ) <= probability ){
 	  (*vec) = (*vecRange)->random( near, (*vec), spread, mirror );
 	}
 	vecRange++;
@@ -168,120 +168,120 @@ void TMVA_GeneticPopulation::mutate( Double_t probability , Int_t startIndex,
   }
 }
 
-void TMVA_GeneticPopulation::addFactor( Double_t from, Double_t to )
+void TMVA_GeneticPopulation::AddFactor( Double_t from, Double_t to )
 {
-  ranges.push_back( new TMVA_GeneticRange( randomGenerator, from, to ) );
+  fRanges.push_back( new TMVA_GeneticRange( fRandomGenerator, from, to ) );
 }
 
-TMVA_GeneticGenes* TMVA_GeneticPopulation::getGenes( Int_t index )
+TMVA_GeneticGenes* TMVA_GeneticPopulation::GetGenes( Int_t index )
 {
-  multimap<Double_t, TMVA_GeneticGenes >::iterator it = genePool->begin();
+  multimap<Double_t, TMVA_GeneticGenes >::iterator it = fGenePool->begin();
   for( Int_t i=0; i<index; i++) it++;
   return &(it->second);
 }
 
-Double_t TMVA_GeneticPopulation::getFitness( Int_t index )
+Double_t TMVA_GeneticPopulation::GetFitness( Int_t index )
 {
-  multimap<Double_t, TMVA_GeneticGenes >::iterator it = genePool->begin();
+  multimap<Double_t, TMVA_GeneticGenes >::iterator it = fGenePool->begin();
   for( Int_t i=0; i<index; i++) it++;
   return it->first;
 }
 
-void TMVA_GeneticPopulation::clearResults()
+void TMVA_GeneticPopulation::ClearResults()
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
-  for( it = genePool->begin(); it!=genePool->end(); it++ ){
-    it->second.clearResults();
+  for( it = fGenePool->begin(); it!=fGenePool->end(); it++ ){
+    it->second.ClearResults();
   }
 }
 
-TMVA_GeneticGenes* TMVA_GeneticPopulation::getGenes()
+TMVA_GeneticGenes* TMVA_GeneticPopulation::GetGenes()
 {
   TMVA_GeneticGenes *g;
-  if( counter == genePool->end() ) {
+  if( counter == fGenePool->end() ) {
     g = new TMVA_GeneticGenes();
     return g;
   }
   g = &(counter->second);
-  counterFitness = counter->first;
+  fCounterFitness = counter->first;
   return g;
 }
 
-Double_t TMVA_GeneticPopulation::getFitness()
+Double_t TMVA_GeneticPopulation::GetFitness()
 {
-  if( counter == genePool->end() ) {
-    reset();
+  if( counter == fGenePool->end() ) {
+    Reset();
     return -1.;
   }
   return counter->first;
 }
 
-void TMVA_GeneticPopulation::reset()
+void TMVA_GeneticPopulation::Reset()
 {
-  counter = genePool->begin();
-  newGenePool->clear();
+  counter = fGenePool->begin();
+  fNewGenePool->clear();
 }
 
-Bool_t TMVA_GeneticPopulation::setFitness( TMVA_GeneticGenes *g, Double_t fitness, Bool_t add )
+Bool_t TMVA_GeneticPopulation::SetFitness( TMVA_GeneticGenes *g, Double_t fitness, Bool_t add )
 {
-  if( add ) g->results.push_back( fitness );
-  newGenePool->insert( entry( fitness, *g) );
+  if( add ) g->fResults.push_back( fitness );
+  fNewGenePool->insert( entry( fitness, *g) );
   counter++;
-  if( counter == genePool->end() ){
-    genePool->swap( (*newGenePool) );
-    counter = genePool->begin();
-    reset();
+  if( counter == fGenePool->end() ){
+    fGenePool->swap( (*fNewGenePool) );
+    counter = fGenePool->begin();
+    Reset();
     return kFALSE;
   }
   return kTRUE;
 }
 
-void TMVA_GeneticPopulation::giveHint( vector< Double_t > hint, Double_t fitness )
+void TMVA_GeneticPopulation::GiveHint( vector< Double_t > hint, Double_t fitness )
 {
   TMVA_GeneticGenes g;
-  g.factors.assign( hint.begin(), hint.end() );             
+  g.fFactors.assign( hint.begin(), hint.end() );             
 
-  genePool->insert( entry( fitness, g ) );
+  fGenePool->insert( entry( fitness, g ) );
 }
 
-void TMVA_GeneticPopulation::print( Int_t untilIndex)
+void TMVA_GeneticPopulation::Print( Int_t untilIndex)
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
   Int_t n;
-  for( it = genePool->begin(); it != genePool->end(); it++ ){
+  for( it = fGenePool->begin(); it != fGenePool->end(); it++ ){
     if( untilIndex >= -1 ) {
       if( untilIndex == -1 ) return;
       untilIndex--;
     }
     n = 0;
-    for( vector< Double_t >::iterator vec = it->second.factors.begin(); 
-	 vec < it->second.factors.end(); vec++ ) {
+    for( vector< Double_t >::iterator vec = it->second.fFactors.begin(); 
+	 vec < it->second.fFactors.end(); vec++ ) {
       cout << "f_" << n++ << ": " << (*vec) << "     ";
     }
     cout << endl;
   }
 }
 
-void TMVA_GeneticPopulation::print( ostream & out, Int_t untilIndex )
+void TMVA_GeneticPopulation::Print( ostream & out, Int_t untilIndex )
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
   Int_t n;
-  for( it = genePool->begin(); it != genePool->end(); it++ ){
+  for( it = fGenePool->begin(); it != fGenePool->end(); it++ ){
     if( untilIndex > -1 ) {
       untilIndex--;
       if( untilIndex == -1 ) return;
     }
     n = 0;
     out << "fitness: " << it->first << "    ";
-    for( vector< Double_t >::iterator vec = it->second.factors.begin(); 
-	 vec < it->second.factors.end(); vec++ ){
+    for( vector< Double_t >::iterator vec = it->second.fFactors.begin(); 
+	 vec < it->second.fFactors.end(); vec++ ){
       out << "f_" << n++ << ": " << (*vec) << "     ";
     }
     out << endl;
   }
 }
 
-TH1F* TMVA_GeneticPopulation::variableDistribution( Int_t varNumber, Int_t bins, 
+TH1F* TMVA_GeneticPopulation::VariableDistribution( Int_t varNumber, Int_t bins, 
 						    Int_t min, Int_t max ) 
 {
   std::stringstream histName;
@@ -292,27 +292,27 @@ TH1F* TMVA_GeneticPopulation::variableDistribution( Int_t varNumber, Int_t bins,
   hist->SetBit(TH1::kCanRebin);
 
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
-  for( it = genePool->begin(); it != genePool->end(); it++ ){
-    hist->Fill( it->second.factors.at(varNumber));
+  for( it = fGenePool->begin(); it != fGenePool->end(); it++ ){
+    hist->Fill( it->second.fFactors.at(varNumber));
   }
   return hist;
 }
 
-vector<Double_t> TMVA_GeneticPopulation::variableDistribution( Int_t varNumber ) 
+vector<Double_t> TMVA_GeneticPopulation::VariableDistribution( Int_t varNumber ) 
 {
   vector< Double_t > varDist;
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
-  for( it = genePool->begin(); it != genePool->end(); it++ ){
-    varDist.push_back( it->second.factors.at( varNumber ) );
+  for( it = fGenePool->begin(); it != fGenePool->end(); it++ ){
+    varDist.push_back( it->second.fFactors.at( varNumber ) );
   }
   return varDist;
 }
 
 TMVA_GeneticPopulation::~TMVA_GeneticPopulation()
 {
-  if( randomGenerator != NULL ) delete randomGenerator;
-  if( genePool != NULL ) delete genePool;
-  if( newGenePool != NULL ) delete newGenePool;
+  if( fRandomGenerator != NULL ) delete fRandomGenerator;
+  if( fGenePool != NULL ) delete fGenePool;
+  if( fNewGenePool != NULL ) delete fNewGenePool;
 }
 
 

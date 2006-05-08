@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.3 2006/05/08 15:39:03 brun Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.4 2006/05/08 17:56:50 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -579,24 +579,24 @@ void  TMVA_MethodCuts::Train( void )
 	// "m_ga_spread" times the number of variables
 	TMVA_GeneticCuts ga( ranges.size() * 10, ranges ); 
 
-	ga.population.addPopulation( &bestResults->population );
-	ga.calculateFitness();
-	ga.population.trimPopulation();
+	ga.fPopulation.AddPopulation( &bestResults->fPopulation );
+	ga.CalculateFitness();
+	ga.fPopulation.TrimPopulation();
 
 	do {
-	  ga.init();
-	  ga.calculateFitness();
-	  ga.spreadControl( fGa_SC_steps, fGa_SC_offsteps, fGa_SC_factor );
-	} while (!ga.hasConverged( Int_t(fGa_nsteps*0.67), 0.0001 ));
+	  ga.Init();
+	  ga.CalculateFitness();
+	  ga.SpreadControl( fGa_SC_steps, fGa_SC_offsteps, fGa_SC_factor );
+	} while (!ga.HasConverged( Int_t(fGa_nsteps*0.67), 0.0001 ));
 	
-	bestResultsStore->population.giveHint( ga.population.getGenes( 0 )->factors );
+	bestResultsStore->fPopulation.GiveHint( ga.fPopulation.GetGenes( 0 )->fFactors );
       }
       bestResults = bestResultsStore;
       bestResultsStore = new TMVA_GeneticCuts( 0, ranges );
 		
     }
 
-    bestResults->init();
+    bestResults->Init();
 
     // main run
     cout << "--- " << GetName() << ": GA: start main course                                    " 
@@ -614,23 +614,23 @@ void  TMVA_MethodCuts::Train( void )
       // ---- perform series of fits to achieve best convergence
 
       TMVA_GeneticCuts ga( ranges.size() * 10, ranges ); // 10 times the number of variables
-      ga.spread = 0.1;
-      ga.population.addPopulation( &bestResults->population );
-      ga.calculateFitness();
-      ga.population.trimPopulation();
+      ga.fSpread = 0.1;
+      ga.fPopulation.AddPopulation( &bestResults->fPopulation );
+      ga.CalculateFitness();
+      ga.fPopulation.TrimPopulation();
       do {
-	ga.init();
-	ga.calculateFitness();
-	ga.spreadControl( fGa_SC_steps, fGa_SC_offsteps, fGa_SC_factor );
-      } while (!ga.hasConverged( fGa_nsteps, 0.00001 ));
+	ga.Init();
+	ga.CalculateFitness();
+	ga.SpreadControl( fGa_SC_steps, fGa_SC_offsteps, fGa_SC_factor );
+      } while (!ga.HasConverged( fGa_nsteps, 0.00001 ));
 
       Int_t n;
       //Double_t par[2*fNvar];
       Double_t par[2000]; //please check
 
       n = 0;
-      for( vector< Double_t >::iterator vec = ga.population.getGenes( 0 )->factors.begin(); 
-	   vec < ga.population.getGenes( 0 )->factors.end(); vec++ ){
+      for( vector< Double_t >::iterator vec = ga.fPopulation.GetGenes( 0 )->fFactors.begin(); 
+	   vec < ga.fPopulation.GetGenes( 0 )->fFactors.end(); vec++ ){
 	par[n] = (*vec);
 	n++;
       }
@@ -1087,7 +1087,6 @@ Double_t TMVA_MethodCuts::GetEfficiency( TString theString, TTree * /*theTree*/ 
     // use root finder
 
     // make the background-vs-signal efficiency plot
-    const Int_t nvar = this->fNvar;
     for (Int_t bini=1; bini<=fNbins; bini++) {
       //Double_t tmpCutMin[nvar], tmpCutMax[nvar];
       Double_t tmpCutMin[1000], tmpCutMax[1000]; //please check

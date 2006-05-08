@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticRange.h,v 1.5 2006/05/02 12:01:35 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticRange.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -22,8 +22,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_GeneticRange.h,v 1.5 2006/05/02 12:01:35 andreas.hoecker Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_GeneticRange
@@ -61,6 +59,7 @@ class TMVA_GeneticRange {
 
   // same as before, but the values leaving the allowed range, are mirrored into the range.
   Double_t reMapMirror( Double_t val );
+  ClassDef(TMVA_GeneticRange,0) //Range definition for genetic algorithm
 };
 
 #endif

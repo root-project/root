@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticGenes.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticGenes.h,v 1.1 2006/05/08 12:46:30 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -22,8 +22,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_GeneticGenes.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_GeneticGenes
@@ -46,18 +44,21 @@ class TMVA_GeneticGenes{
   
   TMVA_GeneticGenes() {}  
   TMVA_GeneticGenes( std::vector<Double_t> f );
+  virtual ~TMVA_GeneticGenes() {}  
   
-  void clear() {
-    factors.clear();
-    results.clear();
+  void Clear() {
+    fFactors.clear();
+    fResults.clear();
   }
   
-  void clearResults() {
-    results.clear();
+  void ClearResults() {
+    fResults.clear();
   }
 
-  std::vector< Double_t > factors;
-  std::vector< Double_t > results;
+  std::vector< Double_t > fFactors;
+  std::vector< Double_t > fResults;
+  
+  ClassDef(TMVA_GeneticGenes,0) //Genes definition for genetic algorithm
 };
 
 

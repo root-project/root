@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodANNBase.h,v 1.1 2006/05/08 12:46:31 brun Exp $
+// @(#)root/tmva $Id: TMVA_MethodANNBase.h,v 1.2 2006/05/08 12:59:13 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,8 +26,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_MethodANNBase.h,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodANNBase

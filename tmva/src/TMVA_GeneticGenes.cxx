@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticGenes.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticGenes.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -22,8 +22,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_GeneticGenes.cpp,v 1.4 2006/05/02 12:01:35 andreas.hoecker Exp $
  **********************************************************************************/
 
 #include "TMVA_GeneticGenes.h"
@@ -36,7 +34,9 @@
 //                                                                      
 //_______________________________________________________________________
 
+ClassImp(TMVA_GeneticGenes)
+
 TMVA_GeneticGenes::TMVA_GeneticGenes( std::vector<Double_t> f  ) 
 {
-  factors = f;
+  fFactors = f;
 }

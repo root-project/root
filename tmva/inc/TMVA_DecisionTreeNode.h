@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_DecisionTreeNode.h,v 1.9 2006/05/02 23:27:40 helgevoss Exp $    
+// @(#)root/tmva $Id: TMVA_DecisionTreeNode.h,v 1.1 2006/05/08 12:46:30 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -25,8 +25,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_DecisionTreeNode.h,v 1.9 2006/05/02 23:27:40 helgevoss Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_DecisionTreeNode
