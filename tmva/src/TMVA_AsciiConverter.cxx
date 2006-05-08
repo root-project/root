@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_AsciiConverter.cpp,v 1.3 2006/05/02 12:01:35 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: TMVA_AsciiConverter.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: unknown
 
 /**********************************************************************************
@@ -173,7 +173,8 @@ void TMVA_AsciiConverter::FillFromFile( void )
     exit(1);
   } 
   else {
-    TString* branchFormats[fNbranch];
+    //TString* branchFormats[fNbranch];
+    TString** branchFormats = new TString*[fNbranch];
     
     Int_t    char_cnt=0, int_cnt=0, dbl_cnt=0, float_cnt=0;
     char     buffer[10000];
@@ -277,7 +278,7 @@ void TMVA_AsciiConverter::ParseFormatLine( void )
   
   formatstring->ReadLine(fInfile); // read format line from file
  
-  const Ssiz_t n = formatstring->Length();
+  const Int_t n = formatstring->Length();
   TObjString* format_obj[n]; // array of formats (e.g. 'blah/D')
   TObjString* label_obj[n];  // array of labels (e.g. 'blah')
   

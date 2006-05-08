@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MisClassificationError.cpp,v 1.4 2006/05/02 23:27:40 helgevoss Exp $
+// @(#)root/tmva $Id: TMVA_MisClassificationError.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -44,7 +44,9 @@ Double_t  TMVA_MisClassificationError::GetSeparationIndex( const Double_t &s, co
 {
   if ( s+b <= 0) return 0;
   Double_t p = s/(s+b);
-  return 1 - std::max(p, 1-p); 
+  if (p < 1-p) return 1-p;
+  else         return p;
+  //return std::max(p, 1-p); 
 }
 
 

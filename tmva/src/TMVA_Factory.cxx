@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $   
+// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.2 2006/05/08 12:59:13 brun Exp $   
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -306,7 +306,7 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
      
      // loop over existing bins and add the new ones
      // store their values in temporary opjects
-     Int_t nOldBins =  fMultipleMVAnames.size();
+     const Int_t nOldBins =  fMultipleMVAnames.size();
      TString SimpleName[nOldBins], Description[nOldBins];
      TCut OldCut[nOldBins];
      Int_t binc=0;
@@ -613,8 +613,9 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
   fTestTree = new TTree("TestTree"+TreeName, "Variables used for MVA testing, and MVA outputs" );
   fTestTree->Branch( "type", &type, "type/I", basketsize );
 
-  Float_t v[fInputVariables->size()];
-  for (UInt_t ivar=0; ivar<fInputVariables->size(); ivar++) {
+  const Int_t nvars = fInputVariables->size();
+  Float_t v[nvars];
+  for (Int_t ivar=0; ivar<nvars; ivar++) {
     
     // Add Branch to training/test Tree
     TString myVar = (*fInputVariables)[ivar];
@@ -627,7 +628,7 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
   Int_t ac=0;
   for (Int_t i = 0; i < fSignalTree->GetEntries(); i++) {
     if (signalList->Contains(i)) { // survives the cut
-      for (UInt_t ivar=0; ivar<fInputVariables->size(); ivar++) 
+      for (Int_t ivar=0; ivar<nvars; ivar++) 
 	v[ivar] = (Float_t)TMVA_Tools::GetValue( fSignalTree, i, (*fInputVariables)[ivar] );
 
       ac++;

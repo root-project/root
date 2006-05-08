@@ -23,7 +23,7 @@
  * (http://tmva.sourceforge.net/license.txt)                                      *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_Tools.cpp,v 1.9 2006/05/03 19:45:38 helgevoss Exp $      
+ * $Id: TMVA_Tools.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $      
  **********************************************************************************/
 #include <algorithm>
 
@@ -333,7 +333,7 @@ TList* TMVA_Tools::ParseFormatLine( TString formatString )
   TString* label     = new TString();
   Int_t    nLabels   = 0;
   
-  const Ssiz_t n = formatString.Length();
+  const Int_t n = (Int_t)formatString.Length();
   TObjString* label_obj[n];  // array of labels 
   
   for (Int_t i=0; i<n; i++) {

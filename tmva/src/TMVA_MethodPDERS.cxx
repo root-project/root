@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.2 2006/05/08 12:59:13 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -451,7 +451,8 @@ Double_t TMVA_MethodPDERS::KernelEstimate( TMVA_Event& event,
 {
   // define gaussian sigmas  
   Double_t fac = 0.2;
-  Double_t sigma[fNvar];
+  const Int_t nvar = fNvar;
+  Double_t sigma[nvar];
   for (Int_t ivar=0; ivar<fNvar; ivar++) 
     sigma[ivar] = ((*V.Upper)[ivar] - (*V.Lower)[ivar])*fac;
 
@@ -524,7 +525,8 @@ void TMVA_MethodPDERS::WriteWeightsToFile( void )
   // create clone of fTrainingTree in new file
   TObjArrayIter branchIter( fTrainingTree->GetListOfBranches(), kIterForward );
   TBranch*      branch = NULL;
-  Float_t       branchVar[fNvar];
+  const Int_t nvar = fNvar;
+  Float_t       branchVar[nvar];
   Int_t         theType, ivar = -1;
   while ((branch = (TBranch*)branchIter.Next()) != 0) {
 

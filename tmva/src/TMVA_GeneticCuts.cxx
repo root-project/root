@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticCuts.cpp,v 1.3 2006/05/02 12:01:35 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: TMVA_GeneticCuts.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -25,8 +25,6 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TMVA_GeneticCuts.cpp,v 1.3 2006/05/02 12:01:35 andreas.hoecker Exp $ 
  **********************************************************************************/
 
 #include "TMVA_GeneticCuts.h"
@@ -45,7 +43,7 @@ TMVA_GeneticCuts::TMVA_GeneticCuts( Int_t size, std::vector<LowHigh*> ranges )
 
 Double_t TMVA_GeneticCuts::fitnessFunction( std::vector<Double_t> parameters )
 {
-  const Int_t n = (Int_t)parameters.size();
+  const Int_t n = parameters.size();
   Double_t p[n];
   for (Int_t i=0; i<n; i++) p[i] = parameters[i];
   

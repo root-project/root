@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.2 2006/05/08 12:59:13 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -380,8 +380,9 @@ void  TMVA_MethodCuts::Train( void )
   TObjArrayIter branchIter( fTrainingTree->GetListOfBranches(), kIterForward );
   TBranch*      branch = 0;
   Int_t         ivar   = -1;
-  TString       branchName[fNvar];
-  Float_t       branchVar[fNvar];
+  const Int_t nvar = this->fNvar;
+  TString       branchName[nvar];
+  Float_t       branchVar[nvar];
   Int_t         theType;
 
   vector<TH1F*> signalDist, bkgDist;
@@ -438,8 +439,8 @@ void  TMVA_MethodCuts::Train( void )
   if (fFitMethod == UseMonteCarlo) {
     
     // generate MC cuts
-    Double_t cutMin[fNvar];
-    Double_t cutMax[fNvar];
+    Double_t cutMin[nvar];
+    Double_t cutMax[nvar];
     
     // MC loop
     cout << "--- " << GetName() << ": Generating " << fNRandCuts 
@@ -620,7 +621,8 @@ void  TMVA_MethodCuts::Train( void )
       } while (!ga.hasConverged( fGa_nsteps, 0.00001 ));
 
       Int_t n;
-      Double_t par[2*fNvar];
+      const Int_t nvar2 = 2*this->fNvar;
+      Double_t par[nvar2];
 
       n = 0;
       for( vector< Double_t >::iterator vec = ga.population.getGenes( 0 )->factors.begin(); 
@@ -630,8 +632,8 @@ void  TMVA_MethodCuts::Train( void )
       }
 
       Double_t effS = 0, effB = 0;
-      Double_t cutMin[fNvar];
-      Double_t cutMax[fNvar];
+      Double_t cutMin[nvar];
+      Double_t cutMax[nvar];
       this->MatchParsToCuts( par, &cutMin[0], &cutMax[0] );
       this->GetEffsfromSelection( &cutMin[0], &cutMax[0], effS, effB);
 
@@ -669,8 +671,9 @@ Double_t TMVA_MethodCuts::ComputeEstimator( Double_t *par, Int_t /*npar*/ )
 
   // determine cuts
   Double_t effS = 0, effB = 0;
-  Double_t cutMin[fNvar];
-  Double_t cutMax[fNvar];
+  const Int_t nvar = this->fNvar;
+  Double_t cutMin[nvar];
+  Double_t cutMax[nvar];
   this->MatchParsToCuts( par, &cutMin[0], &cutMax[0] );
 
   // retrieve signal and background efficiencies for given cut
@@ -1075,8 +1078,9 @@ Double_t TMVA_MethodCuts::GetEfficiency( TString theString, TTree * /*theTree*/ 
     // use root finder
 
     // make the background-vs-signal efficiency plot
+    const Int_t nvar = this->fNvar;
     for (Int_t bini=1; bini<=fNbins; bini++) {
-      Double_t tmpCutMin[fNvar], tmpCutMax[fNvar];
+      Double_t tmpCutMin[nvar], tmpCutMax[nvar];
       for (Int_t ivar=0; ivar <fNvar; ivar++){
 	tmpCutMin[ivar] = fCutMin[ivar][bini-1];
 	tmpCutMax[ivar] = fCutMax[ivar][bini-1];
