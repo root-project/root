@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cpp,v 1.11 2006/05/03 08:31:10 helgevoss Exp $    
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -50,7 +50,7 @@ static Int_t         TMVA_MethodCFMlpANN_nsel    = 0;
 TMVA_MethodCFMlpANN* TMVA_MethodCFMlpANN::fThis = 0;
 
 // references for mlpl3 functions
-extern "C" Int_t train_nn__( Double_t *tin2, Double_t *tout2, Int_t *ntrain, 
+R__EXTERN "C" Int_t train_nn__( Double_t *tin2, Double_t *tout2, Int_t *ntrain, 
 			     Int_t *ntest, Int_t *nvar2, Int_t *nlayer, 
 			     Int_t *nodes, Int_t *ncycle );
 
