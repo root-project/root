@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.257 2006/05/02 16:46:03 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.258 2006/05/08 09:37:12 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2310,17 +2310,6 @@ void THistPainter::PaintColorLevels(Option_t *)
    Double_t dz = zmax - zmin;
 
    if (dz <= 0) return;
-   if (fH->GetMinimumStored() == -1111) {
-      Double_t yMARGIN = gStyle->GetHistTopMargin();
-      if (gStyle->GetHistMinimumZero()) {
-         if (zmin >= 0) zmin = 0;
-         else           zmin -= yMARGIN*(zmax-zmin);
-      } else {
-         Double_t dzmin = yMARGIN*(zmax-zmin);
-         if (zmin >= 0 && (zmin-dzmin <= 0)) zmin  = 0;
-         else                                zmin -= dzmin;
-      }
-   }
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
