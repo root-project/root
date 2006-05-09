@@ -19,7 +19,8 @@ TH1F *hpx[5];
 void *handle(void *ptr)
 {
    int nr = (int) ptr;
-
+   int upd = 5000;
+   
    char name[5];
    sprintf(name,"hpx%d",nr);
    TThread::Lock();
@@ -28,19 +29,18 @@ void *handle(void *ptr)
    TThread::UnLock();
    Float_t px, py, pz;
    gRandom->SetSeed();
-   for (Int_t i=0;i<25000;i++) {
+   for (Int_t i=0;i<250000;i++) {
       c[nr]->cd();
       gRandom->Rannor(px,py);
       pz = px*px + py*py;
       Float_t random = gRandom->Rndm(1);
       hpx[nr]->Fill(px);
-      if (i && (i%1000) == 0) {
+      if (i && (i%upd) == 0) {
          TThread::Printf("Here I am loop index: %3d , thread: %d", i, nr);
-         if (i == 1000) hpx[nr]->Draw();
+         if (i == upd) hpx[nr]->Draw();
          c[nr]->Modified();
          c[nr]->Update();
       }
-      gSystem->Sleep(1);
    }
    return 0;
 }
