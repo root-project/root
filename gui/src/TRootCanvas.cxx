@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.98 2006/04/14 17:54:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.99 2006/04/28 08:32:35 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1589,6 +1589,7 @@ Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
          gROOT->SetEscape();
          fCanvas->HandleInput(kButton1Up, 0, 0);
          fCanvas->HandleInput(kMouseMotion, 0, 0);
+         gPad->Modified();
          return kTRUE;
       }
       if (str[0] == 3)   // ctrl-c sets the interrupt flag
