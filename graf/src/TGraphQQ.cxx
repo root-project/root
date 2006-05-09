@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.3 2006/04/03 15:58:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.4 2006/05/09 14:03:18 brun Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -177,20 +177,6 @@ TGraphQQ::~TGraphQQ()
       delete [] fY0;
    if (fF)
       fF = 0;
-   if (fFunctions) {
-      fFunctions->SetBit(kInvalidObject);
-      //special logic to support the case where the same object is
-      //added multiple times in fFunctions.
-      //This case happens when the same object is added with different
-      //drawing modes
-      TObject *obj;
-      while ((obj  = fFunctions->First())) {
-         while(fFunctions->Remove(obj));
-         delete obj;
-      }
-      delete fFunctions;
-   }
-   delete fHistogram;
 }
 
 //______________________________________________________________________________
