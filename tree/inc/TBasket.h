@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.15 2005/11/16 20:18:36 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.16 2006/01/24 21:32:46 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -70,7 +70,7 @@ public:
            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
 
-        Int_t      LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
+           Int_t   LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
         Long64_t   CopyTo(TFile *to);
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }

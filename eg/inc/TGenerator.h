@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.4 2003/01/20 10:25:57 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.5 2006/04/22 09:23:01 brun Exp $
 // -*- mode: C++ -*-
 // Author: Ola Nordmann   21/09/95
 
@@ -159,7 +159,7 @@ class TGenerator : public TNamed {
         virtual Int_t           DistancetoPrimitive(Int_t px, Int_t py);
         virtual void            Draw(Option_t *option="");
         virtual void            ExecuteEvent(Int_t event, Int_t px, Int_t py);
-	virtual void            GenerateEvent();
+        virtual void            GenerateEvent();
         virtual Double_t        GetParameter(const char* /*name*/) const { return 0.; }
         virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
         virtual TObjArray      *ImportParticles(Option_t *option="");

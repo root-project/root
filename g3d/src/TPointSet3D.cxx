@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.2 2006/04/07 09:20:43 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -27,6 +27,7 @@ ClassImp(TPointSet3D)
 //______________________________________________________________________________
 void TPointSet3D::ComputeBBox()
 {
+   //Compute the bounding box of this points set
    if (fN > 0) {
       Int_t    n = fN;
       Float_t* p = fP;

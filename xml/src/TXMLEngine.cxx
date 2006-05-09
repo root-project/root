@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.16 2005/11/22 20:42:37 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.17 2006/01/20 01:12:13 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -90,11 +90,11 @@ public:
    void OutputCurrent()
    {
       if (fCurrent!=fBuf) 
-        if (fOut!=0)
-           fOut->write(fBuf, fCurrent-fBuf);
-        else
-        if (fOutStr!=0) 
-           fOutStr->Append(fBuf, fCurrent-fBuf);
+         if (fOut!=0)
+            fOut->write(fBuf, fCurrent-fBuf);
+         else
+         if (fOutStr!=0) 
+            fOutStr->Append(fBuf, fCurrent-fBuf);
       fCurrent = fBuf;
    }
    

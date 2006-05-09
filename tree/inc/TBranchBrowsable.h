@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.h,v 1.2 2005/04/22 19:04:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -176,7 +176,7 @@ public:
    static void Unregister();
 
 protected:
-  TCollectionMethodBrowsable(const TBranch* branch, TMethod* m, 
+   TCollectionMethodBrowsable(const TBranch* branch, TMethod* m, 
       const TVirtualBranchBrowsable* parent=0);
 
    ClassDef(TCollectionMethodBrowsable,0); // Helper object to browse a collection's methods

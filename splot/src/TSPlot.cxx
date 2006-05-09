@@ -1,4 +1,4 @@
-// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.6 2005/12/09 17:46:04 brun Exp $
+// @(#)root/splot:$Name:  $:$Id: TSPlot.cxx,v 1.7 2006/03/20 21:43:44 pcanal Exp $
 // Author: Muriel Pivk, Anna Kreshuk    10/2005  
 
 /**********************************************************************
@@ -479,9 +479,9 @@ void TSPlot::Browse(TBrowser *b)
 
    if (!fSWeightsHists.IsEmpty()) {
       TIter next(&fSWeightsHists);
-       TH1D* h = 0;
-       while ((h = (TH1D*)next()))
-          b->Add(h,h->GetName());
+      TH1D* h = 0;
+      while ((h = (TH1D*)next()))
+         b->Add(h,h->GetName());
    }
 
    if (!fYpdfHists.IsEmpty()) {

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.10 2002/11/26 17:26:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.11 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
 
    TOptionListItem(TDataMember *m,Long_t val, Long_t valmask, Long_t tglmask,
                    const char *name, const char *label);
-  ~TOptionListItem();
+   ~TOptionListItem();
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.5 2006/02/03 14:50:25 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.6 2006/04/20 14:36:48 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -237,13 +237,13 @@ TGridResult *TAlienCollection::GetGridResult(const char *filename,Bool_t publica
    TGridResult* result = new TAlienResult();
 
    while ( (mapp = Next())) {
-     if (((TObjString*)fCurrent->GetValue(filename))) {
-       TMap* attributes = (TMap*)fCurrent->GetValue(filename)->Clone();
-       if (publicaccess) {
-          attributes->Add(new TObjString("options"), new TObjString("&publicaccess=1"));
-       }
-       result->Add(attributes);
-     }
+      if (((TObjString*)fCurrent->GetValue(filename))) {
+         TMap* attributes = (TMap*)fCurrent->GetValue(filename)->Clone();
+         if (publicaccess) {
+            attributes->Add(new TObjString("options"), new TObjString("&publicaccess=1"));
+         }
+         result->Add(attributes);
+      }
    }
    return dynamic_cast<TGridResult*>(result);
 }

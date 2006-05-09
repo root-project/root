@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.148 2006/04/25 09:38:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.149 2006/05/02 18:25:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1129,7 +1129,7 @@ TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
   //  ifield = 1 if tracking performed with g3rkuta; ifield = 2 if tracking
   //  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
   //
-  return new TGeoMedium(name,numed,nmat,isvol,ifield,fieldm,tmaxfd,stemax,deemax,epsil,stmin);
+   return new TGeoMedium(name,numed,nmat,isvol,ifield,fieldm,tmaxfd,stemax,deemax,epsil,stmin);
 }
 
 //_____________________________________________________________________________

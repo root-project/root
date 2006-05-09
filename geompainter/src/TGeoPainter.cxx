@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.84 2006/04/25 09:38:27 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.85 2006/04/27 10:19:43 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -537,7 +537,7 @@ Int_t TGeoPainter::CountNodes(TGeoVolume *volume, Int_t rlevel) const
          if (last) next.Skip();
       }
    }      
-    return count;    
+   return count;    
 }   
 
 //______________________________________________________________________________

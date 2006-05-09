@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.10 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.11 2006/04/18 14:19:21 rdm Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1058,9 +1058,9 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
       }
 
       if (cl->IsTObject())
-        typ_id = isptr ? TStreamerInfo::kObjectp : TStreamerInfo::kObject;
+         typ_id = isptr ? TStreamerInfo::kObjectp : TStreamerInfo::kObject;
       else
-        typ_id = isptr ? TStreamerInfo::kAnyp : TStreamerInfo::kAny;
+         typ_id = isptr ? TStreamerInfo::kAnyp : TStreamerInfo::kAny;
 
       if ((cl==TString::Class()) && !isptr)
          typ_id = TStreamerInfo::kTString;
@@ -1118,7 +1118,7 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
       elem->SetArrayDim(arrsize2>0 ? 2 : 1);
       elem->SetMaxIndex(0, arrsize1);
       if (arrsize2>0)
-        elem->SetMaxIndex(1, arrsize2);
+         elem->SetMaxIndex(1, arrsize2);
    }
 
    // we indicate that there is no streamerinfo

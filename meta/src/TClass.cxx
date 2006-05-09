@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.187 2006/04/19 08:22:24 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.188 2006/04/25 18:23:59 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1420,7 +1420,7 @@ namespace {
                local = (ULong_t) new TClassLocalStorage();
                lmap->AddAt(slot, hash, (Long_t)cl, local);
             }
-           return (TClassLocalStorage*)local;
+            return (TClassLocalStorage*)local;
          }
          return 0;
       }

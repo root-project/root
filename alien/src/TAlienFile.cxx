@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.15 2006/03/15 11:01:52 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.16 2006/04/18 14:23:19 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -101,8 +101,8 @@ TAlienFile::TAlienFile(const char *url, Option_t *option,
    delete objOptions;
 
    if (lLocate) {
-     SetName(newurl);
-     return;
+      SetName(newurl);
+      return;
    }
 
    TUrl nUrl(newurl.Data());
@@ -314,8 +314,8 @@ TString TAlienFile::AccessURL(const char *url, Option_t *option,
    newurl = urlStr->GetName();
    stmp = purl.GetAnchor();
    if (stmp != "") {
-     newurl += "#";
-     newurl += purl.GetAnchor();
+      newurl += "#";
+      newurl += purl.GetAnchor();
    }
    newurl += TString("?&authz=");
    newurl += authzStr->GetName();

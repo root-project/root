@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.7 2004/01/15 18:14:06 brun Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.8 2005/04/15 14:20:39 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ static Pixmap GetRootLogo()
    XpmFreeAttributes(&attr);
 
    if (ret == XpmSuccess || ret == XpmColorError)
-       return logo;
+      return logo;
 
    printf("rootx xpm error: %s\n", XpmGetErrorString(ret));
 

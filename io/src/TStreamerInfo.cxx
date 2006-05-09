@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.234 2006/03/20 21:35:47 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.235 2006/04/19 08:22:24 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1920,12 +1920,12 @@ void* TStreamerInfo::New(void *obj)
          case kObjectP:
          case kSTLp:
          {
-             // Initialize array of pointers with null pointers.
-             char** r = (char**) eaddr;
-             Int_t len = element->GetArrayLength();
-             for (Int_t i = 0; i < len; ++i) {
-                r[i] = 0;
-             }
+            // Initialize array of pointers with null pointers.
+            char** r = (char**) eaddr;
+            Int_t len = element->GetArrayLength();
+            for (Int_t i = 0; i < len; ++i) {
+               r[i] = 0;
+            }
          }
          break;
 
