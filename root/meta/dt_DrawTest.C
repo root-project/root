@@ -156,7 +156,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    DrawSkippable(tree,"event.fTriggerBits",
                  "hTriggerBits",level>1 && gBranchStyle!=0);
    DrawSkippable(tree,"event.fTriggerBits.fNbits",
-                 "event.fTriggerBits.TestBitNumber(10)",
+                 "event.fTriggerBits.TestBitNumber(30)",
                  "hFiltTriggerBits",level>1 && gBranchStyle!=0);
 
    DrawSkippable(tree,"event.GetTriggerBits()",
