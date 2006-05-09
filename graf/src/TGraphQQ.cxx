@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.2 2005/11/21 09:27:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.3 2006/04/03 15:58:23 brun Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -173,8 +173,6 @@ TGraphQQ::~TGraphQQ()
 {
    //Destroys a TGraphQQ
 
-   delete [] fX;
-   delete [] fY;
    if (fY0)
       delete [] fY0;
    if (fF)
