@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.27 2004/01/25 20:33:32 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.28 2005/01/19 07:52:45 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -203,6 +203,7 @@ void Event::Clear(Option_t * /*option*/)
    fTracks->Clear("C"); //will also call Track::Clear
    fHighPt->Delete();
    fMuons->Delete();
+   fTriggerBits.Clear();
 }
 
 //______________________________________________________________________________
