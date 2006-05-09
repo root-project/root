@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.2 2006/05/08 20:56:16 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.3 2006/05/08 21:13:46 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -63,7 +63,7 @@ class TMVA_GeneticPopulation {
 
   std::vector< TMVA_GeneticRange* > fRanges;
 
-  std::multimap<Double_t, TMVA_GeneticGenes >::iterator counter;
+  std::multimap<Double_t, TMVA_GeneticGenes >::iterator fCounter;
   Double_t fCounterFitness;
 
   Int_t fPopulationSize;

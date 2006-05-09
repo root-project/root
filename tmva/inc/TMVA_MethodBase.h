@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodBase.h,v 1.1 2006/05/08 12:46:31 brun Exp $   
+// @(#)root/tmva $Id: TMVA_MethodBase.h,v 1.2 2006/05/08 20:56:16 brun Exp $   
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -163,25 +163,25 @@ class TMVA_MethodBase : public TObject {
   
   // member functions for the "evaluation" 
   // accessors
-  Bool_t   isOK     ( void  )  const { return fIsOK; }
+  Bool_t   IsOK     ( void  )  const { return fIsOK; }
 
   void WriteHistosToFile( TDirectory* targetDir );
 
-  enum CutOrientation { Negative = -1, Positive = +1 };
+  enum CutOrientation { kNegative = -1, kPositive = +1 };
   CutOrientation GetCutOrientation() { return fCutOrientation; }
 
-  enum Type { Signal = 1, Background = 0 };
+  enum Type { kSignal = 1, kBackground = 0 };
 
   Bool_t Verbose( void ) { return fVerbose; }
 
  public:
 
   // static pointer to this object
-  static TMVA_MethodBase* ThisBase( void ) { return fThisBase; }  
+  static TMVA_MethodBase* GetThisBase( void ) { return fgThisBase; }  
 
  protected:
 
-  void ResetThisBase( void ) { fThisBase = this; }
+  void ResetThisBase( void ) { fgThisBase = this; }
 
  protected:
 
@@ -206,7 +206,7 @@ class TMVA_MethodBase : public TObject {
   TString     fFileDir;
 
 
-  TH1*        bookNormTH1( TString, Int_t, Double_t, Double_t, TString );
+  TH1*        BookNormTH1( TString, Int_t, Double_t, Double_t, TString );
 
   TString     fWeightFile;
 
@@ -236,7 +236,7 @@ class TMVA_MethodBase : public TObject {
   TMVA_PDF* fSplS;
   TMVA_PDF* fSplB;
   TSpline*  fSpleffBvsS;
-  void      muTransform( void );
+  void      MuTransform( void );
 
  private:
 
@@ -284,7 +284,7 @@ class TMVA_MethodBase : public TObject {
   vector<Double_t>* fXmaxNorm;
 
   // this carrier
-  static TMVA_MethodBase* fThisBase;
+  static TMVA_MethodBase* fgThisBase;
 
   // Init used in the various constructors
   void Init( void );

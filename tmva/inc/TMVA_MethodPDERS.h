@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: TMVA_MethodPDERS.h,v 1.8 2006/05/02 23:27:40 helgevoss Exp $    
-// Author: Andreas Hoecker, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: TMVA_MethodPDERS.h,v 1.1 2006/05/08 12:46:31 brun Exp $
+// Author: Andreas Hoecker, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -24,9 +24,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany                                                *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -34,7 +34,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodPDERS.h,v 1.8 2006/05/02 23:27:40 helgevoss Exp $    
+ * $Id: TMVA_MethodPDERS.h,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodPDERS
@@ -66,24 +66,24 @@ class TMVA_MethodPDERS : public TMVA_MethodBase {
 
  public:
 
-  TMVA_MethodPDERS( TString jobName, 
-		    vector<TString>* theVariables, 
-		    TTree* theTree = 0, 
+  TMVA_MethodPDERS( TString jobName,
+		    vector<TString>* theVariables,
+		    TTree* theTree = 0,
 		    TString theOption = "Adaptive:100:200:50:0.99",
 		    TDirectory* theTargetDir = 0 );
 
-  TMVA_MethodPDERS( vector<TString> *theVariables, 
-		    TString theWeightFile,  
+  TMVA_MethodPDERS( vector<TString> *theVariables,
+		    TString theWeightFile,
 		    TDirectory* theTargetDir = NULL );
 
   virtual ~TMVA_MethodPDERS( void );
-    
+
   // training method
   virtual void Train( void );
 
   // write weights to file
   virtual void WriteWeightsToFile( void );
-  
+
   // read weights from file
   virtual void ReadWeightsFromFile( void  );
 
@@ -95,12 +95,12 @@ class TMVA_MethodPDERS : public TMVA_MethodBase {
 
  public:
 
-  // for root finder 
+  // for root finder
   static Double_t IGetVolumeContentForRoot( Double_t );
   Double_t         GetVolumeContentForRoot( Double_t );
 
   // static pointer to this object
-  static TMVA_MethodPDERS* ThisPDERS( void ) { return fThisPDERS; }  
+  static TMVA_MethodPDERS* ThisPDERS( void ) { return fgThisPDERS; }
 
  protected:
 
@@ -115,7 +115,7 @@ class TMVA_MethodPDERS : public TMVA_MethodBase {
 
  private:
 
-  enum VolumeRangeMode { MinMax = 0, RMS, Adaptive } fVRangeMode;
+  enum VolumeRangeMode { kMinMax = 0, kRMS, kAdaptive } fVRangeMode;
 
   TMVA_BinarySearchTree*       fBinaryTreeS;
   TMVA_BinarySearchTree*       fBinaryTreeB;
@@ -131,7 +131,7 @@ class TMVA_MethodPDERS : public TMVA_MethodBase {
   Float_t            fNEventsMin;
   Float_t            fNEventsMax;
   Float_t            fMaxVIterations;
-  Float_t            fInitialScale;          
+  Float_t            fInitialScale;
 
   TFile*             fFin;
 
@@ -139,15 +139,15 @@ class TMVA_MethodPDERS : public TMVA_MethodBase {
 
   void    SetVolumeElement ( void );
   Float_t RScalc           ( TMVA_Event *e );
-  Float_t GetError         ( Float_t countS, Float_t countB, 
+  Float_t GetError         ( Float_t countS, Float_t countB,
 			     Float_t sumW2S, Float_t sumW2B ) const;
 
   // this carrier
-  static TMVA_MethodPDERS* fThisPDERS;
+  static TMVA_MethodPDERS* fgThisPDERS;
 
   void InitPDERS( void );
 
-  ClassDef(TMVA_MethodPDERS,0) //Multidimensional Likelihood using the "Probability density estimator range search" (PDERS) method  
+  ClassDef(TMVA_MethodPDERS,0) //Multidimensional Likelihood using the "Probability density estimator range search" (PDERS) method
 };
 
 #endif // TMVA_MethodPDERS_H

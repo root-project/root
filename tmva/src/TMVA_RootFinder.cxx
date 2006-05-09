@@ -41,7 +41,7 @@ TMVA_RootFinder::TMVA_RootFinder( Double_t (*rootVal)( Double_t ),
     fMaxIter( maxIterations ),
     fAbsTol ( absTolerance  )
 {
-  GetRootVal = rootVal;
+  fGetRootVal = rootVal;
 }
 
 //_______________________________________________________________________
@@ -54,13 +54,13 @@ Double_t TMVA_RootFinder::Root( Double_t refValue  )
   // Root finding using Brents algorithm; taken from CERNLIB function RZERO
 
   Double_t a  = fRootMin, b = fRootMax;
-  Double_t fa = (*GetRootVal)( a ) - refValue;
-  Double_t fb = (*GetRootVal)( b ) - refValue;
+  Double_t fa = (*fGetRootVal)( a ) - refValue;
+  Double_t fb = (*fGetRootVal)( b ) - refValue;
   if (fb*fa > 0) {
     cout << "--- " << GetName() << "::Root: initial interval w/o root: "
 	 << "(a=" << a << ", b=" << b << "),"
-	 << " (Eff_a=" << (*GetRootVal)( a ) 
-	 << ", Eff_b=" << (*GetRootVal)( b ) << "), "
+	 << " (Eff_a=" << (*fGetRootVal)( a ) 
+	 << ", Eff_b=" << (*fGetRootVal)( b ) << "), "
 	 << "(fa=" << fa << ", fb=" << fb << "), "
 	 << "refValue = " << refValue << endl;
     return 1;
@@ -121,7 +121,7 @@ Double_t TMVA_RootFinder::Root( Double_t refValue  )
     if (TMath::Abs(d) > tol) b += d;
     else                     b += (m > 0 ? +tol : -tol);
 
-    fb = (*GetRootVal)( b ) - refValue;
+    fb = (*fGetRootVal)( b ) - refValue;
   }
 
   // Return our best guess if we run out of iterations

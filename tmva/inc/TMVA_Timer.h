@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Timer.h,v 1.6 2006/04/29 23:55:41 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_Timer.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_Timer.h,v 1.6 2006/04/29 23:55:41 andreas.hoecker Exp $    
+ * $Id: TMVA_Timer.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Timer
@@ -78,8 +78,8 @@ class TMVA_Timer : public TStopwatch {
   TString   fPrefix;
   Bool_t    fColourfulOutput;
 
-  static const TString fMethodName;
-  static const Int_t   fNbins;  
+  static const TString fgMethodName;
+  static const Int_t   fgNbins;  
 
   ClassDef(TMVA_Timer,0) //Timing information for training and evaluation of MVA methods
 };

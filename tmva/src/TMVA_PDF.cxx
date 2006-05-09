@@ -58,7 +58,7 @@ TMVA_PDF::TMVA_PDF( const TH1 *hist, TMVA_PDF::SmoothMethod method, Int_t nsmoot
   fHist = (TH1*)hist->Clone();
   
   // check histogram!
-  checkHist();
+  CheckHist();
     
   // use ROOT TH1 smooth methos
   if (fNsmooth >0) fHist->Smooth( fNsmooth );
@@ -68,19 +68,19 @@ TMVA_PDF::TMVA_PDF( const TH1 *hist, TMVA_PDF::SmoothMethod method, Int_t nsmoot
     
   switch (method) {
 
-  case TMVA_PDF::Spline1:
+  case TMVA_PDF::kSpline1:
     fSpline = new TMVA_TSpline1( "spline1", fGraph );
     break;
 
-  case TMVA_PDF::Spline2:
+  case TMVA_PDF::kSpline2:
     fSpline = new TMVA_TSpline2( "spline2", fGraph );
     break;
 
-  case TMVA_PDF::Spline3:
+  case TMVA_PDF::kSpline3:
     fSpline = new TSpline3    ( "spline3", fGraph );
     break;
     
-  case TMVA_PDF::Spline5:
+  case TMVA_PDF::kSpline5:
     fSpline = new TSpline5    ( "spline5", fGraph );
     break;
 
@@ -91,7 +91,7 @@ TMVA_PDF::TMVA_PDF( const TH1 *hist, TMVA_PDF::SmoothMethod method, Int_t nsmoot
   }
 
   // fill into histogram 
-  fillSplineToHist();
+  FillSplineToHist();
 
   fSpline->SetTitle( (TString)hist->GetTitle() + fSpline->GetTitle() );
   fSpline->SetName ( (TString)hist->GetName()  + fSpline->GetName()  );
@@ -111,7 +111,7 @@ TMVA_PDF::~TMVA_PDF( void )
 }
 
 //_______________________________________________________________________
-void TMVA_PDF::fillSplineToHist( void )
+void TMVA_PDF::FillSplineToHist( void )
 {
   fPDFHist = new TH1D( "", "", fNbinsPDFHist, fXmin, fXmax );
   fPDFHist->SetTitle( (TString)fHist->GetTitle() + "_hist from_" + fSpline->GetTitle() );
@@ -129,12 +129,12 @@ void TMVA_PDF::fillSplineToHist( void )
 }
 
 //_______________________________________________________________________
-void TMVA_PDF::checkHist(void){
+void TMVA_PDF::CheckHist(void){
 
   //sanity check
   if (fHist == NULL) {
     cout << "--- " << GetName() 
-	 << ": checkHist: ERROR!!! Called without valid histogram pointer!" << endl;
+	 << ": CheckHist: ERROR!!! Called without valid histogram pointer!" << endl;
     exit(1);
   }
 
@@ -208,9 +208,9 @@ Double_t TMVA_PDF::GetVal( const Double_t x )
   if (fIntegral <= 0.0) fIntegral = 1.0;
 
   // linear interpolation between adjacent bins
-  Double_t Dx     = fPDFHist->GetBinCenter(bin)  - fPDFHist->GetBinCenter(nextbin);
-  Double_t Dy     = fPDFHist->GetBinContent(bin) - fPDFHist->GetBinContent(nextbin);
-  Double_t retval = fPDFHist->GetBinContent(bin) + (x - fPDFHist->GetBinCenter(bin))*Dy/Dx;
+  Double_t dx     = fPDFHist->GetBinCenter(bin)  - fPDFHist->GetBinCenter(nextbin);
+  Double_t dy     = fPDFHist->GetBinContent(bin) - fPDFHist->GetBinContent(nextbin);
+  Double_t retval = fPDFHist->GetBinContent(bin) + (x - fPDFHist->GetBinCenter(bin))*dy/dx;
 
   return max(retval, TMVA_PDF_epsilon_);
 }

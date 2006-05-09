@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_RootFinder.h,v 1.3 2006/04/29 23:55:41 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: TMVA_RootFinder.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_RootFinder.h,v 1.3 2006/04/29 23:55:41 andreas.hoecker Exp $    
+ * $Id: TMVA_RootFinder.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_RootFinder
@@ -65,7 +65,7 @@ class TMVA_RootFinder : public TObject {
   Double_t fAbsTol; 
 
   // function pointer
-  Double_t (*GetRootVal)( Double_t );
+  Double_t (*fGetRootVal)( Double_t );
 
   ClassDef(TMVA_RootFinder,0) //Root finding using Brents algorithm
 

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: TMVA_MethodCuts.h,v 1.10 2006/05/02 23:27:40 helgevoss Exp $ 
-// Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: TMVA_MethodCuts.h,v 1.1 2006/05/08 12:46:31 brun Exp $
+// Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,9 +18,9 @@
  *      Kai Voss         <Kai.Voss@cern.ch>       - U. of Victoria, Canada        *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -28,7 +28,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodCuts.h,v 1.10 2006/05/02 23:27:40 helgevoss Exp $ 
+ * $Id: TMVA_MethodCuts.h,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCuts
@@ -64,23 +64,23 @@ class TMVA_MethodCuts : public TMVA_MethodBase {
  public:
 
   TMVA_MethodCuts( TString jobName,
-		   vector<TString>* theVariables, 
-		   TTree* theTree = 0, 
+		   vector<TString>* theVariables,
+		   TTree* theTree = 0,
 		   TString theOption = "MC:150:10000:",
 		   TDirectory* theTargetFile = 0 );
-  
-  TMVA_MethodCuts( vector<TString> *theVariables, 
-		   TString theWeightFile,  
+
+  TMVA_MethodCuts( vector<TString> *theVariables,
+		   TString theWeightFile,
 		   TDirectory* theTargetDir = NULL );
 
   virtual ~TMVA_MethodCuts( void );
-    
+
   // training method
   virtual void Train( void );
 
   // write weights to file
   virtual void WriteWeightsToFile( void );
-  
+
   // read weights from file
   virtual void ReadWeightsFromFile( void );
 
@@ -99,40 +99,40 @@ class TMVA_MethodCuts : public TMVA_MethodBase {
   virtual Double_t GetmuTransform ( TTree *) { return 0; }
   virtual Double_t GetEfficiency  ( TString, TTree *);
 
-  // accessors for Minuit 
+  // accessors for Minuit
   Double_t        ComputeEstimator( Double_t*, Int_t );
 
   void SetTestSignalEfficiency( Double_t eff ) { fTestSignalEff = eff; }
 
   // static pointer to this object
-  static TMVA_MethodCuts* ThisCuts( void ) { return fThisCuts; }  
+  static TMVA_MethodCuts* ThisCuts( void ) { return fgThisCuts; }
 
  protected:
 
  private:
 
-  enum ConstrainType { ConstrainEffS = 0, 
-		       ConstrainEffB } fConstrainType;
+  enum ConstrainType { kConstrainEffS = 0,
+		       kConstrainEffB } fConstrainType;
 
-  enum FitMethodType { UseMonteCarlo = 0,
-		       UseGeneticAlgorithm };
+  enum FitMethodType { kUseMonteCarlo = 0,
+		       kUseGeneticAlgorithm };
 
-  enum EffMethod     { UseEventSelection = 0,
-		       UsePDFs };
+  enum EffMethod     { kUseEventSelection = 0,
+		       kUsePDFs };
 
-  enum FitParameters { NotEnforced = 0, 
-		       StartFromMin,
-		       StartFromCenter,
-		       StartFromMax,
-		       ForceMin,
-		       ForceMax,
-		       ForceSmart,
-		       ForceVerySmart,
-		       StartingValuesAreGiven,
-		       RandomizeStartingValues };
+  enum FitParameters { kNotEnforced = 0,
+		       kStartFromMin,
+		       kStartFromCenter,
+		       kStartFromMax,
+		       kForceMin,
+		       kForceMax,
+		       kForceSmart,
+		       kForceVerySmart,
+		       kStartingValuesAreGiven,
+		       kRandomizeStartingValues };
 
-  enum FitType       { Migrad = 0, Simplex };
-  
+  enum FitType       { kMigrad = 0, kSimplex };
+
   // general
   FitMethodType           fFitMethod;
   EffMethod               fEffMethod;
@@ -153,7 +153,7 @@ class TMVA_MethodCuts : public TMVA_MethodBase {
   Double_t           fGa_SC_factor;
   Int_t              fGa_nsteps;
 
-  // minuit 
+  // minuit
   Double_t           fEffRef;
   Int_t              fNpar;
   vector<Int_t>*     fRangeSign;
@@ -161,12 +161,12 @@ class TMVA_MethodCuts : public TMVA_MethodBase {
   TRandom*           fTrandom;
 
   // Statistics
-  vector<Double_t>*  fMeanS; 
-  vector<Double_t>*  fMeanB; 
-  vector<Double_t>*  fRmsS; 
-  vector<Double_t>*  fRmsB; 
-  vector<Double_t>*  fXmin; 
-  vector<Double_t>*  fXmax;    
+  vector<Double_t>*  fMeanS;
+  vector<Double_t>*  fMeanB;
+  vector<Double_t>*  fRmsS;
+  vector<Double_t>*  fRmsB;
+  vector<Double_t>*  fXmin;
+  vector<Double_t>*  fXmax;
 
   TH1*               fEffBvsSLocal;
 
@@ -176,16 +176,16 @@ class TMVA_MethodCuts : public TMVA_MethodBase {
   vector<TH1*>*      fVarHistS_smooth;
   vector<TH1*>*      fVarHistB_smooth;
   vector<TMVA_PDF*>* fVarPdfS;
-  vector<TMVA_PDF*>* fVarPdfB;             
-  
+  vector<TMVA_PDF*>* fVarPdfB;
+
   // MC method
   Int_t              fNRandCuts;
   Double_t**         fCutMin;
   Double_t**         fCutMax;
 
-  static TMVA_MethodCuts*   fThisCuts;
+  static TMVA_MethodCuts*   fgThisCuts;
 
-  void     InitTMinuitAndFit   ( FitParameters fitParam = NotEnforced, 
+  void     InitTMinuitAndFit   ( FitParameters fitParam = kNotEnforced,
 			         vector<Double_t>* parStart = NULL );
   void     MatchParsToCuts     ( Double_t*, Double_t*, Double_t* );
   void     MatchCutsToPars     ( Double_t*, Double_t*, Double_t* );
@@ -200,7 +200,7 @@ class TMVA_MethodCuts : public TMVA_MethodBase {
 				  Double_t& effS, Double_t& effB );
   void     InitCuts( void );
 
-  ClassDef(TMVA_MethodCuts,0)  //Multivariate optimisation of signal efficiency 
+  ClassDef(TMVA_MethodCuts,0)  //Multivariate optimisation of signal efficiency
 };
 
 #endif

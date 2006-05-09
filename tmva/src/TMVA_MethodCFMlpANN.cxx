@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cxx,v 1.3 2006/05/08 21:53:03 brun Exp $    
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cxx,v 1.4 2006/05/09 05:39:17 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -47,7 +47,7 @@ ClassImp(TMVA_MethodCFMlpANN)
 
 // initialization of statics
 static Int_t         TMVA_MethodCFMlpANN_nsel    = 0;
-TMVA_MethodCFMlpANN* TMVA_MethodCFMlpANN::fThis = 0;
+TMVA_MethodCFMlpANN* TMVA_MethodCFMlpANN::fgThis = 0;
 
 // references for mlpl3 functions <=======please check
 #ifndef R__WIN32
@@ -68,7 +68,7 @@ int TMVA_MethodCFMlpANN_dataInterface( Double_t* /*tout2*/, Double_t*  /*tin2*/,
   *ikend = 0; 
 
   // retrieve pointer to current object (CFMlpANN must be a singleton class!)
-  TMVA_MethodCFMlpANN* O = TMVA_MethodCFMlpANN::This();
+  TMVA_MethodCFMlpANN* opt = TMVA_MethodCFMlpANN::This();
 
   // sanity checks
   if (0 == xpg) {
@@ -76,18 +76,18 @@ int TMVA_MethodCFMlpANN_dataInterface( Double_t* /*tout2*/, Double_t*  /*tin2*/,
 	 << endl;
     exit(1);
   }
-  if (*nvar != O->GetNvar()) {
+  if (*nvar != opt->GetNvar()) {
     cout << "*** ERROR in MethodCFMlpANN_DataInterface mismatch in num of variables: " 
-	 << *nvar << " " << O->GetNvar()
+	 << *nvar << " " << opt->GetNvar()
 	 << " ==> exit(1)"
 	 << endl;
     exit(1);
   }
 
   // fill variables
-  *iclass = (int)O->GetClass( TMVA_MethodCFMlpANN_nsel );
-  for (Int_t ivar=0; ivar<O->GetNvar(); ivar++) 
-    xpg[ivar] = (double)O->GetData( TMVA_MethodCFMlpANN_nsel, ivar );
+  *iclass = (int)opt->GetClass( TMVA_MethodCFMlpANN_nsel );
+  for (Int_t ivar=0; ivar<opt->GetNvar(); ivar++) 
+    xpg[ivar] = (double)opt->GetData( TMVA_MethodCFMlpANN_nsel, ivar );
 
   ++TMVA_MethodCFMlpANN_nsel;
 
@@ -106,11 +106,11 @@ void TMVA_MethodCFMlpANN_writeWeightsToFile( Int_t nva, Int_t lclass,
 #define ww_ref(a_1,a_2)    wwNN[(a_2)*max_nLayers_ + a_1 - 7]
 
   // retrieve pointer to current object (CFMlpANN must be a singleton class!)
-  TMVA_MethodCFMlpANN* O = TMVA_MethodCFMlpANN::This();
+  TMVA_MethodCFMlpANN* opt = TMVA_MethodCFMlpANN::This();
 
-  TString fname      = O->GetWeightFileName();
-  TString ClassName  = "TMVA_MethodCFMlpANN";
-  cout << "--- " << ClassName << ": creating weight file: " << fname << endl;  
+  TString fname      = opt->GetWeightFileName();
+  TString className  = "TMVA_MethodCFMlpANN";
+  cout << "--- " << className << ": creating weight file: " << fname << endl;  
 
   Bool_t isOK = kTRUE;
 
@@ -118,7 +118,7 @@ void TMVA_MethodCFMlpANN_writeWeightsToFile( Int_t nva, Int_t lclass,
   ofstream* fout = new ofstream( fname );
 
   if (!fout->good( )) { // file not found --> Error
-    cout << "--- " << ClassName << ": Error in ::WriteWeightsToFile: "
+    cout << "--- " << className << ": Error in ::WriteWeightsToFile: "
 	 << "unable to open input file: " << fname << endl;
     isOK = kFALSE;
   }
@@ -127,9 +127,9 @@ void TMVA_MethodCFMlpANN_writeWeightsToFile( Int_t nva, Int_t lclass,
     // write variable names and min/max 
     // NOTE: the latter values are mandatory for the normalisation 
     // in the reader application !!!
-    for (Int_t ivar=0; ivar<O->GetNvar(); ivar++) {
-      TString var = (*O->GetInputVars())[ivar];
-      *fout << var << "  " << O->GetXminNorm( var ) << "  " << O->GetXmaxNorm( var ) << endl;
+    for (Int_t ivar=0; ivar<opt->GetNvar(); ivar++) {
+      TString var = (*opt->GetInputVars())[ivar];
+      *fout << var << "  " << opt->GetXminNorm( var ) << "  " << opt->GetXmaxNorm( var ) << endl;
     }
       
     // write number of variables and classes
@@ -137,14 +137,14 @@ void TMVA_MethodCFMlpANN_writeWeightsToFile( Int_t nva, Int_t lclass,
       
     // number of output classes must be 2
     if (lclass != 2) { // wrong file
-      cout << "--- " << ClassName << ": Error in ::WriteWeightsToFile: "
+      cout << "--- " << className << ": Error in ::WriteWeightsToFile: "
 	   << "mismatch in number of classes" << endl;
     }
     else {
 
       // check that we are not at the end of the file
       if (fout->eof( )) {
-	cout << "--- " << ClassName << ": Error in ::WriteWeightsToFile: "
+	cout << "--- " << className << ": Error in ::WriteWeightsToFile: "
 	     << "EOF while writing output file: " << fname << endl;
       }
       else {
@@ -223,7 +223,7 @@ TMVA_MethodCFMlpANN::TMVA_MethodCFMlpANN( TString jobName, vector<TString>* theV
   //--------------------------------------------------------------
 
   // parse the option string
-  vector<Int_t>* nodes = parseOptionString( fOptions, fNvar, new vector<Int_t> );
+  vector<Int_t>* nodes = ParseOptionString( fOptions, fNvar, new vector<Int_t> );
 
   // sanity check: exactly two numbers in string
   if (nodes->size() < 1) {
@@ -340,7 +340,7 @@ void TMVA_MethodCFMlpANN::InitCFMlpANN( void )
   fTempNN   = 0;
   fXmaxNN   = 0;
   fXminNN   = 0;   
-  fThis     = this;  
+  fgThis    = this;  
 
   fNevt     = 0;
   fNsig     = 0;
@@ -413,9 +413,9 @@ Double_t TMVA_MethodCFMlpANN::GetMvaValue( TMVA_Event *e )
   for (Int_t ivar=0; ivar<fNvar; ivar++) 
     (*inputVec)[ivar] = __N__( e->GetData(ivar), GetXminNorm( ivar ), GetXmaxNorm( ivar ) );
 
-  myMVA = evalANN( inputVec, isOK );
+  myMVA = EvalANN( inputVec, isOK );
   if (!isOK) {
-    cout << "--- " << GetName() << ": Problem in ::evalANN (!isOK) for event " << e
+    cout << "--- " << GetName() << ": Problem in ::EvalANN (!isOK) for event " << e
 	 << " ==> exit(1)"
 	 << endl;
     exit(1);
@@ -425,7 +425,7 @@ Double_t TMVA_MethodCFMlpANN::GetMvaValue( TMVA_Event *e )
 }
 
 //_______________________________________________________________________
-Double_t TMVA_MethodCFMlpANN::evalANN( vector<Double_t>* inVar, Bool_t& isOK )
+Double_t TMVA_MethodCFMlpANN::EvalANN( vector<Double_t>* inVar, Bool_t& isOK )
 {
   Double_t* xeev = new Double_t[fNvar];
 
@@ -448,7 +448,7 @@ Double_t TMVA_MethodCFMlpANN::evalANN( vector<Double_t>* inVar, Bool_t& isOK )
     }
   }
     
-  nn_ava( xeev );
+  NN_ava( xeev );
 
   delete [] xeev;
 
@@ -458,7 +458,7 @@ Double_t TMVA_MethodCFMlpANN::evalANN( vector<Double_t>* inVar, Bool_t& isOK )
 }
 
 //_______________________________________________________________________
-void  TMVA_MethodCFMlpANN::nn_ava( Double_t* xeev )
+void  TMVA_MethodCFMlpANN::NN_ava( Double_t* xeev )
 {  
   for (Int_t ivar=0; ivar<fNeuronNN[0]; ivar++) fYNN[0][ivar] = xeev[ivar];
   
@@ -470,13 +470,13 @@ void  TMVA_MethodCFMlpANN::nn_ava( Double_t* xeev )
 	x = x + fYNN[layer][k]*fWNN[layer+1][j][k];
 
       x = x + fWwNN[layer+1][j];      
-      fYNN[layer+1][j] = nn_fonc( layer+1, x );
+      fYNN[layer+1][j] = NN_fonc( layer+1, x );
     }
   }  
 }
 
 //_______________________________________________________________________
-Double_t TMVA_MethodCFMlpANN::nn_fonc( Int_t i, Double_t u ) const
+Double_t TMVA_MethodCFMlpANN::NN_fonc( Int_t i, Double_t u ) const
 {
   Double_t f(0);
   
@@ -583,13 +583,13 @@ void TMVA_MethodCFMlpANN::ReadWeightsFromFile( void )
 	    // read number of neurons for each layer
 	    *fin >> fNeuronNN[layer];
 	      
-	    Int_t Nneu = fNeuronNN[layer];
+	    Int_t neuN = fNeuronNN[layer];
 	      
-	    fWNN [layer] = new Double_t*[Nneu];
-	    fWwNN[layer] = new Double_t [Nneu];
-	    fYNN [layer] = new Double_t [Nneu];
+	    fWNN [layer] = new Double_t*[neuN];
+	    fWwNN[layer] = new Double_t [neuN];
+	    fYNN [layer] = new Double_t [neuN];
 	    if (layer > 0)
-	      for (Int_t neu=0; neu<Nneu; neu++) 
+	      for (Int_t neu=0; neu<neuN; neu++) 
 		fWNN[layer][neu] = new Double_t[fNeuronNN[layer-1]];
 	  }
 	    

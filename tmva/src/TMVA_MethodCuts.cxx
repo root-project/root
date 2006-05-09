@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.4 2006/05/08 17:56:50 brun Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodCuts.cxx,v 1.5 2006/05/08 20:56:17 brun Exp $ 
 // Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -49,7 +49,7 @@
 ClassImp(TMVA_MethodCuts)
 
 // init global variables
-TMVA_MethodCuts* TMVA_MethodCuts::fThisCuts = NULL;
+TMVA_MethodCuts* TMVA_MethodCuts::fgThisCuts = NULL;
 
 //_______________________________________________________________________
 TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables,  
@@ -86,8 +86,8 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
   // which optimisation Method
   TString s = ((TObjString*)list->At(0))->GetString();
   s.ToUpper();
-  if      (s.Contains( "MC"     )) fFitMethod = UseMonteCarlo;
-  else if (s.Contains( "GA"     )) fFitMethod = UseGeneticAlgorithm;
+  if      (s.Contains( "MC"     )) fFitMethod = kUseMonteCarlo;
+  else if (s.Contains( "GA"     )) fFitMethod = kUseGeneticAlgorithm;
   else {
     cout << "--- " << GetName() << ": unknown entry in field 0 of option string: " 
 	 << s << " ==> abort" << endl;
@@ -98,24 +98,24 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
     s = ((TObjString*)list->At(1))->GetString();
     s.ToUpper();
 
-    if      (s.Contains( "EFFSEL" )) fEffMethod = UseEventSelection; // highly recommended
-    else if (s.Contains( "EFFPDF" )) fEffMethod = UsePDFs;
-    else                             fEffMethod = UseEventSelection;
+    if      (s.Contains( "EFFSEL" )) fEffMethod = kUseEventSelection; // highly recommended
+    else if (s.Contains( "EFFPDF" )) fEffMethod = kUsePDFs;
+    else                             fEffMethod = kUseEventSelection;
   }
 
   // options output
   cout << "--- " << GetName() << ": interpret options string: '" << fOptions << "'" << endl;
   printf( "--- %s: --> use optimization method: '%s'\n", 
-	  GetName(), (fFitMethod == UseMonteCarlo) ? "Monte Carlo" : "Genetic Algorithm" );
+	  GetName(), (fFitMethod == kUseMonteCarlo) ? "Monte Carlo" : "Genetic Algorithm" );
   printf( "--- %s: --> use efficiency computation method: '%s'\n", 
-	  GetName(), (fEffMethod == UseEventSelection) ? "Event Selection" : "PDF" );
+	  GetName(), (fEffMethod == kUseEventSelection) ? "Event Selection" : "PDF" );
 
   // -----------------------------------------------------------------------------------
   // interpret for MC use  
   //
   switch (fFitMethod) {
 
-  case UseMonteCarlo:
+  case kUseMonteCarlo:
 
     if (list->GetSize() > 2) {
 
@@ -136,11 +136,11 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
       s = ((TObjString*)list->At(3))->GetString();
       s.ToUpper();
       if (s.Contains( "ALL" )) { // one option sets all the others
-	FitParameters theFitP = NotEnforced;
-	if      (s.Contains( "FMAX"   )) theFitP = ForceMax;
-	else if (s.Contains( "FMIN"   )) theFitP = ForceMin;
-	else if (s.Contains( "FSMART" )) theFitP = ForceSmart;
-	else if (s.Contains( "FVERYSMART" )) theFitP = ForceVerySmart;
+	FitParameters theFitP = kNotEnforced;
+	if      (s.Contains( "FMAX"   )) theFitP = kForceMax;
+	else if (s.Contains( "FMIN"   )) theFitP = kForceMin;
+	else if (s.Contains( "FSMART" )) theFitP = kForceSmart;
+	else if (s.Contains( "FVERYSMART" )) theFitP = kForceVerySmart;
 	else {
 	  cout << "--- " << GetName() << ": unknown fit parameter option "
 	       << " in field 2 of option string: " << s << " ==> abort" << endl;
@@ -148,7 +148,7 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
 	}
 	for (Int_t ivar=0; ivar<fNvar; ivar++) (*fFitParams)[ivar] = theFitP;
 
-	if (theFitP != NotEnforced) 
+	if (theFitP != kNotEnforced) 
 	  cout << "--- " << GetName() << ": use 'smart' cuts" << endl;
       }
       else { // individual options
@@ -156,12 +156,12 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
 	  if (list->GetSize() >= 3+ivar) {
 	    s = ((TObjString*)list->At(2+ivar))->GetString();
 	    s.ToUpper();
-	    FitParameters theFitP = NotEnforced;
-	    if      (s == "" || s == "NOTENFORCED") theFitP = NotEnforced;
-	    else if (s.Contains( "FMAX"   )) theFitP = ForceMax;
-	    else if (s.Contains( "FMIN"   )) theFitP = ForceMin;
-	    else if (s.Contains( "FSMART" )) theFitP = ForceSmart;
-	    else if (s.Contains( "FVERYSMART" )) theFitP = ForceVerySmart;
+	    FitParameters theFitP = kNotEnforced;
+	    if      (s == "" || s == "NOTENFORCED") theFitP = kNotEnforced;
+	    else if (s.Contains( "FMAX"   )) theFitP = kForceMax;
+	    else if (s.Contains( "FMIN"   )) theFitP = kForceMin;
+	    else if (s.Contains( "FSMART" )) theFitP = kForceSmart;
+	    else if (s.Contains( "FVERYSMART" )) theFitP = kForceVerySmart;
 	    else {
 	      cout << "--- " << GetName() << ": unknown fit parameter option "
 		   << " in field " << ivar+3 << " (var: " << ivar 
@@ -170,7 +170,7 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
 	    }
 	    (*fFitParams)[ivar] = theFitP;
 
-	    if (theFitP != NotEnforced) 
+	    if (theFitP != kNotEnforced) 
 	      cout << "--- " << GetName() << ": use 'smart' cuts for variable: " 
 		   << "'" << (*fInputVars)[ivar] << "'" << endl;
 	  }	
@@ -182,7 +182,7 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
   // -----------------------------------------------------------------------------------
   // interpret for GA use  
   //
-  case UseGeneticAlgorithm:
+  case kUseGeneticAlgorithm:
     
     if (list->GetSize() > 2) {      
       s = ((TObjString*)list->At(2))->GetString(); fGa_nsteps = atoi( s );
@@ -209,14 +209,14 @@ TMVA_MethodCuts::TMVA_MethodCuts( TString jobName, vector<TString>* theVariables
   }
 
   
-  if (fFitMethod == UseMonteCarlo) 
+  if (fFitMethod == kUseMonteCarlo) 
     printf( "--- %s: --> number of MC events to be generated: %i\n", GetName(), fNRandCuts );
   for (Int_t ivar=0; ivar<fNvar; ivar++) {
-    TString theFitOption = ( ((*fFitParams)[ivar] == NotEnforced) ? "NotEnforced" :
-			     ((*fFitParams)[ivar] == ForceMin   ) ? "ForceMin"    :
-			     ((*fFitParams)[ivar] == ForceMax   ) ? "ForceMax"    :
-			     ((*fFitParams)[ivar] == ForceSmart ) ? "ForceSmart"  :
-			     ((*fFitParams)[ivar] == ForceVerySmart ) ? "ForceVerySmart"  : "other" );
+    TString theFitOption = ( ((*fFitParams)[ivar] == kNotEnforced) ? "NotEnforced" :
+			     ((*fFitParams)[ivar] == kForceMin   ) ? "ForceMin"    :
+			     ((*fFitParams)[ivar] == kForceMax   ) ? "ForceMax"    :
+			     ((*fFitParams)[ivar] == kForceSmart ) ? "ForceSmart"  :
+			     ((*fFitParams)[ivar] == kForceVerySmart ) ? "ForceVerySmart"  : "other" );
     
     printf( "--- %s: --> option for variable: %s: '%s' (#: %i)\n",
 	    GetName(), (const char*)(*fInputVars)[ivar], (const char*)theFitOption, 
@@ -241,7 +241,7 @@ void TMVA_MethodCuts::InitCuts( void )
   fMethodName        = "Cuts";
   fMethod            = TMVA_Types::Cuts;  
   fTestvar           = fTestvarPrefix+GetMethodName();
-  fConstrainType     = ConstrainEffS;
+  fConstrainType     = kConstrainEffS;
   fVarHistS          = fVarHistB = 0;		 
   fVarHistS_smooth   = fVarHistB_smooth = 0;
   fVarPdfS           = fVarPdfB = 0; 
@@ -261,7 +261,7 @@ void TMVA_MethodCuts::InitCuts( void )
   fGa_SC_factor      = 0.95;
   fGa_nsteps         = 30;
 
-  fThisCuts          = this;
+  fgThisCuts         = this;
 
   // vector with fit results
   fNpar      = 2*fNvar;
@@ -276,10 +276,10 @@ void TMVA_MethodCuts::InitCuts( void )
 
   // get the variable specific options, first initialize default
   fFitParams = new vector<FitParameters>( fNvar );
-  for (Int_t ivar=0; ivar<fNvar; ivar++) (*fFitParams)[ivar] = NotEnforced;
+  for (Int_t ivar=0; ivar<fNvar; ivar++) (*fFitParams)[ivar] = kNotEnforced;
 
   fTrandom   = new TRandom( 0 ); // set seed
-  fFitMethod = UseMonteCarlo;
+  fFitMethod = kUseMonteCarlo;
   fTestSignalEff = -1;
 
   // create LUT for cuts
@@ -364,11 +364,11 @@ void  TMVA_MethodCuts::Train( void )
     exit(1);
   }
 
-  if (fEffMethod == UsePDFs) CreateVariablePDFs(); // create PDFs for variables
+  if (fEffMethod == kUsePDFs) CreateVariablePDFs(); // create PDFs for variables
 
   // get background efficiency for which the signal efficiency
   // ought to be maximized
-  fConstrainType = ConstrainEffS;
+  fConstrainType = kConstrainEffS;
 
   // create binary trees (global member variables) for signal and background
   Int_t dummy;
@@ -427,7 +427,7 @@ void  TMVA_MethodCuts::Train( void )
   }
 
   // determine eff(B) versus eff(S) plot
-  fConstrainType = ConstrainEffS;
+  fConstrainType = kConstrainEffS;
 
   Int_t ibin=0;
   fEffBvsSLocal = new TH1F( fTestvar + "_effBvsSLocal", 
@@ -438,7 +438,7 @@ void  TMVA_MethodCuts::Train( void )
   for (ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 );
 
   // --------------------------------------------------------------------------
-  if (fFitMethod == UseMonteCarlo) {
+  if (fFitMethod == kUseMonteCarlo) {
     
     // generate MC cuts
     //Double_t cutMin[fNvar];
@@ -462,22 +462,22 @@ void  TMVA_MethodCuts::Train( void )
 
 	FitParameters fitParam = (*fFitParams)[ivar];
 
-	if (fitParam == ForceSmart) {
-	  if ((*fMeanS)[ivar] > (*fMeanB)[ivar]) fitParam = ForceMax;
-	  else                                     fitParam = ForceMin;	  
+	if (fitParam == kForceSmart) {
+	  if ((*fMeanS)[ivar] > (*fMeanB)[ivar]) fitParam = kForceMax;
+	  else                                   fitParam = kForceMin;	  
 	}
 
-	if (fitParam == ForceMin) 
+	if (fitParam == kForceMin) 
 	  cutMin[ivar] = (*fXmin)[ivar];
 	else
 	  cutMin[ivar] = fTrandom->Rndm()*((*fXmax)[ivar] - (*fXmin)[ivar]) + (*fXmin)[ivar];
 
-	if (fitParam == ForceMax) 
+	if (fitParam == kForceMax) 
 	  cutMax[ivar] = (*fXmax)[ivar];
 	else
 	  cutMax[ivar] = fTrandom->Rndm()*((*fXmax)[ivar] - cutMin[ivar]   ) + cutMin[ivar];
 	
-	if (fitParam == ForceVerySmart){
+	if (fitParam == kForceVerySmart){
 	  // generate random cut parameters gaussian distrubuted around the variable values
 	  // where the difference between signal and background is maximal
 	  
@@ -546,7 +546,7 @@ void  TMVA_MethodCuts::Train( void )
 
   }
   // --------------------------------------------------------------------------
-  else if (fFitMethod == UseGeneticAlgorithm) {
+  else if (fFitMethod == kUseGeneticAlgorithm) {
 
     // ranges
     vector<LowHigh*> ranges;
@@ -685,10 +685,10 @@ Double_t TMVA_MethodCuts::ComputeEstimator( Double_t *par, Int_t /*npar*/ )
 
   // retrieve signal and background efficiencies for given cut
   switch (fEffMethod) {
-  case UsePDFs:
+  case kUsePDFs:
     this->GetEffsfromPDFs( &cutMin[0], &cutMax[0], effS, effB );
     break;
-  case UseEventSelection:
+  case kUseEventSelection:
     this->GetEffsfromSelection( &cutMin[0], &cutMax[0], effS, effB);
     break;
   default:
@@ -698,11 +698,11 @@ Double_t TMVA_MethodCuts::ComputeEstimator( Double_t *par, Int_t /*npar*/ )
   // compute estimator
   const Double_t epsilon = 1.0e-06;
   Double_t eta;  
-  if (fConstrainType == ConstrainEffS) {
+  if (fConstrainType == kConstrainEffS) {
     if (TMath::Abs(effS - fEffRef) > 0.001) eta = TMath::Abs(effB) + TMath::Abs(effS - fEffRef)/epsilon;
     else eta = TMath::Abs(effB);
   }
-  else if (fConstrainType == ConstrainEffB) {
+  else if (fConstrainType == kConstrainEffB) {
     eta = ( pow( (effB - fEffRef)/epsilon, 1 ) +
 	    pow( 1.0/((effS > 0) ? effS : epsilon), 2 ) );
   }
@@ -855,8 +855,8 @@ void TMVA_MethodCuts::CreateVariablePDFs( void )
     (*fVarHistB_smooth)[ivar]->Smooth(nsmooth);
 
     // create PDFs
-    (*fVarPdfS)[ivar] = new TMVA_PDF( (*fVarHistS_smooth)[ivar], TMVA_PDF::Spline2 );
-    (*fVarPdfB)[ivar] = new TMVA_PDF( (*fVarHistB_smooth)[ivar], TMVA_PDF::Spline2 );
+    (*fVarPdfS)[ivar] = new TMVA_PDF( (*fVarHistS_smooth)[ivar], TMVA_PDF::kSpline2 );
+    (*fVarPdfB)[ivar] = new TMVA_PDF( (*fVarHistB_smooth)[ivar], TMVA_PDF::kSpline2 );
   }		  
 }
 
@@ -923,8 +923,8 @@ void  TMVA_MethodCuts::WriteWeightsToFile( void )
   
   // first the dimensions
   fout << "OptimisationMethod " << "nRandCuts " << "nbins:" << endl;
-  fout << ((fEffMethod == UseEventSelection) ? "Fit-EventSelection" : 
-	   (fEffMethod == UsePDFs) ? "Fit-PDF" : "Monte-Carlo") << "  " ;
+  fout << ((fEffMethod == kUseEventSelection) ? "Fit-EventSelection" : 
+	   (fEffMethod == kUsePDFs) ? "Fit-PDF" : "Monte-Carlo") << "  " ;
   fout << fNRandCuts << "  ";
   fout << fNbins << endl;
 
@@ -1020,7 +1020,7 @@ void  TMVA_MethodCuts::WriteHistosToFile( void )
   fEffBvsSLocal->Write();
 
   // save reference histograms to file
-  if (fEffMethod == UsePDFs) {
+  if (fEffMethod == kUsePDFs) {
     gDirectory->GetListOfKeys()->Print();
     fBaseDir->mkdir(GetName()+GetMethodName())->cd();  
     for (Int_t ivar=0; ivar<fNvar; ivar++) { 

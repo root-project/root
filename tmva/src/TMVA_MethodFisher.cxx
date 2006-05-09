@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodFisher.cpp,v 1.9 2006/05/03 08:31:10 helgevoss Exp $
+// @(#)root/tmva $Id: TMVA_MethodFisher.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -62,8 +62,8 @@ TMVA_MethodFisher::TMVA_MethodFisher( TString jobName, vector<TString>* theVaria
   // option string defines "Method" (Fisher, Mahalanobis)
   // add to instance name 
   fOptions.ToLower();
-  if      (fOptions.Contains( "fi" )) fFisherMethod = Fisher;
-  else if (fOptions.Contains( "ma" )) fFisherMethod = Mahalanobis;
+  if      (fOptions.Contains( "fi" )) fFisherMethod = kFisher;
+  else if (fOptions.Contains( "ma" )) fFisherMethod = kMahalanobis;
   else {
     cout << "--- " << GetName() << ": Error: unrecognized option string: " 
 	 << GetOptions() << " | " << fOptions
@@ -364,10 +364,10 @@ void TMVA_MethodFisher::GetFisherCoeff( void )
   // invert covariance matrix
   TMatrix* theMat = 0;
   switch (fFisherMethod) {
-  case Fisher:
+  case kFisher:
     theMat = fWith;
     break;
-  case Mahalanobis:
+  case kMahalanobis:
     theMat = fCov;
     break;
   default:
@@ -388,8 +388,8 @@ void TMVA_MethodFisher::GetFisherCoeff( void )
     (*fFisherCoeff)[ivar] = 0;
 
     for(jvar=0; jvar<fNvar; jvar++) {
-      Double_t D = (*fMeanMatx)(jvar, 0) - (*fMeanMatx)(jvar, 1);
-      (*fFisherCoeff)[ivar] += invCov(ivar, jvar)*D;
+      Double_t d = (*fMeanMatx)(jvar, 0) - (*fMeanMatx)(jvar, 1);
+      (*fFisherCoeff)[ivar] += invCov(ivar, jvar)*d;
     }    
     
     // rescale

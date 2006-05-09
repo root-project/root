@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_DecisionTreeNode.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_DecisionTreeNode.cxx,v 1.2 2006/05/08 17:56:50 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_DecisionTreeNode.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
+ * $Id: TMVA_DecisionTreeNode.cxx,v 1.2 2006/05/08 17:56:50 brun Exp $    
  **********************************************************************************/
    
 //_______________________________________________________________________
@@ -83,7 +83,7 @@ Bool_t TMVA_DecisionTreeNode::GoesRight(const TMVA_Event * e) const
   Bool_t result;
   
   result =  (e->GetData(this->GetSelector()) > this->GetCutMin() && 
-	     e->GetData(this->GetSelector()) <= this->GetCutMax() ); 
+             e->GetData(this->GetSelector()) <= this->GetCutMax() ); 
   
   if (fCutType == kTRUE) return result; //the cuts are selecting Signal ;
   else return !result;

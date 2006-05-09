@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.3 2006/05/08 15:39:03 brun Exp $    
-// Author: Andreas Hoecker, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.4 2006/05/08 17:56:50 brun Exp $
+// Author: Andreas Hoecker, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -20,9 +20,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -32,9 +32,9 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// Multidimensional Likelihood using the "Probability density           
-// estimator range search" (PDERS) method                               
+//
+// Multidimensional Likelihood using the "Probability density
+// estimator range search" (PDERS) method
 //
 //_______________________________________________________________________
 
@@ -53,9 +53,9 @@
 using std::vector;
 
 ClassImp(TMVA_MethodPDERS)
-   
+
 //_______________________________________________________________________
-TMVA_MethodPDERS::TMVA_MethodPDERS( TString jobName, vector<TString>* theVariables,  
+TMVA_MethodPDERS::TMVA_MethodPDERS( TString jobName, vector<TString>* theVariables,
 				    TTree* theTree, TString theOption, TDirectory* theTargetDir )
   : TMVA_MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
@@ -68,27 +68,27 @@ TMVA_MethodPDERS::TMVA_MethodPDERS( TString jobName, vector<TString>* theVariabl
   // format and syntax of option string: "VolumeRangeMode:options"
   //
   // where:
-  //  VolumeRangeMode - all methods defined in private enum "VolumeRangeMode" 
+  //  VolumeRangeMode - all methods defined in private enum "VolumeRangeMode"
   //  options         - deltaFrac in case of VolumeRangeMode=MinMax/RMS
   //                  - nEventsMin/Max, maxVIterations, scale for VolumeRangeMode=Adaptive
 
   if (list->GetSize() > 0) {
     TString s = ((TObjString*)list->At(0))->GetString();
     s.ToLower();
-    if       (s.Contains("minmax")  ) fVRangeMode = TMVA_MethodPDERS::MinMax;
-    else  if (s.Contains("rms")     ) fVRangeMode = TMVA_MethodPDERS::RMS;
-    else  if (s.Contains("adaptive")) fVRangeMode = TMVA_MethodPDERS::Adaptive;
+    if       (s.Contains("minmax")  ) fVRangeMode = TMVA_MethodPDERS::kMinMax;
+    else  if (s.Contains("rms")     ) fVRangeMode = TMVA_MethodPDERS::kRMS;
+    else  if (s.Contains("adaptive")) fVRangeMode = TMVA_MethodPDERS::kAdaptive;
     else {
       cout  << "--- " << GetName() << ": Fatal error unknown vRangeType type: "
 	    << s << " in first option" << endl;
       throw std::invalid_argument( "Abort" );
     }
   }
-  if (list->GetSize() > 1 && (fVRangeMode == MinMax || fVRangeMode == RMS)) {
+  if (list->GetSize() > 1 && (fVRangeMode == kMinMax || fVRangeMode == kRMS)) {
     TString s = ((TObjString*)list->At(0))->GetString();
     fDeltaFrac = atof( ((TObjString*)list->At(1))->GetString() );
   }
-  else if (fVRangeMode == Adaptive) {
+  else if (fVRangeMode == kAdaptive) {
     if (list->GetSize() > 1) fNEventsMin     = atoi( ((TObjString*)list->At(1))->GetString() );
     if (list->GetSize() > 2) fNEventsMax     = atoi( ((TObjString*)list->At(2))->GetString() );
     if (list->GetSize() > 3) fMaxVIterations = atoi( ((TObjString*)list->At(3))->GetString() );
@@ -96,26 +96,26 @@ TMVA_MethodPDERS::TMVA_MethodPDERS( TString jobName, vector<TString>* theVariabl
   }
 
   if (Verbose()) {
-    cout << "--- " << GetName() 
-	 << " <verbose>: interpreted option string: vRangeMethod: '" 
-	 << (const char*)((fVRangeMode == MinMax) ? "MinMax" : 
-			  (fVRangeMode == RMS   ) ? "RMS" : "Adaptive")
+    cout << "--- " << GetName()
+	 << " <verbose>: interpreted option string: vRangeMethod: '"
+	 << (const char*)((fVRangeMode == kMinMax) ? "MinMax" :
+			  (fVRangeMode == kRMS   ) ? "RMS" : "Adaptive")
 	 << "'" << endl;
-    if (fVRangeMode == MinMax || fVRangeMode == RMS)
+    if (fVRangeMode == kMinMax || fVRangeMode == kRMS)
       cout << "--- " << GetName() << ": deltaFrac: " << fDeltaFrac << endl;
-    else 
-      cout << "--- " << GetName() 
+    else
+      cout << "--- " << GetName()
 	   << " <verbose>: nEventsMin/Max, maxVIterations, initialScale: "
-	   << fNEventsMin << "  " << fNEventsMax 
+	   << fNEventsMin << "  " << fNEventsMax
 	   << "  " << fMaxVIterations << "  " << fInitialScale << endl;
   }
 }
 
 //_______________________________________________________________________
-TMVA_MethodPDERS::TMVA_MethodPDERS( vector<TString> *theVariables, 
-				    TString theWeightFile,  
+TMVA_MethodPDERS::TMVA_MethodPDERS( vector<TString> *theVariables,
+				    TString theWeightFile,
 				    TDirectory* theTargetDir )
-  : TMVA_MethodBase( theVariables, theWeightFile, theTargetDir ) 
+  : TMVA_MethodBase( theVariables, theWeightFile, theTargetDir )
 {
   InitPDERS();
 }
@@ -128,17 +128,17 @@ void TMVA_MethodPDERS::InitPDERS( void )
   fFin         = NULL;
   fBinaryTreeS = fBinaryTreeB = NULL;
 
-  fThisPDERS   = this;
- 
+  fgThisPDERS  = this;
+
   // default options
-  fDeltaFrac      = 3.0;  
-  fVRangeMode     = Adaptive;
+  fDeltaFrac      = 3.0;
+  fVRangeMode     = kAdaptive;
 
   // special options for Adaptive mode
-  fNEventsMin     = 100;     
-  fNEventsMax     = 200;     
-  fMaxVIterations = 50; 
-  fInitialScale   = 0.99;          
+  fNEventsMin     = 100;
+  fNEventsMax     = 200;
+  fMaxVIterations = 50;
+  fInitialScale   = 0.99;
 
   fInitializedVolumeEle = kFALSE;
 }
@@ -155,17 +155,17 @@ TMVA_MethodPDERS::~TMVA_MethodPDERS( void )
 void TMVA_MethodPDERS::Train( void )
 {
   //--------------------------------------------------------------
-  // this is a dummy training: the preparation work to do is the construction 
-  // of the binary tree as a pointer chain. It is easier to directly save the 
-  // trainingTree in the weight file, and to rebuild the binary tree in the 
+  // this is a dummy training: the preparation work to do is the construction
+  // of the binary tree as a pointer chain. It is easier to directly save the
+  // trainingTree in the weight file, and to rebuild the binary tree in the
   // test phase from scratch
 
   // default sanity checks
-  if (!CheckSanity()) { 
+  if (!CheckSanity()) {
     cout << "--- " << GetName() << ": Error: sanity check failed" << endl;
     throw std::invalid_argument( "Abort" );
   }
-  
+
   // write weights to file
   WriteWeightsToFile();
 }
@@ -173,32 +173,32 @@ void TMVA_MethodPDERS::Train( void )
 //_______________________________________________________________________
 Double_t TMVA_MethodPDERS::GetMvaValue( TMVA_Event *e )
 {
-  // init the size of a volume element using a defined fraction of the 
+  // init the size of a volume element using a defined fraction of the
   // volume containing the entire events
   if (fInitializedVolumeEle == kFALSE) {
 
     fInitializedVolumeEle = kTRUE;
     SetVolumeElement();
-    
+
     // create binary trees (global member variables) for signal and background
     Int_t nS = 0, nB = 0;
     fBinaryTreeS = new TMVA_BinarySearchTree();
     fBinaryTreeS->Fill( fTrainingTree, fInputVars, nS, 1 );
     fBinaryTreeB = new TMVA_BinarySearchTree();
     fBinaryTreeB->Fill( fTrainingTree, fInputVars, nB, 0 );
-    
+
     // sanity check
     if (NULL == fBinaryTreeS || NULL == fBinaryTreeB) {
       cout << "--- " << GetName() << ": Error in ::Train: Create(BinaryTree) returned zero "
 	   << "binaryTree pointer(s): " << fBinaryTreeS << "  " << fBinaryTreeB << endl;
       throw std::invalid_argument( "Abort" );
     }
-    
+
     // these are the signal and background scales for the weights
     fScaleS = 1.0/Float_t(nS);
     fScaleB = 1.0/Float_t(nB);
-    if (Verbose()) cout << "--- " << GetName() << " <verbose>: signal and background scales: " 
-			<< fScaleS << " " << fScaleB << endl;    
+    if (Verbose()) cout << "--- " << GetName() << " <verbose>: signal and background scales: "
+			<< fScaleS << " " << fScaleB << endl;
   }
 
   return this->RScalc( e );
@@ -214,21 +214,21 @@ void TMVA_MethodPDERS::SetVolumeElement( void )
     for (Int_t ivar=0; ivar<fNvar; ivar++) {
       switch (fVRangeMode) {
 
-      case RMS:
-      case Adaptive:
+      case kRMS:
+      case kAdaptive:
 	Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
-	TMVA_Tools::ComputeStat( fTrainingTree, (*fInputVars)[ivar], 
+	TMVA_Tools::ComputeStat( fTrainingTree, (*fInputVars)[ivar],
 				 meanS, meanB, rmsS, rmsB, xmin, xmax );
-	(*fDelta)[ivar] = (rmsS + rmsB)*0.5*fDeltaFrac;    
-	if (Verbose()) 
+	(*fDelta)[ivar] = (rmsS + rmsB)*0.5*fDeltaFrac;
+	if (Verbose())
 	  cout << "--- " << GetName() << " <verbose>: delta of var[" << (*fInputVars)[ivar]
 	       << "\t]: " << (rmsS + rmsB)*0.5
 	       << "\t  |  comp with d|norm|: " << (GetXmaxNorm( ivar ) - GetXminNorm( ivar ))
 	       << endl;
 	break;
 
-      case MinMax:
-	(*fDelta)[ivar] = (GetXmaxNorm( ivar ) - GetXminNorm( ivar ))*fDeltaFrac;    
+      case kMinMax:
+	(*fDelta)[ivar] = (GetXmaxNorm( ivar ) - GetXminNorm( ivar ))*fDeltaFrac;
 	break;
 
       default:
@@ -236,45 +236,45 @@ void TMVA_MethodPDERS::SetVolumeElement( void )
 	     << ": Error in ::SetVolumeElement: unknown range-set mode: "
 	     << fVRangeMode << endl;
 	throw std::invalid_argument( "Abort" );
-      }	  
+      }
 
       (*fShift)[ivar] = 0.5; // volume is centered around test value
     }
   }
   else {
     cout << "--- " << GetName() << ": Error: fNvar <= 0: " << fNvar << endl;
-    throw std::invalid_argument("");    
+    throw std::invalid_argument("");
   }
 }
 
-TMVA_MethodPDERS* TMVA_MethodPDERS::fThisPDERS = NULL;
+TMVA_MethodPDERS* TMVA_MethodPDERS::fgThisPDERS = NULL;
 
 //_______________________________________________________________________
-Double_t TMVA_MethodPDERS::IGetVolumeContentForRoot( Double_t scale ) 
-{  
+Double_t TMVA_MethodPDERS::IGetVolumeContentForRoot( Double_t scale )
+{
   return TMVA_MethodPDERS::ThisPDERS()->GetVolumeContentForRoot( scale );
 }
 
 //_______________________________________________________________________
-Double_t TMVA_MethodPDERS::GetVolumeContentForRoot( Double_t scale ) 
+Double_t TMVA_MethodPDERS::GetVolumeContentForRoot( Double_t scale )
 {
-  // search for events in rescaled volume  
+  // search for events in rescaled volume
   // retrieve the class object
 
-  TMVA_Volume V( *fHelpVolume );
-  V.ScaleInterval( scale );
-  Double_t cS = GetBinaryTreeSig()->SearchVolume( &V );
-  Double_t cB = GetBinaryTreeBkg()->SearchVolume( &V );
-  V.Delete();
+  TMVA_Volume v( *fHelpVolume );
+  v.ScaleInterval( scale );
+  Double_t cS = GetBinaryTreeSig()->SearchVolume( &v );
+  Double_t cB = GetBinaryTreeBkg()->SearchVolume( &v );
+  v.Delete();
 
   return cS + cB;
 }
 
 //_______________________________________________________________________
 Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
-{ 
+{
   vector<Double_t> *lb = new vector<Double_t>( fNvar );
-  for (Int_t ivar=0; ivar<fNvar; ivar++) 
+  for (Int_t ivar=0; ivar<fNvar; ivar++)
     (*lb)[ivar] = e->GetData(ivar);
 
   vector<Double_t> *ub = new vector<Double_t>( *lb );
@@ -287,11 +287,11 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
 
   Float_t countS = 0;
   Float_t countB = 0;
-  
+
   // -------------------------------------------------------------------------
   //
   // ==== test of volume search =====
-  // 
+  //
   // #define TMVA_MethodPDERS__countByHand__Debug__
 #ifdef  TMVA_MethodPDERS__countByHand__Debug__
   // starting values
@@ -306,52 +306,52 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
       Float_t x = TMVA_Tools::GetValue( fTrainingTree, ievt_, (*fInputVars)[ivar] );
       inV = (x > (*volume->Lower)[ivar] && x <= (*volume->Upper)[ivar]);
       if (!inV) break;
-    }    
+    }
     if (inV) {
-      if ((Int_t)TMVA_Tools::GetValue( fTrainingTree, ievt_, "type" ) == 1) 
+      if ((Int_t)TMVA_Tools::GetValue( fTrainingTree, ievt_, "type" ) == 1)
 	iS++;
       else
 	iB++;
     }
   }
-  cout << "--- " << GetName() << ": debug: my test: S/B: " 
+  cout << "--- " << GetName() << ": debug: my test: S/B: "
        << iS << "  " << iB << endl;
-  cout << "--- " << GetName() << ": debug: binTree: S/B: " 
+  cout << "--- " << GetName() << ": debug: binTree: S/B: "
        << countS << "  " << countB << endl << endl;
 #endif
   // -------------------------------------------------------------------------
-  
-  // adaptive volume 
 
-  if (fVRangeMode == Adaptive) {
+  // adaptive volume
+
+  if (fVRangeMode == kAdaptive) {
 
     // -----------------------------------------------------------------------
-    
+
     if (TMVA_MethodPDERS_UseFindRoot) {
 
-      fHelpVolume = new TMVA_Volume( *volume );	
+      fHelpVolume = new TMVA_Volume( *volume );
 
       TMVA_RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 50, 10 );
-      Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );  
+      Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
-      TMVA_Volume V( *volume );
-      V.ScaleInterval( scale );
-      
+      TMVA_Volume v( *volume );
+      v.ScaleInterval( scale );
+
       // improve PDE by estimate of the kernel within volume
       if (TMVA_MethodPDERS_UseKernelEstimate) {
 	std::vector<TMVA_Event*> eventsS;
 	std::vector<TMVA_Event*> eventsB;
-	fBinaryTreeS->SearchVolume( &V, &eventsS );      
-	fBinaryTreeB->SearchVolume( &V, &eventsB );
-	countS = KernelEstimate( *e, eventsS, V );
-	countB = KernelEstimate( *e, eventsB, V );
+	fBinaryTreeS->SearchVolume( &v, &eventsS );
+	fBinaryTreeB->SearchVolume( &v, &eventsB );
+	countS = KernelEstimate( *e, eventsS, v );
+	countB = KernelEstimate( *e, eventsB, v );
       }
       else {
-	countS = fBinaryTreeS->SearchVolume( &V );      
-	countB = fBinaryTreeB->SearchVolume( &V );
+	countS = fBinaryTreeS->SearchVolume( &v );
+	countB = fBinaryTreeB->SearchVolume( &v );
       }
 
-      V.Delete();
+      v.Delete();
 
       fHelpVolume->Delete();
       delete fHelpVolume; fHelpVolume = NULL;
@@ -364,16 +364,16 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
       countS = fBinaryTreeS->SearchVolume( volume );
       countB = fBinaryTreeB->SearchVolume( volume );
 
-      Float_t nEventsO = countS + countB;     
+      Float_t nEventsO = countS + countB;
       Int_t i_=0;
       while (nEventsO < fNEventsMin) { // this isn't a sain start... try again
 	volume->ScaleInterval( 1.15 );
 	countS = fBinaryTreeS->SearchVolume( volume );
 	countB = fBinaryTreeB->SearchVolume( volume );
-	nEventsO = countS + countB;     
+	nEventsO = countS + countB;
 	i_++;
       }
-      if (i_ > 50) cout << "--- " << GetName() << ": Warning in event: " << e 
+      if (i_ > 50) cout << "--- " << GetName() << ": Warning in event: " << e
 			<< ": adaptive volume pre-adjustment reached "
 			<< ">50 iterations in while loop (" << i_ << ")" << endl;
 
@@ -387,49 +387,49 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
       Float_t cB = countB;
 
       for (Int_t ic=1; ic<fMaxVIterations; ic++) {
-	if (nEventsN < fNEventsMin || nEventsN > fNEventsMax) { 
+	if (nEventsN < fNEventsMin || nEventsN > fNEventsMax) {
 
 	  // search for events in rescaled volume
-	  TMVA_Volume* V = new TMVA_Volume( *volume );	
+	  TMVA_Volume* V = new TMVA_Volume( *volume );
 	  V->ScaleInterval( scale );
 	  cS       = fBinaryTreeS->SearchVolume( V );
 	  cB       = fBinaryTreeB->SearchVolume( V );
 	  nEventsN = cS + cB;
 
 	  // determine next iteration (linear approximation)
-	  if (nEventsN > 1 && nEventsN - nEventsO != 0) 
+	  if (nEventsN > 1 && nEventsN - nEventsO != 0)
 	    if (scaleN - scaleO != 0)
 	      scale += (scaleN - scaleO)/(nEventsN - nEventsO)*(nEventsE - nEventsN);
 	    else
 	      scale += (-0.01); // should not actually occur...
-	  else 
+	  else
 	    scale += 0.5; // use much larger volume
 
 	  // save old scale
-	  scaleN   = scale;	
+	  scaleN   = scale;
 
 	  // take if better (don't accept it if too small number of events)
-	  if (TMath::Abs(cS + cB - nEventsE) < TMath::Abs(countS + countB - nEventsE) && 
+	  if (TMath::Abs(cS + cB - nEventsE) < TMath::Abs(countS + countB - nEventsE) &&
 	      (cS + cB >= fNEventsMin || countS + countB < cS + cB)) {
-	    countS = cS; countB = cB; 
+	    countS = cS; countB = cB;
 	  }
 
 	  V->Delete();
 	  delete V;
 	}
-	else break;      
-      }   
+	else break;
+      }
 
       // last sanity check
-      nEventsN = countS + countB;     
+      nEventsN = countS + countB;
       // include "1" to cover float precision
-      if (nEventsN < fNEventsMin-1 || nEventsN > fNEventsMax+1) 
-	cout << "--- " << GetName() << ": Warning in event " << e 
+      if (nEventsN < fNEventsMin-1 || nEventsN > fNEventsMax+1)
+	cout << "--- " << GetName() << ": Warning in event " << e
 	     << ": adaptive volume adjustment reached "
-	     << "max. #iterations (" << fMaxVIterations << ")" 
+	     << "max. #iterations (" << fMaxVIterations << ")"
 	     << "[ nEvents: " << nEventsN << "  " << fNEventsMin << "  " << fNEventsMax << "]"
 	     << endl;
-    } 
+    }
 
   } // end of adaptive method
   // -----------------------------------------------------------------------
@@ -449,18 +449,18 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
 Double_t TMVA_MethodPDERS::KernelEstimate( TMVA_Event& event,
 					   vector<TMVA_Event*>& events, TMVA_Volume& V )
 {
-  // define gaussian sigmas  
+  // define gaussian sigmas
   Double_t fac = 0.2;
   Double_t *sigma = new Double_t[fNvar];
-  for (Int_t ivar=0; ivar<fNvar; ivar++) 
-    sigma[ivar] = ((*V.Upper)[ivar] - (*V.Lower)[ivar])*fac;
+  for (Int_t ivar=0; ivar<fNvar; ivar++)
+    sigma[ivar] = ((*V.fUpper)[ivar] - (*V.fLower)[ivar])*fac;
 
   Double_t pdfSum = 0;
   for (vector<TMVA_Event*>::iterator iev = events.begin(); iev != events.end(); iev++) {
 
     Double_t pdf = 1;
-    for (Int_t ivar=0; ivar<fNvar; ivar++)     
-      pdf *= TMath::Gaus( event.GetData(ivar), (*iev)->GetData(ivar), sigma[ivar], kTRUE );	
+    for (Int_t ivar=0; ivar<fNvar; ivar++)
+      pdf *= TMath::Gaus( event.GetData(ivar), (*iev)->GetData(ivar), sigma[ivar], kTRUE );
 
     pdfSum += pdf;
   }
@@ -470,7 +470,7 @@ Double_t TMVA_MethodPDERS::KernelEstimate( TMVA_Event& event,
 }
 
 //_______________________________________________________________________
-Float_t TMVA_MethodPDERS::GetError( Float_t countS, Float_t countB, 
+Float_t TMVA_MethodPDERS::GetError( Float_t countS, Float_t countB,
 				    Float_t sumW2S, Float_t sumW2B ) const
 {
   Float_t c = fScaleB/fScaleS;
@@ -488,27 +488,27 @@ Float_t TMVA_MethodPDERS::GetError( Float_t countS, Float_t countB,
 
 //_______________________________________________________________________
 void TMVA_MethodPDERS::WriteWeightsToFile( void )
-{  
+{
   // write coefficients to file
   TString fname = GetWeightFileName() + ".root";
   cout << "--- " << GetName() << ": creating weight file: " << fname << endl;
   TFile *fout = new TFile( fname, "RECREATE" );
 
   // build TList of input variables, and TVectors for min/max
-  // NOTE: the latter values are mandatory for the normalisation 
+  // NOTE: the latter values are mandatory for the normalisation
   // in the reader application !!!
-  TList    Lvar;
-  TVectorD Vmin( fNvar ), Vmax( fNvar );
+  TList    lvar;
+  TVectorD vmin( fNvar ), vmax( fNvar );
   for (Int_t ivar=0; ivar<fNvar; ivar++) {
-    Lvar.Add( new TNamed( (*fInputVars)[ivar], TString() ) );
-    Vmin[ivar] = this->GetXminNorm( ivar );
-    Vmax[ivar] = this->GetXmaxNorm( ivar );
+    lvar.Add( new TNamed( (*fInputVars)[ivar], TString() ) );
+    vmin[ivar] = this->GetXminNorm( ivar );
+    vmax[ivar] = this->GetXmaxNorm( ivar );
   }
   // write to file
-  Lvar.Write();
-  Vmin.Write( "Vmin" );
-  Vmax.Write( "Vmax" );
-  Lvar.Delete();
+  lvar.Write();
+  vmin.Write( "vmin" );
+  vmax.Write( "vmax" );
+  lvar.Delete();
 
   // save other configuration options
   // (best would be to use a TMap here, but found implementation really complicated)
@@ -531,7 +531,7 @@ void TMVA_MethodPDERS::WriteWeightsToFile( void )
 
     // note: allowed are only variables with minimum and maximum cut
     //       i.e., no distinct cut regions are supported
-    if ((TString)branch->GetName() == "type") 
+    if ((TString)branch->GetName() == "type")
       fTrainingTree->SetBranchAddress( branch->GetName(), &theType );
     else
       fTrainingTree->SetBranchAddress( branch->GetName(), &branchVar[++jvar] );
@@ -544,7 +544,7 @@ void TMVA_MethodPDERS::WriteWeightsToFile( void )
   fout->Close();
   delete fout;
 }
-  
+
 //_______________________________________________________________________
 void TMVA_MethodPDERS::ReadWeightsFromFile( void )
 {
@@ -556,10 +556,10 @@ void TMVA_MethodPDERS::ReadWeightsFromFile( void )
   fFin = new TFile( fname );
 
   // build TList of input variables, and TVectors for min/max
-  // NOTE: the latter values are mandatory for the normalisation 
+  // NOTE: the latter values are mandatory for the normalisation
   // in the reader application !!!
-  TList Lvar;
-  for (Int_t ivar=0; ivar<fNvar; ivar++) {    
+  TList lvar;
+  for (Int_t ivar=0; ivar<fNvar; ivar++) {
     // read variable names
     TNamed t;
     t.Read( (*fInputVars)[ivar] );
@@ -568,22 +568,22 @@ void TMVA_MethodPDERS::ReadWeightsFromFile( void )
       cout << "--- " << GetName() << ": Error while reading weight file; "
 	   << "unknown variable: " << t.GetName() << " at position: " << ivar << ". "
 	   << "Expected variable: " << (*fInputVars)[ivar] << endl;
-      throw std::invalid_argument( "Abort" );    
+      throw std::invalid_argument( "Abort" );
     }
   }
 
   // read vectors
-  TVectorD Vmin( fNvar ), Vmax( fNvar );
-  // unfortunatly the more elegant Vmin/max.Read( "Vmin/max" ) crash in ROOT V4.04.02g
-  TVectorD *tmp = (TVectorD*)fFin->Get( "Vmin" );
-  Vmin = *tmp;
-  tmp  = (TVectorD*)fFin->Get( "Vmax" );
-  Vmax = *tmp;
+  TVectorD vmin( fNvar ), vmax( fNvar );
+  // unfortunatly the more elegant vmin/max.Read( "vmin/max" ) crash in ROOT V4.04.02g
+  TVectorD *tmp = (TVectorD*)fFin->Get( "vmin" );
+  vmin = *tmp;
+  tmp  = (TVectorD*)fFin->Get( "vmax" );
+  vmax = *tmp;
 
   // initialize min/max
-  for (Int_t ivar=0; ivar<fNvar; ivar++) {    
-    this->SetXminNorm( ivar, Vmin[ivar] );
-    this->SetXmaxNorm( ivar, Vmax[ivar] );
+  for (Int_t ivar=0; ivar<fNvar; ivar++) {
+    this->SetXminNorm( ivar, vmin[ivar] );
+    this->SetXmaxNorm( ivar, vmax[ivar] );
   }
 
   // read other configuration options
@@ -595,20 +595,20 @@ void TMVA_MethodPDERS::ReadWeightsFromFile( void )
   fMaxVIterations = (Int_t)(*pdersOptions)(4);
   fInitialScale   = (*pdersOptions)(5);
 
-  // read the trainingTree 
+  // read the trainingTree
   fTrainingTree = (TTree*)fFin->Get( "trainingTree" );
-    
+
   if (NULL == fTrainingTree) {
-    cout << "--- " << GetName() << ": Error while reading 'trainingTree': zero pointer " 
+    cout << "--- " << GetName() << ": Error while reading 'trainingTree': zero pointer "
 	 << endl;
-    throw std::invalid_argument( "Abort" );    
-  }        
+    throw std::invalid_argument( "Abort" );
+  }
 }
 
 //_______________________________________________________________________
 void  TMVA_MethodPDERS::WriteHistosToFile( void )
 {
-  cout << "--- " << GetName() << ": write " << GetName() 
+  cout << "--- " << GetName() << ": write " << GetName()
        <<" special histos to file: " << fBaseDir->GetPath() << endl;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticRange.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticRange.cxx,v 1.2 2006/05/08 20:56:17 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -23,7 +23,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_GeneticRange.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
+ * $Id: TMVA_GeneticRange.cxx,v 1.2 2006/05/08 20:56:17 brun Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -40,40 +40,40 @@ ClassImp(TMVA_GeneticRange)
 //_______________________________________________________________________
 TMVA_GeneticRange::TMVA_GeneticRange( TRandom *rnd, Double_t f, Double_t t )
 {
-  from = f;
-  to = t;
-  totalLength = t-f;
+  fFrom = f;
+  fTo = t;
+  fTotalLength = t-f;
 
-  randomGenerator = rnd;
+  fRandomGenerator = rnd;
 }
 
 //_______________________________________________________________________
-Double_t TMVA_GeneticRange::random( Bool_t near, Double_t value, Double_t spread, Bool_t mirror )
+Double_t TMVA_GeneticRange::Random( Bool_t near, Double_t value, Double_t spread, Bool_t mirror )
 {
   if( near ){
     Double_t ret;
-    ret = randomGenerator->Gaus( value, totalLength*spread );
-    if( mirror ) return reMapMirror( ret );
-    else return reMap( ret );
+    ret = fRandomGenerator->Gaus( value, fTotalLength*spread );
+    if( mirror ) return ReMapMirror( ret );
+    else return ReMap( ret );
   }
-  return randomGenerator->Uniform(from, to);
+  return fRandomGenerator->Uniform(fFrom, fTo);
 }
 
 //_______________________________________________________________________
-Double_t TMVA_GeneticRange::reMap( Double_t val )
+Double_t TMVA_GeneticRange::ReMap( Double_t val )
 {
-  if( from >= to ) return val;
-  if( val <= from ) return reMap( (val-from) + to );
-  if( val > to ) return reMap( (val-to) + from );
+  if( fFrom >= fTo ) return val;
+  if( val <= fFrom ) return ReMap( (val-fFrom) + fTo );
+  if( val > fTo )    return ReMap( (val-fTo) + fFrom );
   return val;
 }
 
 //_______________________________________________________________________
-Double_t TMVA_GeneticRange::reMapMirror( Double_t val )
+Double_t TMVA_GeneticRange::ReMapMirror( Double_t val )
 {
-  if( from >= to ) return val;
-  if( val <= from ) return reMap( from - (val-from) );
-  if( val > to ) return reMap( to - (val-to)  );
+  if( fFrom >= fTo ) return val;
+  if( val <= fFrom ) return ReMap( fFrom - (val-fFrom) );
+  if( val > fTo )    return ReMap( fTo - (val-fTo)  );
   return val;
 }
 

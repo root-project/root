@@ -13,9 +13,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -23,7 +23,7 @@
  * (http://tmva.sourceforge.net/license.txt)                                      *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_Tools.cxx,v 1.2 2006/05/08 15:39:03 brun Exp $      
+ * $Id: TMVA_Tools.cxx,v 1.3 2006/05/08 17:56:50 brun Exp $
  **********************************************************************************/
 #include <algorithm>
 
@@ -41,19 +41,19 @@
 #define TMVA_Tools_NAME_ "TMVA_Tools"
 
 using namespace TMVA_Tools;
-   
-Double_t TMVA_Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax ) 
+
+Double_t TMVA_Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 {
   // output range: [-1, 1]
   return 2*(x - xmin)/(xmax - xmin) - 1.0;
 }
 
 void TMVA_Tools::ComputeStat( TTree* theTree, TString theVarName,
-			     Double_t& meanS, Double_t& meanB, 
-			     Double_t& rmsS,  Double_t& rmsB, 
+			     Double_t& meanS, Double_t& meanB,
+			     Double_t& rmsS,  Double_t& rmsB,
 			     Double_t& xmin,  Double_t& xmax,
 			     Bool_t    norm )
-{  
+{
   // sanity check
   if (0 == theTree) {
     cout << "---" << TMVA_Tools_NAME_ << ": Error in TMVA_Tools::ComputeStat:"
@@ -63,7 +63,7 @@ void TMVA_Tools::ComputeStat( TTree* theTree, TString theVarName,
 
   // does variable exist in tree?
   if (0 == theTree->FindBranch( theVarName )) {
-    cout << "---" << TMVA_Tools_NAME_ << ": Error in TMVA_Tools::ComputeStat: variable: " 
+    cout << "---" << TMVA_Tools_NAME_ << ": Error in TMVA_Tools::ComputeStat: variable: "
 	 << theVarName << " is not member of tree ==> exit(1)" << endl;
     exit(1);
   }
@@ -111,15 +111,15 @@ void TMVA_Tools::ComputeStat( TTree* theTree, TString theVarName,
 }
 
 void TMVA_Tools::ComputeStat( const std::vector<TMVA_Event*> eventCollection, Int_t ivar,
-			     Double_t& meanS, Double_t& meanB, 
-			     Double_t& rmsS,  Double_t& rmsB, 
+			     Double_t& meanS, Double_t& meanB,
+			     Double_t& rmsS,  Double_t& rmsB,
 			     Double_t& xmin,  Double_t& xmax,
 			     Bool_t    norm )
-{  
-  
+{
+
   // does variable exist?
   if (ivar > eventCollection[0]->GetEventSize()){
-    cout << "---" << TMVA_Tools_NAME_ << ": Error in TMVA_Tools::ComputeStat: variable: " 
+    cout << "---" << TMVA_Tools_NAME_ << ": Error in TMVA_Tools::ComputeStat: variable: "
 	 << ivar << " is too big ==> exit(1)" << endl;
     exit(1);
   }
@@ -165,7 +165,7 @@ void TMVA_Tools::ComputeStat( const std::vector<TMVA_Event*> eventCollection, In
   delete [] varVecB;
 }
 
-void TMVA_Tools::GetCovarianceMatrix( TTree* theTree, TMatrixDBase *theMatrix, 
+void TMVA_Tools::GetCovarianceMatrix( TTree* theTree, TMatrixDBase *theMatrix,
 				     vector<TString>* theVars, Int_t theType, Bool_t norm )
 {
   Long64_t      entries = theTree->GetEntries();
@@ -199,7 +199,7 @@ void TMVA_Tools::GetCovarianceMatrix( TTree* theTree, TMatrixDBase *theMatrix,
 	if (norm) xi = __N__( xi, xmin(ivar), xmax(ivar) );
 	vec(ivar) += xi;
 	mat2(ivar, ivar) += (xi*xi);
-	
+
 	for (jvar=ivar+1; jvar<nvar; jvar++) {
 	  Double_t xj = TMVA_Tools::GetValue( theTree, ievt, (*theVars)[jvar] );
 	  if (norm) xj = __N__( xj, xmin(jvar), xmax(jvar) );
@@ -212,12 +212,12 @@ void TMVA_Tools::GetCovarianceMatrix( TTree* theTree, TMatrixDBase *theMatrix,
 
   // variance-covariance
   Double_t n = (Double_t)ic;
-  for (ivar=0; ivar<nvar; ivar++) 
-    for (jvar=0; jvar<nvar; jvar++) 
-      (*theMatrix)(ivar, jvar) = mat2(ivar, jvar)/n - vec(ivar)*vec(jvar)/pow(n,2);      
+  for (ivar=0; ivar<nvar; ivar++)
+    for (jvar=0; jvar<nvar; jvar++)
+      (*theMatrix)(ivar, jvar) = mat2(ivar, jvar)/n - vec(ivar)*vec(jvar)/pow(n,2);
 }
 
-void TMVA_Tools::GetCorrelationMatrix( TTree* theTree, TMatrixDBase *theMatrix, 
+void TMVA_Tools::GetCorrelationMatrix( TTree* theTree, TMatrixDBase *theMatrix,
 				      vector<TString>* theVars, Int_t theType )
 {
   TMVA_Tools::GetCovarianceMatrix( theTree, theMatrix, theVars, theType, kTRUE );
@@ -236,21 +236,21 @@ void TMVA_Tools::GetCorrelationMatrix( TTree* theTree, TMatrixDBase *theMatrix,
 	  (*theMatrix)(ivar, jvar) = 0;
 	}
       }
-    }        
+    }
   }
 
   for (Int_t ivar=0; ivar<nvar; ivar++) (*theMatrix)(ivar, ivar) = 1.0;
 }
 
 // square-root of symmetric matrix
-// of course the resulting sqrtMat is also symmetric, but it's easier to 
+// of course the resulting sqrtMat is also symmetric, but it's easier to
 // treat it as a general matrix
 void TMVA_Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD* sqrtMat )
 {
   Int_t n = symMat->GetNrows();
 
   // sanity check
-  if (NULL != sqrtMat) 
+  if (NULL != sqrtMat)
     if (sqrtMat->GetNrows() != n || sqrtMat->GetNcols() != n) {
       cout << "--- " << TMVA_Tools_NAME_ << ": mismatch in matrices ==> abort: "
 	   << n << " " << sqrtMat->GetNrows() << " " << sqrtMat->GetNcols() << endl;
@@ -260,49 +260,49 @@ void TMVA_Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD* sqrtMat )
   TMatrixDSymEigen* eigen = new TMatrixDSymEigen( *symMat );
 
   // D = ST C S
-  TMatrixD* Si = new TMatrixD( eigen->GetEigenVectors() );
-  TMatrixD* S  = new TMatrixD( *Si ); // copy
-  Si->Transpose( *Si ); // invert (= transpose)
-  
+  TMatrixD* si = new TMatrixD( eigen->GetEigenVectors() );
+  TMatrixD* s  = new TMatrixD( *si ); // copy
+  si->Transpose( *si ); // invert (= transpose)
+
   // diagonal matrices
-  TMatrixD* D = new TMatrixD( n, n);
-  D->Mult( (*Si), (*symMat) ); (*D) *= (*S);
+  TMatrixD* d = new TMatrixD( n, n);
+  d->Mult( (*si), (*symMat) ); (*d) *= (*s);
 
   // sanity check: matrix must be diagonal and positive definit
   Int_t i, j;
   Double_t epsilon = 1.0e-13;
   for (i=0; i<n; i++) {
     for (j=0; j<n; j++) {
-      if ((i != j && TMath::Abs((*D)(i,j)) > epsilon) ||
-	  (i == j && (*D)(i,i) < 0)) {
-	cout << "--- " << TMVA_Tools_NAME_ 
+      if ((i != j && TMath::Abs((*d)(i,j)) > epsilon) ||
+	  (i == j && (*d)(i,i) < 0)) {
+	cout << "--- " << TMVA_Tools_NAME_
 	     << ": Error in matrix diagonalization; printing S and B ==> abort" << endl;
-	D->Print();
+	d->Print();
 	exit(1);
       }
     }
   }
 
   // make exactly diagonal
-  for (i=0; i<n; i++) for (j=0; j<n; j++) if (j != i) (*D)(i,j) = 0;
+  for (i=0; i<n; i++) for (j=0; j<n; j++) if (j != i) (*d)(i,j) = 0;
 
   // compute the square-root C' of covariance matrix: C = C'*C'
-  for (i=0; i<n; i++) (*D)(i,i) = sqrt((*D)(i,i)); 
+  for (i=0; i<n; i++) (*d)(i,i) = sqrt((*d)(i,i));
   if (NULL == sqrtMat) sqrtMat = new TMatrixD( n, n );
-  sqrtMat->Mult( (*S), (*D) );
-  (*sqrtMat) *= (*Si);
+  sqrtMat->Mult( (*s), (*d) );
+  (*sqrtMat) *= (*si);
 
   // invert square-root matrices
   sqrtMat->Invert();
 
   delete eigen;
-  delete S;
-  delete Si;
-  delete D;
+  delete s;
+  delete si;
+  delete d;
 }
 
 TH1* TMVA_Tools::projNormTH1F( TTree* theTree, TString theVarName,
-			      TString name, Int_t nbins, 
+			      TString name, Int_t nbins,
 			      Double_t xmin, Double_t xmax, TString cut )
 {
   TH1* hist = new TH1F( name, name, nbins, xmin, xmax );
@@ -317,25 +317,25 @@ Double_t TMVA_Tools::NormHist( TH1* theHist, Double_t norm )
   if (NULL == theHist) {
     cout << "--- " << TMVA_Tools_NAME_ << "::NormHist: null TH1 pointer ==> abort" << endl;
     exit(1);
-  }  
+  }
   TAxis* tx  = theHist->GetXaxis();
-  Double_t w = ((theHist->GetEntries() > 0 ? theHist->GetEntries() : 1) 
+  Double_t w = ((theHist->GetEntries() > 0 ? theHist->GetEntries() : 1)
 		* (tx->GetXmax() - tx->GetXmin())/tx->GetNbins());
-  theHist->Scale( (w > 0) ? norm/w : norm );  
+  theHist->Scale( (w > 0) ? norm/w : norm );
   return w;
 }
 
-TList* TMVA_Tools::ParseFormatLine( TString formatString ) 
+TList* TMVA_Tools::ParseFormatLine( TString formatString )
 {
   // Parse the string and cut into labels separated by ":"
 
   TList*   labelList = new TList();
   TString* label     = new TString();
   Int_t    nLabels   = 0;
-  
+
   const Int_t n = (Int_t)formatString.Length();
-  TObjString** label_obj = new TObjString*[n];  // array of labels 
-  
+  TObjString** label_obj = new TObjString*[n];  // array of labels
+
   for (Int_t i=0; i<n; i++) {
     label->Append(formatString(i));
     if (formatString(i)==':') {
@@ -344,7 +344,7 @@ TList* TMVA_Tools::ParseFormatLine( TString formatString )
       labelList->Add(label_obj[nLabels]);
       label->Resize(0);
       nLabels++;
-    } 
+    }
     if (i == n-1) {
       label_obj[nLabels] = new TObjString(label->Data());
       labelList->Add(label_obj[nLabels]);
@@ -355,7 +355,7 @@ TList* TMVA_Tools::ParseFormatLine( TString formatString )
   delete label;
   delete [] label_obj;
   return labelList;
-}  
+}
 
 Double_t TMVA_Tools::GetValue( TTree *theTree, Int_t entry, TString varname )
 {
@@ -364,7 +364,7 @@ Double_t TMVA_Tools::GetValue( TTree *theTree, Int_t entry, TString varname )
   static Double_t d = 0;
   static Int_t    i = 0;
 
-  // sanity check 
+  // sanity check
   if (0 == theTree) {
     cout << "---" << TMVA_Tools_NAME_ << ": fatal error: zero tree pointer ==> exit(1) " << endl;
     exit(1);
@@ -375,43 +375,43 @@ Double_t TMVA_Tools::GetValue( TTree *theTree, Int_t entry, TString varname )
 
   TBranch* branch = theTree->GetBranch( varname );
   if (0 != branch) {
-    
+
     TLeaf *leaf = branch->GetLeaf(branch->GetName());
-    
-    if (((TString)leaf->GetTypeName()).Contains("Int_t")) {     	
+
+    if (((TString)leaf->GetTypeName()).Contains("Int_t")) {     
       branch->SetAddress(&i);
       branch->GetEntry(entry);
       retval = (Double_t)i;
-    } 
-    else if (((TString)leaf->GetTypeName()).Contains("Float_t")) {          
+    }
+    else if (((TString)leaf->GetTypeName()).Contains("Float_t")) {
       branch->SetAddress(&f);
       branch->GetEntry(entry);
       retval = (Double_t)f;
-    } 
-    else if (((TString)leaf->GetTypeName()).Contains("Double_t")) {     
+    }
+    else if (((TString)leaf->GetTypeName()).Contains("Double_t")) {
       branch->SetAddress(&d);
       branch->GetEntry(entry);
       retval = (Double_t)d;
-    }    
-    
+    }
+
   } // end of found right branch
   else {
-    cout << "---" << TMVA_Tools_NAME_ << ": branch " << varname 
-	 << " does not exist in tree" << endl;    
+    cout << "---" << TMVA_Tools_NAME_ << ": branch " << varname
+	 << " does not exist in tree" << endl;
     cout << "---" << TMVA_Tools_NAME_ << ": candidates are:" << endl;
     TIter next_branch1( theTree->GetListOfBranches() );
-    while (TBranch *branch = (TBranch*)next_branch1()) 
+    while (TBranch *branch = (TBranch*)next_branch1())
       cout << "---\t" << branch->GetName() << endl;
   }
 
   return retval;
-} 
+}
 
 // check quality of splining by comparing splines and histograms in each bin
-Bool_t TMVA_Tools::CheckSplines( TH1* theHist, TSpline* theSpline ) 
+Bool_t TMVA_Tools::CheckSplines( TH1* theHist, TSpline* theSpline )
 {
   const Double_t sanityCrit = 0.01; // relative deviation
-  
+
   Bool_t retval = kTRUE;
   for (Int_t ibin=1; ibin<=theHist->GetNbinsX(); ibin++) {
     Double_t x  = theHist->GetBinCenter( ibin );
@@ -422,13 +422,13 @@ Bool_t TMVA_Tools::CheckSplines( TH1* theHist, TSpline* theSpline )
       Double_t dev = 0.5*(ys - yh)/(ys + yh);
       if (TMath::Abs(dev) > sanityCrit) {
  	cout << "---" << TMVA_Tools_NAME_ << ": Warning: Spline failed sanity criterion; "
-	     << " relative deviation from histogram: " << dev 
+	     << " relative deviation from histogram: " << dev
 	     << " in (bin, value): (" << ibin << ", " << x << ")" << endl;
 	retval = kFALSE;
       }
     }
   }
-  
+
   return retval;
 }
 
@@ -484,9 +484,9 @@ void TMVA_Tools::UsefulSortAscending(vector< vector<Double_t> > &v)
   Double_t temp;
   if (nArrays > 0) {
     UInt_t sizeofarray=v[0].size();
-    for (UInt_t i=0; i<sizeofarray; i++) { 
-      for (UInt_t j=sizeofarray-1; j>i; j--) { 
-	if (v[0][j-1] > v[0][j]) { 
+    for (UInt_t i=0; i<sizeofarray; i++) {
+      for (UInt_t j=sizeofarray-1; j>i; j--) {
+	if (v[0][j-1] > v[0][j]) {
  	  for (UInt_t k=0; k< nArrays; k++) {
  	    temp = v[k][j-1];v[k][j-1] = v[k][j]; v[k][j] = temp;
  	  }
@@ -499,7 +499,7 @@ void TMVA_Tools::UsefulSortAscending(vector< vector<Double_t> > &v)
 void TMVA_Tools::UsefulSortDescending(vector< vector<Double_t> > &v, vector<TString>* vs)
 {
   UInt_t nArrays=v.size();
-  Double_t temp;  
+  Double_t temp;
   if (nArrays > 0) {
     UInt_t sizeofarray=v[0].size();
     for (UInt_t i=0; i<sizeofarray; i++) {
@@ -508,7 +508,7 @@ void TMVA_Tools::UsefulSortDescending(vector< vector<Double_t> > &v, vector<TStr
  	  for (UInt_t k=0; k< nArrays; k++) {
  	    temp = v[k][j-1]; v[k][j-1] = v[k][j]; v[k][j] = temp;
 	  }
-	  if (NULL != vs) { 
+	  if (NULL != vs) {
 	    TString temps = (*vs)[j-1]; (*vs)[j-1] = (*vs)[j]; (*vs)[j] = temps;
 	  }
 	}

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: TMVA_DecisionTree.cpp,v 1.9 2006/05/03 19:45:38 helgevoss Exp $
-// Author: Andreas Hoecker, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: TMVA_DecisionTree.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
+// Author: Andreas Hoecker, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -26,13 +26,13 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_DecisionTree.cpp,v 1.9 2006/05/03 19:45:38 helgevoss Exp $    
+ * $Id: TMVA_DecisionTree.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
-   
+
 //_______________________________________________________________________
-//                                                                      
-// Implementation of a Decision Tree                                    
-//                                                                      
+//
+// Implementation of a Decision Tree
+//
 //_______________________________________________________________________
 
 #include <iostream>
@@ -70,8 +70,8 @@ TMVA_DecisionTree::TMVA_DecisionTree( void )
 }
 
 //_______________________________________________________________________
-TMVA_DecisionTree::TMVA_DecisionTree( TMVA_SeparationBase *sepType,Int_t minSize, Double_t mnsep, 
-				      Int_t nCuts)
+TMVA_DecisionTree::TMVA_DecisionTree( TMVA_SeparationBase *sepType,Int_t minSize, Double_t mnsep,
+                                      Int_t nCuts)
 {
   fNvars        = 0;
   fSepType      = sepType;
@@ -88,17 +88,17 @@ TMVA_DecisionTree::~TMVA_DecisionTree( void )
 {}
 
 //_______________________________________________________________________
-void TMVA_DecisionTree::BuildTree( vector<TMVA_Event*> & eventSample, 
-				   TMVA_DecisionTreeNode *node )
-{  
-  if (node==NULL) { 
+void TMVA_DecisionTree::BuildTree( vector<TMVA_Event*> & eventSample,
+                                   TMVA_DecisionTreeNode *node )
+{
+  if (node==NULL) {
     //start with the root node
     node = new TMVA_DecisionTreeNode();
     fNNodes++;
     fSumOfWeights+=1.;
     this->SetRoot(node);
   }
-  
+
   UInt_t nevents = eventSample.size();
   if (nevents > 0 ) fNvars = eventSample[0]->GetEventSize();
   else{
@@ -113,7 +113,7 @@ void TMVA_DecisionTree::BuildTree( vector<TMVA_Event*> & eventSample,
   }
   node->SetSoverSB(s/(s+b));
   node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
- 
+
 //   if ( eventSample.size() > fMinSize  &&
 //        node->GetSoverSB() < fSoverSBUpperThreshold      &&
 //        node->GetSoverSB() > fSoverSBLowerThreshold  ) {
@@ -127,27 +127,27 @@ void TMVA_DecisionTree::BuildTree( vector<TMVA_Event*> & eventSample,
       vector<TMVA_Event*> rightSample; rightSample.reserve(nevents);
       Double_t nRight=0, nLeft=0;
       for (UInt_t ie=0; ie< nevents ; ie++){
-	if (node->GoesRight(eventSample[ie])){
-	  rightSample.push_back(eventSample[ie]);
-	  nRight += eventSample[ie]->GetWeight();
-	}
-	else {
-	  leftSample.push_back(eventSample[ie]);
-	  nLeft += eventSample[ie]->GetWeight();
-	}
-      }  
-      
+        if (node->GoesRight(eventSample[ie])){
+          rightSample.push_back(eventSample[ie]);
+          nRight += eventSample[ie]->GetWeight();
+        }
+        else {
+          leftSample.push_back(eventSample[ie]);
+          nLeft += eventSample[ie]->GetWeight();
+        }
+      }
+
       // sanity check
       if (leftSample.size() == 0 || rightSample.size() == 0) {
-	cout << "--- DecisionTree::TrainNode Error:  all events went to the same branch\n";
-	cout << "---                         Hence new node == old node ... check\n";
-	cout << "---                         left:" << leftSample.size() 
-	     << " right:" << rightSample.size() << endl;
-	cout << "--- this should never happen, please write a bug report to Helge.Voss@cern.ch" 
-	     << endl; 
-	exit(1);
+        cout << "--- DecisionTree::TrainNode Error:  all events went to the same branch\n";
+        cout << "---                         Hence new node == old node ... check\n";
+        cout << "---                         left:" << leftSample.size()
+             << " right:" << rightSample.size() << endl;
+        cout << "--- this should never happen, please write a bug report to Helge.Voss@cern.ch"
+             << endl;
+        exit(1);
       }
-      
+
       // continue building daughter nodes for the left and the right eventsample
       TMVA_DecisionTreeNode *rightNode = new TMVA_DecisionTreeNode(node);
       fNNodes++;
@@ -157,7 +157,7 @@ void TMVA_DecisionTree::BuildTree( vector<TMVA_Event*> & eventSample,
       fNNodes++;
       fSumOfWeights += 1.0;
       leftNode->SetNEvents(nLeft);
-      
+
       node->SetNodeType(0);
       node->SetLeft(leftNode);
       node->SetRight(rightNode);
@@ -165,12 +165,12 @@ void TMVA_DecisionTree::BuildTree( vector<TMVA_Event*> & eventSample,
       this->BuildTree(leftSample,  leftNode );
     } else { // it is a leaf node
       //      cout << "Found a leaf node: " << node->GetSeparationGain() << endl;
-      
+
       if (node->GetSoverSB() > 0.5) node->SetNodeType(1);
       else node->SetNodeType(-1);
     }
   } else{ // it is a leaf node
-    //    cout << "Found a leaf lode: " << eventSample.size() << " " << 
+    //    cout << "Found a leaf lode: " << eventSample.size() << " " <<
     //      node->GetSoverSB()*eventSample.size()  << endl;
     if (node->GetSoverSB() > 0.5) node->SetNodeType(1);
     else node->SetNodeType(-1);
@@ -180,30 +180,30 @@ void TMVA_DecisionTree::BuildTree( vector<TMVA_Event*> & eventSample,
 }
 
 //_______________________________________________________________________
-Double_t TMVA_DecisionTree::TrainNode(vector<TMVA_Event*> & eventSample, 
-				  TMVA_DecisionTreeNode *node)
+Double_t TMVA_DecisionTree::TrainNode(vector<TMVA_Event*> & eventSample,
+                                  TMVA_DecisionTreeNode *node)
 {
   Int_t dummy;
   // at each node, ONE of the variables is choosen, which gives the best
   // separation between sign and bkg on the sample which enters the Node.
-  // --> first fill a binary search tree for "each" variable in order to 
+  // --> first fill a binary search tree for "each" variable in order to
   // quickly find which one offers the best separation.
-  
-  TMVA_BinarySearchTree *BSTsig=NULL;
-  TMVA_BinarySearchTree *BSTbkg=NULL;
+
+  TMVA_BinarySearchTree *sigBST=NULL;
+  TMVA_BinarySearchTree *bkgBST=NULL;
 
   vector<Double_t> *xmin  = new vector<Double_t>( fNvars );
   vector<Double_t> *xmax  = new vector<Double_t>( fNvars );
-   
+
   Double_t separation = -1;
   Double_t cutMin=-999, cutMax=-999;
   Int_t mxVar=-1;
   Bool_t cutType=kTRUE;
-  Double_t  nSelS, nSelB, nTotS, nTotB;   
+  Double_t  nSelS, nSelB, nTotS, nTotB;
 
   fUseSearchTree = kTRUE;
   if (eventSample.size() < 30000) fUseSearchTree = kFALSE;
-  
+
   for (int ivar=0; ivar < fNvars; ivar++){
     (*xmin)[ivar]=(*xmax)[ivar]=eventSample[0]->GetData(ivar);
   }
@@ -217,62 +217,62 @@ Double_t TMVA_DecisionTree::TrainNode(vector<TMVA_Event*> & eventSample,
 
   for (int ivar=0; ivar < fNvars; ivar++){
     if (fUseSearchTree) {
-      BSTsig = new TMVA_BinarySearchTree();
-      BSTbkg = new TMVA_BinarySearchTree();
+      sigBST = new TMVA_BinarySearchTree();
+      bkgBST = new TMVA_BinarySearchTree();
       vector<Int_t> theVars;
       theVars.push_back(ivar);
-      BSTsig->Fill( eventSample,theVars, dummy, 1 );
-      BSTbkg->Fill( eventSample, theVars, dummy, 0 );
+      sigBST->Fill( eventSample,theVars, dummy, 1 );
+      bkgBST->Fill( eventSample, theVars, dummy, 0 );
     }
-      
+
     // now optimist the cuts for each varable and find which one gives
     // the best separation at the current stage.
-    // just scan the possible cut values for this variable  
+    // just scan the possible cut values for this variable
     Double_t istepSize =( (*xmax)[ivar] - (*xmin)[ivar] ) / Double_t(fNCuts);
     Int_t nCuts = fNCuts;
     vector<Double_t> cutMinTmp(nCuts), cutMaxTmp(nCuts);
-    vector<Double_t> sep(nCuts); 
+    vector<Double_t> sep(nCuts);
     vector<Bool_t> cutTypeTmp(nCuts);
 
     for (Int_t istep=0; istep<fNCuts; istep++){
       cutMinTmp[istep]=(*xmin)[ivar]+(Float_t(istep)+0.5)*istepSize;
       cutMaxTmp[istep]=(*xmax)[ivar];
       if (fUseSearchTree){
-	TMVA_Volume volume(cutMinTmp[istep], cutMaxTmp[istep]);
-	nSelS  = BSTsig->SearchVolume( &volume );
-	nSelB  = BSTbkg->SearchVolume( &volume );
-	
-	nTotS  = BSTsig->GetSumOfWeights();
-	nTotB  = BSTbkg->GetSumOfWeights();
+        TMVA_Volume volume(cutMinTmp[istep], cutMaxTmp[istep]);
+        nSelS  = sigBST->SearchVolume( &volume );
+        nSelB  = bkgBST->SearchVolume( &volume );
+
+        nTotS  = sigBST->GetSumOfWeights();
+        nTotB  = bkgBST->GetSumOfWeights();
       }else{
-	nSelS=0; nSelB=0; nTotS=0; nTotB=0;
-	for (UInt_t i=0; i<eventSample.size(); i++){
-	  if (eventSample[i]->GetType()==1){
-	    nTotS+=eventSample[i]->GetWeight();
-	    if (eventSample[i]->GetData(ivar) > cutMinTmp[istep]) nSelS+=eventSample[i]->GetWeight();
-	  }else if (eventSample[i]->GetType()==0){
-	    nTotB+=eventSample[i]->GetWeight();
-	    if (eventSample[i]->GetData(ivar) > cutMinTmp[istep]) nSelB+=eventSample[i]->GetWeight();
-	  } 
-	}
+        nSelS=0; nSelB=0; nTotS=0; nTotB=0;
+        for (UInt_t i=0; i<eventSample.size(); i++){
+          if (eventSample[i]->GetType()==1){
+            nTotS+=eventSample[i]->GetWeight();
+            if (eventSample[i]->GetData(ivar) > cutMinTmp[istep]) nSelS+=eventSample[i]->GetWeight();
+          }else if (eventSample[i]->GetType()==0){
+            nTotB+=eventSample[i]->GetWeight();
+            if (eventSample[i]->GetData(ivar) > cutMinTmp[istep]) nSelB+=eventSample[i]->GetWeight();
+          }
+        }
       }
-      
+
       // now the separation is defined as the various indices (Gini, CorssEntropy, e.t.c)
       // calculated by the "SamplePurities" from the branches that would go to the
       // left or the right from this node if "these" cuts were used in the Node:
       // hereby: nSelS and nSelB would go to the right branch
       //        (nTotS - nSelS) + (nTotB - nSelB)  would go to the left branch;
-      
+
       if (nSelS/nTotS > nSelB/nTotB) cutTypeTmp[istep]=kTRUE;
       else cutTypeTmp[istep]=kFALSE;
-      
+
       sep[istep]= fSepType->GetSeparationGain(nSelS, nSelB, nTotS, nTotB);
     }
-    
+
     //ich hab's versucht...aber das ist scheissee!!! Ich will ein INT!!!
     //    vector<Double_t>::iterator mxsep=max_element(sep.begin(),sep.end());
     Int_t pos = TMVA_Tools::GetIndexMaxElement(sep);
-    
+
     //and now, choose the variable that gives the maximum separation
     if (separation < sep[pos]) {
       separation = sep[pos];
@@ -282,8 +282,8 @@ Double_t TMVA_DecisionTree::TrainNode(vector<TMVA_Event*> & eventSample,
       mxVar = ivar;
     }
     if (fUseSearchTree) {
-      if (BSTsig!=NULL) delete BSTsig;
-      if (BSTbkg!=NULL) delete BSTbkg;
+      if (sigBST!=NULL) delete sigBST;
+      if (bkgBST!=NULL) delete bkgBST;
     }
   }
 
@@ -294,7 +294,7 @@ Double_t TMVA_DecisionTree::TrainNode(vector<TMVA_Event*> & eventSample,
   node->SetSeparationGain(separation);
 
   delete xmin;
-  delete xmax;  
+  delete xmax;
   return separation;
 }
 
@@ -304,8 +304,8 @@ Int_t TMVA_DecisionTree::CheckEvent(TMVA_Event* e)
   TMVA_DecisionTreeNode *current = (TMVA_DecisionTreeNode*)this->GetRoot();
 
   while(current->GetNodeType() == 0){ //intermediate node
-    if (current->GoesRight(e)) 
-	current=(TMVA_DecisionTreeNode*)current->GetRight();
+    if (current->GoesRight(e))
+        current=(TMVA_DecisionTreeNode*)current->GetRight();
     else current=(TMVA_DecisionTreeNode*)current->GetLeft();
   }
   return current->GetNodeType();
@@ -314,7 +314,7 @@ Int_t TMVA_DecisionTree::CheckEvent(TMVA_Event* e)
 //_______________________________________________________________________
 Double_t  TMVA_DecisionTree::SamplePurity(vector<TMVA_Event*> eventSample)
 {
-  Double_t sumsig=0, sumbkg=0, sumtot=0; 
+  Double_t sumsig=0, sumbkg=0, sumtot=0;
   for (UInt_t ievt=0; ievt<eventSample.size(); ievt++) {
     if (eventSample[ievt]->GetType()==0) sumbkg+=eventSample[ievt]->GetWeight();
     if (eventSample[ievt]->GetType()==1) sumsig+=eventSample[ievt]->GetWeight();
@@ -322,8 +322,8 @@ Double_t  TMVA_DecisionTree::SamplePurity(vector<TMVA_Event*> eventSample)
   }
   //sanity check
   if (sumtot!= (sumsig+sumbkg)){
-    cout << "--- TMVA_DecisionTree::Purity Error! sumtot != sumsig+sumbkg" 
-	 << sumtot << " " << sumsig << " " << sumbkg << endl;
+    cout << "--- TMVA_DecisionTree::Purity Error! sumtot != sumsig+sumbkg"
+         << sumtot << " " << sumsig << " " << sumbkg << endl;
     exit(1);
   }
   if (sumtot>0) return sumsig/(sumsig + sumbkg);

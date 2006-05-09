@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Volume.h,v 1.5 2006/04/29 23:55:41 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TMVA_Volume.h,v 1.1 2006/05/08 12:46:31 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_Volume.h,v 1.5 2006/04/29 23:55:41 andreas.hoecker Exp $    
+ * $Id: TMVA_Volume.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Volume
@@ -72,8 +72,8 @@ class TMVA_Volume {
   void Print        ( void ) const;
 
   // allow direct access for speed
-  std::vector<Double_t> *Lower;
-  std::vector<Double_t> *Upper;
+  std::vector<Double_t> *fLower;
+  std::vector<Double_t> *fUpper;
 
  private:
 

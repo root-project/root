@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.h,v 1.2 2006/05/08 21:33:46 brun Exp $    
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.h,v 1.3 2006/05/08 21:53:03 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -70,7 +70,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodCFMlpANN.h,v 1.2 2006/05/08 21:33:46 brun Exp $    
+ * $Id: TMVA_MethodCFMlpANN.h,v 1.3 2006/05/08 21:53:03 brun Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN
@@ -139,14 +139,14 @@ class TMVA_MethodCFMlpANN : public TMVA_MethodBase, TMVA_MethodANNBase {
   Int_t    GetClass( Int_t ivar             ) const { return (*fClass)[ivar];      }
 
   // static pointer to this object (required for external functions
-  static TMVA_MethodCFMlpANN* This( void ) { return fThis; }  
+  static TMVA_MethodCFMlpANN* This( void ) { return fgThis; }  
 
  protected:
 
  private:
 
   // this carrier
-  static TMVA_MethodCFMlpANN* fThis;
+  static TMVA_MethodCFMlpANN* fgThis;
 
   // LUTs
   TMatrix       *fData ; // the (data,var) string
@@ -172,9 +172,9 @@ class TMVA_MethodCFMlpANN : public TMVA_MethodBase, TMVA_MethodANNBase {
   Double_t*     fTempNN;
 
   // auxiliary member functions
-  Double_t evalANN( vector<Double_t>*, Bool_t& isOK );
-  void     nn_ava ( Double_t* );
-  Double_t nn_fonc( Int_t, Double_t ) const;
+  Double_t EvalANN( vector<Double_t>*, Bool_t& isOK );
+  void     NN_ava ( Double_t* );
+  Double_t NN_fonc( Int_t, Double_t ) const;
 
   void InitCFMlpANN( void );
 

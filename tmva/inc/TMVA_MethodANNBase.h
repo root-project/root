@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodANNBase.h,v 1.2 2006/05/08 12:59:13 brun Exp $
+// @(#)root/tmva $Id: TMVA_MethodANNBase.h,v 1.3 2006/05/08 20:56:16 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -54,7 +54,7 @@ class TMVA_MethodANNBase {
   // option string parser
   // first input in vector is number of cycles; additional inputs give
   // number of nodes for each layer (as many layers as inputs in vector)
-  std::vector<Int_t>* parseOptionString( TString, Int_t, std::vector<Int_t>* );
+  std::vector<Int_t>* ParseOptionString( TString, Int_t, std::vector<Int_t>* );
  
  ClassDef(TMVA_MethodANNBase,0) //Base class for all MVA methods using artificial neural networks
 

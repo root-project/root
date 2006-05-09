@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_BinarySearchTree.h,v 1.1 2006/05/08 12:46:30 brun Exp $    
+// @(#)root/tmva $Id: TMVA_BinarySearchTree.h,v 1.2 2006/05/08 20:56:16 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -78,7 +78,7 @@ class TMVA_BinarySearchTree : public TMVA_BinaryTree {
   Bool_t   InVolume    ( TMVA_Event*, TMVA_Volume* ) const;
   void     DestroyNode ( TMVA_Node* );
   Double_t SearchVolume( TMVA_Node*, TMVA_Volume*, Int_t, 
-			 std::vector<TMVA_Event*>* events );
+                         std::vector<TMVA_Event*>* events );
   Int_t    fPeriode;
   Int_t    fDbgcount; 
   

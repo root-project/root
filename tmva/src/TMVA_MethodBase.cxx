@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id: TMVA_MethodBase.cpp,v 1.13 2006/05/02 23:27:40 helgevoss Exp $   
-// Author: Andreas Hoecker, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: TMVA_MethodBase.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
+// Author: Andreas Hoecker, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -26,13 +26,13 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodBase.cpp,v 1.13 2006/05/02 23:27:40 helgevoss Exp $ 
+ * $Id: TMVA_MethodBase.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// Virtual base class for all MVA method                                
-//                                                                      
+//
+// Virtual base class for all MVA method
+//
 //_______________________________________________________________________
 
 #include "string"
@@ -60,15 +60,15 @@
 #define NBIN_HIST_HIGH    10000
 
 ClassImp(TMVA_MethodBase)
-  
+
 //_______________________________________________________________________
-TMVA_MethodBase::TMVA_MethodBase( TString jobName, 
-				  vector<TString>* theVariables,  
-				  TTree*  theTree, 
+TMVA_MethodBase::TMVA_MethodBase( TString jobName,
+				  vector<TString>* theVariables,
+				  TTree*  theTree,
 				  TString theOption,
 				  TDirectory*  theBaseDir) :
   fJobName      ( jobName ),
-  fTrainingTree ( theTree ), 
+  fTrainingTree ( theTree ),
   fInputVars    ( theVariables ),
   fOptions      ( theOption ),
   fBaseDir      ( theBaseDir ),
@@ -79,20 +79,20 @@ TMVA_MethodBase::TMVA_MethodBase( TString jobName,
   // parse option string and search for verbose
   // after that, remove the verbose option to not interfere with method-specific options
   TList*  list = TMVA_Tools::ParseFormatLine( fOptions );
-  TString O;
+  TString opt;
   for (Int_t i=0; i<list->GetSize(); i++) {
     TString s = ((TObjString*)list->At(i))->GetString();
     s.ToUpper();
     if (s == "V") {
       fVerbose = kTRUE;
-      if (i == list->GetSize()-1) O.Chop();
+      if (i == list->GetSize()-1) opt.Chop();
     }
     else {
-      O += (TString)((TObjString*)list->At(i))->GetString();
-      if (i < list->GetSize()-1) O += ":";
+      opt += (TString)((TObjString*)list->At(i))->GetString();
+      if (i < list->GetSize()-1) opt += ":";
     }
   }
-  fOptions = O;
+  fOptions = opt;
 
   // default extension for weight files
   fFileExtension = "weights";
@@ -105,11 +105,11 @@ TMVA_MethodBase::TMVA_MethodBase( TString jobName,
 }
 
 //_______________________________________________________________________
-TMVA_MethodBase::TMVA_MethodBase( vector<TString> *theVariables, 
-				  TString weightFile, 
-				  TDirectory*  theBaseDir) 
+TMVA_MethodBase::TMVA_MethodBase( vector<TString> *theVariables,
+				  TString weightFile,
+				  TDirectory*  theBaseDir)
   : fJobName      ( "" ),
-    fTrainingTree ( NULL ), 
+    fTrainingTree ( NULL ),
     fInputVars    ( theVariables ),
     fOptions      ( "" ),
     fBaseDir      ( theBaseDir ),
@@ -117,7 +117,7 @@ TMVA_MethodBase::TMVA_MethodBase( vector<TString> *theVariables,
 {
 // constructor used for Testing + Application of the MVA, only (no training), using given WeightFiles
   this->Init();
-  fJobName       = "";   //not used 
+  fJobName       = "";   //not used
 }
 
 //_______________________________________________________________________
@@ -180,38 +180,38 @@ void TMVA_MethodBase::InitNorm( TTree* theTree )
       this->SetXminNorm( ivar, theTree->GetMinimum( (*fInputVars)[ivar] ) );
       this->SetXmaxNorm( ivar, theTree->GetMaximum( (*fInputVars)[ivar] ) );
     }
-  }       
+  }
   else {
-    cout << "--- " << GetName() 
+    cout << "--- " << GetName()
 	 << ":InitNorm Error: tree has zero pointer ==> abort" << endl;
     exit(1);
   }
   if (Verbose()) {
-    cout << "--- " << GetName() << " <verbose>: set minNorm/maxNorm to: " << endl;    
-    cout << setprecision(3); 
-    for (Int_t ivar=0; ivar<fNvar; ivar++) 
-      cout << "    " << (*fInputVars)[ivar] 
+    cout << "--- " << GetName() << " <verbose>: set minNorm/maxNorm to: " << endl;
+    cout << setprecision(3);
+    for (Int_t ivar=0; ivar<fNvar; ivar++)
+      cout << "    " << (*fInputVars)[ivar]
 	   << "\t: [" << GetXminNorm( ivar ) << "\t, " << GetXmaxNorm( ivar ) << "\t] " << endl;
     cout << setprecision(5); // reset to better value
   }
 }
 
 //_______________________________________________________________________
-void TMVA_MethodBase::SetWeightFileName( void ) 
-{  
+void TMVA_MethodBase::SetWeightFileName( void )
+{
   fWeightFile =  fFileDir + "/" +fJobName + "_" + fMethodName + "." + fFileExtension;
 }
 
 //_______________________________________________________________________
 void TMVA_MethodBase::SetWeightFileName( TString theWeightFile)
-{  
+{
   fWeightFile = theWeightFile;
 }
 
 //_______________________________________________________________________
-TString TMVA_MethodBase::GetWeightFileName( void ) 
-{  
-  if (fWeightFile == "") this->SetWeightFileName();  
+TString TMVA_MethodBase::GetWeightFileName( void )
+{
+  if (fWeightFile == "") this->SetWeightFileName();
   return fWeightFile;
 }
 
@@ -220,12 +220,12 @@ Bool_t TMVA_MethodBase::CheckSanity( TTree* theTree )
 {
   // if no tree is given, use the trainingTree
   TTree* tree = (0 != theTree) ? theTree : fTrainingTree;
-  
+
   // the input variables must exist in the tree
   vector<TString>::iterator itrVar    = fInputVars->begin();
   vector<TString>::iterator itrVarEnd = fInputVars->end();
   Bool_t found = kTRUE;
-  for (; itrVar != itrVarEnd; itrVar++) 
+  for (; itrVar != itrVarEnd; itrVar++)
     if (0 == tree->FindBranch( *itrVar )) found = kFALSE;
 
   return found;
@@ -243,7 +243,7 @@ void TMVA_MethodBase::AppendToMethodName( TString methodNameSuffix )
 //_______________________________________________________________________
 void TMVA_MethodBase::SetWeightFileDir( TString fileDir )
 {
-  fFileDir = fileDir; 
+  fFileDir = fileDir;
   gSystem->MakeDirectory( fFileDir );
 }
 
@@ -264,7 +264,7 @@ Double_t TMVA_MethodBase::Norm( Int_t ivar, Double_t x ) const
 }
 
 //_______________________________________________________________________
-void TMVA_MethodBase::UpdateNorm( Int_t ivar, Double_t x ) 
+void TMVA_MethodBase::UpdateNorm( Int_t ivar, Double_t x )
 {
   if (x < GetXminNorm( ivar )) SetXminNorm( ivar, x );
   if (x > GetXmaxNorm( ivar )) SetXmaxNorm( ivar, x );
@@ -276,7 +276,7 @@ Double_t TMVA_MethodBase::GetXminNorm( TString var ) const
   for (Int_t ivar=0; ivar<fNvar; ivar++)
     if (var == (*fInputVars)[ivar]) return (*fXminNorm)[ivar];
 
-  cout << "--- " << GetName() << ": Error in ::GetXminNorm: variable not found ==> abort " 
+  cout << "--- " << GetName() << ": Error in ::GetXminNorm: variable not found ==> abort "
        << var << endl;
   exit(1);
 }
@@ -287,13 +287,13 @@ Double_t TMVA_MethodBase::GetXmaxNorm( TString var ) const
   for (Int_t ivar=0; ivar<fNvar; ivar++)
     if (var == (*fInputVars)[ivar]) return (*fXmaxNorm)[ivar];
 
-  cout << "--- " << GetName() << ": Error in ::GetXmaxNorm: variable not found ==> abort " 
+  cout << "--- " << GetName() << ": Error in ::GetXmaxNorm: variable not found ==> abort "
        << var << endl;
   exit(1);
 }
 
 //_______________________________________________________________________
-void TMVA_MethodBase::SetXminNorm( TString var, Double_t x ) 
+void TMVA_MethodBase::SetXminNorm( TString var, Double_t x )
 {
   for (Int_t ivar=0; ivar<fNvar; ivar++) {
     if (var == (*fInputVars)[ivar]) {
@@ -302,13 +302,13 @@ void TMVA_MethodBase::SetXminNorm( TString var, Double_t x )
     }
   }
 
-  cout << "--- " << GetName() << ": Error in ::SetXminNorm: variable not found ==> abort " 
+  cout << "--- " << GetName() << ": Error in ::SetXminNorm: variable not found ==> abort "
        << var << endl;
   exit(1);
 }
 
 //_______________________________________________________________________
-void TMVA_MethodBase::SetXmaxNorm( TString var, Double_t x ) 
+void TMVA_MethodBase::SetXmaxNorm( TString var, Double_t x )
 {
   for (Int_t ivar=0; ivar<fNvar; ivar++) {
     if (var == (*fInputVars)[ivar]) {
@@ -317,7 +317,7 @@ void TMVA_MethodBase::SetXmaxNorm( TString var, Double_t x )
     }
   }
 
-  cout << "--- " << GetName() << ": Error in ::SetXmaxNorm: variable not found ==> abort " 
+  cout << "--- " << GetName() << ": Error in ::SetXmaxNorm: variable not found ==> abort "
        << var << endl;
   exit(1);
 }
@@ -326,7 +326,7 @@ void TMVA_MethodBase::SetXmaxNorm( TString var, Double_t x )
 //_______________________________________________________________________
 void TMVA_MethodBase::TestInit(TTree* theTestTree)
 {
-   
+
   //  fTestTree       = theTestTree;
   fHistS_plotbin  = fHistB_plotbin = 0;
   fHistS_highbin  = fHistB_highbin = 0;
@@ -334,32 +334,32 @@ void TMVA_MethodBase::TestInit(TTree* theTestTree)
   fGraphS         = fGraphB = 0;
   fEffSatB        = 0;
   fSeparation     = 0;
-  fCutOrientation = Positive;
+  fCutOrientation = kPositive;
   fSplS           = fSplB = 0;
   fSplRefS        = fSplRefB = 0;
 
 
   // sanity checks: tree must exist, and theVar must be in tree
-  if (0 == theTestTree || 
+  if (0 == theTestTree ||
       ( 0 == theTestTree->FindBranch( fTestvar ) && !(GetMethodName().Contains("Cuts")))){
     cout<<"--- "<< GetName() << ": Error in TestInit: test variable "<<fTestvar
 	<<" not found in tree"<<endl;
 
-    fIsOK = kFALSE;  
+    fIsOK = kFALSE;
   }
 
   // now call the TestInitLocal for possible individual initialisation
   // of each method
   this->TestInitLocal(theTestTree);
 
-} 
+}
 
 //_______________________________________________________________________
 void TMVA_MethodBase::PrepareEvaluationTree( TTree* testTree )
 {
   // sanity checks
   if (0 == testTree) {
-    cout << "--- " << GetName() 
+    cout << "--- " << GetName()
 	 << ": PrepareEvaluationTree Error: testTree has zero pointer ==> exit(1)"
 	 << endl;
     exit(1);
@@ -367,7 +367,7 @@ void TMVA_MethodBase::PrepareEvaluationTree( TTree* testTree )
 
   // checks that all variables in input vector indeed exist in the testTree
   if (!CheckSanity( testTree )) {
-    cout << "--- " << GetName() 
+    cout << "--- " << GetName()
 	 << ": PrepareEvaluationTree Error: sanity check failed" << endl;
     exit(1);
   }
@@ -378,10 +378,10 @@ void TMVA_MethodBase::PrepareEvaluationTree( TTree* testTree )
   // fill a new branch into the testTree with the MVA-value of the method
   Double_t myMVA;
   TBranch *newBranch = testTree->Branch( fTestvar, &myMVA, fTestvar + "/D" );
-  
+
   // use timer
-  TMVA_Timer timer( testTree->GetEntries(), GetName(), kTRUE ); 
-  
+  TMVA_Timer timer( testTree->GetEntries(), GetName(), kTRUE );
+
   for (Int_t ievt=0; ievt<testTree->GetEntries(); ievt++) {
     if ((Int_t)ievt%100 == 0) timer.DrawProgressBar( ievt );
     TMVA_Event *e = new TMVA_Event( testTree, ievt, fInputVars );
@@ -389,9 +389,9 @@ void TMVA_MethodBase::PrepareEvaluationTree( TTree* testTree )
     newBranch->Fill();
     delete e;
   }
-  cout << "--- " << GetName() << ": elapsed time for evaluation of " 
+  cout << "--- " << GetName() << ": elapsed time for evaluation of "
        << testTree->GetEntries() <<  " events: "
-       << timer.GetElapsedTime() << "       " << endl;    
+       << timer.GetElapsedTime() << "       " << endl;
 }
 
 //_______________________________________________________________________
@@ -409,31 +409,31 @@ void TMVA_MethodBase::Test( TTree *theTestTree )
 
   fMeanS = meanS; fMeanB = meanB;
   fRmsS  = rmsS;  fRmsB  = rmsB;
-  fXmin  = xmin;  fXmax  = xmax;  
+  fXmin  = xmin;  fXmax  = xmax;
 
   // determine cut orientation
-  fCutOrientation = (fMeanS > fMeanB) ? Positive : Negative;
+  fCutOrientation = (fMeanS > fMeanB) ? kPositive : kNegative;
 
   // fill 2 types of histograms for the various analyses
   // this one is for actual plotting
-  fHistS_plotbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar, 
-					     fTestvar + "_S", 
+  fHistS_plotbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar,
+					     fTestvar + "_S",
 					     fNbins, fXmin, fXmax, "type == 1" );
-  fHistB_plotbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar, 
-					     fTestvar + "_B",  
+  fHistB_plotbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar,
+					     fTestvar + "_B",
 					     fNbins, fXmin, fXmax, "type == 0" );
 
   // need histograms with even more bins for efficiency calculation and integration
-  fHistS_highbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar, 
-					     fTestvar + "_S_high",  
+  fHistS_highbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar,
+					     fTestvar + "_S_high",
 					     fNbinsH, fXmin, fXmax, "type == 1" );
-  fHistB_highbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar, 
-					     fTestvar + "_B_high",  
+  fHistB_highbin = TMVA_Tools::projNormTH1F( theTestTree, fTestvar,
+					     fTestvar + "_B_high",
 					     fNbinsH, fXmin, fXmax, "type == 0" );
 
   // create PDFs from histograms, using default splines, and no additional smoothing
-  fSplS = new TMVA_PDF( fHistS_plotbin, TMVA_PDF::Spline2, 0 ); 
-  fSplB = new TMVA_PDF( fHistB_plotbin, TMVA_PDF::Spline2, 0  ); 
+  fSplS = new TMVA_PDF( fHistS_plotbin, TMVA_PDF::kSpline2, 0 );
+  fSplB = new TMVA_PDF( fHistB_plotbin, TMVA_PDF::kSpline2, 0  );
 
 }
 
@@ -454,14 +454,14 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
   //the efficiency-vs-bkg plot which is done anyway.
   Float_t effBref  = atof( ((TObjString*)list->At(1))->GetString() );
 
-  if (DEBUG_TMVA_MethodBase) 
+  if (DEBUG_TMVA_MethodBase)
     cout << "--- " << GetName() << "::GetEfficiency : compute eff(S) at eff(B) = " << effBref << endl;
 
   // sanity check
   if (fHistS_highbin->GetNbinsX() != fHistB_highbin->GetNbinsX() ||
       fHistS_plotbin->GetNbinsX() != fHistB_plotbin->GetNbinsX()) {
-    cout << "--- " << GetName() 
-	 << "WARNING: in GetEfficiency() binning mismatch between signal and background histos"<<endl;  
+    cout << "--- " << GetName()
+	 << "WARNING: in GetEfficiency() binning mismatch between signal and background histos"<<endl;
     fIsOK = kFALSE;
     return -1.0;
   }
@@ -482,11 +482,11 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
     fEffB = new TH1F( fTestvar + "_effB", fTestvar + " (background)", fNbinsH, xmin, xmax );
 
     // sign if cut
-    Int_t sign = (fCutOrientation == Positive) ? +1 : -1;
+    Int_t sign = (fCutOrientation == kPositive) ? +1 : -1;
 
     // this method is unbinned
     for (Int_t ievt=0; ievt<theTree->GetEntries(); ievt++) {
-      
+
       TH1* theHist = 0;
       if ((Int_t)TMVA_Tools::GetValue( theTree, ievt, "type" ) == 1) { // this is signal
 	theHist = fEffS;
@@ -494,9 +494,9 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
       else { // this is background
 	theHist = fEffB;
       }
-      
+
       Double_t theVal = TMVA_Tools::GetValue( theTree, ievt, fTestvar );
-      for (Int_t bin=1; bin<=fNbinsH; bin++) 
+      for (Int_t bin=1; bin<=fNbinsH; bin++)
 	if (sign*theVal > sign*theHist->GetBinCenter( bin )) theHist->AddBinContent( bin );
     }
 
@@ -514,11 +514,11 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
       fGraphS   = new TGraph( fEffS );
       fGraphB   = new TGraph( fEffB );
       fSplRefS  = new TMVA_TSpline1( "spline2_signal",     fGraphS );
-      fSplRefB  = new TMVA_TSpline1( "spline2_background", fGraphB );   
+      fSplRefB  = new TMVA_TSpline1( "spline2_background", fGraphB );
 
       // verify spline sanity
       if (Verbose())
-	cout << "--- " << GetName() 
+	cout << "--- " << GetName()
 	     << "::GetEfficiency <verbose>: verify signal and background eff. splines" << endl;
       TMVA_Tools::CheckSplines( fEffS, fSplRefS );
       TMVA_Tools::CheckSplines( fEffB, fSplRefB );
@@ -533,12 +533,12 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
 
     Double_t effB = 0;
     for (Int_t bini=1; bini<=fNbins; bini++) {
-      
+
       // find cut value corresponding to a given signal efficiency
       Double_t effS = fEffBvsS->GetBinCenter( bini );
 
       Double_t cut  = rootFinder.Root( effS );
-      
+
       // retrieve background efficiency for given cut
       if (Use_Splines_for_Eff_)
 	effB = fSplRefB->Eval( cut );
@@ -546,8 +546,8 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
 	effB = fEffB->GetBinContent( fEffB->FindBin( cut ) );
 
       // and fill histograms
-      fEffBvsS->SetBinContent( bini, effB     );     
-      fRejBvsS->SetBinContent( bini, 1.0-effB ); 
+      fEffBvsS->SetBinContent( bini, effB     );
+      fRejBvsS->SetBinContent( bini, 1.0-effB );
     }
 
     // create splines for histogram
@@ -562,7 +562,7 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
   Double_t effS, effB, effS_ = 0, effB_ = 0;
   Int_t    nbins_ = 1000;
   for (Int_t bini=1; bini<=nbins_; bini++) {
-    
+
     // get corresponding signal and background efficiencies
     effS = (bini - 0.5)/Float_t(nbins_);
     effB = fSpleffBvsS->Eval( effS );
@@ -570,7 +570,7 @@ Double_t TMVA_MethodBase::GetEfficiency( TString theString, TTree *theTree )
     // find signal efficiency that corresponds to required background efficiency
     if ((effB - effBref)*(effB_ - effBref) < 0) break;
     effS_ = effS;
-    effB_ = effB;  
+    effB_ = effB;
   }
 
   return fEffSatB = 0.5*(effS + effS_);//the mean between bin above and bin below
@@ -598,13 +598,13 @@ Double_t TMVA_MethodBase::GetSeparation( void )
   Double_t intBin = (fXmax - fXmin)/nstep;
   for (Int_t bin=0; bin<nstep; bin++) {
     Double_t x = (bin + 0.5)*intBin + fXmin;
-    Double_t S = fSplS->GetVal( x );
-    Double_t B = fSplB->GetVal( x );
+    Double_t s = fSplS->GetVal( x );
+    Double_t b = fSplB->GetVal( x );
     // separation
-    if (S + B > 0) fSeparation += 0.5*pow(S - B,2)/(S + B); 
+    if (s + b > 0) fSeparation += 0.5*pow(s - b,2)/(s + b);
   }
   fSeparation *= intBin;
-  
+
   return fSeparation;
 }
 
@@ -614,7 +614,7 @@ Double_t TMVA_MethodBase::GetmuTransform( TTree *theTree )
   //---------------------------------------------------------------------------------------
   // Authors     : Francois Le Diberder and Muriel Pivk
   // Reference   : Muriel Pivk,
-  //               "Etude de la violation de CP dans la désintégration 
+  //               "Etude de la violation de CP dans la désintégration
   //                B0 -> h+ h- (h = pi, K) auprès du détecteur BaBar à SLAC",
   //               PhD thesis at Universite de Paris VI-VII, LPNHE (IN2P3/CNRS), Paris, 2003
   //               http://tel.ccsd.cnrs.fr/documents/archives0/00/00/29/91/index_fr.html
@@ -631,23 +631,23 @@ Double_t TMVA_MethodBase::GetmuTransform( TTree *theTree )
   fHistBhatS->Sumw2();
   fHistBhatB->Sumw2();
 
-  vector<Double_t>* BhatB = new vector<Double_t>;
-  vector<Double_t>* BhatS = new vector<Double_t>;
+  vector<Double_t>* aBhatB = new vector<Double_t>;
+  vector<Double_t>* aBhatS = new vector<Double_t>;
   Int_t ievt;
-  for (ievt=0; ievt<theTree->GetEntries(); ievt++) {    
+  for (ievt=0; ievt<theTree->GetEntries(); ievt++) {
     Double_t x    = TMVA_Tools::GetValue( theTree, ievt, fTestvar );
-    Double_t S    = fSplS->GetVal( x );
-    Double_t B    = fSplB->GetVal( x );
-    Double_t Bhat = 0;
-    if (B + S > 0) Bhat = B/(B + S);
+    Double_t s    = fSplS->GetVal( x );
+    Double_t b    = fSplB->GetVal( x );
+    Double_t aBhat = 0;
+    if (b + s > 0) aBhat = b/(b + s);
 
     if ((Int_t)TMVA_Tools::GetValue( theTree, ievt, "type" ) == 1) { // this is signal
-      BhatS->push_back ( Bhat );
-      fHistBhatS->Fill( Bhat );
+      aBhatS->push_back ( aBhat );
+      fHistBhatS->Fill( aBhat );
     }
     else {
-      BhatB->push_back ( Bhat );
-      fHistBhatB->Fill( Bhat );
+      aBhatB->push_back ( aBhat );
+      fHistBhatB->Fill( aBhat );
     }
   }
 
@@ -655,38 +655,38 @@ Double_t TMVA_MethodBase::GetmuTransform( TTree *theTree )
   fHistBhatS->Scale( 1.0/((fHistBhatS->GetEntries() > 0 ? fHistBhatS->GetEntries() : 1) / nbin) );
   fHistBhatB->Scale( 1.0/((fHistBhatB->GetEntries() > 0 ? fHistBhatB->GetEntries() : 1) / nbin) );
 
-  TMVA_PDF* yB = new TMVA_PDF( fHistBhatB, TMVA_PDF::Spline2, 100 );
+  TMVA_PDF* yB = new TMVA_PDF( fHistBhatB, TMVA_PDF::kSpline2, 100 );
 
-  Int_t nevtS = BhatS->size();
-  Int_t nevtB = BhatB->size();
+  Int_t nevtS = aBhatS->size();
+  Int_t nevtB = aBhatB->size();
 
   // get the mu-transform
   Int_t nbinMu = 50;
-  fHistMuS = new TH1F( fTestvar + "_muTransform_S", 
+  fHistMuS = new TH1F( fTestvar + "_muTransform_S",
 			fTestvar + ": mu-Transform (S)", nbinMu, 0.0, 1.0 );
-  fHistMuB = new TH1F( fTestvar + "_muTransform_B", 
+  fHistMuB = new TH1F( fTestvar + "_muTransform_B",
 			fTestvar + ": mu-Transform (B)", nbinMu, 0.0, 1.0 );
-  
+
   // signal
-  for (ievt=0; ievt<nevtS; ievt++) {    
-    Double_t w = yB->GetVal( (*BhatS)[ievt] );
-    if (w > 0) fHistMuS->Fill( 1.0 - (*BhatS)[ievt], 1.0/w );
+  for (ievt=0; ievt<nevtS; ievt++) {
+    Double_t w = yB->GetVal( (*aBhatS)[ievt] );
+    if (w > 0) fHistMuS->Fill( 1.0 - (*aBhatS)[ievt], 1.0/w );
   }
 
   // background (must be flat)
-  for (ievt=0; ievt<nevtB; ievt++) {          
-    Double_t w = yB->GetVal( (*BhatB)[ievt] );
-    if (w > 0) fHistMuB->Fill( 1.0 - (*BhatB)[ievt], 1.0/w );
+  for (ievt=0; ievt<nevtB; ievt++) {
+    Double_t w = yB->GetVal( (*aBhatB)[ievt] );
+    if (w > 0) fHistMuB->Fill( 1.0 - (*aBhatB)[ievt], 1.0/w );
   }
 
   // normalize mu-transforms
   TMVA_Tools::NormHist( fHistMuS );
   TMVA_Tools::NormHist( fHistMuB );
 
-  // determine the mu-transform value, which is defined as 
+  // determine the mu-transform value, which is defined as
   // the average of the signal mu-transform Int_[0,1] { S(mu) dmu }
   // this average is 0.5 for background, by definition
-  TMVA_PDF* thePdf = new TMVA_PDF( fHistMuS, TMVA_PDF::Spline2 );
+  TMVA_PDF* thePdf = new TMVA_PDF( fHistMuS, TMVA_PDF::kSpline2 );
   Double_t intS = 0;
   Int_t    nstp = 10000;
   for (Int_t istp=0; istp<nstp; istp++) {
@@ -697,8 +697,8 @@ Double_t TMVA_MethodBase::GetmuTransform( TTree *theTree )
 
   delete yB;
   delete thePdf;
-  delete BhatB;
-  delete BhatS;
+  delete aBhatB;
+  delete aBhatS;
 
   return intS; // return average mu-transform for signal
 }
@@ -723,16 +723,16 @@ void TMVA_MethodBase::WriteHistosToFile( TDirectory* targetDir )
 
 // ----------------------- r o o t   f i n d i n g ----------------------------
 
-TMVA_MethodBase* TMVA_MethodBase::fThisBase = NULL;
+TMVA_MethodBase* TMVA_MethodBase::fgThisBase = NULL;
 
 //_______________________________________________________________________
-Double_t TMVA_MethodBase::IGetEffForRoot( Double_t theCut ) 
+Double_t TMVA_MethodBase::IGetEffForRoot( Double_t theCut )
 {
-  return TMVA_MethodBase::ThisBase()->GetEffForRoot( theCut );
+  return TMVA_MethodBase::GetThisBase()->GetEffForRoot( theCut );
 }
 
 //_______________________________________________________________________
-Double_t TMVA_MethodBase::GetEffForRoot( Double_t theCut ) 
+Double_t TMVA_MethodBase::GetEffForRoot( Double_t theCut )
 {
   Double_t retval;
 
@@ -744,13 +744,13 @@ Double_t TMVA_MethodBase::GetEffForRoot( Double_t theCut )
 
   // caution: here we take some "forbidden" action to hide a problem:
   // in some cases, in particular for likelihood, the binned efficiency distributions
-  // do not equal 1, at xmin, and 0 at xmax; of course, in principle we have the 
+  // do not equal 1, at xmin, and 0 at xmax; of course, in principle we have the
   // unbinned information available in the trees, but the unbinned minimization is
   // too slow, and we don't need to do a precision measurement here. Hence, we force
   // this property.
   Double_t eps = 1.0e-5;
-  if      (theCut-fXmin < eps) retval = (GetCutOrientation() == Positive) ? 1.0 : 0.0;
-  else if (fXmax-theCut < eps) retval = (GetCutOrientation() == Positive) ? 0.0 : 1.0;
+  if      (theCut-fXmin < eps) retval = (GetCutOrientation() == kPositive) ? 1.0 : 0.0;
+  else if (fXmax-theCut < eps) retval = (GetCutOrientation() == kPositive) ? 0.0 : 1.0;
 
   return retval;
 };

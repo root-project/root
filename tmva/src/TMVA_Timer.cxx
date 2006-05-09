@@ -35,15 +35,15 @@ const TString BC__b1    = "\033[1;42m" ;
 const TString BC__f1    = "\033[33m"   ;
 const TString EC__      = "\033[0m"    ;
 
-const TString TMVA_Timer::fMethodName = "TMVA_Timer";
-const Int_t   TMVA_Timer::fNbins      = 24;  
+const TString TMVA_Timer::fgMethodName = "TMVA_Timer";
+const Int_t   TMVA_Timer::fgNbins      = 24;  
 
 ClassImp(TMVA_Timer)
 
 //_______________________________________________________________________
 TMVA_Timer::TMVA_Timer( Bool_t colourfulOutput )
   : fNcounts        ( 0 ),
-    fPrefix         ( TMVA_Timer::fMethodName ),
+    fPrefix         ( TMVA_Timer::fgMethodName ),
     fColourfulOutput( colourfulOutput )
 {
   Reset();
@@ -54,7 +54,7 @@ TMVA_Timer::TMVA_Timer( Int_t ncounts, TString prefix, Bool_t colourfulOutput  )
   : fNcounts        ( ncounts ),
     fColourfulOutput( colourfulOutput )
 {
-  if (prefix == "") fPrefix = TMVA_Timer::fMethodName;
+  if (prefix == "") fPrefix = TMVA_Timer::fgMethodName;
   else              fPrefix = prefix;
 
   Reset();
@@ -105,7 +105,7 @@ void TMVA_Timer::DrawProgressBar( Int_t icounts )
   // sanity check:
   if (icounts > fNcounts-1) icounts = fNcounts-1;
   if (icounts < 0          ) icounts = 0;
-  Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fNbins);
+  Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fgNbins);
 
   clog << "--- " << fPrefix << ": ";
   if (fColourfulOutput) clog << BC__b1 << BC__f1 << "[" << EC__;
@@ -114,7 +114,7 @@ void TMVA_Timer::DrawProgressBar( Int_t icounts )
     if (fColourfulOutput) clog << BC__b1 << BC__f1 << ">" << EC__; 
     else                   clog << ">";
   }
-  for (Int_t i=ic+1; i<fNbins; i++) {
+  for (Int_t i=ic+1; i<fgNbins; i++) {
     if (fColourfulOutput) clog << BC__b1 << BC__f1 << "." << EC__; 
     else                   clog << ".";
   }

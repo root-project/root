@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodFisher.h,v 1.5 2006/05/02 23:27:40 helgevoss Exp $
+// @(#)root/tmva $Id: TMVA_MethodFisher.h,v 1.1 2006/05/08 12:46:31 brun Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -30,7 +30,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodFisher.h,v 1.5 2006/05/02 23:27:40 helgevoss Exp $          
+ * $Id: TMVA_MethodFisher.h,v 1.1 2006/05/08 12:46:31 brun Exp $          
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodFisher
@@ -84,7 +84,7 @@ class TMVA_MethodFisher : public TMVA_MethodBase {
   // write method specific histos to target file
   virtual void WriteHistosToFile( void ) ;
 
-  enum FisherMethod { Fisher, Mahalanobis };
+  enum FisherMethod { kFisher, kMahalanobis };
   virtual FisherMethod GetMethod( void ) { return fFisherMethod; }
 
  protected:

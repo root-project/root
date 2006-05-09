@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.3 2006/05/08 15:39:03 brun Exp $   
+// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.4 2006/05/08 17:56:50 brun Exp $   
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -307,22 +307,22 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
      // loop over existing bins and add the new ones
      // store their values in temporary opjects
      Int_t nOldBins =  fMultipleMVAnames.size();
-     //TString SimpleName[nOldBins], Description[nOldBins];
-     TString SimpleName[1000], Description[1000]; //please check
-     //TCut OldCut[nOldBins];
-     TCut OldCut[1000];
+     //TString simpleName[nOldBins], description[nOldBins];
+     TString simpleName[1000], description[1000]; //please check
+     //TCut oldCut[nOldBins];
+     TCut oldCut[1000];
      Int_t binc=0;
      for (map<TString, std::pair<TString,TCut> >::iterator oldBin = fMultipleMVAnames.begin();
 	  oldBin != fMultipleMVAnames.end(); oldBin++) {
-       SimpleName[binc]=oldBin->first;
-       Description[binc]=(oldBin->second).first;
-       OldCut[binc]=(oldBin->second).second;
+       simpleName[binc]=oldBin->first;
+       description[binc]=(oldBin->second).first;
+       oldCut[binc]=(oldBin->second).second;
        binc++;
      } // end of loop over existing bins
      // erase the old map
      map<TString, std::pair<TString,TCut> >::iterator startBins = fMultipleMVAnames.begin();
-     map<TString, std::pair<TString,TCut> >::iterator EndBins = fMultipleMVAnames.end();
-     fMultipleMVAnames.erase(startBins, EndBins);
+     map<TString, std::pair<TString,TCut> >::iterator endBins = fMultipleMVAnames.end();
+     fMultipleMVAnames.erase(startBins, endBins);
 
      // create new map
      for(Int_t oldbin=0; oldbin<nOldBins; oldbin++){
@@ -332,10 +332,10 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
  	 //    fMultipleMVAnames = new TMap(nbins);
 	 
  	 // simple bin name
- 	 TString *binMVAname = new TString( SimpleName[oldbin] + "__" + theVariable + 
+ 	 TString *binMVAname = new TString( simpleName[oldbin] + "__" + theVariable + 
  					    Form("_bin_%d",(bin+1)));
  	 // this is the cut in human readable version
- 	 TString *binMVAdescription = new TString( Description[oldbin] + " && " 
+ 	 TString *binMVAdescription = new TString( description[oldbin] + " && " 
 						   + Form(" %g < ",array[bin])  
  						   + theVariable  
  						   + Form(" < %g",array[bin+1]));
@@ -349,7 +349,7 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
 	 
 	 
  	 // fill all three into the map
- 	 fMultipleMVAnames[*binMVAname] =  std::pair<TString,TCut>(*binMVAdescription, *binMVACut + OldCut[oldbin]);
+ 	 fMultipleMVAnames[*binMVAname] =  std::pair<TString,TCut>(*binMVAdescription, *binMVACut + oldCut[oldbin]);
 
 	 if (Verbose()) cout << "--- " <<  GetName() <<": "
 			     <<binMVAname->Data()
@@ -1095,8 +1095,8 @@ TMVA_MethodBase* TMVA_Factory::GetMVA( TString method )
   vector<TMVA_MethodBase*>::iterator itrMethod    = fMethods.begin();
   vector<TMVA_MethodBase*>::iterator itrMethodEnd = fMethods.end();
   for(; itrMethod != itrMethodEnd; itrMethod++) {
-    TMVA_MethodBase* MVA = (*itrMethod);    
-    if ( (MVA->GetMethodName()).Contains(method)) return MVA;
+    TMVA_MethodBase* mva = (*itrMethod);    
+    if ( (mva->GetMethodName()).Contains(method)) return mva;
   }
   return 0;
 }
@@ -1228,8 +1228,8 @@ void TMVA_Factory::EvaluateAllMethods( void )
     // perform the evaluation
     (*itrMethod)->TestInit(fTestTree);
     // do the job
-    if ((*itrMethod)->isOK()) (*itrMethod)->Test(fTestTree);
-    if ((*itrMethod)->isOK()) {
+    if ((*itrMethod)->IsOK()) (*itrMethod)->Test(fTestTree);
+    if ((*itrMethod)->IsOK()) {
       mname[isel].push_back( (*itrMethod)->GetMethodName() );  
       sig[isel].push_back  ( (*itrMethod)->GetSignificance() );
       sep[isel].push_back  ( (*itrMethod)->GetSeparation() );
@@ -1243,7 +1243,7 @@ void TMVA_Factory::EvaluateAllMethods( void )
     else {
       cout << "--- " << GetName() << ": Warning: " << (*itrMethod)->GetName() 
 	   << " returned isOK flag: " 
-	   << (*itrMethod)->isOK() << endl;
+	   << (*itrMethod)->IsOK() << endl;
     }
   }
 

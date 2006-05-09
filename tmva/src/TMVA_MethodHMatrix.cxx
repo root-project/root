@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodHMatrix.cpp,v 1.9 2006/05/03 08:31:10 helgevoss Exp $    
+// @(#)root/tmva $Id: TMVA_MethodHMatrix.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Andreas Hoecker, Xavier Prudent, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodHMatrix.cpp,v 1.9 2006/05/03 08:31:10 helgevoss Exp $        
+ * $Id: TMVA_MethodHMatrix.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $        
  **********************************************************************************/
 
 #include "TMVA_MethodHMatrix.h"
@@ -129,12 +129,12 @@ Double_t TMVA_MethodHMatrix::GetMvaValue( TMVA_Event *e )
 {
   Double_t myMVA = 0;
 
-  Double_t S = GetChi2( e, Signal     );
-  Double_t B = GetChi2( e, Background );
+  Double_t s = GetChi2( e, kSignal     );
+  Double_t b = GetChi2( e, kBackground );
   
-  if ((S + B) > 0) myMVA = (B - S)/(S + B);
+  if ((s + b) > 0) myMVA = (b - s)/(s + b);
   else {
-    cout << "--- " << GetName() << ": Big trouble: S+B: " << S+B << " ==> abort"
+    cout << "--- " << GetName() << ": Big trouble: s+b: " << s+b << " ==> abort"
 	 << endl;
     exit(1);
   }
@@ -157,7 +157,7 @@ Double_t TMVA_MethodHMatrix::GetChi2( TMVA_Event *e,  Type type ) const
   Double_t chi2 = 0;
   for (ivar=0; ivar<fNvar; ivar++) {
     for (jvar=0; jvar<fNvar; jvar++) {
-      if (type == Signal) 
+      if (type == kSignal) 
   	chi2 += ( (val[ivar] - (*fVecMeanS)(ivar))*(val[jvar] - (*fVecMeanS)(jvar))
   		  * (*fInvHMatrixS)(ivar,jvar) );
       else

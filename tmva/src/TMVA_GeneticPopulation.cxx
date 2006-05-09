@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticPopulation.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticPopulation.cxx,v 1.2 2006/05/08 20:56:17 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -69,13 +69,13 @@ void TMVA_GeneticPopulation::CreatePopulation( Int_t size )
   for( Int_t i=0; i<fPopulationSize; i++ ){
     newEntry.clear();
     for( rIt = fRanges.begin(); rIt<fRanges.end(); rIt++ ){
-      newEntry.push_back( (*rIt)->random() );
+      newEntry.push_back( (*rIt)->Random() );
     }
     entry e(0, TMVA_GeneticGenes( newEntry) );
     fGenePool->insert( e );
   }
 
-  counter = fGenePool->begin();
+  fCounter = fGenePool->begin();
 }
 
 void TMVA_GeneticPopulation::AddPopulation( TMVA_GeneticPopulation *strangers )
@@ -159,7 +159,7 @@ void TMVA_GeneticPopulation::Mutate( Double_t probability , Int_t startIndex,
       vecRange = fRanges.begin();
       for( vec = (it->second.fFactors).begin(); vec < (it->second.fFactors).end(); vec++ ){
 	if( fRandomGenerator->Uniform( 100 ) <= probability ){
-	  (*vec) = (*vecRange)->random( near, (*vec), spread, mirror );
+	  (*vec) = (*vecRange)->Random( near, (*vec), spread, mirror );
 	}
 	vecRange++;
       }
@@ -198,27 +198,27 @@ void TMVA_GeneticPopulation::ClearResults()
 TMVA_GeneticGenes* TMVA_GeneticPopulation::GetGenes()
 {
   TMVA_GeneticGenes *g;
-  if( counter == fGenePool->end() ) {
+  if( fCounter == fGenePool->end() ) {
     g = new TMVA_GeneticGenes();
     return g;
   }
-  g = &(counter->second);
-  fCounterFitness = counter->first;
+  g = &(fCounter->second);
+  fCounterFitness = fCounter->first;
   return g;
 }
 
 Double_t TMVA_GeneticPopulation::GetFitness()
 {
-  if( counter == fGenePool->end() ) {
+  if( fCounter == fGenePool->end() ) {
     Reset();
     return -1.;
   }
-  return counter->first;
+  return fCounter->first;
 }
 
 void TMVA_GeneticPopulation::Reset()
 {
-  counter = fGenePool->begin();
+  fCounter = fGenePool->begin();
   fNewGenePool->clear();
 }
 
@@ -226,10 +226,10 @@ Bool_t TMVA_GeneticPopulation::SetFitness( TMVA_GeneticGenes *g, Double_t fitnes
 {
   if( add ) g->fResults.push_back( fitness );
   fNewGenePool->insert( entry( fitness, *g) );
-  counter++;
-  if( counter == fGenePool->end() ){
+  fCounter++;
+  if( fCounter == fGenePool->end() ){
     fGenePool->swap( (*fNewGenePool) );
-    counter = fGenePool->begin();
+    fCounter = fGenePool->begin();
     Reset();
     return kFALSE;
   }

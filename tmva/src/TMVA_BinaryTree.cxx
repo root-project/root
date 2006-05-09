@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_BinaryTree.cpp,v 1.9 2006/05/03 19:45:38 helgevoss Exp $    
+// @(#)root/tmva $Id: TMVA_BinaryTree.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -46,9 +46,9 @@ ClassImp(TMVA_BinaryTree)
 //_______________________________________________________________________
 TMVA_BinaryTree::TMVA_BinaryTree( void )
   :     fNNodes  ( 0 ), 
-	fSumOfWeights( 0 ),
-	fRoot ( NULL ), 
-	fPeriode ( 1 ) 
+        fSumOfWeights( 0 ),
+        fRoot ( NULL ), 
+        fPeriode ( 1 ) 
 {}
 
 //_______________________________________________________________________

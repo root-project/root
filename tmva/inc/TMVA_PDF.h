@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_PDF.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TMVA_PDF.h,v 1.1 2006/05/08 12:46:31 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -26,7 +26,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_PDF.h,v 1.4 2006/04/29 23:55:41 andreas.hoecker Exp $
+ * $Id: TMVA_PDF.h,v 1.1 2006/05/08 12:46:31 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_PDF
@@ -48,10 +48,10 @@ class TMVA_PDF : public TObject {
   
  public:
 
-  enum SmoothMethod { Spline1, Spline2, Spline3, Spline5 };
+  enum SmoothMethod { kSpline1, kSpline2, kSpline3, kSpline5 };
   
   TMVA_PDF( const TH1* theHist, 
-	   TMVA_PDF::SmoothMethod method = Spline2,
+	   TMVA_PDF::SmoothMethod method = kSpline2,
 	   Int_t nsmooth = 0 );
   
   ~TMVA_PDF( void );
@@ -68,8 +68,8 @@ class TMVA_PDF : public TObject {
 
  private:
 
-  void     checkHist(void);
-  void     fillSplineToHist( void );
+  void     CheckHist(void);
+  void     FillSplineToHist( void );
   Double_t Integral  ( Double_t xmin, Double_t xmax );
   Double_t Integral  ( void );
   

@@ -1,7 +1,7 @@
-// @(#)root/tmva $Id: TMVA_MethodTMlpANN.cpp,v 1.12 2006/05/02 12:01:35 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodTMlpANN.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
-// @(#)root/tmva $Id: TMVA_MethodTMlpANN.cpp,v 1.12 2006/05/02 12:01:35 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodTMlpANN.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -114,7 +114,7 @@ TMVA_MethodTMlpANN::~TMVA_MethodTMlpANN( void )
 void TMVA_MethodTMlpANN::CreateMLPOptions( void )
 {
   // parse the option string
-  vector<Int_t>* nodes = parseOptionString( fOptions, fNvar, new vector<Int_t>() );
+  vector<Int_t>* nodes = ParseOptionString( fOptions, fNvar, new vector<Int_t>() );
   fNcycles = (*nodes)[0];
   fHiddenLayer = ":";
   for (UInt_t i=1; i<nodes->size(); i++) 

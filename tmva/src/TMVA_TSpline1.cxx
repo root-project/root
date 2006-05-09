@@ -62,9 +62,9 @@ Double_t TMVA_TSpline1::Eval( Double_t x ) const
   else
     nextbin--;  
 
-  Double_t Dx = fGraph->GetX()[ibin] - fGraph->GetX()[nextbin];
-  Double_t Dy = fGraph->GetY()[ibin] - fGraph->GetY()[nextbin];
-  return fGraph->GetY()[ibin] + (x - fGraph->GetX()[ibin]) * Dy/Dx;
+  Double_t dx = fGraph->GetX()[ibin] - fGraph->GetX()[nextbin];
+  Double_t dy = fGraph->GetY()[ibin] - fGraph->GetY()[nextbin];
+  return fGraph->GetY()[ibin] + (x - fGraph->GetX()[ibin]) * dy/dx;
 }
 
 //_______________________________________________________________________

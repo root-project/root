@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodLikelihood.cpp,v 1.13 2006/05/03 08:31:10 helgevoss Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodLikelihood.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -86,12 +86,12 @@ TMVA_MethodLikelihood::TMVA_MethodLikelihood( TString jobName, vector<TString>* 
 
   if (list->GetSize() > 0) {
     TString s = ((TObjString*)list->At(0))->GetString();
-    if       (s.Contains("Spline2")) fSmoothMethod = TMVA_PDF::Spline2;
-    else  if (s.Contains("Spline3")) fSmoothMethod = TMVA_PDF::Spline3;      
-    else  if (s.Contains("Spline5")) fSmoothMethod = TMVA_PDF::Spline3;
+    if       (s.Contains("Spline2")) fSmoothMethod = TMVA_PDF::kSpline2;
+    else  if (s.Contains("Spline3")) fSmoothMethod = TMVA_PDF::kSpline3;      
+    else  if (s.Contains("Spline5")) fSmoothMethod = TMVA_PDF::kSpline3;
     else {
       cout  << "--- " << GetName() << ": WARNING unknown Spline type! Choose Spline2" << endl;
-      fSmoothMethod = TMVA_PDF::Spline2;
+      fSmoothMethod = TMVA_PDF::kSpline2;
     }
   }
 
@@ -120,9 +120,9 @@ TMVA_MethodLikelihood::TMVA_MethodLikelihood( TString jobName, vector<TString>* 
   }  
 
   cout << "--- " << GetName() << ": smooth input histos "<<fNsmooth<<" times; ";
-  if (fSmoothMethod == TMVA_PDF::Spline2) cout << "Spline2";
-  if (fSmoothMethod == TMVA_PDF::Spline3) cout << "Spline3";
-  if (fSmoothMethod == TMVA_PDF::Spline5) cout << "Spline5";
+  if (fSmoothMethod == TMVA_PDF::kSpline2) cout << "Spline2";
+  if (fSmoothMethod == TMVA_PDF::kSpline3) cout << "Spline3";
+  if (fSmoothMethod == TMVA_PDF::kSpline5) cout << "Spline5";
   cout << " for smoothing; <events> per bin " << fAverageEvtPerBin << endl;
 
   
@@ -274,35 +274,35 @@ void TMVA_MethodLikelihood::Train( void )
   fNbins = (Int_t)(TMath::Min(fNsig,fNbgd)/fAverageEvtPerBin);
   
   TString histTitle, histName;
-  TVector* Vmin = new TVector( fNvar );
-  TVector* Vmax = new TVector( fNvar );
-  TVector* VS   = new TVector( fNvar );
-  TVector* VB   = new TVector( fNvar );
-  for (Int_t ivar=0; ivar<fNvar; ivar++) { (*Vmin)(ivar) = 1e15; (*Vmax)(ivar) = -1e15; }
+  TVector* vmin = new TVector( fNvar );
+  TVector* vmax = new TVector( fNvar );
+  TVector* vs   = new TVector( fNvar );
+  TVector* vb   = new TVector( fNvar );
+  for (Int_t ivar=0; ivar<fNvar; ivar++) { (*vmin)(ivar) = 1e15; (*vmax)(ivar) = -1e15; }
 
   // search for kinematic borders
   for (Int_t ievt=0; ievt<fTrainingTree->GetEntries(); ievt++) {
 
     for (Int_t ivar=0; ivar<fNvar; ivar++) {
       Double_t x = TMVA_Tools::GetValue( fTrainingTree, ievt, (*fInputVars)[ivar] );
-      (*VS)(ivar) = __N__( x, GetXminNorm( ivar ), GetXmaxNorm( ivar ) );
-      (*VB)(ivar) = (*VS)(ivar);
+      (*vs)(ivar) = __N__( x, GetXminNorm( ivar ), GetXmaxNorm( ivar ) );
+      (*vb)(ivar) = (*vs)(ivar);
     }
 
     // the minima and maxima will change after the diagonalization
-    if (fDecorrVarSpace) { (*VS) *= (*fSqS); (*VB) *= (*fSqB); }
+    if (fDecorrVarSpace) { (*vs) *= (*fSqS); (*vb) *= (*fSqB); }
 
     for (Int_t ivar=0; ivar<fNvar; ivar++) {
-      if ((*VS)(ivar) < (*Vmin)(ivar)) (*Vmin)(ivar) = (*VS)(ivar);
-      if ((*VB)(ivar) < (*Vmin)(ivar)) (*Vmin)(ivar) = (*VB)(ivar);
-      if ((*VS)(ivar) > (*Vmax)(ivar)) (*Vmax)(ivar) = (*VS)(ivar);
-      if ((*VB)(ivar) > (*Vmax)(ivar)) (*Vmax)(ivar) = (*VB)(ivar);
+      if ((*vs)(ivar) < (*vmin)(ivar)) (*vmin)(ivar) = (*vs)(ivar);
+      if ((*vb)(ivar) < (*vmin)(ivar)) (*vmin)(ivar) = (*vb)(ivar);
+      if ((*vs)(ivar) > (*vmax)(ivar)) (*vmax)(ivar) = (*vs)(ivar);
+      if ((*vb)(ivar) > (*vmax)(ivar)) (*vmax)(ivar) = (*vb)(ivar);
     }      
   }
   if (Verbose()) {
     cout << "--- " << GetName() << " <verbose>: variable minima and maxima: " << endl;
-    Vmin->Print();
-    Vmax->Print();
+    vmin->Print();
+    vmax->Print();
   }
   
   for (Int_t ivar=0; ivar<fNvar; ivar++) { 
@@ -310,46 +310,46 @@ void TMVA_MethodLikelihood::Train( void )
     // for signal events
     histTitle         = (*fInputVars)[ivar] + " signal training";
     histName          = (*fInputVars)[ivar] + "_sig";
-    TH1F *htemp    = new TH1F( histName, histTitle, fNbins, (*Vmin)(ivar), (*Vmax)(ivar) );
+    TH1F *htemp    = new TH1F( histName, histTitle, fNbins, (*vmin)(ivar), (*vmax)(ivar) );
     (*fHistSig)[ivar]   = htemp;
 
     // for background events
     histTitle         = (*fInputVars)[ivar] + " background training";
     histName          = (*fInputVars)[ivar] + "_bgd";
-    TH1F *htemp2 = new TH1F( histName, histTitle, fNbins, (*Vmin)(ivar), (*Vmax)(ivar) );
+    TH1F *htemp2 = new TH1F( histName, histTitle, fNbins, (*vmin)(ivar), (*vmax)(ivar) );
     (*fHistBgd)[ivar]   = htemp2;
 
     
   }
 
-  delete Vmin;
-  delete Vmax;
-  delete VS;
-  delete VB;
+  delete vmin;
+  delete vmax;
+  delete vs;
+  delete vb;
   
   // ----- fill the reference histograms
 
   // event loop
-  TVector* V = new TVector( fNvar );
+  TVector* v = new TVector( fNvar );
   for (Int_t ievt=0; ievt<fTrainingTree->GetEntries(); ievt++) {
 
     // fill variable vector
     for (Int_t ivar=0; ivar<fNvar; ivar++) {
       Double_t x = TMVA_Tools::GetValue( fTrainingTree, ievt, (*fInputVars)[ivar] );
-      (*V)(ivar) = __N__( x, GetXminNorm( ivar ), GetXmaxNorm( ivar ) );
+      (*v)(ivar) = __N__( x, GetXminNorm( ivar ), GetXmaxNorm( ivar ) );
     }
 
     // compute diagonalized vector
     if ((Int_t)TMVA_Tools::GetValue( fTrainingTree, ievt, "type") == 1) {
-      if (fDecorrVarSpace) (*V) *= (*fSqS);
-      for (Int_t ivar=0; ivar<fNvar; ivar++) (*fHistSig)[ivar]->Fill( (Float_t)(*V)(ivar) );
+      if (fDecorrVarSpace) (*v) *= (*fSqS);
+      for (Int_t ivar=0; ivar<fNvar; ivar++) (*fHistSig)[ivar]->Fill( (Float_t)(*v)(ivar) );
     }
     else {
-      if (fDecorrVarSpace) (*V) *= (*fSqB);
-      for (Int_t ivar=0; ivar<fNvar; ivar++) (*fHistBgd)[ivar]->Fill( (Float_t)(*V)(ivar) );
+      if (fDecorrVarSpace) (*v) *= (*fSqB);
+      for (Int_t ivar=0; ivar<fNvar; ivar++) (*fHistBgd)[ivar]->Fill( (Float_t)(*v)(ivar) );
     }
   }
-  delete V;
+  delete v;
 
   // apply smoothing, and create PDFs
   for (Int_t ivar=0; ivar<fNvar; ivar++) { 
@@ -412,19 +412,19 @@ Double_t TMVA_MethodLikelihood::GetMvaValue( TMVA_Event *e )
   Double_t pb = 1;
   
   // retrieve variables, and transform, if required
-  TVector VS( fNvar );
-  TVector VB( fNvar );
+  TVector vs( fNvar );
+  TVector vb( fNvar );
   for (ivar=0; ivar<fNvar; ivar++) {
-    VS(ivar) = __N__( e->GetData(ivar), GetXminNorm( ivar ), GetXmaxNorm( ivar ) );
-    VB(ivar) = VS(ivar);
+    vs(ivar) = __N__( e->GetData(ivar), GetXminNorm( ivar ), GetXmaxNorm( ivar ) );
+    vb(ivar) = vs(ivar);
   }
-  if (fDecorrVarSpace) { VS *= (*fSqS); VB *= (*fSqB); }
+  if (fDecorrVarSpace) { vs *= (*fSqS); vb *= (*fSqB); }
 
   // compute the likelihood (signal)
   TIter next1(fSigPDFHist);
   for (ivar=0; ivar<fNvar; ivar++) {
     
-    Double_t x = VS(ivar);
+    Double_t x = vs(ivar);
     
     next1.Reset();
     while ((hist = (TH1D*)next1())) {
@@ -442,9 +442,9 @@ Double_t TMVA_MethodLikelihood::GetMvaValue( TMVA_Event *e )
     else
       nextbin--;  
     
-    Double_t Dx   = hist->GetBinCenter(bin)  - hist->GetBinCenter(nextbin);
-    Double_t Dy   = hist->GetBinContent(bin) - hist->GetBinContent(nextbin);
-    Double_t like = hist->GetBinContent(bin) + (x - hist->GetBinCenter(bin)) * Dy/Dx;
+    Double_t dx   = hist->GetBinCenter(bin)  - hist->GetBinCenter(nextbin);
+    Double_t dy   = hist->GetBinContent(bin) - hist->GetBinContent(nextbin);
+    Double_t like = hist->GetBinContent(bin) + (x - hist->GetBinCenter(bin)) * dy/dx;
     ps *= max(like, fEpsilon);
   }     
   
@@ -452,7 +452,7 @@ Double_t TMVA_MethodLikelihood::GetMvaValue( TMVA_Event *e )
   TIter next2(fBgdPDFHist);
   for (ivar=0; ivar<fNvar; ivar++) {
     
-    Double_t x = VB(ivar);
+    Double_t x = vb(ivar);
     
     next2.Reset();
     while ((hist = (TH1D*)next2())) {
@@ -470,9 +470,9 @@ Double_t TMVA_MethodLikelihood::GetMvaValue( TMVA_Event *e )
     else
       nextbin--;  
     
-    Double_t Dx   = hist->GetBinCenter(bin)  - hist->GetBinCenter(nextbin);
-    Double_t Dy   = hist->GetBinContent(bin) - hist->GetBinContent(nextbin);
-    Double_t like = hist->GetBinContent(bin) + (x - hist->GetBinCenter(bin)) * Dy/Dx;
+    Double_t dx   = hist->GetBinCenter(bin)  - hist->GetBinCenter(nextbin);
+    Double_t dy   = hist->GetBinContent(bin) - hist->GetBinContent(nextbin);
+    Double_t like = hist->GetBinContent(bin) + (x - hist->GetBinCenter(bin)) * dy/dx;
     pb *= max(like, fEpsilon);
   }
   
@@ -520,18 +520,18 @@ void  TMVA_MethodLikelihood::WriteWeightsToFile( void )
   // build TList of input variables, and TVectors for min/max
   // NOTE: the latter values are mandatory for the normalisation 
   // in the reader application !!!
-  TList    Lvar;
-  TVectorD Vmin( fNvar ), Vmax( fNvar );
+  TList    lvar;
+  TVectorD vmin( fNvar ), Vmax( fNvar );
   for (Int_t ivar=0; ivar<fNvar; ivar++) {
-    Lvar.Add( new TNamed( (*fInputVars)[ivar], TString() ) );
-    Vmin[ivar] = this->GetXminNorm( ivar );
+    lvar.Add( new TNamed( (*fInputVars)[ivar], TString() ) );
+    vmin[ivar] = this->GetXminNorm( ivar );
     Vmax[ivar] = this->GetXmaxNorm( ivar );
   }
   // write to file
-  Lvar.Write();
-  Vmin.Write( "Vmin" );
+  lvar.Write();
+  vmin.Write( "vmin" );
   Vmax.Write( "Vmax" );
-  Lvar.Delete();
+  lvar.Delete();
 
   // save configuration options
   // (best would be to use a TMap here, but found implementation really complicated)
@@ -571,7 +571,7 @@ void  TMVA_MethodLikelihood::ReadWeightsFromFile( void )
   // build TList of input variables, and TVectors for min/max
   // NOTE: the latter values are mandatory for the normalisation 
   // in the reader application 
-  TList Lvar;
+  TList lvar;
   for (Int_t ivar=0; ivar<fNvar; ivar++) {    
     // read variable names
     TNamed t;
@@ -587,16 +587,16 @@ void  TMVA_MethodLikelihood::ReadWeightsFromFile( void )
   }
 
   // read vectors
-  TVectorD Vmin( fNvar ), Vmax( fNvar );
-  // unfortunatly the more elegant Vmin/max.Read( "Vmin/max" ) crash in ROOT <= V4.04.02
-  TVectorD *tmp = (TVectorD*)fFin->Get( "Vmin" );
-  Vmin = *tmp;
+  TVectorD vmin( fNvar ), Vmax( fNvar );
+  // unfortunatly the more elegant vmin/max.Read( "vmin/max" ) crash in ROOT <= V4.04.02
+  TVectorD *tmp = (TVectorD*)fFin->Get( "vmin" );
+  vmin = *tmp;
   tmp  = (TVectorD*)fFin->Get( "Vmax" );
   Vmax = *tmp;
 
   // initialize min/max
   for (Int_t ivar=0; ivar<fNvar; ivar++) {    
-    this->SetXminNorm( ivar, Vmin[ivar] );
+    this->SetXminNorm( ivar, vmin[ivar] );
     this->SetXmaxNorm( ivar, Vmax[ivar] );
   }
 

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticRange.h,v 1.1 2006/05/08 12:46:31 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticRange.h,v 1.2 2006/05/08 20:56:16 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -44,21 +44,21 @@ class TMVA_GeneticRange {
   TMVA_GeneticRange( TRandom *rnd, Double_t f, Double_t t );
   virtual ~TMVA_GeneticRange();
 
-  Double_t from, to;
-  Double_t totalLength;
+  Double_t fFrom, fTo;
+  Double_t fTotalLength;
 
-  TRandom *randomGenerator;
+  TRandom *fRandomGenerator;
 
-  Double_t random( Bool_t near = kFALSE, Double_t value=0, Double_t spread=0.1, Bool_t mirror=kFALSE );
+  Double_t Random( Bool_t near = kFALSE, Double_t value=0, Double_t spread=0.1, Bool_t mirror=kFALSE );
 
  private:
 
   // maps the values thrown outside of the ]from,to] interval back to the interval
   // the values which leave the range on the from-side, are mapped in to the to-side
-  Double_t reMap( Double_t val );
+  Double_t ReMap( Double_t val );
 
   // same as before, but the values leaving the allowed range, are mirrored into the range.
-  Double_t reMapMirror( Double_t val );
+  Double_t ReMapMirror( Double_t val );
   ClassDef(TMVA_GeneticRange,0) //Range definition for genetic algorithm
 };
 
