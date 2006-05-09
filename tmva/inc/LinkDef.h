@@ -29,7 +29,6 @@
 #pragma link C++ class TMVA_DecisionTree;
 #pragma link C++ class TMVA_DecisionTreeNode;
 #pragma link C++ class TMVA_Event;
-#pragma link C++ class TMVA_GiniIndex;
 #pragma link C++ class TMVA_MisClassificationError;
 #pragma link C++ class TMVA_Node;
 #pragma link C++ class TMVA_SdivSqrtSplusB;
