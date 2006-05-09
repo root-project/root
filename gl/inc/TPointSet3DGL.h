@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TPointSet3DGL.h,v 1.3 2006/04/07 09:20:43 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 class TPointSet3DGL : public TGLObject
 {
 protected:
-  virtual void DirectDraw(const TGLDrawFlags & flags) const;
+   virtual void DirectDraw(const TGLDrawFlags & flags) const;
 
 public:
    TPointSet3DGL();
@@ -31,7 +31,7 @@ public:
 
    virtual Bool_t ShouldCache(const TGLDrawFlags & /*flags*/) const { return false; }
 
-  ClassDef(TPointSet3DGL,1)  // Sets of 3D points
+  ClassDef(TPointSet3DGL,1)  // GL renderer for TPointSet3D
 };
 
 #endif

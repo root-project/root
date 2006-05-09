@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttBBox.cxx,v 1.2 2006/04/07 09:20:43 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -18,12 +18,12 @@
 //
 // Helper for management of bounding-box information.
 // Optionally used by classes that use direct OpenGL rendering
-// via <Class>GLRenderer class.
+// via <Class>GL class.
 
 ClassImp(TAttBBox)
 
 //______________________________________________________________________________
-void TAttBBox::bbox_init(Float_t infinity)
+void TAttBBox::BBoxInit(Float_t infinity)
 {
    // Allocate and prepare for incremental filling.
 
@@ -35,7 +35,7 @@ void TAttBBox::bbox_init(Float_t infinity)
 }
 
 //______________________________________________________________________________
-void TAttBBox::bbox_zero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
+void TAttBBox::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
 {
    // Create cube of volume (2*epsiolon)^3 at (x,y,z).
    // epsilon iz zero by default.
@@ -48,7 +48,9 @@ void TAttBBox::bbox_zero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
 }
 
 //______________________________________________________________________________
-void TAttBBox::bbox_clear()
+void TAttBBox::BBoxClear()
 {
+   // Remove BBox information.
+
    delete [] fBBox; fBBox = 0;
 }

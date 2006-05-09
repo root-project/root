@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.2 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.3 2006/05/09 10:24:26 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -31,12 +31,12 @@ void TPointSet3D::ComputeBBox()
    if (fN > 0) {
       Int_t    n = fN;
       Float_t* p = fP;
-      bbox_init();
+      BBoxInit();
       while (n--) {
-         bbox_check_point(p);
+         BBoxCheckPoint(p);
          p += 3;
       }
    } else {
-      bbox_zero();
+      BBoxZero();
    }
 }

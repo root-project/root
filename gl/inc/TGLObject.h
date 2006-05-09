@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TSocket.h,v 1.20 2005/07/29 14:26:51 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLObject.h,v 1.2 2006/04/07 09:20:43 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -24,12 +24,12 @@ protected:
    // Abstract method from TGLDrawable:
    // virtual void DirectDraw(const TGLDrawFlags & flags) const;
 
-   Bool_t set_model(TObject* obj, const Text_t* classname);
+   Bool_t SetModelCheckClass(TObject* obj, const Text_t* classname);
 
-   void   set_axis_aligned_bbox(Float_t xmin, Float_t xmax,
+   void   SetAxisAlignedBBox(Float_t xmin, Float_t xmax,
                                 Float_t ymin, Float_t ymax,
                                 Float_t zmin, Float_t zmax);
-   void   set_axis_aligned_bbox(const Float_t* p);
+   void   SetAxisAlignedBBox(const Float_t* p);
 
 public:
    TGLObject() : TGLLogicalShape(0) {}
