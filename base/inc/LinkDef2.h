@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.32 2005/12/24 17:05:57 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.33 2006/05/04 13:06:15 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,7 @@
 #include <vector>
 
 #pragma link C++ class vector<string>;
+#pragma link C++ class vector<TString>;
 #pragma create TClass string;
 
 #pragma link C++ global gTQSender;
