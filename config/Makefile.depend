@@ -79,9 +79,9 @@ MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 MLPLIBEXTRA         = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                       lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib
 TMVALIBDEP          = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
-                      $(GPADLIB) $(TREEPLAYERLIB)
+                      $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
 TMVALIBEXTRA        = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
-                      lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib
+                      lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib lib/libMLP.lib
 SPLOTLIBDEP         = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                       $(G3DLIB) $(GRAFLIB)
 SPLOTLIBEXTRA       = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
@@ -198,9 +198,9 @@ ASIMAGEGSLIBDEP     = $(GRAFLIB) $(ASIMAGELIB)
 ASIMAGEGSLIBEXTRA   = -Llib -lGraf -lASImage
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
-MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
+MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer -lMLP
 TMVALIBDEP          = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
-                      $(GPADLIB) $(TREEPLAYERLIB)
+                      $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
 TMVALIBEXTRA        = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
 SPLOTLIBDEP         = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                       $(G3DLIB) $(GRAFLIB)

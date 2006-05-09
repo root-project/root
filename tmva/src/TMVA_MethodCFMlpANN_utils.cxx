@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN_utils.cpp,v 1.6 2006/05/02 12:01:35 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN_utils.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,7 +38,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: TMVA_MethodCFMlpANN_utils.cpp,v 1.6 2006/05/02 12:01:35 andreas.hoecker Exp $ 
+ * $Id: TMVA_MethodCFMlpANN_utils.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
  **********************************************************************************/
 
 #include "TMVA_MethodCFMlpANN_utils.h"
@@ -47,6 +47,7 @@
 #include <stdio.h>
 #include "string.h"
 
+#ifndef R__WIN32
 //_______________________________________________________________________
 //                                                                      
 // CFMlpANN implementation 
@@ -1585,4 +1586,5 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
 #endif

@@ -36,6 +36,12 @@
 #pragma link C++ class TMVA_SeparationBase;
 #pragma link C++ class TMVA_Tools;
 #pragma link C++ class TMVA_Reader;
+#pragma link C++ class TMVA_GeneticBase;
+#pragma link C++ class TMVA_GeneticCuts;
+#pragma link C++ class TMVA_GeneticGenes;
+#pragma link C++ class TMVA_GeneticPopulation;
+#pragma link C++ class TMVA_GeneticRange;
+#pragma link C++ class TMVA_GiniIndex;
 
 #pragma link C++ function TMVA_MethodCFMlpANN_dataInterface;
 #pragma link C++ function TMVA_MethodCFMlpANN_writeWeightsToFile;

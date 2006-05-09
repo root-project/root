@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cxx,v 1.2 2006/05/08 21:33:46 brun Exp $    
+// @(#)root/tmva $Id: TMVA_MethodCFMlpANN.cxx,v 1.3 2006/05/08 21:53:03 brun Exp $    
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -50,9 +50,11 @@ static Int_t         TMVA_MethodCFMlpANN_nsel    = 0;
 TMVA_MethodCFMlpANN* TMVA_MethodCFMlpANN::fThis = 0;
 
 // references for mlpl3 functions <=======please check
-//extern "C" Int_t train_nn__( Double_t *tin2, Double_t *tout2, Int_t *ntrain, 
-//			     Int_t *ntest, Int_t *nvar2, Int_t *nlayer, 
-//			     Int_t *nodes, Int_t *ncycle );
+#ifndef R__WIN32
+extern "C" Int_t train_nn__( Double_t *tin2, Double_t *tout2, Int_t *ntrain, 
+			     Int_t *ntest, Int_t *nvar2, Int_t *nlayer, 
+			     Int_t *nodes, Int_t *ncycle );
+#endif
 
 //_______________________________________________________________________
 int TMVA_MethodCFMlpANN_dataInterface( Double_t* /*tout2*/, Double_t*  /*tin2*/, 
@@ -387,8 +389,11 @@ void TMVA_MethodCFMlpANN::Train( void )
   Int_t* ncycles = new Int_t(fNcycles);
 
   //please check
-  //train_nn__( dumDat, dumDat, ntrain, ntest, nvar, nlayers, nodes, ncycles );
-  
+#ifndef R__WIN32
+    train_nn__( dumDat, dumDat, ntrain, ntest, nvar, nlayers, nodes, ncycles );
+#else
+    printf("Sorry train_nn is not yet implemented on Windows\n");
+#endif  
   delete nodes;
   delete ntrain;
   delete ntest;
