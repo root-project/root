@@ -116,9 +116,9 @@ G__EXPORT
 #endif
 G__SourceFileInfo {
  public:
-  G__SourceFileInfo() { Init(); }
-  G__SourceFileInfo(int filenin) { filen = filenin; }
-  G__SourceFileInfo(const char* fname) { Init(fname); }
+  G__SourceFileInfo(): filen(0) { Init(); }
+  G__SourceFileInfo(int filenin): filen(filenin) { }
+  G__SourceFileInfo(const char* fname): filen(0) { Init(fname); }
   ~G__SourceFileInfo() { }
   void Init() { 
     filen = -1; 
@@ -149,7 +149,10 @@ G__EXPORT
 #endif
 G__IncludePathInfo {
  public:
-  G__IncludePathInfo() { Init(); }
+  G__IncludePathInfo(): p(NULL) { Init(); }
+#ifndef __CINT__
+  G__IncludePathInfo(const G__IncludePathInfo& ipf): p(ipf.p) {}
+#endif
   ~G__IncludePathInfo() { }
   void Init() { p=(struct G__includepath*)NULL; }
   const char *Name(); 
@@ -157,6 +160,7 @@ G__IncludePathInfo {
   int IsValid();
   int Next();
  private:
+  G__IncludePathInfo& operator=(const G__IncludePathInfo&);
 #ifndef __CINT__
   struct G__includepath *p;
 #endif
