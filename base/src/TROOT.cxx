@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.177 2006/04/27 09:20:33 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.178 2006/05/04 13:03:36 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -309,6 +309,13 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
       //Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
+
+#ifndef ROOTPREFIX
+   if (!getenv("ROOTSYS")) {
+      fprintf(stderr, "Fatal in <TROOT::TROOT>: ROOTSYS not set. Set it before trying to run.\n");
+      exit(1);
+   }
+#endif
 
    R__LOCKGUARD2(gROOTMutex);
 
@@ -794,6 +801,7 @@ const char *TROOT::FindObjectPathName(const TObject *) const
    return "??";
 }
 
+//______________________________________________________________________________
 TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 {
    // return a TClass object corresponding to 'name' assuming it is an STL container.
@@ -1382,7 +1390,10 @@ void TROOT::InitSystem()
 #endif
 
       if (gSystem->Init())
-         Fatal("InitSystem", "can't init operating system layer");
+         fprintf(stderr, "Fatal in <TROOT::InitSystem>: can't init operating system layer\n");
+
+      if (!gSystem->HomeDirectory())
+         fprintf(stderr, "Fatal in <TROOT::InitSystem>: HOME directory not set\n");
 
       // read default files
       gEnv = new TEnv(".rootrc");
