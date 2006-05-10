@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.12 2005/07/12 15:23:24 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.13 2005/09/02 19:55:59 brun Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -429,8 +429,8 @@ again:
 
    // Notify, if requested ...
    if (gDebug > 1)
-     ErrorInfo("NetOpen: concurrent server: connection from host %s"
-               " via socket %d", gOpenhost.data(), gSockFd);
+      ErrorInfo("NetOpen: concurrent server: connection from host %s"
+                " via socket %d", gOpenhost.data(), gSockFd);
 
    return 0;
 }

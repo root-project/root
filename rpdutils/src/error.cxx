@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: error.cxx,v 1.3 2004/04/20 21:32:02 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: error.cxx,v 1.4 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 
@@ -85,9 +85,9 @@ void ErrorInfo(const char *va_(fmt), ...)
    va_end(ap);
 
    if (gSysLog) {
-    syslog(LOG_INFO, buf);
+      syslog(LOG_INFO, buf);
    } else {
-     fprintf(stderr, "%s\n",buf);
+      fprintf(stderr, "%s\n",buf);
    }
 }
 

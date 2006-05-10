@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.83 2005/11/01 18:33:40 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.84 2006/03/22 21:57:17 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -991,9 +991,9 @@ int main(int argc, char **argv)
    // Parent ID
    int proofdparentid = -1;      // Parent process ID
    if (!gInetdFlag)
-     proofdparentid = getpid(); // Identifies this family
+      proofdparentid = getpid(); // Identifies this family
    else
-     proofdparentid = getppid(); // Identifies this family
+      proofdparentid = getppid(); // Identifies this family
 
    // default job options
    unsigned int options = kDMN_RQAUTH | kDMN_HOSTEQ | kDMN_SYSLOG ;

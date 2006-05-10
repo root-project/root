@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.113 2006/05/01 20:19:14 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.114 2006/05/04 17:05:29 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -506,7 +506,7 @@ needshell:
             strcat(cmd, p);
          }
 
-    } else {
+   } else {
          hd = HomeDirectory(0);
          if (hd == 0) {
             Error(ErrSys, kErrFatal, "RootdExpandPathName: no home directory");
@@ -2467,9 +2467,9 @@ int main(int argc, char **argv)
    // Parent ID
    int rootdparentid = -1;      // Parent process ID
    if (!gInetdFlag)
-     rootdparentid = getpid(); // Identifies this family
+      rootdparentid = getpid(); // Identifies this family
    else
-     rootdparentid = getppid(); // Identifies this family
+      rootdparentid = getppid(); // Identifies this family
 
    // default job options
    unsigned int options = kDMN_RQAUTH | kDMN_HOSTEQ | kDMN_SYSLOG;
