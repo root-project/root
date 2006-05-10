@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.16 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.17 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -232,12 +232,12 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                new TGLayoutHints(kLHintsLeft | kLHintsExpandX |
                                  kLHintsExpandY, 4, 0, 0, 0));
 
-   fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask | 
+   fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
                                       kPointerMotionMask);
 
    //--- first check for the existence of some directories...
 
-   const char *homeDir = gSystem->Getenv("HOME");
+   const char *homeDir = gSystem->HomeDirectory();
 #ifndef ROOTPREFIX
    const char *rootSys = gSystem->Getenv("ROOTSYS");
 #else

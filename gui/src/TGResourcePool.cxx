@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.6 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.7 2005/11/24 23:30:05 rdm Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -106,7 +106,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
 #ifndef R__VMS
 # ifdef ROOTICONPATH
    sprintf(icon_path, "%s/icons:%s:.:",
-           gSystem->Getenv("HOME"),
+           gSystem->HomeDirectory(),
            ROOTICONPATH);
 #  ifdef EXTRAICONPATH
    strcat(icon_path, gEnv->GetValue("Gui.IconPath", EXTRAICONPATH));
@@ -114,15 +114,15 @@ TGResourcePool::TGResourcePool(TGClient *client)
    strcat(icon_path, gEnv->GetValue("Gui.IconPath", ""));
 #  endif
 # else
-   sprintf(icon_path, "%s/icons:%s/icons:.:", gSystem->Getenv("HOME"),
+   sprintf(icon_path, "%s/icons:%s/icons:.:", gSystem->HomeDirectory(),
                                               gSystem->Getenv("ROOTSYS"));
    strcat(icon_path, gEnv->GetValue("Gui.IconPath", ""));
 # endif
-   sprintf(line, "%s/.root.mimes", gSystem->Getenv("HOME"));
+   sprintf(line, "%s/.root.mimes", gSystem->HomeDirectory());
 #else
    sprintf(line,"[%s.ICONS]",gSystem->Getenv("ROOTSYS"));
    strcpy(icon_path, gEnv->GetValue("Gui.IconPath",line));
-   sprintf(line,"%sroot.mimes",gSystem->Getenv("HOME"));
+   sprintf(line,"%sroot.mimes",gSystem->HomeDirectory());
 #endif
 
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
@@ -144,7 +144,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
 #else // R__WIN32
    sprintf(icon_path, "%s\\icons:.:\\", gSystem->Getenv("ROOTSYS"));
    strcat(icon_path, gEnv->GetValue("Gui.IconPath", ""));
-   sprintf(line, "%s\\root.mimes", gSystem->Getenv("HOME"));
+   sprintf(line, "%s\\root.mimes", gSystem->HomeDirectory());
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
    if (gSystem->AccessPathName(mime_file, kReadPermission))
       sprintf(mime_file, "%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
@@ -209,7 +209,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    fGCPool = new TGGCPool(fClient);
 
    GCValues_t gval;
-   gval.fMask = kGCForeground | kGCBackground | kGCFont | 
+   gval.fMask = kGCForeground | kGCBackground | kGCFont |
                 kGCFillStyle  | kGCGraphicsExposures;
    gval.fGraphicsExposures = kFALSE;
    gval.fFillStyle  = kFillSolid;

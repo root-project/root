@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.12 2006/04/19 08:29:18 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.13 2006/05/10 07:40:12 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -3025,9 +3025,9 @@ void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
          if (fileinc[0] == '~') {
             // needs to expand
             int flen =
-               strlen(fileinc) + strlen(gSystem->Getenv("HOME")) + 10;
+               strlen(fileinc) + strlen(gSystem->HomeDirectory()) + 10;
             char *ffull = new char[flen];
-            sprintf(ffull, "%s/%s", gSystem->Getenv("HOME"), fileinc + 1);
+            sprintf(ffull, "%s/%s", gSystem->HomeDirectory(), fileinc + 1);
             strcpy(fileinc, ffull);
          }
          // Check if file exist and can be read ... ignore if not ...

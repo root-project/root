@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.cxx,v 1.9 2005/12/15 21:36:29 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.cxx,v 1.4 2006/03/24 15:31:10 antcheva Exp $
 // Author: Valeri Fine   21/01/2003
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -288,7 +288,7 @@ void TQMimeTypes::SaveMimes()
    // Save mime types in user's mime type file.
 
    char filename[1024];
-   sprintf(filename, "%s/.root.mimes", gSystem->Getenv("HOME"));
+   sprintf(filename, "%s/.root.mimes", gSystem->HomeDirectory());
 
    FILE *fp = fopen(filename, "w");
 

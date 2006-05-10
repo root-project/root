@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.20 2005/07/19 12:40:37 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.21 2005/11/17 01:20:45 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -668,7 +668,7 @@ Int_t GlobusCertFile(int LocalEnv, TString &CertFile)
          return 1;
       } else {
          // build default location
-         CertFile = TString(gSystem->Getenv("HOME")) + usercert_default;
+         CertFile = TString(gSystem->HomeDirectory() + usercert_default;
       }
    }
 

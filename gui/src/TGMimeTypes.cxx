@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.5 2005/05/24 20:05:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.6 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -180,7 +180,7 @@ const TGPicture *TGMimeTypes::GetIcon(const char *filename, Bool_t small_icon)
    if ((mime = Find(filename))) {
       Bool_t thumb = (mime->fType == "[thumbnail]");
       if (small_icon) {
-         mypic = thumb ? fClient->GetPicture(mime->fSIcon.Data(), 32, 32) : 
+         mypic = thumb ? fClient->GetPicture(mime->fSIcon.Data(), 32, 32) :
                          fClient->GetPicture(mime->fSIcon.Data(), 16, 16);
       } else {
          mypic = thumb ? fClient->GetPicture(mime->fIcon.Data(), 64, 64) :
@@ -248,9 +248,9 @@ void TGMimeTypes::SaveMimes()
 
    char filename[1024];
 #ifdef WIN32
-   sprintf(filename, "%s\\.root.mimes", gSystem->Getenv("HOME"));
+   sprintf(filename, "%s\\.root.mimes", gSystem->HomeDirectory());
 #else
-   sprintf(filename, "%s/.root.mimes", gSystem->Getenv("HOME"));
+   sprintf(filename, "%s/.root.mimes", gSystem->HomeDirectory());
 #endif
 
    FILE *fp = fopen(filename, "w");

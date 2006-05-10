@@ -76,7 +76,10 @@ void G__input_history(int *state,char *string)
      ********************************************************/
     *state = 1;
     prevstring[0]='\0'; /* sprintf(prevstring,""); */
-    sprintf(histfile,"%s/%s",getenv("HOME"),homehist);
+    if (getenv("HOME"))
+      sprintf(histfile,"%s/%s",getenv("HOME"),homehist);
+    else
+      sprintf(histfile,"./%s",homehist);
     fp=fopen(histfile,"r");
     if(fp) {
       while(G__readline(fp,G__oneline,G__argbuf,&argn,arg)!=0){

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.52 2006/03/28 16:35:00 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.53 2006/03/28 23:59:13 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -194,9 +194,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Goto into raw terminal input mode
    char defhist[kMAXPATHLEN];
 #ifndef R__VMS
-   sprintf(defhist, "%s/.root_hist", gSystem->Getenv("HOME"));
+   sprintf(defhist, "%s/.root_hist", gSystem->HomeDirectory());
 #else
-   sprintf(defhist, "%s.root_hist", gSystem->Getenv("HOME"));
+   sprintf(defhist, "%s.root_hist", gSystem->HomeDirectory());
 #endif
    logon = gEnv->GetValue("Rint.History", defhist);
    Gl_histinit((char *)logon);

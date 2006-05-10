@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.5 2006/03/16 08:49:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.6 2006/03/31 07:42:20 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -146,7 +146,7 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
                  " check existence and/or permissions", (cf ? cf : ""));
       // Use user defined file or default
       // Add a proper path to the file name
-      fFileName.Form("%s/.%s", gSystem->Getenv("HOME"), fileName);
+      fFileName.Form("%s/.%s", gSystem->HomeDirectory(), fileName);
       PDB(kGlobal,2)
          Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
       if (gSystem->AccessPathName(fFileName, kReadPermission)) {

@@ -1,4 +1,4 @@
-// @(#)root/clarens:$Name: PROOF_MLM $:$Id: TClSession.cxx,v 1.1.2.4 2004/11/07 22:02:31 maartenb Exp $
+// @(#)root/clarens:$Name:  $:$Id: TClSession.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn   25/10/2004
 
 /*************************************************************************
@@ -242,7 +242,7 @@ Bool_t TClSession::InitAuthentication()
          // yes, file exists
          bio = BIO_new_file(certFile,"r");
       } else {
-         certFile = gSystem->Getenv("HOME");
+         certFile = gSystem->HomeDirectory();
          certFile += "/.globus/usercert.pem";
          bio = BIO_new_file(certFile,"r");
       }
@@ -314,7 +314,7 @@ Bool_t TClSession::InitAuthentication()
          // yes, file exists
          bio = BIO_new_file(privfile,"r");
       } else {
-         privfile = gSystem->Getenv("HOME");
+         privfile = gSystem->HomeDirectory();
          privfile += "/.globus/userkey.pem";
          bio = BIO_new_file(privfile,"r");
       }

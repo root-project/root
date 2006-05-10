@@ -1,4 +1,4 @@
-/* @(#)root/srputils:$Name:  $:$Id: rtconf.c,v 1.3 2003/08/06 21:31:24 rdm Exp $ */
+/* @(#)root/srputils:$Name:  $:$Id: rtconf.c,v 1.4 2003/10/13 16:55:11 rdm Exp $ */
 /*
  * Copyright (c) 1997-1999  The Stanford SRP Authentication Project
  * All Rights Reserved.
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
    argc -= optind;
    argv += optind;
 
-   if (configFile[0] == '\0')
+   if (configFile[0] == '\0' && getenv("HOME"))
       sprintf(configFile, "%s/%s", getenv("HOME"), SROOTDCONF);
 
    efp = fopen(configFile, "a+");
