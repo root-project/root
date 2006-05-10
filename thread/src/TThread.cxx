@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.39 2005/12/02 22:44:16 pcanal Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.40 2006/02/09 20:46:23 pcanal Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -50,6 +50,16 @@ extern "C" void G__set_alloclockfunc(void(*)());
 extern "C" void G__set_allocunlockfunc(void(*)());
 static void CINT_alloc_lock()   { gGlobalMutex->Lock(); }
 static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
+
+//------------------------------------------------------------------------------
+
+// Set gGlobalMutex to 0 when Thread library gets unloaded
+class TGlobalMutexGuard {
+public:
+   TGlobalMutexGuard() { }
+   ~TGlobalMutexGuard() { gGlobalMutex = 0; }
+};
+static TGlobalMutexGuard gGlobalMutexGuardInit;
 
 //------------------------------------------------------------------------------
 
