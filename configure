@@ -2882,6 +2882,10 @@ if test "x$enable_ssl" = "xyes" ; then
          ssllib="$found_lib"
          if test ! "x$found_lib" = "x-lssl" ; then
             tmpssllibdir="$ssllibdir"
+            ssllibdir=""
+            if test ! "x$tmpssllibdir" = "x" ; then
+               tmpssllibdir=`dirname $found_lib`
+            fi
             if test ! "x$ssl_shared" = "xno" ; then
                ssl_shared=no
             fi
@@ -2896,20 +2900,12 @@ if test "x$enable_ssl" = "xyes" ; then
          libcrypto="libcrypto"
          if test "x$enable_globus" = "xyes" ; then
              libcrypto="libcrypto_$flavour"
-             tmpglbslibdir="$globusdir/lib"
-         else
-             tmpglbslibdir=$tmpssllibdir
          fi
          check_library "$libcrypto" "$enable_shared" "$tmpglbslibdir" \
-             $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
+                      /usr/lib /opt/lib /usr/local/lib $finkdir/lib
          if test "x$found_lib" != "x" ; then
              ssllib="$ssllib $found_lib"
              ssllibdir="$found_dir"
-             if test ! "x$found_dir" = "x$ssllibdir" ; then
-                 message "Checking for openssl"
-                 result "warning: paths to libcrypto and libssl do not match"
-                 ssllibdir="$ssllibdir $found_dir"
-             fi
          else
              ssllib=""
              ssllibdir=""
