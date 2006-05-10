@@ -1504,10 +1504,11 @@ if test ! "x$enable_mysql" = "xno"; then
        result "not found"
        # fall back in case mysql_config is not found
        check_header "mysql.h" "$mysqlincdir" \
-	   $MYSQL $MYSQL/include /usr/local/include /usr/local/include/mysql \
-           /usr/local/mysql /usr/local/mysql/include /opt/mysql \
-           /opt/mysql/include /usr/include /usr/include/mysql \
-	   /usr/mysql /usr/mysql/include $finkdir/include/mysql
+	   $MYSQL $MYSQL/include $MYSQL/include/mysql /usr/local/include \
+	   /usr/local/include/mysql /usr/local/mysql /usr/local/mysql/include \
+	   /opt/mysql /opt/mysql/include \
+	   /usr/include /usr/include/mysql /usr/mysql /usr/mysql/include \
+	   $finkdir/include/mysql
        mysqlinc=$found_hdr
        mysqlincdir=$found_dir
 
@@ -1517,9 +1518,10 @@ if test ! "x$enable_mysql" = "xno"; then
        fi
 
        check_library "$mysqlclientlibs" "$enable_shared" "$mysqllibdir" \
-	   $MYSQL $MYSQL/lib /usr/local/lib /usr/local/lib/mysql \
-           /usr/local/mysql /usr/local/mysql/lib /opt/mysql /opt/mysql/lib \
-           /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib \
+	   $MYSQL $MYSQL/lib $MYSQL/lib/mysql /usr/local/lib \
+	   /usr/local/lib/mysql /usr/local/mysql /usr/local/mysql/lib \
+	   /opt/mysql /opt/mysql/lib \
+	   /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib \
            $finkdir/lib/mysql
        mysqllib=$found_lib
        mysqllibdir=$found_dir
