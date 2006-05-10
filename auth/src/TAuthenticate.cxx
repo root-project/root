@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.11 2006/03/22 21:57:17 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.12 2006/04/19 08:29:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1327,7 +1327,7 @@ const char *TAuthenticate::GetKrb5Principal()
 {
     // Static method returning the principal to be used to init Krb5 tickets.
 
-    return fgKrb5Principal;
+   return fgKrb5Principal;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TRootAuth.cxx,v 1.2 2005/07/29 14:26:50 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TRootAuth.cxx,v 1.3 2005/09/06 09:34:34 brun Exp $
 // Author: Gerardo Ganis   08/07/05
 
 /*************************************************************************
@@ -87,16 +87,16 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
    if (isMASTER && !isPROOFserv) {
       if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
          Int_t kSRP = TAuthenticate::kSRP;
-         TString SRPDets(auth->GetHostAuth()->GetDetails(kSRP));
-         Int_t pos = SRPDets.Index("ru:0");
+         TString detsSRP(auth->GetHostAuth()->GetDetails(kSRP));
+         Int_t pos = detsSRP.Index("ru:0");
          if (pos > -1) {
-            SRPDets.ReplaceAll("ru:0",4,"ru:1",4);
-            auth->GetHostAuth()->SetDetails(kSRP,SRPDets);
+            detsSRP.ReplaceAll("ru:0",4,"ru:1",4);
+            auth->GetHostAuth()->SetDetails(kSRP,detsSRP);
          } else {
-            TSubString ss = SRPDets.SubString("ru:no",TString::kIgnoreCase);
+            TSubString ss = detsSRP.SubString("ru:no",TString::kIgnoreCase);
             if (!ss.IsNull()) {
-               SRPDets.ReplaceAll(ss.Data(),5,"ru:1",4);
-               auth->GetHostAuth()->SetDetails(kSRP,SRPDets);
+               detsSRP.ReplaceAll(ss.Data(),5,"ru:1",4);
+               auth->GetHostAuth()->SetDetails(kSRP,detsSRP);
             }
          }
       }
