@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Factory.h,v 1.1 2006/05/08 12:46:30 brun Exp $   
+// @(#)root/tmva $Id: TMVA_Factory.h,v 1.2 2006/05/08 20:56:16 brun Exp $   
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -91,7 +91,7 @@ public:
    * The 4th branch will be called "myString" and will contain a TObjString. 
    */
   Bool_t SetInputTrees( TString signalFileName, 
-			TString backgroundFileName );
+                        TString backgroundFileName );
   Bool_t SetInputTrees( TTree* inputTree, TCut SigCut, TCut BgCut = "");
 
   // Set input trees at once
@@ -121,13 +121,13 @@ public:
   // set number of training events
   // void SetN_training(Int_t Ntrain);
   Bool_t BookMethod( TString theMethodName, TString theOption = "", 
-		     TString theNameAppendix = "" );
+                     TString theNameAppendix = "" );
   Bool_t BookMethod( TMVA_Types::MVA theMethod, TString theOption = "", 
-		     TString theNameAppendix = "" );
+                     TString theNameAppendix = "" );
 
   // booking the method with a given weight file --> testing or application only
   Bool_t BookMethod( TMVA_MethodBase *theMethod, 
-		     TString theNameAppendix = "");
+                     TString theNameAppendix = "");
 
   // training for all booked methods
   void TrainAllMethods     ( void );

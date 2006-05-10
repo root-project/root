@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_DecisionTree.h,v 1.1 2006/05/08 12:46:30 brun Exp $
+// @(#)root/tmva $Id: TMVA_DecisionTree.h,v 1.2 2006/05/08 20:56:16 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -59,11 +59,11 @@ class TMVA_DecisionTree : public TMVA_BinaryTree {
 
   // the constructur needed for constructing the decision tree via training with events
   TMVA_DecisionTree( TMVA_SeparationBase *sepType,Int_t minSize, Double_t mnsep, 
-		     Int_t nCuts);
+                     Int_t nCuts);
   virtual ~TMVA_DecisionTree( void );
   
   void BuildTree( vector<TMVA_Event*> & eventSample, 
-		  TMVA_DecisionTreeNode *node = NULL );
+                  TMVA_DecisionTreeNode *node = NULL );
 
   Double_t TrainNode( vector<TMVA_Event*> & eventSample,  TMVA_DecisionTreeNode *node );
 

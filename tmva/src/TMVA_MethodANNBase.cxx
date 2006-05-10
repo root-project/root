@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodANNBase.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $
+// @(#)root/tmva $Id: TMVA_MethodANNBase.cxx,v 1.2 2006/05/09 08:37:06 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -49,7 +49,7 @@ TMVA_MethodANNBase::TMVA_MethodANNBase( void )
 
 //_______________________________________________________________________
 vector<Int_t>* TMVA_MethodANNBase::ParseOptionString( TString theOptions, Int_t nvar,
-						      vector<Int_t>* nodes )
+                                                      vector<Int_t>* nodes )
 {
   // default settings (should be defined in theOption string)
   TList*  list  = TMVA_Tools::ParseFormatLine( theOptions );

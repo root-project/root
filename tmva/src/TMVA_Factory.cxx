@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.4 2006/05/08 17:56:50 brun Exp $   
+// @(#)root/tmva $Id: TMVA_Factory.cxx,v 1.5 2006/05/09 08:37:06 brun Exp $   
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -142,23 +142,23 @@ void TMVA_Factory::Greeting(TString op){
   op.ToUpper();
   if (op.Contains("COLOR") || op.Contains("COLOUR") ) {
     cout << "--- " << GetName() << ": " << BCred__f 
-	 << "_______________________________ _ _ _ _ _ _ _" << EC__ << endl;
+         << "_______________________________ _ _ _ _ _ _ _" << EC__ << endl;
     cout << "--- " << GetName() << ": " << BCblue__f
-	 << BCred__b << BCwhite__f << " // " << EC__
-	 << BCwhite__f << BClblue__b 
-	 << "|\\  /|| \\  //  /\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\ \\ \\ \\ \\ " << EC__ << endl;
+         << BCred__b << BCwhite__f << " // " << EC__
+         << BCwhite__f << BClblue__b 
+         << "|\\  /|| \\  //  /\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\ \\ \\ \\ \\ " << EC__ << endl;
     cout << "--- " << GetName() << ": "<< BCblue__f
-	 << BCred__b << BCwhite__f << "//  " << EC__
-	 << BCwhite__f << BClblue__b 
-	 << "| \\/ ||  \\//  /--\\\\\\\\\\\\\\\\\\\\\\\\f\\a\\c\\t\\o\\r\\y\\" << EC__ << endl;
+         << BCred__b << BCwhite__f << "//  " << EC__
+         << BCwhite__f << BClblue__b 
+         << "| \\/ ||  \\//  /--\\\\\\\\\\\\\\\\\\\\\\\\f\\a\\c\\t\\o\\r\\y\\" << EC__ << endl;
   }
   else {
     cout << "--- " << GetName() << ": " 
- 	 << "_______________________________ _ _ _ _ _ _ _" << endl;
+         << "_______________________________ _ _ _ _ _ _ _" << endl;
     cout << "--- " << GetName() << ":  // "
-	 << "|\\  /|| \\  //  /\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\ \\ \\ \\ \\ " << endl;
+         << "|\\  /|| \\  //  /\\\\\\\\\\\\\\\\\\\\\\\\ \\ \\ \\ \\ \\ \\ \\ " << endl;
     cout << "--- " << GetName() << ": //  " 
-	 << "| \\/ ||  \\//  /--\\\\\\\\\\\\\\\\\\\\\\\\f\\a\\c\\t\\o\\r\\y\\" << endl;
+         << "| \\/ ||  \\//  /--\\\\\\\\\\\\\\\\\\\\\\\\f\\a\\c\\t\\o\\r\\y\\" << endl;
   }
   
 }
@@ -189,8 +189,8 @@ void TMVA_Factory::DeleteAllMethods( void )
   for(; itrMethod != itrMethodEnd; itrMethod++) {
     if (Verbose())
       cout << "--- " << GetName() << " <verbose>: delete method: " 
-	   << (*itrMethod)->GetName() 
-	   << endl;    
+           << (*itrMethod)->GetName() 
+           << endl;    
     delete (*itrMethod);
   }
   // erase method vector
@@ -240,7 +240,7 @@ Bool_t TMVA_Factory::SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut)
     inputTree->GetEntry(i);
      if ((backgList->Contains(i)) && (signalList->Contains(i))){
        cout << "--- " << GetName() << ": WARNING  Event "<<i
- 	   <<" is selected for signal and background sample! Skip it!"<<endl;
+            <<" is selected for signal and background sample! Skip it!"<<endl;
        continue;
      }
     if (signalList->Contains(i)) fSignalTree->Fill();
@@ -313,7 +313,7 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
      TCut oldCut[1000];
      Int_t binc=0;
      for (map<TString, std::pair<TString,TCut> >::iterator oldBin = fMultipleMVAnames.begin();
-	  oldBin != fMultipleMVAnames.end(); oldBin++) {
+          oldBin != fMultipleMVAnames.end(); oldBin++) {
        simpleName[binc]=oldBin->first;
        description[binc]=(oldBin->second).first;
        oldCut[binc]=(oldBin->second).second;
@@ -327,37 +327,37 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
      // create new map
      for(Int_t oldbin=0; oldbin<nOldBins; oldbin++){
        for(Int_t bin=0; bin<(nbins); bin++){
- 	 // prepare string for this bin
- 	 // FIXME!!! assume at the moment that array is sorted!
- 	 //    fMultipleMVAnames = new TMap(nbins);
-	 
- 	 // simple bin name
- 	 TString *binMVAname = new TString( simpleName[oldbin] + "__" + theVariable + 
- 					    Form("_bin_%d",(bin+1)));
- 	 // this is the cut in human readable version
- 	 TString *binMVAdescription = new TString( description[oldbin] + " && " 
-						   + Form(" %g < ",array[bin])  
- 						   + theVariable  
- 						   + Form(" < %g",array[bin+1]));
+          // prepare string for this bin
+          // FIXME!!! assume at the moment that array is sorted!
+          //    fMultipleMVAnames = new TMap(nbins);
+         
+          // simple bin name
+          TString *binMVAname = new TString( simpleName[oldbin] + "__" + theVariable + 
+ 				            Form("_bin_%d",(bin+1)));
+          // this is the cut in human readable version
+          TString *binMVAdescription = new TString( description[oldbin] + " && " 
+					           + Form(" %g < ",array[bin])  
+ 					           + theVariable  
+ 					           + Form(" < %g",array[bin+1]));
          // create ROOT TCut
- 	 TString *binMVAtmp = new TString("("+ theVariable +
- 					  Form(" > %g ",array[bin]) +
- 					  ") && (" +
- 					  theVariable + Form(" < %g",array[bin+1]) +")");
-	 
- 	 TCut *binMVACut = new TCut(binMVAtmp->Data());
-	 
-	 
- 	 // fill all three into the map
- 	 fMultipleMVAnames[*binMVAname] =  std::pair<TString,TCut>(*binMVAdescription, *binMVACut + oldCut[oldbin]);
+          TString *binMVAtmp = new TString("("+ theVariable +
+ 				          Form(" > %g ",array[bin]) +
+ 				          ") && (" +
+ 				          theVariable + Form(" < %g",array[bin+1]) +")");
+         
+          TCut *binMVACut = new TCut(binMVAtmp->Data());
+         
+         
+          // fill all three into the map
+          fMultipleMVAnames[*binMVAname] =  std::pair<TString,TCut>(*binMVAdescription, *binMVACut + oldCut[oldbin]);
 
-	 if (Verbose()) cout << "--- " <<  GetName() <<": "
-			     <<binMVAname->Data()
-			     <<"  ["<< binMVAdescription->Data() << "]  "<<endl;
-	 delete binMVAname;
-	 delete binMVAdescription;
-	 delete binMVAtmp;
-	 delete binMVACut;
+         if (Verbose()) cout << "--- " <<  GetName() <<": "
+		             <<binMVAname->Data()
+		             <<"  ["<< binMVAdescription->Data() << "]  "<<endl;
+         delete binMVAname;
+         delete binMVAdescription;
+         delete binMVAtmp;
+         delete binMVACut;
        }// end of loop over bins
      } // end of loop over oldbins
 
@@ -369,11 +369,11 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
        
        // simple bin name
        TString *binMVAname = new TString( theVariable + 
-					  Form("_bin_%d",(bin+1)));
+				          Form("_bin_%d",(bin+1)));
        // this is the cut in human readable version
        TString *binMVAdescription = new TString( Form("%g < ",array[bin]) + 
-						 theVariable + 
-						 Form(" < %g",array[bin+1]));
+					         theVariable + 
+					         Form(" < %g",array[bin+1]));
        // create ROOT TCut
        TString *binMVAtmp = new TString("("+ theVariable +
 					Form(" > %g ",array[bin]) +
@@ -385,8 +385,8 @@ void TMVA_Factory::BookMultipleMVAs(TString theVariable, Int_t nbins, Double_t *
        // fill all three into the map
        fMultipleMVAnames[*binMVAname] =  std::pair<TString,TCut>(*binMVAdescription, *binMVACut);
        if (Verbose()) cout << "--- " <<  GetName() <<": "
-			   <<binMVAname->Data()
-			   <<"  ["<< binMVAdescription->Data() << "]  "<<endl;
+		           <<binMVAname->Data()
+		           <<"  ["<< binMVAdescription->Data() << "]  "<<endl;
        delete binMVAname;
        delete binMVAdescription;
        delete binMVAtmp;
@@ -451,11 +451,11 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
 //! 4)
 //!      user gives         : -1, -1
 //!      PrepareTree does   : nsig_train=nsigTot, nbkg_train=nbkgTot
-//! 			  nsig_test =nsigTot, nbkg_test =nbkgTot
+//! 		          nsig_test =nsigTot, nbkg_test =nbkgTot
 //!      -> give warning that same samples are used for testing and training,
 //!         and, if nsig_train != nbkg_train, that an unequal number of 
 //!         signal and background events are used in training
-//!			  
+//!		          
 //! ------------------------------------------------------------------------
 //! Give in any case the number of signal and background events that are
 //! used for testing and training, and tell whether there are overlaps between
@@ -482,7 +482,7 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
        << fBackgTree->GetEntries() << endl;
   if (TString(fCut) != "") 
     cout << "--- " << GetName() << ": apply cut on input trees               : " 
-	 << fCut << endl;
+         << fCut << endl;
   else
     cout << "--- " << GetName() << ": no cuts applied" << endl;
 
@@ -496,9 +496,9 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
 
   if (TString(fCut) != "") {
     cout << "--- " << GetName() << ": num of signal events passing cut       : " 
-	 << signalList->GetN() << endl;
+         << signalList->GetN() << endl;
     cout << "--- " << GetName() << ": num of background eventspassing cut    : " 
-	 << backgList->GetN() << endl;
+         << backgList->GetN() << endl;
   }
 
   Int_t nsig_train(0), nbkg_train(0), nsig_test(0), nbkg_test(0);
@@ -519,10 +519,10 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
     
     if ((nsigTot-nsig_train)<=0 ) 
       cout << "--- " << GetName() 
-	   << ": WARNING  # signal events for testing <= 0! " << endl;
+           << ": WARNING  # signal events for testing <= 0! " << endl;
     if ((nbkgTot-nbkg_test)<=0) 
       cout << "--- " << GetName() 
-	   << ": WARNING # background events for testing <= 0! " << endl;
+           << ": WARNING # background events for testing <= 0! " << endl;
     nsig_test = nsigTot;
     nbkg_test = nbkgTot;
     
@@ -538,10 +538,10 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
     nbkg_test     = TMath::Min(Ntest,nbkgTot-nsig_train);
     if (nsig_train != Ntrain) 
       cout << "--- " << GetName() 
-	   << ": WARNING  less events for training than requested!" << endl;
+           << ": WARNING  less events for training than requested!" << endl;
       if (nsig_test<Ntest || nbkg_test<Ntest)
 	cout << "--- " << GetName() 
-	     << ": WARNING  less events for testing than requested!" << endl;
+             << ": WARNING  less events for testing than requested!" << endl;
       nsig_test += nsig_train;
       nbkg_test += nsig_train;
 
@@ -556,7 +556,7 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
     nsig_test_min=1;
     nbkg_test_min=1;
     cout << "--- " << GetName() 
-	 << ": WARNING! Same samples are used for training and testing" << endl;
+         << ": WARNING! Same samples are used for training and testing" << endl;
     
   }
   else if (Ntrain == -1 && Ntest == -1) {
@@ -567,10 +567,10 @@ void TMVA_Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nte
     nsig_test_min=1;
     nbkg_test_min=1;
     cout << "--- " << GetName() 
-	 << ": WARNING! Same samples are used for training and testing" << endl;
+         << ": WARNING! Same samples are used for training and testing" << endl;
     cout << "--- " << GetName() 
-	 << ": WARNING! An unequal number of signal and background events are used in training" 
-	 <<endl;
+         << ": WARNING! An unequal number of signal and background events are used in training" 
+         <<endl;
     
   }
 
@@ -680,7 +680,7 @@ void TMVA_Factory::PlotVariables( TTree* theTree )
 
   // create plots of the input variables and check them
   if (Verbose()) cout << "--- " << GetName() << " <verbose>: plot input variables from '"
-		      <<theTree->GetName();
+	              <<theTree->GetName();
 
   // create directory in output file
   TDirectory *localDir= fLocalTDir->mkdir("input_variables" );
@@ -718,7 +718,7 @@ void TMVA_Factory::PlotVariables( TTree* theTree )
      drawOpt= myVar+">>h("+TString(nbins);
      TString draw = Form( ">>h(%d,%f,%f)", nbins, xmin, xmax );
      printf("--- %s: create histogram '%s' within range [%0.3g, %0.3g]\n",
-	    (const char*)GetName(), (const char*)histName, xmin, xmax );
+            (const char*)GetName(), (const char*)histName, xmin, xmax );
      drawOpt= myVar + draw;
      theTree->Draw(drawOpt,"type  == 1", "goff");
      myhist= (TH1F*)gDirectory->Get("h");
@@ -736,14 +736,14 @@ void TMVA_Factory::PlotVariables( TTree* theTree )
      }
      if (((Float_t)emptyBins/(Float_t)myhist->GetNbinsX()) > 0.75) {
        cout << " | More than 75% of the bins in hist '"
-	    << myhist->GetName() << "' are empty!" << endl;
+            << myhist->GetName() << "' are empty!" << endl;
        cout << " | check plot " << myhist->GetName() << " in output file " << endl;
 
        // create additional cut to remove outliers
        TString newCutStr = "( "+ myVar 
-	 + Form(" > %0.3g ) && (", (myhist->GetMean()-timesRMS*(myhist->GetRMS())))
-	 + myVar  
-	 + Form(" < %0.3g )", (myhist->GetMean()+timesRMS*(myhist->GetRMS())));
+         + Form(" > %0.3g ) && (", (myhist->GetMean()-timesRMS*(myhist->GetRMS())))
+         + myVar  
+         + Form(" < %0.3g )", (myhist->GetMean()+timesRMS*(myhist->GetRMS())));
 
        cout << " | suggested cut to remove outliers: " << newCutStr << endl;
 
@@ -754,18 +754,18 @@ void TMVA_Factory::PlotVariables( TTree* theTree )
        TH1F *myNewhist= (TH1F*)gDirectory->Get("g");
        Float_t removed=origEntries-(myNewhist->GetEntries());
        cout << " | this cut would remove " << removed << " out of "
-	    << origEntries << " signal events" << endl;
+            << origEntries << " signal events" << endl;
        Float_t left=0;
        Float_t right=0;
        for(Int_t b=1; b<=myhist->GetNbinsX(); b++){
-	 if (b <  myhist->FindBin((myhist->GetRMS()))){
-	   left += ((myhist->GetBinContent(b)) - (myNewhist->GetBinContent(b)));
-	 }else{
-	   right += myhist->GetBinContent(b)-myNewhist->GetBinContent(b);
-	 }
+         if (b <  myhist->FindBin((myhist->GetRMS()))){
+           left += ((myhist->GetBinContent(b)) - (myNewhist->GetBinContent(b)));
+         }else{
+           right += myhist->GetBinContent(b)-myNewhist->GetBinContent(b);
+         }
        }
        cout << " | "<<left <<" on the low side and "<<
-	 right<<" on the high side of the mean"<<endl;
+         right<<" on the high side of the mean"<<endl;
        delete myNewhist;
      }
 
@@ -802,7 +802,7 @@ void TMVA_Factory::GetCorrelationMatrix( TTree* theTree )
   // first remove type from variable set
   if (Verbose())
     cout << "--- " << GetName() << " <verbose>: retrieve correlation matrix using tree: " 
-	 << theTree->GetName() << endl;
+         << theTree->GetName() << endl;
 
   TBranch*         branch = 0;
   vector<TString>* theVars = new vector<TString>;
@@ -912,7 +912,7 @@ void TMVA_Factory::GetCorrelationMatrix( TTree* theTree )
     h2->Write();
     if (Verbose())
       cout << "--- " << GetName() << " <verbose>: created correlation matrix as 2D histogram: " 
-	   << h2->GetName() << endl;
+           << h2->GetName() << endl;
 
     delete h2;
   }
@@ -945,11 +945,11 @@ void TMVA_Factory::SetTestTree(TTree* testTree)
 
 //_______________________________________________________________________
 Bool_t TMVA_Factory::BookMethod( TString theMethodName, TString theOption, 
-				 TString theNameAppendix ) 
+			         TString theNameAppendix ) 
 {
   if (fMultipleMVAs && !fMultipleStoredOptions ){
     cout << "--- " << GetName() << ":  Store "<<theMethodName+theNameAppendix
-	 <<"  and its options for multiple MVAs " << endl;
+         <<"  and its options for multiple MVAs " << endl;
     
     fMultipleMVAMethodOptions[theMethodName+theNameAppendix] = 
       std::pair<TString,TString>(theOption, theNameAppendix);
@@ -979,7 +979,7 @@ Bool_t TMVA_Factory::BookMethod( TString theMethodName, TString theOption,
     return BookMethod( TMVA_Types::BDT, theOption, theNameAppendix );
   else {
     cout << "--- " << GetName() << ": Error: method: " 
-	 << theMethodName << " does not exist ==> abort" << endl;
+         << theMethodName << " does not exist ==> abort" << endl;
     exit(1);
   }
 
@@ -988,7 +988,7 @@ Bool_t TMVA_Factory::BookMethod( TString theMethodName, TString theOption,
 
 //_______________________________________________________________________
 Bool_t TMVA_Factory::BookMethod( TMVA_Types::MVA theMethod, TString theOption, 
-				 TString theNameAppendix ) 
+			         TString theNameAppendix ) 
 {
   TMVA_MethodBase *method = 0;
 
@@ -1063,7 +1063,7 @@ Bool_t TMVA_Factory::BookMethod( TMVA_Types::MVA theMethod, TString theOption,
 
   else {
     cout << "--- " << GetName() << ": Error: method: " 
-	 << theMethod << " does not exist ==> abort" << endl;
+         << theMethod << " does not exist ==> abort" << endl;
     exit(1);
   }
 
@@ -1077,7 +1077,7 @@ Bool_t TMVA_Factory::BookMethod( TMVA_Types::MVA theMethod, TString theOption,
 
 //_______________________________________________________________________
 Bool_t TMVA_Factory::BookMethod( TMVA_MethodBase *theMethod,
-				 TString theNameAppendix )
+			         TString theNameAppendix )
 {
 
   if (NULL != theMethod) {
@@ -1118,13 +1118,13 @@ void TMVA_Factory::TrainAllMethods( void )
   for(; itrMethod != itrMethodEnd; itrMethod++) {
     if (fTrainingTree->GetEntries() > MinNoTrainingEvents){
       cout << "--- " << GetName() << ": train method: " 
-	   << ((TMVA_MethodBase*)*itrMethod)->GetMethodName() << endl;
+           << ((TMVA_MethodBase*)*itrMethod)->GetMethodName() << endl;
       (*itrMethod)->Train();
     }
     else{
       cout << "--- " << GetName() 
-	   << ": WARNING method "<< ((TMVA_MethodBase*)*itrMethod)->GetMethodName() 
-	   << " not trained (training tree has no entries)"<<endl; 
+           << ": WARNING method "<< ((TMVA_MethodBase*)*itrMethod)->GetMethodName() 
+           << " not trained (training tree has no entries)"<<endl; 
     }
   }
 }
@@ -1140,11 +1140,11 @@ void TMVA_Factory::TestAllMethods( void )
     return;
   } else if (fTrainingTree == NULL) {
     cout << "--- "<< GetName() 
-	 << " you perform testing without training before, hope you  \n"
-	 << "--- did give a reasonable test tree and weight files " <<endl;
+         << " you perform testing without training before, hope you  \n"
+         << "--- did give a reasonable test tree and weight files " <<endl;
   } else if ((fTrainingTree->GetEntries() < MinNoTrainingEvents) && fMultipleMVAs && fMultiTrain) {
     cout << "--- "<< GetName() 
-	 <<" : WARNING Skip testing since training wasn't performed for this bin"<<endl;
+         <<" : WARNING Skip testing since training wasn't performed for this bin"<<endl;
     return;
   }
 
@@ -1153,7 +1153,7 @@ void TMVA_Factory::TestAllMethods( void )
   vector<TMVA_MethodBase*>::iterator itrMethodEnd = fMethods.end();
   for(; itrMethod != itrMethodEnd; itrMethod++) {
     cout << "--- " << GetName() << ": test method: " 
-	 << ((TMVA_MethodBase*)*itrMethod)->GetMethodName() << endl;
+         << ((TMVA_MethodBase*)*itrMethod)->GetMethodName() << endl;
     (*itrMethod)->PrepareEvaluationTree( fTestTree );
     if (DEBUG_TMVA_Factory) fTestTree->Print();
   }
@@ -1170,18 +1170,18 @@ void TMVA_Factory::EvaluateAllVariables( TString options )
     return;
   } else if (fTrainingTree == NULL) {
     cout << "--- "<< GetName() 
-	 << " you perform testing without training before, hope you  \n"
-	 << "--- did give a reasonable test tree and weight files " <<endl;
+         << " you perform testing without training before, hope you  \n"
+         << "--- did give a reasonable test tree and weight files " <<endl;
   }else if ((fTrainingTree->GetEntries() < MinNoTrainingEvents) && fMultipleMVAs && fMultiTrain){
     cout << "--- "<< GetName() 
-	 <<" : WARNING Skip evaluation since training wasn't performed for this bin"<<endl;
+         <<" : WARNING Skip evaluation since training wasn't performed for this bin"<<endl;
     return;
   }
 
 
   if (Verbose())
     cout << "--- " << GetName() 
-	 << " <verbose>: for this each variable needs to be booked as a Method" << endl;
+         << " <verbose>: for this each variable needs to be booked as a Method" << endl;
   // iterate over variables and evaluate
   vector<TString>::iterator itrVars    = fInputVariables->begin();
   vector<TString>::iterator itrVarsEnd = fInputVariables->end();
@@ -1202,8 +1202,8 @@ void TMVA_Factory::EvaluateAllMethods( void )
     return;
   } else if (fTrainingTree == NULL) {
     cout << "--- "<< GetName() 
-	 << " you perform testing without training before, hope you  \n"
-	 << "--- did give a reasonable test tree and weight files " <<endl;
+         << " you perform testing without training before, hope you  \n"
+         << "--- did give a reasonable test tree and weight files " <<endl;
   }else if ((fTrainingTree->GetEntries() < MinNoTrainingEvents) && fMultipleMVAs && fMultiTrain){
     cout << "--- "<< GetName() <<" : WARNING Skip evaluation since training wasn't performed"<<endl;
     return;
@@ -1222,7 +1222,7 @@ void TMVA_Factory::EvaluateAllMethods( void )
   vector<TMVA_MethodBase*>::iterator itrMethodEnd = fMethods.end();
   for (; itrMethod != itrMethodEnd; itrMethod++) {
     cout << "--- " << GetName() << ": evaluate method: " 
-	 << (*itrMethod)->GetMethodName() << endl;
+         << (*itrMethod)->GetMethodName() << endl;
     isel=0; if ((*itrMethod)->GetMethodName().Contains("Variable")) isel=1;
 
     // perform the evaluation
@@ -1242,8 +1242,8 @@ void TMVA_Factory::EvaluateAllMethods( void )
     }
     else {
       cout << "--- " << GetName() << ": Warning: " << (*itrMethod)->GetName() 
-	   << " returned isOK flag: " 
-	   << (*itrMethod)->IsOK() << endl;
+           << " returned isOK flag: " 
+           << (*itrMethod)->IsOK() << endl;
     }
   }
 
@@ -1277,13 +1277,13 @@ void TMVA_Factory::EvaluateAllMethods( void )
     if (k == 1 && nmeth_used[k] > 0 && !fMultipleMVAs) {
       cout << "---------------------------------------------------------------------------" << endl;
       cout << "--- Input Variables: " << endl
-	   << "---------------------------------------------------------------------------" << endl;
+           << "---------------------------------------------------------------------------" << endl;
     }
     for(Int_t i=0; i<nmeth_used[k]; i++) {
       if (k == 1) mname[k][i].ReplaceAll( "Variable_", "" );
       printf("--- %-15s: %1.3f    %1.3f    %1.3f    %1.3f    %1.3f    %1.3f \n",
- 	     (const char*)mname[k][i], 
-	     eff01[k][i], eff10[k][i], eff30[k][i], sig[k][i], sep[k][i], mutr[k][i] );
+              (const char*)mname[k][i], 
+             eff01[k][i], eff10[k][i], eff30[k][i], sig[k][i], sep[k][i], mutr[k][i] );
     }
   }
   cout << "---------------------------------------------------------------------------" << endl;
@@ -1311,7 +1311,7 @@ void TMVA_Factory::ProcessMultipleMVA( void )
 
     // loop over bins:
     for (map<TString, std::pair<TString,TCut> >::iterator bin = fMultipleMVAnames.begin();
-	 bin != fMultipleMVAnames.end(); bin++) {
+         bin != fMultipleMVAnames.end(); bin++) {
 
 
       cout << "---------------------------------------------------------------------------"   << endl;  
@@ -1333,7 +1333,7 @@ void TMVA_Factory::ProcessMultipleMVA( void )
 
       // loop over stored methods
       for (map<TString, std::pair<TString,TString> >::iterator method = fMultipleMVAMethodOptions.begin();
- 	   method != fMultipleMVAMethodOptions.end(); method++) {
+            method != fMultipleMVAMethodOptions.end(); method++) {
 	
 	// book methods
 	this->BookMethod(method->first, (method->second).first, (method->second).second ) ;
@@ -1360,50 +1360,50 @@ void TMVA_Factory::ProcessMultipleMVA( void )
 	Bool_t hasMVA=kFALSE;
 	TIter next_branch1( fTestTree->GetListOfBranches() );
 	while (TBranch *branch = (TBranch*)next_branch1()){
-	  if (((TString)branch->GetName()).Contains("TMVA_")) hasMVA=kTRUE;
+          if (((TString)branch->GetName()).Contains("TMVA_")) hasMVA=kTRUE;
 	} // end of loop over fTestTree branches
 	
 	if (hasMVA){
-	  if (fMultiCutTestTree == NULL){
-	    fMultiCutTestTree = new TTree("MultiCutTree","Combined Test Tree for all bins");
-	    TIter next_branch1( fTestTree->GetListOfBranches() );
-	    
-	    while (TBranch *branch = (TBranch*)next_branch1()){
-	      TLeaf *leaf = branch->GetLeaf(branch->GetName());
-	      if (((TString)leaf->GetTypeName()).Contains("Double_t"))      	
+          if (fMultiCutTestTree == NULL){
+            fMultiCutTestTree = new TTree("MultiCutTree","Combined Test Tree for all bins");
+            TIter next_branch1( fTestTree->GetListOfBranches() );
+            
+            while (TBranch *branch = (TBranch*)next_branch1()){
+              TLeaf *leaf = branch->GetLeaf(branch->GetName());
+              if (((TString)leaf->GetTypeName()).Contains("Double_t"))      	
 		fMultiCutTestTree->Branch( (TString)leaf->GetName(), 
-					  &vd[++count_vd], 
-					    (TString)leaf->GetName() + "/D", basketsize );
-	      
-	      if (((TString)leaf->GetTypeName()).Contains("Int_t"))      	
+				          &vd[++count_vd], 
+				            (TString)leaf->GetName() + "/D", basketsize );
+              
+              if (((TString)leaf->GetTypeName()).Contains("Int_t"))      	
 		fMultiCutTestTree->Branch( (TString)leaf->GetName(),
-					    &vi[++count_vi], 
-					    (TString)leaf->GetName() + "/I", basketsize );
-	      
-	      if (((TString)leaf->GetTypeName()).Contains("Float_t"))      	
+				            &vi[++count_vi], 
+				            (TString)leaf->GetName() + "/I", basketsize );
+              
+              if (((TString)leaf->GetTypeName()).Contains("Float_t"))      	
 		fMultiCutTestTree->Branch( (TString)leaf->GetName(), 
-					  &vf[++count_vf], 
-					    (TString)leaf->GetName() + "/F", basketsize );
-	      
-	    } // loop over branches in fTestTree
-	  }
-	  // loop over fTestTree and fill into MultiCutTestTree
-	  for (Int_t ievt=0;ievt<fTestTree->GetEntries(); ievt++) {
-	    count_vd=0;	  count_vi=0;	  count_vf=0;
-	    TIter next_branch1( fTestTree->GetListOfBranches() );
-	    while (TBranch *branch = (TBranch*)next_branch1()){
-	      TLeaf *leaf = branch->GetLeaf(branch->GetName());
-	    if (((TString)leaf->GetTypeName()).Contains("Double_t"))      	
-	      vd[++count_vd]=TMVA_Tools::GetValue( fTestTree, ievt, leaf->GetName());
-	    
-	    if (((TString)leaf->GetTypeName()).Contains("Int_t"))      	
-	      vi[++count_vi]=(Int_t)TMVA_Tools::GetValue( fTestTree, ievt, leaf->GetName());
-	    
-	    if (((TString)leaf->GetTypeName()).Contains("Float_t"))      	
-	      vf[++count_vf]=(Float_t)TMVA_Tools::GetValue( fTestTree, ievt, leaf->GetName());
-	    } // loop over branches
-	    fMultiCutTestTree->Fill();
-	  } // end of loop over fTestTree
+				          &vf[++count_vf], 
+				            (TString)leaf->GetName() + "/F", basketsize );
+              
+            } // loop over branches in fTestTree
+          }
+          // loop over fTestTree and fill into MultiCutTestTree
+          for (Int_t ievt=0;ievt<fTestTree->GetEntries(); ievt++) {
+            count_vd=0;          count_vi=0;          count_vf=0;
+            TIter next_branch1( fTestTree->GetListOfBranches() );
+            while (TBranch *branch = (TBranch*)next_branch1()){
+              TLeaf *leaf = branch->GetLeaf(branch->GetName());
+            if (((TString)leaf->GetTypeName()).Contains("Double_t"))      	
+              vd[++count_vd]=TMVA_Tools::GetValue( fTestTree, ievt, leaf->GetName());
+            
+            if (((TString)leaf->GetTypeName()).Contains("Int_t"))      	
+              vi[++count_vi]=(Int_t)TMVA_Tools::GetValue( fTestTree, ievt, leaf->GetName());
+            
+            if (((TString)leaf->GetTypeName()).Contains("Float_t"))      	
+              vf[++count_vf]=(Float_t)TMVA_Tools::GetValue( fTestTree, ievt, leaf->GetName());
+            } // loop over branches
+            fMultiCutTestTree->Fill();
+          } // end of loop over fTestTree
 
 	} //end of if(fTesttree has MVA branches
       }// end of if (fMultiEval) 
@@ -1431,10 +1431,10 @@ void TMVA_Factory::ProcessMultipleMVA( void )
       TLeaf *leaf = branch->GetLeaf(branch->GetName());
       if (((TString)branch->GetName()).Contains("TMVA_")){
 	method = new TMVA_MethodVariable  ( fJobName,  
-					   fInputVariables, 
-					   fMultiCutTestTree, 
-					   (TString)leaf->GetName(), 
-					   fTargetFile );   
+				           fInputVariables, 
+				           fMultiCutTestTree, 
+				           (TString)leaf->GetName(), 
+				           fTargetFile );   
 	fMethods.push_back( method );
       }// is MVA variable
     }

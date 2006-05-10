@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.4 2006/05/08 17:56:50 brun Exp $
+// @(#)root/tmva $Id: TMVA_MethodPDERS.cxx,v 1.5 2006/05/09 08:37:06 brun Exp $
 // Author: Andreas Hoecker, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -390,10 +390,10 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
 	if (nEventsN < fNEventsMin || nEventsN > fNEventsMax) {
 
 	  // search for events in rescaled volume
-	  TMVA_Volume* V = new TMVA_Volume( *volume );
-	  V->ScaleInterval( scale );
-	  cS       = fBinaryTreeS->SearchVolume( V );
-	  cB       = fBinaryTreeB->SearchVolume( V );
+	  TMVA_Volume* v = new TMVA_Volume( *volume );
+	  v->ScaleInterval( scale );
+	  cS       = fBinaryTreeS->SearchVolume( v );
+	  cB       = fBinaryTreeB->SearchVolume( v );
 	  nEventsN = cS + cB;
 
 	  // determine next iteration (linear approximation)
@@ -414,8 +414,8 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
 	    countS = cS; countB = cB;
 	  }
 
-	  V->Delete();
-	  delete V;
+	  v->Delete();
+	  delete v;
 	}
 	else break;
       }
@@ -447,13 +447,13 @@ Float_t TMVA_MethodPDERS::RScalc( TMVA_Event *e )
 
 //_______________________________________________________________________
 Double_t TMVA_MethodPDERS::KernelEstimate( TMVA_Event& event,
-					   vector<TMVA_Event*>& events, TMVA_Volume& V )
+					   vector<TMVA_Event*>& events, TMVA_Volume& v )
 {
   // define gaussian sigmas
   Double_t fac = 0.2;
   Double_t *sigma = new Double_t[fNvar];
   for (Int_t ivar=0; ivar<fNvar; ivar++)
-    sigma[ivar] = ((*V.fUpper)[ivar] - (*V.fLower)[ivar])*fac;
+    sigma[ivar] = ((*v.fUpper)[ivar] - (*v.fLower)[ivar])*fac;
 
   Double_t pdfSum = 0;
   for (vector<TMVA_Event*>::iterator iev = events.begin(); iev != events.end(); iev++) {

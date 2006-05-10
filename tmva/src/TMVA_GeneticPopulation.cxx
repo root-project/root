@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticPopulation.cxx,v 1.2 2006/05/08 20:56:17 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticPopulation.cxx,v 1.3 2006/05/09 08:37:06 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -114,7 +114,7 @@ void TMVA_GeneticPopulation::MakeChildren()
 }
 
 TMVA_GeneticGenes TMVA_GeneticPopulation::MakeSex( TMVA_GeneticGenes male, 
-						   TMVA_GeneticGenes female )
+                                                   TMVA_GeneticGenes female )
 {
   vector< Double_t > child;
   vector< Double_t >::iterator itM;
@@ -131,7 +131,7 @@ TMVA_GeneticGenes TMVA_GeneticPopulation::MakeSex( TMVA_GeneticGenes male,
 }
 
 void TMVA_GeneticPopulation::MakeMutants( Double_t probability, Bool_t near, 
-					  Double_t spread, Bool_t mirror )
+                                          Double_t spread, Bool_t mirror )
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
   Int_t n = 0;
@@ -148,7 +148,7 @@ void TMVA_GeneticPopulation::MakeMutants( Double_t probability, Bool_t near,
 }
 
 void TMVA_GeneticPopulation::Mutate( Double_t probability , Int_t startIndex, 
-				     Bool_t near, Double_t spread, Bool_t mirror ) 
+                                     Bool_t near, Double_t spread, Bool_t mirror ) 
 {
   multimap<Double_t, TMVA_GeneticGenes >::iterator it;
   Int_t index = 0;
@@ -158,10 +158,10 @@ void TMVA_GeneticPopulation::Mutate( Double_t probability , Int_t startIndex,
     if( index >= startIndex ){
       vecRange = fRanges.begin();
       for( vec = (it->second.fFactors).begin(); vec < (it->second.fFactors).end(); vec++ ){
-	if( fRandomGenerator->Uniform( 100 ) <= probability ){
-	  (*vec) = (*vecRange)->Random( near, (*vec), spread, mirror );
-	}
-	vecRange++;
+        if( fRandomGenerator->Uniform( 100 ) <= probability ){
+          (*vec) = (*vecRange)->Random( near, (*vec), spread, mirror );
+        }
+        vecRange++;
       }
     }
     index++;
@@ -255,8 +255,8 @@ void TMVA_GeneticPopulation::Print( Int_t untilIndex)
     }
     n = 0;
     for( vector< Double_t >::iterator vec = it->second.fFactors.begin(); 
-	 vec < it->second.fFactors.end(); vec++ ) {
-      cout << "f_" << n++ << ": " << (*vec) << "     ";
+       vec < it->second.fFactors.end(); vec++ ) {
+       cout << "f_" << n++ << ": " << (*vec) << "     ";
     }
     cout << endl;
   }
@@ -274,15 +274,15 @@ void TMVA_GeneticPopulation::Print( ostream & out, Int_t untilIndex )
     n = 0;
     out << "fitness: " << it->first << "    ";
     for( vector< Double_t >::iterator vec = it->second.fFactors.begin(); 
-	 vec < it->second.fFactors.end(); vec++ ){
-      out << "f_" << n++ << ": " << (*vec) << "     ";
+       vec < it->second.fFactors.end(); vec++ ){
+       out << "f_" << n++ << ": " << (*vec) << "     ";
     }
     out << endl;
   }
 }
 
 TH1F* TMVA_GeneticPopulation::VariableDistribution( Int_t varNumber, Int_t bins, 
-						    Int_t min, Int_t max ) 
+                                                    Int_t min, Int_t max ) 
 {
   std::stringstream histName;
   histName.clear();

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_MethodLikelihood.cxx,v 1.1 2006/05/08 12:46:31 brun Exp $ 
+// @(#)root/tmva $Id: TMVA_MethodLikelihood.cxx,v 1.2 2006/05/09 08:37:06 brun Exp $ 
 // Author: Andreas Hoecker, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -521,16 +521,16 @@ void  TMVA_MethodLikelihood::WriteWeightsToFile( void )
   // NOTE: the latter values are mandatory for the normalisation 
   // in the reader application !!!
   TList    lvar;
-  TVectorD vmin( fNvar ), Vmax( fNvar );
+  TVectorD vmin( fNvar ), vmax( fNvar );
   for (Int_t ivar=0; ivar<fNvar; ivar++) {
     lvar.Add( new TNamed( (*fInputVars)[ivar], TString() ) );
     vmin[ivar] = this->GetXminNorm( ivar );
-    Vmax[ivar] = this->GetXmaxNorm( ivar );
+    vmax[ivar] = this->GetXmaxNorm( ivar );
   }
   // write to file
   lvar.Write();
   vmin.Write( "vmin" );
-  Vmax.Write( "Vmax" );
+  vmax.Write( "vmax" );
   lvar.Delete();
 
   // save configuration options
@@ -587,17 +587,17 @@ void  TMVA_MethodLikelihood::ReadWeightsFromFile( void )
   }
 
   // read vectors
-  TVectorD vmin( fNvar ), Vmax( fNvar );
+  TVectorD vmin( fNvar ), vmax( fNvar );
   // unfortunatly the more elegant vmin/max.Read( "vmin/max" ) crash in ROOT <= V4.04.02
   TVectorD *tmp = (TVectorD*)fFin->Get( "vmin" );
   vmin = *tmp;
-  tmp  = (TVectorD*)fFin->Get( "Vmax" );
-  Vmax = *tmp;
+  tmp  = (TVectorD*)fFin->Get( "vmax" );
+  vmax = *tmp;
 
   // initialize min/max
   for (Int_t ivar=0; ivar<fNvar; ivar++) {    
     this->SetXminNorm( ivar, vmin[ivar] );
-    this->SetXmaxNorm( ivar, Vmax[ivar] );
+    this->SetXmaxNorm( ivar, vmax[ivar] );
   }
 
   // save configuration options

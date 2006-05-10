@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticBase.h,v 1.1 2006/05/08 12:46:30 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticBase.h,v 1.2 2006/05/08 20:56:16 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -83,7 +83,7 @@ class TMVA_GeneticBase {
   virtual Double_t CalculateFitness();
   Double_t DoRenewFitness();
   virtual Double_t RenewFitness( std::vector< Double_t > factors, 
-				 std::vector< Double_t > results );
+                                 std::vector< Double_t > results );
   virtual void Evolution();
   void Finalize();
   

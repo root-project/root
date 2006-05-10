@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.3 2006/05/08 21:13:46 brun Exp $    
+// @(#)root/tmva $Id: TMVA_GeneticPopulation.h,v 1.4 2006/05/09 08:37:06 brun Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -76,9 +76,9 @@ class TMVA_GeneticPopulation {
   TMVA_GeneticGenes MakeSex( TMVA_GeneticGenes male, TMVA_GeneticGenes female );
 
   void MakeMutants( Double_t probability = 30, Bool_t near = kFALSE, 
-		    Double_t spread = 0.1, Bool_t mirror = kFALSE  );
+                    Double_t spread = 0.1, Bool_t mirror = kFALSE  );
   void Mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE, 
-	       Double_t spread = 0.1, Bool_t mirror = kFALSE  );
+               Double_t spread = 0.1, Bool_t mirror = kFALSE  );
 
   void AddFactor( Double_t from, Double_t to );
 
