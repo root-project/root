@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.14 2006/04/12 15:01:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.15 2006/04/24 14:07:47 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -299,6 +299,7 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
                      -1, color);
       }
    }
+   DeleteWindow();
 }
 
 //________________________________________________________________________________
@@ -450,6 +451,7 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
 
          fColorPopup->PlacePopup(ax, ay, fColorPopup->GetDefaultWidth(),
                                          fColorPopup->GetDefaultHeight());
+         fColorPopup = 0;
       }
    }
    return kTRUE;
