@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.108 2006/03/28 16:43:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.109 2006/05/04 12:21:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1093,6 +1093,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          gPad = fSelectedPad;
 
          fSelected->ExecuteEvent(event, px, py);
+         gVirtualX->Update();
 
          {
             Bool_t resize = kFALSE;
