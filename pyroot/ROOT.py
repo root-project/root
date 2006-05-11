@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.36 2006/03/09 09:07:01 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.37 2006/03/16 06:07:32 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 03/14/06
+# Last: 05/10/06
 
 """PyROOT user module.
 
@@ -14,7 +14,7 @@
 """
 
 ## system modules
-import os, sys
+import os, sys, time
 import string as pystring
 
 ## there's no version_info in 1.5.2
@@ -224,15 +224,14 @@ sys.displayhook = _displayhook
 
 ### helper to prevent GUIs from starving
 def _processRootEvents( controller ):
-    import time
-    global gSystem
+   global gSystem
 
-    while controller.keeppolling:
-       try:
-          gSystem.ProcessEvents()
-          time.sleep( 0.01 )
-       except: # in case gSystem gets destroyed early on exit
-          pass
+   while controller.keeppolling:
+      try:
+         gSystem.ProcessEvents()
+         time.sleep( 0.01 )
+      except: # in case gSystem gets destroyed early on exit
+         pass
 
 
 ### allow loading ROOT classes as attributes ------------------------------------
@@ -243,7 +242,7 @@ class ModuleFacade( object ):
 
     # root thread to prevent GUIs from starving
       if not self.module.gROOT.IsBatch():
-         import threading, time
+         import threading
          self.__dict__[ 'keeppolling' ] = 1
          self.__dict__[ 'thread' ] = \
             threading.Thread( None, _processRootEvents, None, ( self, ) )
@@ -328,6 +327,8 @@ def cleanup():
  # shutdown GUI thread, as appropriate
    if hasattr( facade, 'thread' ):
       facade.keeppolling = 0
+      while facade.thread.isAlive():
+         time.sleep( 0.01 )
 
  # destroy ROOT module
    del facade.libmodule
