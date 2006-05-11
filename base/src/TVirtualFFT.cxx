@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.1 2006/04/10 15:40:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.2 2006/04/11 16:17:37 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 /*************************************************************************
@@ -253,7 +253,7 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
 //_____________________________________________________________________________
 TVirtualFFT* TVirtualFFT::GetCurrentTransform()
 {
-//return current fgFFT
+// static: return current fgFFT
 
    if (fgFFT)
       return fgFFT;
@@ -266,19 +266,23 @@ TVirtualFFT* TVirtualFFT::GetCurrentTransform()
 //_____________________________________________________________________________
 void TVirtualFFT::SetTransform(TVirtualFFT* fft)
 {
+// static: set the current transfrom to parameter
+
    fgFFT = fft;
 }
 
 //_____________________________________________________________________________
 const char *TVirtualFFT::GetDefaultFFT()
 {
+// static: return the name of the default fft
+
    return fgDefault.Data();
 }
 
 //______________________________________________________________________________
 void TVirtualFFT::SetDefaultFFT(const char *name)
 {
-   // static: set name of default fitter
+   // static: set name of default fft
 
    if (fgDefault == name) return;
    delete fgFFT;
