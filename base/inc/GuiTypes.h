@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.7 2004/05/24 11:24:27 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.8 2005/06/08 07:07:43 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -247,35 +247,36 @@ struct GCValues_t {
    Int_t    fDashLen;            // number of dashes in fDashes
    Mask_t   fMask;               // bit mask specifying which fields are valid
 
-   GCValues_t() { // default constructor
-      fFunction = kGXcopy;
-      fPlaneMask = 0;
-      fForeground = 0;
-      fBackground = 1;
-      fLineWidth = 0;
-      fLineStyle = kLineSolid;
-      fCapStyle = kCapButt;
-      fJoinStyle = kJoinMiter;
-      fFillStyle = kFillSolid; 
-      fFillRule = kEvenOddRule;
-      fArcMode = kArcPieSlice;
-      fTile = 0;
-      fStipple = 0;
-      fTsXOrigin = 0;
-      fTsYOrigin = 0;
-      fFont = 0;
-      fSubwindowMode = kClipByChildren;
-      fGraphicsExposures = kTRUE;
-      fClipXOrigin = 0;
-      fClipYOrigin = 0;
-      fClipMask = 0;
-      fDashOffset = 0;
-      fDashes[0] = 5; // dashed
-      fDashes[1] = 5;
-      for (int i=2; i<8; i++) fDashes[i] = 0;
-      fDashLen = 2;
-      fMask = 0;
-   }
+   GCValues_t(): // default constructor
+      fFunction  (kGXcopy),
+      fPlaneMask  (0),
+      fForeground  (0),
+      fBackground  (1),
+      fLineWidth  (0),
+      fLineStyle  (kLineSolid),
+      fCapStyle  (kCapButt),
+      fJoinStyle  (kJoinMiter),
+      fFillStyle  (kFillSolid), 
+      fFillRule  (kEvenOddRule),
+      fArcMode  (kArcPieSlice),
+      fTile  (0),
+      fStipple  (0),
+      fTsXOrigin  (0),
+      fTsYOrigin  (0),
+      fFont  (0),
+      fSubwindowMode  (kClipByChildren),
+      fGraphicsExposures  (kTRUE),
+      fClipXOrigin  (0),
+      fClipYOrigin  (0),
+      fClipMask  (0),
+      fDashOffset  (0),
+      fDashLen  (2),
+      fMask  (0)
+  { 
+    for (int i=2; i<8; i++) fDashes[i] = 0; 
+    fDashes[0] = 5; // dashed
+    fDashes[1] = 5;
+  }
 };
 
 // Bits telling which GCValues_t fields are valid

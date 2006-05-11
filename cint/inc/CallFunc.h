@@ -38,6 +38,31 @@ G__CallFunc {
  public:
   ~G__CallFunc() {}
   G__CallFunc() ;
+
+  G__CallFunc(const G__CallFunc& cf)
+#ifndef __MAKECINT__
+   :pfunc(cf.pfunc),
+    result(cf.result),
+#ifdef G__ASM_WHOLEFUNC
+    bytecode(cf.bytecode),
+#endif
+    method(cf.method),
+    para(cf.para)
+#endif /* __MAKECINT__ */
+  {}
+
+  G__CallFunc& operator=(const G__CallFunc& cf) {
+#ifndef __MAKECINT__
+  pfunc=cf.pfunc;
+  result=cf.result;
+#ifdef G__ASM_WHOLEFUNC
+  bytecode=cf.bytecode;
+#endif
+  method=cf.method;
+  para=cf.para;
+#endif /* __MAKECINT__ */
+  return *this;}
+
   void Init() ;
 
   enum MatchMode { ExactMatch=0, ConversionMatch=1 };

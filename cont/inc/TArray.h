@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.6 2002/07/23 11:11:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.7 2002/07/25 18:03:46 rdm Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -40,9 +40,9 @@ protected:
 public:
    Int_t     fN;            //Number of array elements
 
-   TArray() { fN = 0; }
-   TArray(Int_t n) { fN = n; }
-   TArray(const TArray &a) { fN = a.fN; }
+   TArray(): fN(0) { }
+   TArray(Int_t n): fN(n) { }
+   TArray(const TArray &a): fN(a.fN) { }
    TArray         &operator=(const TArray &rhs) { fN = rhs.fN; return *this; }
    virtual        ~TArray() { fN = 0; }
 

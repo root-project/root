@@ -38,8 +38,19 @@ G__MethodInfo {
   friend class G__MethodArgInfo;
  public:
   ~G__MethodInfo() {}
-  G__MethodInfo() : type() { Init(); }
-  G__MethodInfo(G__ClassInfo &a) : type() { Init(a); } 
+  G__MethodInfo() 
+    : handle(0), index(0), usingIndex(0), belongingclass(NULL), type() 
+    { Init(); }
+  G__MethodInfo(G__ClassInfo &a)
+    : handle(0), index(0), usingIndex(0), belongingclass(NULL), type() 
+    { Init(a); } 
+  G__MethodInfo(const G__MethodInfo& mi)
+    : handle(mi.handle), index(mi.index), usingIndex(mi.usingIndex), 
+    belongingclass(mi.belongingclass), type(mi.type) {}
+  G__MethodInfo& operator=(const G__MethodInfo& mi) {
+    handle=mi.handle; index=mi.index; usingIndex=mi.usingIndex; 
+    belongingclass=mi.belongingclass; type=mi.type; return *this;}
+
   void Init();
   void Init(G__ClassInfo &a);
   void Init(long handlein,long indexin,G__ClassInfo *belongingclassin);

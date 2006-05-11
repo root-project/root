@@ -36,8 +36,18 @@ G__EXPORT
 G__DataMemberInfo {
  public:
   ~G__DataMemberInfo() {}
-  G__DataMemberInfo() : type() { Init(); }
-  G__DataMemberInfo(class G__ClassInfo &a) : type() { Init(a); }
+  G__DataMemberInfo(): handle(0), index(0), belongingclass(NULL), type() 
+    { Init(); }
+  G__DataMemberInfo(const G__DataMemberInfo& dmi): 
+    handle(dmi.handle), index(dmi.index), belongingclass(dmi.belongingclass), 
+    type(dmi.type) {}
+  G__DataMemberInfo(class G__ClassInfo &a): handle(0), index(0), belongingclass(NULL), type()  
+    { Init(a); }
+  G__DataMemberInfo& operator=(const G__DataMemberInfo& dmi) {
+    handle=dmi.handle; index=dmi.index; belongingclass=dmi.belongingclass;
+    type=dmi.type; return *this;}
+
+
   void Init();
   void Init(class G__ClassInfo &a);
   void Init(long handlinin,long indexin,G__ClassInfo *belongingclassin);

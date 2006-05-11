@@ -40,11 +40,11 @@ G__EXPORT
 G__ClassInfo {
  public:
   virtual ~G__ClassInfo() {}
-  G__ClassInfo() { Init(); }
+  G__ClassInfo(): tagnum(0), class_property(0) { Init(); }
   void Init();
-  G__ClassInfo(const char *classname) { Init(classname); } 
+  G__ClassInfo(const char *classname): tagnum(0), class_property(0){ Init(classname); } 
   void Init(const char *classname);
-  G__ClassInfo(int tagnumin) { Init(tagnumin); } 
+  G__ClassInfo(int tagnumin): tagnum(0), class_property(0) { Init(tagnumin); } 
   void Init(int tagnumin);
 
   int operator==(const G__ClassInfo& a);
@@ -164,8 +164,12 @@ G__EXPORT
 #endif
 G__FriendInfo {
  public:
-  G__FriendInfo(struct G__friendtag *pin=0) { Init(pin); }
-  void operator=(const G__FriendInfo& x) { Init(x.pfriendtag); }
+  G__FriendInfo(struct G__friendtag *pin=0): pfriendtag(NULL), cls()
+    { Init(pin); }
+  G__FriendInfo(const G__FriendInfo& x): pfriendtag(x.pfriendtag), cls(x.cls) 
+    { Init(x.pfriendtag); }
+  G__FriendInfo& operator=(const G__FriendInfo& x) 
+    { Init(x.pfriendtag); return *this; }
   void Init(struct G__friendtag* pin) {
     pfriendtag = pin;
     if(pfriendtag) cls.Init(pfriendtag->tagnum); 

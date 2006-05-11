@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.4 2005/05/06 15:40:22 rdm Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.5 2005/06/23 10:04:08 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -44,25 +44,25 @@ struct Foption_t {
    int Minuit;      // "F"  If fitting a polN, switch to minuit fitter
    int Robust;      // "ROB" For a TGraph use robust fitting
 
-   Foption_t() {
-      Quiet    = 0;
-      Verbose  = 0;
-      Bound    = 0;
-      Like     = 0;
-      User     = 0;
-      W1       = 0;
-      Errors   = 0;
-      More     = 0;
-      Range    = 0;
-      Gradient = 0;
-      Nostore  = 0;
-      Nograph  = 0;
-      Plus     = 0;
-      Integral = 0;
-      Nochisq  = 0;
-      Minuit   = 0;
-      Robust   = 0;
-   }
+  Foption_t() :
+      Quiet     (0),
+      Verbose   (0),
+      Bound     (0),
+      Like      (0),
+      User      (0),
+      W1        (0),
+      Errors    (0),
+      More      (0),
+      Range     (0),
+      Gradient  (0),
+      Nostore   (0),
+      Nograph   (0),
+      Plus      (0),
+      Integral  (0),
+      Nochisq   (0),
+      Minuit    (0),
+      Robust    (0)
+   {}
 };
 
 #endif
