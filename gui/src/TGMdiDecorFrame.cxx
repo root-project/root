@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.14 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.15 2006/03/23 15:56:03 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -586,7 +586,9 @@ void TGMdiTitleBar::AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
    icon->ReparentWindow(fLFrame);
    buttons->ReparentWindow(fRFrame);
    fLFrame->AddFrame(icon, fLHint);
+   fLFrame->ShowFrame(icon);
    fRFrame->AddFrame(buttons, fLHint);
+   fRFrame->ShowFrame(buttons);
 }
 
 

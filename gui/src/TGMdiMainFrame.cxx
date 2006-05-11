@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.19 2006/03/20 13:34:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.20 2006/03/23 09:40:01 antcheva Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -846,7 +846,7 @@ void TGMdiMainFrame::Restore(TGMdiFrame *mdiframe)
    frame->GetTitleBar()->LayoutButtons(frame->GetMdiButtons(), kFALSE, kFALSE);
    frame->MoveResize(frame->GetPreResizeX(), frame->GetPreResizeY(),
                      frame->GetPreResizeWidth(), frame->GetPreResizeHeight());
-
+   SetCurrent(mdiframe);
    SendMessage(fParent, MK_MSG(kC_MDI, kMDI_RESTORE), frame->GetId(), 0);
    FrameRestored(frame->GetId());
 
