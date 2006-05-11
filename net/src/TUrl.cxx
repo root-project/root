@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.26 2006/05/01 16:34:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.27 2006/05/01 20:11:19 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -63,9 +63,13 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    fPasswd    = "";
    fHost      = "";
    fPort      = 80;
-   fFile      = "/";
+   fFile      = "";
    fAnchor    = "";
    fOptions   = "";
+
+   // if url starts with a / consider it as a file url
+   if (url[0] == '/')
+      defaultIsFile = kTRUE;
 
    // Find protocol
    char *s, sav;
@@ -341,15 +345,11 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
       }
 
       Bool_t deflt = kFALSE;
-      if ((!fProtocol.CompareTo("http")   && fPort == 80)   ||
-          (!fProtocol.CompareTo("proof")  && fPort == 1093) ||
-          (!fProtocol.CompareTo("proofs") && fPort == 1093) ||
-          (!fProtocol.CompareTo("proofk") && fPort == 1093) ||
-          (!fProtocol.CompareTo("root")   && fPort == 1094) ||
-          (!fProtocol.CompareTo("roots")  && fPort == 1094) ||
-          (!fProtocol.CompareTo("rootk")  && fPort == 1094) ||
-          (!fProtocol.CompareTo("ftp")    && fPort == 20)   ||
-          (!fProtocol.CompareTo("news")   && fPort == 119)  ||
+      if ((!fProtocol.CompareTo("http")  && fPort == 80)   ||
+          (fProtocol.BeginsWith("proof") && fPort == 1093) ||
+          (fProtocol.BeginsWith("root")  && fPort == 1094) ||
+          (!fProtocol.CompareTo("ftp")   && fPort == 20)   ||
+          (!fProtocol.CompareTo("news")  && fPort == 119)  ||
            fPort == 0)
          deflt = kTRUE;
 
