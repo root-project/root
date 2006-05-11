@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.185 2006/04/28 08:43:05 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.186 2006/05/03 13:33:23 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3446,19 +3446,32 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    Double_t rx = (x2ndc-x1ndc)/(rx2-rx1);
    Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
 
+   // The first part of the filled area is made of the graph points
    for (i=0; i<n; i++) {
       xf[i] = rx*(x[i]-rx1)+x1ndc;
       yf[i] = ry*(y[i]-ry1)+y1ndc;
    }
    nf = n-1;
 
-   a     = TMath::ATan((y[1]-y[0])/(x[1]-x[0]));
-   xt[0] = rx*(x[0]-rx1)+x1ndc-w*TMath::Sin(a);
-   yt[0] = ry*(y[0]-ry1)+y1ndc+w*TMath::Cos(a); 
+   // For each graph points a shifted points is computed to build up
+   // the second part of the filled area.
+   a = TMath::ATan((y[1]-y[0])/(x[1]-x[0]));
+   if (xf[0]<=xf[1]) {
+      xt[0] = rx*(x[0]-rx1)+x1ndc-w*TMath::Sin(a);
+      yt[0] = ry*(y[0]-ry1)+y1ndc+w*TMath::Cos(a); 
+   } else {
+      xt[0] = rx*(x[0]-rx1)+x1ndc+w*TMath::Sin(a);
+      yt[0] = ry*(y[0]-ry1)+y1ndc-w*TMath::Cos(a); 
+   }
 
-   a       = TMath::ATan((y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
-   xt[n-1] = rx*(x[n-1]-rx1)+x1ndc-w*TMath::Sin(a);
-   yt[n-1] = ry*(y[n-1]-ry1)+y1ndc+w*TMath::Cos(a); 
+   a = TMath::ATan((y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
+   if (xf[n-1]>=xf[n-2]) {
+      xt[n-1] = rx*(x[n-1]-rx1)+x1ndc-w*TMath::Sin(a);
+      yt[n-1] = ry*(y[n-1]-ry1)+y1ndc+w*TMath::Cos(a); 
+   } else {
+      xt[n-1] = rx*(x[n-1]-rx1)+x1ndc+w*TMath::Sin(a);
+      yt[n-1] = ry*(y[n-1]-ry1)+y1ndc-w*TMath::Cos(a); 
+   }
 
    Double_t xi0,yi0,xi1,yi1,xi2,yi2;
    for (i=1; i<n-1; i++) {
@@ -3557,6 +3570,7 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    delete [] xt;
    delete [] yt;
 }
+
 
 //______________________________________________________________________________
 void TGraph::ComputeLogs(Int_t npoints, Int_t opt)
