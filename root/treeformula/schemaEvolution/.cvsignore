@@ -3,3 +3,4 @@ EventDict*.*
 *.log *.dll *.def *.exp *.lib *.pdb *.log *.d 
 *.sln *.suo *.dylib
 *.manifest
+schemaRun.ref
