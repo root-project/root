@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.4 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.5 2006/04/27 10:19:43 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -341,6 +341,7 @@ TSQLObjectDataPool::TSQLObjectDataPool(TSQLClassInfo* info, TSQLResult* data) :
 //______________________________________________________________________________
 TSQLObjectDataPool::~TSQLObjectDataPool()
 {
+   //please Sergey: document this function
    if (fClassData!=0) delete fClassData;
    if (fRowsPool!=0) {
       fRowsPool->Delete();
@@ -351,6 +352,7 @@ TSQLObjectDataPool::~TSQLObjectDataPool()
 //______________________________________________________________________________
 TSQLRow* TSQLObjectDataPool::GetObjectRow(Long64_t objid)
 {
+   //please Sergey: document this function
    if (fClassData==0) return 0;
    
    Long64_t rowid;

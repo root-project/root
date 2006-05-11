@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.7 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.8 2006/03/20 21:43:44 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -1072,18 +1072,18 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
       const char* classname = (*row)[7];
       
       if (gDebug>4) 
-        cout << "  Reading keyid = " << keyid << " name = " << keyname << endl;
+         cout << "  Reading keyid = " << keyid << " name = " << keyname << endl;
 
       if ((keyid>=sqlio::Ids_FirstKey) || (keyid==specialkeyid))
          if (doupdate) {
-           TKeySQL* key = FindSQLKey(dir, keyid);
+            TKeySQL* key = FindSQLKey(dir, keyid);
            
-           if (key==0) {
-              Error("StreamKeysForDirectory","Key with id %d not exist in list", keyid);
-              nkeys = -1; // this will finish execution
-           } else 
-           if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
-              UpdateKeyData(key);
+            if (key==0) {
+               Error("StreamKeysForDirectory","Key with id %d not exist in list", keyid);
+               nkeys = -1; // this will finish execution
+            } else 
+               if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
+               UpdateKeyData(key);
              
          } else {
             TKeySQL* key = new TKeySQL(dir, keyid, objid, 
@@ -1300,6 +1300,7 @@ void TSQLFile::CreateBasicTables()
 //______________________________________________________________________________
 void TSQLFile::IncrementModifyCounter()
 {
+   //please Sergey: document this function
    if (!IsWritable()) {
       Error("IncrementModifyCounter","Cannot update tables without write accsess");
       return;
@@ -1834,7 +1835,7 @@ TKeySQL* TSQLFile::FindSQLKey(TDirectory* dir, Long64_t keyid)
    while ((obj = next())!=0) {
       TKeySQL* key = dynamic_cast<TKeySQL*> (obj);
       if (key!=0)
-        if (key->GetDBKeyId()==keyid) return key;
+         if (key->GetDBKeyId()==keyid) return key;
    }
    
    return 0;
@@ -1874,6 +1875,7 @@ Bool_t TSQLFile::WriteKeyData(TKeySQL* key)
 //______________________________________________________________________________
 Bool_t TSQLFile::UpdateKeyData(TKeySQL* key)
 {
+   //please Sergey: document this function
    if ((fSQL==0) || (key==0)) return kFALSE;
 
    TString sqlcmd;
@@ -2294,6 +2296,7 @@ TSQLResult* TSQLFile::GetNormalClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 //______________________________________________________________________________
 TSQLResult* TSQLFile::GetNormalClassDataAll(Long64_t minobjid, Long64_t maxobjid, TSQLClassInfo* sqlinfo)
 {
+   //please Sergey: document this function
    if (!sqlinfo->IsClassTableExist()) return 0;
    TString sqlcmd;
    const char* quote = SQLIdentifierQuote();
@@ -2311,8 +2314,8 @@ TSQLResult* TSQLFile::GetBlobClassData(Long64_t objid, TSQLClassInfo* sqlinfo)
 
    if (sqlinfo->IsRawTableExist()) {
       TString sqlcmd;
-       const char* quote = SQLIdentifierQuote();
-       sqlcmd.Form("SELECT %s, %s FROM %s%s%s WHERE %s%s%s=%lld ORDER BY %s%s%s",
+      const char* quote = SQLIdentifierQuote();
+      sqlcmd.Form("SELECT %s, %s FROM %s%s%s WHERE %s%s%s=%lld ORDER BY %s%s%s",
                   sqlio::BT_Field, sqlio::BT_Value,
                   quote, sqlinfo->GetRawTableName(), quote,
                   quote, SQLObjectIdColumn(), quote, objid,
@@ -2379,11 +2382,11 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
          }
           
          if (!SQLApplyCommands(&cmds)) {
-           Error("StoreObject","Cannot correctly store object data in database");
-           objid = -1;
-           if (needcommit) SQLRollback();
+            Error("StoreObject","Cannot correctly store object data in database");
+            objid = -1;
+            if (needcommit) SQLRollback();
          } else {
-           if (needcommit) SQLCommit();
+            if (needcommit) SQLCommit();
          }
       }
       cmds.Delete();

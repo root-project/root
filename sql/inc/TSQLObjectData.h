@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.4 2005/12/07 14:59:57 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.5 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -53,7 +53,7 @@ protected:
    TString           fClassName;
    Version_t         fVersion;
 
-ClassDef(TSQLObjectInfo, 1); // Info (classname, version) about object in database 
+ClassDef(TSQLObjectInfo, 1)  // Info (classname, version) about object in database 
     
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.6 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.7 2006/02/01 18:57:41 pcanal Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -105,30 +105,30 @@ Bool_t TKeySQL::IsKeyModified(const char* keyname, const char* keytitle, const c
 // Used in TFile::StreamKeysForDirectory() method to verify data for that keys
 // should be updated
   
-  Int_t len1 = (GetName()==0) ? 0 : strlen(GetName());
-  Int_t len2 = (keyname==0) ? 0 : strlen(keyname);
-  if (len1!=len2) return kTRUE;
-  if ((len1>0) && (strcmp(GetName(), keyname)!=0)) return kTRUE;
+   Int_t len1 = (GetName()==0) ? 0 : strlen(GetName());
+   Int_t len2 = (keyname==0) ? 0 : strlen(keyname);
+   if (len1!=len2) return kTRUE;
+   if ((len1>0) && (strcmp(GetName(), keyname)!=0)) return kTRUE;
   
-  len1 = (GetTitle()==0) ? 0 : strlen(GetTitle());
-  len2 = (keytitle==0) ? 0 : strlen(keytitle);
-  if (len1!=len2) return kTRUE;
-  if ((len1>0) && (strcmp(GetTitle(), keytitle)!=0)) return kTRUE;
+   len1 = (GetTitle()==0) ? 0 : strlen(GetTitle());
+   len2 = (keytitle==0) ? 0 : strlen(keytitle);
+   if (len1!=len2) return kTRUE;
+   if ((len1>0) && (strcmp(GetTitle(), keytitle)!=0)) return kTRUE;
 
-  const char* tm = GetDatime().AsSQLString();
-  len1 = (tm==0) ? 0 : strlen(tm);
-  len2 = (keydatime==0) ? 0 : strlen(keydatime);
-  if (len1!=len2) return kTRUE;
-  if ((len1>0) && (strcmp(tm, keydatime)!=0)) return kTRUE;
+   const char* tm = GetDatime().AsSQLString();
+   len1 = (tm==0) ? 0 : strlen(tm);
+   len2 = (keydatime==0) ? 0 : strlen(keydatime);
+   if (len1!=len2) return kTRUE;
+   if ((len1>0) && (strcmp(tm, keydatime)!=0)) return kTRUE;
   
-  if (cycle!=GetCycle()) return kTRUE;
+   if (cycle!=GetCycle()) return kTRUE;
 
-  len1 = (GetClassName()==0) ? 0 : strlen(GetClassName());
-  len2 = (classname==0) ? 0 : strlen(classname);
-  if (len1!=len2) return kTRUE;
-  if ((len1>0) && (strcmp(GetClassName(), classname)!=0)) return kTRUE;
+   len1 = (GetClassName()==0) ? 0 : strlen(GetClassName());
+   len2 = (classname==0) ? 0 : strlen(classname);
+   if (len1!=len2) return kTRUE;
+   if ((len1>0) && (strcmp(GetClassName(), classname)!=0)) return kTRUE;
       
-  return kFALSE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -155,6 +155,7 @@ Long64_t TKeySQL::GetDBDirId() const
 //______________________________________________________________________________
 void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
 {
+   //please Sergey: document this function
    TSQLFile* f = (TSQLFile*) GetFile(); 
     
    fCycle = GetMotherDir()->AppendKey(this);
@@ -232,6 +233,7 @@ void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
 //______________________________________________________________________________
 void* TKeySQL::ReadKeyObject(void* obj, const TClass* expectedClass)
 {
+   //please Sergey: document this function
 
    TSQLFile* f = (TSQLFile*) GetFile(); 
 

@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.9 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.10 2006/04/12 20:54:30 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -238,13 +238,14 @@ Bool_t TBufferSQL2::SqlObjectInfo(Long64_t objid, TString& clname, Version_t& ve
 //______________________________________________________________________________
 TSQLObjectData* TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo* sqlinfo)
 {
+   //please Sergey document this function
    if (!sqlinfo->IsClassTableExist()) 
       return fSQL->GetObjectClassData(objid, sqlinfo); 
    
    TSQLObjectDataPool* pool = 0;
    
    if (fPoolsMap!=0)
-     pool = (TSQLObjectDataPool*) fPoolsMap->GetValue(sqlinfo);
+      pool = (TSQLObjectDataPool*) fPoolsMap->GetValue(sqlinfo);
    
    if ((pool==0) && (fLastObjId>=fFirstObjId)) {
       if (gDebug>4) Info("SqlObjectData","Before request to %s",sqlinfo->GetClassTableName());
@@ -312,7 +313,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
       ULong_t hash = TMath::Hash(&obj, sizeof(void*));
       Long_t value = fObjMap->GetValue(hash, (Long_t) obj);
       if (value>0)
-        objid = fFirstObjId + value - 1;
+         objid = fFirstObjId + value - 1;
    }
    
    if (objid>=0) {
@@ -686,9 +687,9 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
       }
       
       if (cl->IsTObject())
-        typ_id = isptr ? TStreamerInfo::kObjectp : TStreamerInfo::kObject;
+         typ_id = isptr ? TStreamerInfo::kObjectp : TStreamerInfo::kObject;
       else
-        typ_id = isptr ? TStreamerInfo::kAnyp : TStreamerInfo::kAny;
+         typ_id = isptr ? TStreamerInfo::kAnyp : TStreamerInfo::kAny;
         
       if ((cl==TString::Class()) && !isptr)
          typ_id = TStreamerInfo::kTString;
@@ -745,7 +746,7 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
       elem->SetArrayDim(arrsize2>0 ? 2 : 1);
       elem->SetMaxIndex(0, arrsize1);
       if (arrsize2>0)
-        elem->SetMaxIndex(1, arrsize2);
+         elem->SetMaxIndex(1, arrsize2);
    }
 
    // return stack to CustomClass node
@@ -1820,7 +1821,7 @@ void  TBufferSQL2::WriteFastArray(void  *start,  const TClass *cl, Int_t n, TMem
    int size = cl->Size();
 
    for(Int_t j=0; j<n; j++,obj+=size) 
-     StreamObject(obj, cl);
+      StreamObject(obj, cl);
 
    //   TBuffer::WriteFastArray(start, cl, n, s);
 }

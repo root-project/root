@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLStructure.cxx,v 1.8 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLStructure.cxx,v 1.9 2006/04/18 14:19:21 rdm Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -300,6 +300,7 @@ void TSQLStructure::SetStreamerElement(const TStreamerElement* elem, Int_t numbe
 //________________________________________________________________________
 void TSQLStructure::SetCustomClass(const TClass* cl, Version_t version)
 {
+   //please Sergey: document this function
    fType = kSqlCustomClass;
    fPointer = (void*) cl;
    fArrayIndex = version;
@@ -308,6 +309,7 @@ void TSQLStructure::SetCustomClass(const TClass* cl, Version_t version)
 //________________________________________________________________________
 void TSQLStructure::SetCustomElement(TStreamerElement* elem)
 {
+   //please Sergey: document this function
    fType = kSqlCustomElement;
    fPointer = elem;
 }
@@ -410,11 +412,13 @@ const char* TSQLStructure::GetValueType() const
 //________________________________________________________________________
 TClass* TSQLStructure::GetCustomClass() const
 {
+   //please Sergey: document this function
    return (fType==kSqlCustomClass) ? (TClass*) fPointer : 0;
 }
 
 //________________________________________________________________________
 Version_t TSQLStructure::GetCustomClassVersion() const
+   //please Sergey: document this function
 {
    return (fType==kSqlCustomClass) ? fArrayIndex : 0;
 }
@@ -422,6 +426,7 @@ Version_t TSQLStructure::GetCustomClassVersion() const
 //________________________________________________________________________
 Bool_t TSQLStructure::GetClassInfo(TClass* &cl, Version_t &version)
 {
+   //please Sergey: document this function
    if (GetType()==kSqlStreamerInfo) {
       TStreamerInfo* info = GetStreamerInfo();
       if (info==0) return kFALSE;
@@ -684,7 +689,7 @@ public:
    {
       TObjString* str = new TObjString(values);
       if (isnorm) fNormCmds.Add(str);
-             else fBlobCmds.Add(str);
+      else fBlobCmds.Add(str);
    }
 
    TSQLClassInfo* fInfo;
@@ -1078,13 +1083,13 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl,
    if (cl==TString::Class())
       normstore = StoreTString(reg);
    else
-     if (GetType()==kSqlStreamerInfo)
-        // this is a case when array of objects are stored in blob and each object
-        // has normal streamer. Then it will be stored in normal form and only one tag
-        // will be kept to remind about
-        normstore = StoreClassInNormalForm(reg);
-     else
-        normstore = StoreObjectInNormalForm(reg);
+      if (GetType()==kSqlStreamerInfo)
+         // this is a case when array of objects are stored in blob and each object
+         // has normal streamer. Then it will be stored in normal form and only one tag
+         // will be kept to remind about
+         normstore = StoreClassInNormalForm(reg);
+      else
+         normstore = StoreObjectInNormalForm(reg);
 
    if (gDebug>2)
       cout << "Store object " << objid << " of class " << cl->GetName() << "  normal = " << normstore << " sqltype = " << GetType() << endl;
@@ -1292,7 +1297,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
          if (child->GetType()==kSqlPointer) {
             TString sobjid = child->GetValue();
             if (sobjid.Length()>0)
-              objid = sqlio::atol64(sobjid.Data());
+               objid = sqlio::atol64(sobjid.Data());
          }
       }
 
@@ -1310,9 +1315,9 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TObjArray* col
    if (columntyp==kColNormObject) {
 
       if (NumChilds()!=1) {
-          Error("kColNormObject","NumChilds()=%d", NumChilds());
-          PrintLevel(20);
-          return kFALSE;
+         Error("kColNormObject","NumChilds()=%d", NumChilds());
+         PrintLevel(20);
+         return kFALSE;
       }
       TSQLStructure* child = GetChild(0);
       if ((child->GetType()!=kSqlPointer) && (child->GetType()!=kSqlObject)) return kFALSE;
@@ -1669,8 +1674,8 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
        (typ==TStreamerInfo::kObjectp + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kObjectP + TStreamerInfo::kOffsetL))
-      if (elem->GetStreamer()!=0) return kColNormObject;
-                             else return kColNormObjectArray;
+       if (elem->GetStreamer()!=0) return kColNormObject;
+       else                        return kColNormObjectArray;
 
    if ((typ==TStreamerInfo::kObject) ||
        (typ==TStreamerInfo::kAny) ||
@@ -1805,7 +1810,7 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObje
    TString colname = DefineElementColumnName(elem, f);
 
    if (gDebug>4)
-     cout << "         colname = " << colname << " in " <<
+      cout << "         colname = " << colname << " in " <<
             data->GetInfo()->GetClassTableName() << endl;
 
    switch (coltype) {
