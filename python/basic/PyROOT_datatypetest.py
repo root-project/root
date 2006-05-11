@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 03/13/06
+# Last: 04/13/06
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -92,13 +92,18 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       self.failUnlessRaises( TypeError, c.SetBool, 10 )
 
     # char types
-      c.fChar = 'b';      self.assertEqual( c.GetChar(),     'b' )
-      c.SetChar( 'c' );   self.assertEqual( c.fChar,         'c' )
-      c.SetChar( 41 );    self.assertEqual( c.fChar, chr(41)     )
-      c.fUChar = 'd';     self.assertEqual( c.GetUChar(),    'd' )
-      c.SetUChar( 'e' );  self.assertEqual( c.fUChar,        'e' )
-      self.failUnlessRaises( TypeError, c.SetChar, 256 )
-      self.failUnlessRaises( TypeError, c.SetChar, "string" )
+      c.fChar = 'b';      self.assertEqual( c.GetChar(),      'b' )
+      c.fChar = 40;       self.assertEqual( c.GetChar(),  chr(40) )
+      c.SetChar( 'c' );   self.assertEqual( c.fChar,          'c' )
+      c.SetChar( 41 );    self.assertEqual( c.fChar,      chr(41) )
+      c.fUChar = 'd';     self.assertEqual( c.GetUChar(),     'd' )
+      c.fUChar = 42;      self.assertEqual( c.GetUChar(), chr(42) )
+      c.SetUChar( 'e' );  self.assertEqual( c.fUChar,         'e' )
+      c.SetUChar( 43 );   self.assertEqual( c.fUChar,     chr(43) )
+
+      self.failUnlessRaises( TypeError, c.SetChar,  "string" )
+      self.failUnlessRaises( TypeError, c.SetUChar,       -1 )
+      self.failUnlessRaises( TypeError, c.SetUChar, "string" )
 
     # integer types
       names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong' ]

@@ -1,7 +1,7 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 03/28/05
+# Last: 05/10/06
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
@@ -76,15 +76,15 @@ class FitFunctionTestCase( unittest.TestCase ):
       """Test fitting with a python global function"""
 
       f = TF1( 'pygaus', pygaus, -4, 4, 4 )
-      f.SetParameters( 300, 0.43, 0.35, 300 )
+      f.SetParameters( 600, 0.43, 0.35, 600 )
 
       h = TH1F( "h"," test", 100, -4, 4 )
-      h.FillRandom( "gaus", 100000 )
+      h.FillRandom( "gaus", 200000 )
       h.Fit( f, "0Q" )
 
       self.assertEqual( f.GetNDF(), 96 )
       result = f.GetParameters()
-      self.assertEqual( round( result[1] - 0., 1), 0 )  # mean
+      self.assertEqual( round( result[1] - 0., 0), 0 )  # mean
       self.assertEqual( round( result[2] - 1., 1), 0 )  # s.d.
 
 
