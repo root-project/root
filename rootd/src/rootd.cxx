@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.114 2006/05/04 17:05:29 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.115 2006/05/10 07:43:35 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -506,7 +506,7 @@ needshell:
             strcat(cmd, p);
          }
 
-   } else {
+      } else {
          hd = HomeDirectory(0);
          if (hd == 0) {
             Error(ErrSys, kErrFatal, "RootdExpandPathName: no home directory");

@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.23 2006/01/24 05:59:27 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.24 2006/04/23 20:40:23 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,24 +158,25 @@ extern "C" void type_of_call pyinit(char *frame,  Long_t l_frame,
 #endif
 
 extern "C" {
-  void*  pythia6_common_address(const char*);
-  void   type_of_call tpythia6_open_fortran_file(int* lun, char* name, int);
-  void   type_of_call tpythia6_close_fortran_file(int* lun);
+   void*  pythia6_common_address(const char*);
+   void   type_of_call tpythia6_open_fortran_file(int* lun, char* name, int);
+   void   type_of_call tpythia6_close_fortran_file(int* lun);
 }
 
 ClassImp(TPythia6)
 
 //------------------------------------------------------------------------------
 TPythia6::TPythia6Cleaner::TPythia6Cleaner() {
+   //utility class to manage the TPythia6 innstance
 }
 
 //------------------------------------------------------------------------------
 TPythia6::TPythia6Cleaner::~TPythia6Cleaner() {
-
-  if (TPythia6::fgInstance) {
-    delete TPythia6::fgInstance;
-    TPythia6::fgInstance = 0;
-  }
+   //delete the TPythia6 insntance
+   if (TPythia6::fgInstance) {
+      delete TPythia6::fgInstance;
+      TPythia6::fgInstance = 0;
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -183,67 +184,67 @@ TPythia6::TPythia6Cleaner::~TPythia6Cleaner() {
 //  Initialize() method
 //------------------------------------------------------------------------------
 TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
-// TPythia6 constructor: creates a TClonesArray in which it will store all
-// particles. Note that there may be only one functional TPythia6 object
-// at a time, so it's not use to create more than one instance of it.
+   // TPythia6 constructor: creates a TClonesArray in which it will store all
+   // particles. Note that there may be only one functional TPythia6 object
+   // at a time, so it's not use to create more than one instance of it.
   
-  // Protect against multiple objects.   All access should be via the
-  // Instance member function. 
-  if (fgInstance) 
-    Fatal("TPythia6", "There's already an instance of TPythia6");
+   // Protect against multiple objects.   All access should be via the
+   // Instance member function. 
+   if (fgInstance) 
+      Fatal("TPythia6", "There's already an instance of TPythia6");
   
-  delete fParticles; // was allocated as TObjArray in TGenerator
+   delete fParticles; // was allocated as TObjArray in TGenerator
 
-  fParticles = new TClonesArray("TMCParticle",50);
+   fParticles = new TClonesArray("TMCParticle",50);
 
-  // initialize common-blocks
-  // the functions/subroutines referenced by TPythia6 can be found
-  // at ftp://root.cern.ch/root/pythia6.tar.gz
+   // initialize common-blocks
+   // the functions/subroutines referenced by TPythia6 can be found
+   // at ftp://root.cern.ch/root/pythia6.tar.gz
   
-  fPyjets = (Pyjets_t*) pythia6_common_address("PYJETS");
-  fPydat1 = (Pydat1_t*) pythia6_common_address("PYDAT1");
-  fPydat2 = (Pydat2_t*) pythia6_common_address("PYDAT2");
-  fPydat3 = (Pydat3_t*) pythia6_common_address("PYDAT3");
-  fPydat4 = (Pydat4_t*) pythia6_common_address("PYDAT4");
-  fPydatr = (Pydatr_t*) pythia6_common_address("PYDATR");
-  fPysubs = (Pysubs_t*) pythia6_common_address("PYSUBS");
-  fPypars = (Pypars_t*) pythia6_common_address("PYPARS");
-  fPyint1 = (Pyint1_t*) pythia6_common_address("PYINT1");
-  fPyint2 = (Pyint2_t*) pythia6_common_address("PYINT2");
-  fPyint3 = (Pyint3_t*) pythia6_common_address("PYINT3");
-  fPyint4 = (Pyint4_t*) pythia6_common_address("PYINT4");
-  fPyint5 = (Pyint5_t*) pythia6_common_address("PYINT5");
-  fPyint6 = (Pyint6_t*) pythia6_common_address("PYINT6");
-  fPyint7 = (Pyint7_t*) pythia6_common_address("PYINT7");
-  fPyint8 = (Pyint8_t*) pythia6_common_address("PYINT8");
-  fPyint9 = (Pyint9_t*) pythia6_common_address("PYINT9");
-  fPyuppr = (Pyuppr_t*) pythia6_common_address("PYUPPR");
-  fPymssm = (Pymssm_t*) pythia6_common_address("PYMSSM");
-  fPyssmt = (Pyssmt_t*) pythia6_common_address("PYSSMT");
-  fPyints = (Pyints_t*) pythia6_common_address("PYINTS");
-  fPybins = (Pybins_t*) pythia6_common_address("PYBINS");
+   fPyjets = (Pyjets_t*) pythia6_common_address("PYJETS");
+   fPydat1 = (Pydat1_t*) pythia6_common_address("PYDAT1");
+   fPydat2 = (Pydat2_t*) pythia6_common_address("PYDAT2");
+   fPydat3 = (Pydat3_t*) pythia6_common_address("PYDAT3");
+   fPydat4 = (Pydat4_t*) pythia6_common_address("PYDAT4");
+   fPydatr = (Pydatr_t*) pythia6_common_address("PYDATR");
+   fPysubs = (Pysubs_t*) pythia6_common_address("PYSUBS");
+   fPypars = (Pypars_t*) pythia6_common_address("PYPARS");
+   fPyint1 = (Pyint1_t*) pythia6_common_address("PYINT1");
+   fPyint2 = (Pyint2_t*) pythia6_common_address("PYINT2");
+   fPyint3 = (Pyint3_t*) pythia6_common_address("PYINT3");
+   fPyint4 = (Pyint4_t*) pythia6_common_address("PYINT4");
+   fPyint5 = (Pyint5_t*) pythia6_common_address("PYINT5");
+   fPyint6 = (Pyint6_t*) pythia6_common_address("PYINT6");
+   fPyint7 = (Pyint7_t*) pythia6_common_address("PYINT7");
+   fPyint8 = (Pyint8_t*) pythia6_common_address("PYINT8");
+   fPyint9 = (Pyint9_t*) pythia6_common_address("PYINT9");
+   fPyuppr = (Pyuppr_t*) pythia6_common_address("PYUPPR");
+   fPymssm = (Pymssm_t*) pythia6_common_address("PYMSSM");
+   fPyssmt = (Pyssmt_t*) pythia6_common_address("PYSSMT");
+   fPyints = (Pyints_t*) pythia6_common_address("PYINTS");
+   fPybins = (Pybins_t*) pythia6_common_address("PYBINS");
 }
 
 //------------------------------------------------------------------------------
- TPythia6::~TPythia6()
- {
-// Destroys the object, deletes and disposes all TMCParticles currently on list.
+TPythia6::~TPythia6()
+{
+   // Destroys the object, deletes and disposes all TMCParticles currently on list.
 
-    if (fParticles) {
+   if (fParticles) {
       fParticles->Delete();
       delete fParticles;
       fParticles = 0;
    }
- }
+}
 
 //------------------------------------------------------------------------------
 TPythia6* TPythia6::Instance() {
-  // model of automatic memory cleanup suggested by Jim Kowalkovski:
-  // destructor for local static variable `cleaner' is  always called in the end
-  // of the job thus deleting the only TPythia6 instance
+   // model of automatic memory cleanup suggested by Jim Kowalkovski:
+   // destructor for local static variable `cleaner' is  always called in the end
+   // of the job thus deleting the only TPythia6 instance
 
-  static TPythia6::TPythia6Cleaner cleaner;
-  return fgInstance ? fgInstance : (fgInstance=new TPythia6()) ;
+   static TPythia6::TPythia6Cleaner cleaner;
+   return fgInstance ? fgInstance : (fgInstance=new TPythia6()) ;
 }
 
 
@@ -252,33 +253,34 @@ TPythia6* TPythia6::Instance() {
 
 //______________________________________________________________________________
 void TPythia6::GenerateEvent() {
+   //  generate event and copy the information from /HEPEVT/ to fPrimaries
 
-  //  generate event and copy the information from /HEPEVT/ to fPrimaries
-
-  pyevnt();
-  ImportParticles();
+   pyevnt();
+   ImportParticles();
 }
 
 //______________________________________________________________________________
 void TPythia6::OpenFortranFile(int lun, char* name) {
-  tpythia6_open_fortran_file(&lun, name, strlen(name));
+   //interface with fortran i/o
+   tpythia6_open_fortran_file(&lun, name, strlen(name));
 }
 
 //______________________________________________________________________________
 void TPythia6::CloseFortranFile(int lun) {
-  tpythia6_close_fortran_file(&lun);
+   //interface with fortran i/o
+   tpythia6_close_fortran_file(&lun);
 }
 
 
 //______________________________________________________________________________
 TObjArray *TPythia6::ImportParticles(Option_t *)
 {
-// Fills TObjArray fParticles list with particles from common LUJETS
-// Old contents of a list are cleared. This function should be called after
-// any change in common LUJETS, however GetParticles() method  calls it
-// automatically - user don't need to care about it. In case you make a call
-// to LuExec() you must call this method yourself to transfer new data from
-// common LUJETS to the fParticles list.
+   // Fills TObjArray fParticles list with particles from common LUJETS
+   // Old contents of a list are cleared. This function should be called after
+   // any change in common LUJETS, however GetParticles() method  calls it
+   // automatically - user don't need to care about it. In case you make a call
+   // to LuExec() you must call this method yourself to transfer new data from
+   // common LUJETS to the fParticles list.
 
    fParticles->Clear();
    Int_t numpart   = fPyjets->N;
@@ -289,13 +291,11 @@ TObjArray *TPythia6::ImportParticles(Option_t *)
                             fPyjets->K[2][i] ,
                             fPyjets->K[3][i] ,
                             fPyjets->K[4][i] ,
-
                             fPyjets->P[0][i] ,
                             fPyjets->P[1][i] ,
                             fPyjets->P[2][i] ,
                             fPyjets->P[3][i] ,
                             fPyjets->P[4][i] ,
-
                             fPyjets->V[0][i] ,
                             fPyjets->V[1][i] ,
                             fPyjets->V[2][i] ,
@@ -308,43 +308,40 @@ TObjArray *TPythia6::ImportParticles(Option_t *)
 //______________________________________________________________________________
 Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 {
-//
-//  Default primary creation method. It reads the /HEPEVT/ common block which
-//  has been filled by the GenerateEvent method. If the event generator does
-//  not use the HEPEVT common block, This routine has to be overloaded by
-//  the subclasses.
-//  The function loops on the generated particles and store them in
-//  the TClonesArray pointed by the argument particles.
-//  The default action is to store only the stable particles (ISTHEP = 1)
-//  This can be demanded explicitly by setting the option = "Final"
-//  If the option = "All", all the particles are stored.
-//
+   //  Default primary creation method. It reads the /HEPEVT/ common block which
+   //  has been filled by the GenerateEvent method. If the event generator does
+   //  not use the HEPEVT common block, This routine has to be overloaded by
+   //  the subclasses.
+   //  The function loops on the generated particles and store them in
+   //  the TClonesArray pointed by the argument particles.
+   //  The default action is to store only the stable particles (ISTHEP = 1)
+   //  This can be demanded explicitly by setting the option = "Final"
+   //  If the option = "All", all the particles are stored.
+   //
 
-  if (particles == 0) return 0;
-  TClonesArray &clonesParticles = *particles;
-  clonesParticles.Clear();
-  Int_t numpart = fPyjets->N;
-  Int_t nparts=0;
-  if (!strcmp(option,"") || !strcmp(option,"Final")) {
-    for (Int_t i = 0; i<numpart; i++) {
+   if (particles == 0) return 0;
+   TClonesArray &clonesParticles = *particles;
+   clonesParticles.Clear();
+   Int_t numpart = fPyjets->N;
+   Int_t nparts=0;
+   if (!strcmp(option,"") || !strcmp(option,"Final")) {
+      for (Int_t i = 0; i<numpart; i++) {
 
-    if (fPyjets->K[0][i] == 1) {
-//
-//  Use the common block values for the TParticle constructor
-//
-        new(clonesParticles[nparts]) TParticle(
+      if (fPyjets->K[0][i] == 1) {
+         //
+         //  Use the common block values for the TParticle constructor
+         //
+         new(clonesParticles[nparts]) TParticle(
                             fPyjets->K[1][i] ,
                             fPyjets->K[0][i] ,
                             fPyjets->K[2][i] ,
                             -1,
                             fPyjets->K[3][i] ,
                             fPyjets->K[4][i] ,
-
                             fPyjets->P[0][i] ,
                             fPyjets->P[1][i] ,
                             fPyjets->P[2][i] ,
                             fPyjets->P[3][i] ,
-
                             fPyjets->V[0][i] ,
                             fPyjets->V[1][i] ,
                             fPyjets->V[2][i] ,
@@ -352,53 +349,51 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
 
          //     if(gDebug) printf("%d %d %d! ",i,fPyjets->K[1][i],numpart);
          nparts++;
+         }
       }
-    }
-  }
-  else if (!strcmp(option,"All")) {
-    for (Int_t i = 0; i<numpart; i++) {
-        new(clonesParticles[i]) TParticle(
+   } else if (!strcmp(option,"All")) {
+      for (Int_t i = 0; i<numpart; i++) {
+         new(clonesParticles[i]) TParticle(
                             fPyjets->K[1][i] ,
                             fPyjets->K[0][i] ,
                             fPyjets->K[2][i] ,
                             -1,
                             fPyjets->K[3][i] ,
                             fPyjets->K[4][i] ,
-
                             fPyjets->P[0][i] ,
                             fPyjets->P[1][i] ,
                             fPyjets->P[2][i] ,
                             fPyjets->P[3][i] ,
-
                             fPyjets->V[0][i] ,
                             fPyjets->V[1][i] ,
                             fPyjets->V[2][i] ,
                             fPyjets->V[3][i]);
-    }
-    nparts=numpart;
-  }
+      }
+      nparts=numpart;
+   }
 
-  return nparts;
+   return nparts;
 }
 
 //______________________________________________________________________________
 void TPythia6::Initialize(const char *frame, const char *beam, const char *target, float win)
 {
-// Calls PyInit with the same parameters after performing some checking,
-// sets correct title. This method should preferably be called instead of PyInit.
-// PURPOSE: to initialize the generation procedure.
-// ARGUMENTS: See documentation for details.
-//    frame:  - specifies the frame of the experiment:
-//                "CMS","FIXT","USER","FOUR","FIVE","NONE"
-//    beam,
-//    target: - beam and target particles (with additionaly cahrges, tildes or "bar":
-//              e,nu_e,mu,nu_mu,tau,nu_tau,gamma,pi,n,p,Lambda,Sigma,Xi,Omega,
-//              pomeron,reggeon
-//    win:    - related to energy system:
-//              for frame=="CMS" - total energy of system
-//              for frame=="FIXT" - momentum of beam particle
-//              for frame=="USER" - dummy - see documentation.
-////////////////////////////////////////////////////////////////////////////////////
+   ////////////////////////////////////////////////////////////////////////////////////
+   // Calls PyInit with the same parameters after performing some checking,
+   // sets correct title. This method should preferably be called instead of PyInit.
+   // PURPOSE: to initialize the generation procedure.
+   // ARGUMENTS: See documentation for details.
+   //    frame:  - specifies the frame of the experiment:
+   //                "CMS","FIXT","USER","FOUR","FIVE","NONE"
+   //    beam,
+   //    target: - beam and target particles (with additionaly cahrges, tildes or "bar":
+   //              e,nu_e,mu,nu_mu,tau,nu_tau,gamma,pi,n,p,Lambda,Sigma,Xi,Omega,
+   //              pomeron,reggeon
+   //    win:    - related to energy system:
+   //              for frame=="CMS" - total energy of system
+   //              for frame=="FIXT" - momentum of beam particle
+   //              for frame=="USER" - dummy - see documentation.
+   ////////////////////////////////////////////////////////////////////////////////////
 
    char  cframe[4];
    strncpy(cframe,frame,4);
@@ -475,23 +470,23 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
 
 
 void TPythia6::Pyinit(char* frame, char* beam, char* target, double win) {
-//------------------------------------------------------------------------------
-// Calls Pyinit with the same parameters after performing some checking,
-// sets correct title. This method should preferably be called instead of PyInit.
-// PURPOSE: to initialize the generation procedure.
-// ARGUMENTS: See documentation for details.
-//    frame:  - specifies the frame of the experiment:
-//                "CMS","FIXT","USER","FOUR","FIVE","NONE"
-//    beam,
-//    target: - beam and target particles (with additionaly charges,
-//              tildes or "bar":
-//              e,nu_e,mu,nu_mu,tau,nu_tau,gamma,pi,n,p,Lambda,Sigma,Xi,Omega,
-//              pomeron,reggeon
-//    win:    - related to energy system:
-//              for frame=="CMS" - total energy of system
-//              for frame=="FIXT" - momentum of beam particle
-//              for frame=="USER" - dummy - see documentation.
-//------------------------------------------------------------------------------
+   //------------------------------------------------------------------------------
+   // Calls Pyinit with the same parameters after performing some checking,
+   // sets correct title. This method should preferably be called instead of PyInit.
+   // PURPOSE: to initialize the generation procedure.
+   // ARGUMENTS: See documentation for details.
+   //    frame:  - specifies the frame of the experiment:
+   //                "CMS","FIXT","USER","FOUR","FIVE","NONE"
+   //    beam,
+   //    target: - beam and target particles (with additionaly charges,
+   //              tildes or "bar":
+   //              e,nu_e,mu,nu_mu,tau,nu_tau,gamma,pi,n,p,Lambda,Sigma,Xi,Omega,
+   //              pomeron,reggeon
+   //    win:    - related to energy system:
+   //              for frame=="CMS" - total energy of system
+   //              for frame=="FIXT" - momentum of beam particle
+   //              for frame=="USER" - dummy - see documentation.
+   //------------------------------------------------------------------------------
 
    Double_t lwin = win;
    Long_t  s1    = strlen(frame);
@@ -506,109 +501,123 @@ void TPythia6::Pyinit(char* frame, char* beam, char* target, double win) {
 
 
 int TPythia6::Pycomp(int kf) {
-  return pycomp(&kf);
+   //interface with fortran routine pycomp
+   return pycomp(&kf);
 }
 
 void TPythia6::Pyedit(int medit) {
-  pyedit(&medit);
-  ImportParticles();
+   //interface with fortran routine pyedit
+   pyedit(&medit);
+   ImportParticles();
 }
 
 void TPythia6::Pydiff() {
-  pydiff();
+   //interface with fortran routine pydiff
+   pydiff();
 }
 
 void TPythia6::Pyevnt() {
-  pyevnt();
+   //interface with fortran routine pyevnt
+   pyevnt();
 }
 
 void TPythia6::Pyexec() {
-  pyexec();
+   //interface with fortran routine pyexec
+   pyexec();
 }
 
 void TPythia6::Pyhepc(int mconv) {
-  pyhepc(&mconv);
+   //interface with fortran routine pyhepc
+   pyhepc(&mconv);
 }
 
 void TPythia6::Pylist(int flag) {
-  pylist(&flag);
+   //interface with fortran routine pylist
+   pylist(&flag);
 }
 
 void TPythia6::Pyname(int kf, char* name) {
-  //Note that the array name must be dimensioned in the calling program
-  //to at least name[16]
+   //Note that the array name must be dimensioned in the calling program
+   //to at least name[16]
    
    pyname(&kf,name,15);
-  // cut trailing blanks to get C string
- name[15] = 0;
-  //for (int i=15; (i>=0) && (name[i] == ' '); i--) {
-  //  name[i] = 0;
-  // }
+   // cut trailing blanks to get C string
+   name[15] = 0;
+   //for (int i=15; (i>=0) && (name[i] == ' '); i--) {
+   //  name[i] = 0;
+   // }
 }
 
 double TPythia6::Pyr(int idummy) {
-  return pyr(&idummy);
+   //interface with fortran routine pyr
+   return pyr(&idummy);
 }
 
 void TPythia6::Pyrget(int lun, int move) {
-  pyrget(&lun,&move);
+   //interface with fortran routine pyrget
+   pyrget(&lun,&move);
 }
 
 void TPythia6::Pyrset(int lun, int move) {
-  pyrset(&lun,&move);
+   //interface with fortran routine pyrset
+   pyrset(&lun,&move);
 }
 
 void TPythia6::Pystat(int flag) {
-  pystat(&flag);
+   //interface with fortran routine pystat
+   pystat(&flag);
 }
 
 void TPythia6::Pytest(int flag) {
-  pytest(&flag);
+   //interface with fortran routine pytest
+   pytest(&flag);
 }
 
 void TPythia6::Pyupda(int mupda, int lun) {
-  pyupda(&mupda,&lun);
+   //interface with fortran routine pyupda
+   pyupda(&mupda,&lun);
 }
 
 double TPythia6::Pymass(int kf) {
-  return pymass(&kf);
+   //interface with fortran routine pymass
+   return pymass(&kf);
 }
 
 int TPythia6::Pychge(int kf) {
-  return pychge(&kf);
+   //interface with fortran routine pychge
+   return pychge(&kf);
 }
 
 //______________________________________________________________________________
-void 
-TPythia6::Py1ent(Int_t ip, Int_t kf, Double_t pe, Double_t theta, Double_t phi)
+void TPythia6::Py1ent(Int_t ip, Int_t kf, Double_t pe, Double_t theta, Double_t phi)
 {
-  // Add one entry to the event record, i.e. either a parton or a
-  // particle. 
-  //
-  //  IP:   normally line number for the parton/particle. There are two
-  //        exceptions:
-  // 
-  //        If IP = 0: line number 1 is used and PYEXEC is called. 
-  //        If IP < 0: line -IP is used, with status code K(-IP,2)=2
-  //                   rather than 1; thus a parton system may be built
-  //                   up by filling all but the last parton of the
-  //                   system with IP < 0.   
-  //  KF:   parton/particle flavour code (PDG code)
-  //  PE:   parton/particle energy. If PE is smaller than the mass,
-  //        the parton/particle is taken to be at rest.  
-  //  THETA:
-  //  PHI:  polar and azimuthal angle for the momentum vector of the
-  //        parton/particle. 
-  py1ent(ip, kf, pe, theta, phi);
+   // Add one entry to the event record, i.e. either a parton or a
+   // particle. 
+   //
+   //  IP:   normally line number for the parton/particle. There are two
+   //        exceptions:
+   // 
+   //        If IP = 0: line number 1 is used and PYEXEC is called. 
+   //        If IP < 0: line -IP is used, with status code K(-IP,2)=2
+   //                   rather than 1; thus a parton system may be built
+   //                   up by filling all but the last parton of the
+   //                   system with IP < 0.   
+   //  KF:   parton/particle flavour code (PDG code)
+   //  PE:   parton/particle energy. If PE is smaller than the mass,
+   //        the parton/particle is taken to be at rest.  
+   //  THETA:
+   //  PHI:  polar and azimuthal angle for the momentum vector of the
+   //        parton/particle. 
+   py1ent(ip, kf, pe, theta, phi);
 }
 
 
 //______________________________________________________________________________
 void TPythia6::SetupTest()
 {
-// Exemplary setup of Pythia parameters:
-// Switches on processes 102,123,124 (Higgs generation) and switches off
-// interactions, fragmentation, ISR, FSR...
+   // Exemplary setup of Pythia parameters:
+   // Switches on processes 102,123,124 (Higgs generation) and switches off
+   // interactions, fragmentation, ISR, FSR...
 
    SetMSEL(0);            // full user controll;
 

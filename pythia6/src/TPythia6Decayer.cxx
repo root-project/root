@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.1 2006/04/23 20:40:23 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.2 2006/04/25 15:56:07 rdm Exp $
 // Author: Christian Holm Christensen   22/04/06
 // Much of this code has been lifted from AliROOT.
 
@@ -51,9 +51,9 @@ TPythia6Decayer::TPythia6Decayer()
 void TPythia6Decayer::Init()
 {
    // Initialize the decayer
-   static bool init = false;
+   static Bool_t init = kFALSE;
    if (init) return;
-   init = true;
+   init = kTRUE;
    ForceDecay();
 }
 
@@ -89,177 +89,177 @@ void TPythia6Decayer::SetForceDecay(Int_t type)
 void TPythia6Decayer::ForceDecay()
 {
    // Force a particle decay mode
-    Decay_t decay=fDecay;
-    TPythia6::Instance()->SetMSTJ(21,2);
-    if (decay == kNoDecayHeavy) return;
+   Decay_t decay=fDecay;
+   TPythia6::Instance()->SetMSTJ(21,2);
+   if (decay == kNoDecayHeavy) return;
 
-    //
-    // select mode
-    Int_t products[3];
-    Int_t mult[3];
+   //
+   // select mode
+   Int_t products[3];
+   Int_t mult[3];
 
-    switch (decay) {
-    case kHardMuons:
-       products[0] =     13;
-       products[1] =    443;
-       products[2] = 100443;
-       mult[0] = 1;
-       mult[1] = 1;
-       mult[2] = 1;
-       ForceParticleDecay(  511, products, mult, 3);
-       ForceParticleDecay(  521, products, mult, 3);
-       ForceParticleDecay(  531, products, mult, 3);
-       ForceParticleDecay( 5122, products, mult, 3);
-       ForceParticleDecay( 5132, products, mult, 3);
-       ForceParticleDecay( 5232, products, mult, 3);
-       ForceParticleDecay( 5332, products, mult, 3);
-       ForceParticleDecay( 100443, 443, 1);  // Psi'  -> J/Psi X
-       ForceParticleDecay(    443,  13, 2);  // J/Psi -> mu+ mu-
+   switch (decay) {
+   case kHardMuons:
+      products[0] =     13;
+      products[1] =    443;
+      products[2] = 100443;
+      mult[0] = 1;
+      mult[1] = 1;
+      mult[2] = 1;
+      ForceParticleDecay(  511, products, mult, 3);
+      ForceParticleDecay(  521, products, mult, 3);
+      ForceParticleDecay(  531, products, mult, 3);
+      ForceParticleDecay( 5122, products, mult, 3);
+      ForceParticleDecay( 5132, products, mult, 3);
+      ForceParticleDecay( 5232, products, mult, 3);
+      ForceParticleDecay( 5332, products, mult, 3);
+      ForceParticleDecay( 100443, 443, 1);  // Psi'  -> J/Psi X
+      ForceParticleDecay(    443,  13, 2);  // J/Psi -> mu+ mu-
 
-       ForceParticleDecay(  411,13,1); // D+/-
-       ForceParticleDecay(  421,13,1); // D0
-       ForceParticleDecay(  431,13,1); // D_s
-       ForceParticleDecay( 4122,13,1); // Lambda_c
-       ForceParticleDecay( 4132,13,1); // Xsi_c
-       ForceParticleDecay( 4232,13,1); // Sigma_c
-       ForceParticleDecay( 4332,13,1); // Omega_c
-       break;
-    case kSemiMuonic:
-       ForceParticleDecay(  411,13,1); // D+/-
-       ForceParticleDecay(  421,13,1); // D0
-       ForceParticleDecay(  431,13,1); // D_s
-       ForceParticleDecay( 4122,13,1); // Lambda_c
-       ForceParticleDecay( 4132,13,1); // Xsi_c
-       ForceParticleDecay( 4232,13,1); // Sigma_c
-       ForceParticleDecay( 4332,13,1); // Omega_c
-       ForceParticleDecay(  511,13,1); // B0
-       ForceParticleDecay(  521,13,1); // B+/-
-       ForceParticleDecay(  531,13,1); // B_s
-       ForceParticleDecay( 5122,13,1); // Lambda_b
-       ForceParticleDecay( 5132,13,1); // Xsi_b
-       ForceParticleDecay( 5232,13,1); // Sigma_b
-       ForceParticleDecay( 5332,13,1); // Omega_b
-       break;
-    case kDiMuon:
-       ForceParticleDecay(  113,13,2); // rho
-       ForceParticleDecay(  221,13,2); // eta
-       ForceParticleDecay(  223,13,2); // omega
-       ForceParticleDecay(  333,13,2); // phi
-       ForceParticleDecay(  443,13,2); // J/Psi
-       ForceParticleDecay(100443,13,2);// Psi'
-       ForceParticleDecay(  553,13,2); // Upsilon
-       ForceParticleDecay(100553,13,2);// Upsilon'
-       ForceParticleDecay(200553,13,2);// Upsilon''
-       break;
-    case kSemiElectronic:
-       ForceParticleDecay(  411,11,1); // D+/-
-       ForceParticleDecay(  421,11,1); // D0
-       ForceParticleDecay(  431,11,1); // D_s
-       ForceParticleDecay( 4122,11,1); // Lambda_c
-       ForceParticleDecay( 4132,11,1); // Xsi_c
-       ForceParticleDecay( 4232,11,1); // Sigma_c
-       ForceParticleDecay( 4332,11,1); // Omega_c
-       ForceParticleDecay(  511,11,1); // B0
-       ForceParticleDecay(  521,11,1); // B+/-
-       ForceParticleDecay(  531,11,1); // B_s
-       ForceParticleDecay( 5122,11,1); // Lambda_b
-       ForceParticleDecay( 5132,11,1); // Xsi_b
-       ForceParticleDecay( 5232,11,1); // Sigma_b
-       ForceParticleDecay( 5332,11,1); // Omega_b
-       break;
-    case kDiElectron:
-       ForceParticleDecay(  113,11,2); // rho
-       ForceParticleDecay(  333,11,2); // phi
-       ForceParticleDecay(  221,11,2); // eta
-       ForceParticleDecay(  223,11,2); // omega
-       ForceParticleDecay(  443,11,2); // J/Psi
-       ForceParticleDecay(100443,11,2);// Psi'
-       ForceParticleDecay(  553,11,2); // Upsilon
-       ForceParticleDecay(100553,11,2);// Upsilon'
-       ForceParticleDecay(200553,11,2);// Upsilon''
-       break;
-    case kBJpsiDiMuon:
+      ForceParticleDecay(  411,13,1); // D+/-
+      ForceParticleDecay(  421,13,1); // D0
+      ForceParticleDecay(  431,13,1); // D_s
+      ForceParticleDecay( 4122,13,1); // Lambda_c
+      ForceParticleDecay( 4132,13,1); // Xsi_c
+      ForceParticleDecay( 4232,13,1); // Sigma_c
+      ForceParticleDecay( 4332,13,1); // Omega_c
+      break;
+   case kSemiMuonic:
+      ForceParticleDecay(  411,13,1); // D+/-
+      ForceParticleDecay(  421,13,1); // D0
+      ForceParticleDecay(  431,13,1); // D_s
+      ForceParticleDecay( 4122,13,1); // Lambda_c
+      ForceParticleDecay( 4132,13,1); // Xsi_c
+      ForceParticleDecay( 4232,13,1); // Sigma_c
+      ForceParticleDecay( 4332,13,1); // Omega_c
+      ForceParticleDecay(  511,13,1); // B0
+      ForceParticleDecay(  521,13,1); // B+/-
+      ForceParticleDecay(  531,13,1); // B_s
+      ForceParticleDecay( 5122,13,1); // Lambda_b
+      ForceParticleDecay( 5132,13,1); // Xsi_b
+      ForceParticleDecay( 5232,13,1); // Sigma_b
+      ForceParticleDecay( 5332,13,1); // Omega_b
+      break;
+   case kDiMuon:
+      ForceParticleDecay(  113,13,2); // rho
+      ForceParticleDecay(  221,13,2); // eta
+      ForceParticleDecay(  223,13,2); // omega
+      ForceParticleDecay(  333,13,2); // phi
+      ForceParticleDecay(  443,13,2); // J/Psi
+      ForceParticleDecay(100443,13,2);// Psi'
+      ForceParticleDecay(  553,13,2); // Upsilon
+      ForceParticleDecay(100553,13,2);// Upsilon'
+      ForceParticleDecay(200553,13,2);// Upsilon''
+      break;
+   case kSemiElectronic:
+      ForceParticleDecay(  411,11,1); // D+/-
+      ForceParticleDecay(  421,11,1); // D0
+      ForceParticleDecay(  431,11,1); // D_s
+      ForceParticleDecay( 4122,11,1); // Lambda_c
+      ForceParticleDecay( 4132,11,1); // Xsi_c
+      ForceParticleDecay( 4232,11,1); // Sigma_c
+      ForceParticleDecay( 4332,11,1); // Omega_c
+      ForceParticleDecay(  511,11,1); // B0
+      ForceParticleDecay(  521,11,1); // B+/-
+      ForceParticleDecay(  531,11,1); // B_s
+      ForceParticleDecay( 5122,11,1); // Lambda_b
+      ForceParticleDecay( 5132,11,1); // Xsi_b
+      ForceParticleDecay( 5232,11,1); // Sigma_b
+      ForceParticleDecay( 5332,11,1); // Omega_b
+      break;
+   case kDiElectron:
+      ForceParticleDecay(  113,11,2); // rho
+      ForceParticleDecay(  333,11,2); // phi
+      ForceParticleDecay(  221,11,2); // eta
+      ForceParticleDecay(  223,11,2); // omega
+      ForceParticleDecay(  443,11,2); // J/Psi
+      ForceParticleDecay(100443,11,2);// Psi'
+      ForceParticleDecay(  553,11,2); // Upsilon
+      ForceParticleDecay(100553,11,2);// Upsilon'
+      ForceParticleDecay(200553,11,2);// Upsilon''
+      break;
+   case kBJpsiDiMuon:
 
-       products[0] =    443;
-       products[1] = 100443;
-       mult[0] = 1;
-       mult[1] = 1;
+      products[0] =    443;
+      products[1] = 100443;
+      mult[0] = 1;
+      mult[1] = 1;
 
-       ForceParticleDecay(  511, products, mult, 2); // B0   -> J/Psi (Psi') X
-       ForceParticleDecay(  521, products, mult, 2); // B+/- -> J/Psi (Psi') X
-       ForceParticleDecay(  531, products, mult, 2); // B_s  -> J/Psi (Psi') X
-       ForceParticleDecay( 5122, products, mult, 2); // Lambda_b -> J/Psi (Psi') X
-       ForceParticleDecay( 100443, 443, 1);          // Psi'  -> J/Psi X
-       ForceParticleDecay(    443,13,2);             // J/Psi -> mu+ mu-
-       break;
-    case kBPsiPrimeDiMuon:
-       ForceParticleDecay(  511,100443,1); // B0
-       ForceParticleDecay(  521,100443,1); // B+/-
-       ForceParticleDecay(  531,100443,1); // B_s
-       ForceParticleDecay( 5122,100443,1); // Lambda_b
-       ForceParticleDecay(100443,13,2);    // Psi'
-       break;
-    case kBJpsiDiElectron:
-       ForceParticleDecay(  511,443,1); // B0
-       ForceParticleDecay(  521,443,1); // B+/-
-       ForceParticleDecay(  531,443,1); // B_s
-       ForceParticleDecay( 5122,443,1); // Lambda_b
-       ForceParticleDecay(  443,11,2);  // J/Psi
-       break;
-    case kBJpsi:
-       ForceParticleDecay(  511,443,1); // B0
-       ForceParticleDecay(  521,443,1); // B+/-
-       ForceParticleDecay(  531,443,1); // B_s
-       ForceParticleDecay( 5122,443,1); // Lambda_b
-       break;
-    case kBPsiPrimeDiElectron:
-       ForceParticleDecay(  511,100443,1); // B0
-       ForceParticleDecay(  521,100443,1); // B+/-
-       ForceParticleDecay(  531,100443,1); // B_s
-       ForceParticleDecay( 5122,100443,1); // Lambda_b
-       ForceParticleDecay(100443,11,2);   // Psi'
-       break;
-    case kPiToMu:
-       ForceParticleDecay(211,13,1); // pi->mu
-       break;
-    case kKaToMu:
-       ForceParticleDecay(321,13,1); // K->mu
-       break;
-    case kWToMuon:
-       ForceParticleDecay(  24, 13,1); // W -> mu
-       break;
-    case kWToCharm:
-       ForceParticleDecay(   24, 4,1); // W -> c
-       break;
-    case kWToCharmToMuon:
-       ForceParticleDecay(   24, 4,1); // W -> c
-       ForceParticleDecay(  411,13,1); // D+/- -> mu
-       ForceParticleDecay(  421,13,1); // D0  -> mu
-       ForceParticleDecay(  431,13,1); // D_s  -> mu
-       ForceParticleDecay( 4122,13,1); // Lambda_c
-       ForceParticleDecay( 4132,13,1); // Xsi_c
-       ForceParticleDecay( 4232,13,1); // Sigma_c
-       ForceParticleDecay( 4332,13,1); // Omega_c
-       break;
-    case kZDiMuon:
-       ForceParticleDecay(  23, 13,2); // Z -> mu+ mu-
-       break;
-    case kHadronicD:
+      ForceParticleDecay(  511, products, mult, 2); // B0   -> J/Psi (Psi') X
+      ForceParticleDecay(  521, products, mult, 2); // B+/- -> J/Psi (Psi') X
+      ForceParticleDecay(  531, products, mult, 2); // B_s  -> J/Psi (Psi') X
+      ForceParticleDecay( 5122, products, mult, 2); // Lambda_b -> J/Psi (Psi') X
+      ForceParticleDecay( 100443, 443, 1);          // Psi'  -> J/Psi X
+      ForceParticleDecay(    443,13,2);             // J/Psi -> mu+ mu-
+      break;
+   case kBPsiPrimeDiMuon:
+      ForceParticleDecay(  511,100443,1); // B0
+      ForceParticleDecay(  521,100443,1); // B+/-
+      ForceParticleDecay(  531,100443,1); // B_s
+      ForceParticleDecay( 5122,100443,1); // Lambda_b
+      ForceParticleDecay(100443,13,2);    // Psi'
+      break;
+   case kBJpsiDiElectron:
+      ForceParticleDecay(  511,443,1); // B0
+      ForceParticleDecay(  521,443,1); // B+/-
+      ForceParticleDecay(  531,443,1); // B_s
+      ForceParticleDecay( 5122,443,1); // Lambda_b
+      ForceParticleDecay(  443,11,2);  // J/Psi
+      break;
+   case kBJpsi:
+      ForceParticleDecay(  511,443,1); // B0
+      ForceParticleDecay(  521,443,1); // B+/-
+      ForceParticleDecay(  531,443,1); // B_s
+      ForceParticleDecay( 5122,443,1); // Lambda_b
+      break;
+   case kBPsiPrimeDiElectron:
+      ForceParticleDecay(  511,100443,1); // B0
+      ForceParticleDecay(  521,100443,1); // B+/-
+      ForceParticleDecay(  531,100443,1); // B_s
+      ForceParticleDecay( 5122,100443,1); // Lambda_b
+      ForceParticleDecay(100443,11,2);   // Psi'
+      break;
+   case kPiToMu:
+      ForceParticleDecay(211,13,1); // pi->mu
+      break;
+   case kKaToMu:
+      ForceParticleDecay(321,13,1); // K->mu
+      break;
+   case kWToMuon:
+      ForceParticleDecay(  24, 13,1); // W -> mu
+      break;
+   case kWToCharm:
+      ForceParticleDecay(   24, 4,1); // W -> c
+      break;
+   case kWToCharmToMuon:
+      ForceParticleDecay(   24, 4,1); // W -> c
+      ForceParticleDecay(  411,13,1); // D+/- -> mu
+      ForceParticleDecay(  421,13,1); // D0  -> mu
+      ForceParticleDecay(  431,13,1); // D_s  -> mu
+      ForceParticleDecay( 4122,13,1); // Lambda_c
+      ForceParticleDecay( 4132,13,1); // Xsi_c
+      ForceParticleDecay( 4232,13,1); // Sigma_c
+      ForceParticleDecay( 4332,13,1); // Omega_c
+      break;
+   case kZDiMuon:
+      ForceParticleDecay(  23, 13,2); // Z -> mu+ mu-
+      break;
+   case kHadronicD:
        ForceHadronicD();
-       break;
-    case kPhiKK:
-       ForceParticleDecay(333,321,2); // Phi->K+K-
-       break;
-    case kOmega:
-       ForceOmega();
-    case kAll:
-       break;
-    case kNoDecay:
-       TPythia6::Instance()->SetMSTJ(21,0);
-       break;
-    case kNoDecayHeavy: break;
-    case kMaxDecay: break;
-    }
+      break;
+   case kPhiKK:
+      ForceParticleDecay(333,321,2); // Phi->K+K-
+      break;
+   case kOmega:
+      ForceOmega();
+   case kAll:
+      break;
+   case kNoDecay:
+      TPythia6::Instance()->SetMSTJ(21,0);
+      break;
+   case kNoDecayHeavy: break;
+   case kMaxDecay: break;
+   }
 }
 
 //______________________________________________________________________________
@@ -292,7 +292,7 @@ void TPythia6Decayer::ReadDecayTable()
    }
    Int_t lun = 15;
    TPythia6::Instance()->OpenFortranFile(lun,
-					 const_cast<char*>(fDecayTableFile.Data()));
+                                         const_cast<char*>(fDecayTableFile.Data()));
    TPythia6::Instance()->Pyupda(3,lun);
    TPythia6::Instance()->CloseFortranFile(lun);
 }
@@ -321,77 +321,77 @@ void TPythia6Decayer::ReadDecayTable()
 #if 0
 void PrintPDG(TParticlePDG* pdg)
 {
-  TParticlePDG* anti = pdg->AntiParticle();
-  const char* antiName = (anti ? anti->GetName() : "");
-  Int_t color = 0;
-  switch (TMath::Abs(pdg->PdgCode())) {
-  case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: // Quarks
-    color = 1; break;
-  case 21: // Gluon
-    color = 2; break;
-  case 1103:
-  case 2101: case 2103: case 2203:
-  case 3101: case 3103: case 3201: case 3203: case 3303:
-  case 4101: case 4103: case 4201: case 4203: case 4301: case 4303: case 4403:
-  case 5101: case 5103: case 5201: case 5203: case 5301: case 5303: case 5401:
-  case 5403: case 5503:
-    // Quark combinations
-    color = -1; break;
-  case 1000001: case 1000002: case 1000003: case 1000004: case 1000005:
-  case 1000006: // super symmetric partners to quars
-    color = 1; break;
-  case 1000021: // ~g
-    color = 2; break;
-  case 2000001: case 2000002: case 2000003: case 2000004: case 2000005:
-  case 2000006: // R hadrons
-    color = 1; break;
-  case 3000331: case 3100021: case 3200111: case 3100113: case 3200113:
-  case 3300113: case 3400113:
-    // Technicolor
-    color = 2; break;
-  case 4000001: case 4000002:
-    color = 1; break;
-  case 9900443: case 9900441: case 9910441: case 9900553: case 9900551:
-  case 9910551:
-    color = 2; break;
-  }
-  std::cout << std::right
-	    << " " << std::setw(9) << pdg->PdgCode()
-	    << "  " << std::left   << std::setw(16) << pdg->GetName()
-	    << "  " << std::setw(16) << antiName
-	    << std::right
-	    << std::setw(3) << Int_t(pdg->Charge())
-	    << std::setw(3) << color
-	    << std::setw(3) << (anti ? 1 : 0)
-	    << std::fixed   << std::setprecision(5)
-	    << std::setw(12) << pdg->Mass()
-	    << std::setw(12) << pdg->Width()
-	    << std::setw(12) << 0 // Broad
-	    << std::scientific
-	    << " " << std::setw(13) << pdg->Lifetime()
-	    << std::setw(3) << 0 // MWID
-	    << std::setw(3) << pdg->Stable()
-	    << std::endl;
+   TParticlePDG* anti = pdg->AntiParticle();
+   const char* antiName = (anti ? anti->GetName() : "");
+   Int_t color = 0;
+   switch (TMath::Abs(pdg->PdgCode())) {
+      case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: // Quarks
+      color = 1; break;
+      case 21: // Gluon
+      color = 2; break;
+      case 1103:
+      case 2101: case 2103: case 2203:
+      case 3101: case 3103: case 3201: case 3203: case 3303:
+      case 4101: case 4103: case 4201: case 4203: case 4301: case 4303: case 4403:
+      case 5101: case 5103: case 5201: case 5203: case 5301: case 5303: case 5401:
+      case 5403: case 5503:
+      // Quark combinations
+      color = -1; break;
+      case 1000001: case 1000002: case 1000003: case 1000004: case 1000005:
+      case 1000006: // super symmetric partners to quars
+      color = 1; break;
+      case 1000021: // ~g
+      color = 2; break;
+      case 2000001: case 2000002: case 2000003: case 2000004: case 2000005:
+      case 2000006: // R hadrons
+      color = 1; break;
+      case 3000331: case 3100021: case 3200111: case 3100113: case 3200113:
+      case 3300113: case 3400113:
+      // Technicolor
+      color = 2; break;
+      case 4000001: case 4000002:
+      color = 1; break;
+      case 9900443: case 9900441: case 9910441: case 9900553: case 9900551:
+      case 9910551:
+      color = 2; break;
+   }
+   std::cout << std::right
+             << " " << std::setw(9) << pdg->PdgCode()
+             << "  " << std::left   << std::setw(16) << pdg->GetName()
+             << "  " << std::setw(16) << antiName
+             << std::right
+             << std::setw(3) << Int_t(pdg->Charge())
+             << std::setw(3) << color
+             << std::setw(3) << (anti ? 1 : 0)
+             << std::fixed   << std::setprecision(5)
+             << std::setw(12) << pdg->Mass()
+             << std::setw(12) << pdg->Width()
+             << std::setw(12) << 0 // Broad
+             << std::scientific
+             << " " << std::setw(13) << pdg->Lifetime()
+             << std::setw(3) << 0 // MWID
+             << std::setw(3) << pdg->Stable()
+             << std::endl;
 }
 
 void MakeDecayList()
 {
-  TDatabasePDG* pdgDB = TDatabasePDG::Instance();
-  pdgDB->ReadPDGTable();
-  const THashList*    pdgs  = pdgDB->ParticleList();
-  TParticlePDG*       pdg   = 0;
-  TIter               nextPDG(pdgs);
-  while ((pdg = static_cast<TParticlePDG*>(nextPDG()))) {
-    // std::cout << "Processing " << pdg->GetName() << std::endl;
-    PrintPDG(pdg);
+   TDatabasePDG* pdgDB = TDatabasePDG::Instance();
+   pdgDB->ReadPDGTable();
+   const THashList*    pdgs  = pdgDB->ParticleList();
+   TParticlePDG*       pdg   = 0;
+   TIter               nextPDG(pdgs);
+   while ((pdg = static_cast<TParticlePDG*>(nextPDG()))) {
+      // std::cout << "Processing " << pdg->GetName() << std::endl;
+      PrintPDG(pdg);
 
-    TObjArray*     decays = pdg->DecayList();
-    TDecayChannel* decay  = 0;
-    TIter          nextDecay(decays);
-    while ((decay = static_cast<TDecayChannel*>(nextDecay()))) {
-      // std::cout << "Processing decay number " << decay->Number() << std::endl;
-    }
-  }
+      TObjArray*     decays = pdg->DecayList();
+      TDecayChannel* decay  = 0;
+      TIter          nextDecay(decays);
+      while ((decay = static_cast<TDecayChannel*>(nextDecay()))) {
+        // std::cout << "Processing decay number " << decay->Number() << std::endl;
+      }
+   }
 }
 #endif
 // END COMMENT
@@ -467,7 +467,7 @@ void TPythia6Decayer::WriteDecayTable()
    }
    Int_t lun = 15;
    TPythia6::Instance()->OpenFortranFile(lun,
-					 const_cast<char*>(fDecayTableFile.Data()));
+                                         const_cast<char*>(fDecayTableFile.Data()));
    TPythia6::Instance()->Pyupda(1,lun);
    TPythia6::Instance()->CloseFortranFile(lun);
 }
@@ -522,17 +522,17 @@ void TPythia6Decayer::ForceHadronicD()
 
       for (channel = ifirst; channel <= ilast; channel++) {
 	 if ((pyth->GetKFDP(channel,1) == decayP1[ihadron][0] &&
-	      pyth->GetKFDP(channel,2) == decayP1[ihadron][1] &&
-	      pyth->GetKFDP(channel,3) == decayP1[ihadron][2] &&
-	      pyth->GetKFDP(channel,4) == 0) ||
-	     (pyth->GetKFDP(channel,1) == decayP2[ihadron][0] &&
-	      pyth->GetKFDP(channel,2) == decayP2[ihadron][1] &&
-	      pyth->GetKFDP(channel,3) == decayP2[ihadron][2] &&
-	      pyth->GetKFDP(channel,4) == 0)) {
-	    pyth->SetMDME(channel,1,1);
+            pyth->GetKFDP(channel,2) == decayP1[ihadron][1] &&
+            pyth->GetKFDP(channel,3) == decayP1[ihadron][2] &&
+            pyth->GetKFDP(channel,4) == 0) ||
+           (pyth->GetKFDP(channel,1) == decayP2[ihadron][0] &&
+            pyth->GetKFDP(channel,2) == decayP2[ihadron][1] &&
+            pyth->GetKFDP(channel,3) == decayP2[ihadron][2] &&
+            pyth->GetKFDP(channel,4) == 0)) {
+            pyth->SetMDME(channel,1,1);
 	 } else {
-	    pyth->SetMDME(channel,1,0);
-	    fBraPart[kc] -= pyth->GetBRAT(channel);
+            pyth->SetMDME(channel,1,0);
+            fBraPart[kc] -= pyth->GetBRAT(channel);
 	 } // selected channel ?
       } // decay channels
    } // hadrons
@@ -556,17 +556,17 @@ void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t product, Int_t mu
    //  Loop over decay channels
    for (Int_t channel= ifirst; channel <= ilast; channel++) {
       if (CountProducts(channel,product) >= mult) {
-	 pyth->SetMDME(channel,1,1);
+         pyth->SetMDME(channel,1,1);
       } else {
-	 pyth->SetMDME(channel,1,0);
-	 fBraPart[kc]-=pyth->GetBRAT(channel);
+         pyth->SetMDME(channel,1,0);
+         fBraPart[kc]-=pyth->GetBRAT(channel);
       }
    }
 }
 
 //______________________________________________________________________________
 void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products,
-				    Int_t* mult, Int_t npart)
+                                         Int_t* mult, Int_t npart)
 {
    //
    //  Force decay of particle into products with multiplicity mult
@@ -582,12 +582,12 @@ void TPythia6Decayer::ForceParticleDecay(Int_t particle, Int_t* products,
    for (Int_t channel = ifirst; channel <= ilast; channel++) {
       Int_t nprod = 0;
       for (Int_t i = 0; i < npart; i++)
-	 nprod += (CountProducts(channel, products[i]) >= mult[i]);
+         nprod += (CountProducts(channel, products[i]) >= mult[i]);
       if (nprod)
-	 pyth->SetMDME(channel,1,1);
+         pyth->SetMDME(channel,1,1);
       else {
-	 pyth->SetMDME(channel,1,0);
-	 fBraPart[kc] -= pyth->GetBRAT(channel);
+         pyth->SetMDME(channel,1,0);
+         fBraPart[kc] -= pyth->GetBRAT(channel);
       }
    }
 }
@@ -604,11 +604,11 @@ void TPythia6Decayer::ForceOmega()
    Int_t ilast  = ifirst + pyth->GetMDCY(kc,3)-1;
    for (Int_t channel = ifirst; channel <= ilast; channel++) {
       if (pyth->GetKFDP(channel,1) == kLambda0 &&
-	  pyth->GetKFDP(channel,2) == kKMinus  &&
-	  pyth->GetKFDP(channel,3) == 0)
-	 pyth->SetMDME(channel,1,1);
+         pyth->GetKFDP(channel,2) == kKMinus  &&
+         pyth->GetKFDP(channel,3) == 0)
+         pyth->SetMDME(channel,1,1);
       else
-	 pyth->SetMDME(channel,1,0);
+         pyth->SetMDME(channel,1,0);
       // selected channel ?
    } // decay channels
 }
