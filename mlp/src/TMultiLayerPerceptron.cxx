@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.34 2006/03/21 18:25:11 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.35 2006/04/19 08:22:24 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -1048,7 +1048,7 @@ Double_t TMultiLayerPerceptron::GetCrossEntropyBinary() const
       if ((1 - target) < DBL_EPSILON) {
          if (output == 0.0)
             error = DBL_MAX;
-          else
+         else
             error -= TMath::Log(output);
       } else {
          if (output == 0.0 || output == 1.0)
@@ -1383,11 +1383,11 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
 
    Int_t nneurons = output.CountChar(',')+1;
    if (fStructure.EndsWith("!")) {
-     fStructure = TString(fStructure(0, fStructure.Length() - 1));  // remove "!"
-     if (nneurons == 1)
-       fOutType = TNeuron::kSigmoid;
-     else
-       fOutType = TNeuron::kSoftmax;
+      fStructure = TString(fStructure(0, fStructure.Length() - 1));  // remove "!"
+      if (nneurons == 1)
+         fOutType = TNeuron::kSigmoid;
+      else
+         fOutType = TNeuron::kSoftmax;
    }
    Int_t prevStop = fNetwork.GetEntriesFast();
    Int_t prevStart = prevStop - prev;

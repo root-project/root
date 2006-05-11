@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.16 2006/01/13 09:10:12 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.17 2006/03/03 16:18:35 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -1007,37 +1007,37 @@ Double_t TNeuron::GetDerivative() const
    }
    Double_t derivative = 0;
    switch (fType) {
-   case TNeuron::kOff: {
-       derivative = 0;
-       break;
-     }
-   case TNeuron::kLinear: {
-       derivative = 1;
-       break;
-     }
-   case TNeuron::kSigmoid: {
-       derivative = DSigmoid(input);
-       break;
-     }
-   case TNeuron::kTanh: {
-       derivative = (1 - (TMath::TanH(input) * TMath::TanH(input)));
-       break;
-     }
-   case TNeuron::kGauss: {
-       derivative = (-2) * input * TMath::Exp(-input * input);
-       break;
-     }
-   case TNeuron::kSoftmax: {
-       // actually this is not the derivative, as the Softmax function needs
-       // exp(activation) of all the neurons in the layer for the normalization.
-       // it will be smartly taken care of in GetDeDw()
-       derivative = GetValue();
-       break;
-     }
-   case TNeuron::kExternal: {
-       derivative = fExtD->Eval(input);
-       break;
-     }
+      case TNeuron::kOff: {
+         derivative = 0;
+         break;
+      }
+      case TNeuron::kLinear: {
+         derivative = 1;
+         break;
+      }
+      case TNeuron::kSigmoid: {
+         derivative = DSigmoid(input);
+         break;
+      }
+      case TNeuron::kTanh: {
+         derivative = (1 - (TMath::TanH(input) * TMath::TanH(input)));
+         break;
+      }
+      case TNeuron::kGauss: {
+         derivative = (-2) * input * TMath::Exp(-input * input);
+         break;
+      }
+      case TNeuron::kSoftmax: {
+         // actually this is not the derivative, as the Softmax function needs
+         // exp(activation) of all the neurons in the layer for the normalization.
+         // it will be smartly taken care of in GetDeDw()
+         derivative = GetValue();
+         break;
+      }
+      case TNeuron::kExternal: {
+         derivative = fExtD->Eval(input);
+         break;
+      }
    }
    return (((TNeuron*)this)->fDerivative = derivative);
 }
@@ -1075,29 +1075,29 @@ Double_t TNeuron::GetDeDw() const
    //  - softmax output, with 1-of-c cross entropy
    Int_t nEntries = fpost.GetEntriesFast();
    if (nEntries == 0) {
-     // output neuron
-     ((TNeuron*)this)->fDeDw = GetError();
+      // output neuron
+      ((TNeuron*)this)->fDeDw = GetError();
    } else {
-     // hidden nuron
-     ((TNeuron*)this)->fDeDw = 0.0;
-     if (fType != TNeuron::kSoftmax) {
-        // non-softmax
-        for (Int_t i = 0; i < nEntries; i++) {
-           TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
-           ((TNeuron*)this)->fDeDw += 
+      // hidden nuron
+      ((TNeuron*)this)->fDeDw = 0.0;
+      if (fType != TNeuron::kSoftmax) {
+         // non-softmax
+         for (Int_t i = 0; i < nEntries; i++) {
+            TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
+            ((TNeuron*)this)->fDeDw += 
               postSynapse->GetWeight() * 
               postSynapse->GetPost()->GetDeDw();
         }
-     } else {
-        // softmax derivative can be taken care of correcting the forward weight
-        for (Int_t i = 0; i < nEntries; i++) {
-           TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
-           ((TNeuron*)this)->fDeDw += 
+      } else {
+         // softmax derivative can be taken care of correcting the forward weight
+         for (Int_t i = 0; i < nEntries; i++) {
+            TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
+            ((TNeuron*)this)->fDeDw += 
               (postSynapse->GetWeight() - postSynapse->GetPost()->GetInput()) * 
               postSynapse->GetPost()->GetDeDw();
-        }
-     }
-     ((TNeuron*)this)->fDeDw *= GetDerivative();
+         }
+      }
+      ((TNeuron*)this)->fDeDw *= GetDerivative();
    } 
    return fDeDw;
 }
