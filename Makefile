@@ -558,6 +558,13 @@ dist:
 distsrc:
 	@$(MAKEDISTSRC)
 
+distmsi: map build/package/msi/makemsi$(EXEEXT) 
+	build/package/msi/makemsi.sh $(HOME)/
+
+build/package/msi/makemsi$(EXEEXT): build/package/msi/makemsi.cxx build/version_number
+	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` && \
+	$(CXX) -DPRODUCT=\"ROOT\" -DVERSION=\"$$vers\" $(CXXFLAGS) Rpcrt4.lib build/package/msi/makemsi.cxx -Fe$@
+
 rebase: $(ALLLIBS) $(ALLEXECS)
 	@echo -n "Rebasing binaries... "
 	@rebase -b 0x71000000 bin/*.exe bin/*.dll
