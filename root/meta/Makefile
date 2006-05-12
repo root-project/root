@@ -79,11 +79,12 @@ nospace: nospace.log
 
 drawing.raw.log: DrawTest.sh  $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV) MainEvent.cxx Event.cxx Event.h \
                  $(wildcard dt_wrap*.C) dt_MakeFiles.sh dt_RunDrawTest.sh
-	$(CMDECHO) unset V; unset VERBOSE; ./DrawTest.sh 2>&1 > drawing.raw.log
+	$(CMDECHO) ./DrawTest.sh > drawing.raw.log 2>&1
 
 drawing.log: drawing.raw.log
-	$(CMDECHO) grep -v 'ROOTMARKS' drawing.raw.log | grep '^..' | grep -v 'gmake' | \
-        	grep -v 'Event.*root made' | grep -v 'dt.*made' > drawing.log
+	$(CMDECHO) grep -v 'ROOTMARKS' drawing.raw.log | grep '^..' | \
+	grep -v 'gmake' | grep -v ' creating shared library' | \
+	grep -v 'Event.*root made' | grep -v 'dt.*made' > drawing.log
 
 drawing: drawing.log
 	$(TestDiff)
