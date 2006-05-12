@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.48 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.49 2005/11/16 20:21:34 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -36,6 +36,10 @@ class TDSet;
 class TVirtualProof;
 
 class TChain : public TTree {
+
+private:
+   TChain(const TChain&);
+   TChain& operator=(const TChain&);
 
 protected:
    Int_t       fTreeOffsetLen;     //  Current size of fTreeOffset array

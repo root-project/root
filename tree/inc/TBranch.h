@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.29 2005/11/16 20:20:01 pcanal Exp $
+// @(#)root/tree:$Name: v5-11-02 $:$Id: TBranch.h,v 1.30 2006/04/17 21:21:59 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -57,6 +57,10 @@ class TClonesArray;
    const Int_t kBranchObject = BIT(12); // branch is a TObject*
 
 class TBranch : public TNamed , public TAttFill {
+
+private:
+   TBranch(const TBranch&);   
+   TBranch& operator=(const TBranch&);
 
 protected:
    // TBranch status bits
