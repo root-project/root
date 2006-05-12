@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.242 2006/04/19 13:28:38 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.243 2006/04/25 15:36:07 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2331,8 +2331,12 @@ void WriteClassInit(G__ClassInfo &cl)
    }
 
    char *filename = (char*)cl.FileName();
-   for (unsigned int i=0; i<strlen(filename); i++) {
-      if (filename[i]=='\\') filename[i]='/';
+   if (filename) {
+      for (unsigned int i=0; i<strlen(filename); i++) {
+         if (filename[i]=='\\') filename[i]='/';
+      }
+   } else {
+      filename = "";
    }
    (*dictSrcOut) << "\"" << filename << "\", " << cl.LineNumber() << "," << std::endl
        << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
