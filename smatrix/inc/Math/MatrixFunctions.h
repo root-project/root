@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.10 2006/04/25 13:54:01 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.11 2006/05/12 08:12:16 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -775,12 +775,17 @@ protected:
 
 };
 
+
+
+
+#ifndef _WIN32
+
     // Tensor Prod (use default MatRepStd for the returned expression
     // cannot make a symmetric matrix
 //==============================================================================
 // TensorProd (SVector x SVector)
 //==============================================================================
-template <  class T, unsigned int D1, unsigned int D2>
+template <class T, unsigned int D1, unsigned int D2>
 inline Expr<TensorMulOp<SVector<T,D1>, SVector<T,D2>  >, T, D1, D2 >
  TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2>& rhs) {
   typedef TensorMulOp<SVector<T,D1>, SVector<T,D2> > TVMulOp;
@@ -790,7 +795,7 @@ inline Expr<TensorMulOp<SVector<T,D1>, SVector<T,D2>  >, T, D1, D2 >
 //==============================================================================
 // TensorProd (VecExpr x SVector)
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
+ template <class T, unsigned int D1, unsigned int D2, class A>
 inline Expr<TensorMulOp<VecExpr<A,T,D1>, SVector<T,D2>  >, T, D1, D2 >
  TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,D2>& rhs) {
   typedef TensorMulOp<VecExpr<A,T,D1>, SVector<T,D2> > TVMulOp;
@@ -800,7 +805,7 @@ inline Expr<TensorMulOp<VecExpr<A,T,D1>, SVector<T,D2>  >, T, D1, D2 >
 //==============================================================================
 // TensorProd (SVector x VecExpr)
 //==============================================================================
-template <class A, class T, unsigned int D1, unsigned int D2>
+ template <class T, unsigned int D1, unsigned int D2, class A>
 inline Expr<TensorMulOp<SVector<T,D1>, VecExpr<A,T,D2>  >, T, D1, D2 >
  TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D2>& rhs) {
   typedef TensorMulOp<SVector<T,D1>, VecExpr<A,T,D2> > TVMulOp;
@@ -811,14 +816,70 @@ inline Expr<TensorMulOp<SVector<T,D1>, VecExpr<A,T,D2>  >, T, D1, D2 >
 //==============================================================================
 // TensorProd (VecExpr x VecExpr)
 //==============================================================================
-template <class A, class B, class T, unsigned int D1, unsigned int D2>
+ template <class T, unsigned int D1, unsigned int D2, class A, class B>
 inline Expr<TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2>  >, T, D1, D2 >
  TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B,T,D2>& rhs) {
   typedef TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2> > TVMulOp;
   return Expr<TVMulOp,T,D1,D2>(TVMulOp(lhs,rhs));
 }
 
+#endif
+#ifdef _WIN32  
+/// case of WINDOWS - problem using Expression (  C1001: INTERNAL COMPILER ERROR )
 
+//==============================================================================
+// TensorProd (SVector x SVector)
+//==============================================================================
+template <class T, unsigned int D1, unsigned int D2>
+inline SMatrix<T,D1,D2>  TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2>& rhs) {
+  SMatrix<T,D1,D2> tmp;
+  for (unsigned int i=0; i< D1; ++i)
+    for (unsigned int j=0; i< D2; ++j)
+      tmp(i,j) = lhs[i]*rhs[j];
+
+  return tmp;
+}
+//==============================================================================
+// TensorProd (VecExpr x SVector)
+//==============================================================================
+ template <class T, unsigned int D1, unsigned int D2, class A>
+inline SMatrix<T,D1,D2>  TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,D2>& rhs) {
+  SMatrix<T,D1,D2> tmp;
+  for (unsigned int i=0; i< D1; ++i)
+    for (unsigned int j=0; i< D2; ++j)
+      tmp(i,j) = rhs.apply(j)*lhs.apply(i);
+
+  return tmp;
+}
+//==============================================================================
+// TensorProd (SVector x VecExpr)
+//==============================================================================
+ template <class T, unsigned int D1, unsigned int D2, class A>
+inline SMatrix<T,D1,D2> TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D2>& rhs) {
+  SMatrix<T,D1,D2> tmp;
+  for (unsigned int i=0; i< D1; ++i)
+    for (unsigned int j=0; i< D2; ++j)
+      tmp(i,j) = lhs.apply(i)*rhs.apply(j);
+
+  return tmp;
+}
+
+//==============================================================================
+// TensorProd (VecExpr x VecExpr)
+//==============================================================================
+
+ template <class T, unsigned int D1, unsigned int D2, class A, class B>
+inline SMatrix<T,D1,D2  > TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B,T,D2>& rhs) {
+  SMatrix<T,D1,D2> tmp;
+  for (unsigned int i=0; i< D1; ++i)
+    for (unsigned int j=0; i< D2; ++j)
+      tmp(i,j) = lhs.apply(i)*rhs.apply(j);
+
+  return tmp;
+}
+
+
+#endif
 
 
 
