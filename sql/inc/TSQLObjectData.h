@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.5 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.h,v 1.6 2006/05/11 10:29:45 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -53,7 +53,7 @@ protected:
    TString           fClassName;
    Version_t         fVersion;
 
-ClassDef(TSQLObjectInfo, 1)  // Info (classname, version) about object in database 
+   ClassDef(TSQLObjectInfo, 1)  //Info (classname, version) about object in database 
     
 };
 
@@ -112,7 +112,7 @@ protected:
    TString           fBlobName2;     //!
    TObjArray*        fUnpack;        //! 
    
-   ClassDef(TSQLObjectData, 1); // Keeps the data requested from the SQL server for an object.
+   ClassDef(TSQLObjectData, 1) // Keeps the data requested from the SQL server for an object.
       
 };
 
@@ -136,7 +136,7 @@ protected:
    Bool_t            fIsMoreRows;    //!  indicates if class data has not yet read rows
    TList*            fRowsPool;      //!  pool of extrcted, but didnot used rows
 
-ClassDef(TSQLObjectDataPool,1);     
+ClassDef(TSQLObjectDataPool,1) //XML object keeper class     
     
 };
 

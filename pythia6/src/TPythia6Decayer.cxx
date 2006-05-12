@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.2 2006/04/25 15:56:07 rdm Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.3 2006/05/11 10:12:36 brun Exp $
 // Author: Christian Holm Christensen   22/04/06
 // Much of this code has been lifted from AliROOT.
 
@@ -245,7 +245,7 @@ void TPythia6Decayer::ForceDecay()
       ForceParticleDecay(  23, 13,2); // Z -> mu+ mu-
       break;
    case kHadronicD:
-       ForceHadronicD();
+      ForceHadronicD();
       break;
    case kPhiKK:
       ForceParticleDecay(333,321,2); // Phi->K+K-
@@ -521,7 +521,7 @@ void TPythia6Decayer::ForceHadronicD()
       Int_t ilast  = ifirst + pyth->GetMDCY(kc,3)-1;
 
       for (channel = ifirst; channel <= ilast; channel++) {
-	 if ((pyth->GetKFDP(channel,1) == decayP1[ihadron][0] &&
+         if ((pyth->GetKFDP(channel,1) == decayP1[ihadron][0] &&
             pyth->GetKFDP(channel,2) == decayP1[ihadron][1] &&
             pyth->GetKFDP(channel,3) == decayP1[ihadron][2] &&
             pyth->GetKFDP(channel,4) == 0) ||
@@ -530,10 +530,10 @@ void TPythia6Decayer::ForceHadronicD()
             pyth->GetKFDP(channel,3) == decayP2[ihadron][2] &&
             pyth->GetKFDP(channel,4) == 0)) {
             pyth->SetMDME(channel,1,1);
-	 } else {
+         } else {
             pyth->SetMDME(channel,1,0);
             fBraPart[kc] -= pyth->GetBRAT(channel);
-	 } // selected channel ?
+         } // selected channel ?
       } // decay channels
    } // hadrons
 }

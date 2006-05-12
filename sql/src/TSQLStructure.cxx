@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLStructure.cxx,v 1.9 2006/04/18 14:19:21 rdm Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLStructure.cxx,v 1.10 2006/05/11 10:29:45 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -418,8 +418,8 @@ TClass* TSQLStructure::GetCustomClass() const
 
 //________________________________________________________________________
 Version_t TSQLStructure::GetCustomClassVersion() const
-   //please Sergey: document this function
 {
+   //please Sergey: document this function
    return (fType==kSqlCustomClass) ? fArrayIndex : 0;
 }
 
@@ -1674,8 +1674,8 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
        (typ==TStreamerInfo::kObjectp + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kObjectP + TStreamerInfo::kOffsetL))
-       if (elem->GetStreamer()!=0) return kColNormObject;
-       else                        return kColNormObjectArray;
+      if (elem->GetStreamer()!=0) return kColNormObject;
+      else                        return kColNormObjectArray;
 
    if ((typ==TStreamerInfo::kObject) ||
        (typ==TStreamerInfo::kAny) ||
