@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.227 2006/04/29 16:57:46 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.228 2006/04/29 17:50:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5397,7 +5397,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    Bool_t testlast = kFALSE;
    if (strlen(pname) == 0 && strlen(emode) == 0) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
-   while (!gSystem->ProcessEvents()) {
+   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
       if (gROOT->GetEditorMode() == 0) {
          obj = FindObject(pname);
          if (obj) return obj;
