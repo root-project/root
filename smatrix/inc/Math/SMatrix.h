@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.19 2006/04/20 13:13:21 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.h,v 1.20 2006/04/25 13:54:01 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_SMatrix
@@ -337,6 +337,7 @@ public:
 
 #endif
 
+#ifdef OLD_IMPL
   /** @name --- Expert functions --- */
 
   /**
@@ -362,19 +363,23 @@ public:
       this method will preserve the contents of the Matrix!
   */
   bool Sdet2(T& det) const;
+#endif
 
 
   /**
-     invert square Matrix via Dinv.
-     This method change the current matrix
+     invert square Matrix ( this method change the current matrix)
+     The method used for general square matrices is the LU factorization taken from Dinv routine 
+     from the CERNLIB (written in C++ from CLHEP authors)
+     In case of symmetric matrices Bunch-Kaufman diagonal pivoting method is used
+     (The implementation is the one written by the CLHEP authors)
   */
   bool Invert();
 
   /**
-     invert square Matrix via Dinv.
-     This method  returns a new matrix. In case the inversion fails
-     the current matrix is returned
-     Return ifail = 0 when successfull 
+     invert a square Matrix and  returns a new matrix. In case the inversion fails
+     the current matrix is returned. 
+     Return ifail = 0 when successfull. 
+     See ROOT::Math::SMatrix::Invert for the inversion algorithm
   */
   SMatrix<T,D1,D2,R> Inverse(int & ifail ) const;
 

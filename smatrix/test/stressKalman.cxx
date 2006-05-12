@@ -19,7 +19,7 @@
 
 #include <map>
 
-
+//#undef HAVE_CLHEP
 
 #ifdef HAVE_CLHEP
 #include "CLHEP/Matrix/SymMatrix.h"
@@ -58,7 +58,7 @@ public:
     test_smatrix_kalman(); 
     test_tmatrix_kalman(); 
 #ifdef HAVE_CLHEP
-    test_clhep_matrix(); 
+    test_clhep_kalman(); 
 #endif
 
     return; 
@@ -188,8 +188,8 @@ void printTime(TStopwatch & time, std::string s) {
 }
 
 // reference times for sizes <=6 and > 6 on Linux slc3 P4 3Ghz ("SMatrix","SMatrix_sym","TMatrix")
-double refTime1[3] = { 40.49, 53.75, 83.21 }; 
-double refTime2[3] = { 393.81, 462.16, 785.50 }; 
+double refTime1[4] = { 40.49, 53.75, 83.21,1000 }; 
+double refTime2[4] = { 393.81, 462.16, 785.50,10000 }; 
 
 #define NMAX1  9   // matrix storese results from 2 to 10
 #define NMAX2  7   //  results from 2 to 8 
@@ -807,8 +807,8 @@ int TestRunner<NDIM1,NDIM2>::test_clhep_kalman() {
       fillRandomMat(r,K0,second,first,1); 
       fillRandomSym(r,Cp,second,1); 
       fillRandomSym(r,V,first,1); 
-      fillRandomVec(r,m,first,1); 
-      fillRandomVec(r,xp,second,1); 
+      fillRandomVec(r,m,first); 
+      fillRandomVec(r,xp,second); 
 
       MnSymMatrix I(second,1);//Identity matrix
 
@@ -843,12 +843,11 @@ int TestRunner<NDIM1,NDIM2>::test_clhep_kalman() {
 	x2= RinvSym.similarity(vtmp1);
        	if(ifail!=0) { std::cout << "Error inverting Rinv" << std::endl; break; } 
       }
-      //	std::cout << k << " chi2 " << x2 << std::endl;
       x2sum += x2;
      
       c2 = 0;
-      for (int i=1; i<=NDIM2; ++i)
-	for (int j=1; j<=NDIM2; ++j)
+      for (unsigned int i=1; i<=NDIM2; ++i)
+	for (unsigned int j=1; j<=NDIM2; ++j)
 	  c2 += C(i,j);
       c2sum += c2;
     }

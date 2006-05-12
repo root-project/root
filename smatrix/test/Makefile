@@ -12,7 +12,7 @@ include ../../test/Makefile.arch
 
 ifeq ($(PLATFORM),macosx) 
 #unroll loop better on gcc > 4
-CXXFLAGS+= -g  -funroll-loops
+CXXFLAGS+= -O3 -g  -funroll-loops 
 endif
 
 # if have clhep

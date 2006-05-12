@@ -796,8 +796,9 @@ int main(int argc , char *argv[] ) {
   NLOOP = 1000*NLOOP_MIN 
   initValues();
 
-
   TEST(5)
+//   NLOOP = 50*NLOOP_MIN;
+//   TEST(30);
 #else
   NLOOP = 5000*NLOOP_MIN; 
   initValues();

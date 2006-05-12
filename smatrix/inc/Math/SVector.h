@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.7 2006/02/27 18:41:58 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SVector.h,v 1.8 2006/04/20 13:13:21 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SVector
@@ -119,7 +119,12 @@ public:
   // if you use iterator this is not necessary
 
   /// fill from array, len must be equal to D!
-  SVector(const T* a, unsigned int len);
+  SVector( const T *  a, unsigned int len);
+
+  /// fill from iterators 
+  //(iterator is T* to skip ambiguities)
+  SVector(const_iterator begin, const_iterator end);
+
 #endif
   ///
   SVector(const T& rhs);

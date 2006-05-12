@@ -79,11 +79,11 @@ int test1() {
   //std::vector<float> vp(sp.begin(), sp.end() );
   std::vector<float> vm(sm.begin(), sm.end() );
 
-  //SVector<float, 2> sp2(vp.begin(),vp.end());
-  //SVector<float, 2> sp2(vp.begin(),vp.size());
+  SVector<float, 4> sp1(m,4);
+  SVector<float, 4> sp2(sm.begin(),sm.end());
   SMatrix<float, 2,2> sm2(vm.begin(),vm.end());
 
-  //if ( sp2 != sp) { cout << "Test STL interface for SVector failed" << endl; return -1; }
+  if ( sp1 != sp2) { cout << "Test STL interface for SVector failed" << endl; return -1; }
   if ( sm2 != sm) { cout << "Test STL interface for SMatrix failed" << endl; return -1; }
 
 
@@ -137,7 +137,7 @@ int test3() {
   cout << "A: " << endl << A << endl;
 
   double det = 0.;
-  A.Sdet(det);
+  A.Det(det);
   cout << "Determinant: " << det << endl;
   // WARNING: A has changed!!
   cout << "A again: " << endl << A << endl;
@@ -445,6 +445,24 @@ int test12() {
 
   double a = 3; 
   std::cout << "S\n" << a * S << std::endl;
+
+  // test inversion
+  int ifail1 = 0; 
+  //int ifail2 = 0; 
+  SMatrix<double,2,2,MatRepSym<double,2> > Sinv1 = S.Inverse (ifail1);  
+  //SMatrix<double,2,2,MatRepSym<double,2> > Sinv2 = S.Sinverse(ifail2);
+  std::cout << "Inverse:  S-1 " <<  Sinv1 << "\nifail=" << ifail1 << std::endl;
+  //std::cout << "Sinverse: S-1"  << Sinv2 << "\nifail=" << ifail2 << std::endl;
+
+  SMatrix<double,2> IS1 = S*Sinv1;
+  //SMatrix<double,2> IS2 = S*Sinv2;
+  double d1 = std::sqrt( IS1(1,0)*IS1(1,0) + IS1(0,1)*IS1(0,1) ); 
+  //double d2 = std::sqrt( IS2(1,0)*IS2(1,0) + IS2(0,1)*IS2(0,1) ); 
+
+
+  iret |= compare( d1 < 1E-6,true,"inversion1" ); 
+  //iret |= compare( d2 < 1E-6,true,"inversion2" ); 
+  
 
   SMatrix<double,2,3  >  M1 =  SMatrixIdentity(); 
   M1(0,1) = 1; M1(1,0) = 1; M1(0,2) = 1; M1(1,2) = 1;
@@ -881,6 +899,42 @@ int test16() {
 }
 
 
+int test17() { 
+  int iret =0;
+  // tets tensor product
+  SVector<double,2> v1(1,2); 
+  SVector<double,3> v2(1,2,3); 
+
+  SMatrix<double,2,3> m = TensorProd(v1,v2); 
+  std::cout << "Tensor Product \n" << m << std::endl;
+
+  SVector<double,4> a1(2,-1,3,4); 
+  SVector<double,4> a2(5,6,1,-2); 
+  
+  SMatrix<double,4> A = TensorProd(a1,a2); 
+  double r1 = Dot(a1, A * a2 ); 
+  double r2 = Dot(a1, a1) * Dot(a2,a2 );
+  iret |= compare(r1,r2,"tensor prod");
+
+  A = TensorProd(2.*a1,a2); 
+  r1 = Dot(a1, A * a2 )/2; 
+  r2 = Dot(a1, a1) * Dot(a2,a2 );
+  iret |= compare(r1,r2,"tensor prod");
+
+
+  A = TensorProd(a1,2*a2); 
+  r1 = Dot(a1, A * a2 )/2; 
+  r2 = Dot(a1, a1) * Dot(a2,a2 );
+  iret |= compare(r1,r2,"tensor prod");
+
+  A = TensorProd(0.5*a1,2*a2); 
+  r1 = Dot(a1, A * a2 ); 
+  r2 = Dot(a1, a1) * Dot(a2,a2 );
+  iret |= compare(r1,r2,"tensor prod");
+ 
+  return iret;
+}
+
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
@@ -909,6 +963,7 @@ int main() {
   TEST(14);
   TEST(15);
   TEST(16);
+  TEST(17);
 
 
 

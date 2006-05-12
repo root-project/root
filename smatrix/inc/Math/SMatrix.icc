@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.19 2006/03/30 16:18:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: SMatrix.icc,v 1.20 2006/04/25 13:54:01 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_SMatrix_icc
@@ -431,6 +431,7 @@ bool SMatrix<T,D1,D2,R>::operator<(const Expr<A,T,D1,D2,R2>& rhs) const {
   return rc;
 }
 
+#ifdef OLD_IMPL
 //==============================================================================
 // sinvert
 //==============================================================================
@@ -451,7 +452,6 @@ inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::Sinverse(int &  ifail) const {
 }
 
 
-
 //==============================================================================
 // sdet
 //==============================================================================
@@ -469,6 +469,7 @@ inline bool SMatrix<T,D1,D2,R>::Sdet2(T& det) const {
   return tmp.Sdet(det);
 }
 
+#endif
 
 //==============================================================================
 // invert
@@ -476,7 +477,7 @@ inline bool SMatrix<T,D1,D2,R>::Sdet2(T& det) const {
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::Invert() {
   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
-  return Inverter<D1>::Dinv((*this).fRep);
+  return Inverter<D1,D2>::Dinv((*this).fRep);
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>

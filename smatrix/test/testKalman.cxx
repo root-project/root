@@ -489,8 +489,8 @@ int test_clhep_kalman() {
       fillRandomMat(r,K0,second,first,1); 
       fillRandomSym(r,Cp,second,1); 
       fillRandomSym(r,V,first,1); 
-      fillRandomVec(r,m,first,1); 
-      fillRandomVec(r,xp,second,1); 
+      fillRandomVec(r,m,first); 
+      fillRandomVec(r,xp,second); 
 
       MnSymMatrix I(second,1);//Identity matrix
 

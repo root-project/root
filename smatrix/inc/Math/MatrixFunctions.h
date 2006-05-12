@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.9 2006/03/20 17:11:44 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixFunctions.h,v 1.10 2006/04/25 13:54:01 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef ROOT_Math_MatrixFunctions
@@ -56,6 +56,10 @@ SVector<T,D1> operator*(const SMatrix<T,D1,D2,R>& rhs, const SVector<T,D2>& lhs)
 }
 #endif
 
+
+// matrix-vector product: 
+// use apply(i) funciton for matrices. Tested  (11/05/06) with using (i,j) but 
+// performances are slightly worse (not clear  why)
 
 //==============================================================================
 // meta_row_dot
@@ -733,6 +737,88 @@ inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const Expr<A,T,D1,D2,R>& lh
 //   typedef MatrixMulOp<Expr<A,T,D1,D,R1>, Expr<B,T,D,D2,R2>, T,D> MatMulOp;
 //   return Expr<MatMulOp,T,D1,D2,typename MultPolicy<T,R1,R2>::RepType>(MatMulOp(lhs,rhs));
 // }
+
+
+
+//==============================================================================
+// TensorMulOp
+//  tensor (or outer) product between two vectors giving a matrix 
+//==============================================================================
+template <class Vector1, class Vector2>
+class TensorMulOp {
+public:
+  ///
+  TensorMulOp( const Vector1 & lhs, const Vector2 & rhs) :
+    lhs_(lhs),
+    rhs_(rhs) {}
+
+  ///
+  ~TensorMulOp() {}
+
+  /// Vector2::kSize is the number of columns in the resulting matrix
+  inline typename Vector1::value_type apply(unsigned int i) const {
+    return lhs_.apply( i/ Vector2::kSize) * rhs_.apply( i % Vector2::kSize );
+  }
+  inline typename Vector1::value_type operator() (unsigned int i, unsigned j) const {
+    return lhs_.apply(i) * rhs_.apply(j);
+  }
+
+  inline bool IsInUse (const typename Vector1::value_type * ) const { 
+    return false; 
+  }
+
+
+protected:
+
+  const Vector1 & lhs_;
+  const Vector2 & rhs_;
+
+};
+
+    // Tensor Prod (use default MatRepStd for the returned expression
+    // cannot make a symmetric matrix
+//==============================================================================
+// TensorProd (SVector x SVector)
+//==============================================================================
+template <  class T, unsigned int D1, unsigned int D2>
+inline Expr<TensorMulOp<SVector<T,D1>, SVector<T,D2>  >, T, D1, D2 >
+ TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2>& rhs) {
+  typedef TensorMulOp<SVector<T,D1>, SVector<T,D2> > TVMulOp;
+  return Expr<TVMulOp,T,D1,D2>(TVMulOp(lhs,rhs));
+}
+
+//==============================================================================
+// TensorProd (VecExpr x SVector)
+//==============================================================================
+template <class A, class T, unsigned int D1, unsigned int D2>
+inline Expr<TensorMulOp<VecExpr<A,T,D1>, SVector<T,D2>  >, T, D1, D2 >
+ TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,D2>& rhs) {
+  typedef TensorMulOp<VecExpr<A,T,D1>, SVector<T,D2> > TVMulOp;
+  return Expr<TVMulOp,T,D1,D2>(TVMulOp(lhs,rhs));
+}
+
+//==============================================================================
+// TensorProd (SVector x VecExpr)
+//==============================================================================
+template <class A, class T, unsigned int D1, unsigned int D2>
+inline Expr<TensorMulOp<SVector<T,D1>, VecExpr<A,T,D2>  >, T, D1, D2 >
+ TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D2>& rhs) {
+  typedef TensorMulOp<SVector<T,D1>, VecExpr<A,T,D2> > TVMulOp;
+  return Expr<TVMulOp,T,D1,D2>(TVMulOp(lhs,rhs));
+}
+
+
+//==============================================================================
+// TensorProd (VecExpr x VecExpr)
+//==============================================================================
+template <class A, class B, class T, unsigned int D1, unsigned int D2>
+inline Expr<TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2>  >, T, D1, D2 >
+ TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B,T,D2>& rhs) {
+  typedef TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2> > TVMulOp;
+  return Expr<TVMulOp,T,D1,D2>(TVMulOp(lhs,rhs));
+}
+
+
 
 
 

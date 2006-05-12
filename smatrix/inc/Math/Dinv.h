@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.3 2005/12/07 16:44:05 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.4 2006/02/08 14:45:35 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dinv
@@ -67,7 +67,7 @@ public:
       }
 #endif
 
-
+#ifdef OLD_IMPL
 
       /* Initialized data */
       static unsigned int work[n];
@@ -83,6 +83,23 @@ public:
 	return false;
       }
       return Dfinv<MatrixRep,n,idim>(rhs,work);
+#else 
+
+      /* Initialized data */
+      static unsigned int work[n+1];
+      for(unsigned int i=0; i<n+1; ++i) work[i] = 0;
+
+      static typename MatrixRep::value_type det = 0;
+      
+      if (DfactMatrix(rhs,det,work) != 0) {
+	std::cerr << "Dfact_matrix failed!!" << std::endl;
+	return false;
+      }
+
+      int ifail =  DfinvMatrix(rhs,work); 
+      if (ifail == 0) return true; 
+      return false; 
+#endif
   } // Dinv
 
 
@@ -91,6 +108,7 @@ public:
   static bool Dinv(MatRepSym<T,idim> & rhs) {
     // not very efficient but need to re-do Dsinv for new storage of 
     // symmetric matrices
+#ifdef OLD_IMPL
     MatRepStd<T,idim>  tmp; 
     for (unsigned int i = 0; i< idim*idim; ++i) 
       tmp[i] = rhs[i];
@@ -100,7 +118,28 @@ public:
       rhs[i] = tmp[i];
 
     return true; 
+#else
+    int ifail = 0; 
+    InvertBunchKaufman(rhs,ifail); 
+    if (ifail == 0) return true; 
+    return false; 
+#endif
   }
+
+
+  /**
+     Bunch-Kaufman method for inversion of symmetric matrices
+   */
+  template <class T>
+  static int DfactMatrix(MatRepStd<T,idim,n> & rhs, T & det, unsigned int * work); 
+  template <class T>
+  static int DfinvMatrix(MatRepStd<T,idim,n> & rhs, unsigned int * work); 
+
+  /**
+     Bunch-Kaufman method for inversion of symmetric matrices
+   */
+  template <class T>
+  static void InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail); 
 
 
 
@@ -279,5 +318,6 @@ public:
 
 #include "CramerInversion.icc"
 #include "CramerInversionSym.icc"
+#include "MatrixInversion.icc"
 
 #endif  /* ROOT_Math_Dinv */
