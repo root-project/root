@@ -1342,7 +1342,7 @@ char *G__search_func(char *funcname,G__value *buf)
 
 
   /* search for interpreted and user precompied function */
-  ifunc=G__p_ifunc;
+  ifunc= &G__ifunc;
   do {
     for(i=0;i<ifunc->allifunc;i++) {
       if(
