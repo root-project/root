@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.16 2005/08/29 18:10:54 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.17 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -108,8 +108,8 @@ void TLeafC::Import(TClonesArray *list, Int_t n)
 //______________________________________________________________________________
 void TLeafC::PrintValue(Int_t) const
 {
-// Prints leaf value
-
+   // Prints leaf value.
+   
    char *value = (char*)GetValuePointer();
    printf("%s",value);
 }
@@ -117,7 +117,7 @@ void TLeafC::PrintValue(Int_t) const
 //______________________________________________________________________________
 void TLeafC::ReadBasket(TBuffer &b)
 {
-   // Read leaf elements from Basket input buffer
+   // Read leaf elements from Basket input buffer.
 
    b.ReadFastArrayString(fValue,fLen);
 }
@@ -125,8 +125,8 @@ void TLeafC::ReadBasket(TBuffer &b)
 //______________________________________________________________________________
 void TLeafC::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//  and export buffer to TClonesArray objects
+   // Read leaf elements from Basket input buffer
+   // and export buffer to TClonesArray objects.
 
    UChar_t len;
    b >> len;
@@ -148,9 +148,22 @@ void TLeafC::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 //______________________________________________________________________________
 void TLeafC::ReadValue(ifstream &s)
 {
-// read a string from ifstream s and store it into the branch buffer
-   char *value = (char*)GetValuePointer();
-   s >> value;
+   // Read a string from ifstream s and store it into the branch buffer.
+
+   string temp;
+   s >> temp;
+   if ( TestBit(kNewValue) && 
+        (temp.size()+1 > ((UInt_t)fNdata))) {
+      // Grow buffer if needed and we created the buffer.
+      fNdata = temp.size() + 1;
+      if (TestBit(kIndirectAddress) && fPointer) {
+         delete [] *fPointer;
+         *fPointer = new char[fNdata];
+      } else {
+         fValue = new char[fNdata];
+      }
+   }
+   strcpy(fValue,temp.c_str());
 }
 
 //______________________________________________________________________________
