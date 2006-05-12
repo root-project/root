@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.17 2006/03/03 16:18:35 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.18 2006/05/11 09:42:42 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -912,6 +912,7 @@ Double_t TNeuron::GetBranch() const
 //______________________________________________________________________________
 Double_t TNeuron::GetInput() const
 {
+   // Returns neuron input
    if (!fNewInput) {
       return fInput;
    }
@@ -1087,7 +1088,7 @@ Double_t TNeuron::GetDeDw() const
             ((TNeuron*)this)->fDeDw += 
               postSynapse->GetWeight() * 
               postSynapse->GetPost()->GetDeDw();
-        }
+         }
       } else {
          // softmax derivative can be taken care of correcting the forward weight
          for (Int_t i = 0; i < nEntries; i++) {
