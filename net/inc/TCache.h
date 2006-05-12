@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.5 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.6 2004/01/19 18:31:13 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -54,17 +54,21 @@ class TCache : public TObject {
 friend class TFile;
 
 private:
+   TCache(const TCache&);
+   TCache& operator=(const TCache&);
    // The TPage class describes a cache page
    class TPage : public TObject {
    friend class TCache;
    private:
+      TPage(const TPage&);
+      TPage& operator=(const TPage&);
       Long64_t   fOffset;  // offset of page in file
       char      *fData;    // pointer to page data
       Int_t      fSize;    // size of page
    public:
       enum { kDirty = BIT(14), kLocked = BIT(15) };
       TPage(Long64_t offset, char *page, Int_t size)
-         { fOffset = offset; fData = page; fSize = size; }
+        : fOffset(offset), fData(page), fSize(size) { }
       ~TPage() { delete [] fData; }
       ULong_t  Hash() const { return (ULong_t) fOffset; }
       Bool_t   IsEqual(const TObject *obj) const

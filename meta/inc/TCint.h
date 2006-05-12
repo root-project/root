@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.24 2005/01/18 21:04:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.25 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -52,6 +52,9 @@ R__EXTERN TVirtualMutex *gCINTMutex;
 class TCint : public TInterpreter {
 
 private:
+   TCint(const TCint&);
+   TCint& operator=(const TCint&);
+
    Int_t           fMore;           //1 if more input is required
    Int_t           fExitCode;       //value passed to exit() in interpreter
    char            fPrompt[64];     //proposed prompt string
@@ -61,7 +64,8 @@ private:
    TString         fIncludePath;    //hold a list of lib include path
    TEnv           *fMapfile;        //map of classes and libraries
 
-   TCint() : fMore(-1), fMapfile(0) { }  //for Dictionary() only
+   TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(), 
+     fSharedLibs(), fIncludePath(), fMapfile(0) { }  //for Dictionary() only
    virtual void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
 protected:

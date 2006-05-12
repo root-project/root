@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.20 2006/02/19 21:02:34 pcanal Exp $
+// @(#)root/cont:$Name: v5-11-02 $:$Id: TCollection.h,v 1.21 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@ protected:
    TString   fName;               //name of the collection
    Int_t     fSize;               //number of elements in collection
 
-   TCollection() : fSize(0) { }
+   TCollection() : fName(), fSize(0) { }
 
 public:
    enum { kInitCapacity = 16, kInitHashTableCapacity = 17 };

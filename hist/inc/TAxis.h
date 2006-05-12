@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.32 2004/08/24 12:59:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.33 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -38,6 +38,8 @@
 class TAxis : public TNamed, public TAttAxis {
 
 private:
+        TAxis& operator=(const TAxis&);
+
         Int_t        fNbins;          //Number of bins
         Double_t     fXmin;           //low edge of first bin
         Double_t     fXmax;           //upper edge of last bin

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.4 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.5 2004/07/07 17:46:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -31,6 +31,11 @@
 #endif
 
 class TBenchmark : public TNamed {
+
+private:
+
+   TBenchmark(const TBenchmark&);
+   TBenchmark& operator=(const TBenchmark&);
 
 protected:
 

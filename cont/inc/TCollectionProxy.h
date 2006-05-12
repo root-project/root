@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.12 2005/11/16 20:04:47 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.13 2006/02/09 20:39:46 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -108,10 +108,11 @@ public:
       Q second;
       PairHolder() {}
       PairHolder(const PairHolder& c) : first(c.first), second(c.second) {}
-      ~PairHolder() {}
+      virtual ~PairHolder() {}
    };
 
    template <class T> struct Address {
+      virtual ~Address() {}
       static void* address(T ref) {
          return (void*)&ref;
       }
@@ -140,6 +141,8 @@ public:
       typedef Env_t                 *PEnv_t;
       typedef Cont_t                *PCont_t;
       typedef Value_t               *PValue_t;
+
+      virtual ~Type() {}
 
       static inline PCont_t object(void* ptr)   {
          return PCont_t(PEnv_t(ptr)->object);
@@ -458,6 +461,9 @@ public:
  * @version 1.0
  */
 class TCollectionStreamer   {
+private:
+   TCollectionStreamer& operator=(const TCollectionStreamer&);
+
 protected:
    TGenCollectionProxy* fStreamer;   /// Pointer to worker streamer
 

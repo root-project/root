@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.6 2005/06/03 15:59:18 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.7 2005/06/08 21:13:48 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -43,7 +43,7 @@ private:
    TClass   *InternalGetClass() const;
    void      ListReset();
 public:
-   TClassRef() : fClassPtr(0), fPrevious(0), fNext(0) {}
+   TClassRef() : fClassName(), fClassPtr(0), fPrevious(0), fNext(0) {}
    TClassRef(TClass *cl);
    TClassRef(const char *classname);
    TClassRef(const TClassRef&);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.4 2005/09/05 14:21:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.5 2005/09/05 14:50:12 rdm Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -30,6 +30,10 @@ class TBrowser;
 
 class TBrowserImp {
 
+private:
+   TBrowserImp(const TBrowserImp&);
+   TBrowserImp& operator=(const TBrowserImp&);
+
 protected:
    TBrowser  *fBrowser;     //TBrowser associated with this implementation
    Bool_t     fShowCycles;  //Show object cycle numbers in browser
@@ -57,7 +61,9 @@ public:
    ClassDef(TBrowserImp,0)  //ABC describing browser implementation protocol
 };
 
-inline TBrowserImp::TBrowserImp(TBrowser *, const char *, UInt_t, UInt_t) { }
-inline TBrowserImp::TBrowserImp(TBrowser *, const char *, Int_t, Int_t, UInt_t, UInt_t) { }
+inline TBrowserImp::TBrowserImp(TBrowser *, const char *, UInt_t, UInt_t)
+  : fBrowser(NULL), fShowCycles(kFALSE) { }
+inline TBrowserImp::TBrowserImp(TBrowser *, const char *, Int_t, Int_t, UInt_t, UInt_t)
+  : fBrowser(NULL), fShowCycles(kFALSE) { }
 
 #endif

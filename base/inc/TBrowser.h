@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.11 2004/06/22 15:36:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.12 2005/09/05 14:21:53 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -41,6 +41,9 @@ class TBrowserTimer;
 class TBrowser : public TNamed {
 
 private:
+   TBrowser(const TBrowser&);
+   TBrowser& operator=(const TBrowser&);
+
    TObject       *fLastSelectedObject; //!The last TObject selected by user
 
 protected:

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.60 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.61 2006/05/02 19:35:48 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -74,6 +74,9 @@ public:
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
 private:
+   //   TClass(const TClass&);
+   TClass& operator=(const TClass&);   
+
    TObjArray         *fStreamerInfo;    //Array of TStreamerInfo
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes

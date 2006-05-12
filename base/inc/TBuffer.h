@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.53 2005/12/02 22:27:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.54 2006/01/24 21:23:20 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -69,7 +69,7 @@ protected:
    TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
                fBufCur(0), fBufMax(0), fMapCount(0), fMapSize(0),
                fDisplacement(0), fMap(0), fClassMap(0), fParent(0),
-               fInfo(0),  fInfos() {}
+               fInfo(0), fInfos(), fPidOffset(0) {}
 
    // TBuffer objects cannot be copied or assigned
    TBuffer(const TBuffer &);           // not implemented

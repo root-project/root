@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.5 2003/07/15 12:50:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.6 2005/11/15 14:04:51 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -34,6 +34,8 @@
 class TBox : public TObject, public TAttLine, public TAttFill {
 
 private:
+   TBox& operator=(const TBox&);
+
    TObject     *fTip;          //!tool tip associated with box
 
 protected:

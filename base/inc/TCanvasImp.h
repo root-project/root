@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.7 2004/05/12 16:19:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.8 2005/05/30 22:47:27 rdm Exp $
 // Author: Fons Rademakers   16/11/95
 
 /*************************************************************************
@@ -31,6 +31,10 @@ class TCanvas;
 
 class TCanvasImp {
 friend class TCanvas;
+
+private:
+   TCanvasImp(const TCanvasImp&); 
+   TCanvasImp& operator=(const TCanvasImp&); 
 
 protected:
    TCanvas  *fCanvas;   //TCanvas associated with this implementation

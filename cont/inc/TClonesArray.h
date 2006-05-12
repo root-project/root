@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.10 2004/11/12 21:55:41 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.11 2006/02/19 21:02:34 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -31,6 +31,9 @@ class TClass;
 
 class TClonesArray : public TObjArray {
 
+private:
+   TClonesArray& operator=(const TClonesArray&);
+
 protected:
    TClass       *fClass;       //!Pointer to the class
    TObjArray    *fKeep;        //!Saved copies of pointers to objects
@@ -45,6 +48,8 @@ public:
    TClonesArray();
    TClonesArray(const char *classname, Int_t size = 1000, Bool_t call_dtor = kFALSE);
    TClonesArray(const TClass *cl, Int_t size = 1000, Bool_t call_dtor = kFALSE);
+   TClonesArray(const TClonesArray& tca)
+     : TObjArray(tca), fClass(tca.fClass), fKeep(tca.fKeep) {}
    virtual         ~TClonesArray();
    virtual void     Compress();
    virtual void     Clear(Option_t *option="");
