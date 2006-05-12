@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.11 2006/04/18 14:19:21 rdm Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.12 2006/05/09 10:24:27 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -919,6 +919,7 @@ void TBufferXML::SetStreamerElementNumber(Int_t number)
 //______________________________________________________________________________
 void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
 {
+   //to be documented by Sergey
    CheckVersionBuf();
 
    fExpectedChain = kFALSE;
@@ -1004,18 +1005,21 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
 //______________________________________________________________________________
 void TBufferXML::ClassBegin(const TClass* cl, Version_t)
 {
+   //to be documented by Sergey
    WorkWithClass(0, cl);
 }
 
 //______________________________________________________________________________
 void TBufferXML::ClassEnd(const TClass*)
 {
+   //to be documented by Sergey
    DecrementLevel(0);
 }
 
 //______________________________________________________________________________
 void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsize1, Int_t arrsize2)
 {
+   //to be documented by Sergey
    if (typeName==0) typeName = name;
 
    if ((name==0) || (strlen(name)==0)) {
