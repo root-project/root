@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dsinv.h,v 1.2 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dsinv.h,v 1.3 2006/02/28 13:45:05 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dsinv
@@ -143,7 +143,7 @@ public:
   static bool Dsinv(MatRepSym<T,n> & rhs) {
     // not very efficient but need to re-do Dsinv for new storage of 
     // symmetric matrices
-    T tmp[n*n]; 
+    MatRepStd<T,n,n> tmp;
     for (int i = 0; i< n*n; ++i) 
       tmp[i] = rhs[i];
     // call dsinv

@@ -1,8 +1,8 @@
-// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.1 2006/02/08 14:45:35 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: MatrixInversion.icc,v 1.1 2006/05/12 08:12:16 moneta Exp $
 // Authors: CLHEP authors, L. Moneta    2006  
 
 #include "Math/SVector.h"
-
+#include <limits>
 
 // inversion algorithms for matrices
 // taken  from CLHEP (L. Moneta May 2006)
