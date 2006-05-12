@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.4 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: VectorUtil.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -252,7 +252,7 @@ namespace ROOT {
 	  Throw(e);
 	  return LVector();
 	}    
-	register double gamma = 1.0 / sqrt(1.0 - b2);
+	register double gamma = 1.0 / std::sqrt(1.0 - b2);
 	register double bp = bx*v.X() + by*v.Y() + bz*v.Z();
 	register double gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
 	double x2 = v.X() + gamma2*bp*bx + gamma*bx*v.T();
