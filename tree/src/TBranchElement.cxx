@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.192 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.193 2006/04/19 08:22:25 rdm Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1768,12 +1768,12 @@ void TBranchElement::ReadLeaves(TBuffer &b)
             case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
             case 18:  {b.ReadFastArray((Bool_t*)  fAddress, n); break;}
             case  9:  {
-                          Double_t *xx = (Double_t*)fAddress;
-                          Float_t afloat;
-                          for (Int_t ii=0;ii<n;ii++) {
-                             b >> afloat; xx[ii] = Double_t(afloat);
-                          }
-                          break;
+                         Double_t *xx = (Double_t*)fAddress;
+                         Float_t afloat;
+                         for (Int_t ii=0;ii<n;ii++) {
+                            b >> afloat; xx[ii] = Double_t(afloat);
+                         }
+                         break;
                       }
          }
          return;
@@ -1800,11 +1800,14 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                case 16:  {b.ReadFastArray((Long64_t*) fAddress, n); break;}
                case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
                case 18:  {b.ReadFastArray((Bool_t*)   fAddress, n); break;}
-               case  9:  {Double_t *xx = (Double_t*)fAddress;
-                          Float_t afloat;
-                          for (Int_t ii=0;ii<n;ii++) {
-                             b>> afloat; xx[ii] = Double_t(afloat);
-                          } break;}
+               case  9:  {
+                            Double_t *xx = (Double_t*)fAddress;
+                            Float_t afloat;
+                            for (Int_t ii=0;ii<n;ii++) {
+                               b>> afloat; xx[ii] = Double_t(afloat);
+                            } 
+                            break;
+                         }
             }
          } else {
             fNdata = 1;

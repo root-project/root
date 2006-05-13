@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeSQL.h,v 1.2 2005/08/16 13:51:48 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeSQL.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -53,16 +53,16 @@ protected:
    TSQLServer            *fServer;
    Bool_t                 fBranchChecked;
 
-           void           CheckBasket(TBranch * tb);
-           Bool_t         CheckBranch(TBranch * tb);
-           Bool_t         CheckTable(const TString &table) const;
+   void                   CheckBasket(TBranch * tb);
+   Bool_t                 CheckBranch(TBranch * tb);
+   Bool_t                 CheckTable(const TString &table) const;
    TString                CreateBranches(TSQLResult * rs);
    std::vector<Int_t>    *GetColumnIndice(TBranch *branch);
    void                   Init();   
    void                   ResetQuery();
-           TString        ConvertTypeName(const TString& typeName );
+   TString                ConvertTypeName(const TString& typeName );
    virtual void           CreateBranch(const TString& branchName,const TString &typeName);
-           void           CreateTable(const TString& table);
+   void                   CreateTable(const TString& table);
    virtual TBasket       *CreateBasket(TBranch * br); 
 
    virtual TBranch *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
