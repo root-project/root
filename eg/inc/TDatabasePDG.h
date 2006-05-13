@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.7 2005/06/09 06:23:47 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.8 2005/09/04 11:42:05 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -22,6 +22,10 @@
 #endif
 
 class TDatabasePDG: public TNamed {
+
+private:
+  TDatabasePDG(const TDatabasePDG&);
+  TDatabasePDG& operator=(const TDatabasePDG&);
 
 protected:
   static TDatabasePDG *fgInstance;        // protect against multiple instances

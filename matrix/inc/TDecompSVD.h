@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.11 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name: v4-02-00 $:$Id: TDecompSVD.h,v 1.12 2004/11/28 18:54:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public :
 
   enum {kWorkMax = 100}; // size of work array
 
-  TDecompSVD() {}
+  TDecompSVD(): fU(), fV(), fSig() {}
   TDecompSVD(Int_t nrows,Int_t ncols);
   TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TDecompSVD(const TMatrixD &m,Double_t tol = 0.0);

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.11 2004/01/10 10:52:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.12 2006/05/09 10:24:26 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -35,6 +35,9 @@ class TMethodCall;
 class TDataMember : public TDictionary {
 
 private:
+   TDataMember(const TDataMember&);
+   TDataMember& operator=(const TDataMember&);
+
    enum { kObjIsPersistent = BIT(2) };
 
    G__DataMemberInfo  *fInfo;         //pointer to CINT data member info
@@ -89,6 +92,10 @@ public:
 // for cenvenience reasons.
 
 class TOptionListItem : public TObject {
+
+private:
+   TOptionListItem(const TOptionListItem&);
+   TOptionListItem& operator=(const TOptionListItem&);
 
 public:
    TDataMember     *fDataMember;     //Data member to which this option belongs

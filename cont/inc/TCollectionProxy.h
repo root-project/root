@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.13 2006/02/09 20:39:46 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.14 2006/05/12 12:25:45 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -109,6 +109,8 @@ public:
       PairHolder() {}
       PairHolder(const PairHolder& c) : first(c.first), second(c.second) {}
       virtual ~PairHolder() {}
+     private:
+      PairHolder& operator=(const PairHolder&);
    };
 
    template <class T> struct Address {

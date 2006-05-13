@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.5 2002/04/04 17:32:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.6 2002/04/08 15:06:07 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -44,6 +44,10 @@ class TClassMenuItem;
 class TContextMenu : public TNamed {
 
 friend class  TContextMenuImp;
+
+private:
+   TContextMenu(const TContextMenu&); 
+   TContextMenu& operator=(const TContextMenu&); 
 
 protected:
    TContextMenuImp *fContextMenuImp;      //!Context menu system specific implementation

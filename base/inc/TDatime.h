@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.9 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.10 2005/06/23 10:47:54 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -28,20 +28,23 @@
 
 class TDatime {
 
+private:
+
 protected:
    UInt_t     fDatime;            //Date (relative to 1995) + time
 
 public:
    TDatime();
-   TDatime(const TDatime &d) { fDatime = d.fDatime; }
-   TDatime(UInt_t tloc, Bool_t dosDate = kFALSE) { Set(tloc, dosDate); }
+   TDatime(const TDatime &d): fDatime(d.fDatime) { }
+   TDatime(UInt_t tloc, Bool_t dosDate = kFALSE): fDatime(0)
+     { Set(tloc, dosDate); }
    TDatime(Int_t date, Int_t time);
    TDatime(Int_t year, Int_t month, Int_t day,
            Int_t hour, Int_t min, Int_t sec);
    TDatime(const char *sqlDateTime);
    virtual ~TDatime() { }
 
-   TDatime operator=(const TDatime &d);
+   TDatime& operator=(const TDatime &d);
 
    const char  *AsString() const;
    const char  *AsString(char *out) const;
@@ -80,7 +83,7 @@ public:
 };
 
 
-inline TDatime TDatime::operator=(const TDatime &d)
+inline TDatime& TDatime::operator=(const TDatime &d)
    { fDatime = d.fDatime; return *this; }
 
 inline Bool_t operator==(const TDatime &d1, const TDatime &d2)

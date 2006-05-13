@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.5 2001/08/08 15:23:30 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.6 2003/03/05 07:16:07 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -29,6 +29,10 @@
 #endif
 
 class TDialogCanvas : public TCanvas, public TAttText {
+
+private:
+   TDialogCanvas(const TDialogCanvas&);
+   TDialogCanvas& operator=(const TDialogCanvas&);
 
 protected:
    TObject     *fRefObject;   //Pointer to object to set attributes

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.12 2006/03/01 12:07:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.13 2006/03/03 09:48:19 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -104,7 +104,7 @@ private:
    TString  ExpandValue(const char *v);
 
 public:
-   TEnvRec() { fLevel = kEnvAll; fModified = kTRUE; }
+   TEnvRec(): fName(), fType(), fValue(), fLevel(kEnvAll), fModified(kTRUE) { }
    const char *GetName() const { return fName; }
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }
@@ -123,6 +123,9 @@ public:
 class TEnv : public TObject {
 
 private:
+   TEnv(const TEnv&);
+   TEnv& operator=(const TEnv&);
+
    THashList        *fTable;     // hash table containing env records
    TString           fRcName;    // resource file base name
 
