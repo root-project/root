@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name: v5-10-00 $:$Id: TGeoMCGeometry.cxx,v 1.7 2005/11/18 21:20:15 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.8 2006/03/31 13:43:23 brun Exp $
 // Authors: ... 25/06/2002
 
 //______________________________________________________________________________
@@ -34,9 +34,9 @@ TGeoMCGeometry::TGeoMCGeometry(const char *name, const char *title,
   : TVirtualMCGeometry(name, title),
     fG3CompatibleVolumeNames(g3CompatibleVolumeNames)
 {
-  //
-  // Standard constructor
-  //
+   //
+   // Standard constructor
+   //
 }
 
 //_____________________________________________________________________________
@@ -44,18 +44,18 @@ TGeoMCGeometry::TGeoMCGeometry()
   : TVirtualMCGeometry(),
     fG3CompatibleVolumeNames(kFALSE)
 {    
-  //
-  // Default constructor
-  //
+   //
+   // Default constructor
+   //
 }
 
 //_____________________________________________________________________________
 TGeoMCGeometry::~TGeoMCGeometry() 
 {
-  //
-  // Destructor
-  //
-  fgInstance=0;
+   //
+   // Destructor
+   //
+   fgInstance=0;
 }
 
 //
@@ -67,9 +67,9 @@ TGeoMCGeometry::~TGeoMCGeometry()
 TGeoMCGeometry::TGeoMCGeometry(const TGeoMCGeometry &geom)
   : TVirtualMCGeometry(geom)
 {
-  //
-  // Copy constructor
-  //
+   //
+   // Copy constructor
+   //
 }
 
 //_____________________________________________________________________________
@@ -79,38 +79,36 @@ Double_t* TGeoMCGeometry::CreateDoubleArray(Float_t* array, Int_t size) const
 // !! The new array has to be deleted by user.
 // ---
 
-  Double_t* doubleArray;
-  if (size>0) {
-    doubleArray = new Double_t[size]; 
-    for (Int_t i=0; i<size; i++) doubleArray[i] = array[i];
-  }
-  else {
-    //doubleArray = 0; 
-    doubleArray = new Double_t[1]; 
-  }  
-  return doubleArray;
+   Double_t* doubleArray;
+   if (size>0) {
+      doubleArray = new Double_t[size]; 
+      for (Int_t i=0; i<size; i++) doubleArray[i] = array[i];
+   } else {
+      //doubleArray = 0; 
+      doubleArray = new Double_t[1]; 
+   }  
+   return doubleArray;
 }
 
 //______________________________________________________________________________
 void TGeoMCGeometry::Vname(const char *name, char *vname) const
 {
-  //
-  //  convert name to upper case. Make vname at least 4 chars
-  //
-  if (fG3CompatibleVolumeNames) {
-    Int_t l = strlen(name);
-    Int_t i;
-    l = l < 4 ? l : 4;
-    for (i=0;i<l;i++) vname[i] = toupper(name[i]);
-    for (i=l;i<4;i++) vname[i] = ' ';
-    vname[4] = 0;
-  }
-  else {
-    Int_t l = strlen(name);
-    if ( l>=79 ) l = 79;
-    for (Int_t i=0;i<l;i++) vname[i] = name[i];
-    vname[l] = 0;
-  }
+   //
+   //  convert name to upper case. Make vname at least 4 chars
+   //
+   if (fG3CompatibleVolumeNames) {
+      Int_t l = strlen(name);
+      Int_t i;
+      l = l < 4 ? l : 4;
+      for (i=0;i<l;i++) vname[i] = toupper(name[i]);
+      for (i=l;i<4;i++) vname[i] = ' ';
+      vname[4] = 0;
+   } else {
+      Int_t l = strlen(name);
+      if ( l>=79 ) l = 79;
+      for (Int_t i=0;i<l;i++) vname[i] = name[i];
+      vname[l] = 0;
+   }
 }
  
 //
@@ -140,9 +138,9 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
   //  nbuf               number of user words
   //
   
-  Double_t* dbuf = CreateDoubleArray(buf, nwbuf);  
-  Material(kmat, name, a, z, dens, radl, absl, dbuf, nwbuf);
-  delete [] dbuf;
+   Double_t* dbuf = CreateDoubleArray(buf, nwbuf);  
+   Material(kmat, name, a, z, dens, radl, absl, dbuf, nwbuf);
+   delete [] dbuf;
 }  
 
 //_____________________________________________________________________________
@@ -168,7 +166,7 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
   //  nbuf               number of user words
   //
 
-  gGeoManager->Material(name, a, z, dens, kmat, radl, absl);
+   gGeoManager->Material(name, a, z, dens, kmat, radl, absl);
 }
 
 //_____________________________________________________________________________
@@ -188,18 +186,18 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Float_t* a, Float_t*
   // weigths.
   //
   
-  Double_t* da = CreateDoubleArray(a, TMath::Abs(nlmat));  
-  Double_t* dz = CreateDoubleArray(z, TMath::Abs(nlmat));  
-  Double_t* dwmat = CreateDoubleArray(wmat, TMath::Abs(nlmat));  
+   Double_t* da = CreateDoubleArray(a, TMath::Abs(nlmat));  
+   Double_t* dz = CreateDoubleArray(z, TMath::Abs(nlmat));  
+   Double_t* dwmat = CreateDoubleArray(wmat, TMath::Abs(nlmat));  
 
-  Mixture(kmat, name, da, dz, dens, nlmat, dwmat);
-  for (Int_t i=0; i<nlmat; i++) {
-    a[i] = da[i]; z[i] = dz[i]; wmat[i] = dwmat[i];
-  }  
+   Mixture(kmat, name, da, dz, dens, nlmat, dwmat);
+   for (Int_t i=0; i<nlmat; i++) {
+      a[i] = da[i]; z[i] = dz[i]; wmat[i] = dwmat[i];
+   }  
 
-  delete [] da;
-  delete [] dz;
-  delete [] dwmat;
+   delete [] da;
+   delete [] dz;
+   delete [] dwmat;
 }
 
 //_____________________________________________________________________________
@@ -219,18 +217,18 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Double_t* a, Double_
   // weigths.
   //
 
-  if (nlmat < 0) {
-     nlmat = - nlmat;
-     Double_t amol = 0;
-     Int_t i;
-     for (i=0;i<nlmat;i++) {
-        amol += a[i]*wmat[i];
-     }
-     for (i=0;i<nlmat;i++) {
-        wmat[i] *= a[i]/amol;
-     }
-  }
-  gGeoManager->Mixture(name, a, z, dens, nlmat, wmat, kmat);
+   if (nlmat < 0) {
+      nlmat = - nlmat;
+      Double_t amol = 0;
+      Int_t i;
+      for (i=0;i<nlmat;i++) {
+         amol += a[i]*wmat[i];
+      }
+      for (i=0;i<nlmat;i++) {
+         wmat[i] *= a[i]/amol;
+      }
+   }
+   gGeoManager->Mixture(name, a, z, dens, nlmat, wmat, kmat);
 }
 
 //_____________________________________________________________________________
@@ -258,10 +256,10 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
   //  
 
   //printf("Creating mediuma: %s, numed=%d, nmat=%d\n",name,kmed,nmat);
-  Double_t* dubuf = CreateDoubleArray(ubuf, nbuf);  
-  Medium(kmed, name, nmat, isvol, ifield, fieldm, tmaxfd, stemax, deemax, epsil,
-         stmin, dubuf, nbuf);
-  delete [] dubuf;        
+   Double_t* dubuf = CreateDoubleArray(ubuf, nbuf);  
+   Medium(kmed, name, nmat, isvol, ifield, fieldm, tmaxfd, stemax, deemax, epsil,
+          stmin, dubuf, nbuf);
+   delete [] dubuf;        
 }
 
 //_____________________________________________________________________________
@@ -288,7 +286,7 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
   //  performed with g3helix; ifield = 3 if tracking performed with g3helx3.
   //  
 
-  gGeoManager->Medium(name,kmed,nmat, isvol, ifield, fieldm, tmaxfd, stemax,deemax, epsil, stmin);
+   gGeoManager->Medium(name,kmed,nmat, isvol, ifield, fieldm, tmaxfd, stemax,deemax, epsil, stmin);
 }
 
 //_____________________________________________________________________________
@@ -307,8 +305,8 @@ void TGeoMCGeometry::Matrix(Int_t& krot, Double_t thex, Double_t phix, Double_t 
   //  it defines the rotation matrix number irot.
   //  
 
-  krot = gGeoManager->GetListOfMatrices()->GetEntriesFast();
-  gGeoManager->Matrix(krot, thex, phix, they, phiy, thez, phiz);  
+   krot = gGeoManager->GetListOfMatrices()->GetEntriesFast();
+   gGeoManager->Matrix(krot, thex, phix, they, phiy, thez, phiz);  
 }
 
 //_____________________________________________________________________________
@@ -325,10 +323,10 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
   //  It creates a new volume in the JVOLUM data structure.
   //  
 
-  Double_t* dupar = CreateDoubleArray(upar, npar);
-  Int_t id = Gsvolu(name, shape, nmed, dupar, npar);
-  delete [] dupar;  
-  return id;
+   Double_t* dupar = CreateDoubleArray(upar, npar);
+   Int_t id = Gsvolu(name, shape, nmed, dupar, npar);
+   delete [] dupar;  
+   return id;
 } 
 
 //_____________________________________________________________________________
@@ -345,13 +343,13 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
   //  It creates a new volume in the JVOLUM data structure.
   //  
 
-  char vname[80];
-  Vname(name,vname);
-  char vshape[5];
-  Vname(shape,vshape);
+   char vname[80];
+   Vname(name,vname);
+   char vshape[5];
+   Vname(shape,vshape);
 
-  TGeoVolume* vol = gGeoManager->Volume(vname, vshape, nmed, upar, npar); 
-  return vol->GetNumber();
+   TGeoVolume* vol = gGeoManager->Volume(vname, vshape, nmed, upar, npar); 
+   return vol->GetNumber();
 } 
  
 //_____________________________________________________________________________
@@ -369,12 +367,12 @@ void  TGeoMCGeometry::Gsdvn(const char *name, const char *mother, Int_t ndiv,
   //  X,Y,Z of CAXIS will be translated to 1,2,3 for IAXIS.
   //  It divides a previously defined volume.
   //  
-  char vname[80];
-  Vname(name,vname);
-  char vmother[80];
-  Vname(mother,vmother);
+   char vname[80];
+   Vname(name,vname);
+   char vmother[80];
+   Vname(mother,vmother);
  
-  gGeoManager->Division(vname, vmother, iaxis, ndiv, 0, 0, 0, "n");
+   gGeoManager->Division(vname, vmother, iaxis, ndiv, 0, 0, 0, "n");
 } 
  
 //_____________________________________________________________________________
@@ -388,12 +386,12 @@ void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
   // along axis iaxis starting at coordinate value c0.
   // the new volume created will be medium number numed.
   //
-  char vname[80];
-  Vname(name,vname);
-  char vmother[80];
-  Vname(mother,vmother);
+   char vname[80];
+   Vname(name,vname);
+   char vmother[80];
+   Vname(mother,vmother);
   
-  gGeoManager->Division(vname, vmother, iaxis, ndiv, c0i, 0, numed, "nx");
+   gGeoManager->Division(vname, vmother, iaxis, ndiv, c0i, 0, numed, "nx");
 } 
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
@@ -410,12 +408,12 @@ void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
   //       NDVMX is the expected maximum number of divisions
   //          (If 0, no protection tests are performed) 
   //
-  char vname[80];
-  Vname(name,vname);
-  char vmother[80];
-  Vname(mother,vmother);
+   char vname[80];
+   Vname(name,vname);
+   char vmother[80];
+   Vname(mother,vmother);
   
-  gGeoManager->Division(vname, vmother, iaxis, 0, 0, step, numed, "s");
+   gGeoManager->Division(vname, vmother, iaxis, 0, 0, step, numed, "s");
 } 
 
 //_____________________________________________________________________________
@@ -433,12 +431,12 @@ void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step
   //           NDVMX is the expected maximum number of divisions        
   //             (If 0, no protection tests are performed)              
   //
-  char vname[80];
-  Vname(name,vname);
-  char vmother[80];
-  Vname(mother,vmother);
+   char vname[80];
+   Vname(name,vname);
+   char vmother[80];
+   Vname(mother,vmother);
   
-  gGeoManager->Division(vname, vmother, iaxis, 0, c0, step, numed, "sx");
+   gGeoManager->Division(vname, vmother, iaxis, 0, c0, step, numed, "sx");
 } 
 
 //_____________________________________________________________________________
@@ -481,17 +479,17 @@ void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Doub
   //  It positions a previously defined volume in the mother.
   //  
     
-  TString only = konly;
-  only.ToLower();
-  Bool_t isOnly = kFALSE;
-  if (only.Contains("only")) isOnly = kTRUE;
-  char vname[80];
-  Vname(name,vname);
-  char vmother[80];
-  Vname(mother,vmother);
+   TString only = konly;
+   only.ToLower();
+   Bool_t isOnly = kFALSE;
+   if (only.Contains("only")) isOnly = kTRUE;
+   char vname[80];
+   Vname(name,vname);
+   char vmother[80];
+   Vname(mother,vmother);
   
-  Double_t *upar=0;
-  gGeoManager->Node(vname, nr, vmother, x, y, z, irot, isOnly, upar);
+   Double_t *upar=0;
+   gGeoManager->Node(vname, nr, vmother, x, y, z, irot, isOnly, upar);
 } 
  
 //_____________________________________________________________________________
@@ -504,9 +502,9 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
   //      NR inside MOTHER, with its parameters UPAR(1..NP)
   //
 
-  Double_t* dupar = CreateDoubleArray(upar, np);
-  Gsposp(name, nr, mother, x, y, z, irot, konly, dupar, np); 
-  delete [] dupar;
+   Double_t* dupar = CreateDoubleArray(upar, np);
+   Gsposp(name, nr, mother, x, y, z, irot, konly, dupar, np); 
+   delete [] dupar;
 } 
  
 //_____________________________________________________________________________
@@ -519,16 +517,16 @@ void  TGeoMCGeometry::Gsposp(const char *name, Int_t nr, const char *mother,
   //      NR inside MOTHER, with its parameters UPAR(1..NP)
   //
 
-  TString only = konly;
-  only.ToLower();
-  Bool_t isOnly = kFALSE;
-  if (only.Contains("only")) isOnly = kTRUE;
-  char vname[80];
-  Vname(name,vname);
-  char vmother[80];
-  Vname(mother,vmother);
+   TString only = konly;
+   only.ToLower();
+   Bool_t isOnly = kFALSE;
+   if (only.Contains("only")) isOnly = kTRUE;
+   char vname[80];
+   Vname(name,vname);
+   char vmother[80];
+   Vname(mother,vmother);
 
-  gGeoManager->Node(vname,nr,vmother, x,y,z,irot,isOnly,upar,np);
+   gGeoManager->Node(vname,nr,vmother, x,y,z,irot,isOnly,upar,np);
 } 
  
 //_____________________________________________________________________________
@@ -538,12 +536,12 @@ Int_t TGeoMCGeometry::VolId(const Text_t *name) const
   // Return the unique numeric identifier for volume name
   //
 
-  Int_t uid = gGeoManager->GetUID(name);
-  if (uid<0) {
-     printf("VolId: Volume %s not found\n",name);
-     return 0;
-  }
-  return uid;
+   Int_t uid = gGeoManager->GetUID(name);
+   if (uid<0) {
+      printf("VolId: Volume %s not found\n",name);
+      return 0;
+   }
+   return uid;
 }
 
 //_____________________________________________________________________________
@@ -553,12 +551,12 @@ const char* TGeoMCGeometry::VolName(Int_t id) const
   // Return the volume name given the volume identifier
   //
 
-  TGeoVolume *volume = gGeoManager->GetVolume(id);
-  if (!volume) {
-     Error("VolName","volume with id=%d does not exist",id);
-     return "NULL";
-  }
-  return volume->GetName();
+   TGeoVolume *volume = gGeoManager->GetVolume(id);
+   if (!volume) {
+      Error("VolName","volume with id=%d does not exist",id);
+      return "NULL";
+   }
+   return volume->GetName();
 }
 
 //_____________________________________________________________________________
@@ -568,7 +566,7 @@ Int_t TGeoMCGeometry::NofVolumes() const
   // Return total number of volumes in the geometry
   //
 
-  return gGeoManager->GetListOfUVolumes()->GetEntriesFast()-1;
+   return gGeoManager->GetListOfUVolumes()->GetEntriesFast()-1;
 }
 
 //_____________________________________________________________________________
@@ -578,14 +576,14 @@ Int_t TGeoMCGeometry::NofVolDaughters(const char* volName) const
 // According to A. Morsch' G3toRoot class (by A. Morsch)
 // ---
 
-  TGeoVolume* volume = gGeoManager->GetVolume(volName);
+   TGeoVolume* volume = gGeoManager->GetVolume(volName);
 
-  if (!volume) {
-     Error("NofVolDaughters", "Volume %s not found.", volName);
-     return 0;
-  }
+   if (!volume) {
+      Error("NofVolDaughters", "Volume %s not found.", volName);
+      return 0;
+   }
      
-  return volume->GetNdaughters();
+   return volume->GetNdaughters();
 }
 
 //_____________________________________________________________________________
@@ -595,21 +593,21 @@ const char*  TGeoMCGeometry::VolDaughterName(const char* volName, Int_t i) const
 // According to A. Morsch' G3toRoot class.
 // ---
 
-  // Get volume
-  TGeoVolume* volume = gGeoManager->GetVolume(volName);
-  if (!volume) { 
-     Error("VolDaughterName", "Volume %s not found.", volName);
-     return "";
-  }
+   // Get volume
+   TGeoVolume* volume = gGeoManager->GetVolume(volName);
+   if (!volume) { 
+      Error("VolDaughterName", "Volume %s not found.", volName);
+      return "";
+   }
   
-  // Check index
-  if (i<0 || i>=volume->GetNdaughters()) {
-     Error("VolDaughterName", "Index out of limits", volName);
-     return "";
-  }
+   // Check index
+   if (i<0 || i>=volume->GetNdaughters()) {
+      Error("VolDaughterName", "Index out of limits", volName);
+      return "";
+   }
 
-  // Return node's volume name
-  return volume->GetNode(i)->GetVolume()->GetName();
+   // Return node's volume name
+   return volume->GetNode(i)->GetVolume()->GetName();
 }
 
 //_____________________________________________________________________________
@@ -620,21 +618,21 @@ Int_t TGeoMCGeometry::VolDaughterCopyNo(const char* volName, Int_t i) const
 // ---
 
 
-  // Get volume
-  TGeoVolume* volume = gGeoManager->GetVolume(volName);
-  if (!volume) { 
-     Error("VolDaughterName", "Volume %s not found.", volName);
-     return 0;
-  }
+   // Get volume
+   TGeoVolume* volume = gGeoManager->GetVolume(volName);
+   if (!volume) { 
+      Error("VolDaughterName", "Volume %s not found.", volName);
+      return 0;
+   }
   
-  // Check index
-  if (i<0 || i>=volume->GetNdaughters()) {
-     Error("VolDaughterName", "Index out of limits", volName);
-     return 0;
-  }
+   // Check index
+   if (i<0 || i>=volume->GetNdaughters()) {
+      Error("VolDaughterName", "Index out of limits", volName);
+      return 0;
+   }
 
-  // Return node's copyNo
-  return volume->GetNode(i)->GetNumber();
+   // Return node's copyNo
+   return volume->GetNode(i)->GetNumber();
 }
 
 //_____________________________________________________________________________
@@ -644,14 +642,14 @@ Int_t TGeoMCGeometry::VolId2Mate(Int_t id) const
   // Return material number for a given volume id
   //
 
-  TGeoVolume *volume = gGeoManager->GetVolume(id);
-  if (!volume) {
-     Error("VolId2Mate","volume with id=%d does not exist",id);
-     return 0;
-  }
-  TGeoMedium *med = volume->GetMedium();
-  if (!med) return 0;
-  return med->GetId();
+   TGeoVolume *volume = gGeoManager->GetVolume(id);
+   if (!volume) {
+      Error("VolId2Mate","volume with id=%d does not exist",id);
+      return 0;
+   }
+   TGeoMedium *med = volume->GetMedium();
+   if (!med) return 0;
+   return med->GetId();
 }
 
 //______________________________________________________________________

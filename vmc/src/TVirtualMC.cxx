@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name: v4-02-00 $:$Id: TVirtualMC.cxx,v 1.4 2004/06/08 10:26:42 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.5 2005/02/08 11:20:15 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
    
 /**************************************************************************
@@ -33,23 +33,23 @@ TVirtualMC::TVirtualMC(const char *name, const char *title,
     fDecayer(0),
     fRandom(0)
 {
-  //
-  // Standard constructor
-  //
-  if(fgMC) {
-    Warning("TVirtualMC","Cannot initialise twice MonteCarlo class");
-  } else {
-    fgMC=this;
-    gMC=this;
+   //
+   // Standard constructor
+   //
+   if(fgMC) {
+      Warning("TVirtualMC","Cannot initialise twice MonteCarlo class");
+   } else {
+      fgMC=this;
+      gMC=this;
  
-    fApplication = TVirtualMCApplication::Instance();  
+      fApplication = TVirtualMCApplication::Instance();  
   
-    if (!fApplication) {
-      Error("TVirtualMC", "No user MC application is defined.");
-    }
+      if (!fApplication) {
+         Error("TVirtualMC", "No user MC application is defined.");
+      }
     
-    fRandom = gRandom;
-  }
+     fRandom = gRandom;
+   }
 }
 
 //_____________________________________________________________________________
@@ -60,19 +60,19 @@ TVirtualMC::TVirtualMC()
     fDecayer(0),
     fRandom(0)
 {    
-  //
-  // Default constructor
-  //
+   //
+   // Default constructor
+   //
 }
 
 //_____________________________________________________________________________
 TVirtualMC::~TVirtualMC() 
 {
-  //
-  // Destructor
-  //
-  fgMC=0;
-  gMC=0;
+   //
+   // Destructor
+   //
+   fgMC=0;
+   gMC=0;
 }
 
 //
@@ -86,7 +86,7 @@ void TVirtualMC::SetStack(TVirtualMCStack* stack)
 // Set particles stack.
 //
 
-  fStack = stack; 
+   fStack = stack; 
 }
 
 //_____________________________________________________________________________
@@ -96,7 +96,7 @@ void TVirtualMC::SetExternalDecayer(TVirtualMCDecayer* decayer)
 // Set external decayer.
 //
 
-  fDecayer = decayer;
+   fDecayer = decayer;
 }
 
 //_____________________________________________________________________________

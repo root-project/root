@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.2 2003/09/23 14:03:15 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.3 2004/02/10 13:46:37 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "TVirtualMCApplication.h"
@@ -22,30 +22,30 @@ TVirtualMCApplication::TVirtualMCApplication(const char *name,
 // Standard constructor
 //
 
-  if (fgInstance) {
-    Fatal("TVirtualMCApplication", 
-          "Attempt to create two instances of singleton.");
-  }
+   if (fgInstance) {
+      Fatal("TVirtualMCApplication", 
+            "Attempt to create two instances of singleton.");
+   }
       
-  fgInstance = this;
+   fgInstance = this;
 }
 
 //_____________________________________________________________________________
 TVirtualMCApplication::TVirtualMCApplication()
   : TNamed()
 {    
-  //
-  // Default constructor
-  //
-  fgInstance = this;
+   //
+   // Default constructor
+   //
+   fgInstance = this;
 }
 
 //_____________________________________________________________________________
 TVirtualMCApplication::~TVirtualMCApplication() 
 {
-  //
-  // Destructor  
-  //
+   //
+   // Destructor  
+   //
   
-  fgInstance = 0;
+   fgInstance = 0;
 }

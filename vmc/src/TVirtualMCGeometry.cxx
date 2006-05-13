@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.cxx,v 1.5 2002/11/15 17:53:14 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Authors: ... 25/06/2002
 
 #include "TVirtualMCGeometry.h"
@@ -16,29 +16,29 @@ TVirtualMCGeometry* TVirtualMCGeometry::fgInstance=0;
 TVirtualMCGeometry::TVirtualMCGeometry(const char *name, const char *title) 
   : TNamed(name,title)
 {
-  //
-  // Standard constructor
-  //
-  if (fgInstance) 
-    Warning("TVirtualMCGeometry","TVirtualMCGeometry instance already exists");
-  else
-    fgInstance=this;
+   //
+   // Standard constructor
+   //
+   if (fgInstance) 
+      Warning("TVirtualMCGeometry","TVirtualMCGeometry instance already exists");
+   else
+      fgInstance=this;
 }
 
 //_____________________________________________________________________________
 TVirtualMCGeometry::TVirtualMCGeometry()
   : TNamed()
 {    
-  //
-  // Default constructor
-  //
+   //
+   // Default constructor
+   //
 }
 
 //_____________________________________________________________________________
 TVirtualMCGeometry::~TVirtualMCGeometry() 
 {
-  //
-  // Destructor
-  //
-  fgInstance=0;
+   //
+   // Destructor
+   //
+   fgInstance=0;
 }
