@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.2 2002/08/20 10:51:50 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.3 2002/09/10 16:14:58 brun Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -76,6 +76,7 @@ static TMemHashTable gMemHashTable;
 //______________________________________________________________________________
 void TStackInfo::Init(int stacksize, void **stackptrs)
 {
+   //Initialize the stack
    fSize = stacksize;
    memcpy(&(this[1]), stackptrs, stacksize * sizeof(void *));
    fTotalAllocCount = fTotalAllocSize = fAllocCount = fAllocSize = 0;
@@ -216,12 +217,14 @@ TStackInfo *TStackTable::FindInfo(int size, void **stackptrs)
 //______________________________________________________________________________
 int TStackTable::GetIndex(TStackInfo * info)
 {
+   //return index of info
    return (char *) info - fTable;
 }
 
 //______________________________________________________________________________
 TStackInfo *TStackTable::GetInfo(int index)
 {
+   //return TStackInfo class corresponding to index
    return (TStackInfo *) & fTable[index];
 }
 
@@ -238,6 +241,7 @@ static void *get_stack_pointer(int level);
 //______________________________________________________________________________
 void TMemHashTable::Init()
 {
+   //Initialize the hash table
    fgStackTable.Init();
    fgSize = 65536;
    fgAllocCount = 0;
