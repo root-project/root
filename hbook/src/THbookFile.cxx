@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.21 2004/02/19 21:48:06 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.22 2005/08/30 14:00:27 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -242,6 +242,7 @@ ClassImp(THbookFile)
 //______________________________________________________________________________
 THbookFile::THbookFile() : TNamed()
 {
+   //the constructor
    fList = new TList();
    fKeys = new TList();
 }
@@ -252,79 +253,79 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
 {
 //  Constructor for an HBook file object
 
-  // Initialize the Hbook/Zebra store
+   // Initialize the Hbook/Zebra store
    Int_t i;
    if (!fgPawInit) {
-     fgPawInit = kTRUE;
-     lq = &pawc[9];
-     iq = &pawc[17];
-     void *qq = iq;
-     q = (float*)qq;
-     int pawc_size = PAWC_SIZE;
-     hlimit(pawc_size);
-     fgLuns = new Int_t[10];
-     for (i=0;i<10;i++) fgLuns[i] = 0;
-  }
+      fgPawInit = kTRUE;
+      lq = &pawc[9];
+      iq = &pawc[17];
+      void *qq = iq;
+      q = (float*)qq;
+      int pawc_size = PAWC_SIZE;
+      hlimit(pawc_size);
+      fgLuns = new Int_t[10];
+      for (i=0;i<10;i++) fgLuns[i] = 0;
+   }
 
-  //find a free logical unit (max 10)
-  fLun = 0;
-  for (i=0;i<10;i++) {
-     if (fgLuns[i] == 0) {
-        fLun = 10+i;
-        fgLuns[i] = 1;
-        break;
-     }
-  }
-  if (fLun == 0) {
-     Error("THbookFile","Too many HbookFiles\n");
-     return;
-  }
-  char topdir[20];
-  sprintf(topdir,"lun%d",fLun);
+   //find a free logical unit (max 10)
+   fLun = 0;
+   for (i=0;i<10;i++) {
+      if (fgLuns[i] == 0) {
+         fLun = 10+i;
+         fgLuns[i] = 1;
+         break;
+      }
+   }
+   if (fLun == 0) {
+      Error("THbookFile","Too many HbookFiles\n");
+      return;
+   }
+   char topdir[20];
+   sprintf(topdir,"lun%d",fLun);
 
-  Int_t ier;
+   Int_t ier;
 #ifndef WIN32
-  hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier,strlen(topdir),strlen(fname),1);
+   hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier,strlen(topdir),strlen(fname),1);
 #else
-  hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier);
+   hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier);
 #endif
-  fLrecl = lrecl;
-  SetTitle(topdir);
-  sprintf(topdir,"//lun%d",fLun);
-  fCurDir = topdir;
+   fLrecl = lrecl;
+   SetTitle(topdir);
+   sprintf(topdir,"//lun%d",fLun);
+   fCurDir = topdir;
 
-  if (ier) printf (" Error on hropen was %d \n", ier);
-  if (quest[0]) {
-     printf("Error cannot open input file: %s\n",fname);
-  }
-  if (ier || quest[0]) {
-     fgLuns[fLun-10]=0; 
-     fLun  = 0;
-     fList = 0;
-     fKeys = 0;
-     MakeZombie();
-     return;
-  }
+   if (ier) printf (" Error on hropen was %d \n", ier);
+   if (quest[0]) {
+      printf("Error cannot open input file: %s\n",fname);
+   }
+   if (ier || quest[0]) {
+      fgLuns[fLun-10]=0; 
+      fLun  = 0;
+      fList = 0;
+      fKeys = 0;
+      MakeZombie();
+      return;
+   }
 
-  gROOT->GetListOfBrowsables()->Add(this,fname);
+   gROOT->GetListOfBrowsables()->Add(this,fname);
 
-  fList = new TList();
-  fKeys = new TList();
-  for (Int_t key=1;key<1000000;key++) {
-     int z0 = 0;
-     rzink(key,z0,"S",1);
-     if (quest[0]) break;
-     if (quest[13] & 8) continue;
-     Int_t id = quest[20];
-     THbookKey *akey = new THbookKey(id,this);
-     fKeys->Add(akey);
-  }
+   fList = new TList();
+   fKeys = new TList();
+   for (Int_t key=1;key<1000000;key++) {
+      int z0 = 0;
+      rzink(key,z0,"S",1);
+      if (quest[0]) break;
+      if (quest[13] & 8) continue;
+      Int_t id = quest[20];
+      THbookKey *akey = new THbookKey(id,this);
+      fKeys->Add(akey);
+   }
 }
 
 //______________________________________________________________________________
 THbookFile::~THbookFile()
 {
-
+   //destructor
    if (!fList) return;
    Close();
    delete fList;
@@ -337,8 +338,8 @@ void THbookFile::Browse(TBrowser *b)
 // to be implemented
 
    if( b ) {
-        b->Add(fList, "memory");
-        b->Add(fKeys, "IDs on disk");
+      b->Add(fList, "memory");
+      b->Add(fKeys, "IDs on disk");
    }
    cd();
 }
@@ -351,11 +352,11 @@ Bool_t THbookFile::cd(const char *dirname)
    Int_t nch = strlen(dirname);
    if (nch == 0) {
 #ifndef WIN32
-       hcdir(PASSCHAR(fCurDir.Data()),PASSCHAR(" "),fCurDir.Length(),1);
+      hcdir(PASSCHAR(fCurDir.Data()),PASSCHAR(" "),fCurDir.Length(),1);
 #else
-       hcdir(PASSCHAR(fCurDir.Data()),PASSCHAR(" "));
+      hcdir(PASSCHAR(fCurDir.Data()),PASSCHAR(" "));
 #endif
-       return kTRUE;
+      return kTRUE;
    }
 
    char cdir[512];
@@ -363,20 +364,20 @@ Bool_t THbookFile::cd(const char *dirname)
    for (i=0;i<512;i++) cdir[i] = ' ';
    cdir[511] = 0;
 #ifndef WIN32
-  hcdir(PASSCHAR(dirname),PASSCHAR(" "),nch,1);
-  hcdir(PASSCHAR(cdir),PASSCHAR("R"),511,1);
+   hcdir(PASSCHAR(dirname),PASSCHAR(" "),nch,1);
+   hcdir(PASSCHAR(cdir),PASSCHAR("R"),511,1);
 #else
-  hcdir(PASSCHAR(dirname),PASSCHAR(" "));
-  hcdir(PASSCHAR(cdir),PASSCHAR("R"));
+   hcdir(PASSCHAR(dirname),PASSCHAR(" "));
+   hcdir(PASSCHAR(cdir),PASSCHAR("R"));
 #endif
-  for (i=510;i>=0;i--) {
-     if (cdir[i] != ' ') break;
-     cdir[i] = 0;
-  }
-  fCurDir = cdir;
-  printf("fCurdir=%s\n",fCurDir.Data());
+   for (i=510;i>=0;i--) {
+      if (cdir[i] != ' ') break;
+      cdir[i] = 0;
+   }
+   fCurDir = cdir;
+   printf("fCurdir=%s\n",fCurDir.Data());
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -396,15 +397,16 @@ void THbookFile::Close(Option_t *)
    if (fgLuns) fgLuns[fLun-10] = 0;
    hdelet(0);
 #ifndef WIN32
-  hrend(PASSCHAR(GetTitle()),strlen(GetTitle()));
+   hrend(PASSCHAR(GetTitle()),strlen(GetTitle()));
 #else
-  hrend(PASSCHAR(GetTitle()));
+   hrend(PASSCHAR(GetTitle()));
 #endif
 }
 
 //______________________________________________________________________________
 void THbookFile::DeleteID(Int_t id)
 {
+   //remove id from file and memory
    hdelet(id);
 }
 
@@ -427,70 +429,70 @@ TObject *THbookFile::Get(Int_t idd)
 {
 // import Hbook object with identifier idd in memory
 
-  Int_t id = 0;
-  for (Int_t key=1;key<1000000;key++) {
-     int z0 = 0;
-     rzink(key,z0,"S",1);
-     if (quest[0]) break;
-     if (quest[13] & 8)  continue;
-     id = quest[20];
-     if (id == idd) break;
-  }
-  if (id == 0) return 0;
-  if (id != idd) {
-     printf("Error cannot find ID = %d\n",idd);
-     return 0;
-  }
+   Int_t id = 0;
+   for (Int_t key=1;key<1000000;key++) {
+      int z0 = 0;
+      rzink(key,z0,"S",1);
+      if (quest[0]) break;
+      if (quest[13] & 8)  continue;
+      id = quest[20];
+      if (id == idd) break;
+   }
+   if (id == 0) return 0;
+   if (id != idd) {
+      printf("Error cannot find ID = %d\n",idd);
+      return 0;
+   }
 
-  int i999 = 999;
-  // must delete any previous object with the same ID !!
-  lcdir = hcbook[6];
-  ltab  = hcbook[9];
-  for (Int_t i=1;i<=iq[lcdir+kNRH];i++) {
-     if (iq[ltab+i] == id) {
-        printf("WARNING, previous ID=%d is replaced\n",id);
-        hdelet(id);
-        break;
-     }
-  }
-  hrin(id,i999,0);
-  if (quest[0]) {
-     printf("Error cannot read ID = %d\n",id);
-     return 0;
-  }
-  hdcofl();
-  lcid  = hcbook[10];
-  lcont = lq[lcid-1];
-  TObject *obj = 0;
-  if (hcbits[3]) {
-     if (iq[lcid-2] == 2) obj = ConvertRWN(id);
-     else                 obj = ConvertCWN(id);
-     //hdelet(id); //cannot be deleted here since used in GetEntry
-     if (obj) {
-        fList->Add(obj);
-        ((THbookTree *)obj)->SetTitle(GetName());
-     }
-     return obj;
-  }
-  if (hcbits[0] && hcbits[7]) {
-     obj = ConvertProfile(id);
-     hdelet(id);
-     if (obj) fList->Add(obj);
-     return obj;
-  }
-  if (hcbits[0]) {
-     obj = Convert1D(id);
-     hdelet(id);
-     if (obj) fList->Add(obj);
-     return obj;
-  }
-  if (hcbits[1] || hcbits[2]) {
-     obj = Convert2D(id);
-     hdelet(id);
-     if (obj) fList->Add(obj);
-     return obj;
-  }
-  return obj;
+   int i999 = 999;
+   // must delete any previous object with the same ID !!
+   lcdir = hcbook[6];
+   ltab  = hcbook[9];
+   for (Int_t i=1;i<=iq[lcdir+kNRH];i++) {
+      if (iq[ltab+i] == id) {
+         printf("WARNING, previous ID=%d is replaced\n",id);
+         hdelet(id);
+         break;
+      }
+   }
+   hrin(id,i999,0);
+   if (quest[0]) {
+      printf("Error cannot read ID = %d\n",id);
+      return 0;
+   }
+   hdcofl();
+   lcid  = hcbook[10];
+   lcont = lq[lcid-1];
+   TObject *obj = 0;
+   if (hcbits[3]) {
+      if (iq[lcid-2] == 2) obj = ConvertRWN(id);
+      else                 obj = ConvertCWN(id);
+      //hdelet(id); //cannot be deleted here since used in GetEntry
+      if (obj) {
+         fList->Add(obj);
+         ((THbookTree *)obj)->SetTitle(GetName());
+      }
+      return obj;
+   }
+   if (hcbits[0] && hcbits[7]) {
+      obj = ConvertProfile(id);
+      hdelet(id);
+      if (obj) fList->Add(obj);
+      return obj;
+   }
+   if (hcbits[0]) {
+      obj = Convert1D(id);
+      hdelet(id);
+      if (obj) fList->Add(obj);
+      return obj;
+   }
+   if (hcbits[1] || hcbits[2]) {
+      obj = Convert2D(id);
+      hdelet(id);
+      if (obj) fList->Add(obj);
+      return obj;
+   }
+   return obj;
 }
 
 
@@ -536,7 +538,7 @@ void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
 // and pre-process the internal Hbook tables to speed-up the search
 // at the next entries.
 
-  if (!formula) return;
+   if (!formula) return;
    Int_t ncodes = formula->GetNcodes();
    for (Int_t i=1;i<=ncodes;i++) {
       TLeaf *leaf = formula->GetLeaf(i-1);
@@ -569,9 +571,9 @@ void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 {
 //
 #ifndef WIN32
-  hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0,strlen(bname),4);
+   hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0,strlen(bname),4);
 #else
-  hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0);
+   hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0);
 #endif
 }
 
@@ -620,153 +622,153 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 {
 // Convert the Column-Wise-Ntuple id to a Root Tree
 
-  const int nchar=9;
-  int nvar;
-  int i,j;
-  int nsub,itype,isize,ielem;
-  char *chtag_out;
-  float rmin[1000], rmax[1000];
+   const int nchar=9;
+   int nvar;
+   int i,j;
+   int nsub,itype,isize,ielem;
+   char *chtag_out;
+   float rmin[1000], rmax[1000];
 
-  if (id > 0) sprintf(idname,"h%d",id);
-  else        sprintf(idname,"h_%d",-id);
-  hnoent(id,nentries);
-  //printf(" Converting CWN with ID= %d, nentries = %d\n",id,nentries);
-  nvar=0;
+   if (id > 0) sprintf(idname,"h%d",id);
+   else        sprintf(idname,"h_%d",-id);
+   hnoent(id,nentries);
+   //printf(" Converting CWN with ID= %d, nentries = %d\n",id,nentries);
+   nvar=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
+   hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
 #else
-  hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
+   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
 #endif
-  chtag_out = new char[nvar*nchar+1];
-  Int_t *charflag = new Int_t[nvar];
-  Int_t *lenchar  = new Int_t[nvar];
-  Int_t *boolflag = new Int_t[nvar];
-  Int_t *lenbool  = new Int_t[nvar];
-  UChar_t *boolarr = new UChar_t[10000];
+   chtag_out = new char[nvar*nchar+1];
+   Int_t *charflag = new Int_t[nvar];
+   Int_t *lenchar  = new Int_t[nvar];
+   Int_t *boolflag = new Int_t[nvar];
+   Int_t *lenbool  = new Int_t[nvar];
+   UChar_t *boolarr = new UChar_t[10000];
 
-  chtag_out[nvar*nchar]=0;
-  for (i=0;i<80;i++)chtitl[i]=0;
+   chtag_out[nvar*nchar]=0;
+   for (i=0;i<80;i++)chtitl[i]=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,nchar);
+   hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,nchar);
 #else
-  hgiven(id,chtitl,80,nvar,chtag_out,nchar,rmin[0],rmax[0]);
-#endif
-
-  Int_t bufpos = 0;
-  Int_t isachar = 0;
-  Int_t isabool = 0;
-  char fullname[64];
-  char name[32];
-  char block[32];
-  char oldblock[32];
-  strcpy(oldblock,"OLDBLOCK");
-  Int_t oldischar = -1;
-  for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
-  THbookTree *tree = new THbookTree(idname,id);
-  tree->SetHbookFile(this);
-  tree->SetType(1);
-
-  char *bigbuf = tree->MakeX(500000);
-
-  gTree = tree;
-#ifndef WIN32
-  hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
-#else
-  hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0);
+   hgiven(id,chtitl,80,nvar,chtag_out,nchar,rmin[0],rmax[0]);
 #endif
 
-  UInt_t varNumber = 0;
-  Int_t golower  = 1;
-  Int_t nbits = 0;
-  for(i=0; i<nvar;i++) {
-     memset(name,' ',sizeof(name));
-     name[sizeof(name)-1] = 0;
-     memset(block,' ',sizeof(block));
-     block[sizeof(block)-1] = 0;
-     memset(fullname,' ',sizeof(fullname));
-     fullname[sizeof(fullname)-1]=0;
+   Int_t bufpos = 0;
+   Int_t isachar = 0;
+   Int_t isabool = 0;
+   char fullname[64];
+   char name[32];
+   char block[32];
+   char oldblock[32];
+   strcpy(oldblock,"OLDBLOCK");
+   Int_t oldischar = -1;
+   for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
+   THbookTree *tree = new THbookTree(idname,id);
+   tree->SetHbookFile(this);
+   tree->SetType(1);
+
+   char *bigbuf = tree->MakeX(500000);
+
+   gTree = tree;
 #ifndef WIN32
-     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
+   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
 #else
-     hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
+   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0);
 #endif
-     TString hbookName = name;
 
-     for (j=30;j>0;j--) {
-        if(golower) name[j] = tolower(name[j]);
-        if (name[j] == ' ') name[j] = 0;
-     }
-     if (golower == 2) name[0] = tolower(name[0]);
+   UInt_t varNumber = 0;
+   Int_t golower  = 1;
+   Int_t nbits = 0;
+   for(i=0; i<nvar;i++) {
+      memset(name,' ',sizeof(name));
+      name[sizeof(name)-1] = 0;
+      memset(block,' ',sizeof(block));
+      block[sizeof(block)-1] = 0;
+      memset(fullname,' ',sizeof(fullname));
+      fullname[sizeof(fullname)-1]=0;
+#ifndef WIN32
+      hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
+#else
+      hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
+#endif
+      TString hbookName = name;
 
-     for (j=62;j>0;j--) {
-        if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
-        // convert also character after [, if golower == 2
-        if (golower == 2) fullname[j] = tolower(fullname[j]);
-        if (fullname[j] == ' ') fullname[j] = 0;
-     }
-     // convert also first character, if golower == 2
-     if (golower == 2) fullname[0] = tolower(fullname[0]);
-     for (j=30;j>0;j--) {
-        if (block[j] == ' ') block[j] = 0;
-        else break;
-     }
-     if (itype == 1 && isize == 4) strcat(fullname,"/F");
-     if (itype == 1 && isize == 8) strcat(fullname,"/D");
-     if (itype == 2) strcat(fullname,"/I");
-     if (itype == 3) strcat(fullname,"/i");
+      for (j=30;j>0;j--) {
+         if(golower) name[j] = tolower(name[j]);
+         if (name[j] == ' ') name[j] = 0;
+      }
+      if (golower == 2) name[0] = tolower(name[0]);
+
+      for (j=62;j>0;j--) {
+         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
+         // convert also character after [, if golower == 2
+         if (golower == 2) fullname[j] = tolower(fullname[j]);
+         if (fullname[j] == ' ') fullname[j] = 0;
+      }
+      // convert also first character, if golower == 2
+      if (golower == 2) fullname[0] = tolower(fullname[0]);
+      for (j=30;j>0;j--) {
+         if (block[j] == ' ') block[j] = 0;
+         else break;
+      }
+      if (itype == 1 && isize == 4) strcat(fullname,"/F");
+      if (itype == 1 && isize == 8) strcat(fullname,"/D");
+      if (itype == 2) strcat(fullname,"/I");
+      if (itype == 3) strcat(fullname,"/i");
 //     if (itype == 4) strcat(fullname,"/i");
-     if (itype == 4) strcat(fullname,"/b");
-     if (itype == 5) strcat(fullname,"/C");
+      if (itype == 4) strcat(fullname,"/b");
+      if (itype == 5) strcat(fullname,"/C");
 //printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, ielem=%d, bufpos=%d\n",name,block,fullname,nsub,itype,isize,ielem,bufpos);
-     Int_t ischar;
-     if (itype == 5) ischar = 1;
-     else            ischar = 0;
+      Int_t ischar;
+      if (itype == 5) ischar = 1;
+      else            ischar = 0;
 
-     if (ischar != oldischar || strcmp(oldblock,block) != 0) {
-        varNumber = 0;
-        strcpy(oldblock,block);
-        oldischar = ischar;
-        Long_t add= (Long_t)&bigbuf[bufpos];
-        Int_t lblock   = strlen(block);
+      if (ischar != oldischar || strcmp(oldblock,block) != 0) {
+         varNumber = 0;
+         strcpy(oldblock,block);
+         oldischar = ischar;
+         Long_t add= (Long_t)&bigbuf[bufpos];
+         Int_t lblock   = strlen(block);
 #ifndef WIN32
-        hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
+         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
 #else
         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
-#endif
+#endif 
 
-     }
+      }
 
-     Int_t bufsize = 8000;
-     THbookBranch *branch = new THbookBranch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
-     tree->GetListOfBranches()->Add(branch);
-     branch->SetBlockName(block);
-     branch->SetUniqueID(varNumber);
-     varNumber++;
+      Int_t bufsize = 8000;
+      THbookBranch *branch = new THbookBranch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
+      tree->GetListOfBranches()->Add(branch);
+      branch->SetBlockName(block);
+      branch->SetUniqueID(varNumber);
+      varNumber++;
 
-     //NB: the information about isachar should be saved in the branch
-     // to be done
-     boolflag[i] = -10;
-     charflag[i] = 0;
-     if (itype == 4) {isabool++; boolflag[i] = bufpos; lenbool[i] = ielem;}
-     bufpos += isize*ielem;
-     if (ischar) {isachar++; charflag[i] = bufpos-1; lenchar[i] = isize*ielem;}
-     TObjArray *ll= branch->GetListOfLeaves();
-     TLeaf *leaf = (TLeaf*)ll->UncheckedAt(0);
-     if (!leaf) continue;
-     TLeafI *leafcount = (TLeafI*)leaf->GetLeafCount();
-     if (leafcount) {
-        if (leafcount->GetMaximum() <= 0) leafcount->SetMaximum(ielem);
-     }
-  }
-  tree->SetEntries(nentries);
-  delete [] charflag;
-  delete [] lenchar;
-  delete [] boolflag;
-  delete [] lenbool;
-  delete [] boolarr;
-  delete [] chtag_out;
+      //NB: the information about isachar should be saved in the branch
+      // to be done
+      boolflag[i] = -10;
+      charflag[i] = 0;
+      if (itype == 4) {isabool++; boolflag[i] = bufpos; lenbool[i] = ielem;}
+      bufpos += isize*ielem;
+      if (ischar) {isachar++; charflag[i] = bufpos-1; lenchar[i] = isize*ielem;}
+      TObjArray *ll= branch->GetListOfLeaves();
+      TLeaf *leaf = (TLeaf*)ll->UncheckedAt(0);
+      if (!leaf) continue;
+      TLeafI *leafcount = (TLeafI*)leaf->GetLeafCount();
+      if (leafcount) {
+         if (leafcount->GetMaximum() <= 0) leafcount->SetMaximum(ielem);
+      }
+   }
+   tree->SetEntries(nentries);
+   delete [] charflag;
+   delete [] lenchar;
+   delete [] boolflag;
+   delete [] lenbool;
+   delete [] boolarr;
+   delete [] chtag_out;
 
-  return tree;
+   return tree;
 }
 
 //______________________________________________________________________________
@@ -774,70 +776,70 @@ TObject *THbookFile::ConvertRWN(Int_t id)
 {
 // Convert the Row-Wise-Ntuple id to a Root Tree
 
-  const int nchar=9;
-  int nvar;
-  int i,j;
-  char *chtag_out;
-  float rmin[1000], rmax[1000];
+   const int nchar=9;
+   int nvar;
+   int i,j;
+   char *chtag_out;
+   float rmin[1000], rmax[1000];
 
-  if (id > 0) sprintf(idname,"h%d",id);
-  else        sprintf(idname,"h_%d",-id);
-  hnoent(id,nentries);
-  //printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
-  nvar=0;
+   if (id > 0) sprintf(idname,"h%d",id);
+   else        sprintf(idname,"h_%d",-id);
+   hnoent(id,nentries);
+   //printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
+   nvar=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
+   hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
 #else
-  hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
+   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
 #endif
 
-  chtag_out = new char[nvar*nchar+1];
+   chtag_out = new char[nvar*nchar+1];
 
-  Int_t golower  = 1;
-  chtag_out[nvar*nchar]=0;
-  for (i=0;i<80;i++)chtitl[i]=0;
+   Int_t golower  = 1;
+   chtag_out[nvar*nchar]=0;
+   for (i=0;i<80;i++)chtitl[i]=0;
 #ifndef WIN32
-  hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,nchar);
+   hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,nchar);
 #else
-  hgiven(id,chtitl,80,nvar,chtag_out,nchar,rmin[0],rmax[0]);
+   hgiven(id,chtitl,80,nvar,chtag_out,nchar,rmin[0],rmax[0]);
 #endif
-  hgnpar(id,"?",1);
-  char *name = chtag_out;
-  for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
-  THbookTree *tree = new THbookTree(idname,id);
-  tree->SetHbookFile(this);
-  tree->SetType(0);
-  gTree = tree;
-  Float_t *x = (Float_t*)tree->MakeX(nvar*4);
+   hgnpar(id,"?",1);
+   char *name = chtag_out;
+   for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
+   THbookTree *tree = new THbookTree(idname,id);
+   tree->SetHbookFile(this);
+   tree->SetType(0);
+   gTree = tree;
+   Float_t *x = (Float_t*)tree->MakeX(nvar*4);
 
-  Int_t first,last;
-  for(i=0; i<nvar;i++) {
-    name[nchar-1] = 0;
-    first = last = 0;
-    TString hbookName = name;
-    // suppress trailing blanks
-    for (j=nchar-2;j>0;j--) {
-       if(golower) name[j] = tolower(name[j]);
-       if (name[j] == ' ' && last == 0) name[j] = 0;
-       else last = j;
-    }
-    if (golower == 2) name[0] = tolower(name[0]);
+   Int_t first,last;
+   for(i=0; i<nvar;i++) {
+      name[nchar-1] = 0;
+      first = last = 0;
+      TString hbookName = name;
+      // suppress trailing blanks
+      for (j=nchar-2;j>0;j--) {
+         if(golower) name[j] = tolower(name[j]);
+         if (name[j] == ' ' && last == 0) name[j] = 0;
+         else last = j;
+      }
+      if (golower == 2) name[0] = tolower(name[0]);
 
-    // suppress heading blanks
-    for (j=0;j<nchar;j++) {
-       if (name[j] != ' ') break;
-       first = j+1;
-    }
-    Int_t bufsize = 8000;
-    //tree->Branch(&name[first],&x[i],&name[first],bufsize);
-    THbookBranch *branch = new THbookBranch(&name[first],&x[4*i],&name[first],bufsize);
-    branch->SetAddress(&x[i]);
-    branch->SetBlockName(hbookName.Data());
-    tree->GetListOfBranches()->Add(branch);
-    name += nchar;
-  }
-  tree->SetEntries(nentries);
-  return tree;
+      // suppress heading blanks
+      for (j=0;j<nchar;j++) {
+         if (name[j] != ' ') break;
+         first = j+1;
+      }
+      Int_t bufsize = 8000;
+      //tree->Branch(&name[first],&x[i],&name[first],bufsize);
+      THbookBranch *branch = new THbookBranch(&name[first],&x[4*i],&name[first],bufsize);
+      branch->SetAddress(&x[i]);
+      branch->SetBlockName(hbookName.Data());
+      tree->GetListOfBranches()->Add(branch);
+      name += nchar;
+   }
+   tree->SetEntries(nentries);
+   return tree;
 }
 
 //______________________________________________________________________________
@@ -853,40 +855,40 @@ TObject *THbookFile::ConvertProfile(Int_t id)
 //      if option S jbyt(iq(lw),1,2) = 1
 //      if option I jbyt(iq(lw),1,2) = 2
 
-  if (id > 0) sprintf(idname,"h%d",id);
-  else        sprintf(idname,"h_%d",-id);
-  hnoent(id,nentries);
-  Int_t lw = lq[lcont];
-  Int_t ln = lq[lw];
+   if (id > 0) sprintf(idname,"h%d",id);
+   else        sprintf(idname,"h_%d",-id);
+   hnoent(id,nentries);
+   Int_t lw = lq[lcont];
+   Int_t ln = lq[lw];
 #ifndef WIN32
-  hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
+   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
 #else
-  hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
+   hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
 #endif
-  Float_t offsetx = 0.5*(xmax-xmin)/ncx;
-  chtitl[4*nwt] = 0;
-  const char *option= " ";
-  if (iq[lw] == 1) option = "S";
-  if (iq[lw] == 2) option = "I";
-  TProfile *p = new TProfile(idname,chtitl,ncx,xmin,xmax,ymin,ymax,option);
+   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
+   chtitl[4*nwt] = 0;
+   const char *option= " ";
+   if (iq[lw] == 1) option = "S";
+   if (iq[lw] == 2) option = "I";
+   TProfile *p = new TProfile(idname,chtitl,ncx,xmin,xmax,ymin,ymax,option);
 
-  const Int_t kCON1 = 9;
-  Int_t i;
-  Float_t x;
-  Float_t y = 0.5*(ymin+ymax);
-  for (i=1;i<=ncx;i++) {
-     Int_t n = Int_t(q[ln+i]);
-     hix(id,i,x);
-     for (Int_t j=0;j<n;j++) {
-        p->Fill(x+offsetx,y);
-     }
-     Float_t content = q[lcont+kCON1+i];
-     Float_t error   = TMath::Sqrt(q[lw+i]);
-     p->SetBinContent(i,content);
-     p->SetBinError(i,error);
-  }
-  p->SetEntries(nentries);
-  return p;
+   const Int_t kCON1 = 9;
+   Int_t i;
+   Float_t x;
+   Float_t y = 0.5*(ymin+ymax);
+   for (i=1;i<=ncx;i++) {
+      Int_t n = Int_t(q[ln+i]);
+      hix(id,i,x);
+      for (Int_t j=0;j<n;j++) {
+         p->Fill(x+offsetx,y);
+      }
+      Float_t content = q[lcont+kCON1+i];
+      Float_t error   = TMath::Sqrt(q[lw+i]);
+      p->SetBinContent(i,content);
+      p->SetBinError(i,error);
+   }
+   p->SetEntries(nentries);
+   return p;
 }
 
 //______________________________________________________________________________
@@ -894,51 +896,51 @@ TObject *THbookFile::Convert1D(Int_t id)
 {
 // Convert an Hbook 1-d histogram into a Root TH1F
 
-  if (id > 0) sprintf(idname,"h%d",id);
-  else        sprintf(idname,"h_%d",-id);
-  hnoent(id,nentries);
+   if (id > 0) sprintf(idname,"h%d",id);
+   else        sprintf(idname,"h_%d",-id);
+   hnoent(id,nentries);
 #ifndef WIN32
-  hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
+   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
 #else
-  hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
+   hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
 #endif
-  chtitl[4*nwt] = 0;
-  TH1F *h1;
-  Int_t i;
-  if (hcbits[5]) {
-     Int_t lbins = lq[lcid-2];
-     Double_t *xbins = new Double_t[ncx+1];
-     for (i=0;i<=ncx;i++) xbins[i] = q[lbins+i+1];
-     h1 = new TH1F(idname,chtitl,ncx,xbins);
-     delete [] xbins;
-  } else {
-     h1 = new TH1F(idname,chtitl,ncx,xmin,xmax);
-  }
-  if (hcbits[8]) h1->Sumw2();
-  TGraph *gr = 0;
-  if (hcbits[11]) {
-     gr = new TGraph(ncx);
-     h1->GetListOfFunctions()->Add(gr);
-  }
+   chtitl[4*nwt] = 0;
+   TH1F *h1;
+   Int_t i;
+   if (hcbits[5]) {
+      Int_t lbins = lq[lcid-2];
+      Double_t *xbins = new Double_t[ncx+1];
+      for (i=0;i<=ncx;i++) xbins[i] = q[lbins+i+1];
+      h1 = new TH1F(idname,chtitl,ncx,xbins);
+      delete [] xbins;
+   } else {
+      h1 = new TH1F(idname,chtitl,ncx,xmin,xmax);
+   }
+   if (hcbits[8]) h1->Sumw2();
+   TGraph *gr = 0;
+   if (hcbits[11]) {
+      gr = new TGraph(ncx);
+      h1->GetListOfFunctions()->Add(gr);
+   }
 
-  Float_t x;
-  for (i=0;i<=ncx+1;i++) {
-     x = h1->GetBinCenter(i);
-     h1->Fill(x,hi(id,i));
-     if (hcbits[8]) h1->SetBinError(i,hie(id,i));
-     if (gr && i>0 && i<=ncx) gr->SetPoint(i,x,hif(id,i));
-  }
-  Float_t ymin, ymax;
-  if (hcbits[19]) {
-     ymax = q[lcid+kMAX1];
-     h1->SetMaximum(ymax);
-  }
-  if (hcbits[20]) {
-     ymin = q[lcid+kMIN1];
-     h1->SetMinimum(ymin);
-  }
-  h1->SetEntries(nentries);
-  return h1;
+   Float_t x;
+   for (i=0;i<=ncx+1;i++) {
+      x = h1->GetBinCenter(i);
+      h1->Fill(x,hi(id,i));
+      if (hcbits[8]) h1->SetBinError(i,hie(id,i));
+      if (gr && i>0 && i<=ncx) gr->SetPoint(i,x,hif(id,i));
+   }
+   Float_t ymin, ymax;
+   if (hcbits[19]) {
+      ymax = q[lcid+kMAX1];
+      h1->SetMaximum(ymax);
+   }
+   if (hcbits[20]) {
+      ymin = q[lcid+kMIN1];
+      h1->SetMinimum(ymin);
+   }
+   h1->SetEntries(nentries);
+   return h1;
 }
 
 //______________________________________________________________________________
@@ -946,34 +948,34 @@ TObject *THbookFile::Convert2D(Int_t id)
 {
 // Convert an Hbook 2-d histogram into a Root TH2F
 
-  if (id > 0) sprintf(idname,"h%d",id);
-  else        sprintf(idname,"h_%d",-id);
-  hnoent(id,nentries);
+   if (id > 0) sprintf(idname,"h%d",id);
+   else        sprintf(idname,"h_%d",-id);
+   hnoent(id,nentries);
 #ifndef WIN32
-  hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
+   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
 #else
-  hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
+   hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
 #endif
-  chtitl[4*nwt] = 0;
-  TH2F *h2 = new TH2F(idname,chtitl,ncx,xmin,xmax,ncy,ymin,ymax);
-  Float_t offsetx = 0.5*(xmax-xmin)/ncx;
-  Float_t offsety = 0.5*(ymax-ymin)/ncy;
-  Int_t lw = lq[lcont];
-  if (lw) h2->Sumw2();
+   chtitl[4*nwt] = 0;
+   TH2F *h2 = new TH2F(idname,chtitl,ncx,xmin,xmax,ncy,ymin,ymax);
+   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
+   Float_t offsety = 0.5*(ymax-ymin)/ncy;
+   Int_t lw = lq[lcont];
+   if (lw) h2->Sumw2();
 
-  Float_t x,y;
-  for (Int_t j=0;j<=ncy+1;j++) {
-     for (Int_t i=0;i<=ncx+1;i++) {
-        hijxy(id,i,j,x,y);
-        h2->Fill(x+offsetx,y+offsety,hij(id,i,j));
-        if (lw) {
-           Double_t err2 = hije(id,i,j);
-           h2->SetCellError(i,j,err2);
-        }
-     }
-  }
-  h2->SetEntries(nentries);
-  return h2;
+   Float_t x,y;
+   for (Int_t j=0;j<=ncy+1;j++) {
+      for (Int_t i=0;i<=ncx+1;i++) {
+         hijxy(id,i,j,x,y);
+         h2->Fill(x+offsetx,y+offsety,hij(id,i,j));
+         if (lw) {
+            Double_t err2 = hije(id,i,j);
+            h2->SetCellError(i,j,err2);
+         }
+      }
+   }
+   h2->SetEntries(nentries);
+   return h2;
 }
 
 //______________________________________________________________________________
@@ -984,16 +986,16 @@ void THbookFile::ls(const char *path) const
    Int_t nch = strlen(path);
    if (nch == 0) {
 #ifndef WIN32
-       hldir(PASSCHAR(fCurDir.Data()),PASSCHAR("T"),fCurDir.Length(),1);
+      hldir(PASSCHAR(fCurDir.Data()),PASSCHAR("T"),fCurDir.Length(),1);
 #else
-       hldir(PASSCHAR(fCurDir.Data()),PASSCHAR("T"));
+      hldir(PASSCHAR(fCurDir.Data()),PASSCHAR("T"));
 #endif
-       return;
+      return;
    }
 
 #ifndef WIN32
-  hldir(PASSCHAR(path),PASSCHAR("T"),strlen(path),1);
+   hldir(PASSCHAR(path),PASSCHAR("T"),strlen(path),1);
 #else
-  hldir(PASSCHAR(path),PASSCHAR("T"));
+   hldir(PASSCHAR(path),PASSCHAR("T"));
 #endif
 }

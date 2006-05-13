@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.h,v 1.4 2003/11/03 14:57:02 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.h,v 1.5 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -36,7 +36,7 @@ public:
    virtual ~THbookBranch();
    virtual void     Browse(TBrowser *b);
    virtual Int_t    GetEntry(Long64_t entry=0, Int_t getall=0);
-        const char *GetBlockName() const {return fBlockName.Data();}
+   const char      *GetBlockName() const {return fBlockName.Data();}
    virtual void     SetAddress(void *addobj);
            void     SetBlockName(const char *name) {fBlockName=name;}
    virtual void     SetEntries(Long64_t n) {fEntries=n;}

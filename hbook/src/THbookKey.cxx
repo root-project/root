@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookKey.cxx,v 1.1 2002/02/18 18:02:57 rdm Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookKey.cxx,v 1.1 2002/02/20 16:57:31 brun Exp $
 // Author: Rene Brun   20/02/2002
 
 /*************************************************************************
@@ -19,6 +19,7 @@ ClassImp(THbookKey)
 //______________________________________________________________________________
 THbookKey::THbookKey(Int_t id, THbookFile *file)
 {
+   //constructor
    fDirectory = file;
    fID = id;
    char name[10];
@@ -63,8 +64,9 @@ void THbookKey::Browse(TBrowser *b)
 //______________________________________________________________________________
 Bool_t THbookKey::IsFolder() const
 {
-    Bool_t ret = kFALSE;
+   //an hbook key is not a folder
+   Bool_t ret = kFALSE;
 
 
-    return( ret );
+   return( ret );
 }

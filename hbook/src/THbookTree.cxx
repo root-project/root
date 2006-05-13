@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.9 2004/07/29 10:54:54 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.10 2005/01/12 10:51:00 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -57,6 +57,7 @@ ClassImp(THbookTree)
 //______________________________________________________________________________
 THbookTree::THbookTree(): TTree()
 {
+   //default constructor
    fID   = 0;
    fType = 0;
    fX    = 0;
@@ -68,6 +69,7 @@ THbookTree::THbookTree(): TTree()
 THbookTree::THbookTree(const char *name,Int_t id)
     :TTree(name,name)
 {
+   //constructor
    fID   = id;
    fType = 0;
    fX    = 0;
@@ -79,6 +81,7 @@ THbookTree::THbookTree(const char *name,Int_t id)
 //______________________________________________________________________________
 THbookTree::~THbookTree()
 {
+   //destructor
    if (fX) delete [] fX;
    if (fFile) fFile->DeleteID(fID);
 }
@@ -87,6 +90,7 @@ THbookTree::~THbookTree()
 //______________________________________________________________________________
 Int_t THbookTree::GetEntry(Long64_t entry, Int_t /*getall*/)
 {
+   //get one entry from the hbook ntuple
    fReadEntry = entry;
    return fFile->GetEntry(entry,fID,fType,GetX());
 }
@@ -95,6 +99,7 @@ Int_t THbookTree::GetEntry(Long64_t entry, Int_t /*getall*/)
 //______________________________________________________________________________
 void THbookTree::InitBranches(Long64_t entry)
 {
+   //Initialize the branch addresses
    Int_t nfill = GetPlayer()->GetNfill();
    if (nfill > 0) {fInit = kFALSE; return;}
    if (fInit) return;
@@ -113,12 +118,14 @@ void THbookTree::InitBranches(Long64_t entry)
 //______________________________________________________________________________
 void THbookTree::Print(Option_t *option) const
 {
+   //Print an overview of the hbook ntuple
    TTree::Print(option);
 }
 
 //______________________________________________________________________________
 Long64_t THbookTree::SetEntries(Long64_t n)
 {
+   //Set the number of entries in the tree header and its branches
    fEntries = n;
    TIter next(GetListOfBranches());
    THbookBranch *branch;
