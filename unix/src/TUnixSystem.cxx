@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.149 2006/04/06 16:42:20 pcanal Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.150 2006/04/06 21:39:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -77,11 +77,11 @@
 #if defined(R__ALPHA)
 #   include <sys/mount.h>
 #   ifndef R__TRUE64
-    extern "C" int statfs(const char *file, struct statfs *buffer);
+   extern "C" int statfs(const char *file, struct statfs *buffer);
 #   endif
 #elif defined(R__MACOSX)
 #   include <sys/mount.h>
-    extern "C" int statfs(const char *file, struct statfs *buffer);
+   extern "C" int statfs(const char *file, struct statfs *buffer);
 #elif defined(R__LINUX) || defined(R__HPUX) || defined(R__HURD)
 #   include <sys/vfs.h>
 #elif defined(R__FBSD) || defined(R__OBSD)
@@ -135,20 +135,20 @@
 #   include <symlink.h>
 #   include <dl.h>
 #   if defined(R__GNU)
-       extern "C" {
-          extern shl_t cxxshl_load(const char *path, int flags, long address);
-          extern int   cxxshl_unload(shl_t handle);
-       }
+   extern "C" {
+      extern shl_t cxxshl_load(const char *path, int flags, long address);
+      extern int   cxxshl_unload(shl_t handle);
+   }
 #   elif !defined(__STDCPP__)
 #      include <cxxdl.h>
 #   endif
 #   if defined(hpux9)
-       extern "C" {
-          extern void openlog(const char *, int, int);
-          extern void syslog(int, const char *, ...);
-          extern void closelog(void);
-          extern int setlogmask(int);
-       }
+   extern "C" {
+      extern void openlog(const char *, int, int);
+      extern void syslog(int, const char *, ...);
+      extern void closelog(void);
+      extern int setlogmask(int);
+   }
 #   define HASNOT_INETATON
 #   endif
 #endif
@@ -638,13 +638,13 @@ Int_t TUnixSystem::GetFPEMask()
    fenv_t oldenv;
    fegetenv(&oldenv);
    fesetenv(&oldenv);
- #ifdef __alpha__
+#ifdef __alpha__
    ULong_t oldmask = ~oldenv;
- #elif __ia64__
+#elif __ia64__
    Int_t oldmask = ~oldenv;
- #else
+#else
    Int_t oldmask = ~oldenv.__control_word;
- #endif
+#endif
 #endif
 
    if (oldmask & FE_INVALID  )   mask |= kInvalid;
@@ -699,11 +699,11 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 
    fenv_t cur;
    fegetenv(&cur);
- #if defined __ia64__ || defined __alpha__
+#if defined __ia64__ || defined __alpha__
    cur &= ~newm;
- #else
+#else
    cur.__control_word &= ~newm;
- #endif
+#endif
    fesetenv(&cur);
 
 #endif
@@ -2253,7 +2253,8 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode)
 //______________________________________________________________________________
 Func_t TUnixSystem::DynFindSymbol(const char *module, const char *entry)
 {
-#ifdef NOCINT
+   //dynamic linking of module
+   #ifdef NOCINT
    return UnixDynFindSymbol(module,entry);
 #else
    if (module) { }   // silence compiler about not using module
@@ -3071,9 +3072,9 @@ static void sighandler(int sig)
 }
 
 #if defined(R__KCC)
-extern "C" {
-  typedef void (*sighandlerFunc_t)(int);
-}
+   extern "C" {
+      typedef void (*sighandlerFunc_t)(int);
+   }
 #endif
 
 //______________________________________________________________________________
@@ -3917,12 +3918,12 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
             name = Form("%s.sl", lib);
             name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
             if (!name) {
-                name = Form("%s.dl", lib);
-                name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
-                if (!name) {
-                   name = Form("%s.a", lib);
-                   name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
-                }
+               name = Form("%s.dl", lib);
+               name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+               if (!name) {
+                  name = Form("%s.a", lib);
+                  name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+               }
             }
          }
       }
