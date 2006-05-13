@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.40 2006/03/20 08:22:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.41 2006/04/13 09:25:54 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -892,20 +892,20 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       if (exh < 0) exh = 0;
       if (ey < 0)  ey  = 0;
       if (exh > 0 && exl > 0) {
-        //Without the "variance method", we had the 6 next lines instead
-        // of the line above.
-         //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
-         //xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
-         //Double_t fm,fp;
-         //x[0] = xm; fm = f1->EvalPar(x,u);
-         //x[0] = xp; fp = f1->EvalPar(x,u);
-         //eux = 0.5*(fp-fm);
+         //Without the "variance method", we had the 6 next lines instead
+         // of the line above.
+          //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
+          //xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
+          //Double_t fm,fp;
+          //x[0] = xm; fm = f1->EvalPar(x,u);
+          //x[0] = xp; fp = f1->EvalPar(x,u);
+          //eux = 0.5*(fp-fm);
          
-        //"Effective Variance" method introduced by Anna Kreshuk 
-        // in version 4.00/08.        
-        eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
+         //"Effective Variance" method introduced by Anna Kreshuk 
+         // in version 4.00/08.        
+         eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
       } else
-        eux = 0.;
+         eux = 0.;
       eu = ey*ey+eux*eux;
       if (eu <= 0) eu = 1;
       f += fsum*fsum/eu;
@@ -965,19 +965,19 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       if (ez < 0) ez = 0;
       eux = euy = 0;
       if (ex > 0) {
-        xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-        xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-        x[0] = xm; fm = f2->EvalPar(x,u);
-        x[0] = xp; fp = f2->EvalPar(x,u);
-        eux = fp-fm;
+         xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+         xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+         x[0] = xm; fm = f2->EvalPar(x,u);
+         x[0] = xp; fp = f2->EvalPar(x,u);
+         eux = fp-fm;
       }
       if (ey > 0) {
-        x[0] = gx[bin];
-        ym = x[1] - ey; if (ym < fymin) ym = fxmin;
-        yp = x[1] + ey; if (yp > fymax) yp = fymax;
-        x[1] = ym; fm = f2->EvalPar(x,u);
-        x[1] = yp; fp = f2->EvalPar(x,u);
-        euy = fp-fm;
+         x[0] = gx[bin];
+         ym = x[1] - ey; if (ym < fymin) ym = fxmin;
+         yp = x[1] + ey; if (yp > fymax) yp = fymax;
+         x[1] = ym; fm = f2->EvalPar(x,u);
+         x[1] = yp; fp = f2->EvalPar(x,u);
+         euy = fp-fm;
       }
       eu = ez*ez+eux*eux+euy*euy;
       if (eu <= 0) eu = 1;

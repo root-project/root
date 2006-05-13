@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.7 2003/05/14 20:58:22 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.8 2003/05/15 19:18:31 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -185,94 +185,94 @@ public:
 
 // methods performed on TMinuit class
 public:
-                TMinuit();
-                TMinuit(Int_t maxpar);
- virtual       ~TMinuit();
- virtual void   BuildArrays(Int_t maxpar=15);
- virtual TObject *Clone(const char *newname="") const;   //Clone-Method to copy the function-pointer fFCN
- virtual Int_t  Command(const char *command);
- virtual TObject *Contour(Int_t npoints=10, Int_t pa1=0, Int_t pa2=1);
- virtual Int_t  DefineParameter( Int_t parNo, const char *name, Double_t initVal, Double_t initErr, Double_t lowerLimit, Double_t upperLimit );
- virtual void   DeleteArrays();
- virtual Int_t  Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag);
- virtual Int_t  FixParameter( Int_t parNo );
- TMethodCall   *GetMethodCall() const {return fMethodCall;}
- TObject       *GetObjectFit() const {return fObjectFit;}
- Int_t          GetMaxIterations() const {return fMaxIterations;}
- virtual Int_t  GetNumFixedPars() const;
- virtual Int_t  GetNumFreePars() const;
- virtual Int_t  GetNumPars() const;
- virtual Int_t  GetParameter( Int_t parNo, Double_t &currentValue, Double_t &currentError ) const;
- virtual TObject *GetPlot() const {return fPlot;}
- Int_t          GetStatus() const {return fStatus;}
- virtual Int_t  Migrad();
- virtual void   mnamin();
- virtual void   mnbins(Double_t a1, Double_t a2, Int_t naa, Double_t &bl, Double_t &bh, Int_t &nb, Double_t &bwid);
- virtual void   mncalf(Double_t *pvec, Double_t &ycalf);
- virtual void   mncler();
- virtual void   mncntr(Int_t ke1, Int_t ke2, Int_t &ierrf);
- virtual void   mncomd(const char *crdbin, Int_t &icondn);
- virtual void   mncont(Int_t ke1, Int_t ke2, Int_t nptu, Double_t *xptu, Double_t *yptu, Int_t &ierrf);
- virtual void   mncrck(TString crdbuf, Int_t maxcwd, TString &comand, Int_t &lnc
+   TMinuit();
+   TMinuit(Int_t maxpar);
+   virtual       ~TMinuit();
+   virtual void   BuildArrays(Int_t maxpar=15);
+   virtual TObject *Clone(const char *newname="") const;   //Clone-Method to copy the function-pointer fFCN
+   virtual Int_t  Command(const char *command);
+   virtual TObject *Contour(Int_t npoints=10, Int_t pa1=0, Int_t pa2=1);
+   virtual Int_t  DefineParameter( Int_t parNo, const char *name, Double_t initVal, Double_t initErr, Double_t lowerLimit, Double_t upperLimit );
+   virtual void   DeleteArrays();
+   virtual Int_t  Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag);
+   virtual Int_t  FixParameter( Int_t parNo );
+   TMethodCall   *GetMethodCall() const {return fMethodCall;}
+   TObject       *GetObjectFit() const {return fObjectFit;}
+   Int_t          GetMaxIterations() const {return fMaxIterations;}
+   virtual Int_t  GetNumFixedPars() const;
+   virtual Int_t  GetNumFreePars() const;
+   virtual Int_t  GetNumPars() const;
+   virtual Int_t  GetParameter( Int_t parNo, Double_t &currentValue, Double_t &currentError ) const;
+   virtual TObject *GetPlot() const {return fPlot;}
+   Int_t          GetStatus() const {return fStatus;}
+   virtual Int_t  Migrad();
+   virtual void   mnamin();
+   virtual void   mnbins(Double_t a1, Double_t a2, Int_t naa, Double_t &bl, Double_t &bh, Int_t &nb, Double_t &bwid);
+   virtual void   mncalf(Double_t *pvec, Double_t &ycalf);
+   virtual void   mncler();
+   virtual void   mncntr(Int_t ke1, Int_t ke2, Int_t &ierrf);
+   virtual void   mncomd(const char *crdbin, Int_t &icondn);
+   virtual void   mncont(Int_t ke1, Int_t ke2, Int_t nptu, Double_t *xptu, Double_t *yptu, Int_t &ierrf);
+   virtual void   mncrck(TString crdbuf, Int_t maxcwd, TString &comand, Int_t &lnc
                     ,  Int_t mxp, Double_t *plist, Int_t &llist, Int_t &ierr, Int_t isyswr);
- virtual void   mncros(Double_t &aopt, Int_t &iercr);
- virtual void   mncuve();
- virtual void   mnderi();
- virtual void   mndxdi(Double_t pint, Int_t ipar, Double_t &dxdi);
- virtual void   mneig(Double_t *a, Int_t ndima, Int_t n, Int_t mits, Double_t *work, Double_t precis, Int_t &ifault);
- virtual void   mnemat(Double_t *emat, Int_t ndim);
- virtual void   mnerrs(Int_t number, Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &gcc);
- virtual void   mneval(Double_t anext, Double_t &fnext, Int_t &ierev);
- virtual void   mnexcm(const char *comand, Double_t *plist, Int_t llist, Int_t &ierflg) ;
- virtual void   mnexin(Double_t *pint);
- virtual void   mnfixp(Int_t iint, Int_t &ierr);
- virtual void   mnfree(Int_t k);
- virtual void   mngrad();
- virtual void   mnhelp(TString comd);
- virtual void   mnhelp(const char *command="");
- virtual void   mnhess();
- virtual void   mnhes1();
- virtual void   mnimpr();
- virtual void   mninex(Double_t *pint);
- virtual void   mninit(Int_t i1, Int_t i2, Int_t i3);
- virtual void   mnlims();
- virtual void   mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t slope, Double_t toler);
- virtual void   mnmatu(Int_t kode);
- virtual void   mnmigr();
- virtual void   mnmnos();
- virtual void   mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi);
- virtual void   mnparm(Int_t k, TString cnamj, Double_t uk, Double_t wk, Double_t a, Double_t b, Int_t &ierflg);
- virtual void   mnpars(TString &crdbuf, Int_t &icondn);
- virtual void   mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t *coef2p, Double_t &sdev2p);
- virtual void   mnpint(Double_t &pexti, Int_t i, Double_t &pinti);
- virtual void   mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_t npagwd, Int_t npagln);
- virtual void   mnpout(Int_t iuext, TString &chnam, Double_t &val, Double_t &err, Double_t &xlolim, Double_t &xuplim, Int_t &iuint) const;
- virtual void   mnprin(Int_t inkode, Double_t fval);
- virtual void   mnpsdf();
- virtual void   mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_t &jl);
- virtual void   mnrn15(Double_t &val, Int_t &inseed);
- virtual void   mnrset(Int_t iopt);
- virtual void   mnsave();
- virtual void   mnscan();
- virtual void   mnseek();
- virtual void   mnset();
- virtual void   mnsimp();
- virtual void   mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &npari, Int_t &nparx, Int_t &istat);
- virtual void   mntiny(Double_t epsp1, Double_t &epsbak);
- Bool_t         mnunpt(TString &cfname);
- virtual void   mnvert(Double_t *a, Int_t l, Int_t m, Int_t n, Int_t &ifail);
- virtual void   mnwarn(const char *copt, const char *corg, const char *cmes);
- virtual void   mnwerr();
- virtual Int_t  Release( Int_t parNo );
- virtual Int_t  SetErrorDef( Double_t up );
- virtual void   SetFCN(void *fcn);
- virtual void   SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
- virtual void   SetGraphicsMode(Bool_t mode=kTRUE) {fGraphicsMode = mode;}
- virtual void   SetMaxIterations(Int_t maxiter=500) {fMaxIterations = maxiter;}
- virtual void   SetObjectFit(TObject *obj) {fObjectFit=obj;}
- virtual Int_t  SetPrintLevel( Int_t printLevel=0 );
+   virtual void   mncros(Double_t &aopt, Int_t &iercr);
+   virtual void   mncuve();
+   virtual void   mnderi();
+   virtual void   mndxdi(Double_t pint, Int_t ipar, Double_t &dxdi);
+   virtual void   mneig(Double_t *a, Int_t ndima, Int_t n, Int_t mits, Double_t *work, Double_t precis, Int_t &ifault);
+   virtual void   mnemat(Double_t *emat, Int_t ndim);
+   virtual void   mnerrs(Int_t number, Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &gcc);
+   virtual void   mneval(Double_t anext, Double_t &fnext, Int_t &ierev);
+   virtual void   mnexcm(const char *comand, Double_t *plist, Int_t llist, Int_t &ierflg) ;
+   virtual void   mnexin(Double_t *pint);
+   virtual void   mnfixp(Int_t iint, Int_t &ierr);
+   virtual void   mnfree(Int_t k);
+   virtual void   mngrad();
+   virtual void   mnhelp(TString comd);
+   virtual void   mnhelp(const char *command="");
+   virtual void   mnhess();
+   virtual void   mnhes1();
+   virtual void   mnimpr();
+   virtual void   mninex(Double_t *pint);
+   virtual void   mninit(Int_t i1, Int_t i2, Int_t i3);
+   virtual void   mnlims();
+   virtual void   mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t slope, Double_t toler);
+   virtual void   mnmatu(Int_t kode);
+   virtual void   mnmigr();
+   virtual void   mnmnos();
+   virtual void   mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi);
+   virtual void   mnparm(Int_t k, TString cnamj, Double_t uk, Double_t wk, Double_t a, Double_t b, Int_t &ierflg);
+   virtual void   mnpars(TString &crdbuf, Int_t &icondn);
+   virtual void   mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t *coef2p, Double_t &sdev2p);
+   virtual void   mnpint(Double_t &pexti, Int_t i, Double_t &pinti);
+   virtual void   mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_t npagwd, Int_t npagln);
+   virtual void   mnpout(Int_t iuext, TString &chnam, Double_t &val, Double_t &err, Double_t &xlolim, Double_t &xuplim, Int_t &iuint) const;
+   virtual void   mnprin(Int_t inkode, Double_t fval);
+   virtual void   mnpsdf();
+   virtual void   mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_t &jl);
+   virtual void   mnrn15(Double_t &val, Int_t &inseed);
+   virtual void   mnrset(Int_t iopt);
+   virtual void   mnsave();
+   virtual void   mnscan();
+   virtual void   mnseek();
+   virtual void   mnset();
+   virtual void   mnsimp();
+   virtual void   mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &npari, Int_t &nparx, Int_t &istat);
+   virtual void   mntiny(Double_t epsp1, Double_t &epsbak);
+   Bool_t         mnunpt(TString &cfname);
+   virtual void   mnvert(Double_t *a, Int_t l, Int_t m, Int_t n, Int_t &ifail);
+   virtual void   mnwarn(const char *copt, const char *corg, const char *cmes);
+   virtual void   mnwerr();
+   virtual Int_t  Release( Int_t parNo );
+   virtual Int_t  SetErrorDef( Double_t up );
+   virtual void   SetFCN(void *fcn);
+   virtual void   SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
+   virtual void   SetGraphicsMode(Bool_t mode=kTRUE) {fGraphicsMode = mode;}
+   virtual void   SetMaxIterations(Int_t maxiter=500) {fMaxIterations = maxiter;}
+   virtual void   SetObjectFit(TObject *obj) {fObjectFit=obj;}
+   virtual Int_t  SetPrintLevel( Int_t printLevel=0 );
 
- ClassDef(TMinuit,1)  //The MINUIT minimisation package
+   ClassDef(TMinuit,1)  //The MINUIT minimisation package
 };
 
 R__EXTERN TMinuit  *gMinuit;

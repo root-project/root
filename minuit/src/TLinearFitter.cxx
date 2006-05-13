@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.21 2006/03/20 08:22:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.22 2006/03/20 16:15:40 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -333,7 +333,7 @@ void TLinearFitter::AddPoint(Double_t *x, Double_t y, Double_t e)
    }
    //add the point to the design matrix, if the formula has been set
    if (!fFunctions.IsEmpty() || fInputFunction || fSpecial>199 || !fRobust)
-          AddToDesign(x, y, e);
+      AddToDesign(x, y, e);
    else if (!fStoreData)
       Error("AddPoint", "Point can't be added, because the formula hasn't been set and data is not stored");
 }
@@ -590,8 +590,8 @@ void TLinearFitter::ComputeTValues()
    // Computes parameters' t-values and significance
 
    for (Int_t i=0; i<fNfunctions; i++){
-     fTValues(i) = fParams(i)/(TMath::Sqrt(fParCovar(i, i)));
-     fParSign(i) = 2*(1-TMath::StudentI(TMath::Abs(fTValues(i)),fNpoints-fNfunctions+fNfixed));
+      fTValues(i) = fParams(i)/(TMath::Sqrt(fParCovar(i, i)));
+      fParSign(i) = 2*(1-TMath::StudentI(TMath::Abs(fTValues(i)),fNpoints-fNfunctions+fNfixed));
    }
 }
 
@@ -769,17 +769,17 @@ void TLinearFitter::ReleaseParameter(Int_t ipar)
 {
    //Releases parameter #ipar.
 
-    if (ipar>fNfunctions || ipar<0){
+   if (ipar>fNfunctions || ipar<0){
       Error("ReleaseParameter", "illegal parameter value");
       return;
    }
-    if (!fFixedParams[ipar]){
-       Warning("ReleaseParameter","This parameter is not fixed\n");
-       return;
-    } else {
-       fFixedParams[ipar] = 0;
-       fNfixed--;
-    }
+   if (!fFixedParams[ipar]){
+      Warning("ReleaseParameter","This parameter is not fixed\n");
+      return;
+   } else {
+      fFixedParams[ipar] = 0;
+      fNfixed--;
+   }
 }
 
 //______________________________________________________________________________
@@ -1027,8 +1027,8 @@ void TLinearFitter::GetErrors(TVectorD &vpar)
 //Returns parameter errors
 
    if (vpar.GetNoElements()!=fNfunctions) {
-     vpar.ResizeTo(fNfunctions);
-  }
+      vpar.ResizeTo(fNfunctions);
+   }
    for (Int_t i=0; i<fNfunctions; i++)
       vpar(i) = TMath::Sqrt(fParCovar(i, i));
 
@@ -1040,9 +1040,9 @@ void TLinearFitter::GetParameters(TVectorD &vpar)
 //Returns parameter values
 
    if (vpar.GetNoElements()!=fNfunctions) {
-     vpar.ResizeTo(fNfunctions);
-  }
-  vpar=fParams;
+      vpar.ResizeTo(fNfunctions);
+   }
+   vpar=fParams;
 }
 
 //______________________________________________________________________________
@@ -1318,13 +1318,13 @@ Bool_t TLinearFitter::UpdateMatrix()
 {
    //Update the design matrix after the formula has been changed.
 
-     if (fStoreData){
-        for (Int_t i=0; i<fNpoints; i++){
-           AddToDesign(TMatrixDRow(fX, i).GetPtr(), fY(i), fE(i));
-        }
-        return 1;
-     } else 
-        return 0;
+   if (fStoreData) {
+      for (Int_t i=0; i<fNpoints; i++) {
+         AddToDesign(TMatrixDRow(fX, i).GetPtr(), fY(i), fE(i));
+      }
+      return 1;
+   } else 
+      return 0;
      
 }
 
@@ -1358,17 +1358,17 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
    // errors.
 
    if (level==3){
-     if (!fRobust){
-        printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");     
-        for (Int_t i=0; i<fNfunctions; i++){
-           printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
-        }
-     } else {
-        printf("Fitting results:\nParameters:\nNO.\t\tVALUE\n");     
-        for (Int_t i=0; i<fNfunctions; i++){
-           printf("%d\t%f\n", i, fParams(i));
-        }
-     }
+      if (!fRobust){
+         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");     
+         for (Int_t i=0; i<fNfunctions; i++){
+            printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
+         }
+      } else {
+         printf("Fitting results:\nParameters:\nNO.\t\tVALUE\n");     
+         for (Int_t i=0; i<fNfunctions; i++){
+            printf("%d\t%f\n", i, fParams(i));
+         }
+      }
    }
 }
 
@@ -1434,6 +1434,7 @@ void TLinearFitter::GraphLinearFitter(Double_t h)
 //______________________________________________________________________________
 void TLinearFitter::Graph2DLinearFitter(Double_t h)
 {
+   //Minimisation function for a TGraph2D
    StoreData(kFALSE);
 
    TGraph2D *gr=(TGraph2D*)GetObjectFit();
@@ -1516,7 +1517,7 @@ void TLinearFitter::Graph2DLinearFitter(Double_t h)
 //______________________________________________________________________________
 void TLinearFitter::MultiGraphLinearFitter(Double_t h)
 {
-
+   //Minimisation function for a TMultiGraph
    Int_t n, i;
    Double_t *gx, *gy;
    Double_t e;
@@ -1725,7 +1726,7 @@ void TLinearFitter::EvalRobust(Double_t h)
       Double_t currentbest;
       for (i=0; i<nbest; i++) {
          for (j=0; j<fNfunctions; j++)
-             fParams(j) = cstock(j, i);
+            fParams(j) = cstock(j, i);
          chi2 = 1;
          while (chi2 > kEps) {
             chi2 = CStep(2, fH, residuals,index, index, -1, -1);
@@ -1967,39 +1968,39 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
          residuals[i] = (fY(itemp) - func)*(fY(itemp) - func)/(fE(i)*fE(i));
       }
    } else {
-       n=fNpoints;
-       for (i=0; i<fNpoints; i++) {
-          func = 0;
-          if (fInputFunction){
-             fInputFunction->SetParameters(fParams.GetMatrixArray());
-             func=fInputFunction->EvalPar(TMatrixDRow(fX, i).GetPtr());
-          } else {
-            func=0;
-            if ((fSpecial>100)&&(fSpecial<200)){
-               Int_t npar = fSpecial-100;
-               val[0] = 1;
-               for (j=1; j<npar; j++)
-                  val[j] = val[j-1]*fX(i, 0);
-               for (j=0; j<npar; j++)
-                  func += fParams(j)*val[j];
-            } else {
-               if (fSpecial>200) {
-                  //hyperplane case
-                  Int_t npar = fSpecial-201;
-                  func+=fParams(0);
-                  for (j=0; j<npar; j++)
-                     func += fParams(j+1)*fX(i, j);
-               } else {
-                  for (j=0; j<fNfunctions; j++) {
-                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                     val[j] = f1->EvalPar(TMatrixDRow(fX, i).GetPtr());
-                     func += fParams(j)*val[j];
-                  }
-               }
-            }
-          }   
-          residuals[i] = (fY(i) - func)*(fY(i) - func)/(fE(i)*fE(i));
-       }
+      n=fNpoints;
+      for (i=0; i<fNpoints; i++) {
+         func = 0;
+         if (fInputFunction){
+            fInputFunction->SetParameters(fParams.GetMatrixArray());
+            func=fInputFunction->EvalPar(TMatrixDRow(fX, i).GetPtr());
+         } else {
+           func=0;
+           if ((fSpecial>100)&&(fSpecial<200)){
+              Int_t npar = fSpecial-100;
+              val[0] = 1;
+              for (j=1; j<npar; j++)
+                 val[j] = val[j-1]*fX(i, 0);
+              for (j=0; j<npar; j++)
+                 func += fParams(j)*val[j];
+           } else {
+              if (fSpecial>200) {
+                 //hyperplane case
+                 Int_t npar = fSpecial-201;
+                 func+=fParams(0);
+                 for (j=0; j<npar; j++)
+                    func += fParams(j+1)*fX(i, j);
+              } else {
+                 for (j=0; j<fNfunctions; j++) {
+                    TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                    val[j] = f1->EvalPar(TMatrixDRow(fX, i).GetPtr());
+                    func += fParams(j)*val[j];
+                 }
+              }
+           }
+         }   
+         residuals[i] = (fY(i) - func)*(fY(i) - func)/(fE(i)*fE(i));
+      }
    }
    //take h with smallest residuals
    TMath::KOrdStat(n, residuals, h-1, index);
@@ -2137,7 +2138,7 @@ Int_t TLinearFitter::Partition(Int_t nmini, Int_t *indsubdat)
          indsubdat[1]=Int_t(fNpoints*0.5)+1;
       } else
          indsubdat[0]=indsubdat[1]=Int_t(fNpoints/2);
-    nsub=2;
+      nsub=2;
    }
    else{
       if((fNpoints>=3*nmini) && (fNpoints<(4*nmini -1))) {
