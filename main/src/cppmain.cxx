@@ -1,4 +1,4 @@
-// @(#)root/main:$Name$:$Id$
+// @(#)root/main:$Name:  $:$Id: cppmain.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Masaharu Goto   16/05/2000
 /* /% C++ %/ */
 /***********************************************************************
@@ -28,6 +28,6 @@ extern int G__main(int argc,char **argv);
 
 int main(int argc,char **argv)
 {
-  G__setothermain(0);
-  return(G__main(argc,argv));
+   G__setothermain(0);
+   return(G__main(argc,argv));
 }
