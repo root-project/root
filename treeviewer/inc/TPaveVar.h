@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.2 2000/06/13 13:59:21 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.h,v 1.3 2000/11/23 10:09:16 brun Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -31,24 +31,24 @@
 class TPaveVar : public TPaveLabel{
 
 protected:
-        TTreeViewer   *fViewer;       //Pointer to the TTreeViewer referencing this object
-        virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   TTreeViewer   *fViewer;       //Pointer to the TTreeViewer referencing this object
+   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
 public:
-        // TPaveVar status bits
-        enum { kBranchObject = BIT(15) };
+   // TPaveVar status bits
+   enum { kBranchObject = BIT(15) };
 
-        TPaveVar();
-        TPaveVar(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, TTreeViewer *viewer);
-        TPaveVar(const TPaveVar &PaveVar);
-        virtual      ~TPaveVar();
-                void  Copy(TObject &PaveVar);
-        TTreeViewer  *GetViewer() {return fViewer;}
-        virtual void  SavePrimitive(ofstream &out, Option_t *option);
-        virtual void  Merge(Option_t *option="AND");  // *MENU*
-        virtual void  SetViewer(TTreeViewer *viewer) {fViewer = viewer;}
+   TPaveVar();
+   TPaveVar(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, TTreeViewer *viewer);
+   TPaveVar(const TPaveVar &PaveVar);
+   virtual       ~TPaveVar();
+   void           Copy(TObject &PaveVar);
+   TTreeViewer   *GetViewer() {return fViewer;}
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
+   virtual void   Merge(Option_t *option="AND");  // *MENU*
+   virtual void   SetViewer(TTreeViewer *viewer) {fViewer = viewer;}
 
-        ClassDef(TPaveVar,1)  //A TPaveLabel specialized for TTree variables and cuts
+   ClassDef(TPaveVar,1)  //A TPaveLabel specialized for TTree variables and cuts
 };
 
 #endif

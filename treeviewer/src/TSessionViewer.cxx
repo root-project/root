@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.58 2006/03/03 09:49:48 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.59 2006/03/20 21:43:44 pcanal Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -1698,7 +1698,7 @@ void TSessionFrame::ShutdownSession()
    if (!fViewer->GetActDesc()->fAttached ||
        !fViewer->GetActDesc()->fProof ||
        !fViewer->GetActDesc()->fProof->IsValid())
-       return;
+      return;
    // ask for confirmation
    TString m;
    m.Form("Are you sure to shutdown the session \"%s\"",

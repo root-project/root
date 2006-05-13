@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.8 2005/08/30 11:13:22 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.9 2005/11/11 16:10:02 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -40,7 +40,7 @@ class TGItemContext : public TObject {
 protected:
    TTVLVEntry *fItem;       // pointer to associated item
 public:
-                TGItemContext();
+   TGItemContext();
    virtual     ~TGItemContext() { }
    void         Associate(TTVLVEntry *item) { fItem = item; }
    virtual void Delete(Option_t *) { }           // *MENU*

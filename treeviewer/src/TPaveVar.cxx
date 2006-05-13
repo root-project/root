@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.4 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TPaveVar.cxx,v 1.5 2005/09/18 13:19:22 rdm Exp $
 // Author: Rene Brun   08/12/98
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -59,6 +59,7 @@ TPaveVar::~TPaveVar()
 //______________________________________________________________________________
 TPaveVar::TPaveVar(const TPaveVar &PaveVar)
 {
+   //copy constructor
    ((TPaveVar&)PaveVar).Copy(*this);
 }
 
@@ -177,15 +178,15 @@ again:
       ll = rr = inside = kFALSE;
 
       if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
+         TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
          pxold = pxl; pyold = pyl; ll = kTRUE;
          gPad->SetCursor(kLeftSide);
       }
 
       if ((py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
-          pxold = pxt; pyold = pyt; rr = kTRUE;
-          gPad->SetCursor(kRightSide);
+         TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
+         pxold = pxt; pyold = pyt; rr = kTRUE;
+         gPad->SetCursor(kRightSide);
       }
 
       if ((px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
@@ -313,14 +314,14 @@ void TPaveVar::Merge(Option_t *option)
          // check if at least one corner overlaps with this
          if ((pl->GetX1() > fX1 && pl->GetX1() < fX2) ||
              (pl->GetX2() > fX1 && pl->GetX2() < fX2)) {
-              if ((pl->GetY1() > fY1 && pl->GetY1() < fY2) ||
+            if ((pl->GetY1() > fY1 && pl->GetY1() < fY2) ||
                   (pl->GetY2() > fY1 && pl->GetY2() < fY2)) {
-                   if (opt.Contains("AND")) strcat(name,"&&");
-                   if (opt.Contains("OR"))  strcat(name,"||");
-                   strcat(name,"(");
-                   strcat(name,pl->GetLabel());
-                   strcat(name,")");
-              }
+               if (opt.Contains("AND")) strcat(name,"&&");
+               if (opt.Contains("OR"))  strcat(name,"||");
+               strcat(name,"(");
+               strcat(name,pl->GetLabel());
+               strcat(name,")");
+            }
          }
       }
    }
@@ -336,9 +337,9 @@ void TPaveVar::SavePrimitive(ofstream &out, Option_t *)
    char quote = '"';
    out<<"   "<<endl;
    if (gROOT->ClassSaved(TPaveVar::Class())) {
-       out<<"   ";
+      out<<"   ";
    } else {
-       out<<"   TPaveVar *";
+      out<<"   TPaveVar *";
    }
    out<<"pvar = new TPaveVar("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<","<<quote<<fLabel<<quote<<","<<quote<<fOption<<quote<<");"<<endl;

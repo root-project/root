@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.4 2005/09/18 13:07:40 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewerOld.cxx,v 1.5 2005/09/18 13:19:22 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -525,11 +525,11 @@ void TTreeViewer::ExecuteDraw(Option_t *option)
 
    // record the draw command if the fRecordFlag is on
    if (fRecordFlag) {
-        // show the command on the command line
-        printf("%s", command);
+      // show the command on the command line
+      printf("%s", command);
 
-        // print the command to the history file
-        Gl_histadd(command);
+      // print the command to the history file
+      Gl_histadd(command);
    }
 
    gPad->Update();
@@ -618,7 +618,7 @@ void TTreeViewer::MakeClass(const char *classname)
 //______________________________________________________________________________
 void TTreeViewer::Reorganize()
 {
-
+   //Reorganize the user interface
    BuildInterface();
 
 }
@@ -696,11 +696,11 @@ void TTreeViewer::ToggleRecordCommand()
 {
 //*-*-*-*-*-*-*-*-*Toggle the recording of the Draw command*-*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
-  fRecordFlag = !fRecordFlag;
-  if (!fRecordFlag){
-     fRecord->SetFillColor(16);
-  } else {
-     fRecord->SetFillColor(45);
-  }
+   fRecordFlag = !fRecordFlag;
+   if (!fRecordFlag){
+      fRecord->SetFillColor(16);
+   } else {
+      fRecord->SetFillColor(45);
+   }
 }
 
