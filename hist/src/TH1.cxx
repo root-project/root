@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.289 2006/05/06 14:22:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.290 2006/05/06 16:35:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1034,9 +1034,8 @@ Double_t TH1::Chi2Test(const TH1 *h, Option_t *option, Int_t constraint) const
    //The Chi2 (Pearson's) test for differences between h and this histogram.
    //a small value of prob indicates a significant difference between the distributions
    //
-   //if the data was collected in such a way that the number of entries
-   //in the first histogram is necessarily equal to the number of entries
-   //in the second, the parameter _constraint_ must be made 1. Default is 0.
+   //if constraint=1 the algorithm riuns on the two histograms normalized to 1.
+   //constraint=0 is the default.
    //any additional constraints on the data lower the number of degrees of freedom
    //(i.e. increase constraint to more positive values) in accordance with
    //their number
@@ -1086,9 +1085,8 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
    //The Chi2 (Pearson's) test for differences between h and this histogram.
    //a small value of prob indicates a significant difference between the distributions
    //
-   //if the data was collected in such a way that the number of entries
-   //in the first histogram is necessarily equal to the number of entries
-   //in the second, the parameter _constraint_ must be made 1. Default is 0.
+   //if constraint=1 the algorithm riuns on the two histograms normalized to 1.
+   //constraint=0 is the default.
    //any additional constraints on the data lower the number of degrees of freedom
    //(i.e. increase constraint to more positive values) in accordance with
    //their number
@@ -1166,7 +1164,7 @@ Double_t TH1::Chi2TestX(const TH1 *h, Double_t &chi2, Int_t &ndf, Option_t *opti
       Error("Chi2TestX","one of the histograms is empty");
       return 0;
    }
-
+   if (!constraint) {sum1 = sum2 = 1;}
 
    Double_t bin1, bin2, err1, err2, temp;
    for (i=i_start; i<=i_end; i++){
