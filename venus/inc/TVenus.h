@@ -1,4 +1,4 @@
-// @(#)root/venus:$Name$:$Id$
+// @(#)root/venus:$Name:  $:$Id: TVenus.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -161,118 +161,118 @@ protected:
   Int_t          fZTarget;
 
 public:
-  TVenus();
-  TVenus(char *choice, Int_t numberOfEvents, Int_t zprojectile,
-         Int_t aprojectile, Int_t ztarget, Int_t atarget,
-         Double_t incidentMomentum, Bool_t labSys,
-         Bool_t   lastGeneration, Double_t impactParameterMin,
-         Double_t impactParameterMax, Double_t phiMin, Double_t phiMax);
-  virtual ~TVenus();
-  virtual void            GenerateEvent(Option_t *option="");
-  virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
-  virtual TObjArray      *ImportParticles(Option_t *option="");
-  virtual void            SetVersionNumber(Int_t iversn = 521);
-  virtual void            SetU_D_QuarkProductionProb(Float_t pud = 0.455);
-  virtual void            SetQQ_QQbarProbability(Float_t pdiqua = 0.08);
-  virtual void            SetLightFlavoursSpinProb(Float_t pspinl = 0.50);
-  virtual void            SetHeavyFlavoursSpinProb(Float_t pspinh = 0.75);
-  virtual void            SetIsoSpinProb(Float_t pispn = 0.50);
-  virtual void            Setp_T_Distribution(Int_t ioptf = 1);
-  virtual void            SetAveragep_T(Float_t ptf = 0.45);
-  virtual void            SetStringTension(Float_t tensn = 1.0);
-  virtual void            SetStringDecayParameter(Float_t parea = 0.20);
-  virtual void            SetThresholdResonanceToString(Float_t delrem = 1.0);
-  virtual void            SetCutOffForKmaxor(Int_t kutdiq = 4);
-  virtual void            SetBreakingProcedureOption(Int_t iopbrk = 1);
-  virtual void            SetQuarkp_TDistributionOption(Int_t ioptq = 2);
-  virtual void            SetMeanTransverseQuarkMomentum(Float_t ptq1 = 0.260,
+   TVenus();
+   TVenus(char *choice, Int_t numberOfEvents, Int_t zprojectile,
+          Int_t aprojectile, Int_t ztarget, Int_t atarget,
+          Double_t incidentMomentum, Bool_t labSys,
+          Bool_t   lastGeneration, Double_t impactParameterMin,
+          Double_t impactParameterMax, Double_t phiMin, Double_t phiMax);
+   virtual ~TVenus();
+   virtual void            GenerateEvent(Option_t *option="");
+   virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
+   virtual TObjArray      *ImportParticles(Option_t *option="");
+   virtual void            SetVersionNumber(Int_t iversn = 521);
+   virtual void            SetU_D_QuarkProductionProb(Float_t pud = 0.455);
+   virtual void            SetQQ_QQbarProbability(Float_t pdiqua = 0.08);
+   virtual void            SetLightFlavoursSpinProb(Float_t pspinl = 0.50);
+   virtual void            SetHeavyFlavoursSpinProb(Float_t pspinh = 0.75);
+   virtual void            SetIsoSpinProb(Float_t pispn = 0.50);
+   virtual void            Setp_T_Distribution(Int_t ioptf = 1);
+   virtual void            SetAveragep_T(Float_t ptf = 0.45);
+   virtual void            SetStringTension(Float_t tensn = 1.0);
+   virtual void            SetStringDecayParameter(Float_t parea = 0.20);
+   virtual void            SetThresholdResonanceToString(Float_t delrem = 1.0);
+   virtual void            SetCutOffForKmaxor(Int_t kutdiq = 4);
+   virtual void            SetBreakingProcedureOption(Int_t iopbrk = 1);
+   virtual void            SetQuarkp_TDistributionOption(Int_t ioptq = 2);
+   virtual void            SetMeanTransverseQuarkMomentum(Float_t ptq1 = 0.260,
                                                          Float_t ptq2 = 0.0,
                                                          Float_t ptq3 = 0.0);
-  virtual void            SetSemihardInteractionProb(Float_t phard = -1.0);
-  virtual void            SetSemihardCutOff(Float_t pth = 1.0);
-  virtual void            SetSeaRatio(Float_t rstras = 0.0);
-  virtual void            SetProjectileDiffractiveProb(Float_t wproj = 0.32);
-  virtual void            SetTargetDiffractiveProb(Float_t wtarg = 0.32);
-  virtual void            SetStructureFunctionSeaValence(Float_t cutmsq = 2.0);
-  virtual void            SetStructureFunctionCutOffMass(Float_t cutmss = 0.001);
-  virtual void            SetDiffractiveValenceQuarkFrac(Float_t pvalen = 0.30);
-  virtual void            SetPhaseSpace(Float_t delmss = 0.300);
-  virtual void            SetGribovReggeGamma(Float_t grigam = 3.64*0.04);
-  virtual void            SetGribovReggeRSquared(Float_t grirsq = 3.56*0.04);
-  virtual void            SetGribovReggeDelta(Float_t gridel = 0.07);
-  virtual void            SetGribovReggeSlope(Float_t grislo = 0.25*0.04);
-  virtual void            SetGribovReggeCrossSecWeight(Float_t gricel = 1.5);
-  virtual void            SetHardCoreDistance(Float_t core = 0.8);
-  virtual void            SetJ_PsiNucleonCrossSec(Float_t sigj = 0.2);
-  virtual void            SetReactionTime(Float_t taurea = 1.5);
-  virtual void            SetBaryonRadius(Float_t radbar = 0.63);
-  virtual void            SetMesonRadius(Float_t radmes = 0.40);
-  virtual void            SetInteractionMass(Float_t amsiac = 0.8);
-  virtual void            SetJIntaOption(Int_t iojint = 2);
-  virtual void            SetPrintOptionAmprif(Float_t amprif = 0.0);
-  virtual void            SetPrintOptionDelvol(Float_t delvol = 1.0);
-  virtual void            SetPrintOptionDeleps(Float_t deleps = 1.0);
-  virtual void            SetEntropyOption(Int_t   iopent = 5,
+   virtual void            SetSemihardInteractionProb(Float_t phard = -1.0);
+   virtual void            SetSemihardCutOff(Float_t pth = 1.0);
+   virtual void            SetSeaRatio(Float_t rstras = 0.0);
+   virtual void            SetProjectileDiffractiveProb(Float_t wproj = 0.32);
+   virtual void            SetTargetDiffractiveProb(Float_t wtarg = 0.32);
+   virtual void            SetStructureFunctionSeaValence(Float_t cutmsq = 2.0);
+   virtual void            SetStructureFunctionCutOffMass(Float_t cutmss = 0.001);
+   virtual void            SetDiffractiveValenceQuarkFrac(Float_t pvalen = 0.30);
+   virtual void            SetPhaseSpace(Float_t delmss = 0.300);
+   virtual void            SetGribovReggeGamma(Float_t grigam = 3.64*0.04);
+   virtual void            SetGribovReggeRSquared(Float_t grirsq = 3.56*0.04);
+   virtual void            SetGribovReggeDelta(Float_t gridel = 0.07);
+   virtual void            SetGribovReggeSlope(Float_t grislo = 0.25*0.04);
+   virtual void            SetGribovReggeCrossSecWeight(Float_t gricel = 1.5);
+   virtual void            SetHardCoreDistance(Float_t core = 0.8);
+   virtual void            SetJ_PsiNucleonCrossSec(Float_t sigj = 0.2);
+   virtual void            SetReactionTime(Float_t taurea = 1.5);
+   virtual void            SetBaryonRadius(Float_t radbar = 0.63);
+   virtual void            SetMesonRadius(Float_t radmes = 0.40);
+   virtual void            SetInteractionMass(Float_t amsiac = 0.8);
+   virtual void            SetJIntaOption(Int_t iojint = 2);
+   virtual void            SetPrintOptionAmprif(Float_t amprif = 0.0);
+   virtual void            SetPrintOptionDelvol(Float_t delvol = 1.0);
+   virtual void            SetPrintOptionDeleps(Float_t deleps = 1.0);
+   virtual void            SetEntropyOption(Int_t   iopent = 5,
                                            Float_t uentro = 4.,
                                            Int_t kentro = 10000);
-  virtual void            SetDecayTime(Float_t taunll = 1.0);
-  virtual void            SetOscillatorQuantum(Float_t omega = .500);
-  virtual void            SetSpaceTimeEvolutionMinTau(Float_t taumin = 1.);
-  virtual void            SetTauSteps(Int_t numtau = 86);
-  virtual void            Setp_TDistributionRange(Float_t ptmx = 6.0);
-  virtual void            SetGaussDistributionRange(Float_t gaumx = 8.0);
-  virtual void            SetDensityDistributionRange(Float_t fctrmx = 10.0);
-  virtual void            SetTryAgain(Int_t ntrymx = 10);
-  virtual void            SetJ_PsiEvolutionTime(Float_t taumx = 20.0);
-  virtual void            SetJ_PsiEvolutionTimeSteps(Int_t nsttau = 100);
-  virtual void            SetMinimumEnergyOption(Int_t iopenu = 1);
-  virtual void            SetBergerJaffeTheta(Float_t themas = 0.51225);
-  virtual void            SetSeaProbability(Float_t prosea = -1.0);
-  virtual void            SetInelasticProtonProtonCrossSec(Float_t sigppi = -1.0);
-  virtual void            SetEntropyCalculated(Int_t ientro = 2);
-  virtual void            SetDualPartonModel(Int_t idpm = 0);
-  virtual void            SetAntiQuarkColourExchange(Int_t iaqu = 1);
-  virtual void            SetMinNumberOfValenceQuarks(Int_t neqmn = -5);
-  virtual void            SetMaxNumberOfValenceQuarks(Int_t neqmx = 5);
-  virtual void            SetRapidityUpperLimit(Float_t ymximi = 2.0);
-  virtual void            SetClean(Int_t nclean = 0);
-  virtual void            SetCMToLabTransformation(Int_t labsys = 1);
-  virtual void            SetMaxNumberOfCollisions(Int_t ncolmx = 10000);
-  virtual void            SetMaxResonanceSpin(Int_t maxres = 99999);
-  virtual void            SetMomentumRescaling(Int_t irescl = 1);
-  virtual void            SetNueEnergy(Float_t elepti = 43.00);
-  virtual void            SetMuonEnergy(Float_t elepto = 26.24);
-  virtual void            SetMuonAngle(Float_t angmue = 3.9645/360.0*2*3.14159);
-  virtual void            SetCollisionTrigger(Int_t ko1ko2 = 9999);
-  virtual void            SetPrintOption(Int_t ish = 0);
-  virtual void            SetPrintSubOption(Int_t ishsub = 0);
-  virtual void            SetEventPrint(Int_t ishevt = 0);
-  virtual void            SetPrintMarks(Int_t ipagi = 0);
-  virtual void            SetMaxImpact(Float_t bmaxim = 10000.);
-  virtual void            SetMinImpact(Float_t bminim = 0.);
-  virtual void            SetStoreOnlyStable(Int_t istmax = 0);
-  virtual void            SetInitialRandomSeed(Double_t seedi = 0.0);
-  virtual void            SetJFRADESuppression(Int_t ifrade = 1);
-  virtual void            SetResonanceStable(Bool_t stable = kFALSE);
-  virtual void            SetKShortKLongStable(Bool_t stable);
-  virtual void            SetLambdaStable(Bool_t stable);
-  virtual void            SetSigmaStable(Bool_t stable);
-  virtual void            SetCascadeStable(Bool_t stable);
-  virtual void            SetOmegaStable(Bool_t stable);
-  virtual void            SetPiZeroStable(Bool_t stable);
-  virtual void            SetRhoPhiRatio(Float_t rhophi = 0.5);
-  virtual void            SetSpaceTimeEvolution(Int_t ispall = 1);
-  virtual void            SetMinTimeInEvolution(Float_t wtmini = -3.0);
-  virtual void            SetTimeStepInEvolution(Float_t wtstep = 1.0);
-  virtual void            SetCentralPointInEvolution(Int_t iwcent = 0);
-  virtual void            SetsMass(Float_t smas = 0.0);
-  virtual void            SetuuMass(Float_t uumas = 0.0);
-  virtual void            SetusMass(Float_t usmas = 0.0);
-  virtual void            SetssMass(Float_t ssmas = 0.0);
-  virtual void            SetStorage(Int_t istore);
-  virtual void            Show();
+   virtual void            SetDecayTime(Float_t taunll = 1.0);
+   virtual void            SetOscillatorQuantum(Float_t omega = .500);
+   virtual void            SetSpaceTimeEvolutionMinTau(Float_t taumin = 1.);
+   virtual void            SetTauSteps(Int_t numtau = 86);
+   virtual void            Setp_TDistributionRange(Float_t ptmx = 6.0);
+   virtual void            SetGaussDistributionRange(Float_t gaumx = 8.0);
+   virtual void            SetDensityDistributionRange(Float_t fctrmx = 10.0);
+   virtual void            SetTryAgain(Int_t ntrymx = 10);
+   virtual void            SetJ_PsiEvolutionTime(Float_t taumx = 20.0);
+   virtual void            SetJ_PsiEvolutionTimeSteps(Int_t nsttau = 100);
+   virtual void            SetMinimumEnergyOption(Int_t iopenu = 1);
+   virtual void            SetBergerJaffeTheta(Float_t themas = 0.51225);
+   virtual void            SetSeaProbability(Float_t prosea = -1.0);
+   virtual void            SetInelasticProtonProtonCrossSec(Float_t sigppi = -1.0);
+   virtual void            SetEntropyCalculated(Int_t ientro = 2);
+   virtual void            SetDualPartonModel(Int_t idpm = 0);
+   virtual void            SetAntiQuarkColourExchange(Int_t iaqu = 1);
+   virtual void            SetMinNumberOfValenceQuarks(Int_t neqmn = -5);
+   virtual void            SetMaxNumberOfValenceQuarks(Int_t neqmx = 5);
+   virtual void            SetRapidityUpperLimit(Float_t ymximi = 2.0);
+   virtual void            SetClean(Int_t nclean = 0);
+   virtual void            SetCMToLabTransformation(Int_t labsys = 1);
+   virtual void            SetMaxNumberOfCollisions(Int_t ncolmx = 10000);
+   virtual void            SetMaxResonanceSpin(Int_t maxres = 99999);
+   virtual void            SetMomentumRescaling(Int_t irescl = 1);
+   virtual void            SetNueEnergy(Float_t elepti = 43.00);
+   virtual void            SetMuonEnergy(Float_t elepto = 26.24);
+   virtual void            SetMuonAngle(Float_t angmue = 3.9645/360.0*2*3.14159);
+   virtual void            SetCollisionTrigger(Int_t ko1ko2 = 9999);
+   virtual void            SetPrintOption(Int_t ish = 0);
+   virtual void            SetPrintSubOption(Int_t ishsub = 0);
+   virtual void            SetEventPrint(Int_t ishevt = 0);
+   virtual void            SetPrintMarks(Int_t ipagi = 0);
+   virtual void            SetMaxImpact(Float_t bmaxim = 10000.);
+   virtual void            SetMinImpact(Float_t bminim = 0.);
+   virtual void            SetStoreOnlyStable(Int_t istmax = 0);
+   virtual void            SetInitialRandomSeed(Double_t seedi = 0.0);
+   virtual void            SetJFRADESuppression(Int_t ifrade = 1);
+   virtual void            SetResonanceStable(Bool_t stable = kFALSE);
+   virtual void            SetKShortKLongStable(Bool_t stable);
+   virtual void            SetLambdaStable(Bool_t stable);
+   virtual void            SetSigmaStable(Bool_t stable);
+   virtual void            SetCascadeStable(Bool_t stable);
+   virtual void            SetOmegaStable(Bool_t stable);
+   virtual void            SetPiZeroStable(Bool_t stable);
+   virtual void            SetRhoPhiRatio(Float_t rhophi = 0.5);
+   virtual void            SetSpaceTimeEvolution(Int_t ispall = 1);
+   virtual void            SetMinTimeInEvolution(Float_t wtmini = -3.0);
+   virtual void            SetTimeStepInEvolution(Float_t wtstep = 1.0);
+   virtual void            SetCentralPointInEvolution(Int_t iwcent = 0);
+   virtual void            SetsMass(Float_t smas = 0.0);
+   virtual void            SetuuMass(Float_t uumas = 0.0);
+   virtual void            SetusMass(Float_t usmas = 0.0);
+   virtual void            SetssMass(Float_t ssmas = 0.0);
+   virtual void            SetStorage(Int_t istore);
+   virtual void            Show();
 
-  ClassDef(TVenus,1)  //Venus event generator interface class
+   ClassDef(TVenus,1)  //Venus event generator interface class
 };
 
 #endif
