@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.22 2006/03/20 16:15:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.23 2006/05/13 21:49:17 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -1975,29 +1975,29 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
             fInputFunction->SetParameters(fParams.GetMatrixArray());
             func=fInputFunction->EvalPar(TMatrixDRow(fX, i).GetPtr());
          } else {
-           func=0;
-           if ((fSpecial>100)&&(fSpecial<200)){
-              Int_t npar = fSpecial-100;
-              val[0] = 1;
-              for (j=1; j<npar; j++)
-                 val[j] = val[j-1]*fX(i, 0);
-              for (j=0; j<npar; j++)
-                 func += fParams(j)*val[j];
-           } else {
-              if (fSpecial>200) {
-                 //hyperplane case
-                 Int_t npar = fSpecial-201;
-                 func+=fParams(0);
-                 for (j=0; j<npar; j++)
-                    func += fParams(j+1)*fX(i, j);
-              } else {
-                 for (j=0; j<fNfunctions; j++) {
-                    TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
-                    val[j] = f1->EvalPar(TMatrixDRow(fX, i).GetPtr());
-                    func += fParams(j)*val[j];
-                 }
-              }
-           }
+            func=0;
+            if ((fSpecial>100)&&(fSpecial<200)){
+               Int_t npar = fSpecial-100;
+               val[0] = 1;
+               for (j=1; j<npar; j++)
+                  val[j] = val[j-1]*fX(i, 0);
+               for (j=0; j<npar; j++)
+                  func += fParams(j)*val[j];
+            } else {
+               if (fSpecial>200) {
+                  //hyperplane case
+                  Int_t npar = fSpecial-201;
+                  func+=fParams(0);
+                  for (j=0; j<npar; j++)
+                     func += fParams(j+1)*fX(i, j);
+               } else {
+                  for (j=0; j<fNfunctions; j++) {
+                     TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(j));
+                     val[j] = f1->EvalPar(TMatrixDRow(fX, i).GetPtr());
+                     func += fParams(j)*val[j];
+                  }
+               }
+            }
          }   
          residuals[i] = (fY(i) - func)*(fY(i) - func)/(fE(i)*fE(i));
       }

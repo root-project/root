@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.243 2006/04/25 15:36:07 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.244 2006/05/12 16:19:22 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -863,7 +863,7 @@ bool NeedShadowClass(G__ClassInfo& cl)
    if (strcmp(cl.Name(),"string") == 0 ) return false;
 
    if (cl.FileName() && !strncmp(cl.FileName(),"prec_stl",8))
-       return false;
+      return false;
 
    // This means templated classes hiding members won't have
    // a proper shadow class, and the use has no change of
@@ -2150,14 +2150,14 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
    string clsname = cl.Fullname();
    string nsname;
    if (ns.IsValid()) {
-     nsname = ns.Fullname();
-     clsname.erase (0, nsname.size() + 2);
+      nsname = ns.Fullname();
+      clsname.erase (0, nsname.size() + 2);
    }
 
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
-     G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
-     enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+      G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
+      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
    }
 
    (*dictSrcOut) << "//_______________________________________"
@@ -2318,8 +2318,8 @@ void WriteClassInit(G__ClassInfo &cl)
       delete [] proto;
 
       if (methodinfo.IsValid() &&
-          //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
-          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
+         //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
+         strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
 
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
@@ -2620,14 +2620,14 @@ void WriteStreamer(G__ClassInfo &cl)
    string clsname = cl.Fullname();
    string nsname;
    if (ns.IsValid()) {
-     nsname = ns.Fullname();
-     clsname.erase (0, nsname.size() + 2);
+      nsname = ns.Fullname();
+      clsname.erase (0, nsname.size() + 2);
    }
 
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
-     G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
-     enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+      G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
+      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
    }
 
    (*dictSrcOut) << "//_______________________________________"
@@ -2989,14 +2989,14 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    string clsname = cl.Fullname();
    string nsname;
    if (ns.IsValid()) {
-     nsname = ns.Fullname();
-     clsname.erase (0, nsname.size() + 2);
+      nsname = ns.Fullname();
+      clsname.erase (0, nsname.size() + 2);
    }
 
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
-     G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
-     enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+      G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
+      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
    }
 
    (*dictSrcOut) << "//_______________________________________"
@@ -3507,8 +3507,8 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
       string clsname = cl.Fullname();
       string nsname;
       if (ns.IsValid()) {
-        nsname = ns.Fullname();
-        clsname.erase (0, nsname.size() + 2);
+         nsname = ns.Fullname();
+         clsname.erase (0, nsname.size() + 2);
       }
       int add_template_keyword = NeedTemplateKeyword(cl);
       int enclSpaceNesting = 0;
@@ -3533,7 +3533,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
          (*dictSrcOut) << "} // namespace " << nsname << std::endl;
          --enclSpaceNesting;
       }
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -3553,7 +3553,7 @@ void WriteClassCode(G__ClassInfo &cl, bool force = false)
             if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
                WriteAutoStreamer(cl);
             } else {
-              WriteStreamer(cl);
+               WriteStreamer(cl);
             }
          } else
             Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
@@ -3567,7 +3567,7 @@ void WriteClassCode(G__ClassInfo &cl, bool force = false)
          WriteAuxFunctions(cl);
       } else {
          if (NeedShadowClass(cl)) {
-           WriteShowMembers(cl, true);
+            WriteShowMembers(cl, true);
          }
          WriteAuxFunctions(cl);
       }

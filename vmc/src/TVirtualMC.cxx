@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.5 2005/02/08 11:20:15 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.6 2006/05/13 20:57:20 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
    
 /**************************************************************************
@@ -48,7 +48,7 @@ TVirtualMC::TVirtualMC(const char *name, const char *title,
          Error("TVirtualMC", "No user MC application is defined.");
       }
     
-     fRandom = gRandom;
+      fRandom = gRandom;
    }
 }
 

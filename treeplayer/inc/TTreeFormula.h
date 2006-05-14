@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.48 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.49 2006/02/22 06:59:15 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -151,8 +151,8 @@ private:
    TTreeFormula& operator=(const TTreeFormula&);
 
 public:
-             TTreeFormula();
-             TTreeFormula(const char *name,const char *formula, TTree *tree);
+   TTreeFormula();
+   TTreeFormula(const char *name,const char *formula, TTree *tree);
    virtual   ~TTreeFormula();
 
    virtual Int_t       DefinedVariable(TString &variable, Int_t &action);
