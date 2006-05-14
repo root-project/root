@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.26 2006/04/10 06:55:14 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.27 2006/04/18 06:58:59 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -97,6 +97,7 @@ public:
    virtual void       PaintScatterPlot(Option_t *option);
    virtual void       PaintStat(Int_t dostat, TF1 *fit);
    virtual void       PaintStat2(Int_t dostat, TF1 *fit);
+   virtual void       PaintStat3(Int_t dostat, TF1 *fit);
    virtual void       PaintSurface(Option_t *option);
    virtual void       PaintTriangles(Option_t *option);
    virtual void       PaintTable(Option_t *option);
