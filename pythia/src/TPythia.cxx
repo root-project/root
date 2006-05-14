@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name:  $:$Id: TPythia.cxx,v 1.2 2000/07/11 17:11:14 brun Exp $
+// @(#)root/pythia:$Name:  $:$Id: TPythia.cxx,v 1.3 2001/04/06 17:16:00 brun Exp $
 // Author: Piotr Golonka   10/09/97
 
 /*************************************************************************
@@ -121,9 +121,9 @@ TPythia::TPythia() : TGenerator("Pythia","Pythia")
 // particles. Note that there may be only one functional TPythia object
 // at a time, so it's not use to create more than one instance of it.
 
-    delete fParticles; // was allocated as TObjArray in TGenerator
+   delete fParticles; // was allocated as TObjArray in TGenerator
 
-    fParticles = new TClonesArray("TMCParticle",50);
+   fParticles = new TClonesArray("TMCParticle",50);
 }
 
 //______________________________________________________________________________
@@ -131,7 +131,7 @@ TPythia::~TPythia()
 {
 // Destroys the object, deletes and disposes all TMCParticles currently on list.
 
-    if (fParticles) {
+   if (fParticles) {
       fParticles->Delete();
       delete fParticles;
       fParticles = 0;
@@ -197,13 +197,11 @@ TObjArray *TPythia::ImportParticles(Option_t *)
                             LUJETS.k[2][i] ,
                             LUJETS.k[3][i] ,
                             LUJETS.k[4][i] ,
-
                             LUJETS.p[0][i] ,
                             LUJETS.p[1][i] ,
                             LUJETS.p[2][i] ,
                             LUJETS.p[3][i] ,
                             LUJETS.p[4][i] ,
-
                             LUJETS.v[0][i] ,
                             LUJETS.v[1][i] ,
                             LUJETS.v[2][i] ,
@@ -228,17 +226,17 @@ Int_t TPythia::ImportParticles(TClonesArray *particles, Option_t *option)
 //  This can be demanded explicitly by setting the option = "Final"
 //  If the option = "All", all the particles are stored.
 //
-  if (particles == 0) return 0;
-  TClonesArray &Particles = *particles;
-  Particles.Clear();
-  Int_t numpart = LUJETS.n;
-  if (!strcmp(option,"") || !strcmp(option,"Final")) {
-    for (Int_t i = 0; i<numpart; i++) {
-      if (LUJETS.k[0][i] == 1) {
+   if (particles == 0) return 0;
+   TClonesArray &theParticles = *particles;
+   theParticles.Clear();
+   Int_t numpart = LUJETS.n;
+   if (!strcmp(option,"") || !strcmp(option,"Final")) {
+      for (Int_t i = 0; i<numpart; i++) {
+         if (LUJETS.k[0][i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
 //
-        new(Particles[i]) TParticle(
+            new(theParticles[i]) TParticle(
                             LUJETS.k[1][i] ,
                             LUJETS.k[0][i] ,
                             LUJETS.k[2][i] ,
@@ -251,35 +249,32 @@ Int_t TPythia::ImportParticles(TClonesArray *particles, Option_t *option)
                             LUJETS.p[2][i] ,
                             LUJETS.p[3][i] ,
 
+                            LUJETS.v[0][i] ,
+                            LUJETS.v[1][i] ,
+                            LUJETS.v[2][i] ,
+                            LUJETS.v[3][i]);
+         }
+      }
+   } else if (!strcmp(option,"All")) {
+      for (Int_t i = 0; i<numpart; i++) {
+         new(theParticles[i]) TParticle(
+                            LUJETS.k[1][i] ,
+                            LUJETS.k[0][i] ,
+                            LUJETS.k[2][i] ,
+                            -1,
+                            LUJETS.k[3][i] ,
+                            LUJETS.k[4][i] ,
+                            LUJETS.p[0][i] ,
+                            LUJETS.p[1][i] ,
+                            LUJETS.p[2][i] ,
+                            LUJETS.p[3][i] ,
                             LUJETS.v[0][i] ,
                             LUJETS.v[1][i] ,
                             LUJETS.v[2][i] ,
                             LUJETS.v[3][i]);
       }
-    }
-  }
-  else if (!strcmp(option,"All")) {
-    for (Int_t i = 0; i<numpart; i++) {
-        new(Particles[i]) TParticle(
-                            LUJETS.k[1][i] ,
-                            LUJETS.k[0][i] ,
-                            LUJETS.k[2][i] ,
-                            -1,
-                            LUJETS.k[3][i] ,
-                            LUJETS.k[4][i] ,
-
-                            LUJETS.p[0][i] ,
-                            LUJETS.p[1][i] ,
-                            LUJETS.p[2][i] ,
-                            LUJETS.p[3][i] ,
-
-                            LUJETS.v[0][i] ,
-                            LUJETS.v[1][i] ,
-                            LUJETS.v[2][i] ,
-                            LUJETS.v[3][i]);
-    }
-  }
-  return numpart;
+   }
+   return numpart;
 }
 
 //====================== access to common PYSUBS ===============================
@@ -864,7 +859,7 @@ Int_t TPythia::GetNGEN(Int_t isub, Int_t key) const
       return 0;
    }
 
-  if ( key<1 || key>3 ) {
+   if ( key<1 || key>3 ) {
       printf("ERROR in TPythia::GetNGEN(isub.key):\n");
       printf("      key=%i is out of range [1..3]\n",key);
       return 0;
