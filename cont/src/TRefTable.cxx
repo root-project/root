@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.10 2006/04/20 16:54:41 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.11 2006/04/25 16:36:00 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -257,7 +257,7 @@ Int_t TRefTable::FindPIDGUID(const char *guid) const
 {
    // Get fProcessGUIDs' index of the TProcessID with GUID guid
    std::vector<std::string>::const_iterator posPID
-       = std::find(fProcessGUIDs.begin(), fProcessGUIDs.end(), guid);
+      = std::find(fProcessGUIDs.begin(), fProcessGUIDs.end(), guid);
    if (posPID == fProcessGUIDs.end()) return -1;
    return posPID - fProcessGUIDs.begin();
 }

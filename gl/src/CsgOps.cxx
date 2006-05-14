@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.10 2006/02/07 14:18:45 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.11 2006/04/20 14:36:48 rdm Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -1374,9 +1374,9 @@ namespace RootCsg {
 
    class TBBoxNode {
    public:
-     enum ETagType {kLeaf, kInternal};
-     TBBox     fBBox;
-     ETagType fTag;
+      enum ETagType {kLeaf, kInternal};
+      TBBox     fBBox;
+      ETagType fTag;
    };
 
    class TBBoxLeaf : public TBBoxNode {
