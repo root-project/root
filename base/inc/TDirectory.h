@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.32 2006/01/24 21:27:30 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.33 2006/02/01 18:54:51 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -80,6 +80,9 @@ public:
      */
    class TContext  {
    private:
+      TContext(TContext&);
+      TContext& operator=(TContext&);
+     
       TDirectory* fPrevious;   // Pointer to the previous current directory.
       void CdNull(); 
    public:

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.8 2006/04/12 15:01:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.9 2006/04/24 14:07:47 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -48,6 +48,10 @@
 
 class TGColorFrame : public TGFrame {
 
+private:
+   TGColorFrame(const TGColorFrame&);
+   TGColorFrame& operator=(const TGColorFrame&);
+
 protected:
    const TGWindow *fMsgWindow;   // window handling container messages
    Pixel_t         fPixel;       // color value of this cell
@@ -72,6 +76,10 @@ public:
 
 class TG16ColorSelector : public TGCompositeFrame {
 
+private:
+   TG16ColorSelector(const TG16ColorSelector&);   
+   TG16ColorSelector& operator=(const TG16ColorSelector&);   
+
 protected:
    Int_t            fActive;     // index of active color cell
    const TGWindow  *fMsgWindow;  // window handling container messages
@@ -92,6 +100,10 @@ public:
 //----------------------------------------------------------------------
 
 class TGColorPopup : public TGCompositeFrame {
+
+private:
+   TGColorPopup(const TGColorPopup&);
+   TGColorPopup& operator=(const TGColorPopup&);
 
 protected:
    Int_t            fActive;        // active color index
@@ -115,6 +127,10 @@ public:
 //----------------------------------------------------------------------
 
 class TGColorSelect : public TGCheckButton {
+
+private:
+   TGColorSelect(const TGColorSelect&);
+   TGColorSelect& operator=(const TGColorSelect&);
 
 protected:
    Pixel_t       fColor;         // color value of the button

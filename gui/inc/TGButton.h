@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.37 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGButton.h,v 1.38 2006/04/11 06:36:46 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -72,6 +72,9 @@ class TGButton : public TGFrame, public TGWidget {
 
 friend class TGButtonGroup;
 
+private:
+   TGButton& operator=(const TGButton&); 
+
 protected:
    UInt_t         fTWidth;      // button width
    UInt_t         fTHeight;     // button height
@@ -96,6 +99,9 @@ public:
 
    TGButton(const TGWindow *p = 0, Int_t id = -1, GContext_t norm = GetDefaultGC()(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
+   TGButton(const TGButton& tgb): TGFrame(tgb), TGWidget(tgb), fTWidth(tgb.fTWidth), 
+     fTHeight(tgb.fTHeight), fState(tgb.fState), fStayDown(tgb.fStayDown), 
+     fNormGC(tgb.fNormGC), fUserData(tgb.fUserData), fTip(tgb.fTip), fGroup(tgb.fGroup) { }
    virtual ~TGButton();
 
    virtual Bool_t       HandleButton(Event_t *event);
@@ -131,6 +137,9 @@ public:
 
 class TGTextButton : public TGButton {
 
+private:
+   TGTextButton& operator=(const TGTextButton&);
+
 protected:
    TGHotString   *fLabel;         // button text
    Int_t          fTMode;         // text drawing mode (ETextJustification)
@@ -158,6 +167,9 @@ public:
                 Int_t id = -1, GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
+   TGTextButton(const TGTextButton& tgt): TGButton(tgt), fLabel(tgt.fLabel), 
+     fTMode(tgt.fTMode), fHKeycode(tgt.fHKeycode), fFontStruct(tgt.fFontStruct), 
+     fHasOwnFont(tgt.fHasOwnFont) { }
    virtual ~TGTextButton();
 
    virtual TGDimension GetDefaultSize() const 
@@ -187,6 +199,9 @@ public:
 
 class TGPictureButton : public TGButton {
 
+private:
+   TGPictureButton& operator=(const TGPictureButton&);
+
 protected:
    const TGPicture   *fPic;            // picture to be put in button
    const TGPicture   *fPicD;           // picture shown when button disabled
@@ -205,6 +220,8 @@ public:
    TGPictureButton(const TGWindow *p = 0, const char* pic = 0, Int_t id = -1,
                    GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
+   TGPictureButton(const TGPictureButton& tgp): TGButton(tgp), fPic(tgp.fPic),
+     fPicD(tgp.fPicD), fOwnDisabledPic(tgp.fOwnDisabledPic) { }
    virtual ~TGPictureButton();
 
    virtual void     SetPicture(const TGPicture *new_pic);
@@ -264,6 +281,10 @@ public:
 
 
 class TGRadioButton : public TGTextButton {
+
+private:
+   TGRadioButton(const TGRadioButton&);
+   TGRadioButton& operator=(const TGRadioButton&);
 
 protected:
    EButtonState       fPrevState;   // radio button state

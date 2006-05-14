@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.25 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.26 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -44,6 +44,10 @@ friend class TGViewPort;
 friend class TGCanvas;
 friend class TGContainerKeyboardTimer;
 friend class TGContainerScrollTimer;
+
+private:
+   TGContainer(const TGContainer&);
+   TGContainer& operator=(const TGContainer&);
 
 protected:
    TGViewPort        *fViewPort;      // container viewport
@@ -153,6 +157,10 @@ public:
 
 class TGViewPort : public TGCompositeFrame {
 
+private:
+   TGViewPort(const TGViewPort&);
+   TGViewPort& operator=(const TGViewPort&);
+
 protected:
    Int_t       fX0, fY0;     // position of container frame in viewport
    TGFrame    *fContainer;   // container frame
@@ -182,6 +190,10 @@ public:
 
 
 class TGCanvas : public TGFrame {
+
+private:
+   TGCanvas(const TGCanvas&);
+   TGCanvas& operator=(const TGCanvas&);
 
 protected:
    TGViewPort      *fVport;        // viewport through which we look at contents

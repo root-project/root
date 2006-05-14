@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.22 2004/09/13 09:02:37 rdm Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGClient.h,v 1.23 2006/04/14 17:54:11 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -48,6 +48,10 @@ class TGIdleHandler;
 
 
 class TGClient : public TObject {
+
+private:
+   TGClient(const TGClient&);
+   TGClient& operator=(const TGClient&);
 
 protected:
    Pixel_t         fBackColor;        // default background color

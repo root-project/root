@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRefCnt.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRefCnt.h,v 1.2 2000/12/13 16:45:35 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -36,6 +36,7 @@ public:
 
    TRefCnt(Int_t initRef = 0) : fRefs((UInt_t)initRef-1) { }
    TRefCnt(EReferenceFlag) { }  // leave fRefs alone
+   virtual ~TRefCnt() { }
    UInt_t   References() const      { return fRefs+1; }
    void     SetRefCount(UInt_t r)   { fRefs = r-1; }
    void     AddReference()          { fRefs++; }

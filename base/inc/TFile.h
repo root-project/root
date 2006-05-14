@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.44 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.45 2006/04/25 09:28:42 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -216,6 +216,9 @@ public:
 class TFileOpenHandle : public TNamed {
  friend class TFile;
  private:
+   TFileOpenHandle(const TFileOpenHandle&);
+   TFileOpenHandle& operator=(const TFileOpenHandle&);
+
    TString  fOpt;        // Options
    Int_t    fCompress;   // Compression factor
    Int_t    fNetOpt;     // Network options
@@ -227,16 +230,16 @@ class TFileOpenHandle : public TNamed {
                    Int_t no) : TNamed(n,t), fOpt(o), fCompress(cmp),
                                fNetOpt(no), fFile(0) { }
 
-   TFile      *GetFile() { return fFile; }
+   TFile      *GetFile() const { return fFile; }
 
  public:
    ~TFileOpenHandle() { }
 
    Bool_t      Matches(const char *name);
 
-   const char *GetOpt() { return fOpt; }
-   Int_t       GetCompress() { return fCompress; }
-   Int_t       GetNetOpt() { return fNetOpt; }
+   const char *GetOpt() const { return fOpt; }
+   Int_t       GetCompress() const { return fCompress; }
+   Int_t       GetNetOpt() const { return fNetOpt; }
 };
 
 R__EXTERN TFile   *gFile;

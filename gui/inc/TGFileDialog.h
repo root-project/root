@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.5 2004/12/07 01:34:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.6 2005/02/18 09:26:54 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -54,6 +54,11 @@ class TGFSComboBox;
 
 
 class TGFileInfo {
+
+private:
+   TGFileInfo(const TGFileInfo&);
+   TGFileInfo& operator=(const TGFileInfo&);
+
 public:
    char         *fFilename;    // selected file name
    char         *fIniDir;      // on input: initial directory, on output: new directory
@@ -67,6 +72,10 @@ public:
 
 
 class TGFileDialog : public TGTransientFrame {
+
+private:
+   TGFileDialog(const TGFileDialog&);
+   TGFileDialog& operator=(const TGFileDialog&);
 
 protected:
    TGTextBuffer      *fTbfname;  // text buffer of file name

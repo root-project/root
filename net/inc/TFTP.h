@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.11 2005/05/20 10:04:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.12 2005/10/27 16:36:37 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -58,7 +58,10 @@ private:
    Long64_t   fBytesRead;   // number of bytes received
    Bool_t     fDir;         // Indicates if a remote directory is open
 
-   TFTP() { fSocket = 0; }
+   TFTP(): fHost(), fUser(), fPort(0), fParallel(0), fWindowSize(0),
+     fProtocol(0), fLastBlock(0), fBlockSize(0), fMode(0),
+     fRestartAt(0), fCurrentFile(), fSocket(NULL), fBytesWrite(0),
+     fBytesRead(0), fDir(kFALSE) { }
    TFTP(const TFTP &);              // not implemented
    void   operator=(const TFTP &);  // idem
    void   Init(const char *url, Int_t parallel, Int_t wsize);

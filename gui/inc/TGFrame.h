@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.70 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.71 2006/04/24 13:48:49 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -130,6 +130,9 @@ enum EMWMHints {
 
 class TGFrame : public TGWindow, public TQObject {
 
+private:
+   TGFrame& operator=(const TGFrame&);
+
 protected:
    Int_t    fX;             // frame x position
    Int_t    fY;             // frame y position
@@ -190,6 +193,13 @@ public:
    TGFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
+
+   TGFrame(const TGFrame& tgf): TGWindow(tgf), TQObject(tgf), fX(tgf.fX), fY(tgf.fY), 
+     fWidth(tgf.fWidth), fHeight(tgf.fHeight), fMinWidth(tgf.fMinWidth), 
+     fMinHeight(tgf.fMinHeight), fMaxWidth(tgf.fMaxWidth), fMaxHeight(tgf.fMaxHeight), 
+     fBorderWidth(tgf.fBorderWidth), fOptions(tgf.fOptions), fBackground(tgf.fBackground), 
+     fEventMask(tgf.fEventMask), fFE(tgf.fFE) {}
+
    virtual ~TGFrame();
    virtual void DeleteWindow();
    virtual void ReallyDelete() { delete this; }
@@ -323,6 +333,9 @@ public:
 
 class TGCompositeFrame : public TGFrame {
 
+private:
+   TGCompositeFrame& operator=(const TGCompositeFrame&);
+
 protected:
    TGLayoutManager *fLayoutManager;   // layout manager
    TList           *fList;            // container of frame elements
@@ -338,6 +351,11 @@ public:
                     UInt_t options = 0,
                     Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGCompositeFrame(const TGCompositeFrame& tcf): TGFrame(tcf),
+     fLayoutManager(tcf.fLayoutManager), fList(tcf.fList), 
+     fLayoutBroken(tcf.fLayoutBroken), fMustCleanup(tcf.fMustCleanup),
+     fMapSubwindows(tcf.fMapSubwindows) { }
+
    virtual ~TGCompositeFrame();
    virtual TList *GetList() const { return fList; }
 
@@ -435,15 +453,21 @@ public:
 
 class TGMainFrame : public TGCompositeFrame {
 
+private:
+   TGMainFrame& operator=(const TGMainFrame&);
+
 protected:
    enum { kDontCallClose = BIT(14) };
 
    // mapping between key and window
    class TGMapKey : public TObject {
+   private:
+      TGMapKey(const TGMapKey&);
+      TGMapKey& operator=(const TGMapKey&);
    public:
       UInt_t     fKeyCode;
       TGWindow  *fWindow;
-      TGMapKey(UInt_t keycode, TGWindow *w) { fKeyCode = keycode; fWindow = w; }
+      TGMapKey(UInt_t keycode, TGWindow *w): fKeyCode(keycode), fWindow(w) { }
    };
 
    TList        *fBindList;     // list with key bindings
@@ -474,6 +498,16 @@ protected:
 public:
    TGMainFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
+   TGMainFrame(const TGMainFrame& tmf): TGCompositeFrame(tmf),
+     fBindList(tmf.fBindList), fWindowName(tmf.fWindowName), fIconName(tmf.fIconName),
+     fIconPixmap(tmf.fIconPixmap), fClassName(tmf.fClassName), 
+     fResourceName(tmf.fResourceName), fMWMValue(tmf.fMWMValue), fMWMFuncs(tmf.fMWMFuncs),
+     fMWMInput(tmf.fMWMInput), fWMX(tmf.fWMX), fWMY(tmf.fWMY), fWMWidth(tmf.fWMWidth),
+     fWMHeight(tmf.fWMHeight), fWMMinWidth(tmf.fWMMinWidth), fWMMinHeight(tmf.fWMMinHeight),
+     fWMMaxWidth(tmf.fWMMaxWidth), fWMMaxHeight(tmf.fWMMaxHeight), 
+     fWMWidthInc(tmf.fWMWidthInc), fWMHeightInc(tmf.fWMHeightInc), 
+     fWMInitState(tmf.fWMInitState) { }
+
    virtual ~TGMainFrame();
 
    virtual Bool_t HandleKey(Event_t *event);
@@ -530,12 +564,17 @@ public:
 
 class TGTransientFrame : public TGMainFrame {
 
+private:
+   TGTransientFrame& operator=(const TGTransientFrame&);
+
 protected:
    const TGWindow   *fMain;  // window over which to popup dialog
 
 public:
    TGTransientFrame(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = kVerticalFrame);
+
+   TGTransientFrame(const TGTransientFrame& ttf): TGMainFrame(ttf), fMain(ttf.fMain) { }
 
    enum EPlacement { kCenter, kLeft, kRight, kTop, kBottom, kTopLeft, kTopRight,
                      kBottomLeft, kBottomRight };
@@ -559,6 +598,9 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGGroupFrame : public TGCompositeFrame {
+
+private:
+   TGGroupFrame& operator=(const TGGroupFrame&);
 
 protected:
    TGString      *fText;         // title text
@@ -587,6 +629,10 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 Pixel_t back = GetDefaultFrameBackground());
+   TGGroupFrame(const TGGroupFrame& tgf): TGCompositeFrame(tgf),
+     fText(tgf.fText), fFontStruct(tgf.fFontStruct), fNormGC(tgf.fNormGC),
+     fTitlePos(tgf.fTitlePos) { }
+
    virtual ~TGGroupFrame();
 
    virtual TGDimension GetDefaultSize() const;
