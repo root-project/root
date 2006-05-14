@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name: v4-04-02 $:$Id: TCondition.cxx,v 1.6 2005/01/05 01:55:13 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.7 2005/05/27 08:48:27 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -123,8 +123,8 @@ Int_t TCondition::TimedWaitRelative(ULong_t ms)
    absSec += dsec;
    absNanoSec += (ms - dsec*1000) * 1000000;
    if (absNanoSec > 999999999) {
-     absSec += 1;
-     absNanoSec -= 1000000000;
+      absSec += 1;
+      absNanoSec -= 1000000000;
    }
 
    return TimedWait(absSec, absNanoSec);

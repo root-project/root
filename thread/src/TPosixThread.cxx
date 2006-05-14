@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.10 2004/12/14 15:06:18 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.11 2005/01/05 01:25:19 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -175,6 +175,7 @@ Long_t TPosixThread::SelfId()
 //______________________________________________________________________________
 TPosixThreadCleanUp::TPosixThreadCleanUp(void **main, void *routine, void *arg)
 {
+   //cleanup function
    fNext = (TPosixThreadCleanUp*)*main;
    fRoutine = routine; fArgument = arg;
    *main  = this;

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.40 2006/02/09 20:46:23 pcanal Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.41 2006/05/10 15:31:03 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -85,12 +85,14 @@ public:
 TJoinHelper::TJoinHelper(TThread *th, void **ret)
    : fT(th), fRet(ret), fRc(0), fM(new TMutex), fC(new TCondition(fM))
 {
+   //constructor of Thread helper class
    fH = new TThread("JoinHelper", JoinFunc, this);
 }
 
 //______________________________________________________________________________
 TJoinHelper::~TJoinHelper()
 {
+   //destructor
    delete fC;
    delete fM;
    delete fH;
@@ -116,6 +118,7 @@ void TJoinHelper::JoinFunc(void *p)
 //______________________________________________________________________________
 Int_t TJoinHelper::Join()
 {
+   //thread join function
    fM->Lock();
    fH->Run();
 
