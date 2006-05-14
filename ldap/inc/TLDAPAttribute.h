@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.h,v 0.0.0.1 2001/09/21 17:00:58 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
    Int_t           GetCount() const { return fValues->GetSize(); }
    void            Print(Option_t * = "") const;
 
-   ClassDef(TLDAPAttribute, 0)
+   ClassDef(TLDAPAttribute, 0) //interface to LDAP
 };
 
 #endif

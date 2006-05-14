@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPAttribute.cxx,v 1.2 2002/12/02 18:50:04 rdm Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -16,6 +16,7 @@ ClassImp(TLDAPAttribute)
 //______________________________________________________________________________
 TLDAPAttribute::TLDAPAttribute(const char *name) : fNCount(0)
 {
+   //constructor
    SetName(name);
    fValues = new TList;
    fValues->SetOwner();
@@ -51,6 +52,7 @@ TLDAPAttribute::TLDAPAttribute(const TLDAPAttribute &attr)
 //______________________________________________________________________________
 TLDAPAttribute::~TLDAPAttribute()
 {
+   //destructor
    delete fValues;
 }
 

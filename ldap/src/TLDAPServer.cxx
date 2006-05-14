@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.cxx,v 1.1 2002/11/24 22:42:31 rdm Exp $
+// @(#)root/ldap:$Name:  $:$Id: TLDAPServer.cxx,v 1.2 2006/04/25 10:30:20 rdm Exp $
 // Author: Oleksandr Grebenyuk   21/09/2001
 
 /*************************************************************************
@@ -46,8 +46,8 @@ TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
       Error("TLDAPServer", "error in ldap_init function");
    } else {
       if (ldap_set_option(fLd, LDAP_OPT_PROTOCOL_VERSION, &version) != LDAP_OPT_SUCCESS ) {
-                      Error("Bind", "Could not set protocol version!");
-                      return;
+         Error("Bind", "Could not set protocol version!");
+         return;
       }
 
       Bind( );

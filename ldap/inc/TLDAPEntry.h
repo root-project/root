@@ -1,4 +1,4 @@
-// @(#)root/ldap:$Name:$:$Id:$
+// @(#)root/ldap:$Name:  $:$Id: TLDAPEntry.h,v 1.1 2002/11/24 22:42:31 rdm Exp $
 // Author: Evgenia Smirnova   21/09/2001
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    TList          *GetReferrals() const;
    void            Print(Option_t * = "") const;
 
-   ClassDef(TLDAPEntry, 0)
+   ClassDef(TLDAPEntry, 0) //describe one entry in LDAP
 };
 
 #endif
