@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.31 2006/04/20 20:10:36 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.32 2006/05/13 17:03:46 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -485,7 +485,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
          else
             if(fCmPar[0]==1.) {
                ReleaseParameter(fLastFixed);
-              cout <<fLastFixed<<endl;
+               cout <<fLastFixed<<endl;
             }
          return 0;
       case 10: // RELease <parno> ...
@@ -608,9 +608,9 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
          Double_t val;
          if(setCommand) {
             parnum = Int_t(fCmPar[0])-1;
-           val= fCmPar[1];
-           if(parnum<0 || parnum>=fNpar) return -2; //no such parameter
-           fA[parnum] = val;
+            val= fCmPar[1];
+            if(parnum<0 || parnum>=fNpar) return -2; //no such parameter
+            fA[parnum] = val;
          } else {
             if (nargs>0) {
                parnum = Int_t(fCmPar[0])-1;
@@ -648,12 +648,12 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
                      lolim = uplim;
                      uplim = tmp;
                   }
-              } else {
-                 lolim = gMINDOUBLE;
-                 uplim = gMAXDOUBLE;
-              }
-              fAMN[parnum] = lolim;
-              fAMX[parnum] = uplim;
+               } else {
+                  lolim = gMINDOUBLE;
+                  uplim = gMAXDOUBLE;
+               }
+               fAMN[parnum] = lolim;
+               fAMX[parnum] = uplim;
             } else 
                Printf("Limits for param %s Low=%E, High=%E",
                     fANames[parnum].Data(),fAMN[parnum],fAMX[parnum]);
@@ -809,8 +809,8 @@ Int_t TFumili::GetNumberFreeParameters() const
 
    Int_t nfree = fNpar;
    for (Int_t i=0;i<fNpar;i++) {
-       if (IsFixed(i)) nfree--;
-    }
+      if (IsFixed(i)) nfree--;
+   }
    return nfree;
 }
 
@@ -1728,7 +1728,7 @@ Int_t TFumili::SGZ()
       l = 0;
       for (i=0;i<n;i++)
          for (j=0;j<=i;j++) 
-           fZ[l++] += df[i]*df[j];
+            fZ[l++] += df[i]*df[j];
       k2 += fNED2;
    }
  
@@ -2192,8 +2192,8 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
       }
       Int_t l = 0;
       for (i=0;i<n;i++)
-        for (Int_t j=0;j<=i;j++) 
-          zik[l++] += df[i]*df[j];
+         for (Int_t j=0;j<=i;j++) 
+            zik[l++] += df[i]*df[j];
       f += .5*fsum*fsum;
 
    }

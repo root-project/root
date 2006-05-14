@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.9 2005/09/04 09:02:06 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.10 2006/05/13 15:40:17 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_____________________________________________________________________________
@@ -42,7 +42,7 @@ TFoamVect::TFoamVect(Int_t n)
       fCoords = new Double_t[fDim];
       if(gDebug) {
          if(fCoords == NULL)
-             Error("TFoamVect", "Constructor failed to allocate\n");
+            Error("TFoamVect", "Constructor failed to allocate\n");
       }
       for (i=0; i<n; i++) *(fCoords+i)=0.0;
    }
@@ -73,9 +73,9 @@ TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
 TFoamVect::~TFoamVect()
 {
 // Destructor
-  if(gDebug) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
-  delete [] fCoords; //  free(fCoords)
-  fCoords=0;
+   if(gDebug) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
+   delete [] fCoords; //  free(fCoords)
+   fCoords=0;
 }
 
 
@@ -193,7 +193,7 @@ TFoamVect& TFoamVect::operator =(Double_t x)
       for(Int_t i=0; i<fDim; i++)
          fCoords[i] = x;
    }
-  return *this;
+   return *this;
 }
 //////////////////////////////////////////////////////////////////////////////
 //                          OTHER METHODS                                   //

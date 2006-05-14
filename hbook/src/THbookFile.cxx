@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.22 2005/08/30 14:00:27 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.23 2006/05/13 17:28:15 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -733,7 +733,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 #ifndef WIN32
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
 #else
-        hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
+         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
 #endif 
 
       }

@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.14 2005/09/22 22:39:50 rdm Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.15 2006/05/13 15:40:17 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -351,7 +351,7 @@ void TFoam::Initialize()
       if(fAlpha==0)  Error("Initialize", "Cannot initialize buffer fAlpha \n" );
    }
    fMCvect = new Double_t[fDim]; // vector generated in the MC run
-  if(fMCvect==0)  Error("Initialize", "Cannot initialize buffer fMCvect  \n" );
+   if(fMCvect==0)  Error("Initialize", "Cannot initialize buffer fMCvect  \n" );
 
    //====== List of directions inhibited for division
    if(fInhiDiv == 0){
@@ -390,7 +390,7 @@ void TFoam::Initialize()
       htitle=TString("Debug Histogram ");
       htitle+=i;
       (*fHistDbg)[i] = new TH1D(hname.Data(),htitle.Data(),fNBin,0.0, 1.0); // Initialize histogram for each edge
-    }
+   }
 
    // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| //
    //                     BUILD-UP of the FOAM                            //
@@ -458,7 +458,7 @@ void TFoam::InitCells()
    // Exploration of the root cell(s)
    for(Long_t iCell=0; iCell<=fLastCe; iCell++){
       Explore( fCells[iCell] );               // Exploration of root cell(s)
-    }
+   }
 }//InitCells
 
 //_______________________________________________________________________________________
@@ -780,8 +780,8 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
          //-----  walk to the left and find first bin > theBin
          iLow = iBin;
          for(j=iBin; j>-1; j-- ) {
-           if(theBin< bins[j]) break;
-           iLow = j;
+            if(theBin< bins[j]) break;
+            iLow = j;
          }
          //iLow = iBin;
          //if(iLow>0)     while( (theBin >= bins[iLow-1])&&(iLow >0) ){iLow--;} // horror!!!
@@ -1019,8 +1019,8 @@ void TFoam::ResetRho(TFoamIntegrand *fun)
 // should be "owned" by the FOAM object and should not be replaced by another one after initialization.
 
    if(fRho) {
-     Info("ResetRho", "!!! Resetting distribution function  !!!\n");
-     delete fRho;
+      Info("ResetRho", "!!! Resetting distribution function  !!!\n");
+      delete fRho;
    }
    SetRho(fun);
 }
@@ -1341,7 +1341,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
       fXdivPRD[iDim] = new TFoamVect(len); // allocate list of division points
       for(i=0; i<len; i++) {
          (*fXdivPRD[iDim])[i]=xDiv[i]; // set list of division points
-       }
+      }
    } else {
       Error("SetXdivPRD", "Wrong iDim  \n");
    }

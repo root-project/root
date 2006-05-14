@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.8 2005/08/30 08:27:42 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.9 2006/05/13 15:40:17 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_________________________________________________________________________________
@@ -131,7 +131,7 @@ void    TFoamCell::GetHcub( TFoamVect &cellPosi, TFoamVect &cellSize)  const
          cellSize[kDiv] *=(1.0-xDivi);
          cellPosi[kDiv]  =cellPosi[kDiv]*(1.0-xDivi)+xDivi;
       } else {
-          Error("GetHcub ","Something wrong with linked tree \n");
+         Error("GetHcub ","Something wrong with linked tree \n");
       }
       dCell=pCell;
    }//while
@@ -157,7 +157,7 @@ void    TFoamCell::GetHSize( TFoamVect &cellSize)  const
       } else if(dCell == pCell->GetDau1()  ) {
          cellSize[kDiv]=cellSize[kDiv]*(1.0-xDivi);
       } else {
-          Error("GetHSize ","Something wrong with linked tree \n");
+         Error("GetHSize ","Something wrong with linked tree \n");
       }
       dCell=pCell;
    }//while
