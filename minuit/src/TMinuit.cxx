@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.50 2005/09/04 16:47:56 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.51 2006/05/13 21:49:17 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -654,7 +654,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
       if (h->LoadPlugin() != -1)
-         gr = (TObject*)h->ExecPlugin(3,npoints,xcoor,ycoor);
+      gr = (TObject*)h->ExecPlugin(3,npoints,xcoor,ycoor);
    }
    delete [] xcoor;
    delete [] ycoor;
@@ -1541,7 +1541,7 @@ L300:
 //*-*-             If cannot find mid-point, try closer to point 1
          if (a1 > .5) {
             if (fISW[4] >= 0) {
-                Printf(" MNCONT CANNOT FIND NEXT POINT ON CONTOUR.  ONLY %3d POINTS FOUND.",nowpts);
+               Printf(" MNCONT CANNOT FIND NEXT POINT ON CONTOUR.  ONLY %3d POINTS FOUND.",nowpts);
             }
             goto L950;
          }
@@ -1888,7 +1888,7 @@ L300:
       mneval(aopt, fnext, ierev);
 //*-* debug printout:
       if (ldebug) {
-         Printf(" MNCROS: calls=%8d   AIM=%10.5f  F,A=%10.5f%10.5f",fNfcn,aim,fnext,aopt);
+        Printf(" MNCROS: calls=%8d   AIM=%10.5f  F,A=%10.5f%10.5f",fNfcn,aim,fnext,aopt);
       }
       if (ierev > 0) goto L900;
       if (fLimset && fnext <= aim) goto L930;
@@ -2162,110 +2162,110 @@ void TMinuit::mnderi()
 //*-*        according to whether fISW[2] is zero or one.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t step, dfmin, stepb4, dd, df, fs1;
-    Double_t tlrstp, tlrgrd, epspri, optstp, stpmax, stpmin, fs2, grbfor=0, d1d2, xtf;
-    Int_t icyc, ncyc, iint, iext, i, nparx;
-    Bool_t ldebug;
+   /* Local variables */
+   Double_t step, dfmin, stepb4, dd, df, fs1;
+   Double_t tlrstp, tlrgrd, epspri, optstp, stpmax, stpmin, fs2, grbfor=0, d1d2, xtf;
+   Int_t icyc, ncyc, iint, iext, i, nparx;
+   Bool_t ldebug;
 
-    nparx = fNpar;
-    ldebug = fIdbg[2] >= 1;
-    if (fAmin == fUndefi) mnamin();
-    if (fISW[2] == 1) goto L100;
+   nparx = fNpar;
+   ldebug = fIdbg[2] >= 1;
+   if (fAmin == fUndefi) mnamin();
+   if (fISW[2] == 1) goto L100;
 
-    if (ldebug) {
+   if (ldebug) {
 //*-*-                      make sure starting at the right place
-        mninex(fX);
-        nparx = fNpar;
-        Eval(nparx, fGin, fs1, fU, 4);        ++fNfcn;
-        if (fs1 != fAmin) {
-            df    = fAmin - fs1;
-            mnwarn("D", "MNDERI", Form("function value differs from AMIN by %12.3g",df));
-            fAmin = fs1;
-        }
-        Printf("  FIRST DERIVATIVE DEBUG PRINTOUT.  MNDERI");
-        Printf(" PAR    DERIV     STEP      MINSTEP   OPTSTEP  D1-D2    2ND DRV");
-    }
-    dfmin = fEpsma2*8*(TMath::Abs(fAmin) + fUp);
-    if (fIstrat <= 0) {
-        ncyc   = 2;
-        tlrstp = .5;
-        tlrgrd = .1;
-    } else if (fIstrat == 1) {
-        ncyc   = 3;
-        tlrstp = .3;
-        tlrgrd = .05;
-    } else {
-        ncyc   = 5;
-        tlrstp = .1;
-        tlrgrd = .02;
-    }
+      mninex(fX);
+      nparx = fNpar;
+      Eval(nparx, fGin, fs1, fU, 4);        ++fNfcn;
+      if (fs1 != fAmin) {
+         df    = fAmin - fs1;
+         mnwarn("D", "MNDERI", Form("function value differs from AMIN by %12.3g",df));
+         fAmin = fs1;
+      }
+      Printf("  FIRST DERIVATIVE DEBUG PRINTOUT.  MNDERI");
+      Printf(" PAR    DERIV     STEP      MINSTEP   OPTSTEP  D1-D2    2ND DRV");
+   }
+   dfmin = fEpsma2*8*(TMath::Abs(fAmin) + fUp);
+   if (fIstrat <= 0) {
+      ncyc   = 2;
+      tlrstp = .5;
+      tlrgrd = .1;
+   } else if (fIstrat == 1) {
+      ncyc   = 3;
+      tlrstp = .3;
+      tlrgrd = .05;
+   } else {
+      ncyc   = 5;
+      tlrstp = .1;
+      tlrgrd = .02;
+   }
 //*-*-                               loop over variable parameters
-    for (i = 1; i <= fNpar; ++i) {
-        epspri = fEpsma2 + TMath::Abs(fGrd[i-1]*fEpsma2);
+   for (i = 1; i <= fNpar; ++i) {
+      epspri = fEpsma2 + TMath::Abs(fGrd[i-1]*fEpsma2);
 //*-*-        two-point derivatives always assumed necessary
 //*-*-        maximum number of cycles over step size depends on strategy
-        xtf = fX[i-1];
-        stepb4 = 0;
+      xtf = fX[i-1];
+      stepb4 = 0;
 //*-*-                              loop as little as possible here!/
-        for (icyc = 1; icyc <= ncyc; ++icyc) {
+      for (icyc = 1; icyc <= ncyc; ++icyc) {
 //*-*-                ........ theoretically best step
-            optstp = TMath::Sqrt(dfmin / (TMath::Abs(fG2[i-1]) + epspri));
+         optstp = TMath::Sqrt(dfmin / (TMath::Abs(fG2[i-1]) + epspri));
 //*-*-                    step cannot decrease by more than a factor of ten
-            step = TMath::Max(optstp,TMath::Abs(fGstep[i-1]*.1));
+         step = TMath::Max(optstp,TMath::Abs(fGstep[i-1]*.1));
 //*-*-                but if parameter has limits, max step size = 0.5
-            if (fGstep[i-1] < 0 && step > .5) step = .5;
+         if (fGstep[i-1] < 0 && step > .5) step = .5;
 //*-*-                and not more than ten times the previous step
-            stpmax = TMath::Abs(fGstep[i-1])*10;
-            if (step > stpmax) step = stpmax;
+         stpmax = TMath::Abs(fGstep[i-1])*10;
+         if (step > stpmax) step = stpmax;
 //*-*-                minimum step size allowed by machine precision
-            stpmin = TMath::Abs(fEpsma2*fX[i-1])*8;
-            if (step < stpmin) step = stpmin;
+         stpmin = TMath::Abs(fEpsma2*fX[i-1])*8;
+         if (step < stpmin) step = stpmin;
 //*-*-                end of iterations if step change less than factor 2
-            if (TMath::Abs((step - stepb4) / step) < tlrstp) goto L50;
+         if (TMath::Abs((step - stepb4) / step) < tlrstp) goto L50;
 //*-*-        take step positive
-            stepb4 = step;
-            if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(step);
-            else                 fGstep[i-1] = -TMath::Abs(step);
-            stepb4  = step;
-            fX[i-1] = xtf + step;
-            mninex(fX);
-            Eval(nparx, fGin, fs1, fU, 4);            ++fNfcn;
+         stepb4 = step;
+         if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(step);
+         else                 fGstep[i-1] = -TMath::Abs(step);
+         stepb4  = step;
+         fX[i-1] = xtf + step;
+         mninex(fX);
+         Eval(nparx, fGin, fs1, fU, 4);            ++fNfcn;
 //*-*-        take step negative
-            fX[i-1] = xtf - step;
-            mninex(fX);
-            Eval(nparx, fGin, fs2, fU, 4);            ++fNfcn;
-            grbfor = fGrd[i-1];
-            fGrd[i-1] = (fs1 - fs2) / (step*2);
-            fG2[i-1]  = (fs1 + fs2 - fAmin*2) / (step*step);
-            fX[i-1]   = xtf;
-            if (ldebug) {
-                d1d2 = (fs1 + fs2 - fAmin*2) / step;
-                Printf("%4d%11.3g%11.3g%10.2g%10.2g%10.2g%10.2g%10.2g",i,fGrd[i-1],step,stpmin,optstp,d1d2,fG2[i-1]);
-            }
+         fX[i-1] = xtf - step;
+         mninex(fX);
+         Eval(nparx, fGin, fs2, fU, 4);            ++fNfcn;
+         grbfor = fGrd[i-1];
+         fGrd[i-1] = (fs1 - fs2) / (step*2);
+         fG2[i-1]  = (fs1 + fs2 - fAmin*2) / (step*step);
+         fX[i-1]   = xtf;
+         if (ldebug) {
+            d1d2 = (fs1 + fs2 - fAmin*2) / step;
+            Printf("%4d%11.3g%11.3g%10.2g%10.2g%10.2g%10.2g%10.2g",i,fGrd[i-1],step,stpmin,optstp,d1d2,fG2[i-1]);
+         }
 //*-*-        see if another iteration is necessary
-            if (TMath::Abs(grbfor - fGrd[i-1]) / (TMath::Abs(fGrd[i-1]) + dfmin/step) < tlrgrd)
-                goto L50;
-        }
+         if (TMath::Abs(grbfor - fGrd[i-1]) / (TMath::Abs(fGrd[i-1]) + dfmin/step) < tlrgrd)
+            goto L50;
+      }
 //*-*-                          end of ICYC loop. too many iterations
-        if (ncyc == 1) goto L50;
-        mnwarn("D", "MNDERI", Form("First derivative not converged. %g%g",fGrd[i-1],grbfor));
+      if (ncyc == 1) goto L50;
+      mnwarn("D", "MNDERI", Form("First derivative not converged. %g%g",fGrd[i-1],grbfor));
 L50:
-        ;
-    }
-    mninex(fX);
-    return;
+      ;
+   }
+   mninex(fX);
+   return;
 //*-*-                                       .  derivatives calc by fcn
 L100:
-    for (iint = 1; iint <= fNpar; ++iint) {
-        iext = fNexofi[iint-1];
-        if (fNvarl[iext-1] <= 1) {
-           fGrd[iint-1] = fGin[iext-1];
-        } else {
-           dd = (fBlim[iext-1] - fAlim[iext-1])*.5*TMath::Cos(fX[iint-1]);
-           fGrd[iint-1] = fGin[iext-1]*dd;
-        }
-    }
+   for (iint = 1; iint <= fNpar; ++iint) {
+      iext = fNexofi[iint-1];
+      if (fNvarl[iext-1] <= 1) {
+         fGrd[iint-1] = fGin[iext-1];
+      } else {
+         dd = (fBlim[iext-1] - fAlim[iext-1])*.5*TMath::Cos(fX[iint-1]);
+         fGrd[iint-1] = fGin[iext-1]*dd;
+      }
+   }
 } /* mnderi_ */
 
 //______________________________________________________________________________
@@ -2278,11 +2278,11 @@ void TMinuit::mndxdi(Double_t pint, Int_t ipar, Double_t &dxdi)
 //*-*        parameters which are not limited.     called from MNEMAT.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i = fNexofi[ipar];
-    dxdi = 1;
-    if (fNvarl[i-1] > 1) {
-        dxdi = TMath::Abs((fBlim[i-1] - fAlim[i-1])*TMath::Cos(pint))*.5;
-    }
+   Int_t i = fNexofi[ipar];
+   dxdi = 1;
+   if (fNvarl[i-1] > 1) {
+      dxdi = TMath::Abs((fBlim[i-1] - fAlim[i-1])*TMath::Cos(pint))*.5;
+   }
 } /* mndxdi_ */
 
 //______________________________________________________________________________
@@ -2290,190 +2290,190 @@ void TMinuit::mneig(Double_t *a, Int_t ndima, Int_t n, Int_t mits, Double_t *wor
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Compute matrix eigen values*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ===========================
-    /* System generated locals */
-    Int_t a_offset;
-    Double_t d__1;
+   /* System generated locals */
+   Int_t a_offset;
+   Double_t d__1;
 
-    /* Local variables */
-    Double_t b, c, f, h, r, s, hh, gl, pr, pt;
-    Int_t i, j, k, l, m=0, i0, i1, j1, m1, n1;
+   /* Local variables */
+   Double_t b, c, f, h, r, s, hh, gl, pr, pt;
+   Int_t i, j, k, l, m=0, i0, i1, j1, m1, n1;
 
 //*-*-         PRECIS is the machine precision EPSMAC
-    /* Parameter adjustments */
-    a_offset = ndima + 1;
-    a -= a_offset;
-    --work;
+   /* Parameter adjustments */
+   a_offset = ndima + 1;
+   a -= a_offset;
+   --work;
 
-    /* Function Body */
-    ifault = 1;
+   /* Function Body */
+   ifault = 1;
 
-    i = n;
-    for (i1 = 2; i1 <= n; ++i1) {
-        l  = i-2;
-        f  = a[i + (i-1)*ndima];
-        gl = 0;
+   i = n;
+   for (i1 = 2; i1 <= n; ++i1) {
+      l  = i-2;
+      f  = a[i + (i-1)*ndima];
+      gl = 0;
 
-        if (l < 1) goto L25;
+      if (l < 1) goto L25;
 
-        for (k = 1; k <= l; ++k) {
-            d__1 = a[i + k*ndima];
-            gl  += d__1*d__1;
-        }
+      for (k = 1; k <= l; ++k) {
+         d__1 = a[i + k*ndima];
+         gl  += d__1*d__1;
+      }
 L25:
-        h = gl + f*f;
+      h = gl + f*f;
 
-        if (gl > 1e-35) goto L30;
+      if (gl > 1e-35) goto L30;
 
-        work[i]     = 0;
-        work[n + i] = f;
-        goto L65;
+      work[i]     = 0;
+      work[n + i] = f;
+      goto L65;
 L30:
-        ++l;
-        gl = TMath::Sqrt(h);
-        if (f >= 0) gl = -gl;
-        work[n + i] = gl;
-        h -= f*gl;
-        a[i + (i-1)*ndima] = f - gl;
-        f = 0;
-        for (j = 1; j <= l; ++j) {
-            a[j + i*ndima] = a[i + j*ndima] / h;
-            gl = 0;
-            for (k = 1; k <= j; ++k) { gl += a[j + k*ndima]*a[i + k*ndima]; }
-            if (j >= l) goto L47;
-            j1 = j + 1;
-            for (k = j1; k <= l; ++k) {        gl += a[k + j*ndima]*a[i + k*ndima]; }
+      ++l;
+      gl = TMath::Sqrt(h);
+      if (f >= 0) gl = -gl;
+      work[n + i] = gl;
+      h -= f*gl;
+      a[i + (i-1)*ndima] = f - gl;
+      f = 0;
+      for (j = 1; j <= l; ++j) {
+         a[j + i*ndima] = a[i + j*ndima] / h;
+         gl = 0;
+         for (k = 1; k <= j; ++k) { gl += a[j + k*ndima]*a[i + k*ndima]; }
+         if (j >= l) goto L47;
+         j1 = j + 1;
+         for (k = j1; k <= l; ++k) {        gl += a[k + j*ndima]*a[i + k*ndima]; }
 L47:
-            work[n + j] = gl / h;
-            f += gl*a[j + i*ndima];
-        }
-        hh = f / (h + h);
-        for (j = 1; j <= l; ++j) {
-            f  = a[i + j*ndima];
-            gl = work[n + j] - hh*f;
-            work[n + j] = gl;
-            for (k = 1; k <= j; ++k) {
-                a[j + k*ndima] = a[j + k*ndima] - f*work[n + k] - gl*a[i + k*ndima];
-            }
-        }
-        work[i] = h;
+         work[n + j] = gl / h;
+         f += gl*a[j + i*ndima];
+      }
+      hh = f / (h + h);
+      for (j = 1; j <= l; ++j) {
+         f  = a[i + j*ndima];
+         gl = work[n + j] - hh*f;
+         work[n + j] = gl;
+         for (k = 1; k <= j; ++k) {
+            a[j + k*ndima] = a[j + k*ndima] - f*work[n + k] - gl*a[i + k*ndima];
+         }
+      }
+      work[i] = h;
 L65:
-        --i;
-    }
-    work[1] = 0;
-    work[n + 1] = 0;
-    for (i = 1; i <= n; ++i) {
-        l = i-1;
-        if (work[i] == 0 || l == 0) goto L100;
+      --i;
+   }
+   work[1] = 0;
+   work[n + 1] = 0;
+   for (i = 1; i <= n; ++i) {
+      l = i-1;
+      if (work[i] == 0 || l == 0) goto L100;
 
-        for (j = 1; j <= l; ++j) {
-            gl = 0;
-            for (k = 1; k <= l; ++k) { gl += a[i + k*ndima]*a[k + j*ndima]; }
-            for (k = 1; k <= l; ++k) { a[k + j*ndima] -= gl*a[k + i*ndima]; }
-        }
+      for (j = 1; j <= l; ++j) {
+         gl = 0;
+         for (k = 1; k <= l; ++k) { gl += a[i + k*ndima]*a[k + j*ndima]; }
+         for (k = 1; k <= l; ++k) { a[k + j*ndima] -= gl*a[k + i*ndima]; }
+      }
 L100:
-        work[i] = a[i + i*ndima];
-        a[i + i*ndima] = 1;
-        if (l == 0) continue;
+      work[i] = a[i + i*ndima];
+      a[i + i*ndima] = 1;
+      if (l == 0) continue;
 
-        for (j = 1; j <= l; ++j) {
-            a[i + j*ndima] = 0;
-            a[j + i*ndima] = 0;
-        }
-    }
+      for (j = 1; j <= l; ++j) {
+         a[i + j*ndima] = 0;
+         a[j + i*ndima] = 0;
+      }
+   }
 
-    n1 = n - 1;
-    for (i = 2; i <= n; ++i) {
-        i0 = n + i-1;
-        work[i0] = work[i0 + 1];
-    }
-    work[n + n] = 0;
-    b = 0;
-    f = 0;
-    for (l = 1; l <= n; ++l) {
-        j = 0;
-        h = precis*(TMath::Abs(work[l]) + TMath::Abs(work[n + l]));
-        if (b < h) b = h;
-        for (m1 = l; m1 <= n; ++m1) {
-            m = m1;
-            if (TMath::Abs(work[n + m]) <= b)        goto L150;
-        }
+   n1 = n - 1;
+   for (i = 2; i <= n; ++i) {
+      i0 = n + i-1;
+      work[i0] = work[i0 + 1];
+   }
+   work[n + n] = 0;
+   b = 0;
+   f = 0;
+   for (l = 1; l <= n; ++l) {
+      j = 0;
+      h = precis*(TMath::Abs(work[l]) + TMath::Abs(work[n + l]));
+      if (b < h) b = h;
+      for (m1 = l; m1 <= n; ++m1) {
+         m = m1;
+         if (TMath::Abs(work[n + m]) <= b)        goto L150;
+      }
 
 L150:
-        if (m == l) goto L205;
+      if (m == l) goto L205;
 
 L160:
-        if (j == mits) return;
-        ++j;
-        pt = (work[l + 1] - work[l]) / (work[n + l]*2);
-        r  = TMath::Sqrt(pt*pt + 1);
-        pr = pt + r;
-        if (pt < 0) pr = pt - r;
+      if (j == mits) return;
+      ++j;
+      pt = (work[l + 1] - work[l]) / (work[n + l]*2);
+      r  = TMath::Sqrt(pt*pt + 1);
+      pr = pt + r;
+      if (pt < 0) pr = pt - r;
 
-        h = work[l] - work[n + l] / pr;
-        for (i = l; i <= n; ++i) { work[i] -= h; }
-        f += h;
-        pt = work[m];
-        c  = 1;
-        s  = 0;
-        m1 = m - 1;
-        i  = m;
-        for (i1 = l; i1 <= m1; ++i1) {
-            j = i;
-            --i;
-            gl = c*work[n + i];
-            h  = c*pt;
-            if (TMath::Abs(pt) >= TMath::Abs(work[n + i])) goto L180;
+      h = work[l] - work[n + l] / pr;
+      for (i = l; i <= n; ++i) { work[i] -= h; }
+      f += h;
+      pt = work[m];
+      c  = 1;
+      s  = 0;
+      m1 = m - 1;
+      i  = m;
+      for (i1 = l; i1 <= m1; ++i1) {
+         j = i;
+         --i;
+         gl = c*work[n + i];
+         h  = c*pt;
+         if (TMath::Abs(pt) >= TMath::Abs(work[n + i])) goto L180;
 
-            c = pt / work[n + i];
-            r = TMath::Sqrt(c*c + 1);
-            work[n + j] = s*work[n + i]*r;
-            s  = 1 / r;
-            c /= r;
-            goto L190;
+         c = pt / work[n + i];
+         r = TMath::Sqrt(c*c + 1);
+         work[n + j] = s*work[n + i]*r;
+         s  = 1 / r;
+         c /= r;
+         goto L190;
 L180:
-            c = work[n + i] / pt;
-            r = TMath::Sqrt(c*c + 1);
-            work[n + j] = s*pt*r;
-            s = c / r;
-            c = 1 / r;
+         c = work[n + i] / pt;
+         r = TMath::Sqrt(c*c + 1);
+         work[n + j] = s*pt*r;
+         s = c / r;
+         c = 1 / r;
 L190:
-            pt = c*work[i] - s*gl;
-            work[j] = h + s*(c*gl + s*work[i]);
-            for (k = 1; k <= n; ++k) {
-                h = a[k + j*ndima];
-                a[k + j*ndima] = s*a[k + i*ndima] + c*h;
-                a[k + i*ndima] = c*a[k + i*ndima] - s*h;
-            }
-        }
-        work[n + l] = s*pt;
-        work[l]     = c*pt;
+         pt = c*work[i] - s*gl;
+         work[j] = h + s*(c*gl + s*work[i]);
+         for (k = 1; k <= n; ++k) {
+            h = a[k + j*ndima];
+            a[k + j*ndima] = s*a[k + i*ndima] + c*h;
+            a[k + i*ndima] = c*a[k + i*ndima] - s*h;
+         }
+      }
+      work[n + l] = s*pt;
+      work[l]     = c*pt;
 
-        if (TMath::Abs(work[n + l]) > b) goto L160;
+      if (TMath::Abs(work[n + l]) > b) goto L160;
 
 L205:
-        work[l] += f;
-    }
-    for (i = 1; i <= n1; ++i) {
-        k  = i;
-        pt = work[i];
-        i1 = i + 1;
-        for (j = i1; j <= n; ++j) {
-            if (work[j] >= pt) continue;
-            k  = j;
-            pt = work[j];
-        }
+      work[l] += f;
+   }
+   for (i = 1; i <= n1; ++i) {
+      k  = i;
+      pt = work[i];
+      i1 = i + 1;
+      for (j = i1; j <= n; ++j) {
+         if (work[j] >= pt) continue;
+         k  = j;
+         pt = work[j];
+      }
 
-        if (k == i) continue;
+      if (k == i) continue;
 
-        work[k] = work[i];
-        work[i] = pt;
-        for (j = 1; j <= n; ++j) {
-            pt = a[j + i*ndima];
-            a[j + i*ndima] = a[j + k*ndima];
-            a[j + k*ndima] = pt;
-        }
-    }
-    ifault = 0;
+      work[k] = work[i];
+      work[i] = pt;
+      for (j = 1; j <= n; ++j) {
+         pt = a[j + i*ndima];
+         a[j + i*ndima] = a[j + k*ndima];
+         a[j + k*ndima] = pt;
+      }
+   }
+   ifault = 0;
 } /* mneig_ */
 
 //______________________________________________________________________________
@@ -2485,66 +2485,66 @@ void TMinuit::mnemat(Double_t *emat, Int_t ndim)
 // in the calling program, one has to call mnemat with, eg
 //     gMinuit->mnemat(&matrix[0][0],5);
 
-    /* System generated locals */
-    Int_t emat_dim1, emat_offset;
+   /* System generated locals */
+   Int_t emat_dim1, emat_offset;
 
-    /* Local variables */
-    Double_t dxdi, dxdj;
-    Int_t i, j, k, npard, k2, kk, iz, nperln, kga, kgb;
-    TString ctemp;
+   /* Local variables */
+   Double_t dxdi, dxdj;
+   Int_t i, j, k, npard, k2, kk, iz, nperln, kga, kgb;
+   TString ctemp;
 
-    /* Parameter adjustments */
-    emat_dim1 = ndim;
-    emat_offset = emat_dim1 + 1;
-    emat -= emat_offset;
+   /* Parameter adjustments */
+   emat_dim1 = ndim;
+   emat_offset = emat_dim1 + 1;
+   emat -= emat_offset;
 
-    /* Function Body */
-    if (fISW[1] < 1) return;
-    if (fISW[4] >= 2) {
-        Printf(" EXTERNAL ERROR MATRIX.    NDIM=%4d    NPAR=%3d    ERR DEF=%g",ndim,fNpar,fUp);
-    }
+   /* Function Body */
+   if (fISW[1] < 1) return;
+   if (fISW[4] >= 2) {
+      Printf(" EXTERNAL ERROR MATRIX.    NDIM=%4d    NPAR=%3d    ERR DEF=%g",ndim,fNpar,fUp);
+   }
 //*-*-                   size of matrix to be printed
-    npard = fNpar;
-    if (ndim < fNpar) {
-        npard = ndim;
-        if (fISW[4] >= 0) {
-            Printf(" USER-DIMENSIONED  ARRAY EMAT NOT BIG ENOUGH. REDUCED MATRIX CALCULATED.");
-        }
-    }
+   npard = fNpar;
+   if (ndim < fNpar) {
+      npard = ndim;
+      if (fISW[4] >= 0) {
+         Printf(" USER-DIMENSIONED  ARRAY EMAT NOT BIG ENOUGH. REDUCED MATRIX CALCULATED.");
+      }
+   }
 //*-*-                NPERLN is the number of elements that fit on one line
 
-    nperln = (fNpagwd - 5) / 10;
-    nperln = TMath::Min(nperln,13);
-    if (fISW[4] >= 1 && npard > nperln) {
-        Printf(" ELEMENTS ABOVE DIAGONAL ARE NOT PRINTED.");
-    }
+   nperln = (fNpagwd - 5) / 10;
+   nperln = TMath::Min(nperln,13);
+   if (fISW[4] >= 1 && npard > nperln) {
+      Printf(" ELEMENTS ABOVE DIAGONAL ARE NOT PRINTED.");
+   }
 //*-*-                I counts the rows of the matrix
-    for (i = 1; i <= npard; ++i) {
-        mndxdi(fX[i-1], i-1, dxdi);
-        kga = i*(i-1) / 2;
-        for (j = 1; j <= i; ++j) {
-            mndxdi(fX[j-1], j-1, dxdj);
-            kgb = kga + j;
-            emat[i + j*emat_dim1] = dxdi*fVhmat[kgb-1]*dxdj*fUp;
-            emat[j + i*emat_dim1] = emat[i + j*emat_dim1];
-        }
-    }
+   for (i = 1; i <= npard; ++i) {
+      mndxdi(fX[i-1], i-1, dxdi);
+      kga = i*(i-1) / 2;
+      for (j = 1; j <= i; ++j) {
+         mndxdi(fX[j-1], j-1, dxdj);
+         kgb = kga + j;
+         emat[i + j*emat_dim1] = dxdi*fVhmat[kgb-1]*dxdj*fUp;
+         emat[j + i*emat_dim1] = emat[i + j*emat_dim1];
+      }
+   }
 //*-*-                   IZ is number of columns to be printed in row I
-    if (fISW[4] >= 2) {
-        for (i = 1; i <= npard; ++i) {
-            iz = npard;
-            if (npard >= nperln) iz = i;
-            ctemp = " ";
-            for (k = 1; nperln < 0 ? k >= iz : k <= iz; k += nperln) {
-                k2 = k + nperln - 1;
-                if (k2 > iz) k2 = iz;
-                for (kk = k; kk <= k2; ++kk) {
-                    ctemp += Form("%10.3e ",emat[i + kk*emat_dim1]);
-                }
-                Printf("%s",(const char*)ctemp);
+   if (fISW[4] >= 2) {
+      for (i = 1; i <= npard; ++i) {
+         iz = npard;
+         if (npard >= nperln) iz = i;
+         ctemp = " ";
+         for (k = 1; nperln < 0 ? k >= iz : k <= iz; k += nperln) {
+            k2 = k + nperln - 1;
+            if (k2 > iz) k2 = iz;
+            for (kk = k; kk <= k2; ++kk) {
+               ctemp += Form("%10.3e ",emat[i + kk*emat_dim1]);
             }
-        }
-    }
+            Printf("%s",(const char*)ctemp);
+         }
+      }
+   }
 } /* mnemat_ */
 
 //______________________________________________________________________________
@@ -2561,34 +2561,34 @@ void TMinuit::mnerrs(Int_t number, Double_t &eplus, Double_t &eminus, Double_t &
 //*-*       GCC is global correlation coefficient from error matrix
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t dxdi;
-    Int_t ndiag, iin, iex;
+   Double_t dxdi;
+   Int_t ndiag, iin, iex;
 
-    iex = number+1;
+   iex = number+1;
 
-    if (iex > fNu || iex <= 0) goto L900;
-    iin = fNiofex[iex-1];
-    if (iin <= 0) goto L900;
+   if (iex > fNu || iex <= 0) goto L900;
+   iin = fNiofex[iex-1];
+   if (iin <= 0) goto L900;
 
 //*-*-            IEX is external number, IIN is internal number
-    eplus  = fErp[iin-1];
-    if (eplus == fUndefi)  eplus = 0;
-    eminus = fErn[iin-1];
-    if (eminus == fUndefi) eminus = 0;
-    mndxdi(fX[iin-1], iin-1, dxdi);
-    ndiag  = iin*(iin + 1) / 2;
-    eparab = TMath::Abs(dxdi*TMath::Sqrt(TMath::Abs(fUp*fVhmat[ndiag- 1])));
+   eplus  = fErp[iin-1];
+   if (eplus == fUndefi)  eplus = 0;
+   eminus = fErn[iin-1];
+   if (eminus == fUndefi) eminus = 0;
+   mndxdi(fX[iin-1], iin-1, dxdi);
+   ndiag  = iin*(iin + 1) / 2;
+   eparab = TMath::Abs(dxdi*TMath::Sqrt(TMath::Abs(fUp*fVhmat[ndiag- 1])));
 //*-*-             global correlation coefficient
-    gcc = 0;
-    if (fISW[1] < 2) return;
-    gcc = fGlobcc[iin-1];
-    return;
+   gcc = 0;
+   if (fISW[1] < 2) return;
+   gcc = fGlobcc[iin-1];
+   return;
 //*-*-                 ERROR.  parameter number not valid
 L900:
-    eplus  = 0;
-    eminus = 0;
-    eparab = 0;
-    gcc    = 0;
+   eplus  = 0;
+   eminus = 0;
+   eparab = 0;
+   gcc    = 0;
 } /* mnerrs_ */
 
 //______________________________________________________________________________
@@ -2604,24 +2604,24 @@ void TMinuit::mneval(Double_t anext, Double_t &fnext, Int_t &ierev)
 //*-*      and (if KE2CR .NE. 0)  U(KE2CR) = YMIDCR + ANEXT*YDIRCR
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t nparx;
+   Int_t nparx;
 
-    fU[fKe1cr-1] = fXmidcr + anext*fXdircr;
-    if (fKe2cr != 0) fU[fKe2cr-1] = fYmidcr + anext*fYdircr;
-    mninex(fX);
-    nparx = fNpar;
-    Eval(nparx, fGin, fnext, fU, 4);    ++fNfcn;
-    ierev = 0;
-    if (fNpar > 0) {
-        fItaur = 1;
-        fAmin = fnext;
-        fISW[0] = 0;
-        mnmigr();
-        fItaur = 0;
-        fnext = fAmin;
-        if (fISW[0] >= 1) ierev = 1;
-        if (fISW[3] < 1)  ierev = 2;
-    }
+   fU[fKe1cr-1] = fXmidcr + anext*fXdircr;
+   if (fKe2cr != 0) fU[fKe2cr-1] = fYmidcr + anext*fYdircr;
+   mninex(fX);
+   nparx = fNpar;
+   Eval(nparx, fGin, fnext, fU, 4);    ++fNfcn;
+   ierev = 0;
+   if (fNpar > 0) {
+      fItaur = 1;
+      fAmin = fnext;
+      fISW[0] = 0;
+      mnmigr();
+      fItaur = 0;
+      fnext = fAmin;
+      if (fISW[0] >= 1) ierev = 1;
+      if (fISW[3] < 1)  ierev = 2;
+   }
 } /* mneval_ */
 
 //______________________________________________________________________________
@@ -2646,12 +2646,12 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
 //*-*             12: RETURN command
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    TString comand = command;
-    static TString clower = "abcdefghijklmnopqrstuvwxyz";
-    static TString cupper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const char *cname[40] = {
+   TString comand = command;
+   static TString clower = "abcdefghijklmnopqrstuvwxyz";
+   static TString cupper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+   const char *cname[40] = {
       "MINImize  ",
       "SEEk      ",
       "SIMplex   ",
@@ -2693,436 +2693,436 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
       "LIMITS    ",
       "PUNCH     "};
 
-    Int_t nntot = 40;
+   Int_t nntot = 40;
 
-    /* Local variables */
-    Double_t step, xptu[101], yptu[101], f, rno;
-    Int_t icol, kcol, ierr, iint, iext, lnow, nptu, i, iflag, ierrf;
-    Int_t ilist, nparx, izero, nf, lk, it, iw, inonde, nsuper;
-    Int_t it2, ke1, ke2, nowprt, kll, krl;
-    TString chwhy, c26, cvblnk, cneway, comd;
-    TString ctemp;
-    Bool_t lfreed, ltofix, lfixed;
+   /* Local variables */
+   Double_t step, xptu[101], yptu[101], f, rno;
+   Int_t icol, kcol, ierr, iint, iext, lnow, nptu, i, iflag, ierrf;
+   Int_t ilist, nparx, izero, nf, lk, it, iw, inonde, nsuper;
+   Int_t it2, ke1, ke2, nowprt, kll, krl;
+   TString chwhy, c26, cvblnk, cneway, comd;
+   TString ctemp;
+   Bool_t lfreed, ltofix, lfixed;
 
 //*-*  alphabetical order of command names!
 
-    /* Function Body */
+   /* Function Body */
 
-    lk = comand.Length();
-    if (lk > 20) lk = 20;
-    fCword =  comand;
-    fCword.ToUpper();
+   lk = comand.Length();
+   if (lk > 20) lk = 20;
+   fCword =  comand;
+   fCword.ToUpper();
 //*-*-          Copy the first MAXP arguments into WORD7, making
 //*-*-          sure that WORD7(1)=0 if LLIST=0
-    for (iw = 1; iw <= fMaxpar; ++iw) {
-        fWord7[iw-1] = 0;
-        if (iw <= llist) fWord7[iw-1] = plist[iw-1];
-    }
-    ++fIcomnd;
-    fNfcnlc = fNfcn;
-    if (fCword(0,7) != "SET PRI" || fWord7[0] >= 0) {
-        if (fISW[4] >= 0) {
-            lnow = llist;
-            if (lnow > 4) lnow = 4;
-            Printf(" **********");
-            ctemp = Form(" **%5d **%s",fIcomnd,(const char*)fCword);
-            for (i = 1; i <= lnow; ++i) {
-                ctemp += Form("%12.4g",plist[i-1]);
+   for (iw = 1; iw <= fMaxpar; ++iw) {
+      fWord7[iw-1] = 0;
+      if (iw <= llist) fWord7[iw-1] = plist[iw-1];
+   }
+   ++fIcomnd;
+   fNfcnlc = fNfcn;
+   if (fCword(0,7) != "SET PRI" || fWord7[0] >= 0) {
+      if (fISW[4] >= 0) {
+         lnow = llist;
+         if (lnow > 4) lnow = 4;
+         Printf(" **********");
+         ctemp = Form(" **%5d **%s",fIcomnd,(const char*)fCword);
+         for (i = 1; i <= lnow; ++i) {
+            ctemp += Form("%12.4g",plist[i-1]);
+         }
+         Printf("%s",(const char*)ctemp);
+         inonde = 0;
+         if (llist > lnow) {
+            kll = llist;
+            if (llist > fMaxpar) {
+               inonde = 1;
+               kll = fMaxpar;
             }
-            Printf("%s",(const char*)ctemp);
-            inonde = 0;
-            if (llist > lnow) {
-                kll = llist;
-                if (llist > fMaxpar) {
-                    inonde = 1;
-                    kll = fMaxpar;
-                }
-                Printf(" ***********");
-                for (i = lnow + 1; i <= kll; ++i) {
-                   Printf("%12.4g",plist[i-1]);
-                }
+            Printf(" ***********");
+            for (i = lnow + 1; i <= kll; ++i) {
+               Printf("%12.4g",plist[i-1]);
             }
-            Printf(" **********");
-            if (inonde > 0) {
-                Printf("  ERROR: ABOVE CALL TO MNEXCM TRIED TO PASS MORE THAN %d PARAMETERS.", fMaxpar);
-            }
-        }
-    }
-    fNfcnmx = Int_t(fWord7[0]);
-    if (fNfcnmx <= 0) {
-        fNfcnmx = fNpar*100 + 200 + fNpar*fNpar*5;
-    }
-    fEpsi = fWord7[1];
-    if (fEpsi <= 0) {
-        fEpsi = fUp*.1;
-    }
-    fLnewmn = kFALSE;
-    fLphead = kTRUE;
-    fISW[0] = 0;
-    ierflg = 0;
+         }
+         Printf(" **********");
+         if (inonde > 0) {
+            Printf("  ERROR: ABOVE CALL TO MNEXCM TRIED TO PASS MORE THAN %d PARAMETERS.", fMaxpar);
+         }
+      }
+   }
+   fNfcnmx = Int_t(fWord7[0]);
+   if (fNfcnmx <= 0) {
+      fNfcnmx = fNpar*100 + 200 + fNpar*fNpar*5;
+   }
+   fEpsi = fWord7[1];
+   if (fEpsi <= 0) {
+      fEpsi = fUp*.1;
+   }
+   fLnewmn = kFALSE;
+   fLphead = kTRUE;
+   fISW[0] = 0;
+   ierflg = 0;
 //*-*-               look for command in list CNAME . . . . . . . . . .
-    ctemp = fCword(0,3);
-    for (i = 1; i <= nntot; ++i) {
-        if (strncmp(ctemp.Data(),cname[i-1],3) == 0) goto L90;
-    }
-    Printf("UNKNOWN COMMAND IGNORED:%s", comand.Data());
-    ierflg = 3;
-    return;
+   ctemp = fCword(0,3);
+   for (i = 1; i <= nntot; ++i) {
+      if (strncmp(ctemp.Data(),cname[i-1],3) == 0) goto L90;
+   }
+   Printf("UNKNOWN COMMAND IGNORED:%s", comand.Data());
+   ierflg = 3;
+   return;
 //*-*-               normal case: recognized MINUIT command . . . . . . .
 L90:
-    if (fCword(0,4) == "MINO") i = 5;
-    if (i != 6 && i != 7 && i != 8 && i != 23) {
-        fCfrom  = cname[i-1];
-        fNfcnfr = fNfcn;
-    }
+   if (fCword(0,4) == "MINO") i = 5;
+   if (i != 6 && i != 7 && i != 8 && i != 23) {
+      fCfrom  = cname[i-1];
+      fNfcnfr = fNfcn;
+   }
 //*-*-             1    2    3    4    5    6    7    8    9   10
-    switch (i) {
-        case 1:  goto L400;
-        case 2:  goto L200;
-        case 3:  goto L300;
-        case 4:  goto L400;
-        case 5:  goto L500;
-        case 6:  goto L700;
-        case 7:  goto L700;
-        case 8:  goto L800;
-        case 9:  goto L900;
-        case 10:  goto L1000;
-        case 11:  goto L1100;
-        case 12:  goto L1200;
-        case 13:  goto L1300;
-        case 14:  goto L1400;
-        case 15:  goto L1500;
-        case 16:  goto L1600;
-        case 17:  goto L1700;
-        case 18:  goto L1800;
-        case 19:  goto L1900;
-        case 20:  goto L1900;
-        case 21:  goto L1900;
-        case 22:  goto L2200;
-        case 23:  goto L2300;
-        case 24:  goto L2400;
-        case 25:  goto L1900;
-        case 26:  goto L2600;
-        case 27:  goto L3300;
-        case 28:  goto L3300;
-        case 29:  goto L3300;
-        case 30:  goto L3300;
-        case 31:  goto L3300;
-        case 32:  goto L3300;
-        case 33:  goto L3300;
-        case 34:  goto L3400;
-        case 35:  goto L3500;
-        case 36:  goto L3600;
-        case 37:  goto L3700;
-        case 38:  goto L3800;
-        case 39:  goto L3900;
-        case 40:  goto L4000;
-    }
+   switch (i) {
+      case 1:  goto L400;
+      case 2:  goto L200;
+      case 3:  goto L300;
+      case 4:  goto L400;
+      case 5:  goto L500;
+      case 6:  goto L700;
+      case 7:  goto L700;
+      case 8:  goto L800;
+      case 9:  goto L900;
+      case 10:  goto L1000;
+      case 11:  goto L1100;
+      case 12:  goto L1200;
+      case 13:  goto L1300;
+      case 14:  goto L1400;
+      case 15:  goto L1500;
+      case 16:  goto L1600;
+      case 17:  goto L1700;
+      case 18:  goto L1800;
+      case 19:  goto L1900;
+      case 20:  goto L1900;
+      case 21:  goto L1900;
+      case 22:  goto L2200;
+      case 23:  goto L2300;
+      case 24:  goto L2400;
+      case 25:  goto L1900;
+      case 26:  goto L2600;
+      case 27:  goto L3300;
+      case 28:  goto L3300;
+      case 29:  goto L3300;
+      case 30:  goto L3300;
+      case 31:  goto L3300;
+      case 32:  goto L3300;
+      case 33:  goto L3300;
+      case 34:  goto L3400;
+      case 35:  goto L3500;
+      case 36:  goto L3600;
+      case 37:  goto L3700;
+      case 38:  goto L3800;
+      case 39:  goto L3900;
+      case 40:  goto L4000;
+   }
 //*-*-                                       . . . . . . . . . . seek
 L200:
-    mnseek();
-    return;
+   mnseek();
+   return;
 //*-*-                                       . . . . . . . . . . simplex
 L300:
-    mnsimp();
-    if (fISW[3] < 1) ierflg = 4;
-    return;
+   mnsimp();
+   if (fISW[3] < 1) ierflg = 4;
+   return;
 //*-*-                                       . . . . . . migrad, minimize
 L400:
-    nf = fNfcn;
-    fApsi = fEpsi;
-    mnmigr();
-    mnwerr();
-    if (fISW[3] >= 1) return;
-    ierflg = 4;
-    if (fISW[0] == 1) return;
-    if (fCword(0,3) == "MIG") return;
+   nf = fNfcn;
+   fApsi = fEpsi;
+   mnmigr();
+   mnwerr();
+   if (fISW[3] >= 1) return;
+   ierflg = 4;
+   if (fISW[0] == 1) return;
+   if (fCword(0,3) == "MIG") return;
 
-    fNfcnmx = fNfcnmx + nf - fNfcn;
-    nf = fNfcn;
-    mnsimp();
-    if (fISW[0] == 1) return;
-    fNfcnmx = fNfcnmx + nf - fNfcn;
-    mnmigr();
-    if (fISW[3] >= 1) ierflg = 0;
-    mnwerr();
-    return;
+   fNfcnmx = fNfcnmx + nf - fNfcn;
+   nf = fNfcn;
+   mnsimp();
+   if (fISW[0] == 1) return;
+   fNfcnmx = fNfcnmx + nf - fNfcn;
+   mnmigr();
+   if (fISW[3] >= 1) ierflg = 0;
+   mnwerr();
+   return;
 //*-*-                                       . . . . . . . . . . minos
 L500:
-    nsuper = fNfcn + (fNpar + 1 << 1)*fNfcnmx;
+   nsuper = fNfcn + (fNpar + 1 << 1)*fNfcnmx;
 //*-*-         possible loop over new minima
-    fEpsi = fUp*.1;
+   fEpsi = fUp*.1;
 L510:
-    mncuve();
-    mnmnos();
-    if (! fLnewmn) return;
-    mnrset(0);
-    mnmigr();
-    mnwerr();
-    if (fNfcn < nsuper) goto L510;
-    Printf(" TOO MANY FUNCTION CALLS. MINOS GIVES UP");
-    ierflg = 4;
-    return;
+   mncuve();
+   mnmnos();
+   if (! fLnewmn) return;
+   mnrset(0);
+   mnmigr();
+   mnwerr();
+   if (fNfcn < nsuper) goto L510;
+   Printf(" TOO MANY FUNCTION CALLS. MINOS GIVES UP");
+   ierflg = 4;
+   return;
 //*-*-                                       . . . . . . . . . .set, show
 L700:
-    mnset();
-    return;
+   mnset();
+   return;
 //*-*-                                       . . . . . . . . . . top of page
 
 L800:
-    Printf("1");
-    return;
+   Printf("1");
+   return;
 //*-*-                                       . . . . . . . . . . fix
 L900:
-    ltofix = kTRUE;
+   ltofix = kTRUE;
 //*-*-                                       . . (also release) ....
 L901:
-    lfreed = kFALSE;
-    lfixed = kFALSE;
-    if (llist == 0) {
-        Printf("%s:  NO PARAMETERS REQUESTED ",(const char*)fCword);
-        return;
-    }
-    for (ilist = 1; ilist <= llist; ++ilist) {
-        iext = Int_t(plist[ilist-1]);
-        chwhy = " IS UNDEFINED.";
-        if (iext <= 0) goto L930;
-        if (iext > fNu) goto L930;
-        if (fNvarl[iext-1] < 0) goto L930;
-        chwhy = " IS CONSTANT.  ";
-        if (fNvarl[iext-1] == 0) goto L930;
-        iint = fNiofex[iext-1];
-        if (ltofix) {
-            chwhy = " ALREADY FIXED.";
-            if (iint == 0) goto L930;
-            mnfixp(iint-1, ierr);
-            if (ierr == 0) lfixed = kTRUE;
-            else           ierflg = 4;
-        } else {
-            chwhy = " ALREADY VARIABLE.";
-            if (iint > 0) goto L930;
-            krl = -abs(iext);
-            mnfree(krl);
-            lfreed = kTRUE;
-        }
-        continue;
+   lfreed = kFALSE;
+   lfixed = kFALSE;
+   if (llist == 0) {
+      Printf("%s:  NO PARAMETERS REQUESTED ",(const char*)fCword);
+      return;
+   }
+   for (ilist = 1; ilist <= llist; ++ilist) {
+      iext = Int_t(plist[ilist-1]);
+      chwhy = " IS UNDEFINED.";
+      if (iext <= 0) goto L930;
+      if (iext > fNu) goto L930;
+      if (fNvarl[iext-1] < 0) goto L930;
+      chwhy = " IS CONSTANT.  ";
+      if (fNvarl[iext-1] == 0) goto L930;
+      iint = fNiofex[iext-1];
+      if (ltofix) {
+         chwhy = " ALREADY FIXED.";
+         if (iint == 0) goto L930;
+         mnfixp(iint-1, ierr);
+         if (ierr == 0) lfixed = kTRUE;
+         else           ierflg = 4;
+      } else {
+         chwhy = " ALREADY VARIABLE.";
+         if (iint > 0) goto L930;
+         krl = -abs(iext);
+         mnfree(krl);
+         lfreed = kTRUE;
+      }
+      continue;
 L930:
-        if (fISW[4] >= 0) Printf(" PARAMETER %4d %s IGNORED.",iext,(const char*)chwhy);
-    }
-    if (lfreed || lfixed) mnrset(0);
-    if (lfreed) {
-        fISW[1] = 0;
-        fDcovar = 1;
-        fEDM = fBigedm;
-        fISW[3] = 0;
-    }
-    mnwerr();
-    if (fISW[4] > 1) mnprin(5, fAmin);
-    return;
+      if (fISW[4] >= 0) Printf(" PARAMETER %4d %s IGNORED.",iext,(const char*)chwhy);
+   }
+   if (lfreed || lfixed) mnrset(0);
+   if (lfreed) {
+      fISW[1] = 0;
+      fDcovar = 1;
+      fEDM = fBigedm;
+      fISW[3] = 0;
+   }
+   mnwerr();
+   if (fISW[4] > 1) mnprin(5, fAmin);
+   return;
 //*-*-                                       . . . . . . . . . . restore
 L1000:
-    it = Int_t(fWord7[0]);
-    if (it > 1 || it < 0) goto L1005;
-    lfreed = fNpfix > 0;
-    mnfree(it);
-    if (lfreed) {
-        mnrset(0);
-        fISW[1] = 0;
-        fDcovar = 1;
-        fEDM    = fBigedm;
-    }
-    return;
+   it = Int_t(fWord7[0]);
+   if (it > 1 || it < 0) goto L1005;
+   lfreed = fNpfix > 0;
+   mnfree(it);
+   if (lfreed) {
+      mnrset(0);
+      fISW[1] = 0;
+      fDcovar = 1;
+      fEDM    = fBigedm;
+   }
+   return;
 L1005:
-    Printf(" IGNORED.  UNKNOWN ARGUMENT:%4d",it);
-    ierflg = 3;
-    return;
+   Printf(" IGNORED.  UNKNOWN ARGUMENT:%4d",it);
+   ierflg = 3;
+   return;
 //*-*-                                       . . . . . . . . . . release
 L1100:
-    ltofix = kFALSE;
-    goto L901;
+   ltofix = kFALSE;
+   goto L901;
 //*-*-                                      . . . . . . . . . . scan . . .
 L1200:
-    iext = Int_t(fWord7[0]);
-    if (iext <= 0) goto L1210;
-    it2 = 0;
-    if (iext <= fNu) it2 = fNiofex[iext-1];
-    if (it2 <= 0) goto L1250;
+   iext = Int_t(fWord7[0]);
+   if (iext <= 0) goto L1210;
+   it2 = 0;
+   if (iext <= fNu) it2 = fNiofex[iext-1];
+   if (it2 <= 0) goto L1250;
 
 L1210:
-    mnscan();
-    return;
+   mnscan();
+   return;
 L1250:
-    Printf(" PARAMETER %4d NOT VARIABLE.",iext);
-    ierflg = 3;
-    return;
+   Printf(" PARAMETER %4d NOT VARIABLE.",iext);
+   ierflg = 3;
+   return;
 //*-*-                                       . . . . . . . . . . contour
 L1300:
-    ke1 = Int_t(fWord7[0]);
-    ke2 = Int_t(fWord7[1]);
-    if (ke1 == 0) {
-        if (fNpar == 2) {
-            ke1 = fNexofi[0];
-            ke2 = fNexofi[1];
-        } else {
-            Printf("%s:  NO PARAMETERS REQUESTED ",(const char*)fCword);
-            ierflg = 3;
-            return;
-        }
-    }
-    fNfcnmx = 1000;
-    mncntr(ke1-1, ke2-1, ierrf);
-    if (ierrf > 0) ierflg = 3;
-    return;
+   ke1 = Int_t(fWord7[0]);
+   ke2 = Int_t(fWord7[1]);
+   if (ke1 == 0) {
+      if (fNpar == 2) {
+         ke1 = fNexofi[0];
+         ke2 = fNexofi[1];
+      } else {
+        Printf("%s:  NO PARAMETERS REQUESTED ",(const char*)fCword);
+         ierflg = 3;
+         return;
+      }
+   }
+   fNfcnmx = 1000;
+   mncntr(ke1-1, ke2-1, ierrf);
+   if (ierrf > 0) ierflg = 3;
+   return;
 //*-*-                                       . . . . . . . . . . hesse
 L1400:
-    mnhess();
-    mnwerr();
-    if (fISW[4] >= 0) mnprin(2, fAmin);
-    if (fISW[4] >= 1) mnmatu(1);
-    return;
+   mnhess();
+   mnwerr();
+   if (fISW[4] >= 0) mnprin(2, fAmin);
+   if (fISW[4] >= 1) mnmatu(1);
+   return;
 //*-*-                                       . . . . . . . . . . save
 L1500:
-    mnsave();
-    return;
+   mnsave();
+   return;
 //*-*-                                       . . . . . . . . . . improve
 L1600:
-    mncuve();
-    mnimpr();
-    if (fLnewmn) goto L400;
-    ierflg = 4;
-    return;
+   mncuve();
+   mnimpr();
+   if (fLnewmn) goto L400;
+   ierflg = 4;
+   return;
 //*-*-                                       . . . . . . . . . . call fcn
 L1700:
-    iflag = Int_t(fWord7[0]);
-    nparx = fNpar;
-    f = fUndefi;
-    Eval(nparx, fGin, f, fU, iflag);    ++fNfcn;
-    nowprt = 0;
-    if (f != fUndefi) {
-        if (fAmin == fUndefi) {
-            fAmin  = f;
-            nowprt = 1;
-        } else if (f < fAmin) {
-            fAmin  = f;
-            nowprt = 1;
-        }
-        if (fISW[4] >= 0 && iflag <= 5 && nowprt == 1) {
-            mnprin(5, fAmin);
-        }
-        if (iflag == 3)  fFval3 = f;
-    }
-    if (iflag > 5) mnrset(1);
-    return;
+   iflag = Int_t(fWord7[0]);
+   nparx = fNpar;
+   f = fUndefi;
+   Eval(nparx, fGin, f, fU, iflag);    ++fNfcn;
+   nowprt = 0;
+   if (f != fUndefi) {
+      if (fAmin == fUndefi) {
+         fAmin  = f;
+         nowprt = 1;
+      } else if (f < fAmin) {
+         fAmin  = f;
+         nowprt = 1;
+      }
+      if (fISW[4] >= 0 && iflag <= 5 && nowprt == 1) {
+         mnprin(5, fAmin);
+      }
+      if (iflag == 3)  fFval3 = f;
+   }
+   if (iflag > 5) mnrset(1);
+   return;
 //*-*-                                       . . . . . . . . . . standard
 L1800:
 //    stand();
-    return;
+   return;
 //*-*-                                      . . . return, stop, end, exit
 L1900:
-    it = Int_t(fWord7[0]);
-    if (fFval3 != fAmin && it == 0) {
-        iflag = 3;
-        if (fISW[4] >= 0) Printf(" CALL TO USER FUNCTION WITH IFLAG = 3");
-        nparx = fNpar;
-        Eval(nparx, fGin, f, fU, iflag);        ++fNfcn;
-    }
-    ierflg = 11;
-    if (fCword(0,3) == "END") ierflg = 10;
-    if (fCword(0,3) == "RET") ierflg = 12;
-    return;
+   it = Int_t(fWord7[0]);
+   if (fFval3 != fAmin && it == 0) {
+      iflag = 3;
+      if (fISW[4] >= 0) Printf(" CALL TO USER FUNCTION WITH IFLAG = 3");
+      nparx = fNpar;
+      Eval(nparx, fGin, f, fU, iflag);        ++fNfcn;
+   }
+   ierflg = 11;
+   if (fCword(0,3) == "END") ierflg = 10;
+   if (fCword(0,3) == "RET") ierflg = 12;
+   return;
 //*-*-                                       . . . . . . . . . . clear
 L2200:
-    mncler();
-    if (fISW[4] >= 1) {
-        Printf(" MINUIT MEMORY CLEARED. NO PARAMETERS NOW DEFINED.");
-    }
-    return;
+   mncler();
+   if (fISW[4] >= 1) {
+      Printf(" MINUIT MEMORY CLEARED. NO PARAMETERS NOW DEFINED.");
+   }
+   return;
 //*-*-                                       . . . . . . . . . . help
 L2300:
-    kcol = 0;
-    for (icol = 5; icol <= lk; ++icol) {
-        if (fCword[icol-1] == ' ') continue;
-        kcol = icol;
-        goto L2320;
-    }
+   kcol = 0;
+   for (icol = 5; icol <= lk; ++icol) {
+      if (fCword[icol-1] == ' ') continue;
+      kcol = icol;
+      goto L2320;
+   }
 L2320:
-    if (kcol == 0) comd = "*   ";
-    else           comd = fCword(kcol-1,lk-kcol+1);
-    mnhelp(comd);
-    return;
+   if (kcol == 0) comd = "*   ";
+   else           comd = fCword(kcol-1,lk-kcol+1);
+   mnhelp(comd);
+   return;
 //*-*-                                      . . . . . . . . . . MNContour
 L2400:
-    fEpsi = fUp*.05;
-    ke1 = Int_t(fWord7[0]);
-    ke2 = Int_t(fWord7[1]);
-    if (ke1 == 0 && fNpar == 2) {
-        ke1 = fNexofi[0];
-        ke2 = fNexofi[1];
-    }
-    nptu = Int_t(fWord7[2]);
-    if (nptu <= 0)  nptu = 20;
-    if (nptu > 101) nptu = 101;
-    fNfcnmx = (nptu + 5)*100*(fNpar + 1);
-    mncont(ke1-1, ke2-1, nptu, xptu, yptu, ierrf);
-    if (ierrf < nptu) ierflg = 4;
-    if (ierrf == -1)  ierflg = 3;
-    return;
+   fEpsi = fUp*.05;
+   ke1 = Int_t(fWord7[0]);
+   ke2 = Int_t(fWord7[1]);
+   if (ke1 == 0 && fNpar == 2) {
+      ke1 = fNexofi[0];
+      ke2 = fNexofi[1];
+   }
+   nptu = Int_t(fWord7[2]);
+   if (nptu <= 0)  nptu = 20;
+   if (nptu > 101) nptu = 101;
+   fNfcnmx = (nptu + 5)*100*(fNpar + 1);
+   mncont(ke1-1, ke2-1, nptu, xptu, yptu, ierrf);
+   if (ierrf < nptu) ierflg = 4;
+   if (ierrf == -1)  ierflg = 3;
+   return;
 //*-*-                                     . . . . . . . . . . jump
 L2600:
-    step = fWord7[0];
-    if (step <= 0) step = 2;
-    rno = 0;
-    izero = 0;
-    for (i = 1; i <= fNpar; ++i) {
-        mnrn15(rno, izero);
-        rno      = rno*2 - 1;
-        fX[i-1] += rno*step*fWerr[i-1];
-    }
-    mninex(fX);
-    mnamin();
-    mnrset(0);
-    return;
+   step = fWord7[0];
+   if (step <= 0) step = 2;
+   rno = 0;
+   izero = 0;
+   for (i = 1; i <= fNpar; ++i) {
+      mnrn15(rno, izero);
+      rno      = rno*2 - 1;
+      fX[i-1] += rno*step*fWerr[i-1];
+   }
+   mninex(fX);
+   mnamin();
+   mnrset(0);
+   return;
 //*-*-                                     . . . . . . . . . . blank line
 L3300:
-    Printf(" BLANK COMMAND IGNORED.");
-    ierflg = 1;
-    return;
+   Printf(" BLANK COMMAND IGNORED.");
+   ierflg = 1;
+   return;
 //*-*  . . . . . . . . obsolete commands     . . . . . . . . . . . . . .
 //*-*-                                     . . . . . . . . . . covariance
 L3400:
-    Printf(" THE *COVARIANCE* COMMAND IS OSBSOLETE. THE COVARIANCE MATRIX IS NOW SAVED IN A DIFFERENT FORMAT WITH THE *SAVE* COMMAND AND READ IN WITH:*SET COVARIANCE*");
-    ierflg = 3;
-    return;
+   Printf(" THE *COVARIANCE* COMMAND IS OSBSOLETE. THE COVARIANCE MATRIX IS NOW SAVED IN A DIFFERENT FORMAT WITH THE *SAVE* COMMAND AND READ IN WITH:*SET COVARIANCE*");
+   ierflg = 3;
+   return;
 //*-*-                                       . . . . . . . . . . printout
 L3500:
-    cneway = "SET PRInt ";
-    goto L3100;
+   cneway = "SET PRInt ";
+   goto L3100;
 //*-*-                                       . . . . . . . . . . gradient
 L3600:
-    cneway = "SET GRAd  ";
-    goto L3100;
+   cneway = "SET GRAd  ";
+   goto L3100;
 //*-*-                                       . . . . . . . . . . matout
 L3700:
-    cneway = "SHOW COVar";
-    goto L3100;
+   cneway = "SHOW COVar";
+   goto L3100;
 //*-*-                                       . . . . . . . . . error def
 L3800:
-    cneway = "SET ERRdef";
-    goto L3100;
+   cneway = "SET ERRdef";
+   goto L3100;
 //*-*-                                       . . . . . . . . . . limits
 L3900:
-    cneway = "SET LIMits";
-    goto L3100;
+   cneway = "SET LIMits";
+   goto L3100;
 //*-*-                                       . . . . . . . . . . punch
 L4000:
-    cneway = "SAVE      ";
+   cneway = "SAVE      ";
 //*-*-                               ....... come from obsolete commands
 L3100:
-    Printf(" OBSOLETE COMMAND:%s   PLEASE USE:%s",(const char*)fCword
+   Printf(" OBSOLETE COMMAND:%s   PLEASE USE:%s",(const char*)fCword
                                                  ,(const char*)cneway);
-    fCword = cneway;
-    if (fCword == "SAVE      ") goto L1500;
-    goto L700;
+   fCword = cneway;
+   if (fCword == "SAVE      ") goto L1500;
+   goto L700;
 //*-*                                 . . . . . . . . . . . . . . . . . .
 } /* mnexcm_ */
 
@@ -3135,15 +3135,15 @@ void TMinuit::mnexin(Double_t *pint)
 //*-*        values in the dense array PINT.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t pinti;
-    Int_t iint, iext;
+   Double_t pinti;
+   Int_t iint, iext;
 
-    fLimset = kFALSE;
-    for (iint = 1; iint <= fNpar; ++iint) {
-        iext = fNexofi[iint-1];
-        mnpint(fU[iext-1], iext-1, pinti);
-        pint[iint-1] = pinti;
-    }
+   fLimset = kFALSE;
+   for (iint = 1; iint <= fNpar; ++iint) {
+      iext = fNexofi[iint-1];
+      mnpint(fU[iext-1], iext-1, pinti);
+      pint[iint-1] = pinti;
+   }
 } /* mnexin_ */
 
 //______________________________________________________________________________
@@ -3154,75 +3154,75 @@ void TMinuit::mnfixp(Int_t iint1, Int_t &ierr)
 //*-*        and arranges the rest of the list to fill the hole.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t yyover;
-    Int_t kold, nold, ndex, knew, iext, i, j, m, n, lc, ik;
+   /* Local variables */
+   Double_t yyover;
+   Int_t kold, nold, ndex, knew, iext, i, j, m, n, lc, ik;
 
 //*-*-                          first see if it can be done
-    ierr = 0;
-    Int_t iint = iint1+1;
-    if (iint > fNpar || iint <= 0) {
-        ierr = 1;
-        Printf(" MINUIT ERROR.  ARGUMENT TO MNFIXP=%4d",iint);
-        return;
-    }
-    iext = fNexofi[iint-1];
-    if (fNpfix >= fMaxpar) {
-        ierr = 1;
-        Printf(" MINUIT CANNOT FIX PARAMETER %4d MAXIMUM NUMBER THAT CAN BE FIXED IS %d",iext,fMaxpar);
-        return;
-    }
+   ierr = 0;
+   Int_t iint = iint1+1;
+   if (iint > fNpar || iint <= 0) {
+      ierr = 1;
+      Printf(" MINUIT ERROR.  ARGUMENT TO MNFIXP=%4d",iint);
+      return;
+   }
+   iext = fNexofi[iint-1];
+   if (fNpfix >= fMaxpar) {
+      ierr = 1;
+      Printf(" MINUIT CANNOT FIX PARAMETER %4d MAXIMUM NUMBER THAT CAN BE FIXED IS %d",iext,fMaxpar);
+      return;
+   }
 //*-*-                          reduce number of variable parameters by one
 
-    fNiofex[iext-1] = 0;
-    nold = fNpar;
-    --fNpar;
+   fNiofex[iext-1] = 0;
+   nold = fNpar;
+   --fNpar;
 //*-*-                      save values in case parameter is later restored
 
-    ++fNpfix;
-    fIpfix[fNpfix-1]  = iext;
-    lc                = iint;
-    fXs[fNpfix-1]     = fX[lc-1];
-    fXts[fNpfix-1]    = fXt[lc-1];
-    fDirins[fNpfix-1] = fWerr[lc-1];
-    fGrds[fNpfix-1]   = fGrd[lc-1];
-    fG2s[fNpfix-1]    = fG2[lc-1];
-    fGsteps[fNpfix-1] = fGstep[lc-1];
+   ++fNpfix;
+   fIpfix[fNpfix-1]  = iext;
+   lc                = iint;
+   fXs[fNpfix-1]     = fX[lc-1];
+   fXts[fNpfix-1]    = fXt[lc-1];
+   fDirins[fNpfix-1] = fWerr[lc-1];
+   fGrds[fNpfix-1]   = fGrd[lc-1];
+   fG2s[fNpfix-1]    = fG2[lc-1];
+   fGsteps[fNpfix-1] = fGstep[lc-1];
 //*-*-                       shift values for other parameters to fill hole
-    for (ik = iext + 1; ik <= fNu; ++ik) {
-        if (fNiofex[ik-1] > 0) {
-            lc = fNiofex[ik-1] - 1;
-            fNiofex[ik-1] = lc;
-            fNexofi[lc-1] = ik;
-            fX[lc-1]      = fX[lc];
-            fXt[lc-1]     = fXt[lc];
-            fDirin[lc-1]  = fDirin[lc];
-            fWerr[lc-1]   = fWerr[lc];
-            fGrd[lc-1]    = fGrd[lc];
-            fG2[lc-1]     = fG2[lc];
-            fGstep[lc-1]  = fGstep[lc];
-        }
-    }
-    if (fISW[1] <= 0) return;
+   for (ik = iext + 1; ik <= fNu; ++ik) {
+      if (fNiofex[ik-1] > 0) {
+         lc = fNiofex[ik-1] - 1;
+         fNiofex[ik-1] = lc;
+         fNexofi[lc-1] = ik;
+         fX[lc-1]      = fX[lc];
+         fXt[lc-1]     = fXt[lc];
+         fDirin[lc-1]  = fDirin[lc];
+         fWerr[lc-1]   = fWerr[lc];
+         fGrd[lc-1]    = fGrd[lc];
+         fG2[lc-1]     = fG2[lc];
+         fGstep[lc-1]  = fGstep[lc];
+      }
+   }
+   if (fISW[1] <= 0) return;
 //*-*-                   remove one row and one column from variance matrix
-    if (fNpar <= 0)   return;
-    for (i = 1; i <= nold; ++i) {
-        m       = TMath::Max(i,iint);
-        n       = TMath::Min(i,iint);
-        ndex    = m*(m-1) / 2 + n;
-        fFIXPyy[i-1] = fVhmat[ndex-1];
-    }
-    yyover = 1 / fFIXPyy[iint-1];
-    knew   = 0;
-    kold   = 0;
-    for (i = 1; i <= nold; ++i) {
-        for (j = 1; j <= i; ++j) {
-            ++kold;
-            if (j == iint || i == iint) continue;
-            ++knew;
-            fVhmat[knew-1] = fVhmat[kold-1] - fFIXPyy[j-1]*fFIXPyy[i-1]*yyover;
-        }
-    }
+   if (fNpar <= 0)   return;
+   for (i = 1; i <= nold; ++i) {
+      m       = TMath::Max(i,iint);
+      n       = TMath::Min(i,iint);
+      ndex    = m*(m-1) / 2 + n;
+      fFIXPyy[i-1] = fVhmat[ndex-1];
+   }
+   yyover = 1 / fFIXPyy[iint-1];
+   knew   = 0;
+   kold   = 0;
+   for (i = 1; i <= nold; ++i) {
+      for (j = 1; j <= i; ++j) {
+         ++kold;
+         if (j == iint || i == iint) continue;
+         ++knew;
+         fVhmat[knew-1] = fVhmat[kold-1] - fFIXPyy[j-1]*fFIXPyy[i-1]*yyover;
+      }
+   }
 } /* mnfixp_ */
 
 //______________________________________________________________________________
@@ -3242,99 +3242,99 @@ void TMinuit::mnfree(Int_t k)
 //*-*        IS = internal number of parameter being restored
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t grdv, xv, dirinv, g2v, gstepv, xtv;
-    Int_t i, ipsav, ka, lc, ik, iq, ir, is;
+   /* Local variables */
+   Double_t grdv, xv, dirinv, g2v, gstepv, xtv;
+   Int_t i, ipsav, ka, lc, ik, iq, ir, is;
 
-    if (k > 1) {
-        Printf(" CALL TO MNFREE IGNORED.  ARGUMENT GREATER THAN ONE");
-    }
-    if (fNpfix < 1) {
-        Printf(" CALL TO MNFREE IGNORED.  THERE ARE NO FIXED PARAMETERS");
-    }
-    if (k == 1 || k == 0) goto L40;
+   if (k > 1) {
+      Printf(" CALL TO MNFREE IGNORED.  ARGUMENT GREATER THAN ONE");
+   }
+   if (fNpfix < 1) {
+      Printf(" CALL TO MNFREE IGNORED.  THERE ARE NO FIXED PARAMETERS");
+   }
+   if (k == 1 || k == 0) goto L40;
 
 //*-*-                  release parameter with specified external number
-    ka = abs(k);
-    if (fNiofex[ka-1] == 0) goto L15;
-    Printf(" IGNORED.  PARAMETER SPECIFIED IS ALREADY VARIABLE.");
-    return;
+   ka = abs(k);
+   if (fNiofex[ka-1] == 0) goto L15;
+   Printf(" IGNORED.  PARAMETER SPECIFIED IS ALREADY VARIABLE.");
+   return;
 L15:
-    if (fNpfix < 1) goto L21;
-    for (ik = 1; ik <= fNpfix; ++ik) { if (fIpfix[ik-1] == ka) goto L24; }
+   if (fNpfix < 1) goto L21;
+   for (ik = 1; ik <= fNpfix; ++ik) { if (fIpfix[ik-1] == ka) goto L24; }
 L21:
-    Printf(" PARAMETER %4d NOT FIXED.  CANNOT BE RELEASED.",ka);
-    return;
+   Printf(" PARAMETER %4d NOT FIXED.  CANNOT BE RELEASED.",ka);
+   return;
 L24:
-    if (ik == fNpfix) goto L40;
+   if (ik == fNpfix) goto L40;
 
 //*-*-                  move specified parameter to end of list
-    ipsav  = ka;
-    xv     = fXs[ik-1];
-    xtv    = fXts[ik-1];
-    dirinv = fDirins[ik-1];
-    grdv   = fGrds[ik-1];
-    g2v    = fG2s[ik-1];
-    gstepv = fGsteps[ik-1];
-    for (i = ik + 1; i <= fNpfix; ++i) {
-        fIpfix[i-2]  = fIpfix[i-1];
-        fXs[i-2]     = fXs[i-1];
-        fXts[i-2]    = fXts[i-1];
-        fDirins[i-2] = fDirins[i-1];
-        fGrds[i-2]   = fGrds[i-1];
-        fG2s[i-2]    = fG2s[i-1];
-        fGsteps[i-2] = fGsteps[i-1];
-    }
-    fIpfix[fNpfix-1]  = ipsav;
-    fXs[fNpfix-1]     = xv;
-    fXts[fNpfix-1]    = xtv;
-    fDirins[fNpfix-1] = dirinv;
-    fGrds[fNpfix-1]   = grdv;
-    fG2s[fNpfix-1]    = g2v;
-    fGsteps[fNpfix-1] = gstepv;
+   ipsav  = ka;
+   xv     = fXs[ik-1];
+   xtv    = fXts[ik-1];
+   dirinv = fDirins[ik-1];
+   grdv   = fGrds[ik-1];
+   g2v    = fG2s[ik-1];
+   gstepv = fGsteps[ik-1];
+   for (i = ik + 1; i <= fNpfix; ++i) {
+      fIpfix[i-2]  = fIpfix[i-1];
+      fXs[i-2]     = fXs[i-1];
+      fXts[i-2]    = fXts[i-1];
+      fDirins[i-2] = fDirins[i-1];
+      fGrds[i-2]   = fGrds[i-1];
+      fG2s[i-2]    = fG2s[i-1];
+      fGsteps[i-2] = fGsteps[i-1];
+   }
+   fIpfix[fNpfix-1]  = ipsav;
+   fXs[fNpfix-1]     = xv;
+   fXts[fNpfix-1]    = xtv;
+   fDirins[fNpfix-1] = dirinv;
+   fGrds[fNpfix-1]   = grdv;
+   fG2s[fNpfix-1]    = g2v;
+   fGsteps[fNpfix-1] = gstepv;
 //*-*-               restore last parameter in fixed list  -- IPFIX(NPFIX)
 L40:
-    if (fNpfix < 1) goto L300;
-    ir = fIpfix[fNpfix-1];
-    is = 0;
-    for (ik = fNu; ik >= ir; --ik) {
-        if (fNiofex[ik-1] > 0) {
-            lc = fNiofex[ik-1] + 1;
-            is = lc - 1;
-            fNiofex[ik-1] = lc;
-            fNexofi[lc-1] = ik;
-            fX[lc-1]      = fX[lc-2];
-            fXt[lc-1]     = fXt[lc-2];
-            fDirin[lc-1]  = fDirin[lc-2];
-            fWerr[lc-1]   = fWerr[lc-2];
-            fGrd[lc-1]    = fGrd[lc-2];
-            fG2[lc-1]     = fG2[lc-2];
-            fGstep[lc-1]  = fGstep[lc-2];
-        }
-    }
-    ++fNpar;
-    if (is == 0) is = fNpar;
-    fNiofex[ir-1] = is;
-    fNexofi[is-1] = ir;
-    iq           = fNpfix;
-    fX[is-1]     = fXs[iq-1];
-    fXt[is-1]    = fXts[iq-1];
-    fDirin[is-1] = fDirins[iq-1];
-    fWerr[is-1]  = fDirins[iq-1];
-    fGrd[is-1]   = fGrds[iq-1];
-    fG2[is-1]    = fG2s[iq-1];
-    fGstep[is-1] = fGsteps[iq-1];
-    --fNpfix;
-    fISW[1] = 0;
-    fDcovar = 1;
-    if (fISW[4] - fItaur >= 1) {
-        Printf("                   PARAMETER %4d  %s RESTORED TO VARIABLE.",ir,
+   if (fNpfix < 1) goto L300;
+   ir = fIpfix[fNpfix-1];
+   is = 0;
+   for (ik = fNu; ik >= ir; --ik) {
+      if (fNiofex[ik-1] > 0) {
+         lc = fNiofex[ik-1] + 1;
+         is = lc - 1;
+         fNiofex[ik-1] = lc;
+         fNexofi[lc-1] = ik;
+         fX[lc-1]      = fX[lc-2];
+         fXt[lc-1]     = fXt[lc-2];
+         fDirin[lc-1]  = fDirin[lc-2];
+         fWerr[lc-1]   = fWerr[lc-2];
+         fGrd[lc-1]    = fGrd[lc-2];
+         fG2[lc-1]     = fG2[lc-2];
+         fGstep[lc-1]  = fGstep[lc-2];
+      }
+   }
+   ++fNpar;
+   if (is == 0) is = fNpar;
+   fNiofex[ir-1] = is;
+   fNexofi[is-1] = ir;
+   iq           = fNpfix;
+   fX[is-1]     = fXs[iq-1];
+   fXt[is-1]    = fXts[iq-1];
+   fDirin[is-1] = fDirins[iq-1];
+   fWerr[is-1]  = fDirins[iq-1];
+   fGrd[is-1]   = fGrds[iq-1];
+   fG2[is-1]    = fG2s[iq-1];
+   fGstep[is-1] = fGsteps[iq-1];
+   --fNpfix;
+   fISW[1] = 0;
+   fDcovar = 1;
+   if (fISW[4] - fItaur >= 1) {
+      Printf("                   PARAMETER %4d  %s RESTORED TO VARIABLE.",ir,
                       (const char*)fCpnam[ir-1]);
-    }
-    if (k == 0) goto L40;
+   }
+   if (k == 0) goto L40;
 L300:
 //*-*-        if different from internal, external values are taken
-    mnexin(fX);
+   mnexin(fX);
 } /* mnfree_ */
 
 //______________________________________________________________________________
@@ -3349,65 +3349,65 @@ void TMinuit::mngrad()
 //*-*       by comparing it with a finite difference approximation.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t fzero, err;
-    Int_t i, nparx, lc, istsav;
-    Bool_t lnone;
-    static TString cwd = "    ";
+   /* Local variables */
+   Double_t fzero, err;
+   Int_t i, nparx, lc, istsav;
+   Bool_t lnone;
+   static TString cwd = "    ";
 
-    fISW[2] = 1;
-    nparx   = fNpar;
-    if (fWord7[0] > 0) goto L2000;
+   fISW[2] = 1;
+   nparx   = fNpar;
+   if (fWord7[0] > 0) goto L2000;
 
 //*-*-                 get user-calculated first derivatives from FCN
-    for (i = 1; i <= fNu; ++i) { fGin[i-1] = fUndefi; }
-    mninex(fX);
-    Eval(nparx, fGin, fzero, fU, 2);    ++fNfcn;
-    mnderi();
-    for (i = 1; i <= fNpar; ++i) { fGRADgf[i-1] = fGrd[i-1]; }
+   for (i = 1; i <= fNu; ++i) { fGin[i-1] = fUndefi; }
+   mninex(fX);
+   Eval(nparx, fGin, fzero, fU, 2);    ++fNfcn;
+   mnderi();
+   for (i = 1; i <= fNpar; ++i) { fGRADgf[i-1] = fGrd[i-1]; }
 //*-*-                   get MINUIT-calculated first derivatives
-    fISW[2] = 0;
-    istsav  = fIstrat;
-    fIstrat = 2;
-    mnhes1();
-    fIstrat = istsav;
-    Printf(" CHECK OF GRADIENT CALCULATION IN FCN");
-    Printf("            PARAMETER      G(IN FCN)   G(MINUIT)  DG(MINUIT)   AGREEMENT");
-    fISW[2] = 1;
-    lnone = kFALSE;
-    for (lc = 1; lc <= fNpar; ++lc) {
-        i   = fNexofi[lc-1];
-        cwd = "GOOD";
-        err = fDgrd[lc-1];
-        if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err)  cwd = " BAD";
-        if (fGin[i-1] == fUndefi) {
-            cwd      = "NONE";
-            lnone    = kTRUE;
-            fGRADgf[lc-1] = 0;
-        }
-        if (cwd != "GOOD") fISW[2] = 0;
-        Printf("       %5d  %10s%12.4e%12.4e%12.4e    %s",i
+   fISW[2] = 0;
+   istsav  = fIstrat;
+   fIstrat = 2;
+   mnhes1();
+   fIstrat = istsav;
+   Printf(" CHECK OF GRADIENT CALCULATION IN FCN");
+   Printf("            PARAMETER      G(IN FCN)   G(MINUIT)  DG(MINUIT)   AGREEMENT");
+   fISW[2] = 1;
+   lnone = kFALSE;
+   for (lc = 1; lc <= fNpar; ++lc) {
+      i   = fNexofi[lc-1];
+      cwd = "GOOD";
+      err = fDgrd[lc-1];
+      if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err)  cwd = " BAD";
+      if (fGin[i-1] == fUndefi) {
+         cwd      = "NONE";
+         lnone    = kTRUE;
+         fGRADgf[lc-1] = 0;
+      }
+      if (cwd != "GOOD") fISW[2] = 0;
+      Printf("       %5d  %10s%12.4e%12.4e%12.4e    %s",i
                     ,(const char*)fCpnam[i-1]
                     ,fGRADgf[lc-1],fGrd[lc-1],err,(const char*)cwd);
-    }
-    if (lnone) {
-        Printf("  AGREEMENT=NONE  MEANS FCN DID NOT CALCULATE THE DERIVATIVE");
-    }
-    if (fISW[2] == 0) {
-        Printf(" MINUIT DOES NOT ACCEPT DERIVATIVE CALCULATIONS BY FCN");
-        Printf(" TO FORCE ACCEPTANCE, ENTER *SET GRAD    1*");
-    }
+   }
+   if (lnone) {
+      Printf("  AGREEMENT=NONE  MEANS FCN DID NOT CALCULATE THE DERIVATIVE");
+   }
+   if (fISW[2] == 0) {
+      Printf(" MINUIT DOES NOT ACCEPT DERIVATIVE CALCULATIONS BY FCN");
+      Printf(" TO FORCE ACCEPTANCE, ENTER *SET GRAD    1*");
+   }
 
 L2000:
-    return;
+   return;
 } /* mngrad_ */
 
 //______________________________________________________________________________
 void TMinuit::mnhelp(const char *command)
 {
-   //interface to Minuit help
-   TString comd = command;
-   mnhelp(comd);
+  //interface to Minuit help
+  TString comd = command;
+  mnhelp(comd);
 }
 
 //______________________________________________________________________________
@@ -3431,567 +3431,567 @@ void TMinuit::mnhelp(TString comd)
 //*-*  Global HELP: Summary of all commands
 //*-*  ====================================
 //*-*
-    comd.ToUpper();
-    if( comd.Length() == 0 || comd[0] == '*' || comd[0] == '?' || comd[0] == 0 || comd=="HELP" ) {
-       Printf("   ==>List of MINUIT Interactive commands:");
-       Printf(" CLEar     Reset all parameter names and values undefined");
-       Printf(" CONtour   Make contour map of the user function");
-       Printf(" EXIT      Exit from Interactive Minuit");
-       Printf(" FIX       Cause parameter(s) to remain constant");
-       Printf(" HESse     Calculate the Hessian or error matrix.");
-       Printf(" IMPROVE   Search for a new minimum around current minimum");
-       Printf(" MIGrad    Minimize by the method of Migrad");
-       Printf(" MINImize  MIGRAD + SIMPLEX method if Migrad fails");
-       Printf(" MINOs     Exact (non-linear) parameter error analysis");
-       Printf(" MNContour Calculate one MINOS function contour");
-       Printf(" PARameter Define or redefine new parameters and values");
-       Printf(" RELease   Make previously FIXed parameters variable again");
-       Printf(" REStore   Release last parameter fixed");
-       Printf(" SAVe      Save current parameter values on a file");
-       Printf(" SCAn      Scan the user function by varying parameters");
-       Printf(" SEEk      Minimize by the method of Monte Carlo");
-       Printf(" SET       Set various MINUIT constants or conditions");
-       Printf(" SHOw      Show values of current constants or conditions");
-       Printf(" SIMplex   Minimize by the method of Simplex");
-        goto L99;
-    }
+   comd.ToUpper();
+   if( comd.Length() == 0 || comd[0] == '*' || comd[0] == '?' || comd[0] == 0 || comd=="HELP" ) {
+      Printf("   ==>List of MINUIT Interactive commands:");
+      Printf(" CLEar     Reset all parameter names and values undefined");
+      Printf(" CONtour   Make contour map of the user function");
+      Printf(" EXIT      Exit from Interactive Minuit");
+      Printf(" FIX       Cause parameter(s) to remain constant");
+      Printf(" HESse     Calculate the Hessian or error matrix.");
+      Printf(" IMPROVE   Search for a new minimum around current minimum");
+      Printf(" MIGrad    Minimize by the method of Migrad");
+      Printf(" MINImize  MIGRAD + SIMPLEX method if Migrad fails");
+      Printf(" MINOs     Exact (non-linear) parameter error analysis");
+      Printf(" MNContour Calculate one MINOS function contour");
+      Printf(" PARameter Define or redefine new parameters and values");
+      Printf(" RELease   Make previously FIXed parameters variable again");
+      Printf(" REStore   Release last parameter fixed");
+      Printf(" SAVe      Save current parameter values on a file");
+      Printf(" SCAn      Scan the user function by varying parameters");
+      Printf(" SEEk      Minimize by the method of Monte Carlo");
+      Printf(" SET       Set various MINUIT constants or conditions");
+      Printf(" SHOw      Show values of current constants or conditions");
+      Printf(" SIMplex   Minimize by the method of Simplex");
+      goto L99;
+   }
 
 //*-* __________________________________________________________________
 //*-*
 //*-* --  Command CLEAR
 //*-* --  =============
 //*-*
-    if( !strncmp(comd.Data(),"CLE",3) ) {
-       Printf(" ***>CLEAR");
-       Printf(" Resets all parameter names and values to undefined.");
-       Printf(" Must normally be followed by a PARameters command or ");
-       Printf(" equivalent, in order to define parameter values.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"CLE",3) ) {
+      Printf(" ***>CLEAR");
+      Printf(" Resets all parameter names and values to undefined.");
+      Printf(" Must normally be followed by a PARameters command or ");
+      Printf(" equivalent, in order to define parameter values.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command CONTOUR
 //*-* --  ===============
 //*-* .
-    if( !strncmp(comd.Data(),"CON",3) ) {
-       Printf(" ***>CONTOUR <par1>  <par2>  [devs]  [ngrid]");
-       Printf(" Instructs Minuit to trace contour lines of the user function");
-       Printf(" with respect to the two parameters whose external numbers");
-       Printf(" are <par1> and <par2>.");
-       Printf(" Other variable parameters of the function, if any, will have");
-       Printf(" their values fixed at the current values during the contour");
-       Printf(" tracing. The optional parameter [devs] (default value 2.)");
-       Printf(" gives the number of standard deviations in each parameter");
-       Printf(" which should lie entirely within the plotting area.");
-       Printf(" Optional parameter [ngrid] (default value 25 unless page");
-       Printf(" size is too small) determines the resolution of the plot,");
-       Printf(" i.e. the number of rows and columns of the grid at which the");
-       Printf(" function will be evaluated. [See also MNContour.]");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"CON",3) ) {
+      Printf(" ***>CONTOUR <par1>  <par2>  [devs]  [ngrid]");
+      Printf(" Instructs Minuit to trace contour lines of the user function");
+      Printf(" with respect to the two parameters whose external numbers");
+      Printf(" are <par1> and <par2>.");
+      Printf(" Other variable parameters of the function, if any, will have");
+      Printf(" their values fixed at the current values during the contour");
+      Printf(" tracing. The optional parameter [devs] (default value 2.)");
+      Printf(" gives the number of standard deviations in each parameter");
+      Printf(" which should lie entirely within the plotting area.");
+      Printf(" Optional parameter [ngrid] (default value 25 unless page");
+      Printf(" size is too small) determines the resolution of the plot,");
+      Printf(" i.e. the number of rows and columns of the grid at which the");
+      Printf(" function will be evaluated. [See also MNContour.]");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command END
 //*-* --  ===========
 //*-* .
-    if( !strncmp(comd.Data(),"END",3) ) {
-       Printf(" ***>END");
-       Printf(" Signals the end of a data block (i.e., the end of a fit),");
-       Printf(" and implies that execution should continue, because another");
-       Printf(" Data Block follows. A Data Block is a set of Minuit data");
-       Printf(" consisting of");
-       Printf("     (1) A Title,");
-       Printf("     (2) One or more Parameter Definitions,");
-       Printf("     (3) A blank line, and");
-       Printf("     (4) A set of Minuit Commands.");
-       Printf(" The END command is used when more than one Data Block is to");
-       Printf(" be used with the same FCN function. It first causes Minuit");
-       Printf(" to issue a CALL FCN with IFLAG=3, in order to allow FCN to");
-       Printf(" perform any calculations associated with the final fitted");
-       Printf(" parameter values, unless a CALL FCN 3 command has already");
-       Printf(" been executed at the current FCN value.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"END",3) ) {
+      Printf(" ***>END");
+      Printf(" Signals the end of a data block (i.e., the end of a fit),");
+      Printf(" and implies that execution should continue, because another");
+      Printf(" Data Block follows. A Data Block is a set of Minuit data");
+      Printf(" consisting of");
+      Printf("     (1) A Title,");
+      Printf("     (2) One or more Parameter Definitions,");
+      Printf("     (3) A blank line, and");
+      Printf("     (4) A set of Minuit Commands.");
+      Printf(" The END command is used when more than one Data Block is to");
+      Printf(" be used with the same FCN function. It first causes Minuit");
+      Printf(" to issue a CALL FCN with IFLAG=3, in order to allow FCN to");
+      Printf(" perform any calculations associated with the final fitted");
+      Printf(" parameter values, unless a CALL FCN 3 command has already");
+      Printf(" been executed at the current FCN value.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* .
 //*-* --
 //*-* --  Command EXIT
 //*-* --  ============
-    if( !strncmp(comd.Data(),"EXI",3) ) {
-       Printf(" ***>EXIT");
-       Printf(" Signals the end of execution.");
-       Printf(" The EXIT command first causes Minuit to issue a CALL FCN");
-       Printf(" with IFLAG=3, to allow FCN to perform any calculations");
-       Printf(" associated with the final fitted parameter values, unless a");
-       Printf(" CALL FCN 3 command has already been executed.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"EXI",3) ) {
+      Printf(" ***>EXIT");
+      Printf(" Signals the end of execution.");
+      Printf(" The EXIT command first causes Minuit to issue a CALL FCN");
+      Printf(" with IFLAG=3, to allow FCN to perform any calculations");
+      Printf(" associated with the final fitted parameter values, unless a");
+      Printf(" CALL FCN 3 command has already been executed.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command FIX
 //*-* --  ===========
 //*-* .
-    if( !strncmp(comd.Data(),"FIX",3) ) {
-       Printf(" ***>FIX} <parno> [parno] ... [parno]");
-       Printf(" Causes parameter(s) <parno> to be removed from the list of");
-       Printf(" variable parameters, and their value(s) will remain constant");
-       Printf(" during subsequent minimizations, etc., until another command");
-       Printf(" changes their value(s) or status.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"FIX",3) ) {
+      Printf(" ***>FIX} <parno> [parno] ... [parno]");
+      Printf(" Causes parameter(s) <parno> to be removed from the list of");
+      Printf(" variable parameters, and their value(s) will remain constant");
+      Printf(" during subsequent minimizations, etc., until another command");
+      Printf(" changes their value(s) or status.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command HESSE
 //*-* --  =============
 //*-* .
-    if( !strncmp(comd.Data(),"HES",3) ) {
-       Printf(" ***>HESse  [maxcalls]");
-       Printf(" Calculate, by finite differences, the Hessian or error matrix.");
-       Printf("  That is, it calculates the full matrix of second derivatives");
-       Printf(" of the function with respect to the currently variable");
-       Printf(" parameters, and inverts it, printing out the resulting error");
-       Printf(" matrix. The optional argument [maxcalls] specifies the");
-       Printf(" (approximate) maximum number of function calls after which");
-       Printf(" the calculation will be stopped.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"HES",3) ) {
+      Printf(" ***>HESse  [maxcalls]");
+      Printf(" Calculate, by finite differences, the Hessian or error matrix.");
+      Printf("  That is, it calculates the full matrix of second derivatives");
+      Printf(" of the function with respect to the currently variable");
+      Printf(" parameters, and inverts it, printing out the resulting error");
+      Printf(" matrix. The optional argument [maxcalls] specifies the");
+      Printf(" (approximate) maximum number of function calls after which");
+      Printf(" the calculation will be stopped.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command IMPROVE
 //*-* --  ===============
 //*-* .
-    if( !strncmp(comd.Data(),"IMP",3) ) {
-       Printf(" ***>IMPROVE  [maxcalls]");
-       Printf(" If a previous minimization has converged, and the current");
-       Printf(" values of the parameters therefore correspond to a local");
-       Printf(" minimum of the function, this command requests a search for");
-       Printf(" additional distinct local minima.");
-       Printf(" The optional argument [maxcalls] specifies the (approximate");
-       Printf(" maximum number of function calls after which the calculation");
-       Printf(" will be stopped.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"IMP",3) ) {
+      Printf(" ***>IMPROVE  [maxcalls]");
+      Printf(" If a previous minimization has converged, and the current");
+      Printf(" values of the parameters therefore correspond to a local");
+      Printf(" minimum of the function, this command requests a search for");
+      Printf(" additional distinct local minima.");
+      Printf(" The optional argument [maxcalls] specifies the (approximate");
+      Printf(" maximum number of function calls after which the calculation");
+      Printf(" will be stopped.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command MIGRAD
 //*-* --  ==============
 //*-* .
-    if( !strncmp(comd.Data(),"MIG",3) ) {
-       Printf(" ***>MIGrad  [maxcalls]  [tolerance]");
-       Printf(" Causes minimization of the function by the method of Migrad,");
-       Printf(" the most efficient and complete single method, recommended");
-       Printf(" for general functions (see also MINImize).");
-       Printf(" The minimization produces as a by-product the error matrix");
-       Printf(" of the parameters, which is usually reliable unless warning");
-       Printf(" messages are produced.");
-       Printf(" The optional argument [maxcalls] specifies the (approximate)");
-       Printf(" maximum number of function calls after which the calculation");
-       Printf(" will be stopped even if it has not yet converged.");
-       Printf(" The optional argument [tolerance] specifies required tolerance");
-       Printf(" on the function value at the minimum.");
-       Printf(" The default tolerance is 0.1, and the minimization will stop");
-       Printf(" when the estimated vertical distance to the minimum (EDM) is");
-       Printf(" less than 0.001*[tolerance]*UP (see [SET ERRordef]).");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"MIG",3) ) {
+      Printf(" ***>MIGrad  [maxcalls]  [tolerance]");
+      Printf(" Causes minimization of the function by the method of Migrad,");
+      Printf(" the most efficient and complete single method, recommended");
+      Printf(" for general functions (see also MINImize).");
+      Printf(" The minimization produces as a by-product the error matrix");
+      Printf(" of the parameters, which is usually reliable unless warning");
+      Printf(" messages are produced.");
+      Printf(" The optional argument [maxcalls] specifies the (approximate)");
+      Printf(" maximum number of function calls after which the calculation");
+      Printf(" will be stopped even if it has not yet converged.");
+      Printf(" The optional argument [tolerance] specifies required tolerance");
+      Printf(" on the function value at the minimum.");
+      Printf(" The default tolerance is 0.1, and the minimization will stop");
+      Printf(" when the estimated vertical distance to the minimum (EDM) is");
+      Printf(" less than 0.001*[tolerance]*UP (see [SET ERRordef]).");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command MINIMIZE
 //*-* --  ================
 //*-* .
-    if( !strncmp(comd.Data(),"MINI",4) ) {
-       Printf(" ***>MINImize  [maxcalls] [tolerance]");
-       Printf(" Causes minimization of the function by the method of Migrad,");
-       Printf(" as does the MIGrad command, but switches to the SIMplex method");
-       Printf(" if Migrad fails to converge. Arguments are as for MIGrad.");
-       Printf(" Note that command requires four characters to be unambiguous.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"MINI",4) ) {
+      Printf(" ***>MINImize  [maxcalls] [tolerance]");
+      Printf(" Causes minimization of the function by the method of Migrad,");
+      Printf(" as does the MIGrad command, but switches to the SIMplex method");
+      Printf(" if Migrad fails to converge. Arguments are as for MIGrad.");
+      Printf(" Note that command requires four characters to be unambiguous.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command MINOS
 //*-* --  =============
 //*-* .
-    if( !strncmp(comd.Data(),"MIN0",4) ) {
-       Printf(" ***>MINOs  [maxcalls]  [parno] [parno] ...");
-       Printf(" Causes a Minos error analysis to be performed on the parameters");
-       Printf(" whose numbers [parno] are specified. If none are specified,");
-       Printf(" Minos errors are calculated for all variable parameters.");
-       Printf(" Minos errors may be expensive to calculate, but are very");
-       Printf(" reliable since they take account of non-linearities in the");
-       Printf(" problem as well as parameter correlations, and are in general");
-       Printf(" asymmetric.");
-       Printf(" The optional argument [maxcalls] specifies the (approximate)");
-       Printf(" maximum number of function calls per parameter requested,");
-       Printf(" after which the calculation will stop for that parameter.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"MIN0",4) ) {
+      Printf(" ***>MINOs  [maxcalls]  [parno] [parno] ...");
+      Printf(" Causes a Minos error analysis to be performed on the parameters");
+      Printf(" whose numbers [parno] are specified. If none are specified,");
+      Printf(" Minos errors are calculated for all variable parameters.");
+      Printf(" Minos errors may be expensive to calculate, but are very");
+      Printf(" reliable since they take account of non-linearities in the");
+      Printf(" problem as well as parameter correlations, and are in general");
+      Printf(" asymmetric.");
+      Printf(" The optional argument [maxcalls] specifies the (approximate)");
+      Printf(" maximum number of function calls per parameter requested,");
+      Printf(" after which the calculation will stop for that parameter.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command MNCONTOUR
 //*-* --  =================
 //*-* .
-    if( !strncmp(comd.Data(),"MNC",3) ) {
-       Printf(" ***>MNContour  <par1> <par2> [npts]");
-       Printf(" Calculates one function contour of FCN with respect to");
-       Printf(" parameters par1 and par2, with FCN minimized always with");
-       Printf(" respect to all other NPAR-2 variable parameters (if any).");
-       Printf(" Minuit will try to find npts points on the contour (default 20)");
-       Printf(" If only two parameters are variable at the time, it is not");
-       Printf(" necessary to specify their numbers. To calculate more than");
-       Printf(" one contour, it is necessary to SET ERRordef to the appropriate");
-       Printf(" value and issue the MNContour command for each contour.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"MNC",3) ) {
+      Printf(" ***>MNContour  <par1> <par2> [npts]");
+      Printf(" Calculates one function contour of FCN with respect to");
+      Printf(" parameters par1 and par2, with FCN minimized always with");
+      Printf(" respect to all other NPAR-2 variable parameters (if any).");
+      Printf(" Minuit will try to find npts points on the contour (default 20)");
+      Printf(" If only two parameters are variable at the time, it is not");
+      Printf(" necessary to specify their numbers. To calculate more than");
+      Printf(" one contour, it is necessary to SET ERRordef to the appropriate");
+      Printf(" value and issue the MNContour command for each contour.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command PARAMETER
 //*-* --  =================
 //*-* .
-    if( !strncmp(comd.Data(),"PAR",3) ) {
-       Printf(" ***>PARameters");
-       Printf(" followed by one or more parameter definitions.");
-       Printf(" Parameter definitions are of the form:");
-       Printf("   <number>  ''name''  <value>  <step>  [lolim] [uplim] ");
-       Printf(" for example:");
-       Printf("  3  ''K width''  1.2   0.1");
-       Printf(" the last definition is followed by a blank line or a zero.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"PAR",3) ) {
+      Printf(" ***>PARameters");
+      Printf(" followed by one or more parameter definitions.");
+      Printf(" Parameter definitions are of the form:");
+      Printf("   <number>  ''name''  <value>  <step>  [lolim] [uplim] ");
+      Printf(" for example:");
+      Printf("  3  ''K width''  1.2   0.1");
+      Printf(" the last definition is followed by a blank line or a zero.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command RELEASE
 //*-* --  ===============
 //*-* .
-    if( !strncmp(comd.Data(),"REL",3) ) {
-       Printf(" ***>RELease  <parno> [parno] ... [parno]");
-       Printf(" If <parno> is the number of a previously variable parameter");
-       Printf(" which has been fixed by a command: FIX <parno>, then that");
-       Printf(" parameter will return to variable status.  Otherwise a warning");
-       Printf(" message is printed and the command is ignored.");
-       Printf(" Note that this command operates only on parameters which were");
-       Printf(" at one time variable and have been FIXed. It cannot make");
-       Printf(" constant parameters variable; that must be done by redefining");
-       Printf(" the parameter with a PARameters command.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"REL",3) ) {
+      Printf(" ***>RELease  <parno> [parno] ... [parno]");
+      Printf(" If <parno> is the number of a previously variable parameter");
+      Printf(" which has been fixed by a command: FIX <parno>, then that");
+      Printf(" parameter will return to variable status.  Otherwise a warning");
+      Printf(" message is printed and the command is ignored.");
+      Printf(" Note that this command operates only on parameters which were");
+      Printf(" at one time variable and have been FIXed. It cannot make");
+      Printf(" constant parameters variable; that must be done by redefining");
+      Printf(" the parameter with a PARameters command.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command RESTORE
 //*-* --  ===============
 //*-* .
-    if( !strncmp(comd.Data(),"RES",3) ) {
-       Printf(" ***>REStore  [code]");
-       Printf(" If no [code] is specified, this command restores all previously");
-       Printf(" FIXed parameters to variable status. If [code]=1, then only");
-       Printf(" the last parameter FIXed is restored to variable status.");
-       Printf(" If code is neither zero nor one, the command is ignored.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"RES",3) ) {
+      Printf(" ***>REStore  [code]");
+      Printf(" If no [code] is specified, this command restores all previously");
+      Printf(" FIXed parameters to variable status. If [code]=1, then only");
+      Printf(" the last parameter FIXed is restored to variable status.");
+      Printf(" If code is neither zero nor one, the command is ignored.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command RETURN
 //*-* --  ==============
 //*-* .
-    if( !strncmp(comd.Data(),"RET",3) ) {
-       Printf(" ***>RETURN");
-       Printf(" Signals the end of a data block, and instructs Minuit to return");
-       Printf(" to the program which called it. The RETurn command first");
-       Printf(" causes Minuit to CALL FCN with IFLAG=3, in order to allow FCN");
-       Printf(" to perform any calculations associated with the final fitted");
-       Printf(" parameter values, unless a CALL FCN 3 command has already been");
-       Printf(" executed at the current FCN value.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"RET",3) ) {
+      Printf(" ***>RETURN");
+      Printf(" Signals the end of a data block, and instructs Minuit to return");
+      Printf(" to the program which called it. The RETurn command first");
+      Printf(" causes Minuit to CALL FCN with IFLAG=3, in order to allow FCN");
+      Printf(" to perform any calculations associated with the final fitted");
+      Printf(" parameter values, unless a CALL FCN 3 command has already been");
+      Printf(" executed at the current FCN value.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command SAVE
 //*-* --  ============
 //*-* .
-    if( !strncmp(comd.Data(),"SAV",3) ) {
-       Printf(" ***>SAVe");
-       Printf(" Causes the current parameter values to be saved on a file in");
-       Printf(" such a format that they can be read in again as Minuit");
-       Printf(" parameter definitions. If the covariance matrix exists, it is");
-       Printf(" also output in such a format. The unit number is by default 7,");
-       Printf(" or that specified by the user in his call to MINTIO or");
-       Printf(" MNINIT. The user is responsible for opening the file previous");
-       Printf(" to issuing the [SAVe] command (except where this can be done");
-       Printf(" interactively).");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"SAV",3) ) {
+      Printf(" ***>SAVe");
+      Printf(" Causes the current parameter values to be saved on a file in");
+      Printf(" such a format that they can be read in again as Minuit");
+      Printf(" parameter definitions. If the covariance matrix exists, it is");
+      Printf(" also output in such a format. The unit number is by default 7,");
+      Printf(" or that specified by the user in his call to MINTIO or");
+      Printf(" MNINIT. The user is responsible for opening the file previous");
+      Printf(" to issuing the [SAVe] command (except where this can be done");
+      Printf(" interactively).");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command SCAN
 //*-* --  ============
 //*-* .
-    if( !strncmp(comd.Data(),"SCA",3) ) {
-       Printf(" ***>SCAn  [parno]  [numpts] [from]  [to]");
-       Printf(" Scans the value of the user function by varying parameter");
-       Printf(" number [parno], leaving all other parameters fixed at the");
-       Printf(" current value. If [parno] is not specified, all variable");
-       Printf(" parameters are scanned in sequence.");
-       Printf(" The number of points [numpts] in the scan is 40 by default,");
-       Printf(" and cannot exceed 100. The range of the scan is by default");
-       Printf(" 2 standard deviations on each side of the current best value,");
-       Printf(" but can be specified as from [from] to [to].");
-       Printf(" After each scan, if a new minimum is found, the best parameter");
-       Printf(" values are retained as start values for future scans or");
-       Printf(" minimizations. The curve resulting from each scan is plotted");
-       Printf(" on the output unit in order to show the approximate behaviour");
-       Printf(" of the function.");
-       Printf(" This command is not intended for minimization, but is sometimes");
-       Printf(" useful for debugging the user function or finding a");
-       Printf(" reasonable starting point.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"SCA",3) ) {
+      Printf(" ***>SCAn  [parno]  [numpts] [from]  [to]");
+      Printf(" Scans the value of the user function by varying parameter");
+      Printf(" number [parno], leaving all other parameters fixed at the");
+      Printf(" current value. If [parno] is not specified, all variable");
+      Printf(" parameters are scanned in sequence.");
+      Printf(" The number of points [numpts] in the scan is 40 by default,");
+      Printf(" and cannot exceed 100. The range of the scan is by default");
+      Printf(" 2 standard deviations on each side of the current best value,");
+      Printf(" but can be specified as from [from] to [to].");
+      Printf(" After each scan, if a new minimum is found, the best parameter");
+      Printf(" values are retained as start values for future scans or");
+      Printf(" minimizations. The curve resulting from each scan is plotted");
+      Printf(" on the output unit in order to show the approximate behaviour");
+      Printf(" of the function.");
+      Printf(" This command is not intended for minimization, but is sometimes");
+      Printf(" useful for debugging the user function or finding a");
+      Printf(" reasonable starting point.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command SEEK
 //*-* --  ============
 //*-* .
-    if( !strncmp(comd.Data(),"SEE",3) ) {
-       Printf(" ***>SEEk  [maxcalls]  [devs]");
-       Printf(" Causes a Monte Carlo minimization of the function, by choosing");
-       Printf(" random values of the variable parameters, chosen uniformly");
-       Printf(" over a hypercube centered at the current best value.");
-       Printf(" The region size is by default 3 standard deviations on each");
-       Printf(" side, but can be changed by specifying the value of [devs].");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"SEE",3) ) {
+      Printf(" ***>SEEk  [maxcalls]  [devs]");
+      Printf(" Causes a Monte Carlo minimization of the function, by choosing");
+      Printf(" random values of the variable parameters, chosen uniformly");
+      Printf(" over a hypercube centered at the current best value.");
+      Printf(" The region size is by default 3 standard deviations on each");
+      Printf(" side, but can be changed by specifying the value of [devs].");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command SET
 //*-* --  ===========
 //*-* .
-    if( !strncmp(comd.Data(),"SET",3) ) {
-       Printf(" ***>SET <option_name>");
-       Printf("  SET BATch");
-       Printf("    Informs Minuit that it is running in batch mode.");
+   if( !strncmp(comd.Data(),"SET",3) ) {
+      Printf(" ***>SET <option_name>");
+      Printf("  SET BATch");
+      Printf("    Informs Minuit that it is running in batch mode.");
 
-       Printf(" ");
-       Printf("  SET EPSmachine  <accuracy>");
-       Printf("    Informs Minuit that the relative floating point arithmetic");
-       Printf("    precision is <accuracy>. Minuit determines the nominal");
-       Printf("    precision itself, but the SET EPSmachine command can be");
-       Printf("    used to override Minuit own determination, when the user");
-       Printf("    knows that the FCN function value is not calculated to");
-       Printf("    the nominal machine accuracy. Typical values of <accuracy>");
-       Printf("    are between 10**-5 and 10**-14.");
+      Printf(" ");
+      Printf("  SET EPSmachine  <accuracy>");
+      Printf("    Informs Minuit that the relative floating point arithmetic");
+      Printf("    precision is <accuracy>. Minuit determines the nominal");
+      Printf("    precision itself, but the SET EPSmachine command can be");
+      Printf("    used to override Minuit own determination, when the user");
+      Printf("    knows that the FCN function value is not calculated to");
+      Printf("    the nominal machine accuracy. Typical values of <accuracy>");
+      Printf("    are between 10**-5 and 10**-14.");
 
-       Printf(" ");
-       Printf("  SET ERRordef  <up>");
-       Printf("    Sets the value of UP (default value= 1.), defining parameter");
-       Printf("    errors. Minuit defines parameter errors as the change");
-       Printf("    in parameter value required to change the function value");
-       Printf("    by UP. Normally, for chisquared fits UP=1, and for negative");
-       Printf("    log likelihood, UP=0.5.");
+      Printf(" ");
+      Printf("  SET ERRordef  <up>");
+      Printf("    Sets the value of UP (default value= 1.), defining parameter");
+      Printf("    errors. Minuit defines parameter errors as the change");
+      Printf("    in parameter value required to change the function value");
+      Printf("    by UP. Normally, for chisquared fits UP=1, and for negative");
+      Printf("    log likelihood, UP=0.5.");
 
-       Printf(" ");
-       Printf("   SET GRAdient  [force]");
-       Printf("    Informs Minuit that the user function is prepared to");
-       Printf("    calculate its own first derivatives and return their values");
-       Printf("    in the array GRAD when IFLAG=2 (see specs of FCN).");
-       Printf("    If [force] is not specified, Minuit will calculate");
-       Printf("    the FCN derivatives by finite differences at the current");
-       Printf("    point and compare with the user calculation at that point,");
-       Printf("    accepting the user values only if they agree.");
-       Printf("    If [force]=1, Minuit does not do its own derivative");
-       Printf("    calculation, and uses the derivatives calculated in FCN.");
+      Printf(" ");
+      Printf("   SET GRAdient  [force]");
+      Printf("    Informs Minuit that the user function is prepared to");
+      Printf("    calculate its own first derivatives and return their values");
+      Printf("    in the array GRAD when IFLAG=2 (see specs of FCN).");
+      Printf("    If [force] is not specified, Minuit will calculate");
+      Printf("    the FCN derivatives by finite differences at the current");
+      Printf("    point and compare with the user calculation at that point,");
+      Printf("    accepting the user values only if they agree.");
+      Printf("    If [force]=1, Minuit does not do its own derivative");
+      Printf("    calculation, and uses the derivatives calculated in FCN.");
 
-       Printf(" ");
-       Printf("   SET INPut  [unitno]  [filename]");
-       Printf("    Causes Minuit, in data-driven mode only, to read subsequent");
-       Printf("    commands (or parameter definitions) from a different input");
-       Printf("    file. If no [unitno] is specified, reading reverts to the");
-       Printf("    previous input file, assuming that there was one.");
-       Printf("    If [unitno] is specified, and that unit has not been opened,");
-       Printf("    then Minuit attempts to open the file [filename]} if a");
-       Printf("    name is specified. If running in interactive mode and");
-       Printf("    [filename] is not specified and [unitno] is not opened,");
-       Printf("    Minuit prompts the user to enter a file name.");
-       Printf("    If the word REWIND is added to the command (note:no blanks");
-       Printf("    between INPUT and REWIND), the file is rewound before");
-       Printf("    reading. Note that this command is implemented in standard");
-       Printf("    Fortran 77 and the results may depend on the  system;");
-       Printf("    for example, if a filename is given under VM/CMS, it must");
-       Printf("    be preceeded by a slash.");
+      Printf(" ");
+      Printf("   SET INPut  [unitno]  [filename]");
+      Printf("    Causes Minuit, in data-driven mode only, to read subsequent");
+      Printf("    commands (or parameter definitions) from a different input");
+      Printf("    file. If no [unitno] is specified, reading reverts to the");
+      Printf("    previous input file, assuming that there was one.");
+      Printf("    If [unitno] is specified, and that unit has not been opened,");
+      Printf("    then Minuit attempts to open the file [filename]} if a");
+      Printf("    name is specified. If running in interactive mode and");
+      Printf("    [filename] is not specified and [unitno] is not opened,");
+      Printf("    Minuit prompts the user to enter a file name.");
+      Printf("    If the word REWIND is added to the command (note:no blanks");
+      Printf("    between INPUT and REWIND), the file is rewound before");
+      Printf("    reading. Note that this command is implemented in standard");
+      Printf("    Fortran 77 and the results may depend on the  system;");
+      Printf("    for example, if a filename is given under VM/CMS, it must");
+      Printf("    be preceeded by a slash.");
 
-       Printf(" ");
-       Printf("   SET INTeractive");
-       Printf("    Informs Minuit that it is running interactively.");
+      Printf(" ");
+      Printf("   SET INTeractive");
+      Printf("    Informs Minuit that it is running interactively.");
 
-       Printf(" ");
-       Printf("   SET LIMits  [parno]  [lolim]  [uplim]");
-       Printf("    Allows the user to change the limits on one or all");
-       Printf("    parameters. If no arguments are specified, all limits are");
-       Printf("    removed from all parameters. If [parno] alone is specified,");
-       Printf("    limits are removed from parameter [parno].");
-       Printf("    If all arguments are specified, then parameter [parno] will");
-       Printf("    be bounded between [lolim] and [uplim].");
-       Printf("    Limits can be specified in either order, Minuit will take");
-       Printf("    the smaller as [lolim] and the larger as [uplim].");
-       Printf("    However, if [lolim] is equal to [uplim], an error condition");
-       Printf("    results.");
+      Printf(" ");
+      Printf("   SET LIMits  [parno]  [lolim]  [uplim]");
+      Printf("    Allows the user to change the limits on one or all");
+      Printf("    parameters. If no arguments are specified, all limits are");
+      Printf("    removed from all parameters. If [parno] alone is specified,");
+      Printf("    limits are removed from parameter [parno].");
+      Printf("    If all arguments are specified, then parameter [parno] will");
+      Printf("    be bounded between [lolim] and [uplim].");
+      Printf("    Limits can be specified in either order, Minuit will take");
+      Printf("    the smaller as [lolim] and the larger as [uplim].");
+      Printf("    However, if [lolim] is equal to [uplim], an error condition");
+      Printf("    results.");
 
-       Printf(" ");
-       Printf("   SET LINesperpage");
-       Printf("     Sets the number of lines for one page of output.");
-       Printf("     Default value is 24 for interactive mode");
+      Printf(" ");
+      Printf("   SET LINesperpage");
+      Printf("     Sets the number of lines for one page of output.");
+      Printf("     Default value is 24 for interactive mode");
 
-       Printf(" ");
-       Printf("   SET NOGradient");
-       Printf("    The inverse of SET GRAdient, instructs Minuit not to");
-       Printf("    use the first derivatives calculated by the user in FCN.");
+      Printf(" ");
+      Printf("   SET NOGradient");
+      Printf("    The inverse of SET GRAdient, instructs Minuit not to");
+      Printf("    use the first derivatives calculated by the user in FCN.");
 
-       Printf(" ");
-       Printf("   SET NOWarnings");
-       Printf("    Supresses Minuit warning messages.");
+      Printf(" ");
+      Printf("   SET NOWarnings");
+      Printf("    Supresses Minuit warning messages.");
 
-       Printf(" ");
-       Printf("   SET OUTputfile  <unitno>");
-       Printf("    Instructs Minuit to write further output to unit <unitno>.");
+      Printf(" ");
+      Printf("   SET OUTputfile  <unitno>");
+      Printf("    Instructs Minuit to write further output to unit <unitno>.");
 
-       Printf(" ");
-       Printf("   SET PAGethrow  <integer>");
-       Printf("    Sets the carriage control character for ``new page'' to");
-       Printf("    <integer>. Thus the value 1 produces a new page, and 0");
-       Printf("    produces a blank line, on some devices (see TOPofpage)");
+      Printf(" ");
+      Printf("   SET PAGethrow  <integer>");
+      Printf("    Sets the carriage control character for ``new page'' to");
+      Printf("    <integer>. Thus the value 1 produces a new page, and 0");
+      Printf("    produces a blank line, on some devices (see TOPofpage)");
 
 
-       Printf(" ");
-       Printf("   SET PARameter  <parno>  <value>");
-       Printf("    Sets the value of parameter <parno> to <value>.");
-       Printf("    The parameter in question may be variable, fixed, or");
-       Printf("    constant, but must be defined.");
+      Printf(" ");
+      Printf("   SET PARameter  <parno>  <value>");
+      Printf("    Sets the value of parameter <parno> to <value>.");
+      Printf("    The parameter in question may be variable, fixed, or");
+      Printf("    constant, but must be defined.");
 
-       Printf(" ");
-       Printf("   SET PRIntout  <level>");
-       Printf("    Sets the print level, determining how much output will be");
-       Printf("    produced. Allowed values and their meanings are displayed");
-       Printf("    after a SHOw PRInt command, and are currently <level>=:");
-       Printf("      [-1]  no output except from SHOW commands");
-       Printf("       [0]  minimum output");
-       Printf("       [1]  default value, normal output");
-       Printf("       [2]  additional output giving intermediate results.");
-       Printf("       [3]  maximum output, showing progress of minimizations.");
-       Printf("    Note: See also the SET WARnings command.");
+      Printf(" ");
+      Printf("   SET PRIntout  <level>");
+      Printf("    Sets the print level, determining how much output will be");
+      Printf("    produced. Allowed values and their meanings are displayed");
+      Printf("    after a SHOw PRInt command, and are currently <level>=:");
+      Printf("      [-1]  no output except from SHOW commands");
+      Printf("       [0]  minimum output");
+      Printf("       [1]  default value, normal output");
+      Printf("       [2]  additional output giving intermediate results.");
+      Printf("       [3]  maximum output, showing progress of minimizations.");
+      Printf("    Note: See also the SET WARnings command.");
 
-       Printf(" ");
-       Printf("   SET RANdomgenerator  <seed>");
-       Printf("    Sets the seed of the random number generator used in SEEk.");
-       Printf("    This can be any integer between 10000 and 900000000, for");
-       Printf("    example one which was output from a SHOw RANdom command of");
-       Printf("    a previous run.");
+      Printf(" ");
+      Printf("   SET RANdomgenerator  <seed>");
+      Printf("    Sets the seed of the random number generator used in SEEk.");
+      Printf("    This can be any integer between 10000 and 900000000, for");
+      Printf("    example one which was output from a SHOw RANdom command of");
+      Printf("    a previous run.");
 
-       Printf(" ");
-       Printf("   SET STRategy  <level>");
-       Printf("    Sets the strategy to be used in calculating first and second");
-       Printf("    derivatives and in certain minimization methods.");
-       Printf("    In general, low values of <level> mean fewer function calls");
-       Printf("    and high values mean more reliable minimization.");
-       Printf("    Currently allowed values are 0, 1 (default), and 2.");
+      Printf(" ");
+      Printf("   SET STRategy  <level>");
+      Printf("    Sets the strategy to be used in calculating first and second");
+      Printf("    derivatives and in certain minimization methods.");
+      Printf("    In general, low values of <level> mean fewer function calls");
+      Printf("    and high values mean more reliable minimization.");
+      Printf("    Currently allowed values are 0, 1 (default), and 2.");
 
-       Printf(" ");
-       Printf("   SET TITle");
-       Printf("    Informs Minuit that the next input line is to be considered");
-       Printf("    the (new) title for this task or sub-task.  This is for");
-       Printf("    the convenience of the user in reading his output.");
+      Printf(" ");
+      Printf("   SET TITle");
+      Printf("    Informs Minuit that the next input line is to be considered");
+      Printf("    the (new) title for this task or sub-task.  This is for");
+      Printf("    the convenience of the user in reading his output.");
 
-       Printf(" ");
-       Printf("   SET WARnings");
-       Printf("    Instructs Minuit to output warning messages when suspicious");
-       Printf("    conditions arise which may indicate unreliable results.");
-       Printf("    This is the default.");
+      Printf(" ");
+      Printf("   SET WARnings");
+      Printf("    Instructs Minuit to output warning messages when suspicious");
+      Printf("    conditions arise which may indicate unreliable results.");
+      Printf("    This is the default.");
 
-       Printf(" ");
-       Printf("    SET WIDthpage");
-       Printf("    Informs Minuit of the output page width.");
-       Printf("    Default values are 80 for interactive jobs");
-        goto L99;
-    }
+      Printf(" ");
+      Printf("    SET WIDthpage");
+      Printf("    Informs Minuit of the output page width.");
+      Printf("    Default values are 80 for interactive jobs");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command SHOW
 //*-* --  ============
 //*-* .
-    if( !strncmp(comd.Data(),"SHO",3) ) {
-       Printf(" ***>SHOw  <option_name>");
-       Printf("  All SET XXXX commands have a corresponding SHOw XXXX command.");
-       Printf("  In addition, the SHOw commands listed starting here have no");
-       Printf("  corresponding SET command for obvious reasons.");
+   if( !strncmp(comd.Data(),"SHO",3) ) {
+      Printf(" ***>SHOw  <option_name>");
+      Printf("  All SET XXXX commands have a corresponding SHOw XXXX command.");
+      Printf("  In addition, the SHOw commands listed starting here have no");
+      Printf("  corresponding SET command for obvious reasons.");
 
-       Printf(" ");
-       Printf("   SHOw CORrelations");
-       Printf("    Calculates and prints the parameter correlations from the");
-       Printf("    error matrix.");
+      Printf(" ");
+      Printf("   SHOw CORrelations");
+      Printf("    Calculates and prints the parameter correlations from the");
+      Printf("    error matrix.");
 
-       Printf(" ");
-       Printf("   SHOw COVariance");
-       Printf("    Prints the (external) covariance (error) matrix.");
+      Printf(" ");
+      Printf("   SHOw COVariance");
+      Printf("    Prints the (external) covariance (error) matrix.");
 
-       Printf(" ");
-       Printf("   SHOw EIGenvalues");
-       Printf("    Calculates and prints the eigenvalues of the covariance");
-       Printf("    matrix.");
+      Printf(" ");
+      Printf("   SHOw EIGenvalues");
+      Printf("    Calculates and prints the eigenvalues of the covariance");
+      Printf("    matrix.");
 
-       Printf(" ");
-       Printf("   SHOw FCNvalue");
-       Printf("    Prints the current value of FCN.");
-        goto L99;
-    }
+      Printf(" ");
+      Printf("   SHOw FCNvalue");
+      Printf("    Prints the current value of FCN.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command SIMPLEX
 //*-* --  ===============
 //*-* .
-    if( !strncmp(comd.Data(),"SIM",3) ) {
-       Printf(" ***>SIMplex  [maxcalls]  [tolerance]");
-       Printf(" Performs a function minimization using the simplex method of");
-       Printf(" Nelder and Mead. Minimization terminates either when the");
-       Printf(" function has been called (approximately) [maxcalls] times,");
-       Printf(" or when the estimated vertical distance to minimum (EDM) is");
-       Printf(" less than [tolerance].");
-       Printf(" The default value of [tolerance] is 0.1*UP(see SET ERRordef).");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"SIM",3) ) {
+      Printf(" ***>SIMplex  [maxcalls]  [tolerance]");
+      Printf(" Performs a function minimization using the simplex method of");
+      Printf(" Nelder and Mead. Minimization terminates either when the");
+      Printf(" function has been called (approximately) [maxcalls] times,");
+      Printf(" or when the estimated vertical distance to minimum (EDM) is");
+      Printf(" less than [tolerance].");
+      Printf(" The default value of [tolerance] is 0.1*UP(see SET ERRordef).");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command STANDARD
 //*-* --  ================
 //*-* .
-    if( !strncmp(comd.Data(),"STA",3) ) {
-       Printf(" ***>STAndard");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"STA",3) ) {
+      Printf(" ***>STAndard");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command STOP
 //*-* --  ============
 //*-* .
-    if( !strncmp(comd.Data(),"STO",3) ) {
-       Printf(" ***>STOP");
-       Printf(" Same as EXIT.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"STO",3) ) {
+      Printf(" ***>STOP");
+      Printf(" Same as EXIT.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
 //*-* --
 //*-* --  Command TOPOFPAGE
 //*-* --  =================
 //*-* .
-    if( !strncmp(comd.Data(),"TOP",3) ) {
-       Printf(" ***>TOPofpage");
-       Printf(" Causes Minuit to write the character specified in a");
-       Printf(" SET PAGethrow command (default = 1) to column 1 of the output");
-       Printf(" file, which may or may not position your output medium to");
-       Printf(" the top of a page depending on the device and system.");
-        goto L99;
-    }
+   if( !strncmp(comd.Data(),"TOP",3) ) {
+      Printf(" ***>TOPofpage");
+      Printf(" Causes Minuit to write the character specified in a");
+      Printf(" SET PAGethrow command (default = 1) to column 1 of the output");
+      Printf(" file, which may or may not position your output medium to");
+      Printf(" the top of a page depending on the device and system.");
+      goto L99;
+   }
 //*-* __________________________________________________________________
-       Printf(" Unknown MINUIT command. Type HELP for list of commands.");
+   Printf(" Unknown MINUIT command. Type HELP for list of commands.");
 
 L99:
-    return;
+   return;
 } /* mnhelp_ */
 
 //______________________________________________________________________________
@@ -4006,221 +4006,221 @@ void TMinuit::mnhess()
 //*-*        step size in order to obtain a known accuracy.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t dmin_, dxdi, elem, wint, tlrg2, d, dlast, ztemp, g2bfor;
-    Double_t df, aimsag, fs1, tlrstp, fs2, stpinm, g2i, sag=0, xtf, xti, xtj;
-    Int_t icyc, ncyc, ndex, idrv, iext, npar2, i, j, ifail, npard, nparx, id, multpy;
-    Bool_t ldebug;
+   /* Local variables */
+   Double_t dmin_, dxdi, elem, wint, tlrg2, d, dlast, ztemp, g2bfor;
+   Double_t df, aimsag, fs1, tlrstp, fs2, stpinm, g2i, sag=0, xtf, xti, xtj;
+   Int_t icyc, ncyc, ndex, idrv, iext, npar2, i, j, ifail, npard, nparx, id, multpy;
+   Bool_t ldebug;
 
-    ldebug = fIdbg[3] >= 1;
-    if (fAmin == fUndefi) {
-        mnamin();
-    }
-    if (fIstrat <= 0) {
-        ncyc   = 3;
-        tlrstp = .5;
-        tlrg2  = .1;
-    } else if (fIstrat == 1) {
-        ncyc   = 5;
-        tlrstp = .3;
-        tlrg2  = .05;
-    } else {
-        ncyc   = 7;
-        tlrstp = .1;
-        tlrg2  = .02;
-    }
-    if (fISW[4] >= 2 || ldebug) {
-        Printf("   START COVARIANCE MATRIX CALCULATION.");
-    }
-    fCfrom  = "HESSE   ";
-    fNfcnfr = fNfcn;
-    fCstatu = "OK        ";
-    npard   = fNpar;
+   ldebug = fIdbg[3] >= 1;
+   if (fAmin == fUndefi) {
+      mnamin();
+   }
+   if (fIstrat <= 0) {
+      ncyc   = 3;
+      tlrstp = .5;
+      tlrg2  = .1;
+   } else if (fIstrat == 1) {
+      ncyc   = 5;
+      tlrstp = .3;
+      tlrg2  = .05;
+   } else {
+      ncyc   = 7;
+      tlrstp = .1;
+      tlrg2  = .02;
+   }
+   if (fISW[4] >= 2 || ldebug) {
+      Printf("   START COVARIANCE MATRIX CALCULATION.");
+   }
+   fCfrom  = "HESSE   ";
+   fNfcnfr = fNfcn;
+   fCstatu = "OK        ";
+   npard   = fNpar;
 //*-*-                make sure starting at the right place
-    mninex(fX);
-    nparx = fNpar;
-    Eval(nparx, fGin, fs1, fU, 4);    ++fNfcn;
-    if (fs1 != fAmin) {
-        df    = fAmin - fs1;
-        mnwarn("D", "MNHESS", Form("function value differs from AMIN by %g",df));
-    }
-    fAmin = fs1;
-    if (ldebug) {
-        Printf(" PAR D   GSTEP           D          G2         GRD         SAG    ");
-    }
+   mninex(fX);
+   nparx = fNpar;
+   Eval(nparx, fGin, fs1, fU, 4);    ++fNfcn;
+   if (fs1 != fAmin) {
+      df    = fAmin - fs1;
+      mnwarn("D", "MNHESS", Form("function value differs from AMIN by %g",df));
+   }
+   fAmin = fs1;
+   if (ldebug) {
+      Printf(" PAR D   GSTEP           D          G2         GRD         SAG    ");
+   }
 //*-*-                                       . . . . . . diagonal elements .
 
 //*-*-        fISW[1] = 1 if approx, 2 if not posdef, 3 if ok
 //*-*-        AIMSAG is the sagitta we are aiming for in second deriv calc.
 
-    aimsag = TMath::Sqrt(fEpsma2)*(TMath::Abs(fAmin) + fUp);
+   aimsag = TMath::Sqrt(fEpsma2)*(TMath::Abs(fAmin) + fUp);
 //*-*-        Zero the second derivative matrix
-    npar2 = fNpar*(fNpar + 1) / 2;
-    for (i = 1; i <= npar2; ++i) { fVhmat[i-1] = 0; }
+   npar2 = fNpar*(fNpar + 1) / 2;
+   for (i = 1; i <= npar2; ++i) { fVhmat[i-1] = 0; }
 
 //*-*-        Loop over variable parameters for second derivatives
-    idrv = 2;
-    for (id = 1; id <= npard; ++id) {
-        i = id + fNpar - npard;
-        iext = fNexofi[i-1];
-        if (fG2[i-1] == 0) {
-            mnwarn("W", "HESSE", Form("Second derivative enters zero, param %d",iext));
-            wint = fWerr[i-1];
-            if (fNvarl[iext-1] > 1) {
-                mndxdi(fX[i-1], i-1, dxdi);
-                if (TMath::Abs(dxdi) < .001) wint = .01;
-                else                          wint /= TMath::Abs(dxdi);
-            }
-            fG2[i-1] = fUp / (wint*wint);
-        }
-        xtf   = fX[i-1];
-        dmin_ = fEpsma2*8*TMath::Abs(xtf);
+   idrv = 2;
+   for (id = 1; id <= npard; ++id) {
+      i = id + fNpar - npard;
+      iext = fNexofi[i-1];
+      if (fG2[i-1] == 0) {
+         mnwarn("W", "HESSE", Form("Second derivative enters zero, param %d",iext));
+         wint = fWerr[i-1];
+         if (fNvarl[iext-1] > 1) {
+            mndxdi(fX[i-1], i-1, dxdi);
+            if (TMath::Abs(dxdi) < .001) wint = .01;
+            else                          wint /= TMath::Abs(dxdi);
+         }
+         fG2[i-1] = fUp / (wint*wint);
+      }
+      xtf   = fX[i-1];
+      dmin_ = fEpsma2*8*TMath::Abs(xtf);
 
 //*-*-                              find step which gives sagitta = AIMSAG
-        d = TMath::Abs(fGstep[i-1]);
-        int skip50 = 0;
-        for (icyc = 1; icyc <= ncyc; ++icyc) {
+      d = TMath::Abs(fGstep[i-1]);
+      int skip50 = 0;
+      for (icyc = 1; icyc <= ncyc; ++icyc) {
 //*-*-                              loop here only if SAG=0
-            for (multpy = 1; multpy <= 5; ++multpy) {
+         for (multpy = 1; multpy <= 5; ++multpy) {
 //*-*-          take two steps
-                fX[i-1] = xtf + d;
-                mninex(fX);
-                nparx = fNpar;
-                Eval(nparx, fGin, fs1, fU, 4);    ++fNfcn;
-                fX[i-1] = xtf - d;
-                mninex(fX);
-                Eval(nparx, fGin, fs2, fU, 4);    ++fNfcn;
-                fX[i-1] = xtf;
-                sag = (fs1 + fs2 - fAmin*2)*.5;
-                if (sag != 0) goto L30;
-                if (fGstep[i-1] < 0) {
-                    if (d >= .5) goto L26;
-                    d *= 10;
-                    if (d > .5)         d = .51;
-                    continue;
-                }
-                d *= 10;
+            fX[i-1] = xtf + d;
+            mninex(fX);
+            nparx = fNpar;
+            Eval(nparx, fGin, fs1, fU, 4);    ++fNfcn;
+            fX[i-1] = xtf - d;
+            mninex(fX);
+            Eval(nparx, fGin, fs2, fU, 4);    ++fNfcn;
+            fX[i-1] = xtf;
+            sag = (fs1 + fs2 - fAmin*2)*.5;
+            if (sag != 0) goto L30;
+            if (fGstep[i-1] < 0) {
+               if (d >= .5) goto L26;
+               d *= 10;
+               if (d > .5)         d = .51;
+               continue;
             }
+            d *= 10;
+         }
 L26:
-            mnwarn("W", "HESSE", Form("Second derivative zero for parameter%d",iext));
-            goto L390;
+         mnwarn("W", "HESSE", Form("Second derivative zero for parameter%d",iext));
+         goto L390;
 //*-*-                            SAG is not zero
 L30:
-            g2bfor    = fG2[i-1];
-            fG2[i-1]  = sag*2 / (d*d);
-            fGrd[i-1] = (fs1 - fs2) / (d*2);
-            if (ldebug) {
-                Printf("%4d%2d%12.5g%12.5g%12.5g%12.5g%12.5g%12.5g",i,idrv,fGstep[i-1],fG2[i-1],fGrd[i-1],sag);
-            }
-            if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(d);
-            else                 fGstep[i-1] = -TMath::Abs(d);
-            fDirin[i-1] = d;
-            fHESSyy[i-1]= fs1;
-            dlast       = d;
-            d           = TMath::Sqrt(aimsag*2 / TMath::Abs(fG2[i-1]));
+         g2bfor    = fG2[i-1];
+         fG2[i-1]  = sag*2 / (d*d);
+         fGrd[i-1] = (fs1 - fs2) / (d*2);
+         if (ldebug) {
+            Printf("%4d%2d%12.5g%12.5g%12.5g%12.5g%12.5g%12.5g",i,idrv,fGstep[i-1],fG2[i-1],fGrd[i-1],sag);
+         }
+         if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(d);
+         else                 fGstep[i-1] = -TMath::Abs(d);
+         fDirin[i-1] = d;
+         fHESSyy[i-1]= fs1;
+         dlast       = d;
+         d           = TMath::Sqrt(aimsag*2 / TMath::Abs(fG2[i-1]));
 //*-*-        if parameter has limits, max int step size = 0.5
-            stpinm = .5;
-            if (fGstep[i-1] < 0) d = TMath::Min(d,stpinm);
-            if (d < dmin_) d = dmin_;
+         stpinm = .5;
+         if (fGstep[i-1] < 0) d = TMath::Min(d,stpinm);
+         if (d < dmin_) d = dmin_;
 //*-*-          see if converged
-            if (TMath::Abs((d - dlast) / d) < tlrstp ||
-                TMath::Abs((fG2[i-1] - g2bfor) / fG2[i-1]) < tlrg2) {
-               skip50 = 1;
-               break;
-            }
-            d = TMath::Min(d,dlast*102);
-            d = TMath::Max(d,dlast*.1);
-        }
+         if (TMath::Abs((d - dlast) / d) < tlrstp ||
+            TMath::Abs((fG2[i-1] - g2bfor) / fG2[i-1]) < tlrg2) {
+            skip50 = 1;
+            break;
+         }
+         d = TMath::Min(d,dlast*102);
+         d = TMath::Max(d,dlast*.1);
+      }
 //*-*-                      end of step size loop
-        if (!skip50)
-           mnwarn("D", "MNHESS", Form("Second Deriv. SAG,AIM= %d%g%g",iext,sag,aimsag));
+      if (!skip50)
+         mnwarn("D", "MNHESS", Form("Second Deriv. SAG,AIM= %d%g%g",iext,sag,aimsag));
 
-        ndex = i*(i + 1) / 2;
-        fVhmat[ndex-1] = fG2[i-1];
-    }
+      ndex = i*(i + 1) / 2;
+      fVhmat[ndex-1] = fG2[i-1];
+   }
 //*-*-                             end of diagonal second derivative loop
-    mninex(fX);
+   mninex(fX);
 //*-*-                                    refine the first derivatives
-    if (fIstrat > 0) mnhes1();
-    fISW[1] = 3;
-    fDcovar = 0;
+   if (fIstrat > 0) mnhes1();
+   fISW[1] = 3;
+   fDcovar = 0;
 //*-*-                                       . . . .  off-diagonal elements
 
-    if (fNpar == 1) goto L214;
-    for (i = 1; i <= fNpar; ++i) {
-        for (j = 1; j <= i-1; ++j) {
-            xti     = fX[i-1];
-            xtj     = fX[j-1];
-            fX[i-1] = xti + fDirin[i-1];
-            fX[j-1] = xtj + fDirin[j-1];
-            mninex(fX);
-            Eval(nparx, fGin, fs1, fU, 4);            ++fNfcn;
-            fX[i-1] = xti;
-            fX[j-1] = xtj;
-            elem = (fs1 + fAmin - fHESSyy[i-1] - fHESSyy[j-1]) / (
+   if (fNpar == 1) goto L214;
+   for (i = 1; i <= fNpar; ++i) {
+      for (j = 1; j <= i-1; ++j) {
+         xti     = fX[i-1];
+         xtj     = fX[j-1];
+         fX[i-1] = xti + fDirin[i-1];
+         fX[j-1] = xtj + fDirin[j-1];
+         mninex(fX);
+         Eval(nparx, fGin, fs1, fU, 4);            ++fNfcn;
+         fX[i-1] = xti;
+         fX[j-1] = xtj;
+         elem = (fs1 + fAmin - fHESSyy[i-1] - fHESSyy[j-1]) / (
                     fDirin[i-1]*fDirin[j-1]);
-            ndex = i*(i-1) / 2 + j;
-            fVhmat[ndex-1] = elem;
-        }
-    }
+         ndex = i*(i-1) / 2 + j;
+         fVhmat[ndex-1] = elem;
+      }
+   }
 L214:
-    mninex(fX);
+   mninex(fX);
 //*-*-                 verify matrix positive-definite
-    mnpsdf();
-    for (i = 1; i <= fNpar; ++i) {
-        for (j = 1; j <= i; ++j) {
-            ndex = i*(i-1) / 2 + j;
-            fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1];
-            fP[j + i*fMaxpar - fMaxpar-1] = fP[i + j*fMaxpar - fMaxpar-1];
-        }
-    }
-    mnvert(fP, fMaxint, fMaxint, fNpar, ifail);
-    if (ifail > 0) {
-        mnwarn("W", "HESSE", "Matrix inversion fails.");
-        goto L390;
-    }
+   mnpsdf();
+   for (i = 1; i <= fNpar; ++i) {
+      for (j = 1; j <= i; ++j) {
+         ndex = i*(i-1) / 2 + j;
+         fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1];
+         fP[j + i*fMaxpar - fMaxpar-1] = fP[i + j*fMaxpar - fMaxpar-1];
+      }
+   }
+   mnvert(fP, fMaxint, fMaxint, fNpar, ifail);
+   if (ifail > 0) {
+      mnwarn("W", "HESSE", "Matrix inversion fails.");
+      goto L390;
+   }
 //*-*-                                       . . . . . . .  calculate  e d m
-    fEDM = 0;
+   fEDM = 0;
 
-    for (i = 1; i <= fNpar; ++i) {
+   for (i = 1; i <= fNpar; ++i) {
 //*-*-                             off-diagonal elements
-        ndex = i*(i-1) / 2;
-        for (j = 1; j <= i-1; ++j) {
-            ++ndex;
-            ztemp = fP[i + j*fMaxpar - fMaxpar-1]*2;
-            fEDM += fGrd[i-1]*ztemp*fGrd[j-1];
-            fVhmat[ndex-1] = ztemp;
-        }
+      ndex = i*(i-1) / 2;
+      for (j = 1; j <= i-1; ++j) {
+         ++ndex;
+         ztemp = fP[i + j*fMaxpar - fMaxpar-1]*2;
+         fEDM += fGrd[i-1]*ztemp*fGrd[j-1];
+         fVhmat[ndex-1] = ztemp;
+      }
 //*-*-                             diagonal elements
-        ++ndex;
-        fVhmat[ndex-1] = fP[i + i*fMaxpar - fMaxpar-1]*2;
-        fEDM += fP[i + i*fMaxpar - fMaxpar-1]*(fGrd[i-1]*fGrd[i-1]);
-    }
-    if (fISW[4] >= 1 && fISW[1] == 3 && fItaur == 0) {
-        Printf(" COVARIANCE MATRIX CALCULATED SUCCESSFULLY");
-    }
-    goto L900;
+      ++ndex;
+      fVhmat[ndex-1] = fP[i + i*fMaxpar - fMaxpar-1]*2;
+      fEDM += fP[i + i*fMaxpar - fMaxpar-1]*(fGrd[i-1]*fGrd[i-1]);
+   }
+   if (fISW[4] >= 1 && fISW[1] == 3 && fItaur == 0) {
+      Printf(" COVARIANCE MATRIX CALCULATED SUCCESSFULLY");
+   }
+   goto L900;
 //*-*-                             failure to invert 2nd deriv matrix
 L390:
-    fISW[1] = 1;
-    fDcovar = 1;
-    fCstatu = "FAILED    ";
-    if (fISW[4] >= 0) {
-        Printf("  MNHESS FAILS AND WILL RETURN DIAGONAL MATRIX. ");
-    }
-    for (i = 1; i <= fNpar; ++i) {
-        ndex = i*(i-1) / 2;
-        for (j = 1; j <= i-1; ++j) {
-            ++ndex;
-            fVhmat[ndex-1] = 0;
-        }
-        ++ndex;
-        g2i = fG2[i-1];
-        if (g2i <= 0) g2i = 1;
-        fVhmat[ndex-1] = 2 / g2i;
-    }
+   fISW[1] = 1;
+   fDcovar = 1;
+   fCstatu = "FAILED    ";
+   if (fISW[4] >= 0) {
+      Printf("  MNHESS FAILS AND WILL RETURN DIAGONAL MATRIX. ");
+   }
+   for (i = 1; i <= fNpar; ++i) {
+      ndex = i*(i-1) / 2;
+      for (j = 1; j <= i-1; ++j) {
+         ++ndex;
+         fVhmat[ndex-1] = 0;
+      }
+      ++ndex;
+      g2i = fG2[i-1];
+      if (g2i <= 0) g2i = 1;
+      fVhmat[ndex-1] = 2 / g2i;
+   }
 L900:
-    return;
+   return;
 } /* mnhess_ */
 
 //______________________________________________________________________________
@@ -4232,69 +4232,69 @@ void TMinuit::mnhes1()
 //*-*      Called from MNHESS and MNGRAD
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t dmin_, d, dfmin, dgmin=0, change, chgold, grdold=0, epspri;
-    Double_t fs1, optstp, fs2, grdnew=0, sag, xtf;
-    Int_t icyc, ncyc=0, idrv, i, nparx;
-    Bool_t ldebug;
+   /* Local variables */
+   Double_t dmin_, d, dfmin, dgmin=0, change, chgold, grdold=0, epspri;
+   Double_t fs1, optstp, fs2, grdnew=0, sag, xtf;
+   Int_t icyc, ncyc=0, idrv, i, nparx;
+   Bool_t ldebug;
 
-    ldebug = fIdbg[5] >= 1;
-    if (fIstrat <= 0) ncyc = 1;
-    if (fIstrat == 1) ncyc = 2;
-    if (fIstrat > 1)  ncyc = 6;
-    idrv = 1;
-    nparx = fNpar;
-    dfmin = fEpsma2*4*(TMath::Abs(fAmin) + fUp);
+   ldebug = fIdbg[5] >= 1;
+   if (fIstrat <= 0) ncyc = 1;
+   if (fIstrat == 1) ncyc = 2;
+   if (fIstrat > 1)  ncyc = 6;
+   idrv = 1;
+   nparx = fNpar;
+   dfmin = fEpsma2*4*(TMath::Abs(fAmin) + fUp);
 //*-*-                                    main loop over parameters
-    for (i = 1; i <= fNpar; ++i) {
-        xtf    = fX[i-1];
-        dmin_  = fEpsma2*4*TMath::Abs(xtf);
-        epspri = fEpsma2 + TMath::Abs(fGrd[i-1]*fEpsma2);
-        optstp = TMath::Sqrt(dfmin / (TMath::Abs(fG2[i-1]) + epspri));
-        d = TMath::Abs(fGstep[i-1])*.2;
-        if (d > optstp) d = optstp;
-        if (d < dmin_)  d = dmin_;
-        chgold = 1e4;
+   for (i = 1; i <= fNpar; ++i) {
+      xtf    = fX[i-1];
+      dmin_  = fEpsma2*4*TMath::Abs(xtf);
+      epspri = fEpsma2 + TMath::Abs(fGrd[i-1]*fEpsma2);
+      optstp = TMath::Sqrt(dfmin / (TMath::Abs(fG2[i-1]) + epspri));
+      d = TMath::Abs(fGstep[i-1])*.2;
+      if (d > optstp) d = optstp;
+      if (d < dmin_)  d = dmin_;
+      chgold = 1e4;
 //*-*-                                      iterate reducing step size
-        for (icyc = 1; icyc <= ncyc; ++icyc) {
-            fX[i-1] = xtf + d;
-            mninex(fX);
-            Eval(nparx, fGin, fs1, fU, 4);            ++fNfcn;
-            fX[i-1] = xtf - d;
-            mninex(fX);
-            Eval(nparx, fGin, fs2, fU, 4);            ++fNfcn;
-            fX[i-1] = xtf;
+      for (icyc = 1; icyc <= ncyc; ++icyc) {
+         fX[i-1] = xtf + d;
+         mninex(fX);
+         Eval(nparx, fGin, fs1, fU, 4);            ++fNfcn;
+         fX[i-1] = xtf - d;
+         mninex(fX);
+         Eval(nparx, fGin, fs2, fU, 4);            ++fNfcn;
+         fX[i-1] = xtf;
 //*-*-                                      check if step sizes appropriate
-            sag    = (fs1 + fs2 - fAmin*2)*.5;
-            grdold = fGrd[i-1];
-            grdnew = (fs1 - fs2) / (d*2);
-            dgmin  = fEpsmac*(TMath::Abs(fs1) + TMath::Abs(fs2)) / d;
-            if (ldebug) {
-                Printf("%4d%2d%12.5g%12.5g%12.5g%12.5g%12.5g%12.5g",i,idrv,fGstep[i-1],d,fG2[i-1],grdnew,sag);
-            }
-            if (grdnew == 0) goto L60;
-            change = TMath::Abs((grdold - grdnew) / grdnew);
-            if (change > chgold && icyc > 1) goto L60;
-            chgold    = change;
-            fGrd[i-1] = grdnew;
-            if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(d);
-            else                 fGstep[i-1] = -TMath::Abs(d);
+         sag    = (fs1 + fs2 - fAmin*2)*.5;
+         grdold = fGrd[i-1];
+         grdnew = (fs1 - fs2) / (d*2);
+         dgmin  = fEpsmac*(TMath::Abs(fs1) + TMath::Abs(fs2)) / d;
+         if (ldebug) {
+            Printf("%4d%2d%12.5g%12.5g%12.5g%12.5g%12.5g%12.5g",i,idrv,fGstep[i-1],d,fG2[i-1],grdnew,sag);
+         }
+         if (grdnew == 0) goto L60;
+         change = TMath::Abs((grdold - grdnew) / grdnew);
+         if (change > chgold && icyc > 1) goto L60;
+         chgold    = change;
+         fGrd[i-1] = grdnew;
+         if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(d);
+         else                 fGstep[i-1] = -TMath::Abs(d);
 //*-*-                 decrease step until first derivative changes by <5%
-            if (change < .05) goto L60;
-            if (TMath::Abs(grdold - grdnew) < dgmin) goto L60;
-            if (d < dmin_) {
-                mnwarn("D", "MNHES1", "Step size too small for 1st drv.");
-                goto L60;
-            }
-            d *= .2;
-        }
+         if (change < .05) goto L60;
+         if (TMath::Abs(grdold - grdnew) < dgmin) goto L60;
+         if (d < dmin_) {
+            mnwarn("D", "MNHES1", "Step size too small for 1st drv.");
+            goto L60;
+         }
+         d *= .2;
+      }
 //*-*-                                      loop satisfied = too many iter
-        mnwarn("D", "MNHES1", Form("Too many iterations on D1.%g%g",grdold,grdnew));
+      mnwarn("D", "MNHES1", Form("Too many iterations on D1.%g%g",grdold,grdnew));
 L60:
-        fDgrd[i-1] = TMath::Max(dgmin,TMath::Abs(grdold - grdnew));
-    }
+      fDgrd[i-1] = TMath::Max(dgmin,TMath::Abs(grdold - grdnew));
+   }
 //*-*-                                       end of first deriv. loop
-    mninex(fX);
+   mninex(fX);
 } /* mnhes1_ */
 
 //______________________________________________________________________________
@@ -4309,207 +4309,207 @@ void TMinuit::mnimpr()
 //*-*        ref. -- Goldstein and Price, Math.Comp. 25, 569 (1971)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static Double_t rnum = 0;
+   static Double_t rnum = 0;
 
-    /* Local variables */
-    Double_t amax, ycalf, ystar, ystst;
-    Double_t pb, ep, wg, xi, sigsav, reg, sig2;
-    Int_t npfn, ndex, loop=0, i, j, ifail, iseed;
-    Int_t jhold, nloop, nparx, nparp1, jh, jl, iswtr;
+   /* Local variables */
+   Double_t amax, ycalf, ystar, ystst;
+   Double_t pb, ep, wg, xi, sigsav, reg, sig2;
+   Int_t npfn, ndex, loop=0, i, j, ifail, iseed;
+   Int_t jhold, nloop, nparx, nparp1, jh, jl, iswtr;
 
-    if (fNpar <= 0) return;
-    if (fAmin == fUndefi) mnamin();
-    fCstatu = "UNCHANGED ";
-    fItaur  = 1;
-    fEpsi   = fUp*.1;
-    npfn    = fNfcn;
-    nloop   = Int_t(fWord7[1]);
-    if (nloop <= 0) nloop = fNpar + 4;
-    nparx  = fNpar;
-    nparp1 = fNpar + 1;
-    wg = 1 / Double_t(fNpar);
-    sigsav = fEDM;
-    fApsi  = fAmin;
-    iswtr   = fISW[4] - 2*fItaur;
-    for (i = 1; i <= fNpar; ++i) {
-        fXt[i-1]       = fX[i-1];
-        fIMPRdsav[i-1] = fWerr[i-1];
-        for (j = 1; j <= i; ++j) {
-            ndex = i*(i-1) / 2 + j;
-            fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1];
-            fP[j + i*fMaxpar - fMaxpar-1] = fP[i + j*fMaxpar - fMaxpar-1];
-        }
-    }
-    mnvert(fP, fMaxint, fMaxint, fNpar, ifail);
-    if (ifail >= 1) goto L280;
+   if (fNpar <= 0) return;
+   if (fAmin == fUndefi) mnamin();
+   fCstatu = "UNCHANGED ";
+   fItaur  = 1;
+   fEpsi   = fUp*.1;
+   npfn    = fNfcn;
+   nloop   = Int_t(fWord7[1]);
+   if (nloop <= 0) nloop = fNpar + 4;
+   nparx  = fNpar;
+   nparp1 = fNpar + 1;
+   wg = 1 / Double_t(fNpar);
+   sigsav = fEDM;
+   fApsi  = fAmin;
+   iswtr   = fISW[4] - 2*fItaur;
+   for (i = 1; i <= fNpar; ++i) {
+      fXt[i-1]       = fX[i-1];
+      fIMPRdsav[i-1] = fWerr[i-1];
+      for (j = 1; j <= i; ++j) {
+         ndex = i*(i-1) / 2 + j;
+         fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1];
+         fP[j + i*fMaxpar - fMaxpar-1] = fP[i + j*fMaxpar - fMaxpar-1];
+      }
+   }
+   mnvert(fP, fMaxint, fMaxint, fNpar, ifail);
+   if (ifail >= 1) goto L280;
 //*-*-              Save inverted matrix in VT
-    for (i = 1; i <= fNpar; ++i) {
-        ndex = i*(i-1) / 2;
-        for (j = 1; j <= i; ++j) {
-            ++ndex;
-            fVthmat[ndex-1] = fP[i + j*fMaxpar - fMaxpar-1];
-        }
-    }
-    loop = 0;
+   for (i = 1; i <= fNpar; ++i) {
+      ndex = i*(i-1) / 2;
+      for (j = 1; j <= i; ++j) {
+         ++ndex;
+         fVthmat[ndex-1] = fP[i + j*fMaxpar - fMaxpar-1];
+      }
+   }
+   loop = 0;
 
 L20:
-    for (i = 1; i <= fNpar; ++i) {
-        fDirin[i-1] = fIMPRdsav[i-1]*2;
-        mnrn15(rnum, iseed);
-        fX[i-1] = fXt[i-1] + fDirin[i-1]*2*(rnum - .5);
-    }
-    ++loop;
-    reg = 2;
-    if (fISW[4] >= 0) {
-        Printf("START ATTEMPT NO.%2d TO FIND NEW MINIMUM",loop);
-    }
+   for (i = 1; i <= fNpar; ++i) {
+      fDirin[i-1] = fIMPRdsav[i-1]*2;
+      mnrn15(rnum, iseed);
+      fX[i-1] = fXt[i-1] + fDirin[i-1]*2*(rnum - .5);
+   }
+   ++loop;
+   reg = 2;
+   if (fISW[4] >= 0) {
+      Printf("START ATTEMPT NO.%2d TO FIND NEW MINIMUM",loop);
+   }
 L30:
-    mncalf(fX, ycalf);
-    fAmin = ycalf;
+   mncalf(fX, ycalf);
+   fAmin = ycalf;
 //*-*-                                       . . . . set up  random simplex
-    jl = nparp1;
-    jh = nparp1;
-    fIMPRy[nparp1-1] = fAmin;
-    amax = fAmin;
-    for (i = 1; i <= fNpar; ++i) {
-        xi = fX[i-1];
-        mnrn15(rnum, iseed);
-        fX[i-1] = xi - fDirin[i-1]*(rnum - .5);
-        mncalf(fX, ycalf);
-        fIMPRy[i-1] = ycalf;
-        if (fIMPRy[i-1] < fAmin) {
-            fAmin = fIMPRy[i-1];
-            jl    = i;
-        } else if (fIMPRy[i-1] > amax) {
-            amax = fIMPRy[i-1];
-            jh   = i;
-        }
-        for (j = 1; j <= fNpar; ++j) { fP[j + i*fMaxpar - fMaxpar-1] = fX[j-1]; }
-        fP[i + nparp1*fMaxpar - fMaxpar-1] = xi;
-        fX[i-1] = xi;
-    }
+   jl = nparp1;
+   jh = nparp1;
+   fIMPRy[nparp1-1] = fAmin;
+   amax = fAmin;
+   for (i = 1; i <= fNpar; ++i) {
+      xi = fX[i-1];
+      mnrn15(rnum, iseed);
+      fX[i-1] = xi - fDirin[i-1]*(rnum - .5);
+      mncalf(fX, ycalf);
+      fIMPRy[i-1] = ycalf;
+      if (fIMPRy[i-1] < fAmin) {
+         fAmin = fIMPRy[i-1];
+         jl    = i;
+      } else if (fIMPRy[i-1] > amax) {
+         amax = fIMPRy[i-1];
+         jh   = i;
+      }
+      for (j = 1; j <= fNpar; ++j) { fP[j + i*fMaxpar - fMaxpar-1] = fX[j-1]; }
+      fP[i + nparp1*fMaxpar - fMaxpar-1] = xi;
+      fX[i-1] = xi;
+   }
 
-    fEDM = fAmin;
-    sig2 = fEDM;
+   fEDM = fAmin;
+   sig2 = fEDM;
 //*-*-                                       . . . . . . .  start main loop
 L50:
-    if (fAmin < 0)   goto L95;
-    if (fISW[1] <= 2) goto L280;
-    ep = fAmin*.1;
-    if (sig2 < ep && fEDM < ep) goto L100;
-    sig2 = fEDM;
-    if (fNfcn - npfn > fNfcnmx) goto L300;
+   if (fAmin < 0)   goto L95;
+   if (fISW[1] <= 2) goto L280;
+   ep = fAmin*.1;
+   if (sig2 < ep && fEDM < ep) goto L100;
+   sig2 = fEDM;
+   if (fNfcn - npfn > fNfcnmx) goto L300;
 //*-*-        calculate new point * by reflection
-    for (i = 1; i <= fNpar; ++i) {
-        pb = 0;
-        for (j = 1; j <= nparp1; ++j) { pb += wg*fP[i + j*fMaxpar - fMaxpar-1]; }
-        fPbar[i-1]  = pb - wg*fP[i + jh*fMaxpar - fMaxpar-1];
-        fPstar[i-1] = fPbar[i-1]*2 - fP[i + jh*fMaxpar - fMaxpar-1]*1;
-    }
-    mncalf(fPstar, ycalf);
-    ystar = ycalf;
-    if (ystar >= fAmin) goto L70;
+   for (i = 1; i <= fNpar; ++i) {
+      pb = 0;
+      for (j = 1; j <= nparp1; ++j) { pb += wg*fP[i + j*fMaxpar - fMaxpar-1]; }
+      fPbar[i-1]  = pb - wg*fP[i + jh*fMaxpar - fMaxpar-1];
+      fPstar[i-1] = fPbar[i-1]*2 - fP[i + jh*fMaxpar - fMaxpar-1]*1;
+   }
+   mncalf(fPstar, ycalf);
+   ystar = ycalf;
+   if (ystar >= fAmin) goto L70;
 //*-*-        point * better than jl, calculate new point **
-    for (i = 1; i <= fNpar; ++i) {
-        fPstst[i-1] = fPstar[i-1]*2 + fPbar[i- 1]*-1;
-    }
-    mncalf(fPstst, ycalf);
-    ystst = ycalf;
-    if (ystst < fIMPRy[jl-1]) goto L67;
-    mnrazz(ystar, fPstar, fIMPRy, jh, jl);
-    goto L50;
+   for (i = 1; i <= fNpar; ++i) {
+      fPstst[i-1] = fPstar[i-1]*2 + fPbar[i- 1]*-1;
+   }
+   mncalf(fPstst, ycalf);
+   ystst = ycalf;
+   if (ystst < fIMPRy[jl-1]) goto L67;
+   mnrazz(ystar, fPstar, fIMPRy, jh, jl);
+   goto L50;
 L67:
-    mnrazz(ystst, fPstst, fIMPRy, jh, jl);
-    goto L50;
+   mnrazz(ystst, fPstst, fIMPRy, jh, jl);
+   goto L50;
 //*-*-        point * is not as good as jl
 L70:
-    if (ystar >= fIMPRy[jh-1]) goto L73;
-    jhold = jh;
-    mnrazz(ystar, fPstar, fIMPRy, jh, jl);
-    if (jhold != jh) goto L50;
+   if (ystar >= fIMPRy[jh-1]) goto L73;
+   jhold = jh;
+   mnrazz(ystar, fPstar, fIMPRy, jh, jl);
+   if (jhold != jh) goto L50;
 //*-*-        calculate new point **
 L73:
-    for (i = 1; i <= fNpar; ++i) {
-        fPstst[i-1] = fP[i + jh*fMaxpar - fMaxpar-1]*.5 + fPbar[i-1]*.5;
-    }
-    mncalf(fPstst, ycalf);
-    ystst = ycalf;
-    if (ystst > fIMPRy[jh-1]) goto L30;
+   for (i = 1; i <= fNpar; ++i) {
+      fPstst[i-1] = fP[i + jh*fMaxpar - fMaxpar-1]*.5 + fPbar[i-1]*.5;
+   }
+   mncalf(fPstst, ycalf);
+   ystst = ycalf;
+   if (ystst > fIMPRy[jh-1]) goto L30;
 //*-*-    point ** is better than jh
-    if (ystst < fAmin) goto L67;
-    mnrazz(ystst, fPstst, fIMPRy, jh, jl);
-    goto L50;
+   if (ystst < fAmin) goto L67;
+   mnrazz(ystst, fPstst, fIMPRy, jh, jl);
+   goto L50;
 //*-*-                                       . . . . . .  end main loop
 L95:
-    if (fISW[4] >= 0) {
-        Printf(" AN IMPROVEMENT ON THE PREVIOUS MINIMUM HAS BEEN FOUND");
-    }
-    reg = .1;
+   if (fISW[4] >= 0) {
+      Printf(" AN IMPROVEMENT ON THE PREVIOUS MINIMUM HAS BEEN FOUND");
+   }
+   reg = .1;
 //*-*-                                       . . . . . ask if point is new
 L100:
-    mninex(fX);
-    Eval(nparx, fGin, fAmin, fU, 4);    ++fNfcn;
-    for (i = 1; i <= fNpar; ++i) {
-        fDirin[i-1] = reg*fIMPRdsav[i-1];
-        if (TMath::Abs(fX[i-1] - fXt[i-1]) > fDirin[i-1])     goto L150;
-    }
-    goto L230;
+   mninex(fX);
+   Eval(nparx, fGin, fAmin, fU, 4);    ++fNfcn;
+   for (i = 1; i <= fNpar; ++i) {
+      fDirin[i-1] = reg*fIMPRdsav[i-1];
+      if (TMath::Abs(fX[i-1] - fXt[i-1]) > fDirin[i-1])     goto L150;
+   }
+   goto L230;
 L150:
-    fNfcnmx = fNfcnmx + npfn - fNfcn;
-    npfn    = fNfcn;
-    mnsimp();
-    if (fAmin >= fApsi) goto L325;
-    for (i = 1; i <= fNpar; ++i) {
-        fDirin[i-1] = fIMPRdsav[i-1]*.1;
-        if (TMath::Abs(fX[i-1] - fXt[i-1]) > fDirin[i-1])     goto L250;
-    }
+   fNfcnmx = fNfcnmx + npfn - fNfcn;
+   npfn    = fNfcn;
+   mnsimp();
+   if (fAmin >= fApsi) goto L325;
+   for (i = 1; i <= fNpar; ++i) {
+      fDirin[i-1] = fIMPRdsav[i-1]*.1;
+      if (TMath::Abs(fX[i-1] - fXt[i-1]) > fDirin[i-1])     goto L250;
+   }
 L230:
-    if (fAmin < fApsi)         goto L350;
-    goto L325;
+   if (fAmin < fApsi)         goto L350;
+   goto L325;
 /*                                        . . . . . . truly new minimum */
 L250:
-    fLnewmn = kTRUE;
-    if (fISW[1] >= 1) {
-        fISW[1] = 1;
-        fDcovar = TMath::Max(fDcovar,.5);
-    } else fDcovar = 1;
-    fItaur  = 0;
-    fNfcnmx = fNfcnmx + npfn - fNfcn;
-    fCstatu = "NEW MINIMU";
-    if (fISW[4] >= 0) {
-        Printf(" IMPROVE HAS FOUND A TRULY NEW MINIMUM");
-        Printf(" *************************************");
-    }
-    return;
+   fLnewmn = kTRUE;
+   if (fISW[1] >= 1) {
+      fISW[1] = 1;
+      fDcovar = TMath::Max(fDcovar,.5);
+   } else fDcovar = 1;
+   fItaur  = 0;
+   fNfcnmx = fNfcnmx + npfn - fNfcn;
+   fCstatu = "NEW MINIMU";
+   if (fISW[4] >= 0) {
+      Printf(" IMPROVE HAS FOUND A TRULY NEW MINIMUM");
+      Printf(" *************************************");
+   }
+   return;
 //*-*-                                       . . . return to previous region
 L280:
-    if (fISW[4] > 0) {
-        Printf(" COVARIANCE MATRIX WAS NOT POSITIVE-DEFINITE");
-    }
-    goto L325;
+   if (fISW[4] > 0) {
+      Printf(" COVARIANCE MATRIX WAS NOT POSITIVE-DEFINITE");
+   }
+   goto L325;
 L300:
-    fISW[0] = 1;
+   fISW[0] = 1;
 L325:
-    for (i = 1; i <= fNpar; ++i) {
-        fDirin[i-1] = fIMPRdsav[i-1]*.01;
-        fX[i-1]     = fXt[i-1];
-    }
-    fAmin = fApsi;
-    fEDM  = sigsav;
+   for (i = 1; i <= fNpar; ++i) {
+      fDirin[i-1] = fIMPRdsav[i-1]*.01;
+      fX[i-1]     = fXt[i-1];
+   }
+   fAmin = fApsi;
+   fEDM  = sigsav;
 L350:
-    mninex(fX);
-    if (fISW[4] > 0) {
-        Printf(" IMPROVE HAS RETURNED TO REGION OF ORIGINAL MINIMUM");
-    }
-    fCstatu = "UNCHANGED ";
-    mnrset(0);
-    if (fISW[1] < 2) goto L380;
-    if (loop < nloop && fISW[0] < 1) goto L20;
+   mninex(fX);
+   if (fISW[4] > 0) {
+      Printf(" IMPROVE HAS RETURNED TO REGION OF ORIGINAL MINIMUM");
+   }
+   fCstatu = "UNCHANGED ";
+   mnrset(0);
+   if (fISW[1] < 2) goto L380;
+   if (loop < nloop && fISW[0] < 1) goto L20;
 L380:
-    if (iswtr >= 0) mnprin(5, fAmin);
-    fItaur = 0;
+   if (iswtr >= 0) mnprin(5, fAmin);
+   fItaur = 0;
 } /* mnimpr_ */
 
 //______________________________________________________________________________
@@ -4521,16 +4521,16 @@ void TMinuit::mninex(Double_t *pint)
 //*-*        internal coordinates call this routine before calling FCN.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, j;
+   Int_t i, j;
 
-    for (j = 0; j < fNpar; ++j) {
-        i = fNexofi[j]-1;
-        if (fNvarl[i] == 1) {
-            fU[i] = pint[j];
-        } else {
-            fU[i] = fAlim[i] + (TMath::Sin(pint[j]) + 1)*.5*(fBlim[i] - fAlim[i]);
-        }
-    }
+   for (j = 0; j < fNpar; ++j) {
+      i = fNexofi[j]-1;
+      if (fNvarl[i] == 1) {
+         fU[i] = pint[j];
+      } else {
+         fU[i] = fAlim[i] + (TMath::Sin(pint[j]) + 1)*.5*(fBlim[i] - fAlim[i]);
+      }
+   }
 } /* mninex_ */
 
 //______________________________________________________________________________
@@ -4542,85 +4542,85 @@ void TMinuit::mninit(Int_t i1, Int_t i2, Int_t i3)
 //*-*                (including the logical I/O unit nos.),
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t piby2, epsp1, epsbak, epstry, distnn;
-    Int_t i, idb;
+   /* Local variables */
+   Double_t piby2, epsp1, epsbak, epstry, distnn;
+   Int_t i, idb;
 
 //*-*-           I/O unit numbers
-    fIsysrd = i1;
-    fIsyswr = i2;
-    fIstkwr[0] = fIsyswr;
-    fNstkwr = 1;
-    fIsyssa = i3;
-    fNstkrd = 0;
+   fIsysrd = i1;
+   fIsyswr = i2;
+   fIstkwr[0] = fIsyswr;
+   fNstkwr = 1;
+   fIsyssa = i3;
+   fNstkrd = 0;
 //*-*-              version identifier
-    fCvrsn  = "95.03++ ";
+   fCvrsn  = "95.03++ ";
 //*-*-              some CONSTANT
-    fMaxint = fMaxpar;
-    fMaxext = 2*fMaxpar;
-    fUndefi = -54321;
-    fBigedm = 123456;
-    fCundef = ")UNDEFINED";
-    fCovmes[0] = "NO ERROR MATRIX       ";
-    fCovmes[1] = "ERR MATRIX APPROXIMATE";
-    fCovmes[2] = "ERR MATRIX NOT POS-DEF";
-    fCovmes[3] = "ERROR MATRIX ACCURATE ";
+   fMaxint = fMaxpar;
+   fMaxext = 2*fMaxpar;
+   fUndefi = -54321;
+   fBigedm = 123456;
+   fCundef = ")UNDEFINED";
+   fCovmes[0] = "NO ERROR MATRIX       ";
+   fCovmes[1] = "ERR MATRIX APPROXIMATE";
+   fCovmes[2] = "ERR MATRIX NOT POS-DEF";
+   fCovmes[3] = "ERROR MATRIX ACCURATE ";
 //*-*-               some starting values
-    fNblock = 0;
-    fIcomnd = 0;
-    fCtitl  = fCundef;
-    fCfrom  = "INPUT   ";
-    fNfcn   = 0;
-    fNfcnfr = fNfcn;
-    fCstatu = "INITIALIZE";
-    fISW[2] = 0;
-    fISW[3] = 0;
-    fISW[4] = 1;
+   fNblock = 0;
+   fIcomnd = 0;
+   fCtitl  = fCundef;
+   fCfrom  = "INPUT   ";
+   fNfcn   = 0;
+   fNfcnfr = fNfcn;
+   fCstatu = "INITIALIZE";
+   fISW[2] = 0;
+   fISW[3] = 0;
+   fISW[4] = 1;
 //*-*-        fISW[5]=0 for batch jobs,  =1 for interactive jobs
 //*-*-                     =-1 for originally interactive temporarily batch
 
-    fISW[5] = 0;
+   fISW[5] = 0;
 //    if (intrac(&dummy)) fISW[5] = 1;
 //*-*-       DEBUG options set to default values
-    for (idb = 0; idb <= 10; ++idb) { fIdbg[idb] = 0; }
-    fLrepor = kFALSE;
-    fLwarn  = kTRUE;
-    fLimset = kFALSE;
-    fLnewmn = kFALSE;
-    fIstrat = 1;
-    fItaur  = 0;
+   for (idb = 0; idb <= 10; ++idb) { fIdbg[idb] = 0; }
+   fLrepor = kFALSE;
+   fLwarn  = kTRUE;
+   fLimset = kFALSE;
+   fLnewmn = kFALSE;
+   fIstrat = 1;
+   fItaur  = 0;
 //*-*-       default page dimensions and 'new page' carriage control integer
-    fNpagwd = 120;
-    fNpagln = 56;
-    fNewpag = 1;
-    if (fISW[5] > 0) {
-        fNpagwd = 80;
-        fNpagln = 30;
-        fNewpag = 0;
-    }
-    fUp = 1;
-    fUpdflt = fUp;
+   fNpagwd = 120;
+   fNpagln = 56;
+   fNewpag = 1;
+   if (fISW[5] > 0) {
+      fNpagwd = 80;
+      fNpagln = 30;
+      fNewpag = 0;
+   }
+   fUp = 1;
+   fUpdflt = fUp;
 //*-*-                  determine machine accuracy epsmac
-    epstry = .5;
-    for (i = 1; i <= 100; ++i) {
-        epstry *= .5;
-        epsp1 = epstry + 1;
-        mntiny(epsp1, epsbak);
-        if (epsbak < epstry) goto L35;
-    }
-    epstry = 1e-7;
-    fEpsmac = epstry*4;
-    Printf(" MNINIT UNABLE TO DETERMINE ARITHMETIC PRECISION. WILL ASSUME:%g",fEpsmac);
+   epstry = .5;
+   for (i = 1; i <= 100; ++i) {
+      epstry *= .5;
+      epsp1 = epstry + 1;
+      mntiny(epsp1, epsbak);
+      if (epsbak < epstry) goto L35;
+   }
+   epstry = 1e-7;
+   fEpsmac = epstry*4;
+   Printf(" MNINIT UNABLE TO DETERMINE ARITHMETIC PRECISION. WILL ASSUME:%g",fEpsmac);
 L35:
-    fEpsmac = epstry*8;
-    fEpsma2 = TMath::Sqrt(fEpsmac)*2;
+   fEpsmac = epstry*8;
+   fEpsma2 = TMath::Sqrt(fEpsmac)*2;
 //*-*-                the vlims are a non-negligible distance from pi/2
 //*-*-        used by MNPINT to set variables "near" the physical limits
-    piby2   = TMath::ATan(1)*2;
-    distnn  = TMath::Sqrt(fEpsma2)*8;
-    fVlimhi =  piby2 - distnn;
-    fVlimlo = -piby2 + distnn;
-    mncler();
+   piby2   = TMath::ATan(1)*2;
+   distnn  = TMath::Sqrt(fEpsma2)*8;
+   fVlimhi =  piby2 - distnn;
+   fVlimlo = -piby2 + distnn;
+   mncler();
 //    Printf("  MINUIT RELEASE %s INITIALIZED.   DIMENSIONS 100/50  EPSMAC=%g",(const char*)fCvrsn,fEpsmac);
 } /* mninit_ */
 
@@ -4632,107 +4632,107 @@ void TMinuit::mnlims()
 //*-*       Called from MNSET
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t dxdi, snew;
-    Int_t kint, i2, newcod, ifx=0, inu;
+   /* Local variables */
+   Double_t dxdi, snew;
+   Int_t kint, i2, newcod, ifx=0, inu;
 
-    fCfrom  = "SET LIM ";
-    fNfcnfr = fNfcn;
-    fCstatu = "NO CHANGE ";
-    i2 = Int_t(fWord7[0]);
-    if (i2 > fMaxext || i2 < 0) goto L900;
-    if (i2 > 0) goto L30;
+   fCfrom  = "SET LIM ";
+   fNfcnfr = fNfcn;
+   fCstatu = "NO CHANGE ";
+   i2 = Int_t(fWord7[0]);
+   if (i2 > fMaxext || i2 < 0) goto L900;
+   if (i2 > 0) goto L30;
 //*-*-                                    set limits on all parameters
-    newcod = 4;
-    if (fWord7[1] == fWord7[2]) newcod = 1;
-    for (inu = 1; inu <= fNu; ++inu) {
-        if (fNvarl[inu-1] <= 0) continue;
-        if (fNvarl[inu-1] == 1 && newcod == 1) continue;
-        kint = fNiofex[inu-1];
+   newcod = 4;
+   if (fWord7[1] == fWord7[2]) newcod = 1;
+   for (inu = 1; inu <= fNu; ++inu) {
+      if (fNvarl[inu-1] <= 0) continue;
+      if (fNvarl[inu-1] == 1 && newcod == 1) continue;
+      kint = fNiofex[inu-1];
 //*-*-            see if parameter has been fixed
-        if (kint <= 0) {
-            if (fISW[4] >= 0) {
-                Printf("           LIMITS NOT CHANGED FOR FIXED PARAMETER:%4d",inu);
-            }
-            continue;
-        }
-        if (newcod == 1) {
+      if (kint <= 0) {
+         if (fISW[4] >= 0) {
+            Printf("           LIMITS NOT CHANGED FOR FIXED PARAMETER:%4d",inu);
+         }
+         continue;
+      }
+      if (newcod == 1) {
 //*-*-           remove limits from parameter
-            if (fISW[4] > 0) {
-                Printf(" LIMITS REMOVED FROM PARAMETER  :%3d",inu);
-            }
-            fCstatu = "NEW LIMITS";
-            mndxdi(fX[kint-1], kint-1, dxdi);
-            snew           = fGstep[kint-1]*dxdi;
-            fGstep[kint-1] = TMath::Abs(snew);
-            fNvarl[inu-1]  = 1;
-        } else {
+         if (fISW[4] > 0) {
+            Printf(" LIMITS REMOVED FROM PARAMETER  :%3d",inu);
+         }
+         fCstatu = "NEW LIMITS";
+         mndxdi(fX[kint-1], kint-1, dxdi);
+         snew           = fGstep[kint-1]*dxdi;
+         fGstep[kint-1] = TMath::Abs(snew);
+         fNvarl[inu-1]  = 1;
+      } else {
 //*-*-            put limits on parameter
-            fAlim[inu-1] = TMath::Min(fWord7[1],fWord7[2]);
-            fBlim[inu-1] = TMath::Max(fWord7[1],fWord7[2]);
-            if (fISW[4] > 0) {
-                Printf(" PARAMETER %3d LIMITS SET TO  %15.5g%15.5g",inu,fAlim[inu-1],fBlim[inu-1]);
-            }
-            fNvarl[inu-1]  = 4;
-            fCstatu        = "NEW LIMITS";
-            fGstep[kint-1] = -.1;
-        }
-    }
-    goto L900;
+         fAlim[inu-1] = TMath::Min(fWord7[1],fWord7[2]);
+         fBlim[inu-1] = TMath::Max(fWord7[1],fWord7[2]);
+         if (fISW[4] > 0) {
+            Printf(" PARAMETER %3d LIMITS SET TO  %15.5g%15.5g",inu,fAlim[inu-1],fBlim[inu-1]);
+         }
+         fNvarl[inu-1]  = 4;
+         fCstatu        = "NEW LIMITS";
+         fGstep[kint-1] = -.1;
+      }
+   }
+   goto L900;
 //*-*-                                      set limits on one parameter
 L30:
-    if (fNvarl[i2-1] <= 0) {
-        Printf(" PARAMETER %3d IS NOT VARIABLE.", i2);
-        goto L900;
-    }
-    kint = fNiofex[i2-1];
+   if (fNvarl[i2-1] <= 0) {
+      Printf(" PARAMETER %3d IS NOT VARIABLE.", i2);
+      goto L900;
+   }
+   kint = fNiofex[i2-1];
 //*-*-                                      see if parameter was fixed
-    if (kint == 0) {
-        Printf(" REQUEST TO CHANGE LIMITS ON FIXED PARAMETER:%3d",i2);
-        for (ifx = 1; ifx <= fNpfix; ++ifx) {
-            if (i2 == fIpfix[ifx-1]) goto L92;
-        }
-        Printf(" MINUIT BUG IN MNLIMS. SEE F. JAMES");
+   if (kint == 0) {
+      Printf(" REQUEST TO CHANGE LIMITS ON FIXED PARAMETER:%3d",i2);
+      for (ifx = 1; ifx <= fNpfix; ++ifx) {
+         if (i2 == fIpfix[ifx-1]) goto L92;
+      }
+      Printf(" MINUIT BUG IN MNLIMS. SEE F. JAMES");
 L92:
-        ;
-    }
-    if (fWord7[1] != fWord7[2]) goto L235;
+      ;
+   }
+   if (fWord7[1] != fWord7[2]) goto L235;
 //*-*-                                      remove limits
-    if (fNvarl[i2-1] != 1) {
-        if (fISW[4] > 0) {
-            Printf(" LIMITS REMOVED FROM PARAMETER  %2d",i2);
-        }
-        fCstatu = "NEW LIMITS";
-        if (kint <= 0) {
-            fGsteps[ifx-1] = TMath::Abs(fGsteps[ifx-1]);
-        } else {
-            mndxdi(fX[kint-1], kint-1, dxdi);
-            if (TMath::Abs(dxdi) < .01) dxdi = .01;
-            fGstep[kint-1] = TMath::Abs(fGstep[kint-1]*dxdi);
-            fGrd[kint-1]  *= dxdi;
-        }
-        fNvarl[i2-1] = 1;
-    } else {
-        Printf(" NO LIMITS SPECIFIED.  PARAMETER %3d IS ALREADY UNLIMITED.  NO CHANGE.",i2);
-    }
-    goto L900;
+   if (fNvarl[i2-1] != 1) {
+      if (fISW[4] > 0) {
+         Printf(" LIMITS REMOVED FROM PARAMETER  %2d",i2);
+      }
+      fCstatu = "NEW LIMITS";
+      if (kint <= 0) {
+         fGsteps[ifx-1] = TMath::Abs(fGsteps[ifx-1]);
+      } else {
+         mndxdi(fX[kint-1], kint-1, dxdi);
+         if (TMath::Abs(dxdi) < .01) dxdi = .01;
+         fGstep[kint-1] = TMath::Abs(fGstep[kint-1]*dxdi);
+         fGrd[kint-1]  *= dxdi;
+      }
+      fNvarl[i2-1] = 1;
+   } else {
+      Printf(" NO LIMITS SPECIFIED.  PARAMETER %3d IS ALREADY UNLIMITED.  NO CHANGE.",i2);
+   }
+   goto L900;
 //*-*-                                       put on limits
 L235:
-    fAlim[i2-1]  = TMath::Min(fWord7[1],fWord7[2]);
-    fBlim[i2-1]  = TMath::Max(fWord7[1],fWord7[2]);
-    fNvarl[i2-1] = 4;
-    if (fISW[4] > 0) {
-        Printf(" PARAMETER %3d LIMITS SET TO  %15.5g%15.5g",i2,fAlim[i2-1],fBlim[i2-1]);
-    }
-    fCstatu = "NEW LIMITS";
-    if (kint <= 0) fGsteps[ifx-1] = -.1;
-    else           fGstep[kint-1] = -.1;
+   fAlim[i2-1]  = TMath::Min(fWord7[1],fWord7[2]);
+   fBlim[i2-1]  = TMath::Max(fWord7[1],fWord7[2]);
+   fNvarl[i2-1] = 4;
+   if (fISW[4] > 0) {
+      Printf(" PARAMETER %3d LIMITS SET TO  %15.5g%15.5g",i2,fAlim[i2-1],fBlim[i2-1]);
+   }
+   fCstatu = "NEW LIMITS";
+   if (kint <= 0) fGsteps[ifx-1] = -.1;
+   else           fGstep[kint-1] = -.1;
 
 L900:
-    if (fCstatu != "NO CHANGE ") {
-        mnexin(fX);
-        mnrset(1);
-    }
+   if (fCstatu != "NO CHANGE ") {
+      mnexin(fX);
+      mnrset(1);
+   }
 } /* mnlims_ */
 
 //______________________________________________________________________________
@@ -4753,226 +4753,226 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 //*-*   but cannot be smaller than SLAMBG.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
-    Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
-    Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
-    Int_t i, nparx=0, nvmax=0, nxypt, kk, ipt;
-    Bool_t ldebug;
-    TString cmess;
-    char chpq[13];
-    int     l65, l70, l80;
+   /* Local variables */
+   Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
+   Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
+   Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
+   Int_t i, nparx=0, nvmax=0, nxypt, kk, ipt;
+   Bool_t ldebug;
+   TString cmess;
+   char chpq[13];
+   int     l65, l70, l80;
 
-    /* Function Body */
-    l65 = 0; l70 = 0; l80 = 0;
-    ldebug = fIdbg[1] >= 1;
+   /* Function Body */
+   l65 = 0; l70 = 0; l80 = 0;
+   ldebug = fIdbg[1] >= 1;
 //*-*-                 starting values for overall limits on total step SLAM
-    overal = 1e3;
-    undral = -100;
+   overal = 1e3;
+   undral = -100;
 //*-*-                             debug check if start is ok
-    if (ldebug) {
-        mninex(&start[0]);
-        Eval(nparx, fGin, f1, fU, 4);        ++fNfcn;
-        if (f1 != fstart) {
-            Printf(" MNLINE start point not consistent, F values, parameters=");
-            for (kk = 1; kk <= fNpar; ++kk) {
-                Printf("  %14.5e",fX[kk-1]);
-            }
-        }
-    }
+   if (ldebug) {
+      mninex(&start[0]);
+      Eval(nparx, fGin, f1, fU, 4);        ++fNfcn;
+      if (f1 != fstart) {
+         Printf(" MNLINE start point not consistent, F values, parameters=");
+         for (kk = 1; kk <= fNpar; ++kk) {
+            Printf("  %14.5e",fX[kk-1]);
+         }
+      }
+   }
 //*-*-                                     . set up linear search along STEP
-    fvmin   = fstart;
-    xvmin   = 0;
-    nxypt   = 1;
-    chpq[0] = charal[0];
-    xpq[0]  = 0;
-    ypq[0]  = fstart;
+   fvmin   = fstart;
+   xvmin   = 0;
+   nxypt   = 1;
+   chpq[0] = charal[0];
+   xpq[0]  = 0;
+   ypq[0]  = fstart;
 //*-*-              SLAMIN = smallest possible value of ABS(SLAM)
-    slamin = 0;
-    for (i = 1; i <= fNpar; ++i) {
-        if (step[i-1] != 0) {
-           ratio = TMath::Abs(start[i-1] / step[i-1]);
-           if (slamin == 0)    slamin = ratio;
-           if (ratio < slamin) slamin = ratio;
-        }
-        fX[i-1] = start[i-1] + step[i-1];
-    }
-    if (slamin == 0) slamin = fEpsmac;
-    slamin *= fEpsma2;
-    nparx = fNpar;
+   slamin = 0;
+   for (i = 1; i <= fNpar; ++i) {
+      if (step[i-1] != 0) {
+         ratio = TMath::Abs(start[i-1] / step[i-1]);
+         if (slamin == 0)    slamin = ratio;
+         if (ratio < slamin) slamin = ratio;
+      }
+      fX[i-1] = start[i-1] + step[i-1];
+   }
+   if (slamin == 0) slamin = fEpsmac;
+   slamin *= fEpsma2;
+   nparx = fNpar;
 
-    mninex(fX);
-    Eval(nparx, fGin, f1, fU, 4);    ++fNfcn;
-    ++nxypt;
-    chpq[nxypt-1] = charal[nxypt-1];
-    xpq[nxypt-1] = 1;
-    ypq[nxypt-1] = f1;
-    if (f1 < fstart) {
-        fvmin = f1;
-        xvmin = 1;
-    }
+   mninex(fX);
+   Eval(nparx, fGin, f1, fU, 4);    ++fNfcn;
+   ++nxypt;
+   chpq[nxypt-1] = charal[nxypt-1];
+   xpq[nxypt-1] = 1;
+   ypq[nxypt-1] = f1;
+   if (f1 < fstart) {
+      fvmin = f1;
+      xvmin = 1;
+   }
 //*-*-                        . quadr interp using slope GDEL and two points
-    slam   = 1;
-    toler8 = toler;
-    slamax = 5;
-    flast  = f1;
+   slam   = 1;
+   toler8 = toler;
+   slamax = 5;
+   flast  = f1;
 //*-*-                        can iterate on two-points (cut) if no imprvmnt
 
-    do {
-       denom = (flast - fstart - slope*slam)*2 / (slam*slam);
-       slam  = 1;
-       if (denom != 0)    slam = -slope / denom;
-       if (slam < 0)      slam = slamax;
-       if (slam > slamax) slam = slamax;
-       if (slam < toler8) slam = toler8;
-       if (slam < slamin) {
-          l80 = 1;
-          break;
-       }
-       if (TMath::Abs(slam - 1) < toler8 && f1 < fstart) {
-          l70 = 1;
-          break;
-       }
-       if (TMath::Abs(slam - 1) < toler8) slam = toler8 + 1;
-       if (nxypt >= 12) {
+   do {
+      denom = (flast - fstart - slope*slam)*2 / (slam*slam);
+      slam  = 1;
+      if (denom != 0)    slam = -slope / denom;
+      if (slam < 0)      slam = slamax;
+      if (slam > slamax) slam = slamax;
+      if (slam < toler8) slam = toler8;
+      if (slam < slamin) {
+         l80 = 1;
+         break;
+      }
+      if (TMath::Abs(slam - 1) < toler8 && f1 < fstart) {
+         l70 = 1;
+         break;
+      }
+      if (TMath::Abs(slam - 1) < toler8) slam = toler8 + 1;
+      if (nxypt >= 12) {
          l65 = 1;
          break;
-       }
-       for (i = 1; i <= fNpar; ++i) { fX[i-1] = start[i-1] + slam*step[i-1]; }
-       mninex(fX);
-       nparx = fNpar;
-       Eval(nparx, fGin, f2, fU, 4);    ++fNfcn;
-       ++nxypt;
-       chpq[nxypt-1] = charal[nxypt-1];
-       xpq[nxypt-1]  = slam;
-       ypq[nxypt-1]  = f2;
-       if (f2 < fvmin) {
-          fvmin = f2;
-          xvmin = slam;
-       }
-       if (fstart == fvmin) {
-          flast  = f2;
-          toler8 = toler*slam;
-          overal = slam - toler8;
-          slamax = overal;
-       }
-    } while (fstart == fvmin);
+      }
+      for (i = 1; i <= fNpar; ++i) { fX[i-1] = start[i-1] + slam*step[i-1]; }
+      mninex(fX);
+      nparx = fNpar;
+      Eval(nparx, fGin, f2, fU, 4);    ++fNfcn;
+      ++nxypt;
+      chpq[nxypt-1] = charal[nxypt-1];
+      xpq[nxypt-1]  = slam;
+      ypq[nxypt-1]  = f2;
+      if (f2 < fvmin) {
+         fvmin = f2;
+         xvmin = slam;
+      }
+      if (fstart == fvmin) {
+         flast  = f2;
+         toler8 = toler*slam;
+         overal = slam - toler8;
+         slamax = overal;
+      }
+   } while (fstart == fvmin);
 
-    if (!l65 && !l70 && !l80) {
+   if (!l65 && !l70 && !l80) {
 //*-*-                                       . quadr interp using 3 points
-       xvals[0] = xpq[0];
-       fvals[0] = ypq[0];
-       xvals[1] = xpq[nxypt-2];
-       fvals[1] = ypq[nxypt-2];
-       xvals[2] = xpq[nxypt-1];
-       fvals[2] = ypq[nxypt-1];
+      xvals[0] = xpq[0];
+      fvals[0] = ypq[0];
+      xvals[1] = xpq[nxypt-2];
+      fvals[1] = ypq[nxypt-2];
+      xvals[2] = xpq[nxypt-1];
+      fvals[2] = ypq[nxypt-1];
 //*-*-                            begin iteration, calculate desired step
-       do {
-          slamax = TMath::Max(slamax,TMath::Abs(xvmin)*2);
-          mnpfit(xvals, fvals, 3, coeff, sdev);
-          if (coeff[2] <= 0) {
-             slopem = coeff[2]*2*xvmin + coeff[1];
-             if (slopem <= 0)  slam = xvmin + slamax;
-             else              slam = xvmin - slamax;
-          } else {
-             slam = -coeff[1] / (coeff[2]*2);
-             if (slam > xvmin + slamax) slam = xvmin + slamax;
-             if (slam < xvmin - slamax) slam = xvmin - slamax;
-          }
-          if (slam > 0) if (slam > overal) slam = overal;
-          else          if (slam < undral) slam = undral;
+      do {
+         slamax = TMath::Max(slamax,TMath::Abs(xvmin)*2);
+         mnpfit(xvals, fvals, 3, coeff, sdev);
+         if (coeff[2] <= 0) {
+            slopem = coeff[2]*2*xvmin + coeff[1];
+            if (slopem <= 0)  slam = xvmin + slamax;
+            else              slam = xvmin - slamax;
+         } else {
+            slam = -coeff[1] / (coeff[2]*2);
+            if (slam > xvmin + slamax) slam = xvmin + slamax;
+            if (slam < xvmin - slamax) slam = xvmin - slamax;
+         }
+         if (slam > 0) if (slam > overal) slam = overal;
+         else          if (slam < undral) slam = undral;
 
 //*-*-              come here if step was cut below
-          do {
-             toler9 = TMath::Max(toler8,TMath::Abs(toler8*slam));
-             for (ipt = 1; ipt <= 3; ++ipt) {
-                if (TMath::Abs(slam - xvals[ipt-1]) < toler9) {
-                   l70 = 1;
-                   break;
-                }
-             }
-             if (l70) break;
+         do {
+            toler9 = TMath::Max(toler8,TMath::Abs(toler8*slam));
+            for (ipt = 1; ipt <= 3; ++ipt) {
+               if (TMath::Abs(slam - xvals[ipt-1]) < toler9) {
+                  l70 = 1;
+                  break;
+               }
+            }
+            if (l70) break;
 //*-*-               take the step
-             if (nxypt >= 12) {
-                l65 = 1;
-                break;
-             }
-             for (i = 1; i <= fNpar; ++i) { fX[i-1] = start[i-1] + slam*step[i-1]; }
-             mninex(fX);
-             Eval(nparx, fGin, f3, fU, 4);    ++fNfcn;
-             ++nxypt;
-             chpq[nxypt-1] = charal[nxypt-1];
-             xpq[nxypt-1]  = slam;
-             ypq[nxypt-1]  = f3;
+            if (nxypt >= 12) {
+               l65 = 1;
+               break;
+            }
+            for (i = 1; i <= fNpar; ++i) { fX[i-1] = start[i-1] + slam*step[i-1]; }
+            mninex(fX);
+            Eval(nparx, fGin, f3, fU, 4);    ++fNfcn;
+            ++nxypt;
+            chpq[nxypt-1] = charal[nxypt-1];
+            xpq[nxypt-1]  = slam;
+            ypq[nxypt-1]  = f3;
 //*-*-            find worst previous point out of three
-             fvmax = fvals[0];
-             nvmax = 1;
-             if (fvals[1] > fvmax) {
-                fvmax = fvals[1];
-                nvmax = 2;
-             }
-             if (fvals[2] > fvmax) {
-                fvmax = fvals[2];
-                nvmax = 3;
-             }
+            fvmax = fvals[0];
+            nvmax = 1;
+            if (fvals[1] > fvmax) {
+               fvmax = fvals[1];
+               nvmax = 2;
+            }
+            if (fvals[2] > fvmax) {
+               fvmax = fvals[2];
+               nvmax = 3;
+            }
 //*-*-             if latest point worse than all three previous, cut step
-             if (f3 >= fvmax) {
-                if (nxypt >= 12) {
-                   l65 = 1;
-                   break;
-                }
-                if (slam > xvmin) overal = TMath::Min(overal,slam - toler8);
-                if (slam < xvmin) undral = TMath::Max(undral,slam + toler8);
-                slam = (slam + xvmin)*.5;
-             }
-          } while (f3 >= fvmax);
+            if (f3 >= fvmax) {
+               if (nxypt >= 12) {
+                  l65 = 1;
+                  break;
+               }
+               if (slam > xvmin) overal = TMath::Min(overal,slam - toler8);
+               if (slam < xvmin) undral = TMath::Max(undral,slam + toler8);
+               slam = (slam + xvmin)*.5;
+            }
+         } while (f3 >= fvmax);
 
 //*-*-             prepare another iteration, replace worst previous point
-          if (l65 || l70) break;
+         if (l65 || l70) break;
 
-          xvals[nvmax-1] = slam;
-          fvals[nvmax-1] = f3;
-          if (f3 < fvmin) {
-             fvmin = f3;
-             xvmin = slam;
-          } else {
-             if (slam > xvmin) overal = TMath::Min(overal,slam - toler8);
-             if (slam < xvmin) undral = TMath::Max(undral,slam + toler8);
-          }
-       } while (nxypt < 12);
-    }
+         xvals[nvmax-1] = slam;
+         fvals[nvmax-1] = f3;
+         if (f3 < fvmin) {
+            fvmin = f3;
+            xvmin = slam;
+         } else {
+            if (slam > xvmin) overal = TMath::Min(overal,slam - toler8);
+            if (slam < xvmin) undral = TMath::Max(undral,slam + toler8);
+         }
+      } while (nxypt < 12);
+   }
 
 //*-*-                                           . . end of iteration . . .
 //*-*-           stop because too many iterations
-    if (!l70 && !l80) {
-       cmess = " LINE SEARCH HAS EXHAUSTED THE LIMIT OF FUNCTION CALLS ";
-       if (ldebug) {
-          Printf(" MNLINE DEBUG: steps=");
-          for (kk = 1; kk <= fNpar; ++kk) {
-             Printf("  %12.4g",step[kk-1]);
-          }
-       }
-    }
+   if (!l70 && !l80) {
+      cmess = " LINE SEARCH HAS EXHAUSTED THE LIMIT OF FUNCTION CALLS ";
+      if (ldebug) {
+         Printf(" MNLINE DEBUG: steps=");
+         for (kk = 1; kk <= fNpar; ++kk) {
+            Printf("  %12.4g",step[kk-1]);
+         }
+      }
+   }
 //*-*-           stop because within tolerance
-    if (l70) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
-    if (l80) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
+   if (l70) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
+   if (l80) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
 
-    fAmin = fvmin;
-    for (i = 1; i <= fNpar; ++i) {
-        fDirin[i-1] = step[i-1]*xvmin;
-        fX[i-1]     = start[i-1] + fDirin[i-1];
-    }
-    mninex(fX);
-    if (xvmin < 0) {
-        mnwarn("D", "MNLINE", " LINE MINIMUM IN BACKWARDS DIRECTION");
-    }
-    if (fvmin == fstart) {
-        mnwarn("D", "MNLINE", " LINE SEARCH FINDS NO IMPROVEMENT ");
-    }
-    if (ldebug) {
-        Printf(" AFTER %3d POINTS,%s",nxypt,(const char*)cmess);
-        mnplot(xpq, ypq, chpq, nxypt, fNpagwd, fNpagln);
-    }
+   fAmin = fvmin;
+   for (i = 1; i <= fNpar; ++i) {
+      fDirin[i-1] = step[i-1]*xvmin;
+      fX[i-1]     = start[i-1] + fDirin[i-1];
+   }
+   mninex(fX);
+   if (xvmin < 0) {
+      mnwarn("D", "MNLINE", " LINE MINIMUM IN BACKWARDS DIRECTION");
+   }
+   if (fvmin == fstart) {
+      mnwarn("D", "MNLINE", " LINE SEARCH FINDS NO IMPROVEMENT ");
+   }
+   if (ldebug) {
+      Printf(" AFTER %3d POINTS,%s",nxypt,(const char*)cmess);
+      mnplot(xpq, ypq, chpq, nxypt, fNpagwd, fNpagln);
+   }
 } /* mnline_ */
 
 //______________________________________________________________________________
@@ -4984,74 +4984,74 @@ void TMinuit::mnmatu(Int_t kode)
 //*-*        calculates and prints the individual correlation coefficients
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Int_t ndex, i, j, m, n, ncoef, nparm, id, it, ix;
-    Int_t nsofar, ndi, ndj, iso, isw2, isw5;
-    TString ctemp;
+   /* Local variables */
+   Int_t ndex, i, j, m, n, ncoef, nparm, id, it, ix;
+   Int_t nsofar, ndi, ndj, iso, isw2, isw5;
+   TString ctemp;
 
-    isw2 = fISW[1];
-    if (isw2 < 1) {
-        Printf("%s",(const char*)fCovmes[isw2]);
-        return;
-    }
-    if (fNpar == 0) {
-        Printf(" MNMATU: NPAR=0");
-        return;
-    }
+   isw2 = fISW[1];
+   if (isw2 < 1) {
+      Printf("%s",(const char*)fCovmes[isw2]);
+      return;
+   }
+   if (fNpar == 0) {
+      Printf(" MNMATU: NPAR=0");
+      return;
+   }
 //*-*-                                      . . . . .external error matrix
-    if (kode == 1) {
-        isw5    = fISW[4];
-        fISW[4] = 2;
-        mnemat(fP, fMaxint);
-        if (isw2 < 3) {
-            Printf("%s",(const char*)fCovmes[isw2]);
-        }
-        fISW[4] = isw5;
-    }
+   if (kode == 1) {
+      isw5    = fISW[4];
+      fISW[4] = 2;
+      mnemat(fP, fMaxint);
+      if (isw2 < 3) {
+         Printf("%s",(const char*)fCovmes[isw2]);
+      }
+      fISW[4] = isw5;
+   }
 //*-*-                                      . . . . . correlation coeffs. .
-    if (fNpar <= 1) return;
-    mnwerr();
+   if (fNpar <= 1) return;
+   mnwerr();
 //*-*-    NCOEF is number of coeff. that fit on one line, not to exceed 20
-    ncoef = (fNpagwd - 19) / 6;
-    ncoef = TMath::Min(ncoef,20);
-    nparm = TMath::Min(fNpar,ncoef);
-    Printf(" PARAMETER  CORRELATION COEFFICIENTS  ");
-    ctemp = "       NO.  GLOBAL";
-    for (id = 1; id <= nparm; ++id) {
-        ctemp += Form(" %6d",fNexofi[id-1]);
-    }
-    Printf("%s",(const char*)ctemp);
-    for (i = 1; i <= fNpar; ++i) {
-        ix  = fNexofi[i-1];
-        ndi = i*(i + 1) / 2;
-        for (j = 1; j <= fNpar; ++j) {
-            m    = TMath::Max(i,j);
-            n    = TMath::Min(i,j);
-            ndex = m*(m-1) / 2 + n;
-            ndj  = j*(j + 1) / 2;
-            fMATUvline[j-1] = fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(fVhmat[ndi-1]*fVhmat[ndj-1]));
-        }
-        nparm = TMath::Min(fNpar,ncoef);
-        ctemp = Form("      %3d  %7.5f ",ix,fGlobcc[i-1]);
-        for (it = 1; it <= nparm; ++it) {
-            ctemp += Form(" %6.3f",fMATUvline[it-1]);
-        }
-        Printf("%s",(const char*)ctemp);
-        if (i <= nparm) continue;
-        ctemp = "                   ";
-        for (iso = 1; iso <= 10; ++iso) {
-            nsofar = nparm;
-            nparm  = TMath::Min(fNpar,nsofar + ncoef);
-            for (it = nsofar + 1; it <= nparm; ++it) {
-                ctemp = ctemp + Form(" %6.3f",fMATUvline[it-1]);
-            }
-            Printf("%s",(const char*)ctemp);
-            if (i <= nparm) break;
-        }
-    }
-    if (isw2 < 3) {
-        Printf(" %s",(const char*)fCovmes[isw2]);
-    }
+   ncoef = (fNpagwd - 19) / 6;
+   ncoef = TMath::Min(ncoef,20);
+   nparm = TMath::Min(fNpar,ncoef);
+   Printf(" PARAMETER  CORRELATION COEFFICIENTS  ");
+   ctemp = "       NO.  GLOBAL";
+   for (id = 1; id <= nparm; ++id) {
+      ctemp += Form(" %6d",fNexofi[id-1]);
+   }
+   Printf("%s",(const char*)ctemp);
+   for (i = 1; i <= fNpar; ++i) {
+      ix  = fNexofi[i-1];
+      ndi = i*(i + 1) / 2;
+      for (j = 1; j <= fNpar; ++j) {
+         m    = TMath::Max(i,j);
+         n    = TMath::Min(i,j);
+         ndex = m*(m-1) / 2 + n;
+         ndj  = j*(j + 1) / 2;
+         fMATUvline[j-1] = fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(fVhmat[ndi-1]*fVhmat[ndj-1]));
+      }
+      nparm = TMath::Min(fNpar,ncoef);
+      ctemp = Form("      %3d  %7.5f ",ix,fGlobcc[i-1]);
+      for (it = 1; it <= nparm; ++it) {
+         ctemp += Form(" %6.3f",fMATUvline[it-1]);
+      }
+      Printf("%s",(const char*)ctemp);
+      if (i <= nparm) continue;
+      ctemp = "                   ";
+      for (iso = 1; iso <= 10; ++iso) {
+         nsofar = nparm;
+         nparm  = TMath::Min(fNpar,nsofar + ncoef);
+         for (it = nsofar + 1; it <= nparm; ++it) {
+            ctemp = ctemp + Form(" %6.3f",fMATUvline[it-1]);
+         }
+         Printf("%s",(const char*)ctemp);
+         if (i <= nparm) break;
+      }
+   }
+   if (isw2 < 3) {
+      Printf(" %s",(const char*)fCovmes[isw2]);
+   }
 } /* mnmatu_ */
 
 //______________________________________________________________________________
@@ -5064,335 +5064,335 @@ void TMinuit::mnmigr()
 //*-*        ref. -- Fletcher, Comp.J. 13,317 (1970)   "switching method"
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t gdel, gami, vlen, dsum, gssq, vsum, d;
-    Double_t fzero, fs, ri, delgam, rhotol;
-    Double_t gdgssq, gvg, vgi;
-    Int_t npfn, ndex, iext, i, j, m, n, npsdf, nparx;
-    Int_t iswtr, lined2, kk, nfcnmg, nrstrt,iter;
-    Bool_t ldebug;
-    Double_t toler = 0.05;
+   /* Local variables */
+   Double_t gdel, gami, vlen, dsum, gssq, vsum, d;
+   Double_t fzero, fs, ri, delgam, rhotol;
+   Double_t gdgssq, gvg, vgi;
+   Int_t npfn, ndex, iext, i, j, m, n, npsdf, nparx;
+   Int_t iswtr, lined2, kk, nfcnmg, nrstrt,iter;
+   Bool_t ldebug;
+   Double_t toler = 0.05;
 
-    if (fNpar <= 0) return;
-    if (fAmin == fUndefi) mnamin();
-    ldebug  = kFALSE; if ( fIdbg[4] >= 1) ldebug = kTRUE;
-    fCfrom  = "MIGRAD  ";
-    fNfcnfr = fNfcn;
-    nfcnmg  = fNfcn;
-    fCstatu = "INITIATE  ";
-    iswtr   = fISW[4] - 2*fItaur;
-    npfn    = fNfcn;
-    nparx   = fNpar;
-    vlen    = (Double_t) (fNpar*(fNpar + 1) / 2);
-    nrstrt  = 0;
-    npsdf   = 0;
-    lined2  = 0;
-    fISW[3] = -1;
-    rhotol  = fApsi*.001;
-    if (iswtr >= 1) {
-        Printf(" START MIGRAD MINIMIZATION.  STRATEGY %2d.  CONVERGENCE WHEN EDM .LT.%9.2e",fIstrat,rhotol);
-    }
+   if (fNpar <= 0) return;
+   if (fAmin == fUndefi) mnamin();
+   ldebug  = kFALSE; if ( fIdbg[4] >= 1) ldebug = kTRUE;
+   fCfrom  = "MIGRAD  ";
+   fNfcnfr = fNfcn;
+   nfcnmg  = fNfcn;
+   fCstatu = "INITIATE  ";
+   iswtr   = fISW[4] - 2*fItaur;
+   npfn    = fNfcn;
+   nparx   = fNpar;
+   vlen    = (Double_t) (fNpar*(fNpar + 1) / 2);
+   nrstrt  = 0;
+   npsdf   = 0;
+   lined2  = 0;
+   fISW[3] = -1;
+   rhotol  = fApsi*.001;
+   if (iswtr >= 1) {
+      Printf(" START MIGRAD MINIMIZATION.  STRATEGY %2d.  CONVERGENCE WHEN EDM .LT.%9.2e",fIstrat,rhotol);
+   }
 //*-*-                                          initialization strategy
-    if (fIstrat < 2 || fISW[1] >= 3) goto L2;
+   if (fIstrat < 2 || fISW[1] >= 3) goto L2;
 //*-*-                               come (back) here to restart completely
 L1:
-    if (nrstrt > fIstrat) {
-        fCstatu = "FAILED    ";
-        fISW[3] = -1;
-        goto L230;
-    }
+   if (nrstrt > fIstrat) {
+      fCstatu = "FAILED    ";
+      fISW[3] = -1;
+      goto L230;
+   }
 //*-*-                                     . get full covariance and gradient
-    mnhess();
-    mnwerr();
-    npsdf = 0;
-    if (fISW[1] >= 1) goto L10;
+   mnhess();
+   mnwerr();
+   npsdf = 0;
+   if (fISW[1] >= 1) goto L10;
 //*-*-                                       . get gradient at start point
 L2:
-    mninex(fX);
-    if (fISW[2] == 1) {
-        Eval(nparx, fGin, fzero, fU, 2);        ++fNfcn;
-    }
-    mnderi();
-    if (fISW[1] >= 1) goto L10;
+   mninex(fX);
+   if (fISW[2] == 1) {
+      Eval(nparx, fGin, fzero, fU, 2);        ++fNfcn;
+   }
+   mnderi();
+   if (fISW[1] >= 1) goto L10;
 //*-*-                                  sometimes start with diagonal matrix
-    for (i = 1; i <= fNpar; ++i) {
-        fMIGRxxs[i-1]  = fX[i-1];
-        fMIGRstep[i-1] = 0;
-    }
+   for (i = 1; i <= fNpar; ++i) {
+      fMIGRxxs[i-1]  = fX[i-1];
+      fMIGRstep[i-1] = 0;
+   }
 //*-*-                          do line search if second derivative negative
-    ++lined2;
-    if (lined2 < (fIstrat + 1)*fNpar) {
-        for (i = 1; i <= fNpar; ++i) {
-            if (fG2[i-1] > 0) continue;
-            if (fGrd[i-1] > 0) fMIGRstep[i-1] = -TMath::Abs(fGstep[i-1]);
-            else               fMIGRstep[i-1] =  TMath::Abs(fGstep[i-1]);
-            gdel = fMIGRstep[i-1]*fGrd[i-1];
-            fs   = fAmin;
-            mnline(fMIGRxxs, fs, fMIGRstep, gdel, toler);
-            mnwarn("D", "MNMIGR", "Negative G2 line search");
-            iext = fNexofi[i-1];
-            if (ldebug) {
-                Printf(" Negative G2 line search, param %3d %13.3g%13.3g",iext,fs,fAmin);
-            }
-            goto L2;
-        }
-    }
+   ++lined2;
+   if (lined2 < (fIstrat + 1)*fNpar) {
+      for (i = 1; i <= fNpar; ++i) {
+         if (fG2[i-1] > 0) continue;
+         if (fGrd[i-1] > 0) fMIGRstep[i-1] = -TMath::Abs(fGstep[i-1]);
+         else               fMIGRstep[i-1] =  TMath::Abs(fGstep[i-1]);
+         gdel = fMIGRstep[i-1]*fGrd[i-1];
+         fs   = fAmin;
+         mnline(fMIGRxxs, fs, fMIGRstep, gdel, toler);
+         mnwarn("D", "MNMIGR", "Negative G2 line search");
+         iext = fNexofi[i-1];
+         if (ldebug) {
+            Printf(" Negative G2 line search, param %3d %13.3g%13.3g",iext,fs,fAmin);
+         }
+         goto L2;
+      }
+   }
 //*-*-                          make diagonal error matrix
-    for (i = 1; i <= fNpar; ++i) {
-        ndex = i*(i-1) / 2;
-        for (j = 1; j <= i-1; ++j) {
-            ++ndex;
-            fVhmat[ndex-1] = 0;
-        }
-        ++ndex;
-        if (fG2[i-1] <= 0) fG2[i-1] = 1;
-        fVhmat[ndex-1] = 2 / fG2[i-1];
-    }
-    fDcovar = 1;
-    if (ldebug) {
-        Printf(" DEBUG MNMIGR, STARTING MATRIX DIAGONAL,  VHMAT=");
-        for (kk = 1; kk <= Int_t(vlen); ++kk) {
-            Printf(" %10.2g",fVhmat[kk-1]);
-        }
-    }
+   for (i = 1; i <= fNpar; ++i) {
+      ndex = i*(i-1) / 2;
+      for (j = 1; j <= i-1; ++j) {
+         ++ndex;
+         fVhmat[ndex-1] = 0;
+      }
+      ++ndex;
+      if (fG2[i-1] <= 0) fG2[i-1] = 1;
+      fVhmat[ndex-1] = 2 / fG2[i-1];
+   }
+   fDcovar = 1;
+   if (ldebug) {
+      Printf(" DEBUG MNMIGR, STARTING MATRIX DIAGONAL,  VHMAT=");
+      for (kk = 1; kk <= Int_t(vlen); ++kk) {
+         Printf(" %10.2g",fVhmat[kk-1]);
+      }
+   }
 //*-*-                                        ready to start first iteration
 L10:
-    ++nrstrt;
-    if (nrstrt > fIstrat + 1) {
-        fCstatu = "FAILED    ";
-        goto L230;
-    }
-    fs = fAmin;
+   ++nrstrt;
+   if (nrstrt > fIstrat + 1) {
+      fCstatu = "FAILED    ";
+      goto L230;
+   }
+   fs = fAmin;
 //*-*-                                       . . . get EDM and set up loop
-    fEDM = 0;
-    for (i = 1; i <= fNpar; ++i) {
-        fMIGRgs[i-1]  = fGrd[i-1];
-        fMIGRxxs[i-1] = fX[i-1];
-        ndex     = i*(i-1) / 2;
-        for (j = 1; j <= i-1; ++j) {
-            ++ndex;
-            fEDM += fMIGRgs[i-1]*fVhmat[ndex-1]*fMIGRgs[j-1];
-        }
-        ++ndex;
-        fEDM += fMIGRgs[i-1]*fMIGRgs[i-1]*.5*fVhmat[ndex-1];
-    }
-    fEDM = fEDM*.5*(fDcovar*3 + 1);
-    if (fEDM < 0) {
-        mnwarn("W", "MIGRAD", "STARTING MATRIX NOT POS-DEFINITE.");
-        fISW[1] = 0;
-        fDcovar = 1;
-        goto L2;
-    }
-    if (fISW[1] == 0) fEDM = fBigedm;
-    iter = 0;
-    mninex(fX);
-    mnwerr();
-    if (iswtr >= 1) mnprin(3, fAmin);
-    if (iswtr >= 2) mnmatu(0);
+   fEDM = 0;
+   for (i = 1; i <= fNpar; ++i) {
+      fMIGRgs[i-1]  = fGrd[i-1];
+      fMIGRxxs[i-1] = fX[i-1];
+      ndex     = i*(i-1) / 2;
+      for (j = 1; j <= i-1; ++j) {
+         ++ndex;
+         fEDM += fMIGRgs[i-1]*fVhmat[ndex-1]*fMIGRgs[j-1];
+      }
+      ++ndex;
+      fEDM += fMIGRgs[i-1]*fMIGRgs[i-1]*.5*fVhmat[ndex-1];
+   }
+   fEDM = fEDM*.5*(fDcovar*3 + 1);
+   if (fEDM < 0) {
+      mnwarn("W", "MIGRAD", "STARTING MATRIX NOT POS-DEFINITE.");
+      fISW[1] = 0;
+      fDcovar = 1;
+      goto L2;
+   }
+   if (fISW[1] == 0) fEDM = fBigedm;
+   iter = 0;
+   mninex(fX);
+   mnwerr();
+   if (iswtr >= 1) mnprin(3, fAmin);
+   if (iswtr >= 2) mnmatu(0);
 //*-*-                                       . . . . .  start main loop
 L24:
-    if (fNfcn - npfn >= fNfcnmx) goto L190;
-    gdel = 0;
-    gssq = 0;
-    for (i = 1; i <= fNpar; ++i) {
-        ri = 0;
-        gssq += fMIGRgs[i-1]*fMIGRgs[i-1];
-        for (j = 1; j <= fNpar; ++j) {
-            m    = TMath::Max(i,j);
-            n    = TMath::Min(i,j);
-            ndex = m*(m-1) / 2 + n;
-            ri  += fVhmat[ndex-1]*fMIGRgs[j-1];
-        }
-        fMIGRstep[i-1] = ri*-.5;
-        gdel += fMIGRstep[i-1]*fMIGRgs[i-1];
-    }
-    if (gssq == 0) {
-        mnwarn("D", "MIGRAD", " FIRST DERIVATIVES OF FCN ARE ALL ZERO");
-        goto L300;
-    }
+   if (fNfcn - npfn >= fNfcnmx) goto L190;
+   gdel = 0;
+   gssq = 0;
+   for (i = 1; i <= fNpar; ++i) {
+      ri = 0;
+      gssq += fMIGRgs[i-1]*fMIGRgs[i-1];
+      for (j = 1; j <= fNpar; ++j) {
+         m    = TMath::Max(i,j);
+         n    = TMath::Min(i,j);
+         ndex = m*(m-1) / 2 + n;
+         ri  += fVhmat[ndex-1]*fMIGRgs[j-1];
+      }
+      fMIGRstep[i-1] = ri*-.5;
+      gdel += fMIGRstep[i-1]*fMIGRgs[i-1];
+   }
+   if (gssq == 0) {
+      mnwarn("D", "MIGRAD", " FIRST DERIVATIVES OF FCN ARE ALL ZERO");
+      goto L300;
+   }
 //*-*-                if gdel positive, V not posdef
-    if (gdel >= 0) {
-        mnwarn("D", "MIGRAD", " NEWTON STEP NOT DESCENT.");
-        if (npsdf == 1) goto L1;
-        mnpsdf();
-        npsdf = 1;
-        goto L24;
-    }
+   if (gdel >= 0) {
+      mnwarn("D", "MIGRAD", " NEWTON STEP NOT DESCENT.");
+      if (npsdf == 1) goto L1;
+      mnpsdf();
+      npsdf = 1;
+      goto L24;
+   }
 //*-*-                                       . . . . do line search
-    mnline(fMIGRxxs, fs, fMIGRstep, gdel, toler);
-    if (fAmin == fs) goto L200;
-    fCfrom  = "MIGRAD  ";
-    fNfcnfr = nfcnmg;
-    fCstatu = "PROGRESS  ";
+   mnline(fMIGRxxs, fs, fMIGRstep, gdel, toler);
+   if (fAmin == fs) goto L200;
+   fCfrom  = "MIGRAD  ";
+   fNfcnfr = nfcnmg;
+   fCstatu = "PROGRESS  ";
 //*-*-                                       . get gradient at new point
-    mninex(fX);
-    if (fISW[2] == 1) {
-        Eval(nparx, fGin, fzero, fU, 2);        ++fNfcn;
-    }
-    mnderi();
+   mninex(fX);
+   if (fISW[2] == 1) {
+      Eval(nparx, fGin, fzero, fU, 2);        ++fNfcn;
+   }
+   mnderi();
 //*-*-                                        . calculate new EDM
-    npsdf = 0;
+   npsdf = 0;
 L81:
-    fEDM = 0;
-    gvg = 0;
-    delgam = 0;
-    gdgssq = 0;
-    for (i = 1; i <= fNpar; ++i) {
-        ri  = 0;
-        vgi = 0;
-        for (j = 1; j <= fNpar; ++j) {
-            m    = TMath::Max(i,j);
-            n    = TMath::Min(i,j);
-            ndex = m*(m-1) / 2 + n;
-            vgi += fVhmat[ndex-1]*(fGrd[j-1] - fMIGRgs[j-1]);
-            ri  += fVhmat[ndex-1]*fGrd[j-1];
-        }
-        fMIGRvg[i-1] = vgi*.5;
-        gami    = fGrd[i-1] - fMIGRgs[i-1];
-        gdgssq += gami*gami;
-        gvg    += gami*fMIGRvg[i-1];
-        delgam += fDirin[i-1]*gami;
-        fEDM   += fGrd[i-1]*ri*.5;
-    }
-    fEDM = fEDM*.5*(fDcovar*3 + 1);
+   fEDM = 0;
+   gvg = 0;
+   delgam = 0;
+   gdgssq = 0;
+   for (i = 1; i <= fNpar; ++i) {
+      ri  = 0;
+      vgi = 0;
+      for (j = 1; j <= fNpar; ++j) {
+         m    = TMath::Max(i,j);
+         n    = TMath::Min(i,j);
+         ndex = m*(m-1) / 2 + n;
+         vgi += fVhmat[ndex-1]*(fGrd[j-1] - fMIGRgs[j-1]);
+         ri  += fVhmat[ndex-1]*fGrd[j-1];
+      }
+      fMIGRvg[i-1] = vgi*.5;
+      gami    = fGrd[i-1] - fMIGRgs[i-1];
+      gdgssq += gami*gami;
+      gvg    += gami*fMIGRvg[i-1];
+      delgam += fDirin[i-1]*gami;
+      fEDM   += fGrd[i-1]*ri*.5;
+   }
+   fEDM = fEDM*.5*(fDcovar*3 + 1);
 //*-*-                         . if EDM negative,  not positive-definite
-    if (fEDM < 0 || gvg <= 0) {
-        mnwarn("D", "MIGRAD", "NOT POS-DEF. EDM OR GVG NEGATIVE.");
-        fCstatu = "NOT POSDEF";
-        if (npsdf == 1) goto L230;
-        mnpsdf();
-        npsdf = 1;
-        goto L81;
-    }
+   if (fEDM < 0 || gvg <= 0) {
+      mnwarn("D", "MIGRAD", "NOT POS-DEF. EDM OR GVG NEGATIVE.");
+      fCstatu = "NOT POSDEF";
+      if (npsdf == 1) goto L230;
+      mnpsdf();
+      npsdf = 1;
+      goto L81;
+   }
 //*-*-                           print information about this iteration
-    ++iter;
-    if (iswtr >= 3 || iswtr == 2 && iter % 10 == 1) {
-        mnwerr();
-        mnprin(3, fAmin);
-    }
-    if (gdgssq == 0) {
-        mnwarn("D", "MIGRAD", "NO CHANGE IN FIRST DERIVATIVES OVER LAST STEP");
-    }
-    if (delgam < 0) {
-        mnwarn("D", "MIGRAD", "FIRST DERIVATIVES INCREASING ALONG SEARCH LINE");
-    }
+   ++iter;
+   if (iswtr >= 3 || iswtr == 2 && iter % 10 == 1) {
+      mnwerr();
+      mnprin(3, fAmin);
+   }
+   if (gdgssq == 0) {
+      mnwarn("D", "MIGRAD", "NO CHANGE IN FIRST DERIVATIVES OVER LAST STEP");
+   }
+   if (delgam < 0) {
+      mnwarn("D", "MIGRAD", "FIRST DERIVATIVES INCREASING ALONG SEARCH LINE");
+   }
 //*-*-                                       .  update covariance matrix
-    fCstatu = "IMPROVEMNT";
-    if (ldebug) {
-        Printf(" VHMAT 1 =");
-        for (kk = 1; kk <= 10; ++kk) {
-            Printf(" %10.2g",fVhmat[kk-1]);
-        }
-    }
-    dsum = 0;
-    vsum = 0;
-    for (i = 1; i <= fNpar; ++i) {
-        for (j = 1; j <= i; ++j) {
-            if(delgam == 0 || gvg == 0) d = 0;
-            else d = fDirin[i-1]*fDirin[j-1] / delgam - fMIGRvg[i-1]*fMIGRvg[j-1] / gvg;
-            dsum += TMath::Abs(d);
-            ndex  = i*(i-1) / 2 + j;
-            fVhmat[ndex-1] += d*2;
-            vsum += TMath::Abs(fVhmat[ndex-1]);
-        }
-    }
+   fCstatu = "IMPROVEMNT";
+   if (ldebug) {
+      Printf(" VHMAT 1 =");
+      for (kk = 1; kk <= 10; ++kk) {
+         Printf(" %10.2g",fVhmat[kk-1]);
+      }
+   }
+   dsum = 0;
+   vsum = 0;
+   for (i = 1; i <= fNpar; ++i) {
+      for (j = 1; j <= i; ++j) {
+         if(delgam == 0 || gvg == 0) d = 0;
+         else d = fDirin[i-1]*fDirin[j-1] / delgam - fMIGRvg[i-1]*fMIGRvg[j-1] / gvg;
+         dsum += TMath::Abs(d);
+         ndex  = i*(i-1) / 2 + j;
+         fVhmat[ndex-1] += d*2;
+         vsum += TMath::Abs(fVhmat[ndex-1]);
+      }
+   }
 //*-*-               smooth local fluctuations by averaging DCOVAR
-    fDcovar = (fDcovar + dsum / vsum)*.5;
-    if (iswtr >= 3 || ldebug) {
-        Printf(" RELATIVE CHANGE IN COV. MATRIX=%5.1f per cent",fDcovar*100);
-    }
-    if (ldebug) {
-        Printf(" VHMAT 2 =");
-        for (kk = 1; kk <= 10; ++kk) {
-            Printf(" %10.3g",fVhmat[kk-1]);
-        }
-    }
-    if (delgam <= gvg) goto L135;
-    for (i = 1; i <= fNpar; ++i) {
-        fMIGRflnu[i-1] = fDirin[i-1] / delgam - fMIGRvg[i-1] / gvg;
-    }
-    for (i = 1; i <= fNpar; ++i) {
-        for (j = 1; j <= i; ++j) {
-            ndex = i*(i-1) / 2 + j;
-            fVhmat[ndex-1] += gvg*2*fMIGRflnu[i-1]*fMIGRflnu[j-1];
-        }
-    }
+   fDcovar = (fDcovar + dsum / vsum)*.5;
+   if (iswtr >= 3 || ldebug) {
+      Printf(" RELATIVE CHANGE IN COV. MATRIX=%5.1f per cent",fDcovar*100);
+   }
+   if (ldebug) {
+      Printf(" VHMAT 2 =");
+      for (kk = 1; kk <= 10; ++kk) {
+         Printf(" %10.3g",fVhmat[kk-1]);
+      }
+   }
+   if (delgam <= gvg) goto L135;
+   for (i = 1; i <= fNpar; ++i) {
+      fMIGRflnu[i-1] = fDirin[i-1] / delgam - fMIGRvg[i-1] / gvg;
+   }
+   for (i = 1; i <= fNpar; ++i) {
+      for (j = 1; j <= i; ++j) {
+         ndex = i*(i-1) / 2 + j;
+         fVhmat[ndex-1] += gvg*2*fMIGRflnu[i-1]*fMIGRflnu[j-1];
+      }
+   }
 L135:
 //*-*-                                             and see if converged
-    if (fEDM < rhotol*.1) goto L300;
+   if (fEDM < rhotol*.1) goto L300;
 //*-*-                                   if not, prepare next iteration
-    for (i = 1; i <= fNpar; ++i) {
-        fMIGRxxs[i-1] = fX[i-1];
-        fMIGRgs[i-1]  = fGrd[i-1];
-    }
-    fs = fAmin;
-    if (fISW[1] == 0 && fDcovar < .5)  fISW[1] = 1;
-    if (fISW[1] == 3 && fDcovar > .1)  fISW[1] = 1;
-    if (fISW[1] == 1 && fDcovar < .05) fISW[1] = 3;
-    goto L24;
+   for (i = 1; i <= fNpar; ++i) {
+      fMIGRxxs[i-1] = fX[i-1];
+      fMIGRgs[i-1]  = fGrd[i-1];
+   }
+   fs = fAmin;
+   if (fISW[1] == 0 && fDcovar < .5)  fISW[1] = 1;
+   if (fISW[1] == 3 && fDcovar > .1)  fISW[1] = 1;
+   if (fISW[1] == 1 && fDcovar < .05) fISW[1] = 3;
+   goto L24;
 //*-*-                                       . . . . .  end main loop
 //*-*-                                        . . call limit in MNMIGR
 L190:
-    fISW[0] = 1;
-    if (fISW[4] >= 0) {
-        Printf(" CALL LIMIT EXCEEDED IN MIGRAD.");
-    }
-    fCstatu = "CALL LIMIT";
-    goto L230;
+   fISW[0] = 1;
+   if (fISW[4] >= 0) {
+      Printf(" CALL LIMIT EXCEEDED IN MIGRAD.");
+   }
+   fCstatu = "CALL LIMIT";
+   goto L230;
 //*-*-                                        . . fails to improve . .
 L200:
-    if (iswtr >= 1) {
-        Printf(" MIGRAD FAILS TO FIND IMPROVEMENT");
-    }
-    for (i = 1; i <= fNpar; ++i) { fX[i-1] = fMIGRxxs[i-1]; }
-    if (fEDM < rhotol) goto L300;
-    if (fEDM < TMath::Abs(fEpsma2*fAmin)) {
-        if (iswtr >= 0) {
-            Printf(" MACHINE ACCURACY LIMITS FURTHER IMPROVEMENT.");
-        }
-        goto L300;
-    }
-    if (fIstrat < 1) {
-        if (fISW[4] >= 0) {
-            Printf(" MIGRAD FAILS WITH STRATEGY=0.   WILL TRY WITH STRATEGY=1.");
-        }
-        fIstrat = 1;
-    }
-    goto L1;
+   if (iswtr >= 1) {
+      Printf(" MIGRAD FAILS TO FIND IMPROVEMENT");
+   }
+   for (i = 1; i <= fNpar; ++i) { fX[i-1] = fMIGRxxs[i-1]; }
+   if (fEDM < rhotol) goto L300;
+   if (fEDM < TMath::Abs(fEpsma2*fAmin)) {
+      if (iswtr >= 0) {
+         Printf(" MACHINE ACCURACY LIMITS FURTHER IMPROVEMENT.");
+      }
+      goto L300;
+   }
+   if (fIstrat < 1) {
+      if (fISW[4] >= 0) {
+         Printf(" MIGRAD FAILS WITH STRATEGY=0.   WILL TRY WITH STRATEGY=1.");
+      }
+      fIstrat = 1;
+   }
+   goto L1;
 //*-*-                                        . . fails to converge
 L230:
-    if (iswtr >= 0) {
-        Printf(" MIGRAD TERMINATED WITHOUT CONVERGENCE.");
-    }
-    if (fISW[1] == 3) fISW[1] = 1;
-    fISW[3] = -1;
-    goto L400;
+   if (iswtr >= 0) {
+      Printf(" MIGRAD TERMINATED WITHOUT CONVERGENCE.");
+   }
+   if (fISW[1] == 3) fISW[1] = 1;
+   fISW[3] = -1;
+   goto L400;
 //*-*-                                        . . apparent convergence
 L300:
-    if (iswtr >= 0) {
-        Printf(" MIGRAD MINIMIZATION HAS CONVERGED.");
-    }
-    if (fItaur == 0) {
-        if (fIstrat >= 2 || (fIstrat == 1 && fISW[1] < 3)) {
-            if (fISW[4] >= 0) {
-                Printf(" MIGRAD WILL VERIFY CONVERGENCE AND ERROR MATRIX.");
-            }
-            mnhess();
-            mnwerr();
-            npsdf = 0;
-            if (fEDM > rhotol) goto L10;
-        }
-    }
-    fCstatu = "CONVERGED ";
-    fISW[3] = 1;
+   if (iswtr >= 0) {
+      Printf(" MIGRAD MINIMIZATION HAS CONVERGED.");
+   }
+   if (fItaur == 0) {
+      if (fIstrat >= 2 || (fIstrat == 1 && fISW[1] < 3)) {
+         if (fISW[4] >= 0) {
+            Printf(" MIGRAD WILL VERIFY CONVERGENCE AND ERROR MATRIX.");
+         }
+         mnhess();
+         mnwerr();
+         npsdf = 0;
+         if (fEDM > rhotol) goto L10;
+      }
+   }
+   fCstatu = "CONVERGED ";
+   fISW[3] = 1;
 //*-*-                                          come here in any case
 L400:
-    fCfrom  = "MIGRAD  ";
-    fNfcnfr = nfcnmg;
-    mninex(fX);
-    mnwerr();
-    if (iswtr >= 0) mnprin(3, fAmin);
-    if (iswtr >= 1) mnmatu(1);
+   fCfrom  = "MIGRAD  ";
+   fNfcnfr = nfcnmg;
+   mninex(fX);
+   mnwerr();
+   if (iswtr >= 0) mnprin(3, fAmin);
+   if (iswtr >= 1) mnmatu(1);
 } /* mnmigr_ */
 
 //______________________________________________________________________________
@@ -5405,71 +5405,71 @@ void TMinuit::mnmnos()
 //*-*        MNMNOT for each parameter requested.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t val2mi, val2pl;
-    Int_t nbad, ilax, ilax2, ngood, nfcnmi, iin, knt;
+   /* Local variables */
+   Double_t val2mi, val2pl;
+   Int_t nbad, ilax, ilax2, ngood, nfcnmi, iin, knt;
 
-    if (fNpar <= 0) goto L700;
-    ngood = 0;
-    nbad = 0;
-    nfcnmi = fNfcn;
+   if (fNpar <= 0) goto L700;
+   ngood = 0;
+   nbad = 0;
+   nfcnmi = fNfcn;
 //*-*-                                     . loop over parameters requested
-    for (knt = 1; knt <= fNpar; ++knt) {
-        if (Int_t(fWord7[1]) == 0) {
-            ilax = fNexofi[knt-1];
-        } else {
-            if (knt >= 7) break;
-            ilax = Int_t(fWord7[knt]);
-            if (ilax == 0) break;
-            if (ilax > 0 && ilax <= fNu) {
-                if (fNiofex[ilax-1] > 0) goto L565;
-            }
-            Printf(" PARAMETER NUMBER %3d NOT A VARIABLE. IGNORED.",ilax);
-            continue;
-        }
+   for (knt = 1; knt <= fNpar; ++knt) {
+      if (Int_t(fWord7[1]) == 0) {
+         ilax = fNexofi[knt-1];
+      } else {
+         if (knt >= 7) break;
+         ilax = Int_t(fWord7[knt]);
+         if (ilax == 0) break;
+         if (ilax > 0 && ilax <= fNu) {
+            if (fNiofex[ilax-1] > 0) goto L565;
+         }
+         Printf(" PARAMETER NUMBER %3d NOT A VARIABLE. IGNORED.",ilax);
+         continue;
+      }
 L565:
 //*-*-                                        calculate one pair of M E s
-        ilax2 = 0;
-        mnmnot(ilax, ilax2, val2pl, val2mi);
-        if (fLnewmn) goto L650;
+      ilax2 = 0;
+      mnmnot(ilax, ilax2, val2pl, val2mi);
+      if (fLnewmn) goto L650;
 //*-*-                                         update NGOOD and NBAD
-        iin = fNiofex[ilax-1];
-        if (fErp[iin-1] > 0) ++ngood;
-        else                   ++nbad;
-        if (fErn[iin-1] < 0) ++ngood;
-        else                   ++nbad;
-    }
+      iin = fNiofex[ilax-1];
+      if (fErp[iin-1] > 0) ++ngood;
+      else                   ++nbad;
+      if (fErn[iin-1] < 0) ++ngood;
+      else                   ++nbad;
+   }
 //*-*-                                          end of loop . . . . . . .
 //*-*-                                       . . . . printout final values .
-    fCfrom  = "MINOS   ";
-    fNfcnfr = nfcnmi;
-    fCstatu = "UNCHANGED ";
-    if (ngood == 0 && nbad == 0) goto L700;
-    if (ngood > 0 && nbad == 0)  fCstatu = "SUCCESSFUL";
-    if (ngood == 0 && nbad > 0)  fCstatu = "FAILURE   ";
-    if (ngood > 0 && nbad > 0)   fCstatu = "PROBLEMS  ";
-    if (fISW[4] >= 0)    mnprin(4, fAmin);
-    if (fISW[4] >= 2)    mnmatu(0);
-    return;
+   fCfrom  = "MINOS   ";
+   fNfcnfr = nfcnmi;
+   fCstatu = "UNCHANGED ";
+   if (ngood == 0 && nbad == 0) goto L700;
+   if (ngood > 0 && nbad == 0)  fCstatu = "SUCCESSFUL";
+   if (ngood == 0 && nbad > 0)  fCstatu = "FAILURE   ";
+   if (ngood > 0 && nbad > 0)   fCstatu = "PROBLEMS  ";
+   if (fISW[4] >= 0)    mnprin(4, fAmin);
+   if (fISW[4] >= 2)    mnmatu(0);
+   return;
 //*-*-                                       . . . new minimum found . . . .
 L650:
-    fCfrom  = "MINOS   ";
-    fNfcnfr = nfcnmi;
-    fCstatu = "NEW MINIMU";
-    if (fISW[4] >= 0) mnprin(4, fAmin);
-    Printf(" NEW MINIMUM FOUND.  GO BACK TO MINIMIZATION STEP.");
-    Printf(" =================================================");
-    Printf("                                                  V");
-    Printf("                                                  V");
-    Printf("                                                  V");
-    Printf("                                               VVVVVVV");
-    Printf("                                                VVVVV");
-    Printf("                                                 VVV");
-    Printf("                                                  V");
-    Printf("");
-    return;
+   fCfrom  = "MINOS   ";
+   fNfcnfr = nfcnmi;
+   fCstatu = "NEW MINIMU";
+   if (fISW[4] >= 0) mnprin(4, fAmin);
+   Printf(" NEW MINIMUM FOUND.  GO BACK TO MINIMIZATION STEP.");
+   Printf(" =================================================");
+   Printf("                                                  V");
+   Printf("                                                  V");
+   Printf("                                                  V");
+   Printf("                                               VVVVVVV");
+   Printf("                                                VVVVV");
+   Printf("                                                 VVV");
+   Printf("                                                  V");
+   Printf("");
+   return;
 L700:
-    Printf(" THERE ARE NO MINOS ERRORS TO CALCULATE.");
+   Printf(" THERE ARE NO MINOS ERRORS TO CALCULATE.");
 } /* mnmnos_ */
 
 //______________________________________________________________________________
@@ -5482,187 +5482,187 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
 //*-*        until it crosses the value FMIN+UP.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* System generated locals */
-    Int_t i__1;
+   /* System generated locals */
+   Int_t i__1;
 
-    /* Local variables */
-    Double_t delu, aopt, eros;
-    Double_t abest, xunit, dc, ut, sigsav, du1;
-    Double_t fac, sig, sav;
-    Int_t marc, isig, mpar, ndex, imax, indx, ierr, i, j;
-    Int_t iercr, it, istrav, nfmxin, nlimit, isw2, isw4;
-    TString csig;
+   /* Local variables */
+   Double_t delu, aopt, eros;
+   Double_t abest, xunit, dc, ut, sigsav, du1;
+   Double_t fac, sig, sav;
+   Int_t marc, isig, mpar, ndex, imax, indx, ierr, i, j;
+   Int_t iercr, it, istrav, nfmxin, nlimit, isw2, isw4;
+   TString csig;
 
 //*-*-                                       . . save and prepare start vals
-    isw2    = fISW[1];
-    isw4    = fISW[3];
-    sigsav  = fEDM;
-    istrav  = fIstrat;
-    dc      = fDcovar;
-    fLnewmn = kFALSE;
-    fApsi   = fEpsi*.5;
-    abest   = fAmin;
-    mpar    = fNpar;
-    nfmxin  = fNfcnmx;
-    for (i = 1; i <= mpar; ++i) { fXt[i-1] = fX[i-1]; }
-    i__1 = mpar*(mpar + 1) / 2;
-    for (j = 1; j <= i__1; ++j) { fVthmat[j-1] = fVhmat[j-1]; }
-    for (i = 1; i <= mpar; ++i) {
-        fMNOTgcc[i-1] = fGlobcc[i-1];
-        fMNOTw[i-1]   = fWerr[i-1];
-    }
-    it = fNiofex[ilax-1];
-    fErp[it-1] = 0;
-    fErn[it-1] = 0;
-    mninex(fXt);
-    ut = fU[ilax-1];
-    if (fNvarl[ilax-1] == 1) {
-        fAlim[ilax-1] = ut - fMNOTw[it-1]*100;
-        fBlim[ilax-1] = ut + fMNOTw[it-1]*100;
-    }
-    ndex  = it*(it + 1) / 2;
-    xunit = TMath::Sqrt(fUp / fVthmat[ndex-1]);
-    marc  = 0;
-    for (i = 1; i <= mpar; ++i) {
-        if (i == it) continue;
-        ++marc;
-        imax = TMath::Max(it,i);
-        indx = imax*(imax-1) / 2 + TMath::Min(it,i);
-        fMNOTxdev[marc-1] = xunit*fVthmat[indx-1];
-    }
+   isw2    = fISW[1];
+   isw4    = fISW[3];
+   sigsav  = fEDM;
+   istrav  = fIstrat;
+   dc      = fDcovar;
+   fLnewmn = kFALSE;
+   fApsi   = fEpsi*.5;
+   abest   = fAmin;
+   mpar    = fNpar;
+   nfmxin  = fNfcnmx;
+   for (i = 1; i <= mpar; ++i) { fXt[i-1] = fX[i-1]; }
+   i__1 = mpar*(mpar + 1) / 2;
+   for (j = 1; j <= i__1; ++j) { fVthmat[j-1] = fVhmat[j-1]; }
+   for (i = 1; i <= mpar; ++i) {
+      fMNOTgcc[i-1] = fGlobcc[i-1];
+      fMNOTw[i-1]   = fWerr[i-1];
+   }
+   it = fNiofex[ilax-1];
+   fErp[it-1] = 0;
+   fErn[it-1] = 0;
+   mninex(fXt);
+   ut = fU[ilax-1];
+   if (fNvarl[ilax-1] == 1) {
+      fAlim[ilax-1] = ut - fMNOTw[it-1]*100;
+      fBlim[ilax-1] = ut + fMNOTw[it-1]*100;
+   }
+   ndex  = it*(it + 1) / 2;
+   xunit = TMath::Sqrt(fUp / fVthmat[ndex-1]);
+   marc  = 0;
+   for (i = 1; i <= mpar; ++i) {
+      if (i == it) continue;
+      ++marc;
+      imax = TMath::Max(it,i);
+      indx = imax*(imax-1) / 2 + TMath::Min(it,i);
+      fMNOTxdev[marc-1] = xunit*fVthmat[indx-1];
+   }
 //*-*-                          fix the parameter in question
-    mnfixp(it-1, ierr);
-    if (ierr > 0) {
-        Printf(" MINUIT ERROR. CANNOT FIX PARAMETER %4d   INTERNAL %3d",ilax,it);
-        goto L700;
-    }
+   mnfixp(it-1, ierr);
+   if (ierr > 0) {
+      Printf(" MINUIT ERROR. CANNOT FIX PARAMETER %4d   INTERNAL %3d",ilax,it);
+       goto L700;
+   }
 //*-*-                      . . . . . Nota Bene: from here on, NPAR=MPAR-1
 //*-*-     Remember: MNFIXP squeezes IT out of X, XT, WERR, and VHMAT,
 //*-*-                                                   not W, VTHMAT
-    for (isig = 1; isig <= 2; ++isig) {
-        if (isig == 1) {
-            sig  = 1;
-            csig = "POSI";
-        } else {
-            sig  = -1;
-            csig = "NEGA";
-        }
+   for (isig = 1; isig <= 2; ++isig) {
+      if (isig == 1) {
+         sig  = 1;
+         csig = "POSI";
+      } else {
+         sig  = -1;
+         csig = "NEGA";
+      }
 //*-*-                                       . sig=sign of error being calcd
-        if (fISW[4] > 1) {
-            Printf(" DETERMINATION OF %sTIVE MINOS ERROR FOR PARAMETER %d"
+      if (fISW[4] > 1) {
+         Printf(" DETERMINATION OF %sTIVE MINOS ERROR FOR PARAMETER %d"
                             ,(const char*)csig,ilax
                             ,(const char*)fCpnam[ilax-1]);
-        }
-        if (fISW[1] <= 0) {
+      }
+      if (fISW[1] <= 0) {
             mnwarn("D", "MINOS", "NO COVARIANCE MATRIX.");
-        }
-        nlimit     = fNfcn + nfmxin;
-        fIstrat    = TMath::Max(istrav-1,0);
-        du1        = fMNOTw[it-1];
-        fU[ilax-1] = ut + sig*du1;
-        fU[ilax-1] = TMath::Min(fU[ilax-1],fBlim[ilax-1]);
-        fU[ilax-1] = TMath::Max(fU[ilax-1],fAlim[ilax-1]);
-        delu = fU[ilax-1] - ut;
+      }
+      nlimit     = fNfcn + nfmxin;
+      fIstrat    = TMath::Max(istrav-1,0);
+      du1        = fMNOTw[it-1];
+      fU[ilax-1] = ut + sig*du1;
+      fU[ilax-1] = TMath::Min(fU[ilax-1],fBlim[ilax-1]);
+      fU[ilax-1] = TMath::Max(fU[ilax-1],fAlim[ilax-1]);
+      delu = fU[ilax-1] - ut;
 //*-*-        stop if already at limit with negligible step size
-        if (TMath::Abs(delu) / (TMath::Abs(ut) + TMath::Abs(fU[ilax-1])) < fEpsmac) goto L440;
-        fac = delu / fMNOTw[it-1];
-        for (i = 1; i <= fNpar; ++i) {
-            fX[i-1] = fXt[i-1] + fac*fMNOTxdev[i-1];
-        }
-        if (fISW[4] > 1) {
-            Printf(" PARAMETER %4d SET TO%11.3e + %10.3e = %12.3e",ilax,ut,delu,fU[ilax-1]);
-        }
+      if (TMath::Abs(delu) / (TMath::Abs(ut) + TMath::Abs(fU[ilax-1])) < fEpsmac) goto L440;
+      fac = delu / fMNOTw[it-1];
+      for (i = 1; i <= fNpar; ++i) {
+         fX[i-1] = fXt[i-1] + fac*fMNOTxdev[i-1];
+      }
+      if (fISW[4] > 1) {
+         Printf(" PARAMETER %4d SET TO%11.3e + %10.3e = %12.3e",ilax,ut,delu,fU[ilax-1]);
+      }
 //*-*-                                       loop to hit AMIN+UP
-        fKe1cr  = ilax;
-        fKe2cr  = 0;
-        fXmidcr = fU[ilax-1];
-        fXdircr = delu;
+      fKe1cr  = ilax;
+      fKe2cr  = 0;
+      fXmidcr = fU[ilax-1];
+      fXdircr = delu;
 
-        fAmin = abest;
-        fNfcnmx = nlimit - fNfcn;
-        mncros(aopt, iercr);
-        if (abest - fAmin > fUp*.01) goto L650;
-        if (iercr == 1) goto L440;
-        if (iercr == 2) goto L450;
-        if (iercr == 3) goto L460;
+      fAmin = abest;
+      fNfcnmx = nlimit - fNfcn;
+      mncros(aopt, iercr);
+      if (abest - fAmin > fUp*.01) goto L650;
+      if (iercr == 1) goto L440;
+      if (iercr == 2) goto L450;
+      if (iercr == 3) goto L460;
 //*-*-                                       . error successfully calculated
-        eros = fXmidcr - ut + aopt*fXdircr;
-        if (fISW[4] > 1) {
-            Printf("        THE %4sTIVE MINOS ERROR OF PARAMETER %3d  %10s, IS %12.4e"
+      eros = fXmidcr - ut + aopt*fXdircr;
+      if (fISW[4] > 1) {
+         Printf("        THE %4sTIVE MINOS ERROR OF PARAMETER %3d  %10s, IS %12.4e"
                            ,(const char*)csig,ilax
                            ,(const char*)fCpnam[ilax-1],eros);
-        }
-        goto L480;
+      }
+      goto L480;
 //*-*-                                       . . . . . . . . failure returns
 L440:
-        if (fISW[4] >= 1) {
-            Printf("    THE %4sTIVE MINOS ERROR OF PARAMETER %3d, %s EXCEEDS ITS LIMIT."
+      if (fISW[4] >= 1) {
+         Printf("    THE %4sTIVE MINOS ERROR OF PARAMETER %3d, %s EXCEEDS ITS LIMIT."
                               ,(const char*)csig,ilax
                               ,(const char*)fCpnam[ilax-1]);
-        }
-        eros = fUndefi;
-        goto L480;
+      }
+      eros = fUndefi;
+      goto L480;
 L450:
-        if (fISW[4] >= 1) {
-            Printf("       THE %4sTIVE MINOS ERROR %4d REQUIRES MORE THAN %5d FUNCTION CALLS."
+      if (fISW[4] >= 1) {
+         Printf("       THE %4sTIVE MINOS ERROR %4d REQUIRES MORE THAN %5d FUNCTION CALLS."
                          ,(const char*)csig,ilax,nfmxin);
-        }
-        eros = 0;
-        goto L480;
+      }
+      eros = 0;
+      goto L480;
 L460:
-        if (fISW[4] >= 1) {
-            Printf("                         %4sTIVE MINOS ERROR NOT CALCULATED FOR PARAMETER %d"
+      if (fISW[4] >= 1) {
+         Printf("                         %4sTIVE MINOS ERROR NOT CALCULATED FOR PARAMETER %d"
                          ,(const char*)csig,ilax);
-        }
-        eros = 0;
+      }
+      eros = 0;
 
 L480:
-        if (fISW[4] > 1) {
-            Printf("     **************************************************************************");
-        }
-        if (sig < 0) {
-            fErn[it-1] = eros;
-            if (ilax2 > 0 && ilax2 <= fNu) val2mi = fU[ilax2-1];
-        } else {
-            fErp[it-1] = eros;
-            if (ilax2 > 0 && ilax2 <= fNu) val2pl = fU[ilax2-1];
-        }
-    }
+      if (fISW[4] > 1) {
+         Printf("     **************************************************************************");
+      }
+      if (sig < 0) {
+         fErn[it-1] = eros;
+         if (ilax2 > 0 && ilax2 <= fNu) val2mi = fU[ilax2-1];
+      } else {
+         fErp[it-1] = eros;
+         if (ilax2 > 0 && ilax2 <= fNu) val2pl = fU[ilax2-1];
+      }
+   }
 //*-*-                                       . . parameter finished. reset v
 //*-*-                      normal termination */
-    fItaur = 1;
-    mnfree(1);
-    i__1 = mpar*(mpar + 1) / 2;
-    for (j = 1; j <= i__1; ++j) { fVhmat[j-1] = fVthmat[j-1]; }
-    for (i = 1; i <= mpar; ++i) {
-        fWerr[i-1]   = fMNOTw[i-1];
-        fGlobcc[i-1] = fMNOTgcc[i-1];
-        fX[i-1]      = fXt[i-1];
-    }
-    mninex(fX);
-    fEDM    = sigsav;
-    fAmin   = abest;
-    fISW[1] = isw2;
-    fISW[3] = isw4;
-    fDcovar = dc;
-    goto L700;
+   fItaur = 1;
+   mnfree(1);
+   i__1 = mpar*(mpar + 1) / 2;
+   for (j = 1; j <= i__1; ++j) { fVhmat[j-1] = fVthmat[j-1]; }
+   for (i = 1; i <= mpar; ++i) {
+      fWerr[i-1]   = fMNOTw[i-1];
+      fGlobcc[i-1] = fMNOTgcc[i-1];
+      fX[i-1]      = fXt[i-1];
+   }
+   mninex(fX);
+   fEDM    = sigsav;
+   fAmin   = abest;
+   fISW[1] = isw2;
+   fISW[3] = isw4;
+   fDcovar = dc;
+   goto L700;
 //*-*-                      new minimum
 L650:
-    fLnewmn = kTRUE;
-    fISW[1] = 0;
-    fDcovar = 1;
-    fISW[3] = 0;
-    sav     = fU[ilax-1];
-    fItaur  = 1;
-    mnfree(1);
-    fU[ilax-1] = sav;
-    mnexin(fX);
-    fEDM = fBigedm;
+   fLnewmn = kTRUE;
+   fISW[1] = 0;
+   fDcovar = 1;
+   fISW[3] = 0;
+   sav     = fU[ilax-1];
+   fItaur  = 1;
+   mnfree(1);
+   fU[ilax-1] = sav;
+   mnexin(fX);
+   fEDM = fBigedm;
 //*-*-                      in any case
 L700:
-    fItaur  = 0;
-    fNfcnmx = nfmxin;
-    fIstrat = istrav;
+   fItaur  = 0;
+   fNfcnmx = nfmxin;
+   fIstrat = istrav;
 } /* mnmnot_ */
 
 //______________________________________________________________________________
@@ -5682,187 +5682,187 @@ void TMinuit::mnparm(Int_t k1, TString cnamj, Double_t uk, Double_t wk, Double_t
 //*-*                  >0 if MNPARM unable to implement definition
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t vplu, a_small, gsmin, pinti, vminu, danger, sav, sav2;
-    Int_t ierr, kint, in, ix, ktofix, lastin, kinfix, nvl;
-    TString cnamk, chbufi;
+   /* Local variables */
+   Double_t vplu, a_small, gsmin, pinti, vminu, danger, sav, sav2;
+   Int_t ierr, kint, in, ix, ktofix, lastin, kinfix, nvl;
+   TString cnamk, chbufi;
 
-    Int_t k = k1+1;
-    cnamk   = cnamj;
-    kint    = fNpar;
-    if (k < 1 || k > fMaxext) {
+   Int_t k = k1+1;
+   cnamk   = cnamj;
+   kint    = fNpar;
+   if (k < 1 || k > fMaxext) {
 //*-*-                    parameter number exceeds allowed maximum value
-        Printf(" MINUIT USER ERROR.  PARAMETER NUMBER IS %3d  ALLOWED RANGE IS ONE TO %4d",k,fMaxext);
-        goto L800;
-    }
+      Printf(" MINUIT USER ERROR.  PARAMETER NUMBER IS %3d  ALLOWED RANGE IS ONE TO %4d",k,fMaxext);
+      goto L800;
+   }
 //*-*-                    normal parameter request
-    ktofix = 0;
-    if (fNvarl[k-1] < 0) goto L50;
+   ktofix = 0;
+   if (fNvarl[k-1] < 0) goto L50;
 //*-*-        previously defined parameter is being redefined
 //*-*-                                    find if parameter was fixed
-    for (ix = 1; ix <= fNpfix; ++ix) {
-        if (fIpfix[ix-1] == k) ktofix = k;
-    }
-    if (ktofix > 0) {
-        mnwarn("W", "PARAM DEF", "REDEFINING A FIXED PARAMETER.");
-        if (kint >= fMaxint) {
-            Printf(" CANNOT RELEASE. MAX NPAR EXCEEDED.");
-            goto L800;
-        }
-        mnfree(-k);
-    }
+   for (ix = 1; ix <= fNpfix; ++ix) {
+      if (fIpfix[ix-1] == k) ktofix = k;
+   }
+   if (ktofix > 0) {
+      mnwarn("W", "PARAM DEF", "REDEFINING A FIXED PARAMETER.");
+      if (kint >= fMaxint) {
+         Printf(" CANNOT RELEASE. MAX NPAR EXCEEDED.");
+         goto L800;
+      }
+      mnfree(-k);
+   }
 //*-*-                      if redefining previously variable parameter
-    if (fNiofex[k-1] > 0) kint = fNpar - 1;
+   if (fNiofex[k-1] > 0) kint = fNpar - 1;
 L50:
 
 //*-*-                                     . . .print heading
-    if (fLphead && fISW[4] >= 0) {
-        Printf(" PARAMETER DEFINITIONS:");
-        Printf("    NO.   NAME         VALUE      STEP SIZE      LIMITS");
-        fLphead = kFALSE;
-    }
-    if (wk > 0) goto L122;
+   if (fLphead && fISW[4] >= 0) {
+      Printf(" PARAMETER DEFINITIONS:");
+      Printf("    NO.   NAME         VALUE      STEP SIZE      LIMITS");
+      fLphead = kFALSE;
+   }
+   if (wk > 0) goto L122;
 //*-*-                                       . . .constant parameter . . . .
-    if (fISW[4] >= 0) {
-        Printf(" %5d %-10s %13.5e  constant",k,(const char*)cnamk,uk);
-    }
-    nvl = 0;
-    goto L200;
+   if (fISW[4] >= 0) {
+      Printf(" %5d %-10s %13.5e  constant",k,(const char*)cnamk,uk);
+   }
+   nvl = 0;
+   goto L200;
 L122:
-    if (a == 0 && b == 0) {
+   if (a == 0 && b == 0) {
 //*-*-                                     variable parameter without limits
-        nvl = 1;
-        if (fISW[4] >= 0) {
-            Printf(" %5d %-10s %13.5e%13.5e     no limits",k,(const char*)cnamk,uk,wk);
-        }
-    } else {
+      nvl = 1;
+      if (fISW[4] >= 0) {
+         Printf(" %5d %-10s %13.5e%13.5e     no limits",k,(const char*)cnamk,uk,wk);
+      }
+   } else {
 //*-*-                                        variable parameter with limits
-        nvl = 4;
-        fLnolim = kFALSE;
-        if (fISW[4] >= 0) {
-            Printf(" %5d %-10s %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
-        }
-    }
+      nvl = 4;
+      fLnolim = kFALSE;
+      if (fISW[4] >= 0) {
+         Printf(" %5d %-10s %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
+      }
+   }
 //*-*-                            . . request for another variable parameter
-    ++kint;
-    if (kint > fMaxint) {
-        Printf(" MINUIT USER ERROR.   TOO MANY VARIABLE PARAMETERS.");
-        goto L800;
-    }
-    if (nvl == 1) goto L200;
-    if (a == b) {
-        Printf(" USER ERROR IN MINUIT PARAMETER");
-        Printf(" DEFINITION");
-        Printf(" UPPER AND LOWER LIMITS EQUAL.");
-        goto L800;
-    }
-    if (b < a) {
-        sav = b;
-        b = a;
-        a = sav;
-        mnwarn("W", "PARAM DEF", "PARAMETER LIMITS WERE REVERSED.");
-        if (fLwarn) fLphead = kTRUE;
-    }
-    if (b - a > 1e7) {
-        mnwarn("W", "PARAM DEF", Form("LIMITS ON PARAM%d TOO FAR APART.",k));
-        if (fLwarn) fLphead = kTRUE;
-    }
-    danger = (b - uk)*(uk - a);
-    if (danger < 0) {
-        mnwarn("W", "PARAM DEF", "STARTING VALUE OUTSIDE LIMITS.");
-    }
-    if (danger == 0) {
-        mnwarn("W", "PARAM DEF", "STARTING VALUE IS AT LIMIT.");
-    }
+   ++kint;
+   if (kint > fMaxint) {
+      Printf(" MINUIT USER ERROR.   TOO MANY VARIABLE PARAMETERS.");
+      goto L800;
+   }
+   if (nvl == 1) goto L200;
+   if (a == b) {
+      Printf(" USER ERROR IN MINUIT PARAMETER");
+      Printf(" DEFINITION");
+      Printf(" UPPER AND LOWER LIMITS EQUAL.");
+      goto L800;
+   }
+   if (b < a) {
+      sav = b;
+      b = a;
+      a = sav;
+      mnwarn("W", "PARAM DEF", "PARAMETER LIMITS WERE REVERSED.");
+      if (fLwarn) fLphead = kTRUE;
+   }
+   if (b - a > 1e7) {
+      mnwarn("W", "PARAM DEF", Form("LIMITS ON PARAM%d TOO FAR APART.",k));
+      if (fLwarn) fLphead = kTRUE;
+   }
+   danger = (b - uk)*(uk - a);
+   if (danger < 0) {
+      mnwarn("W", "PARAM DEF", "STARTING VALUE OUTSIDE LIMITS.");
+   }
+   if (danger == 0) {
+      mnwarn("W", "PARAM DEF", "STARTING VALUE IS AT LIMIT.");
+   }
 L200:
 //*-*-                          . . . input OK, set values, arrange lists,
 //*-*-                                   calculate step sizes GSTEP, DIRIN
-    fCfrom      = "PARAMETR";
-    fNfcnfr     = fNfcn;
-    fCstatu     = "NEW VALUES";
-    fNu         = TMath::Max(fNu,k);
-    fCpnam[k-1] = cnamk;
-    fU[k-1]     = uk;
-    fAlim[k-1]  = a;
-    fBlim[k-1]  = b;
-    fNvarl[k-1] = nvl;
-    mnrset(1);
+   fCfrom      = "PARAMETR";
+   fNfcnfr     = fNfcn;
+   fCstatu     = "NEW VALUES";
+   fNu         = TMath::Max(fNu,k);
+   fCpnam[k-1] = cnamk;
+   fU[k-1]     = uk;
+   fAlim[k-1]  = a;
+   fBlim[k-1]  = b;
+   fNvarl[k-1] = nvl;
+   mnrset(1);
 //*-*-                            K is external number of new parameter
 //*-*-          LASTIN is the number of var. params with ext. param. no.< K
-    lastin = 0;
-    for (ix = 1; ix <= k-1; ++ix) { if (fNiofex[ix-1] > 0) ++lastin; }
+   lastin = 0;
+   for (ix = 1; ix <= k-1; ++ix) { if (fNiofex[ix-1] > 0) ++lastin; }
 //*-*-                KINT is new number of variable params, NPAR is old
-    if (kint == fNpar) goto L280;
-    if (kint > fNpar) {
+   if (kint == fNpar) goto L280;
+   if (kint > fNpar) {
 //*-*-                         insert new variable parameter in list
-        for (in = fNpar; in >= lastin + 1; --in) {
-            ix            = fNexofi[in-1];
-            fNiofex[ix-1] = in + 1;
-            fNexofi[in]   = ix;
-            fX[in]        = fX[in-1];
-            fXt[in]       = fXt[in-1];
-            fDirin[in]    = fDirin[in-1];
-            fG2[in]       = fG2[in-1];
-            fGstep[in]    = fGstep[in-1];
-        }
-    } else {
+      for (in = fNpar; in >= lastin + 1; --in) {
+         ix            = fNexofi[in-1];
+         fNiofex[ix-1] = in + 1;
+         fNexofi[in]   = ix;
+         fX[in]        = fX[in-1];
+         fXt[in]       = fXt[in-1];
+         fDirin[in]    = fDirin[in-1];
+         fG2[in]       = fG2[in-1];
+         fGstep[in]    = fGstep[in-1];
+      }
+   } else {
 //*-*-                         remove variable parameter from list
-        for (in = lastin + 1; in <= kint; ++in) {
-            ix            = fNexofi[in];
-            fNiofex[ix-1] = in;
-            fNexofi[in-1] = ix;
-            fX[in-1]      = fX[in];
-            fXt[in-1]     = fXt[in];
-            fDirin[in-1]  = fDirin[in];
-            fG2[in-1]     = fG2[in];
-            fGstep[in-1]  = fGstep[in];
-        }
-    }
+      for (in = lastin + 1; in <= kint; ++in) {
+         ix            = fNexofi[in];
+         fNiofex[ix-1] = in;
+         fNexofi[in-1] = ix;
+         fX[in-1]      = fX[in];
+         fXt[in-1]     = fXt[in];
+         fDirin[in-1]  = fDirin[in];
+         fG2[in-1]     = fG2[in];
+         fGstep[in-1]  = fGstep[in];
+      }
+   }
 L280:
-    ix = k;
-    fNiofex[ix-1] = 0;
-    fNpar = kint;
+   ix = k;
+   fNiofex[ix-1] = 0;
+   fNpar = kint;
 //*-*-                                      lists are now arranged . . . .
-    if (nvl > 0) {
-        in            = lastin + 1;
-        fNexofi[in-1] = ix;
-        fNiofex[ix-1] = in;
-        sav           = fU[ix-1];
-        mnpint(sav, ix-1, pinti);
-        fX[in-1]    = pinti;
-        fXt[in-1]   = fX[in-1];
-        fWerr[in-1] = wk;
-        sav2        = sav + wk;
-        mnpint(sav2, ix-1, pinti);
-        vplu = pinti - fX[in-1];
-        sav2 = sav - wk;
-        mnpint(sav2, ix-1, pinti);
-        vminu = pinti - fX[in-1];
-        fDirin[in-1] = (TMath::Abs(vplu) + TMath::Abs(vminu))*.5;
-        fG2[in-1] = fUp*2 / (fDirin[in-1]*fDirin[in-1]);
-        gsmin = fEpsma2*8*TMath::Abs(fX[in-1]);
-        fGstep[in-1] = TMath::Max(gsmin,fDirin[in-1]*.1);
-        if (fAmin != fUndefi) {
-            a_small      = TMath::Sqrt(fEpsma2*(fAmin + fUp) / fUp);
-            fGstep[in-1] = TMath::Max(gsmin,a_small*fDirin[in-1]);
-        }
-        fGrd[in-1] = fG2[in-1]*fDirin[in-1];
+   if (nvl > 0) {
+      in            = lastin + 1;
+      fNexofi[in-1] = ix;
+      fNiofex[ix-1] = in;
+      sav           = fU[ix-1];
+      mnpint(sav, ix-1, pinti);
+      fX[in-1]    = pinti;
+      fXt[in-1]   = fX[in-1];
+      fWerr[in-1] = wk;
+      sav2        = sav + wk;
+      mnpint(sav2, ix-1, pinti);
+      vplu = pinti - fX[in-1];
+      sav2 = sav - wk;
+      mnpint(sav2, ix-1, pinti);
+      vminu = pinti - fX[in-1];
+      fDirin[in-1] = (TMath::Abs(vplu) + TMath::Abs(vminu))*.5;
+      fG2[in-1] = fUp*2 / (fDirin[in-1]*fDirin[in-1]);
+      gsmin = fEpsma2*8*TMath::Abs(fX[in-1]);
+      fGstep[in-1] = TMath::Max(gsmin,fDirin[in-1]*.1);
+      if (fAmin != fUndefi) {
+         a_small      = TMath::Sqrt(fEpsma2*(fAmin + fUp) / fUp);
+         fGstep[in-1] = TMath::Max(gsmin,a_small*fDirin[in-1]);
+      }
+      fGrd[in-1] = fG2[in-1]*fDirin[in-1];
 //*-*-                  if parameter has limits
-        if (fNvarl[k-1] > 1) {
-            if (fGstep[in-1] > .5) fGstep[in-1] = .5;
-            fGstep[in-1] = -fGstep[in-1];
-        }
-    }
-    if (ktofix > 0) {
-        kinfix = fNiofex[ktofix-1];
-        if (kinfix > 0) mnfixp(kinfix-1, ierr);
-        if (ierr > 0)   goto L800;
-    }
-    ierflg = 0;
-    return;
+      if (fNvarl[k-1] > 1) {
+         if (fGstep[in-1] > .5) fGstep[in-1] = .5;
+         fGstep[in-1] = -fGstep[in-1];
+      }
+   }
+   if (ktofix > 0) {
+      kinfix = fNiofex[ktofix-1];
+      if (kinfix > 0) mnfixp(kinfix-1, ierr);
+      if (ierr > 0)   goto L800;
+   }
+   ierflg = 0;
+   return;
 //*-*-                  error on input, unable to implement request  . . . .
 L800:
-    ierflg = 1;
+   ierflg = 1;
 } /* mnparm_ */
 
 //______________________________________________________________________________
@@ -5880,79 +5880,79 @@ void TMinuit::mnpars(TString &crdbuf, Int_t &icondn)
 //*-*        ICONDN = 2    end of parameter definitions
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t a=0, b=0, fk=0, uk=0, wk=0, xk=0;
-    Int_t ierr, kapo1, kapo2;
-    Int_t k, llist, ibegin, lenbuf, istart, lnc, icy;
-    TString cnamk, comand, celmnt, ctemp;
-    char stmp[128];
+   /* Local variables */
+   Double_t a=0, b=0, fk=0, uk=0, wk=0, xk=0;
+   Int_t ierr, kapo1, kapo2;
+   Int_t k, llist, ibegin, lenbuf, istart, lnc, icy;
+   TString cnamk, comand, celmnt, ctemp;
+   char stmp[128];
 
-    lenbuf = strlen((const char*)crdbuf);
+   lenbuf = strlen((const char*)crdbuf);
 //*-*-                    find out whether fixed or free-field format
-    kapo1 = strspn((const char*)crdbuf, "'");
-    if (kapo1 == 0) goto L150;
-    kapo2 = strspn((const char*)crdbuf + kapo1, "'");
-    if (kapo2 == 0) goto L150;
+   kapo1 = strspn((const char*)crdbuf, "'");
+   if (kapo1 == 0) goto L150;
+   kapo2 = strspn((const char*)crdbuf + kapo1, "'");
+   if (kapo2 == 0) goto L150;
 //*-*-         new (free-field) format
-    kapo2 += kapo1;
+   kapo2 += kapo1;
 //*-*-                            skip leading blanks if any
-    for (istart = 1; istart <= kapo1-1; ++istart) {
-        if (crdbuf(istart-1,1) != ' ') goto L120;
-    }
-    goto L210;
+   for (istart = 1; istart <= kapo1-1; ++istart) {
+      if (crdbuf(istart-1,1) != ' ') goto L120;
+   }
+   goto L210;
 L120:
 //*-*-                              parameter number integer
-    celmnt = crdbuf(istart-1, kapo1-istart);
-    scanf((const char*)celmnt,fk);
-    k = Int_t(fk);
-    if (k <= 0) goto L210;
-    cnamk = "PARAM " + celmnt;
-    if (kapo2 - kapo1 > 1) {
-        cnamk = crdbuf(kapo1, kapo2-1-kapo1);
-    }
+   celmnt = crdbuf(istart-1, kapo1-istart);
+   scanf((const char*)celmnt,fk);
+   k = Int_t(fk);
+   if (k <= 0) goto L210;
+   cnamk = "PARAM " + celmnt;
+   if (kapo2 - kapo1 > 1) {
+      cnamk = crdbuf(kapo1, kapo2-1-kapo1);
+   }
 //*-*  special handling if comma or blanks and a comma follow 'name'
-    for (icy = kapo2 + 1; icy <= lenbuf; ++icy) {
-        if (crdbuf(icy-1,1) == ',') goto L139;
-        if (crdbuf(icy-1,1) != ' ') goto L140;
-    }
-    uk = 0;
-    wk = 0;
-    a  = 0;
-    b  = 0;
-    goto L170;
+   for (icy = kapo2 + 1; icy <= lenbuf; ++icy) {
+      if (crdbuf(icy-1,1) == ',') goto L139;
+      if (crdbuf(icy-1,1) != ' ') goto L140;
+   }
+   uk = 0;
+   wk = 0;
+   a  = 0;
+   b  = 0;
+   goto L170;
 L139:
-    ++icy;
+   ++icy;
 L140:
-    ibegin = icy;
-    ctemp = crdbuf(ibegin-1,lenbuf-ibegin);
-    mncrck(ctemp, 20, comand, lnc, fMaxpar, fPARSplist, llist, ierr, fIsyswr);
-    if (ierr > 0) goto L180;
-    uk = fPARSplist[0];
-    wk = 0;
-    if (llist >= 2) wk = fPARSplist[1];
-    a = 0;
-    if (llist >= 3) a = fPARSplist[2];
-    b = 0;
-    if (llist >= 4) b = fPARSplist[3];
-    goto L170;
+   ibegin = icy;
+   ctemp = crdbuf(ibegin-1,lenbuf-ibegin);
+   mncrck(ctemp, 20, comand, lnc, fMaxpar, fPARSplist, llist, ierr, fIsyswr);
+   if (ierr > 0) goto L180;
+   uk = fPARSplist[0];
+   wk = 0;
+   if (llist >= 2) wk = fPARSplist[1];
+   a = 0;
+   if (llist >= 3) a = fPARSplist[2];
+   b = 0;
+   if (llist >= 4) b = fPARSplist[3];
+   goto L170;
 //*-*-         old (fixed-field) format
 L150:
-    scanf((const char*)crdbuf,xk,stmp,uk,wk,a,b);
-    cnamk = stmp;
-    k = Int_t(xk);
-    if (k == 0)    goto L210;
+   scanf((const char*)crdbuf,xk,stmp,uk,wk,a,b);
+   cnamk = stmp;
+   k = Int_t(xk);
+   if (k == 0)    goto L210;
 //*-*-         parameter format cracked, implement parameter definition
 L170:
-    mnparm(k-1, cnamk, uk, wk, a, b, ierr);
-    icondn = ierr;
-    return;
+   mnparm(k-1, cnamk, uk, wk, a, b, ierr);
+   icondn = ierr;
+   return;
 //*-*-         format or other error
 L180:
-    icondn = 1;
-    return;
+   icondn = 1;
+   return;
 //*-*-       end of data
 L210:
-    icondn = 2;
+   icondn = 2;
 } /* mnpars_ */
 
 //______________________________________________________________________________
@@ -5970,58 +5970,58 @@ void TMinuit::mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t 
 //*-*   method : chi**2 = min equation solved explicitly
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t a, f, s, t, y, s2, x2, x3, x4, y2, cz[3], xm, xy, x2y;
-    x2 = x3 = 0;
-    Int_t i;
+   /* Local variables */
+   Double_t a, f, s, t, y, s2, x2, x3, x4, y2, cz[3], xm, xy, x2y;
+   x2 = x3 = 0;
+   Int_t i;
 
-    /* Parameter adjustments */
-    --coef2p;
-    --pary2p;
-    --parx2p;
+   /* Parameter adjustments */
+   --coef2p;
+   --pary2p;
+   --parx2p;
 
-    /* Function Body */
-    for (i = 1; i <= 3; ++i) { cz[i-1] = 0; }
-    sdev2p = 0;
-    if (npar2p < 3) goto L10;
-    f = (Double_t) (npar2p);
+   /* Function Body */
+   for (i = 1; i <= 3; ++i) { cz[i-1] = 0; }
+   sdev2p = 0;
+   if (npar2p < 3) goto L10;
+   f = (Double_t) (npar2p);
 //*-* --- center x values for reasons of machine precision
-    xm  = 0;
-    for (i = 1; i <= npar2p; ++i) { xm += parx2p[i]; }
-    xm /= f;
-    x2  = 0;
-    x3  = 0;
-    x4  = 0;
-    y   = 0;
-    y2  = 0;
-    xy  = 0;
-    x2y = 0;
-    for (i = 1; i <= npar2p; ++i) {
-        s    = parx2p[i] - xm;
-        t    = pary2p[i];
-        s2   = s*s;
-        x2  += s2;
-        x3  += s*s2;
-        x4  += s2*s2;
-        y   += t;
-        y2  += t*t;
-        xy  += s*t;
-        x2y += s2*t;
-    }
-    a = (f*x4 - x2*x2)*x2 - f*(x3*x3);
-    if (a == 0) goto L10;
-    cz[2] = (x2*(f*x2y - x2*y) - f*x3*xy) / a;
-    cz[1] = (xy - x3*cz[2]) / x2;
-    cz[0] = (y - x2*cz[2]) / f;
-    if (npar2p == 3) goto L6;
-    sdev2p = y2 - (cz[0]*y + cz[1]*xy + cz[2]*x2y);
-    if (sdev2p < 0) sdev2p = 0;
-    sdev2p /= f - 3;
+   xm  = 0;
+   for (i = 1; i <= npar2p; ++i) { xm += parx2p[i]; }
+   xm /= f;
+   x2  = 0;
+   x3  = 0;
+   x4  = 0;
+   y   = 0;
+   y2  = 0;
+   xy  = 0;
+   x2y = 0;
+   for (i = 1; i <= npar2p; ++i) {
+      s    = parx2p[i] - xm;
+      t    = pary2p[i];
+      s2   = s*s;
+      x2  += s2;
+      x3  += s*s2;
+      x4  += s2*s2;
+      y   += t;
+      y2  += t*t;
+      xy  += s*t;
+      x2y += s2*t;
+   }
+   a = (f*x4 - x2*x2)*x2 - f*(x3*x3);
+   if (a == 0) goto L10;
+   cz[2] = (x2*(f*x2y - x2*y) - f*x3*xy) / a;
+   cz[1] = (xy - x3*cz[2]) / x2;
+   cz[0] = (y - x2*cz[2]) / f;
+   if (npar2p == 3) goto L6;
+   sdev2p = y2 - (cz[0]*y + cz[1]*xy + cz[2]*x2y);
+   if (sdev2p < 0) sdev2p = 0;
+   sdev2p /= f - 3;
 L6:
-    cz[0] += xm*(xm*cz[2] - cz[1]);
-    cz[1] -= xm*2*cz[2];
+   cz[0] += xm*(xm*cz[2] - cz[1]);
+   cz[1] -= xm*2*cz[2];
 L10:
-    for (i = 1; i <= 3; ++i) { coef2p[i] = cz[i-1]; }
+   for (i = 1; i <= 3; ++i) { coef2p[i] = cz[i-1]; }
 } /* mnpfit_ */
 
 //______________________________________________________________________________
@@ -6032,37 +6032,37 @@ void TMinuit::mnpint(Double_t &pexti, Int_t i1, Double_t &pinti)
 //*-*        corresponding  to the external value PEXTI for parameter I.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t a, alimi, blimi, yy, yy2;
-    Int_t igo;
-    TString chbuf2, chbufi;
+   /* Local variables */
+   Double_t a, alimi, blimi, yy, yy2;
+   Int_t igo;
+   TString chbuf2, chbufi;
 
-    Int_t i = i1+1;
-    pinti   = pexti;
-    igo     = fNvarl[i-1];
-    if (igo == 4) {
+   Int_t i = i1+1;
+   pinti   = pexti;
+   igo     = fNvarl[i-1];
+   if (igo == 4) {
 //*-* --                          there are two limits
-        alimi = fAlim[i-1];
-        blimi = fBlim[i-1];
-        yy = (pexti - alimi)*2 / (blimi - alimi) - 1;
-        yy2 = yy*yy;
-        if (yy2 >= 1 - fEpsma2) {
-            if (yy < 0) {
-                a      = fVlimlo;
-                chbuf2 = " IS AT ITS LOWER ALLOWED LIMIT.";
-            } else {
-                a      = fVlimhi;
-                chbuf2 = " IS AT ITS UPPER ALLOWED LIMIT.";
-            }
-            pinti   = a;
-            pexti   = alimi + (blimi - alimi)*.5*(TMath::Sin(a) + 1);
-            fLimset = kTRUE;
-            if (yy2 > 1) chbuf2 = " BROUGHT BACK INSIDE LIMITS.";
-            mnwarn("W", fCfrom, Form("VARIABLE%d%s",i,chbuf2.Data()));
-        } else {
-            pinti = TMath::ASin(yy);
-        }
-    }
+      alimi = fAlim[i-1];
+      blimi = fBlim[i-1];
+      yy = (pexti - alimi)*2 / (blimi - alimi) - 1;
+      yy2 = yy*yy;
+      if (yy2 >= 1 - fEpsma2) {
+         if (yy < 0) {
+            a      = fVlimlo;
+            chbuf2 = " IS AT ITS LOWER ALLOWED LIMIT.";
+         } else {
+            a      = fVlimhi;
+            chbuf2 = " IS AT ITS UPPER ALLOWED LIMIT.";
+         }
+         pinti   = a;
+         pexti   = alimi + (blimi - alimi)*.5*(TMath::Sin(a) + 1);
+         fLimset = kTRUE;
+         if (yy2 > 1) chbuf2 = " BROUGHT BACK INSIDE LIMITS.";
+         mnwarn("W", fCfrom, Form("VARIABLE%d%s",i,chbuf2.Data()));
+      } else {
+         pinti = TMath::ASin(yy);
+      }
+   }
 } /* mnpint_ */
 
 //______________________________________________________________________________
@@ -6085,165 +6085,165 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
  //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
-     if (fGraphicsMode) {
-        TPluginHandler *h;
-        if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
-           //remove the first two points
-           if (h->LoadPlugin() != -1)
-           fPlot = (TObject*)h->ExecPlugin(3,nxypt-2,&xpt[2],&ypt[2]);
-        }
-        return;
-     }
+   if (fGraphicsMode) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
+         //remove the first two points
+         if (h->LoadPlugin() != -1)
+         fPlot = (TObject*)h->ExecPlugin(3,nxypt-2,&xpt[2],&ypt[2]);
+      }
+      return;
+   }
 
-     static TString cdot   = ".";
-     static TString cslash = "/";
+   static TString cdot   = ".";
+   static TString cslash = "/";
 
-     /* Local variables */
-     Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
-     Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
-     Double_t xvalus[12], any, dxx, dyy;
-     Int_t iten, i, j, k, maxnx, maxny, iquit, ni, linodd;
-     Int_t nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
-     TString chmess, ctemp;
-     Bool_t overpr;
-     char cline[120];
-     char chsav, chbest;
+   /* Local variables */
+   Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
+   Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
+   Double_t xvalus[12], any, dxx, dyy;
+   Int_t iten, i, j, k, maxnx, maxny, iquit, ni, linodd;
+   Int_t nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
+   TString chmess, ctemp;
+   Bool_t overpr;
+   char cline[120];
+   char chsav, chbest;
 
-     /* Function Body */
+   /* Function Body */
  //*-*  Computing MIN
-     maxnx = TMath::Min(npagwd-20,100);
-     if (maxnx < 10) maxnx = 10;
-     maxny = npagln;
-     if (maxny < 10) maxny = 10;
-     if (nxypt <= 1) return;
-     xbest  = xpt[0];
-     ybest  = ypt[0];
-     chbest = chpt[0];
+   maxnx = TMath::Min(npagwd-20,100);
+   if (maxnx < 10) maxnx = 10;
+   maxny = npagln;
+   if (maxny < 10) maxny = 10;
+   if (nxypt <= 1) return;
+   xbest  = xpt[0];
+   ybest  = ypt[0];
+   chbest = chpt[0];
  //*-*-        order the points by decreasing y
-     km1 = nxypt - 1;
-     for (i = 1; i <= km1; ++i) {
-         iquit = 0;
-         ni    = nxypt - i;
-         for (j = 1; j <= ni; ++j) {
-             if (ypt[j-1] > ypt[j]) continue;
-             savx     = xpt[j-1];
-             xpt[j-1] = xpt[j];
-             xpt[j]   = savx;
-             savy     = ypt[j-1];
-             ypt[j-1] = ypt[j];
-             ypt[j]   = savy;
-             chsav    = chpt[j-1];
-             chpt[j-1]= chpt[j];
-             chpt[j]  = chsav;
-             iquit    = 1;
-         }
-         if (iquit == 0) break;
-     }
+   km1 = nxypt - 1;
+   for (i = 1; i <= km1; ++i) {
+      iquit = 0;
+      ni    = nxypt - i;
+      for (j = 1; j <= ni; ++j) {
+         if (ypt[j-1] > ypt[j]) continue;
+         savx     = xpt[j-1];
+         xpt[j-1] = xpt[j];
+         xpt[j]   = savx;
+         savy     = ypt[j-1];
+         ypt[j-1] = ypt[j];
+         ypt[j]   = savy;
+         chsav    = chpt[j-1];
+         chpt[j-1]= chpt[j];
+         chpt[j]  = chsav;
+         iquit    = 1;
+      }
+      if (iquit == 0) break;
+   }
  //*-*-        find extreme values
-     xmax = xpt[0];
-     xmin = xmax;
-     for (i = 1; i <= nxypt; ++i) {
-         if (xpt[i-1] > xmax) xmax = xpt[i-1];
-         if (xpt[i-1] < xmin) xmin = xpt[i-1];
-     }
-     dxx   = (xmax - xmin)*.001;
-     xmax += dxx;
-     xmin -= dxx;
-     mnbins(xmin, xmax, maxnx, xmin, xmax, nx, bwidx);
-     ymax = ypt[0];
-     ymin = ypt[nxypt-1];
-     if (ymax == ymin) ymax = ymin + 1;
-     dyy   = (ymax - ymin)*.001;
-     ymax += dyy;
-     ymin -= dyy;
-     mnbins(ymin, ymax, maxny, ymin, ymax, ny, bwidy);
-     any = (Double_t) ny;
+   xmax = xpt[0];
+   xmin = xmax;
+   for (i = 1; i <= nxypt; ++i) {
+      if (xpt[i-1] > xmax) xmax = xpt[i-1];
+      if (xpt[i-1] < xmin) xmin = xpt[i-1];
+   }
+   dxx   = (xmax - xmin)*.001;
+   xmax += dxx;
+   xmin -= dxx;
+   mnbins(xmin, xmax, maxnx, xmin, xmax, nx, bwidx);
+   ymax = ypt[0];
+   ymin = ypt[nxypt-1];
+   if (ymax == ymin) ymax = ymin + 1;
+   dyy   = (ymax - ymin)*.001;
+   ymax += dyy;
+   ymin -= dyy;
+   mnbins(ymin, ymax, maxny, ymin, ymax, ny, bwidy);
+   any = (Double_t) ny;
  //*-*-        if first point is blank, it is an 'origin'
-     if (chbest == ' ') goto L50;
-     xbest = (xmax + xmin)*.5;
-     ybest = (ymax + ymin)*.5;
+   if (chbest == ' ') goto L50;
+   xbest = (xmax + xmin)*.5;
+   ybest = (ymax + ymin)*.5;
  L50:
  //*-*-        find scale constants
-     ax = 1 / bwidx;
-     ay = 1 / bwidy;
-     bx = -ax*xmin + 2;
-     by = -ay*ymin - 2;
+   ax = 1 / bwidx;
+   ay = 1 / bwidy;
+   bx = -ax*xmin + 2;
+   by = -ay*ymin - 2;
  //*-*-        convert points to grid positions
-     for (i = 1; i <= nxypt; ++i) {
-         xpt[i-1] = ax*xpt[i-1] + bx;
-         ypt[i-1] = any - ay*ypt[i-1] - by;
-     }
-     nxbest = Int_t((ax*xbest + bx));
-     nybest = Int_t((any - ay*ybest - by));
+   for (i = 1; i <= nxypt; ++i) {
+      xpt[i-1] = ax*xpt[i-1] + bx;
+      ypt[i-1] = any - ay*ypt[i-1] - by;
+   }
+   nxbest = Int_t((ax*xbest + bx));
+   nybest = Int_t((any - ay*ybest - by));
  //*-*-        print the points
-     ny += 2;
-     nx += 2;
-     isp1 = 1;
-     linodd = 1;
-     overpr = kFALSE;
-     for (i = 1; i <= ny; ++i) {
-         for (ibk = 1; ibk <= nx; ++ibk) { cline[ibk-1] = ' '; }
-         cline[nx] = '\0';
-         cline[nx+1] = '\0';
-         cline[0]        = '.';
-         cline[nx-1]     = '.';
-         cline[nxbest-1] = '.';
-         if (i != 1 && i != nybest && i != ny) goto L320;
-         for (j = 1; j <= nx; ++j) { cline[j-1] = '.'; }
+   ny += 2;
+   nx += 2;
+   isp1 = 1;
+   linodd = 1;
+   overpr = kFALSE;
+   for (i = 1; i <= ny; ++i) {
+      for (ibk = 1; ibk <= nx; ++ibk) { cline[ibk-1] = ' '; }
+      cline[nx] = '\0';
+      cline[nx+1] = '\0';
+      cline[0]        = '.';
+      cline[nx-1]     = '.';
+      cline[nxbest-1] = '.';
+      if (i != 1 && i != nybest && i != ny) goto L320;
+      for (j = 1; j <= nx; ++j) { cline[j-1] = '.'; }
  L320:
-         yprt = ymax - Double_t(i-1)*bwidy;
-         if (isp1 > nxypt) goto L350;
+      yprt = ymax - Double_t(i-1)*bwidy;
+      if (isp1 > nxypt) goto L350;
  //*-*-        find the points to be plotted on this line
-         for (k = isp1; k <= nxypt; ++k) {
-             ks = Int_t(ypt[k-1]);
-             if (ks > i) goto L345;
-             ix = Int_t(xpt[k-1]);
-             if (cline[ix-1] == '.')   goto L340;
-             if (cline[ix-1] == ' ') goto L340;
-             if (cline[ix-1] == chpt[k-1])   continue;
-             overpr = kTRUE;
+      for (k = isp1; k <= nxypt; ++k) {
+         ks = Int_t(ypt[k-1]);
+         if (ks > i) goto L345;
+         ix = Int_t(xpt[k-1]);
+         if (cline[ix-1] == '.')   goto L340;
+         if (cline[ix-1] == ' ') goto L340;
+         if (cline[ix-1] == chpt[k-1])   continue;
+         overpr = kTRUE;
  //*-*-        OVERPR is true if one or more positions contains more than
  //*-*-           one point
-             cline[ix-1] = '&';
-             continue;
+         cline[ix-1] = '&';
+         continue;
  L340:
-             cline[ix-1] = chpt[k-1];
-         }
-         isp1 = nxypt + 1;
-         goto L350;
+         cline[ix-1] = chpt[k-1];
+      }
+      isp1 = nxypt + 1;
+      goto L350;
  L345:
-         isp1 = k;
+      isp1 = k;
  L350:
-         if (linodd == 1 || i == ny) goto L380;
-         linodd = 1;
-         ctemp  = cline;
-         Printf("                  %s",(const char*)ctemp);
-         goto L400;
+      if (linodd == 1 || i == ny) goto L380;
+      linodd = 1;
+      ctemp  = cline;
+      Printf("                  %s",(const char*)ctemp);
+      goto L400;
  L380:
-         ctemp = cline;
-         Printf(" %14.7g ..%s",yprt,(const char*)ctemp);
-         linodd = 0;
+      ctemp = cline;
+      Printf(" %14.7g ..%s",yprt,(const char*)ctemp);
+      linodd = 0;
  L400:
-         ;
-     }
+      ;
+   }
  //*-*-        print labels on x-axis every ten columns
-     for (ibk = 1; ibk <= nx; ++ibk) {
-         cline[ibk-1] = ' ';
-         if (ibk % 10 == 1) cline[ibk-1] = '/';
-     }
-     Printf("                  %s",cline);
+   for (ibk = 1; ibk <= nx; ++ibk) {
+      cline[ibk-1] = ' ';
+      if (ibk % 10 == 1) cline[ibk-1] = '/';
+   }
+   Printf("                  %s",cline);
 
-     for (ibk = 1; ibk <= 12; ++ibk) {
-         xvalus[ibk-1] = xmin + Double_t(ibk-1)*10*bwidx;
-     }
-     printf("           ");
-     iten = (nx + 9) / 10;
-     for (ibk = 1; ibk <= iten; ++ibk) {
-         printf(" %9.4g", xvalus[ibk-1]);
-     }
-     chmess = " ";
-     if (overpr) chmess = "   Overprint character is &";
-     Printf("                         ONE COLUMN=%13.7g%s",bwidx,(const char*)chmess);
+   for (ibk = 1; ibk <= 12; ++ibk) {
+      xvalus[ibk-1] = xmin + Double_t(ibk-1)*10*bwidx;
+   }
+   printf("           ");
+   iten = (nx + 9) / 10;
+   for (ibk = 1; ibk <= iten; ++ibk) {
+      Printf(" %9.4g", xvalus[ibk-1]);
+   }
+   chmess = " ";
+   if (overpr) chmess = "   Overprint character is &";
+   Printf("                         ONE COLUMN=%13.7g%s",bwidx,(const char*)chmess);
 } /* mnplot_ */
 
 //______________________________________________________________________________
@@ -6265,44 +6265,44 @@ void TMinuit::mnpout(Int_t iuext1, TString &chnam, Double_t &val, Double_t &err,
 //*-*     User-called
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Int_t iint, iext, nvl;
+   /* Local variables */
+   Int_t iint, iext, nvl;
 
-    Int_t iuext = iuext1 + 1;
-    xlolim = 0;
-    xuplim = 0;
-    err    = 0;
-    if (iuext == 0) goto L100;
-    if (iuext < 0) {
+   Int_t iuext = iuext1 + 1;
+   xlolim = 0;
+   xuplim = 0;
+   err    = 0;
+   if (iuext == 0) goto L100;
+   if (iuext < 0) {
 //*-*-                  internal parameter number specified
-        iint  = -(iuext);
-        if (iint > fNpar) goto L100;
-        iext  = fNexofi[iint-1];
-        iuint = iext;
-    } else {
+      iint  = -(iuext);
+      if (iint > fNpar) goto L100;
+      iext  = fNexofi[iint-1];
+      iuint = iext;
+   } else {
 //*-*-                   external parameter number specified
-        iext = iuext;
-        if (iext == 0) goto L100;
-        if (iext > fNu) goto L100;
-        iint  = fNiofex[iext-1];
-        iuint = iint;
-    }
+      iext = iuext;
+      if (iext == 0) goto L100;
+      if (iext > fNu) goto L100;
+      iint  = fNiofex[iext-1];
+      iuint = iint;
+   }
 //*-*-                    in both cases
-    nvl = fNvarl[iext-1];
-    if (nvl < 0) goto L100;
-    chnam = fCpnam[iext-1];
-    val   = fU[iext-1];
-    if (iint > 0) err = fWerr[iint-1];
-    if (nvl == 4) {
-        xlolim = fAlim[iext-1];
-        xuplim = fBlim[iext-1];
-    }
-    return;
+   nvl = fNvarl[iext-1];
+   if (nvl < 0) goto L100;
+   chnam = fCpnam[iext-1];
+   val   = fU[iext-1];
+   if (iint > 0) err = fWerr[iint-1];
+   if (nvl == 4) {
+      xlolim = fAlim[iext-1];
+      xuplim = fBlim[iext-1];
+   }
+   return;
 //*-*-               parameter is undefined
 L100:
-    iuint = -1;
-    chnam = "undefined";
-    val = 0;
+   iuint = -1;
+   chnam = "undefined";
+   val = 0;
 } /* mnpout_ */
 
 //______________________________________________________________________________
@@ -6322,187 +6322,187 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
 //*-*    when INKODE=5, MNPRIN chooses IKODE=1,2, or 3, according to fISW[1]
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static TString cblank = "           ";
-    static TString cnambf = "           ";
+   static TString cblank = "           ";
+   static TString cnambf = "           ";
 
-    /* Local variables */
-    Double_t dcmax, x1, x2, x3, dc;
-    x2 = x3 = 0;
-    Int_t nadd, i, k, l, m, ikode, ic, nc, ntrail, lbl;
-    TString chedm;
-    TString colhdl[6], colhdu[6], cx2, cx3, cheval;
+   /* Local variables */
+   Double_t dcmax, x1, x2, x3, dc;
+   x2 = x3 = 0;
+   Int_t nadd, i, k, l, m, ikode, ic, nc, ntrail, lbl;
+   TString chedm;
+   TString colhdl[6], colhdu[6], cx2, cx3, cheval;
 
-    if (fNu == 0) {
-        Printf(" THERE ARE CURRENTLY NO PARAMETERS DEFINED");
-        return;
-    }
+   if (fNu == 0) {
+      Printf(" THERE ARE CURRENTLY NO PARAMETERS DEFINED");
+      return;
+   }
 //*-*-                 get value of IKODE based in INKODE, fISW[1]
-    ikode = inkode;
-    if (inkode == 5) {
-        ikode = fISW[1] + 1;
-        if (ikode > 3) ikode = 3;
-    }
+   ikode = inkode;
+   if (inkode == 5) {
+      ikode = fISW[1] + 1;
+      if (ikode > 3) ikode = 3;
+   }
 //*-*-                 set 'default' column headings
-    for (k = 1; k <= 6; ++k) {
-        colhdu[k-1] = "UNDEFINED";
-        colhdl[k-1] = "COLUMN HEAD";
-    }
+   for (k = 1; k <= 6; ++k) {
+      colhdu[k-1] = "UNDEFINED";
+      colhdl[k-1] = "COLUMN HEAD";
+   }
 //*-*-             print title if Minos errors, and title exists.
-    if (ikode == 4 && fCtitl != fCundef) {
-        Printf(" MINUIT TASK: %s",(const char*)fCtitl);
-    }
+   if (ikode == 4 && fCtitl != fCundef) {
+      Printf(" MINUIT TASK: %s",(const char*)fCtitl);
+   }
 //*-*-             report function value and status
-    if (fval == fUndefi) cheval = " unknown       ";
-    else                 cheval = Form("%g",fval);
+   if (fval == fUndefi) cheval = " unknown       ";
+   else                 cheval = Form("%g",fval);
 
-    if (fEDM == fBigedm) chedm = " unknown  ";
-    else                 chedm = Form("%g",fEDM);
+   if (fEDM == fBigedm) chedm = " unknown  ";
+   else                 chedm = Form("%g",fEDM);
 
-    nc = fNfcn - fNfcnfr;
-    Printf(" FCN=%s FROM %8s  STATUS=%10s %6d CALLS   %9d TOTAL"
+   nc = fNfcn - fNfcnfr;
+   Printf(" FCN=%s FROM %8s  STATUS=%10s %6d CALLS   %9d TOTAL"
                ,(const char*)cheval
                ,(const char*)fCfrom
                ,(const char*)fCstatu,nc,fNfcn);
-    m = fISW[1];
-    if (m == 0 || m == 2 || fDcovar == 0) {
-        Printf("                     EDM=%s    STRATEGY=%2d      %s"
+   m = fISW[1];
+   if (m == 0 || m == 2 || fDcovar == 0) {
+      Printf("                     EDM=%s    STRATEGY=%2d      %s"
                       ,(const char*)chedm,fIstrat
                       ,(const char*)fCovmes[m]);
-    } else {
-        dcmax = 1;
-        dc    = TMath::Min(fDcovar,dcmax)*100;
-        Printf("                     EDM=%s    STRATEGY=%2d  ERROR MATRIX UNCERTAINTY %5.1f per cent"
+   } else {
+      dcmax = 1;
+      dc    = TMath::Min(fDcovar,dcmax)*100;
+      Printf("                     EDM=%s    STRATEGY=%2d  ERROR MATRIX UNCERTAINTY %5.1f per cent"
                       ,(const char*)chedm,fIstrat,dc);
-    }
+   }
 
-    if (ikode == 0) return;
+   if (ikode == 0) return;
 //*-*-              find longest name (for Rene!)
-    ntrail = 10;
-    for (i = 1; i <= fNu; ++i) {
-        if (fNvarl[i-1] < 0) continue;
-        for (ic = 10; ic >= 1; --ic) {
-            if (fCpnam[i-1](ic-1,1) != " ") goto L16;
-        }
-        ic = 1;
+   ntrail = 10;
+   for (i = 1; i <= fNu; ++i) {
+      if (fNvarl[i-1] < 0) continue;
+      for (ic = 10; ic >= 1; --ic) {
+         if (fCpnam[i-1](ic-1,1) != " ") goto L16;
+      }
+      ic = 1;
 L16:
-        lbl = 10 - ic;
-        if (lbl < ntrail) ntrail = lbl;
-    }
-    nadd = ntrail / 2 + 1;
-    if (ikode == 1) {
-        colhdu[0] = "              ";
-        colhdl[0] = "      ERROR   ";
-        colhdu[1] = "      PHYSICAL";
-        colhdu[2] = " LIMITS       ";
-        colhdl[1] = "    NEGATIVE  ";
-        colhdl[2] = "    POSITIVE  ";
-    }
-    if (ikode == 2) {
-        colhdu[0] = "              ";
-        colhdl[0] = "      ERROR   ";
-        colhdu[1] = "    INTERNAL  ";
-        colhdl[1] = "    STEP SIZE ";
-        colhdu[2] = "    INTERNAL  ";
-        colhdl[2] = "      VALUE   ";
-    }
-    if (ikode == 3) {
-        colhdu[0] = "              ";
-        colhdl[0] = "      ERROR   ";
-        colhdu[1] = "       STEP   ";
-        colhdl[1] = "       SIZE   ";
-        colhdu[2] = "      FIRST   ";
-        colhdl[2] = "   DERIVATIVE ";
-    }
-    if (ikode == 4) {
-        colhdu[0] = "    PARABOLIC ";
-        colhdl[0] = "      ERROR   ";
-        colhdu[1] = "        MINOS ";
-        colhdu[2] = "ERRORS        ";
-        colhdl[1] = "   NEGATIVE   ";
-        colhdl[2] = "   POSITIVE   ";
-    }
+      lbl = 10 - ic;
+      if (lbl < ntrail) ntrail = lbl;
+   }
+   nadd = ntrail / 2 + 1;
+   if (ikode == 1) {
+      colhdu[0] = "              ";
+      colhdl[0] = "      ERROR   ";
+      colhdu[1] = "      PHYSICAL";
+      colhdu[2] = " LIMITS       ";
+      colhdl[1] = "    NEGATIVE  ";
+      colhdl[2] = "    POSITIVE  ";
+   }
+   if (ikode == 2) {
+      colhdu[0] = "              ";
+      colhdl[0] = "      ERROR   ";
+      colhdu[1] = "    INTERNAL  ";
+      colhdl[1] = "    STEP SIZE ";
+      colhdu[2] = "    INTERNAL  ";
+      colhdl[2] = "      VALUE   ";
+   }
+   if (ikode == 3) {
+      colhdu[0] = "              ";
+      colhdl[0] = "      ERROR   ";
+      colhdu[1] = "       STEP   ";
+      colhdl[1] = "       SIZE   ";
+      colhdu[2] = "      FIRST   ";
+      colhdl[2] = "   DERIVATIVE ";
+   }
+   if (ikode == 4) {
+      colhdu[0] = "    PARABOLIC ";
+      colhdl[0] = "      ERROR   ";
+      colhdu[1] = "        MINOS ";
+      colhdu[2] = "ERRORS        ";
+      colhdl[1] = "   NEGATIVE   ";
+      colhdl[2] = "   POSITIVE   ";
+   }
 
-    if (ikode != 4) {
-        if (fISW[1] < 3) colhdu[0] = "  APPROXIMATE ";
-        if (fISW[1] < 1) colhdu[0] = " CURRENT GUESS";
-    }
-    Printf("  EXT PARAMETER              %-14s%-14s%-14s",(const char*)colhdu[0]
+   if (ikode != 4) {
+      if (fISW[1] < 3) colhdu[0] = "  APPROXIMATE ";
+      if (fISW[1] < 1) colhdu[0] = " CURRENT GUESS";
+   }
+   Printf("  EXT PARAMETER              %-14s%-14s%-14s",(const char*)colhdu[0]
                                                     ,(const char*)colhdu[1]
                                                     ,(const char*)colhdu[2]);
-    Printf("  NO.   NAME      VALUE      %-14s%-14s%-14s",(const char*)colhdl[0]
+   Printf("  NO.   NAME      VALUE      %-14s%-14s%-14s",(const char*)colhdl[0]
                                                     ,(const char*)colhdl[1]
                                                     ,(const char*)colhdl[2]);
 //*-*-                                       . . . loop over parameters . .
-    for (i = 1; i <= fNu; ++i) {
-        if (fNvarl[i-1] < 0) continue;
-        l = fNiofex[i-1];
-        cnambf = cblank(0,nadd) + fCpnam[i-1];
-        if (l == 0) goto L55;
+   for (i = 1; i <= fNu; ++i) {
+      if (fNvarl[i-1] < 0) continue;
+      l = fNiofex[i-1];
+      cnambf = cblank(0,nadd) + fCpnam[i-1];
+      if (l == 0) goto L55;
 //*-*-             variable parameter.
-        x1  = fWerr[l-1];
-        cx2 = "PLEASE GET X..";
-        cx3 = "PLEASE GET X..";
-        if (ikode == 1) {
-            if (fNvarl[i-1] <= 1) {
-                Printf("%4d %-11s%14.5e%14.5e",i,(const char*)cnambf,fU[i-1],x1);
-                continue;
-            } else {
-                x2 = fAlim[i-1];
-                x3 = fBlim[i-1];
-            }
-        }
-        if (ikode == 2) {
-            x2 = fDirin[l-1];
-            x3 = fX[l-1];
-        }
-        if (ikode == 3) {
-            x2 = fDirin[l-1];
-            x3 = fGrd[l-1];
-            if (fNvarl[i-1] > 1 && TMath::Abs(TMath::Cos(fX[l-1])) < .001) {
-                cx3 = "** at limit **";
-            }
-        }
-        if (ikode == 4) {
-            x2 = fErn[l-1];
-            if (x2 == 0)        cx2 = " ";
-            if (x2 == fUndefi)  cx2 = "   at limit   ";
-            x3 = fErp[l-1];
-            if (x3 == 0)        cx3 = " ";
-            if (x3 == fUndefi)         cx3 = "   at limit   ";
-        }
-        if (cx2 == "PLEASE GET X..")  cx2 = Form("%14.5e",x2);
-        if (cx3 == "PLEASE GET X..")  cx3 = Form("%14.5e",x3);
-        Printf("%4d %-11s%14.5e%14.5e%-14s%-14s",i
+      x1  = fWerr[l-1];
+      cx2 = "PLEASE GET X..";
+      cx3 = "PLEASE GET X..";
+      if (ikode == 1) {
+         if (fNvarl[i-1] <= 1) {
+            Printf("%4d %-11s%14.5e%14.5e",i,(const char*)cnambf,fU[i-1],x1);
+            continue;
+         } else {
+            x2 = fAlim[i-1];
+            x3 = fBlim[i-1];
+         }
+      }
+      if (ikode == 2) {
+         x2 = fDirin[l-1];
+         x3 = fX[l-1];
+      }
+      if (ikode == 3) {
+         x2 = fDirin[l-1];
+         x3 = fGrd[l-1];
+         if (fNvarl[i-1] > 1 && TMath::Abs(TMath::Cos(fX[l-1])) < .001) {
+            cx3 = "** at limit **";
+         }
+      }
+      if (ikode == 4) {
+         x2 = fErn[l-1];
+         if (x2 == 0)        cx2 = " ";
+         if (x2 == fUndefi)  cx2 = "   at limit   ";
+         x3 = fErp[l-1];
+         if (x3 == 0)        cx3 = " ";
+         if (x3 == fUndefi)         cx3 = "   at limit   ";
+      }
+      if (cx2 == "PLEASE GET X..")  cx2 = Form("%14.5e",x2);
+      if (cx3 == "PLEASE GET X..")  cx3 = Form("%14.5e",x3);
+      Printf("%4d %-11s%14.5e%14.5e%-14s%-14s",i
                    ,(const char*)cnambf,fU[i-1],x1
                    ,(const char*)cx2,(const char*)cx3);
 
 //*-*-              check if parameter is at limit
-        if (fNvarl[i-1] <= 1 || ikode == 3) continue;
-        if (TMath::Abs(TMath::Cos(fX[l-1])) < .001) {
-            Printf("                                 WARNING -   - ABOVE PARAMETER IS AT LIMIT.");
-        }
-        continue;
+      if (fNvarl[i-1] <= 1 || ikode == 3) continue;
+      if (TMath::Abs(TMath::Cos(fX[l-1])) < .001) {
+         Printf("                                 WARNING -   - ABOVE PARAMETER IS AT LIMIT.");
+      }
+      continue;
 
 //*-*-                               print constant or fixed parameter.
 L55:
-        colhdu[0] = "   constant   ";
-        if (fNvarl[i-1] > 0)  colhdu[0] = "     fixed    ";
-        if (fNvarl[i-1] == 4 && ikode == 1) {
-            Printf("%4d %-11s%14.5e%-14s%14.5e%14.5e",i
+      colhdu[0] = "   constant   ";
+      if (fNvarl[i-1] > 0)  colhdu[0] = "     fixed    ";
+      if (fNvarl[i-1] == 4 && ikode == 1) {
+         Printf("%4d %-11s%14.5e%-14s%14.5e%14.5e",i
               ,(const char*)cnambf,fU[i-1]
               ,(const char*)colhdu[0],fAlim[i-1],fBlim[i-1]);
-        } else {
-            Printf("%4d %-11s%14.5e%s",i
+      } else {
+         Printf("%4d %-11s%14.5e%s",i
                    ,(const char*)cnambf,fU[i-1],(const char*)colhdu[0]);
-        }
-    }
+      }
+   }
 
-    if (fUp != fUpdflt) {
-        Printf("                               ERR DEF= %g",fUp);
-    }
-    return;
+   if (fUp != fUpdflt) {
+      Printf("                               ERR DEF= %g",fUp);
+   }
+   return;
 } /* mnprin_ */
 
 //______________________________________________________________________________
@@ -6513,69 +6513,69 @@ void TMinuit::mnpsdf()
 //*-*        if not, adds constant along diagonal to make positive.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
-    Int_t ndex, i, j, ndexd, ip, ifault;
-    TString chbuff, ctemp;
+   /* Local variables */
+   Double_t dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
+   Int_t ndex, i, j, ndexd, ip, ifault;
+   TString chbuff, ctemp;
 
-    epsmin = 1e-6;
-    epspdf = TMath::Max(epsmin,fEpsma2);
-    dgmin  = fVhmat[0];
+   epsmin = 1e-6;
+   epspdf = TMath::Max(epsmin,fEpsma2);
+   dgmin  = fVhmat[0];
 //*-*-                       Check if negative or zero on diagonal
-    for (i = 1; i <= fNpar; ++i) {
-        ndex = i*(i + 1) / 2;
-        if (fVhmat[ndex-1] <= 0) {
-            mnwarn("W", fCfrom, Form("Negative diagonal element %d in Error Matrix",i));
-        }
-        if (fVhmat[ndex-1] < dgmin) dgmin = fVhmat[ndex-1];
-    }
-    if (dgmin <= 0) {
-        dg    = epspdf + 1 - dgmin;
-        mnwarn("W", fCfrom, Form("%g added to diagonal of error matrix",dg));
-    } else {
-        dg = 0;
-    }
-//*-*-                   Store VHMAT in P, make sure diagonal pos.
-    for (i = 1; i <= fNpar; ++i) {
-        ndex  = i*(i-1) / 2;
-        ndexd = ndex + i;
-        fVhmat[ndexd-1] += dg;
-   if (fVhmat[ndexd-1]==0) {
-      fPSDFs[i-1] = 1 / 1e-19; // a totally arbitrary silly small value
-   } else {
-      fPSDFs[i-1] = 1 / TMath::Sqrt(fVhmat[ndexd-1]);
+   for (i = 1; i <= fNpar; ++i) {
+      ndex = i*(i + 1) / 2;
+      if (fVhmat[ndex-1] <= 0) {
+         mnwarn("W", fCfrom, Form("Negative diagonal element %d in Error Matrix",i));
+      }
+      if (fVhmat[ndex-1] < dgmin) dgmin = fVhmat[ndex-1];
    }
-        for (j = 1; j <= i; ++j) {
-            ++ndex;
-            fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1]*fPSDFs[i-1]*fPSDFs[j-1];
-        }
-    }
+   if (dgmin <= 0) {
+      dg    = epspdf + 1 - dgmin;
+      mnwarn("W", fCfrom, Form("%g added to diagonal of error matrix",dg));
+   } else {
+      dg = 0;
+   }
+//*-*-                   Store VHMAT in P, make sure diagonal pos.
+   for (i = 1; i <= fNpar; ++i) {
+      ndex  = i*(i-1) / 2;
+      ndexd = ndex + i;
+      fVhmat[ndexd-1] += dg;
+      if (fVhmat[ndexd-1]==0) {
+         fPSDFs[i-1] = 1 / 1e-19; // a totally arbitrary silly small value
+      } else {
+         fPSDFs[i-1] = 1 / TMath::Sqrt(fVhmat[ndexd-1]);
+      }
+      for (j = 1; j <= i; ++j) {
+         ++ndex;
+         fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1]*fPSDFs[i-1]*fPSDFs[j-1];
+      }
+   }
 //*-*-     call eigen (p,p,maxint,npar,pstar,-npar)
-    mneig(fP, fMaxint, fNpar, fMaxint, fPstar, epspdf, ifault);
-    pmin = fPstar[0];
-    pmax = fPstar[0];
-    for (ip = 2; ip <= fNpar; ++ip) {
-        if (fPstar[ip-1] < pmin) pmin = fPstar[ip-1];
-        if (fPstar[ip-1] > pmax) pmax = fPstar[ip-1];
-    }
-    pmax = TMath::Max(TMath::Abs(pmax),Double_t(1));
-    if (pmin <= 0 && fLwarn || fISW[4] >= 2) {
-        Printf(" EIGENVALUES OF SECOND-DERIVATIVE MATRIX:");
-        ctemp = "       ";
-        for (ip = 1; ip <= fNpar; ++ip) {
-            ctemp += Form(" %11.4e",fPstar[ip-1]);
-        }
-        Printf((const char*)ctemp);
-    }
-    if (pmin > epspdf*pmax) return;
-    if (fISW[1] == 3) fISW[1] = 2;
-    padd = pmax*.001 - pmin;
-    for (ip = 1; ip <= fNpar; ++ip) {
-        ndex = ip*(ip + 1) / 2;
-        fVhmat[ndex-1] *= padd + 1;
-    }
-    fCstatu = "NOT POSDEF";
-    mnwarn("W", fCfrom, Form("MATRIX FORCED POS-DEF BY ADDING %f TO DIAGONAL.",padd));
+   mneig(fP, fMaxint, fNpar, fMaxint, fPstar, epspdf, ifault);
+   pmin = fPstar[0];
+   pmax = fPstar[0];
+   for (ip = 2; ip <= fNpar; ++ip) {
+      if (fPstar[ip-1] < pmin) pmin = fPstar[ip-1];
+      if (fPstar[ip-1] > pmax) pmax = fPstar[ip-1];
+   }
+   pmax = TMath::Max(TMath::Abs(pmax),Double_t(1));
+   if (pmin <= 0 && fLwarn || fISW[4] >= 2) {
+      Printf(" EIGENVALUES OF SECOND-DERIVATIVE MATRIX:");
+      ctemp = "       ";
+      for (ip = 1; ip <= fNpar; ++ip) {
+         ctemp += Form(" %11.4e",fPstar[ip-1]);
+      }
+      Printf((const char*)ctemp);
+   }
+   if (pmin > epspdf*pmax) return;
+   if (fISW[1] == 3) fISW[1] = 2;
+   padd = pmax*.001 - pmin;
+   for (ip = 1; ip <= fNpar; ++ip) {
+      ndex = ip*(ip + 1) / 2;
+      fVhmat[ndex-1] *= padd + 1;
+   }
+   fCstatu = "NOT POSDEF";
+   mnwarn("W", fCfrom, Form("MATRIX FORCED POS-DEF BY ADDING %f TO DIAGONAL.",padd));
 
 } /* mnpsdf_ */
 
@@ -6588,42 +6588,42 @@ void TMinuit::mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_
 //*-*        estimated distance to minimum.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t pbig, plit;
-    Int_t i, j, nparp1;
+   /* Local variables */
+   Double_t pbig, plit;
+   Int_t i, j, nparp1;
 
-    /* Function Body */
-    for (i = 1; i <= fNpar; ++i) { fP[i + jh*fMaxpar - fMaxpar-1] = pnew[i-1]; }
-    y[jh-1] = ynew;
-    if (ynew < fAmin) {
-        for (i = 1; i <= fNpar; ++i) { fX[i-1] = pnew[i-1]; }
-        mninex(fX);
-        fAmin   = ynew;
-        fCstatu = "PROGRESS  ";
-        jl      = jh;
-    }
-    jh     = 1;
-    nparp1 = fNpar + 1;
-    for (j = 2; j <= nparp1; ++j) { if (y[j-1] > y[jh-1]) jh = j; }
-    fEDM = y[jh-1] - y[jl-1];
-    if (fEDM <= 0) goto L45;
-    for (i = 1; i <= fNpar; ++i) {
-        pbig = fP[i-1];
-        plit = pbig;
-        for (j = 2; j <= nparp1; ++j) {
-            if (fP[i + j*fMaxpar - fMaxpar-1] > pbig) pbig = fP[i + j*fMaxpar - fMaxpar-1];
-            if (fP[i + j*fMaxpar - fMaxpar-1] < plit) plit = fP[i + j*fMaxpar - fMaxpar-1];
-        }
-        fDirin[i-1] = pbig - plit;
-    }
+   /* Function Body */
+   for (i = 1; i <= fNpar; ++i) { fP[i + jh*fMaxpar - fMaxpar-1] = pnew[i-1]; }
+   y[jh-1] = ynew;
+   if (ynew < fAmin) {
+      for (i = 1; i <= fNpar; ++i) { fX[i-1] = pnew[i-1]; }
+      mninex(fX);
+      fAmin   = ynew;
+      fCstatu = "PROGRESS  ";
+      jl      = jh;
+   }
+   jh     = 1;
+   nparp1 = fNpar + 1;
+   for (j = 2; j <= nparp1; ++j) { if (y[j-1] > y[jh-1]) jh = j; }
+   fEDM = y[jh-1] - y[jl-1];
+   if (fEDM <= 0) goto L45;
+   for (i = 1; i <= fNpar; ++i) {
+      pbig = fP[i-1];
+      plit = pbig;
+      for (j = 2; j <= nparp1; ++j) {
+         if (fP[i + j*fMaxpar - fMaxpar-1] > pbig) pbig = fP[i + j*fMaxpar - fMaxpar-1];
+         if (fP[i + j*fMaxpar - fMaxpar-1] < plit) plit = fP[i + j*fMaxpar - fMaxpar-1];
+      }
+      fDirin[i-1] = pbig - plit;
+   }
 L40:
-    return;
+   return;
 L45:
-    Printf("  FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE %d VARIABLE PARAMETERS.",fNpar);
-    Printf("          VERIFY THAT STEP SIZES ARE BIG ENOUGH AND CHECK FCN LOGIC.");
-    Printf(" *******************************************************************************");
-    Printf(" *******************************************************************************");
-    goto L40;
+   Printf("  FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE %d VARIABLE PARAMETERS.",fNpar);
+   Printf("          VERIFY THAT STEP SIZES ARE BIG ENOUGH AND CHECK FCN LOGIC.");
+   Printf(" *******************************************************************************");
+   Printf(" *******************************************************************************");
+   goto L40;
 } /* mnrazz_ */
 
 //______________________________________________________________________________
@@ -6637,22 +6637,22 @@ void TMinuit::mnrn15(Double_t &val, Int_t &inseed)
 //*-*                    Set Default Starting Seed
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static Int_t iseed = 12345;
+   static Int_t iseed = 12345;
 
-    Int_t k;
+   Int_t k;
 
-    if (val == 3) goto L100;
-    inseed = iseed;
-    k      = iseed / 53668;
-    iseed  = (iseed - k*53668)*40014 - k*12211;
-    if (iseed < 0) iseed += 2147483563;
-    val = Double_t(iseed*4.656613e-10);
-    return;
+   if (val == 3) goto L100;
+   inseed = iseed;
+   k      = iseed / 53668;
+   iseed  = (iseed - k*53668)*40014 - k*12211;
+   if (iseed < 0) iseed += 2147483563;
+   val = Double_t(iseed*4.656613e-10);
+   return;
 //*-*               "entry" to set seed, flag is VAL=3
 L100:
-    iseed = inseed;
+   iseed = inseed;
 } /* mnrn15_ */
 
 //______________________________________________________________________________
@@ -6666,30 +6666,30 @@ void TMinuit::mnrset(Int_t iopt)
 //*-*        after SET LIMITS, SET PARAM, CALL FCN 6
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t iext, i;
+   Int_t iext, i;
 
-    fCstatu = "RESET     ";
-    if (iopt >= 1) {
-        fAmin   = fUndefi;
-        fFval3  = TMath::Abs(fAmin)*2 + 1;
-        fEDM    = fBigedm;
-        fISW[3] = 0;
-        fISW[1] = 0;
-        fDcovar = 1;
-        fISW[0] = 0;
-    }
-    fLnolim = kTRUE;
-    for (i = 1; i <= fNpar; ++i) {
-        iext = fNexofi[i-1];
-        if (fNvarl[iext-1] >= 4) fLnolim = kFALSE;
-        fErp[i-1] = 0;
-        fErn[i-1] = 0;
-        fGlobcc[i-1] = 0;
-    }
-    if (fISW[1] >= 1) {
-        fISW[1] = 1;
-        fDcovar = TMath::Max(fDcovar,.5);
-    }
+   fCstatu = "RESET     ";
+   if (iopt >= 1) {
+      fAmin   = fUndefi;
+      fFval3  = TMath::Abs(fAmin)*2 + 1;
+      fEDM    = fBigedm;
+      fISW[3] = 0;
+      fISW[1] = 0;
+      fDcovar = 1;
+      fISW[0] = 0;
+   }
+   fLnolim = kTRUE;
+   for (i = 1; i <= fNpar; ++i) {
+      iext = fNexofi[i-1];
+      if (fNvarl[iext-1] >= 4) fLnolim = kFALSE;
+      fErp[i-1] = 0;
+      fErn[i-1] = 0;
+      fGlobcc[i-1] = 0;
+   }
+   if (fISW[1] >= 1) {
+      fISW[1] = 1;
+      fDcovar = TMath::Max(fDcovar,.5);
+   }
 } /* mnrset_ */
 
 //______________________________________________________________________________
@@ -6715,100 +6715,100 @@ void TMinuit::mnscan()
 //*-*        retains the best function and parameter values found.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t step, uhigh, xhreq, xlreq, ubest, fnext, unext, xh, xl;
-    Int_t ipar, iint, icall, ncall, nbins, nparx;
-    Int_t nxypt, nccall, iparwd;
+   /* Local variables */
+   Double_t step, uhigh, xhreq, xlreq, ubest, fnext, unext, xh, xl;
+   Int_t ipar, iint, icall, ncall, nbins, nparx;
+   Int_t nxypt, nccall, iparwd;
 
-    xlreq = TMath::Min(fWord7[2],fWord7[3]);
-    xhreq = TMath::Max(fWord7[2],fWord7[3]);
-    ncall = Int_t((fWord7[1] + .01));
-    if (ncall <= 1)  ncall = 41;
-    if (ncall > 101) ncall = 101;
-    nccall = ncall;
-    if (fAmin == fUndefi) mnamin();
-    iparwd  = Int_t((fWord7[0] + .1));
-    ipar    = TMath::Max(iparwd,0);
-    iint    = fNiofex[ipar-1];
-    fCstatu = "NO CHANGE";
-    if (iparwd > 0) goto L200;
+   xlreq = TMath::Min(fWord7[2],fWord7[3]);
+   xhreq = TMath::Max(fWord7[2],fWord7[3]);
+   ncall = Int_t((fWord7[1] + .01));
+   if (ncall <= 1)  ncall = 41;
+   if (ncall > 101) ncall = 101;
+   nccall = ncall;
+   if (fAmin == fUndefi) mnamin();
+   iparwd  = Int_t((fWord7[0] + .1));
+   ipar    = TMath::Max(iparwd,0);
+   iint    = fNiofex[ipar-1];
+   fCstatu = "NO CHANGE";
+   if (iparwd > 0) goto L200;
 
 //*-*-        equivalent to a loop over parameters requested
 L100:
-    ++ipar;
-    if (ipar > fNu) goto L900;
-    iint = fNiofex[ipar-1];
-    if (iint <= 0) goto L100;
+   ++ipar;
+   if (ipar > fNu) goto L900;
+   iint = fNiofex[ipar-1];
+   if (iint <= 0) goto L100;
 //*-*-        set up range for parameter IPAR
 L200:
-    ubest    = fU[ipar-1];
-    fXpt[0]  = ubest;
-    fYpt[0]  = fAmin;
-    fChpt[0] = ' ';
-    fXpt[1]  = ubest;
-    fYpt[1]  = fAmin;
-    fChpt[1] = 'X';
-    nxypt    = 2;
-    if (fNvarl[ipar-1] > 1) goto L300;
+   ubest    = fU[ipar-1];
+   fXpt[0]  = ubest;
+   fYpt[0]  = fAmin;
+   fChpt[0] = ' ';
+   fXpt[1]  = ubest;
+   fYpt[1]  = fAmin;
+   fChpt[1] = 'X';
+   nxypt    = 2;
+   if (fNvarl[ipar-1] > 1) goto L300;
 
 //*-*-        no limits on parameter
-    if (xlreq == xhreq) goto L250;
-    unext = xlreq;
-    step = (xhreq - xlreq) / Double_t(ncall-1);
-    goto L500;
+   if (xlreq == xhreq) goto L250;
+   unext = xlreq;
+   step = (xhreq - xlreq) / Double_t(ncall-1);
+   goto L500;
 L250:
-    xl = ubest - fWerr[iint-1];
-    xh = ubest + fWerr[iint-1];
-    mnbins(xl, xh, ncall, unext, uhigh, nbins, step);
-    nccall = nbins + 1;
-    goto L500;
+   xl = ubest - fWerr[iint-1];
+   xh = ubest + fWerr[iint-1];
+   mnbins(xl, xh, ncall, unext, uhigh, nbins, step);
+   nccall = nbins + 1;
+   goto L500;
 //*-*-        limits on parameter
 L300:
-    if (xlreq == xhreq) goto L350;
+   if (xlreq == xhreq) goto L350;
 //*-*  Computing MAX
-    xl = TMath::Max(xlreq,fAlim[ipar-1]);
+   xl = TMath::Max(xlreq,fAlim[ipar-1]);
 //*-*  Computing MIN
-    xh = TMath::Min(xhreq,fBlim[ipar-1]);
-    if (xl >= xh) goto L700;
-    unext = xl;
-    step  = (xh - xl) / Double_t(ncall-1);
-    goto L500;
+   xh = TMath::Min(xhreq,fBlim[ipar-1]);
+   if (xl >= xh) goto L700;
+   unext = xl;
+   step  = (xh - xl) / Double_t(ncall-1);
+   goto L500;
 L350:
-    unext = fAlim[ipar-1];
-    step = (fBlim[ipar-1] - fAlim[ipar-1]) / Double_t(ncall-1);
+   unext = fAlim[ipar-1];
+   step = (fBlim[ipar-1] - fAlim[ipar-1]) / Double_t(ncall-1);
 //*-*-        main scanning loop over parameter IPAR
 L500:
-    for (icall = 1; icall <= nccall; ++icall) {
-        fU[ipar-1] = unext;
-        nparx = fNpar;
-        Eval(nparx, fGin, fnext, fU, 4);        ++fNfcn;
-        ++nxypt;
-        fXpt[nxypt-1]  = unext;
-        fYpt[nxypt-1]  = fnext;
-        fChpt[nxypt-1] = '*';
-        if (fnext < fAmin) {
-            fAmin   = fnext;
-            ubest   = unext;
-            fCstatu = "IMPROVED  ";
-        }
-        unext += step;
-    }
-    fChpt[nccall] = 0;
+   for (icall = 1; icall <= nccall; ++icall) {
+      fU[ipar-1] = unext;
+      nparx = fNpar;
+      Eval(nparx, fGin, fnext, fU, 4);        ++fNfcn;
+      ++nxypt;
+      fXpt[nxypt-1]  = unext;
+      fYpt[nxypt-1]  = fnext;
+      fChpt[nxypt-1] = '*';
+      if (fnext < fAmin) {
+         fAmin   = fnext;
+         ubest   = unext;
+         fCstatu = "IMPROVED  ";
+      }
+      unext += step;
+   }
+   fChpt[nccall] = 0;
 
 //*-*-        finished with scan of parameter IPAR
-    fU[ipar-1] = ubest;
-    mnexin(fX);
-    Printf("%dSCAN OF PARAMETER NO. %d,  %s"
+   fU[ipar-1] = ubest;
+   mnexin(fX);
+   Printf("%dSCAN OF PARAMETER NO. %d,  %s"
          ,fNewpag,ipar,(const char*)fCpnam[ipar-1]);
-    mnplot(fXpt, fYpt, fChpt, nxypt, fNpagwd, fNpagln);
-    goto L800;
+   mnplot(fXpt, fYpt, fChpt, nxypt, fNpagwd, fNpagln);
+   goto L800;
 L700:
-    Printf(" REQUESTED RANGE OUTSIDE LIMITS FOR PARAMETER  %d",ipar);
+   Printf(" REQUESTED RANGE OUTSIDE LIMITS FOR PARAMETER  %d",ipar);
 L800:
-    if (iparwd <= 0) goto L100;
+   if (iparwd <= 0) goto L100;
 //*-*-        finished with all parameters
 L900:
-    mnprin(5, fAmin);
+   mnprin(5, fAmin);
 } /* mnscan_ */
 
 //______________________________________________________________________________
@@ -6825,86 +6825,86 @@ void TMinuit::mnseek()
 //*-*      multiples of the nominal steps (DIRIN).
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Local variables */
-    Double_t dxdi, rnum, ftry, rnum1, rnum2, alpha;
-    Double_t flast, bar;
-    Int_t ipar, iext, j, ifail, iseed, nparx, istep, ib, mxfail, mxstep;
+   /* Local variables */
+   Double_t dxdi, rnum, ftry, rnum1, rnum2, alpha;
+   Double_t flast, bar;
+   Int_t ipar, iext, j, ifail, iseed, nparx, istep, ib, mxfail, mxstep;
 
-    mxfail = Int_t(fWord7[0]);
-    if (mxfail <= 0) mxfail = fNpar*20 + 100;
-    mxstep = mxfail*10;
-    if (fAmin == fUndefi) mnamin();
-    alpha = fWord7[1];
-    if (alpha <= 0) alpha = 3;
-    if (fISW[4] >= 1) {
-        Printf(" MNSEEK: MONTE CARLO MINIMIZATION USING METROPOLIS ALGORITHM");
-        Printf(" TO STOP AFTER %6d SUCCESSIVE FAILURES, OR %7d STEPS",mxfail,mxstep);
-        Printf(" MAXIMUM STEP SIZE IS %9.3f ERROR BARS.",alpha);
-    }
-    fCstatu = "INITIAL  ";
-    if (fISW[4] >= 2) mnprin(2, fAmin);
-    fCstatu = "UNCHANGED ";
-    ifail   = 0;
-    rnum    = 0;
-    rnum1   = 0;
-    rnum2   = 0;
-    nparx   = fNpar;
-    flast   = fAmin;
+   mxfail = Int_t(fWord7[0]);
+   if (mxfail <= 0) mxfail = fNpar*20 + 100;
+   mxstep = mxfail*10;
+   if (fAmin == fUndefi) mnamin();
+   alpha = fWord7[1];
+   if (alpha <= 0) alpha = 3;
+   if (fISW[4] >= 1) {
+      Printf(" MNSEEK: MONTE CARLO MINIMIZATION USING METROPOLIS ALGORITHM");
+      Printf(" TO STOP AFTER %6d SUCCESSIVE FAILURES, OR %7d STEPS",mxfail,mxstep);
+      Printf(" MAXIMUM STEP SIZE IS %9.3f ERROR BARS.",alpha);
+   }
+   fCstatu = "INITIAL  ";
+   if (fISW[4] >= 2) mnprin(2, fAmin);
+   fCstatu = "UNCHANGED ";
+   ifail   = 0;
+   rnum    = 0;
+   rnum1   = 0;
+   rnum2   = 0;
+   nparx   = fNpar;
+   flast   = fAmin;
 //*-*-             set up step sizes, starting values
-    for (ipar = 1; ipar <= fNpar; ++ipar) {
-        iext = fNexofi[ipar-1];
-        fDirin[ipar-1] = alpha*2*fWerr[ipar-1];
-        if (fNvarl[iext-1] > 1) {
+   for (ipar = 1; ipar <= fNpar; ++ipar) {
+      iext = fNexofi[ipar-1];
+      fDirin[ipar-1] = alpha*2*fWerr[ipar-1];
+      if (fNvarl[iext-1] > 1) {
 //*-*-             parameter with limits
-            mndxdi(fX[ipar-1], ipar-1, dxdi);
-            if (dxdi == 0) dxdi = 1;
-            fDirin[ipar-1] = alpha*2*fWerr[ipar-1] / dxdi;
-            if (TMath::Abs(fDirin[ipar-1]) > 6.2831859999999997) {
-                fDirin[ipar-1] = 6.2831859999999997;
-            }
-        }
-        fSEEKxmid[ipar-1]  = fX[ipar-1];
-        fSEEKxbest[ipar-1] = fX[ipar-1];
-    }
+         mndxdi(fX[ipar-1], ipar-1, dxdi);
+         if (dxdi == 0) dxdi = 1;
+         fDirin[ipar-1] = alpha*2*fWerr[ipar-1] / dxdi;
+         if (TMath::Abs(fDirin[ipar-1]) > 6.2831859999999997) {
+            fDirin[ipar-1] = 6.2831859999999997;
+         }
+      }
+      fSEEKxmid[ipar-1]  = fX[ipar-1];
+      fSEEKxbest[ipar-1] = fX[ipar-1];
+   }
 //*-*-                             search loop
-    for (istep = 1; istep <= mxstep; ++istep) {
-        if (ifail >= mxfail) break;
-        for (ipar = 1; ipar <= fNpar; ++ipar) {
-            mnrn15(rnum1, iseed);
-            mnrn15(rnum2, iseed);
-            fX[ipar-1] = fSEEKxmid[ipar-1] + (rnum1 + rnum2 - 1)*.5*fDirin[ipar-1];
-        }
-        mninex(fX);
-        Eval(nparx, fGin, ftry, fU, 4);        ++fNfcn;
-        if (ftry < flast) {
-            if (ftry < fAmin) {
-                fCstatu = "IMPROVEMNT";
-                fAmin = ftry;
-                for (ib = 1; ib <= fNpar; ++ib) { fSEEKxbest[ib-1] = fX[ib-1]; }
-                ifail = 0;
-                if (fISW[4] >= 2) mnprin(2, fAmin);
-            }
-            goto L300;
-        } else {
-            ++ifail;
+   for (istep = 1; istep <= mxstep; ++istep) {
+      if (ifail >= mxfail) break;
+      for (ipar = 1; ipar <= fNpar; ++ipar) {
+         mnrn15(rnum1, iseed);
+         mnrn15(rnum2, iseed);
+         fX[ipar-1] = fSEEKxmid[ipar-1] + (rnum1 + rnum2 - 1)*.5*fDirin[ipar-1];
+      }
+      mninex(fX);
+      Eval(nparx, fGin, ftry, fU, 4);        ++fNfcn;
+      if (ftry < flast) {
+         if (ftry < fAmin) {
+            fCstatu = "IMPROVEMNT";
+            fAmin = ftry;
+            for (ib = 1; ib <= fNpar; ++ib) { fSEEKxbest[ib-1] = fX[ib-1]; }
+            ifail = 0;
+            if (fISW[4] >= 2) mnprin(2, fAmin);
+         }
+         goto L300;
+      } else {
+         ++ifail;
 //*-*-                  Metropolis algorithm
-            bar = (fAmin - ftry) / fUp;
-            mnrn15(rnum, iseed);
-            if (bar < TMath::Log(rnum)) continue;
-        }
+         bar = (fAmin - ftry) / fUp;
+         mnrn15(rnum, iseed);
+         if (bar < TMath::Log(rnum)) continue;
+      }
 //*-*-                   Accept new point, move there
 L300:
-        for (j = 1; j <= fNpar; ++j) { fSEEKxmid[j-1] = fX[j-1];        }
-        flast = ftry;
-    }
+      for (j = 1; j <= fNpar; ++j) { fSEEKxmid[j-1] = fX[j-1];        }
+      flast = ftry;
+   }
 //*-*-                              end search loop
-    if (fISW[4] > 1) {
-        Printf(" MNSEEK: %5d SUCCESSIVE UNSUCCESSFUL TRIALS.",ifail);
-    }
-    for (ib = 1; ib <= fNpar; ++ib) { fX[ib-1] = fSEEKxbest[ib-1]; }
-    mninex(fX);
-    if (fISW[4] >= 1) mnprin(2, fAmin);
-    if (fISW[4] == 0) mnprin(0, fAmin);
+   if (fISW[4] > 1) {
+      Printf(" MNSEEK: %5d SUCCESSIVE UNSUCCESSFUL TRIALS.",ifail);
+   }
+   for (ib = 1; ib <= fNpar; ++ib) { fX[ib-1] = fSEEKxbest[ib-1]; }
+   mninex(fX);
+   if (fISW[4] >= 1) mnprin(2, fAmin);
+   if (fISW[4] == 0) mnprin(0, fAmin);
 } /* mnseek_ */
 
 //______________________________________________________________________________
@@ -6921,9 +6921,9 @@ void TMinuit::mnset()
 //*-*        options not intended for normal users
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    const char *cname[30] = {
+   const char *cname[30] = {
       "FCN value ",
       "PARameters",
       "LIMits    ",
@@ -6955,21 +6955,21 @@ void TMinuit::mnset()
       "SHOw      ",
       "SET       "};
 
-    static Int_t nname = 25;
-    static Int_t nntot = 30;
-    static TString cprlev[5] = {
+   static Int_t nname = 25;
+   static Int_t nntot = 30;
+   static TString cprlev[5] = {
       "-1: NO OUTPUT EXCEPT FROM SHOW    ",
       " 0: REDUCED OUTPUT                ",
       " 1: NORMAL OUTPUT                 ",
       " 2: EXTRA OUTPUT FOR PROBLEM CASES",
       " 3: MAXIMUM OUTPUT                "};
 
-    static TString cstrat[3] = {
+   static TString cstrat[3] = {
       " 0: MINIMIZE THE NUMBER OF CALLS TO FUNCTION",
       " 1: TRY TO BALANCE SPEED AGAINST RELIABILITY",
       " 2: MAKE SURE MINIMUM TRUE, ERRORS CORRECT  "};
 
-    static TString cdbopt[7] = {
+   static TString cdbopt[7] = {
       "REPORT ALL EXCEPTIONAL CONDITIONS      ",
       "MNLINE: LINE SEARCH MINIMIZATION       ",
       "MNDERI: FIRST DERIVATIVE CALCULATIONS  ",
@@ -6978,309 +6978,309 @@ void TMinuit::mnset()
       "MNHES1: FIRST DERIVATIVE UNCERTAINTIES ",
       "MNCONT: MNCONTOUR PLOT (MNCROS SEARCH) "};
 
-    /* System generated locals */
-    Int_t f_inqu();
+   /* System generated locals */
+   Int_t f_inqu();
 
-    /* Local variables */
-    Double_t val;
-    Int_t iset, iprm, i, jseed, kname, iseed, iunit, id, ii, kk;
-    Int_t ikseed, idbopt, igrain, iswsav, isw2;
-    TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
-    Bool_t lname=kFALSE;
+   /* Local variables */
+   Double_t val;
+   Int_t iset, iprm, i, jseed, kname, iseed, iunit, id, ii, kk;
+   Int_t ikseed, idbopt, igrain, iswsav, isw2;
+   TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
+   Bool_t lname=kFALSE;
 
-    for (i = 1; i <= nntot; ++i) {
-        ctemp  = cname[i-1];
-        ckind  = ctemp(0,3);
-        ctemp2 = fCword(4,6);
-        if (strstr(ctemp2.Data(),ckind.Data())) goto L5;
-    }
-    i = 0;
+   for (i = 1; i <= nntot; ++i) {
+      ctemp  = cname[i-1];
+      ckind  = ctemp(0,3);
+      ctemp2 = fCword(4,6);
+      if (strstr(ctemp2.Data(),ckind.Data())) goto L5;
+   }
+   i = 0;
 L5:
-    kname = i;
+   kname = i;
 
 //*-*-          Command could be SET xxx, SHOW xxx,  HELP SET or HELP SHOW
-    ctemp2 = fCword(0,3);
-    if ( ctemp2.Contains("HEL"))  goto L2000;
-    if ( ctemp2.Contains("SHO"))  goto L1000;
-    if (!ctemp2.Contains("SET"))  goto L1900;
+   ctemp2 = fCword(0,3);
+   if ( ctemp2.Contains("HEL"))  goto L2000;
+   if ( ctemp2.Contains("SHO"))  goto L1000;
+   if (!ctemp2.Contains("SET"))  goto L1900;
 //*-*-                          ---
-    ckind = "SET ";
+   ckind = "SET ";
 //*-*-                                       . . . . . . . . . . set unknown
-    if (kname <= 0) goto L1900;
+   if (kname <= 0) goto L1900;
 //*-*-                                       . . . . . . . . . . set known
-    switch ((int)kname) {
-        case 1:  goto L3000;
-        case 2:  goto L20;
-        case 3:  goto L30;
-        case 4:  goto L40;
-        case 5:  goto L3000;
-        case 6:  goto L60;
-        case 7:  goto L70;
-        case 8:  goto L80;
-        case 9:  goto L90;
-        case 10:  goto L100;
-        case 11:  goto L110;
-        case 12:  goto L120;
-        case 13:  goto L130;
-        case 14:  goto L140;
-        case 15:  goto L150;
-        case 16:  goto L160;
-        case 17:  goto L170;
-        case 18:  goto L3000;
-        case 19:  goto L190;
-        case 20:  goto L3000;
-        case 21:  goto L210;
-        case 22:  goto L220;
-        case 23:  goto L230;
-        case 24:  goto L240;
-        case 25:  goto L3000;
-        case 26:  goto L1900;
-        case 27:  goto L270;
-        case 28:  goto L280;
-        case 29:  goto L290;
-        case 30:  goto L300;
-    }
+   switch ((int)kname) {
+      case 1:  goto L3000;
+      case 2:  goto L20;
+      case 3:  goto L30;
+      case 4:  goto L40;
+      case 5:  goto L3000;
+      case 6:  goto L60;
+      case 7:  goto L70;
+      case 8:  goto L80;
+      case 9:  goto L90;
+      case 10:  goto L100;
+      case 11:  goto L110;
+      case 12:  goto L120;
+      case 13:  goto L130;
+      case 14:  goto L140;
+      case 15:  goto L150;
+      case 16:  goto L160;
+      case 17:  goto L170;
+      case 18:  goto L3000;
+      case 19:  goto L190;
+      case 20:  goto L3000;
+      case 21:  goto L210;
+      case 22:  goto L220;
+      case 23:  goto L230;
+      case 24:  goto L240;
+      case 25:  goto L3000;
+      case 26:  goto L1900;
+      case 27:  goto L270;
+      case 28:  goto L280;
+      case 29:  goto L290;
+      case 30:  goto L300;
+   }
 
 //*-*-                                       . . . . . . . . . . set param
 L20:
-    iprm = Int_t(fWord7[0]);
-    if (iprm > fNu) goto L25;
-    if (iprm <= 0) goto L25;
-    if (fNvarl[iprm-1] < 0) goto L25;
-    fU[iprm-1] = fWord7[1];
-    mnexin(fX);
-    isw2 = fISW[1];
-    mnrset(1);
+   iprm = Int_t(fWord7[0]);
+   if (iprm > fNu) goto L25;
+   if (iprm <= 0) goto L25;
+   if (fNvarl[iprm-1] < 0) goto L25;
+   fU[iprm-1] = fWord7[1];
+   mnexin(fX);
+   isw2 = fISW[1];
+   mnrset(1);
 //*-*-       Keep approximate covariance matrix, even if new param value
-    fISW[1] = TMath::Min(isw2,1);
-    fCfrom  = "SET PARM";
-    fNfcnfr = fNfcn;
-    fCstatu = "NEW VALUES";
-    return;
+   fISW[1] = TMath::Min(isw2,1);
+   fCfrom  = "SET PARM";
+   fNfcnfr = fNfcn;
+   fCstatu = "NEW VALUES";
+   return;
 L25:
-    Printf(" UNDEFINED PARAMETER NUMBER.  IGNORED.");
-    return;
+   Printf(" UNDEFINED PARAMETER NUMBER.  IGNORED.");
+   return;
 //*-*-                                       . . . . . . . . . . set limits
 L30:
-    mnlims();
-    return;
+   mnlims();
+   return;
 //*-*-                                       . . . . . . . . . . set covar
 L40:
 //*-*   this command must be handled by MNREAD, and is not Fortran-callable
-    goto L3000;
+   goto L3000;
 //*-*-                                       . . . . . . . . . . set print
 L60:
-    fISW[4] = Int_t(fWord7[0]);
-    return;
+   fISW[4] = Int_t(fWord7[0]);
+   return;
 //*-*-                                       . . . . . . . . . . set nograd
 L70:
-    fISW[2] = 0;
-    return;
+   fISW[2] = 0;
+   return;
 //*-*-                                       . . . . . . . . . . set grad
 L80:
-    mngrad();
-    return;
+   mngrad();
+   return;
 //*-*-                                       . . . . . . . . . . set errdef
 L90:
-    if (fWord7[0] == fUp) return;
-    if (fWord7[0] <= 0) {
-        if (fUp == fUpdflt) return;
-        fUp = fUpdflt;
-    } else {
-        fUp = fWord7[0];
-    }
-    for (i = 1; i <= fNpar; ++i) {
-        fErn[i-1] = 0;
-        fErp[i-1] = 0;
-    }
-    mnwerr();
-    return;
+   if (fWord7[0] == fUp) return;
+   if (fWord7[0] <= 0) {
+      if (fUp == fUpdflt) return;
+      fUp = fUpdflt;
+   } else {
+      fUp = fWord7[0];
+   }
+   for (i = 1; i <= fNpar; ++i) {
+      fErn[i-1] = 0;
+      fErp[i-1] = 0;
+   }
+   mnwerr();
+   return;
 //*-*-                                       . . . . . . . . . . set input
 //*-* This command must be handled by MNREAD. If it gets this far,
 //*-*-        it is illegal.
 L100:
-    goto L3000;
+   goto L3000;
 //*-*-                                       . . . . . . . . . . set width
 L110:
-    fNpagwd = Int_t(fWord7[0]);
-    fNpagwd = TMath::Max(fNpagwd,50);
-    return;
+   fNpagwd = Int_t(fWord7[0]);
+   fNpagwd = TMath::Max(fNpagwd,50);
+   return;
 
 L120:
-    fNpagln = Int_t(fWord7[0]);
-    return;
+   fNpagln = Int_t(fWord7[0]);
+   return;
 //*-*-                                       . . . . . . . . . . set nowarn
 
 L130:
-    fLwarn = kFALSE;
-    return;
+   fLwarn = kFALSE;
+   return;
 //*-*-                                       . . . . . . . . . . set warn
 L140:
-    fLwarn = kTRUE;
-    mnwarn("W", "SHO", "SHO");
-    return;
+   fLwarn = kTRUE;
+   mnwarn("W", "SHO", "SHO");
+   return;
 //*-*-                                       . . . . . . . . . . set random
 L150:
-    jseed = Int_t(fWord7[0]);
-    val = 3;
-    mnrn15(val, jseed);
-    if (fISW[4] > 0) {
-        Printf(" MINUIT RANDOM NUMBER SEED SET TO %d",jseed);
-    }
-    return;
+   jseed = Int_t(fWord7[0]);
+   val = 3;
+   mnrn15(val, jseed);
+   if (fISW[4] > 0) {
+      Printf(" MINUIT RANDOM NUMBER SEED SET TO %d",jseed);
+   }
+   return;
 //*-*-                                       . . . . . . . . . . set title
 L160:
 //*-*   this command must be handled by MNREAD, and is not Fortran-callable
-    goto L3000;
+   goto L3000;
 //*-*-                                       . . . . . . . . . set strategy
 L170:
-    fIstrat = Int_t(fWord7[0]);
-    fIstrat = TMath::Max(fIstrat,0);
-    fIstrat = TMath::Min(fIstrat,2);
-    if (fISW[4] > 0) goto L1172;
-    return;
+   fIstrat = Int_t(fWord7[0]);
+   fIstrat = TMath::Max(fIstrat,0);
+   fIstrat = TMath::Min(fIstrat,2);
+   if (fISW[4] > 0) goto L1172;
+   return;
 //*-*-                                      . . . . . . . . . set page throw
 L190:
-    fNewpag = Int_t(fWord7[0]);
-    goto L1190;
+   fNewpag = Int_t(fWord7[0]);
+   goto L1190;
 //*-*-                                       . . . . . . . . . . set epsmac
 L210:
-    if (fWord7[0] > 0 && fWord7[0] < .1) {
-        fEpsmac = fWord7[0];
-    }
-    fEpsma2 = TMath::Sqrt(fEpsmac);
-    goto L1210;
+   if (fWord7[0] > 0 && fWord7[0] < .1) {
+      fEpsmac = fWord7[0];
+   }
+   fEpsma2 = TMath::Sqrt(fEpsmac);
+   goto L1210;
 //*-*-                                      . . . . . . . . . . set outputfile
 L220:
-    iunit = Int_t(fWord7[0]);
-    fIsyswr = iunit;
-    fIstkwr[0] = iunit;
-    if (fISW[4] >= 0) goto L1220;
-    return;
+   iunit = Int_t(fWord7[0]);
+   fIsyswr = iunit;
+   fIstkwr[0] = iunit;
+   if (fISW[4] >= 0) goto L1220;
+   return;
 //*-*-                                       . . . . . . . . . . set batch
 L230:
-    fISW[5] = 0;
-    if (fISW[4] >= 0) goto L1100;
-    return;
+   fISW[5] = 0;
+   if (fISW[4] >= 0) goto L1100;
+   return;
 //*-*-                                      . . . . . . . . . . set interactive
 L240:
-    fISW[5] = 1;
-    if (fISW[4] >= 0) goto L1100;
-    return;
+   fISW[5] = 1;
+   if (fISW[4] >= 0) goto L1100;
+   return;
 //*-*-                                       . . . . . . . . . . set nodebug
 L270:
-    iset = 0;
-    goto L281;
+   iset = 0;
+   goto L281;
 //*-*-                                       . . . . . . . . . . set debug
 L280:
-    iset = 1;
+   iset = 1;
 L281:
-    idbopt = Int_t(fWord7[0]);
-    if (idbopt > 6) goto L288;
-    if (idbopt >= 0) {
-        fIdbg[idbopt] = iset;
-        if (iset == 1) fIdbg[0] = 1;
-    } else {
+   idbopt = Int_t(fWord7[0]);
+   if (idbopt > 6) goto L288;
+   if (idbopt >= 0) {
+      fIdbg[idbopt] = iset;
+      if (iset == 1) fIdbg[0] = 1;
+   } else {
 //*-*-            SET DEBUG -1  sets all debug options
-        for (id = 0; id <= 6; ++id) { fIdbg[id] = iset; }
-    }
-    fLrepor = fIdbg[0] >= 1;
-    mnwarn("D", "SHO", "SHO");
-    return;
+      for (id = 0; id <= 6; ++id) { fIdbg[id] = iset; }
+   }
+   fLrepor = fIdbg[0] >= 1;
+   mnwarn("D", "SHO", "SHO");
+   return;
 L288:
-    Printf(" UNKNOWN DEBUG OPTION %d REQUESTED. IGNORED",idbopt);
-    return;
+   Printf(" UNKNOWN DEBUG OPTION %d REQUESTED. IGNORED",idbopt);
+   return;
 //*-*-                                       . . . . . . . . . . set show
 L290:
 //*-*-                                       . . . . . . . . . . set set
 L300:
-    goto L3000;
+   goto L3000;
 //*-*-               -----------------------------------------------------
 L1000:
 //*-*-              at this point, CWORD must be 'SHOW'
-    ckind = "SHOW";
-    if (kname <= 0) goto L1900;
+   ckind = "SHOW";
+   if (kname <= 0) goto L1900;
 
-    switch ((int)kname) {
-        case 1:  goto L1010;
-        case 2:  goto L1020;
-        case 3:  goto L1030;
-        case 4:  goto L1040;
-        case 5:  goto L1050;
-        case 6:  goto L1060;
-        case 7:  goto L1070;
-        case 8:  goto L1070;
-        case 9:  goto L1090;
-        case 10:  goto L1100;
-        case 11:  goto L1110;
-        case 12:  goto L1120;
-        case 13:  goto L1130;
-        case 14:  goto L1130;
-        case 15:  goto L1150;
-        case 16:  goto L1160;
-        case 17:  goto L1170;
-        case 18:  goto L1180;
-        case 19:  goto L1190;
-        case 20:  goto L1200;
-        case 21:  goto L1210;
-        case 22:  goto L1220;
-        case 23:  goto L1100;
-        case 24:  goto L1100;
-        case 25:  goto L1250;
-        case 26:  goto L1900;
-        case 27:  goto L1270;
-        case 28:  goto L1270;
-        case 29:  goto L1290;
-        case 30:  goto L1300;
-    }
+   switch ((int)kname) {
+      case 1:  goto L1010;
+      case 2:  goto L1020;
+      case 3:  goto L1030;
+      case 4:  goto L1040;
+      case 5:  goto L1050;
+      case 6:  goto L1060;
+      case 7:  goto L1070;
+      case 8:  goto L1070;
+      case 9:  goto L1090;
+      case 10:  goto L1100;
+      case 11:  goto L1110;
+      case 12:  goto L1120;
+      case 13:  goto L1130;
+      case 14:  goto L1130;
+      case 15:  goto L1150;
+      case 16:  goto L1160;
+      case 17:  goto L1170;
+      case 18:  goto L1180;
+      case 19:  goto L1190;
+      case 20:  goto L1200;
+      case 21:  goto L1210;
+      case 22:  goto L1220;
+      case 23:  goto L1100;
+      case 24:  goto L1100;
+      case 25:  goto L1250;
+      case 26:  goto L1900;
+      case 27:  goto L1270;
+      case 28:  goto L1270;
+      case 29:  goto L1290;
+      case 30:  goto L1300;
+   }
 
 //*-*-                                       . . . . . . . . . . show fcn
 L1010:
-    if (fAmin == fUndefi) mnamin();
-    mnprin(0, fAmin);
-    return;
+   if (fAmin == fUndefi) mnamin();
+   mnprin(0, fAmin);
+   return;
 //*-*-                                       . . . . . . . . . . show param
 L1020:
-    if (fAmin == fUndefi) mnamin();
-    mnprin(5, fAmin);
-    return;
+   if (fAmin == fUndefi) mnamin();
+   mnprin(5, fAmin);
+   return;
 //*-*-                                       . . . . . . . . . . show limits
 L1030:
-    if (fAmin == fUndefi) mnamin();
-    mnprin(1, fAmin);
-    return;
+   if (fAmin == fUndefi) mnamin();
+   mnprin(1, fAmin);
+   return;
 //*-*-                                       . . . . . . . . . . show covar
 L1040:
-    mnmatu(1);
-    return;
+   mnmatu(1);
+   return;
 //*-*-                                       . . . . . . . . . . show corre
 L1050:
-    mnmatu(0);
-    return;
+   mnmatu(0);
+   return;
 //*-*-                                       . . . . . . . . . . show print
 L1060:
-    if (fISW[4] < -1) fISW[4] = -1;
-    if (fISW[4] > 3)  fISW[4] = 3;
-    Printf(" ALLOWED PRINT LEVELS ARE:");
-    Printf("                           %s",cprlev[0].Data());
-    Printf("                           %s",cprlev[1].Data());
-    Printf("                           %s",cprlev[2].Data());
-    Printf("                           %s",cprlev[3].Data());
-    Printf("                           %s",cprlev[4].Data());
-    Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]+1].Data());
-    return;
+   if (fISW[4] < -1) fISW[4] = -1;
+   if (fISW[4] > 3)  fISW[4] = 3;
+   Printf(" ALLOWED PRINT LEVELS ARE:");
+   Printf("                           %s",cprlev[0].Data());
+   Printf("                           %s",cprlev[1].Data());
+   Printf("                           %s",cprlev[2].Data());
+   Printf("                           %s",cprlev[3].Data());
+   Printf("                           %s",cprlev[4].Data());
+   Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]+1].Data());
+   return;
 //*-*-                                       . . . . . . . show nograd, grad
 L1070:
-    if (fISW[2] <= 0) {
-        Printf(" NOGRAD IS SET.  DERIVATIVES NOT COMPUTED IN FCN.");
-    } else {
-        Printf("   GRAD IS SET.  USER COMPUTES DERIVATIVES IN FCN.");
-    }
-    return;
+   if (fISW[2] <= 0) {
+      Printf(" NOGRAD IS SET.  DERIVATIVES NOT COMPUTED IN FCN.");
+   } else {
+      Printf("   GRAD IS SET.  USER COMPUTES DERIVATIVES IN FCN.");
+   }
+   return;
 //*-*-                                      . . . . . . . . . . show errdef
 L1090:
-    Printf(" ERRORS CORRESPOND TO FUNCTION CHANGE OF %g",fUp);
-    return;
+   Printf(" ERRORS CORRESPOND TO FUNCTION CHANGE OF %g",fUp);
+   return;
 //*-*-                                      . . . . . . . . . . show input,
 //*-*-                                               batch, or interactive
 L1100:
@@ -7303,131 +7303,131 @@ L1100:
 //    ioin__1.innrec = 0;
 //    ioin__1.inblank = 0;
 //    f_inqu(&ioin__1);
-    cmode = "BATCH MODE      ";
-    if (fISW[5] == 1) cmode  = "INTERACTIVE MODE";
-    if (! lname)      cfname = "unknown";
-    Printf(" INPUT NOW BEING READ IN %s FROM UNIT NO. %d FILENAME: %s"
+   cmode = "BATCH MODE      ";
+   if (fISW[5] == 1) cmode  = "INTERACTIVE MODE";
+   if (! lname)      cfname = "unknown";
+   Printf(" INPUT NOW BEING READ IN %s FROM UNIT NO. %d FILENAME: %s"
            ,(const char*)cmode,fIsysrd,(const char*)cfname);
-    return;
+   return;
 //*-*-                                      . . . . . . . . . . show width
 L1110:
-    Printf("          PAGE WIDTH IS SET TO %d COLUMNS",fNpagwd);
-    return;
+   Printf("          PAGE WIDTH IS SET TO %d COLUMNS",fNpagwd);
+   return;
 //*-*-                                      . . . . . . . . . . show lines
 L1120:
-    Printf("          PAGE LENGTH IS SET TO %d LINES",fNpagln);
-    return;
+   Printf("          PAGE LENGTH IS SET TO %d LINES",fNpagln);
+   return;
 //*-*-                                      . . . . . . .show nowarn, warn
 L1130:
-    cwarn = "SUPPRESSED";
-    if (fLwarn) cwarn = "REPORTED  ";
-    Printf("%s",(const char*)cwarn);
-    if (! fLwarn) mnwarn("W", "SHO", "SHO");
-    return;
+   cwarn = "SUPPRESSED";
+   if (fLwarn) cwarn = "REPORTED  ";
+   Printf("%s",(const char*)cwarn);
+   if (! fLwarn) mnwarn("W", "SHO", "SHO");
+   return;
 //*-*-                                     . . . . . . . . . . show random
 L1150:
-    val = 0;
-    mnrn15(val, igrain);
-    ikseed = igrain;
-    Printf(" MINUIT RNDM SEED IS CURRENTLY=",ikseed);
-    val   = 3;
-    iseed = ikseed;
-    mnrn15(val, iseed);
-    return;
+   val = 0;
+   mnrn15(val, igrain);
+   ikseed = igrain;
+   Printf(" MINUIT RNDM SEED IS CURRENTLY=",ikseed);
+   val   = 3;
+   iseed = ikseed;
+   mnrn15(val, iseed);
+   return;
 //*-*-                                       . . . . . . . . . show title
 L1160:
-    Printf(" TITLE OF CURRENT TASK IS:%s",(const char*)fCtitl);
-    return;
+   Printf(" TITLE OF CURRENT TASK IS:%s",(const char*)fCtitl);
+   return;
 //*-*-                                       . . . . . . . show strategy
 L1170:
-    Printf(" ALLOWED STRATEGIES ARE:");
-    Printf("                    %s",cstrat[0].Data());
-    Printf("                    %s",cstrat[1].Data());
-    Printf("                    %s",cstrat[2].Data());
+   Printf(" ALLOWED STRATEGIES ARE:");
+   Printf("                    %s",cstrat[0].Data());
+   Printf("                    %s",cstrat[1].Data());
+   Printf("                    %s",cstrat[2].Data());
 L1172:
-    Printf(" NOW USING STRATEGY %s",(const char*)cstrat[fIstrat]);
-    return;
+   Printf(" NOW USING STRATEGY %s",(const char*)cstrat[fIstrat]);
+   return;
 //*-*-                                         . . . . . show eigenvalues
 L1180:
-    iswsav = fISW[4];
-    fISW[4] = 3;
-    if (fISW[1] < 1) {
-        Printf("%s",(const char*)fCovmes[0]);
-    } else {
-        mnpsdf();
-    }
-    fISW[4] = iswsav;
-    return;
+   iswsav = fISW[4];
+   fISW[4] = 3;
+   if (fISW[1] < 1) {
+      Printf("%s",(const char*)fCovmes[0]);
+   } else {
+      mnpsdf();
+   }
+   fISW[4] = iswsav;
+   return;
 //*-*-                                           . . . . . show page throw
 L1190:
-    Printf(" PAGE THROW CARRIAGE CONTROL = %d",fNewpag);
-    if (fNewpag == 0) {
-        Printf(" NO PAGE THROWS IN MINUIT OUTPUT");
-    }
-    return;
+   Printf(" PAGE THROW CARRIAGE CONTROL = %d",fNewpag);
+   if (fNewpag == 0) {
+      Printf(" NO PAGE THROWS IN MINUIT OUTPUT");
+   }
+   return;
 //*-*-                                       . . . . . . show minos errors
 L1200:
-    for (ii = 1; ii <= fNpar; ++ii) {
-        if (fErp[ii-1] > 0 || fErn[ii-1] < 0) goto L1204;
-    }
-    Printf("       THERE ARE NO MINOS ERRORS CURRENTLY VALID.");
-    return;
+   for (ii = 1; ii <= fNpar; ++ii) {
+      if (fErp[ii-1] > 0 || fErn[ii-1] < 0) goto L1204;
+   }
+   Printf("       THERE ARE NO MINOS ERRORS CURRENTLY VALID.");
+   return;
 L1204:
-    mnprin(4, fAmin);
-    return;
+   mnprin(4, fAmin);
+   return;
 //*-*-                                       . . . . . . . . . show epsmac
 L1210:
-    Printf(" FLOATING-POINT NUMBERS ASSUMED ACCURATE TO %g",fEpsmac);
-    return;
+   Printf(" FLOATING-POINT NUMBERS ASSUMED ACCURATE TO %g",fEpsmac);
+   return;
 //*-*-                                       . . . . . . show outputfiles
 L1220:
-    Printf("  MINUIT PRIMARY OUTPUT TO UNIT %d",fIsyswr);
-    return;
+   Printf("  MINUIT PRIMARY OUTPUT TO UNIT %d",fIsyswr);
+   return;
 //*-*-                                       . . . . . . show version
 L1250:
-    Printf(" THIS IS MINUIT VERSION:%s",(const char*)fCvrsn);
-    return;
+   Printf(" THIS IS MINUIT VERSION:%s",(const char*)fCvrsn);
+   return;
 //*-*-                                       . . . . . . show nodebug, debug
 L1270:
-    for (id = 0; id <= 6; ++id) {
-        copt = "OFF";
-        if (fIdbg[id] >= 1) copt = "ON ";
-        Printf("          DEBUG OPTION %3d IS %3s :%s"
+   for (id = 0; id <= 6; ++id) {
+      copt = "OFF";
+      if (fIdbg[id] >= 1) copt = "ON ";
+      Printf("          DEBUG OPTION %3d IS %3s :%s"
              ,id,(const char*)copt,(const char*)cdbopt[id]);
-    }
-    if (! fLrepor) mnwarn("D", "SHO", "SHO");
-    return;
+   }
+   if (! fLrepor) mnwarn("D", "SHO", "SHO");
+   return;
 //*-*-                                       . . . . . . . . . . show show
 L1290:
-    ckind = "SHOW";
-    goto L2100;
+   ckind = "SHOW";
+   goto L2100;
 //*-*-                                       . . . . . . . . . . show set
 L1300:
-    ckind = "SET ";
-    goto L2100;
+   ckind = "SET ";
+   goto L2100;
 //*-*-               -----------------------------------------------------
 //*-*-                             UNKNOWN COMMAND
 L1900:
-    Printf(" THE COMMAND:%10s IS UNKNOWN.",(const char*)fCword);
-    goto L2100;
+   Printf(" THE COMMAND:%10s IS UNKNOWN.",(const char*)fCword);
+   goto L2100;
 //*-*-               -----------------------------------------------------
 //*-*-                   HELP SHOW,  HELP SET,  SHOW SET, or SHOW SHOW
 L2000:
-    ckind = "SET ";
-    ctemp2 = fCword(3,7);
-    if (strcmp(ctemp2.Data(), "SHO")) ckind = "SHOW";
+   ckind = "SET ";
+   ctemp2 = fCword(3,7);
+   if (strcmp(ctemp2.Data(), "SHO")) ckind = "SHOW";
 L2100:
-    Printf(" THE FORMAT OF THE %4s COMMAND IS:",(const char*)ckind);
-    Printf(" %s xxx    [numerical arguments if any]",(const char*)ckind);
-    Printf(" WHERE xxx MAY BE ONE OF THE FOLLOWING:");
-    for (kk = 1; kk <= nname; ++kk) {
-        Printf(" %s",cname[kk-1]);
-    }
-    return;
+   Printf(" THE FORMAT OF THE %4s COMMAND IS:",(const char*)ckind);
+   Printf(" %s xxx    [numerical arguments if any]",(const char*)ckind);
+   Printf(" WHERE xxx MAY BE ONE OF THE FOLLOWING:");
+   for (kk = 1; kk <= nname; ++kk) {
+      Printf(" %s",cname[kk-1]);
+   }
+   return;
 //*-*-               -----------------------------------------------------
 //*-*-                              ILLEGAL COMMAND
 L3000:
-    Printf(" ABOVE COMMAND IS ILLEGAL.   IGNORED");
+   Printf(" ABOVE COMMAND IS ILLEGAL.   IGNORED");
 
 } /* mnset_ */
 
@@ -7440,192 +7440,192 @@ void TMinuit::mnsimp()
 //*-*        and Mead (ref. -- Comp. J. 7,308 (1965)).
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* Initialized data */
+   /* Initialized data */
 
-    static Double_t alpha = 1;
-    static Double_t beta = .5;
-    static Double_t gamma = 2;
-    static Double_t rhomin = 4;
-    static Double_t rhomax = 8;
+   static Double_t alpha = 1;
+   static Double_t beta = .5;
+   static Double_t gamma = 2;
+   static Double_t rhomin = 4;
+   static Double_t rhomax = 8;
 
-    /* Local variables */
-    Double_t dmin_, dxdi, yrho, f, ynpp1, aming, ypbar;
-    Double_t bestx, ystar, y1, y2, ystst, pb, wg;
-    Double_t absmin, rho, sig2, rho1, rho2;
-    Int_t npfn, i, j, k, jhold, ncycl, nparx;
-    Int_t nparp1, kg, jh, nf, jl, ns;
+   /* Local variables */
+   Double_t dmin_, dxdi, yrho, f, ynpp1, aming, ypbar;
+   Double_t bestx, ystar, y1, y2, ystst, pb, wg;
+   Double_t absmin, rho, sig2, rho1, rho2;
+   Int_t npfn, i, j, k, jhold, ncycl, nparx;
+   Int_t nparp1, kg, jh, nf, jl, ns;
 
-    if (fNpar <= 0) return;
-    if (fAmin == fUndefi) mnamin();
-    fCfrom  = "SIMPLEX ";
-    fNfcnfr = fNfcn;
-    fCstatu = "UNCHANGED ";
-    npfn    = fNfcn;
-    nparp1  = fNpar + 1;
-    nparx   = fNpar;
-    rho1    = alpha + 1;
-    rho2    = rho1 + alpha*gamma;
-    wg      = 1 / Double_t(fNpar);
-    if (fISW[4] >= 0) {
-        Printf(" START SIMPLEX MINIMIZATION.    CONVERGENCE WHEN EDM .LT. %g",fEpsi);
-    }
-    for (i = 1; i <= fNpar; ++i) {
-        fDirin[i-1] = fWerr[i-1];
-        mndxdi(fX[i-1], i-1, dxdi);
-        if (dxdi != 0) fDirin[i-1] = fWerr[i-1] / dxdi;
-        dmin_ = fEpsma2*TMath::Abs(fX[i-1]);
-        if (fDirin[i-1] < dmin_) fDirin[i-1] = dmin_;
-    }
+   if (fNpar <= 0) return;
+   if (fAmin == fUndefi) mnamin();
+   fCfrom  = "SIMPLEX ";
+   fNfcnfr = fNfcn;
+   fCstatu = "UNCHANGED ";
+   npfn    = fNfcn;
+   nparp1  = fNpar + 1;
+   nparx   = fNpar;
+   rho1    = alpha + 1;
+   rho2    = rho1 + alpha*gamma;
+   wg      = 1 / Double_t(fNpar);
+   if (fISW[4] >= 0) {
+      Printf(" START SIMPLEX MINIMIZATION.    CONVERGENCE WHEN EDM .LT. %g",fEpsi);
+   }
+   for (i = 1; i <= fNpar; ++i) {
+      fDirin[i-1] = fWerr[i-1];
+      mndxdi(fX[i-1], i-1, dxdi);
+      if (dxdi != 0) fDirin[i-1] = fWerr[i-1] / dxdi;
+      dmin_ = fEpsma2*TMath::Abs(fX[i-1]);
+      if (fDirin[i-1] < dmin_) fDirin[i-1] = dmin_;
+   }
 //*-* **       choose the initial simplex using single-parameter searches
 L1:
-    ynpp1 = fAmin;
-    jl = nparp1;
-    fSIMPy[nparp1-1] = fAmin;
-    absmin = fAmin;
-    for (i = 1; i <= fNpar; ++i) {
-        aming      = fAmin;
-        fPbar[i-1] = fX[i-1];
-        bestx      = fX[i-1];
-        kg         = 0;
-        ns         = 0;
-        nf         = 0;
+   ynpp1 = fAmin;
+   jl = nparp1;
+   fSIMPy[nparp1-1] = fAmin;
+   absmin = fAmin;
+   for (i = 1; i <= fNpar; ++i) {
+      aming      = fAmin;
+      fPbar[i-1] = fX[i-1];
+      bestx      = fX[i-1];
+      kg         = 0;
+      ns         = 0;
+      nf         = 0;
 L4:
-        fX[i-1] = bestx + fDirin[i-1];
-        mninex(fX);
-        Eval(nparx, fGin, f, fU, 4);        ++fNfcn;
-        if (f <= aming) goto L6;
+      fX[i-1] = bestx + fDirin[i-1];
+      mninex(fX);
+      Eval(nparx, fGin, f, fU, 4);        ++fNfcn;
+      if (f <= aming) goto L6;
 //*-*-        failure
-        if (kg == 1) goto L8;
-        kg = -1;
-        ++nf;
-        fDirin[i-1] *= -.4;
-        if (nf < 3) goto L4;
-        ns = 6;
+      if (kg == 1) goto L8;
+      kg = -1;
+      ++nf;
+      fDirin[i-1] *= -.4;
+      if (nf < 3) goto L4;
+      ns = 6;
 //*-*-        success
 L6:
-        bestx        = fX[i-1];
-        fDirin[i-1] *= 3;
-        aming        = f;
-        fCstatu      = "PROGRESS  ";
-        kg           = 1;
-        ++ns;
-        if (ns < 6) goto L4;
+      bestx        = fX[i-1];
+      fDirin[i-1] *= 3;
+      aming        = f;
+      fCstatu      = "PROGRESS  ";
+      kg           = 1;
+      ++ns;
+      if (ns < 6) goto L4;
 //*-*-        local minimum found in ith direction
 L8:
-        fSIMPy[i-1] = aming;
-        if (aming < absmin) jl = i;
-        if (aming < absmin) absmin = aming;
-        fX[i-1] = bestx;
-        for (k = 1; k <= fNpar; ++k) { fP[k + i*fMaxpar - fMaxpar-1] = fX[k-1]; }
-    }
-    jh    = nparp1;
-    fAmin = fSIMPy[jl-1];
-    mnrazz(ynpp1, fPbar, fSIMPy, jh, jl);
-    for (i = 1; i <= fNpar; ++i) { fX[i-1] = fP[i + jl*fMaxpar - fMaxpar-1]; }
-    mninex(fX);
-    fCstatu = "PROGRESS  ";
-    if (fISW[4] >= 1) mnprin(5, fAmin);
-    fEDM  = fBigedm;
-    sig2  = fEDM;
-    ncycl = 0;
+      fSIMPy[i-1] = aming;
+      if (aming < absmin) jl = i;
+      if (aming < absmin) absmin = aming;
+      fX[i-1] = bestx;
+      for (k = 1; k <= fNpar; ++k) { fP[k + i*fMaxpar - fMaxpar-1] = fX[k-1]; }
+   }
+   jh    = nparp1;
+   fAmin = fSIMPy[jl-1];
+   mnrazz(ynpp1, fPbar, fSIMPy, jh, jl);
+   for (i = 1; i <= fNpar; ++i) { fX[i-1] = fP[i + jl*fMaxpar - fMaxpar-1]; }
+   mninex(fX);
+   fCstatu = "PROGRESS  ";
+   if (fISW[4] >= 1) mnprin(5, fAmin);
+   fEDM  = fBigedm;
+   sig2  = fEDM;
+   ncycl = 0;
 //*-*-                                       . . . . .  start main loop
 L50:
-    if (sig2 < fEpsi && fEDM < fEpsi) goto L76;
-    sig2 = fEDM;
-    if (fNfcn - npfn > fNfcnmx) goto L78;
+   if (sig2 < fEpsi && fEDM < fEpsi) goto L76;
+   sig2 = fEDM;
+   if (fNfcn - npfn > fNfcnmx) goto L78;
 //*-*-        calculate new point * by reflection
-    for (i = 1; i <= fNpar; ++i) {
-        pb = 0;
-        for (j = 1; j <= nparp1; ++j) { pb += wg*fP[i + j*fMaxpar - fMaxpar-1]; }
-        fPbar[i-1]  = pb - wg*fP[i + jh*fMaxpar - fMaxpar-1];
-        fPstar[i-1] = (alpha + 1)*fPbar[i-1] - alpha*fP[i + jh*fMaxpar - fMaxpar-1];
-    }
-    mninex(fPstar);
-    Eval(nparx, fGin, ystar, fU, 4);    ++fNfcn;
-    if (ystar >= fAmin) goto L70;
+   for (i = 1; i <= fNpar; ++i) {
+      pb = 0;
+      for (j = 1; j <= nparp1; ++j) { pb += wg*fP[i + j*fMaxpar - fMaxpar-1]; }
+      fPbar[i-1]  = pb - wg*fP[i + jh*fMaxpar - fMaxpar-1];
+      fPstar[i-1] = (alpha + 1)*fPbar[i-1] - alpha*fP[i + jh*fMaxpar - fMaxpar-1];
+   }
+   mninex(fPstar);
+   Eval(nparx, fGin, ystar, fU, 4);    ++fNfcn;
+   if (ystar >= fAmin) goto L70;
 //*-*-        point * better than jl, calculate new point **
-    for (i = 1; i <= fNpar; ++i) {
-        fPstst[i-1] = gamma*fPstar[i-1] + (1 - gamma)*fPbar[i-1];
-    }
-    mninex(fPstst);
-    Eval(nparx, fGin, ystst, fU, 4);    ++fNfcn;
+   for (i = 1; i <= fNpar; ++i) {
+      fPstst[i-1] = gamma*fPstar[i-1] + (1 - gamma)*fPbar[i-1];
+   }
+   mninex(fPstst);
+   Eval(nparx, fGin, ystst, fU, 4);    ++fNfcn;
 //*-*-        try a parabola through ph, pstar, pstst.  min = prho
-    y1 = (ystar - fSIMPy[jh-1])*rho2;
-    y2 = (ystst - fSIMPy[jh-1])*rho1;
-    rho = (rho2*y1 - rho1*y2)*.5 / (y1 - y2);
-    if (rho < rhomin) goto L66;
-    if (rho > rhomax) rho = rhomax;
-    for (i = 1; i <= fNpar; ++i) {
-        fPrho[i-1] = rho*fPbar[i-1] + (1 - rho)*fP[i + jh*fMaxpar - fMaxpar-1];
-    }
-    mninex(fPrho);
-    Eval(nparx, fGin, yrho, fU, 4);    ++fNfcn;
-    if (yrho  < fSIMPy[jl-1] && yrho < ystst) goto L65;
-    if (ystst < fSIMPy[jl-1]) goto L67;
-    if (yrho  > fSIMPy[jl-1]) goto L66;
+   y1 = (ystar - fSIMPy[jh-1])*rho2;
+   y2 = (ystst - fSIMPy[jh-1])*rho1;
+   rho = (rho2*y1 - rho1*y2)*.5 / (y1 - y2);
+   if (rho < rhomin) goto L66;
+   if (rho > rhomax) rho = rhomax;
+   for (i = 1; i <= fNpar; ++i) {
+      fPrho[i-1] = rho*fPbar[i-1] + (1 - rho)*fP[i + jh*fMaxpar - fMaxpar-1];
+   }
+   mninex(fPrho);
+   Eval(nparx, fGin, yrho, fU, 4);    ++fNfcn;
+   if (yrho  < fSIMPy[jl-1] && yrho < ystst) goto L65;
+   if (ystst < fSIMPy[jl-1]) goto L67;
+   if (yrho  > fSIMPy[jl-1]) goto L66;
 //*-*-        accept minimum point of parabola, PRHO
 L65:
-    mnrazz(yrho, fPrho, fSIMPy, jh, jl);
-    goto L68;
+   mnrazz(yrho, fPrho, fSIMPy, jh, jl);
+   goto L68;
 L66:
-    if (ystst < fSIMPy[jl-1]) goto L67;
-    mnrazz(ystar, fPstar, fSIMPy, jh, jl);
-    goto L68;
+   if (ystst < fSIMPy[jl-1]) goto L67;
+   mnrazz(ystar, fPstar, fSIMPy, jh, jl);
+   goto L68;
 L67:
-    mnrazz(ystst, fPstst, fSIMPy, jh, jl);
+   mnrazz(ystst, fPstst, fSIMPy, jh, jl);
 L68:
-    ++ncycl;
-    if (fISW[4] < 2) goto L50;
-    if (fISW[4] >= 3 || ncycl % 10 == 0) {
-        mnprin(5, fAmin);
-    }
-    goto L50;
+   ++ncycl;
+   if (fISW[4] < 2) goto L50;
+   if (fISW[4] >= 3 || ncycl % 10 == 0) {
+      mnprin(5, fAmin);
+   }
+   goto L50;
 //*-*-        point * is not as good as jl
 L70:
-    if (ystar >= fSIMPy[jh-1]) goto L73;
-    jhold = jh;
-    mnrazz(ystar, fPstar, fSIMPy, jh, jl);
-    if (jhold != jh) goto L50;
+   if (ystar >= fSIMPy[jh-1]) goto L73;
+   jhold = jh;
+   mnrazz(ystar, fPstar, fSIMPy, jh, jl);
+   if (jhold != jh) goto L50;
 //*-*-        calculate new point **
 L73:
-    for (i = 1; i <= fNpar; ++i) {
-        fPstst[i-1] = beta*fP[i + jh*fMaxpar - fMaxpar-1] + (1 - beta)*fPbar[i-1];
-    }
-    mninex(fPstst);
-    Eval(nparx, fGin, ystst, fU, 4);    ++fNfcn;
-    if (ystst > fSIMPy[jh-1]) goto L1;
+   for (i = 1; i <= fNpar; ++i) {
+      fPstst[i-1] = beta*fP[i + jh*fMaxpar - fMaxpar-1] + (1 - beta)*fPbar[i-1];
+   }
+   mninex(fPstst);
+   Eval(nparx, fGin, ystst, fU, 4);    ++fNfcn;
+   if (ystst > fSIMPy[jh-1]) goto L1;
 //*-*-    point ** is better than jh
-    if (ystst < fAmin) goto L67;
-    mnrazz(ystst, fPstst, fSIMPy, jh, jl);
-    goto L50;
+   if (ystst < fAmin) goto L67;
+   mnrazz(ystst, fPstst, fSIMPy, jh, jl);
+   goto L50;
 //*-*-                                       . . . . . .  end main loop
 L76:
-    if (fISW[4] >= 0) {
-        Printf(" SIMPLEX MINIMIZATION HAS CONVERGED.");
-    }
-    fISW[3] = 1;
-    goto L80;
+   if (fISW[4] >= 0) {
+      Printf(" SIMPLEX MINIMIZATION HAS CONVERGED.");
+   }
+   fISW[3] = 1;
+   goto L80;
 L78:
-    if (fISW[4] >= 0) {
-        Printf(" SIMPLEX TERMINATES WITHOUT CONVERGENCE.");
-    }
-    fCstatu = "CALL LIMIT";
-    fISW[3] = -1;
-    fISW[0] = 1;
+   if (fISW[4] >= 0) {
+      Printf(" SIMPLEX TERMINATES WITHOUT CONVERGENCE.");
+   }
+   fCstatu = "CALL LIMIT";
+   fISW[3] = -1;
+   fISW[0] = 1;
 L80:
-    for (i = 1; i <= fNpar; ++i) {
-        pb = 0;
-        for (j = 1; j <= nparp1; ++j) { pb += wg*fP[i + j*fMaxpar - fMaxpar-1]; }
-        fPbar[i-1] = pb - wg*fP[i + jh*fMaxpar - fMaxpar-1];
-    }
-    mninex(fPbar);
-    Eval(nparx, fGin, ypbar, fU, 4);    ++fNfcn;
-    if (ypbar < fAmin)         mnrazz(ypbar, fPbar, fSIMPy, jh, jl);
-    mninex(fX);
-    if (fNfcnmx + npfn - fNfcn < fNpar*3) goto L90;
-    if (fEDM > fEpsi*2) goto L1;
+   for (i = 1; i <= fNpar; ++i) {
+      pb = 0;
+      for (j = 1; j <= nparp1; ++j) { pb += wg*fP[i + j*fMaxpar - fMaxpar-1]; }
+      fPbar[i-1] = pb - wg*fP[i + jh*fMaxpar - fMaxpar-1];
+   }
+   mninex(fPbar);
+   Eval(nparx, fGin, ypbar, fU, 4);    ++fNfcn;
+   if (ypbar < fAmin)         mnrazz(ypbar, fPbar, fSIMPy, jh, jl);
+   mninex(fX);
+   if (fNfcnmx + npfn - fNfcn < fNpar*3) goto L90;
+   if (fEDM > fEpsi*2) goto L1;
 L90:
-    if (fISW[4] >= 0) mnprin(5, fAmin);
+   if (fISW[4] >= 0) mnprin(5, fAmin);
 } /* mnsimp_ */
 
 //______________________________________________________________________________
@@ -7647,18 +7647,18 @@ void TMinuit::mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &np
 //*-*                    3= full accurate covariance matrix
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    fmin   = fAmin;
-    fedm   = fEDM;
-    errdef = fUp;
-    npari  = fNpar;
-    nparx  = fNu;
-    istat  = fISW[1];
-    if (fEDM == fBigedm) fedm = fUp;
-    if (fAmin == fUndefi) {
-        fmin  = 0;
-        fedm  = fUp;
-        istat = 0;
-    }
+   fmin   = fAmin;
+   fedm   = fEDM;
+   errdef = fUp;
+   npari  = fNpar;
+   nparx  = fNu;
+   istat  = fISW[1];
+   if (fEDM == fBigedm) fedm = fUp;
+   if (fAmin == fUndefi) {
+      fmin  = 0;
+      fedm  = fUp;
+      istat = 0;
+   }
 } /* mnstat_ */
 
 //______________________________________________________________________________
@@ -7671,7 +7671,7 @@ void TMinuit::mntiny(Double_t epsp1, Double_t &epsbak)
 //*-*        safely by foiling the Fortran optimizer
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    epsbak = epsp1 - 1;
+   epsbak = epsp1 - 1;
 } /* mntiny_ */
 
 //______________________________________________________________________________
@@ -7681,21 +7681,21 @@ Bool_t TMinuit::mnunpt(TString &cfname)
 //*-*        ========================================================
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, l, ic;
-    Bool_t ret_val;
-    static TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
+   Int_t i, l, ic;
+   Bool_t ret_val;
+   static TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
 
-    ret_val = kFALSE;
-    l       = strlen((const char*)cfname);
-    for (i = 1; i <= l; ++i) {
-        for (ic = 1; ic <= 80; ++ic) {
-            if (cfname[i-1] == cpt[ic-1]) goto L100;
-        }
-        return kTRUE;
+   ret_val = kFALSE;
+   l       = strlen((const char*)cfname);
+   for (i = 1; i <= l; ++i) {
+      for (ic = 1; ic <= 80; ++ic) {
+         if (cfname[i-1] == cpt[ic-1]) goto L100;
+      }
+      return kTRUE;
 L100:
-        ;
-    }
-    return ret_val;
+      ;
+   }
+   return ret_val;
 } /* mnunpt_ */
 
 //______________________________________________________________________________
@@ -7708,78 +7708,78 @@ void TMinuit::mnvert(Double_t *a, Int_t l, Int_t, Int_t n, Int_t &ifail)
 //*-*        but no pivoting is done since matrix is positive-definite.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    /* System generated locals */
-    Int_t a_offset;
+   /* System generated locals */
+   Int_t a_offset;
 
-    /* Local variables */
-    Double_t si;
-    Int_t i, j, k, kp1, km1;
+   /* Local variables */
+   Double_t si;
+   Int_t i, j, k, kp1, km1;
 
-    /* Parameter adjustments */
-    a_offset = l + 1;
-    a -= a_offset;
+   /* Parameter adjustments */
+   a_offset = l + 1;
+   a -= a_offset;
 
-    /* Function Body */
-    ifail = 0;
-    if (n < 1) goto L100;
-    if (n > fMaxint) goto L100;
+   /* Function Body */
+   ifail = 0;
+   if (n < 1) goto L100;
+   if (n > fMaxint) goto L100;
 //*-*-                  scale matrix by sqrt of diag elements
-    for (i = 1; i <= n; ++i) {
-        si = a[i + i*l];
-        if (si <= 0) goto L100;
-        fVERTs[i-1] = 1 / TMath::Sqrt(si);
-    }
-    for (i = 1; i <= n; ++i) {
-        for (j = 1; j <= n; ++j) {
-            a[i + j*l] = a[i + j*l]*fVERTs[i-1]*fVERTs[j-1];
-        }
-    }
+   for (i = 1; i <= n; ++i) {
+      si = a[i + i*l];
+      if (si <= 0) goto L100;
+      fVERTs[i-1] = 1 / TMath::Sqrt(si);
+   }
+   for (i = 1; i <= n; ++i) {
+      for (j = 1; j <= n; ++j) {
+         a[i + j*l] = a[i + j*l]*fVERTs[i-1]*fVERTs[j-1];
+      }
+   }
 //*-*-                                       . . . start main loop . . . .
-    for (i = 1; i <= n; ++i) {
-        k = i;
+   for (i = 1; i <= n; ++i) {
+      k = i;
 //*-*-                  preparation for elimination step1
-        if (a[k + k*l] != 0) fVERTq[k-1] = 1 / a[k + k*l];
-        else goto L100;
-        fVERTpp[k-1] = 1;
-        a[k + k*l] = 0;
-        kp1 = k + 1;
-        km1 = k - 1;
-        if (km1 < 0) goto L100;
-        else if (km1 == 0) goto L50;
-        else               goto L40;
+      if (a[k + k*l] != 0) fVERTq[k-1] = 1 / a[k + k*l];
+      else goto L100;
+      fVERTpp[k-1] = 1;
+      a[k + k*l] = 0;
+      kp1 = k + 1;
+      km1 = k - 1;
+      if (km1 < 0) goto L100;
+      else if (km1 == 0) goto L50;
+      else               goto L40;
 L40:
-        for (j = 1; j <= km1; ++j) {
-            fVERTpp[j-1] = a[j + k*l];
-            fVERTq[j-1]  = a[j + k*l]*fVERTq[k-1];
-            a[j + k*l]   = 0;
-        }
+      for (j = 1; j <= km1; ++j) {
+         fVERTpp[j-1] = a[j + k*l];
+         fVERTq[j-1]  = a[j + k*l]*fVERTq[k-1];
+         a[j + k*l]   = 0;
+      }
 L50:
-        if (k - n < 0) goto L51;
-        else if (k - n == 0) goto L60;
-        else                goto L100;
+      if (k - n < 0) goto L51;
+      else if (k - n == 0) goto L60;
+      else                goto L100;
 L51:
-        for (j = kp1; j <= n; ++j) {
-            fVERTpp[j-1] = a[k + j*l];
-            fVERTq[j-1]  = -a[k + j*l]*fVERTq[k-1];
-            a[k + j*l]   = 0;
-        }
+      for (j = kp1; j <= n; ++j) {
+         fVERTpp[j-1] = a[k + j*l];
+         fVERTq[j-1]  = -a[k + j*l]*fVERTq[k-1];
+         a[k + j*l]   = 0;
+      }
 //*-*-                  elimination proper
 L60:
-        for (j = 1; j <= n; ++j) {
-            for (k = j; k <= n; ++k) { a[j + k*l] += fVERTpp[j-1]*fVERTq[k-1]; }
-        }
-    }
+      for (j = 1; j <= n; ++j) {
+         for (k = j; k <= n; ++k) { a[j + k*l] += fVERTpp[j-1]*fVERTq[k-1]; }
+      }
+   }
 //*-*-                  elements of left diagonal and unscaling
-    for (j = 1; j <= n; ++j) {
-        for (k = 1; k <= j; ++k) {
-            a[k + j*l] = a[k + j*l]*fVERTs[k-1]*fVERTs[j-1];
-            a[j + k*l] = a[k + j*l];
-        }
-    }
-    return;
+   for (j = 1; j <= n; ++j) {
+      for (k = 1; k <= j; ++k) {
+         a[k + j*l] = a[k + j*l]*fVERTs[k-1]*fVERTs[j-1];
+         a[j + k*l] = a[k + j*l];
+      }
+   }
+   return;
 //*-*-                  failure return
 L100:
-    ifail = 1;
+   ifail = 1;
 } /* mnvert_ */
 
 //______________________________________________________________________________
@@ -7797,73 +7797,73 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
 //*-*             the circular buffer, FIFO, and empties the buffer.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    TString copt = copt1;
-    TString corg = corg1;
-    TString cmes = cmes1;
+   TString copt = copt1;
+   TString corg = corg1;
+   TString cmes = cmes1;
 
-    const Int_t kMAXMES = 10;
-    Int_t ityp, i, ic, nm;
-    TString englsh, ctyp;
+   const Int_t kMAXMES = 10;
+   Int_t ityp, i, ic, nm;
+   TString englsh, ctyp;
 
-    if (corg(0,3) != "SHO" || cmes(0,3) != "SHO") {
+   if (corg(0,3) != "SHO" || cmes(0,3) != "SHO") {
 
 //*-*-            Either print warning or put in buffer
-       if (copt == "W") {
-          ityp = 1;
-          if (fLwarn) {
-             Printf(" MINUIT WARNING IN %s",(const char*)corg);
-             Printf(" ============== %s",(const char*)cmes);
-             return;
-          }
+      if (copt == "W") {
+         ityp = 1;
+         if (fLwarn) {
+            Printf(" MINUIT WARNING IN %s",(const char*)corg);
+            Printf(" ============== %s",(const char*)cmes);
+            return;
+         }
        } else {
-          ityp = 2;
-          if (fLrepor) {
-             Printf(" MINUIT DEBUG FOR %s",(const char*)corg);
-             Printf(" =============== %s ",(const char*)cmes);
-             return;
-          }
-       }
+         ityp = 2;
+         if (fLrepor) {
+            Printf(" MINUIT DEBUG FOR %s",(const char*)corg);
+            Printf(" =============== %s ",(const char*)cmes);
+            return;
+         }
+      }
 //*-*-                if appropriate flag is off, fill circular buffer
-       if (fNwrmes[ityp-1] == 0) fIcirc[ityp-1] = 0;
-       ++fNwrmes[ityp-1];
-       ++fIcirc[ityp-1];
-       if (fIcirc[ityp-1] > 10)         fIcirc[ityp-1] = 1;
-       ic = fIcirc[ityp-1];
-       fOrigin[ic] = corg;
-       fWarmes[ic] = cmes;
-       fNfcwar[ic] = fNfcn;
-       return;
+      if (fNwrmes[ityp-1] == 0) fIcirc[ityp-1] = 0;
+      ++fNwrmes[ityp-1];
+      ++fIcirc[ityp-1];
+      if (fIcirc[ityp-1] > 10)         fIcirc[ityp-1] = 1;
+      ic = fIcirc[ityp-1];
+      fOrigin[ic] = corg;
+      fWarmes[ic] = cmes;
+      fNfcwar[ic] = fNfcn;
+      return;
    }
 
 //*-*-            'SHO WARnings', ask if any suppressed mess in buffer
-    if (copt == "W") {
-        ityp = 1;
-        ctyp = "WARNING";
-    } else {
-        ityp = 2;
-        ctyp = "*DEBUG*";
-    }
-    if (fNwrmes[ityp-1] > 0) {
-        englsh = " WAS SUPPRESSED.  ";
-        if (fNwrmes[ityp-1] > 1) englsh = "S WERE SUPPRESSED.";
-        Printf(" %5d MINUIT %s MESSAGE%s",fNwrmes[ityp-1]
+   if (copt == "W") {
+      ityp = 1;
+      ctyp = "WARNING";
+   } else {
+      ityp = 2;
+      ctyp = "*DEBUG*";
+   }
+   if (fNwrmes[ityp-1] > 0) {
+      englsh = " WAS SUPPRESSED.  ";
+      if (fNwrmes[ityp-1] > 1) englsh = "S WERE SUPPRESSED.";
+      Printf(" %5d MINUIT %s MESSAGE%s",fNwrmes[ityp-1]
              ,(const char*)ctyp,(const char*)englsh);
-        nm = fNwrmes[ityp-1];
-        ic = 0;
-        if (nm > kMAXMES) {
-            Printf(" ONLY THE MOST RECENT 10 WILL BE LISTED BELOW.");
-            nm = kMAXMES;
-            ic = fIcirc[ityp-1];
-        }
-        Printf("  CALLS  ORIGIN         MESSAGE");
-        for (i = 1; i <= nm; ++i) {
-            ++ic;
-            if (ic > kMAXMES) ic = 1;
-            Printf(" %6d  %s  %s", fNfcwar[ic],fOrigin[ic].Data(),fWarmes[ic].Data());
-        }
-        fNwrmes[ityp-1] = 0;
-        Printf(" ");
-    }
+      nm = fNwrmes[ityp-1];
+      ic = 0;
+      if (nm > kMAXMES) {
+         Printf(" ONLY THE MOST RECENT 10 WILL BE LISTED BELOW.");
+         nm = kMAXMES;
+         ic = fIcirc[ityp-1];
+      }
+      Printf("  CALLS  ORIGIN         MESSAGE");
+      for (i = 1; i <= nm; ++i) {
+         ++ic;
+         if (ic > kMAXMES) ic = 1;
+         Printf(" %6d  %s  %s", fNfcwar[ic],fOrigin[ic].Data(),fWarmes[ic].Data());
+      }
+      fNwrmes[ityp-1] = 0;
+      Printf(" ");
+   }
 } /* mnwarn_ */
 
 //______________________________________________________________________________
@@ -7875,45 +7875,45 @@ void TMinuit::mnwerr()
 //*-*      whenever a new covariance matrix is available.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t denom, ba, al, dx, du1, du2;
-    Int_t ndex, ierr, i, j, k, l, ndiag, k1, iin;
+   Double_t denom, ba, al, dx, du1, du2;
+   Int_t ndex, ierr, i, j, k, l, ndiag, k1, iin;
 
 //*-*-                        calculate external error if v exists
-    if (fISW[1] >= 1) {
-        for (l = 1; l <= fNpar; ++l) {
-            ndex = l*(l + 1) / 2;
-            dx = TMath::Sqrt(TMath::Abs(fVhmat[ndex-1]*fUp));
-            i = fNexofi[l-1];
-            if (fNvarl[i-1] > 1) {
-                al = fAlim[i-1];
-                ba = fBlim[i-1] - al;
-                du1 = al + 0.5*(TMath::Sin(fX[l-1] + dx) + 1)*ba - fU[i-1];
-                du2 = al + 0.5*(TMath::Sin(fX[l-1] - dx) + 1)*ba - fU[i-1];
-                if (dx > 1) du1 = ba;
-                dx = 0.5*(TMath::Abs(du1) + TMath::Abs(du2));
-            }
-            fWerr[l-1] = dx;
-        }
-    }
+   if (fISW[1] >= 1) {
+      for (l = 1; l <= fNpar; ++l) {
+         ndex = l*(l + 1) / 2;
+         dx = TMath::Sqrt(TMath::Abs(fVhmat[ndex-1]*fUp));
+         i = fNexofi[l-1];
+         if (fNvarl[i-1] > 1) {
+            al = fAlim[i-1];
+            ba = fBlim[i-1] - al;
+            du1 = al + 0.5*(TMath::Sin(fX[l-1] + dx) + 1)*ba - fU[i-1];
+            du2 = al + 0.5*(TMath::Sin(fX[l-1] - dx) + 1)*ba - fU[i-1];
+            if (dx > 1) du1 = ba;
+            dx = 0.5*(TMath::Abs(du1) + TMath::Abs(du2));
+         }
+         fWerr[l-1] = dx;
+      }
+   }
 //*-*-                         global correlation coefficients
-    if (fISW[1] >= 1) {
-        for (i = 1; i <= fNpar; ++i) {
-            fGlobcc[i-1] = 0;
-            k1 = i*(i-1) / 2;
-            for (j = 1; j <= i; ++j) {
-                k = k1 + j;
-                fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[k-1];
-                fP[j + i*fMaxpar - fMaxpar-1] = fP[i + j*fMaxpar - fMaxpar-1];
-            }
-        }
-        mnvert(fP, fMaxint, fMaxint, fNpar, ierr);
-        if (ierr == 0) {
-            for (iin = 1; iin <= fNpar; ++iin) {
-                ndiag = iin*(iin + 1) / 2;
-                denom = fP[iin + iin*fMaxpar - fMaxpar-1]*fVhmat[ndiag-1];
-                if (denom <= 1 && denom >= 0) fGlobcc[iin-1] = 0;
-                else                          fGlobcc[iin-1] = TMath::Sqrt(1 - 1 / denom);
-            }
-        }
-    }
+   if (fISW[1] >= 1) {
+      for (i = 1; i <= fNpar; ++i) {
+         fGlobcc[i-1] = 0;
+         k1 = i*(i-1) / 2;
+         for (j = 1; j <= i; ++j) {
+            k = k1 + j;
+            fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[k-1];
+            fP[j + i*fMaxpar - fMaxpar-1] = fP[i + j*fMaxpar - fMaxpar-1];
+         }
+      }
+      mnvert(fP, fMaxint, fMaxint, fNpar, ierr);
+      if (ierr == 0) {
+         for (iin = 1; iin <= fNpar; ++iin) {
+            ndiag = iin*(iin + 1) / 2;
+            denom = fP[iin + iin*fMaxpar - fMaxpar-1]*fVhmat[ndiag-1];
+            if (denom <= 1 && denom >= 0) fGlobcc[iin-1] = 0;
+            else                          fGlobcc[iin-1] = TMath::Sqrt(1 - 1 / denom);
+         }
+      }
+   }
 } /* mnwerr_ */
