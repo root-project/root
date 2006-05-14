@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.5 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.1 2006/05/04 13:06:15 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -240,8 +240,7 @@ const Long64_t fgSeedTable[215][2] = {
                              {     1104640222, 240506063	},
                              {      356133630, 1676634527	},
                              {      242242374, 1863206182	},
-                             {      957935844, 1490681416	}
-					     };
+                             {      957935844, 1490681416	}};
 #endif
                                              
 ClassImp(TRandom1)
@@ -331,47 +330,47 @@ TRandom1::~TRandom1() {}
 void TRandom1::GetTableSeeds(Long64_t* seeds, Int_t index)
 //static function
 {
-  if ((index >= 0) && (index < 215)) {
-    seeds[0] = fgSeedTable[index][0];
-    seeds[1] = fgSeedTable[index][1];
-  }
-  else seeds = NULL;
+   if ((index >= 0) && (index < 215)) {
+      seeds[0] = fgSeedTable[index][0];
+      seeds[1] = fgSeedTable[index][1];
+   }
+   else seeds = NULL;
 }
 
 //______________________________________________________________________________
 Double_t TRandom1::Rndm(Int_t) {
 
-  float next_random;
-  float uni;
-  int i;
+   float next_random;
+   float uni;
+   int i;
 
-  uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
-  if(uni < 0. ){
-     uni += 1.0;
-     fCarry = fMantissaBit24;
-  }else{
-     fCarry = 0.;
-  }
+   uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
+   if(uni < 0. ) {
+      uni += 1.0;
+      fCarry = fMantissaBit24;
+   } else {
+      fCarry = 0.;
+   }
 
-  fFloatSeedTable[fIlag] = uni;
-  fIlag --;
-  fJlag --;
-  if(fIlag < 0) fIlag = 23;
-  if(fJlag < 0) fJlag = 23;
+   fFloatSeedTable[fIlag] = uni;
+   fIlag --;
+   fJlag --;
+   if(fIlag < 0) fIlag = 23;
+   if(fJlag < 0) fJlag = 23;
 
-  if( uni < fMantissaBit12 ){
-     uni += fMantissaBit24 * fFloatSeedTable[fJlag];
-     if( uni == 0) uni = fMantissaBit24 * fMantissaBit24;
-  }
-  next_random = uni;
-  fCount24 ++;
+   if( uni < fMantissaBit12 ){
+      uni += fMantissaBit24 * fFloatSeedTable[fJlag];
+      if( uni == 0) uni = fMantissaBit24 * fMantissaBit24;
+   }
+   next_random = uni;
+   fCount24 ++;
 
 // every 24th number generation, several random numbers are generated
 // and wasted depending upon the fLuxury level.
 
-  if(fCount24 == 24 ){
-     fCount24 = 0;
-     for( i = 0; i != fNskip ; i++){
+   if(fCount24 == 24 ){
+      fCount24 = 0;
+      for( i = 0; i != fNskip ; i++){
          uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
          if(uni < 0. ){
             uni += 1.0;
@@ -398,55 +397,55 @@ void TRandom1::RndmArray(const Int_t size, Float_t *vect)
 //______________________________________________________________________________
 void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 {
-  float next_random;
-  float uni;
-  int i;
-  int index;
+   float next_random;
+   float uni;
+   int i;
+   int index;
 
-  for (index=0; index<size; ++index) {
-    uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
-    if(uni < 0. ){
-       uni += 1.0;
-       fCarry = fMantissaBit24;
-    }else{
-       fCarry = 0.;
-    }
+   for (index=0; index<size; ++index) {
+      uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
+      if(uni < 0. ) {
+         uni += 1.0;
+         fCarry = fMantissaBit24;
+      } else {
+         fCarry = 0.;
+      }
 
-    fFloatSeedTable[fIlag] = uni;
-    fIlag --;
-    fJlag --;
-    if(fIlag < 0) fIlag = 23;
-    if(fJlag < 0) fJlag = 23;
+      fFloatSeedTable[fIlag] = uni;
+      fIlag --;
+      fJlag --;
+      if(fIlag < 0) fIlag = 23;
+      if(fJlag < 0) fJlag = 23;
 
-    if( uni < fMantissaBit12 ){
-       uni += fMantissaBit24 * fFloatSeedTable[fJlag];
-       if( uni == 0) uni = fMantissaBit24 * fMantissaBit24;
-    }
-    next_random = uni;
-    vect[index] = (double)next_random;
-    fCount24 ++;
+      if( uni < fMantissaBit12 ){
+         uni += fMantissaBit24 * fFloatSeedTable[fJlag];
+         if( uni == 0) uni = fMantissaBit24 * fMantissaBit24;
+      }
+      next_random = uni;
+      vect[index] = (double)next_random;
+      fCount24 ++;
 
 // every 24th number generation, several random numbers are generated
 // and wasted depending upon the fLuxury level.
 
-    if(fCount24 == 24 ){
-       fCount24 = 0;
-       for( i = 0; i != fNskip ; i++){
-           uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
-           if(uni < 0. ){
-              uni += 1.0;
-              fCarry = fMantissaBit24;
-           }else{
-              fCarry = 0.;
-           }
-           fFloatSeedTable[fIlag] = uni;
-           fIlag --;
-           fJlag --;
-           if(fIlag < 0)fIlag = 23;
-           if(fJlag < 0) fJlag = 23;
-        }
-    }
-  }
+      if(fCount24 == 24 ) {
+         fCount24 = 0;
+         for( i = 0; i != fNskip ; i++) {
+            uni = fFloatSeedTable[fJlag] - fFloatSeedTable[fIlag] - fCarry;
+            if(uni < 0. ) {
+               uni += 1.0;
+               fCarry = fMantissaBit24;
+            } else {
+               fCarry = 0.;
+            }
+            fFloatSeedTable[fIlag] = uni;
+            fIlag --;
+            fJlag --;
+            if(fIlag < 0)fIlag = 23;
+            if(fJlag < 0) fJlag = 23;
+         }
+      }
+   }
 } 
 
 
@@ -467,7 +466,7 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux) {
    fTheSeeds = seeds;
    seedptr   = seeds;
  
-   if(seeds == 0){
+   if(seeds == 0) {
       SetSeed2(fTheSeed,lux);
       fTheSeeds = &fTheSeed;
       return;
@@ -478,43 +477,43 @@ void TRandom1::SetSeeds(const Long64_t *seeds, int lux) {
 // number of additional random numbers that need to be 'thrown away'
 // every 24 numbers is set using fLuxury level variable.
 
-  if( (lux > 4)||(lux < 0) ){
-     if(lux >= 24){
-        fNskip = lux - 24;
-     }else{
-        fNskip = lux_levels[3]; // corresponds to default fLuxury level
-     }
-  }else{
-     fLuxury = lux;
-     fNskip  = lux_levels[fLuxury];
-  }
+   if( (lux > 4)||(lux < 0) ) {
+      if(lux >= 24) {
+         fNskip = lux - 24;
+      } else {
+         fNskip = lux_levels[3]; // corresponds to default fLuxury level
+      }
+   } else {
+      fLuxury = lux;
+      fNskip  = lux_levels[fLuxury];
+   }
       
-  for( i = 0;(i != 24)&&(*seedptr != 0);i++){
+   for( i = 0;(i != 24)&&(*seedptr != 0);i++) {
       int_seed_table[i] = *seedptr % fIntModulus;
       seedptr++;
-  }		       
+   }		       
 
-  if(i != 24){
-     next_seed = int_seed_table[i-1];
-     for(;i != 24;i++){
-        k_multiple = next_seed / ecuyer_a;
-        next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a) 
-        - k_multiple * ecuyer_c ;
-        if(next_seed < 0)next_seed += ecuyer_d;
-        int_seed_table[i] = next_seed % fIntModulus;
-     }          
-  }
+   if(i != 24){
+      next_seed = int_seed_table[i-1];
+      for(;i != 24;i++) {
+         k_multiple = next_seed / ecuyer_a;
+         next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a) 
+         - k_multiple * ecuyer_c ;
+         if(next_seed < 0)next_seed += ecuyer_d;
+         int_seed_table[i] = next_seed % fIntModulus;
+      }          
+   }
 
-  for(i = 0;i != 24;i++)
-    fFloatSeedTable[i] = int_seed_table[i] * fMantissaBit24;
+   for(i = 0;i != 24;i++)
+      fFloatSeedTable[i] = int_seed_table[i] * fMantissaBit24;
 
-  fIlag = 23;
-  fJlag = 9;
-  fCarry = 0. ;
+   fIlag = 23;
+   fJlag = 9;
+   fCarry = 0. ;
 
-  if( fFloatSeedTable[23] == 0. ) fCarry = fMantissaBit24;
+   if( fFloatSeedTable[23] == 0. ) fCarry = fMantissaBit24;
   
-  fCount24 = 0;
+   fCount24 = 0;
 }
 
 //______________________________________________________________________________
@@ -526,51 +525,51 @@ void TRandom1::SetSeed2(Long64_t seed, int lux) {
 // (Fred James) published in Computer Physics Communications 60 (1990)
 // pages 329-344
 
-  const int ecuyer_a = 53668;
-  const int ecuyer_b = 40014;
-  const int ecuyer_c = 12211;
-  const int ecuyer_d = 2147483563;
+   const int ecuyer_a = 53668;
+   const int ecuyer_b = 40014;
+   const int ecuyer_c = 12211;
+   const int ecuyer_d = 2147483563;
 
-  const int lux_levels[5] = {0,24,73,199,365};  
+   const int lux_levels[5] = {0,24,73,199,365};  
 
-  Long64_t int_seed_table[24];
-  Long64_t next_seed = seed;
-  Long64_t k_multiple;
-  int i;
+   Long64_t int_seed_table[24];
+   Long64_t next_seed = seed;
+   Long64_t k_multiple;
+   int i;
   
 // number of additional random numbers that need to be 'thrown away'
 // every 24 numbers is set using fLuxury level variable.
 
-  fTheSeed = seed;
-  if( (lux > 4)||(lux < 0) ){
-     if(lux >= 24){
-        fNskip = lux - 24;
-     }else{
-        fNskip = lux_levels[3]; // corresponds to default fLuxury level
-     }
-  }else{
-     fLuxury = lux;
-     fNskip  = lux_levels[fLuxury];
-  }
+   fTheSeed = seed;
+   if( (lux > 4)||(lux < 0) ) {
+      if(lux >= 24) {
+         fNskip = lux - 24;
+      } else {
+         fNskip = lux_levels[3]; // corresponds to default fLuxury level
+      }
+   } else {
+      fLuxury = lux;
+      fNskip  = lux_levels[fLuxury];
+   }
 
    
-  for(i = 0;i != 24;i++){
-     k_multiple = next_seed / ecuyer_a;
-     next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a) 
-     - k_multiple * ecuyer_c ;
-     if(next_seed < 0)next_seed += ecuyer_d;
-     int_seed_table[i] = next_seed % fIntModulus;
-  }     
+   for(i = 0;i != 24;i++) {
+      k_multiple = next_seed / ecuyer_a;
+      next_seed = ecuyer_b * (next_seed - k_multiple * ecuyer_a) 
+      - k_multiple * ecuyer_c ;
+      if(next_seed < 0)next_seed += ecuyer_d;
+      int_seed_table[i] = next_seed % fIntModulus;
+   }     
 
-  for(i = 0;i != 24;i++)
-    fFloatSeedTable[i] = int_seed_table[i] * fMantissaBit24;
+   for(i = 0;i != 24;i++)
+      fFloatSeedTable[i] = int_seed_table[i] * fMantissaBit24;
 
-  fIlag = 23;
-  fJlag = 9;
-  fCarry = 0. ;
+   fIlag = 23;
+   fJlag = 9;
+   fCarry = 0. ;
 
-  if( fFloatSeedTable[23] == 0. ) fCarry = fMantissaBit24;
-  
-  fCount24 = 0;
+   if( fFloatSeedTable[23] == 0. ) fCarry = fMantissaBit24;
+   
+   fCount24 = 0;
 }
 

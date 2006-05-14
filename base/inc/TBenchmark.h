@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.5 2004/07/07 17:46:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.6 2006/05/12 12:25:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -47,7 +47,7 @@ protected:
    TStopwatch *fTimer;          // Timers
 
 public:
-                       TBenchmark();
+   TBenchmark();
    virtual            ~TBenchmark();
    Int_t              GetBench(const char *name) const;
    Float_t            GetCpuTime(const char *name);

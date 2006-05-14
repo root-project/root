@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.46 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.47 2006/04/19 08:22:22 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -338,7 +338,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    if (!comment || !strlen(comment) || strstr(comment,"*SIGNAL")){
       ::Error("TQObject::CheckConnectArgs",
               "signal %s::%s(%s), to declare signal use comment //*SIGNAL*",
-              sender_class->GetName(), signal_method, signal_proto);
+      sender_class->GetName(), signal_method, signal_proto);
       delete [] signal_method;
       return -1;
    }

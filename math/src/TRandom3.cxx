@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.9 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.10 2006/05/04 13:01:46 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
          y = (fMt[kN-1] & kUpperMask) | (fMt[0] & kLowerMask);
          fMt[kN-1] = fMt[kM-1] ^ (y >> 1) ^ ((y & 0x1) ? kMatrixA : 0x0);
          fCount624 = 0;
-     }
+      }
 
       y = fMt[fCount624++];
       y ^=  (y >> 11);
@@ -197,7 +197,7 @@ void TRandom3::SetSeed(UInt_t seed)
       j = 8;
    }
    for(i=j; i<624; i++) {
-     fMt[i] = (69069 * fMt[i-1]) & 0xffffffff;
+      fMt[i] = (69069 * fMt[i-1]) & 0xffffffff;
    }
 }
 
