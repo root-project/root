@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.25 2005/09/04 10:32:02 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.26 2006/05/13 18:02:56 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -233,6 +233,7 @@ Int_t bufsize  = 64000;
 Int_t optcwn = 1;
 int main(int argc, char **argv)
 {
+   //Program to convert an HBOOK file into a ROOT file
    if (argc < 2) {
       printf("******Error in invoking h2root\n");
       printf("===>  h2root file.hbook  file.root [compress] [tolower] [lrecl] [bufsize] [optcwn] \n");
@@ -253,28 +254,28 @@ int main(int argc, char **argv)
    Int_t compress = 1;
    int ier=0, record_size=0;
    if (argc > 7) {
-     optcwn = atoi(argv[7]);
+      optcwn = atoi(argv[7]);
    }
    if (argc > 6) {
-     bufsize = atoi(argv[6]);
+      bufsize = atoi(argv[6]);
    }
    if (argc > 5) {
-     record_size = atoi(argv[5]);
+      record_size = atoi(argv[5]);
    }
    if (argc > 4) {
-     golower = atoi(argv[4]);
+      golower = atoi(argv[4]);
    }
    if (argc > 3) {
-     compress = atoi(argv[3]);
+      compress = atoi(argv[3]);
    }
    if (argc > 2) {
-     file_out=argv[2];
+      file_out=argv[2];
    } else {
-     file_out= new char[2000];
-     strcpy(file_out,file_in);
-     char *dot = strrchr(file_out,'.');
-     if (dot) strcpy(dot+1,"root");
-     else     strcat(file_out,".root");
+      file_out= new char[2000];
+      strcpy(file_out,file_in);
+      char *dot = strrchr(file_out,'.');
+      if (dot) strcpy(dot+1,"root");
+      else     strcat(file_out,".root");
    }
 
 #if defined(_HIUX_SOURCE) && !defined(__GNUC__)
@@ -320,7 +321,7 @@ int main(int argc, char **argv)
 //____________________________________________________________________________
 void convert_directory(const char *dir)
 {
-
+   //convert a directory
    printf(" Converting directory %s\n",dir);
    Int_t id;
 //  Int_t nastycase=0;
@@ -423,8 +424,9 @@ void convert_directory(const char *dir)
 }
 
 //____________________________________________________________________________
-  void convert_1d(Int_t id)
+void convert_1d(Int_t id)
 {
+   //convert 1d histogram
    if (id > 0) sprintf(idname,"h%d",id);
    else        sprintf(idname,"h_%d",-id);
    hnoent(id,nentries);
@@ -476,6 +478,7 @@ void convert_directory(const char *dir)
 //____________________________________________________________________________
 void convert_2d(Int_t id)
 {
+   //convert 2d histogram
    if (id > 0) sprintf(idname,"h%d",id);
    else        sprintf(idname,"h_%d",-id);
    hnoent(id,nentries);
@@ -557,8 +560,9 @@ void convert_profile(Int_t id)
 }
 
 //____________________________________________________________________________
-  void convert_rwn(Int_t id)
+void convert_rwn(Int_t id)
 {
+   //convert row wise ntuple
    const int kNchar=9;
    int nvar;
    int ier=0;
@@ -622,8 +626,9 @@ void convert_profile(Int_t id)
 }
 
 //____________________________________________________________________________
-  void convert_cwn(Int_t id)
+void convert_cwn(Int_t id)
 {
+   //convert column wise ntuple
    const int kNchar=9;
    int nvar;
    int ier=0;
@@ -859,8 +864,8 @@ void convert_profile(Int_t id)
                }
             }
             bufpos += isize*ielem;
-          }
-       }
+         }
+      }
 
       tree->Fill();
    }
