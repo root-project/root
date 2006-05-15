@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.71 2006/04/24 13:48:49 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.72 2006/05/14 10:23:26 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -194,11 +194,11 @@ public:
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
 
-   TGFrame(const TGFrame& tgf): TGWindow(tgf), TQObject(tgf), fX(tgf.fX), fY(tgf.fY), 
-     fWidth(tgf.fWidth), fHeight(tgf.fHeight), fMinWidth(tgf.fMinWidth), 
-     fMinHeight(tgf.fMinHeight), fMaxWidth(tgf.fMaxWidth), fMaxHeight(tgf.fMaxHeight), 
-     fBorderWidth(tgf.fBorderWidth), fOptions(tgf.fOptions), fBackground(tgf.fBackground), 
-     fEventMask(tgf.fEventMask), fFE(tgf.fFE) {}
+   TGFrame(const TGFrame& tgf): TGWindow(tgf), TQObject(tgf), fX(tgf.fX), fY(tgf.fY),
+      fWidth(tgf.fWidth), fHeight(tgf.fHeight), fMinWidth(tgf.fMinWidth),
+      fMinHeight(tgf.fMinHeight), fMaxWidth(tgf.fMaxWidth), fMaxHeight(tgf.fMaxHeight),
+      fBorderWidth(tgf.fBorderWidth), fOptions(tgf.fOptions), fBackground(tgf.fBackground),
+      fEventMask(tgf.fEventMask), fFE(tgf.fFE) { }
 
    virtual ~TGFrame();
    virtual void DeleteWindow();
@@ -352,9 +352,9 @@ public:
                     Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    TGCompositeFrame(const TGCompositeFrame& tcf): TGFrame(tcf),
-     fLayoutManager(tcf.fLayoutManager), fList(tcf.fList), 
-     fLayoutBroken(tcf.fLayoutBroken), fMustCleanup(tcf.fMustCleanup),
-     fMapSubwindows(tcf.fMapSubwindows) { }
+      fLayoutManager(tcf.fLayoutManager), fList(tcf.fList),
+      fLayoutBroken(tcf.fLayoutBroken), fMustCleanup(tcf.fMustCleanup),
+      fMapSubwindows(tcf.fMapSubwindows) { }
 
    virtual ~TGCompositeFrame();
    virtual TList *GetList() const { return fList; }
@@ -364,7 +364,7 @@ public:
    virtual UInt_t GetDefaultHeight() const
                      { return GetDefaultSize().fHeight; }
    virtual TGDimension GetDefaultSize() const
-                     { return (IsLayoutBroken() ? TGDimension(fWidth, fHeight) : 
+                     { return (IsLayoutBroken() ? TGDimension(fWidth, fHeight) :
                                fLayoutManager->GetDefaultSize()); }
    virtual TGFrame *GetFrameFromPoint(Int_t x, Int_t y);
    virtual Bool_t TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
@@ -499,14 +499,14 @@ public:
    TGMainFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
    TGMainFrame(const TGMainFrame& tmf): TGCompositeFrame(tmf),
-     fBindList(tmf.fBindList), fWindowName(tmf.fWindowName), fIconName(tmf.fIconName),
-     fIconPixmap(tmf.fIconPixmap), fClassName(tmf.fClassName), 
-     fResourceName(tmf.fResourceName), fMWMValue(tmf.fMWMValue), fMWMFuncs(tmf.fMWMFuncs),
-     fMWMInput(tmf.fMWMInput), fWMX(tmf.fWMX), fWMY(tmf.fWMY), fWMWidth(tmf.fWMWidth),
-     fWMHeight(tmf.fWMHeight), fWMMinWidth(tmf.fWMMinWidth), fWMMinHeight(tmf.fWMMinHeight),
-     fWMMaxWidth(tmf.fWMMaxWidth), fWMMaxHeight(tmf.fWMMaxHeight), 
-     fWMWidthInc(tmf.fWMWidthInc), fWMHeightInc(tmf.fWMHeightInc), 
-     fWMInitState(tmf.fWMInitState) { }
+      fBindList(tmf.fBindList), fWindowName(tmf.fWindowName), fIconName(tmf.fIconName),
+      fIconPixmap(tmf.fIconPixmap), fClassName(tmf.fClassName),
+      fResourceName(tmf.fResourceName), fMWMValue(tmf.fMWMValue), fMWMFuncs(tmf.fMWMFuncs),
+      fMWMInput(tmf.fMWMInput), fWMX(tmf.fWMX), fWMY(tmf.fWMY), fWMWidth(tmf.fWMWidth),
+      fWMHeight(tmf.fWMHeight), fWMMinWidth(tmf.fWMMinWidth), fWMMinHeight(tmf.fWMMinHeight),
+      fWMMaxWidth(tmf.fWMMaxWidth), fWMMaxHeight(tmf.fWMMaxHeight),
+      fWMWidthInc(tmf.fWMWidthInc), fWMHeightInc(tmf.fWMHeightInc),
+      fWMInitState(tmf.fWMInitState) { }
 
    virtual ~TGMainFrame();
 
@@ -630,8 +630,8 @@ public:
                 FontStruct_t font = GetDefaultFontStruct(),
                 Pixel_t back = GetDefaultFrameBackground());
    TGGroupFrame(const TGGroupFrame& tgf): TGCompositeFrame(tgf),
-     fText(tgf.fText), fFontStruct(tgf.fFontStruct), fNormGC(tgf.fNormGC),
-     fTitlePos(tgf.fTitlePos) { }
+      fText(tgf.fText), fFontStruct(tgf.fFontStruct), fNormGC(tgf.fNormGC),
+      fTitlePos(tgf.fTitlePos) { }
 
    virtual ~TGGroupFrame();
 

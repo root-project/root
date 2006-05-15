@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.10 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.11 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -66,10 +66,10 @@ friend class TGFrameElement;
 friend class TGCompositeFrame;
 
 private:
-   TGLayoutHints& operator=(const TGLayoutHints&);
-
    TGFrameElement *fFE;       // back pointer to the last frame element
    TGFrameElement *fPrev;     // previous element sharing this layout_hints
+
+   TGLayoutHints& operator=(const TGLayoutHints&);
 
 protected:
    ULong_t  fLayoutHints;     // layout hints (combination of ELayoutHints)
@@ -116,9 +116,10 @@ public:
 // with the frame manager class
 
 class TGFrameElement : public TObject {
+
 private:
-   TGFrameElement(const TGFrameElement&); 
-   TGFrameElement& operator=(const TGFrameElement&); 
+   TGFrameElement(const TGFrameElement&);
+   TGFrameElement& operator=(const TGFrameElement&);
 
 public:
    TGFrame        *fFrame;    // frame used in layout

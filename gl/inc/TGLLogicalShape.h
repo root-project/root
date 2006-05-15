@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name: v5-11-02 $:$Id: TGLLogicalShape.h,v 1.11 2006/04/19 10:58:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.12 2006/05/15 07:43:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -53,10 +53,11 @@ class TContextMenu;
 class TGLLogicalShape : public TGLDrawable
 {
 private:
-   TGLLogicalShape(const TGLLogicalShape&);
-   TGLLogicalShape& operator=(const TGLLogicalShape&);
    // Fields
    mutable UInt_t  fRef;         //! physical instance ref counting
+
+   TGLLogicalShape(const TGLLogicalShape&);
+   TGLLogicalShape& operator=(const TGLLogicalShape&);
 
 protected:
    mutable Bool_t  fRefStrong;   //! Strong ref (delete on 0 ref)

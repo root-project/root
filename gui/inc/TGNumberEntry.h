@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGNumberEntry.h,v 1.10 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.11 2006/05/15 07:43:34 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -167,11 +167,11 @@ class TGNumberEntry : public TGCompositeFrame, public TGWidget,
    ELimit fNumLimits; // *OPTION={GetMethod="GetNumLimits";SetMethod="SetNumLimits";Items=(TGNumberFormat::kNELNoLimits="&NoLimits",TGNumberFormat::kNELLimitMinMax="Upper&AndLower")}*
 
 private:
-   TGNumberEntry(const TGNumberEntry&);
-   TGNumberEntry& operator=(const TGNumberEntry&);
-
    const TGPicture  *fPicUp;      // Up arrow
    const TGPicture  *fPicDown;    // Down arrow
+
+   TGNumberEntry(const TGNumberEntry&);
+   TGNumberEntry& operator=(const TGNumberEntry&);
 
 protected:
    TGNumberEntryField *fNumericEntry;  // Number text entry field
@@ -303,7 +303,7 @@ public:
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
 
-   ClassDef(TGNumberEntryLayout,0)  // Layout manager for number entry widget 
+   ClassDef(TGNumberEntryLayout,0)  // Layout manager for number entry widget
 };
 
 

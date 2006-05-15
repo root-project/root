@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.7 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.8 2006/05/14 10:23:26 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -35,9 +35,9 @@ public:
    UInt_t  fWidth;       // width
    UInt_t  fHeight;      // height
 
-   TGDimension(): fWidth(0), fHeight(0) {  }
-   TGDimension(UInt_t width, UInt_t height): fWidth(width), fHeight(height) {  }
-   TGDimension(const TGDimension &d): fWidth(d.fWidth), fHeight(d.fHeight) {  }
+   TGDimension(): fWidth(0), fHeight(0) { }
+   TGDimension(UInt_t width, UInt_t height): fWidth(width), fHeight(height) { }
+   TGDimension(const TGDimension &d): fWidth(d.fWidth), fHeight(d.fHeight) { }
    virtual ~TGDimension() { }
 
    Bool_t operator==(const TGDimension &b) const
@@ -56,9 +56,9 @@ public:
    Int_t  fX;         // x position
    Int_t  fY;         // y position
 
-   TGPosition(): fX(0), fY(0) {  }
-   TGPosition(Int_t xc, Int_t yc): fX(xc), fY(yc) {  }
-   TGPosition(const TGPosition &p): fX(p.fX), fY(p.fY) {  }
+   TGPosition(): fX(0), fY(0) { }
+   TGPosition(Int_t xc, Int_t yc): fX(xc), fY(yc) { }
+   TGPosition(const TGPosition &p): fX(p.fX), fY(p.fY) { }
    virtual ~TGPosition() { }
 
    Bool_t operator==(const TGPosition &b) const
@@ -77,9 +77,9 @@ public:
    Long_t  fX;         // x position
    Long_t  fY;         // y position
 
-   TGLongPosition(): fX(0), fY(0) {  }
-   TGLongPosition(Long_t xc, Long_t yc): fX(xc), fY(yc) {  }
-   TGLongPosition(const TGLongPosition &p): fX(p.fX), fY(p.fY) {  }
+   TGLongPosition(): fX(0), fY(0) { }
+   TGLongPosition(Long_t xc, Long_t yc): fX(xc), fY(yc) { }
+   TGLongPosition(const TGLongPosition &p): fX(p.fX), fY(p.fY) { }
    virtual ~TGLongPosition() { }
 
    Bool_t operator==(const TGLongPosition &b) const
@@ -100,9 +100,9 @@ public:
    Int_t  fT;    // top
    Int_t  fB;    // bottom
 
-   TGInsets(): fL(0), fR(0), fT(0), fB(0) {  }
+   TGInsets(): fL(0), fR(0), fT(0), fB(0) { }
    TGInsets(Int_t lf, Int_t rg, Int_t tp, Int_t bt):
-      fL(lf), fR(rg), fT(tp), fB(bt) {  }
+      fL(lf), fR(rg), fT(tp), fB(bt) { }
    TGInsets(const TGInsets &in):
       fL(in.fL), fR(in.fR), fT(in.fT), fB(in.fB) { }
    virtual ~TGInsets() { }

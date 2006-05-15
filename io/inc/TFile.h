@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.45 2006/04/25 09:28:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.46 2006/05/14 10:23:26 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -214,25 +214,26 @@ public:
 // Class holding info about the file being opened
 //
 class TFileOpenHandle : public TNamed {
- friend class TFile;
- private:
-   TFileOpenHandle(const TFileOpenHandle&);
-   TFileOpenHandle& operator=(const TFileOpenHandle&);
 
+friend class TFile;
+
+private:
    TString  fOpt;        // Options
    Int_t    fCompress;   // Compression factor
    Int_t    fNetOpt;     // Network options
-   TFile   *fFile;       // TFile instance of the file being opened 
+   TFile   *fFile;       // TFile instance of the file being opened
 
    TFileOpenHandle(TFile *f) : TNamed("",""), fOpt(""), fCompress(1),
                                fNetOpt(0), fFile(f) { }
    TFileOpenHandle(const char *n, const char *o, const char *t, Int_t cmp,
                    Int_t no) : TNamed(n,t), fOpt(o), fCompress(cmp),
                                fNetOpt(no), fFile(0) { }
+   TFileOpenHandle(const TFileOpenHandle&);
+   TFileOpenHandle& operator=(const TFileOpenHandle&);
 
    TFile      *GetFile() const { return fFile; }
 
- public:
+public:
    ~TFileOpenHandle() { }
 
    Bool_t      Matches(const char *name);

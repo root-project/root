@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.9 2005/05/30 22:38:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.10 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -55,10 +55,11 @@ protected:
    PictureAttributes_t fAttributes; // picture attributes
 
    TGPicture(const char *name, Bool_t scaled = kFALSE):
-     fName(name), fScaled(scaled), fPic(kNone), fMask(kNone), fAttributes()
-     { fAttributes.fPixels = 0;
-     SetRefCount(1);
-     }
+      fName(name), fScaled(scaled), fPic(kNone), fMask(kNone), fAttributes()
+   {
+      fAttributes.fPixels = 0;
+      SetRefCount(1);
+   }
 
    TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask = 0);
 
@@ -117,7 +118,7 @@ protected:
 
 public:
    TGPicturePool(const TGClient *client, const char *path):
-     fClient(client), fPath(path), fPicList(NULL) { }
+      fClient(client), fPath(path), fPicList(NULL) { }
    virtual ~TGPicturePool();
 
    const char      *GetPath() const { return fPath; }

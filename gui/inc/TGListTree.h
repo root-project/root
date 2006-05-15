@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name: v5-11-02 $:$Id: TGListTree.h,v 1.22 2006/04/07 15:45:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.23 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -47,9 +47,6 @@ class TGListTreeItem {
 friend class TGListTree;
 
 private:
-   TGListTreeItem(const TGListTreeItem&);
-   TGListTreeItem& operator=(const TGListTreeItem&);
-
    TGClient        *fClient;       // pointer to TGClient
    TGListTreeItem  *fParent;       // pointer to parent
    TGListTreeItem  *fFirstchild;   // pointer to first child item
@@ -74,6 +71,9 @@ private:
 
    Bool_t           fHasColor;     // true if item has assigned color
    Color_t          fColor;        // item's color
+
+   TGListTreeItem(const TGListTreeItem&);
+   TGListTreeItem& operator=(const TGListTreeItem&);
 
 public:
    TGListTreeItem(TGClient *fClient = gClient, const char *name = 0,

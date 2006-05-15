@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.244 2006/05/12 16:19:22 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.245 2006/05/14 07:43:40 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1317,15 +1317,18 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
    next = &(arg[0]);
    for (int c = 0; c<len && i<=count; c++) {
       switch (arg[c]) {
-      case '<': nesting++; break;
-      case '>': nesting--; break;
-      case ',': if (nesting==0) {
-                   arg[c]=0;
-                   i++;
-                   current = next;
-                   next = &(arg[c+1]);
-                }
-                break;
+      case '<':
+         nesting++; break;
+      case '>':
+         nesting--; break;
+      case ',':
+         if (nesting==0) {
+            arg[c]=0;
+            i++;
+            current = next;
+            next = &(arg[c+1]);
+         }
+         break;
       }
    }
    if (current) ti.Init(current);
@@ -1354,21 +1357,25 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    next = &(arg[0]);
    for (int c = 0; c<len && i<=count; c++) {
       switch (arg[c]) {
-      case '<': if (nesting==0) {
-                   arg[c]=0;
-                   current = next;
-                   next = &(arg[c+1]);
-                }
-                nesting++;
-                break;
-      case '>': nesting--; break;
-      case ',': if (nesting==1) {
-                   arg[c]=0;
-                   i++;
-                   current = next;
-                   next = &(arg[c+1]);
-                }
-                break;
+      case '<':
+         if (nesting==0) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+         }
+         nesting++;
+         break;
+      case '>':
+         nesting--;
+         break;
+      case ',':
+         if (nesting==1) {
+            arg[c]=0;
+            i++;
+            current = next;
+            next = &(arg[c+1]);
+         }
+         break;
       }
    }
    if (current) ti.Init(current);
@@ -2397,18 +2404,18 @@ void WriteClassInit(G__ClassInfo &cl)
    if (!stl) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
       (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
-                    << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }" 
+                    << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"
                     << std::endl;
    }
-    
+
    (*dictSrcOut) << "   // Static variable to force the class initialization" << std::endl;
    // must be one long line otherwise R__UseDummy does not work
 
 
-   (*dictSrcOut) 
+   (*dictSrcOut)
       << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const "
       << csymbol.c_str() << "*)0x0); R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
- 
+
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       (*dictSrcOut) <<  std::endl << "   // Dictionary for non-ClassDef classes" << std::endl
                     << "   static void " << mappedname.c_str() << "_Dictionary() {" << std::endl;

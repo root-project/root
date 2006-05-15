@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.33 2006/02/01 18:54:51 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.34 2006/05/14 10:23:26 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -58,11 +58,11 @@ protected:
    TList      *fList;            //Pointer to objects list in memory
    TList      *fKeys;            //Pointer to keys list in memory
    TUUID       fUUID;            //Unique identifier
-   TString     fPathBuffer;      //!Buffer for GetPath() function 
+   TString     fPathBuffer;      //!Buffer for GetPath() function
 
           Bool_t cd1(const char *path);
    static Bool_t Cd1(const char *path);
-   
+
           void   FillFullPath(TString& buf) const;
 
 private:
@@ -80,26 +80,25 @@ public:
      */
    class TContext  {
    private:
+      TDirectory* fPrevious;   // Pointer to the previous current directory.
       TContext(TContext&);
       TContext& operator=(TContext&);
-     
-      TDirectory* fPrevious;   // Pointer to the previous current directory.
-      void CdNull(); 
+      void CdNull();
    public:
-      TContext(TDirectory* previous, TDirectory* newCurrent) 
+      TContext(TDirectory* previous, TDirectory* newCurrent)
          : fPrevious(previous)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
          if ( newCurrent ) newCurrent->cd();
-      } 
+      }
       TContext(TDirectory* newCurrent) : fPrevious(gDirectory)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
          if ( newCurrent ) newCurrent->cd();
-      } 
-      ~TContext() 
+      }
+      ~TContext()
       {
          // Destructor.   Reset the current directory to its
          // previous state.
@@ -129,8 +128,8 @@ public:
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
-   virtual TObject    *Get(const char *namecycle); 
-   virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory"); 
+   virtual TObject    *Get(const char *namecycle);
+   virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory");
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
       {
          ptr = (T*)GetObjectChecked(namecycle,TBuffer::GetClass(typeid(T)));

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.109 2006/05/04 12:21:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.110 2006/05/11 08:09:20 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -149,7 +149,7 @@ void TCanvas::Constructor()
    fBatch     = kTRUE;
    fUpdating  = kFALSE;
    fUseGL     = kFALSE;
-   
+
    fContextMenu = 0;
    fSelected    = 0;
    fSelectedPad = 0;
@@ -200,7 +200,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad()
    //  form = 4    500x500 at 40,40
    //  form = 5    500x500 at 50,50
    fUseGL = name && strstr(name, "gl") || gStyle->GetCanvasPreferGL()? kTRUE : kFALSE;
-   
+
    Constructor(name, title, form);
 }
 
@@ -222,7 +222,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       static Int_t ww = 500;
       static Int_t wh = 500;
       arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
-      if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
+      if ((*gThreadXAR)("CANV", 6, arr, 0)) return;
    }
 
    Init();
@@ -279,7 +279,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
    //      (if ww < 0  the menubar is not shown)
    //  wh is the canvas size in pixels along Y
    fUseGL = name && strstr(name, "gl") || gStyle->GetCanvasPreferGL()? kTRUE : kFALSE;
-   
+
    Constructor(name, title, ww, wh);
 }
 
@@ -296,7 +296,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    if (gThreadXAR) {
       void *arr[6];
       arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
-      if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
+      if ((*gThreadXAR)("CANV", 6, arr, 0)) return;
    }
 
    Init();
@@ -344,7 +344,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
    //  ww is the canvas size in pixels along X
    //  wh is the canvas size in pixels along Y
    fUseGL = name && strstr(name, "gl") || gStyle->GetCanvasPreferGL()? kTRUE : kFALSE;
-   
+
    Constructor(name, title, wtopx, wtopy, ww, wh);
 }
 
@@ -364,7 +364,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       void *arr[8];
       arr[1] = this;   arr[2] = (void*)name;   arr[3] = (void*)title;
       arr[4] = &wtopx; arr[5] = &wtopy; arr[6] = &ww; arr[7] = &wh;
-      if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
+      if ((*gThreadXAR)("CANV", 8, arr, 0)) return;
    }
 
    Init();
@@ -484,7 +484,7 @@ void TCanvas::Build()
 
       fContextMenu = new TContextMenu("ContextMenu");
    } else {
-      // Make sure that batch interactive canvas sizes are the same 
+      // Make sure that batch interactive canvas sizes are the same
       fCw -= 4;
       fCh -= 28;
    }
@@ -558,7 +558,7 @@ void TCanvas::Destructor()
    if (gThreadXAR) {
       void *arr[2];
       arr[1] = this;
-      if ((*gThreadXAR)("CDEL", 2, arr, NULL)) return;
+      if ((*gThreadXAR)("CDEL", 2, arr, 0)) return;
    }
 
    if (!TestBit(kNotDeleted)) return;
@@ -843,7 +843,7 @@ void TCanvas::EditorBar()
 //______________________________________________________________________________
 void TCanvas::EmbedInto(Int_t winid, Int_t ww, Int_t wh)
 {
-   // Embedded a canvas into a TRootEmbeddedCanvas. This method is only called 
+   // Embedded a canvas into a TRootEmbeddedCanvas. This method is only called
    // via TRootEmbeddedCanvas::AdoptCanvas.
 
    // If fCanvasImp already exists, no need to go further.
@@ -1051,7 +1051,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // mouse enters canvas
       if (!fDoubleBuffer) FeedbackMode(kTRUE);
       break;
-      
+
    case kMouseLeave:
       // mouse leaves canvas
       {
@@ -1158,7 +1158,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          while ((tc = (TCanvas *)next()))
             tc->Update();
       }
-      
+
       if (pad->GetGLDevice() != -1)
          fSelected->ExecuteEvent(event, px, py);
 
@@ -1234,7 +1234,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       {
          pad = Pick(px, py, prevSelObj);
          if (!pad) return;
-         
+
          gPad = pad;
          fSelected->ExecuteEvent(event, px, py);
       }
@@ -1535,7 +1535,7 @@ void TCanvas::SavePrimitive(ofstream &out, Option_t *option)
       if (GetHighLightColor() > 228) {
          TColor::SaveColor(out, GetHighLightColor());
          out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
 
@@ -1640,7 +1640,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       if (GetHighLightColor() > 228) {
          TColor::SaveColor(out, GetHighLightColor());
          out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
 
@@ -1842,7 +1842,7 @@ void TCanvas::Streamer(TBuffer &b)
          colors->Delete();
          delete colors;
       }
-      
+
       fDISPLAY.Streamer(b);
       b >> fDoubleBuffer;
       b >> fRetained;
@@ -1879,7 +1879,7 @@ void TCanvas::Streamer(TBuffer &b)
       //save list of colors
       //we must protect the case when two or more canvases are saved
       //in the same buffer. If the list of colors has already been saved
-      //in the buffer, do not add the list of colors to the list of primitives. 
+      //in the buffer, do not add the list of colors to the list of primitives.
       TObjArray *colors = 0;
       if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
          colors = (TObjArray*)gROOT->GetListOfColors();
@@ -1972,7 +1972,7 @@ void TCanvas::Update()
    if (gThreadXAR) {
       void *arr[2];
       arr[1] = this;
-      if ((*gThreadXAR)("CUPD", 2, arr, NULL)) return;
+      if ((*gThreadXAR)("CUPD", 2, arr, 0)) return;
    }
 
    if (!gVirtualX->IsCmdThread()) {
@@ -2002,16 +2002,16 @@ void TCanvas::DisconnectWidget()
 }
 
 //______________________________________________________________________________
-Bool_t TCanvas::IsGrayscale() 
-{ 
+Bool_t TCanvas::IsGrayscale()
+{
    // Check whether this canvas is to be drawn in grayscale mode.
-   return TestBit(kIsGrayscale); 
+   return TestBit(kIsGrayscale);
 }
 
 //______________________________________________________________________________
 void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
 {
-   // Set whether this canvas should be painted in grayscale, and re-paint 
+   // Set whether this canvas should be painted in grayscale, and re-paint
    // it if necessary.
    if (IsGrayscale() == set) return;
    SetBit(kIsGrayscale, set);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.4 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.5 2006/05/15 07:43:33 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -29,10 +29,11 @@ class GLUquadric;
 class TGLQuadric
 {
 private:
+   GLUquadric * fQuad;
+
    TGLQuadric(const TGLQuadric&);
    TGLQuadric& operator=(const TGLQuadric&);
 
-   GLUquadric * fQuad;
 public:
    TGLQuadric();
    virtual ~TGLQuadric(); // ClassDef introduces virtuals

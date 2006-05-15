@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.4 2004/09/07 08:13:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFont.h,v 1.5 2006/05/14 10:23:26 brun Exp $
 // Author: Fons Rademakers   20/5/2003
 
 /*************************************************************************
@@ -56,8 +56,10 @@ private:
 
 protected:
    TGFont(const char *name)
-     : TNamed(name,""), TRefCnt(), fFontStruct(0), fFontH(0), fFM() {
-     SetRefCount(1); }
+      : TNamed(name,""), TRefCnt(), fFontStruct(0), fFontH(0), fFM()
+   {
+      SetRefCount(1);
+   }
    TGFont(const TGFont &font);          // not implemented
    void operator=(const TGFont &rhs);   // use TGFontPool to get fonts
 
@@ -81,10 +83,10 @@ public:
 class TGFontPool : public TGObject {
 
 private:
-   TGFontPool(const TGFontPool&);
-   TGFontPool& operator=(const TGFontPool&);
-
    THashTable    *fList;
+
+   TGFontPool(const TGFontPool&);              // not implemented
+   TGFontPool& operator=(const TGFontPool&);   // not implemented
 
 public:
    TGFontPool(TGClient *client);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextBuffer.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextBuffer.h,v 1.2 2006/05/15 07:43:34 brun Exp $
 // Author: Fons Rademakers   05/05/98
 
 /*************************************************************************
@@ -32,10 +32,10 @@
 class TGTextBuffer {
 
 private:
+   TString    *fBuffer;
+
    TGTextBuffer(const TGTextBuffer&);
    TGTextBuffer& operator=(const TGTextBuffer&);
-
-   TString    *fBuffer;
 
 public:
    TGTextBuffer(): fBuffer(new TString) { }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-11-02 $:$Id: TFileInfo.h,v 1.4 2006/03/21 14:53:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileInfo.h,v 1.5 2006/05/14 10:23:26 brun Exp $
 // Author: Andreas-Joachim Peters   20/9/2005
 
 /*************************************************************************
@@ -48,9 +48,6 @@
 class TFileInfo : public TNamed {
 
 private:
-   TFileInfo(const TFileInfo&);
-   TFileInfo& operator=(const TFileInfo&);
-
    TUrl            *fCurrentUrl;     //! current URL to access the file, points to one of the UrlList List or 0, if the list end is reached
    TList           *fUrlList;        //-> URL List of the file
    Long64_t         fSize;           // file size
@@ -62,6 +59,9 @@ private:
    Long64_t         fLast;           // last  entry to process
 
    TObject         *fMetaDataObject; //-> generic file meta data object
+
+   TFileInfo(const TFileInfo&);
+   TFileInfo& operator=(const TFileInfo&);
 
 public:
    TFileInfo(const char *url=0, Long64_t size=-1, const char *uuid=0,

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.2 2005/05/27 20:47:15 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.3 2006/05/15 07:43:34 brun Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -24,10 +24,8 @@ class TClass;
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 class TIsAProxy  : public TVirtualIsAProxy {
-private:
-   TIsAProxy(const TIsAProxy&);
-   TIsAProxy& operator=(const TIsAProxy&);
 
+private:
    const type_info   *fType;         //Actual typeid of the proxy
    const type_info   *fLastType;     //Last used subtype
    TClass            *fClass;        //Actual TClass
@@ -36,6 +34,10 @@ private:
    Bool_t             fVirtual;      //Flag if class is virtual
    void              *fContext;      //Optional user contex
    Bool_t             fInit;         //Initialization flag
+
+   TIsAProxy(const TIsAProxy&);
+   TIsAProxy& operator=(const TIsAProxy&);
+
 public:
    // Standard initializing constructor
    TIsAProxy(const type_info &typ, void *ctxt = 0);
@@ -53,11 +55,12 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 template <class T> class TInstrumentedIsAProxy : public TVirtualIsAProxy {
+
 private:
+   TClass *fClass;        //Actual TClass
+
    TInstrumentedIsAProxy(const TInstrumentedIsAProxy&);
    TInstrumentedIsAProxy& operator=(const TInstrumentedIsAProxy&);
-
-   TClass *fClass;        //Actual TClass
 
 public:
    // Standard initializing constructor
