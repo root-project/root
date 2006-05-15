@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.2 2000/12/13 15:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.3 2004/08/02 11:43:12 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -35,12 +35,16 @@ class TGClient;
 
 class TGObject : public TObject {
 
+private:
+   TGObject& operator=(const TGObject&);
+
 protected:
    Handle_t    fId;                  // X11/Win32 Window identifier
    TGClient   *fClient;              // Connection to display server
 
 public:
-   TGObject() { fId = 0; fClient = 0; }
+   TGObject(): fId(0), fClient(NULL) { }
+   TGObject(const TGObject& tgo): TObject(tgo), fId(tgo.fId), fClient(tgo.fClient) { }
    virtual ~TGObject() { }
 
    Handle_t  GetId() const { return fId; }

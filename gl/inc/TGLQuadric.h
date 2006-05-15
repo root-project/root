@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h $
+// @(#)root/gl:$Name:  $:$Id: TGLQuadric.h,v 1.4 2006/01/30 17:42:06 rdm Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -29,6 +29,9 @@ class GLUquadric;
 class TGLQuadric
 {
 private:
+   TGLQuadric(const TGLQuadric&);
+   TGLQuadric& operator=(const TGLQuadric&);
+
    GLUquadric * fQuad;
 public:
    TGLQuadric();

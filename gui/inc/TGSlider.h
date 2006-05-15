@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.9 2004/10/19 17:13:27 brun Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGSlider.h,v 1.10 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -68,6 +68,10 @@ enum ESliderType {
 
 
 class TGSlider : public TGFrame, public TGWidget {
+
+private:
+   TGSlider(const TGSlider&);
+   TGSlider& operator=(const TGSlider&);
 
 protected:
    Int_t            fPos;           // logical position between fVmin and fVmax

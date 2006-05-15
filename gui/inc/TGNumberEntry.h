@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.9 2006/04/12 12:56:32 antcheva Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGNumberEntry.h,v 1.10 2006/04/13 15:32:35 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -167,6 +167,9 @@ class TGNumberEntry : public TGCompositeFrame, public TGWidget,
    ELimit fNumLimits; // *OPTION={GetMethod="GetNumLimits";SetMethod="SetNumLimits";Items=(TGNumberFormat::kNELNoLimits="&NoLimits",TGNumberFormat::kNELLimitMinMax="Upper&AndLower")}*
 
 private:
+   TGNumberEntry(const TGNumberEntry&);
+   TGNumberEntry& operator=(const TGNumberEntry&);
+
    const TGPicture  *fPicUp;      // Up arrow
    const TGPicture  *fPicDown;    // Down arrow
 
@@ -288,11 +291,15 @@ public:
 
 
 class TGNumberEntryLayout : public TGLayoutManager {
+private:
+   TGNumberEntryLayout(const TGNumberEntryLayout&);
+   TGNumberEntryLayout& operator=(const TGNumberEntryLayout&);
+
 protected:
    TGNumberEntry *fBox;        // pointer to numeric control box
 
 public:
-   TGNumberEntryLayout(TGNumberEntry *box) { fBox = box; }
+   TGNumberEntryLayout(TGNumberEntry *box): fBox(box) { }
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
 

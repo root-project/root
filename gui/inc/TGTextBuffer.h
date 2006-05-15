@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextBuffer.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   05/05/98
 
 /*************************************************************************
@@ -32,11 +32,14 @@
 class TGTextBuffer {
 
 private:
+   TGTextBuffer(const TGTextBuffer&);
+   TGTextBuffer& operator=(const TGTextBuffer&);
+
    TString    *fBuffer;
 
 public:
-   TGTextBuffer() { fBuffer = new TString; }
-   TGTextBuffer(Int_t length) { fBuffer = new TString(length); }
+   TGTextBuffer(): fBuffer(new TString) { }
+   TGTextBuffer(Int_t length): fBuffer(new TString(length)) { }
    virtual ~TGTextBuffer() { delete fBuffer; }
 
    UInt_t GetTextLength() const { return fBuffer->Length(); }

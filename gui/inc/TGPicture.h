@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.8 2005/05/15 07:30:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.9 2005/05/30 22:38:39 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -54,14 +54,11 @@ protected:
    Pixmap_t            fMask;       // picture mask pixmap
    PictureAttributes_t fAttributes; // picture attributes
 
-   TGPicture(const char *name, Bool_t scaled = kFALSE) {
-      fName   = name;
-      fScaled = scaled;
-      fPic    = kNone;
-      fMask   = kNone;
-      fAttributes.fPixels = 0;
-      SetRefCount(1);
-   }
+   TGPicture(const char *name, Bool_t scaled = kFALSE):
+     fName(name), fScaled(scaled), fPic(kNone), fMask(kNone), fAttributes()
+     { fAttributes.fPixels = 0;
+     SetRefCount(1);
+     }
 
    TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask = 0);
 
@@ -89,6 +86,10 @@ public:
 
 class TGSelectedPicture : public TGPicture {
 
+private:
+   TGSelectedPicture(const TGSelectedPicture&);
+   TGSelectedPicture& operator=(const TGSelectedPicture&);
+
 protected:
    const TGClient *fClient;    // client to which selected picture belongs
 
@@ -105,17 +106,18 @@ public:
 
 class TGPicturePool : public TObject {
 
+private:
+   TGPicturePool(const TGPicturePool&);
+   TGPicturePool& operator=(const TGPicturePool&);
+
 protected:
    const TGClient    *fClient;    // client for which we keep icon pool
    TString            fPath;      // icon search path
    THashTable        *fPicList;   // hash table containing the icons
 
 public:
-   TGPicturePool(const TGClient *client, const char *path) {
-      fClient  = client;
-      fPath    = path;
-      fPicList = 0;
-   }
+   TGPicturePool(const TGClient *client, const char *path):
+     fClient(client), fPath(path), fPicList(NULL) { }
    virtual ~TGPicturePool();
 
    const char      *GetPath() const { return fPath; }

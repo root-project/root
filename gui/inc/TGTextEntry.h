@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.26 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.27 2006/04/24 14:04:41 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -43,6 +43,10 @@ class TGToolTip;
 class TColor;
 
 class TGTextEntry : public TGFrame, public TGWidget {
+
+private:
+   TGTextEntry(const TGTextEntry&);
+   TGTextEntry& operator=(const TGTextEntry&);
 
 public:
    enum   EEchoMode { kNormal, kNoEcho, kPassword };

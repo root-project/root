@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.9 2004/09/07 09:31:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.10 2005/11/17 19:09:28 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -66,6 +66,8 @@ friend class TGFrameElement;
 friend class TGCompositeFrame;
 
 private:
+   TGLayoutHints& operator=(const TGLayoutHints&);
+
    TGFrameElement *fFE;       // back pointer to the last frame element
    TGFrameElement *fPrev;     // previous element sharing this layout_hints
 
@@ -81,10 +83,10 @@ protected:
 public:
    TGLayoutHints(ULong_t hints = kLHintsNormal,
                  Int_t padleft = 0, Int_t padright = 0,
-                 Int_t padtop = 0, Int_t padbottom = 0)
-      { fPadleft = padleft; fPadright = padright;
-        fPadtop  = padtop;  fPadbottom = padbottom;
-        fLayoutHints = hints; SetRefCount(0); fFE = 0; fPrev = 0; }
+                 Int_t padtop = 0, Int_t padbottom = 0):
+     fFE(0), fPrev(0), fLayoutHints(hints), fPadtop(padtop), fPadbottom(padbottom),
+     fPadleft(padleft), fPadright(padright)
+     { SetRefCount(0); }
 
    TGLayoutHints(const TGLayoutHints &lh);
 
@@ -114,12 +116,16 @@ public:
 // with the frame manager class
 
 class TGFrameElement : public TObject {
+private:
+   TGFrameElement(const TGFrameElement&); 
+   TGFrameElement& operator=(const TGFrameElement&); 
+
 public:
    TGFrame        *fFrame;    // frame used in layout
    Int_t           fState;    // EFrameState defined in TGFrame.h
    TGLayoutHints  *fLayout;   // layout hints used in layout
 
-   TGFrameElement() { fFrame = 0; fState = 0; fLayout = 0; }
+   TGFrameElement(): fFrame(NULL), fState(0), fLayout(NULL) { }
    TGFrameElement(TGFrame *f, TGLayoutHints *l);
    ~TGFrameElement();
 
@@ -156,6 +162,10 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGVerticalLayout : public TGLayoutManager {
+
+private:
+   TGVerticalLayout(const TGVerticalLayout&);
+   TGVerticalLayout& operator=(const TGVerticalLayout&);
 
 protected:
    TGCompositeFrame  *fMain;     // container frame
@@ -196,7 +206,7 @@ public:
    Int_t   fSep;             // interval between frames
 
    TGRowLayout(TGCompositeFrame *main, Int_t s = 0) :
-      TGVerticalLayout(main) { fSep = s; }
+      TGVerticalLayout(main), fSep(s) { }
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;
@@ -226,6 +236,11 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGMatrixLayout : public TGLayoutManager {
+
+private:
+   TGMatrixLayout(const TGMatrixLayout&);
+   TGMatrixLayout& operator=(const TGMatrixLayout&);
+
 protected:
    TGCompositeFrame *fMain;      // container frame
    TList            *fList;      // list of frames to arrange
@@ -255,6 +270,10 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGTileLayout : public TGLayoutManager {
+
+private:
+   TGTileLayout(const TGTileLayout&);
+   TGTileLayout& operator=(const TGTileLayout&);
 
 protected:
    Int_t             fSep;    // separation between tiles
@@ -289,7 +308,7 @@ private:
 
 public:
    TGListDetailsLayout(TGCompositeFrame *main, Int_t sep = 0, UInt_t w = 0) :
-      TGTileLayout(main, sep) { fWidth = w; }
+      TGTileLayout(main, sep), fWidth(w) { }
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const;

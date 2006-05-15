@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.11 2004/09/20 19:11:54 rdm Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGSplitter.h,v 1.12 2006/04/12 11:11:43 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -30,6 +30,10 @@
 
 class TGSplitter : public TGFrame {
 
+private:
+   TGSplitter(const TGSplitter&);
+   TGSplitter& operator=(const TGSplitter&);
+
 protected:
    Cursor_t    fSplitCursor;      // split cursor
    Bool_t      fDragging;         // true if in dragging mode
@@ -50,6 +54,10 @@ public:
 
 
 class TGVSplitter : public TGSplitter {
+
+private:
+   TGVSplitter(const TGVSplitter&);
+   TGVSplitter& operator=(const TGVSplitter&);
 
 protected:
    Int_t       fStartX;         // x position when dragging starts
@@ -82,6 +90,10 @@ public:
 
 
 class TGHSplitter : public TGSplitter {
+
+private:
+   TGHSplitter(const TGHSplitter&);
+   TGHSplitter& operator=(const TGHSplitter&);
 
 protected:
    Int_t       fStartY;         // y position when dragging starts

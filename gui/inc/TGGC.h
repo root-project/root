@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.6 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.7 2004/09/06 08:19:51 brun Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -118,6 +118,9 @@ class TGGCPool : public TGObject {
 friend class TGGC;
 
 private:
+   TGGCPool(const TGGCPool&);
+   TGGCPool& operator=(const TGGCPool&);
+
    THashTable  *fList;   // hash table of graphics contexts in pool
 
    void   ForceFreeGC(const TGGC *gc);

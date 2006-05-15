@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.16 2006/04/12 12:56:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.17 2006/04/24 13:13:21 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -42,6 +42,10 @@ class TGTab;
 
 class TGTabLayout : public TGLayoutManager {
 
+private:
+   TGTabLayout(const TGTabLayout&);
+   TGTabLayout& operator=(const TGTabLayout&);
+
 protected:
    TGTab    *fMain;      // container frame
    TList    *fList;      // list of frames to arrange
@@ -59,6 +63,10 @@ public:
 
 
 class TGTab : public TGCompositeFrame, public TGWidget {
+
+private:
+   TGTab(const TGTab&);
+   TGTab& operator=(const TGTab&);
 
 protected:
    Int_t               fCurrent;        // index of current tab
@@ -117,6 +125,10 @@ public:
 
 
 class TGTabElement : public TGFrame {
+
+private:
+   TGTabElement(const TGTabElement&);
+   TGTabElement& operator=(const TGTabElement&);
 
 protected:
    TGString        *fText;            // text on tab

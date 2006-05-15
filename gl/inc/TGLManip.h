@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.9 2006/02/23 16:44:51 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLManip.h,v 1.10 2006/03/08 21:09:42 brun Exp $
 // Author:  Richard Maunder  16/09/2005
 
 /*************************************************************************
@@ -48,6 +48,10 @@ class TGLViewer;
 //////////////////////////////////////////////////////////////////////////
 
 class TGLManip : public TVirtualGLManip {
+private:
+   TGLManip(const TGLManip&);
+   TGLManip& operator=(const TGLManip&);
+
 protected:
    TGLPhysicalShape * fShape;             //! manipulated shape
    UInt_t             fSelectedWidget;    //! active width (axis) component

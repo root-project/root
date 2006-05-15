@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.7 2005/07/05 12:36:06 brun Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -36,6 +36,10 @@ class TGTextLine {
 
 friend class TGText;
 
+private:
+   TGTextLine(const TGTextLine&);
+   TGTextLine& operator=(const TGTextLine&);
+
 protected:
    char         *fString;   // line of text
    ULong_t       fLength;   // lenght of line
@@ -65,6 +69,10 @@ public:
 
 
 class TGText {
+
+private:
+   TGText(const TGText&);
+   TGText& operator=(const TGText&);
 
 protected:
    TString      fFilename;       // name of opened file ("" if open buffer)

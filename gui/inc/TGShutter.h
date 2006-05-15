@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.7 2004/09/10 13:34:07 brun Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGShutter.h,v 1.8 2006/03/28 17:08:39 antcheva Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -46,6 +46,10 @@ class TGShutterItem : public TGVerticalFrame, public TGWidget {
 
 friend class TGShutter;
 
+private:
+   TGShutterItem(const TGShutterItem&);
+   TGShutterItem& operator=(const TGShutterItem&);
+
 protected:
    TGButton      *fButton;     // shutter item button
    TGCanvas      *fCanvas;     // canvas of shutter item
@@ -67,6 +71,10 @@ public:
 
 
 class TGShutter : public TGCompositeFrame {
+
+private:
+   TGShutter(const TGShutter&);
+   TGShutter& operator=(TGShutter&);
 
 protected:
    TTimer         *fTimer;                  // Timer for animation

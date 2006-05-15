@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.32 2006/04/11 06:58:23 antcheva Exp $
+// @(#)root/gui:$Name: v5-11-02 $:$Id: TGMenu.h,v 1.33 2006/04/13 15:32:35 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -80,6 +80,10 @@ class TGMenuEntry : public TObject {
 friend class TGPopupMenu;
 friend class TGMenuBar;
 
+private:
+   TGMenuEntry(const TGMenuEntry&); 
+   TGMenuEntry& operator=(const TGMenuEntry&); 
+
 protected:
    Int_t             fEntryId;   // the entry id (used for event processing)
    void             *fUserData;  // pointer to user data structure
@@ -92,7 +96,8 @@ protected:
    TGPopupMenu      *fPopup;     // pointer to popup menu (in case of cascading menus)
 
 public:
-   TGMenuEntry() { fUserData = 0; fLabel = 0; fPic = 0; fPopup = 0; }
+   TGMenuEntry(): fEntryId(0), fUserData(NULL), fType(), fStatus(0), fEx(0), fEy(0),
+     fEw(0), fEh(0), fLabel(NULL), fPic(NULL), fPopup(NULL) { }
    virtual ~TGMenuEntry() { if (fLabel) delete fLabel; }
 
    Int_t          GetEntryId() const { return fEntryId; }
@@ -125,6 +130,10 @@ class TGPopupMenu : public TGFrame {
 
 friend class TGMenuTitle;
 friend class TGMenuBar;
+
+private:
+   TGPopupMenu(const TGPopupMenu&);
+   TGPopupMenu& operator=(const TGPopupMenu&);
 
 protected:
    TList             *fEntryList;     // list of menu entries
@@ -240,6 +249,10 @@ public:
 
 class TGMenuTitle : public TGFrame {
 
+private:
+   TGMenuTitle(const TGMenuTitle&);
+   TGMenuTitle& operator=(const TGMenuTitle&);
+
 protected:
    TGPopupMenu    *fMenu;             // attached popup menu
    TGHotString    *fLabel;            // menu title
@@ -290,6 +303,10 @@ public:
 class TGMenuBar : public TGHorizontalFrame {
 
 friend class TGPopupMenu;
+
+private:
+   TGMenuBar(const TGMenuBar&);
+   TGMenuBar& operator=(const TGMenuBar&);
 
 protected:
    TGMenuTitle  *fCurrent;       // current menu title

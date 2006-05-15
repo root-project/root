@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.4 2004/09/13 09:29:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.5 2006/05/05 16:25:59 antcheva Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -65,6 +65,10 @@ class TGLabel;
 
 
 class TGMsgBox : public TGTransientFrame {
+
+private:
+   TGMsgBox(const TGMsgBox&);
+   TGMsgBox& operator=(const TGMsgBox&);
 
 protected:
    TGButton            *fYes, *fNo, *fOK, *fApply;   // buttons in dialog box

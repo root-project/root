@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.1 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.2 2005/05/27 20:47:15 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -25,6 +25,9 @@ class TClass;
 //////////////////////////////////////////////////////////////////////////
 class TIsAProxy  : public TVirtualIsAProxy {
 private:
+   TIsAProxy(const TIsAProxy&);
+   TIsAProxy& operator=(const TIsAProxy&);
+
    const type_info   *fType;         //Actual typeid of the proxy
    const type_info   *fLastType;     //Last used subtype
    TClass            *fClass;        //Actual TClass
@@ -51,6 +54,9 @@ public:
 //////////////////////////////////////////////////////////////////////////
 template <class T> class TInstrumentedIsAProxy : public TVirtualIsAProxy {
 private:
+   TInstrumentedIsAProxy(const TInstrumentedIsAProxy&);
+   TInstrumentedIsAProxy& operator=(const TInstrumentedIsAProxy&);
+
    TClass *fClass;        //Actual TClass
 
 public:

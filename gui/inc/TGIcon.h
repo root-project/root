@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.5 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.6 2006/04/24 13:51:06 antcheva Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -33,6 +33,10 @@ class TImage;
 
 class TGIcon : public TGFrame {
 
+private:
+   TGIcon(const TGIcon&);
+   TGIcon& operator=(const TGIcon&);
+
 protected:
    const TGPicture  *fPic;     // icon picture
    TImage           *fImage;   // image  
@@ -43,7 +47,7 @@ protected:
 public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground()) :
-         TGFrame(p, w, h, options, back) { fPic = pic; fImage = 0; SetWindowName(); }
+         TGFrame(p, w, h, options, back), fPic(pic), fImage(0), fPath() { SetWindowName(); }
    TGIcon(const TGWindow *p = 0, const char *image = 0);
 
    virtual ~TGIcon();
