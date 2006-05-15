@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.6 2006/04/24 13:51:06 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.7 2006/05/15 07:43:33 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -33,16 +33,18 @@ class TImage;
 
 class TGIcon : public TGFrame {
 
-private:
-   TGIcon(const TGIcon&);
-   TGIcon& operator=(const TGIcon&);
-
 protected:
    const TGPicture  *fPic;     // icon picture
    TImage           *fImage;   // image  
    TString           fPath;    // directory of image
 
    virtual void DoRedraw();
+
+private:
+   TGIcon& operator=(const TGIcon&);
+
+protected:
+   TGIcon(const TGIcon &p);
 
 public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,

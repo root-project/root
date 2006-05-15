@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.12 2006/04/25 08:47:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.13 2006/05/05 14:47:05 antcheva Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -63,6 +63,16 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
    TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
    SetWindowName();
    delete path;
+}
+
+//______________________________________________________________________________
+TGIcon::TGIcon(const TGIcon &p)
+       :TGFrame(p)
+{
+   // Copy constructor
+   fPic = 0;
+   fImage = 0;
+   fPath = "";
 }
 
 //______________________________________________________________________________
