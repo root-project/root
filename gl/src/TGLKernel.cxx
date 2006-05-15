@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.40 2005/12/06 15:27:48 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.41 2006/01/26 11:59:41 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -46,35 +46,37 @@ GLenum GLCommand[] = { GLConstants(GL_)  };
 //______________________________________________________________________________
 TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp), fQuad(0), fTessObj(0)
 {
-   // Ctor.
+   // Constructor.
 
    gVirtualGL = this;
    gROOT->GetListOfSpecials()->Add(this);
-   //glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 }
+
 
 //______________________________________________________________________________
 TGLKernel::TGLKernel(const char *name) : TVirtualGL(name), fQuad(0), fTessObj(0)
 {
-   // Ctor.
+   // Constructor.
 
    gVirtualGL = this;
    gROOT->GetListOfSpecials()->Add(this);
 }
 
+
 //______________________________________________________________________________
 TGLKernel::~TGLKernel()
 {
-   // dtor.
+   // Destructor.
 
    gROOT->GetListOfSpecials()->Remove(this);
    gluDeleteQuadric(fQuad);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::ClearColor(Int_t color)
 {
-   //
+   // Clear GL color.
 
    if (GetTrueColorMode()) {
       Float_t red;
@@ -91,18 +93,20 @@ void TGLKernel::ClearColor(Int_t color)
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::ClearGLColor(Float_t red, Float_t green, Float_t blue, Float_t alpha)
 {
-   //
+   // Clear GL color.
 
    glClearColor(red, green, blue, alpha);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::ClearGLColor(Float_t *colors)
 {
-   //
+   // Clear GL color.
 
    GLclampf red   = colors[0];
    GLclampf green = colors[1];
@@ -111,10 +115,12 @@ void TGLKernel::ClearGLColor(Float_t *colors)
    glClearColor(red, green, blue, alpha);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::ClearGL(UInt_t stereo)
 {
-   //
+   // Clear GL.
+
 #ifdef STEREO_GL
    if (stereo) {
       if (Int_t(stereo) < 0)
@@ -127,141 +133,156 @@ void TGLKernel::ClearGL(UInt_t stereo)
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::DisableGL(EG3D2GLmode mode)
 {
-   //
+   // Disable GL.
 
    glDisable(GLCommand[mode]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::EnableGL(EG3D2GLmode mode)
 {
-   //
+   // Enable GL.
 
    glEnable(GLCommand[mode]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::FlushGL()
 {
-   //
+   // FLush GL buffer.
 
    glFlush();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::FrontGLFace(EG3D2GLmode faceflag)
 {
-   //
+   // GL front face.
 
    fFaceFlag = faceflag;
    glFrontFace(GLCommand[faceflag]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::NewGLList(UInt_t ilist, EG3D2GLmode mode)
 {
-   //
+   // New GL list.
 
    glNewList(ilist, GLCommand[mode]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::NewGLModelView(Int_t ilist)
 {
-   //
+   // New GL mode view.
 
    glNewList(ilist, GL_COMPILE);
-//--    glMatrixMode(GL_MODELVIEW);
-//--    glLoadIdentity();
 }
+
 
 //______________________________________________________________________________
 void TGLKernel::GetGL(EG3D2GLmode mode, UChar_t *params)
 {
-   //
+   // Get GL.
 
    glGetBooleanv(GLCommand[mode], params);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::GetGL(EG3D2GLmode mode, Double_t *params)
 {
-   //
+   // Get GL.
 
    glGetDoublev(GLCommand[mode], params);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::GetGL(EG3D2GLmode mode, Float_t *params)
 {
-   //
+   // Get GL.
 
    glGetFloatv(GLCommand[mode], params);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::GetGL(EG3D2GLmode mode, Int_t *params)
 {
-   //
+   // Get GL.
 
    glGetIntegerv(GLCommand[mode], params);
 }
 
+
 //______________________________________________________________________________
 Int_t TGLKernel::GetGLError()
 {
-   //
+   // Get GL error.
 
    return glGetError();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::EndGLList()
 {
-   //
+   // End GL list.
 
    glEndList();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::BeginGLCmd(EG3D2GLmode mode)
 {
-   //
+   // Begin GL.
 
    glBegin(GLCommand[mode]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::EndGLCmd()
 {
-   //
+   // End GL.
 
    glEnd();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PushGLMatrix()
 {
-   //
+   // Push GL matrix.
 
    glPushMatrix();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PopGLMatrix()
 {
-   //
+   // Pop GL matrix.
 
    glPopMatrix();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::RotateGL(Double_t *direction, Int_t mode)
 {
-   //
+   // GL rotate.
 
    if (mode) {
       Double_t angle = direction[0];
@@ -270,10 +291,9 @@ void TGLKernel::RotateGL(Double_t *direction, Int_t mode)
       Double_t z     = direction[3];
       RotateGL(angle,x,y,z);
    } else {
-//*-* Double_t theta   - polar angle for the axis x`
-//*-* Double_t phi     - azimutal angle for the axis x`
-//*-* Double_t psi     - azimutal angle for the axis y`
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+      // Double_t theta   - polar angle for the axis x`
+      // Double_t phi     - azimutal angle for the axis x`
+      // Double_t psi     - azimutal angle for the axis y`
       Double_t theta = direction[0];
       Double_t phi   = direction[1];
       Double_t psi   = direction[2];
@@ -281,94 +301,105 @@ void TGLKernel::RotateGL(Double_t *direction, Int_t mode)
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::RotateGL(Double_t angle, Double_t x,Double_t y,Double_t z)
 {
-   //*-* The RotateGL function computes a matrix that performs a counterclockwise
-   //*-* rotation of angle degrees about the vector from the origin through
-   //*-* the point (x, y, z).
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // The RotateGL function computes a matrix that performs a counterclockwise
+   // rotation of angle degrees about the vector from the origin through
+   // the point (x, y, z).
 
    glRotated(angle,x,y,z);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::RotateGL(Double_t theta, Double_t phi, Double_t psi)
 {
-   //*-* Double_t theta   - polar angle for the axis x`
-   //*-* Double_t phi     - azimutal angle for the axis x`
-   //*-* Double_t psi     - azimutal angle for the axis y`
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Rotate GL.
+   //
+   // Double_t theta   - polar angle for the axis x`
+   // Double_t phi     - azimutal angle for the axis x`
+   // Double_t psi     - azimutal angle for the axis y`
 
    if (TMath::Abs(90-theta) > 0.00001) RotateGL(theta-90, 1, 0, 0);
    if (TMath::Abs(90-psi)   > 0.00001) RotateGL(90-psi,0, 1, 0);
    if (TMath::Abs(phi)      > 0.00001) RotateGL(phi, 0, 0, 1);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::TranslateGL(Double_t x,Double_t y,Double_t z)
 {
-   //
+   // GL Translate.
 
    glTranslated(x,y,z);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::TranslateGL(Double_t *xyz)
 {
-   //
+   // GL Translate.
 
    TranslateGL(xyz[0], xyz[1],xyz[2]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::MultGLMatrix(Double_t *mat)
 {
-   //
+   // Mult GL matrix.
 
    glMultMatrixd(mat);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetGLColor(Float_t *rgb)
 {
-   //
+   // Set GL color.
 
    glColor3fv(rgb);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetGLVertex(Float_t *vertex)
 {
-   //
+   // Set GL vertex.
 
    glVertex3fv(vertex);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetGLVertex(const Double_t *vert)
 {
-   //
+   // Set GL vertex.
 
    glVertex3dv(vert);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetGLColorIndex(Int_t color)
 {
-   //
+   // Set GL color index.
 
    if (color != -1) fColorIndx = color;
-   // We have to change BLACK color to GRAY to make it visible
+
+   // Change BLACK color to GRAY to make it visible
    if (fColorIndx == 1 && gVirtualGL->GetTrueColorMode()) fColorIndx=19;
    SetCurrentColor(fColorIndx);
 }
+
 
 //______________________________________________________________________________
 void TGLKernel::SetCurrentColor(Int_t color)
 {
 
-   //
+   // Set current color.
 
    if (gVirtualGL->GetTrueColorMode()) {
       Float_t rgb[3];
@@ -388,30 +419,29 @@ void TGLKernel::SetCurrentColor(Int_t color)
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetGLPointSize(Float_t size)
 {
-   //*-*
-   //*-* The SetGLPointSize function specifies the diameter of rasterized points.
-   //*-*
+   // The SetGLPointSize function specifies the diameter of rasterized points.
 
    glPointSize(size);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetGLLineWidth(Float_t width)
 {
-   //*-*
-   //*-* The SetGLLineWidth function specifies the width of rasterized lines.
-   //*-*
+   // The SetGLLineWidth function specifies the width of rasterized lines.
 
    glLineWidth(width);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetRootLight(Bool_t flag)
 {
-   //
+   // Set Root light.
 
    if (flag != fRootLight) {
       fRootLight = flag;
@@ -426,41 +456,43 @@ void TGLKernel::SetRootLight(Bool_t flag)
       #ifdef STEREO_GL
          glEnable(GL_STEREO);
       #endif
-      //            glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);
-      //          glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,GL_TRUE);
-      //          glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
       }
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::DeleteGLLists(Int_t ilist, Int_t range)
 {
-   //
+   // Delete GL list.
 
    glDeleteLists(ilist, range);
 }
 
+
 //______________________________________________________________________________
 Int_t TGLKernel::CreateGLLists(Int_t range)
 {
-   //
+   // Create GL list.
 
    return glGenLists(range);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::RunGLList(Int_t list)
 {
-   //
+   // Run GL listi (call list).
 
    glCallList(list);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::NewProjectionView(Double_t min[], Double_t max[], Bool_t perspective)
 {
-   //
+   // Define new Projection view.
+
 #if 0
    if (kTRUE) {
       glEnable(GL_LIGHT0);
@@ -472,9 +504,6 @@ void TGLKernel::NewProjectionView(Double_t min[], Double_t max[], Bool_t perspec
       ::SetRootLight(kTRUE);
    }
 #endif
-//       glMaterial(GL_FRONT,
-//       glLightModel();
-
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -486,8 +515,6 @@ void TGLKernel::NewProjectionView(Double_t min[], Double_t max[], Bool_t perspec
       glFrustum(min[0],max[0],min[1],max[1],dnear,dfar);
    else
       glOrtho  (min[0],max[0],min[1],max[1],dnear,dfar);
-
-//       RotateGL(-(-90+view->GetLatitude()),-(90+view->GetLongitude()),view->GetPsi()+90);
 
    glCullFace(GL_BACK);
    glMatrixMode(GL_MODELVIEW);
@@ -506,20 +533,22 @@ void TGLKernel::NewProjectionView(Double_t min[], Double_t max[], Bool_t perspec
 #endif
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PolygonGLMode(EG3D2GLmode face , EG3D2GLmode mode)
 {
-   //
+   // Set GL polygon mode.
 
    glPolygonMode(GLCommand[face], GLCommand[mode]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetStack(Double_t *matrix)
 {
-   // SetStack(Double_t *matrix) method replaces the matrix on the top of the stack
-   //                            of the matrix with a new one supplied or with the
-   //                            indentity.
+   // SetStack(Double_t *matrix) method replaces the matrix on the top of the
+   //                            stack of the matrix with a new one supplied or
+   //                            with the indentity.
    // Parameters:
    // ----------
    // Double_t *matrix - the pointer to a new matrix to updtae stack
@@ -532,18 +561,20 @@ void TGLKernel::SetStack(Double_t *matrix)
    glPushMatrix();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::ShadeGLModel(EG3D2GLmode model)
 {
-   //
+   // Set GL shade model.
 
    glShadeModel(GLCommand[model]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::AddRotation(Double_t *rotmatrix, Double_t *angles)
 {
-   //
+   // Add Rotation.
 
    GLint mode;
    glPushMatrix();
@@ -575,16 +606,18 @@ void TGLKernel::AddRotation(Double_t *rotmatrix, Double_t *angles)
    glPopMatrix();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::NewModelView(Double_t *angles,Double_t *delta )
 {
-   //
+   // New model view.
 
    RotateGL(-(-90+angles[0]), -( 90+angles[1]), 90+angles[2]);
 
-   //*-*  Move model to the center of the "view" box ??????????
+   // Move model to the center of the "view" box
    TranslateGL(delta[0], delta[1], delta[2]);
 }
+
 
 //______________________________________________________________________________
 void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option)
@@ -596,20 +629,15 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
    //          "LP"       - draw the 3D points and connect them with
    //                       straight lines
 
-
    if (!points) return;
    Int_t n = points->Size();
 
    if (n <=0) return;
 
-//    if (fRootLight)
-//           LightIndex(0);  //reset the original color
-
    GLenum mode = GL_POINTS;
    Int_t pass = 0;
    if (option && strchr(option,'P')) { pass++;}
    if (option && strchr(option,'L')) { mode = GL_LINE_STRIP; pass++;}
-
 
    while (pass >= 0) {
       pass--;
@@ -624,16 +652,14 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PaintGLPoints(Int_t n, Float_t *p, Option_t *)
 {
-   //
+   // Paint GL points.
 
    if (n <= 0 || p == 0) return;
    GLfloat *point = p;
-
-//    if (fRootLight)
-//           LightIndex(0);  //reset the original color
 
    glBegin(GL_POINTS);
 
@@ -641,16 +667,14 @@ void TGLKernel::PaintGLPoints(Int_t n, Float_t *p, Option_t *)
    glEnd();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PaintPolyLine(Int_t n, Float_t *p, Option_t *)
 {
-   //
+   // Paint Polyline via OpenGL.
 
    if (n <= 0 || p == 0) return;
    GLfloat *line = p;
-
-//    if (fRootLight)
-//           LightIndex(0);  //reset the original color
 
    glBegin(GL_LINE_STRIP);
 
@@ -658,16 +682,14 @@ void TGLKernel::PaintPolyLine(Int_t n, Float_t *p, Option_t *)
    glEnd();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PaintPolyLine(Int_t n, Double_t *p, Option_t *)
 {
-   //
+   // Paint Polyline via OpenGL.
 
    if (n <= 0 || p == 0) return;
    GLdouble *line = p;
-
-//    if (fRootLight)
-//           LightIndex(0);  //reset the original color
 
    glBegin(GL_LINE_STRIP);
 
@@ -679,8 +701,7 @@ void TGLKernel::PaintPolyLine(Int_t n, Double_t *p, Option_t *)
 //______________________________________________________________________________
 void TGLKernel::PaintBrik(Float_t vertex[24])
 {
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Paint BRIK via OpenGL *-*-*-*-*-*-*-*-*-*-*-*-*
-   //*-*                            =====================
+   // Paint BRIK via OpenGL.
 
 #define vert(i) &vertex[3*(i)]
    Int_t i;
@@ -688,7 +709,7 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
 
    if (vertex) {
 
-//*-* The counterclockwise polygons are taken to be front-facing by default
+      // The counterclockwise polygons are taken to be front-facing by default
 
       if (fRootLight) LightIndex(0);
 
@@ -699,14 +720,14 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
       for (i=4;i<8;i++)
          glVertex3fv(vert(i));
 
-//*-*   "Bottom"  of TBRIK
+      // "Bottom"  of TBRIK
       if (!fRootLight)
          glNormal3fv(TMath::Normal2Plane(vert(0),vert(3),vert(1),normal));
       for (i=3;i>-1;i--) {
          glVertex3fv(vert(i));
       }
 
-//*-*   "Walls"  of TBRIK
+      // "Walls"  of TBRIK
       for (i=0;i<3;i++) {
          if (fRootLight)
             LightIndex(i+1);
@@ -718,8 +739,8 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
          glVertex3fv(vert(i+5));
          glVertex3fv(vert(i+4));
       }
-//*-*  The last "wall" to close the brik
 
+      // The last "wall" to close the brik
       if (fRootLight)
          LightIndex(i+1);
       else
@@ -740,23 +761,24 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
 #undef vert
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
 {
-   // Paint Xtru shape via OpenGL
+   // Paint Xtru shape via OpenGL.
 
    Float_t frontnorm[3] = {0,0,1};  // top (normally max z)
    Float_t backnorm[3]  = {0,0,-1}; // bottom (normally min z)
    Float_t normal[3]    = {0,0,0};
 
-// OpenGL doesn't handle concave polygons correctly
-// it isn't required to do anything more than the convex hull of all vertices
+   // OpenGL doesn't handle concave polygons correctly
+   // it isn't required to do anything more than the convex hull of all vertices
    Float_t *p = vertex;
    Float_t *start = vertex;
    Int_t ixy = 0;
 
-// the front face should go around counter clockwise
-// while the back go around clockwise
+   // the front face should go around counter clockwise
+   // while the back go around clockwise
 
    // Front or top face
    if (fRootLight) LightIndex(0);
@@ -785,7 +807,6 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
 
    glVertex3fv(start);
    glEnd();
-
 
    // The sides are given as a QUAD_STRIP list but care must be taken
    // to ensure that the normals are "outward" going.  Which way to
@@ -828,25 +849,25 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
    if (fRootLight)  LightIndex(0);  //reset the original color
 }
 
+
 //______________________________________________________________________________
 Float_t *Normal2Line(Float_t *p1, Float_t *p2, Float_t *normal)
 {
-   //*-* The calculation  a normal vector to the conic surface
-   //*-*
-   //*-*  Principial chord:
-   //*-*  ----------------
-   //*-*     p1 = (a1,b1,c1);
-   //*-*     p2 = (a2,b2,c2);
-   //*-*
-   //*-*     v      = (a2-a1,b2-b1,c2-c1);
-   //*-*     normal = (a2-0,b2-0,c2-Z);
-   //*-*
-   //*-*     v*normal = 0;
-   //*-*
-   //*-*          a2*(a2-a1) + b2*(b2-b1) + c2*(c2-c1)
-   //*-*     z = -------------------------------------
-   //*-*                         c2-c1
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Compute a normal vector to the conic surface
+   //
+   //  Principal chord:
+   //  ----------------
+   //     p1 = (a1,b1,c1);
+   //     p2 = (a2,b2,c2);
+   //
+   //     v      = (a2-a1,b2-b1,c2-c1);
+   //     normal = (a2-0,b2-0,c2-Z);
+   //
+   //     v*normal = 0;
+   //
+   //          a2*(a2-a1) + b2*(b2-b1) + c2*(c2-c1)
+   //     z = -------------------------------------
+   //                         c2-c1
 
    Float_t z = 0;
    Int_t i;
@@ -864,21 +885,24 @@ Float_t *Normal2Line(Float_t *p1, Float_t *p2, Float_t *normal)
    return normal;
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
 {
-   //*-*  vertex  - array of the 3d coordinates
-   //*-*  nseg    - number of segments (precision)
-   //*-*            < 0 means the shape is segmented
-   //*-*            > 0 means the shape is closed
-   //*-*  nstacks -  number of stack sections
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Paint Cone.
+   //
+   // vertex  - array of the 3d coordinates
+   // nseg    - number of segments (precision)
+   //           < 0 means the shape is segmented
+   //           > 0 means the shape is closed
+   // nstacks -  number of stack sections
+   //
+   // Vertex[2*(3*ndiv*nstacks)]
+   //  i - the division number
+   //  j - the stack number
+   //  k = 0 internal points
+   //      1 external points
 
-   //*-*  Vertex[2*(3*ndiv*nstacks)]
-   //*-*   i - the division number
-   //*-*   j - the stack number
-   //*-*   k = 0 internal points
-   //*-*       1 external points
 #define vert(i,j,k) (&vertex[3*((i)+2*ndiv*((j)+(k)))])
    Int_t i,j;
    Float_t normal[3];
@@ -889,20 +913,19 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
    Float_t onenorm[3] = {0,0,1};
    Float_t backone[3] = {0,0,-1};
    if (vertex) {
-   //*-* The counterclockwise polygons are taken to be front-facing by deafult
+      // The counter clockwise polygons are taken to be front-facing by default
 
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //*-*  "Top"  of TPCON
+      // "Top"  of TPCON
       if (fRootLight)
          LightIndex(0);
       else
          glNormal3fv(onenorm);
 
-      //*-*  Check internal radius
+      // Check internal radius
       nextv = vert(0,nstacks-1,0);
       if (*(nextv+1) == 0.0 && *nextv == 0.0) { // The inner radius is ZERO
 
-      //*-*  Draw the "Triangle fan"
+         // Draw the "Triangle fan"
          glBegin(GL_TRIANGLE_FAN);
          glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
          nextv += pt3;
@@ -913,7 +936,7 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
          if (nseg > 0)
          glVertex3fv(nextv-pt3);
       } else {
-//*-*  Draws the series of the quadrilaterals
+         // Draws the series of the quadrilaterals
          glBegin(GL_QUAD_STRIP);
          exnextv = nextv + pt3;
          for (i=0;i<ndiv;i++) {
@@ -929,14 +952,14 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
 
       }
       glEnd();
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*   "Bottom"  of TPCON
+
+      // "Bottom"  of TPCON
       if (!fRootLight)
          glNormal3fv(backone);
 
       nextv = vert(0,0,0);
       if (*(nextv+1) == 0.0 && *nextv == 0.0 ) {
-//*-*  Draw the "Triangle fan"
+         // Draw the "Triangle fan"
          glBegin(GL_TRIANGLE_FAN);
          glVertex3f(0.0,0.0,*(nextv+2)); //*-* Set the center of the fan
          nextv += pt6;
@@ -963,16 +986,13 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
       }
       glEnd();
 
-
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*   "Walls"  of TPCON
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*    Create the external walls
+      // "Walls"  of TPCON
+      // Create the external walls
       nextv = vertex + pt3;
       for (i=0;i<nstacks-1;i++) {
          glBegin(GL_QUAD_STRIP);
          {
-//                nextv = vert(0,i,1);
+            // nextv = vert(0,i,1);
             exnextv = nextv+pt6;
             for(j=0;j<ndiv;j++) {
                if (fRootLight)
@@ -986,7 +1006,7 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
                exnextv += 3;
             }
             if (nseg > 0) {
-//*-* To "close" shape we have to add on extra "wall"
+               // To "close" shape we have to add on extra "wall"
                if (fRootLight)
                   LightIndex(j>>1);
                else
@@ -999,8 +1019,8 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
          }
          glEnd();
       }
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*    Create the internal walls
+
+      // Create the internal walls
       exnextv = vertex;
       for (i=0;i<nstacks-1;i++) {
          if (*(exnextv+1) == 0.0 && *exnextv == 0.0) continue; // No internal wall at all
@@ -1020,7 +1040,7 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
                exnextv += 3;
             }
             if (nseg > 0) {
-//*-* To "close" shape we have to add on extra "wall"
+               // To "close" shape we have to add on extra "wall"
                if (fRootLight)
                   LightIndex(j>>1);
                else
@@ -1035,14 +1055,11 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
       }
       if (nseg < 0 ) {
 
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*  Close the side holes
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+         // Close the side holes
          Float_t oz[3]   = {0.0,0.0,1.0};
          Float_t base[3] = {0.0,0.0,0.0};
 
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*   First hole
+         // First hole
          nextv = vertex;
          base[0] = *(nextv+pt3);
          base[1] = *(nextv+pt3+1);
@@ -1066,8 +1083,7 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
          }
          glEnd();
 
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*   Second one
+         // Second one
          nextv = vertex + 3*(ndiv-1);
          base[0] = *(nextv+pt3);
          base[1] = *(nextv+pt3+1);
@@ -1095,10 +1111,11 @@ void TGLKernel::PaintCone(Float_t *vertex,Int_t nseg,Int_t nstacks)
 #undef vert
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetLineAttr(Color_t color, Int_t width)
 {
-   //
+   // Set GL line attributes.
 
    Color_t c = color;
 
@@ -1111,10 +1128,11 @@ void TGLKernel::SetLineAttr(Color_t color, Int_t width)
    SetGLLineWidth((Float_t)width);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::UpdateMatrix(Double_t *translate, Double_t *rotate, Bool_t isreflection)
 {
-   //
+   // Update matrix.
 
    if (translate) TranslateGL(translate);
 
@@ -1128,134 +1146,152 @@ void TGLKernel::UpdateMatrix(Double_t *translate, Double_t *rotate, Bool_t isref
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::ClearGLDepth(Float_t val)
 {
-   //
+   // Clear GL depth buffer.
 
    glClearDepth(val);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::MatrixModeGL(EG3D2GLmode mode)
 {
-   //
+   // Set GL matrix mode.
 
    glMatrixMode(GLCommand[mode]);
    glLoadIdentity();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::FrustumGL( Double_t xmin, Double_t xmax, Double_t ymin,
                                  Double_t ymax, Double_t znear, Double_t zfar)
 {
-   //
+   // GL Frustrum.
 
    glFrustum(xmin, xmax, ymin, ymax, znear, zfar);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::GLLight(EG3D2GLmode name, EG3D2GLmode prop, const Float_t * lig_mat)
 {
-   //
+   // GL light.
 
    glLightfv(GLCommand[name], GLCommand[prop], lig_mat);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::LightModel(EG3D2GLmode name, const Float_t * lig_mat)
 {
-   //
+   // Set GL light model.
 
    glLightModelfv(GLCommand[name], lig_mat);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::LightModel(EG3D2GLmode name, Int_t prop)
 {
-   //
+   // Set GL light model.
 
    glLightModeli(GLCommand[name], prop);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::CullFaceGL(EG3D2GLmode face)
 {
-   //
+   // Cull GL faces.
 
    glCullFace(GLCommand[face]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::ViewportGL(Int_t x, Int_t y, Int_t w, Int_t h)
 {
-   //
+   // Define GL viewport.
 
    glViewport(x, y, w, h);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::MaterialGL(EG3D2GLmode face, const Float_t * mat_prop)
 {
-   //
+   // Define GL material.
 
    glMaterialfv(GLCommand[face], GL_SPECULAR, mat_prop);
    glMaterialfv(GLCommand[face], GL_DIFFUSE, mat_prop);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::MaterialGL(EG3D2GLmode face, Float_t mat_prop)
 {
-   //
+   // Define GL material.
 
    glMaterialf(GLCommand[face], GL_SHININESS, mat_prop);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::BeginGL(EG3D2GLmode mode)
 {
-   //
+   // Begin GL.
 
    glBegin(GLCommand[mode]);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::EndGL()
 {
-   //
+   // End with GL.
 
    glEnd();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::SetGLNormal(const Double_t *normal)
 {
-   //
+   // Set GL normal.
 
    glNormal3dv(normal);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::NewMVGL()
 {
-   //
+   // New MVGL.
 
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::NewPRGL()
 {
-   //
+   // New PRGL.
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style, UInt_t size)
 {
+   // Paint Polymarker.
+
    if(!fQuad && (fQuad = gluNewQuadric()))
    {
       gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
@@ -1325,9 +1361,12 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::DrawStars(const Double_t * vert, Style_t style, UInt_t size)
 {
+   // Draw stars.
+
    for (Int_t i = 0; i < (Int_t)size; i += 3) {
       Double_t x = vert[i], y = vert[i + 1], z = vert[i + 2];
       glBegin(GL_LINES);
@@ -1353,13 +1392,14 @@ void TGLKernel::DrawStars(const Double_t * vert, Style_t style, UInt_t size)
    }
 }
 
+
 //______________________________________________________________________________
-void TGLKernel::DrawSelectionBox(
- Double_t xmin, Double_t xmax,
- Double_t ymin, Double_t ymax,
- Double_t zmin, Double_t zmax
-)
+void TGLKernel::DrawSelectionBox( Double_t xmin, Double_t xmax,
+                                  Double_t ymin, Double_t ymax,
+                                  Double_t zmin, Double_t zmax)
 {
+   // Draw selection box.
+
    glBegin(GL_LINE_LOOP);
    glVertex3d(xmin, ymin, zmin);
    glVertex3d(xmin, ymax, zmin);
@@ -1384,9 +1424,12 @@ void TGLKernel::DrawSelectionBox(
    glEnd();
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::EnterSelectionMode(UInt_t * buff, Int_t size, Event_t * event, Int_t * viewport)
 {
+   // Enter selection mode.
+
    glGetIntegerv(GL_VIEWPORT, viewport);
    glSelectBuffer(size, buff);
    glRenderMode(GL_SELECT);
@@ -1398,24 +1441,33 @@ void TGLKernel::EnterSelectionMode(UInt_t * buff, Int_t size, Event_t * event, I
    gluPickMatrix(GLdouble(event->fX), GLdouble(viewport[3] - event->fY), 1., 1., viewport);
 }
 
+
 //______________________________________________________________________________
 Int_t TGLKernel::ExitSelectionMode()
 {
+   // Exit selection mode.
+
    glMatrixMode(GL_PROJECTION);
    glPopMatrix();
    return glRenderMode(GL_RENDER);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::GLLoadName(UInt_t name)
 {
+   // Load name.
+
    glLoadName(name);
 }
+
 
 //______________________________________________________________________________
 void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Double_t * normals,
                             const Float_t * mat, UInt_t size)
 {
+   // Draw face set.
+
 #if defined(R__WIN32)
    typedef void (CALLBACK * funcptr)();
 #elif defined(R__AIXGCC)
@@ -1456,30 +1508,41 @@ void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Dou
    }
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::DrawViewer(TGLViewer *viewer)
 {
+   // Draw viewer.
+
    if (gDebug>3) {
       Info("TGLKernel::DrawViewer", "got request to draw viewer = %d", viewer);
    }
    viewer->DoDraw();
 }
 
+
 //______________________________________________________________________________
 Bool_t TGLKernel::SelectViewer(TGLViewer *viewer, const TGLRect * rect)
 {
+   // Select viewer.
    return viewer->DoSelect(*rect);
 }
+
 
 //______________________________________________________________________________
 Bool_t TGLKernel::SelectManip(TGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
 {
+   // Slect manipulator.
+
    return manip->Select(*camera, *rect, *sceneBox);
 }
+
 
 //______________________________________________________________________________
 static GLUquadric *GetQuadric1()
 {
+   // GLU quadric.
+
    static struct Init {
       Init()
       {
@@ -1503,9 +1566,12 @@ static GLUquadric *GetQuadric1()
    return singleton.fQuad;
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::DrawSphere(const Float_t *rgba)
 {
+   // Draw a sphere.
+
    const Float_t whiteColor[] = {1.f, 1.f, 1.f, 1.f};
    const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
    if (rgba[16] < 0.f) {
@@ -1539,8 +1605,11 @@ void TGLKernel::DrawSphere(const Float_t *rgba)
    glDisable(GL_BLEND);
 }
 
+
 //______________________________________________________________________________
 void TGLKernel::CaptureViewer(TGLViewer * viewer, Int_t format, const char * filePath)
 {
+   // Capture viewer.
+
    TGLOutput::Capture(*viewer, TGLOutput::EFormat(format), filePath);
 }
