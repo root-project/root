@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.137 2006/05/07 14:35:34 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.138 2006/05/15 16:30:10 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -201,7 +201,7 @@ namespace {
       itval.it_value.tv_sec  = ms / 1000;
       itval.it_value.tv_usec = (ms % 1000) * 1000;
    }
-   return ::setitimer(ITIMER_REAL, &itval, 0);
+   return setitimer(ITIMER_REAL, &itval, 0);
    }
 
    //---- RPC -------------------------------------------------------------------
