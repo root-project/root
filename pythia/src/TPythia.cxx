@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name:  $:$Id: TPythia.cxx,v 1.3 2001/04/06 17:16:00 brun Exp $
+// @(#)root/pythia:$Name:  $:$Id: TPythia.cxx,v 1.4 2006/05/14 07:58:53 brun Exp $
 // Author: Piotr Golonka   10/09/97
 
 /*************************************************************************
@@ -243,12 +243,10 @@ Int_t TPythia::ImportParticles(TClonesArray *particles, Option_t *option)
                             -1,
                             LUJETS.k[3][i] ,
                             LUJETS.k[4][i] ,
-
                             LUJETS.p[0][i] ,
                             LUJETS.p[1][i] ,
                             LUJETS.p[2][i] ,
                             LUJETS.p[3][i] ,
-
                             LUJETS.v[0][i] ,
                             LUJETS.v[1][i] ,
                             LUJETS.v[2][i] ,

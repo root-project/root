@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.34 2006/04/27 09:26:38 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.35 2006/04/28 08:43:05 couet Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1403,30 +1403,30 @@ void TView::SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_
    Double_t rmax[3], rmin[3];
 
    switch (flag) {
-        case 2:                     // expand view
-           GetRange(rmin, rmax);
-           rmin[0] = x0 < rmin[0] ? x0 : rmin[0];
-           rmin[1] = y0 < rmin[1] ? y0 : rmin[1];
-           rmin[2] = z0 < rmin[2] ? z0 : rmin[2];
-           rmax[0] = x1 > rmax[0] ? x1 : rmax[0];
-           rmax[1] = y1 > rmax[1] ? y1 : rmax[1];
-           rmax[2] = z1 > rmax[2] ? z1 : rmax[2];
-           break;
+      case 2:                     // expand view
+         GetRange(rmin, rmax);
+         rmin[0] = x0 < rmin[0] ? x0 : rmin[0];
+         rmin[1] = y0 < rmin[1] ? y0 : rmin[1];
+         rmin[2] = z0 < rmin[2] ? z0 : rmin[2];
+         rmax[0] = x1 > rmax[0] ? x1 : rmax[0];
+         rmax[1] = y1 > rmax[1] ? y1 : rmax[1];
+         rmax[2] = z1 > rmax[2] ? z1 : rmax[2];
+         break;
 
-        case 1:                     // shrink view
-           GetRange(rmin, rmax);
-           rmin[0] = x0 > rmin[0] ? x0 : rmin[0];
-           rmin[1] = y0 > rmin[1] ? y0 : rmin[1];
-           rmin[2] = z0 > rmin[2] ? z0 : rmin[2];
-           rmax[0] = x1 < rmax[0] ? x1 : rmax[0];
-           rmax[1] = y1 < rmax[1] ? y1 : rmax[1];
-           rmax[2] = z1 < rmax[2] ? z1 : rmax[2];
-           break;
+      case 1:                     // shrink view
+         GetRange(rmin, rmax);
+         rmin[0] = x0 > rmin[0] ? x0 : rmin[0];
+         rmin[1] = y0 > rmin[1] ? y0 : rmin[1];
+         rmin[2] = z0 > rmin[2] ? z0 : rmin[2];
+         rmax[0] = x1 < rmax[0] ? x1 : rmax[0];
+         rmax[1] = y1 < rmax[1] ? y1 : rmax[1];
+         rmax[2] = z1 < rmax[2] ? z1 : rmax[2];
+         break;
 
-        default:
-           rmin[0] = x0; rmax[0] = x1;
-           rmin[1] = y0; rmax[1] = y1;
-           rmin[2] = z0; rmax[2] = z1;
+      default:
+         rmin[0] = x0; rmax[0] = x1;
+         rmin[1] = y0; rmax[1] = y1;
+         rmin[2] = z0; rmax[2] = z1;
    }
    SetRange(rmin, rmax);
 }
@@ -1774,40 +1774,40 @@ void TView::MoveViewCommand(Char_t option, Int_t count)
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    if (count <= 0) count = 1;
    switch (option) {
-       case '+':
-          ZoomView();
-          break;
-       case '-':
-          UnzoomView();
-          break;
-       case 's':
-       case 'S':
-          UnzoomView();
-          break;
-       case 'a':
-       case 'A':
-          ZoomView();
-          break;
-       case 'l':
-       case 'L':
-       case 'h':
-       case 'H':
-       case 'u':
-       case 'U':
-       case 'i':
-       case 'I':
-          MoveWindow(option);
-          break;
-       case 'j':
-       case 'J':
-          ZoomIn();
-          break;
-       case 'k':
-       case 'K':
-          ZoomOut();
-          break;
-       default:
-          break;
+      case '+':
+         ZoomView();
+         break;
+      case '-':
+         UnzoomView();
+         break;
+      case 's':
+      case 'S':
+         UnzoomView();
+         break;
+      case 'a':
+      case 'A':
+         ZoomView();
+         break;
+      case 'l':
+      case 'L':
+      case 'h':
+      case 'H':
+      case 'u':
+      case 'U':
+      case 'i':
+      case 'I':
+         MoveWindow(option);
+         break;
+      case 'j':
+      case 'J':
+         ZoomIn();
+         break;
+      case 'k':
+      case 'K':
+         ZoomOut();
+         break;
+      default:
+         break;
    }
 }
 
@@ -1823,24 +1823,24 @@ void TView::MoveWindow(Char_t option)
    Double_t shiftu = 0.1*fUVcoord[2];
    Double_t shiftv = 0.1*fUVcoord[3];
    switch (option) {
-       case 'l':
-       case 'L':
-          fUVcoord[0] += shiftu;
-          break;
-       case 'h':
-       case 'H':
-          fUVcoord[0] -= shiftu;
-          break;
-       case 'u':
-       case 'U':
-          fUVcoord[1] += shiftv;
-          break;
-       case 'i':
-       case 'I':
-          fUVcoord[1] -= shiftv;
-          break;
-       default:
-          return;
+      case 'l':
+      case 'L':
+         fUVcoord[0] += shiftu;
+         break;
+      case 'h':
+      case 'H':
+         fUVcoord[0] -= shiftu;
+         break;
+      case 'u':
+      case 'U':
+         fUVcoord[1] += shiftv;
+         break;
+      case 'i':
+      case 'I':
+         fUVcoord[1] -= shiftv;
+         break;
+      default:
+         return;
    }
    DefinePerspectiveView();
    if (gPad) {

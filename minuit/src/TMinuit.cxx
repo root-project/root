@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.51 2006/05/13 21:49:17 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.52 2006/05/14 20:05:37 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -1552,8 +1552,8 @@ L300:
       }
 //*-*-               Contour has been located, insert new point in list
       for (move = nowpts; move >= i1 + 1; --move) {
-          xptu[move] = xptu[move-1];
-          yptu[move] = yptu[move-1];
+         xptu[move] = xptu[move-1];
+         yptu[move] = yptu[move-1];
       }
       ++nowpts;
       xptu[i1] = fXmidcr + fXdircr*aopt;
@@ -1612,7 +1612,7 @@ L950:
       fX[i-1]      = fXt[i-1];
    }
    mninex(fX);
-    fEDM    = sigsav;
+   fEDM    = sigsav;
    fAmin   = abest;
    fISW[1] = isw2;
    fISW[3] = isw4;
@@ -1888,7 +1888,7 @@ L300:
       mneval(aopt, fnext, ierev);
 //*-* debug printout:
       if (ldebug) {
-        Printf(" MNCROS: calls=%8d   AIM=%10.5f  F,A=%10.5f%10.5f",fNfcn,aim,fnext,aopt);
+         Printf(" MNCROS: calls=%8d   AIM=%10.5f  F,A=%10.5f%10.5f",fNfcn,aim,fnext,aopt);
       }
       if (ierev > 0) goto L900;
       if (fLimset && fnext <= aim) goto L930;
@@ -2100,7 +2100,7 @@ L1000:
          Printf("RIGHTMOST POINT IS UP AGAINST LIMIT.");
       }
       mnplot(fXpt, fYpt, fChpt, ipt, fNpagwd, fNpagln);
-    }
+   }
 } /* mncros_ */
 
 //______________________________________________________________________________
@@ -2964,7 +2964,7 @@ L1300:
          ke1 = fNexofi[0];
          ke2 = fNexofi[1];
       } else {
-        Printf("%s:  NO PARAMETERS REQUESTED ",(const char*)fCword);
+         Printf("%s:  NO PARAMETERS REQUESTED ",(const char*)fCword);
          ierflg = 3;
          return;
       }
@@ -3405,9 +3405,9 @@ L2000:
 //______________________________________________________________________________
 void TMinuit::mnhelp(const char *command)
 {
-  //interface to Minuit help
-  TString comd = command;
-  mnhelp(comd);
+   //interface to Minuit help
+   TString comd = command;
+   mnhelp(comd);
 }
 
 //______________________________________________________________________________
@@ -5534,7 +5534,7 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
    mnfixp(it-1, ierr);
    if (ierr > 0) {
       Printf(" MINUIT ERROR. CANNOT FIX PARAMETER %4d   INTERNAL %3d",ilax,it);
-       goto L700;
+      goto L700;
    }
 //*-*-                      . . . . . Nota Bene: from here on, NPAR=MPAR-1
 //*-*-     Remember: MNFIXP squeezes IT out of X, XT, WERR, and VHMAT,
@@ -6162,7 +6162,7 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
    if (chbest == ' ') goto L50;
    xbest = (xmax + xmin)*.5;
    ybest = (ymax + ymin)*.5;
- L50:
+L50:
  //*-*-        find scale constants
    ax = 1 / bwidx;
    ay = 1 / bwidy;
@@ -6190,7 +6190,7 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
       cline[nxbest-1] = '.';
       if (i != 1 && i != nybest && i != ny) goto L320;
       for (j = 1; j <= nx; ++j) { cline[j-1] = '.'; }
- L320:
+L320:
       yprt = ymax - Double_t(i-1)*bwidy;
       if (isp1 > nxypt) goto L350;
  //*-*-        find the points to be plotted on this line
@@ -6206,24 +6206,24 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
  //*-*-           one point
          cline[ix-1] = '&';
          continue;
- L340:
+L340:
          cline[ix-1] = chpt[k-1];
       }
       isp1 = nxypt + 1;
       goto L350;
- L345:
+L345:
       isp1 = k;
- L350:
+L350:
       if (linodd == 1 || i == ny) goto L380;
       linodd = 1;
       ctemp  = cline;
       Printf("                  %s",(const char*)ctemp);
       goto L400;
- L380:
+L380:
       ctemp = cline;
       Printf(" %14.7g ..%s",yprt,(const char*)ctemp);
       linodd = 0;
- L400:
+L400:
       ;
    }
  //*-*-        print labels on x-axis every ten columns
@@ -7815,7 +7815,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
             Printf(" ============== %s",(const char*)cmes);
             return;
          }
-       } else {
+      } else {
          ityp = 2;
          if (fLrepor) {
             Printf(" MINUIT DEBUG FOR %s",(const char*)corg);

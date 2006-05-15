@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.1 2006/05/04 13:06:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.2 2006/05/14 08:19:30 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -384,8 +384,8 @@ Double_t TRandom1::Rndm(Int_t) {
          if(fIlag < 0)fIlag = 23;
          if(fJlag < 0) fJlag = 23;
       }
-  } 
-  return (double) next_random;
+   } 
+   return (double) next_random;
 }
 
 //______________________________________________________________________________

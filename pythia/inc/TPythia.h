@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name:  $:$Id: TPythia.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/pythia:$Name:  $:$Id: TPythia.h,v 1.2 2000/12/13 15:13:53 brun Exp $
 // Author: Piotr Golonka   10/09/97
 
 /*************************************************************************
@@ -37,7 +37,7 @@ private:
    virtual void        ShowNeutrons(Bool_t)    {Unsupported("ShowNeutrons");};
 
 public:
-                       TPythia();
+   TPythia();
    virtual            ~TPythia();
 
    virtual void        Initialize(const char *frame, const char *beam, const char *target, float win);
