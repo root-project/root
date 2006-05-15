@@ -1861,11 +1861,11 @@ void TGLHistPainter::DrawGrid(Int_t plane)const
    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
       
    Double_t lineCaps[][4] = {
-                             {fMinXScaled, fMinXScaled, fMinYScaled, fMaxYScaled},
-                             {fMinXScaled, fMaxXScaled, fMinYScaled, fMinYScaled}, 
-                             {fMaxXScaled, fMaxXScaled, fMinYScaled, fMaxYScaled},
-                             {fMinXScaled, fMaxXScaled, fMaxYScaled, fMaxYScaled}
-                            };
+      {fMinXScaled, fMinXScaled, fMinYScaled, fMaxYScaled},
+      {fMinXScaled, fMaxXScaled, fMinYScaled, fMinYScaled}, 
+      {fMaxXScaled, fMaxXScaled, fMinYScaled, fMaxYScaled},
+      {fMinXScaled, fMaxXScaled, fMaxYScaled, fMaxYScaled}
+   };
 
    for (UInt_t i = 0; i < fZLevels.size(); ++i) {
       glBegin(GL_LINES);
@@ -1900,52 +1900,53 @@ void TGLHistPainter::ClearBuffers()const
 
 namespace {
    const UChar_t gDefTexture1[] =
-           {
-          //R    G    B    A
-            128, 0,   255, 200,
-            169, 4,   240, 200,
-            199, 73,  255, 200,
-            222, 149, 253, 200,
-            255, 147, 201, 200,
-            255, 47,  151, 200,
-            232, 0,   116, 200,
-            253, 0,   0,   200,
-            255, 62,  62,  200,
-            217, 111, 15,  200,
-            242, 151, 28,  200,
-            245, 172, 73,  200,
-            251, 205, 68,  200,
-            255, 255, 21,  200,
-            255, 255, 128, 200,
-            255, 255, 185, 200
-           };
+   {
+      //R    G    B    A
+      128, 0,   255, 200,
+      169, 4,   240, 200,
+      199, 73,  255, 200,
+      222, 149, 253, 200,
+      255, 147, 201, 200,
+      255, 47,  151, 200,
+      232, 0,   116, 200,
+      253, 0,   0,   200,
+      255, 62,  62,  200,
+      217, 111, 15,  200,
+      242, 151, 28,  200,
+      245, 172, 73,  200,
+      251, 205, 68,  200,
+      255, 255, 21,  200,
+      255, 255, 128, 200,
+      255, 255, 185, 200
+   };
 
 
    const UChar_t gDefTexture2[] =
-
-           {
-          //R    G    B    A
-            230, 0,   115, 255,
-            255, 62,  158, 255,
-            255, 113, 113, 255,
-            255, 98,  21,  255,
-            255, 143, 89,  255,
-            249, 158, 23,  255,
-            252, 197, 114, 255,
-            252, 228, 148, 255,
-            66,  189, 121, 255,
-            121, 208, 160, 255,
-            89,  245, 37,  255,
-            183, 251, 159, 255,
-            0,   113, 225, 255,
-            64,  159, 255, 255,
-            145, 200, 255, 255,
-            202, 228, 255, 255
-           };
+   {
+      //R    G    B    A
+      230, 0,   115, 255,
+      255, 62,  158, 255,
+      255, 113, 113, 255,
+      255, 98,  21,  255,
+      255, 143, 89,  255,
+      249, 158, 23,  255,
+      252, 197, 114, 255,
+      252, 228, 148, 255,
+      66,  189, 121, 255,
+      121, 208, 160, 255,
+      89,  245, 37,  255,
+      183, 251, 159, 255,
+      0,   113, 225, 255,
+      64,  159, 255, 255,
+      145, 200, 255, 255,
+      202, 228, 255, 255
+   };
 }
 
 void TGLHistPainter::Pan(Int_t x, Int_t y)
 {
+   // Pan
+
    Double_t mvMatrix[16] = {0.};
    glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);
    Double_t prMatrix[16] = {0.};
@@ -1966,6 +1967,7 @@ void TGLHistPainter::Pan(Int_t x, Int_t y)
 void TGLHistPainter::SetTexture()
 {
    //Set default texture
+
    fTexture.resize(sizeof gDefTexture1);
    std::copy(gDefTexture1, gDefTexture1 + sizeof gDefTexture1, fTexture.begin());
 }
@@ -1973,6 +1975,7 @@ void TGLHistPainter::SetTexture()
 void TGLHistPainter::SetPlotColor()const
 {
    //Set color for lego/surface
+
    Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 1.f};
 
    if (fLastOption != kLego2 && fLastOption != kSurface1 && fLastOption != kSurface2) {
@@ -2133,24 +2136,27 @@ namespace {
    //These tables are used so that everything can be done in little loops that you can look at all at once
    // rather than in pages and pages of unrolled code.
    //gA2VertexOffset lists the positions, relative to vertex0, of each of the 8 vertices of a cube
-   const Double_t gA2VertexOffset[8][3] = {
-                                           {0., 0., 0.}, {1., 0., 0.}, {1., 1., 0.},
-                                           {0., 1., 0.}, {0., 0., 1.}, {1., 0., 1.},
-                                           {1., 1., 1.}, {0., 1., 1.}
-                                          };
+   const Double_t gA2VertexOffset[8][3] = 
+   {
+      {0., 0., 0.}, {1., 0., 0.}, {1., 1., 0.},
+      {0., 1., 0.}, {0., 0., 1.}, {1., 0., 1.},
+      {1., 1., 1.}, {0., 1., 1.}
+   };
    //gA2EdgeConnection lists the index of the endpoint vertices for each of the 12 edges of the cube
-   const Int_t gA2EdgeConnection[12][2] = {
-                                           {0, 1}, {1, 2}, {2, 3}, {3, 0},
-                                           {4, 5}, {5, 6}, {6, 7}, {7, 4},
-                                           {0,4}, {1,5}, {2,6}, {3,7}
-                                          };
+   const Int_t gA2EdgeConnection[12][2] =
+   {
+      {0, 1}, {1, 2}, {2, 3}, {3, 0},
+      {4, 5}, {5, 6}, {6, 7}, {7, 4},
+      {0,4}, {1,5}, {2,6}, {3,7}
+   };
    //gA2EdgeDirection lists the direction vector (vertex1-vertex0) for each edge in the cube
-   const Double_t gA2EdgeDirection[12][3] = {
-                                             {1., 0., 0.}, {0., 1., 0.}, {-1., 0., 0.},
-                                             {0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.},
-                                             {-1., 0., 0.}, {0., -1., 0.}, {0., 0., 1.},
-                                             {0., 0., 1.}, { 0., 0., 1.}, {0., 0., 1.}
-                                            };
+   const Double_t gA2EdgeDirection[12][3] = 
+   {
+      {1., 0., 0.}, {0., 1., 0.}, {-1., 0., 0.},
+      {0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.},
+      {-1., 0., 0.}, {0., -1., 0.}, {0., 0., 1.},
+      {0., 0., 1.}, { 0., 0., 1.}, {0., 0., 1.}
+   };
    const Float_t gTargetValue = 0.2f;
 
    //GetOffset finds the approximate point of intersection of the surface
