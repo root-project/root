@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.22 2006/04/03 14:19:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.23 2006/04/11 17:51:08 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -36,6 +36,8 @@ ClassImp(TEventIter)
 //______________________________________________________________________________
 TEventIter::TEventIter()
 {
+   // Default constructor
+
    fDSet  = 0;
    fElem  = 0;
    fFile  = 0;
@@ -51,6 +53,8 @@ TEventIter::TEventIter()
 TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
    : fDSet(dset), fSel(sel)
 {
+   // Constructor
+
    fElem  = 0;
    fFile  = 0;
    fDir   = 0;
@@ -65,18 +69,24 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
 //______________________________________________________________________________
 TEventIter::~TEventIter()
 {
+   // Destructor
+
    delete fFile;
 }
 
 //______________________________________________________________________________
 void TEventIter::StopProcess(Bool_t /*abort*/)
 {
+   // Set flag to stop the process
+
    fStop = kTRUE;
 }
 
 //______________________________________________________________________________
 TEventIter *TEventIter::Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
 {
+   // Create and instance of the appropriate iterator
+
    if ( dset->IsTree() ) {
       return new TEventIterTree(dset, sel, first, num);
    } else {
@@ -87,6 +97,8 @@ TEventIter *TEventIter::Create(TDSet *dset, TSelector *sel, Long64_t first, Long
 //______________________________________________________________________________
 Int_t TEventIter::LoadDir()
 {
+   // Load directory
+
    Int_t ret = 0;
 
    // Check Filename
@@ -162,6 +174,8 @@ TEventIterObj::TEventIterObj()
 TEventIterObj::TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
    : TEventIter(dset,sel,first,num)
 {
+   // Constructor
+
    fClassName = dset->GetType();
    fKeys     = 0;
    fNextKey  = 0;
@@ -172,6 +186,8 @@ TEventIterObj::TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64
 //______________________________________________________________________________
 TEventIterObj::~TEventIterObj()
 {
+   // Destructor
+
    // delete fKeys ?
    delete fNextKey;
    delete fObj;
@@ -180,6 +196,8 @@ TEventIterObj::~TEventIterObj()
 //______________________________________________________________________________
 Long64_t TEventIterObj::GetNextEvent()
 {
+   // Get next event
+
    if (fStop || fNum == 0) return -1;
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
@@ -285,6 +303,8 @@ TEventIterTree::TEventIterTree()
 TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
    : TEventIter(dset,sel,first,num)
 {
+   // Constructor
+
    fTreeName = dset->GetObjName();
    fTree = 0;
    if (!fgTreeCache)
@@ -294,12 +314,15 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
 //______________________________________________________________________________
 TEventIterTree::~TEventIterTree()
 {
+   // Destructor
+
    ReleaseAllTrees();
 }
 
 //______________________________________________________________________________
-void TEventIterTree::ReleaseAllTrees() {
-   // release all acquired trees.
+void TEventIterTree::ReleaseAllTrees()
+{
+   // Release all acquired trees.
 
    for (std::list<TTree*>::iterator i = fAcquiredTrees.begin(); i != fAcquiredTrees.end(); ++i) {
       fgTreeCache->Release(*i);
@@ -340,6 +363,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 //______________________________________________________________________________
 Long64_t TEventIterTree::GetNextEvent()
 {
+   // Get next event
 
    if (fStop || fNum == 0) return -1;
 

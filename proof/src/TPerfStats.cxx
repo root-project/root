@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.5 2005/09/16 08:48:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.6 2006/04/19 08:22:25 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -47,6 +47,8 @@ TPerfEvent::TPerfEvent(TTimeStamp *offset)
      fEventsProcessed(0), fBytesRead(0), fLen(0), fLatency(0.0), fProcTime(0.0), fCpuTime(0.0),
      fIsStart(kFALSE), fIsOk(kFALSE)
 {
+   // Constructor
+
    if (gProofServ != 0) {
       fEvtNode = gProofServ->GetOrdinal();
    } else {
@@ -197,6 +199,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
 //______________________________________________________________________________
 void TPerfStats::SimpleEvent(EEventType type)
 {
+   // Simple event
+
    if (type == kStop && fPacketsHist != 0) {
       fNodeHist->LabelsDeflate("X");
       fNodeHist->LabelsOption("auv","X");
@@ -219,6 +223,8 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
                               Long64_t eventsprocessed, Double_t latency, Double_t proctime,
                               Double_t cputime, Long64_t bytesRead)
 {
+   // Packet event
+
    if (fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -252,6 +258,8 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
 void TPerfStats::FileEvent(const char *slave, const char *slavename, const char *nodename,
                             const char *filename, Bool_t isStart)
 {
+   // File event
+
    if (fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -277,6 +285,8 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
 //______________________________________________________________________________
 void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proctime)
 {
+   // Open file event
+
    if (fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -297,6 +307,8 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proct
 //______________________________________________________________________________
 void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
 {
+   // Read file event
+
    if (fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
@@ -317,6 +329,8 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
 //______________________________________________________________________________
 void TPerfStats::SetBytesRead(Long64_t num)
 {
+   // Set number of bytes read
+
    fBytesRead = num;
 }
 
@@ -324,6 +338,8 @@ void TPerfStats::SetBytesRead(Long64_t num)
 //______________________________________________________________________________
 Long64_t TPerfStats::GetBytesRead() const
 {
+   // Get number of bytes read
+
    return fBytesRead;
 }
 

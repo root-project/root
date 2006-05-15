@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.12 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.13 2006/04/20 14:36:48 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -78,9 +78,8 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel, Bool_t)
 
    // Get the master
    TProofNodeInfo *master = resources->GetMaster();
-   if (master) {
-     fImage = master->GetImage();
-   }
+   if (master)
+      fImage = master->GetImage();
    if (!master || (fImage.Length() == 0)) {
       Error("StartSlaves",
             "no appropriate master line found in %s", fConfFile.Data());

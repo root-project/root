@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.13 2005/05/18 12:31:09 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.14 2005/09/22 23:29:30 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -228,7 +228,7 @@ public:
    std::vector<T> *GetVector() const { return fVector; }
    Long64_t        Merge(TCollection* list);
 
-   ClassDef(TProofVectorContainer,1)
+   ClassDef(TProofVectorContainer,1) //Class describing a vector container
 };
 
 class TProofDrawListOfGraphs : public TProofDraw {

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.4 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.5 2006/03/21 14:54:23 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -52,11 +52,11 @@ TFileMerger::~TFileMerger()
 {
    // Cleanup.
 
-  if (fFileList)
-    delete fFileList;
+   if (fFileList)
+      delete fFileList;
 
-  if (fOutputFile)
-    delete fOutputFile;
+   if (fOutputFile)
+      delete fOutputFile;
 }
 
 //______________________________________________________________________________

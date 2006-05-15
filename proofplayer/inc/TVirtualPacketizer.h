@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.3 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.4 2003/05/01 17:51:42 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -53,7 +53,7 @@ protected:
    Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
-   virtual ~TVirtualPacketizer();
+   virtual ~TVirtualPacketizer() { }
 
    Bool_t                  IsValid() const { return fValid; }
    virtual Long64_t        GetEntriesProcessed() const;

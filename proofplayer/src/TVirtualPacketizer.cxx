@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.5 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.6 2003/05/06 08:23:43 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -37,18 +37,17 @@ ClassImp(TVirtualPacketizer)
 //______________________________________________________________________________
 TVirtualPacketizer::TVirtualPacketizer()
 {
+   // Constructor
+
    fValid = kTRUE;
    fStop = kFALSE;
 }
 
 //______________________________________________________________________________
-TVirtualPacketizer::~TVirtualPacketizer()
-{
-}
-
-//______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
 {
+   // Get entries
+
    Long64_t entries;
    TFile *file = TFile::Open(e->GetFileName());
 
@@ -98,8 +97,8 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
 //______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntriesProcessed() const
 {
+   // Get entries to be processed
    AbstractMethod("GetEntriesProcessed");
-
    return 0;
 }
 
@@ -107,8 +106,8 @@ Long64_t TVirtualPacketizer::GetEntriesProcessed() const
 //______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntriesProcessed(TSlave *) const
 {
+   // Get entries to be processed
    AbstractMethod("GetEntriesProcessed(TSlave *sl)");
-
    return 0;
 }
 
@@ -116,8 +115,8 @@ Long64_t TVirtualPacketizer::GetEntriesProcessed(TSlave *) const
 //______________________________________________________________________________
 TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 {
+   // Get netx packet
    AbstractMethod("GetNextPacket");
-
    return 0;
 }
 
@@ -125,5 +124,7 @@ TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 //______________________________________________________________________________
 void TVirtualPacketizer::StopProcess(Bool_t /*abort*/)
 {
+   // Stop process
+
    fStop = kTRUE;
 }

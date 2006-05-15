@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.31 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.32 2006/04/19 10:51:24 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -451,6 +451,8 @@ TPacketizer::TFileStat *TPacketizer::GetNextUnAlloc(TFileNode *node)
 //______________________________________________________________________________
 TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
 {
+   // Get next node not yet allocated
+
    TFileNode *node = (TFileNode *)fUnAllocNext;
 
    if (node != 0) {
@@ -465,6 +467,8 @@ TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
 //______________________________________________________________________________
 void TPacketizer::RemoveUnAllocNode(TFileNode * node)
 {
+   // Remove unallocated node
+
    if ( fUnAllocNext == node ) fUnAllocNext = fUnAllocated->After(node);
    fUnAllocated->Remove(node);
    if ( fUnAllocNext == 0 ) fUnAllocNext = fUnAllocated->First();
@@ -474,6 +478,8 @@ void TPacketizer::RemoveUnAllocNode(TFileNode * node)
 //______________________________________________________________________________
 TPacketizer::TFileStat *TPacketizer::GetNextActive()
 {
+   // Get next active file
+
    TFileNode *node;
    TFileStat *file = 0;
 
@@ -489,6 +495,8 @@ TPacketizer::TFileStat *TPacketizer::GetNextActive()
 //______________________________________________________________________________
 TPacketizer::TFileNode *TPacketizer::NextActiveNode()
 {
+   // Get next active node
+
    TFileNode *node = (TFileNode *)fActiveNext;
 
    if (node != 0) {
@@ -499,10 +507,11 @@ TPacketizer::TFileNode *TPacketizer::NextActiveNode()
    return node;
 }
 
-
 //______________________________________________________________________________
 void TPacketizer::RemoveActive(TFileStat *file)
 {
+   // Remove file from list of actives
+
    TFileNode *node = file->GetNode();
 
    node->RemoveActive(file);
@@ -512,6 +521,8 @@ void TPacketizer::RemoveActive(TFileStat *file)
 //______________________________________________________________________________
 void TPacketizer::RemoveActiveNode(TPacketizer::TFileNode *node)
 {
+   // Remove node from the list of atives
+
    if ( fActiveNext == node ) fActiveNext = (TFileNode *)fActive->After(node);
    fActive->Remove(node);
    if ( fActiveNext == 0 ) fActiveNext = (TFileNode *)fActive->First();
@@ -814,6 +825,8 @@ void TPacketizer::SplitEventList(TDSet *dset)
 //______________________________________________________________________________
 Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
 {
+   // Get number of entries to be processed
+
    if ( fSlaveStats == 0 ) return 0;
 
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( slave );
@@ -846,6 +859,8 @@ TDSetElement* TPacketizer::CreateNewPacket(TDSetElement* base, Long64_t first, L
 //______________________________________________________________________________
 TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 {
+   // Get next packet
+
    if ( !fValid ) {
       return 0;
    }

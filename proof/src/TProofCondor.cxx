@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.6 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.7 2006/04/20 14:36:48 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -360,6 +360,8 @@ return; // don't suspend for the moment
 //______________________________________________________________________________
 TString TProofCondor::GetJobAd()
 {
+   // Get job Ad
+
    TString ad;
 
    ad = "JobUniverse = 5\n"; // vanilla

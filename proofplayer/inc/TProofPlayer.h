@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.32 2005/09/17 13:55:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.33 2005/09/24 11:33:41 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -227,8 +227,7 @@ protected:
    void StopFeedback();
 
 public:
-   TProofPlayerSlave();
-   TProofPlayerSlave(TSocket *socket);
+   TProofPlayerSlave(TSocket *socket = 0) : fSocket(socket), fFeedback(0) { }
 
    Long64_t DrawSelect(TDSet *set, const char *varexp,
                        const char *selection, Option_t *option = "",

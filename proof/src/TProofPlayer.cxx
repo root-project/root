@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.75 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.76 2006/04/19 10:57:44 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -101,6 +101,8 @@ TProofPlayer::TProofPlayer()
 //______________________________________________________________________________
 TProofPlayer::~TProofPlayer()
 {
+   // Destructor
+
    SafeDelete(fInput);
    SafeDelete(fSelector);
    SafeDelete(fFeedbackTimer);
@@ -111,6 +113,8 @@ TProofPlayer::~TProofPlayer()
 //______________________________________________________________________________
 void TProofPlayer::StopProcess(Bool_t abort)
 {
+   // Stop the process after this event
+
    if (fEvIter != 0)
       fEvIter->StopProcess(abort);
    if (abort == kTRUE)
@@ -614,6 +618,7 @@ void TProofPlayer::UpdateAutoBin(const char *name,
 //______________________________________________________________________________
 TDSetElement *TProofPlayer::GetNextPacket(TSlave *, TMessage *)
 {
+   // Get next packet
    MayNotUse("GetNextPacket");
    return 0;
 }
@@ -621,12 +626,14 @@ TDSetElement *TProofPlayer::GetNextPacket(TSlave *, TMessage *)
 //______________________________________________________________________________
 void TProofPlayer::SetupFeedback()
 {
+   // Set up feedback
    MayNotUse("SetupFeedback");
 }
 
 //______________________________________________________________________________
 void TProofPlayer::StopFeedback()
 {
+   // Stop feedback
    MayNotUse("StopFeedback");
 }
 
@@ -635,8 +642,8 @@ Long64_t TProofPlayer::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
                                const char * /*selection*/, Option_t * /*option*/,
                                Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
+   // Draw
    MayNotUse("DrawSelect");
-
    return 0;
 }
 
@@ -655,6 +662,8 @@ ClassImp(TProofPlayerRemote)
 //______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
+   // Destructor
+
    SafeDelete(fOutput);      // owns the output list
    SafeDelete(fOutputLists);
 
@@ -846,7 +855,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          Info("Finalize","Output list is empty (already finalized?)");
       } else {
          PDB(kGlobal,1)
-             Info("Finalize","Output list is empty (already finalized?)");
+            Info("Finalize","Output list is empty (already finalized?)");
       }
       return -1;
    }
@@ -1055,6 +1064,7 @@ void TProofPlayerRemote::MergeOutput()
 //______________________________________________________________________________
 void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 {
+   // Progress signal
    PDB(kGlobal,1)
       Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
@@ -1066,6 +1076,8 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 //______________________________________________________________________________
 void TProofPlayerRemote::Feedback(TList *objs)
 {
+   // Feedback signal
+
    PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
    PDB(kFeedback,1) {
       Info("Feedback","%d Objects", objs->GetSize());
@@ -1080,6 +1092,8 @@ void TProofPlayerRemote::Feedback(TList *objs)
 //______________________________________________________________________________
 void TProofPlayerRemote::StopProcess(Bool_t abort)
 {
+   // Stop process after this event
+
    if (fPacketizer != 0) fPacketizer->StopProcess(abort);
    if (abort == kTRUE)
       fExitStatus = kAborted;
@@ -1090,6 +1104,8 @@ void TProofPlayerRemote::StopProcess(Bool_t abort)
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
+   // Store received output list
+
    PDB(kOutput,1) Info("StoreOutput","Enter");
 
    if ( out == 0 ) {
@@ -1412,6 +1428,8 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
                                const char *selection, Option_t *option,
                                Long64_t nentries, Long64_t firstentry)
 {
+   // Draw
+
    TTreeDrawArgsParser info;
    info.Parse(varexp, selection, option);
    TString selector = info.GetProofSelectorName();
@@ -1460,23 +1478,10 @@ ClassImp(TProofPlayerSlave)
 
 
 //______________________________________________________________________________
-TProofPlayerSlave::TProofPlayerSlave()
-{
-  fSocket = 0;
-  fFeedback = 0;
-}
-
-//______________________________________________________________________________
-TProofPlayerSlave::TProofPlayerSlave(TSocket *socket)
-{
-      fSocket = socket;
-      fFeedback = 0;
-}
-
-//______________________________________________________________________________
 void TProofPlayerSlave::SetupFeedback()
 {
-   //
+   // Setup feedback
+
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
 
    PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
@@ -1497,6 +1502,8 @@ void TProofPlayerSlave::SetupFeedback()
 //______________________________________________________________________________
 void TProofPlayerSlave::StopFeedback()
 {
+   // Stop feedback
+
    if (fFeedbackTimer == 0) return;
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
@@ -1509,6 +1516,8 @@ void TProofPlayerSlave::StopFeedback()
 //______________________________________________________________________________
 Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 {
+   // Handle timer event
+
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
    // If in sequential (0-slave-PROOF) mode we do not have a packetizer
@@ -1558,8 +1567,8 @@ Long64_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
                                const char * /*selection*/, Option_t * /*option*/,
                                Long64_t /*nentries*/, Long64_t /*firstentry*/)
 {
+   // Draw
    MayNotUse("DrawSelect");
-
    return -1;
 }
 

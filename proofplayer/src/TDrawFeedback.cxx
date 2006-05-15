@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.8 2005/03/24 16:32:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.9 2005/06/07 20:28:32 brun Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -37,6 +37,8 @@ ClassImp(TDrawFeedback)
 TDrawFeedback::TDrawFeedback(TVirtualProof *proof, TSeqCollection *names)
   : fAll(kFALSE)
 {
+   // Constructor
+
    fNames = new THashList;
    fNames->SetOwner();
 
@@ -72,6 +74,8 @@ TDrawFeedback::TDrawFeedback(TVirtualProof *proof, TSeqCollection *names)
 //______________________________________________________________________________
 TDrawFeedback::~TDrawFeedback()
 {
+   // Destructor
+
    delete fNames;
    fProof->Disconnect("Feedback(TList*)", this, "Feedback(TList*");
 }
@@ -79,6 +83,8 @@ TDrawFeedback::~TDrawFeedback()
 //______________________________________________________________________________
 void TDrawFeedback::Feedback(TList *objs)
 {
+   // Display feedback
+
    TSeqCollection *canvases = gROOT->GetListOfCanvases();
    TVirtualPad *save = gPad;
 

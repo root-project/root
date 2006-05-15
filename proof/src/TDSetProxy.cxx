@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSetProxy.cxx,v 1.1 2002/03/13 01:52:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSetProxy.cxx,v 1.2 2005/09/18 01:06:02 rdm Exp $
 // Author: Maarten Ballintijn  12/03/02
 
 /*************************************************************************
@@ -26,6 +26,8 @@ ClassImp(TDSetProxy)
 //______________________________________________________________________________
 TDSetProxy::TDSetProxy()
 {
+   // Constructor
+
    fServ = 0;
 }
 
@@ -33,6 +35,8 @@ TDSetProxy::TDSetProxy()
 TDSetProxy::TDSetProxy(const char *type, const char *objname, const char *dir)
    : TDSet(type,objname,dir)
 {
+   // Constructor
+
    fServ = 0;
    fCurrent = 0;
 }
@@ -40,6 +44,8 @@ TDSetProxy::TDSetProxy(const char *type, const char *objname, const char *dir)
 //______________________________________________________________________________
 void TDSetProxy::SetProofServ(TProofServ *serv)
 {
+   // Set the reference TProofServ instance
+
    fServ = serv;
    fCurrent = 0;
 }
@@ -47,12 +53,16 @@ void TDSetProxy::SetProofServ(TProofServ *serv)
 //______________________________________________________________________________
 void TDSetProxy::Reset()
 {
+   // Reset this instance
+
    delete fCurrent; fCurrent = 0;
 }
 
 //______________________________________________________________________________
 TDSetElement *TDSetProxy::Next(Long64_t totalEntries)
 {
+   // Get the next packet
+
    fCurrent = fServ->GetNextPacket(totalEntries);
 
    return fCurrent;

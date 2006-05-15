@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.2 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.3 2006/04/19 08:22:25 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -43,6 +43,8 @@ TPacketizerProgressive::TFileNode::TFileNode(const char *name)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
      fActFileNext(0), fMySlaveCnt(0), fSlaveCnt(0)
 {
+   // Constructor
+
    fFiles->SetOwner();
    fActFiles->SetOwner(kFALSE);
 }
@@ -50,6 +52,8 @@ TPacketizerProgressive::TFileNode::TFileNode(const char *name)
 //______________________________________________________________________________
 void TPacketizerProgressive::TFileNode::Add(TDSetElement *elem)
 {
+   // Add data set element
+
    TFileStat *f = new TFileStat(this,elem);
    fFiles->Add(f);
    if (fUnAllocFileNext == 0) fUnAllocFileNext = fFiles->First();
@@ -58,6 +62,8 @@ void TPacketizerProgressive::TFileNode::Add(TDSetElement *elem)
 //______________________________________________________________________________
 TPacketizerProgressive::TFileStat *TPacketizerProgressive::TFileNode::GetNextUnAlloc()
 {
+   // Get next unallocated file
+
    TObject *next = fUnAllocFileNext;
 
    if (next != 0) {
@@ -75,6 +81,8 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::TFileNode::GetNextUnA
 //______________________________________________________________________________
 TPacketizerProgressive::TFileStat *TPacketizerProgressive::TFileNode::GetNextActive()
 {
+   // Get next active
+
    TObject *next = fActFileNext;
 
    if (fActFileNext != 0) {
@@ -88,6 +96,8 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::TFileNode::GetNextAct
 //______________________________________________________________________________
 void TPacketizerProgressive::TFileNode::RemoveActive(TFileStat *file)
 {
+   // Remove active
+
    if (fActFileNext == file) fActFileNext = fActFiles->After(file);
    fActFiles->Remove(file);
    if (fActFileNext == 0) fActFileNext = fActFiles->First();
@@ -116,6 +126,8 @@ Int_t TPacketizerProgressive::TFileNode::Compare(const TObject *other) const
 //______________________________________________________________________________
 void TPacketizerProgressive::TFileNode::Print(Option_t *) const
 {
+   // Print file node status
+
    cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName
         << "\tMySlaveCount " << fMySlaveCnt
         << "\tSlaveCount " << fSlaveCnt << endl;
@@ -124,6 +136,8 @@ void TPacketizerProgressive::TFileNode::Print(Option_t *) const
 //______________________________________________________________________________
 void TPacketizerProgressive::TFileNode::Reset()
 {
+   // Reset file node
+
    fUnAllocFileNext = fFiles->First();
    fActFiles->Clear();
    fActFileNext = 0;
@@ -136,6 +150,7 @@ void TPacketizerProgressive::TFileNode::Reset()
 TPacketizerProgressive::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
    : fIsDone(kFALSE), fNode(node), fElement(elem), fNextEntry(elem->GetFirst())
 {
+   // Constructor
 }
 
 
@@ -143,6 +158,7 @@ TPacketizerProgressive::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem
 TPacketizerProgressive::TSlaveStat::TSlaveStat(TSlave *slave)
    : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0), fProcessed(0)
 {
+   // Constructor
 }
 
 
@@ -158,6 +174,8 @@ TPacketizerProgressive::TPacketizerProgressive(TDSet* dset,
      fTotalEvents(num), fEntriesSeen(0), fFilesOpened(0),
      fEstTotalEntries(0), fEntriesProcessed(0)
 {
+   // Constructor
+
    PDB(kPacketizer,1) Info("TPacketizerProgressive", "enter (first %lld, num %lld)", first, num);
 
    if (fTotalEvents != -1) {
@@ -185,6 +203,8 @@ TPacketizerProgressive::TPacketizerProgressive(TDSet* dset,
 //______________________________________________________________________________
 TPacketizerProgressive::~TPacketizerProgressive()
 {
+   // Destructor
+
    fSlaveStats->DeleteValues();
 
    delete fSlavesRemaining;
@@ -266,6 +286,8 @@ void TPacketizerProgressive::Init()
 //______________________________________________________________________________
 Long64_t TPacketizerProgressive::GetEntriesProcessed(TSlave* s) const
 {
+   // Get entries to be processed
+
    TSlaveStat* stat = (TSlaveStat*) fSlaveStats->GetValue(s);
    return stat->GetEntriesProcessed();
 }
@@ -274,6 +296,8 @@ Long64_t TPacketizerProgressive::GetEntriesProcessed(TSlave* s) const
 TDSetElement *TPacketizerProgressive::BuildPacket(TSlaveStat* stat,
                                                   Long64_t size)
 {
+   // Build a packet
+
    TFileStat* fs = stat->GetCurrentFile();
    if (! fs) {
       Error("BuildPacket", "no TFileStat assigned");
@@ -372,6 +396,8 @@ void TPacketizerProgressive::RecalculatePacketSize(Long64_t newCount)
 //______________________________________________________________________________
 TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextActive(TSlaveStat* stat)
 {
+   // Get next active file
+
    fActiveSlaves->Sort();
    fActiveNonSlaves->Sort();
    TFileStat* file = 0;
@@ -414,6 +440,8 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextActive(TSlaveS
 //______________________________________________________________________________
 TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextUnAlloc(TSlaveStat* stat)
 {
+   // Get next unallocated node
+
    fUnAllocSlaves->Sort();
    fUnAllocNonSlaves->Sort();
    TFileStat* file = 0;
@@ -493,6 +521,8 @@ TPacketizerProgressive::TFileStat *TPacketizerProgressive::GetNextUnAlloc(TSlave
 //______________________________________________________________________________
 TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
 {
+   // Get next packet
+
    PDB(kPacketizer, 3) Info("GetNextPacket", "enter with slave %s", s->GetName());
 
    TSlaveStat* stat = (TSlaveStat*) fSlaveStats->GetValue(s);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressLog.h,v 1.1 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressLog.h,v 1.2 2005/08/31 11:11:06 rdm Exp $
 // Author: G Ganis, Aug 2005
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
    void   CloseWindow();
    void   DoClose();
 
-   ClassDef(TProofProgressLog,0);
+   ClassDef(TProofProgressLog,0) //Class implementing a log graphic box
 };
 
 #endif

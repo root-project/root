@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.9 2005/03/30 08:37:34 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.10 2006/03/20 21:43:43 pcanal Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -78,6 +78,8 @@ TCondor::~TCondor()
 //______________________________________________________________________________
 void TCondor::Print(Option_t * opt) const
 {
+   // Print master status
+
    cout << "OBJ: " << IsA()->GetName()
       << "\tPool: \"" << fPool << "\""
       << "\tState: " << fState << endl;
@@ -273,6 +275,8 @@ TCondorSlave *TCondor::Claim(const char *vmname, const char *cmd)
 //______________________________________________________________________________
 Bool_t TCondor::SetState(EState state)
 {
+   // Set the state of workers
+
    PDB(kCondor,1) Info("SetState","state: %s (%ld)",
                        state == kSuspended ? "kSuspended" : "kActive", long(gSystem->Now()));
    TIter next(fClaims);
@@ -312,6 +316,8 @@ Bool_t TCondor::SetState(EState state)
 //______________________________________________________________________________
 Bool_t TCondor::Suspend()
 {
+   // Suspend worker
+
    if (fState != kActive) {
       Error("Suspend","not in state Active");
       return kFALSE;
@@ -324,6 +330,8 @@ Bool_t TCondor::Suspend()
 //______________________________________________________________________________
 Bool_t TCondor::Resume()
 {
+   // Resume worker
+
    if (fState != kSuspended) {
       Error("Suspend","not in state Suspended");
       return kFALSE;
@@ -336,6 +344,8 @@ Bool_t TCondor::Resume()
 //______________________________________________________________________________
 Bool_t TCondor::Release()
 {
+   // Release worker
+
    if (fState == kFree) {
       Error("Suspend","not in state Active or Suspended");
       return kFALSE;
@@ -378,6 +388,8 @@ Bool_t TCondor::Release()
 //______________________________________________________________________________
 Bool_t TCondor::GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const
 {
+   // Get info about worker status
+
    TString cmd = Form("condor_status -format \"%%d:\" Mips -format \"%%s\\n\" FileSystemDomain "
                       "-const 'Name==\"%s\"'", vm);
 
@@ -415,6 +427,8 @@ Bool_t TCondor::GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const
 //______________________________________________________________________________
 TString TCondor::GetImage(const char *host) const
 {
+   // Get image of the worker
+
    TString cmd = Form("condor_status -direct %s -format \"Image:%%s\\n\" "
                       "FileSystemDomain", host);
 
@@ -452,6 +466,8 @@ TString TCondor::GetImage(const char *host) const
 //______________________________________________________________________________
 void TCondorSlave::Print(Option_t * /*opt*/ ) const
 {
+   // Print worker status
+
    cout << "OBJ: " << IsA()->GetName()
       << " " << fHostname << ":" << fPort
       << "  Perf: " << fPerfIdx

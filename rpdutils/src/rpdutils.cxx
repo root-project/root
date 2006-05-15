@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.90 2005/10/10 10:53:50 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.91 2006/03/22 21:57:17 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -912,7 +912,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       ErrorInfo("RpdUpdateAuthTab: unrecognized option (opt= %d)", opt);
    }
 
- goingout:
+   goingout:
    if (ilck == 0) {
       // unlock the file
       lseek(itab, 0, SEEK_SET);
@@ -1432,7 +1432,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       }
    }
 
- found:
+   found:
    // unlock the file
    lseek(itab, 0, SEEK_SET);
    if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
@@ -1985,7 +1985,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                pd = pd2;
             }
             // Get next item
-          nexti:
+            nexti:
             if (nw > 1 && (int) rest[0] != 92) {
                pstr = strstr(pstr, rest);
             } else {
@@ -2016,7 +2016,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                }
             }
          }
-       next:
+         next:
          continue;
       }
 
@@ -2202,8 +2202,8 @@ void RpdSendAuthList()
             ErrorInfo("RpdSendAuthList: gTriedMeth[%d]: %d", i,
                       gTriedMeth[i]);
          if (gTriedMeth[i] == 0) {
-           sprintf(cm," %d",gAllowMeth[i]);
-           alist.append(cm);
+            sprintf(cm," %d",gAllowMeth[i]);
+            alist.append(cm);
          }
       }
       NetSend(alist.c_str(), alist.length(), kMESS_STRING);
@@ -2234,10 +2234,10 @@ int RpdSshAuth(const char *sstr)
    gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #if R__SSL
    if (gRSASSLKey) {
-     // Determine type of RSA key required
-     gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+      // Determine type of RSA key required
+      gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
    } else
-     gRSAKey = 1;
+      gRSAKey = 1;
 #else
    gRSAKey = 1;
 #endif
@@ -2595,7 +2595,7 @@ int RpdSshAuth(const char *sstr)
          while (fgets(line, sizeof(line), floc) != 0) {
             // Get rid of '\n'
             if (line[strlen(line) - 1] == '\n')
-                line[strlen(line) - 1] = '\0';
+               line[strlen(line) - 1] = '\0';
             if (gDebug > 2)
                ErrorInfo("RpdSshAuth: read line ... '%s'", line);
             if (!strncmp(line,"k:",2)) {
@@ -2757,9 +2757,9 @@ int RpdKrb5Auth(const char *sstr)
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+         gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
       } else
-        gRSAKey = 1;
+         gRSAKey = 1;
 #else
       gRSAKey = 1;
 #endif
@@ -2849,23 +2849,23 @@ int RpdKrb5Auth(const char *sstr)
       if (gDebug > 2)
          ErrorInfo("RpdKrb5Auth: receiving target user ... ");
 
-       EMessageTypes kind;
-       char buffer[66];
-       NetRecv(buffer, 65, kind);
+      EMessageTypes kind;
+      char buffer[66];
+      NetRecv(buffer, 65, kind);
 
-       if (kind != kROOTD_KRB5) {
-          ErrorInfo("RpdKrb5Auth: protocol error, received message"
-                    " of type %d instead of %d\n",kind,kROOTD_KRB5);
-       }
-       buffer[65] = 0;
-       targetUser = std::string(buffer);
+      if (kind != kROOTD_KRB5) {
+         ErrorInfo("RpdKrb5Auth: protocol error, received message"
+                   " of type %d instead of %d\n",kind,kROOTD_KRB5);
+      }
+      buffer[65] = 0;
+      targetUser = std::string(buffer);
 
       if (gDebug > 2)
          ErrorInfo("RpdKrb5Auth: received target user %s ",buffer);
    }
 
    if (gDebug > 2)
-     ErrorInfo("RpdKrb5Auth: using ticket file: %s ... ",getenv("KRB5CCNAME"));
+      ErrorInfo("RpdKrb5Auth: using ticket file: %s ... ",getenv("KRB5CCNAME"));
 
 
    // If the target user is not the owner of the principal
@@ -3160,9 +3160,9 @@ int RpdSRPUser(const char *sstr)
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+         gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
       } else
-        gRSAKey = 1;
+         gRSAKey = 1;
 #else
       gRSAKey = 1;
 #endif
@@ -3739,7 +3739,7 @@ int RpdPass(const char *pass, int errheq)
          ErrorInfo("RpdPass: AFS login successful for user %s", gUser);
 #endif
 
- authok:
+   authok:
    auth = afs_auth ? 5 : 1;
    gSec = 0;
 
@@ -4005,8 +4005,8 @@ int RpdGlobusAuth(const char *sstr)
       delete credential;
    } else {
       if (gDebug > 2)
-          ErrorInfo("RpdGlobusAuth: no need for delegated credentials (%s)",
-                     gServName[gService].c_str());
+         ErrorInfo("RpdGlobusAuth: no need for delegated credentials (%s)",
+                   gServName[gService].c_str());
    }
 
    // For Now we set the gUser to the certificate owner using the gridmap file ...
@@ -4187,12 +4187,12 @@ void RpdAuthCleanup(const char *sstr, int opt)
 
    // Turn back to superuser for cleaning, if the case
    if (getuid() == 0) {
-     if (setresgid(0, 0, 0) == -1)
-        if (gDebug > 0)
-           ErrorInfo("RpdAuthCleanup: can't setgid to superuser");
-     if (setresuid(0, 0, 0) == -1)
-        if (gDebug > 0)
-           ErrorInfo("RpdAuthCleanup: can't setuid to superuser");
+      if (setresgid(0, 0, 0) == -1)
+         if (gDebug > 0)
+            ErrorInfo("RpdAuthCleanup: can't setgid to superuser");
+      if (setresuid(0, 0, 0) == -1)
+         if (gDebug > 0)
+            ErrorInfo("RpdAuthCleanup: can't setuid to superuser");
    }
    if (opt == 0) {
       RpdCleanupAuthTab("all", 0, -1);            // Cleanup everything (SIGPIPE)
@@ -4503,9 +4503,9 @@ int RpdUser(const char *sstr)
 #if R__SSL
       if (gRSASSLKey) {
          // Determine type of RSA key required
-        gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
+         gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
       } else
-        gRSAKey = 1;
+         gRSAKey = 1;
 #else
       gRSAKey = 1;
 #endif
@@ -4959,7 +4959,7 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
             ErrorInfo("RpdGetRSAKeys: access to key file %s denied"
                       " to user: %s", pubkey, usr);
             if (!strcmp(usr,"????"))
-                delete[] usr;
+               delete[] usr;
          } else
             ErrorInfo("RpdGetRSAKeys: cannot open key file"
                       " %s (errno: %d)", pubkey, GetErrno());
@@ -6019,10 +6019,10 @@ int RpdLogin(int ServType, int auth)
             shm_ds.shm_perm.uid = pw->pw_uid;
             shm_ds.shm_perm.gid = pw->pw_gid;
             if (shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1) {
-                ErrorInfo("RpdLogin: can't change ownership of shared"
-                          " memory segment %d (errno: %d)",
-                          gShmIdCred,GetErrno());
-                return -1;
+               ErrorInfo("RpdLogin: can't change ownership of shared"
+                         " memory segment %d (errno: %d)",
+                         gShmIdCred,GetErrno());
+               return -1;
             }
          }
       }
@@ -6292,7 +6292,8 @@ int RpdNoAuth(int servtype)
    }
 
    auth = 4;
- quit:
+
+   quit:
    return auth;
 }
 
@@ -6571,7 +6572,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
    pass[++len] = 0;
    rc = len;
 
- back:
+   back:
    // Change back uid's
    if (ouid == 0) {
       // set uid and gid

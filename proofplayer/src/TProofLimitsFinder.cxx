@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.2 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.3 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************
@@ -69,6 +69,8 @@ void TProofLimitsFinder::AutoBinFunc(TString& key,
 //______________________________________________________________________________
 Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 {
+   // Find good limits
+
    Double_t dummy = 0;
 
    TString key = h->GetName();
@@ -81,6 +83,8 @@ Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 //______________________________________________________________________________
 Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax)
 {
+   // Find good limits
+
    Double_t dummy = 0;
 
    TString key = h->GetName();
@@ -93,6 +97,7 @@ Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_
 //______________________________________________________________________________
 Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax)
 {
+   // Find good limits
 
    TString key = h->GetName();
    AutoBinFunc(key, xmin, xmax, ymin, ymax, zmin, zmax);
