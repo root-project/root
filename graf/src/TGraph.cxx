@@ -3517,6 +3517,19 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       yt[i] = y3;
    }
 
+   // Close the polygon if the first and last points are the same
+   if (xf[n-1]==xf[0] && yf[n-1]==yf[0]) {
+      xm = (xt[n-1]+xt[0])*0.5;
+      ym = (yt[n-1]+yt[0])*0.5;
+      a3 = TMath::ATan((ym-yf[0])/(xm-xf[0]));
+      x3 = xf[0]+w*TMath::Sin(a3+1.57079);
+      y3 = yf[0]-w*TMath::Cos(a3+1.57079);
+      xt[n-1] = x3;
+      xt[0]   = x3;
+      yt[n-1] = y3;
+      yt[0]   = y3;
+   }
+
    // Find the crossing segments and remove the useless ones
    Double_t xc, yc, c1, b1, c2, b2;
    Bool_t cross = kFALSE;
