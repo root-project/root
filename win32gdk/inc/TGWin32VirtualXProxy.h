@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.12 2005/06/21 17:09:26 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.13 2006/02/03 09:04:52 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -263,6 +263,7 @@ public:
    Pixmap_t     CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
    Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
    void         RemoveWindow(ULong_t qwid);
+   void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
 
    Int_t        EventsPending() {  return fgRealObject->EventsPending(); }
    void         NextEvent(Event_t & event) { fgRealObject->NextEvent(event); }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.36 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.37 2006/02/06 16:15:12 couet Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -306,6 +306,7 @@ public:
                                  Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
    virtual unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
+   virtual void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
    static TVirtualX    *&Instance();

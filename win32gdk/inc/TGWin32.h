@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.30 2006/02/03 09:04:52 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.31 2006/02/06 16:48:12 couet Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -378,6 +378,7 @@ public:
    unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
    Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
    void         RemoveWindow(ULong_t qwid);
+   void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
 
    Bool_t       IsCmdThread() const;
 

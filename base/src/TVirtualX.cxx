@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.15 2005/08/17 09:10:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.16 2006/02/06 16:15:13 couet Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -2056,4 +2056,12 @@ Pixmap_t TVirtualX::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*widt
    return (Pixmap_t)0;
 }
 
+//______________________________________________________________________________
+void TVirtualX::ShapeCombineMask(Window_t, Int_t, Int_t, Pixmap_t)
+{
+   // The Nonrectangular Window Shape Extension adds nonrectangular
+   // windows to the System.
+   // This allows for making shaped (partially transparent) windows
+
+}
 

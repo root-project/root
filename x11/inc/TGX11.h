@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.27 2005/09/05 12:24:28 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.28 2006/02/06 16:34:43 couet Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -388,6 +388,7 @@ public:
                          Int_t dx, Int_t dy, Int_t x, Int_t y,
                          UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
+   void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
 
    ClassDef(TGX11,0)  //Interface to X11
 };

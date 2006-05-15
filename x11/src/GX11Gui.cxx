@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.44 2005/09/05 14:43:46 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.45 2005/11/11 15:29:46 couet Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "KeySymbols.h"
 #include "TEnv.h"
 
+#include <X11/extensions/shape.h>
 
 //---- MWM Hints stuff
 
@@ -797,9 +798,9 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
    // initializes the TGX11 class via Init(). Called from TGClient ctor.
 
 #ifdef _REENTRANT
-      // very first call before any X-call !!
-      if (!XInitThreads())
-         Warning("OpenDisplay", "system has no X11 thread support");
+   // very first call before any X-call !!
+   if (!XInitThreads())
+      Warning("OpenDisplay", "system has no X11 thread support");
 #endif
 
    Display *dpy;
@@ -2618,4 +2619,15 @@ void TGX11::DeleteImage(Drawable_t img)
    // Destroy XImage img.
 
    XDestroyImage((XImage*) img);
+}
+
+//______________________________________________________________________________
+void TGX11::ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask)
+{
+   // The Nonrectangular Window Shape Extension adds nonrectangular
+   // windows to the System.
+   // This allows for making shaped (partially transparent) windows
+
+   XShapeCombineMask(fDisplay, (Window) id, ShapeBounding, x, y,
+                     (Pixmap) mask, ShapeSet);
 }

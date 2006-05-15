@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.111 2006/04/30 05:37:56 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.112 2006/05/02 16:53:40 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -7122,5 +7122,15 @@ void TGWin32::RemoveWindow(ULong_t qwid)
       }
    }
    gCws = 0;
+}
+
+//______________________________________________________________________________
+void TGWin32::ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask)
+{
+   // The Nonrectangular Window Shape Extension adds nonrectangular
+   // windows to the System.
+   // This allows for making shaped (partially transparent) windows
+
+   gdk_window_shape_combine_mask((GdkWindow *)id, (GdkBitmap *) mask, x, y);
 }
 
