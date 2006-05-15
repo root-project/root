@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.136 2006/04/27 15:07:57 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.137 2006/05/07 14:35:34 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -52,50 +52,17 @@
 #include <stdio.h>
 #include <errno.h>
 #include <lm.h>
+#include <dbghelp.h>
+#include <Tlhelp32.h>
+#include <sstream>
+#include <iostream>
 
 extern "C" {
    extern int G__get_security_error();
    extern int G__genericerror(const char* msg);
+   void *_ReturnAddress(void);
 }
 
-const char *kProtocolName   = "tcp";
-typedef void (*SigHandler_t)(ESignals);
-
-static HANDLE gConsoleEvent;
-static HANDLE gConsoleThreadHandle;
-typedef NET_API_STATUS (WINAPI *pfn1)(LPVOID);
-typedef NET_API_STATUS (WINAPI *pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
-typedef NET_API_STATUS (WINAPI *pfn3)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*,
-                                     DWORD, LPDWORD, LPDWORD, PDWORD);
-typedef NET_API_STATUS (WINAPI *pfn4)(LPCWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
-                                     LPDWORD, PDWORD);
-static pfn1 p2NetApiBufferFree;
-static pfn2 p2NetUserGetInfo;
-static pfn3 p2NetLocalGroupGetMembers;
-static pfn4 p2NetLocalGroupEnum;
-
-
-static struct signal_map {
-   int code;
-   SigHandler_t handler;
-   char *signame;
-} signal_map[kMAXSIGNALS] = {   // the order of the signals should be identical
-//   SIGBUS,   0, "bus error",    // to the one in SysEvtHandler.h
-   SIGSEGV,  0, "segmentation violation",
-//   SIGSYS,   0, "bad argument to system call",
-//   SIGPIPE,  0, "write on a pipe with no one to read it",
-   SIGILL,   0, "illegal instruction",
-//   SIGQUIT,  0, "quit",
-   SIGINT,   0, "interrupt",
-//   SIGWINCH, 0, "window size change",
-//   SIGALRM,  0, "alarm clock",
-//   SIGCHLD,  0, "death of a child",
-//   SIGURG,   0, "urgent data arrived on an I/O channel",
-   SIGFPE,   0, "floating point exception"
-//   SIGTERM,  0, "termination signal",
-//   SIGUSR1,  0, "user-defined signal 1",
-//   SIGUSR2,  0, "user-defined signal 2"
-};
 
 //////////////////// Windows TFdSet ////////////////////////////////////////////////
 class TFdSet {
@@ -129,24 +96,62 @@ public:
    Int_t GetFd(Int_t i) { return i<fds_bits->fd_count ? fds_bits->fd_array[i] : 0; }
 };
 
+namespace {
+   const char *kProtocolName   = "tcp";
+   typedef void (*SigHandler_t)(ESignals);
 
-////// static functions providing interface to raw WinNT ////////////////////
-struct  itimerval {
+   static HANDLE gConsoleEvent;
+   static HANDLE gConsoleThreadHandle;
+   typedef NET_API_STATUS (WINAPI *pfn1)(LPVOID);
+   typedef NET_API_STATUS (WINAPI *pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
+   typedef NET_API_STATUS (WINAPI *pfn3)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*,
+                                       DWORD, LPDWORD, LPDWORD, PDWORD);
+   typedef NET_API_STATUS (WINAPI *pfn4)(LPCWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
+                                       LPDWORD, PDWORD);
+   static pfn1 p2NetApiBufferFree;
+   static pfn2 p2NetUserGetInfo;
+   static pfn3 p2NetLocalGroupGetMembers;
+   static pfn4 p2NetLocalGroupEnum;
+
+   static struct signal_map {
+      int code;
+      SigHandler_t handler;
+      char *signame;
+   } signal_map[kMAXSIGNALS] = {   // the order of the signals should be identical
+      -1 /*SIGBUS*/,   0, "bus error",    // to the one in SysEvtHandler.h
+      SIGSEGV,  0, "segmentation violation",
+      -1 /*SIGSYS*/,   0, "bad argument to system call",
+      -1 /*SIGPIPE*/,  0, "write on a pipe with no one to read it",
+      SIGILL,   0, "illegal instruction",
+      -1 /*SIGQUIT*/,  0, "quit",
+      SIGINT,   0, "interrupt",
+      -1 /*SIGWINCH*/, 0, "window size change",
+      -1 /*SIGALRM*/,  0, "alarm clock",
+      -1 /*SIGCHLD*/,  0, "death of a child",
+      -1 /*SIGURG*/,   0, "urgent data arrived on an I/O channel",
+      SIGFPE,   0, "floating point exception",
+      SIGTERM,  0, "termination signal",
+      -1 /*SIGUSR1*/,  0, "user-defined signal 1",
+      -1 /*SIGUSR2*/,  0, "user-defined signal 2"
+   };
+
+   ////// static functions providing interface to raw WinNT ////////////////////
+   struct  itimerval {
    struct  timeval it_interval;
    struct  timeval it_value;
-};
+   };
 
-static UINT   timer_active = 0;
-static struct itimerval itv;
-static DWORD  start_time;
+   static UINT   timer_active = 0;
+   static struct itimerval itv;
+   static DWORD  start_time;
 
 #define ITIMER_REAL     0
 #define ITIMER_VIRTUAL  1
 #define ITIMER_PROF     2
 
-//______________________________________________________________________________
-static int setitimer(int which, const struct itimerval *value, struct itimerval *oldvalue)
-{
+   //______________________________________________________________________________
+   static int setitimer(int which, const struct itimerval *value, struct itimerval *oldvalue)
+   {
    //
 
    UINT elapse;
@@ -182,11 +187,11 @@ static int setitimer(int which, const struct itimerval *value, struct itimerval 
    }
    start_time = ::GetTickCount();
    return 0;
-}
+   }
 
-//______________________________________________________________________________
-static int WinNTSetitimer(Long_t ms)
-{
+   //______________________________________________________________________________
+   static int WinNTSetitimer(Long_t ms)
+   {
    // Set interval timer to time-out in ms milliseconds.
 
    struct itimerval itval;
@@ -197,20 +202,20 @@ static int WinNTSetitimer(Long_t ms)
       itval.it_value.tv_usec = (ms % 1000) * 1000;
    }
    return ::setitimer(ITIMER_REAL, &itval, 0);
-}
+   }
 
-//---- RPC -------------------------------------------------------------------
-//*-* Error codes set by the Windows Sockets implementation are not made available
-//*-* via the errno variable. Additionally, for the getXbyY class of functions,
-//*-* error codes are NOT made available via the h_errno variable. Instead, error
-//*-* codes are accessed by using the WSAGetLastError . This function is provided
-//*-* in Windows Sockets as a precursor (and eventually an alias) for the Win32
-//*-* function GetLastError. This is intended to provide a reliable way for a thread
-//*-* in a multithreaded process to obtain per-thread error information.
+   //---- RPC -------------------------------------------------------------------
+   //*-* Error codes set by the Windows Sockets implementation are not made available
+   //*-* via the errno variable. Additionally, for the getXbyY class of functions,
+   //*-* error codes are NOT made available via the h_errno variable. Instead, error
+   //*-* codes are accessed by using the WSAGetLastError . This function is provided
+   //*-* in Windows Sockets as a precursor (and eventually an alias) for the Win32
+   //*-* function GetLastError. This is intended to provide a reliable way for a thread
+   //*-* in a multithreaded process to obtain per-thread error information.
 
-//______________________________________________________________________________
-static int WinNTRecv(int socket, void *buffer, int length, int flag)
-{
+   //______________________________________________________________________________
+   static int WinNTRecv(int socket, void *buffer, int length, int flag)
+   {
    // Receive exactly length bytes into buffer. Returns number of bytes
    // received. Returns -1 in case of error, -2 in case of MSG_OOB
    // and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
@@ -258,11 +263,11 @@ static int WinNTRecv(int socket, void *buffer, int length, int flag)
       }
    }
    return n;
-}
+   }
 
-//______________________________________________________________________________
-static int WinNTSend(int socket, const void *buffer, int length, int flag)
-{
+   //______________________________________________________________________________
+   static int WinNTSend(int socket, const void *buffer, int length, int flag)
+   {
    // Send exactly length bytes from buffer. Returns -1 in case of error,
    // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
    // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
@@ -302,11 +307,11 @@ static int WinNTSend(int socket, const void *buffer, int length, int flag)
       }
    }
    return n;
-}
+   }
 
-//______________________________________________________________________________
-static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
-{
+   //______________________________________________________________________________
+   static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
+   {
    // Wait for events on the file descriptors specified in the readready and
    // writeready masks or for timeout (in milliseconds) to occur.
 
@@ -353,11 +358,11 @@ static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
       return -1;
    }
    return retcode;
-}
+   }
 
-//______________________________________________________________________________
-static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
-{
+   //______________________________________________________________________________
+   static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
+   {
    // Get shared library search path.
 
    static const char *dynpath = 0;
@@ -377,11 +382,11 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       }
    }
    return dynpath;
-}
+   }
 
-//______________________________________________________________________________
-static void sighandler(int sig)
-{
+   //______________________________________________________________________________
+   static void sighandler(int sig)
+   {
    // Call the signal handler associated with the signal.
 
    for (int i = 0; i < kMAXSIGNALS; i++) {
@@ -390,25 +395,28 @@ static void sighandler(int sig)
          return;
       }
    }
-}
+   }
 
-//______________________________________________________________________________
-static void WinNTSignal(ESignals sig, SigHandler_t handler)
-{
+   //______________________________________________________________________________
+   static void WinNTSignal(ESignals sig, SigHandler_t handler)
+   {
    // Set a signal handler for a signal.
-}
+      signal_map[sig].handler = handler;
+      if (signal_map[sig].code != -1)
+         (SigHandler_t)signal(signal_map[sig].code, sighandler);
+   }
 
-//______________________________________________________________________________
-static char *WinNTSigname(ESignals sig)
-{
+   //______________________________________________________________________________
+   static char *WinNTSigname(ESignals sig)
+   {
    // Return the signal name associated with a signal.
 
    return signal_map[sig].signame;
-}
+   }
 
-//______________________________________________________________________________
-static BOOL ConsoleSigHandler(DWORD sig)
-{
+   //______________________________________________________________________________
+   static BOOL ConsoleSigHandler(DWORD sig)
+   {
    // WinNT signal handler.
 
    switch (sig) {
@@ -431,55 +439,67 @@ static BOOL ConsoleSigHandler(DWORD sig)
       gSystem->Exit(-1);
       return kTRUE;
    }
-}
+   }
 
-//______________________________________________________________________________
-static void SigHandler(ESignals sig)
-{
+   static CONTEXT *fgXcptContext = 0;
+   //______________________________________________________________________________
+   static void SigHandler(ESignals sig)
+   {
    if (gSystem) {
+         gSystem->StackTrace();
       if (TROOT::Initialized()) {
          ::Throw(sig);
       }
       gSystem->Abort(-1);
    }
-}
+   }
+
+   LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS pXcp) {
+      fgXcptContext = pXcp->ContextRecord;
+      gSystem->StackTrace();
+      return EXCEPTION_CONTINUE_SEARCH;
+   }
 
 
-///////////////////////////////////////////////////////////////////////////////
-class TTermInputLine :  public  TWin32HookViaThread {
+   #pragma intrinsic(_ReturnAddress)
+   #pragma auto_inline(off)
+   DWORD_PTR GetProgramCounter()
+   {
+      return (DWORD_PTR)_ReturnAddress();
+   }
+   #pragma auto_inline(on)
 
-protected:
+   ///////////////////////////////////////////////////////////////////////////////
+   class TTermInputLine :  public  TWin32HookViaThread {
+
+   protected:
    void ExecThreadCB(TWin32SendClass *sentclass);
-public:
+   public:
    TTermInputLine::TTermInputLine();
-};
+   };
 
-//______________________________________________________________________________
-TTermInputLine::TTermInputLine()
-{
+   //______________________________________________________________________________
+   TTermInputLine::TTermInputLine()
+   {
    //
 
    TWin32SendWaitClass CodeOp(this);
    ExecCommandThread(&CodeOp, kFALSE);
    CodeOp.Wait();
-}
+   }
 
-//______________________________________________________________________________
-void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
-{
+   //______________________________________________________________________________
+   void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
+   {
    // Dispatch a single event.
 
    gROOT->GetApplication()->HandleTermInput();
    ((TWin32SendWaitClass *)code)->Release();
-}
+   }
 
-
-///////////////////////////////////////////////////////////////////////////////
-ClassImp(TWinNTSystem)
-
-//______________________________________________________________________________
-unsigned __stdcall HandleConsoleThread(void *pArg )
-{
+   //______________________________________________________________________________
+   unsigned __stdcall HandleConsoleThread(void *pArg )
+   {
    //
 
    while (1) {
@@ -510,7 +530,156 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
    gConsoleThreadHandle = 0;
    _endthreadex( 0 );
    return 0;
-}
+   }
+
+   //=========================================================================
+   // Load IMAGEHLP.DLL and get the address of functions in it that we'll use 
+   // by Microsoft, from http://www.microsoft.com/msj/0597/hoodtextfigs.htm#fig1
+   //=========================================================================
+   // Make typedefs for some IMAGEHLP.DLL functions so that we can use them
+   // with GetProcAddress
+   typedef BOOL (__stdcall *SYMINITIALIZEPROC)( HANDLE, LPSTR, BOOL );
+   typedef BOOL (__stdcall *SYMCLEANUPPROC)( HANDLE );
+   typedef BOOL (__stdcall *STACKWALK64PROC)
+               ( DWORD, HANDLE, HANDLE, LPSTACKFRAME64, LPVOID,
+               PREAD_PROCESS_MEMORY_ROUTINE,PFUNCTION_TABLE_ACCESS_ROUTINE,
+               PGET_MODULE_BASE_ROUTINE, PTRANSLATE_ADDRESS_ROUTINE );
+   typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESS64PROC)( HANDLE, DWORD64 );
+   typedef DWORD (__stdcall *SYMGETMODULEBASE64PROC)( HANDLE, DWORD64 );
+   typedef BOOL (__stdcall *SYMGETMODULEINFO64PROC)(HANDLE, DWORD64, PIMAGEHLP_MODULE64);
+   typedef BOOL (__stdcall *SYMGETSYMFROMADDR64PROC)( HANDLE, DWORD64, PDWORD64, PIMAGEHLP_SYMBOL64);
+   typedef BOOL (__stdcall *SYMGETLINEFROMADDR64PROC)(HANDLE, DWORD64, PDWORD, PIMAGEHLP_LINE64);
+   typedef DWORD (__stdcall *UNDECORATESYMBOLNAMEPROC)(PCSTR, PSTR, DWORD, DWORD);
+
+
+   static SYMINITIALIZEPROC _SymInitialize = 0;
+   static SYMCLEANUPPROC _SymCleanup = 0;
+   static STACKWALK64PROC _StackWalk64 = 0;
+   static SYMFUNCTIONTABLEACCESS64PROC _SymFunctionTableAccess64 = 0;
+   static SYMGETMODULEBASE64PROC _SymGetModuleBase64 = 0;
+   static SYMGETMODULEINFO64PROC _SymGetModuleInfo64 = 0;
+   static SYMGETSYMFROMADDR64PROC _SymGetSymFromAddr64 = 0;
+   static SYMGETLINEFROMADDR64PROC _SymGetLineFromAddr64 = 0;
+   static UNDECORATESYMBOLNAMEPROC _UnDecorateSymbolName = 0;
+
+   BOOL InitImagehlpFunctions()
+   {
+      HMODULE hModImagehlp = LoadLibrary( "IMAGEHLP.DLL" );
+      if (!hModImagehlp)
+         return FALSE;
+
+      _SymInitialize = (SYMINITIALIZEPROC) GetProcAddress( hModImagehlp, "SymInitialize" );
+      if (!_SymInitialize)
+         return FALSE;
+
+      _SymCleanup = (SYMCLEANUPPROC) GetProcAddress( hModImagehlp, "SymCleanup" );
+      if (!_SymCleanup)
+         return FALSE;
+
+      _StackWalk64 = (STACKWALK64PROC) GetProcAddress( hModImagehlp, "StackWalk64" );
+      if (!_StackWalk64)
+         return FALSE;
+
+      _SymFunctionTableAccess64 = (SYMFUNCTIONTABLEACCESS64PROC) GetProcAddress(hModImagehlp, "SymFunctionTableAccess64" );
+      if (!_SymFunctionTableAccess64)
+         return FALSE;
+
+      _SymGetModuleBase64=(SYMGETMODULEBASE64PROC)GetProcAddress(hModImagehlp, "SymGetModuleBase64");
+      if (!_SymGetModuleBase64)
+         return FALSE;
+
+      _SymGetModuleInfo64=(SYMGETMODULEINFO64PROC)GetProcAddress(hModImagehlp, "SymGetModuleInfo64");
+      if (!_SymGetModuleInfo64)
+         return FALSE;
+
+      _SymGetSymFromAddr64=(SYMGETSYMFROMADDR64PROC)GetProcAddress(hModImagehlp, "SymGetSymFromAddr64");
+      if (!_SymGetSymFromAddr64)
+         return FALSE;
+
+      _SymGetLineFromAddr64=(SYMGETLINEFROMADDR64PROC)GetProcAddress(hModImagehlp, "SymGetLineFromAddr64");
+      if (!_SymGetLineFromAddr64)
+         return FALSE;
+
+      _UnDecorateSymbolName=(UNDECORATESYMBOLNAMEPROC)GetProcAddress(hModImagehlp, "UnDecorateSymbolName");
+      if (!_UnDecorateSymbolName)
+         return FALSE;
+
+      if (!_SymInitialize(GetCurrentProcess(), 0, TRUE ))
+         return FALSE;
+
+      return TRUE;        
+   }
+
+   // stack trace helpers getModuleName, getFunctionName by
+   /******************************************************************************
+   * VRS - The Virtual Rendering System
+   * Copyright (C) 2000-2004 Computer Graphics Systems Group at the 
+   * Hasso-Plattner-Institute (HPI), Potsdam, Germany.
+   ******************************************************************************/
+   std::string GetModuleName(DWORD64 address) {
+      std::ostringstream out;
+      HANDLE process = ::GetCurrentProcess();
+
+      DWORD lineDisplacement = 0;
+      IMAGEHLP_LINE64 line;
+      ::ZeroMemory(&line, sizeof(line));
+      line.SizeOfStruct = sizeof(line);
+      if(_SymGetLineFromAddr64(process, address, &lineDisplacement, &line)) {
+            out << line.FileName << "(" << line.LineNumber << "): ";
+      } else {
+            IMAGEHLP_MODULE64 module;
+            ::ZeroMemory(&module, sizeof(module));
+            module.SizeOfStruct = sizeof(module);
+            if(_SymGetModuleInfo64(process, address, &module)) {
+               out << module.ModuleName << "!";
+            } else {
+               out << "0x" << std::hex << address << std::dec << " ";
+            }
+      }
+
+      return out.str();
+   }
+
+   std::string GetFunctionName(DWORD64 address) {
+      DWORD64 symbolDisplacement = 0;
+      HANDLE process = ::GetCurrentProcess();
+
+      const unsigned int SYMBOL_BUFFER_SIZE = 8192;
+      char symbolBuffer[SYMBOL_BUFFER_SIZE];
+      PIMAGEHLP_SYMBOL64 symbol = reinterpret_cast<PIMAGEHLP_SYMBOL64>(symbolBuffer);
+      ::ZeroMemory(symbol, SYMBOL_BUFFER_SIZE);
+      symbol->SizeOfStruct = SYMBOL_BUFFER_SIZE;
+      symbol->MaxNameLength = SYMBOL_BUFFER_SIZE - sizeof(IMAGEHLP_SYMBOL64);
+
+      if(_SymGetSymFromAddr64(process, address, &symbolDisplacement, symbol)) {
+            // Make the symbol readable for humans
+            const unsigned int NAME_SIZE = 8192;
+            char name[NAME_SIZE];
+            _UnDecorateSymbolName(
+               symbol->Name,
+               name,
+               NAME_SIZE, 
+               UNDNAME_COMPLETE             | 
+               UNDNAME_NO_THISTYPE          |
+               UNDNAME_NO_SPECIAL_SYMS      |
+               UNDNAME_NO_MEMBER_TYPE       |
+               UNDNAME_NO_MS_KEYWORDS       |
+               UNDNAME_NO_ACCESS_SPECIFIERS
+            );
+
+            std::string result;
+            result += name;
+            result += "()";
+            return result;
+      } else {
+            return "??";
+      }
+   }
+} // end unnamed namespace
+
+
+///////////////////////////////////////////////////////////////////////////////
+ClassImp(TWinNTSystem)
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::HandleConsoleEvent()
@@ -612,6 +781,7 @@ Bool_t TWinNTSystem::Init()
    fNfd    = 0;
 
    //--- install default handlers
+   /*
    WinNTSignal(kSigChild,                 SigHandler);
    WinNTSignal(kSigBus,                   SigHandler);
    WinNTSignal(kSigSegmentationViolation, SigHandler);
@@ -620,6 +790,8 @@ Bool_t TWinNTSystem::Init()
    WinNTSignal(kSigPipe,                  SigHandler);
    WinNTSignal(kSigAlarm,                 SigHandler);
    WinNTSignal(kSigFloatingException,     SigHandler);
+   */
+   ::SetUnhandledExceptionFilter(ExceptionFilter);
 
    fSigcnt = 0;
 
@@ -981,7 +1153,7 @@ void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
    // Add a new handler to the list of the console handlers
    if (sig == kSigInterrupt) {
       ::SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler, TRUE);
-   }
+   } else
    WinNTSignal(h->GetSignal(), SigHandler);
 }
 
@@ -1018,6 +1190,132 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
    // behaviour.
 
    // FIXME!
+}
+
+//______________________________________________________________________________
+void TWinNTSystem::StackTrace()
+{
+   // Print a stack trace.
+
+   if (!gEnv->GetValue("Root.Stacktrace", 1))
+      return;
+
+   HANDLE snapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD,::GetCurrentProcessId());
+
+   std::cerr.flush();
+   fflush (stderr);
+
+   if (!InitImagehlpFunctions()) {
+      std::cerr << "No stack trace: cannot find (functions in) dbghelp.dll!" << std::endl;
+      return;
+   }
+
+   // what system are we on?
+   SYSTEM_INFO sysInfo;
+   ::GetSystemInfo(&sysInfo);
+   DWORD machineType = IMAGE_FILE_MACHINE_I386;
+   switch (sysInfo.wProcessorArchitecture) {
+      case PROCESSOR_ARCHITECTURE_AMD64:
+         machineType = IMAGE_FILE_MACHINE_AMD64;
+         break;
+      case PROCESSOR_ARCHITECTURE_IA64:
+         machineType = IMAGE_FILE_MACHINE_IA64;
+         break;
+   }
+
+   DWORD currentThreadID = ::GetCurrentThreadId();
+   DWORD currentProcessID = ::GetCurrentProcessId();
+
+   if (snapshot == INVALID_HANDLE_VALUE) return;
+
+   THREADENTRY32 threadentry;
+   threadentry.dwSize = sizeof(THREADENTRY32);
+   if (!::Thread32First(snapshot, &threadentry)) return;
+
+   std::cerr << std::endl << "==========================================" << std::endl;
+   std::cerr << "=============== STACKTRACE ===============" << std::endl;
+   std::cerr << "==========================================" << std::endl << std::endl;
+   UInt_t iThread = 0;
+   do {
+      if (threadentry.th32OwnerProcessID != currentProcessID)
+         continue;
+      HANDLE thread = ::OpenThread(THREAD_GET_CONTEXT|THREAD_SUSPEND_RESUME|THREAD_QUERY_INFORMATION, 
+         FALSE, threadentry.th32ThreadID);
+      CONTEXT context;
+      STACKFRAME64 frame;
+      ::ZeroMemory(&frame, sizeof(frame));
+
+      frame.AddrPC.Mode      = AddrModeFlat;
+      frame.AddrFrame.Mode   = AddrModeFlat;
+
+      if (threadentry.th32ThreadID != currentThreadID) {
+         ::SuspendThread(thread);
+         context.ContextFlags = CONTEXT_CONTROL;
+         ::GetThreadContext(thread, &context);
+         ::ResumeThread(thread);
+      } else {
+         if (fgXcptContext) {
+            context = *fgXcptContext;
+         } else {
+            unsigned int tempEIP = 0, tempESP = 0, tempEBP = 0;
+            // fill the context data by using special evil MS code :-(
+            __asm {
+                  call get_eip_label
+
+                  get_eip_label:
+
+                  pop eax
+
+                  // probably only works for _M_IX86...
+                  mov   tempEIP, eax
+                  mov   tempEBP, ebp
+                  mov   tempESP, esp
+            }
+            frame.AddrPC.Offset    = (DWORD64)GetProgramCounter();
+            frame.AddrFrame.Offset = tempEBP;
+         }
+      }
+
+      if (threadentry.th32ThreadID != currentThreadID || fgXcptContext) {
+#if defined(_M_IX86)
+         frame.AddrPC.Offset    = context.Eip;
+         frame.AddrFrame.Offset = context.Ebp;
+         frame.AddrStack.Offset = context.Esp;
+#elif defined(_M_X64)
+         frame.AddrPC.Offset    = context.Rip;
+         frame.AddrFrame.Offset = context.Rbp;
+         frame.AddrStack.Offset = context.Rsp;
+#elif defined(_M_IA64)
+         frame.AddrPC.Offset    = context.StIIP;
+         frame.AddrFrame.Offset    = context.RsBSP;
+         frame.AddrStack.Offset = context.IntSp;
+         frame.AddrBStore.Offset= context.RsBSP;
+#else
+         std::cerr << "Stack traces not supported on your architecture yet." << std::endl;
+         return;
+#endif
+      }
+      Bool_t bFirst = kTRUE;
+      while (_StackWalk64(machineType, (HANDLE)::GetCurrentProcess(), thread, (LPSTACKFRAME64)&frame,
+         (LPVOID)&context, (PREAD_PROCESS_MEMORY_ROUTINE)NULL, (PFUNCTION_TABLE_ACCESS_ROUTINE)_SymFunctionTableAccess64,
+         (PGET_MODULE_BASE_ROUTINE)_SymGetModuleBase64, NULL)) {
+         if (bFirst)
+            std::cerr << std::endl << "================ Thread " << iThread++ << " ================" << std::endl;
+         if (!bFirst || threadentry.th32ThreadID != currentThreadID) {
+            const std::string moduleName   = GetModuleName(frame.AddrPC.Offset);
+            const std::string functionName = GetFunctionName(frame.AddrPC.Offset);
+            std::cerr << "  " << moduleName << functionName << std::endl;
+         }
+         bFirst = kFALSE;
+      }
+      ::CloseHandle(thread);
+   } while (::Thread32Next(snapshot, &threadentry));
+
+   std::cerr << std::endl << "==========================================" << std::endl;
+   std::cerr << "============= END STACKTRACE =============" << std::endl;
+   std::cerr << "==========================================" << std::endl << std::endl;
+   ::CloseHandle(snapshot);
+   _SymCleanup(GetCurrentProcess());
 }
 
 //______________________________________________________________________________

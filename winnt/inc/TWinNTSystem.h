@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.38 2006/01/10 19:41:10 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.39 2006/03/28 16:35:00 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -136,6 +136,7 @@ public:
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
+   void              StackTrace();
 
    //---- Floating Point Exceptions Control --------------------
    Int_t             GetFPEMask();
