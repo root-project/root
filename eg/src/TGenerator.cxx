@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.8 2005/08/30 06:39:31 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.9 2006/04/22 09:23:01 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -199,22 +199,21 @@ TObjArray* TGenerator::ImportParticles(Option_t *option)
 //  1) This can be demanded explicitly by setting the option = "Final"
 //  If the option = "All", all the particles are stored.
 //
-  fParticles->Clear();
-  Int_t numpart = HEPEVT.nhep;
-  if (!strcmp(option,"") || !strcmp(option,"Final")) {
-    for (Int_t i = 0; i<numpart; i++) {
-      if (HEPEVT.isthep[i] == 1) {
+   fParticles->Clear();
+   Int_t numpart = HEPEVT.nhep;
+   if (!strcmp(option,"") || !strcmp(option,"Final")) {
+      for (Int_t i = 0; i<numpart; i++) {
+         if (HEPEVT.isthep[i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
 //
-        TParticle *p = new TParticle(
+            TParticle *p = new TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
                                    HEPEVT.jmohep[i][0]-1,
                                    HEPEVT.jmohep[i][1]-1,
                                    HEPEVT.jdahep[i][0]-1,
                                    HEPEVT.jdahep[i][1]-1,
-
                                    HEPEVT.phep[i][0],
                                    HEPEVT.phep[i][1],
                                    HEPEVT.phep[i][2],
@@ -223,20 +222,18 @@ TObjArray* TGenerator::ImportParticles(Option_t *option)
                                    HEPEVT.vhep[i][1],
                                    HEPEVT.vhep[i][2],
                                    HEPEVT.vhep[i][3]);
-        fParticles->Add(p);
-        }
-     }
-  }
-  else if (!strcmp(option,"All")) {
-    for (Int_t i = 0; i<numpart; i++) {
-      TParticle *p = new TParticle(
+            fParticles->Add(p);
+         }
+      }
+   } else if (!strcmp(option,"All")) {
+      for (Int_t i = 0; i<numpart; i++) {
+         TParticle *p = new TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
                                    HEPEVT.jmohep[i][0]-1,
                                    HEPEVT.jmohep[i][1]-1,
                                    HEPEVT.jdahep[i][0]-1,
                                    HEPEVT.jdahep[i][1]-1,
-
                                    HEPEVT.phep[i][0],
                                    HEPEVT.phep[i][1],
                                    HEPEVT.phep[i][2],
@@ -245,10 +242,10 @@ TObjArray* TGenerator::ImportParticles(Option_t *option)
                                    HEPEVT.vhep[i][1],
                                    HEPEVT.vhep[i][2],
                                    HEPEVT.vhep[i][3]);
-      fParticles->Add(p);
-    }
-  }
-  return fParticles;
+         fParticles->Add(p);
+      }
+   }
+   return fParticles;
 }
 
 //______________________________________________________________________________
@@ -266,17 +263,17 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
 //  be demanded explicitly by setting the option = "Final" If the
 //  option = "All", all the particles are stored.
 //
-  if (particles == 0) return 0;
-  TClonesArray &clonesParticles = *particles;
-  clonesParticles.Clear();
-  Int_t numpart = HEPEVT.nhep;
-  if (!strcmp(option,"") || !strcmp(option,"Final")) {
-    for (Int_t i = 0; i<numpart; i++) {
-      if (HEPEVT.isthep[i] == 1) {
+   if (particles == 0) return 0;
+   TClonesArray &clonesParticles = *particles;
+   clonesParticles.Clear();
+   Int_t numpart = HEPEVT.nhep;
+   if (!strcmp(option,"") || !strcmp(option,"Final")) {
+      for (Int_t i = 0; i<numpart; i++) {
+         if (HEPEVT.isthep[i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
 //
-        new(clonesParticles[i]) TParticle(
+            new(clonesParticles[i]) TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
                                    HEPEVT.jmohep[i][0]-1,
@@ -292,19 +289,17 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
                                    HEPEVT.vhep[i][1],
                                    HEPEVT.vhep[i][2],
                                    HEPEVT.vhep[i][3]);
-        }
-     }
-  }
-  else if (!strcmp(option,"All")) {
-    for (Int_t i = 0; i<numpart; i++) {
-      new(clonesParticles[i]) TParticle(
+         }
+      }
+   } else if (!strcmp(option,"All")) {
+      for (Int_t i = 0; i<numpart; i++) {
+         new(clonesParticles[i]) TParticle(
                                    HEPEVT.idhep[i],
                                    HEPEVT.isthep[i],
                                    HEPEVT.jmohep[i][0]-1,
                                    HEPEVT.jmohep[i][1]-1,
                                    HEPEVT.jdahep[i][0]-1,
                                    HEPEVT.jdahep[i][1]-1,
-
                                    HEPEVT.phep[i][0],
                                    HEPEVT.phep[i][1],
                                    HEPEVT.phep[i][2],
@@ -313,16 +308,17 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
                                    HEPEVT.vhep[i][1],
                                    HEPEVT.vhep[i][2],
                                    HEPEVT.vhep[i][3]);
-    }
-  }
-  return numpart;
+      }
+   }
+   return numpart;
 }
 
 //______________________________________________________________________________
 void TGenerator::Browse(TBrowser *)
 {
-    Draw();
-    gPad->Update();
+   //browse generator
+   Draw();
+   gPad->Update();
 }
 
 //______________________________________________________________________________
@@ -346,7 +342,7 @@ void TGenerator::Draw(Option_t *option)
 //  Insert one event in the pad list
 //
 
-  // Create a default canvas if a canvas does not exist
+   // Create a default canvas if a canvas does not exist
    if (!gPad) {
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();

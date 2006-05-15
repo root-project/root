@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.12 2006/01/18 19:41:55 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.13 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -15,11 +15,12 @@ TParticle::TParticle() :
   fPdgCode(0), fStatusCode(0), fWeight(0),fCalcMass(0), fPx(0), fPy(0),
   fPz(0), fE(0), fVx(0), fVy(0), fVz(0), fVt(0), fPolarTheta(0), fPolarPhi(0)
 {
-  fMother[0]   = 0;
-  fMother[1]   = 0;
-  fDaughter[0] = 0;
-  fDaughter[1] = 0;
-  fParticlePDG = 0;
+   //default constructor
+   fMother[0]   = 0;
+   fMother[1]   = 0;
+   fDaughter[0] = 0;
+   fDaughter[1] = 0;
+   fParticlePDG = 0;
 }
 
 //______________________________________________________________________________
@@ -31,14 +32,15 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   fPdgCode(pdg), fStatusCode(status), fWeight(1.),fPx(px), fPy(py),
   fPz(pz), fE(etot), fVx(vx), fVy(vy), fVz(vz), fVt(time)
 {
-  fMother[0]   = mother1;
-  fMother[1]   = mother2;
-  fDaughter[0] = daughter1;
-  fDaughter[1] = daughter2;
+   //constructor
+   fMother[0]   = mother1;
+   fMother[1]   = mother2;
+   fDaughter[0] = daughter1;
+   fDaughter[1] = daughter2;
 
-  SetPolarisation(0,0,0);
+   SetPolarisation(0,0,0);
 
-  SetPdgCode(pdg);
+   SetPdgCode(pdg);
 }
 
 //______________________________________________________________________________
@@ -50,14 +52,15 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   fPdgCode(pdg), fStatusCode(status), fWeight(1.),fPx(p.Px()), fPy(p.Py()),
   fPz(p.Pz()), fE(p.E()), fVx(v.X()), fVy(v.Y()), fVz(v.Z()), fVt(v.T())
 {
-  fMother[0]   = mother1;
-  fMother[1]   = mother2;
-  fDaughter[0] = daughter1;
-  fDaughter[1] = daughter2;
+   //constructor
+   fMother[0]   = mother1;
+   fMother[1]   = mother2;
+   fDaughter[0] = daughter1;
+   fDaughter[1] = daughter2;
 
-  SetPolarisation(0,0,0);
+   SetPolarisation(0,0,0);
 
-  SetPdgCode(pdg);
+   SetPdgCode(pdg);
 }
 
 //______________________________________________________________________________
@@ -123,6 +126,7 @@ void TParticle::ExecuteEvent(Int_t, Int_t, Int_t)
 
 //______________________________________________________________________________
 const char* TParticle::GetName() const {
+   //return particle name
    static char def[4] = "XXX";
    const TParticlePDG *ap = TDatabasePDG::Instance()->GetParticle(fPdgCode);
    if (ap) return ap->GetName();
@@ -140,29 +144,31 @@ TParticlePDG*  TParticle::GetPDG(Int_t mode)
 // One can use mode=1 (faster) when the TParticle object is not part of a
 // TClonesArray used in split mode in a Root TTree.
 
-  if (!mode || !fParticlePDG) {
-     (((TParticle*)this)->fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode));
-     // when mutable will be allowed, change above line to the following line
-     //   fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);}
-  }
-  return fParticlePDG;
+   if (!mode || !fParticlePDG) {
+      (((TParticle*)this)->fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode));
+      // when mutable will be allowed, change above line to the following line
+      //   fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);}
+   }
+   return fParticlePDG;
 }
 
 //______________________________________________________________________________
 void TParticle::GetPolarisation(TVector3 &v)
 {
-  if(fPolarTheta == -99 && fPolarPhi == -99)
-    //No polarisation to return
-    v.SetXYZ(0.,0.,0.);
-  else
-    v.SetXYZ(TMath::Cos(fPolarPhi)*TMath::Sin(fPolarTheta),
-             TMath::Sin(fPolarPhi)*TMath::Sin(fPolarTheta),
-             TMath::Cos(fPolarTheta));
+   //return particle polarisation
+   if(fPolarTheta == -99 && fPolarPhi == -99)
+      //No polarisation to return
+      v.SetXYZ(0.,0.,0.);
+   else
+      v.SetXYZ(TMath::Cos(fPolarPhi)*TMath::Sin(fPolarTheta),
+               TMath::Sin(fPolarPhi)*TMath::Sin(fPolarTheta),
+               TMath::Cos(fPolarTheta));
 }
 
 //______________________________________________________________________________
 const char *TParticle::GetTitle() const
 {
+   //return particle title
    static char def[4] = "XXX";
    const TParticlePDG *ap = TDatabasePDG::Instance()->GetParticle(fPdgCode);
    if (ap) return ap->GetTitle();
@@ -216,28 +222,29 @@ void TParticle::SetPdgCode(Int_t pdg)
    //Get a new pointer to a TParticlePDG from TDatabasePDG
    //Recompute the mass
    
-  fPdgCode = pdg;
-  fParticlePDG = TDatabasePDG::Instance()->GetParticle(pdg);
-  if (fParticlePDG) {
-     fCalcMass    = fParticlePDG->Mass();
-  } else {
-     Warning("SetPdg","PDG code %d unknown from TDatabasePDG",pdg);
-     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
-     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
-     else         fCalcMass = -TMath::Sqrt(-a2);
-  }
+   fPdgCode = pdg;
+   fParticlePDG = TDatabasePDG::Instance()->GetParticle(pdg);
+   if (fParticlePDG) {
+      fCalcMass    = fParticlePDG->Mass();
+   } else {
+      Warning("SetPdg","PDG code %d unknown from TDatabasePDG",pdg);
+      Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
+      if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
+      else         fCalcMass = -TMath::Sqrt(-a2);
+   }
 }
 
 //______________________________________________________________________________
 void TParticle::SetPolarisation(Double_t polx, Double_t poly, Double_t polz)
 {
-  if(polx || poly || polz) {
-    fPolarTheta = TMath::ACos(polz/TMath::Sqrt(polx*polx+poly*poly+polz*polz));
-    fPolarPhi   = TMath::Pi()+TMath::ATan2(-poly,-polx);
-  } else {
-    fPolarTheta = -99;
-    fPolarPhi = -99;
-  }
+   //set particle polarisation
+   if(polx || poly || polz) {
+      fPolarTheta = TMath::ACos(polz/TMath::Sqrt(polx*polx+poly*poly+polz*polz));
+      fPolarPhi   = TMath::Pi()+TMath::ATan2(-poly,-polx);
+   } else {
+      fPolarTheta = -99;
+      fPolarPhi = -99;
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.21 2005/06/09 06:23:47 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.22 2005/09/04 11:42:05 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -51,12 +51,11 @@ TDatabasePDG::TDatabasePDG(): TNamed("PDGDB","The PDG particle data base")
 
    fParticleList  = 0;
    fListOfClasses = 0;
-   if (fgInstance) {
-     Warning("TDatabasePDG", "object already instantiated");
-   }
-   else {
-     fgInstance = this;
-     gROOT->GetListOfSpecials()->Add(this);
+      if (fgInstance) {
+      Warning("TDatabasePDG", "object already instantiated");
+   } else {
+      fgInstance = this;
+      gROOT->GetListOfSpecials()->Add(this);
    }
 }
 
@@ -79,7 +78,7 @@ TDatabasePDG::~TDatabasePDG()
 TDatabasePDG*  TDatabasePDG::Instance()
 {
    //static function
-  return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
+   return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
 }
 
 
@@ -101,56 +100,56 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
   //  mean free path will be calculated.
   //
 
-  TParticlePDG* old = GetParticle(PDGcode);
+   TParticlePDG* old = GetParticle(PDGcode);
 
-  if (old) {
-    printf(" *** TDatabasePDG::AddParticle: particle with PDGcode=%d already defined\n",PDGcode);
-    return 0;
-  }
+   if (old) {
+      printf(" *** TDatabasePDG::AddParticle: particle with PDGcode=%d already defined\n",PDGcode);
+      return 0;
+   }
 
-  TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,
+   TParticlePDG* p = new TParticlePDG(name, title, mass, stable, width,
                                      charge, ParticleClass, PDGcode, Anti,
                                      TrackingCode);
-  fParticleList->Add(p);
+   fParticleList->Add(p);
 
-  TParticleClassPDG* pclass = GetParticleClass(ParticleClass);
+   TParticleClassPDG* pclass = GetParticleClass(ParticleClass);
 
-  if (!pclass) {
-    pclass = new TParticleClassPDG(ParticleClass);
-    fListOfClasses->Add(pclass);
-  }
+   if (!pclass) {
+      pclass = new TParticleClassPDG(ParticleClass);
+      fListOfClasses->Add(pclass);
+   }
 
-  pclass->AddParticle(p);
+   pclass->AddParticle(p);
 
-  return p;
+   return p;
 }
 
 //______________________________________________________________________________
 TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 {
-  // assuming particle has already been defined
+   // assuming particle has already been defined
 
-  TParticlePDG* old = GetParticle(PdgCode);
+   TParticlePDG* old = GetParticle(PdgCode);
 
-  if (old) {
-    printf(" *** TDatabasePDG::AddAntiParticle: can't redefine parameters\n");
-    return NULL;
-  }
+   if (old) {
+      printf(" *** TDatabasePDG::AddAntiParticle: can't redefine parameters\n");
+      return NULL;
+   }
 
-  Int_t pdg_code  = abs(PdgCode);
-  TParticlePDG* p = GetParticle(pdg_code);
+   Int_t pdg_code  = abs(PdgCode);
+   TParticlePDG* p = GetParticle(pdg_code);
 
-  TParticlePDG* ap = AddParticle(Name,
-                                 Name,
-                                 p->Mass(),
-                                 1,
-                                 p->Width(),
-                                 -p->Charge(),
-                                 p->ParticleClass(),
-                                 PdgCode,
-                                 1,
-                                 p->TrackingCode());
-  return ap;
+   TParticlePDG* ap = AddParticle(Name,
+                                  Name,
+                                  p->Mass(),
+                                  1,
+                                  p->Width(),
+                                  -p->Charge(),
+                                  p->ParticleClass(),
+                                  PdgCode,
+                                  1,
+                                  p->TrackingCode());
+   return ap;
 }
 
 
@@ -161,9 +160,9 @@ TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
    //  Get a pointer to the particle object according to the name given
    //
 
-  if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
+   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
 
-  TParticlePDG *def = (TParticlePDG *)fParticleList->FindObject(name);
+   TParticlePDG *def = (TParticlePDG *)fParticleList->FindObject(name);
 //     if (!def) {
 //        Error("GetParticle","No match for %s exists!",name);
 //     }
@@ -177,7 +176,7 @@ TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
    //  Get a pointer to the particle object according to the MC code number
    //
 
-  if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
+   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
 
    TParticlePDG *p;
    TObjLink *lnk = fParticleList->FirstLink();
@@ -195,7 +194,7 @@ void TDatabasePDG::Print(Option_t *option) const
 {
    // Print contents of PDG database.
 
-  if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
+   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
 
    TIter next(fParticleList);
    TParticlePDG *p;
@@ -220,116 +219,116 @@ Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) {
   //
   // Paul Balm, Nov 19, 2001
 
-  switch(Geant3number) {
+   switch(Geant3number) {
 
-     case 1   : return 22;       // photon
-     case 25  : return -2112;    // anti-neutron
-     case 2   : return -11;      // e+
-     case 26  : return -3122;    // anti-Lambda
-     case 3   : return 11;       // e-
-     case 27  : return -3222;    // Sigma-
-     case 4   : return 12;       // e-neutrino (NB: flavour undefined by Geant)
-     case 28  : return -3212;    // Sigma0
-     case 5   : return -13;      // mu+
-     case 29  : return -3112;    // Sigma+ (PB)*/
-     case 6   : return 13;       // mu-
-     case 30  : return -3322;    // Xi0
-     case 7   : return 111;      // pi0
-     case 31  : return -3312;    // Xi+
-     case 8   : return 211;      // pi+
-     case 32  : return -3334;    // Omega+ (PB)
-     case 9   : return -211;     // pi-
-     case 33  : return -15;      // tau+
-     case 10  : return 130;      // K long
-     case 34  : return 15;       // tau-
-     case 11  : return 321;      // K+
-     case 35  : return 411;      // D+
-     case 12  : return -321;     // K-
-     case 36  : return -411;     // D-
-     case 13  : return 2112;     // n
-     case 37  : return 421;      // D0
-     case 14  : return 2212;     // p
-     case 38  : return -421;     // D0
-     case 15  : return -2212;    // anti-proton
-     case 39  : return 431;      // Ds+
-     case 16  : return 310;      // K short
-     case 40  : return -431;     // anti Ds-
-     case 17  : return 221;      // eta
-     case 41  : return 4122;     // Lamba_c+
-     case 18  : return 3122;     // Lambda
-     case 42  : return 24;       // W+
-     case 19  : return 3222;     // Sigma+
-     case 43  : return -24;      // W-
-     case 20  : return 3212;     // Sigma0
-     case 44  : return 23;       // Z
-     case 21  : return 3112;     // Sigma-
-     case 45  : return 0;        // deuteron
-     case 22  : return 3322;     // Xi0
-     case 46  : return 0;        // triton
-     case 23  : return 3312;     // Xi-
-     case 47  : return 0;        // alpha
-     case 24  : return 3334;     // Omega- (PB)
-     case 48  : return 0;        // G nu ? PDG ID 0 is undefined
+      case 1   : return 22;       // photon
+      case 25  : return -2112;    // anti-neutron
+      case 2   : return -11;      // e+
+      case 26  : return -3122;    // anti-Lambda
+      case 3   : return 11;       // e-
+      case 27  : return -3222;    // Sigma-
+      case 4   : return 12;       // e-neutrino (NB: flavour undefined by Geant)
+      case 28  : return -3212;    // Sigma0
+      case 5   : return -13;      // mu+
+      case 29  : return -3112;    // Sigma+ (PB)*/
+      case 6   : return 13;       // mu-
+      case 30  : return -3322;    // Xi0
+      case 7   : return 111;      // pi0
+      case 31  : return -3312;    // Xi+
+      case 8   : return 211;      // pi+
+      case 32  : return -3334;    // Omega+ (PB)
+      case 9   : return -211;     // pi-
+      case 33  : return -15;      // tau+
+      case 10  : return 130;      // K long
+      case 34  : return 15;       // tau-
+      case 11  : return 321;      // K+
+      case 35  : return 411;      // D+
+      case 12  : return -321;     // K-
+      case 36  : return -411;     // D-
+      case 13  : return 2112;     // n
+      case 37  : return 421;      // D0
+      case 14  : return 2212;     // p
+      case 38  : return -421;     // D0
+      case 15  : return -2212;    // anti-proton
+      case 39  : return 431;      // Ds+
+      case 16  : return 310;      // K short
+      case 40  : return -431;     // anti Ds-
+      case 17  : return 221;      // eta
+      case 41  : return 4122;     // Lamba_c+
+      case 18  : return 3122;     // Lambda
+      case 42  : return 24;       // W+
+      case 19  : return 3222;     // Sigma+
+      case 43  : return -24;      // W-
+      case 20  : return 3212;     // Sigma0
+      case 44  : return 23;       // Z
+      case 21  : return 3112;     // Sigma-
+      case 45  : return 0;        // deuteron
+      case 22  : return 3322;     // Xi0
+      case 46  : return 0;        // triton
+      case 23  : return 3312;     // Xi-
+      case 47  : return 0;        // alpha
+      case 24  : return 3334;     // Omega- (PB)
+      case 48  : return 0;        // G nu ? PDG ID 0 is undefined
 
      default  : return 0;
 
-  }
+   }
 }
 
 //______________________________________________________________________________
 Int_t TDatabasePDG::ConvertPdgToGeant3(Int_t pdgNumber) {
-  // Converts pdg code to geant3 id
+   // Converts pdg code to geant3 id
 
-  switch(pdgNumber) {
+   switch(pdgNumber) {
 
-     case   22     : return  1;    // photon
-     case   -2112  : return  25;   // anti-neutron
-     case   -11    : return  2;    // e+
-     case   -3122  : return  26;   // anti-Lambda
-     case   11     : return  3;    // e-
-     case   -3222  : return  27;   // Sigma-
-     case   12     : return  4;    // e-neutrino (NB: flavour undefined by Geant)
-     case   -3212  : return  28;   // Sigma0
-     case   -13    : return  5;    // mu+
-     case   -3112  : return  29;   // Sigma+ (PB)*/
-     case   13     : return  6;    // mu-
-     case   -3322  : return  30;   // Xi0
-     case   111    : return  7;    // pi0
-     case   -3312  : return  31;   // Xi+
-     case   211    : return  8;    // pi+
-     case   -3334  : return  32;   // Omega+ (PB)
-     case   -211   : return  9;    // pi-
-     case   -15    : return  33;   // tau+
-     case   130    : return  10;   // K long
-     case   15     : return  34;   // tau-
-     case   321    : return  11;   // K+
-     case   411    : return  35;   // D+
-     case   -321   : return  12;   // K-
-     case   -411   : return  36;   // D-
-     case   2112   : return  13;   // n
-     case   421    : return  37;   // D0
-     case   2212   : return  14;   // p
-     case   -421   : return  38;   // D0
-     case   -2212  : return  15;   // anti-proton
-     case   431    : return  39;   // Ds+
-     case   310    : return  16;   // K short
-     case   -431   : return  40;   // anti Ds-
-     case   221    : return  17;   // eta
-     case   4122   : return  41;   // Lamba_c+
-     case   3122   : return  18;   // Lambda
-     case   24     : return  42;   // W+
-     case   3222   : return  19;   // Sigma+
-     case   -24    : return  43;   // W-
-     case   3212   : return  20;   // Sigma0
-     case   23     : return  44;   // Z
-     case   3112   : return  21;   // Sigma-
-     case   3322   : return  22;   // Xi0
-     case   3312   : return  23;   // Xi-
-     case   3334   : return  24;   // Omega- (PB)
+      case   22     : return  1;    // photon
+      case   -2112  : return  25;   // anti-neutron
+      case   -11    : return  2;    // e+
+      case   -3122  : return  26;   // anti-Lambda
+      case   11     : return  3;    // e-
+      case   -3222  : return  27;   // Sigma-
+      case   12     : return  4;    // e-neutrino (NB: flavour undefined by Geant)
+      case   -3212  : return  28;   // Sigma0
+      case   -13    : return  5;    // mu+
+      case   -3112  : return  29;   // Sigma+ (PB)*/
+      case   13     : return  6;    // mu-
+      case   -3322  : return  30;   // Xi0
+      case   111    : return  7;    // pi0
+      case   -3312  : return  31;   // Xi+
+      case   211    : return  8;    // pi+
+      case   -3334  : return  32;   // Omega+ (PB)
+      case   -211   : return  9;    // pi-
+      case   -15    : return  33;   // tau+
+      case   130    : return  10;   // K long
+      case   15     : return  34;   // tau-
+      case   321    : return  11;   // K+
+      case   411    : return  35;   // D+
+      case   -321   : return  12;   // K-
+      case   -411   : return  36;   // D-
+      case   2112   : return  13;   // n
+      case   421    : return  37;   // D0
+      case   2212   : return  14;   // p
+      case   -421   : return  38;   // D0
+      case   -2212  : return  15;   // anti-proton
+      case   431    : return  39;   // Ds+
+      case   310    : return  16;   // K short
+      case   -431   : return  40;   // anti Ds-
+      case   221    : return  17;   // eta
+      case   4122   : return  41;   // Lamba_c+
+      case   3122   : return  18;   // Lambda
+      case   24     : return  42;   // W+
+      case   3222   : return  19;   // Sigma+
+      case   -24    : return  43;   // W-
+      case   3212   : return  20;   // Sigma0
+      case   23     : return  44;   // Z
+      case   3112   : return  21;   // Sigma-
+      case   3322   : return  22;   // Xi0
+      case   3312   : return  23;   // Xi-
+      case   3334   : return  24;   // Omega- (PB)
 
-     default  : return 0;
+      default  : return 0;
 
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -338,167 +337,167 @@ Int_t TDatabasePDG::ConvertIsajetToPdg(Int_t isaNumber)
 //
 //  Converts the ISAJET Particle number into the PDG MC number
 //
-  switch (isaNumber) {
-    case     1 : return     2; //     UP        .30000E+00       .67
-    case    -1 : return    -2; //     UB        .30000E+00      -.67
-    case     2 : return     1; //     DN        .30000E+00      -.33
-    case    -2 : return    -1; //     DB        .30000E+00       .33
-    case     3 : return     3; //     ST        .50000E+00      -.33
-    case    -3 : return    -3; //     SB        .50000E+00       .33
-    case     4 : return     4; //     CH        .16000E+01       .67
-    case    -4 : return    -4; //     CB        .16000E+01      -.67
-    case     5 : return     5; //     BT        .49000E+01      -.33
-    case    -5 : return    -5; //     BB        .49000E+01       .33
-    case     6 : return     6; //     TP        .17500E+03       .67
-    case    -6 : return    -6; //     TB        .17500E+03      -.67
-    case     9 : return    21; //     GL       0.               0.00
-    case    80 : return    24; //     W+        SIN2W=.23       1.00
-    case   -80 : return   -24; //     W-        SIN2W=.23      -1.00
-    case    90 : return    23; //     Z0        SIN2W=.23       0.00
-    case   230 : return   311; //     K0        .49767E+00      0.00
-    case  -230 : return  -311; //     AK0       .49767E+00      0.00
-    case   330 : return   331; //     ETAP      .95760E+00      0.00
-    case   340 : return     0; //     F-        .20300E+01     -1.00
-    case  -340 : return     0; //     F+        .20300E+01      1.00
-    case   440 : return   441; //     ETAC      .29760E+01      0.00
-    case   111 : return   113; //     RHO0      .77000E+00      0.00
-    case   121 : return   213; //     RHO+      .77000E+00      1.00
-    case  -121 : return  -213; //     RHO-      .77000E+00     -1.00
-    case   221 : return   223; //     OMEG      .78260E+00      0.00
-    case   131 : return   323; //     K*+       .88810E+00      1.00
-    case  -131 : return  -323; //     K*-       .88810E+00     -1.00
-    case   231 : return   313; //     K*0       .89220E+00      0.00
-    case  -231 : return  -313; //     AK*0      .89220E+00      0.00
-    case   331 : return   333; //     PHI       .10196E+01      0.00
-    case  -140 : return   421; //     D0
-    case   140 : return  -421; //     D0 bar
-    case   141 : return  -423; //     AD*0      .20060E+01      0.00
-    case  -141 : return   423; //     D*0       .20060E+01      0.00
-    case  -240 : return  -411; //     D+
-    case   240 : return   411; //     D-
-    case   241 : return  -413; //     D*-       .20086E+01     -1.00
-    case  -241 : return   413; //     D*+       .20086E+01      1.00
-    case   341 : return     0; //     F*-       .21400E+01     -1.00
-    case  -341 : return     0; //     F*+       .21400E+01      1.00
-    case   441 : return   443; //     JPSI      .30970E+01      0.00
+   switch (isaNumber) {
+      case     1 : return     2; //     UP        .30000E+00       .67
+      case    -1 : return    -2; //     UB        .30000E+00      -.67
+      case     2 : return     1; //     DN        .30000E+00      -.33
+      case    -2 : return    -1; //     DB        .30000E+00       .33
+      case     3 : return     3; //     ST        .50000E+00      -.33
+      case    -3 : return    -3; //     SB        .50000E+00       .33
+      case     4 : return     4; //     CH        .16000E+01       .67
+      case    -4 : return    -4; //     CB        .16000E+01      -.67
+      case     5 : return     5; //     BT        .49000E+01      -.33
+      case    -5 : return    -5; //     BB        .49000E+01       .33
+      case     6 : return     6; //     TP        .17500E+03       .67
+      case    -6 : return    -6; //     TB        .17500E+03      -.67
+      case     9 : return    21; //     GL       0.               0.00
+      case    80 : return    24; //     W+        SIN2W=.23       1.00
+      case   -80 : return   -24; //     W-        SIN2W=.23      -1.00
+      case    90 : return    23; //     Z0        SIN2W=.23       0.00
+      case   230 : return   311; //     K0        .49767E+00      0.00
+      case  -230 : return  -311; //     AK0       .49767E+00      0.00
+      case   330 : return   331; //     ETAP      .95760E+00      0.00
+      case   340 : return     0; //     F-        .20300E+01     -1.00
+      case  -340 : return     0; //     F+        .20300E+01      1.00
+      case   440 : return   441; //     ETAC      .29760E+01      0.00
+      case   111 : return   113; //     RHO0      .77000E+00      0.00
+      case   121 : return   213; //     RHO+      .77000E+00      1.00
+      case  -121 : return  -213; //     RHO-      .77000E+00     -1.00
+      case   221 : return   223; //     OMEG      .78260E+00      0.00
+      case   131 : return   323; //     K*+       .88810E+00      1.00
+      case  -131 : return  -323; //     K*-       .88810E+00     -1.00
+      case   231 : return   313; //     K*0       .89220E+00      0.00
+      case  -231 : return  -313; //     AK*0      .89220E+00      0.00
+      case   331 : return   333; //     PHI       .10196E+01      0.00
+      case  -140 : return   421; //     D0
+      case   140 : return  -421; //     D0 bar
+      case   141 : return  -423; //     AD*0      .20060E+01      0.00
+      case  -141 : return   423; //     D*0       .20060E+01      0.00
+      case  -240 : return  -411; //     D+
+      case   240 : return   411; //     D-
+      case   241 : return  -413; //     D*-       .20086E+01     -1.00
+      case  -241 : return   413; //     D*+       .20086E+01      1.00
+      case   341 : return     0; //     F*-       .21400E+01     -1.00
+      case  -341 : return     0; //     F*+       .21400E+01      1.00
+      case   441 : return   443; //     JPSI      .30970E+01      0.00
 
                                         // B-mesons, Bc still missing
-    case   250 : return   511; // B0
-    case  -250 : return  -511; // B0 bar
-    case   150 : return   521; // B+
-    case  -150 : return  -521; // B-
-    case   350 : return   531; // Bs  0
-    case  -350 : return  -531; // Bs  bar
-    case   351 : return   533; // Bs* 0
-    case  -351 : return  -533; // Bs* bar
-    case   450 : return   541; // Bc  +
-    case  -450 : return  -541; // Bc  bar
+      case   250 : return   511; // B0
+      case  -250 : return  -511; // B0 bar
+      case   150 : return   521; // B+
+      case  -150 : return  -521; // B-
+      case   350 : return   531; // Bs  0
+      case  -350 : return  -531; // Bs  bar
+      case   351 : return   533; // Bs* 0
+      case  -351 : return  -533; // Bs* bar
+      case   450 : return   541; // Bc  +
+      case  -450 : return  -541; // Bc  bar
 
-    case  1140 : return  4222; //     SC++      .24300E+01      2.00
-    case -1140 : return -4222; //     ASC--     .24300E+01     -2.00
-    case  1240 : return  4212; //     SC+       .24300E+01      1.00
-    case -1240 : return -4212; //     ASC-      .24300E+01     -1.00
-    case  2140 : return  4122; //     LC+       .22600E+01      1.00
-    case -2140 : return -4122; //     ALC-      .22600E+01     -1.00
-    case  2240 : return  4112; //     SC0       .24300E+01      0.00
-    case -2240 : return -4112; //     ASC0      .24300E+01      0.00
-    case  1340 : return     0; //     USC.      .25000E+01      1.00
-    case -1340 : return     0; //     AUSC.     .25000E+01     -1.00
-    case  3140 : return     0; //     SUC.      .24000E+01      1.00
-    case -3140 : return     0; //     ASUC.     .24000E+01     -1.00
-    case  2340 : return     0; //     DSC.      .25000E+01      0.00
-    case -2340 : return     0; //     ADSC.     .25000E+01      0.00
-    case  3240 : return     0; //     SDC.      .24000E+01      0.00
-    case -3240 : return     0; //     ASDC.     .24000E+01      0.00
-    case  3340 : return     0; //     SSC.      .26000E+01      0.00
-    case -3340 : return     0; //     ASSC.     .26000E+01      0.00
-    case  1440 : return     0; //     UCC.      .35500E+01      2.00
-    case -1440 : return     0; //     AUCC.     .35500E+01     -2.00
-    case  2440 : return     0; //     DCC.      .35500E+01      1.00
-    case -2440 : return     0; //     ADCC.     .35500E+01     -1.00
-    case  3440 : return     0; //     SCC.      .37000E+01      1.00
-    case -3440 : return     0; //     ASCC.     .37000E+01     -1.00
-    case  1111 : return  2224; //     DL++      .12320E+01      2.00
-    case -1111 : return -2224; //     ADL--     .12320E+01     -2.00
-    case  1121 : return  2214; //     DL+       .12320E+01      1.00
-    case -1121 : return -2214; //     ADL-      .12320E+01     -1.00
-    case  1221 : return  2114; //     DL0       .12320E+01      0.00
-    case -1221 : return -2114; //     ADL0      .12320E+01      0.00
-    case  2221 : return   1114; //     DL-       .12320E+01     -1.00
-    case -2221 : return -1114; //     ADL+      .12320E+01      1.00
-    case  1131 : return  3224; //     S*+       .13823E+01      1.00
-    case -1131 : return -3224; //     AS*-      .13823E+01     -1.00
-    case  1231 : return  3214; //     S*0       .13820E+01      0.00
-    case -1231 : return -3214; //     AS*0      .13820E+01      0.00
-    case  2231 : return  3114; //     S*-       .13875E+01     -1.00
-    case -2231 : return -3114; //     AS*+      .13875E+01      1.00
-    case  1331 : return  3324; //     XI*0      .15318E+01      0.00
-    case -1331 : return -3324; //     AXI*0     .15318E+01      0.00
-    case  2331 : return  3314; //     XI*-      .15350E+01     -1.00
-    case -2331 : return -3314; //     AXI*+     .15350E+01      1.00
-    case  3331 : return  3334; //     OM-       .16722E+01     -1.00
-    case -3331 : return -3334; //     AOM+      .16722E+01      1.00
-    case  1141 : return     0; //     UUC*      .26300E+01      2.00
-    case -1141 : return     0; //     AUUC*     .26300E+01     -2.00
-    case  1241 : return     0; //     UDC*      .26300E+01      1.00
-    case -1241 : return     0; //     AUDC*     .26300E+01     -1.00
-    case  2241 : return     0; //     DDC*      .26300E+01      0.00
-    case -2241 : return     0; //     ADDC*     .26300E+01      0.00
-    case  1341 : return     0; //     USC*      .27000E+01      1.00
-    case -1341 : return     0; //     AUSC*     .27000E+01     -1.00
-    case  2341 : return     0; //     DSC*      .27000E+01      0.00
-    case -2341 : return     0; //     ADSC*     .27000E+01      0.00
-    case  3341 : return     0; //     SSC*      .28000E+01      0.00
-    case -3341 : return     0; //     ASSC*     .28000E+01      0.00
-    case  1441 : return     0; //     UCC*      .37500E+01      2.00
-    case -1441 : return     0; //     AUCC*     .37500E+01     -2.00
-    case  2441 : return     0; //     DCC*      .37500E+01      1.00
-    case -2441 : return     0; //     ADCC*     .37500E+01     -1.00
-    case  3441 : return     0; //     SCC*      .39000E+01      1.00
-    case -3441 : return     0; //     ASCC*     .39000E+01     -1.00
-    case  4441 : return     0; //     CCC*      .48000E+01      2.00
-    case -4441 : return     0; //     ACCC*     .48000E+01     -2.00
-    case    10 : return    22; // Photon
-    case    12 : return    11; // Electron
-    case   -12 : return   -11; // Positron
-    case    14 : return    13; // Muon-
-    case   -14 : return   -13; // Muon+
-    case    16 : return    15; // Tau-
-    case   -16 : return   -15; // Tau+
-    case    11 : return    12; // Neutrino e
-    case   -11 : return   -12; // Anti Neutrino e
-    case    13 : return    14; // Neutrino Muon
-    case   -13 : return   -14; // Anti Neutrino Muon
-    case    15 : return    16; // Neutrino Tau
-    case   -15 : return   -16; // Anti Neutrino Tau
-    case   110 : return   111; // Pion0
-    case   120 : return   211; // Pion+
-    case  -120 : return  -211; // Pion-
-    case   220 : return   221; // Eta
-    case   130 : return   321; // Kaon+
-    case  -130 : return  -321; // Kaon-
-    case   -20 : return   130; // Kaon Long
-    case    20 : return   310; // Kaon Short
+      case  1140 : return  4222; //     SC++      .24300E+01      2.00
+      case -1140 : return -4222; //     ASC--     .24300E+01     -2.00
+      case  1240 : return  4212; //     SC+       .24300E+01      1.00
+      case -1240 : return -4212; //     ASC-      .24300E+01     -1.00
+      case  2140 : return  4122; //     LC+       .22600E+01      1.00
+      case -2140 : return -4122; //     ALC-      .22600E+01     -1.00
+      case  2240 : return  4112; //     SC0       .24300E+01      0.00
+      case -2240 : return -4112; //     ASC0      .24300E+01      0.00
+      case  1340 : return     0; //     USC.      .25000E+01      1.00
+      case -1340 : return     0; //     AUSC.     .25000E+01     -1.00
+      case  3140 : return     0; //     SUC.      .24000E+01      1.00
+      case -3140 : return     0; //     ASUC.     .24000E+01     -1.00
+      case  2340 : return     0; //     DSC.      .25000E+01      0.00
+      case -2340 : return     0; //     ADSC.     .25000E+01      0.00
+      case  3240 : return     0; //     SDC.      .24000E+01      0.00
+      case -3240 : return     0; //     ASDC.     .24000E+01      0.00
+      case  3340 : return     0; //     SSC.      .26000E+01      0.00
+      case -3340 : return     0; //     ASSC.     .26000E+01      0.00
+      case  1440 : return     0; //     UCC.      .35500E+01      2.00
+      case -1440 : return     0; //     AUCC.     .35500E+01     -2.00
+      case  2440 : return     0; //     DCC.      .35500E+01      1.00
+      case -2440 : return     0; //     ADCC.     .35500E+01     -1.00
+      case  3440 : return     0; //     SCC.      .37000E+01      1.00
+      case -3440 : return     0; //     ASCC.     .37000E+01     -1.00
+      case  1111 : return  2224; //     DL++      .12320E+01      2.00
+      case -1111 : return -2224; //     ADL--     .12320E+01     -2.00
+      case  1121 : return  2214; //     DL+       .12320E+01      1.00
+      case -1121 : return -2214; //     ADL-      .12320E+01     -1.00
+      case  1221 : return  2114; //     DL0       .12320E+01      0.00
+      case -1221 : return -2114; //     ADL0      .12320E+01      0.00
+      case  2221 : return   1114; //     DL-       .12320E+01     -1.00
+      case -2221 : return -1114; //     ADL+      .12320E+01      1.00
+      case  1131 : return  3224; //     S*+       .13823E+01      1.00
+      case -1131 : return -3224; //     AS*-      .13823E+01     -1.00
+      case  1231 : return  3214; //     S*0       .13820E+01      0.00
+      case -1231 : return -3214; //     AS*0      .13820E+01      0.00
+      case  2231 : return  3114; //     S*-       .13875E+01     -1.00
+      case -2231 : return -3114; //     AS*+      .13875E+01      1.00
+      case  1331 : return  3324; //     XI*0      .15318E+01      0.00
+      case -1331 : return -3324; //     AXI*0     .15318E+01      0.00
+      case  2331 : return  3314; //     XI*-      .15350E+01     -1.00
+      case -2331 : return -3314; //     AXI*+     .15350E+01      1.00
+      case  3331 : return  3334; //     OM-       .16722E+01     -1.00
+      case -3331 : return -3334; //     AOM+      .16722E+01      1.00
+      case  1141 : return     0; //     UUC*      .26300E+01      2.00
+      case -1141 : return     0; //     AUUC*     .26300E+01     -2.00
+      case  1241 : return     0; //     UDC*      .26300E+01      1.00
+      case -1241 : return     0; //     AUDC*     .26300E+01     -1.00
+      case  2241 : return     0; //     DDC*      .26300E+01      0.00
+      case -2241 : return     0; //     ADDC*     .26300E+01      0.00
+      case  1341 : return     0; //     USC*      .27000E+01      1.00
+      case -1341 : return     0; //     AUSC*     .27000E+01     -1.00
+      case  2341 : return     0; //     DSC*      .27000E+01      0.00
+      case -2341 : return     0; //     ADSC*     .27000E+01      0.00
+      case  3341 : return     0; //     SSC*      .28000E+01      0.00
+      case -3341 : return     0; //     ASSC*     .28000E+01      0.00
+      case  1441 : return     0; //     UCC*      .37500E+01      2.00
+      case -1441 : return     0; //     AUCC*     .37500E+01     -2.00
+      case  2441 : return     0; //     DCC*      .37500E+01      1.00
+      case -2441 : return     0; //     ADCC*     .37500E+01     -1.00
+      case  3441 : return     0; //     SCC*      .39000E+01      1.00
+      case -3441 : return     0; //     ASCC*     .39000E+01     -1.00
+      case  4441 : return     0; //     CCC*      .48000E+01      2.00
+      case -4441 : return     0; //     ACCC*     .48000E+01     -2.00
+      case    10 : return    22; // Photon
+      case    12 : return    11; // Electron
+      case   -12 : return   -11; // Positron
+      case    14 : return    13; // Muon-
+      case   -14 : return   -13; // Muon+
+      case    16 : return    15; // Tau-
+      case   -16 : return   -15; // Tau+
+      case    11 : return    12; // Neutrino e
+      case   -11 : return   -12; // Anti Neutrino e
+      case    13 : return    14; // Neutrino Muon
+      case   -13 : return   -14; // Anti Neutrino Muon
+      case    15 : return    16; // Neutrino Tau
+      case   -15 : return   -16; // Anti Neutrino Tau
+      case   110 : return   111; // Pion0
+      case   120 : return   211; // Pion+
+      case  -120 : return  -211; // Pion-
+      case   220 : return   221; // Eta
+      case   130 : return   321; // Kaon+
+      case  -130 : return  -321; // Kaon-
+      case   -20 : return   130; // Kaon Long
+      case    20 : return   310; // Kaon Short
 
                                         // baryons
-    case  1120 : return  2212; // Proton
-    case -1120 : return -2212; // Anti Proton
-    case  1220 : return  2112; // Neutron
-    case -1220 : return -2112; // Anti Neutron
-    case  2130 : return  3122; // Lambda
-    case -2130 : return -3122; // Lambda bar
-    case  1130 : return  3222; // Sigma+
-    case -1130 : return -3222; // Sigma bar -
-    case  1230 : return  3212; // Sigma0
-    case -1230 : return -3212; // Sigma bar 0
-    case  2230 : return  3112; // Sigma-
-    case -2230 : return -3112; // Sigma bar +
-    case  1330 : return  3322; // Xi0
-    case -1330 : return -3322; // Xi bar 0
-    case  2330 : return  3312; // Xi-
-    case -2330 : return -3312; // Xi bar +
-    default :    return 0;      // isajet or pdg number does not exist
-  }
+      case  1120 : return  2212; // Proton
+      case -1120 : return -2212; // Anti Proton
+      case  1220 : return  2112; // Neutron
+      case -1220 : return -2112; // Anti Neutron
+      case  2130 : return  3122; // Lambda
+      case -2130 : return -3122; // Lambda bar
+      case  1130 : return  3222; // Sigma+
+      case -1130 : return -3222; // Sigma bar -
+      case  1230 : return  3212; // Sigma0
+      case -1230 : return -3212; // Sigma bar 0
+      case  2230 : return  3112; // Sigma-
+      case -2230 : return -3112; // Sigma bar +
+      case  1330 : return  3322; // Xi0
+      case -1330 : return -3322; // Xi bar 0
+      case  2330 : return  3312; // Xi-
+      case -2330 : return -3312; // Xi bar +
+      default :    return 0;      // isajet or pdg number does not exist
+   }
 }
 
 //______________________________________________________________________________
@@ -509,162 +508,160 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    // particles are added to the existing list
    // See $ROOTSYS/etc/pdg_table.txt to see the file format
 
-  if (fParticleList == 0) {
-    fParticleList  = new THashList;
-    fListOfClasses = new TObjArray;
-  }
+   if (fParticleList == 0) {
+      fParticleList  = new THashList;
+      fListOfClasses = new TObjArray;
+   }
 
-  char         default_name[1024];
-  const char*  fn;
+   char         default_name[1024];
+   const char*  fn;
 
-  if (strlen(FileName) == 0) {
+   if (strlen(FileName) == 0) {
 #ifdef ROOTETCDIR
-    sprintf(default_name,"%s/pdg_table.txt",ROOTETCDIR);
+      sprintf(default_name,"%s/pdg_table.txt",ROOTETCDIR);
 #else
-    sprintf(default_name,"%s/etc/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
+      sprintf(default_name,"%s/etc/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
 #endif
-    fn = gEnv->GetValue("Root.DatabasePDG",default_name);
-  }
-  else {
-    fn = FileName;
-  }
+      fn = gEnv->GetValue("Root.DatabasePDG",default_name);
+   } else {
+      fn = FileName;
+   }
 
-  FILE* file = fopen(fn,"r");
-  if (file == 0) {
-    Error("ReadPDGTable","Could not open PDG particle file %s",fn);
-    return;
-  }
+   FILE* file = fopen(fn,"r");
+   if (file == 0) {
+      Error("ReadPDGTable","Could not open PDG particle file %s",fn);
+      return;
+   }
 
-  char      c[512];
-  Int_t     class_number, anti, isospin, i3, spin, tracking_code;
-  Int_t     ich, kf, nch, charge;
-  char      name[30], class_name[30];
-  Double_t  mass, width, branching_ratio;
-  Int_t     dau[20];
+   char      c[512];
+   Int_t     class_number, anti, isospin, i3, spin, tracking_code;
+   Int_t     ich, kf, nch, charge;
+   char      name[30], class_name[30];
+   Double_t  mass, width, branching_ratio;
+   Int_t     dau[20];
 
-  Int_t     idecay, decay_type, flavor, ndau;
+   Int_t     idecay, decay_type, flavor, ndau;
 
-  while ( (c[0]=getc(file)) != EOF) {
+   while ( (c[0]=getc(file)) != EOF) {
 
-    if (c[0] != '#') {
-      ungetc(c[0],file);
-      // read channel number
-      fscanf(file,"%i",&ich);
-      fscanf(file,"%s",name  );
-      fscanf(file,"%i",&kf   );
-      fscanf(file,"%i",&anti );
+      if (c[0] != '#') {
+         ungetc(c[0],file);
+         // read channel number
+         fscanf(file,"%i",&ich);
+         fscanf(file,"%s",name  );
+         fscanf(file,"%i",&kf   );
+         fscanf(file,"%i",&anti );
 
-      if (kf < 0) {
-        AddAntiParticle(name,kf);
-        // nothing more on this line
-        fgets(c,200,file);
-      }
-      else {
-        fscanf(file,"%i",&class_number);
-        fscanf(file,"%s",class_name);
-        fscanf(file,"%i",&charge);
-        fscanf(file,"%le",&mass);
-        fscanf(file,"%le",&width);
-        fscanf(file,"%i",&isospin);
-        fscanf(file,"%i",&i3);
-        fscanf(file,"%i",&spin);
-        fscanf(file,"%i",&flavor);
-        fscanf(file,"%i",&tracking_code);
-        fscanf(file,"%i",&nch);
-        // nothing more on this line
-        fgets(c,200,file);
-
-
-        // create particle
-
-        TParticlePDG* part = AddParticle(name,
-                                           name,
-                                           mass,
-                                           1,
-                                           width,
-                                           charge,
-                                           class_name,
-                                           kf,
-                                           anti,
-                                           tracking_code);
-
-        if (nch) {
-          // read in decay channels
-          int ich = 0;
-          while ( ((c[0]=getc(file)) != EOF) && (ich <nch)) {
-            if (c[0] != '#') {
-              ungetc(c[0],file);
-
-              fscanf(file,"%i",&idecay);
-              fscanf(file,"%i",&decay_type);
-              fscanf(file,"%le",&branching_ratio);
-              fscanf(file,"%i",&ndau);
-              for (int idau=0; idau<ndau; idau++) {
-                fscanf(file,"%i",&dau[idau]);
-              }
-              // add decay channel
-
-              part->AddDecayChannel(decay_type,branching_ratio,ndau,dau);
-              ich++;
-            }
-            // skip end of line
+         if (kf < 0) {
+            AddAntiParticle(name,kf);
+            // nothing more on this line
             fgets(c,200,file);
-          }
-        }
+         } else {
+            fscanf(file,"%i",&class_number);
+            fscanf(file,"%s",class_name);
+            fscanf(file,"%i",&charge);
+            fscanf(file,"%le",&mass);
+            fscanf(file,"%le",&width);
+            fscanf(file,"%i",&isospin);
+            fscanf(file,"%i",&i3);
+            fscanf(file,"%i",&spin);
+            fscanf(file,"%i",&flavor);
+            fscanf(file,"%i",&tracking_code);
+            fscanf(file,"%i",&nch);
+            // nothing more on this line
+            fgets(c,200,file);
+
+
+            // create particle
+
+            TParticlePDG* part = AddParticle(name,
+                                             name,
+                                             mass,
+                                             1,
+                                             width,
+                                             charge,
+                                             class_name,
+                                             kf,
+                                             anti,
+                                             tracking_code);
+
+            if (nch) {
+               // read in decay channels
+               int ich = 0;
+               while ( ((c[0]=getc(file)) != EOF) && (ich <nch)) {
+                  if (c[0] != '#') {
+                     ungetc(c[0],file);
+
+                     fscanf(file,"%i",&idecay);
+                     fscanf(file,"%i",&decay_type);
+                     fscanf(file,"%le",&branching_ratio);
+                     fscanf(file,"%i",&ndau);
+                     for (int idau=0; idau<ndau; idau++) {
+                        fscanf(file,"%i",&dau[idau]);
+                     }
+                     // add decay channel
+
+                     part->AddDecayChannel(decay_type,branching_ratio,ndau,dau);
+                     ich++;
+                  }
+                  // skip end of line
+                  fgets(c,200,file);
+               }
+            }
+         }
+      } else {
+         // skip end of line
+         fgets(c,200,file);
       }
-    }
-    else {
-      // skip end of line
-      fgets(c,200,file);
-    }
-  }
-  // in the end loop over the antiparticles and
-  // define their decay lists
-  TIter it(fParticleList);
+   }
+   // in the end loop over the antiparticles and
+   // define their decay lists
+   TIter it(fParticleList);
 
-  Int_t code[20];
-  TParticlePDG  *ap, *p, *daughter;
-  TDecayChannel dc;
+   Int_t code[20];
+   TParticlePDG  *ap, *p, *daughter;
+   TDecayChannel dc;
 
-  while ((p = (TParticlePDG*) it.Next())) {
+   while ((p = (TParticlePDG*) it.Next())) {
 
-    // define decay channels for antiparticles
-    if (p->PdgCode() < 0) {
-      ap = GetParticle(-p->PdgCode());
-      nch = ap->NDecayChannels();
-      for (int ich=0; ich<nch; ich++) {
-        TDecayChannel* dc = ap->DecayChannel(ich);
-        ndau = dc->NDaughters();
-        for (int i=0; i<ndau; i++) {
-          // conserve CPT
+      // define decay channels for antiparticles
+      if (p->PdgCode() < 0) {
+         ap = GetParticle(-p->PdgCode());
+         nch = ap->NDecayChannels();
+         for (int ich=0; ich<nch; ich++) {
+            TDecayChannel* dc = ap->DecayChannel(ich);
+            ndau = dc->NDaughters();
+            for (int i=0; i<ndau; i++) {
+               // conserve CPT
 
-          code[i] = dc->DaughterPdgCode(i);
-          daughter = GetParticle(code[i]);
-          if (daughter->AntiParticle()) {
-            // this particle does have an
-            // antiparticle
-            code[i] = -code[i];
-          }
-        }
-        p->AddDecayChannel(dc->MatrixElementCode(),
-                           dc->BranchingRatio(),
-                           dc->NDaughters(),
-                           code);
+               code[i] = dc->DaughterPdgCode(i);
+               daughter = GetParticle(code[i]);
+               if (daughter->AntiParticle()) {
+                  // this particle does have an
+                  // antiparticle
+                  code[i] = -code[i];
+               }
+            }
+            p->AddDecayChannel(dc->MatrixElementCode(),
+                               dc->BranchingRatio(),
+                               dc->NDaughters(),
+                               code);
+         }
+         p->SetAntiParticle(ap);
+         ap->SetAntiParticle(p);
       }
-      p->SetAntiParticle(ap);
-      ap->SetAntiParticle(p);
-    }
-  }
+   }
 
-  fclose(file);
-  return;
+   fclose(file);
+   return;
 }
 
 
 //______________________________________________________________________________
 void TDatabasePDG::Browse(TBrowser* b)
 {
-  if (fListOfClasses ) fListOfClasses->Browse(b);
+   //browse data base
+   if (fListOfClasses ) fListOfClasses->Browse(b);
 }
 
 
@@ -673,8 +670,8 @@ Int_t TDatabasePDG::WritePDGTable(const char * /*filename*/)
 {
    // write contents of the particle DB into a file
 
-  Error("WritePDGTable"," not implemented yet");
-  return 0;
+   Error("WritePDGTable"," not implemented yet");
+   return 0;
 /*
   if (1) return 0;
 

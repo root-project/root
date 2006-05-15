@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.2 2001/03/05 11:37:31 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.3 2005/09/04 11:42:05 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -10,14 +10,15 @@ ClassImp(TParticleClassPDG)
 //______________________________________________________________________________
 TParticleClassPDG::TParticleClassPDG(const char* name): TNamed(name,name)
 {
-  fListOfParticles  = new TObjArray(5);
+   //default constructor
+   fListOfParticles  = new TObjArray(5);
 }
 
 //______________________________________________________________________________
 TParticleClassPDG::~TParticleClassPDG() {
-  // destructor, class doesn't own its particles...
+   // destructor, class doesn't own its particles...
 
-  delete fListOfParticles;
+   delete fListOfParticles;
 }
 
 
@@ -29,25 +30,26 @@ void TParticleClassPDG::Print(Option_t *) const
 //  Print the entire information of this kind of particle
 //
 
-  printf("Particle class: %-20s",GetName());
-  if (fListOfParticles) {
-    int banner_printed = 0;
-    TIter next(fListOfParticles);
-    TParticlePDG *p;
-    while ((p = (TParticlePDG*)next())) {
-      if (! banner_printed) {
-        p->Print("banner");
-        banner_printed = 1;
+   printf("Particle class: %-20s",GetName());
+   if (fListOfParticles) {
+      int banner_printed = 0;
+      TIter next(fListOfParticles);
+      TParticlePDG *p;
+      while ((p = (TParticlePDG*)next())) {
+         if (! banner_printed) {
+            p->Print("banner");
+            banner_printed = 1;
+         }
+         p->Print("");
       }
-      p->Print("");
-    }
-  }
+   }
 }
 
 //______________________________________________________________________________
 void TParticleClassPDG::Browse(TBrowser* b)
 {
-  if (fListOfParticles) fListOfParticles->Browse(b);
+   //browse this particle class
+   if (fListOfParticles) fListOfParticles->Browse(b);
 }
 
 

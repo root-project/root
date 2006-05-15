@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.h,v 1.2 2004/07/07 17:47:49 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.h,v 1.3 2005/09/04 11:42:05 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -27,34 +27,34 @@ protected:
 // functions
 //------------------------------------------------------------------------------
 public:
-  // ****** constructors  and destructor
+   // ****** constructors  and destructor
 
-  TParticleClassPDG(const char* name = 0);
-  virtual ~TParticleClassPDG();
-  // ****** access methods
+   TParticleClassPDG(const char* name = 0);
+   virtual ~TParticleClassPDG();
+   // ****** access methods
   
-  Int_t   GetNParticles () { 
-    return fListOfParticles->GetEntriesFast();
-  }
+   Int_t   GetNParticles () { 
+      return fListOfParticles->GetEntriesFast();
+   }
 
-  TParticlePDG* GetParticle(Int_t i) { 
-    return (TParticlePDG*) fListOfParticles->At(i); 
-  }
+   TParticlePDG* GetParticle(Int_t i) { 
+      return (TParticlePDG*) fListOfParticles->At(i); 
+   }
 
-  TObjArray* GetListOfParticles() { return fListOfParticles; }
+   TObjArray* GetListOfParticles() { return fListOfParticles; }
 
-  // ****** modifiers
+   // ****** modifiers
 
-  void AddParticle(TObject* p) { fListOfParticles->Add(p); }
+   void AddParticle(TObject* p) { fListOfParticles->Add(p); }
 
-  // ****** overloaded methods of TObject
+   // ****** overloaded methods of TObject
 
- virtual void    Print(Option_t* opt="") const; // *MENU*
+   virtual void    Print(Option_t* opt="") const; // *MENU*
 
-  Bool_t IsFolder() const { return kTRUE; }
-  virtual void   Browse(TBrowser* b);
+   Bool_t IsFolder() const { return kTRUE; }
+   virtual void   Browse(TBrowser* b);
 
-  ClassDef(TParticleClassPDG,1)		// PDG static particle definition
+   ClassDef(TParticleClassPDG,1)		// PDG static particle definition
 };
 
 #endif

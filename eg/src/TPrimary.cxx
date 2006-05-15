@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TPrimary.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TPrimary.cxx,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -40,20 +40,20 @@ TPrimary::TPrimary(Int_t part, Int_t first, Int_t second, Int_t gener,
 //
 //  TPrimary vertex particle normal constructor
 //
-  fPart         = part;
-  fFirstMother  = first;
-  fSecondMother = second;
-  fGeneration   = gener;
-  fPx           = px;
-  fPy           = py;
-  fPz           = pz;
-  fEtot         = etot;
-  fVx           = vx;
-  fVy           = vy;
-  fVz           = vz;
-  fTime         = time;
-  fTimeEnd      = timend;
-  fType         = type;
+   fPart         = part;
+   fFirstMother  = first;
+   fSecondMother = second;
+   fGeneration   = gener;
+   fPx           = px;
+   fPy           = py;
+   fPz           = pz;
+   fEtot         = etot;
+   fVx           = vx;
+   fVy           = vy;
+   fVz           = vz;
+   fTime         = time;
+   fTimeEnd      = timend;
+   fType         = type;
 }
 
 //______________________________________________________________________________
@@ -118,6 +118,7 @@ void TPrimary::ExecuteEvent(Int_t, Int_t, Int_t)
 //______________________________________________________________________________
 const char *TPrimary::GetName() const
 {
+   //return name of primary particle
    static char def[4] = "XXX";
    const TAttParticle *ap = GetParticle();
    if (ap) return ap->GetName();
@@ -130,13 +131,14 @@ const TAttParticle *TPrimary::GetParticle() const
 //
 //  returning a pointer to the particle attributes
 //
-  if (!TAttParticle::fgList) TAttParticle::DefinePDG();
-  return TAttParticle::GetParticle(fPart);
+   if (!TAttParticle::fgList) TAttParticle::DefinePDG();
+   return TAttParticle::GetParticle(fPart);
 }
 
 //______________________________________________________________________________
 const char *TPrimary::GetTitle() const
 {
+   //return title of primary particle
    static char title[128];
    Float_t pmom = TMath::Sqrt(fPx*fPx+fPy*fPy+fPz*fPz);
    sprintf(title,"pmom=%f GeV",pmom);

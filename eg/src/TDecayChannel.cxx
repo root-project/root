@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDecayChannel.cxx,v 1.3 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDecayChannel.cxx,v 1.4 2005/09/04 11:42:05 brun Exp $
 // Author: P.Murat   15/02/2001
 
 /*************************************************************************
@@ -19,9 +19,10 @@ ClassImp(TDecayChannel)
 //_____________________________________________________________________________
 TDecayChannel::TDecayChannel()
 {
-  fNumber            = 0;
-  fMatrixElementCode = 0;
-  fBranchingRatio    = 0;
+   //default constructor
+   fNumber            = 0;
+   fMatrixElementCode = 0;
+   fBranchingRatio    = 0;
 }
 
 //_____________________________________________________________________________
@@ -31,10 +32,11 @@ TDecayChannel::TDecayChannel(Int_t    Number,
                              Int_t    NDaughters,
                              Int_t*   DaughterPdgCode)
 {
-  fNumber            = Number;
-  fMatrixElementCode = MatrixElementType;
-  fBranchingRatio    = BranchingRatio;
-  fDaughters.Set(NDaughters,DaughterPdgCode);
+   //constructor
+   fNumber            = Number;
+   fMatrixElementCode = MatrixElementType;
+   fBranchingRatio    = BranchingRatio;
+   fDaughters.Set(NDaughters,DaughterPdgCode);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TPrimary.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TPrimary.h,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -38,7 +38,7 @@ class TAttParticle;
 
 class TPrimary : public TObject, public TAttLine, public TAtt3D {
 
- protected:
+protected:
         Int_t         fPart;         //Particle id produced
         Int_t         fFirstMother;  //Index of the first mother particle
         Int_t         fSecondMother; //Index of the second mother particle(if any)
@@ -54,36 +54,36 @@ class TPrimary : public TObject, public TAttLine, public TAtt3D {
         Double_t      fTimeEnd;      //Time of particle destruction (always in the pp-cms!)
         TString       fType;         //Indicator of primary type
 
- public:
-        TPrimary();
-        TPrimary(Int_t part, Int_t first, Int_t second, Int_t gener,
-                 Double_t px, Double_t py, Double_t pz,
-                 Double_t etot, Double_t vx, Double_t vy, Double_t vz,
-                 Double_t time, Double_t timend, const char *type = "");
-        virtual ~TPrimary();
-        virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-        virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual const TAttParticle  *GetParticle() const;
-        virtual const char   *GetName() const;
-        virtual const char   *GetTitle() const;
-        virtual Int_t         GetFirstMother() const { return fFirstMother; }
-        virtual Int_t         GetSecondMother() const { return fSecondMother; }
-        virtual Int_t         GetGeneration() const { return fGeneration; }
-        virtual Double_t      GetXMomentum() const { return fPx; }
-        virtual Double_t      GetYMomentum() const { return fPy; }
-        virtual Double_t      GetZMomentum() const { return fPz; }
-        virtual Double_t      GetTotalEnergy() const { return fEtot; }
-        virtual Double_t      GetXPosition() const { return fVx; }
-        virtual Double_t      GetYPosition() const { return fVy; }
-        virtual Double_t      GetZPosition() const { return fVz; }
-        virtual Double_t      GetTime() const { return fTime; }
-        virtual Double_t      GetTimeEnd() const { return fTimeEnd; }
-        virtual const char   *GetType() const { return fType.Data(); }
-        virtual void          Paint(Option_t *option = "");
-        virtual void          Print(Option_t *option = "") const;
-        virtual void          Sizeof3D() const;
+public:
+   TPrimary();
+   TPrimary(Int_t part, Int_t first, Int_t second, Int_t gener,
+            Double_t px, Double_t py, Double_t pz,
+            Double_t etot, Double_t vx, Double_t vy, Double_t vz,
+            Double_t time, Double_t timend, const char *type = "");
+   virtual ~TPrimary();
+   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
+   virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual const TAttParticle  *GetParticle() const;
+   virtual const char   *GetName() const;
+   virtual const char   *GetTitle() const;
+   virtual Int_t         GetFirstMother() const { return fFirstMother; }
+   virtual Int_t         GetSecondMother() const { return fSecondMother; }
+   virtual Int_t         GetGeneration() const { return fGeneration; }
+   virtual Double_t      GetXMomentum() const { return fPx; }
+   virtual Double_t      GetYMomentum() const { return fPy; }
+   virtual Double_t      GetZMomentum() const { return fPz; }
+   virtual Double_t      GetTotalEnergy() const { return fEtot; }
+   virtual Double_t      GetXPosition() const { return fVx; }
+   virtual Double_t      GetYPosition() const { return fVy; }
+   virtual Double_t      GetZPosition() const { return fVz; }
+   virtual Double_t      GetTime() const { return fTime; }
+   virtual Double_t      GetTimeEnd() const { return fTimeEnd; }
+   virtual const char   *GetType() const { return fType.Data(); }
+   virtual void          Paint(Option_t *option = "");
+   virtual void          Print(Option_t *option = "") const;
+   virtual void          Sizeof3D() const;
 
-        ClassDef(TPrimary,1)  //TPrimary vertex particle information
+   ClassDef(TPrimary,1)  //TPrimary vertex particle information
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TAttParticle.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TAttParticle.cxx,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Ola Nordmann   29/09/95
 
 /*************************************************************************
@@ -90,152 +90,152 @@ Int_t TAttParticle::ConvertISAtoPDG(Int_t isaNumber)
 //
 //  Converts the ISAJET Particle number into the PDG MC number
 //
-  switch (isaNumber) {
-    case     1 : return     2; //     UP        .30000E+00       .67
-    case    -1 : return    -2; //     UB        .30000E+00      -.67
-    case     2 : return     1; //     DN        .30000E+00      -.33
-    case    -2 : return    -1; //     DB        .30000E+00       .33
-    case     3 : return     3; //     ST        .50000E+00      -.33
-    case    -3 : return    -3; //     SB        .50000E+00       .33
-    case     4 : return     4; //     CH        .16000E+01       .67
-    case    -4 : return    -4; //     CB        .16000E+01      -.67
-    case     5 : return     5; //     BT        .49000E+01      -.33
-    case    -5 : return    -5; //     BB        .49000E+01       .33
-    case     6 : return     7; //     TP        .30000E+02       .67
-    case    -6 : return    -7; //     TB        .30000E+02      -.67
-    case     9 : return    21; //     GL       0.               0.00
-    case    80 : return    24; //     W+        SIN2W=.23       1.00
-    case   -80 : return   -24; //     W-        SIN2W=.23      -1.00
-    case    90 : return    23; //     Z0        SIN2W=.23       0.00
-    case   230 : return   311; //     K0        .49767E+00      0.00
-    case  -230 : return  -311; //     AK0       .49767E+00      0.00
-    case   330 : return   331; //     ETAP      .95760E+00      0.00
-    case   340 : return     0; //     F-        .20300E+01     -1.00
-    case  -340 : return     0; //     F+        .20300E+01      1.00
-    case   440 : return   441; //     ETAC      .29760E+01      0.00
-    case   111 : return   113; //     RHO0      .77000E+00      0.00
-    case   121 : return   213; //     RHO+      .77000E+00      1.00
-    case  -121 : return  -213; //     RHO-      .77000E+00     -1.00
-    case   221 : return   223; //     OMEG      .78260E+00      0.00
-    case   131 : return   323; //     K*+       .88810E+00      1.00
-    case  -131 : return  -323; //     K*-       .88810E+00     -1.00
-    case   231 : return   313; //     K*0       .89220E+00      0.00
-    case  -231 : return  -313; //     AK*0      .89220E+00      0.00
-    case   331 : return   333; //     PHI       .10196E+01      0.00
-    case   141 : return  -423; //     AD*0      .20060E+01      0.00
-    case  -141 : return   423; //     D*0       .20060E+01      0.00
-    case   241 : return  -413; //     D*-       .20086E+01     -1.00
-    case  -241 : return   413; //     D*+       .20086E+01      1.00
-    case   341 : return     0; //     F*-       .21400E+01     -1.00
-    case  -341 : return     0; //     F*+       .21400E+01      1.00
-    case   441 : return   443; //     JPSI      .30970E+01      0.00
-    case  1140 : return  4222; //     SC++      .24300E+01      2.00
-    case -1140 : return -4222; //     ASC--     .24300E+01     -2.00
-    case  1240 : return  4212; //     SC+       .24300E+01      1.00
-    case -1240 : return -4212; //     ASC-      .24300E+01     -1.00
-    case  2140 : return  4122; //     LC+       .22600E+01      1.00
-    case -2140 : return -4122; //     ALC-      .22600E+01     -1.00
-    case  2240 : return  4112; //     SC0       .24300E+01      0.00
-    case -2240 : return -4112; //     ASC0      .24300E+01      0.00
-    case  1340 : return     0; //     USC.      .25000E+01      1.00
-    case -1340 : return     0; //     AUSC.     .25000E+01     -1.00
-    case  3140 : return     0; //     SUC.      .24000E+01      1.00
-    case -3140 : return     0; //     ASUC.     .24000E+01     -1.00
-    case  2340 : return     0; //     DSC.      .25000E+01      0.00
-    case -2340 : return     0; //     ADSC.     .25000E+01      0.00
-    case  3240 : return     0; //     SDC.      .24000E+01      0.00
-    case -3240 : return     0; //     ASDC.     .24000E+01      0.00
-    case  3340 : return     0; //     SSC.      .26000E+01      0.00
-    case -3340 : return     0; //     ASSC.     .26000E+01      0.00
-    case  1440 : return     0; //     UCC.      .35500E+01      2.00
-    case -1440 : return     0; //     AUCC.     .35500E+01     -2.00
-    case  2440 : return     0; //     DCC.      .35500E+01      1.00
-    case -2440 : return     0; //     ADCC.     .35500E+01     -1.00
-    case  3440 : return     0; //     SCC.      .37000E+01      1.00
-    case -3440 : return     0; //     ASCC.     .37000E+01     -1.00
-    case  1111 : return  2224; //     DL++      .12320E+01      2.00
-    case -1111 : return -2224; //     ADL--     .12320E+01     -2.00
-    case  1121 : return  2214; //     DL+       .12320E+01      1.00
-    case -1121 : return -2214; //     ADL-      .12320E+01     -1.00
-    case  1221 : return  2114; //     DL0       .12320E+01      0.00
-    case -1221 : return -2114; //     ADL0      .12320E+01      0.00
-    case  2221 : return   1114; //     DL-       .12320E+01     -1.00
-    case -2221 : return -1114; //     ADL+      .12320E+01      1.00
-    case  1131 : return  3224; //     S*+       .13823E+01      1.00
-    case -1131 : return -3224; //     AS*-      .13823E+01     -1.00
-    case  1231 : return  3214; //     S*0       .13820E+01      0.00
-    case -1231 : return -3214; //     AS*0      .13820E+01      0.00
-    case  2231 : return  3114; //     S*-       .13875E+01     -1.00
-    case -2231 : return -3114; //     AS*+      .13875E+01      1.00
-    case  1331 : return  3324; //     XI*0      .15318E+01      0.00
-    case -1331 : return -3324; //     AXI*0     .15318E+01      0.00
-    case  2331 : return  3314; //     XI*-      .15350E+01     -1.00
-    case -2331 : return -3314; //     AXI*+     .15350E+01      1.00
-    case  3331 : return  3334; //     OM-       .16722E+01     -1.00
-    case -3331 : return -3334; //     AOM+      .16722E+01      1.00
-    case  1141 : return     0; //     UUC*      .26300E+01      2.00
-    case -1141 : return     0; //     AUUC*     .26300E+01     -2.00
-    case  1241 : return     0; //     UDC*      .26300E+01      1.00
-    case -1241 : return     0; //     AUDC*     .26300E+01     -1.00
-    case  2241 : return     0; //     DDC*      .26300E+01      0.00
-    case -2241 : return     0; //     ADDC*     .26300E+01      0.00
-    case  1341 : return     0; //     USC*      .27000E+01      1.00
-    case -1341 : return     0; //     AUSC*     .27000E+01     -1.00
-    case  2341 : return     0; //     DSC*      .27000E+01      0.00
-    case -2341 : return     0; //     ADSC*     .27000E+01      0.00
-    case  3341 : return     0; //     SSC*      .28000E+01      0.00
-    case -3341 : return     0; //     ASSC*     .28000E+01      0.00
-    case  1441 : return     0; //     UCC*      .37500E+01      2.00
-    case -1441 : return     0; //     AUCC*     .37500E+01     -2.00
-    case  2441 : return     0; //     DCC*      .37500E+01      1.00
-    case -2441 : return     0; //     ADCC*     .37500E+01     -1.00
-    case  3441 : return     0; //     SCC*      .39000E+01      1.00
-    case -3441 : return     0; //     ASCC*     .39000E+01     -1.00
-    case  4441 : return     0; //     CCC*      .48000E+01      2.00
-    case -4441 : return     0; //     ACCC*     .48000E+01     -2.00
-    case    10 : return    22; // Photon
-    case    12 : return    11; // Electron
-    case   -12 : return   -11; // Positron
-    case    14 : return    13; // Muon-
-    case   -14 : return   -13; // Muon+
-    case    16 : return    15; // Tau-
-    case   -16 : return   -15; // Tau+
-    case    11 : return    12; // Neutrino e
-    case   -11 : return   -12; // Anti Neutrino e
-    case    13 : return    14; // Neutrino Muon
-    case   -13 : return   -14; // Anti Neutrino Muon
-    case    15 : return    16; // Neutrino Tau
-    case   -15 : return   -16; // Anti Neutrino Tau
-    case   110 : return   111; // Pion0
-    case   120 : return   211; // Pion+
-    case  -120 : return  -211; // Pion-
-    case   220 : return   221; // Eta
-    case   130 : return   321; // Kaon+
-    case  -130 : return  -321; // Kaon-
-    case   -20 : return   130; // Kaon Long
-    case    20 : return   310; // Kaon Short
-    case  -240 : return  -411; // D+
-    case   240 : return   411; // D-
-    case  -140 : return   421; // D0
-    case   140 : return  -421; // D0 bar
-    case  1120 : return  2212; // Proton
-    case -1120 : return -2212; // Anti Proton
-    case  1220 : return  2112; // Neutron
-    case -1220 : return -2112; // Anti Neutron
-    case  2130 : return  3122; // Lambda
-    case -2130 : return -3122; // Lambda bar
-    case  1130 : return  3222; // Sigma+
-    case -1130 : return -3222; // Sigma bar -
-    case  1230 : return  3212; // Sigma0
-    case -1230 : return -3212; // Sigma bar 0
-    case  2230 : return  3112; // Sigma-
-    case -2230 : return -3112; // Sigma bar +
-    case  1330 : return  3322; // Xi0
-    case -1330 : return -3322; // Xi bar 0
-    case  2330 : return  3312; // Xi-
-    case -2330 : return -3312; // Xi bar +
-    default :    return 0;      // isajet or pdg number does not exist
-  }
+   switch (isaNumber) {
+      case     1 : return     2; //     UP        .30000E+00       .67
+      case    -1 : return    -2; //     UB        .30000E+00      -.67
+      case     2 : return     1; //     DN        .30000E+00      -.33
+      case    -2 : return    -1; //     DB        .30000E+00       .33
+      case     3 : return     3; //     ST        .50000E+00      -.33
+      case    -3 : return    -3; //     SB        .50000E+00       .33
+      case     4 : return     4; //     CH        .16000E+01       .67
+      case    -4 : return    -4; //     CB        .16000E+01      -.67
+      case     5 : return     5; //     BT        .49000E+01      -.33
+      case    -5 : return    -5; //     BB        .49000E+01       .33
+      case     6 : return     7; //     TP        .30000E+02       .67
+      case    -6 : return    -7; //     TB        .30000E+02      -.67
+      case     9 : return    21; //     GL       0.               0.00
+      case    80 : return    24; //     W+        SIN2W=.23       1.00
+      case   -80 : return   -24; //     W-        SIN2W=.23      -1.00
+      case    90 : return    23; //     Z0        SIN2W=.23       0.00
+      case   230 : return   311; //     K0        .49767E+00      0.00
+      case  -230 : return  -311; //     AK0       .49767E+00      0.00
+      case   330 : return   331; //     ETAP      .95760E+00      0.00
+      case   340 : return     0; //     F-        .20300E+01     -1.00
+      case  -340 : return     0; //     F+        .20300E+01      1.00
+      case   440 : return   441; //     ETAC      .29760E+01      0.00
+      case   111 : return   113; //     RHO0      .77000E+00      0.00
+      case   121 : return   213; //     RHO+      .77000E+00      1.00
+      case  -121 : return  -213; //     RHO-      .77000E+00     -1.00
+      case   221 : return   223; //     OMEG      .78260E+00      0.00
+      case   131 : return   323; //     K*+       .88810E+00      1.00
+      case  -131 : return  -323; //     K*-       .88810E+00     -1.00
+      case   231 : return   313; //     K*0       .89220E+00      0.00
+      case  -231 : return  -313; //     AK*0      .89220E+00      0.00
+      case   331 : return   333; //     PHI       .10196E+01      0.00
+      case   141 : return  -423; //     AD*0      .20060E+01      0.00
+      case  -141 : return   423; //     D*0       .20060E+01      0.00
+      case   241 : return  -413; //     D*-       .20086E+01     -1.00
+      case  -241 : return   413; //     D*+       .20086E+01      1.00
+      case   341 : return     0; //     F*-       .21400E+01     -1.00
+      case  -341 : return     0; //     F*+       .21400E+01      1.00
+      case   441 : return   443; //     JPSI      .30970E+01      0.00
+      case  1140 : return  4222; //     SC++      .24300E+01      2.00
+      case -1140 : return -4222; //     ASC--     .24300E+01     -2.00
+      case  1240 : return  4212; //     SC+       .24300E+01      1.00
+      case -1240 : return -4212; //     ASC-      .24300E+01     -1.00
+      case  2140 : return  4122; //     LC+       .22600E+01      1.00
+      case -2140 : return -4122; //     ALC-      .22600E+01     -1.00
+      case  2240 : return  4112; //     SC0       .24300E+01      0.00
+      case -2240 : return -4112; //     ASC0      .24300E+01      0.00
+      case  1340 : return     0; //     USC.      .25000E+01      1.00
+      case -1340 : return     0; //     AUSC.     .25000E+01     -1.00
+      case  3140 : return     0; //     SUC.      .24000E+01      1.00
+      case -3140 : return     0; //     ASUC.     .24000E+01     -1.00
+      case  2340 : return     0; //     DSC.      .25000E+01      0.00
+      case -2340 : return     0; //     ADSC.     .25000E+01      0.00
+      case  3240 : return     0; //     SDC.      .24000E+01      0.00
+      case -3240 : return     0; //     ASDC.     .24000E+01      0.00
+      case  3340 : return     0; //     SSC.      .26000E+01      0.00
+      case -3340 : return     0; //     ASSC.     .26000E+01      0.00
+      case  1440 : return     0; //     UCC.      .35500E+01      2.00
+      case -1440 : return     0; //     AUCC.     .35500E+01     -2.00
+      case  2440 : return     0; //     DCC.      .35500E+01      1.00
+      case -2440 : return     0; //     ADCC.     .35500E+01     -1.00
+      case  3440 : return     0; //     SCC.      .37000E+01      1.00
+      case -3440 : return     0; //     ASCC.     .37000E+01     -1.00
+      case  1111 : return  2224; //     DL++      .12320E+01      2.00
+      case -1111 : return -2224; //     ADL--     .12320E+01     -2.00
+      case  1121 : return  2214; //     DL+       .12320E+01      1.00
+      case -1121 : return -2214; //     ADL-      .12320E+01     -1.00
+      case  1221 : return  2114; //     DL0       .12320E+01      0.00
+      case -1221 : return -2114; //     ADL0      .12320E+01      0.00
+      case  2221 : return   1114; //     DL-       .12320E+01     -1.00
+      case -2221 : return -1114; //     ADL+      .12320E+01      1.00
+      case  1131 : return  3224; //     S*+       .13823E+01      1.00
+      case -1131 : return -3224; //     AS*-      .13823E+01     -1.00
+      case  1231 : return  3214; //     S*0       .13820E+01      0.00
+      case -1231 : return -3214; //     AS*0      .13820E+01      0.00
+      case  2231 : return  3114; //     S*-       .13875E+01     -1.00
+      case -2231 : return -3114; //     AS*+      .13875E+01      1.00
+      case  1331 : return  3324; //     XI*0      .15318E+01      0.00
+      case -1331 : return -3324; //     AXI*0     .15318E+01      0.00
+      case  2331 : return  3314; //     XI*-      .15350E+01     -1.00
+      case -2331 : return -3314; //     AXI*+     .15350E+01      1.00
+      case  3331 : return  3334; //     OM-       .16722E+01     -1.00
+      case -3331 : return -3334; //     AOM+      .16722E+01      1.00
+      case  1141 : return     0; //     UUC*      .26300E+01      2.00
+      case -1141 : return     0; //     AUUC*     .26300E+01     -2.00
+      case  1241 : return     0; //     UDC*      .26300E+01      1.00
+      case -1241 : return     0; //     AUDC*     .26300E+01     -1.00
+      case  2241 : return     0; //     DDC*      .26300E+01      0.00
+      case -2241 : return     0; //     ADDC*     .26300E+01      0.00
+      case  1341 : return     0; //     USC*      .27000E+01      1.00
+      case -1341 : return     0; //     AUSC*     .27000E+01     -1.00
+      case  2341 : return     0; //     DSC*      .27000E+01      0.00
+      case -2341 : return     0; //     ADSC*     .27000E+01      0.00
+      case  3341 : return     0; //     SSC*      .28000E+01      0.00
+      case -3341 : return     0; //     ASSC*     .28000E+01      0.00
+      case  1441 : return     0; //     UCC*      .37500E+01      2.00
+      case -1441 : return     0; //     AUCC*     .37500E+01     -2.00
+      case  2441 : return     0; //     DCC*      .37500E+01      1.00
+      case -2441 : return     0; //     ADCC*     .37500E+01     -1.00
+      case  3441 : return     0; //     SCC*      .39000E+01      1.00
+      case -3441 : return     0; //     ASCC*     .39000E+01     -1.00
+      case  4441 : return     0; //     CCC*      .48000E+01      2.00
+      case -4441 : return     0; //     ACCC*     .48000E+01     -2.00
+      case    10 : return    22; // Photon
+      case    12 : return    11; // Electron
+      case   -12 : return   -11; // Positron
+      case    14 : return    13; // Muon-
+      case   -14 : return   -13; // Muon+
+      case    16 : return    15; // Tau-
+      case   -16 : return   -15; // Tau+
+      case    11 : return    12; // Neutrino e
+      case   -11 : return   -12; // Anti Neutrino e
+      case    13 : return    14; // Neutrino Muon
+      case   -13 : return   -14; // Anti Neutrino Muon
+      case    15 : return    16; // Neutrino Tau
+      case   -15 : return   -16; // Anti Neutrino Tau
+      case   110 : return   111; // Pion0
+      case   120 : return   211; // Pion+
+      case  -120 : return  -211; // Pion-
+      case   220 : return   221; // Eta
+      case   130 : return   321; // Kaon+
+      case  -130 : return  -321; // Kaon-
+      case   -20 : return   130; // Kaon Long
+      case    20 : return   310; // Kaon Short
+      case  -240 : return  -411; // D+
+      case   240 : return   411; // D-
+      case  -140 : return   421; // D0
+      case   140 : return  -421; // D0 bar
+      case  1120 : return  2212; // Proton
+      case -1120 : return -2212; // Anti Proton
+      case  1220 : return  2112; // Neutron
+      case -1220 : return -2112; // Anti Neutron
+      case  2130 : return  3122; // Lambda
+      case -2130 : return -3122; // Lambda bar
+      case  1130 : return  3222; // Sigma+
+      case -1130 : return -3222; // Sigma bar -
+      case  1230 : return  3212; // Sigma0
+      case -1230 : return -3212; // Sigma bar 0
+      case  2230 : return  3112; // Sigma-
+      case -2230 : return -3112; // Sigma bar +
+      case  1330 : return  3322; // Xi0
+      case -1330 : return -3322; // Xi bar 0
+      case  2330 : return  3312; // Xi-
+      case -2330 : return -3312; // Xi bar +
+      default :    return 0;      // isajet or pdg number does not exist
+   }
 }
 
 //______________________________________________________________________________
@@ -1504,11 +1504,11 @@ TAttParticle* TAttParticle::GetParticle(const char *name)
 //
 //  Get a pointer to the particle object according to the name given
 //
-  TAttParticle *def = (TAttParticle *)fgList->FindObject(name);
-  if (!def) {
+   TAttParticle *def = (TAttParticle *)fgList->FindObject(name);
+   if (!def) {
       fgList->Error("GetParticle","No match for %s exists !",name);
-  }
-  return def;
+   }
+   return def;
 }
 
 //______________________________________________________________________________
@@ -1517,13 +1517,13 @@ TAttParticle* TAttParticle::GetParticle(Int_t mcnumber)
 //
 //  Get a pointer to the particle object according to the MC code number
 //
-  TIter next(fgList);
-  TAttParticle *par;
-  while ((par = (TAttParticle *)next())) {
-    if (par->GetMCNumber() == mcnumber) return par;
-  }
-  fgList->Error("GetParticle","No match for %d exists !",mcnumber);
-  return 0;
+   TIter next(fgList);
+   TAttParticle *par;
+   while ((par = (TAttParticle *)next())) {
+      if (par->GetMCNumber() == mcnumber) return par;
+   }
+   fgList->Error("GetParticle","No match for %d exists !",mcnumber);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1537,11 +1537,11 @@ void TAttParticle::Print(Option_t *) const
    Printf("Particle: %-15s  ",
           this->GetName());
    if (!fPDGStable) {
-       Printf("Mass: %8f     DecayWidth: %8f  Charge : %8f",
+      Printf("Mass: %8f     DecayWidth: %8f  Charge : %8f",
               fPDGMass, fPDGDecayWidth, fPDGCharge);
    }
    else {
-       Printf("Mass: %8f     DecayWidth: Stable  Charge : %8f",
+      Printf("Mass: %8f     DecayWidth: Stable  Charge : %8f",
               fPDGMass, fPDGCharge);
    }
    Printf("");
@@ -1553,13 +1553,13 @@ Double_t TAttParticle::SampleMass() const
 //
 //  Samples a mass according to the Breit-Wigner resonance distribution
 //
-  if ( fPDGStable || fPDGDecayWidth == 0.0 )
-     return fPDGMass;
-  else {
-     return (fPDGMass+
+   if ( fPDGStable || fPDGDecayWidth == 0.0 )
+      return fPDGMass;
+   else {
+      return (fPDGMass+
              0.5*fPDGDecayWidth*
              TMath::Tan((2.0*gRandom->Rndm()-1.0)*TMath::Pi()*0.5));
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -1572,11 +1572,11 @@ Double_t TAttParticle::SampleMass(Double_t widthcut) const
 //
 //  according to the Breit-Wigner resonance distribution
 //
-  if ( fPDGStable || fPDGDecayWidth == 0.0 )
-     return fPDGMass;
-  else {
-     return (fPDGMass+
+   if ( fPDGStable || fPDGDecayWidth == 0.0 )
+      return fPDGMass;
+   else {
+      return (fPDGMass+
              0.5*fPDGDecayWidth*
              TMath::Tan((2.0*gRandom->Rndm(0)-1.0)*TMath::ATan(2.0*widthcut)));
-  }
+   }
 }

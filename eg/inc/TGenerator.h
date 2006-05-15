@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.5 2006/04/22 09:23:01 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.6 2006/05/09 10:24:26 brun Exp $
 // -*- mode: C++ -*-
 // Author: Ola Nordmann   21/09/95
 
@@ -146,37 +146,37 @@ class TBrowser;
 class TParticle;
 
 class TGenerator : public TNamed {
- protected:
+protected:
         Float_t       fPtCut;        //!Pt cut. Do not show primaries below
         Bool_t        fShowNeutrons; //!display neutrons if true
         TObjArray    *fParticles;    //->static container of the primary particles
- public:
+public:
 
-        TGenerator(){fParticles=0;} //Used by Dictionary
-        TGenerator(const char *name, const char *title="Generator class");
-        virtual ~TGenerator();
-        virtual void            Browse(TBrowser *b);
-        virtual Int_t           DistancetoPrimitive(Int_t px, Int_t py);
-        virtual void            Draw(Option_t *option="");
-        virtual void            ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        virtual void            GenerateEvent();
-        virtual Double_t        GetParameter(const char* /*name*/) const { return 0.; }
-        virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
-        virtual TObjArray      *ImportParticles(Option_t *option="");
-        virtual TParticle      *GetParticle(Int_t i) const;
-        Int_t                   GetNumberOfParticles() const {return fParticles->GetLast()+1;}
-        virtual TObjArray      *GetListOfParticles() const {return fParticles;}
-        virtual TObjArray      *GetPrimaries(Option_t *option="") {return ImportParticles(option);}
-        Float_t                 GetPtCut() const {return fPtCut;}
-        virtual void            Paint(Option_t *option="");
-        virtual void            SetParameter(const char* /*name*/,Double_t /*val*/){}
-        virtual void            SetPtCut(Float_t ptcut=0); // *MENU*
-        virtual void            SetViewRadius(Float_t rbox = 1000); // *MENU*
-        virtual void            SetViewRange(Float_t xmin=-10000,Float_t ymin=-10000,Float_t zmin=-10000
-                                            ,Float_t xmax=10000,Float_t ymax=10000,Float_t zmax=10000);  // *MENU*
-        virtual void            ShowNeutrons(Bool_t show=1); // *MENU*
+   TGenerator(){fParticles=0;} //Used by Dictionary
+   TGenerator(const char *name, const char *title="Generator class");
+   virtual ~TGenerator();
+   virtual void            Browse(TBrowser *b);
+   virtual Int_t           DistancetoPrimitive(Int_t px, Int_t py);
+   virtual void            Draw(Option_t *option="");
+   virtual void            ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual void            GenerateEvent();
+   virtual Double_t        GetParameter(const char* /*name*/) const { return 0.; }
+   virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
+   virtual TObjArray      *ImportParticles(Option_t *option="");
+   virtual TParticle      *GetParticle(Int_t i) const;
+   Int_t                   GetNumberOfParticles() const {return fParticles->GetLast()+1;}
+   virtual TObjArray      *GetListOfParticles() const {return fParticles;}
+   virtual TObjArray      *GetPrimaries(Option_t *option="") {return ImportParticles(option);}
+   Float_t                 GetPtCut() const {return fPtCut;}
+   virtual void            Paint(Option_t *option="");
+   virtual void            SetParameter(const char* /*name*/,Double_t /*val*/){}
+   virtual void            SetPtCut(Float_t ptcut=0); // *MENU*
+   virtual void            SetViewRadius(Float_t rbox = 1000); // *MENU*
+   virtual void            SetViewRange(Float_t xmin=-10000,Float_t ymin=-10000,Float_t zmin=-10000
+                                       ,Float_t xmax=10000,Float_t ymax=10000,Float_t zmax=10000);  // *MENU*
+   virtual void            ShowNeutrons(Bool_t show=1); // *MENU*
 
-        ClassDef(TGenerator,1)  //Event generator interface abstract baseclass
+   ClassDef(TGenerator,1)  //Event generator interface abstract baseclass
 };
 
 #endif

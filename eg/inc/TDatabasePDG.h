@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.8 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.9 2006/05/13 11:00:50 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -35,47 +35,47 @@ protected:
   
 public:
 
-  TDatabasePDG();
-  virtual ~TDatabasePDG();
+   TDatabasePDG();
+   virtual ~TDatabasePDG();
+ 
+   static TDatabasePDG*  Instance();
 
-  static TDatabasePDG*  Instance();
+   virtual TParticlePDG*   AddParticle(const char*  Name, 
+                                       const char*  Title,
+                                       Double_t     Mass, 
+                                       Bool_t       Stable,
+                                       Double_t     DecayWidth, 
+                                       Double_t     Charge, 
+                                       const char*  ParticleClass,
+                                       Int_t        PdgCode,
+                                       Int_t        Anti=-1,
+                                       Int_t        TrackingCode=0);
 
-  virtual TParticlePDG*   AddParticle(const char*  Name, 
-                                        const char*  Title,
-                                        Double_t     Mass, 
-                                        Bool_t       Stable,
-                                        Double_t     DecayWidth, 
-                                        Double_t     Charge, 
-                                        const char*  ParticleClass,
-                                        Int_t        PdgCode,
-                                        Int_t        Anti=-1,
-                                        Int_t        TrackingCode=0);
+   virtual Int_t  ConvertGeant3ToPdg(Int_t Geant3Number);
+   virtual Int_t  ConvertPdgToGeant3(Int_t pdgNumber);
+   virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber);
 
-  virtual Int_t  ConvertGeant3ToPdg(Int_t Geant3Number);
-  virtual Int_t  ConvertPdgToGeant3(Int_t pdgNumber);
-  virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber);
-
-  virtual TParticlePDG* AddAntiParticle(const char* Name, Int_t PdgCode);
+   virtual TParticlePDG* AddAntiParticle(const char* Name, Int_t PdgCode);
                                 
-  TParticlePDG  *GetParticle(Int_t pdgCode) const;
-  TParticlePDG  *GetParticle(const char *name) const;
+   TParticlePDG  *GetParticle(Int_t pdgCode) const;
+   TParticlePDG  *GetParticle(const char *name) const;
 
-  TParticleClassPDG* GetParticleClass(const char* name) {
-    if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable(); 
-    return (TParticleClassPDG*) fListOfClasses->FindObject(name);
-  }
+   TParticleClassPDG* GetParticleClass(const char* name) {
+      if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable(); 
+      return (TParticleClassPDG*) fListOfClasses->FindObject(name);
+   }
 
-  const THashList *ParticleList() const { return fParticleList; }
+   const THashList *ParticleList() const { return fParticleList; }
 
-  virtual void   Print(Option_t *opt = "") const;
+   virtual void   Print(Option_t *opt = "") const;
 
-  Bool_t IsFolder() const { return kTRUE; }
-  virtual void   Browse(TBrowser* b);
+   Bool_t IsFolder() const { return kTRUE; }
+   virtual void   Browse(TBrowser* b);
 
-  virtual void   ReadPDGTable (const char *filename = "");
-  virtual Int_t  WritePDGTable(const char *filename);
+   virtual void   ReadPDGTable (const char *filename = "");
+   virtual Int_t  WritePDGTable(const char *filename);
 
-  ClassDef(TDatabasePDG,2)  // PDG particle database
+   ClassDef(TDatabasePDG,2)  // PDG particle database
 
 };
 
