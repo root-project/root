@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.7 2006/02/07 19:48:00 pcanal Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.8 2006/04/12 20:53:45 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -42,9 +42,9 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
       return;
    }
 
-   const char *conn_str = 0;
-   if (strcmp(url.GetFile(), "/"))
-      conn_str = url.GetFile()+1;
+   const char *conn_str = url.GetFile();
+   if (conn_str!=0)
+     if (*conn_str == '/') conn_str++; //skip leading "/" if appears
 
    try {
       fEnv = Environment::createEnvironment();

@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.2 2006/04/19 13:55:57 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.3 2006/05/16 09:37:57 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -98,9 +98,9 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
       cout << "URL is VALID !!!!" << endl;
 
       const char* driver = "MyODBC";
-      const char* dbase = 0;
-      if (strcmp(url.GetFile(), "/")!=0)
-         dbase = url.GetFile()+1;   //skip leading /
+      const char* dbase = url.GetFile();
+      if (dbase!=0)
+         if (*dbase=='/') dbase++; //skip leading "/" if appears
 
       if ((uid==0) || (*uid==0) && (strlen(url.GetUser())>0)) {
          uid = url.GetUser();

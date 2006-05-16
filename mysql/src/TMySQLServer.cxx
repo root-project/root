@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.7 2005/02/17 14:35:37 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.8 2006/04/12 20:53:45 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -42,10 +42,10 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
       return;
    }
 
-   const char *dbase = 0;
-   if (strcmp(url.GetFile(), "/"))
-      dbase = url.GetFile()+1;   //skip leading /
-
+   const char* dbase = url.GetFile();
+   if (dbase!=0)
+     if (*dbase=='/') dbase++; //skip leading "/" if appears
+   
    fMySQL = new MYSQL;
    mysql_init(fMySQL);
 
