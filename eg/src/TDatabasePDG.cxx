@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.22 2005/09/04 11:42:05 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.23 2006/05/15 07:27:03 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -270,7 +270,7 @@ Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) {
       case 24  : return 3334;     // Omega- (PB)
       case 48  : return 0;        // G nu ? PDG ID 0 is undefined
 
-     default  : return 0;
+      default  : return 0;
 
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.9 2006/04/22 09:23:01 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.10 2006/05/15 07:27:03 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -280,7 +280,6 @@ Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
                                    HEPEVT.jmohep[i][1]-1,
                                    HEPEVT.jdahep[i][0]-1,
                                    HEPEVT.jdahep[i][1]-1,
-
                                    HEPEVT.phep[i][0],
                                    HEPEVT.phep[i][1],
                                    HEPEVT.phep[i][2],
