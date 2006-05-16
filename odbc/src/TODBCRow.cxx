@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCRow.cxx,v 1.2 2006/04/18 09:59:41 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCRow.cxx,v 1.3 2006/04/24 14:22:51 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -48,8 +48,8 @@ void TODBCRow::Close(Option_t *)
    if (fBuffer!=0) {
       for (Int_t n = 0; n < fFieldCount; n++)
          delete[] fBuffer[n];
-     delete[] fBuffer;
-     fBuffer = 0;
+      delete[] fBuffer;
+      fBuffer = 0;
    }
 
 }

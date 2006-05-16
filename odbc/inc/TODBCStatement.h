@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.2 2006/04/18 09:59:41 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.3 2006/04/24 14:22:51 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -111,7 +111,7 @@ public:
    virtual Double_t    GetDouble(Int_t npar);
    virtual const char *GetString(Int_t npar);
 
-   ClassDef(TODBCStatement, 0);
+   ClassDef(TODBCStatement, 0); //ODBC implementation of TSQLStatement
 };
 
 #endif

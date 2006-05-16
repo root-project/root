@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.1 2006/04/17 14:12:52 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.2 2006/04/19 13:55:57 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -102,22 +102,22 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
       if (strcmp(url.GetFile(), "/")!=0)
          dbase = url.GetFile()+1;   //skip leading /
 
-       if ((uid==0) || (*uid==0) && (strlen(url.GetUser())>0)) {
-          uid = url.GetUser();
-          pw = url.GetPasswd();
-       }
+      if ((uid==0) || (*uid==0) && (strlen(url.GetUser())>0)) {
+         uid = url.GetUser();
+         pw = url.GetPasswd();
+      }
 
-       if (strlen(url.GetOptions())!=0) driver = url.GetOptions();
+      if (strlen(url.GetOptions())!=0) driver = url.GetOptions();
 
-       connstr.Form("DRIVER={%s};"
-                    "SERVER=%s;"
-                    "DATABASE=%s;"
-                    "USER=%s;"
-                    "PASSWORD=%s;"
-                    "OPTION=3;",
-                     driver, url.GetHost(), dbase, uid, pw);
-        if (url.GetPort()>0)
-           connstr += Form("PORT=%d;", url.GetPort());
+      connstr.Form("DRIVER={%s};"
+                   "SERVER=%s;"
+                   "DATABASE=%s;"
+                   "USER=%s;"
+                   "PASSWORD=%s;"
+                   "OPTION=3;",
+                    driver, url.GetHost(), dbase, uid, pw);
+      if (url.GetPort()>0)
+          connstr += Form("PORT=%d;", url.GetPort());
 
       fHost = url.GetHost();
       fPort = url.GetPort()>0 ? url.GetPort() : 1;
@@ -195,25 +195,25 @@ TODBCServer::~TODBCServer()
 //______________________________________________________________________________
 Bool_t TODBCServer::ExtractErrors(SQLRETURN retcode, const char* method)
 {
-    if ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) return kFALSE;
+   if ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
-    SQLINTEGER i = 0;
-    SQLINTEGER native;
-    SQLCHAR state[7];
-    SQLCHAR text[256];
-    SQLSMALLINT len;
+   SQLINTEGER i = 0;
+   SQLINTEGER native;
+   SQLCHAR state[7];
+   SQLCHAR text[256];
+   SQLSMALLINT len;
 
-    while (SQLGetDiagRec(SQL_HANDLE_ENV, fHenv, ++i, state, &native, text,
+   while (SQLGetDiagRec(SQL_HANDLE_ENV, fHenv, ++i, state, &native, text,
                           sizeof(text), &len ) == SQL_SUCCESS)
-         Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
+      Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
 
-    i = 0;
+   i = 0;
 
-    while (SQLGetDiagRec(SQL_HANDLE_DBC, fHdbc, ++i, state, &native, text,
+   while (SQLGetDiagRec(SQL_HANDLE_DBC, fHdbc, ++i, state, &native, text,
                           sizeof(text), &len ) == SQL_SUCCESS)
-         Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
+      Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
 
-    return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________

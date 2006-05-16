@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.2 2006/04/18 09:59:41 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.3 2006/04/24 14:22:51 rdm Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -47,14 +47,14 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
    fNumParsProcessed = 0;
    fNumRowsFetched = 0;
 
-   SQLSMALLINT   ParamsCount = 0;
-   SQLRETURN retcode = SQLNumParams(fHstmt, &ParamsCount);
+   SQLSMALLINT   paramsCount = 0;
+   SQLRETURN retcode = SQLNumParams(fHstmt, &paramsCount);
    if (ExtractErrors(retcode,"Constructor"))
-      ParamsCount = 0;
+      paramsCount = 0;
 
-   cout << "Num parameters = " << ParamsCount << endl;
+   cout << "Num parameters = " << paramsCount << endl;
 
-   if (ParamsCount>0) {
+   if (paramsCount>0) {
 
       fWorkingMode = 1; // we are now using buffers for parameters
       fNumParsProcessed = 0;
@@ -79,18 +79,18 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize) :
          bufferlen = 1;
       }
 
-      SetNumBuffers(ParamsCount, bufferlen);
+      SetNumBuffers(paramsCount, bufferlen);
 
       SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAM_STATUS_PTR, fStatusBuffer, 0);
       SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAMS_PROCESSED_PTR, &fNumParsProcessed, 0);
 
 /*
-      for (int n=0;n<ParamsCount;n++) {
-         SQLSMALLINT   DataType = 0, DecimalDigits = 0, Nullable = 0;
+      for (int n=0;n<paramsCount;n++) {
+         SQLSMALLINT   dataType = 0, decimalDigits = 0, nullable = 0;
          SQLUINTEGER   ParamSize = 0;
-         SQLDescribeParam(fHstmt, n + 1, &DataType, &ParamSize, &DecimalDigits, &Nullable);
-         cout << "Par" << n << "  type = " << DataType
-              << "  size = " << ParamSize << "  Digits = " <<  DecimalDigits << "  Null = " << Nullable << endl;
+         SQLDescribeParam(fHstmt, n + 1, &dataType, &ParamSize, &decimalDigits, &nullable);
+         cout << "Par" << n << "  type = " << dataType
+              << "  size = " << ParamSize << "  Digits = " <<  decimalDigits << "  Null = " << nullable << endl;
       }
 */
 
@@ -151,14 +151,14 @@ Bool_t TODBCStatement::Process()
 //______________________________________________________________________________
 Int_t TODBCStatement::GetNumAffectedRows()
 {
-   SQLLEN    RowCount;
+   SQLLEN    rowCount;
    SQLRETURN retcode = SQL_SUCCESS;
 
-   retcode = SQLRowCount(fHstmt, &RowCount);
+   retcode = SQLRowCount(fHstmt, &rowCount);
 
    if (ExtractErrors(retcode, "GetNumAffectedRows")) return -1;
 
-   return RowCount;
+   return rowCount;
 }
 
 //______________________________________________________________________________
@@ -171,16 +171,16 @@ Bool_t TODBCStatement::StoreResult()
 
    FreeBuffers();
 
-   SQLSMALLINT ColumnCount = 0;
+   SQLSMALLINT columnCount = 0;
 
-   SQLRETURN retcode = SQLNumResultCols(fHstmt, &ColumnCount);
+   SQLRETURN retcode = SQLNumResultCols(fHstmt, &columnCount);
    if (ExtractErrors(retcode, "StoreResult()")) return kFALSE;
 
-//   cout << "Num results columns = " << ColumnCount << endl;
+//   cout << "Num results columns = " << columnCount << endl;
 
-   if (ColumnCount==0) return kFALSE;
+   if (columnCount==0) return kFALSE;
 
-   SetNumBuffers(ColumnCount, fBufferPreferredSize);
+   SetNumBuffers(columnCount, fBufferPreferredSize);
 
    SQLUINTEGER arrsize = fBufferLength;
 
@@ -190,22 +190,22 @@ Bool_t TODBCStatement::StoreResult()
    SQLSetStmtAttr(fHstmt, SQL_ATTR_ROWS_FETCHED_PTR, &fNumRowsFetched, 0);
 
    for (int n=0;n<fNumBuffers;n++) {
-      SQLCHAR ColumnName[1024];
-      SQLSMALLINT NameLength;
-      SQLSMALLINT DataType;
-      SQLULEN     ColumnSize;
-      SQLSMALLINT DecimalDigits;
-      SQLSMALLINT Nullable;
+      SQLCHAR     columnName[1024];
+      SQLSMALLINT nameLength;
+      SQLSMALLINT dataType;
+      SQLULEN     columnSize;
+      SQLSMALLINT decimalDigits;
+      SQLSMALLINT nullable;
 
-      retcode = SQLDescribeCol(fHstmt, n+1, ColumnName, 1024,
-                               &NameLength, &DataType,
-                               &ColumnSize, &DecimalDigits, &Nullable);
+      retcode = SQLDescribeCol(fHstmt, n+1, columnName, 1024,
+                               &nameLength, &dataType,
+                               &columnSize, &decimalDigits, &nullable);
 
-      BindColumn(n, DataType, ColumnSize);
+      BindColumn(n, dataType, columnSize);
 
-      if (NameLength>0) {
-         fBuffer[n].namebuffer = new char[NameLength+1];
-         strcpy(fBuffer[n].namebuffer, (const char*) ColumnName);
+      if (nameLength>0) {
+         fBuffer[n].namebuffer = new char[nameLength+1];
+         strcpy(fBuffer[n].namebuffer, (const char*) columnName);
       }
    }
 
@@ -262,21 +262,20 @@ Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
 {
    if ((retcode== SQL_SUCCESS) || (retcode == SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
-    SQLINTEGER i = 0;
-    SQLINTEGER native;
-    SQLCHAR state[ 7 ];
-    SQLCHAR text[256];
-    SQLSMALLINT len;
-    SQLRETURN ret;
-    do
-    {
+   SQLINTEGER i = 0;
+   SQLINTEGER native;
+   SQLCHAR state[ 7 ];
+   SQLCHAR text[256];
+   SQLSMALLINT len;
+   SQLRETURN ret;
+   do {
       ret = SQLGetDiagRec(SQL_HANDLE_STMT, fHstmt, ++i, state, &native, text,
                           sizeof(text), &len );
       if (ret == SQL_SUCCESS)
          Error(method, "%s:%ld:%ld:%s\n", state, i, native, text);
-    }
-    while( ret == SQL_SUCCESS );
-    return kTRUE;
+   }
+   while( ret == SQL_SUCCESS );
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -399,7 +398,7 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
       default: {
          Error("BindColumn","SQL C Type %d is not supported",sqlctype);
          return kFALSE;
-     }
+      }
    }
 
    fBuffer[ncol].roottype    = 0;
@@ -431,25 +430,25 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
    int elemsize = 0;
 
    switch (roottype) {
-      case kUInt_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG; elemsize = sizeof(unsigned long int); break;
-      case kInt_t:      sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG; elemsize = sizeof(long int); break;
-      case kULong_t:    sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG; elemsize = sizeof(unsigned long int); break;
-      case kLong_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG; elemsize = sizeof(long int); break;
-      case kULong64_t:  sqltype = SQL_BIGINT;  sqlctype = SQL_C_UBIGINT; elemsize = sizeof(ULong64_t); break;
-      case kLong64_t:   sqltype = SQL_BIGINT;  sqlctype = SQL_C_SBIGINT; elemsize = sizeof(Long64_t); break;
-      case kUShort_t:   sqltype = SQL_SMALLINT;sqlctype = SQL_C_USHORT; elemsize = sizeof(unsigned short int); break;
-      case kShort_t:    sqltype = SQL_SMALLINT;sqlctype = SQL_C_SSHORT; elemsize = sizeof(short int); break;
+      case kUInt_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG;    elemsize = sizeof(unsigned long int); break;
+      case kInt_t:      sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG;    elemsize = sizeof(long int); break;
+      case kULong_t:    sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG;    elemsize = sizeof(unsigned long int); break;
+      case kLong_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG;    elemsize = sizeof(long int); break;
+      case kULong64_t:  sqltype = SQL_BIGINT;  sqlctype = SQL_C_UBIGINT;  elemsize = sizeof(ULong64_t); break;
+      case kLong64_t:   sqltype = SQL_BIGINT;  sqlctype = SQL_C_SBIGINT;  elemsize = sizeof(Long64_t); break;
+      case kUShort_t:   sqltype = SQL_SMALLINT;sqlctype = SQL_C_USHORT;   elemsize = sizeof(unsigned short int); break;
+      case kShort_t:    sqltype = SQL_SMALLINT;sqlctype = SQL_C_SSHORT;   elemsize = sizeof(short int); break;
       case kUChar_t:    sqltype = SQL_TINYINT; sqlctype = SQL_C_UTINYINT; elemsize = sizeof(unsigned char); break;
       case kChar_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_STINYINT; elemsize = sizeof(signed char); break;
       case kBool_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_UTINYINT; elemsize = sizeof(unsigned char); break;
-      case kFloat_t:    sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT; elemsize = sizeof(float); break;
-      case kDouble_t:   sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE; elemsize = sizeof(double); break;
-      case kDouble32_t: sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE; elemsize = sizeof(double); break;
-      case kCharStar:   sqltype = SQL_CHAR;    sqlctype = SQL_C_CHAR; elemsize = size; break;
+      case kFloat_t:    sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT;    elemsize = sizeof(float); break;
+      case kDouble_t:   sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
+      case kDouble32_t: sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
+      case kCharStar:   sqltype = SQL_CHAR;    sqlctype = SQL_C_CHAR;     elemsize = size; break;
       default: {
          Error("SetParameterValue","Root type %d is not supported", roottype);
          return kFALSE;
-     }
+      }
    }
 
    void* buffer = malloc(elemsize * fBufferLength);
@@ -621,31 +620,31 @@ const char* TODBCStatement::GetString(Int_t npar)
    if (addr==0) return 0;
 
    if (fBuffer[npar].sqlctype==SQL_C_CHAR) {
-       // first check if string is null
+      // first check if string is null
 
-       int len = fBuffer[npar].lenarray[fBufferCounter];
+      int len = fBuffer[npar].lenarray[fBufferCounter];
 
-       if ((len == SQL_NULL_DATA) || (len==0)) return 0;
+      if ((len == SQL_NULL_DATA) || (len==0)) return 0;
 
-       char* res = (char*) addr;
-       if (len < fBuffer[npar].elementsize) {
-          *(res + len) = 0;
-          return res;
-       }
+      char* res = (char*) addr;
+      if (len < fBuffer[npar].elementsize) {
+         *(res + len) = 0;
+         return res;
+      }
 
-       if (len > fBuffer[npar].elementsize) {
-          Error("getString","Problems with string size %d", len);
-          return 0;
-       }
+      if (len > fBuffer[npar].elementsize) {
+         Error("getString","Problems with string size %d", len);
+         return 0;
+      }
 
-       if (fBuffer[npar].strbuffer==0)
+      if (fBuffer[npar].strbuffer==0)
          fBuffer[npar].strbuffer = new char[len+1];
 
-       strncpy(fBuffer[npar].strbuffer, res, len);
+      strncpy(fBuffer[npar].strbuffer, res, len);
 
-       res = fBuffer[npar].strbuffer;
-       *(res + len) = 0;
-       return res;
+      res = fBuffer[npar].strbuffer;
+      *(res + len) = 0;
+      return res;
    }
 
    return ConvertToString(npar);
