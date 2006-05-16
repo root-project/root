@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.21 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.22 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -467,12 +467,12 @@ TInetAddress TPSocket::GetLocalInetAddress()
 //______________________________________________________________________________
 Int_t TPSocket::GetDescriptor() const
 {
-    // Return socket descriptor
+   // Return socket descriptor
 
-    if (fSize <= 1)
-       return TSocket::GetDescriptor();
+   if (fSize <= 1)
+      return TSocket::GetDescriptor();
 
-    return fSockets ? fSockets[0]->GetDescriptor() : -1;
+   return fSockets ? fSockets[0]->GetDescriptor() : -1;
 
 }
 

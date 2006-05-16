@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.4 2005/06/23 10:51:11 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.5 2005/07/18 16:20:52 rdm Exp $
 // Author: G. Ganis   31/03/2003
 
 /*************************************************************************
@@ -124,7 +124,7 @@ public:
    Int_t   GetProtocol() const { return fServerProtocol; }
    Int_t   GetType() const { return fServerType; }
 
-   ClassDef(TSecContextCleanup,0)
+   ClassDef(TSecContextCleanup,0) //Update the remote authentication table
 };
 
 //
