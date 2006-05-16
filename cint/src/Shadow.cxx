@@ -1,4 +1,4 @@
-//$Id: Shadow.cxx,v 1.9 2006/01/17 13:36:38 axel Exp $
+//$Id: Shadow.cxx,v 1.5 2006/02/09 20:35:05 pcanal Exp $
 
 #include "Api.h"
 #include <ostream>
@@ -564,8 +564,8 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
          // fprintf(stderr,"%s::%s has property 0x%x\n",cl.Fullname(),methods.Name(),methods.Property());
          if (methods.Property() &
              (G__BIT_ISVIRTUALBASE|G__BIT_ISVIRTUAL|G__BIT_ISPUREVIRTUAL)) {
-            fOut << indent << "         // To force the creation of a virtual table." << std::endl
-                << indent << "         virtual ~" << classname << "() {};" << std::endl;
+            fOut << indent << "         // To force the creation of a virtual table, throw just in case." << std::endl
+                << indent << "         virtual ~" << classname << "() throw() {};" << std::endl;
             break;
          }
       }

@@ -4540,8 +4540,17 @@ G__value G__letstructmem(int store_var_type
    * In any cases, tagname is a varaible of struct,union
    * type.
    ****************************************************/
-  if(varglobal) {
-    /********************************************
+
+  if(tagname[strlen(tagname)-1]==')') {
+     /********************************************
+     * If this is a function call like
+     *   'somthing(xyz)'
+     *    --- ----------
+     * get it from G__getfunction
+     ********************************************/
+     result = G__getfunction(tagname,&flag,G__TRYNORMAL);
+  } else if(varglobal) {
+     /********************************************
      * If this is a top level like
      *   'tag.subtag.mem'
      *    --- ----------

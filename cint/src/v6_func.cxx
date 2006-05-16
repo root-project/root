@@ -2098,6 +2098,8 @@ G__value G__getfunction(char *item,int *known3,int memfunc_flag)
       nest=0;
       single_quote=0;
       double_quote=0;
+      /* Skip leading spaces */
+      while(item[ig15]==' ') { ++ig15; }
       while((((item[ig15]!=',')&&(item[ig15]!=')'))||
              (nest>0)||
              (tmpltnest>0)||
