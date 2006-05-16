@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.23 2006/05/15 07:43:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.24 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -114,8 +114,8 @@ public:
 class TGListTree : public TGContainer {
 
 private:
-    TGListTree(const TGListTree&);
-    TGListTree& operator=(const TGListTree&);
+   TGListTree(const TGListTree&);
+   TGListTree& operator=(const TGListTree&);
 
 public:
    //---- color markup mode of tree items
