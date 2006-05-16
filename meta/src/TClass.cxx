@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.188 2006/04/25 18:23:59 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.189 2006/05/09 10:24:26 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -3372,7 +3372,11 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
-         type = tdm->GetFullTypeName(); il = type.Length();
+         type = tdm->GetFullTypeName();
+         if (TClassEdit::IsSTLCont(type))
+            type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+
+         il = type.Length();
          for (i=0; i<il; i++) id = id*3+type[i];
 
          int dim = tdm->GetArrayDim();
