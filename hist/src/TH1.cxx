@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.290 2006/05/06 16:35:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.291 2006/05/13 14:04:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -496,8 +496,8 @@ TH1::~TH1()
       //and may have been already deleted.
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj));
-           if (!obj->TestBit(kNotDeleted)) break;
-           delete obj;
+         if (!obj->TestBit(kNotDeleted)) break;
+         delete obj;
       }
       delete fFunctions;
    }

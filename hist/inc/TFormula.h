@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.30 2005/05/14 16:20:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.31 2005/08/10 12:47:48 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -110,7 +110,7 @@ protected:
       fOperOptimized[code] += param;
    }
 
-           void    ClearFormula(Option_t *option="");
+   void            ClearFormula(Option_t *option="");
    virtual Bool_t  IsString(Int_t oper) const;
 
    virtual void    Convert(UInt_t fromVersion); 
@@ -205,11 +205,11 @@ public:
       kLinear        = BIT(16)    //set to true if the function is for linear fitting
    };
  
-              TFormula();
-              TFormula(const char *name,const char *formula);
-              TFormula(const TFormula &formula);
-   TFormula& operator=(const TFormula &rhs);
-   virtual   ~TFormula();
+               TFormula();
+               TFormula(const char *name,const char *formula);
+               TFormula(const TFormula &formula);
+   TFormula&   operator=(const TFormula &rhs);
+   virtual    ~TFormula();
 
  public:
    TFormulaPrimitive::TFuncG              fOptimal; //!pointer to optimal function

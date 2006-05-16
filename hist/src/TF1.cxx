@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.123 2006/03/24 11:42:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.124 2006/04/26 06:10:23 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2252,8 +2252,8 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t)
 //______________________________________________________________________________
 Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
 {
-// Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
-//
+   // Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
+   //
    Error("Integral","Must be called with a TF3 only");
    return 0;
 }
@@ -2262,9 +2262,9 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 //______________________________________________________________________________
 Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params)
 {
-    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
-    if (!g) return 0;
-    return IntegralFast(g->GetN(), g->GetX(), g->GetY(), a, b, params);
+   // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
+   if (!g) return 0;
+   return IntegralFast(g->GetN(), g->GetX(), g->GetY(), a, b, params);
 }
 #endif
 

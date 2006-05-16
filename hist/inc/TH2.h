@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.37 2006/03/21 15:40:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.38 2006/04/18 06:58:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -90,8 +90,8 @@ public:
    virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");     
       TProfile     *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
       TProfile     *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const ;   // *MENU*
-          TH1D     *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const; // *MENU*
-          TH1D     *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const; // *MENU*
+         TH1D      *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const; // *MENU*
+         TH1D      *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
    virtual void     Reset(Option_t *option="");
    virtual void     SetShowProjectionX(Int_t nbins);  // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.32 2006/02/22 14:23:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.33 2006/03/20 21:43:42 pcanal Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -313,10 +313,10 @@ Double_t TF2::GetContourLevel(Int_t level) const
 {
 //*-*-*-*-*-*-*-*Return the number of contour levels*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ===================================
-  if (level <0 || level >= fContour.fN) return 0;
-  if (fContour.fArray[0] != -9999) return fContour.fArray[level];
-  if (fHistogram == 0) return 0;
-  return fHistogram->GetContourLevel(level);
+   if (level <0 || level >= fContour.fN) return 0;
+   if (fContour.fArray[0] != -9999) return fContour.fArray[level];
+   if (fHistogram == 0) return 0;
+   return fHistogram->GetContourLevel(level);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.3 2002/01/02 21:44:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.4 2005/12/04 10:51:27 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -27,35 +27,35 @@
 class TH1K : public TH1, public TArrayF {
 
 private:
-    void Sort(); 
+   void Sort(); 
 protected:
-    Int_t fReady;	//!
-    Int_t fNIn;
-    Int_t fKOrd;	//!
-    Int_t fKCur;	//!
+   Int_t fReady;	//!
+   Int_t fNIn;
+   Int_t fKOrd;	//!
+   Int_t fKCur;	//!
 public:
-    TH1K();
-    TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
-    virtual ~TH1K();
+   TH1K();
+   TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
+   virtual ~TH1K();
 
-    virtual Int_t     Fill(Double_t x);
-    virtual Int_t     Fill(Double_t x,Double_t w){return TH1::Fill(x,w);}
-    virtual Int_t     Fill(const char *name,Double_t w){return TH1::Fill(name,w);}
-    virtual Double_t  GetBinContent(Int_t bin) const;
-    virtual Double_t  GetBinContent(Int_t bin,Int_t) const {return GetBinContent(bin);}
-    virtual Double_t  GetBinContent(Int_t bin,Int_t,Int_t) const {return GetBinContent(bin);}
+   virtual Int_t     Fill(Double_t x);
+   virtual Int_t     Fill(Double_t x,Double_t w){return TH1::Fill(x,w);}
+   virtual Int_t     Fill(const char *name,Double_t w){return TH1::Fill(name,w);}
+   virtual Double_t  GetBinContent(Int_t bin) const;
+   virtual Double_t  GetBinContent(Int_t bin,Int_t) const {return GetBinContent(bin);}
+   virtual Double_t  GetBinContent(Int_t bin,Int_t,Int_t) const {return GetBinContent(bin);}
 
-    virtual Double_t  GetBinError(Int_t bin) const;
-    virtual Double_t  GetBinError(Int_t bin,Int_t) const {return GetBinError(bin);}
-    virtual Double_t  GetBinError(Int_t bin,Int_t,Int_t) const {return GetBinError(bin);}
+   virtual Double_t  GetBinError(Int_t bin) const;
+   virtual Double_t  GetBinError(Int_t bin,Int_t) const {return GetBinError(bin);}
+   virtual Double_t  GetBinError(Int_t bin,Int_t,Int_t) const {return GetBinError(bin);}
     
     
-    virtual void      Reset(Option_t *option="");
-    virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      Reset(Option_t *option="");
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
 
-    void    SetKOrd(Int_t k){fKOrd=k;}
+   void    SetKOrd(Int_t k){fKOrd=k;}
    
-    ClassDef(TH1K,1)  //1-Dim Nearest Kth neighbour method
+   ClassDef(TH1K,1)  //1-Dim Nearest Kth neighbour method
 };
 
 #endif
