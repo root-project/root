@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.8 2005/06/28 10:16:12 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.9 2005/09/04 09:51:19 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -201,260 +201,275 @@ TRotation::TRotation(Double_t mxx, Double_t mxy, Double_t mxz,
 
 
 Double_t TRotation::operator() (int i, int j) const {
-  if (i == 0) {
-    if (j == 0) { return fxx; }
-    if (j == 1) { return fxy; }
-    if (j == 2) { return fxz; }
-  } else if (i == 1) {
-    if (j == 0) { return fyx; }
-    if (j == 1) { return fyy; }
-    if (j == 2) { return fyz; }
-  } else if (i == 2) {
-    if (j == 0) { return fzx; }
-    if (j == 1) { return fzy; }
-    if (j == 2) { return fzz; }
-  }
+   //dereferencing operator const
+   if (i == 0) {
+      if (j == 0) { return fxx; }
+      if (j == 1) { return fxy; }
+      if (j == 2) { return fxz; }
+   } else if (i == 1) {
+      if (j == 0) { return fyx; }
+      if (j == 1) { return fyy; }
+      if (j == 2) { return fyz; }
+   } else if (i == 2) {
+      if (j == 0) { return fzx; }
+      if (j == 1) { return fzy; }
+      if (j == 2) { return fzz; }
+   }
   
-  Warning("operator()(i,j)", "bad indices (%d , %d)",i,j);
+   Warning("operator()(i,j)", "bad indices (%d , %d)",i,j);
 
-  return 0.0;
+   return 0.0;
 }
 
 TRotation TRotation::operator* (const TRotation & b) const {
-  return TRotation(fxx*b.fxx + fxy*b.fyx + fxz*b.fzx,
-                     fxx*b.fxy + fxy*b.fyy + fxz*b.fzy,
-                     fxx*b.fxz + fxy*b.fyz + fxz*b.fzz,
-                     fyx*b.fxx + fyy*b.fyx + fyz*b.fzx,
-                     fyx*b.fxy + fyy*b.fyy + fyz*b.fzy,
-                     fyx*b.fxz + fyy*b.fyz + fyz*b.fzz,
-                     fzx*b.fxx + fzy*b.fyx + fzz*b.fzx,
-                     fzx*b.fxy + fzy*b.fyy + fzz*b.fzy,
-                     fzx*b.fxz + fzy*b.fyz + fzz*b.fzz);
+   //multiplication operator
+   return TRotation(fxx*b.fxx + fxy*b.fyx + fxz*b.fzx,
+                    fxx*b.fxy + fxy*b.fyy + fxz*b.fzy,
+                    fxx*b.fxz + fxy*b.fyz + fxz*b.fzz,
+                    fyx*b.fxx + fyy*b.fyx + fyz*b.fzx,
+                    fyx*b.fxy + fyy*b.fyy + fyz*b.fzy,
+                    fyx*b.fxz + fyy*b.fyz + fyz*b.fzz,
+                    fzx*b.fxx + fzy*b.fyx + fzz*b.fzx,
+                    fzx*b.fxy + fzy*b.fyy + fzz*b.fzy,
+                    fzx*b.fxz + fzy*b.fyz + fzz*b.fzz);
 }
 
 //_____________________________________
 TRotation::TRotation(const TQuaternion & Q) {
-        // Constructor for a rotation based on a Quaternion
-        // if magnitude of quaternion is null, creates identity rotation
-        // if quaternion is non-unit, creates rotation corresponding to the normalized (unit) quaternion
+   // Constructor for a rotation based on a Quaternion
+   // if magnitude of quaternion is null, creates identity rotation
+   // if quaternion is non-unit, creates rotation corresponding to the normalized (unit) quaternion
 
 
-        double two_r2 = 2 * Q.fRealPart * Q.fRealPart;
-        double two_x2 = 2 * Q.fVectorPart.X() * Q.fVectorPart.X();
-        double two_y2 = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Y();
-        double two_z2 = 2 * Q.fVectorPart.Z() * Q.fVectorPart.Z();
-        double two_xy = 2 * Q.fVectorPart.X() * Q.fVectorPart.Y();
-        double two_xz = 2 * Q.fVectorPart.X() * Q.fVectorPart.Z();
-        double two_xr = 2 * Q.fVectorPart.X() * Q.fRealPart;
-        double two_yz = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Z();
-        double two_yr = 2 * Q.fVectorPart.Y() * Q.fRealPart;
-        double two_zr = 2 * Q.fVectorPart.Z() * Q.fRealPart;
+   double two_r2 = 2 * Q.fRealPart * Q.fRealPart;
+   double two_x2 = 2 * Q.fVectorPart.X() * Q.fVectorPart.X();
+   double two_y2 = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Y();
+   double two_z2 = 2 * Q.fVectorPart.Z() * Q.fVectorPart.Z();
+   double two_xy = 2 * Q.fVectorPart.X() * Q.fVectorPart.Y();
+   double two_xz = 2 * Q.fVectorPart.X() * Q.fVectorPart.Z();
+   double two_xr = 2 * Q.fVectorPart.X() * Q.fRealPart;
+   double two_yz = 2 * Q.fVectorPart.Y() * Q.fVectorPart.Z();
+   double two_yr = 2 * Q.fVectorPart.Y() * Q.fRealPart;
+   double two_zr = 2 * Q.fVectorPart.Z() * Q.fRealPart;
 
-        // protect agains zero quaternion
-        double mag2 = Q.QMag2();
-        if (mag2 > 0) {
+   // protect agains zero quaternion
+   double mag2 = Q.QMag2();
+   if (mag2 > 0) {
 
-                // diago + identity
-                fxx = two_r2 + two_x2;
-                fyy = two_r2 + two_y2;
-                fzz = two_r2 + two_z2;
+      // diago + identity
+      fxx = two_r2 + two_x2;
+      fyy = two_r2 + two_y2;
+      fzz = two_r2 + two_z2;
 
-                //        line 0 column 1 and conjugate
-                fxy = two_xy - two_zr;
-                fyx = two_xy + two_zr;
+      //        line 0 column 1 and conjugate
+      fxy = two_xy - two_zr;
+      fyx = two_xy + two_zr;
 
-                //        line 0 column 2 and conjugate
-                fxz = two_xz + two_yr;
-                fzx = two_xz - two_yr;
+      //        line 0 column 2 and conjugate
+      fxz = two_xz + two_yr;
+      fzx = two_xz - two_yr;
 
-                //        line 1 column 2 and conjugate
-                fyz = two_yz - two_xr;
-                fzy = two_yz + two_xr;
+      //        line 1 column 2 and conjugate
+      fyz = two_yz - two_xr;
+      fzy = two_yz + two_xr;
 
-                // protect agains non-unit quaternion 
-                if (TMath::Abs(mag2-1) > 1e-10) {
-                        fxx /= mag2;
-                        fyy /= mag2;
-                        fzz /= mag2;
-                        fxy /= mag2;
-                        fyx /= mag2;
-                        fxz /= mag2;
-                        fzx /= mag2;
-                        fyz /= mag2;
-                        fzy /= mag2;
-                }
+      // protect agains non-unit quaternion 
+      if (TMath::Abs(mag2-1) > 1e-10) {
+         fxx /= mag2;
+         fyy /= mag2;
+         fzz /= mag2;
+         fxy /= mag2;
+         fyx /= mag2;
+         fxz /= mag2;
+         fzx /= mag2;
+         fyz /= mag2;
+         fzy /= mag2;
+      }
 
-                // diago : remove identity
-                fxx -= 1;
-                fyy -= 1;
-                fzz -= 1;
+      // diago : remove identity
+      fxx -= 1;
+      fyy -= 1;
+      fzz -= 1;
 
 
-        } else {
-                // Identity
+   } else {
+      // Identity
 
-                fxx = fyy = fzz = 1;
-                fxy = fyx = fxz = fzx = fyz = fzy = 0;
+      fxx = fyy = fzz = 1;
+      fxy = fyx = fxz = fzx = fyz = fzy = 0;
 
-        }
+   }
 
 }
 
 TRotation & TRotation::Rotate(Double_t a, const TVector3& axis) {
-  if (a != 0.0) {
-    Double_t ll = axis.Mag();
-    if (ll == 0.0) {
-      Warning("Rotate(angle,axis)"," zero axis");
-    }else{
-      Double_t sa = TMath::Sin(a), ca = TMath::Cos(a);
-      Double_t dx = axis.X()/ll, dy = axis.Y()/ll, dz = axis.Z()/ll;
-      TRotation m(
-        ca+(1-ca)*dx*dx,          (1-ca)*dx*dy-sa*dz,    (1-ca)*dx*dz+sa*dy,
-           (1-ca)*dy*dx+sa*dz, ca+(1-ca)*dy*dy,          (1-ca)*dy*dz-sa*dx,
-           (1-ca)*dz*dx-sa*dy,    (1-ca)*dz*dy+sa*dx, ca+(1-ca)*dz*dz );
-      Transform(m);
-    }
-  }
-  return *this;
+   //rotate along an axis
+   if (a != 0.0) {
+      Double_t ll = axis.Mag();
+      if (ll == 0.0) {
+         Warning("Rotate(angle,axis)"," zero axis");
+      } else {
+         Double_t sa = TMath::Sin(a), ca = TMath::Cos(a);
+         Double_t dx = axis.X()/ll, dy = axis.Y()/ll, dz = axis.Z()/ll;
+         TRotation m(
+             ca+(1-ca)*dx*dx,          (1-ca)*dx*dy-sa*dz,    (1-ca)*dx*dz+sa*dy,
+             (1-ca)*dy*dx+sa*dz, ca+(1-ca)*dy*dy,          (1-ca)*dy*dz-sa*dx,
+             (1-ca)*dz*dx-sa*dy,    (1-ca)*dz*dy+sa*dx, ca+(1-ca)*dz*dz );
+         Transform(m);
+      }
+   }
+   return *this;
 }
 
 TRotation & TRotation::RotateX(Double_t a) {
-  Double_t c = TMath::Cos(a);
-  Double_t s = TMath::Sin(a);
-  Double_t x = fyx, y = fyy, z = fyz;
-  fyx = c*x - s*fzx;
-  fyy = c*y - s*fzy;
-  fyz = c*z - s*fzz;
-  fzx = s*x + c*fzx;
-  fzy = s*y + c*fzy;
-  fzz = s*z + c*fzz;
-  return *this;
+   //rotate around x
+   Double_t c = TMath::Cos(a);
+   Double_t s = TMath::Sin(a);
+   Double_t x = fyx, y = fyy, z = fyz;
+   fyx = c*x - s*fzx;
+   fyy = c*y - s*fzy;
+   fyz = c*z - s*fzz;
+   fzx = s*x + c*fzx;
+   fzy = s*y + c*fzy;
+   fzz = s*z + c*fzz;
+   return *this;
 }
 
 TRotation & TRotation::RotateY(Double_t a){
-  Double_t c = TMath::Cos(a);
-  Double_t s = TMath::Sin(a);
-  Double_t x = fzx, y = fzy, z = fzz;
-  fzx = c*x - s*fxx;
-  fzy = c*y - s*fxy;
-  fzz = c*z - s*fxz;
-  fxx = s*x + c*fxx;
-  fxy = s*y + c*fxy;
-  fxz = s*z + c*fxz;
-  return *this;
+   //rotate around y
+   Double_t c = TMath::Cos(a);
+   Double_t s = TMath::Sin(a);
+   Double_t x = fzx, y = fzy, z = fzz;
+   fzx = c*x - s*fxx;
+   fzy = c*y - s*fxy;
+   fzz = c*z - s*fxz;
+   fxx = s*x + c*fxx;
+   fxy = s*y + c*fxy;
+   fxz = s*z + c*fxz;
+   return *this;
 }
 
 TRotation & TRotation::RotateZ(Double_t a) {
-  Double_t c = TMath::Cos(a);
-  Double_t s = TMath::Sin(a);
-  Double_t x = fxx, y = fxy, z = fxz;
-  fxx = c*x - s*fyx;
-  fxy = c*y - s*fyy;
-  fxz = c*z - s*fyz;
-  fyx = s*x + c*fyx;
-  fyy = s*y + c*fyy;
-  fyz = s*z + c*fyz;
-  return *this;
+   //rotate around z
+   Double_t c = TMath::Cos(a);
+   Double_t s = TMath::Sin(a);
+   Double_t x = fxx, y = fxy, z = fxz;
+   fxx = c*x - s*fyx;
+   fxy = c*y - s*fyy;
+   fxz = c*z - s*fyz;
+   fyx = s*x + c*fyx;
+   fyy = s*y + c*fyy;
+   fyz = s*z + c*fyz;
+   return *this;
 }
 
 TRotation & TRotation::RotateAxes(const TVector3 &newX,
                                   const TVector3 &newY,
                                   const TVector3 &newZ) {
-  Double_t del = 0.001;
-  TVector3 w = newX.Cross(newY);
+   //rotate axes
+   Double_t del = 0.001;
+   TVector3 w = newX.Cross(newY);
 
-  if (TMath::Abs(newZ.X()-w.X()) > del ||
-      TMath::Abs(newZ.Y()-w.Y()) > del ||
-      TMath::Abs(newZ.Z()-w.Z()) > del ||
-      TMath::Abs(newX.Mag2()-1.) > del ||
-      TMath::Abs(newY.Mag2()-1.) > del ||
-      TMath::Abs(newZ.Mag2()-1.) > del ||
-      TMath::Abs(newX.Dot(newY)) > del ||
-      TMath::Abs(newY.Dot(newZ)) > del ||
-      TMath::Abs(newZ.Dot(newX)) > del) {
-    Warning("RotateAxes","bad axis vectors");
-    return *this;
-  }else{
-    return Transform(TRotation(newX.X(), newY.X(), newZ.X(),
+   if (TMath::Abs(newZ.X()-w.X()) > del ||
+       TMath::Abs(newZ.Y()-w.Y()) > del ||
+       TMath::Abs(newZ.Z()-w.Z()) > del ||
+       TMath::Abs(newX.Mag2()-1.) > del ||
+       TMath::Abs(newY.Mag2()-1.) > del ||
+       TMath::Abs(newZ.Mag2()-1.) > del ||
+       TMath::Abs(newX.Dot(newY)) > del ||
+       TMath::Abs(newY.Dot(newZ)) > del ||
+       TMath::Abs(newZ.Dot(newX)) > del) {
+      Warning("RotateAxes","bad axis vectors");
+      return *this;
+   } else {
+      return Transform(TRotation(newX.X(), newY.X(), newZ.X(),
                                  newX.Y(), newY.Y(), newZ.Y(),
                                  newX.Z(), newY.Z(), newZ.Z()));
-  }
+   }
 }
 
 Double_t TRotation::PhiX() const {
-  return (fyx == 0.0 && fxx == 0.0) ? 0.0 : TMath::ATan2(fyx,fxx);
+   //return Phi
+   return (fyx == 0.0 && fxx == 0.0) ? 0.0 : TMath::ATan2(fyx,fxx);
 }
 
 Double_t TRotation::PhiY() const {
-  return (fyy == 0.0 && fxy == 0.0) ? 0.0 : TMath::ATan2(fyy,fxy);
+   //return Phi
+   return (fyy == 0.0 && fxy == 0.0) ? 0.0 : TMath::ATan2(fyy,fxy);
 }
 
 Double_t TRotation::PhiZ() const {
-  return (fyz == 0.0 && fxz == 0.0) ? 0.0 : TMath::ATan2(fyz,fxz);
+   //return Phi
+   return (fyz == 0.0 && fxz == 0.0) ? 0.0 : TMath::ATan2(fyz,fxz);
 }
 
 Double_t TRotation::ThetaX() const {
-  return TMath::ACos(fzx);
+   //return Phi
+   return TMath::ACos(fzx);
 }
 
 Double_t TRotation::ThetaY() const {
-  return TMath::ACos(fzy);
+   //return Theta
+   return TMath::ACos(fzy);
 }
 
 Double_t TRotation::ThetaZ() const {
-  return TMath::ACos(fzz);
+   //return Theta
+   return TMath::ACos(fzz);
 }
 
 void TRotation::AngleAxis(Double_t &angle, TVector3 &axis) const {
-  Double_t cosa  = 0.5*(fxx+fyy+fzz-1);
-  Double_t cosa1 = 1-cosa;
-  if (cosa1 <= 0) {
-    angle = 0;
-    axis  = TVector3(0,0,1);
-  }else{
-    Double_t x=0, y=0, z=0;
-    if (fxx > cosa) x = TMath::Sqrt((fxx-cosa)/cosa1);
-    if (fyy > cosa) y = TMath::Sqrt((fyy-cosa)/cosa1);
-    if (fzz > cosa) z = TMath::Sqrt((fzz-cosa)/cosa1);
-    if (fzy < fyz)  x = -x;
-    if (fxz < fzx)  y = -y;
-    if (fyx < fxy)  z = -z;
-    angle = TMath::ACos(cosa);
-    axis  = TVector3(x,y,z);
-  }
+   //rotation defined by an angle and a vector
+   Double_t cosa  = 0.5*(fxx+fyy+fzz-1);
+   Double_t cosa1 = 1-cosa;
+   if (cosa1 <= 0) {
+      angle = 0;
+      axis  = TVector3(0,0,1);
+   } else {
+      Double_t x=0, y=0, z=0;
+      if (fxx > cosa) x = TMath::Sqrt((fxx-cosa)/cosa1);
+      if (fyy > cosa) y = TMath::Sqrt((fyy-cosa)/cosa1);
+      if (fzz > cosa) z = TMath::Sqrt((fzz-cosa)/cosa1);
+      if (fzy < fyz)  x = -x;
+      if (fxz < fzx)  y = -y;
+      if (fyx < fxy)  z = -z;
+      angle = TMath::ACos(cosa);
+      axis  = TVector3(x,y,z);
+   }
 }
 
 TRotation & TRotation::SetXEulerAngles(Double_t phi,
                                       Double_t theta,
                                       Double_t psi) {
-  // Rotate using the x-convention (Landau and Lifshitz, Goldstein, &c) by 
-  // doing the explicit rotations.  This is slightly less efficient than 
-  // directly applying the rotation, but makes the code much clearer.  My
-  // presumption is that this code is not going to be a speed bottle neck.
+   // Rotate using the x-convention (Landau and Lifshitz, Goldstein, &c) by 
+   // doing the explicit rotations.  This is slightly less efficient than 
+   // directly applying the rotation, but makes the code much clearer.  My
+   // presumption is that this code is not going to be a speed bottle neck.
 
-  SetToIdentity();
-  RotateZ(phi);
-  RotateX(theta);
-  RotateZ(psi);
+   SetToIdentity();
+   RotateZ(phi);
+   RotateX(theta);
+   RotateZ(psi);
   
-  return *this;
+   return *this;
 }
 
 TRotation & TRotation::SetYEulerAngles(Double_t phi,
                                        Double_t theta,
                                        Double_t psi) {
-  // Rotate using the y-convention.
+   // Rotate using the y-convention.
     
-  SetToIdentity();
-  RotateZ(phi);
-  RotateY(theta);
-  RotateZ(psi);
-  return *this;
+   SetToIdentity();
+   RotateZ(phi);
+   RotateY(theta);
+   RotateZ(psi);
+   return *this;
 }
 
 TRotation & TRotation::RotateXEulerAngles(Double_t phi,
                                          Double_t theta,
                                          Double_t psi) {
+   // Rotate using the x-convention.
   TRotation euler;
   euler.SetXEulerAngles(phi,theta,psi);
   return Transform(euler);
@@ -463,215 +478,230 @@ TRotation & TRotation::RotateXEulerAngles(Double_t phi,
 TRotation & TRotation::RotateYEulerAngles(Double_t phi,
                                           Double_t theta,
                                           Double_t psi) {
-  TRotation euler;
-  euler.SetYEulerAngles(phi,theta,psi);
-  return Transform(euler);
+   // Rotate using the y-convention.
+   TRotation euler;
+   euler.SetYEulerAngles(phi,theta,psi);
+   return Transform(euler);
 }
 
 void TRotation::SetXPhi(Double_t phi) {
-  SetXEulerAngles(phi,GetXTheta(),GetXPsi());
+   //set XPhi
+   SetXEulerAngles(phi,GetXTheta(),GetXPsi());
 }
 
 void TRotation::SetXTheta(Double_t theta) {
-  SetXEulerAngles(GetXPhi(),theta,GetXPsi());
+   //set XTheta
+   SetXEulerAngles(GetXPhi(),theta,GetXPsi());
 }
 
 void TRotation::SetXPsi(Double_t psi) {
-  SetXEulerAngles(GetXPhi(),GetXTheta(),psi);
+   //set XPsi
+   SetXEulerAngles(GetXPhi(),GetXTheta(),psi);
 }
 
 void TRotation::SetYPhi(Double_t phi) {
-  SetYEulerAngles(phi,GetYTheta(),GetYPsi());
+   //set YPhi
+   SetYEulerAngles(phi,GetYTheta(),GetYPsi());
 }
 
 void TRotation::SetYTheta(Double_t theta) {
-  SetYEulerAngles(GetYPhi(),theta,GetYPsi());
+   //set YTheta
+   SetYEulerAngles(GetYPhi(),theta,GetYPsi());
 }
 
 void TRotation::SetYPsi(Double_t psi) {
-  SetYEulerAngles(GetYPhi(),GetYTheta(),psi);
+   //set YPsi
+   SetYEulerAngles(GetYPhi(),GetYTheta(),psi);
 }
 
 Double_t TRotation::GetXPhi(void) const {
-  Double_t finalPhi;
+   //return phi angle
+   Double_t finalPhi;
 
-  Double_t s2 =  1.0 - fzz*fzz;
-  if (s2 < 0) {
-    Warning("GetPhi()"," |fzz| > 1 ");
-    s2 = 0;
-  }
-  const Double_t sinTheta = TMath::Sqrt(s2);
+   Double_t s2 =  1.0 - fzz*fzz;
+   if (s2 < 0) {
+      Warning("GetPhi()"," |fzz| > 1 ");
+      s2 = 0;
+   }
+   const Double_t sinTheta = TMath::Sqrt(s2);
 
-  if (sinTheta != 0) {
-    const Double_t cscTheta = 1/sinTheta;
-    Double_t cosAbsPhi =  fzy * cscTheta;
-    if ( TMath::Abs(cosAbsPhi) > 1 ) {        // NaN-proofing
-        Warning("GetPhi()","finds | cos phi | > 1");
-        cosAbsPhi = 1;
-    }
-    const Double_t absPhi = TMath::ACos(cosAbsPhi);
-    if (fzx > 0) {
-        finalPhi = absPhi;
-    } else if (fzx < 0) {
-        finalPhi = -absPhi;
-    } else if (fzy > 0) {
-        finalPhi = 0.0;
-    } else {
-        finalPhi = TMath::Pi();
-    }
-  }
-  else {              // sinTheta == 0 so |Fzz| = 1
-    const Double_t absPhi = .5 * TMath::ACos (fxx);
-    if (fxy > 0) {
-      finalPhi =  -absPhi;
-    } else if (fxy < 0) {
-      finalPhi =   absPhi;
-    } else if (fxx>0) {
-      finalPhi = 0.0;
-    } else {
-      finalPhi = fzz * TMath::PiOver2();
-    }
-  }
-  return finalPhi;
+   if (sinTheta != 0) {
+      const Double_t cscTheta = 1/sinTheta;
+      Double_t cosAbsPhi =  fzy * cscTheta;
+      if ( TMath::Abs(cosAbsPhi) > 1 ) {        // NaN-proofing
+         Warning("GetPhi()","finds | cos phi | > 1");
+         cosAbsPhi = 1;
+      }
+      const Double_t absPhi = TMath::ACos(cosAbsPhi);
+      if (fzx > 0) {
+         finalPhi = absPhi;
+      } else if (fzx < 0) {
+         finalPhi = -absPhi;
+      } else if (fzy > 0) {
+         finalPhi = 0.0;
+      } else {
+         finalPhi = TMath::Pi();
+      }
+   } else {              // sinTheta == 0 so |Fzz| = 1
+      const Double_t absPhi = .5 * TMath::ACos (fxx);
+      if (fxy > 0) {
+         finalPhi =  -absPhi;
+      } else if (fxy < 0) {
+         finalPhi =   absPhi;
+      } else if (fxx>0) {
+         finalPhi = 0.0;
+      } else {
+         finalPhi = fzz * TMath::PiOver2();
+      }
+   }
+   return finalPhi;
 }
 
 Double_t TRotation::GetYPhi(void) const {
-  return GetXPhi() + TMath::Pi()/2.0;
+   //return YPhi
+   return GetXPhi() + TMath::Pi()/2.0;
 }
 
 Double_t TRotation::GetXTheta(void) const {
-  return  ThetaZ();
+   //return XTheta
+   return  ThetaZ();
 }
 
 Double_t TRotation::GetYTheta(void) const {
-  return  ThetaZ();
+   //return YTheta
+   return  ThetaZ();
 }
 
 Double_t TRotation::GetXPsi(void) const {
-  double finalPsi = 0.0;
+   //Get psi angle
+   double finalPsi = 0.0;
 
-  Double_t s2 =  1.0 - fzz*fzz;
-  if (s2 < 0) {
-    Warning("GetPsi()"," |fzz| > 1 ");
-    s2 = 0;
-  }
-  const Double_t sinTheta = TMath::Sqrt(s2);
+   Double_t s2 =  1.0 - fzz*fzz;
+   if (s2 < 0) {
+      Warning("GetPsi()"," |fzz| > 1 ");
+      s2 = 0;
+   }
+   const Double_t sinTheta = TMath::Sqrt(s2);
 
-  if (sinTheta != 0) {
-    const Double_t cscTheta = 1/sinTheta;
-    Double_t cosAbsPsi =  - fyz * cscTheta;
-    if ( TMath::Abs(cosAbsPsi) > 1 ) {        // NaN-proofing
-      Warning("GetPsi()","| cos psi | > 1 ");
-      cosAbsPsi = 1;
-    }
-    const Double_t absPsi = TMath::ACos(cosAbsPsi);
-    if (fxz > 0) {
-      finalPsi = absPsi;
-    } else if (fxz < 0) {
-      finalPsi = -absPsi;
-    } else {
-      finalPsi = (fyz < 0) ? 0 : TMath::Pi();
-    }
-  }
-  else {              // sinTheta == 0 so |Fzz| = 1
-    Double_t absPsi = fxx;
-    if ( TMath::Abs(fxx) > 1 ) {        // NaN-proofing
-      Warning("GetPsi()","| fxx | > 1 ");
-      absPsi = 1;
-    }
-    absPsi = .5 * TMath::ACos (absPsi);
-    if (fyx > 0) {
-      finalPsi = absPsi;
-    } else if (fyx < 0) {
-      finalPsi = -absPsi;
-    } else {
-      finalPsi = (fxx > 0) ? 0 : TMath::PiOver2();
-    }
-  }
-  return finalPsi;
+   if (sinTheta != 0) {
+      const Double_t cscTheta = 1/sinTheta;
+      Double_t cosAbsPsi =  - fyz * cscTheta;
+      if ( TMath::Abs(cosAbsPsi) > 1 ) {        // NaN-proofing
+         Warning("GetPsi()","| cos psi | > 1 ");
+         cosAbsPsi = 1;
+      }
+      const Double_t absPsi = TMath::ACos(cosAbsPsi);
+      if (fxz > 0) {
+         finalPsi = absPsi;
+      } else if (fxz < 0) {
+         finalPsi = -absPsi;
+      } else {
+         finalPsi = (fyz < 0) ? 0 : TMath::Pi();
+      }
+   } else {              // sinTheta == 0 so |Fzz| = 1
+      Double_t absPsi = fxx;
+      if ( TMath::Abs(fxx) > 1 ) {        // NaN-proofing
+         Warning("GetPsi()","| fxx | > 1 ");
+         absPsi = 1;
+      }
+      absPsi = .5 * TMath::ACos (absPsi);
+      if (fyx > 0) {
+         finalPsi = absPsi;
+      } else if (fyx < 0) {
+         finalPsi = -absPsi;
+      } else {
+         finalPsi = (fxx > 0) ? 0 : TMath::PiOver2();
+      }
+   }
+   return finalPsi;
 }
 
 Double_t TRotation::GetYPsi(void) const {
-  return GetXPsi() - TMath::Pi()/2;
+   //return YPsi
+   return GetXPsi() - TMath::Pi()/2;
 }
 
 TRotation & TRotation::SetXAxis(const TVector3& axis, 
                                 const TVector3& xyPlane) {
-  TVector3 xAxis(xyPlane);
-  TVector3 yAxis;
-  TVector3 zAxis(axis);
-  MakeBasis(xAxis,yAxis,zAxis);
-  fxx = zAxis.X();  fyx = zAxis.Y();  fzx = zAxis.Z();
-  fxy = xAxis.X();  fyy = xAxis.Y();  fzy = xAxis.Z();
-  fxz = yAxis.X();  fyz = yAxis.Y();  fzz = yAxis.Z();
-  return *this;
+   //set X axis
+   TVector3 xAxis(xyPlane);
+   TVector3 yAxis;
+   TVector3 zAxis(axis);
+   MakeBasis(xAxis,yAxis,zAxis);
+   fxx = zAxis.X();  fyx = zAxis.Y();  fzx = zAxis.Z();
+   fxy = xAxis.X();  fyy = xAxis.Y();  fzy = xAxis.Z();
+   fxz = yAxis.X();  fyz = yAxis.Y();  fzz = yAxis.Z();
+   return *this;
 }
 
 TRotation & TRotation::SetXAxis(const TVector3& axis) {
-  TVector3 xyPlane(0.0,1.0,0.0);
-  return SetXAxis(axis,xyPlane);
+   //set X axis
+   TVector3 xyPlane(0.0,1.0,0.0);
+   return SetXAxis(axis,xyPlane);
 }
 
 TRotation & TRotation::SetYAxis(const TVector3& axis, 
                                 const TVector3& yzPlane) {
-  TVector3 xAxis(yzPlane);
-  TVector3 yAxis;
-  TVector3 zAxis(axis);
-  MakeBasis(xAxis,yAxis,zAxis);
-  fxx = yAxis.X();  fyx = yAxis.Y();  fzx = yAxis.Z();
-  fxy = zAxis.X();  fyy = zAxis.Y();  fzy = zAxis.Z();
-  fxz = xAxis.X();  fyz = xAxis.Y();  fzz = xAxis.Z();
-  return *this;
+   //set Y axis
+   TVector3 xAxis(yzPlane);
+   TVector3 yAxis;
+   TVector3 zAxis(axis);
+   MakeBasis(xAxis,yAxis,zAxis);
+   fxx = yAxis.X();  fyx = yAxis.Y();  fzx = yAxis.Z();
+   fxy = zAxis.X();  fyy = zAxis.Y();  fzy = zAxis.Z();
+   fxz = xAxis.X();  fyz = xAxis.Y();  fzz = xAxis.Z();
+   return *this;
 }
 
 TRotation & TRotation::SetYAxis(const TVector3& axis) {
-  TVector3 yzPlane(0.0,0.0,1.0);
-  return SetYAxis(axis,yzPlane);
+   //set Y axis
+   TVector3 yzPlane(0.0,0.0,1.0);
+   return SetYAxis(axis,yzPlane);
 }
 
 TRotation & TRotation::SetZAxis(const TVector3& axis, 
                                 const TVector3& zxPlane) {
-  TVector3 xAxis(zxPlane);
-  TVector3 yAxis;
-  TVector3 zAxis(axis);
-  MakeBasis(xAxis,yAxis,zAxis);
-  fxx = xAxis.X();  fyx = xAxis.Y();  fzx = xAxis.Z();
-  fxy = yAxis.X();  fyy = yAxis.Y();  fzy = yAxis.Z();
-  fxz = zAxis.X();  fyz = zAxis.Y();  fzz = zAxis.Z();
-  return *this;
+   //set Y axis
+   TVector3 xAxis(zxPlane);
+   TVector3 yAxis;
+   TVector3 zAxis(axis);
+   MakeBasis(xAxis,yAxis,zAxis);
+   fxx = xAxis.X();  fyx = xAxis.Y();  fzx = xAxis.Z();
+   fxy = yAxis.X();  fyy = yAxis.Y();  fzy = yAxis.Z();
+   fxz = zAxis.X();  fyz = zAxis.Y();  fzz = zAxis.Z();
+   return *this;
 }
 
 TRotation & TRotation::SetZAxis(const TVector3& axis) {
-  TVector3 zxPlane(1.0,0.0,0.0);
-  return SetZAxis(axis,zxPlane);
+   //set Z axis
+   TVector3 zxPlane(1.0,0.0,0.0);
+   return SetZAxis(axis,zxPlane);
 }
 
 void TRotation::MakeBasis(TVector3& xAxis,
                           TVector3& yAxis,
                           TVector3& zAxis) const {
-  // Make the zAxis into a unit variable. 
-  Double_t zmag = zAxis.Mag();
-  if (zmag<TOLERANCE) {
+   // Make the zAxis into a unit variable. 
+   Double_t zmag = zAxis.Mag();
+   if (zmag<TOLERANCE) {
       Warning("MakeBasis(X,Y,Z)","non-zero Z Axis is required");
-  }
-  zAxis *= (1.0/zmag);
+   }
+   zAxis *= (1.0/zmag);
 
-  Double_t xmag = xAxis.Mag();
-  if (xmag<TOLERANCE*zmag) {
+   Double_t xmag = xAxis.Mag();
+   if (xmag<TOLERANCE*zmag) {
       xAxis = zAxis.Orthogonal();
       xmag = 1.0;
-  }
+   }
 
-  // Find the yAxis
-  yAxis = zAxis.Cross(xAxis)*(1.0/xmag);
-  Double_t ymag = yAxis.Mag();
-  if (ymag<TOLERANCE*zmag) {
+   // Find the yAxis
+   yAxis = zAxis.Cross(xAxis)*(1.0/xmag);
+   Double_t ymag = yAxis.Mag();
+   if (ymag<TOLERANCE*zmag) {
       yAxis = zAxis.Orthogonal();
-  }
-
-  else {
+   } else {
       yAxis *= (1.0/ymag);
-  }
+   }
 
-  xAxis = yAxis.Cross(zAxis);
+   xAxis = yAxis.Cross(zAxis);
 }

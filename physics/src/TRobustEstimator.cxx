@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.10 2005/09/04 09:51:19 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.11 2006/05/11 10:31:42 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -175,19 +175,19 @@ void TRobustEstimator::AddColumn(Double_t *col)
    //variable fVarTemp keeps the number of columns l
    //already added
    
-  if (fVarTemp==fNvar) {
-     fNvar++;
-     fCovariance.ResizeTo(fNvar, fNvar);
-     fInvcovariance.ResizeTo(fNvar, fNvar);
-     fCorrelation.ResizeTo(fNvar, fNvar);
-     fMean.ResizeTo(fNvar);
-     fHyperplane.ResizeTo(fNvar);
-     fData.ResizeTo(fN, fNvar);
-  }
-  for (Int_t i=0; i<fN; i++) {
-     fData(i, fVarTemp)=col[i];
-  }
-  fVarTemp++;
+   if (fVarTemp==fNvar) {
+      fNvar++;
+      fCovariance.ResizeTo(fNvar, fNvar);
+      fInvcovariance.ResizeTo(fNvar, fNvar);
+      fCorrelation.ResizeTo(fNvar, fNvar);
+      fMean.ResizeTo(fNvar);
+      fHyperplane.ResizeTo(fNvar);
+      fData.ResizeTo(fN, fNvar);
+   }
+   for (Int_t i=0; i<fN; i++) {
+      fData(i, fVarTemp)=col[i];
+   }
+   fVarTemp++;
 }
 
 //_______________________________________________________________________________
@@ -219,7 +219,7 @@ void TRobustEstimator::Evaluate()
       Warning("Evaluate","Chosen h = #observations, so classic estimates of location and scatter will be calculated");
       Classic();
       return;
-  }
+   }
    
    Int_t i, j, k;
    Int_t ii, jj;
@@ -883,8 +883,7 @@ void TRobustEstimator::CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *
       if (i>0){
          for(j=0; j<=i-1; j++) {
             if(index[j]==num)
-               
-          repeat=kTRUE;
+            repeat=kTRUE;
          }
       }
       if(repeat==kTRUE) {
@@ -973,9 +972,9 @@ void TRobustEstimator::CreateOrtSubset(TMatrixD &dat,Int_t *index, Int_t hmerged
    KOrdStat(nmerged, ndist, hmerged-1, index);
    ClearSscp(sscp);
    for (i=0; i<hmerged; i++) {
-    for(j=0; j<fNvar; j++)
-       vec[j]=dat[index[i]][j];
-    AddToSscp(sscp, vec);
+      for(j=0; j<fNvar; j++)
+         vec[j]=dat[index[i]][j];
+      AddToSscp(sscp, vec);
    }
    Covar(sscp, fMean, fCovariance, fSd, hmerged);
 }
@@ -1101,7 +1100,7 @@ Int_t TRobustEstimator::Exact2(TMatrixD &mstockbig, TMatrixD &cstockbig, TMatrix
          }   
       }      
       return maxind;
-  }
+   }
 }
 
 

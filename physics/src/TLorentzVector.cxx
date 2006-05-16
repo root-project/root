@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.8 2003/09/03 06:08:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.9 2004/04/20 09:29:56 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -261,60 +261,66 @@ TLorentzVector::~TLorentzVector()  {}
 
 Double_t TLorentzVector::operator () (int i) const
 {
-  switch(i) {
-  case kX:
-  case kY:
-  case kZ:
-    return fP(i);
-  case kT:
-    return fE;
-  default:
-    Error("operator()()", "bad index (%d) returning 0",i);
-  }
-  return 0.;
+   //dereferencing operator const
+   switch(i) {
+      case kX:
+      case kY:
+      case kZ:
+         return fP(i);
+      case kT:
+         return fE;
+      default:
+         Error("operator()()", "bad index (%d) returning 0",i);
+   }
+   return 0.;
 }
 
 Double_t & TLorentzVector::operator () (int i)
 {
-  switch(i) {
-  case kX:
-  case kY:
-  case kZ:
-    return fP(i);
-  case kT:
-    return fE;
-  default:
-    Error("operator()()", "bad index (%d) returning &fE",i);
-  }
-  return fE;
+   //dereferencing operator
+   switch(i) {
+      case kX:
+      case kY:
+      case kZ:
+         return fP(i);
+      case kT:
+         return fE;
+      default:
+         Error("operator()()", "bad index (%d) returning &fE",i);
+   }
+   return fE;
 }
 
 void TLorentzVector::Boost(Double_t bx, Double_t by, Double_t bz)
 {
-  Double_t b2 = bx*bx + by*by + bz*bz;
-  register Double_t gamma = 1.0 / TMath::Sqrt(1.0 - b2);
-  register Double_t bp = bx*X() + by*Y() + bz*Z();
-  register Double_t gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
+   //Boost this Lorentz vector
+   Double_t b2 = bx*bx + by*by + bz*bz;
+   register Double_t gamma = 1.0 / TMath::Sqrt(1.0 - b2);
+   register Double_t bp = bx*X() + by*Y() + bz*Z();
+   register Double_t gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
 
-  SetX(X() + gamma2*bp*bx + gamma*bx*T());
-  SetY(Y() + gamma2*bp*by + gamma*by*T());
-  SetZ(Z() + gamma2*bp*bz + gamma*bz*T());
-  SetT(gamma*(T() + bp));
+   SetX(X() + gamma2*bp*bx + gamma*bx*T());
+   SetY(Y() + gamma2*bp*by + gamma*by*T());
+   SetZ(Z() + gamma2*bp*bz + gamma*bz*T());
+   SetT(gamma*(T() + bp));
 }
 
 Double_t TLorentzVector::Rapidity() const
 {
-  return 0.5*log( (E()+Pz()) / (E()-Pz()) );
+   //return rapidity
+   return 0.5*log( (E()+Pz()) / (E()-Pz()) );
 }
 
 TLorentzVector &TLorentzVector::operator *= (const TLorentzRotation & m)
 {
-  return *this = m.VectorMultiplication(*this);
+   //multiply this Lorentzvector by m
+   return *this = m.VectorMultiplication(*this);
 }
 
 TLorentzVector &TLorentzVector::Transform(const TLorentzRotation & m)
 {
-  return *this = m.VectorMultiplication(*this);
+   //Transform this Lorentzvector
+   return *this = m.VectorMultiplication(*this);
 }
 
 void TLorentzVector::Streamer(TBuffer &R__b)

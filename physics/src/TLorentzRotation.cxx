@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.2 2002/05/18 08:22:00 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.3 2003/09/03 06:08:34 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -191,58 +191,62 @@ TLorentzRotation::TLorentzRotation(Double_t bx,
                                    Double_t by,
                                    Double_t bz)
 {
-  SetBoost(bx, by, bz);
+   //constructor   
+   SetBoost(bx, by, bz);
 }
 
 TLorentzRotation::TLorentzRotation(const TVector3 & p) {
-  SetBoost(p.X(), p.Y(), p.Z());
+   //copy constructor
+   SetBoost(p.X(), p.Y(), p.Z());
 }
 
 Double_t TLorentzRotation::operator () (int i, int j) const {
-  if (i == 0) {
-    if (j == 0) { return fxx; }
-    if (j == 1) { return fxy; }
-    if (j == 2) { return fxz; }
-    if (j == 3) { return fxt; }
-  } else if (i == 1) {
-    if (j == 0) { return fyx; }
-    if (j == 1) { return fyy; }
-    if (j == 2) { return fyz; }
-    if (j == 3) { return fyt; }
-  } else if (i == 2) {
-    if (j == 0) { return fzx; }
-    if (j == 1) { return fzy; }
-    if (j == 2) { return fzz; }
-    if (j == 3) { return fzt; }
-  } else if (i == 3) {
-    if (j == 0) { return ftx; }
-    if (j == 1) { return fty; }
-    if (j == 2) { return ftz; }
-    if (j == 3) { return ftt; }
-  }
-  Warning("operator()(i,j)","subscripting: bad indeces(%d,%d)",i,j);
-  return 0.0;
+   //derefencing operator
+   if (i == 0) {
+      if (j == 0) { return fxx; }
+      if (j == 1) { return fxy; }
+      if (j == 2) { return fxz; }
+      if (j == 3) { return fxt; }
+   } else if (i == 1) {
+      if (j == 0) { return fyx; }
+      if (j == 1) { return fyy; }
+      if (j == 2) { return fyz; }
+      if (j == 3) { return fyt; }
+   } else if (i == 2) {
+      if (j == 0) { return fzx; }
+      if (j == 1) { return fzy; }
+      if (j == 2) { return fzz; }
+      if (j == 3) { return fzt; }
+   } else if (i == 3) {
+      if (j == 0) { return ftx; }
+      if (j == 1) { return fty; }
+      if (j == 2) { return ftz; }
+      if (j == 3) { return ftt; }
+   }
+   Warning("operator()(i,j)","subscripting: bad indeces(%d,%d)",i,j);
+   return 0.0;
 }
 
 void TLorentzRotation::SetBoost(Double_t bx, Double_t by, Double_t bz) {
-  Double_t bp2 = bx*bx + by*by + bz*bz;
-  Double_t gamma = 1.0 / TMath::Sqrt(1.0 - bp2);
-  Double_t bgamma = gamma * gamma / (1.0 + gamma);
-  fxx = 1.0 + bgamma * bx * bx;
-  fyy = 1.0 + bgamma * by * by;
-  fzz = 1.0 + bgamma * bz * bz;
-  fxy = fyx = bgamma * bx * by;
-  fxz = fzx = bgamma * bx * bz;
-  fyz = fzy = bgamma * by * bz;
-  fxt = ftx = gamma * bx;
-  fyt = fty = gamma * by;
-  fzt = ftz = gamma * bz;
-  ftt = gamma;
+   //boost this Lorentz vector
+   Double_t bp2 = bx*bx + by*by + bz*bz;
+   Double_t gamma = 1.0 / TMath::Sqrt(1.0 - bp2);
+   Double_t bgamma = gamma * gamma / (1.0 + gamma);
+   fxx = 1.0 + bgamma * bx * bx;
+   fyy = 1.0 + bgamma * by * by;
+   fzz = 1.0 + bgamma * bz * bz;
+   fxy = fyx = bgamma * bx * by;
+   fxz = fzx = bgamma * bx * bz;
+   fyz = fzy = bgamma * by * bz;
+   fxt = ftx = gamma * bx;
+   fyt = fty = gamma * by;
+   fzt = ftz = gamma * bz;
+   ftt = gamma;
 }
 
-TLorentzRotation
-TLorentzRotation::MatrixMultiplication(const TLorentzRotation & b) const {
-  return TLorentzRotation(
+TLorentzRotation TLorentzRotation::MatrixMultiplication(const TLorentzRotation & b) const {
+   //multiply this vector by a matrix
+   return TLorentzRotation(
     fxx*b.fxx + fxy*b.fyx + fxz*b.fzx + fxt*b.ftx,
     fxx*b.fxy + fxy*b.fyy + fxz*b.fzy + fxt*b.fty,
     fxx*b.fxz + fxy*b.fyz + fxz*b.fzz + fxt*b.ftz,

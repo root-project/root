@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.9 2004/11/11 07:48:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.10 2005/08/30 12:27:21 brun Exp $
 // Author: Adrian Bevan  2001
 
 /*************************************************************************
@@ -52,20 +52,21 @@ ClassImp(TFeldmanCousins)
 //______________________________________________________________________________
 TFeldmanCousins::TFeldmanCousins(Double_t newFC, TString options)
 {
-  fCL          = newFC;
-  fUpperLimit  = 0.0;
-  fLowerLimit  = 0.0;
-  fNobserved   = 0.0;
-  fNbackground = 0.0;
-  options.ToLower();
-  if (options.Contains("q")) fQUICK = 1;
-  else                       fQUICK = 0;
+   //constructor
+   fCL          = newFC;
+   fUpperLimit  = 0.0;
+   fLowerLimit  = 0.0;
+   fNobserved   = 0.0;
+   fNbackground = 0.0;
+   options.ToLower();
+   if (options.Contains("q")) fQUICK = 1;
+   else                       fQUICK = 0;
 
-  fNMax   = 50;
-  fMuStep = 0.005;
-  SetMuMin();
-  SetMuMax();
-  SetMuStep();
+   fNMax   = 50;
+   fMuStep = 0.005;
+   SetMuMin();
+   SetMuMax();
+   SetMuStep();
 }
 
 
@@ -84,8 +85,8 @@ Double_t TFeldmanCousins::CalculateLowerLimit(Double_t Nobserved, Double_t Nback
 // to the F&C interval                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-  CalculateUpperLimit(Nobserved, Nbackground);
-  return fLowerLimit;
+   CalculateUpperLimit(Nobserved, Nbackground);
+   return fLowerLimit;
 }
 
 
@@ -98,52 +99,52 @@ Double_t TFeldmanCousins::CalculateUpperLimit(Double_t Nobserved, Double_t Nback
 // to the F&C interval                                                                    //
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-  fNobserved   = Nobserved;
-  fNbackground = Nbackground;
+   fNobserved   = Nobserved;
+   fNbackground = Nbackground;
 
-  Double_t mu = 0.0;
+   Double_t mu = 0.0;
 
-  // for each mu construct the ranked table of probabilities and test the
-  // observed number of events with the upper limit
-  Double_t min = -999.0;
-  Double_t max = 0;
-  Int_t iLower = 0;
+   // for each mu construct the ranked table of probabilities and test the
+   // observed number of events with the upper limit
+   Double_t min = -999.0;
+   Double_t max = 0;
+   Int_t iLower = 0;
 
-  Int_t i;
-  for(i = 0; i <= fNMuStep; i++) {
-    mu = fMuMin + (Double_t)i*fMuStep;
-    Int_t goodChoice = FindLimitsFromTable( mu );
-    if( goodChoice ) {
-      min = mu;
-      iLower = i;
-      break;
-    }
-  }
+   Int_t i;
+   for(i = 0; i <= fNMuStep; i++) {
+      mu = fMuMin + (Double_t)i*fMuStep;
+      Int_t goodChoice = FindLimitsFromTable( mu );
+      if( goodChoice ) {
+         min = mu;
+         iLower = i;
+         break;
+      }
+   }
 
-  //==================================================================
-  // For quicker evaluation, assume that you get the same results when
-  // you expect the uppper limit to be > Nobserved-Nbackground.
-  // This is certainly true for all of the published tables in the PRD
-  // and is a reasonable assumption in any case.
-  //==================================================================
+   //==================================================================
+   // For quicker evaluation, assume that you get the same results when
+   // you expect the uppper limit to be > Nobserved-Nbackground.
+   // This is certainly true for all of the published tables in the PRD
+   // and is a reasonable assumption in any case.
+   //==================================================================
 
-  Double_t quickJump = 0.0;
-  if (fQUICK)          quickJump = Nobserved-Nbackground-fMuMin;
-  if (quickJump < 0.0) quickJump = 0.0;
+   Double_t quickJump = 0.0;
+   if (fQUICK)          quickJump = Nobserved-Nbackground-fMuMin;
+   if (quickJump < 0.0) quickJump = 0.0;
 
-  for(i = iLower+1; i <= fNMuStep; i++) {
-    mu = fMuMin + (Double_t)i*fMuStep + quickJump;
-    Int_t goodChoice = FindLimitsFromTable( mu );
-    if( !goodChoice ) {
-      max = mu;
-      break;
-    }
-  }
+   for(i = iLower+1; i <= fNMuStep; i++) {
+      mu = fMuMin + (Double_t)i*fMuStep + quickJump;
+      Int_t goodChoice = FindLimitsFromTable( mu );
+      if( !goodChoice ) {
+         max = mu;
+         break;
+      }
+   }
 
-  fUpperLimit = max;
-  fLowerLimit = min;
+   fUpperLimit = max;
+   fLowerLimit = min;
 
-  return max;
+   return max;
 }
 
 
@@ -156,45 +157,45 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
 // with the CL bad                                               //
 ///////////////////////////////////////////////////////////////////
 
-  Double_t *p          = new Double_t[fNMax];   //the array of probabilities in the interval MUMIN-MUMAX
-  Double_t *r          = new Double_t[fNMax];   //the ratio of likliehoods = P(Mu|Nobserved)/P(MuBest|Nobserved)
-  Int_t    *rank       = new Int_t[fNMax];      //the ranked array corresponding to R (largest first)
-  Double_t *muBest     = new Double_t[fNMax];
-  Double_t *probMuBest = new Double_t[fNMax];
+   Double_t *p          = new Double_t[fNMax];   //the array of probabilities in the interval MUMIN-MUMAX
+   Double_t *r          = new Double_t[fNMax];   //the ratio of likliehoods = P(Mu|Nobserved)/P(MuBest|Nobserved)
+   Int_t    *rank       = new Int_t[fNMax];      //the ranked array corresponding to R (largest first)
+   Double_t *muBest     = new Double_t[fNMax];
+   Double_t *probMuBest = new Double_t[fNMax];
 
-  //calculate P(i | mu) and P(i | mu)/P(i | mubest)
-  Int_t i;
-  for(i = 0; i < fNMax; i++) {
-    muBest[i] = (Double_t)(i - fNbackground);
-    if(muBest[i]<0.0) muBest[i] = 0.0;
-    probMuBest[i] = Prob(i, muBest[i],  fNbackground);
-    p[i]          = Prob(i, mu,  fNbackground);
-    if(probMuBest[i] == 0.0) r[i] = 0.0;
-    else                     r[i] = p[i]/probMuBest[i];
-  }
+   //calculate P(i | mu) and P(i | mu)/P(i | mubest)
+   Int_t i;
+   for(i = 0; i < fNMax; i++) {
+      muBest[i] = (Double_t)(i - fNbackground);
+      if(muBest[i]<0.0) muBest[i] = 0.0;
+      probMuBest[i] = Prob(i, muBest[i],  fNbackground);
+      p[i]          = Prob(i, mu,  fNbackground);
+      if(probMuBest[i] == 0.0) r[i] = 0.0;
+      else                     r[i] = p[i]/probMuBest[i];
+   }
 
-  //rank the likelihood ratio
-  TMath::BubbleHigh(fNMax, r, rank);
+   //rank the likelihood ratio
+   TMath::BubbleHigh(fNMax, r, rank);
 
-  //search through the probability table and get the i for the CL
-  Double_t sum = 0.0;
-  Int_t iMax = rank[0];
-  Int_t iMin = rank[0];
-  for(i = 0; i < fNMax; i++) {
-    sum += p[rank[i]];
-    if(iMax < rank[i]) iMax = rank[i];
-    if(iMin > rank[i]) iMin = rank[i];
-    if(sum >= fCL) break;
-  }
+   //search through the probability table and get the i for the CL
+   Double_t sum = 0.0;
+   Int_t iMax = rank[0];
+   Int_t iMin = rank[0];
+   for(i = 0; i < fNMax; i++) {
+      sum += p[rank[i]];
+      if(iMax < rank[i]) iMax = rank[i];
+      if(iMin > rank[i]) iMin = rank[i];
+      if(sum >= fCL) break;
+   }
 
-  delete [] p;
-  delete [] r;
-  delete [] rank;
-  delete [] muBest;
-  delete [] probMuBest;
+   delete [] p;
+   delete [] r;
+   delete [] rank;
+   delete [] muBest;
+   delete [] probMuBest;
 
-  if((fNobserved <= iMax) && (fNobserved >= iMin)) return 1;
-  else return 0;
+   if((fNobserved <= iMax) && (fNobserved >= iMin)) return 1;
+   else return 0;
 }
 
 
@@ -206,45 +207,44 @@ Double_t TFeldmanCousins::Prob(Int_t N, Double_t mu, Double_t B)
 // a mean of mu+B events with a variance of N //
 ////////////////////////////////////////////////
 
-  //calculate the factorial
-  Double_t    factorial = 1.0;
-  if (N == 2) factorial = 2.0;
-  else if (N > 2) {
-    for (Int_t ifact = N; ifact>=2; ifact--) {
-      factorial = (Double_t)ifact * factorial;
-    }
-  }
+   //calculate the factorial
+   Double_t    factorial = 1.0;
+   if (N == 2) factorial = 2.0;
+   else if (N > 2) {
+      for (Int_t ifact = N; ifact>=2; ifact--) {
+         factorial = (Double_t)ifact * factorial;
+      }
+   }
 
-  Double_t sum = mu+B;
-  Double_t power;
-  if      (N==1) power = sum;
-  else if (N==2) power = sum*sum;
-  else if (N==3) power = sum*sum*sum;
-  else if (N==4) power = sum*sum*sum*sum;
-  else           power = pow(sum, N);
+   Double_t sum = mu+B;
+   Double_t power;
+   if      (N==1) power = sum;
+   else if (N==2) power = sum*sum;
+   else if (N==3) power = sum*sum*sum;
+   else if (N==4) power = sum*sum*sum*sum;
+   else           power = pow(sum, N);
 
-  return ( power * exp(-sum) / factorial );
+   return ( power * exp(-sum) / factorial );
 }
 
 //______________________________________________________________________________
 void TFeldmanCousins::SetMuMax(Double_t newMax)
 {
- fMuMax   = newMax;
- fNMax    = (Int_t)newMax;
- SetMuStep(fMuStep);
+   //set maximum value of signal to use in calculating the tables
+   fMuMax   = newMax;
+   fNMax    = (Int_t)newMax;
+   SetMuStep(fMuStep);
 }
 
 //______________________________________________________________________________
 void TFeldmanCousins::SetMuStep(Double_t newMuStep)
 {
-  if(newMuStep == 0.0)
-  {
-    cout << "TFeldmanCousins::SetMuStep ERROR New step size is zero - unable to change value"<< endl;
-    return;
-  }
-  else
-  {
-    fMuStep = newMuStep;
-    fNMuStep = (Int_t)((fMuMax - fMuMin)/fMuStep);
-  }
+   //set the step in signal to use when generating tables
+   if(newMuStep == 0.0) {
+      cout << "TFeldmanCousins::SetMuStep ERROR New step size is zero - unable to change value"<< endl;
+      return;
+   } else {
+      fMuStep = newMuStep;
+      fNMuStep = (Int_t)((fMuMax - fMuMin)/fMuStep);
+   }
 }
