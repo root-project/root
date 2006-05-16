@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.95 2006/05/04 19:00:51 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.96 2006/05/05 15:34:30 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -668,9 +668,9 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
          classFile << "<hr width=300>" << endl;
          classFile << "<!--SDL--><em><a href=\"#" << classPtr->GetName();
          if (IsNamespace(classPtr)) {
-             classFile << ":description\">namespace description</a>";
+            classFile << ":description\">namespace description</a>";
          } else {
-             classFile << ":description\">class description</a>";
+            classFile << ":description\">class description</a>";
          }
 
          // make a link to the '.cxx' file
@@ -1782,7 +1782,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
 //        dir      - direction to traverse tree: up, down or both
 //
 
-    if (dir == kBoth) {
+   if (dir == kBoth) {
       out << "<!--INHERITANCE TREE-->" << endl;
 
       // draw class tree into nested tables recursively
@@ -1792,15 +1792,15 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       out << "<table width=\"100%\" border=\"1\"><tr><td>" << endl;
       out << "<table width=\"100%\" border=\"0\" ";
       out << "cellpadding =\"0\" cellspacing=\"2\"><tr>" << endl;
-    } else {
-       out << "<table><tr>";
-    }
+   } else {
+      out << "<table><tr>";
+   }
 
-    ////////////////////////////////////////////////////////
-    // Loop up to mother classes
-    if (dir == kUp || dir == kBoth) {
+   ////////////////////////////////////////////////////////
+   // Loop up to mother classes
+   if (dir == kUp || dir == kBoth) {
 
-       // make a loop on base classes
+      // make a loop on base classes
       TBaseClass *inheritFrom;
       TIter nextBase(classPtr->GetListOfBases());
 
@@ -1808,39 +1808,38 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       Bool_t first = kTRUE;
       while ((inheritFrom = (TBaseClass *) nextBase())) {
 
-        if (first) {
-          out << "<td><table><tr>" << endl;
-          first = kFALSE;
-        } else
-           out << "</tr><tr>" << endl;
-        out << "<td bgcolor=\""
+         if (first) {
+            out << "<td><table><tr>" << endl;
+            first = kFALSE;
+         } else
+            out << "</tr><tr>" << endl;
+         out << "<td bgcolor=\""
             << Form("#%02x%02x%02x", bgcolor, bgcolor, bgcolor)
             << "\" align=\"right\">" << endl;
-        // get a class
-        TClass *classInh =
-          GetClass((const char *) inheritFrom->GetName());
-        if (classInh)
-           ClassHtmlTree(out, classInh, kUp, depth+1);
-        else
-           out << "<tt>"
-               << (const char *) inheritFrom->GetName()
-               << "</tt>";
-        out << "</td>"<< endl;
+         // get a class
+         TClass *classInh = GetClass((const char *) inheritFrom->GetName());
+         if (classInh)
+            ClassHtmlTree(out, classInh, kUp, depth+1);
+         else
+            out << "<tt>"
+                << (const char *) inheritFrom->GetName()
+                << "</tt>";
+         out << "</td>"<< endl;
       }
       if (!first) {
-        out << "</tr></table></td>" << endl; // put it in additional row in table
-           out << "<td>&lt;-</td>";
+         out << "</tr></table></td>" << endl; // put it in additional row in table
+         out << "<td>&lt;-</td>";
       }
-    }
+   }
 
-    out << "<td>" << endl; // put it in additional row in table
-    ////////////////////////////////////////////////////////
-    // Output Class Name
+   out << "<td>" << endl; // put it in additional row in table
+   ////////////////////////////////////////////////////////
+   // Output Class Name
 
-    const char *className = classPtr->GetName();
-    char *htmlFile = GetHtmlFileName(classPtr);
+   const char *className = classPtr->GetName();
+   char *htmlFile = GetHtmlFileName(classPtr);
 
-    if (dir == kUp) {
+   if (dir == kUp) {
       if (htmlFile) {
          out << "<center><tt><a name=\"" << className;
          out << "\" href=\"" << htmlFile << "\">";
@@ -1850,9 +1849,9 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
          htmlFile = 0;
       } else
          ReplaceSpecialChars(out, className);
-    }
+   }
 
-    if (dir == kBoth) {
+   if (dir == kBoth) {
       if (htmlFile) {
          out << "<center><big><b><tt><a name=\"" << className;
          out << "\" href=\"" << htmlFile << "\">";
@@ -1862,14 +1861,14 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
          htmlFile = 0;
       } else
          ReplaceSpecialChars(out, className);
-    }
+   }
 
-    out << "</td>" << endl; // put it in additional row in table
+   out << "</td>" << endl; // put it in additional row in table
 
-    ////////////////////////////////////////////////////////
-    // Loop down to child classes
+   ////////////////////////////////////////////////////////
+   // Loop down to child classes
 
-    if (dir == kDown || dir == kBoth) {
+   if (dir == kDown || dir == kBoth) {
 
       // 1. make a list of class names
       // 2. use DescendHierarchy
@@ -1884,11 +1883,11 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       out<<"</td>" << endl;
 
       // free allocated memory
-    }
+   }
 
-    out << "</tr></table>" << endl;
-    if (dir == kBoth)
-       out << "</td></tr></table></td></tr></table>"<<endl;
+   out << "</tr></table>" << endl;
+   if (dir == kBoth)
+      out << "</td></tr></table></td></tr></table>"<<endl;
 }
 
 
@@ -2577,42 +2576,42 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
       // loop on all classes
       for (i = 0; i < numberOfClasses; i++) {
 
-        // get class
-        TClass *basePtr = GetClass((const char *) classNames[i]);
-        if (basePtr == 0) {
-           Warning("THtml::CreateHierarchy", "skipping class %s\n", classNames[i]);
-           continue;
-        }
+         // get class
+         TClass *basePtr = GetClass((const char *) classNames[i]);
+         if (basePtr == 0) {
+            Warning("THtml::CreateHierarchy", "skipping class %s\n", classNames[i]);
+            continue;
+         }
 
-        // Find basic base classes
-        TList *bases = basePtr->GetListOfBases();
-        if (bases && bases->IsEmpty()){
+         // Find basic base classes
+         TList *bases = basePtr->GetListOfBases();
+         if (bases && bases->IsEmpty()){
 
-          out << "<hr>" << endl;
+            out << "<hr>" << endl;
 
-          out << "<table><tr><td><ul><li><tt>";
-          char *htmlFile = GetHtmlFileName(basePtr);
-          if (htmlFile) {
-             out << "<a name=\"";
-             out << classNames[i];
-             out << "\" href=\"";
-             out << htmlFile;
-             out << "\">";
-             ReplaceSpecialChars(out, classNames[i]);
-             out << "</a>";
-             delete[]htmlFile;
-             htmlFile = 0;
-          } else {
-             ReplaceSpecialChars(out, classNames[i]);
-          }
+            out << "<table><tr><td><ul><li><tt>";
+            char *htmlFile = GetHtmlFileName(basePtr);
+            if (htmlFile) {
+               out << "<a name=\"";
+               out << classNames[i];
+               out << "\" href=\"";
+               out << htmlFile;
+               out << "\">";
+               ReplaceSpecialChars(out, classNames[i]);
+               out << "</a>";
+               delete[]htmlFile;
+               htmlFile = 0;
+            } else {
+               ReplaceSpecialChars(out, classNames[i]);
+            }
 
-          // find derived classes
-          out << "</tt></li></ul></td>";
-          fHierarchyLines = 0;
-          DescendHierarchy(out,basePtr,classNames,numberOfClasses);
+            // find derived classes
+            out << "</tt></li></ul></td>";
+            fHierarchyLines = 0;
+            DescendHierarchy(out,basePtr,classNames,numberOfClasses);
 
-          out << "</tr></table>" << endl;
-        }
+            out << "</tr></table>" << endl;
+         }
       }
 
       // write out footer
@@ -3671,6 +3670,7 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
 //______________________________________________________________________________
 const char* THtml::GetDeclFileName(TClass * cl) const
 {
+   //return declaration file name
    std::map<TClass*,std::string>::const_iterator iClDecl = fGuessedDeclFileNames.find(cl);
    if (iClDecl == fGuessedDeclFileNames.end()) return cl->GetDeclFileName();
    return iClDecl->second.c_str();
@@ -3679,6 +3679,7 @@ const char* THtml::GetDeclFileName(TClass * cl) const
 //______________________________________________________________________________
 const char* THtml::GetImplFileName(TClass * cl) const
 {
+   //return implementation file name
    std::map<TClass*,std::string>::const_iterator iClImpl = fGuessedImplFileNames.find(cl);
    if (iClImpl == fGuessedImplFileNames.end()) return cl->GetImplFileName();
    return iClImpl->second.c_str();
@@ -3925,10 +3926,10 @@ void THtml::MakeTree(const char *className, Bool_t force)
    if (!util) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-          if (h->LoadPlugin() == -1)
+         if (h->LoadPlugin() == -1)
             return;
-          h->ExecPlugin(0);
-          util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
+         h->ExecPlugin(0);
+         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
       }
    }
    util->MakeCanvas("","psCanvas",0,0,1000,1200);
@@ -4123,8 +4124,7 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title, TClass *cls/*=0*/
           endl;
       out << "<!--                                             -->" <<
           endl;
-      out << "<!--   Date: " << date.
-          AsString() << "            -->" << endl;
+      out << "<!--   Date: " << date.AsString() << "            -->" << endl;
       out << "<!--                                             -->" <<
           endl;
       out << "<head>" << endl;
