@@ -52,7 +52,8 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p, Int_t id, Int_t width, Int_t
                     fViewer(0),
                     fIsInPad(kTRUE)
 {
-   //Create tabs
+   // Create tabs.
+   
    CreateLightsTab();
    CreateGuidesTab();
    CreateClippingTab();
@@ -65,6 +66,7 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p, Int_t id, Int_t width, Int_t
    ged->fCanvas = 0;
    TGLViewer::Class()->GetEditorList()->Add(ged);
 }
+
 
 //______________________________________________________________________________
 TGLViewerEditor::TGLViewerEditor(const TGWindow *p)
@@ -99,7 +101,8 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p)
                     fViewer(0),
                     fIsInPad(kFALSE)
 {
-   //Create tabs
+   // Constructor. Create tabs.
+   
    CreateLightsTab();
    CreateGuidesTab();
    CreateClippingTab();
@@ -108,10 +111,12 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p)
    fTab->MapSubwindows();
 }
 
+
 //______________________________________________________________________________
 TGLViewerEditor::~TGLViewerEditor()
 {
-   //Try to cleanup
+   // Destructor.
+   
    SetCleanup(kDeepCleanup);
    Cleanup();
 
@@ -122,11 +127,12 @@ TGLViewerEditor::~TGLViewerEditor()
    fClipFrame->Cleanup();
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::ConnectSignals2Slots()
 {
-   //Connect check buttons
-   //Do I really need this function, or I can connect directly in CreateXXXTab functions ???
+   // Connect check buttons.
+   
    fTopLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
    fRightLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
    fBottomLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
@@ -153,10 +159,12 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::SetModel(TVirtualPad *pad, TObject *obj, Int_t)
 {
-   //Sets model or disables/hides viewer
+   // Sets model or disables/hides viewer.
+
    fViewer = 0;
    fModel = 0;
    fPad = 0;
@@ -192,17 +200,21 @@ void TGLViewerEditor::SetModel(TVirtualPad *pad, TObject *obj, Int_t)
    SetActive();
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::DoButton()
 {
-   //Lights radio button was clicked
+   // Lights radio button was clicked.
+   
    fViewer->ToggleLight(TGLViewer::ELight(((TGButton *) gTQSender)->WidgetId()));
 }
+
 
 //______________________________________________________________________________
 void TGLViewerEditor::UpdateViewerGuides()
 {
-   // Update viewer with GUI state
+   // Update viewer with GUI state.
+   
    TGLViewer::EAxesType axesType = TGLViewer::kAxesNone;
    for (Int_t i = 1; i < 4; i++) {
       TGButton * button = fAxesContainer->GetButton(i);
@@ -217,10 +229,12 @@ void TGLViewerEditor::UpdateViewerGuides()
    UpdateReferencePos();
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::CreateLightsTab()
 {
-   //Creates "Lights" tab
+   //Creates "Lights" tab.
+
    fLightFrame = new TGGroupFrame(this, "Light sources:", kLHintsTop | kLHintsCenterX);
    fLightFrame->SetCleanup(kDeepCleanup);
    fLightFrame->SetTitlePos(TGGroupFrame::kLeft);
@@ -247,10 +261,12 @@ void TGLViewerEditor::CreateLightsTab()
    fLightFrame->AddFrame(fFrontLight);
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::CreateGuidesTab()
 {
-   //Create "Guides" tab
+   // Create "Guides" tab.
+   
    fGuidesFrame = fTab->AddTab("Guides");
    fGuidesTabEl = fTab->GetTabTab("Guides");
 
@@ -306,10 +322,12 @@ namespace
    };
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::CreateClippingTab()
 {
-   // Create GUI controls - clip type (none/plane/box) and plane/box properties
+   // Create GUI controls - clip type (none/plane/box) and plane/box properties.
+   
    fClipFrame = fTab->AddTab("Clipping");
    fClipTabEl = fTab->GetTabTab("Clipping");
    //
@@ -369,27 +387,33 @@ void TGLViewerEditor::CreateClippingTab()
    fClipFrame->AddFrame(fApplyButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::UpdateReferencePos()
 {
    // Enable/disable reference position (x/y/z) number edits based on
-   // reference check box
+   // reference check box.
+   
    fReferencePosX->SetState(fReferenceOn->IsDown());
    fReferencePosY->SetState(fReferenceOn->IsDown());
    fReferencePosZ->SetState(fReferenceOn->IsDown());
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::ClipValueChanged()
 {
-   //One of number edtries was changed
+   // One of number edtries was changed.
+   
    fApplyButton->SetState(kButtonUp);
 }
+
 
 //______________________________________________________________________________
 void TGLViewerEditor::ClipTypeChanged(Int_t id)
 {
-   // Clip type radio button changed - update viewer
+   // Clip type radio button changed - update viewer.
+
    if (id == 1) {
       fCurrentClip = kClipNone;
       fViewer->SetCurrentClip(kClipNone, kFALSE);
@@ -408,10 +432,12 @@ void TGLViewerEditor::ClipTypeChanged(Int_t id)
    fViewer->RequestDraw();
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::UpdateViewerClip()
 {
-   //Change clipping volume
+   // Change clipping volume.
+
    Double_t data[6] = {0.};
    // Fetch GUI state for clip if 'type' into 'data' vector
    if (fCurrentClip == kClipPlane)
@@ -429,10 +455,12 @@ void TGLViewerEditor::UpdateViewerClip()
    fViewer->RequestDraw();
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::SetCurrentClip()
 {
-   // Set current (active) GUI clip type from 'type'
+   // Set current (active) GUI clip type from 'type'.
+
    Bool_t edit = kFALSE;
    fViewer->GetCurrentClip(fCurrentClip, edit);
    fEdit->SetDown(edit);
@@ -472,10 +500,12 @@ void TGLViewerEditor::SetCurrentClip()
    fViewer->RequestDraw();
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::SetGuides()
 {
-   //Set cintriks in "Guides" tab
+   // Set cintriks in "Guides" tab.
+   
    TGLViewer::EAxesType axesType = TGLViewer::kAxesNone;
    Bool_t referenceOn = kFALSE;
    Double_t referencePos[3] = {0.};
@@ -492,9 +522,12 @@ void TGLViewerEditor::SetGuides()
    UpdateReferencePos();
 }
 
+
 //______________________________________________________________________________
 void TGLViewerEditor::HideClippingGUI()
 {
+   // Hide clipping GUI.
+
    fClipFrame->HideFrame(fPlanePropFrame);
    fClipFrame->HideFrame(fBoxPropFrame);
 }
