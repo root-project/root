@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.53 2006/03/28 23:59:13 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.54 2006/05/10 14:06:06 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -63,6 +63,14 @@ static Int_t BeepHook()
    if (!gSystem) return 0;
    gSystem->Beep();
    return 1;
+}
+
+//______________________________________________________________________________
+static void ResetTermAtExit()
+{
+   // Restore terminal to non-raw mode.
+
+   Getlinem(kCleanUp, 0);
 }
 
 
@@ -201,6 +209,8 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    logon = gEnv->GetValue("Rint.History", defhist);
    Gl_histinit((char *)logon);
    Gl_windowchanged();
+
+   atexit(ResetTermAtExit);
 
    // Setup for tab completion
    gTabCom      = new TTabCom;
