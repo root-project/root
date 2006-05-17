@@ -6,11 +6,12 @@
 // Author: Rene Brun
    
 void geomAtlas() {
-   if (!gSystem->AccessPathName("atlas.root")) {
-      TGeoManager::Import("atlas.root");
+   const char *fname = "atlas.root";
+   if (!gSystem->AccessPathName(fname)) {
+      TGeoManager::Import(fname);
    } else {
-      printf("accessing geometry file from http://root.cern.ch/files\n");
-      TGeoManager::Import("http://root.cern.ch/files/atlas.root");
+      printf("accessing %s file from http://root.cern.ch/files\n",fname);
+      TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
    }
    gGeoManager->DefaultColors();
    gGeoManager->SetMaxVisNodes(5000);

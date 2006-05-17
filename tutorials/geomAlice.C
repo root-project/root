@@ -7,11 +7,12 @@
       
 void geomAlice()
 {
-   if (!gSystem->AccessPathName("alice.root")) {
-      TGeoManager::Import("alice.root");
+   const char *fname = "alice.root";
+   if (!gSystem->AccessPathName(fname)) {
+      TGeoManager::Import(fname);
    } else {
-      printf("accessing geometry file from http://root.cern.ch/files\n");
-      TGeoManager::Import("http://root.cern.ch/files/alice.root");
+      printf("accessing %s file from http://root.cern.ch/files\n",fname);
+      TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
    }
    //gGeoManager->DefaultColors();
    gGeoManager->GetVolume("HUFL")->InvisibleAll();
