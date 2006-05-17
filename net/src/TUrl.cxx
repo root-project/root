@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.27 2006/05/01 20:11:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.28 2006/05/11 16:14:31 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -116,13 +116,9 @@ tryfile:
 
    u = u0;
 
-   Bool_t isWin32File = kFALSE;
-#ifdef R__WIN32
-   isWin32File = defaultIsFile;
-#endif
-
    char *t, *s2;
-   if ((s = strstr(u, ":/")) && !isWin32File) {
+   // allow x:/path as Windows filename
+   if ((s = strstr(u, ":/")) && u+1 != s) {
       if (*(s+2) != '/') {
          Error("TUrl", "malformed, URL must contain \"://\"");
          fPort = -1;
