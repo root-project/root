@@ -1,4 +1,4 @@
-// @(#)root/pythia:$Name:  $:$Id: TPythia.cxx,v 1.4 2006/05/14 07:58:53 brun Exp $
+// @(#)root/pythia:$Name:  $:$Id: TPythia.cxx,v 1.5 2006/05/15 06:31:19 brun Exp $
 // Author: Piotr Golonka   10/09/97
 
 /*************************************************************************
@@ -276,6 +276,17 @@ Int_t TPythia::ImportParticles(TClonesArray *particles, Option_t *option)
 }
 
 //====================== access to common PYSUBS ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Provides information on latest event generated,        */
+//* statistics. Contains status codes and parameters       */
+//* regulating the performance of program.                 */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/PYSUBS/MSEL,MSUB(200),KFIN(2,-40:40),CKIN(200)  */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 void TPythia::SetMSEL(Int_t sel)
@@ -294,7 +305,7 @@ void TPythia::SetMSEL(Int_t sel)
 //______________________________________________________________________________
 Int_t TPythia::GetMSEL() const
 {
-// returns a current value of MSEL in common PYSUBS.
+// returns current value of MSEL in common PYSUBS.
 
    return PYSUBS.msel;
 }
@@ -302,6 +313,7 @@ Int_t TPythia::GetMSEL() const
 //______________________________________________________________________________
 void TPythia::SetMSUB(Int_t isub, Bool_t msub)
 {
+// sets value of MSEL in common PYSUBS.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:SetMSUB(isub,msub):\n ");
       printf ("      isub=%i is out of range [1..200]!\n",isub);
@@ -316,6 +328,7 @@ void TPythia::SetMSUB(Int_t isub, Bool_t msub)
 //______________________________________________________________________________
 Bool_t TPythia::GetMSUB(Int_t isub) const
 {
+// returns current value of MSUB in common PYSUBS.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:GetMSUB(isub): \n ");
       printf ("      isub=%i is out of range [1..200]!\n",isub);
@@ -330,6 +343,7 @@ Bool_t TPythia::GetMSUB(Int_t isub) const
 //______________________________________________________________________________
 void TPythia::SetKFIN(Int_t i, Int_t j, Bool_t kfin)
 {
+// sets value of KFIN in common PYSUBS.
    if ( i!=1 &&  i!=2 ) {
       printf("ERROR in TPythia::SetKFIN(i,j,kfin):\n");
       printf("      side: i=%i is neither 1(=beam) nor 2(=target)\n",i);
@@ -350,6 +364,7 @@ void TPythia::SetKFIN(Int_t i, Int_t j, Bool_t kfin)
 //______________________________________________________________________________
 Bool_t TPythia::GetKFIN(Int_t i, Int_t j) const
 {
+// returns current value of KFIN in common PYSUBS.
    if ( i!=1 && i!=2 ) {
       printf("ERROR in TPythia::GetKFIN(i,j):\n");
       printf("      side: i=%i is neither 1(=beam) nor 2(=target)\n",i);
@@ -369,6 +384,7 @@ Bool_t TPythia::GetKFIN(Int_t i, Int_t j) const
 //______________________________________________________________________________
 void TPythia::SetCKIN(Int_t key, Float_t value)
 {
+// sets value of CKIN in common PYSUBS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:SetCKIN(key,value): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -382,6 +398,7 @@ void TPythia::SetCKIN(Int_t key, Float_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetCKIN(Int_t key) const
 {
+// returns current value of CKIN in common PYSUBS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:GetCKIN(key): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -397,6 +414,7 @@ Float_t TPythia::GetCKIN(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetMSTP(Int_t key,Int_t value)
 {
+// sets value of MSTP in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:SetMSTP(key,value): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -410,6 +428,7 @@ void TPythia::SetMSTP(Int_t key,Int_t value)
 //______________________________________________________________________________
 Int_t TPythia::GetMSTP(Int_t key) const
 {
+// returns current value of MSTP in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:GetMSTP(key): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -423,6 +442,7 @@ Int_t TPythia::GetMSTP(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetPARP(Int_t key,Float_t value)
 {
+// sets value of PARP in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:SetPARP(key,value): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -436,6 +456,7 @@ void TPythia::SetPARP(Int_t key,Float_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetPARP(Int_t key) const
 {
+// returns current value of PARP in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:GetPARP(key): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -450,6 +471,7 @@ Float_t TPythia::GetPARP(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetMSTI(Int_t key,Int_t value)
 {
+// sets value of MSTI in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:SetMSTI(key,value): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -464,6 +486,7 @@ void TPythia::SetMSTI(Int_t key,Int_t value)
 //______________________________________________________________________________
 Int_t TPythia::GetMSTI(Int_t key) const
 {
+// returns current value of MSTI in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:GetMSTI(key): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -478,6 +501,7 @@ Int_t TPythia::GetMSTI(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetPARI(Int_t key,Float_t value)
 {
+// sets value of PARI in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:SetPARI(key,value): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -491,6 +515,7 @@ void TPythia::SetPARI(Int_t key,Float_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetPARI(Int_t key) const
 {
+// returns current value of PARI in common PYPARS.
    if ( key<1 || key>200 ) {
       printf ("ERROR in TPythia:GetPARI(key): \n ");
       printf ("      key=%i is out of range [1..200]!\n",key);
@@ -503,10 +528,37 @@ Float_t TPythia::GetPARI(Int_t key) const
 
 
 //====================== access to common PYINT1 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Allows to run program with desired subset of process,  */
+//* or restrict flavour and kinematics.                    */
+//*                                                        */
+//*  MSEL - switches between full user-control and pre-    */
+//*          programed alternatives (look at documentation)*/
+//*  MSUB - selects which subset of subprocesses to include*/
+//*         in the generation(ordering follows ISUB code)  */
+//*  KFIN[J][I]-provides an option to switch contributions  */
+//*         to the cross-sections ->allows restriction on  */
+//*         final state flavour. I=0->beam side of event;  */
+//*         I=1->target side.J-enumerates flavours:        */
+//*         WARNING!!!:In original F77-version flavours are*/
+//*         enumerated from -40 to 40 -according to the KF */
+//*         code. In 'C' there isn't a possibility to have */
+//*         an array indexes start from number different   */
+//*         from 0. Thus, one have to add 40 to desired KF */
+//*         code to obtain proper index in 'C'-array.      */
+//*  CKIN - kinematics cuts settings - see documentation.  */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/PYINT1/MINT(400),VINT(400)                      */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 void  TPythia::SetMINT(Int_t key, Int_t value)
 {
+// sets value of MINT in common PYINT1.
    if (key<1 || key>400) {
       printf ("ERROR in TPythia:SetMINT(key,value): \n ");
       printf ("      key=%i is out of range [1..400]!\n",key);
@@ -520,6 +572,7 @@ void  TPythia::SetMINT(Int_t key, Int_t value)
 //______________________________________________________________________________
 Int_t TPythia::GetMINT(Int_t key) const
 {
+// returns current value of MINT in common PYINT1.
    if (key<1 || key>400) {
       printf ("ERROR in TPythia:GetMINT(key): \n ");
       printf ("      key=%i is out of range [1..400]!\n",key);
@@ -534,6 +587,7 @@ Int_t TPythia::GetMINT(Int_t key) const
 //______________________________________________________________________________
 void  TPythia::SetVINT(Int_t key, Float_t value)
 {
+// sets value of VINT in common PYINT1.
    if ( key<1 || key>400 ) {
       printf ("ERROR in TPythia:SetVINT(key,value): \n ");
       printf ("  array index: key=%i is out of range [1..400]!\n",key);
@@ -548,6 +602,7 @@ void  TPythia::SetVINT(Int_t key, Float_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetVINT(Int_t key) const
 {
+// returns current value of VINT in common PYINT1.
    if ( key<1 || key>400 ) {
       printf ("ERROR in TPythia:GetVINT(key): \n ");
       printf ("  array index: key=%i is out of range [0..400]!\n",key);
@@ -561,10 +616,23 @@ Float_t TPythia::GetVINT(Int_t key) const
 
 
 //====================== access to common PYINT2 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Worksapce arrays.                                      */
+//* These arrays collects a host of integer and real values*/
+//* used internaly during initialization/event generation. */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/PYINT2/ISET(200),KFPR(200,2),COEF(200,20),      */
+//*                ICOL(40,4,2)                            */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 void  TPythia::SetISET(Int_t isub,Int_t iset )
 {
+// sets value of ISET in common PYINT2.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:SetVSET(isub,iset): \n ");
       printf ("   isub=%i - out of range [1..200]!\n",isub);
@@ -584,6 +652,7 @@ void  TPythia::SetISET(Int_t isub,Int_t iset )
 //______________________________________________________________________________
 Int_t TPythia::GetISET(Int_t isub) const
 {
+// returns current value of ISET in common PYINT2.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:GetVSET(isub): \n ");
       printf ("      isub=%i - out of range [1..200]!\n",isub);
@@ -598,6 +667,7 @@ Int_t TPythia::GetISET(Int_t isub) const
 //______________________________________________________________________________
 void TPythia::SetKFPR(Int_t isub, Int_t j, Int_t kfpr)
 {
+// sets value of KFPR in common PYINT2.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:SetKFPR(isub,j,kf): \n ");
       printf ("      isub=%i is out of range [1..200]!\n",isub);
@@ -618,6 +688,7 @@ void TPythia::SetKFPR(Int_t isub, Int_t j, Int_t kfpr)
 //______________________________________________________________________________
 Int_t TPythia::GetKFPR(Int_t isub, Int_t j) const
 {
+// returns current value of KFPR in common PYINT2.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:GetKFPR(isub,j): \n ");
       printf ("      isub=%i is out of range [1..200]!\n",isub);
@@ -637,6 +708,7 @@ Int_t TPythia::GetKFPR(Int_t isub, Int_t j) const
 //______________________________________________________________________________
 void  TPythia::SetCOEF(Int_t isub, Int_t j, Float_t coef)
 {
+// sets value of COEF in common PYINT2.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:SetCOEF(isub,j,coef): \n ");
       printf ("      isub=%i is out of range [1..200]!\n",isub);
@@ -656,6 +728,7 @@ void  TPythia::SetCOEF(Int_t isub, Int_t j, Float_t coef)
 //______________________________________________________________________________
 Float_t TPythia::GetCOEF(Int_t isub, Int_t j) const
 {
+// returns current value of COEF in common PYINT2.
    if ( isub<1 || isub>200 ) {
       printf ("ERROR in TPythia:GetCOEF(isub,j): \n ");
       printf ("      isub=%i is out of range [0..200]!\n",isub);
@@ -676,6 +749,7 @@ Float_t TPythia::GetCOEF(Int_t isub, Int_t j) const
 //______________________________________________________________________________
 void TPythia::SetICOL(Int_t kf,Int_t i, Int_t j,Int_t value)
 {
+// sets value of ICOL in common PYINT2.
    if ( kf<1 || kf>40 ) {
       printf ("ERROR in TPythia:SetICOL(kf,i,j,value): \n ");
       printf ("      kf=%i is out of range [1..40]!\n",kf);
@@ -701,6 +775,7 @@ void TPythia::SetICOL(Int_t kf,Int_t i, Int_t j,Int_t value)
 //______________________________________________________________________________
 Int_t  TPythia::GetICOL(Int_t kf,Int_t i, Int_t j) const
 {
+// returns current value of ICOL in common PYINT2.
    if ( kf<1 || kf>40 ) {
       printf ("ERROR in TPythia:GetICOL(kf,i,j): \n ");
       printf ("      kf=%i is out of range [1..40]!\n",kf);
@@ -726,10 +801,21 @@ Int_t  TPythia::GetICOL(Int_t kf,Int_t i, Int_t j) const
 
 
 //====================== access to common PYINT3 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Workspace arrays.                                      */
+//* These arrays are necessary to store Jacobians, etc.    */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/PYINT3/XSFX(2,-40:40),ISIG(1000,3),SIGH(1000)   */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 Float_t TPythia::GetXSFX(Int_t side, Int_t kf) const
 {
+// returns current value of XSFX in common PYINT3.
    if (side!=1 && side !=2) {
       printf("ERROR in TPythia::GetXSFX(side,kf):\n");
       printf("      side=%i is neither 1(=beam) nor 2(=target)\n",side);
@@ -750,6 +836,7 @@ Float_t TPythia::GetXSFX(Int_t side, Int_t kf) const
 //______________________________________________________________________________
 Int_t TPythia::GetISIG(Int_t ichn, Int_t isig) const
 {
+// returns current value of ISIG in common PYINT3.
    if ( ichn<1 || ichn>1000 ) {
       printf("ERROR in TPythia::GetISIG(ichn,isig):\n");
       printf("      ichn=%i is out of range [1..1000]\n",ichn);
@@ -770,6 +857,7 @@ Int_t TPythia::GetISIG(Int_t ichn, Int_t isig) const
 //______________________________________________________________________________
 Float_t TPythia::GetSIGH(Int_t ichn) const
 {
+// returns current value of SIGH in common PYINT3.
    if (ichn<1 || ichn >1000) {
       printf("ERROR in TPythia::GetSIGH(ichn):\n");
       printf("      ichn=%i is out of range [1..1000]\n",ichn);
@@ -783,10 +871,23 @@ Float_t TPythia::GetSIGH(Int_t ichn) const
 
 
 //====================== access to common PYINT4 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Stores information about crosssections and parton dis- */
+//* tribution and relative final state weights             */
+//* WARNING!!! Values must not be changed by a user!!!     */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/PYINT4/WIDP(21:40,0:40),WIDE(21:40,0:40),       */
+//*                WIDS(21:40,3)                           */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 Float_t TPythia::GetWIDP(Int_t kf, Int_t j) const
 {
+// returns current value of WIDP in common PYINT4.
    if ( kf<21 || kf >40 ) {
       printf("ERROR in TPythia::GetWIDP(kf,j):\n");
       printf("      kf=%i is out of range [21..40]\n",kf);
@@ -807,6 +908,7 @@ Float_t TPythia::GetWIDP(Int_t kf, Int_t j) const
 //______________________________________________________________________________
 Float_t TPythia::GetWIDE(Int_t kf, Int_t j) const
 {
+// returns current value of WIDE in common PYINT4.
    if ( kf<21 || kf >40 ) {
       printf("ERROR in TPythia::GetWIDE(kf,j):\n");
       printf("      kf=%i is out of range [21..40]\n",kf);
@@ -827,6 +929,7 @@ Float_t TPythia::GetWIDE(Int_t kf, Int_t j) const
 //______________________________________________________________________________
 Float_t TPythia::GetWIDS(Int_t kf, Int_t j) const
 {
+// returns current value of WIDS in common PYINT4.
    if ( kf<21 || kf >40 ) {
       printf("ERROR in TPythia::GetWIDP(kf,j):\n");
       printf("      kf=%i is out of range [21..40]\n",kf);
@@ -847,10 +950,22 @@ Float_t TPythia::GetWIDS(Int_t kf, Int_t j) const
 
 
 //====================== access to common PYINT5 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Stores decay wieths for resonances                     */
+//* WARNING!!! Values must not be changed by a user!!!     */
+//*========================================================*/
+//
+//
+//*========================================================*/
+//* COMMON/PYINT5/NGEN(0:200,3),XSEC(0:200,3)              */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 Int_t TPythia::GetNGEN(Int_t isub, Int_t key) const
 {
+// returns current value of NGEN in common PYINT5.
    if ( isub<0 || isub>200 ) {
       printf("ERROR in TPythia::GetNGEN(isub.key):\n");
       printf("      isub=%i is out of range [0..200]\n",isub);
@@ -871,6 +986,7 @@ Int_t TPythia::GetNGEN(Int_t isub, Int_t key) const
 //______________________________________________________________________________
 Float_t TPythia::GetXSEC(Int_t isub, Int_t key) const
 {
+// returns current value of XSEC in common PYINT5.
    if ( isub<0 || isub >200 ) {
       printf("ERROR in TPythia::GetXSEC(isub.key):\n");
       printf("      isub=%i is out of range [0..200]\n",isub);
@@ -888,10 +1004,23 @@ Float_t TPythia::GetXSEC(Int_t isub, Int_t key) const
 }
 
 //====================== access to common LUDATR ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Gives access to character types variables:             */
+//*                                                        */
+//*  chaf - particle names(excluding charge) according to  */
+//*         KC-code                                        */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/LUDATR/MRLU(6),RRLU(100)                        */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 Int_t TPythia::GetMRLU(Int_t key) const
 {
+// returns current value of MRLU in common LUDATR.
    if ( key<1 || key>6 ) {
       printf("ERROR in TPythia::GetMRLU(key):\n");
       printf("      key=%i is out of range [1..6]\n",key);
@@ -905,6 +1034,7 @@ Int_t TPythia::GetMRLU(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetMRLU(Int_t key, Int_t seed)
 {
+// sets value of MRLU in common LUDATR.
    if ( key<1 || key>6 ) {
       printf("ERROR in TPythia::SetMRLU(key,seed):\n");
       printf("      key=%i is out of range [1..6]\n",key);
@@ -919,6 +1049,7 @@ void TPythia::SetMRLU(Int_t key, Int_t seed)
 //______________________________________________________________________________
 Float_t TPythia::GetRRLU(Int_t key) const
 {
+// returns current value of RRLU in common LUDATR.
    if ( key<1 || key>100 ) {
       printf("ERROR in TPythia::GetRRLU(key):\n");
       printf("      key=%i is out of range [1..100]\n",key);
@@ -932,6 +1063,7 @@ Float_t TPythia::GetRRLU(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetRRLU(Int_t key, Float_t value)
 {
+// sets value of RRLU in common LUDATR.
    if ( key<1 || key>100 ) {
       printf("ERROR in TPythia::SetRRLU(key,seed):\n");
       printf("      key=%i is out of range [1..100]\n",key);
@@ -943,10 +1075,38 @@ void TPythia::SetRRLU(Int_t key, Float_t value)
 }
 
 //====================== access to common LUDAT1 ===============================
+//***********************************************************/
+//*           D E S C R I P T I O N :                       */
+//*---------------------------------------------------------*/
+//*  N      - number of lines in K,P,V matrices occupied by */
+//*           current event                                 */
+//*  K[0][I] - Status Code KS (look at documentation)       */
+//*  K[1][I] - Parton/Particle KF code                      */
+//*  K[2][I] - Line number of Parrent Particle              */
+//*  K[3][I] - Line number of first daugher[or internal use]*/
+//*  K[4][I] - Line number of last daughter[or internal use]*/
+//*                                                         */
+//*  P[0][I] - Px - momentum in the x direction [GeV/c]     */
+//*  P[1][I] - Py - momentum in the y direction [GeV/c]     */
+//*  P[2][I] - Pz - momentum in the z direction [GeV/c]     */
+//*  P[3][I] - E  - energy [GeV]                            */
+//*  P[4][I] - m  - mass [Gev/c^2]                          */
+//*                                                         */
+//*  V[0][I] - x position of production vertex [mm]         */
+//*  V[1][I] - y position of production vertex [mm]         */
+//*  V[2][I] - z position of production vertex [mm]         */
+//*  V[3][I] - time of production [mm/c]=[3.33E-12 s]       */
+//*  V[4][I] - proper lifetime of particle [mm/c]           */
+//*=========================================================*/
+//
+//*=========================================================*/
+//* COMMON/LUDAT1/MSTU(200),PARU(200),MSTJ(200),PARJ(200)   */
+//*---------------------------------------------------------*/
 
 //______________________________________________________________________________
 Int_t TPythia::GetMSTU(Int_t key) const
 {
+// returns current value of MSTU in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::GetMSTU(key):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -961,6 +1121,7 @@ Int_t TPythia::GetMSTU(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetMSTU(Int_t key, Int_t value)
 {
+// sets value of MSTU in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::SetMSTU(key,value):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -975,6 +1136,7 @@ void TPythia::SetMSTU(Int_t key, Int_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetPARU(Int_t key) const
 {
+// returns current value of PARU in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::GetPARU(key):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -989,6 +1151,7 @@ Float_t TPythia::GetPARU(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetPARU(Int_t key, Float_t value)
 {
+// sets value of PARU in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::SetPARU(key,value):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -1002,6 +1165,7 @@ void TPythia::SetPARU(Int_t key, Float_t value)
 //______________________________________________________________________________
 Int_t TPythia::GetMSTJ(Int_t key) const
 {
+// returns current value of MSTJ in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::GetMSTJ(key):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -1016,6 +1180,7 @@ Int_t TPythia::GetMSTJ(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetMSTJ(Int_t key, Int_t value)
 {
+// sets value of MSTJ in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::SetMSTJ(key,value):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -1030,6 +1195,7 @@ void TPythia::SetMSTJ(Int_t key, Int_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetPARJ(Int_t key) const
 {
+// returns current value of PARJ in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::GetPARJ(key):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -1044,6 +1210,7 @@ Float_t TPythia::GetPARJ(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetPARJ(Int_t key, Float_t value)
 {
+// sets value of PARJ in common LUDAT1.
    if ( key<1 || key>200 ) {
       printf("ERROR in TPythia::SetPARJ(key,value):\n");
       printf("      key=%i is out of range [1..200]\n",key);
@@ -1059,10 +1226,26 @@ void TPythia::SetPARJ(Int_t key, Float_t value)
 
 
 //====================== access to common LUDAT2 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* This common regulates the performance of program and   */
+//*  gives access to somea number of status codes.         */
+//*                                                        */
+//*  MSTU,MPAR - related to utility function and Standard  */
+//*              Model (look at documentation)             */
+//*  MSTJ,PARJ - underlying physics assumptions            */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/LUDAT2/KCHG(500,3),PMASS(500,4),PARF(2000),     */
+//*               VCKM(4,4)                                */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 Int_t TPythia::GetKCHG(Int_t kc,Int_t key) const
 {
+// returns current value of KCHG in common LUDAT2.
    if ( kc<1 || kc>500 ) {
       printf("ERROR in TPythia::GetKCHG(kc,key):\n");
       printf("      kc=%i is out of range [1..500]\n",kc);
@@ -1082,6 +1265,7 @@ Int_t TPythia::GetKCHG(Int_t kc,Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetKCHG(Int_t kc,Int_t key, Int_t value)
 {
+// sets value of KCHG in common LUDAT2.
    if ( kc<1 || kc>500 ) {
       printf("ERROR in TPythia::SetKCHG(kc,key,value):\n");
       printf("      kc=%i is out of range [1..500]\n",kc);
@@ -1101,6 +1285,7 @@ void TPythia::SetKCHG(Int_t kc,Int_t key, Int_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetPMAS(Int_t kc,Int_t key) const
 {
+// returns current value of PMAS in common LUDAT2.
    if ( kc<1 || kc>500 ) {
       printf("ERROR in TPythia::GetPMAS(kc,key):\n");
       printf("      kc=%i is out of range [1..500]\n",kc);
@@ -1120,6 +1305,7 @@ Float_t TPythia::GetPMAS(Int_t kc,Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetPMAS(Int_t kc,Int_t key, Float_t value)
 {
+// sets value of PMAS in common LUDAT2.
    if ( kc<1 || kc>500 ) {
       printf("ERROR in TPythia::SetPMAS(kc,key,value):\n");
       printf("      kc=%i is out of range [1..500]\n",kc);
@@ -1140,6 +1326,7 @@ void TPythia::SetPMAS(Int_t kc,Int_t key, Float_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetPARF(Int_t key) const
 {
+// returns current value of PARF in common LUDAT2.
 
    if ( key<1 || key>2000 ) {
       printf("ERROR in TPythia::GetPARF(key):\n");
@@ -1154,6 +1341,7 @@ Float_t TPythia::GetPARF(Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetPARF(Int_t key, Float_t value)
 {
+// sets value of PARF in common LUDAT2.
    if ( key<1 || key>2000 ) {
       printf("ERROR in TPythia::SetPARF(key,value):\n");
       printf("      key=%i is out of range [1..2000]\n",key);
@@ -1167,6 +1355,7 @@ void TPythia::SetPARF(Int_t key, Float_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetVCKM(Int_t i,Int_t j) const
 {
+// returns current value of VCKM in common LUDAT2.
    if ( i<1 || i>4 ) {
       printf("ERROR in TPythia::GetVCKM(i,j):\n");
       printf("      up generation index i=%i is out of range [1..4]\n",i);
@@ -1187,6 +1376,7 @@ Float_t TPythia::GetVCKM(Int_t i,Int_t j) const
 //______________________________________________________________________________
 void TPythia::SetVCKM(Int_t i,Int_t j,Float_t value)
 {
+// sets value of VCKM in common LUDAT2.
    if ( i<1 || i>4 ) {
       printf("ERROR in TPythia::SetVCKM(i,j):\n");
       printf("      up generation index i=%i is out of range [1..4]\n",i);
@@ -1206,10 +1396,24 @@ void TPythia::SetVCKM(Int_t i,Int_t j,Float_t value)
 
 
 //====================== access to common LUDAT3 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* This gives access to a number of flavour treatment     */
+//*  constants/parameters and particle/parton data.        */
+//*                                                        */
+//* Look at the documentation for details...               */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/LUDAT3/MDCY(500,3),MDME(2000,2),BRAT(2000),     */
+//*               KFDP(2000,5)                             */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 Int_t TPythia::GetMDCY(Int_t kc,Int_t key) const
 {
+// returns current value of MDCY in common LUDAT3.
    if ( kc<1 || kc>500 ) {
       printf("ERROR in TPythia::GetMDCY(kc,key):\n");
       printf("      kc=%i is out of range [1..500]\n",kc);
@@ -1229,6 +1433,7 @@ Int_t TPythia::GetMDCY(Int_t kc,Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetMDCY(Int_t kc,Int_t key, Int_t value)
 {
+// sets value of MDCY in common LUDAT3.
    if ( kc<1 || kc>500 ) {
       printf("ERROR in TPythia::GetMDCY(kc,key,value):\n");
       printf("      kc=%i is out of range [1..500]\n",kc);
@@ -1248,6 +1453,7 @@ void TPythia::SetMDCY(Int_t kc,Int_t key, Int_t value)
 //______________________________________________________________________________
 Int_t TPythia::GetMDME(Int_t idc,Int_t key) const
 {
+// returns current value of MDME in common LUDAT3.
    if ( idc<1 || idc>2000 ) {
       printf("ERROR in TPythia::GetMDME(idc,key):\n");
       printf("      idc=%i is out of range [1..2000]\n",idc);
@@ -1268,6 +1474,7 @@ Int_t TPythia::GetMDME(Int_t idc,Int_t key) const
 //______________________________________________________________________________
 void TPythia::SetMDME(Int_t idc,Int_t key,Int_t value)
 {
+// sets value of MDME in common LUDAT3.
    if ( idc<1 || idc>2000 ) {
       printf("ERROR in TPythia::GetMDME(idc,key,value):\n");
       printf("      idc=%i is out of range [1..2000]\n",idc);
@@ -1288,6 +1495,7 @@ void TPythia::SetMDME(Int_t idc,Int_t key,Int_t value)
 //______________________________________________________________________________
 Float_t TPythia::GetBRAT(Int_t idc) const
 {
+// returns current value of BRAT in common LUDAT3.
    if ( idc<1 || idc>2000 ) {
       printf("ERROR in TPythia::GetBRAT(idc):\n");
       printf("      idc=%i is out of range [1..2000]\n",idc);
@@ -1302,6 +1510,7 @@ Float_t TPythia::GetBRAT(Int_t idc) const
 //______________________________________________________________________________
 void TPythia::SetBRAT(Int_t idc,Float_t value)
 {
+// sets value of BRAT in common LUDAT3.
    if ( idc<1 || idc>2000 ) {
       printf("ERROR in TPythia::SetBRAT(idc,value):\n");
       printf("      idc=%i is out of range [1..2000]\n",idc);
@@ -1316,6 +1525,7 @@ void TPythia::SetBRAT(Int_t idc,Float_t value)
 //______________________________________________________________________________
 Int_t TPythia::GetKFDP(Int_t idc,Int_t j) const
 {
+// returns current value of KFDP in common LUDAT3.
    if ( idc<1 || idc>2000 ) {
       printf("ERROR in TPythia::GetKFDP(idc,j):\n");
       printf("      idc=%i is out of range [1..2000]\n",idc);
@@ -1336,6 +1546,7 @@ Int_t TPythia::GetKFDP(Int_t idc,Int_t j) const
 //______________________________________________________________________________
 void TPythia::SetKFDP(Int_t idc,Int_t j,Int_t value)
 {
+// sets value of KFDP in common LUDAT3.
    if ( idc<1 || idc>2000 ) {
       printf("ERROR in TPythia::SetKFDP(idc,j,value):\n");
       printf("      idc=%i is out of range [1..2000]\n",idc);
@@ -1352,10 +1563,22 @@ void TPythia::SetKFDP(Int_t idc,Int_t j,Int_t value)
 }
 
 //====================== access to common LUDAT4 ===============================
+//**********************************************************/
+//*           D E S C R I P T I O N :                      */
+//*--------------------------------------------------------*/
+//* Gives access to particle decay data and parameters.    */
+//* Look at the documentation for details...               */
+//*========================================================*/
+//
+//*========================================================*/
+//* COMMON/LUDAT4/CHAF(500)                                */
+//* CHARACTER CHAF*8                                       */
+//*--------------------------------------------------------*/
 
 //______________________________________________________________________________
 char *TPythia::GetCHAF(Int_t kc) const
 {
+// returns current value of CHAF in common LUDAT4.
    static char buf[9]="";
 
    if ( kc<1 || kc>500 ) {
@@ -1375,6 +1598,7 @@ char *TPythia::GetCHAF(Int_t kc) const
 //______________________________________________________________________________
 void TPythia::SetCHAF(Int_t kc,char *name)
 {
+// sets value of CHAF in common LUDAT4.
 
    if ( kc<1 || kc>500 ) {
       printf("ERROR in TPythia::SetCHAF(kc,name):\n");
@@ -1564,6 +1788,7 @@ void TPythia::Luexec()
 //______________________________________________________________________________
 Int_t TPythia::Lucomp(Int_t kf)
 {
+// Calls JetSet's LuComp routine
    Long_t lkey = kf;
    return lucomp(lkey);
 }
