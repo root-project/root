@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.50 2006/04/20 14:36:48 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile3D.cxx,v 1.1 2006/05/17 06:59:24 brun Exp $
 // Author: Rene Brun   17/05/2006
 
 /*************************************************************************
@@ -63,6 +63,7 @@ ClassImp(TProfile3D)
 //  hprof3d->Draw();
 //}
 //
+// NOTE: A TProfile3D is drawn as it was a simple TH3
 
 //______________________________________________________________________________
 TProfile3D::TProfile3D() : TH3D()
@@ -241,6 +242,7 @@ void TProfile3D::Add(const TH1 *h1, Double_t c1)
    fTsumwxy += ac1*p1->fTsumwxy;
    fTsumwz  += ac1*p1->fTsumwz;
    fTsumwz2 += ac1*p1->fTsumwz2;
+   fTsumwxz += ac1*p1->fTsumwxz;
    fTsumwyz += ac1*p1->fTsumwyz;
    fTsumwt  += ac1*p1->fTsumwt;
    fTsumwt2 += ac1*p1->fTsumwt2;
@@ -317,6 +319,7 @@ void TProfile3D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    fTsumwxy = ac1*p1->fTsumwxy     + ac2*p2->fTsumwxy;
    fTsumwz  = ac1*p1->fTsumwz      + ac2*p2->fTsumwz;
    fTsumwz2 = ac1*p1->fTsumwz2     + ac2*p2->fTsumwz2;
+   fTsumwxz = ac1*p1->fTsumwxz     + ac2*p2->fTsumwxz;
    fTsumwyz = ac1*p1->fTsumwyz     + ac2*p2->fTsumwyz;
    fTsumwt  = ac1*p1->fTsumwt      + ac2*p2->fTsumwt;
    fTsumwt2 = ac1*p1->fTsumwt2     + ac2*p2->fTsumwt2;
@@ -564,6 +567,7 @@ void TProfile3D::Divide(const TH1 *h1)
             fTsumwxy += u*x*y;
             fTsumwz  += u;
             fTsumwz2 += u*z;
+            fTsumwxz += u*x*z;
             fTsumwyz += u*y*z;
             fTsumwt  += u;
             fTsumwt2 += u*u;
@@ -666,6 +670,7 @@ void TProfile3D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
             fTsumwxy += u*x*y;
             fTsumwz  += u*z;
             fTsumwz2 += u*z*z;
+            fTsumwxz += u*x*z;
             fTsumwyz += u*y*z;
             fTsumwt  += u;
             fTsumwt2 += u*u;
@@ -721,7 +726,7 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
-   binz =fZaxis.FindBin(y);
+   binz =fZaxis.FindBin(z);
    bin  = GetBin(binx,biny,binz);
    AddBinContent(bin, t);
    fSumw2.fArray[bin] += (Double_t)t*t;
@@ -735,6 +740,7 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
+//printf("x=%g, y=%g, z=%g, t=%g, binx=%d, biny=%d, binz=%d, bin=%d\n",x,y,z,t,binx,biny,binz,bin);
    ++fTsumw;
    ++fTsumw2;
    fTsumwx  += x;
@@ -744,6 +750,7 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
    fTsumwxy += x*y;
    fTsumwz  += z;
    fTsumwz2 += z*z;
+   fTsumwxz += x*z;
    fTsumwyz += y*z;
    fTsumwt  += t;
    fTsumwt2 += t*t;
@@ -791,7 +798,8 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t 
    fTsumwxy += u*x*y;
    fTsumwz  += u*z;
    fTsumwz2 += u*z*z;
-   fTsumwxy += u*y*z;
+   fTsumwxz += u*x*z;
+   fTsumwyz += u*y*z;
    fTsumwt  += u*t;
    fTsumwt2 += u*t*t;
    return bin;
@@ -908,9 +916,10 @@ void TProfile3D::GetStats(Double_t *stats) const
    // stats[6] = sumwxy
    // stats[7] = sumwz
    // stats[8] = sumwz2
-   // stats[9] = sumwyz
-   // stats[10]= sumwt
-   // stats[11]= sumwt2
+   // stats[9] = sumwxz
+   // stats[10]= sumwyz
+   // stats[11]= sumwt
+   // stats[12]= sumwt2
    //
    // If no axis-subrange is specified (via TAxis::SetRange), the array stats
    // is simply a copy of the statistics quantities computed at filling time.
@@ -924,7 +933,7 @@ void TProfile3D::GetStats(Double_t *stats) const
       Int_t bin, binx, biny,binz;
       Double_t w;
       Double_t x,y,z;
-      for (bin=0;bin<11;bin++) stats[bin] = 0;
+      for (bin=0;bin<kNstat;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
       for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();biny++) {
          z = fZaxis.GetBinCenter(binz);
@@ -943,9 +952,10 @@ void TProfile3D::GetStats(Double_t *stats) const
                stats[6]  += w*x*y;
                stats[7]  += w*z;
                stats[8]  += w*z*z;
-               stats[9]  += w*y*z;
-               stats[10] += fArray[bin];
-               stats[11] += fSumw2.fArray[bin];
+               stats[9]  += w*x*z;
+               stats[10] += w*y*z;
+               stats[11] += fArray[bin];
+               stats[12] += fSumw2.fArray[bin];
             }
          }
       }
@@ -959,109 +969,11 @@ void TProfile3D::GetStats(Double_t *stats) const
       stats[6]  = fTsumwxy;
       stats[7]  = fTsumwz;
       stats[8]  = fTsumwz2;
-      stats[9]  = fTsumwyz;
-      stats[10] = fTsumwt;
-      stats[11] = fTsumwt2;
+      stats[9]  = fTsumwxz;
+      stats[10] = fTsumwyz;
+      stats[11] = fTsumwt;
+      stats[12] = fTsumwt2;
    }
-}
-
-//___________________________________________________________________________
-void TProfile3D::LabelsDeflate(Option_t *ax)
-{
-// Reduce the number of bins for this axis to the number of bins having a label.
-
-   TAxis *axis = GetXaxis();
-   if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
-   if (!axis->GetLabels()) return;
-   TIter next(axis->GetLabels());
-   TObject *obj;
-   Int_t nbins = 0;
-   while ((obj = next())) {
-      if (obj->GetUniqueID()) nbins++;
-   }
-   if (nbins < 2) nbins = 2;
-   TProfile3D *hold = (TProfile3D*)Clone();
-   hold->SetDirectory(0);
-
-   //Int_t  nbxold = fXaxis.GetNbins();
-   Double_t xmin = axis->GetXmin();
-   Double_t xmax = axis->GetBinUpEdge(nbins);
-   axis->SetRange(0,0);
-   axis->Set(nbins,xmin,xmax);
-   Int_t  nbinsx = fXaxis.GetNbins();
-   Int_t  nbinsy = fYaxis.GetNbins();
-   Int_t  nbinsz = fZaxis.GetNbins();
-   Int_t ncells = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
-   SetBinsLength(ncells);
-   fBinEntries.Set(ncells);
-   fSumw2.Set(ncells);
-
-   //now loop on all bins and refill
-   Int_t bin,ibin,binx,biny,binz;
-   for (binz=1;binz<=nbinsz;binz++) {
-      for (biny=1;biny<=nbinsy;biny++) {
-         for (binx=1;binx<=nbinsx;binx++) {
-            bin   = GetBin(binx,biny,binz); //check
-            ibin  = biny*(nbinsx+2) + binx;
-            fArray[ibin] = hold->fArray[bin];
-            fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
-            fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
-         }
-      }
-   }
-   delete hold;
-}
-
-//___________________________________________________________________________
-void TProfile3D::LabelsInflate(Option_t *ax)
-{
-// Double the number of bins for axis.
-// Refill histogram
-// This function is called by TAxis::FindBin(const char *label)
-
-   TAxis *axis = GetXaxis();
-   if (ax[0] == 'y' || ax[0] == 'Y') axis = GetYaxis();
-   TProfile3D *hold = (TProfile3D*)Clone();
-   hold->SetDirectory(0);
-
-   Int_t  nbxold = fXaxis.GetNbins();
-   Int_t  nbyold = fYaxis.GetNbins();
-   //Int_t  nbzold = fZaxis.GetNbins();
-   Int_t  nbins  = axis->GetNbins();
-   Double_t xmin = axis->GetXmin();
-   Double_t xmax = axis->GetXmax();
-   xmax = xmin + 2*(xmax-xmin);
-   axis->SetRange(0,0);
-   axis->Set(2*nbins,xmin,xmax);
-   nbins *= 2;
-   Int_t  nbinsx = fXaxis.GetNbins();
-   Int_t  nbinsy = fYaxis.GetNbins();
-   Int_t  nbinsz = fZaxis.GetNbins();
-   Int_t ncells = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
-   SetBinsLength(ncells);
-   fBinEntries.Set(ncells);
-   fSumw2.Set(ncells);
-
-   //now loop on all bins and refill
-   Int_t bin,ibin,binx,biny,binz;
-   for (binz=1;binz<=nbinsz;binz++) {
-      for (biny=1;biny<=nbinsy;biny++) {
-         for (binx=1;binx<=nbinsx;binx++) {
-            bin   = biny*(nbxold+2) + binx; //check
-            ibin  = biny*(nbinsx+2) + binx; //check
-            if (binx <= nbxold && biny <= nbyold) {
-               fArray[ibin] = hold->fArray[bin];
-               fBinEntries.fArray[ibin] = hold->fBinEntries.fArray[bin];
-               fSumw2.fArray[ibin] = hold->fSumw2.fArray[bin];
-            } else {
-               fArray[ibin] = 0;
-               fBinEntries.fArray[ibin] = 0;
-               fSumw2.fArray[ibin] = 0;
-            }
-         }
-      }
-   }
-   delete hold;
 }
 
 //______________________________________________________________________________
@@ -1165,8 +1077,6 @@ Long64_t TProfile3D::Merge(TCollection *li)
             for (Int_t i = 0; i < nbentries; i++)
                Fill(h->fBuffer[5*i + 2], h->fBuffer[5*i + 3],
                     h->fBuffer[5*i + 4], h->fBuffer[5*i + 5], h->fBuffer[5*i + 1]);
-                           // Entries from buffers have to be filled one by one
-                           // because FillN doesn't resize histograms.
          }
       }
       if (!initialLimitsFound)
@@ -1181,6 +1091,7 @@ Long64_t TProfile3D::Merge(TCollection *li)
    Double_t nentries = GetEntries();
    Int_t binx, biny, binz, ix, iy, iz, nx, ny, nz, bin, ibin;
    Int_t nbix = fXaxis.GetNbins();
+   Int_t nbiy = fYaxis.GetNbins();
    Bool_t canRebin=TestBit(kCanRebin);
    ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
 
@@ -1203,7 +1114,8 @@ Long64_t TProfile3D::Merge(TCollection *li)
                iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
                for (binx = 0; binx <= nx + 1; binx++) {
                   ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
-                  bin = binx +(nx+2)*biny; //check
+                  bin  = binx +(nx+2)*(biny + (ny+2)*binz);
+                  ibin = ix   +(nbix+2)*(iy + (nbiy+2)*iz);
                   if ((!same) && (binx == 0 || binx == nx + 1
                                || biny == 0 || biny == ny + 1 
                                || binz == 0 || binz == nz + 1)) {
@@ -1214,7 +1126,6 @@ Long64_t TProfile3D::Merge(TCollection *li)
                         return -1;
                      }
                   }
-                  ibin = ix +(nbix+2)*iy; //check
                   fArray[ibin]             += h->GetW()[bin];
                   fSumw2.fArray[ibin]      += h->GetW2()[bin];
                   fBinEntries.fArray[ibin] += h->GetB()[bin];
@@ -1231,6 +1142,7 @@ Long64_t TProfile3D::Merge(TCollection *li)
          fTsumwxy += h->fTsumwxy;
          fTsumwz  += h->fTsumwz;
          fTsumwz2 += h->fTsumwz2;
+         fTsumwxz += h->fTsumwxz;
          fTsumwyz += h->fTsumwyz;
          fTsumwt  += h->fTsumwt;
          fTsumwt2 += h->fTsumwt2;
@@ -1318,15 +1230,15 @@ TH3D *TProfile3D::ProjectionXYZ(const char *name, Option_t *option) const
    if (pname != name)  delete [] pname;
 
    // Fill the projected histogram
-   Int_t bin,binx, biny,binz;
+   Int_t bin,binx,biny,binz;
    Double_t cont,err;
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          for (binz =0;binz<=nz+1;binz++) {
             bin = GetBin(binx,biny,binz);
             if (binEntries)    cont = GetBinEntries(bin);
-            else               cont = GetBinContent(binx,biny,binz);
-            err   = GetBinError(binx,biny,binz);
+            else               cont = GetBinContent(bin);
+            err   = GetBinError(bin);
             if (cequalErrors)  h1->SetBinContent(binx,biny,binz, err);
             else               h1->SetBinContent(binx,biny,binz,cont);
             if (computeErrors) h1->SetBinError(binx,biny,binz,err);
@@ -1342,18 +1254,9 @@ void TProfile3D::PutStats(Double_t *stats)
 {
    // Replace current statistics with the values in array stats
 
-   fTsumw   = stats[0];
-   fTsumw2  = stats[1];
-   fTsumwx  = stats[2];
-   fTsumwx2 = stats[3];
-   fTsumwy  = stats[4];
-   fTsumwy2 = stats[5];
-   fTsumwxy = stats[6];
-   fTsumwz  = stats[7];
-   fTsumwz2 = stats[8];
-   fTsumwyz = stats[9];
-   fTsumwt  = stats[10];
-   fTsumwt2 = stats[11];
+   TH3::PutStats(stats);
+   fTsumwt  = stats[11];
+   fTsumwt2 = stats[12];
 }
 
 //______________________________________________________________________________
@@ -1426,7 +1329,7 @@ void TProfile3D::RebinAxis(Double_t x, const char* ax)
          }
       }
    }
-   fTsumwt = hold->fTsumwt;
+   fTsumwt  = hold->fTsumwt;
    fTsumwt2 = hold->fTsumwt2;
    delete hold;
 }
