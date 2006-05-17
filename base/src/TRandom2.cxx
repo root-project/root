@@ -1,17 +1,29 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.6 2006/05/04 13:02:33 brun Exp $
-// Author: Rene Brun   04/03/99
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.7 2006/05/14 08:19:30 brun Exp $
+// Author: Rene Brun, Lorenzo Moneta  17/05/2006
 
 //////////////////////////////////////////////////////////////////////////
 //
 // TRandom2
 //
-// Random number generator class (periodicity > 10**14).
+// Random number generator class based on the maximally quidistributed combined 
+// Tausworthe generator by L'Ecuyer. 
 //
-// Has a better periodicity than its base class TRandom but is slower.
+// The period of the generator is 2**88 (about 10**26) and it uses only 3 words 
+// for the state. 
+// 
+// For more information see: 
+// P. L'Ecuyer, Mathematics of Computation, 65, 213 (1996)
+// P. L'Ecuyer, Mathematics of Computation, 68, 225 (1999) 
+// 
+// The publication are available online at 
+//  http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme.ps
+//  http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme2.ps
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMath.h"
 #include "TRandom2.h"
+#include "TRandom3.h"
+
 
 ClassImp(TRandom2)
 
@@ -22,10 +34,8 @@ TRandom2::TRandom2(UInt_t seed)
 //*-*                  ===================
 
    SetName("Random2");
-   SetTitle("Random number generator with period > 10**14");
+   SetTitle("Random number generator with period of about  10**26");
    SetSeed(seed);
-   fSeed1 = 9876;
-   fSeed2 = 54321;
 }
 
 //______________________________________________________________________________
@@ -37,84 +47,107 @@ TRandom2::~TRandom2()
 }
 
 //______________________________________________________________________________
-void TRandom2::GetSeed2(UInt_t &seed1, UInt_t &seed2)
+void TRandom2::GetSeed3(UInt_t &seed1, UInt_t &seed2, UInt_t & seed3)
 {
 //  Set the random generator seeds
 
    seed1 = UInt_t(fSeed1);
    seed2 = UInt_t(fSeed2);
+   seed3 = UInt_t(fSeed);
 }
 
 //______________________________________________________________________________
 Double_t TRandom2::Rndm(Int_t)
 {
-//  Machine independent random number generator.
-//  Produces uniformly-distributed floating points in [0,1]
-//  Identical sequence on all machines of >= 32 bits.
-//  Periodicity > 10**14
+   //  TausWorth generator from L'Ecuyer, uses as seed 3x32bits integers
+   //  Use a mask of 0xffffffffUL to make in work on 64 bit machines  
+   //  Periodicity of about  10**26
+   
+#define TAUSWORTHE(s,a,b,c,d) (((s &c) <<d) & 0xffffffffUL ) ^ ((((s <<a) & 0xffffffffUL )^s) >>b)
 
-   Int_t k = Int_t(fSeed1/53668);
-   fSeed1 = 40014*(fSeed1 - k*53668) - k*12211;
-   if (fSeed1 < 0) fSeed1 += 2147483563;
-   k = Int_t(fSeed2/52774);
-   fSeed2 = 40692*(fSeed2 - k*52774) - k*3791;
-   if (fSeed2 < 0) fSeed2 += 2147483399;
-   Double_t iz = fSeed1 - fSeed2;
-   if (iz <= 0) iz += 2147483562;
-   Double_t r = iz*4.6566128e-10;
-   return r;
+   const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32) 
+
+   fSeed  = TAUSWORTHE (fSeed, 13, 19, 4294967294UL, 12);
+   fSeed1 = TAUSWORTHE (fSeed1, 2, 25, 4294967288UL, 4);
+   fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
+    
+   UInt_t iy = fSeed ^ fSeed1 ^ fSeed2; 
+   return  kScale*static_cast<Double_t>(iy);
 }
 
 //______________________________________________________________________________
 void TRandom2::RndmArray(Int_t n, Float_t *array)
 {
-  // Return an array of n random numbers uniformly distributed in ]0,1]
-   
+   // Return an array of n random numbers uniformly distributed in ]0,1]
+
+   const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32) 
+
+   UInt_t iy;    
+
    for(Int_t i=0; i<n; i++) {
-      Int_t k = Int_t(fSeed1/53668);
-      fSeed1 = 40014*(fSeed1 - k*53668) - k*12211;
-      if (fSeed1 < 0) fSeed1 += 2147483563;
-      k = Int_t(fSeed2/52774);
-      fSeed2 = 40692*(fSeed2 - k*52774) - k*3791;
-      if (fSeed2 < 0) fSeed2 += 2147483399;
-      Double_t iz = fSeed1 - fSeed2;
-      if (iz <= 0) iz += 2147483562;
-      array[i] = Float_t(iz*4.6566128e-10);
+      fSeed  = TAUSWORTHE (fSeed, 13, 19, 4294967294UL, 12);
+      fSeed1 = TAUSWORTHE (fSeed1, 2, 25, 4294967288UL, 4);
+      fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
+    
+     iy = fSeed ^ fSeed1 ^ fSeed2; 
+     array[i] = kScale*static_cast<Double_t>(iy);
    }
 }
 
 //______________________________________________________________________________
 void TRandom2::RndmArray(Int_t n, Double_t *array)
 {
-  // Return an array of n random numbers uniformly distributed in ]0,1]
-   
+   // Return an array of n random numbers uniformly distributed in ]0,1]
+
+   const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32) 
+
+   UInt_t iy;    
    for(Int_t i=0; i<n; i++) {
-      Int_t k = Int_t(fSeed1/53668);
-      fSeed1 = 40014*(fSeed1 - k*53668) - k*12211;
-      if (fSeed1 < 0) fSeed1 += 2147483563;
-      k = Int_t(fSeed2/52774);
-      fSeed2 = 40692*(fSeed2 - k*52774) - k*3791;
-      if (fSeed2 < 0) fSeed2 += 2147483399;
-      Double_t iz = fSeed1 - fSeed2;
-      if (iz <= 0) iz += 2147483562;
-      array[i] = iz*4.6566128e-10;
+      fSeed  = TAUSWORTHE (fSeed, 13, 19, 4294967294UL, 12);
+      fSeed1 = TAUSWORTHE (fSeed1, 2, 25, 4294967288UL, 4);
+      fSeed2 = TAUSWORTHE (fSeed2, 3, 11, 4294967280UL, 17);
+    
+      iy = fSeed ^ fSeed1 ^ fSeed2; 
+      array[i] = kScale*static_cast<Double_t>(iy);
    }
 }
 
 //______________________________________________________________________________
 void TRandom2::SetSeed(UInt_t seed)
 {
-//  Set the random generator sequence (not yet implemented)
+   // Set the generator seed. 
+   // If the seed given is zero, generate automatically seed values which 
+   // are different every time by using TRandom3  and TUUID
+   // If a seed is given generate the other two needed for the generator state using 
+   // a linear congruential generator 
+   // The only condition, stated at the end of the 1999 L'Ecuyer paper is that the seeds
+   // must be greater than 1,7 and 15. 
+  
+#define LCG(n) ((69069 * n) & 0xffffffffUL)  // linear congurential generator
 
-   fSeed = seed;
+   if (seed > 0) { 
+      fSeed = LCG (seed);
+      if (fSeed < 2) fSeed += 2UL;
+      fSeed1 = LCG (fSeed);
+      if (fSeed1 < 8) fSeed1 += 8UL;
+      fSeed2 = LCG (fSeed1);
+      if (fSeed2 < 16) fSeed2 += 16UL;
+   } else { 
+      // initialize using TRandom3 which uses a UUID
+      TRandom3 r3(0); 
+      fSeed   = static_cast<UInt_t> (4294967296.*r3.Rndm());
+      fSeed1  = static_cast<UInt_t> (4294967296.*r3.Rndm());
+      fSeed2  = static_cast<UInt_t> (4294967296.*r3.Rndm());
+
+      if (fSeed < 2)   fSeed  += 2UL;
+      if (fSeed1 < 8)  fSeed1 += 8UL;
+      if (fSeed2 < 16) fSeed2 += 16UL;
+   }     
+
+   // "warm it up" by calling it 6 times 
+   for (int i = 0; i < 6; ++i) 
+      Rndm(); 
+
+   return;
 }
 
-//______________________________________________________________________________
-void TRandom2::SetSeed2(UInt_t seed1, UInt_t seed2)
-{
-//  Set the random generator seeds
-//  Note that seed1 and seed2 must be < 2147483647
-
-   fSeed1 = Double_t(seed1);
-   fSeed2 = Double_t(seed2);
-}

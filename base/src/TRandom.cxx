@@ -1,5 +1,5 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.23 2005/11/16 20:04:11 pcanal Exp $
-// Author: Rene Brun   15/12/95
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.24 2006/05/06 08:25:15 brun Exp $
+// Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -172,6 +172,7 @@
 
 #include "TMath.h"
 #include "TRandom.h"
+#include "TRandom3.h"
 #include "TFile.h"
 #include "TSystem.h"
 #include <time.h>
@@ -587,12 +588,17 @@ void TRandom::ReadRandom(const char *filename)
 Double_t TRandom::Rndm(Int_t)
 {
 //  Machine independent random number generator.
+//  Based on the BSD Unix (Rand) Linear congrential generator
 //  Produces uniformly-distributed floating points between 0 and 1.
 //  Identical sequence on all machines of >= 32 bits.
-//  Periodicity = 10**8
+//  Periodicity = 2**31 
 //  Universal version (Fred James 1985).
 //  generates a number in ]0,1]
+//  Note that this is a generator which is known to have defects 
+//  (the lower random bits are correlated) and therefore should NOT be 
+//  used in any statistical study. 
 
+#ifdef OLD_TRANDOM_IMPL
    const Double_t kCONS = 4.6566128730774E-10;
    const Int_t kMASK24  = 2147483392;
 
@@ -600,45 +606,42 @@ Double_t TRandom::Rndm(Int_t)
    UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
    if (jy) return kCONS*jy;
    return Rndm();
+#endif
+
+   const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
+   fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
+
+   return  kCONS*fSeed;
 }
 
 //______________________________________________________________________________
 void TRandom::RndmArray(Int_t n, Double_t *array)
 {
-  // Return an array of n random numbers uniformly distributed in ]0,1]
-   
-   const Double_t kCONS = 4.6566128730774E-10;
-   const Int_t  kMASK24 = 2147483392;
-   
+   // Return an array of n random numbers uniformly distributed in ]0,1]
+
+   const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
    Int_t i=0;
-   UInt_t jy;
    while (i<n) {
-      fSeed *= 69069;      
-      jy = (fSeed&kMASK24);   // Set lower 8 bits to zero to assure exact float
-      if (jy) {
-         array[i] = kCONS*jy;
-         i++;
-      }
+      fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
+      array[i] = kCONS*fSeed;
+      i++;
    }
 }
 
 //______________________________________________________________________________
 void TRandom::RndmArray(Int_t n, Float_t *array)
 {
-  // Return an array of n random numbers uniformly distributed in ]0,1]
+   // Return an array of n random numbers uniformly distributed in ]0,1]
    
-   const Float_t kCONS = 4.6566128730774E-10;
-   const Int_t kMASK24 = 2147483392;
-   
-   Int_t i=0;
+   const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
+   const Int_t  kMASK24 = 0x7fffff00;
    UInt_t jy;
+   Int_t i=0;
    while (i<n) {
-      fSeed *= 69069;      
+      fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
       jy = (fSeed&kMASK24);  // Set lower 8 bits to zero to assure exact float
-      if (jy) {
-         array[i] = kCONS*jy;
-         i++;
-      }
+      array[i] = kCONS*jy;
+      i++;
    }
 }
    
@@ -648,9 +651,9 @@ void TRandom::SetSeed(UInt_t seed)
 //  Set the random generator seed
 //  if seed is zero, the seed is set to the current  machine clock
 //  Note that the machine clock is returned with a precision of 1 second.
-//  If one calls SetSeed(0) within a loop and the loop time is less than 1s, 
+//  If one calls SetSeed(0) within a loop and the loop time is less than 1s,
 //  all generated numbers will be identical!
-   
+
    if( seed==0 ) {
       time_t curtime;      // Set 'random' seed number  if seed=0
       time(&curtime);      // Get current time in fSeed.
