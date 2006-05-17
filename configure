@@ -3930,7 +3930,7 @@ if test "x$platform" = "xwin32"; then
     echo 'ifeq ($(ROOTSYS),)' > Makefile.tmp
     echo '  ROOTSYS=.' >> Makefile.tmp
     echo 'endif' >> Makefile.tmp
-    sed -e 's@$(ROOTSYS)\(.*\)@$(shell cygpath -u \"$(ROOTSYS)\1")@' \
+    sed -e 's@$(ROOTSYS)\(.*\)@$(shell cygpath -u \"$(ROOTSYS)\1 ")@' \
     < $MAKEOUT >> Makefile.tmp
     mv -f Makefile.tmp $MAKEOUT
 fi
